@@ -203,6 +203,104 @@ export function nistOpticalOfficialWorkbookCatalogEntry(root = path.resolve('dat
   } };
 }
 
+/** Original NIST case 0 cross-sections and publisher checksum sidecars.
+ * This is a separate experimental source revision; catalog discovery does not hash
+ * the 125 MB image set. Preview/import stream-verify every artifact byte.
+ */
+export function nistOpticalCase0MicrographsCatalogEntry(root = path.resolve('data/benchmark/nist-amb2022-03-optical/official')): LpbfSourceCatalogEntry {
+  const datasetId = 'nist-amb2022-03-optical-case0-micrographs-v1';
+  const manifestPath = 'single-track-case0/manifest.json';
+  const manifestSha = '85ec5ce316a2d51c87854b644aef3fc0d601ca884e5a316d23e9a1dc6158b03e';
+  const baseUrl = 'https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/';
+  return { datasetId, title: 'NIST AMB2022-03 · case 0 original optical micrographs', sourceRoot: root,
+    loadDocument() {
+      const filename = path.join(artifactDirectory(root), manifestPath);
+      const stat = lstatSync(filename);
+      if (stat.isSymbolicLink() || !stat.isFile() || stat.size > 1024 * 1024) throw new Error('Invalid case 0 micrograph manifest');
+      const manifestBytes = readFileSync(filename);
+      if (createHash('sha256').update(manifestBytes).digest('hex') !== manifestSha) {
+        throw new Error('NIST case 0 micrograph manifest identity mismatch');
+      }
+      const manifest = JSON.parse(manifestBytes.toString('utf8'));
+      const expectedNames = [1, 2, 3].flatMap(line => ['P3', 'P4'].map(part =>
+        `AMB2022-718-SH1-BP1-${part}-L0-${line}.tif`));
+      const files = manifest.files;
+      const conditions = manifest.processConditions;
+      if (manifest.schemaVersion !== 1 || manifest.datasetId !== datasetId || manifest.publisherVersion !== '1.0.0'
+        || manifest.material !== 'IN718' || manifest.processScope !== 'bare-plate-single-track'
+        || manifest.evidenceClass !== 'experimental-measurements-and-original-micrographs'
+        || manifest.licenseUrl !== 'https://www.nist.gov/open/license'
+        || manifest.measurementMethod?.pixelScale_um_per_pixel !== 0.069
+        || !Array.isArray(files) || files.length !== expectedNames.length
+        || !Array.isArray(manifest.measurements) || manifest.measurements.length !== expectedNames.length
+        || conditions?.laserPower_W !== 285 || conditions?.scanSpeed_mm_s !== 960
+        || conditions?.beamDiameterD4sigma_um !== 67) {
+        throw new Error('NIST case 0 micrograph manifest identity mismatch');
+      }
+      const observations = new Map(manifest.measurements.map((row: any) => [row.imagePath, row]));
+      const artifacts: { relativePath: string; sha256: string; byteSize: number; sourceUrl: string }[] = [];
+      for (const [index, file] of files.entries()) {
+        const expectedName = expectedNames[index];
+        const relativePath = `single-track-case0/${expectedName}`;
+        const imageUrl = `${baseUrl}${expectedName}`;
+        if (file?.path !== relativePath || file?.sourceUrl !== imageUrl
+          || file?.publisherSha256Sidecar !== `${relativePath}.sha256`
+          || !Number.isSafeInteger(file.bytes) || file.bytes <= 0
+          || typeof file.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(file.sha256)) {
+          throw new Error('NIST case 0 micrograph file identity mismatch');
+        }
+        const imageFilename = path.join(artifactDirectory(root), relativePath);
+        const imageStat = lstatSync(imageFilename);
+        if (imageStat.isSymbolicLink() || !imageStat.isFile() || imageStat.size !== file.bytes) {
+          throw new Error('NIST case 0 micrograph size mismatch');
+        }
+        const sidecarPath = `${relativePath}.sha256`;
+        const sidecarFilename = path.join(artifactDirectory(root), sidecarPath);
+        const sidecarStat = lstatSync(sidecarFilename);
+        if (sidecarStat.isSymbolicLink() || !sidecarStat.isFile() || sidecarStat.size !== 64) {
+          throw new Error('NIST case 0 publisher checksum sidecar size mismatch');
+        }
+        const sidecar = readFileSync(sidecarFilename);
+        if (sidecar.toString('ascii') !== file.sha256) throw new Error('NIST case 0 publisher checksum mismatch');
+        const observation: any = observations.get(relativePath);
+        const part = expectedName.includes('-P3-') ? 'P3' : 'P4';
+        const position = part === 'P3' ? 4.9 : 6.0;
+        if (!observation || observation.sample !== 'AMB2022-718-SH1-BP1' || observation.part !== part
+          || observation.position_mm !== position || observation.imagePath !== relativePath
+          || observation.laserPower_W !== conditions.laserPower_W || observation.scanSpeed_mm_s !== conditions.scanSpeed_mm_s
+          || observation.beamDiameterD4sigma_um !== conditions.beamDiameterD4sigma_um
+          || !Number.isFinite(observation.measuredWidth_um) || !Number.isFinite(observation.measuredDepth_um)) {
+          throw new Error('NIST case 0 measurement-to-image mapping mismatch');
+        }
+        artifacts.push({ relativePath, sha256: file.sha256, byteSize: file.bytes, sourceUrl: imageUrl });
+        artifacts.push({ relativePath: sidecarPath, sha256: createHash('sha256').update(sidecar).digest('hex'),
+          byteSize: sidecar.length, sourceUrl: `${imageUrl}.sha256` });
+      }
+      if (observations.size !== expectedNames.length) throw new Error('NIST case 0 has duplicate or unexpected image measurements');
+      return validateSourceDocument({ schemaVersion: 1, datasetId, materialId: 'in718', processScope: 'bare-plate',
+        source: { url: 'https://doi.org/10.18434/mds2-2718', citation: manifest.citation,
+          version: manifest.publisherVersion, terms: `NIST Open License: ${manifest.licenseUrl}`, termsMissingReason: null },
+        artifacts,
+        sourceContext: { schema_version: 1, dataset_id: datasetId, source_version: manifest.publisherVersion,
+          publisher_artifact_kind: 'original-optical-cross-section-micrographs-and-publisher-checksums',
+          checksum_authority: 'NIST-published SHA-256 sidecar for each TIFF; image hashes are rechecked at preview and import.',
+          experiment: { process_scope: 'bare-plate', sample: 'AMB2022-718-SH1-BP1', machine: 'NIST AMMT', scan_direction: '+X',
+            laser_power_W: 285, scan_speed_mm_s: 960, beam_diameter_D4sigma_um: 67,
+            beam_diameter_definition: 'D4sigma', track_length_mm: 10, section_positions_mm: [4.9, 6.0],
+            heat_treatment: null, heat_treatment_missing_reason: 'Not established by the case 0 micrograph manifest.' },
+          measurement: { quantity: 'optical cross-section melt-pool width and depth', unit_source: 'um',
+            pixel_scale_um_per_pixel: 0.069,
+            published_observation_operator: 'ImageJ bounding rectangle; top of rectangle corresponds to specimen surface.',
+            beam_diameter_definition: 'D4sigma', repeat_group_rule: 'Three tracks measured on each of two sections; six rows from one specimen.',
+            temperature_conversion: null, temperature_conversion_missing_reason: 'Not applicable to optical cross-section geometry.' },
+          observations: manifest.measurements, split: 'unassigned',
+          unresolved: ['The six rows are three tracks on each of two sections from one specimen, not six independent builds.',
+            'The workbook and original images derive from the same microscopy campaign and are not independent sources.',
+            'The LPBF solver does not implement the published optical image observation operator.',
+            'Bare-plate measurements do not establish powder-bed model validity.'] } });
+    } };
+}
+
 /**
  * A local screening-input archive, not publisher raw data or an experimental
  * benchmark. The thermal JSON is emitted by in625_lpbf_thermal_snapshot(); a

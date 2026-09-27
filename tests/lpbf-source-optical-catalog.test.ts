@@ -7,7 +7,8 @@ import { test } from 'node:test';
 import express from 'express';
 import { createLpbfSourcesRouter } from '../routes/lpbfSources';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
-import { nistIn718CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry } from '../server/lpbfSourceCatalog';
+import { nistIn718CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry,
+  nistOpticalCase0MicrographsCatalogEntry } from '../server/lpbfSourceCatalog';
 
 const sourceRoot = path.resolve('data/benchmark/nist-amb2022-03-optical');
 const datasetId = 'nist-amb2022-03-optical-table4-local-v1';
@@ -169,4 +170,62 @@ test('official workbook independently previews, imports and verifies over HTTP',
   assert.equal(verified.artifactIntegrity, 'verified-now');
   assert.equal(verified.datasetId, officialId);
   assert.deepEqual(await (await fetch(`${base}/${datasetId}`)).json(), before);
+});
+
+test('NIST case 0 original micrographs are a distinct source with mapped measurements and publisher sidecars', () => {
+  const root = path.join(sourceRoot, 'official');
+  const manifestPath = path.join(root, 'single-track-case0', 'manifest.json');
+  const manifestBytes = readFileSync(manifestPath);
+  assert.equal(sha(manifestBytes), '85ec5ce316a2d51c87854b644aef3fc0d601ca884e5a316d23e9a1dc6158b03e');
+  const manifest = JSON.parse(manifestBytes.toString('utf8'));
+  const document = nistOpticalCase0MicrographsCatalogEntry(root).loadDocument() as any;
+  assert.equal(document.datasetId, 'nist-amb2022-03-optical-case0-micrographs-v1');
+  assert.equal(document.source.terms, 'NIST Open License: https://www.nist.gov/open/license');
+  assert.equal(document.processScope, 'bare-plate');
+  assert.equal(document.artifacts.length, 12);
+  assert.equal(document.sourceContext.observations.length, 6);
+  assert.equal(document.sourceContext.publisher_artifact_kind,
+    'original-optical-cross-section-micrographs-and-publisher-checksums');
+  assert.deepEqual(document.sourceContext.observations.map((row: any) => [row.part, row.position_mm,
+    row.measuredWidth_um, row.measuredDepth_um]), manifest.measurements.map((row: any) => [row.part,
+    row.position_mm, row.measuredWidth_um, row.measuredDepth_um]));
+  for (const file of manifest.files) {
+    const image = readFileSync(path.join(root, file.path));
+    const sidecar = readFileSync(path.join(root, file.publisherSha256Sidecar));
+    assert.equal(file.bytes, image.length);
+    assert.equal(file.sha256, sha(image));
+    assert.equal(sidecar.toString('ascii'), file.sha256);
+  }
+  const catalog = new LpbfSourceArchiveService().catalog().sources;
+  assert.ok(catalog.some(item => item.datasetId === document.datasetId));
+  assert.notEqual(document.datasetId, 'nist-amb2022-03-optical-xlsx-official-v1');
+});
+
+test('NIST case 0 micrograph source previews, imports and verifies through the persistent source API', async t => {
+  const storage = mkdtempSync(path.join(tmpdir(), 'lpbf-optical-micrographs-store-'));
+  t.after(() => rmSync(storage, { recursive: true, force: true }));
+  const micrographId = 'nist-amb2022-03-optical-case0-micrographs-v1';
+  const root = path.join(sourceRoot, 'official');
+  const service = new LpbfSourceArchiveService(storage, [nistOpticalCase0MicrographsCatalogEntry(root)]);
+  const app = express(); app.use(createLpbfSourcesRouter(service));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  t.after(() => new Promise<void>(resolve => server.close(() => resolve())));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}/api/lpbf/sources`;
+  const post = (suffix: string, body = {}) => fetch(`${base}/${micrographId}/${suffix}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  assert.deepEqual((await (await fetch(base)).json()).sources.map((entry: any) => entry.datasetId), [micrographId]);
+  const response = await post('preview');
+  assert.equal(response.status, 200);
+  const preview = await response.json();
+  assert.equal(preview.expectedRevision, 0);
+  assert.equal(preview.artifactCount, 12);
+  assert.equal(preview.document.sourceContext.observations.length, 6);
+  assert.equal(preview.evidenceStatus, 'unreviewed-source-archive');
+  const imported = await (await post('import', { expectedRevision: 0, documentSha256: preview.documentSha256 })).json();
+  assert.equal(imported.revision.revision, 1);
+  assert.equal(imported.revision.document.datasetId, micrographId);
+  const verified = await (await post('verify')).json();
+  assert.equal(verified.artifactIntegrity, 'verified-now');
+  assert.equal(verified.datasetId, micrographId);
 });

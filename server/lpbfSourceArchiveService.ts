@@ -5,7 +5,7 @@ import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfSourceRepository, validateSourceDocument } from './lpbfSourceRepository';
 import { dryRunSourceImport, importSource } from './lpbfSourceImport';
 import { nistIn718CatalogEntry, cmuTi64CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry,
-  in625BareplateScreeningCatalogEntry, type LpbfSourceCatalogEntry } from './lpbfSourceCatalog';
+  nistOpticalCase0MicrographsCatalogEntry, in625BareplateScreeningCatalogEntry, type LpbfSourceCatalogEntry } from './lpbfSourceCatalog';
 
 export class LpbfSourceArchiveError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
@@ -16,7 +16,7 @@ export class LpbfSourceArchiveService {
   private busy = false;
   constructor(private readonly storageRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources'),
     private readonly entries: LpbfSourceCatalogEntry[] = [nistIn718CatalogEntry(), cmuTi64CatalogEntry(), nistOpticalTable4CatalogEntry(),
-      nistOpticalOfficialWorkbookCatalogEntry(), in625BareplateScreeningCatalogEntry()]) {}
+      nistOpticalOfficialWorkbookCatalogEntry(), nistOpticalCase0MicrographsCatalogEntry(), in625BareplateScreeningCatalogEntry()]) {}
 
   catalog() { return { sources: this.entries.map(({ datasetId, title }) => ({ datasetId, title })) }; }
 
