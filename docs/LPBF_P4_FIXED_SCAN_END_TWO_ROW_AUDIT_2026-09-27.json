@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "partial-model-computation-numerical-audit",
+  "scope": "Two completed new rows and the completed spatial axis; final12.5ns row still running",
+  "auditObservedAt": "2026-09-27T17:08:04.981482Z",
+  "observedBy": "gpu_numeric_astra; root retained exact partial snapshot",
+  "snapshotPath": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_TWO_ROW_SNAPSHOT_2026-09-27.json",
+  "snapshotSha256": "25030a530e7f97b4c2f3645bc83cc50fcf3b6bbef80c9f190dcf3d2db49e09f3",
+  "snapshotBytes": 39940,
+  "snapshotUnchangedDuringAudit": true,
+  "arrayIntegrityAcceptance": "pass",
+  "spatialAxisAcceptance": "inconclusive",
+  "timeAxisAcceptance": "not-assessed",
+  "overallConvergenceAcceptance": "unvalidated",
+  "experimentalValidation": false,
+  "solverInvokedByAudit": false,
+  "implementationBeforeAndAfter": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+  "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+  "backend": "numpy-reference",
+  "solver": "enthalpy-fv-6",
+  "admission": ["40MB ZIP/NPY predecode bounds", "NPZ byte hash and five array hashes", "float64 shapes and finiteness", "positive T/rho/dt", "sequential selected accepted-dt clock", "scenario/addendum/actual settings/material/input identity", "frozen protocol/wrapper/source hashes", "exact contour recomputation"],
+  "rows": [
+    {
+      "mesh_um": 5, "maxDt_s": 2.5e-8, "cells": 526592,
+      "inputHash": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+      "npzPath": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-2.5e-08s.npz",
+      "npzSha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+      "npzBytes": 5837849, "decodedArrayBytes": 25356416,
+      "selectedSteps": 10000, "finalSteps": 14000,
+      "selectedTime_s": 0.00024999999999994287, "targetMinusActual_s": 5.708324438136181e-17, "roundoffTolerance_s": 1.0842021724855044e-15,
+      "finalEnergyClosure": 1.628585789617965e-13,
+      "width_um": 77.70163613368703, "depth_um": 34.69857190444219,
+      "arraySha256": {"coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6", "temperature_K": "528493f331a99ce180de34534cc487ffe537bcda3b0bbc60e28cce13d0ffa4ea", "enthalpy_J_m3": "93f5d885c6d853697ce02ae9c10a99462cb933bf8bd0624676be37c9420b2186", "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f", "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"}
+    },
+    {
+      "mesh_um": 5, "maxDt_s": 5e-8, "cells": 526592,
+      "inputHash": "41ec735d7e3e6622a0304675f28877ad3a9e1e4f67da9c7fd209d83cd1e67278",
+      "npzPath": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-5e-08s.npz",
+      "npzSha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+      "npzBytes": 5832892, "decodedArrayBytes": 25316416,
+      "selectedSteps": 5000, "finalSteps": 7000,
+      "selectedTime_s": 0.00024999999999999995, "targetMinusActual_s": 0, "roundoffTolerance_s": 5.421010862427522e-16,
+      "finalEnergyClosure": 9.324138683376302e-14,
+      "width_um": 77.70256216123119, "depth_um": 34.69885790992903,
+      "arraySha256": {"coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6", "temperature_K": "25ec6642a32fca334bbc1edaa7b52015953a8e0b010331a7708372d036e7ded3", "enthalpy_J_m3": "d11df66ebe988302fcbabe35281882d5afcfc38868bcaf1c22f50413303472b7", "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f", "accepted_dt_s": "c6333540d6435edff542dd978522a2fb097d0508e8c60711d24f6dc5f4009492"}
+    }
+  ],
+  "spatialAssessment": {
+    "method": "Unchanged frozen _assessment_rows(..., 'mesh')",
+    "rows": [{"mesh_um": 20, "width_um": 72.4624557588048, "depth_um": 29.63404383872775}, {"mesh_um": 10, "width_um": 74.36212556233751, "depth_um": 33.33499926313726}, {"mesh_um": 5, "width_um": 77.70163613368703, "depth_um": 34.69857190444219}],
+    "width": {"status": "inconclusive", "finestRelativeChange_percent": 4.297863902896246, "changeThreshold_percent": 5, "helperReason": "Non-monotonic, unresolved or identical discrete geometry", "specificReason": "Values are monotonic, but successive corrections grow; trend unresolved."},
+    "depth": {"status": "pass", "finestRelativeChange_percent": 3.9297658850632966, "observedOrder": 1.4405062007479155, "fineGci_percent": 2.8656630860481016},
+    "energy": {"status": "pass", "maximumClosure": 1.6308683205074085e-13}
+  },
+  "temporalScope": "NPZ fields represent first scan-end250us; final scalar energy/steps represent350us. The final accepted-dt tail is not in these NPZ files; no350us array replay is claimed. Selected H was not compared with final stored_J.",
+  "auditHarnessNotes": "Two initial harness assumptions (scenario envelope and zero-based selected step) were corrected before the final read-only audit. No source defect or rerun resulted."
+}

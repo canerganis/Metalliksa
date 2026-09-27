@@ -3,6 +3,23 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
+Numerical partial package: exact two-new-row snapshot25030a53... retained;
+Astra independent admission and root two-NPZ/ten-array/selected-clock readback
+PASS. Frozen20/10/5 mesh axis INCONCLUSIVE(width trend unresolved); depth and
+energy PASS. No time/overall verdict. NPZ250us is not final350us energy/time
+replay. Root commits this scoped evidence without waiting for Node integration;
+final12.5ns remains live and all numerical/protocol/wrapper sources frozen.
+
+Latest committed foundationdf030da; five source/two report Git bindings PASS.
+Luna Node integration is mutable, including current archive GET verification,
+RunArchivePanel and SourceArchivePanel selection persistence. Root actual
+IABtab2 on4176 comparison stage passes keyboard officialXLSX selection/verify,
+revision1/SHA73293ca6...; consoleerrors[]. Reload resets source choice to first
+dataset; explicit reselection preserves stored revision/hash and correctly
+reports bytes not checked in this view. Luna fixes the selection bug, root
+retests after production rebuild. Keep previous engineeringGPU/scientificContext
+UI files frozen; numerical source freeze remains until fine row12.5ns ends.
+
 User requests sustained parallel independent work. Current capacity is root
 plus three agents: Astra science/architecture, Luna implementation, Sol
 independent read-only review. Split owned paths; do not create duplicate work

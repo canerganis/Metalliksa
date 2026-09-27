@@ -24,3 +24,5 @@
 /docs/LPBF_CPU_PROFILE_DIAGNOSTIC_2026-09-27.json -text
 /docs/LPBF_GPU_RUN_API_BASELINE_2026-09-27.json -text
 /docs/LPBF_GPU_NODE_FOUNDATION_ACCEPTANCE_2026-09-27.json -text
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_TWO_ROW_SNAPSHOT_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_TWO_ROW_AUDIT_2026-09-27.json -text

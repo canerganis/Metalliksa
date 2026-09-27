@@ -1,3 +1,32 @@
+## 2026-09-27 — Completed fine rows admitted; spatial width unresolved
+
+Astra independently admitted two completed5um rows from a stable partial
+snapshot39940bytes, captured2026-09-27T17:08:04.981482Z. Root retained the
+exact snapshot and independently verified both NPZ byte hashes, ten array
+hashes, shapes and sequential selected clocks, without solving. Input/material/
+model, bounded predecode, exact contour and frozen source checks PASS.
+
+Frozen mesh assessment on20/10/5um reports spatial axis INCONCLUSIVE.
+Width finest change4.2978639% meets the5% change threshold, but successive
+corrections grow; the trend remains unresolved. Depth passes3.9297659% change,
+observed order1.4405062/fine GCI2.8656631%. Energy maximum closure across the
+three mesh rows1.6308683e-13 PASS. Thresholds are unchanged. Time axis and
+overall convergence are not assessed while the final12.5ns row runs.
+
+| Mesh um | Fixed scan-end width um | Depth um |
+| --- | --- | --- |
+|20|72.4624557588048|29.63404383872775|
+|10|74.36212556233751|33.33499926313726|
+|5|77.70163613368703|34.69857190444219|
+
+NPZ fields/accepted-dt represent250us; final energy/step metadata represent
+350us. Final accepted-dt tail is absent from these NPZ files, so no350us array
+replay is claimed. Selected H was not compared with final stored_J.
+Evidence:docs/LPBF_P4_FIXED_SCAN_END_TWO_ROW_AUDIT_2026-09-27.json,
+SHA256:746fe7c1796d454a50c05f5429a58de5238329aa7915c3e391996842f5acbe7e;
+snapshot SHA256:25030a530e7f97b4c2f3645bc83cc50fcf3b6bbef80c9f190dcf3d2db49e09f3.
+This is model numerical evidence, no experimental validation.
+
 ## 2026-09-27 — GPU Node foundation accepted after independent defect closure
 
 Parent27/27 focused tests, lint and diff check PASS, no skips. Sol final31/31
