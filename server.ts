@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
+import { createServer } from "node:http";
+import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -104,12 +105,9 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 // Vite Middleware & SPA Serving Pipeline
 // =========================================================================
 async function startServer() {
+  const httpServer = createServer(app);
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    await attachDevelopmentMiddleware(app, httpServer);
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
@@ -118,7 +116,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`[MetalliX-Server] Modular server running on http://localhost:${PORT}`);
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");
