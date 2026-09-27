@@ -2,6 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-27 — BiGG Garaj iş fikri raporu hazırlandı
+- Uygulamanın LPBF, Materials Intelligence ve Evidence/Qualification kapsamı; sanayi problemi, teknik kanıt sınırları, ilk pilot ve gelir modeli başvuru odaklı PDF’de toplandı: `docs/Metalliksa_BiGG_Garaj_Is_Fikri_Raporu.pdf`.
+- Rapor 6 sayfa; siyah-beyaz düzen, Times New Roman gömülü fontları, uygulama/iş akışı ve gelir şemaları, tablolar ve paragraf içi numaralı dayanaklar içeriyor. Sayfalar Poppler ile görsel olarak incelendi; PDF metni ve font gömme durumu kontrol edildi. Ürün testi doküman işi kapsamı dışında tutuldu.
+- Ürün kapsamı yerel ürün/teknik durum belgelerine; LPBF model kıyası ve ışın metrologisi NIST yayınlarına; BiGG aşamaları ve yatırım koşulları TÜBİTAK duyurularına dayandırıldı. Müşteri görüşmeleri, pilot ortağı, ödeme isteği/fiyatlandırma ve deneysel LPBF uygunluğu hâlâ doğrulanmış değil.
+- Sıradaki somut adım: başvuru için ekip bilgilerini ve güncel Aşama 1 koşullarını tamamlamak; kullanıcı görüşmeleri yapıp ölçüm/veri erişimli ilk pilotu tanımlamak.
+
 ## 2026-09-27 — IN718 için daha uygun geometri adayı bulundu; deney kapısı açık
 - Chen vd. (2021), çıplak IN718 levhada **250 W / 1.5 m/s** koşulunu iletim rejimi olarak tanımlıyor; 101.6 × 101.6 × 3.18 mm plaka, 100–500 °C ön ısıtma ve kesitlerden W/D bildiriyor. Table 2’deki deneysel W/D (µm): 100 °C 113.66/59.74; 200 °C 122.91/61.24; 300 °C 130.40/74.01; 400 °C 129.96/86.78; 500 °C 131.28/88.99.
 - Kaynak: [OSTI yazar nüshası](https://www.osti.gov/servlets/purl/1849312), [yayıncı makalesi](https://www.sciencedirect.com/science/article/pii/S2214860420310149). Bu turda tablo, OSTI'nin indekslenmiş PDF metninden okundu; PDF bayt/görüntü doğrulaması tamamlanmadı. Işın çapı/tanımı ve soğurulan güç, koşul başına tekrar/ölçüm belirsizliği, kesin kesit konumu ve sınır operatörü doğrulanmadı; “80 track” toplamı her sıcaklık için n anlamına gelmez.
