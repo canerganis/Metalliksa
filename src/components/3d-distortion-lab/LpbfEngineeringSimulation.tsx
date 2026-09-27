@@ -136,6 +136,19 @@ const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strate
 
 const GPU_PILOT_STORAGE_KEY = "metalliksa.lpbf.gpu-pilot.job.v1";
 
+type SavedGpuPilotStorage = Pick<Storage, 'getItem' | 'removeItem'>;
+
+export function recoverMissingSavedGpuPilot(error: unknown, savedId: string,
+  getStorage: () => SavedGpuPilotStorage = () => window.localStorage): boolean {
+  const message = error instanceof Error ? error.message.trim() : '';
+  if (!/^[a-f0-9]{32}$/.test(savedId) || (message !== 'Job not found' && message !== 'LPBF HTTP 404')) return false;
+  try {
+    const storage = getStorage();
+    if (storage.getItem(GPU_PILOT_STORAGE_KEY) === savedId) storage.removeItem(GPU_PILOT_STORAGE_KEY);
+  } catch { /* Keep the page usable when browser storage is unavailable. */ }
+  return true;
+}
+
 const samePilotValue = (left: unknown, right: unknown): boolean => {
   if (Object.is(left, right)) return true;
   if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
@@ -266,7 +279,11 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     if (/^[a-f0-9]{32}$/.test(saved)) {
       gpuPilotApi.get(saved).then(next => { if (live) { setJob(next); setDevice(next.requestSummary.backend);
         setEngine(next.requestSummary.executionEngine === 'warp' ? 'warp' : 'torch'); } })
-        .catch(e => { if (live) setError(`Saved CUDA pilot unavailable: ${e instanceof Error ? e.message : "Worker connection failed"}`); });
+        .catch(e => {
+          if (!live) return;
+          if (recoverMissingSavedGpuPilot(e, saved)) { setError(""); return; }
+          setError(`Saved CUDA pilot unavailable: ${e instanceof Error ? e.message : "Worker connection failed"}`);
+        });
     }
     return () => { live = false; };
   }, []);

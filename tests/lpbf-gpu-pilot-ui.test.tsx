@@ -4,8 +4,10 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { GpuPilotArchiveAction, GpuPilotExecutedInputSummary, LpbfEngineeringSimulation, gpuPilotRuntimeLabel } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
-import { GpuPilotParityTable, gpuPilotEngineLabel } from '../src/components/LpbfRunArchivePanel';
+import { GpuPilotArchiveAction, GpuPilotExecutedInputSummary, LpbfEngineeringSimulation, gpuPilotRuntimeLabel,
+  recoverMissingSavedGpuPilot } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
+import { GpuPilotParityTable, gpuPilotEngineLabel, persistRunSelectionForArchive,
+  restoreRunSelectionForArchive } from '../src/components/LpbfRunArchivePanel';
 import { buildGpuPilotInput, parseGpuPilotJob, type GpuPilotInput } from '../src/services/lpbfSimulationService';
 
 test('engineering screen keeps the CUDA pilot visibly separate from standard CPU results', () => {
@@ -26,6 +28,44 @@ test('engineering screen keeps the CUDA pilot visibly separate from standard CPU
   assert.ok(html.includes('NVIDIA Warp candidate · v2'));
   assert.ok(html.includes('pattern="cuda:[0-9]+"'));
   assert.match(html, /type="submit"/);
+});
+
+test('run archive restores only a still-present saved run selection', () => {
+  const runs = ['a'.repeat(32), 'b'.repeat(32)];
+  const values = new Map<string, string>([['metalliksa.lpbf.runArchive.selectedRun.v1', runs[1]]]);
+  const storage = { getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => values.set(key, value) };
+  assert.equal(restoreRunSelectionForArchive(runs, () => storage), runs[1]);
+  assert.equal(restoreRunSelectionForArchive(runs, () => storage), runs[1], 'a remount keeps the same run selected');
+  assert.equal(restoreRunSelectionForArchive(runs, () => ({ ...storage,
+    getItem: () => 'c'.repeat(32) })), runs[0]);
+  assert.equal(values.get('metalliksa.lpbf.runArchive.selectedRun.v1'), runs[0], 'a stale ID is replaced by a current run');
+  assert.equal(restoreRunSelectionForArchive([], () => storage), '');
+  assert.equal(values.get('metalliksa.lpbf.runArchive.selectedRun.v1'), runs[0], 'an empty archive preserves the last valid ID');
+  assert.equal(restoreRunSelectionForArchive(runs, () => { throw new Error('storage denied'); }), runs[0]);
+  assert.equal(restoreRunSelectionForArchive(runs, () => ({ getItem: () => { throw new Error('read denied'); },
+    setItem: () => { throw new Error('write denied'); } })), runs[0]);
+  assert.doesNotThrow(() => persistRunSelectionForArchive(runs[1], () => { throw new Error('storage denied'); }));
+});
+
+test('only a confirmed missing saved CUDA job is forgotten; newer IDs and transient errors are preserved', () => {
+  const savedId = 'd'.repeat(32);
+  const key = 'metalliksa.lpbf.gpu-pilot.job.v1';
+  const values = new Map<string, string>([[key, savedId]]);
+  const storage = { getItem: (name: string) => values.get(name) ?? null,
+    removeItem: (name: string) => { values.delete(name); } };
+  assert.equal(recoverMissingSavedGpuPilot(new Error('Job not found'), savedId, () => storage), true);
+  assert.equal(values.has(key), false);
+  values.set(key, 'e'.repeat(32));
+  assert.equal(recoverMissingSavedGpuPilot(new Error('LPBF HTTP 404'), savedId, () => storage), true);
+  assert.equal(values.get(key), 'e'.repeat(32), 'a newer saved job must not be removed');
+  for (const error of [new Error('LPBF HTTP 503'), new Error('fetch failed'), new Error('invalid job response')]) {
+    assert.equal(recoverMissingSavedGpuPilot(error, 'e'.repeat(32), () => storage), false);
+    assert.equal(values.get(key), 'e'.repeat(32), 'transient or malformed responses must retain the saved ID');
+  }
+  assert.equal(recoverMissingSavedGpuPilot(new Error('Job not found'), savedId, () => { throw new Error('storage denied'); }), true);
+  assert.doesNotThrow(() => recoverMissingSavedGpuPilot(new Error('Job not found'), savedId,
+    () => ({ getItem: () => savedId, removeItem: () => { throw new Error('removal denied'); } })));
 });
 
 test('completed bound GPU jobs expose an archive action for that job only', () => {

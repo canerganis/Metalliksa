@@ -10,6 +10,7 @@ import type { RunRecord, RunSourceLink, NistOpticalCaseNumber, NistOpticalReport
 
 const button = 'rounded-lg border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40';
 const RESTORE_ID_STORAGE_KEY = 'metalliksa.lpbf.lastRestoreId.v1';
+const SELECTED_RUN_STORAGE_KEY = 'metalliksa.lpbf.runArchive.selectedRun.v1';
 const GPU_ENGINE_UNVERIFIED = 'GPU engine unverified';
 
 type UnknownRecord = Record<string, unknown>;
@@ -217,6 +218,31 @@ function savedRestoreId(): string {
   } catch { return ''; }
 }
 
+export function runSelectionForArchive(runIds: string[], savedId: string | null): string {
+  return savedId && runIds.includes(savedId) ? savedId : runIds[0] ?? '';
+}
+
+type RunSelectionStorage = Pick<Storage, 'getItem' | 'setItem'>;
+
+export function persistRunSelectionForArchive(runId: string,
+  getStorage: () => RunSelectionStorage = () => window.localStorage): void {
+  if (!/^[a-f0-9]{32}$/.test(runId)) return;
+  try { getStorage().setItem(SELECTED_RUN_STORAGE_KEY, runId); } catch { /* Keep the selection for this view. */ }
+}
+
+export function restoreRunSelectionForArchive(runIds: string[],
+  getStorage: () => RunSelectionStorage = () => window.localStorage): string {
+  let storage: RunSelectionStorage | null = null;
+  let savedId: string | null = null;
+  try {
+    storage = getStorage();
+    savedId = storage.getItem(SELECTED_RUN_STORAGE_KEY);
+  } catch { /* Use the available archive order if browser storage is unavailable. */ }
+  const selected = runSelectionForArchive(runIds, savedId && /^[a-f0-9]{32}$/.test(savedId) ? savedId : null);
+  if (selected) persistRunSelectionForArchive(selected, () => storage ?? getStorage());
+  return selected;
+}
+
 export function LpbfRunArchivePanel() {
   const [runs, setRuns] = useState<RunArchiveList | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -227,7 +253,11 @@ export function LpbfRunArchivePanel() {
     const controller = new AbortController();
     setError(null); setRuns(null); setSelected('');
     listRuns(controller.signal).then(items => {
-      if (!controller.signal.aborted) { setRuns(items); setSelected(items[0]?.runId ?? ''); }
+      if (!controller.signal.aborted) {
+        setRuns(items);
+        const runId = restoreRunSelectionForArchive(items.map(item => item.runId));
+        setSelected(runId);
+      }
     }).catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Run archive unavailable.'); });
     return () => controller.abort();
   }, [attempt]);
@@ -238,7 +268,7 @@ export function LpbfRunArchivePanel() {
     {error ? <div><p role="alert" className="text-rose-300">{error}</p><button className={`${button} mt-3`} onClick={() => setAttempt(value => value + 1)}>Retry run archive</button></div>
       : runs === null ? <p role="status">Loading run archive…</p>
       : runs.length === 0 ? <p>No simulation runs archived yet.</p>
-      : <><label className="block text-sm">Archived run<select aria-label="Archived run" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 focus-visible:outline-2 focus-visible:outline-sky-300" value={selected} onChange={event => setSelected(event.target.value)}>{runs.map(item => <option key={item.runId} value={item.runId}>{item.runId.slice(0,8)}... · {item.runKind} · {item.createdAt}</option>)}</select></label>
+      : <><label className="block text-sm">Archived run<select aria-label="Archived run" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 focus-visible:outline-2 focus-visible:outline-sky-300" value={selected} onChange={event => { setSelected(event.target.value); persistRunSelectionForArchive(event.target.value); }}>{runs.map(item => <option key={item.runId} value={item.runId}>{item.runId.slice(0,8)}... · {item.runKind} · {item.createdAt}</option>)}</select></label>
         {selected && <ArchivedRunRecord key={selected} runId={selected}/>}</>}
     {runs && <NistProxyCampaign runs={runs} />}
     <RunBundleControls />
