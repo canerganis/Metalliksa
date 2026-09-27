@@ -16,7 +16,16 @@ export default defineConfig(() => {
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      watch: process.env.DISABLE_HMR === 'true' ? null : {
+        // Solver evidence and generated indexes must not reload an active UI job.
+        ignored: [
+          '**/graft/**',
+          '**/.tmp-lpbf*/**',
+          '**/.lpbf-*/**',
+          '**/.warp-cache*/**',
+          '**/docs/*.partial.json',
+        ],
+      },
     },
   };
 });
