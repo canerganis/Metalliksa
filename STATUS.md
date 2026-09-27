@@ -4,7 +4,7 @@
 
 ## 2026-09-27 — BiGG Garaj iş fikri raporu hazırlandı
 - Uygulamanın LPBF, Materials Intelligence ve Evidence/Qualification kapsamı; sanayi problemi, teknik kanıt sınırları, ilk pilot ve gelir modeli başvuru odaklı PDF’de toplandı: `docs/Metalliksa_BiGG_Garaj_Is_Fikri_Raporu.pdf`.
-- Rapor 6 sayfa; siyah-beyaz düzen, Times New Roman gömülü fontları, uygulama/iş akışı ve gelir şemaları, tablolar ve paragraf içi numaralı dayanaklar içeriyor. Sayfalar Poppler ile görsel olarak incelendi; PDF metni ve font gömme durumu kontrol edildi. Ürün testi doküman işi kapsamı dışında tutuldu.
+- Rapor 8 sayfa; kapak bilgileri büyütüldü, siyah-beyaz Times New Roman düzeni, şema ve tablolar korundu. Son iki sayfada uygulamadan alınan sayısal karşılaştırma ile yalnızca dış kaynaklar yer alıyor; şirket içi Markdown belgeleri kaynakçadan çıkarıldı. PDF sayfa sayısı ve metin içeriği kontrol edildi.
 - Ürün kapsamı yerel ürün/teknik durum belgelerine; LPBF model kıyası ve ışın metrologisi NIST yayınlarına; BiGG aşamaları ve yatırım koşulları TÜBİTAK duyurularına dayandırıldı. Müşteri görüşmeleri, pilot ortağı, ödeme isteği/fiyatlandırma ve deneysel LPBF uygunluğu hâlâ doğrulanmış değil.
 - Sıradaki somut adım: başvuru için ekip bilgilerini ve güncel Aşama 1 koşullarını tamamlamak; kullanıcı görüşmeleri yapıp ölçüm/veri erişimli ilk pilotu tanımlamak.
 
