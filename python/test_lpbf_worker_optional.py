@@ -36,6 +36,11 @@ class OptionalBackends(unittest.TestCase):
         replies = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertEqual([reply["id"] for reply in replies], [1, 2, 3, 4, 5])
         self.assertTrue(replies[0]["data"]["thermalSolver"])
+        inventories = replies[0]["data"]["gpuDevices"]
+        self.assertEqual(set(inventories), {"torch", "warp"})
+        for inventory in inventories.values():
+            self.assertFalse(inventory["runtimeAvailable"])
+            self.assertEqual(inventory["devices"], [])
         for reply, dependency in zip(replies[1:4], ("warp", "torch", "warp")):
             self.assertNotIn("data", reply)
             self.assertIn(dependency, reply["error"])

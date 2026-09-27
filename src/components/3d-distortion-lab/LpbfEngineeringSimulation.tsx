@@ -259,19 +259,70 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+export interface GpuRuntimeDevice {
+  ordinal: number; device: `cuda:${number}`; name: string;
+  computeCapability: [number, number]; memoryBytes: number;
+}
+
+export function gpuDevicesForEngine(caps: unknown, engine: 'torch' | 'warp'): GpuRuntimeDevice[] {
+  if (typeof caps !== 'object' || caps === null || Array.isArray(caps)) return [];
+  const inventories = (caps as {gpuDevices?: unknown}).gpuDevices;
+  if (typeof inventories !== 'object' || inventories === null || Array.isArray(inventories)) return [];
+  const runtime = (inventories as Record<string, unknown>)[engine];
+  if (typeof runtime !== 'object' || runtime === null || Array.isArray(runtime)) return [];
+  const runtimeRecord = runtime as {runtimeAvailable?: unknown; devices?: unknown};
+  if (runtimeRecord.runtimeAvailable !== true) return [];
+  const devices = runtimeRecord.devices;
+  if (!Array.isArray(devices)) return [];
+  return devices.filter((value): value is GpuRuntimeDevice => {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+    const item = value as Record<string, unknown>;
+    return Number.isSafeInteger(item.ordinal) && (item.ordinal as number) >= 0
+      && item.device === `cuda:${item.ordinal}` && typeof item.name === 'string' && !!item.name.trim()
+      && Array.isArray(item.computeCapability) && item.computeCapability.length === 2
+      && item.computeCapability.every(part => Number.isSafeInteger(part) && (part as number) >= 0)
+      && Number.isSafeInteger(item.memoryBytes) && (item.memoryBytes as number) > 0;
+  }).sort((a, b) => a.ordinal - b.ordinal);
+}
+
+export function sameGpuDeviceIdentity(selected: GpuRuntimeDevice | undefined,
+  current: GpuRuntimeDevice | undefined): boolean {
+  return !!selected && !!current && selected.ordinal === current.ordinal
+    && selected.device === current.device && selected.name === current.name
+    && selected.memoryBytes === current.memoryBytes
+    && selected.computeCapability[0] === current.computeCapability[0]
+    && selected.computeCapability[1] === current.computeCapability[1];
+}
+
 function GpuThermalPilotPanel({input, settings, material, properties, strategy, caps, blocked}: {
   input: SimulationInput; settings: Partial<SimulationInput>; material: string;
   properties: string; strategy: SimulationInput["strategy"];
   caps?: SimulationCapabilities; blocked: boolean;
 }) {
-  const [device, setDevice] = useState("cuda:0");
+  const [device, setDevice] = useState("");
+  const [deviceCaps, setDeviceCaps] = useState<SimulationCapabilities | undefined>(caps);
   const [engine, setEngine] = useState<'torch' | 'warp'>('torch');
   const [job, setJob] = useState<GpuPilotJob>();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [refreshingDevices, setRefreshingDevices] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const active = job?.status === "queued" || job?.status === "running";
   const result = job?.status === "completed" ? job.result : undefined;
+  useEffect(() => setDeviceCaps(caps), [caps]);
+  const devices = gpuDevicesForEngine(deviceCaps, engine);
+  const selectedDevice = devices.find(candidate => candidate.device === device);
+  useEffect(() => {
+    if (devices.length && !devices.some(candidate => candidate.device === device)) setDevice(devices[0].device);
+    else if (!devices.length && device) setDevice("");
+  }, [engine, deviceCaps]);
+  const refreshDevices = async () => {
+    if (refreshingDevices || submitting) return;
+    setRefreshingDevices(true);
+    try { setDeviceCaps(await simulationApi.capabilities()); setError(""); }
+    catch (e) { setError(e instanceof Error ? e.message : "CUDA runtime inventory refresh failed"); }
+    finally { setRefreshingDevices(false); }
+  };
   useEffect(() => {
     let live = true;
     let saved = "";
@@ -309,11 +360,21 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting || active) return;
+    const submittedEngine = engine;
+    const submittedDevice = device;
+    const selectedAtSubmit = devices.find(candidate => candidate.device === submittedDevice);
     setSubmitting(true); setError("");
     try {
-      if (!/^cuda:[0-9]+$/.test(device)) throw new Error("Select an explicit cuda:N device.");
-      const pilot = buildGpuPilotInput(input, settings, device as `cuda:${number}`,
-        material, strategy, properties.trim() ? JSON.parse(properties) : undefined, engine);
+      if (!selectedAtSubmit) throw new Error("Select a CUDA device from the current runtime list.");
+      const freshCaps = await simulationApi.capabilities();
+      setDeviceCaps(freshCaps);
+      const freshDevices = gpuDevicesForEngine(freshCaps, submittedEngine);
+      const freshSelection = freshDevices.find(candidate => candidate.device === submittedDevice);
+      if (!sameGpuDeviceIdentity(selectedAtSubmit, freshSelection)) {
+        throw new Error(`${submittedDevice} changed or is no longer available in the ${submittedEngine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime. Refresh the list, select a device, and retry. No CPU fallback is used.`);
+      }
+      const pilot = buildGpuPilotInput(input, settings, submittedDevice as `cuda:${number}`,
+        material, strategy, properties.trim() ? JSON.parse(properties) : undefined, submittedEngine);
       const next = await gpuPilotApi.submit(pilot);
       setJob(next);
       try { localStorage.setItem(GPU_PILOT_STORAGE_KEY, next.id); } catch { /* Live job remains visible. */ }
@@ -341,14 +402,26 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. A completed bound GPU result can be imported with Save to Archive below after selecting a source revision; field bytes and numerical evidence are rechecked during import and bundle restore. This remains unvalidated parity evidence. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above.</p>
     <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
       <label className="text-sm">GPU engine<select aria-label="GPU engine" className={inputClass} value={engine}
-        onChange={e=>setEngine(e.target.value === 'warp' ? 'warp' : 'torch')}>
+        disabled={blocked||submitting||active} onChange={e=>setEngine(e.target.value === 'warp' ? 'warp' : 'torch')}>
         <option value="torch">PyTorch CUDA · v1</option><option value="warp">NVIDIA Warp candidate · v2</option>
       </select></label>
-      <label className="text-sm">CUDA device<input aria-label="CUDA device" className={inputClass} value={device} onChange={e=>setDevice(e.target.value)} pattern="cuda:[0-9]+" aria-invalid={!/^cuda:[0-9]+$/.test(device)} aria-describedby="cuda-pilot-help" required/></label>
-      <button type="submit" disabled={blocked||submitting||active||!/^cuda:[0-9]+$/.test(device)} className="rounded-lg border border-sky-400/50 bg-sky-950/50 px-4 py-2.5 text-sm disabled:opacity-40">{submitting?"Submitting…":engine === 'warp' ? "Run Warp parity pilot" : "Run CUDA parity pilot"}</button>
+      <label className="text-sm">CUDA device<select aria-label="CUDA device" className={inputClass} value={device}
+        disabled={blocked||submitting||active||refreshingDevices} onChange={e=>setDevice(e.target.value)} aria-describedby="cuda-pilot-help" required>
+        {!devices.length && <option value="">No {engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} devices available</option>}
+        {devices.map(candidate=><option key={candidate.device} value={candidate.device}>
+          {candidate.device} · {candidate.name} · compute {candidate.computeCapability.join('.')} · {(candidate.memoryBytes / 1024 ** 3).toFixed(1)} GiB
+        </option>)}
+      </select></label>
+      <button type="button" onClick={refreshDevices} disabled={blocked||submitting||refreshingDevices}
+        className="rounded-lg border border-slate-500 px-3 py-2.5 text-sm disabled:opacity-40">
+        {refreshingDevices ? "Refreshing…" : "Refresh devices"}
+      </button>
+      <button type="submit" disabled={blocked||submitting||active||!selectedDevice} className="rounded-lg border border-sky-400/50 bg-sky-950/50 px-4 py-2.5 text-sm disabled:opacity-40">{submitting?"Checking device…":engine === 'warp' ? "Run Warp parity pilot" : "Run CUDA parity pilot"}</button>
       {active&&<button type="button" disabled={cancelling} onClick={cancel} className="rounded-lg border border-slate-500 px-4 py-2.5 text-sm disabled:opacity-40">{cancelling?"Cancelling…":"Cancel CUDA pilot"}</button>}
     </form>
-    <p id="cuda-pilot-help" className="mt-2 text-xs text-slate-400">{caps?.cudaThermalPilot?.availability === "checked-on-submit" ? "The worker checks the selected CUDA device at submission." : "CUDA availability is not known until submission."} No CPU fallback is used.</p>
+    <p id="cuda-pilot-help" className="mt-2 text-xs text-slate-400">{selectedDevice
+      ? `Listed by the ${engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime · ordinal ${selectedDevice.ordinal} · ${selectedDevice.memoryBytes.toLocaleString()} bytes. Device and engine availability are refreshed before submission.`
+      : `No ${engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime device is currently available. Refresh the device list or select another engine.`} The worker rechecks the exact CUDA ordinal during submission. No CPU fallback is used.</p>
     {error&&<p role="alert" className="mt-3 rounded-lg border border-red-400/40 p-3 text-sm text-red-200">{error}</p>}
     {job&&<p role="status" className="mt-3 text-sm">CUDA job {job.id} · {job.status}{job.cacheHit?" · cached":""}</p>}
     {job?.error&&<p role="alert" className="mt-2 text-sm text-red-200">{job.error}</p>}

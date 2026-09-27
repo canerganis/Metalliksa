@@ -329,6 +329,38 @@ def _archive_run_kind(job_type, result=None):
     return "transient-thermal"
 
 
+def gpu_device_inventories():
+    """Return per-engine CUDA devices from the runtimes that execute each pilot."""
+    inventories = {}
+    try:
+        import torch
+        devices = []
+        if torch.cuda.is_available():
+            for ordinal in range(int(torch.cuda.device_count())):
+                props = torch.cuda.get_device_properties(ordinal)
+                devices.append(dict(
+                    ordinal=ordinal, device=f"cuda:{ordinal}", name=str(props.name),
+                    computeCapability=list(torch.cuda.get_device_capability(ordinal)),
+                    memoryBytes=int(props.total_memory),
+                ))
+        inventories["torch"] = dict(runtimeAvailable=bool(devices), devices=devices)
+    except Exception as exc:
+        inventories["torch"] = dict(runtimeAvailable=False, devices=[], unavailableReason=str(exc)[:240])
+    try:
+        import warp as wp
+        devices = []
+        for device in wp.get_cuda_devices():
+            arch = int(device.arch)
+            devices.append(dict(
+                ordinal=int(device.ordinal), device=str(device.alias), name=str(device.name),
+                computeCapability=[arch // 10, arch % 10], memoryBytes=int(device.total_memory),
+            ))
+        inventories["warp"] = dict(runtimeAvailable=bool(devices), devices=devices)
+    except Exception as exc:
+        inventories["warp"] = dict(runtimeAvailable=False, devices=[], unavailableReason=str(exc)[:240])
+    return inventories
+
+
 def capabilities():
     foam = Path("/opt/openfoam14/etc/bashrc")
     version = None
@@ -351,6 +383,7 @@ def capabilities():
                 binaryHash=hashlib.sha256(BINARY.read_bytes()).hexdigest() if BINARY.is_file() else None,
                 freeSurfaceSolver=bool(version and (Path(__file__).parent/"openfoam/bin/metalliksaMeltPoolFoam").is_file()), platform=sys.platform,
                 thermalSolver=True, materials=catalog(),
+                gpuDevices=gpu_device_inventories(),
                 cudaThermalPilot=dict(selection="jobType=gpu-thermal-pilot; backend=cuda:N",
                     availability="checked-on-submit", cpuAlternative="backend=reference",
                     evidenceScope="same-model numerical parity only"),
@@ -708,7 +741,9 @@ def main():
             if len(line) > 1000000: raise ValueError("RPC payload too large")
             request = json.loads(line)
             method = request["method"]
-            if method == "capabilities": data = queue.caps
+            if method == "capabilities":
+                data = dict(queue.caps)
+                data["gpuDevices"] = gpu_device_inventories()
             elif method == "estimate":
                 p, m = validate(request["payload"])
                 data = resource_estimate(p,m)

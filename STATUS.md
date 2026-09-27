@@ -871,3 +871,9 @@ Do not alter the existing acceptance thresholds or relabel the study as passed.
 - Real RTX 4060 execution: **1/1 PASS**, 20.873 s, CPU + PyTorch CUDA + Warp CUDA; `py_compile` and `git diff --check` **PASS**. CUDA-absent runs explicitly skip as `unverified`; they do not count as parity evidence.
 - This is one-case software/numerical parity only. It does not establish mesh/time convergence, workload-wide speedup or experimental IN718 validity.
 - Next: deterministic GPU Queue cancel/timeout/restart and device-selection acceptance, followed by synchronized end-to-end stage profiling and repeated benchmark sessions.
+
+## 2026-09-28 — Runtime-discovered NVIDIA device selection
+- The worker now reports separate CUDA inventories from the actual PyTorch and Warp runtimes (ordinal, device name, compute capability, memory bytes). The UI offers a runtime-specific device dropdown, refreshes the inventory, locks engine/device controls during submission, and rechecks the selected GPU identity before queue submission. An unavailable or remapped device fails closed; CPU fallback is not used.
+- Verification: local RTX 4060 was listed by both runtimes; GPU pilot UI **8/8 PASS**, optional-backend worker test **1/1 PASS**, `npm run lint`/TypeScript **PASS**, Python `py_compile` **PASS**, `git diff --check` **PASS**. UI and worker checks ran after Windows sandbox process/temp permission failures using the approved writable/elevated test path.
+- This proves device discovery and bounded fail-closed selection only; GPU-specific cancel/timeout/restart acceptance and end-to-end performance attribution remain open.
+- Next: deterministic GPU queue lifecycle matrix, then full-workflow stage profiling with repeated paired sessions.

@@ -2704,3 +2704,9 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - `python/test_lpbf_gpu_three_backend_parity.py` exercises one frozen IN718 40 µm request in one test invocation through CPU, PyTorch CUDA and Warp CUDA. It requires identical model/material/input settings, mesh/cells/steps, accepted timestep arrays, coordinates, density, final time and initial state; thermal-rise and volumetric enthalpy norms, each energy term, closure, peak temperature, melt width/depth/length and volume are bounded by declared tolerances.
 - Actual RTX 4060 run **1/1 PASS** in 20.873 s; `py_compile` and `git diff --check` **PASS**. Missing CUDA is labelled `unverified` by an explicit skip and cannot be mistaken for parity.
 - Scope remains one discrete request and one estimated-property IN718 model. No convergence or experimental-validation claim; no application-wide GPU speedup claim.
+
+## 2026-09-28 — Runtime-discovered NVIDIA device selection
+
+- Worker capabilities now list Torch and Warp CUDA devices from their respective runtimes with ordinal, name, compute capability and memory. UI selection is engine-specific, refreshable, disabled during active submit/run, and revalidated against both ordinal and device metadata before submission. Missing or remapped devices remain an explicit error; no CPU fallback.
+- Evidence: both runtimes listed the local RTX 4060; focused UI suite **8/8 PASS**, worker optional-backend case **1/1 PASS**, TypeScript `npm run lint` **PASS**, Python compilation **PASS**, diff check **PASS**. No GPU solve was part of this device-inventory check.
+- Queue cancellation/timeout/restart behavior, performance profiling and IN718 experimental validation remain separate open gates.

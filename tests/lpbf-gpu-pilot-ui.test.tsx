@@ -5,7 +5,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GpuPilotArchiveAction, GpuPilotExecutedInputSummary, LpbfEngineeringSimulation, gpuPilotRuntimeLabel,
-  recoverMissingSavedGpuPilot } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
+  recoverMissingSavedGpuPilot, gpuDevicesForEngine, sameGpuDeviceIdentity } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
 import { GpuPilotParityTable, gpuPilotEngineLabel, persistRunSelectionForArchive,
   restoreRunSelectionForArchive } from '../src/components/LpbfRunArchivePanel';
 import { buildGpuPilotInput, parseGpuPilotJob, type GpuPilotInput } from '../src/services/lpbfSimulationService';
@@ -26,8 +26,39 @@ test('engineering screen keeps the CUDA pilot visibly separate from standard CPU
   assert.match(html, /aria-label="CUDA device"/);
   assert.match(html, /aria-label="GPU engine"/);
   assert.ok(html.includes('NVIDIA Warp candidate · v2'));
-  assert.ok(html.includes('pattern="cuda:[0-9]+"'));
+  assert.ok(html.includes('No PyTorch CUDA devices available'));
   assert.match(html, /type="submit"/);
+});
+
+test('CUDA device picker uses only the selected runtime inventory and rejects malformed entries', () => {
+  const caps = { gpuDevices: {
+    torch: { runtimeAvailable: true, devices: [
+      { ordinal: 1, device: 'cuda:1', name: 'Torch GPU 1', computeCapability: [8, 9], memoryBytes: 8000 },
+      { ordinal: 0, device: 'cuda:0', name: 'Torch GPU 0', computeCapability: [8, 6], memoryBytes: 4000 },
+      { ordinal: 2, device: 'cuda:2', name: 'stale', computeCapability: [8, 9], memoryBytes: 0 },
+    ] },
+    warp: { runtimeAvailable: true, devices: [
+      { ordinal: 0, device: 'cuda:0', name: 'Warp GPU 0', computeCapability: [8, 9], memoryBytes: 12000 },
+    ] },
+  } };
+  assert.deepEqual(gpuDevicesForEngine(caps, 'torch').map(device => device.device), ['cuda:0', 'cuda:1']);
+  assert.equal(gpuDevicesForEngine(caps, 'warp')[0].name, 'Warp GPU 0');
+  assert.deepEqual(gpuDevicesForEngine({ gpuDevices: { torch: {
+    runtimeAvailable: false,
+    devices: [{ ordinal: 0, device: 'cuda:0', name: 'stale but plausible', computeCapability: [8, 9], memoryBytes: 12000 }],
+  } } }, 'torch'), [], 'a plausible list cannot override unavailable runtime status');
+  assert.deepEqual(gpuDevicesForEngine({ gpuDevices: { warp: { devices: [{}] } } }, 'warp'), []);
+  assert.deepEqual(gpuDevicesForEngine(undefined, 'torch'), []);
+});
+
+test('CUDA submit identity rejects a same ordinal that resolves to a changed device', () => {
+  const selected = { ordinal: 0, device: 'cuda:0' as const, name: 'GPU A',
+    computeCapability: [8, 9] as [number, number], memoryBytes: 8000 };
+  assert.equal(sameGpuDeviceIdentity(selected, {...selected}), true);
+  assert.equal(sameGpuDeviceIdentity(selected, {...selected, name: 'GPU B'}), false);
+  assert.equal(sameGpuDeviceIdentity(selected, {...selected, computeCapability: [8, 6]}), false);
+  assert.equal(sameGpuDeviceIdentity(selected, {...selected, memoryBytes: 4000}), false);
+  assert.equal(sameGpuDeviceIdentity(selected, undefined), false);
 });
 
 test('run archive restores only a still-present saved run selection', () => {
