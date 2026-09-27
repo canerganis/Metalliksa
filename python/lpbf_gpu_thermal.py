@@ -274,6 +274,9 @@ def run_gpu(raw, device="cuda:0", capture_final=False, use_cuda_source=False):
             raise ValueError("Thermal model validity exceeded (boiling or nonphysical enthalpy)")
         temperature = _interp(torch, specific_h, hh, tt)
         time += dt
+        roundoff = min(1e-14, 2 * math.ulp(end) * (step + 1))
+        if end - time <= roundoff:
+            time = end
         step += 1
         min_dt = min(min_dt, dt)
         max_dt = max(max_dt, dt)

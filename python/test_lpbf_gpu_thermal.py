@@ -204,6 +204,40 @@ class GpuThermal(unittest.TestCase):
         self.assertEqual(result["comparisons"]["length_um"]["status"], "pass")
         self.assertFalse(result["experimentalValidation"])
 
+    def test_cuda_final_time_roundoff_preserves_reference_sampling(self):
+        """Reproduce the UI pilot's extra CUDA endpoint step on actual hardware."""
+        try:
+            import torch
+            available = torch.cuda.is_available()
+        except ImportError:
+            available = False
+        if not available:
+            self.skipTest("CUDA runtime unavailable; endpoint parity unverified")
+        case = {
+            "mode": "standard", "backend": "reference", "material": "Inconel 718",
+            "power_W": 40., "speed_mm_s": 800., "beamDiameter_um": 80.,
+            "preheat_C": 80., "layer_um": 40., "hatch_um": 100.,
+            "mesh_um": 40., "maxDt_s": 1e-6, "trackLength_um": 600.,
+            "tracks": 1, "layers": 1, "dwell_s": .0002, "cooling_s": .0005,
+            "scanAngle_deg": 0., "layerRotation_deg": 67., "strategy": "stripe",
+            "stripeWidth_um": 500., "islandSize_um": 200.,
+            "packingFraction": .55, "powderConductivityRatio": .12,
+            "convection_W_m2K": 20., "absorptivity": .38, "emissivity": .35,
+            "study": "none", "surfaceMode": "powder-layer",
+            "powderGridPolicy": "layer-conforming", "barePlateGeometry": "square",
+        }
+        result = compare_with_cpu(case, "cuda:0")
+        sampling = result["comparisons"]["finalSampling"]
+        with self.subTest(check="accepted step count"):
+            self.assertEqual(sampling["gpuSteps"], sampling["cpuSteps"], sampling)
+        for check in ("finalSampling", "finalTemperatureField"):
+            with self.subTest(check=check):
+                self.assertEqual(result["comparisons"][check]["status"], "pass",
+                                 result["comparisons"][check])
+        with self.subTest(check="full frozen parity gate"):
+            self.assertEqual(result["status"], "pass")
+        self.assertFalse(result["experimentalValidation"])
+
     def test_cuda_reference_parity_for_316l_registry_material(self):
         """Check CUDA parity only for the existing estimated-legacy 316L snapshot."""
         try:

@@ -1,3 +1,26 @@
+## 2026-09-27 — Actual CUDA endpoint correction (numerical backend evidence)
+
+PyTorch now uses the existing CPU/Warp endpoint roundoff snap rule. Before
+the correction, the real 40 W / 800 mm/s / 40 micrometre mesh pilot took
+1606 GPU versus 1605 CPU steps; four regression assertions failed. After
+the three-line correction, the unchanged regression passed on actual CUDA.
+Parent independently reran it (**1/1 PASS**, no skip, 25.700 s); the agent's
+three related CUDA regressions also passed. No acceptance threshold changed.
+
+The [full comparison report](docs/LPBF_GPU_ENDPOINT_REGRESSION_2026-09-27.json)
+records 3969 cells, 1605 steps on both backends, final time 0.00145 s, temperature
+rise relative L2 `6.760651397343335e-9` and max `9.062182562735324e-9`.
+Energy terms and 40/40/120 micrometre width/depth/length pass the existing
+gates. The implementation fingerprint is
+`e8d5695b39d2d05eb2d17a78fcafcae0b4d6fa13c623752065ea243f95b7ba06`;
+removing only the three new lines from its exact bytes reproduces the frozen
+prior `d0c160f286f3287248f6163327cf7962a384b2540efe38768092232d74fa9522`.
+
+This is one scoped CPU/PyTorch numerical parity case. Geometry is underresolved;
+it is not experimental validation, mesh/time convergence, Warp revalidation,
+full field archival or an end-to-end speed benchmark. The original failed
+browser job `d970096774274794a60b8494fba58f73` remains intact as failed evidence.
+
 ## 2026-09-27 — IN625 property archive API and live UI (software evidence)
 
 Two exact-byte property catalogs now use `material-characterization` scope.
