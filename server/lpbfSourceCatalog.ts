@@ -203,6 +203,84 @@ export function nistOpticalOfficialWorkbookCatalogEntry(root = path.resolve('dat
   } };
 }
 
+/** NIST supplemental IN718 bare-plate single-track data; cataloged as measured
+ * data, but the published groups are outside this application's conduction-model window.
+ */
+export function nistSupplementalIn718CatalogEntry(root = path.resolve('data/benchmark/nist-mds2-2923-in718/official')): LpbfSourceCatalogEntry {
+  const datasetId = 'nist-mds2-2923-in718-supplement-v1';
+  const manifestSha256 = '7e7f380d5902dc04385941a4222c8356619d747861694ca6d2d7517daef95b44';
+  return { datasetId, title: 'NIST supplemental IN718 bare-plate tracks · mds2-2923', sourceRoot: root,
+    loadDocument() {
+      const manifestPath = path.join(artifactDirectory(root), 'manifest.json');
+      const manifestStat = lstatSync(manifestPath);
+      if (manifestStat.isSymbolicLink() || !manifestStat.isFile() || manifestStat.size > 1024 * 1024) {
+        throw new Error('Invalid NIST supplemental IN718 manifest file');
+      }
+      const manifestBytes = readFileSync(manifestPath);
+      if (createHash('sha256').update(manifestBytes).digest('hex') !== manifestSha256) {
+        throw new Error('NIST supplemental IN718 manifest SHA-256 mismatch');
+      }
+      const manifest = JSON.parse(manifestBytes.toString('utf8'));
+      const files = manifest.files;
+      if (manifest.schema_version !== 1 || manifest.dataset_id !== datasetId || manifest.version !== '1.0.0'
+        || manifest.material !== 'IN718' || manifest.process_scope !== 'bare-plate'
+        || manifest.artifact_kind !== 'publisher-workbook-and-readme'
+        || !Array.isArray(files) || files.length !== 2 || !Array.isArray(manifest.measurements)
+        || manifest.measurements.length !== 6) {
+        throw new Error('NIST supplemental IN718 manifest identity mismatch');
+      }
+      const expectedFiles = [
+        { path: '2923_README.txt', sourceUrl: 'https://data.nist.gov/od/ds/mds2-2923/2923_README.txt',
+          bytes: 8372, sha256: '8b8fc00ce62915af3e0c91c138dc4d033c031d7758161fb9da0e8702fa621c39' },
+        { path: 'Master_TrackList_Measurements.xlsx', sourceUrl: 'https://data.nist.gov/od/ds/mds2-2923/Master_TrackList_Measurements.xlsx',
+          bytes: 59141, sha256: '6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52' },
+      ];
+      for (const [index, expected] of expectedFiles.entries()) {
+        const file = files[index];
+        if (file?.path !== expected.path || file?.source_url !== expected.sourceUrl
+          || file?.bytes !== expected.bytes || file?.sha256 !== expected.sha256) {
+          throw new Error('NIST supplemental IN718 artifact identity mismatch');
+        }
+        const filename = path.join(artifactDirectory(root), expected.path);
+        const stat = lstatSync(filename);
+        if (stat.isSymbolicLink() || !stat.isFile() || stat.size !== expected.bytes
+          || createHash('sha256').update(readFileSync(filename)).digest('hex') !== expected.sha256) {
+          throw new Error('NIST supplemental IN718 artifact integrity mismatch');
+        }
+      }
+      const observations = manifest.measurements.map((row: any) => ({
+        part: row.machine,
+        caseAndLine: `${row.laserPower_W} W · ${row.scanSpeed_mm_s} mm/s · D4σ ${row.beamDiameter_um} µm`,
+        measuredWidth_um: row.meanWidth_um,
+        widthUncertainty_k2_um: row.expandedWidthUncertainty_k2_um,
+        measuredDepth_um: row.meanDepth_um,
+        depthUncertainty_k2_um: row.expandedDepthUncertainty_k2_um,
+        observationCount: row.observationCount,
+        imagePath: 'Master_TrackList_Measurements.xlsx#Summary',
+      }));
+      return validateSourceDocument({ schemaVersion: 1, datasetId, materialId: 'in718', processScope: 'bare-plate',
+        source: { url: 'https://doi.org/10.18434/mds2-2923', citation: manifest.citation,
+          version: manifest.version, terms: 'NIST Open License: https://www.nist.gov/open/license', termsMissingReason: null },
+        artifacts: files.map((file: any) => ({ relativePath: file.path, sha256: file.sha256,
+          byteSize: file.bytes, sourceUrl: file.source_url })),
+        sourceContext: { schema_version: 1, dataset_id: datasetId, source_version: manifest.version,
+          publisher_artifact_kind: manifest.artifact_kind,
+          checksum_authority: 'Locally computed SHA-256 of the bytes downloaded from the NIST publication URLs; no publisher sidecar is supplied for these two files.',
+          experiment: { process_scope: 'bare-plate', material_scope: 'IN718 rows extracted from a multi-alloy NIST workbook',
+            surface_condition: '320 grit where recorded', machine: 'EOS M290 and NIST AMMT',
+            track_length_mm: null, track_length_missing_reason: 'Not established for every supplemental group in the archived workbook.',
+            heat_treatment_missing_reason: 'Not established in the publisher workbook.' },
+          measurement: { quantity: 'optical cross-section melt-pool width and depth', unit_source: 'µm',
+            beam_diameter_definition: 'D4σ; estimated for EOS M290 and measured for AMMT',
+            repeat_group_rule: 'Use the six publisher Summary groups and their stated measurement counts and expanded uncertainties; row count is not assumed to equal independent builds.' },
+          observations, split: 'unassigned', unresolved: [
+            'All six group means have depth-to-spot-radius ratios above 3.0 using the reported spot diameters, outside the conduction-model window; these measurements are not eligible for validation of the present surface-conduction model.',
+            'The EOS M290 spot diameter is estimated; AMMT spot diameter is measured. The archived workbook does not include full beam-profile artifacts.',
+            'The publisher data are measured bare-plate geometry, not powder-bed or thermal-history validation.',
+          ] } });
+    } };
+}
+
 /** Original NIST case 0 cross-sections and publisher checksum sidecars.
  * This is a separate experimental source revision; catalog discovery does not hash
  * the 125 MB image set. Preview/import stream-verify every artifact byte.

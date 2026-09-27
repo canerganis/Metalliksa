@@ -8,12 +8,76 @@ import express from 'express';
 import { createLpbfSourcesRouter } from '../routes/lpbfSources';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistIn718CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry,
-  nistOpticalCase0MicrographsCatalogEntry } from '../server/lpbfSourceCatalog';
+  nistSupplementalIn718CatalogEntry, nistOpticalCase0MicrographsCatalogEntry } from '../server/lpbfSourceCatalog';
 
 const sourceRoot = path.resolve('data/benchmark/nist-amb2022-03-optical');
 const datasetId = 'nist-amb2022-03-optical-table4-local-v1';
 const artifact = 'table4-aggregate-v2.json';
 const sha = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+
+test('NIST mds2-2923 IN718 supplemental source preserves measurement uncertainty and conduction limits', () => {
+  const root = path.resolve('data/benchmark/nist-mds2-2923-in718/official');
+  const manifestBytes = readFileSync(path.join(root, 'manifest.json'));
+  assert.equal(sha(manifestBytes), '7e7f380d5902dc04385941a4222c8356619d747861694ca6d2d7517daef95b44');
+  const manifest = JSON.parse(manifestBytes.toString('utf8'));
+  const document = nistSupplementalIn718CatalogEntry(root).loadDocument() as any;
+  assert.equal(document.datasetId, 'nist-mds2-2923-in718-supplement-v1');
+  assert.equal(document.source.url, 'https://doi.org/10.18434/mds2-2923');
+  assert.equal(document.source.terms, 'NIST Open License: https://www.nist.gov/open/license');
+  assert.equal(document.sourceContext.observations.length, 6);
+  assert.deepEqual(document.sourceContext.observations.map((row: any) => [row.measuredWidth_um,
+    row.widthUncertainty_k2_um, row.measuredDepth_um, row.depthUncertainty_k2_um, row.observationCount]),
+  manifest.measurements.map((row: any) => [row.meanWidth_um, row.expandedWidthUncertainty_k2_um,
+    row.meanDepth_um, row.expandedDepthUncertainty_k2_um, row.observationCount]));
+  assert.ok(manifest.measurements.every((row: any) => row.meanDepth_um / (row.beamDiameter_um / 2) > 3));
+  assert.ok(document.sourceContext.unresolved[0].includes('not eligible for validation'));
+  assert.ok(new LpbfSourceArchiveService().catalog().sources.some(item => item.datasetId === document.datasetId));
+  for (const file of manifest.files) {
+    const bytes = readFileSync(path.join(root, file.path));
+    assert.equal(file.bytes, bytes.length);
+    assert.equal(file.sha256, sha(bytes));
+  }
+});
+
+test('NIST supplemental source rejects a changed local measurement transcription', t => {
+  const source = path.resolve('data/benchmark/nist-mds2-2923-in718/official');
+  const root = mkdtempSync(path.join(tmpdir(), 'lpbf-nist-2923-manifest-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const name of ['2923_README.txt', 'Master_TrackList_Measurements.xlsx']) {
+    copyFileSync(path.join(source, name), path.join(root, name));
+  }
+  const manifest = JSON.parse(readFileSync(path.join(source, 'manifest.json'), 'utf8'));
+  manifest.measurements[0].meanWidth_um += 0.1;
+  writeFileSync(path.join(root, 'manifest.json'), JSON.stringify(manifest));
+  assert.throws(() => nistSupplementalIn718CatalogEntry(root).loadDocument(), /manifest SHA-256 mismatch/i);
+});
+
+test('NIST supplemental source previews, imports and verifies in the persistent source API', async t => {
+  const storage = mkdtempSync(path.join(tmpdir(), 'lpbf-nist-2923-source-store-'));
+  t.after(() => rmSync(storage, { recursive: true, force: true }));
+  const sourceId = 'nist-mds2-2923-in718-supplement-v1';
+  const entry = nistSupplementalIn718CatalogEntry(path.resolve('data/benchmark/nist-mds2-2923-in718/official'));
+  const service = new LpbfSourceArchiveService(storage, [entry]);
+  const app = express(); app.use(createLpbfSourcesRouter(service));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  t.after(() => new Promise<void>(resolve => server.close(() => resolve())));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}/api/lpbf/sources`;
+  const post = (suffix: string, body = {}) => fetch(`${base}/${sourceId}/${suffix}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const previewResponse = await post('preview');
+  assert.equal(previewResponse.status, 200);
+  const preview = await previewResponse.json();
+  assert.equal(preview.artifactCount, 2);
+  assert.equal(preview.document.sourceContext.observations.length, 6);
+  assert.equal(preview.evidenceStatus, 'unreviewed-source-archive');
+  const imported = await (await post('import', { expectedRevision: 0, documentSha256: preview.documentSha256 })).json();
+  assert.equal(imported.revision.revision, 1);
+  const verified = await (await post('verify')).json();
+  assert.equal(verified.artifactIntegrity, 'verified-now');
+  assert.equal(verified.datasetId, sourceId);
+});
 
 test('optical Table 4 catalog identifies local transcription, six-measurement SD and exact artifact bytes', () => {
   const manifest = JSON.parse(readFileSync(path.join(sourceRoot, 'manifest.json'), 'utf8'));

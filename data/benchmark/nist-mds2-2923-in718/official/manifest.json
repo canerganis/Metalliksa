@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "dataset_id": "nist-mds2-2923-in718-supplement-v1",
+  "version": "1.0.0",
+  "material": "IN718",
+  "process_scope": "bare-plate",
+  "artifact_kind": "publisher-workbook-and-readme",
+  "citation": "Weaver, Deisenroth, Mekhontsev, Heigel, and Lane (2023), Single-track laser scan cross-sectional micrographs on IN625 and IN718 bare plates with melt pool depth and width measurements, NIST, Version 1.0.0, DOI 10.18434/mds2-2923.",
+  "files": [
+    {
+      "path": "2923_README.txt",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2923/2923_README.txt",
+      "bytes": 8372,
+      "sha256": "8b8fc00ce62915af3e0c91c138dc4d033c031d7758161fb9da0e8702fa621c39"
+    },
+    {
+      "path": "Master_TrackList_Measurements.xlsx",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2923/Master_TrackList_Measurements.xlsx",
+      "bytes": 59141,
+      "sha256": "6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52"
+    }
+  ],
+  "measurements": [
+    { "machine": "EOS M290", "beamDiameter_um": 80, "beamDiameterSource": "estimated", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 18, "meanWidth_um": 141.3363888888889, "widthStdDev_um": 2.7230069481860064, "expandedWidthUncertainty_k2_um": 5.92242143892606, "meanDepth_um": 122.3881111111111, "depthStdDev_um": 2.0901070867271194, "expandedDepthUncertainty_k2_um": 12.336597513789796 },
+    { "machine": "AMMT", "beamDiameter_um": 63.1674432, "beamDiameterSource": "measured", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 12, "meanWidth_um": 133.30491666666666, "widthStdDev_um": 7.0344609466970605, "expandedWidthUncertainty_k2_um": 6.907150161832442, "meanDepth_um": 161.2254166666667, "depthStdDev_um": 17.931003122871175, "expandedDepthUncertainty_k2_um": 19.431272853783117 },
+    { "machine": "AMMT", "beamDiameter_um": 70.09812, "beamDiameterSource": "measured", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 6, "meanWidth_um": 134.5585, "widthStdDev_um": 7.86782175064992, "expandedWidthUncertainty_k2_um": 8.979156593308359, "meanDepth_um": 131.41666666666669, "depthStdDev_um": 5.081998255279776, "expandedDepthUncertainty_k2_um": 13.966450317479932 },
+    { "machine": "AMMT", "beamDiameter_um": 59.052, "beamDiameterSource": "measured", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 6, "meanWidth_um": 123.81766666666665, "widthStdDev_um": 3.3102313917106505, "expandedWidthUncertainty_k2_um": 5.900205345641692, "meanDepth_um": 177.49249999999998, "depthStdDev_um": 5.547964518632039, "expandedDepthUncertainty_k2_um": 18.477465097672606 },
+    { "machine": "AMMT", "beamDiameter_um": 48.25168, "beamDiameterSource": "measured", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 6, "meanWidth_um": 111.65183333333333, "widthStdDev_um": 2.7892990099067307, "expandedWidthUncertainty_k2_um": 5.258186152829317, "meanDepth_um": 244.88783333333333, "depthStdDev_um": 2.61600484836452, "expandedDepthUncertainty_k2_um": 24.630114031400232 },
+    { "machine": "AMMT", "beamDiameter_um": 74.34128, "beamDiameterSource": "measured", "laserPower_W": 285, "scanSpeed_mm_s": 960, "observationCount": 12, "meanWidth_um": 139.30666666666667, "widthStdDev_um": 7.033377480832289, "expandedWidthUncertainty_k2_um": 7.093732920694117, "meanDepth_um": 140.41341666666668, "depthStdDev_um": 5.9196714045526875, "expandedDepthUncertainty_k2_um": 14.533208147684654 }
+  ]
+}

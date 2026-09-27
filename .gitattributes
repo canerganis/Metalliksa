@@ -1,0 +1,2 @@
+/data/benchmark/nist-mds2-2923-in718/official/2923_README.txt -text whitespace=-blank-at-eol,-blank-at-eof
+/data/benchmark/nist-mds2-2923-in718/official/manifest.json -text
