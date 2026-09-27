@@ -1,3 +1,22 @@
+## 2026-09-27 — Lossless GPU field artifact foundation (software evidence)
+
+The new Python writer/reader and TypeScript descriptor/reader preserve explicit
+little-endian float64 final coordinates, temperature (K), volumetric excess
+enthalpy relative to initial temperature (J/m^3), density and accepted timesteps
+for both CPU and GPU. Shape, units, resource bounds, hashes, finite values,
+advancing sequential clocks and ordinary filesystem ancestry are checked.
+Backend states may differ: this preserves failed-parity evidence and never
+declares parity by itself. Lossy mixed-list/oversized integer conversion is
+rejected before conversion; writer arrays explicitly require NumPy ndarrays.
+
+After a reproduced precision defect and correction, parent integration checks
+passed: Python `test_lpbf_gpu_pilot_artifacts` **10/10**, TypeScript descriptor
+and reader **8/8**, no skips. They include Python-to-TypeScript binary fidelity,
+100000-step sequential clock, negative excess enthalpy, corrupt/rehashed
+nonfinite values, changed file size and Windows junction rejection. Fixtures
+are synthetic software checks. This foundation is not yet wired into actual
+solver production, GPU job capture or archive/restore; those remain open.
+
 ## 2026-09-27 — Completed frozen CPU time refinement (numerical evidence)
 
 The 5 micrometre, 50/25/12.5 ns diagnostic completed all three levels
