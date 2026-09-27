@@ -36,6 +36,9 @@ TOLERANCES = {
     "surface_recession_abs_um": 0.05,
     "pressure_linear_residual_abs": 2.0e-5,
     "post_projection_divergence_rel_abs": 2.0e-5,
+    "post_projection_divergence_max_scaled_rel": 2.0e-5,
+    "energy_ledger_closure_relative_max": 1.0e-3,
+    "energy_terms_absorbed_scale_rel": 1.0e-5,
 }
 
 
@@ -45,7 +48,8 @@ def _run(device):
     solver = TransientEnthalpy3DGPU(nx=nx, ny=ny, nz=nz, dx=dx, dy=dx, dz=dx)
     solver.device = device
     result = solver.solve_toolpath(
-        CASE["toolpath"], T_preheat_K=CASE["initial_temperature_K"]
+        CASE["toolpath"], T_preheat_K=CASE["initial_temperature_K"],
+        include_energy_ledger=True,
     )
     return result
 
@@ -86,6 +90,21 @@ class Phase22MultistepCudaParity(unittest.TestCase):
 
         self.assertEqual(cpu["steps"], cuda["steps"])
 
+        # The max-divergence scalar has units of 1/s. Normalize its backend
+        # difference by the characteristic transport rate U/h before applying
+        # a dimensionless tolerance, so mesh and case scale remain explicit.
+        transport_rate_scale = max(
+            cpu["max_velocity_m_s"], cuda["max_velocity_m_s"], 1e-30
+        ) / CASE["spacing_m"]
+        max_divergence_delta_scaled = abs(
+            cpu["pressure_projection_post_divergence_max_s_inv"]
+            - cuda["pressure_projection_post_divergence_max_s_inv"]
+        ) / transport_rate_scale
+        self.assertLessEqual(
+            max_divergence_delta_scaled,
+            TOLERANCES["post_projection_divergence_max_scaled_rel"],
+        )
+
         self.assertLessEqual(
             abs(cpu["max_temperature_K"] - cuda["max_temperature_K"]),
             TOLERANCES["max_temperature_abs_K"],
@@ -108,6 +127,35 @@ class Phase22MultistepCudaParity(unittest.TestCase):
         self.assertLessEqual(
             abs(cpu["pressure_projection_post_divergence_relative_l2"]
                 - cuda["pressure_projection_post_divergence_relative_l2"]),
+            TOLERANCES["post_projection_divergence_rel_abs"],
+        )
+
+        cpu_ledger = cpu["energy_ledger"]
+        cuda_ledger = cuda["energy_ledger"]
+        for ledger in (cpu_ledger, cuda_ledger):
+            self.assertLessEqual(
+                ledger["closure"]["relative_error"],
+                TOLERANCES["energy_ledger_closure_relative_max"],
+            )
+        nominal_absorbed = cpu_ledger["laser_reference"]["nominal_absorbed_J"]
+        energy_difference_limit = (
+            TOLERANCES["energy_terms_absorbed_scale_rel"] * nominal_absorbed
+        )
+        self.assertEqual(set(cpu_ledger["terms_J"]), set(cuda_ledger["terms_J"]))
+        for term in cpu_ledger["terms_J"]:
+            self.assertLessEqual(
+                abs(cpu_ledger["terms_J"][term] - cuda_ledger["terms_J"][term]),
+                energy_difference_limit,
+                term,
+            )
+        self.assertLessEqual(
+            abs(cpu_ledger["enthalpy_J"]["change_total"]
+                - cuda_ledger["enthalpy_J"]["change_total"]),
+            energy_difference_limit,
+        )
+        self.assertLessEqual(
+            abs(cpu_ledger["closure"]["relative_error"]
+                - cuda_ledger["closure"]["relative_error"]),
             TOLERANCES["post_projection_divergence_rel_abs"],
         )
 
