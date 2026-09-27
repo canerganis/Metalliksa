@@ -1,3 +1,71 @@
+## 2026-09-27 — Five-case continuation completed; convergence unresolved
+
+Session91816 exited0, completed17:34:27Z. Five unique cases retain equal
+before/after source fingerprint fbef0bde...1761c. Astra final admission PASS;
+root three exact byte bindings and last NPZ five array hashes/shape/finite PASS,
+without solving. One initial parent harness read used coords_m; the actual
+NPZ key is coordinates_m. Corrected readback passed; numerical files unchanged.
+
+Frozen mesh/time/overall verdict INCONCLUSIVE. Spatial depth passes, width
+corrections grow. Time finest W/D changes0.001837078%/0.002010655% are below
+the change limit, but corrections do not shrink. Thresholds/helpers unchanged.
+Maximum final energy closure3.5675957801988197e-13 PASS. Evidence admission
+is distinct from convergence acceptance and experimental validation.
+
+Last5um12.5ns NPZ526592cells/20000selectedsteps250us; final metadata28000steps/
+350us. No final dt tail is captured; no350us array clock/energy replay claim.
+Final report SHA196c8dc3db026914fe7590ace40b8f364cf76509f1626958574ab9f8c6f3ecb6;
+independent audit SHAe0aba914b523329707146d003db81d764df0d7d99257e295d7b11d67c1e2a720;
+last NPZ SHAd571784c1a65f1b2111d1484b6e4b2b45bcbdef416ca3d3bbc8124059847e9c7.
+Reports:docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27.json and
+LPBF_P4_FIXED_SCAN_END_FINAL_AUDIT_2026-09-27.json. Freeze readback completed;
+Warp fields and fair paired performance remain pending, no speedup claim.
+
+## 2026-09-27 — GPU Node integration tests pass; browser archive path missing
+
+Parent focused archive tests 24/24, expanded client/API/bundle/NIST/proxy tests
+48/48, UI/context/source selection tests 4/4, TypeScript lint and production
+build PASS, zero skips. Expanded tests include one small CPU workflow solve
+35.614s; this is software acceptance, not a fair benchmark or new GPU solve.
+Sol independent memory matrix 21/21 PASS with sixteen unchanged source hashes.
+
+Two defects were reproduced and closed before enabling the new server: exact
+capture snapshots compared equal JSON values with different object prototypes;
+the archive metadata path also omitted the public GPU parser, accepting false
+experimental-validation/device evidence. Exact producer strings remain bound.
+Failed/inconclusive parity records retain their status and are not CPU/NIST
+eligible. The initial 22/24 test result and independent metadata failures are
+historical failures, not overwritten by final PASS.
+
+Actual production API reuses completed job2bcb and official optical source
+revision1/SHA73293ca6...: preview200, twelve artifacts135737B, GPU bound capture
+and exact saved strings PASS. Browser keyboard source choice/reload persistence
+PASS; the reloaded view correctly reports bytes not checked in this view.
+However the CUDA result omits its own LpbfJobArchiver. The outer archiver uses
+CPU job state. Imported-source control count is0, so GPU browser import remains
+FAILED despite successful API preview and tests. Luna owns the narrow UI fix;
+Sol review and parent production acceptance are required. Retained report:
+docs/LPBF_GPU_NODE_ARCHIVE_BROWSER_2026-09-27.partial.json.
+
+### IN625 2019 primary sources: abstract evidence only
+
+Astra read the official abstracts for
+[Kaschnitz et al.](https://link.springer.com/article/10.1007/s10765-019-2490-8)
+and [Heugenhauser and Kaschnitz](https://www.oldcitypublishing.com/journals/hthp-home/hthp-issue-contents/hthp-volume-48-number-4-2019/17793-2/).
+The first reports diffusivity -120..1250C, DSC cp -170..1250C, expansion
+-150..1295C, room-temperature Archimedes density and derived conductivity.
+The second reports solid/mushy/liquid density and expansion up to1400C,
+initial930C/1h treatment and several heat cycles, with uncertainty analysis.
+Its HTML lower limit reads150C; no sign correction is inferred.
+
+Springer PDF redirects to subscription preview and official OCP PDF id9232
+returns Access Denied. Two targeted searches found no accessible author copy;
+this limited search does not prove none exists. Numerical tables, U values/
+factors, lot/chemistry/state binding remain unverified. Liquid cp/k, latent
+heat, liquidus, high-temperature coverage and applicable optical data remain
+missing. No property was imported and no full-model admission follows. IN625
+full gate remains UNVALIDATED; lawful full text/data acquisition is required.
+
 ## 2026-09-27 — Completed fine rows admitted; spatial width unresolved
 
 Astra independently admitted two completed5um rows from a stable partial
@@ -2536,3 +2604,32 @@ verified locally; catalog names are publisher metadata. TIFF bytes, sidecar
 hash contents, and the `_m` image meaning could not be verified because the
 official file endpoint was unavailable through the local proxy. No image
 segmentation or optical-boundary claim follows from this mapping.
+
+## 2026-09-27 — Native Warp capture and CPU field parity
+
+- **Scope:** one standard/reference IN718 single-layer powder-track case, 60 W, 1200 mm/s, 10 µm mesh, 200 µm track, 80 µm layer and 20 µs cooling. Case SHA-256 `cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73`.
+- **Source identity:** shared model `stationary-enthalpy-conduction-layer-conforming-v1`; material revision SHA-256 `c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06`; CPU observer SHA-256 `fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7`; CPU thermal core SHA-256 `4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879`; Warp solver SHA-256 `fc2d00c9f67cc535b6a5a46d4d75939dc8c71c2ec8d2d04f89b92282d8237ed0`.
+- **Observed result:** CUDA RTX 4060 Warp native state capture and CPU final observer both passed the shared five-array/three-scalar codec checks. CPU/Warp grid coordinates and accepted-dt arrays matched exactly (73,568 cells, 934 steps); endpoint was 186.66666666666666 µs. Frozen temperature parity target is 1%; observed rise-relative L2 `6.807859370994367e-17` and maximum `1.5847157496042588e-16`, PASS. Density arrays matched exactly. Volumetric excess enthalpy integrals matched at `0.0037997413708473005 J`; full enthalpy relative L2 `5.884161624660655e-17`.
+- **Evidence file:** [`docs/LPBF_WARP_CPU_NUMERICAL_COMPARISON_2026-09-27.json`](docs/LPBF_WARP_CPU_NUMERICAL_COMPARISON_2026-09-27.json), SHA-256 `5b263290eca7b28f3c9937da11be3dd7c3976f2ac160d7af80e98e476d671e68`. Its class is model output plus software/numerical check, with `experimentalValidation: false`. One pair is not performance evidence. This does not make Warp an admitted archive backend; current archive/API solver identity remains Torch-bound.
+- **Verification:** native opt-in test 3/3 PASS, including actual CUDA capture. Warp source review found no capture unit/state bug; native execution then confirmed output. A Windows temporary-directory cleanup warning occurred after test completion (exit 0). No threshold or material source changed.
+
+## 2026-09-27 — Same-case Torch/Warp timing and Torch/CPU parity
+
+- **Timed case:** canonical IN718 case SHA `cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73`, 73,568 cells and 934 steps on an RTX 4060. One warm-up preceded three alternating measured trials per backend.
+- **Measured:** Torch median `10.4826513 s` (spread `0.1782491 s`); Warp median `8.1017608 s` (spread `0.3819302 s`); Torch/Warp ratio `1.2938732`. This is preliminary one-session, case-specific runtime evidence. There is no stage-level profiler attribution and no claim of application-wide speedup.
+- **Separate result-preservation checks:** [CPU/Warp](docs/LPBF_WARP_CPU_NUMERICAL_COMPARISON_2026-09-27.json) and [CPU/Torch](docs/LPBF_TORCH_CPU_NUMERICAL_COMPARISON_2026-09-27.json) both pass the frozen temperature parity gates for the exact canonical input. The timing calls themselves did not capture fields; timing and parity evidence are separate.
+- **Benchmark report:** `docs/LPBF_GPU_BACKEND_ALTERNATING_BENCHMARK_2026-09-27.json`, SHA-256 `407ab9f8bf3b70d614ea346f55e13e10cf33668d7184133fbf589ac4b499b681`. Model runtime only; not experimental validation.
+
+## 2026-09-27 — Independent IN718 measurement candidate gate (not admitted)
+
+Yang et al. 2025 Case C is a useful conduction-regime **candidate**, not a completed validation. The NIST-hosted paper reports 195 W and 1200 mm/s on wrought bare IN718 plate, an estimated D4σ=100 µm beam spot, and four 10 mm scans. It describes Case C as conduction mode and reports approximate EBSD-derived melt-pool dimensions of 56 µm width and 84 µm depth. Thermography statistics aggregate 42 in-focus pixel curves across three tracks; the paper's data statement refers additional requests to the authors. The spot is estimated, no measured beam profile/absorbed-power uncertainty is pinned, and the EBSD-derived boundary is not independently shown equivalent to the model's ever-liquidus contour. These gaps prevent a source/input/observable-matched uncertainty comparison. No model solve or experimental-validation claim was made. [Official NIST-hosted full paper](https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=958155)
+
+NIST AM-Bench 2022 provides bare-plate single-track measurements and expanded (k=2) geometry uncertainty, but its baseline condition is 285 W, 960 mm/s, 67 µm D4σ and the reported cases have depth-to-half-width aspect ratios above one. Its carefully etched/resolidified boundary and process regime require an explicit fit to this model's conduction/threshold observable before acceptance. It is not a generic IN718 validation row. [Official NIST paper and data description](https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=957295)
+
+Decision: **experimental validation remains unvalidated**. Preserve the measured observations as source evidence; do not mix them with Metalliksa predictions or synthetic values.
+
+## 2026-09-27 — CUDA source-integration test and profiler boundary
+
+- The optional CUDA source/timestep integration path passed all ten CPU-comparison fields for the exact canonical case: final sampling, temperature, input/loss/stored energy, peak temperature, geometry and melt volume. CPU-source and CUDA-source modes each used 73,568 cells/934 steps. The CUDA-source parity report is `docs/LPBF_TORCH_CUDA_SOURCE_CPU_PARITY_2026-09-27.json`, SHA-256 `9a31aa6f78e757db8467eab2ea43e78114dc2a9b034796226b421ba00a2c8e10`; this is model-output/software evidence, not experiment.
+- A three-trial alternating wall benchmark measured CPU-source median `10.5177666 s` (spread `0.1577484 s`) and CUDA-source median `10.3227514 s` (spread `0.0978114 s`), a `1.01889x` ratio. This one-session `~1.9%` difference is small and not enough to change the default. Report SHA-256 `cec05e37cc300d14d4bd32627979a773de10a0adf6c96c1399e593efb197ed97`.
+- One instrumented default-path run recorded 149,447 `cudaLaunchKernel` host API calls, 12,245 asynchronous copies, and 12,245 stream synchronizations. PyTorch's device-side kernel time fields were all zero in this environment, so GPU-kernel attribution is **partial/unavailable**. Profiler tracing changed runtime and is not benchmark evidence. Report SHA-256 `6f80da165cdf077c3aabaa6d44f04402ce53d9be308a6ca30bc34deb688c6022`.

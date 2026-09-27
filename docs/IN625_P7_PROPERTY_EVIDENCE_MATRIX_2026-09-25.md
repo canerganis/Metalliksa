@@ -210,3 +210,28 @@ The new files are **source-inspected, unverified candidates for admission**;
 `sourceValidityRange_K` for the current runtime snapshot remains `null`,
 full-transient/build-job stay closed, and experimental validation remains
 unestablished.
+
+## 2026-09-27 source and runtime gate re-audit
+
+The `in625_thermal_material.py` property coefficients were not changed in the
+current working diff. Sabau et al. 2020 Appendix B reproduces the solid
+`Cp(T)` and `k(T)` curves as JMatPro-calculated values; its setup lists liquid
+`Cp=700 J/(kg K)`, liquid `k=30 W/(m K)`, latent heat `290 kJ/kg`, and a
+linear liquid fraction across 1290–1350 °C as model inputs. These are not
+independent measurements of the target powder/substrate lot and the article
+does not establish quantified property uncertainty for this runtime table.
+The 273.15 K enthalpy reference and linear mushy-region Cp/k bridges are local
+model choices, not source-validated ranges. [Sabau et al. 2020](https://link.springer.com/article/10.1007/s11663-020-01808-w)
+
+Special Metals' separate bulletin labels its Cp table calculated; it identifies
+the conductivity table as Battelle measurements on material annealed at
+2100 °F for one hour and reports density 8.44 g/cm³. The bulletin does not
+establish the same AM lot, density-vs-temperature, liquid/powder density, or
+quantified uncertainty. [Special Metals IN625 bulletin, p. 2](https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-625.pdf)
+
+The new helper's hash/content `accepted` result pins the current generated
+screening snapshot; it does not independently hash the source paper or close
+the scientific uncertainty gate. Capability remains `unvalidated`,
+`sourceValidityRange_K: null`, `fullTransientAdmitted: false`, and
+`experimentalValidation: false`. IN625 therefore remains **thermal-screening-
+only**; full transient and build-job admission are not supported.

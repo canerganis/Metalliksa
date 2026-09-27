@@ -1,0 +1,383 @@
+{
+  "case": {
+    "backend": "reference",
+    "cooling_s": 2e-05,
+    "dwell_s": 0,
+    "layer_um": 80,
+    "material": "Inconel 718",
+    "maxDt_s": 2e-07,
+    "mesh_um": 10,
+    "mode": "standard",
+    "powderGridPolicy": "layer-conforming",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "trackLength_um": 200
+  },
+  "caseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+  "createdAtUtc": "2026-09-27T18:33:45.552598+00:00",
+  "device": {
+    "cudaRuntime": "12.6",
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu126"
+  },
+  "discretization": {
+    "cells": 73568,
+    "maximumDt_s": 2e-07,
+    "meanDt_s": 1.9985724482512492e-07,
+    "mesh_m": 9.999999999999999e-06,
+    "minimumDt_s": 6.666666666429208e-08,
+    "steps": 934
+  },
+  "evidenceClass": "instrumented-software-diagnostic",
+  "experimentalValidation": false,
+  "kind": "lpbf-torch-profiler-diagnostic",
+  "limitations": [
+    "Profiler instrumentation changes wall time; profiled wall duration is diagnostic, not benchmark evidence.",
+    "Single run, one case; operator totals do not alone establish causality or a safe optimization.",
+    "Model output; no experimental validation."
+  ],
+  "operatorKeyCount": 113,
+  "profiledRunWall_s": 33.2444039999973,
+  "profilerAssessment": {
+    "cudaDeviceKernelTiming": "unavailable; all recorded CUDA time fields are zero",
+    "hostRuntimeSignals": {
+      "cudaLaunchKernelCalls": 149447,
+      "cudaLaunchKernelSelfCpu_ms": 4390.8065,
+      "cudaMemcpyAsyncCalls": 12245,
+      "cudaMemcpyAsyncSelfCpu_ms": 1084.3253,
+      "cudaStreamSynchronizeCalls": 12245,
+      "cudaStreamSynchronizeSelfCpu_ms": 1078.278
+    },
+    "interpretation": "Host dispatch and synchronization overhead is visible; device-side kernel bottleneck cannot be attributed from this profiler capture.",
+    "status": "partial"
+  },
+  "schemaVersion": 1,
+  "sources": {
+    "cpuThermalCoreSha256": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+    "torchSolverSha256": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7"
+  },
+  "topOperatorsBySelfCpuTime": [
+    {
+      "calls": 149447,
+      "operator": "cudaLaunchKernel",
+      "selfCpu_ms": 4390.806500000279,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 4609.014700000278,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 12245,
+      "operator": "cudaMemcpyAsync",
+      "selfCpu_ms": 1084.3253000000752,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1084.5925000000746,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 12245,
+      "operator": "cudaStreamSynchronize",
+      "selfCpu_ms": 1078.2779999999507,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1078.2779999999507,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 27086,
+      "operator": "aten::mul",
+      "selfCpu_ms": 566.8855999999582,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1381.4809000000357,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 16812,
+      "operator": "aten::index",
+      "selfCpu_ms": 459.9132999998862,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1037.2857999998844,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 16812,
+      "operator": "aten::sub",
+      "selfCpu_ms": 341.6801999999385,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 815.6091000000604,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 14944,
+      "operator": "aten::div",
+      "selfCpu_ms": 274.5441999998783,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 650.2298999998708,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 44832,
+      "operator": "aten::slice",
+      "selfCpu_ms": 240.71520000009693,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 297.49889999998055,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 36,
+      "operator": "Runtime Triggered Module Loading",
+      "selfCpu_ms": 206.62610000000015,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 206.62610000000015,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 10274,
+      "operator": "aten::add",
+      "selfCpu_ms": 192.25089999992483,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 470.04429999999434,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 12142,
+      "operator": "aten::add_",
+      "selfCpu_ms": 177.8532999998067,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 549.5436999998896,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 7472,
+      "operator": "aten::where",
+      "selfCpu_ms": 164.97830000003958,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 606.368600000018,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 5604,
+      "operator": "aten::bitwise_and",
+      "selfCpu_ms": 145.17129999999074,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 330.9094999999944,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 9341,
+      "operator": "aten::_local_scalar_dense",
+      "selfCpu_ms": 139.59180000008917,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1278.1302000000726,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 22419,
+      "operator": "aten::select",
+      "selfCpu_ms": 137.38140000002818,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 166.74350000003722,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 16817,
+      "operator": "aten::empty",
+      "selfCpu_ms": 131.39629999975307,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 131.39629999975307,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 93404,
+      "operator": "aten::as_strided",
+      "selfCpu_ms": 130.14099999985007,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 130.14099999985007,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3737,
+      "operator": "aten::sum",
+      "selfCpu_ms": 127.58820000000252,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 348.52429999992347,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3736,
+      "operator": "aten::clamp",
+      "selfCpu_ms": 113.63649999998027,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 249.36809999997163,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 4670,
+      "operator": "aten::ge",
+      "selfCpu_ms": 112.4159999999248,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 265.13159999995054,
+      "totalCuda_ms": 0.0
+    }
+  ],
+  "topOperatorsBySelfCudaTime": [
+    {
+      "calls": 942,
+      "operator": "aten::lift_fresh",
+      "selfCpu_ms": 4.201799999998446,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 4.201799999998446,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3,
+      "operator": "cudaGetDeviceCount",
+      "selfCpu_ms": 0.004199999999998909,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 0.004199999999998909,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 21,
+      "operator": "Unrecognized",
+      "selfCpu_ms": 28.44119999999716,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 28.44119999999716,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3,
+      "operator": "cudaGetDeviceProperties_v2",
+      "selfCpu_ms": 0.012599999999998545,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 0.012599999999998545,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 11404,
+      "operator": "aten::to",
+      "selfCpu_ms": 25.867800000075718,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1420.0042000000062,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3838,
+      "operator": "aten::_to_copy",
+      "selfCpu_ms": 49.38269999979597,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1394.1363999999305,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 5708,
+      "operator": "aten::empty_strided",
+      "selfCpu_ms": 75.66790000005318,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 175.30360000005376,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 1,
+      "operator": "cudaDeviceGetStreamPriorityRange",
+      "selfCpu_ms": 92.23869999999998,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 97.42139999999999,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 2,
+      "operator": "Instrumentation",
+      "selfCpu_ms": 1.4660999999999913,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1.4660999999999913,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 4,
+      "operator": "Resource",
+      "selfCpu_ms": 3.7166000000000206,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 3.7166000000000206,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 2910,
+      "operator": "cudaStreamIsCapturing",
+      "selfCpu_ms": 55.95170000002979,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 55.95170000002979,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 6,
+      "operator": "cudaMalloc",
+      "selfCpu_ms": 1.2406999999999826,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1.2406999999999826,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 18785,
+      "operator": "aten::copy_",
+      "selfCpu_ms": 100.80450000000273,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1233.6832000000509,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 12245,
+      "operator": "cudaMemcpyAsync",
+      "selfCpu_ms": 1084.3253000000752,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1084.5925000000746,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 12245,
+      "operator": "cudaStreamSynchronize",
+      "selfCpu_ms": 1078.2779999999507,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 1078.2779999999507,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 942,
+      "operator": "Memcpy HtoD (Pageable -> Device)",
+      "selfCpu_ms": 0.0,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 0.0,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 1,
+      "operator": "aten::full",
+      "selfCpu_ms": 0.045,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 10.616399999999993,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 16817,
+      "operator": "aten::empty",
+      "selfCpu_ms": 131.39629999975307,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 131.39629999975307,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 3739,
+      "operator": "aten::fill_",
+      "selfCpu_ms": 42.06260000005356,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 164.01860000002173,
+      "totalCuda_ms": 0.0
+    },
+    {
+      "calls": 149447,
+      "operator": "cudaLaunchKernel",
+      "selfCpu_ms": 4390.806500000279,
+      "selfCuda_ms": 0.0,
+      "totalCpu_ms": 4609.014700000278,
+      "totalCuda_ms": 0.0
+    }
+  ]
+}

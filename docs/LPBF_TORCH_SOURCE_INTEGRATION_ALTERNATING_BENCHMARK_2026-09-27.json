@@ -1,0 +1,107 @@
+{
+  "case": {
+    "backend": "reference",
+    "cooling_s": 2e-05,
+    "dwell_s": 0,
+    "layer_um": 80,
+    "material": "Inconel 718",
+    "maxDt_s": 2e-07,
+    "mesh_um": 10,
+    "mode": "standard",
+    "powderGridPolicy": "layer-conforming",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "trackLength_um": 200
+  },
+  "caseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+  "createdAtUtc": "2026-09-27T18:30:43.588968+00:00",
+  "device": {
+    "cudaRuntime": "12.6",
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu126"
+  },
+  "evidenceClass": "measured-software-runtime",
+  "kind": "lpbf-torch-source-integration-alternating-benchmark",
+  "limitations": [
+    "Three alternating trials per source mode, one warmed session and one case only.",
+    "The timed calls capture counts, not full fields; output preservation is established separately by each mode\u2019s CPU parity report.",
+    "No stage-level profiler attribution; not an application-wide speed claim or experimental evidence."
+  ],
+  "protocol": {
+    "alternatingOrderUseCudaSource": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true
+    ],
+    "timingIncludes": "run_gpu allocation, source integration, thermal steps, and CUDA synchronization",
+    "trialsPerPath": 3,
+    "warmupsPerPathOutsideMeasuredTrials": 1
+  },
+  "sameCaseNumericalChecks": {
+    "bothCpuParityStatus": "pass",
+    "cpuSourceParitySha256": "f91c6ded14f98c47c9fcd36a66b58e9db61539a7e0487e004c3719f3d513019d",
+    "cpuSourcePathReport": "docs/LPBF_TORCH_CPU_NUMERICAL_COMPARISON_2026-09-27.json",
+    "cudaSourceParitySha256": "9a31aa6f78e757db8467eab2ea43e78114dc2a9b034796226b421ba00a2c8e10",
+    "cudaSourcePathReport": "docs/LPBF_TORCH_CUDA_SOURCE_CPU_PARITY_2026-09-27.json"
+  },
+  "schemaVersion": 1,
+  "sources": {
+    "cpuThermalCoreSha256": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+    "torchSolverSha256": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7"
+  },
+  "summary": {
+    "cpuSourceMedian_s": 10.517766600009054,
+    "cpuSourceOverCudaSource": 1.0188917849950603,
+    "cpuSourceSpread_s": 0.1577483999717515,
+    "cudaSourceMedian_s": 10.322751400002744,
+    "cudaSourceSpread_s": 0.09781140001723543,
+    "sameCellAndStepCounts": true
+  },
+  "trials": [
+    {
+      "cells": 73568,
+      "runtime_s": 10.605303699994693,
+      "sourceIntegrationDevice": "cpu",
+      "steps": 934,
+      "useCudaSource": false
+    },
+    {
+      "cells": 73568,
+      "runtime_s": 10.244275000004563,
+      "sourceIntegrationDevice": "cuda:0",
+      "steps": 934,
+      "useCudaSource": true
+    },
+    {
+      "cells": 73568,
+      "runtime_s": 10.342086400021799,
+      "sourceIntegrationDevice": "cuda:0",
+      "steps": 934,
+      "useCudaSource": true
+    },
+    {
+      "cells": 73568,
+      "runtime_s": 10.447555300022941,
+      "sourceIntegrationDevice": "cpu",
+      "steps": 934,
+      "useCudaSource": false
+    },
+    {
+      "cells": 73568,
+      "runtime_s": 10.517766600009054,
+      "sourceIntegrationDevice": "cpu",
+      "steps": 934,
+      "useCudaSource": false
+    },
+    {
+      "cells": 73568,
+      "runtime_s": 10.322751400002744,
+      "sourceIntegrationDevice": "cuda:0",
+      "steps": 934,
+      "useCudaSource": true
+    }
+  ]
+}

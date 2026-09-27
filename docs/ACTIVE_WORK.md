@@ -1,7 +1,72 @@
 # Active delegated LPBF work — 2026-09-27
 
+
+## Active implementation handoff — 2026-09-27
+
+User-selected shared checkout remains in force; no worktree move, staging, or
+commit. Luna owns the Warp v2 code package: `python/lpbf_worker.py`,
+`python/lpbf_gpu_thermal.py`, `python/lpbf_gpu_thermal_warp.py`, associated
+Python tests; and strict TS identity/archive/client/UI boundaries in
+`server/lpbfGpuRunIdentity.ts`, `server/lpbfGpuRunArchive.ts`,
+`server/lpbfRunRepository.ts`, `src/types/lpbfRun.ts`,
+`src/services/lpbfSimulationService.ts`, `src/services/lpbfRunArchiveClient.ts`,
+`server/lpbfRunImport.ts`, `server/lpbfRunArchiveService.ts`,
+`server/lpbfRunBundle.ts`, `src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx`,
+`src/components/LpbfRunArchivePanel.tsx`, with the nearest tests. Keep Torch v1
+unchanged; Warp is a strict v2 engine union. Root owns evidence/docs, parity/
+performance assessment and integration review; Sol/Astra are read-only auditors.
+
+GPU results on the captured same input: Warp-vs-Torch backend pilot ratio
+1.294x; moving Torch source integration CPU→CUDA only 1.019x; profiler exposes
+host dispatch/sync but no device-kernel times. Do not change the source default
+from this weak delta. CPU/Warp and CPU/Torch parity both pass. IN718 experiment
+remains unvalidated; IN625 remains screening-only; fine CPU convergence remains
+inconclusive.
+
+## Current checkpoint — 2026-09-27T18:18Z
+
+User chose the old shared checkout workflow and deferred worktree workflow. Do
+not move changes or create new worktrees. No commits have been made for the
+current packages; user requested committing them together later.
+
+- Fine scan-end CPU series and Node GPU archive UI/API package are complete at
+  their bounded scopes. Sol independently audited persisted run/source and
+  export/import/restore identity; no new solve or HTTP was run for that audit.
+- Warp opt-in state capture was implemented and reviewed. Actual CUDA test
+  passed, and a same-input CPU/Warp numerical report is saved (SHA `4fb7a039574524d8522253603f96bd7f31c21896ad754df87fc06cc2c90dbaf5`).
+  CPU/Warp model state is not yet integrated into the public archive contract.
+- An alternating RTX 4060 GPU pilot measured Torch median 10.483 s and Warp 8.102 s (three trials each); same-case CPU/Warp and CPU/Torch numerical gates both pass. No profiler attribution or application-wide speed claim.
+- IN625 remains screening-only; source audit did not establish uncertainty or
+  lot-matched experimental properties, so no full-transient admission.
+- Remaining: add or explicitly withhold Warp archive integration; repeated,
+  profiler-backed attribution and representative repeated performance checks; applicable independent
+  IN718 experiment; finish general source/run/result API/UI restore/export
+  checks; keep unresolved convergence and missing validation as unvalidated.
+- Next action: integrate a backend-neutral CPU/Torch/Warp evidence descriptor
+  only if exact solver/material/input identity remains preserved; otherwise
+  keep Warp diagnostic-only, then profile the measured hotspot before any
+  result-preserving optimization.
+
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
+
+User reverted the worktree workflow: continue in the original shared checkout.
+Three070aa37-based worktrees were created but no files copied or agents assigned;
+leave them idle. Separate scopes and root-only index remain. Commit after
+package acceptance. Fine91816 finished17:34:27Z/exit0; final admission PASS,
+mesh/time/overall INCONCLUSIVE, energyPASS, sourcefbef fixed. Numerical source
+freeze readback complete; Warp remains next separate implementation package.
+GPU UI path fix parent5/5+Sol10/10PASS; browser import/bundle acceptance pending.
+
+Node integration candidate: parent24+48+4 tests, lint/build PASS; Sol21 pure
+checks PASS. Initial prototype mismatch and metadata gate omissions are closed.
+Actual same GPU job/source rev1 preview200/12refs135737B PASS. Production
+browser source selection reload PASS, but GPU panel omits its own archiver.
+Luna now owns the narrow completed-bound GPU archiver UI/test fix (same16
+paths; only engineering UI/test expected to change); Sol independent review.
+Root owns real API/browser on new runtime session32477, HTTP4176/IPC5056,
+IABtab3 and evidence/docs/index. No new GPU solve. Fine PID6556 remains live;
+all numerical/protocol/wrapper sources stay frozen. Do not restart it.
 
 Numerical partial package: exact two-new-row snapshot25030a53... retained;
 Astra independent admission and root two-NPZ/ten-array/selected-clock readback
