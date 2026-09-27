@@ -1,3 +1,19 @@
+## 2026-09-27 — Development server isolation (software evidence)
+
+HMR now uses its application's HTTP listener instead of competing for the
+global 24678 port; `DISABLE_HMR` disables the WebSocket transport too.
+Two real HTTP/Vite instances passed connection and isolated-broadcast checks.
+The first integration test also exposed unrelated HTML dependency crawling and
+live optimizer-cache contention; its timeout remains recorded as a failed
+test attempt. The fixture now uses an isolated temporary root. Application
+dependency discovery is explicitly rooted at `index.html`, excluding bundled
+scientific documentation and standalone test pages as automatic entry points.
+A real dependency-scan regression failed before this change and passed after;
+the application import chain remains discoverable. Combined HMR, scanner and
+file-watcher tests: **4/4 PASS**. No full-application startup speedup or solver
+performance gain is claimed. Existing port 4176 process has not been restarted
+to adopt the server-entry HMR change.
+
 ## 2026-09-27 — GPU result integrity and observed parity failure
 
 Software integrity: restored/cached CUDA pilot results now bind their self-hash

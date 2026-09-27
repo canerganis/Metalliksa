@@ -6,6 +6,10 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    optimizeDeps: {
+      // Only the SPA is an entry point; bundled scientific docs are not apps.
+      entries: ['index.html'],
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
