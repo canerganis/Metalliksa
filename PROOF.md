@@ -1,3 +1,73 @@
+## 2026-09-27 — Bounded new IN625 source review keeps full admission closed
+
+Astra checked the existing property matrix/runtime gate and made two targeted
+primary-source searches, inspecting one new open candidate:
+Rutkowski et al.2023, doi:10.1007/s10973-023-12259-1,
+https://link.springer.com/article/10.1007/s10973-023-12259-1 .
+Its SPS IN625 control has a different state from the target LPBF powder/plate.
+The inspected material does not establish the required lot linkage,
+quantified thermophysical uncertainty, latent/phase endpoints and liquid
+coverage. Gate rejected; no property values were imported. This bounded
+search does not prove that suitable data does not exist elsewhere.
+
+Current open gaps: traceable lot/state across rho/k/cp measurements, supported
+temperature ranges and uncertainty/covariance, solidus/liquidus/latent or H(T),
+liquid/superheat and upper-temperature support, surface/optical/powder inputs.
+Registry user-table parsing still assigns user-supplied-unverified and replaces
+uncertaintyNote with an unquantified-data warning; successful parsing is not
+scientific admission. A future accepted-data contract must preserve quantified
+uncertainty separately, using the same material authority rather than a second
+registry. No numerical source was changed during the fine series.
+
+Concrete remaining source acquisitions are the existing matrix's solid
+thermophysical study https://link.springer.com/article/10.1007/s10765-019-2490-8
+and density/expansion study
+https://www.oldcitypublishing.com/journals/hthp-home/hthp-issue-contents/hthp-volume-48-number-4-2019/17793-2/ .
+Full tables/supplementary data with sample, range, units, U/coverage/repeats and
+covariance are still required; liquid/optical/lot gaps remain even if acquired.
+IN625 full transient and experimental validity: unvalidated.
+
+## 2026-09-27 — GPU Node foundation review found a material identity bypass
+
+The initial frozen TS foundation passed27 focused tests and lint. Independent
+Sol review found a P1: replacing the first character of Inconel with an
+equivalent Unicode JSON escape and rehashing material/revision/nested CPU core
+could pass TS identity, while Python build_core_contract rejected that revision.
+The identity source at discovery was f4e02fcfdfc6689ec0e1b2ba853b12370b7e9c6c38a709814a45766a315ba606.
+Original material revision:c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06.
+Equivalent Unicode escape minted fake revision
+a9a431afc5f88529283b3d11eecc255eff85fe1a4b7b15d80459db6000d2bdc4.
+Equivalent numeric token270000.0 to2.7e5 minted fake revision
+da04a6b95508585d78134ea3ad6452a29fefc012d8ba5227a73259e4851d6d94.
+Both passed the initial TS identity and failed Python core identity.
+This is an adversarial software fixture; no solver or measurement was involved.
+Initial tests are not closure evidence. Producer token admission and independent
+regression review are pending; permanent GPU archive integration is disabled.
+
+## 2026-09-27 — Single CPU profile identifies candidates without a speed claim
+
+Astra ran the committed job2bcb CPU input once through
+`_run_cpu_with_final(raw, include_final_state=True)` with cProfile. The1210-cell,
+934-step result retained all five final fields byte-exact, complete
+discretization/settings/material/core, three state metadata values and eight
+comparison scalars. Fingerprint before/recorded/after:fbef0... . Root separately
+verified the committed result and all five field hashes/bytes against the
+diagnostic report, without another solve.
+
+Profiled entrypoint wall time3.193375s excludes imports/archive reads. Fine CPU
+PID6556 ran concurrently, thread configuration/utilization were not recorded,
+and profiler overhead is present. This is one diagnostic, not a fair benchmark
+or measured speedup. Goldak screening1.560s cumulative and source integration
+0.874s identify candidates; cumulative rows overlap. Candidate changes remain
+unimplemented until numerical sources are unfrozen and result-preserving,
+paired end-to-end measurements are available. No experimental data is involved.
+
+Evidence:docs/LPBF_CPU_PROFILE_DIAGNOSTIC_2026-09-27.json,
+SHA256:7c2cf61c725870ce0966f5bef17639d78eaf854594a9388740bc5dc752b62883.
+The report separates
+direct harness execution counts from independently observed system counters
+and records the measurement protocol, both top12 tables and field hashes.
+
 ## 2026-09-27 — Saved CUDA input presentation corrected and browser accepted
 
 The GPU panel now displays executed settings attached to the saved result.

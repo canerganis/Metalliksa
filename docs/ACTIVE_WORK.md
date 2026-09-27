@@ -3,6 +3,27 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
+Current integration HEAD8e59c3e; saved-input browser package committed. Five
+top-level evidence reports pass exact Git-byte hashes. TS GPU foundation is
+frozen: new bounded JSON/identity/numerics modules, shared artifact reader,
+and one test. Parent27/27 focused tests PASS, zero skips; Sol read-only
+adversarial closure is active. Repository/import/bundle integration remains
+the next separate Luna package. Root owns evidence/docs/index/commits.
+
+Sol found a concrete P1 in frozen identity f4e02fcf...: alternate Unicode
+string escaping could mint a semantically unchanged material revision accepted
+by TS but rejected by Python core identity. Initial27 tests did not cover it.
+Luna owns the TS-only admission fix/regression; Sol closure required before
+foundation commit or archive integration. Numerical Python source freeze holds.
+
+Fine continuation now has2 reused+1 completed new row:5um25ns,
+526592cells14000steps, before=recorded=afterfbef0..., NPZ retained. Remaining
+two rows run serially; source freeze remains, no convergence verdict yet.
+Astra's single small cProfile diagnostic preserved five CPU arrays byte-exact;
+root verified committed archive lineage without solving. Candidate Goldak and
+Gaussian optimizations are unimplemented. Contended profile time is not a
+benchmark; evidence is LPBF_CPU_PROFILE_DIAGNOSTIC_2026-09-27.json.
+
 Latest UI acceptance: parent11/11 focused tests, lint and production build PASS;
 Sol15/15 independent pure cases PASS. Actual browser saved/current fields,
 partial match, device difference/return, keyboard comparison and final reload
