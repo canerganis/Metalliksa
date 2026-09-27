@@ -214,7 +214,15 @@ class Verification(unittest.TestCase):
 
     def test_boil_is_failure_not_clipping(self):
         p, m = validate({**CASE, "power_W": 1000})
-        with self.assertRaisesRegex(ValueError, "validity"): transient(p, m)
+        with self.assertRaisesRegex(ValueError, "validity") as raised:
+            transient(p, m)
+        message = str(raised.exception)
+        self.assertIn("specific enthalpy", message)
+        self.assertIn("J/kg", message)
+        self.assertIn("cell=", message)
+        self.assertIn("dt=", message)
+        self.assertIn("source rate", message)
+        self.assertIn("W/m³", message)
 
     def test_no_source_conservation_operator(self):
         # Zero power is used only internally to verify equilibrium, not accepted by public API.

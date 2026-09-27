@@ -1,12 +1,15 @@
 """Manufactured forcing through the production moving-source transient loop."""
 
+import math
 import unittest
 from unittest.mock import patch
 
 import numpy as np
 
 import lpbf_heat_source
-from lpbf_core_physics import scan_segments
+import lpbf_simulation
+from lpbf_core_physics import GAUSS_NODES, scan_segments
+from lpbf_evidence import FieldRecorder
 from lpbf_simulation import (calculate_mesh_domain, conduction_rate, enthalpy_table,
                              property_at, run, thermal_si_inputs, validate)
 
@@ -184,6 +187,127 @@ class ProductionTransientManufactured(unittest.TestCase):
             self.assertAlmostEqual(final["center_K"], expected_center, delta=1e-7)
             self.assertLessEqual(result["energyBalance"]["relativeError"], 1e-10)
             self.assertLess(result["metrics"]["peakTemperature_K"], boiling)
+
+
+class _CapturingFieldRecorder(FieldRecorder):
+    """Capture final production fields without changing recorder behavior."""
+
+    instances = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_temperature = None
+        self.instances.append(self)
+
+    def record(self, time, temperature, surface):
+        self.last_temperature = np.array(temperature, dtype=np.float64, copy=True)
+        return super().record(time, temperature, surface)
+
+
+class ProductionTransientManufacturedDiffusion(unittest.TestCase):
+    def test_mixed_boundary_eigenmode_converges_on_three_fixed_levels(self):
+        # Fixed 160 um depth; constant x/y fields match the insulated side faces.
+        levels = (8, 16, 32)
+        depth_m = 160e-6
+        initial_K, amplitude_K = 300.0, 1.0
+        rho, cp, conductivity = 8000.0, 500.0, 15.0
+        raw = {
+            "mode": "standard", "backend": "reference", "surfaceMode": "bare-plate",
+            "sourcePenetration_um": 40, "material": "Inconel 718", "power_W": 80,
+            "speed_mm_s": 1200, "mesh_um": 20, "maxDt_s": 2e-7,
+            "trackLength_um": 200, "cooling_s": 2e-5, "dwell_s": 0,
+            "preheat_C": initial_K - 273.15, "convection_W_m2K": 0,
+        }
+        errors, energy_balance_errors = [], []
+
+        for nz in levels:
+            dx = depth_m / nz
+            # Refining dt with dx^2 keeps Euler and spatial errors comparable.
+            level_raw = {**raw, "maxDt_s": 1.0e4 * dx**2}
+            validated_p, validated_material = lpbf_simulation.validate(level_raw)
+            end_time = scan_segments(validated_p)[1]
+            lam = math.pi / (2.0 * depth_m)
+            emissivity = float(validated_material["emissivity"])
+
+            # u=A(t/t_end)sin(lam(z+L)); u=0 at the bottom and du/dz=0
+            # at the top. The forcing is rho*cp*u_t-k*lap(u), GL2 integrated.
+            def manufactured_source(axis, z, spacing, segment, time, dt, surface,
+                                    radius, penetration, power, axis_y=None,
+                                    incidence_angle_deg=0.0,
+                                    incidence_azimuth_deg=0.0):
+                del segment, radius, penetration, power, incidence_angle_deg, incidence_azimuth_deg
+                y_axis = axis if axis_y is None else np.asarray(axis_y)
+                phi = np.sin(lam * (np.asarray(z)[None, None, :] + depth_m))
+                phi = np.broadcast_to(phi, (len(axis), len(y_axis), len(z)))
+                source = np.zeros_like(phi, dtype=np.float64)
+                for node in GAUSS_NODES:
+                    tau = time + float(node) * dt
+                    exact = initial_K + amplitude_K * (tau / end_time) * phi
+                    source += 0.5 * phi * amplitude_K * (
+                        rho * cp / end_time + conductivity * lam**2 * tau / end_time
+                    )
+                    # Retain production radiation; balance it in the exact
+                    # manufactured input at the boundary cell and in the ledger.
+                    source[:, :, -1] += 0.5 * emissivity * 5.670374419e-8 * (
+                        exact[:, :, -1]**4 - initial_K**4
+                    ) / spacing
+                return source, 1.0
+
+            def fixed_domain(_p):
+                return {"radius": dx, "span": 3 * dx, "nx": 3, "ny": 3,
+                        "nz": nz, "dx": dx, "substrate_depth": depth_m}
+
+            original_validate = lpbf_simulation.validate
+
+            def validated_material(value):
+                return original_validate(value)
+
+            def constant_property(_material, temperature, column):
+                value = {1: rho, 2: conductivity, 3: cp, 4: 1.0e-3}[column]
+                values = np.asarray(temperature)
+                return value if values.ndim == 0 else np.full(values.shape, value)
+
+            def constant_enthalpy(_material):
+                temperatures = np.array([0.0, 5000.0])
+                return temperatures, cp * temperatures
+
+            _CapturingFieldRecorder.instances = []
+            with (
+                patch.object(lpbf_simulation, "validate", side_effect=validated_material),
+                patch.object(lpbf_simulation, "calculate_mesh_domain", side_effect=fixed_domain),
+                patch.object(lpbf_simulation, "property_at", side_effect=constant_property),
+                patch.object(lpbf_simulation, "enthalpy_table", side_effect=constant_enthalpy),
+                patch.object(lpbf_simulation, "FieldRecorder", _CapturingFieldRecorder),
+                patch.object(lpbf_heat_source, "integrated_source", side_effect=manufactured_source),
+            ):
+                result = lpbf_simulation.run(level_raw)
+
+            self.assertGreater(result["energyBalance"]["input_J"], 0.0)
+            self.assertGreater(result["energyBalance"]["losses_J"], 0.0)
+            self.assertLess(result["energyBalance"]["relativeError"], 1.0e-10)
+            energy_balance_errors.append(result["energyBalance"]["relativeError"])
+            self.assertEqual(len(_CapturingFieldRecorder.instances), 1)
+            numerical = _CapturingFieldRecorder.instances[0].last_temperature
+            self.assertIsNotNone(numerical)
+
+            z = (np.arange(nz) + 0.5) * dx - depth_m
+            phi = np.sin(lam * (z + depth_m))
+            exact = np.broadcast_to(initial_K + amplitude_K * phi[None, None, :], numerical.shape)
+            errors.append(float(np.sqrt(np.mean((numerical - exact) ** 2))))
+
+        observed_orders = [math.log(errors[i] / errors[i + 1], 2.0)
+                           for i in range(len(errors) - 1)]
+        self.convergence_diagnostics = {
+            "levels_cells_z": levels,
+            "field_rms_error_K": tuple(errors),
+            "observed_order": tuple(observed_orders),
+            "energy_balance_relative_error": tuple(energy_balance_errors),
+        }
+        self.assertTrue(all(math.isfinite(error) and error > 0 for error in errors), errors)
+        self.assertGreater(errors[0], errors[1], errors)
+        self.assertGreater(errors[1], errors[2], errors)
+        self.assertTrue(all(order > 1.0 for order in observed_orders),
+                        (errors, observed_orders))
 
 
 if __name__ == "__main__":

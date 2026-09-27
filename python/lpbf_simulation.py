@@ -568,8 +568,30 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             T[~support_mask] = np.interp(h[~support_mask], hh, tt)
             T[support_mask] = np.interp(h[support_mask], ss_h_table, ss_t_table)
         else:
-            if not np.isfinite(h).all() or float(h.min()) < hh[0]-1e-8 or float(h.max()) >= np.interp(m["boiling_K"], tt, hh):
-                raise ValueError("Thermal model validity exceeded (boiling or nonphysical enthalpy); evaporation/free-surface CFD required")
+            if not np.isfinite(h).all():
+                raise ValueError("Thermal model validity exceeded (non-finite specific enthalpy)")
+            minimum_h, maximum_h = float(h.min()), float(h.max())
+            minimum_allowed_h = float(hh[0])-1e-8
+            boiling_enthalpy = float(np.interp(m["boiling_K"], tt, hh))
+            if minimum_h < minimum_allowed_h:
+                raise ValueError(
+                    "Thermal model validity exceeded below the property-table range "
+                    f"(specific enthalpy {minimum_h:.9g} J/kg; minimum {minimum_allowed_h:.9g} J/kg "
+                    f"at {float(tt[0]):.6g} K)"
+                )
+            if maximum_h >= boiling_enthalpy:
+                hot_cell = np.unravel_index(int(np.argmax(h)), h.shape)
+                cell_density = float(rho[hot_cell])
+                cell_rate = float(rate[hot_cell])
+                prior_specific_h = maximum_h-dt*cell_rate/cell_density
+                raise ValueError(
+                    "Thermal model validity exceeded at or above the material boiling limit "
+                    f"(specific enthalpy {maximum_h:.9g} J/kg; limit {boiling_enthalpy:.9g} J/kg "
+                    f"at {m['boiling_K']:.6g} K; cell={hot_cell}, previous T={float(old[hot_cell]):.6g} K, "
+                    f"previous specific enthalpy={prior_specific_h:.9g} J/kg, dt={dt:.9g} s, "
+                    f"source rate={float(source[hot_cell]):.9g} W/m³, "
+                    f"net rate={cell_rate:.9g} W/m³); evaporation/free-surface CFD required"
+                )
             T = np.interp(h, hh, tt)
         previous_time = time
         time += dt
