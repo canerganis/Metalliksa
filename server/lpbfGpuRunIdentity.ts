@@ -4,6 +4,8 @@ import { parseBoundedJson, strictJsonEqual, type BoundedJsonDocument } from './l
 
 const SHA = /^[a-f0-9]{64}$/;
 const CORE_MODEL = 'stationary-enthalpy-conduction-layer-conforming-v1';
+const TORCH_SOLVER = 'enthalpy-fv-6-cuda-pilot-1';
+const WARP_SOLVER = 'enthalpy-fv-6-warp-candidate-1';
 const CORE_UNITS = { power: 'W', speed: 'mm/s', length: 'um', preheat: 'degC', temperature: 'K',
   internalLength: 'm', time: 's', energy: 'J', beamDiameter: '1/e2-intensity' };
 const CORE_PHYSICS = { conduction: true, transient: true, latentHeat: true, momentum: false,
@@ -35,6 +37,7 @@ function parseInput(value: unknown, hashes: Record<string, unknown>, inputKey: s
 }
 
 export interface GpuPilotRunIdentity {
+  engineId: 'torch' | 'warp';
   request: Record<string, unknown>;
   material: Record<string, unknown>;
   cpuInput: Record<string, unknown>;
@@ -53,20 +56,33 @@ export function validateGpuPilotRunIdentity(value: unknown): GpuPilotRunIdentity
   }
   const contract = record(result.gpuRunContract, 'run contract');
   exactKeys(contract, ['schemaVersion', 'runKind', 'capture', 'serializedInputs', 'hashes'], 'run contract');
-  if (contract.schemaVersion !== 1 || contract.runKind !== 'gpu-thermal-pilot') throw new Error('Unsupported GPU run contract');
+  if ((contract.schemaVersion !== 1 && contract.schemaVersion !== 2)
+    || contract.runKind !== 'gpu-thermal-pilot') throw new Error('Unsupported GPU run contract');
+  const engineId = contract.schemaVersion === 2 ? 'warp' : 'torch';
   const capture = record(contract.capture, 'capture binding');
-  exactKeys(capture, ['contractStatus', 'modelId', 'backend', 'device', 'dtype'], 'capture binding');
+  exactKeys(capture, engineId === 'warp'
+    ? ['contractStatus', 'modelId', 'backend', 'device', 'dtype', 'engineId']
+    : ['contractStatus', 'modelId', 'backend', 'device', 'dtype'], 'capture binding');
   const solver = record(result.solver, 'solver');
   const settings = record(result.settings, 'settings');
   const provenance = record(result.provenance, 'provenance');
   const evidence = record(provenance.deviceEvidence, 'device evidence');
-  if (capture.contractStatus !== 'gpu-pilot-v1-bound' || capture.modelId !== CORE_MODEL
+  if (capture.contractStatus !== (engineId === 'warp' ? 'gpu-pilot-v2-warp-bound' : 'gpu-pilot-v1-bound')
+    || (engineId === 'warp' && capture.engineId !== 'warp')
+    || capture.modelId !== CORE_MODEL
     || typeof capture.backend !== 'string' || !/^cuda:\d+$/.test(capture.backend)
     || capture.backend !== settings.backend || capture.backend !== solver.actualBackend
     || capture.backend !== evidence.selected || capture.backend !== evidence.thermalEvolution
     || capture.backend !== capture.device || capture.dtype !== 'float64'
-    || solver.id !== 'enthalpy-fv-6-cuda-pilot-1' || solver.dtype !== 'float64' || solver.modelId !== CORE_MODEL
+    || solver.id !== (engineId === 'warp' ? WARP_SOLVER : TORCH_SOLVER)
+    || solver.dtype !== 'float64' || solver.modelId !== CORE_MODEL
     || solver.thermalEvolutionDevice !== capture.backend) throw new Error('GPU run capture binding mismatch');
+  if (engineId === 'warp'
+    ? record(result.settings, 'settings').executionEngine !== 'warp'
+      || solver.sourceIntegrationDevice !== 'cpu' || solver.sourceTimestepLimiterDevice !== 'cpu'
+    : Object.hasOwn(record(result.settings, 'settings'), 'executionEngine')) {
+    throw new Error('GPU solver engine is detached from executed settings');
+  }
 
   const serialized = record(contract.serializedInputs, 'serialized inputs');
   exactKeys(serialized, INPUT_KEYS, 'serialized inputs');
@@ -80,8 +96,16 @@ export function validateGpuPilotRunIdentity(value: unknown): GpuPilotRunIdentity
     || typeof provenance.createdAt !== 'string' || !Number.isFinite(Date.parse(provenance.createdAt))) {
     throw new Error('GPU archived provenance is detached from input hashes');
   }
-  if (typeof evidence.name !== 'string' || !evidence.name.trim() || typeof evidence.torch !== 'string' || !evidence.torch.trim()
-    || typeof evidence.cudaRuntime !== 'string' || !evidence.cudaRuntime.trim()
+  const runtimeIdentityValid = engineId === 'warp'
+    ? evidence.engineId === 'warp' && typeof evidence.warp === 'string' && !!evidence.warp.trim()
+      && !Object.hasOwn(evidence, 'torch') && !Object.hasOwn(evidence, 'cudaRuntime')
+      && typeof evidence.warpCudaToolkitVersion === 'string' && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.warpCudaToolkitVersion)
+      && typeof evidence.cudaDriverVersion === 'string' && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.cudaDriverVersion)
+    : typeof evidence.torch === 'string' && !!evidence.torch.trim()
+      && !Object.hasOwn(evidence, 'warp') && !Object.hasOwn(evidence, 'engineId')
+      && typeof evidence.cudaRuntime === 'string' && !!evidence.cudaRuntime.trim()
+      && !Object.hasOwn(evidence, 'warpCudaToolkitVersion') && !Object.hasOwn(evidence, 'cudaDriverVersion');
+  if (!runtimeIdentityValid || typeof evidence.name !== 'string' || !evidence.name.trim()
     || !Array.isArray(evidence.computeCapability) || evidence.computeCapability.length !== 2
     || evidence.computeCapability.some(value => !Number.isSafeInteger(value) || (value as number) < 0)
     || evidence.synchronizedAfterSolve !== true || typeof evidence.sourceIntegration !== 'string' || !evidence.sourceIntegration
@@ -100,6 +124,7 @@ export function validateGpuPilotRunIdentity(value: unknown): GpuPilotRunIdentity
   requireSame(material, result.material, 'GPU material snapshot differs from executed material');
   const expectedCpuInput = { ...request };
   delete expectedCpuInput.jobType;
+  if (engineId === 'warp') delete expectedCpuInput.executionEngine;
   expectedCpuInput.backend = 'reference';
   requireSame(cpuInput, expectedCpuInput, 'GPU CPU reference input is detached from request');
   requireSame(cpuResolvedSettings, cpuInput, 'GPU CPU resolved settings are not the captured fixed point');
@@ -127,5 +152,5 @@ export function validateGpuPilotRunIdentity(value: unknown): GpuPilotRunIdentity
     if (cpuMaterial[key] !== material[key]) throw new Error(`GPU CPU material ${key} mismatch`);
   }
   requireSame(cpu.resolvedSettings, cpuResolvedSettings, 'GPU CPU resolved summary detached from captured inputs');
-  return { request, material, cpuInput, cpuResolvedSettings, hashes };
+  return { engineId, request, material, cpuInput, cpuResolvedSettings, hashes };
 }

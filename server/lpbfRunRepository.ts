@@ -7,13 +7,15 @@ import { DatabaseSync, backup } from 'node:sqlite';
 import { parseIn625BareplateJob, parseSimulationJob } from '../src/services/lpbfSimulationService';
 import { artifactRelativePath } from './lpbfArtifactStore';
 import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
+import { strictJsonEqual } from './lpbfBoundJson';
+import { validateGpuPilotArchiveMetadata } from './lpbfGpuRunArchive';
 
 export interface RunCapture {
   schemaVersion: 1; jobId: string; resultJson: string; inputJson: string; materialJson: string;
-  contractStatus: 'core-v1-bound' | 'legacy-unbound';
+  contractStatus: 'core-v1-bound' | 'legacy-unbound' | 'gpu-pilot-v1-bound' | 'gpu-pilot-v2-warp-bound';
   runKind?: RunKind;
 }
-export type RunKind = 'analytical-screening' | 'build-screening' | 'transient-thermal' | 'bounded-material-screening' | 'legacy-unspecified';
+export type RunKind = 'analytical-screening' | 'build-screening' | 'transient-thermal' | 'bounded-material-screening' | 'gpu-thermal-pilot' | 'legacy-unspecified';
 export interface RunSourceLink { datasetId: string; revision: number; documentSha256: string }
 export interface RunDocument { schemaVersion: 1; runId: string; capture: RunCapture; sources: RunSourceLink[] }
 export interface RunRecord { document: RunDocument; documentSha256: string; createdAt: string; evidenceStatus: 'unvalidated-model'; runKind: RunKind }
@@ -59,11 +61,12 @@ export function validateRunDocument(raw: unknown): RunDocument {
     || !/^[a-f0-9]{32}$/.test(d.runId) || d.runId !== c.jobId) throw new Error('Invalid run identity');
   const result = snapshot(c.resultJson);
   const capturedRunKind = result.runKind === undefined ? 'legacy-unspecified' : result.runKind;
+  const gpuPilot = capturedRunKind === 'gpu-thermal-pilot';
   const settings = result.settings;
   const resolvedPhysics = result.resolvedPhysics ?? result.coreContract?.resolvedPhysics;
   const analyticalScreening = settings?.mode === 'screening' && resolvedPhysics?.transient === false;
   if (typeof capturedRunKind !== 'string'
-    || !['analytical-screening', 'build-screening', 'transient-thermal', 'bounded-material-screening', 'legacy-unspecified'].includes(capturedRunKind)
+    || !['analytical-screening', 'build-screening', 'transient-thermal', 'bounded-material-screening', 'gpu-thermal-pilot', 'legacy-unspecified'].includes(capturedRunKind)
     || (result.runKind === undefined) !== (c.runKind === undefined)
     || (c.runKind !== undefined && c.runKind !== capturedRunKind)
     || (capturedRunKind === 'build-screening' && result.settings?.jobType !== 'build-job')
@@ -73,6 +76,21 @@ export function validateRunDocument(raw: unknown): RunDocument {
     || (capturedRunKind === 'bounded-material-screening'
       && (result.settings?.jobType !== 'in625-bareplate-field' || result.jobType !== 'in625-bareplate-field'))) {
     throw new Error('Invalid captured run classification');
+  }
+  if (gpuPilot) {
+    validateGpuPilotArchiveMetadata(result, c.jobId);
+    const serialized = (result.gpuRunContract as Record<string, any>).serializedInputs;
+    const innerCapture = (result.gpuRunContract as Record<string, any>).capture;
+    if (c.runKind !== 'gpu-thermal-pilot'
+      || !['gpu-pilot-v1-bound', 'gpu-pilot-v2-warp-bound'].includes(c.contractStatus)
+      || !innerCapture || c.contractStatus !== innerCapture.contractStatus
+      || c.inputJson !== serialized.requestJson || c.materialJson !== serialized.materialJson
+      || !strictJsonEqual(snapshot(c.inputJson), result.settings)
+      || !strictJsonEqual(snapshot(c.materialJson), result.material)) {
+      throw new Error('GPU run capture snapshot identity mismatch');
+    }
+  } else if (c.contractStatus === 'gpu-pilot-v1-bound' || c.contractStatus === 'gpu-pilot-v2-warp-bound') {
+    throw new Error('GPU pilot contract status is only valid for a GPU pilot run');
   }
   // Older v1 build-job archives may predate the effective-property snapshot.
   // When any part of the newer binding is present, require and verify the full
@@ -98,7 +116,7 @@ export function validateRunDocument(raw: unknown): RunDocument {
       throw new Error('Run build-job material snapshot hash binding mismatch');
     }
   }
-  if (!result.verdict) { // Not a build-job
+  if (!gpuPilot && !result.verdict) { // Not a build-job
     const job = { id: c.jobId, status: 'completed', progress: 1, log: '', error: null, result };
     if (result.jobType === 'in625-bareplate-field') {
       // Reconstitute the worker queue envelope expected by the public job parser.
@@ -108,12 +126,12 @@ export function validateRunDocument(raw: unknown): RunDocument {
     }
     else parseSimulationJob(job);
   }
-  if (!isDeepStrictEqual(snapshot(c.inputJson), result.settings)
-    || !isDeepStrictEqual(snapshot(c.materialJson), result.material)) throw new Error('Run snapshot identity mismatch');
+  if (!gpuPilot && (!isDeepStrictEqual(snapshot(c.inputJson), result.settings)
+    || !isDeepStrictEqual(snapshot(c.materialJson), result.material))) throw new Error('Run snapshot identity mismatch');
   const bound = Object.hasOwn(result, 'coreContract');
-  if (c.contractStatus !== (bound ? 'core-v1-bound' : 'legacy-unbound')) throw new Error('Invalid run contract status');
+  if (!gpuPilot && c.contractStatus !== (bound ? 'core-v1-bound' : 'legacy-unbound')) throw new Error('Invalid run contract status');
   // Hash Python's exact serialized bytes, not a JavaScript serialization of its numbers.
-  if (bound && (digest(c.inputJson) !== result.coreContract.inputSha256
+  if (!gpuPilot && bound && (digest(c.inputJson) !== result.coreContract.inputSha256
     || digest(c.materialJson) !== result.coreContract.materialSha256)) throw new Error('Run core hash binding mismatch');
   if (!Array.isArray(result.artifacts) || result.artifacts.length > 10000) throw new Error('Missing full run artifact manifest');
   const names = new Set<string>();

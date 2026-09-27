@@ -10,6 +10,8 @@ import { LpbfRunRepository } from './lpbfRunRepository';
 import { runArtifacts } from './lpbfRunImport';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
 import { backupSourceBundle, verifySourceBundle } from './lpbfSourceBundle';
+import { storeGpuPilotArtifactResolver } from './lpbfGpuPilotArtifacts';
+import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
 
 export interface RunBundleManifest {
   schemaVersion: 1 | 2;
@@ -65,8 +67,11 @@ function references(root: string) {
     try {
       const artifacts = new Map<string, ArtifactIdentity>();
       let runCount = 0, sourceLinkCount = 0;
+      const gpuResults: { runId: string; result: unknown }[] = [];
       for (const record of runs.allRuns()) {
         runCount++;
+        if (record.runKind === 'gpu-thermal-pilot') gpuResults.push({ runId: record.document.runId,
+          result: JSON.parse(record.document.capture.resultJson) });
         for (const link of record.document.sources) {
           const revision = sources.revision(link.datasetId, link.revision);
           if (!revision || revision.documentSha256 !== link.documentSha256) throw new Error('Run source revision identity mismatch');
@@ -94,7 +99,7 @@ function references(root: string) {
           }
         }
       }
-      return { artifacts, runCount, sourceLinkCount, campaignCount };
+      return { artifacts, runCount, sourceLinkCount, campaignCount, gpuResults };
     } finally { sources.close(); }
   } finally { runs.close(); }
 }
@@ -111,6 +116,8 @@ async function verifyContents(root: string, manifest: RunBundleManifest) {
     || (manifest.schemaVersion === 1 && refs.campaignCount !== 0)) throw new Error('Run bundle metadata counts mismatch');
   const store = new LpbfArtifactStore(path.join(root, 'artifacts'), { readOnly: true });
   for (const ref of refs.artifacts.values()) await store.verify(ref);
+  const resolver = storeGpuPilotArtifactResolver(store);
+  for (const item of refs.gpuResults) await verifyGpuPilotArchive(item.result, item.runId, resolver);
 }
 
 /** Snapshot runs first, then sources. Includes the full source snapshot as a superset

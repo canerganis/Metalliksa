@@ -155,8 +155,12 @@ def capture_run(folder, job_id):
                 or result.get('jobType') != 'gpu-thermal-pilot'
                 or run_kind != 'gpu-thermal-pilot'):
             raise ValueError('CUDA pilot capture requires its distinct bound archive contract')
-        from lpbf_gpu_thermal import enforce_gpu_pilot_result
-        enforce_gpu_pilot_result(result, artifact_dir=folder)
+        if settings.get('executionEngine') == 'warp':
+            from lpbf_gpu_warp_pilot import enforce_gpu_warp_pilot_result
+            enforce_gpu_warp_pilot_result(result, artifact_dir=folder)
+        else:
+            from lpbf_gpu_thermal import enforce_gpu_pilot_result
+            enforce_gpu_pilot_result(result, artifact_dir=folder)
     elif run_kind == 'gpu-thermal-pilot':
         raise ValueError('GPU pilot classification conflicts with captured settings')
     is_gpu_pilot = gpu_identity
@@ -226,7 +230,7 @@ def capture_run(folder, job_id):
         inputs = result['gpuRunContract']['serializedInputs']
         input_json = inputs['requestJson']
         material_json = inputs['materialJson']
-        contract_status = 'gpu-pilot-v1-bound'
+        contract_status = result['gpuRunContract']['capture']['contractStatus']
     else:
         input_json = encoded(result['settings'])
         material_json = encoded(result['material'])

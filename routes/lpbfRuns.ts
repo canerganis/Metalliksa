@@ -79,7 +79,7 @@ export function createLpbfRunsRouter(service = new LpbfRunArchiveService(), bund
   router.get(`${prefix}/proxy-campaigns`, handle(() => campaigns.list()));
   router.get(`${prefix}/bundles/restores/:restoreId/runs`, handle(req => bundles.listRestoredRuns(req.params.restoreId)));
   router.get(`${prefix}/bundles/restores/:restoreId/runs/:runId`, handle(req => bundles.getRestoredRun(req.params.restoreId, req.params.runId)));
-  router.get(`${prefix}/:runId`, handle(req => service.get(req.params.runId)));
+  router.get(`${prefix}/:runId`, handle(req => service.getVerified(req.params.runId)));
 
   const emptyBody = (req: express.Request) => {
     if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length) {

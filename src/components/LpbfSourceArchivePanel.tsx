@@ -3,6 +3,19 @@ import { useInputBoundTask } from '../hooks/useInputBoundTask';
 import { sourceAction, sourceCatalog, type SourceAction, type SourceSnapshot, type LpbfSourceDocument } from '../services/lpbfSourceService';
 
 const button = 'rounded-lg border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40';
+const SELECTED_SOURCE_KEY = 'metalliksa.lpbf.sourceArchive.selectedDataset.v1';
+
+export function sourceSelectionForCatalog(datasetIds: string[], savedId: string | null): string {
+  return savedId && datasetIds.includes(savedId) ? savedId : datasetIds[0] ?? '';
+}
+
+function savedSourceId(): string | null {
+  try { return window.localStorage.getItem(SELECTED_SOURCE_KEY); } catch { return null; }
+}
+
+function persistSourceId(datasetId: string): void {
+  try { window.localStorage.setItem(SELECTED_SOURCE_KEY, datasetId); } catch { /* Keep the selection for this view. */ }
+}
 
 export function LpbfSourceArchivePanel() {
   const [catalog, setCatalog] = useState<{ datasetId: string; title: string }[] | null>(null);
@@ -13,7 +26,11 @@ export function LpbfSourceArchivePanel() {
     const controller = new AbortController();
     setError(null); setCatalog(null); setSelected('');
     sourceCatalog(controller.signal).then(items => {
-      if (!controller.signal.aborted) { setCatalog(items); setSelected(items[0]?.datasetId ?? ''); }
+      if (!controller.signal.aborted) {
+        setCatalog(items);
+        const datasetId = sourceSelectionForCatalog(items.map(item => item.datasetId), savedSourceId());
+        setSelected(datasetId); persistSourceId(datasetId);
+      }
     }).catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Source catalog unavailable.'); });
     return () => controller.abort();
   }, [attempt]);
@@ -23,7 +40,7 @@ export function LpbfSourceArchivePanel() {
     {error ? <div><p role="alert" className="text-rose-300">{error}</p><button className={`${button} mt-3`} onClick={() => setAttempt(value => value + 1)}>Retry source catalog</button></div>
       : catalog === null ? <p role="status">Loading source catalog…</p>
       : catalog.length === 0 ? <p>No local sources configured.</p>
-      : <><label className="block text-sm">Local source<select aria-label="Local source" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 focus-visible:outline-2 focus-visible:outline-sky-300" value={selected} onChange={event => setSelected(event.target.value)}>{catalog.map(item => <option key={item.datasetId} value={item.datasetId}>{item.title}</option>)}</select></label>
+      : <><label className="block text-sm">Local source<select aria-label="Local source" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 focus-visible:outline-2 focus-visible:outline-sky-300" value={selected} onChange={event => { setSelected(event.target.value); persistSourceId(event.target.value); }}>{catalog.map(item => <option key={item.datasetId} value={item.datasetId}>{item.title}</option>)}</select></label>
         {selected && <SourceRecord key={selected} datasetId={selected}/>}</>}
   </section>;
 }

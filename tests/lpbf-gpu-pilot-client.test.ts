@@ -26,6 +26,9 @@ test('CUDA pilot request includes only CPU validator fields and preserves the sh
   for (const key of ['legacyField', 'legacySetting', 'measurements']) {
     assert.ok(!(key in pilot), key);
   }
+  assert.ok(!Object.hasOwn(pilot, 'executionEngine'), 'Torch v1 request shape stays unchanged');
+  const warp = buildGpuPilotInput(input, settings, 'cuda:0', '316L', 'meander', undefined, 'warp');
+  assert.equal(warp.executionEngine, 'warp');
 });
 
 const sha = 'a'.repeat(64);

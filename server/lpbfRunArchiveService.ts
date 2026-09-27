@@ -3,8 +3,10 @@ import { lstatSync, statSync, readdirSync } from 'node:fs';
 import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfRunRepository, type RunRecord, type RunSourceLink } from './lpbfRunRepository';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
-import { dryRunRunImport, importRun } from './lpbfRunImport';
+import { dryRunRunImport, importRun, runArtifacts } from './lpbfRunImport';
 import { lpbfWorker } from './lpbfWorkerBridge';
+import { storeGpuPilotArtifactResolver } from './lpbfGpuPilotArtifacts';
+import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
 
 const MAX_RUN_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const MAX_ARCHIVE_SIZE_BYTES = 15 * 1024 * 1024 * 1024; // 15 GB
@@ -76,6 +78,19 @@ export class LpbfRunArchiveService {
       if (!record) throw new LpbfRunArchiveError(404, 'Run not found.');
       return { ...record, sourceBindingStatus: bindingStatus(record) };
     } finally { repository.close(); }
+  }
+
+  async getVerified(runId: string): Promise<RunRecord & { sourceBindingStatus: RunSourceBindingStatus }> {
+    const record = this.get(runId);
+    if (record.runKind === 'gpu-thermal-pilot') {
+      const store = new LpbfArtifactStore(path.join(this.runRoot, 'artifacts'), { readOnly: true });
+      try {
+        for (const ref of runArtifacts(record.document)) await store.verify(ref);
+        await verifyGpuPilotArchive(JSON.parse(record.document.capture.resultJson), record.document.runId,
+          storeGpuPilotArtifactResolver(store));
+      } catch { throw new LpbfRunArchiveError(409, 'GPU pilot field archive integrity or numerical verification failed.'); }
+    }
+    return record;
   }
 
   private async exclusive<T>(action: () => Promise<T>): Promise<T> {

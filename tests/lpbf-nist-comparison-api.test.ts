@@ -8,6 +8,7 @@ import express from 'express';
 import { createLpbfRunsRouter } from '../routes/lpbfRuns';
 import { LpbfArtifactStore } from '../server/lpbfArtifactStore';
 import { LpbfNistComparisonService } from '../server/lpbfNistComparisonService';
+import { LpbfNistProxyCampaignService } from '../server/lpbfNistProxyCampaignService';
 import { LpbfRunArchiveService } from '../server/lpbfRunArchiveService';
 import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { LpbfRunRepository } from '../server/lpbfRunRepository';
@@ -77,6 +78,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const buildId = 'f'.repeat(32);
   const legacyBuildId = '9'.repeat(32);
   const analyticalId = '8'.repeat(32);
+  const gpuPilotIds = ['1', '2', '3'].map(value => value.repeat(32));
   saveRun(boundId, [exactLink], true);
   const bundleService = new LpbfRunBundleService(runRoot, sourceRoot, path.join(root, 'bundles'));
   const exportedBundle = await bundleService.export();
@@ -87,6 +89,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   saveRun(buildId, [exactLink], false, 'build-screening', true);
   saveRun(legacyBuildId, [exactLink], true, undefined, true);
   saveRun(analyticalId, [exactLink], true, 'analytical-screening');
+  for (const runId of gpuPilotIds) saveRun(runId, [exactLink], true, 'transient-thermal');
   // These are Python-canonical snapshot bytes: JSON.parse/JSON.stringify changes
   // floatValue:1.0 to 1 and invalidates both the material revision and core hash.
   const materialJson = '{"floatValue":1.0,"materialId":"in718","materialIdentitySchemaVersion":1,"materialRevisionSha256":"1cb5d6833bedd0a8eb9e29606cf0c08b78c4f391f0e89c97c405b8f3e255dba7","name":"Synthetic","provenanceClass":"estimated-legacy","quality":"synthetic","source":"Unit test only"}';
@@ -103,7 +106,8 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const app = express();
   app.use(createLpbfRunsRouter(new LpbfRunArchiveService(runRoot, sourceRoot),
     bundleService,
-    new LpbfNistComparisonService(runRoot, sourceRoot)));
+    new LpbfNistComparisonService(runRoot, sourceRoot),
+    new LpbfNistProxyCampaignService(runRoot, sourceRoot)));
   const server = app.listen(0, '127.0.0.1');
   t.after(() => server.close());
   await new Promise<void>(resolve => server.once('listening', resolve));
@@ -112,6 +116,11 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   async function post(runId: string, body: unknown, headers: Record<string, string> = {}) {
     const response = await fetch(`${endpoint}/${runId}/nist-comparison`, { method: 'POST',
       headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
+    return { status: response.status, body: await response.json() };
+  }
+  async function postCampaignPreview(runIds: string[]) {
+    const response = await fetch(`${endpoint}/proxy-campaigns/preview`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber: '0' }) });
     return { status: response.status, body: await response.json() };
   }
 
@@ -152,6 +161,25 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(analytical.status, 200); assert.equal(analytical.body.status, 'unavailable');
   assert.equal(analytical.body.errors, null);
   assert.match(analytical.body.reasons.join(' '), /analytical screening has no transient thermal evolution/i);
+  // These ordinary CPU rows pass repository validation; the temporary projection isolates
+  // the NIST eligibility branch and is not a valid GPU archive fixture.
+  const originalGet = LpbfRunRepository.prototype.get;
+  LpbfRunRepository.prototype.get = function(runId) {
+    const record = originalGet.call(this, runId);
+    return record && gpuPilotIds.includes(runId) ? { ...record, runKind: 'gpu-thermal-pilot' } : record;
+  };
+  try {
+    const gpuPilot = await post(gpuPilotIds[0], { caseNumber: '0' });
+    assert.equal(gpuPilot.status, 200); assert.equal(gpuPilot.body.status, 'unavailable');
+    assert.equal(gpuPilot.body.errors, null);
+    assert.match(gpuPilot.body.reasons.join(' '), /GPU thermal-pilot archives.*not eligible for CPU-core NIST optical comparison/i);
+    const gpuCampaign = await postCampaignPreview(gpuPilotIds);
+    assert.equal(gpuCampaign.status, 200); assert.equal(gpuCampaign.body.campaign, null);
+    assert.equal(gpuCampaign.body.validation.status, 'unavailable');
+    assert.match(gpuCampaign.body.validation.reasons.join(' '), /GPU pilot .*separate from CPU-core proxy eligibility/i);
+  } finally {
+    LpbfRunRepository.prototype.get = originalGet;
+  }
 
   const extra = await post(boundId, { caseNumber: '0', documentSha256: sha('fake') });
   assert.equal(extra.status, 400);

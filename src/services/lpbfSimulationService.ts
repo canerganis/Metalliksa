@@ -354,6 +354,7 @@ export const simulationApi = {
 /** Separate CUDA pilot contract. It must never be parsed as a standard CPU job. */
 export interface GpuPilotInput extends Omit<SimulationInput, 'backend' | 'mode' | 'study' | 'tracks' | 'layers' | 'measurements'> {
   jobType: 'gpu-thermal-pilot';
+  executionEngine?: 'warp';
   backend: `cuda:${number}`;
   mode: 'standard';
   surfaceMode: 'powder-layer';
@@ -370,7 +371,8 @@ const GPU_PILOT_OPTIONAL_FIELDS = [
 
 /** Build only fields accepted by the CPU reference validator, even from older runtime inputs. */
 export function buildGpuPilotInput(input: SimulationInput, settings: Partial<SimulationInput>,
-  device: `cuda:${number}`, material: string, strategy: SimulationInput['strategy'], properties?: unknown): GpuPilotInput {
+  device: `cuda:${number}`, material: string, strategy: SimulationInput['strategy'], properties?: unknown,
+  executionEngine: 'torch' | 'warp' = 'torch'): GpuPilotInput {
   const merged = { ...input, ...settings };
   const optional = Object.fromEntries(GPU_PILOT_OPTIONAL_FIELDS
     .filter(key => merged[key] !== undefined).map(key => [key, merged[key]])) as Partial<GpuPilotInput>;
@@ -380,6 +382,7 @@ export function buildGpuPilotInput(input: SimulationInput, settings: Partial<Sim
     layer_um: input.layer_um, hatch_um: input.hatch_um, strategy,
     ...(properties !== undefined ? { properties } : {}),
     jobType: 'gpu-thermal-pilot', backend: device, mode: 'standard',
+    ...(executionEngine === 'warp' ? { executionEngine: 'warp' as const } : {}),
     surfaceMode: 'powder-layer', powderGridPolicy: 'layer-conforming',
     study: 'none', tracks: 1, layers: 1,
   };
@@ -391,12 +394,23 @@ export interface GpuPilotComparison {
   absoluteDifference_um?: number; relativeRiseL2?: number; relativeRiseMax?: number;
   reason?: string;
 }
+interface GpuPilotDeviceEvidenceBase {
+  selected: string; name: string; computeCapability: number[];
+  thermalEvolution: string; sourceIntegration: 'cpu' | `cuda:${number}`;
+  sourceTimestepLimiter?: 'cpu' | `cuda:${number}`; synchronizedAfterSolve: true;
+}
+type GpuPilotDeviceEvidence = GpuPilotDeviceEvidenceBase & (
+  | { torch: string; cudaRuntime: string; warp?: never; engineId?: never;
+      warpCudaToolkitVersion?: never; cudaDriverVersion?: never }
+  | { warp: string; engineId: 'warp'; warpCudaToolkitVersion: string; cudaDriverVersion: string;
+      torch?: never; cudaRuntime?: never }
+);
 interface GpuPilotResultBase {
   schemaVersion: 1; jobType: 'gpu-thermal-pilot';
   requestedMode: 'standard'; effectiveMode: 'gpu-pilot';
   validationStatus: 'unvalidated'; productionReady: false; label: string;
   settings: GpuPilotInput;
-  solver: { id: 'enthalpy-fv-6-cuda-pilot-1'; modelId: 'stationary-enthalpy-conduction-layer-conforming-v1';
+  solver: { id: 'enthalpy-fv-6-cuda-pilot-1' | 'enthalpy-fv-6-warp-candidate-1'; modelId: 'stationary-enthalpy-conduction-layer-conforming-v1';
     actualBackend: string; thermalEvolutionDevice: string; sourceIntegrationDevice: 'cpu' | `cuda:${number}`;
     sourceTimestepLimiterDevice: 'cpu' | `cuda:${number}`; dtype: 'float64' };
   material: { name: string; materialId: string; materialRevisionSha256: string; version: string };
@@ -410,10 +424,7 @@ interface GpuPilotResultBase {
       material: { materialRevisionSha256: string }; discretization: { cells: number; steps: number; mesh_m: number } };
     comparisons: Record<string, GpuPilotComparison> };
   provenance: { inputHash: string; implementationHash: string; materialVersion: string; createdAt: string;
-    deviceEvidence: { selected: string; name: string; computeCapability: number[];
-      torch: string; cudaRuntime: string; thermalEvolution: string;
-      sourceIntegration: 'cpu' | `cuda:${number}`; sourceTimestepLimiter?: 'cpu' | `cuda:${number}`;
-      synchronizedAfterSolve: true };
+    deviceEvidence: GpuPilotDeviceEvidence;
     runtime_s?: number };
 }
 export type GpuPilotArtifactManifestEntry = { path: string; size_bytes: number; sha256: string };
@@ -425,7 +436,7 @@ export type GpuPilotResult = GpuPilotResultBase & (
 export interface GpuPilotJob {
   id: string;
   status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'timed_out';
-  requestSummary: { jobType: 'gpu-thermal-pilot'; backend: string; mode: string; material: string };
+  requestSummary: { jobType: 'gpu-thermal-pilot'; backend: string; mode: string; material: string; executionEngine?: 'torch' | 'warp' };
   progress: number; log: string; error: string | null;
   cacheHit?: boolean; deduplicated?: boolean;
   result?: GpuPilotResult;
@@ -466,19 +477,24 @@ function sameJsonValue(left: unknown, right: unknown): boolean {
     Object.hasOwn(right, key) && sameJsonValue(left[key], right[key]));
 }
 
-function validateGpuBoundArchive(result: Record<string, unknown>): void {
+function validateGpuBoundArchive(result: Record<string, unknown>): 'torch' | 'warp' {
   const fail = () => { throw new Error('Invalid bound CUDA pilot archive contract'); };
   if (!Object.hasOwn(result, 'gpuRunContract') || !Object.hasOwn(result, 'gpuFieldArtifacts')
     || 'coreContract' in result || !Array.isArray(result.artifacts)
     || result.artifacts.length > 10_000) return fail();
   const contract = result.gpuRunContract;
+  const engineId = object(contract) && contract.schemaVersion === 2 ? 'warp' : 'torch';
   if (!exactKeys(contract, ['schemaVersion', 'runKind', 'capture', 'serializedInputs', 'hashes'])
-    || contract.schemaVersion !== 1 || contract.runKind !== 'gpu-thermal-pilot') return fail();
+    || (contract.schemaVersion !== 1 && contract.schemaVersion !== 2)
+    || contract.runKind !== 'gpu-thermal-pilot') return fail();
   const capture = contract.capture;
   const serialized = contract.serializedInputs;
   const hashes = contract.hashes;
-  if (!exactKeys(capture, ['contractStatus', 'modelId', 'backend', 'device', 'dtype'])
-    || capture.contractStatus !== 'gpu-pilot-v1-bound'
+  if (!exactKeys(capture, engineId === 'warp'
+    ? ['contractStatus', 'modelId', 'backend', 'device', 'dtype', 'engineId']
+    : ['contractStatus', 'modelId', 'backend', 'device', 'dtype'])
+    || capture.contractStatus !== (engineId === 'warp' ? 'gpu-pilot-v2-warp-bound' : 'gpu-pilot-v1-bound')
+    || (engineId === 'warp' && capture.engineId !== 'warp')
     || capture.modelId !== 'stationary-enthalpy-conduction-layer-conforming-v1'
     || !object(result.settings) || capture.backend !== result.settings.backend
     || capture.device !== result.settings.backend
@@ -501,6 +517,7 @@ function validateGpuBoundArchive(result: Record<string, unknown>): void {
   } catch { return fail(); }
   const expectedCpuInput = { ...result.settings };
   delete expectedCpuInput.jobType;
+  if (engineId === 'warp') delete expectedCpuInput.executionEngine;
   expectedCpuInput.backend = 'reference';
   if (!sameJsonValue(request, result.settings) || !sameJsonValue(material, result.material)
     || !sameJsonValue(cpuInput, expectedCpuInput) || !sameJsonValue(resolved, cpuInput)) return fail();
@@ -535,6 +552,7 @@ function validateGpuBoundArchive(result: Record<string, unknown>): void {
     if (field && (field.size_bytes !== raw.size_bytes || field.sha256 !== raw.sha256)) return fail();
   }
   if ([...expected.keys()].some(path => !foundExact.has(path))) return fail();
+  return engineId;
 }
 
 export function parseGpuPilotJob(value: unknown): GpuPilotJob {
@@ -544,7 +562,9 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || typeof value.log !== 'string' || !(value.error === null || typeof value.error === 'string')
     || !object(value.requestSummary) || value.requestSummary.jobType !== 'gpu-thermal-pilot'
     || typeof value.requestSummary.backend !== 'string' || !/^cuda:[0-9]+$/.test(value.requestSummary.backend)
-    || typeof value.requestSummary.mode !== 'string' || typeof value.requestSummary.material !== 'string') {
+    || typeof value.requestSummary.mode !== 'string' || typeof value.requestSummary.material !== 'string'
+    || (value.requestSummary.executionEngine !== undefined
+      && value.requestSummary.executionEngine !== 'torch' && value.requestSummary.executionEngine !== 'warp')) {
     throw new Error('Invalid CUDA pilot job response');
   }
   if (value.status !== 'completed') {
@@ -559,7 +579,18 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || (hasBoundContract && (r.gpuRunContract === null || r.gpuFieldArtifacts === null))) {
     throw new Error('Invalid bound CUDA pilot archive contract');
   }
-  if (hasBoundContract) validateGpuBoundArchive(r);
+  const engineId = hasBoundContract ? validateGpuBoundArchive(r) : 'torch';
+  const evidence = object(r.provenance) && object(r.provenance.deviceEvidence)
+    ? r.provenance.deviceEvidence : undefined;
+  const runtimeMatchesEngine = engineId === 'warp'
+    ? !!evidence && evidence.engineId === 'warp' && typeof evidence.warp === 'string' && !!evidence.warp.trim()
+      && !Object.hasOwn(evidence, 'torch') && !Object.hasOwn(evidence, 'cudaRuntime')
+      && typeof evidence.warpCudaToolkitVersion === 'string' && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.warpCudaToolkitVersion)
+      && typeof evidence.cudaDriverVersion === 'string' && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.cudaDriverVersion)
+    : !!evidence && typeof evidence.torch === 'string' && !!evidence.torch.trim()
+      && !Object.hasOwn(evidence, 'warp') && !Object.hasOwn(evidence, 'engineId')
+      && !Object.hasOwn(evidence, 'warpCudaToolkitVersion') && !Object.hasOwn(evidence, 'cudaDriverVersion')
+      && typeof evidence.cudaRuntime === 'string' && !!evidence.cudaRuntime.trim();
   if (!object(r) || r.schemaVersion !== 1 || r.jobType !== 'gpu-thermal-pilot'
     || r.requestedMode !== 'standard' || r.effectiveMode !== 'gpu-pilot'
     || r.validationStatus !== 'unvalidated' || r.productionReady !== false
@@ -568,7 +599,7 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || r.settings.study !== 'none' || r.settings.surfaceMode !== 'powder-layer'
     || r.settings.powderGridPolicy !== 'layer-conforming'
     || r.settings.tracks !== 1 || r.settings.layers !== 1
-    || !object(r.solver) || r.solver.id !== 'enthalpy-fv-6-cuda-pilot-1'
+    || !object(r.solver) || r.solver.id !== (engineId === 'warp' ? 'enthalpy-fv-6-warp-candidate-1' : 'enthalpy-fv-6-cuda-pilot-1')
     || r.solver.modelId !== 'stationary-enthalpy-conduction-layer-conforming-v1'
     || r.solver.actualBackend !== r.settings.backend
     || r.solver.thermalEvolutionDevice !== r.settings.backend
@@ -586,8 +617,7 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || typeof r.provenance.implementationHash !== 'string' || !/^[a-f0-9]{64}$/.test(r.provenance.implementationHash)
     || r.provenance.materialVersion !== r.material.version
     || typeof r.provenance.createdAt !== 'string' || !Number.isFinite(Date.parse(r.provenance.createdAt))
-    || typeof r.provenance.deviceEvidence.torch !== 'string' || !r.provenance.deviceEvidence.torch.trim()
-    || typeof r.provenance.deviceEvidence.cudaRuntime !== 'string' || !r.provenance.deviceEvidence.cudaRuntime.trim()
+    || !runtimeMatchesEngine
     || !Array.isArray(r.provenance.deviceEvidence.computeCapability)
     || r.provenance.deviceEvidence.computeCapability.length !== 2
     || r.provenance.deviceEvidence.computeCapability.some(part => !Number.isSafeInteger(part) || part < 0)
@@ -606,6 +636,13 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || !object(r.gpuPilot.targets) || !object(r.gpuPilot.comparisons)
     || !Array.isArray(r.artifacts) || (!hasBoundContract && r.artifacts.length !== 0)) {
     throw new Error('Invalid CUDA pilot result identity');
+  }
+  if ((engineId === 'warp' && (r.settings.executionEngine !== 'warp'
+      || r.solver.sourceIntegrationDevice !== 'cpu' || r.solver.sourceTimestepLimiterDevice !== 'cpu'))
+    || (engineId === 'torch' && Object.hasOwn(r.settings, 'executionEngine'))
+    || (value.requestSummary.executionEngine !== undefined && value.requestSummary.executionEngine !== engineId)
+    || (engineId === 'warp' && value.requestSummary.executionEngine !== 'warp')) {
+    throw new Error('CUDA pilot solver engine identity mismatch');
   }
   checkClosure(r.energyBalance, ['input_J', 'losses_J', 'stored_J'], .01);
   const comparisons = r.gpuPilot.comparisons as Record<string, unknown>;

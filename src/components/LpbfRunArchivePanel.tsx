@@ -10,6 +10,205 @@ import type { RunRecord, RunSourceLink, NistOpticalCaseNumber, NistOpticalReport
 
 const button = 'rounded-lg border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40';
 const RESTORE_ID_STORAGE_KEY = 'metalliksa.lpbf.lastRestoreId.v1';
+const GPU_ENGINE_UNVERIFIED = 'GPU engine unverified';
+
+type UnknownRecord = Record<string, unknown>;
+const isRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isSha256 = (value: unknown): value is string =>
+  typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+function sameJsonValue(left: unknown, right: unknown): boolean {
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') {
+    return Object.is(left, right);
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length
+      && left.every((value, index) => sameJsonValue(value, right[index]));
+  }
+  const leftRecord = left as UnknownRecord;
+  const rightRecord = right as UnknownRecord;
+  const leftKeys = Object.keys(leftRecord).sort();
+  const rightKeys = Object.keys(rightRecord).sort();
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index]
+      && sameJsonValue(leftRecord[key], rightRecord[key]));
+}
+
+/** Return an engine label only when the outer archive capture and every v1/v2 engine identity agree. */
+export function gpuPilotEngineLabel(captureValue: unknown, resultValue: unknown): string {
+  if (!isRecord(captureValue) || !isRecord(resultValue)) return GPU_ENGINE_UNVERIFIED;
+  const capture = captureValue;
+  const result = resultValue;
+  const contract = result.gpuRunContract;
+  const settings = result.settings;
+  const solver = result.solver;
+  const provenance = result.provenance;
+  const evidence = isRecord(provenance) ? provenance.deviceEvidence : undefined;
+  const contractCapture = isRecord(contract) ? contract.capture : undefined;
+  const serialized = isRecord(contract) ? contract.serializedInputs : undefined;
+  const hashes = isRecord(contract) ? contract.hashes : undefined;
+  const backend = isRecord(settings) ? settings.backend : undefined;
+  const cpuSourcesMatch = isRecord(solver) && isRecord(evidence)
+    && solver.sourceIntegrationDevice === 'cpu' && solver.sourceTimestepLimiterDevice === 'cpu'
+    && evidence.sourceIntegration === 'cpu'
+    && (evidence.sourceTimestepLimiter === undefined || evidence.sourceTimestepLimiter === 'cpu');
+  const cudaSourcesMatch = typeof backend === 'string'
+    && isRecord(solver) && isRecord(evidence)
+    && solver.sourceIntegrationDevice === backend && solver.sourceTimestepLimiterDevice === backend
+    && evidence.sourceIntegration === backend && evidence.sourceTimestepLimiter === backend;
+  if (!isRecord(contract) || !isRecord(contractCapture) || !isRecord(serialized)
+      || !isRecord(hashes) || !isRecord(settings) || !isRecord(solver)
+      || !isRecord(result.material) || !isRecord(provenance) || !isRecord(evidence)
+      || capture.schemaVersion !== 1 || capture.runKind !== 'gpu-thermal-pilot'
+      || capture.runKind !== contract.runKind || result.runKind !== 'gpu-thermal-pilot'
+      || result.jobType !== 'gpu-thermal-pilot' || settings.jobType !== 'gpu-thermal-pilot'
+      || result.requestedMode !== 'standard' || result.effectiveMode !== 'gpu-pilot'
+      || result.validationStatus !== 'unvalidated' || result.productionReady !== false
+      || result.confidence !== 'low' || Object.hasOwn(result, 'coreContract')
+      || capture.inputJson !== serialized.requestJson || capture.materialJson !== serialized.materialJson
+      || !isSha256(hashes.requestHash) || !isSha256(hashes.materialHash)
+      || !isSha256(hashes.implementationHash) || !isSha256(provenance.inputHash)
+      || !isSha256(provenance.implementationHash)
+      || hashes.requestHash !== provenance.inputHash
+      || hashes.implementationHash !== provenance.implementationHash
+      || typeof serialized.requestJson !== 'string' || typeof serialized.materialJson !== 'string'
+      || typeof settings.backend !== 'string' || !/^cuda:[0-9]+$/.test(settings.backend)
+      || contractCapture.backend !== settings.backend || contractCapture.device !== settings.backend
+      || contractCapture.dtype !== 'float64' || solver.dtype !== 'float64'
+      || solver.actualBackend !== settings.backend || solver.thermalEvolutionDevice !== settings.backend
+      || evidence.selected !== settings.backend || evidence.thermalEvolution !== settings.backend
+      || typeof evidence.name !== 'string' || !evidence.name.trim()
+      || !Array.isArray(evidence.computeCapability) || evidence.computeCapability.length !== 2
+      || evidence.computeCapability.some(value => !Number.isSafeInteger(value) || value < 0)
+      || evidence.synchronizedAfterSolve !== true || evidence.engineId !== contractCapture.engineId) {
+    return GPU_ENGINE_UNVERIFIED;
+  }
+  try {
+    if (!sameJsonValue(JSON.parse(serialized.requestJson as string), settings)
+        || !sameJsonValue(JSON.parse(serialized.materialJson as string), result.material)) {
+      return GPU_ENGINE_UNVERIFIED;
+    }
+  } catch {
+    return GPU_ENGINE_UNVERIFIED;
+  }
+
+  if (contract.schemaVersion === 2 && contractCapture.contractStatus === 'gpu-pilot-v2-warp-bound'
+      && capture.contractStatus === 'gpu-pilot-v2-warp-bound'
+      && contractCapture.engineId === 'warp' && settings.executionEngine === 'warp'
+      && evidence.engineId === 'warp' && typeof evidence.warp === 'string' && evidence.warp.trim()
+      && !Object.hasOwn(evidence, 'torch') && !Object.hasOwn(evidence, 'cudaRuntime')
+      && solver.id === 'enthalpy-fv-6-warp-candidate-1'
+      && cpuSourcesMatch
+      && solver.modelId === 'stationary-enthalpy-conduction-layer-conforming-v1'
+      && contractCapture.modelId === solver.modelId
+      && typeof evidence.warpCudaToolkitVersion === 'string'
+      && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.warpCudaToolkitVersion)
+      && typeof evidence.cudaDriverVersion === 'string'
+      && /^[1-9][0-9]*\.[0-9]+$/.test(evidence.cudaDriverVersion)) {
+    return 'NVIDIA Warp candidate · v2';
+  }
+
+  if (contract.schemaVersion === 1 && contractCapture.contractStatus === 'gpu-pilot-v1-bound'
+      && capture.contractStatus === 'gpu-pilot-v1-bound'
+      && contractCapture.engineId === undefined && settings.executionEngine === undefined
+      && evidence.engineId === undefined && typeof evidence.torch === 'string' && evidence.torch.trim()
+      && !Object.hasOwn(evidence, 'warp') && !Object.hasOwn(evidence, 'warpCudaToolkitVersion')
+      && !Object.hasOwn(evidence, 'cudaDriverVersion')
+      && solver.id === 'enthalpy-fv-6-cuda-pilot-1'
+      && solver.modelId === 'stationary-enthalpy-conduction-layer-conforming-v1'
+      && contractCapture.modelId === solver.modelId
+      && (cpuSourcesMatch || cudaSourcesMatch)
+      && typeof evidence.cudaRuntime === 'string' && evidence.cudaRuntime.trim()) {
+    return 'PyTorch CUDA · v1';
+  }
+
+  return GPU_ENGINE_UNVERIFIED;
+}
+
+function parseCapturedResult(resultJson: string): unknown {
+  try { return JSON.parse(resultJson); } catch { return undefined; }
+}
+
+const GPU_PARITY_FIELDS = ['finalSampling', 'finalTemperatureField', 'peakTemperature_K', 'input_J', 'losses_J',
+  'stored_J', 'width_um', 'depth_um', 'length_um', 'volume_um3'] as const;
+const displayedNumber = (value: unknown) => typeof value === 'number' && Number.isFinite(value)
+  ? value.toPrecision(6) : '—';
+const displayedCount = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+  ? String(value) : '—';
+
+function gpuParityRow(key: typeof GPU_PARITY_FIELDS[number], item: UnknownRecord | undefined,
+  targets: UnknownRecord | undefined) {
+  const reportedStatus = item && (item.status === 'pass' || item.status === 'failed' || item.status === 'inconclusive')
+    ? item.status : 'unavailable';
+  if (!item) return { unit: '—', status: 'unavailable', cpu: '—', warp: '—', difference: '—' };
+  if (key === 'finalSampling') {
+    const complete = ['cpuFinalTime_s', 'gpuFinalTime_s', 'expectedEnd_s'].every(name =>
+      typeof item[name] === 'number' && Number.isFinite(item[name]))
+      && ['cpuSteps', 'gpuSteps', 'cellCount'].every(name =>
+        typeof item[name] === 'number' && Number.isSafeInteger(item[name]) && (item[name] as number) > 0);
+    return { unit: 's · steps · cells', status: reportedStatus === 'pass' && !complete ? 'unverified' : reportedStatus,
+      cpu: `${displayedNumber(item.cpuFinalTime_s)} s · ${displayedCount(item.cpuSteps)} steps`,
+      warp: `${displayedNumber(item.gpuFinalTime_s)} s · ${displayedCount(item.gpuSteps)} steps`,
+      difference: `Expected end ${displayedNumber(item.expectedEnd_s)} s · ${displayedCount(item.cellCount)} cells` };
+  }
+  if (key === 'finalTemperatureField') {
+    const l2 = item.relativeRiseL2, maximum = item.relativeRiseMax;
+    const l2Target = targets?.fieldRiseL2RelativeMax, maximumTarget = targets?.fieldRiseMaxRelativeMax;
+    const complete = [l2, maximum, l2Target, maximumTarget].every(value =>
+      typeof value === 'number' && Number.isFinite(value) && value >= 0)
+      && typeof item.cpuEncoding === 'string' && !!item.cpuEncoding
+      && typeof item.gpuEncoding === 'string' && !!item.gpuEncoding;
+    const reason = typeof item.reason === 'string' && item.reason.trim() ? ` · ${item.reason}` : '';
+    return { unit: 'dimensionless', status: reportedStatus === 'pass' && !complete ? 'unverified' : reportedStatus,
+      cpu: typeof item.cpuEncoding === 'string' ? item.cpuEncoding : '—',
+      warp: typeof item.gpuEncoding === 'string' ? item.gpuEncoding : '—',
+      difference: complete
+        ? `L2 ${displayedNumber(l2)} / ${displayedNumber(l2Target)} target · Lmax ${displayedNumber(maximum)} / ${displayedNumber(maximumTarget)} target${reason}`
+        : reason ? reason.slice(3) : 'Field norms unavailable' };
+  }
+  const unit = key === 'peakTemperature_K' ? 'K'
+    : ['input_J', 'losses_J', 'stored_J'].includes(key) ? 'J'
+    : key === 'volume_um3' ? 'µm³' : 'µm';
+  const differenceValue = item.relativeDifference ?? item.absoluteDifference_um;
+  const differenceUnit = item.relativeDifference !== undefined ? 'relative' : 'µm';
+  const complete = typeof item.cpu === 'number' && Number.isFinite(item.cpu)
+    && typeof item.gpu === 'number' && Number.isFinite(item.gpu)
+    && typeof differenceValue === 'number' && Number.isFinite(differenceValue);
+  return { unit, status: reportedStatus === 'pass' && !complete ? 'unverified' : reportedStatus,
+    cpu: displayedNumber(item.cpu), warp: displayedNumber(item.gpu),
+    difference: complete ? `${displayedNumber(differenceValue)} ${differenceUnit}` : 'Delta unavailable' };
+}
+
+export function GpuPilotParityTable({ captureValue, resultValue }: { captureValue: unknown; resultValue: unknown }) {
+  const pilot = isRecord(resultValue) && isRecord(resultValue.gpuPilot) ? resultValue.gpuPilot : undefined;
+  const comparisons = pilot && isRecord(pilot.comparisons) ? pilot.comparisons : undefined;
+  if (gpuPilotEngineLabel(captureValue, resultValue) !== 'NVIDIA Warp candidate · v2' || !comparisons) return null;
+  const targets = isRecord(pilot.targets) ? pilot.targets : undefined;
+  const rows = GPU_PARITY_FIELDS.map(key => gpuParityRow(key,
+    isRecord(comparisons[key]) ? comparisons[key] : undefined, targets));
+  const reportedModelStatus = pilot.status === 'pass' || pilot.status === 'failed' || pilot.status === 'inconclusive'
+    ? pilot.status : 'unavailable';
+  const modelStatus = reportedModelStatus === 'pass' && rows.some(row => row.status !== 'pass')
+    ? 'unverified' : reportedModelStatus;
+  return <section aria-label="CPU and Warp numerical parity" className="space-y-2 rounded-xl border border-slate-700 p-4 text-sm">
+    <div><h4 className="font-medium">CPU ↔ Warp numerical/model parity · {modelStatus}</h4>
+      <p className="text-xs text-amber-200">Recorded numerical comparison only. This does not establish experimental validation.</p></div>
+    <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-xs">
+      <thead><tr className="border-b border-slate-700 text-slate-300">
+        <th className="p-2">Quantity</th><th className="p-2">Unit</th><th className="p-2">Status</th>
+        <th className="p-2">CPU</th><th className="p-2">Warp</th><th className="p-2">Difference / criterion</th>
+      </tr></thead>
+      <tbody>{GPU_PARITY_FIELDS.map((key, index) => {
+        const row = rows[index];
+        return <tr key={key} className="border-b border-slate-800">
+          <th scope="row" className="p-2 font-medium">{key}</th><td className="p-2">{row.unit}</td>
+          <td className="p-2">{row.status}</td><td className="p-2 font-mono">{row.cpu}</td>
+          <td className="p-2 font-mono">{row.warp}</td><td className="p-2 font-mono">{row.difference}</td>
+        </tr>;
+      })}</tbody>
+    </table></div>
+  </section>;
+}
 
 function savedRestoreId(): string {
   try {
@@ -220,6 +419,11 @@ function ArchivedRunRecord({ runId, restoreId }: { runId: string; restoreId?: st
   useEffect(() => { void run('current'); }, [runId]);
   
   const record = task.data;
+  const capturedResult = record?.runKind === 'gpu-thermal-pilot'
+    ? parseCapturedResult(record.document.capture.resultJson) : undefined;
+  const gpuEngine = record?.runKind === 'gpu-thermal-pilot'
+    ? gpuPilotEngineLabel(record.document.capture, capturedResult)
+    : GPU_ENGINE_UNVERIFIED;
   return <div className="space-y-4" aria-busy={!!task.pending}>
     <div className="flex flex-wrap gap-2">
       <button className={button} disabled={!!task.pending} onClick={() => void run('current')}>Reload run</button>
@@ -230,14 +434,19 @@ function ArchivedRunRecord({ runId, restoreId }: { runId: string; restoreId?: st
       <p>Created at {record.createdAt}</p>
       <p>Model status: Unvalidated model</p>
       <p>Run kind: {record.runKind}</p>
-      <p>Contract: {record.document.capture.contractStatus === 'legacy-unbound' ? 'Legacy run · core contract unbound' : 'Core v1 bound'}</p>
+      <p>Contract: {record.document.capture.contractStatus === 'gpu-pilot-v2-warp-bound' ? 'Warp GPU pilot v2 bound'
+        : record.document.capture.contractStatus === 'gpu-pilot-v1-bound' ? 'PyTorch CUDA pilot v1 bound'
+        : record.document.capture.contractStatus === 'legacy-unbound' ? 'Legacy run · core contract unbound' : 'Core v1 bound'}</p>
       <p>Source binding: {record.sourceBindingStatus === 'exact-revision-bound' ? 'Exact archived source revision' : 'Legacy run · no archived source revision'}</p>
       <p>Job ID: {record.document.capture.jobId}</p>
       <details><summary className="cursor-pointer font-medium mt-3">Document Payload</summary>
       <pre className="text-xs bg-slate-950 p-3 overflow-auto mt-2 text-slate-300">{JSON.stringify(record.document, null, 2)}</pre>
       </details>
     </div>}
-    {record && <NistOpticalComparison record={record} restoreId={restoreId} />}
+    {record?.runKind === 'gpu-thermal-pilot'
+      ? <><p className="rounded-lg border border-sky-500/30 p-3 text-sm text-sky-100">GPU thermal pilot · {gpuEngine} parity evidence is archived separately from CPU core runs. NIST optical and CPU proxy comparisons are unavailable for this run kind.</p>
+        <GpuPilotParityTable captureValue={record.document.capture} resultValue={capturedResult}/></>
+      : record && <NistOpticalComparison record={record} restoreId={restoreId} />}
   </div>;
 }
 
@@ -522,7 +731,9 @@ export function LpbfJobArchiver({ jobId }: { jobId: string }) {
     {preview && <div className="text-xs text-slate-300 space-y-1">
       <p>Preview ready: {preview.artifactCount} artifacts, {(preview.byteSize / 1024 / 1024).toFixed(2)} MB.</p>
       <p>Run kind: {preview.document.capture.runKind ?? 'legacy-unspecified'}.</p>
-      <p>{preview.document.capture.contractStatus === 'legacy-unbound' ? 'Legacy run: core contract unbound.' : 'Core v1 contract bound.'} Model remains unvalidated.</p>
+      <p>{preview.document.capture.contractStatus === 'gpu-pilot-v2-warp-bound' ? 'Warp GPU pilot v2 contract bound; complete field artifacts and numerical evidence are checked during archive.'
+        : preview.document.capture.contractStatus === 'gpu-pilot-v1-bound' ? 'PyTorch CUDA pilot v1 contract bound; complete field artifacts and numerical evidence are checked during archive.'
+        : preview.document.capture.contractStatus === 'legacy-unbound' ? 'Legacy run: core contract unbound.' : 'Core v1 contract bound.'} Model remains unvalidated.</p>
       {preview.quota.approachingLimit && <p className="text-amber-300">Warning: Archive is approaching its capacity limit.</p>}
       <p className="text-slate-500">Archive size: {(preview.quota.totalArchiveSizeBytes / 1024 / 1024 / 1024).toFixed(2)} GB / 15 GB</p>
     </div>}

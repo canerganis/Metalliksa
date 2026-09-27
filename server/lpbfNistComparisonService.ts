@@ -69,6 +69,9 @@ export class LpbfNistComparisonService {
     }
     const record = this.runs.get(runId);
     const result = JSON.parse(record.document.capture.resultJson);
+    if (record.runKind === 'gpu-thermal-pilot') {
+      return unavailable(caseNumber, ['GPU thermal-pilot archives are separate parity evidence and are not eligible for CPU-core NIST optical comparison.']);
+    }
     if (record.runKind === 'analytical-screening') {
       return unavailable(caseNumber, ['Analytical screening has no transient thermal evolution and is not eligible for NIST optical comparison.']);
     }

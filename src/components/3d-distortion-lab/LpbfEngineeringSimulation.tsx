@@ -3,9 +3,9 @@ import { Badge, ResultHeader, ThermalHistory, ConvergencePanel, MeasurementPanel
 import { LpbfPhysicsDiagnostics } from "./LpbfPhysicsDiagnostics";
 import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
 import React, { useEffect, useRef, useState } from "react";
-import { LpbfJobArchiver } from "../LpbfRunArchivePanel";
+import { LpbfJobArchiver, gpuPilotEngineLabel as validatedGpuPilotEngineLabel } from "../LpbfRunArchivePanel";
 import { In625BareplatePanel } from "../In625BareplatePanel";
-import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, type GpuPilotJob, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
+import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, type GpuPilotJob, type GpuPilotResult, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 
 import { LPBF_ENGINEERING_DEFAULTS as defaults, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
@@ -206,12 +206,53 @@ export function GpuPilotExecutedInputSummary({saved, current, bound}: {
   </section>;
 }
 
+export function GpuPilotArchiveAction({job}: {job: GpuPilotJob}) {
+  const result = job.result;
+  if (job.status !== "completed" || !result?.gpuRunContract || !result.gpuFieldArtifacts) return null;
+  return <div className="mt-6" aria-label="Archive completed CUDA pilot" data-gpu-job-id={job.id}>
+    <LpbfJobArchiver jobId={job.id} />
+  </div>;
+}
+
+export function gpuPilotEngineLabel(result: GpuPilotResult): string {
+  const contract = result.gpuRunContract;
+  const capture = contract && isRecord(contract.capture) ? contract.capture : undefined;
+  const serialized = contract && isRecord(contract.serializedInputs) ? contract.serializedInputs : undefined;
+  return validatedGpuPilotEngineLabel(capture && serialized ? {
+    schemaVersion: 1,
+    runKind: 'gpu-thermal-pilot',
+    contractStatus: capture.contractStatus,
+    inputJson: serialized.requestJson,
+    materialJson: serialized.materialJson,
+  } : undefined, result);
+}
+
+export function gpuPilotRuntimeLabel(result: GpuPilotResult): string {
+  const engine = gpuPilotEngineLabel(result);
+  const evidence = result.provenance.deviceEvidence;
+  if (engine === 'NVIDIA Warp candidate · v2' && 'engineId' in evidence
+      && evidence.engineId === 'warp' && typeof evidence.warp === 'string'
+      && typeof evidence.warpCudaToolkitVersion === 'string' && typeof evidence.cudaDriverVersion === 'string') {
+    return `Warp ${evidence.warp} · CUDA toolkit ${evidence.warpCudaToolkitVersion} · CUDA driver ${evidence.cudaDriverVersion}`;
+  }
+  if (engine === 'PyTorch CUDA · v1' && 'cudaRuntime' in evidence
+      && typeof evidence.torch === 'string' && typeof evidence.cudaRuntime === 'string') {
+    return `PyTorch ${evidence.torch} · CUDA runtime ${evidence.cudaRuntime}`;
+  }
+  return 'GPU runtime evidence unverified';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function GpuThermalPilotPanel({input, settings, material, properties, strategy, caps, blocked}: {
   input: SimulationInput; settings: Partial<SimulationInput>; material: string;
   properties: string; strategy: SimulationInput["strategy"];
   caps?: SimulationCapabilities; blocked: boolean;
 }) {
   const [device, setDevice] = useState("cuda:0");
+  const [engine, setEngine] = useState<'torch' | 'warp'>('torch');
   const [job, setJob] = useState<GpuPilotJob>();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -223,7 +264,8 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     let saved = "";
     try { saved = localStorage.getItem(GPU_PILOT_STORAGE_KEY) || ""; } catch { /* Storage may be disabled. */ }
     if (/^[a-f0-9]{32}$/.test(saved)) {
-      gpuPilotApi.get(saved).then(next => { if (live) { setJob(next); setDevice(next.requestSummary.backend); } })
+      gpuPilotApi.get(saved).then(next => { if (live) { setJob(next); setDevice(next.requestSummary.backend);
+        setEngine(next.requestSummary.executionEngine === 'warp' ? 'warp' : 'torch'); } })
         .catch(e => { if (live) setError(`Saved CUDA pilot unavailable: ${e instanceof Error ? e.message : "Worker connection failed"}`); });
     }
     return () => { live = false; };
@@ -254,7 +296,7 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     try {
       if (!/^cuda:[0-9]+$/.test(device)) throw new Error("Select an explicit cuda:N device.");
       const pilot = buildGpuPilotInput(input, settings, device as `cuda:${number}`,
-        material, strategy, properties.trim() ? JSON.parse(properties) : undefined);
+        material, strategy, properties.trim() ? JSON.parse(properties) : undefined, engine);
       const next = await gpuPilotApi.submit(pilot);
       setJob(next);
       try { localStorage.setItem(GPU_PILOT_STORAGE_KEY, next.id); } catch { /* Live job remains visible. */ }
@@ -274,15 +316,19 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
   let currentRequest: GpuPilotInput | undefined;
   try {
     currentRequest = buildGpuPilotInput(input, settings, device as `cuda:${number}`,
-      material, strategy, properties.trim() ? JSON.parse(properties) : undefined);
+      material, strategy, properties.trim() ? JSON.parse(properties) : undefined, engine);
   } catch { /* Invalid current controls cannot match an archived run. */ }
   return <section className={surface} aria-label="CUDA thermal parity pilot">
     <h4 className="font-medium">CUDA thermal parity pilot</h4>
     <p className="mt-2 text-sm text-slate-300">Explicit CUDA device · one powder-layer track and one layer · standard enthalpy conduction · no convergence study or measurements. Current mesh, time and process values are used. Device availability is checked when submitted.</p>
-    <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above. Permanent archive export and restoration remain unavailable.</p>
+    <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. A completed bound GPU result can be imported with Save to Archive below after selecting a source revision; field bytes and numerical evidence are rechecked during import and bundle restore. This remains unvalidated parity evidence. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above.</p>
     <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
+      <label className="text-sm">GPU engine<select aria-label="GPU engine" className={inputClass} value={engine}
+        onChange={e=>setEngine(e.target.value === 'warp' ? 'warp' : 'torch')}>
+        <option value="torch">PyTorch CUDA · v1</option><option value="warp">NVIDIA Warp candidate · v2</option>
+      </select></label>
       <label className="text-sm">CUDA device<input aria-label="CUDA device" className={inputClass} value={device} onChange={e=>setDevice(e.target.value)} pattern="cuda:[0-9]+" aria-invalid={!/^cuda:[0-9]+$/.test(device)} aria-describedby="cuda-pilot-help" required/></label>
-      <button type="submit" disabled={blocked||submitting||active||!/^cuda:[0-9]+$/.test(device)} className="rounded-lg border border-sky-400/50 bg-sky-950/50 px-4 py-2.5 text-sm disabled:opacity-40">{submitting?"Submitting…":"Run CUDA parity pilot"}</button>
+      <button type="submit" disabled={blocked||submitting||active||!/^cuda:[0-9]+$/.test(device)} className="rounded-lg border border-sky-400/50 bg-sky-950/50 px-4 py-2.5 text-sm disabled:opacity-40">{submitting?"Submitting…":engine === 'warp' ? "Run Warp parity pilot" : "Run CUDA parity pilot"}</button>
       {active&&<button type="button" disabled={cancelling} onClick={cancel} className="rounded-lg border border-slate-500 px-4 py-2.5 text-sm disabled:opacity-40">{cancelling?"Cancelling…":"Cancel CUDA pilot"}</button>}
     </form>
     <p id="cuda-pilot-help" className="mt-2 text-xs text-slate-400">{caps?.cudaThermalPilot?.availability === "checked-on-submit" ? "The worker checks the selected CUDA device at submission." : "CUDA availability is not known until submission."} No CPU fallback is used.</p>
@@ -293,16 +339,17 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
       <GpuPilotExecutedInputSummary saved={result.settings} current={currentRequest}
         bound={Boolean(result.gpuRunContract)}/>
       <p>CPU/GPU parity: <strong>{parity?.status}</strong> · {parity?.scope} · experimental validation: unavailable.</p>
-      <p>Executed device: {evidence?.name} ({evidence?.selected}) · thermal evolution {result.solver.thermalEvolutionDevice} · source integration {result.solver.sourceIntegrationDevice} · {result.solver.dtype}.</p>
+      <p>Executed engine: {gpuPilotEngineLabel(result)} · device: {evidence?.name} ({evidence?.selected}) · thermal evolution {result.solver.thermalEvolutionDevice} · source integration {result.solver.sourceIntegrationDevice} · {result.solver.dtype}.</p>
       <p>Model: {result.solver.modelId} · material {result.material.name} ({result.material.materialId}) · revision <span className="font-mono break-all">{result.material.materialRevisionSha256}</span>.</p>
       <p>GPU W/D/L: {fmt(result.metrics.width_um)} / {fmt(result.metrics.depth_um)} / {fmt(result.metrics.length_um)} µm · peak {fmt(result.metrics.peakTemperature_K)} K · energy closure {fmt(result.energyBalance.relativeError*100)}%.</p>
       <p>CPU reference: {parity?.cpu.solver.id} / {parity?.cpu.coreContract.actualBackend}. Final 3D field L2 {fmt(comparisons?.finalTemperatureField.relativeRiseL2)}; max {fmt(comparisons?.finalTemperatureField.relativeRiseMax)}. Frozen field targets ≤ {fmt(parity?.targets.fieldRiseL2RelativeMax)} / {fmt(parity?.targets.fieldRiseMaxRelativeMax)}.</p>
       <details className="border-t border-slate-700/50 pt-2"><summary className="cursor-pointer">CPU/GPU comparison and device evidence</summary>
         <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[520px] text-left text-xs"><caption className="sr-only">CUDA pilot numerical parity checks</caption><thead><tr><th scope="col">Quantity</th><th scope="col">CPU</th><th scope="col">GPU</th><th scope="col">Difference</th><th scope="col">Status</th></tr></thead><tbody>{Object.entries(comparisons||{}).map(([key,c])=><tr key={key} className="border-t border-slate-700/40"><th scope="row" className="py-2 pr-2 font-normal">{key}</th><td>{fmt(c.cpu)}</td><td>{fmt(c.gpu)}</td><td>{fmt(c.relativeDifference ?? c.absoluteDifference_um ?? c.relativeRiseL2)}</td><td>{c.status}</td></tr>)}</tbody></table></div>
-        <p className="mt-3 text-xs text-slate-400">PyTorch {evidence?.torch} · CUDA runtime {evidence?.cudaRuntime} · compute capability {evidence?.computeCapability.join(".")} · synchronized after solve: {evidence?.synchronizedAfterSolve?"yes":"no"}.</p>
+        <p className="mt-3 text-xs text-slate-400">{gpuPilotRuntimeLabel(result)} · compute capability {evidence?.computeCapability.join(".")} · synchronized after solve: {evidence?.synchronizedAfterSolve?"yes":"no"}.</p>
         <p className="mt-2 text-xs text-slate-400">Input {result.provenance.inputHash} · implementation {result.provenance.implementationHash}.</p>
       </details>
     </div>}
+    {job && <GpuPilotArchiveAction job={job} />}
   </section>;
 }
 

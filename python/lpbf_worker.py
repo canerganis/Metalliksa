@@ -306,7 +306,11 @@ def _archive_run_kind(job_type, result=None):
         if (isinstance(contract, dict) and contract.get("runKind") == job_type
                 and isinstance(fields, dict)
                 and isinstance(capture, dict)
-                and capture.get("contractStatus") == "gpu-pilot-v1-bound"):
+                and ((contract.get("schemaVersion") == 1
+                      and capture.get("contractStatus") == "gpu-pilot-v1-bound")
+                     or (contract.get("schemaVersion") == 2
+                         and capture.get("contractStatus") == "gpu-pilot-v2-warp-bound"
+                         and capture.get("engineId") == "warp"))):
             return "gpu-thermal-pilot"
         return None  # Legacy pilot output remains view-only.
     if job_type == IN625_BAREPLATE_JOB_TYPE:
@@ -407,19 +411,26 @@ class Queue:
         out = dict(row)
         settings = json.loads((self.root/job/"input.json").read_text())
         out["requestSummary"] = {k:settings.get(k) for k in ("jobType","mode","backend","material")}
+        if settings.get("jobType") == "gpu-thermal-pilot" and settings.get("executionEngine") == "warp":
+            out["requestSummary"]["executionEngine"] = "warp"
         if settings.get("jobType") == IN625_BAREPLATE_JOB_TYPE:
             out["requestSummary"] = {k:settings.get(k) for k in ("jobType", "backend", "config")}
         if out["status"] == "completed":
             try:
                 out["result"] = json.loads((self.root/job/"result.json").read_text())
                 if settings.get("jobType") == "gpu-thermal-pilot":
-                    from lpbf_gpu_thermal import enforce_gpu_pilot_result
+                    if settings.get("executionEngine") == "warp":
+                        from lpbf_gpu_warp_pilot import enforce_gpu_warp_pilot_result
+                        enforce_result = enforce_gpu_warp_pilot_result
+                    else:
+                        from lpbf_gpu_thermal import enforce_gpu_pilot_result
+                        enforce_result = enforce_gpu_pilot_result
                     from lpbf_core_contract import _verify_material_revision
                     material = out["result"].get("material") if isinstance(out["result"], dict) else None
                     if not isinstance(material, dict) or "materialRevisionSha256" not in material:
                         raise ValueError("CUDA pilot material revision snapshot is required")
                     _verify_material_revision(material)
-                    enforce_gpu_pilot_result(out["result"], artifact_dir=self.root/job)
+                    enforce_result(out["result"], artifact_dir=self.root/job)
                     # The pilot guard binds a result to its own settings;
                     # also bind it to the separately persisted submitted job.
                     submitted_hash = hashlib.sha256(
@@ -469,8 +480,14 @@ class Queue:
         if job_type == "build-job":
             p, m = raw, raw
         elif job_type == "gpu-thermal-pilot":
-            from lpbf_gpu_thermal import validate_pilot_request
-            p, m = validate_pilot_request(raw)
+            if raw.get("executionEngine") == "warp":
+                from lpbf_gpu_warp_pilot import validate_warp_pilot_request
+                p, m = validate_warp_pilot_request(raw)
+            elif "executionEngine" in raw:
+                raise ValueError("Unsupported GPU pilot execution engine")
+            else:
+                from lpbf_gpu_thermal import validate_pilot_request
+                p, m = validate_pilot_request(raw)
         elif job_type == IN625_BAREPLATE_JOB_TYPE:
             p, _ = _validate_in625_bareplate_request(raw)
             if p["backend"].startswith("cuda:"):
@@ -594,8 +611,12 @@ class Queue:
                     if child.returncode == 0 and (folder/"result.json").exists():
                         result = json.loads((folder/"result.json").read_text())
                         if params.get("jobType") == "gpu-thermal-pilot":
-                            from lpbf_gpu_thermal import enforce_gpu_pilot_result
-                            enforce_gpu_pilot_result(result, artifact_dir=folder)
+                            if params.get("executionEngine") == "warp":
+                                from lpbf_gpu_warp_pilot import enforce_gpu_warp_pilot_result
+                                enforce_gpu_warp_pilot_result(result, artifact_dir=folder)
+                            else:
+                                from lpbf_gpu_thermal import enforce_gpu_pilot_result
+                                enforce_gpu_pilot_result(result, artifact_dir=folder)
                         elif params.get("jobType") == IN625_BAREPLATE_JOB_TYPE:
                             _enforce_bareplate_result(result, params, folder)
                         else:
@@ -629,8 +650,12 @@ def main():
             job_type = input_data.get("jobType")
 
             if job_type == "gpu-thermal-pilot":
-                from lpbf_gpu_thermal import run_queued_pilot
-                result = run_queued_pilot(input_data, artifact_dir=folder)
+                if input_data.get("executionEngine") == "warp":
+                    from lpbf_gpu_warp_pilot import run_queued_warp_pilot
+                    result = run_queued_warp_pilot(input_data, artifact_dir=folder)
+                else:
+                    from lpbf_gpu_thermal import run_queued_pilot
+                    result = run_queued_pilot(input_data, artifact_dir=folder)
             elif job_type == IN625_BAREPLATE_JOB_TYPE:
                 result = _run_in625_bareplate_job(input_data, folder)
             elif job_type == "build-job":

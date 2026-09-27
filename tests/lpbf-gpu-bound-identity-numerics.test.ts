@@ -5,6 +5,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { parseBoundedJson, strictJsonEqual } from '../server/lpbfBoundJson';
 import { validateGpuPilotRunIdentity } from '../server/lpbfGpuRunIdentity';
+import { parseGpuPilotJob } from '../src/services/lpbfSimulationService';
 import { localGpuPilotArtifactResolver, readGpuPilotArtifactsFromManifest } from '../server/lpbfGpuPilotArtifacts';
 import { computeGpuPilotEnthalpyIntegral, expectedGpuPilotScanEnd_s, PARITY_TARGETS,
   stableGpuPilotNorm, validateGpuPilotNumerics } from '../server/lpbfGpuPilotNumerics';
@@ -76,6 +77,62 @@ test('actual bound GPU result retains exact strings and validates historical CPU
   assert.throws(() => validateGpuPilotRunIdentity(roundedInteger), /invalid or over-budget/i);
   reordered.gpuRunContract.hashes.requestHash = '0'.repeat(64);
   assert.throws(() => validateGpuPilotRunIdentity(reordered), /detached|hash/i);
+});
+
+test('Warp v2 has an explicit solver/runtime identity and keeps the CPU core nested', () => {
+  const result = fixture();
+  const contract = result.gpuRunContract;
+  const requestJson = contract.serializedInputs.requestJson.replace(
+    '"jobType": "gpu-thermal-pilot"',
+    '"executionEngine": "warp", "jobType": "gpu-thermal-pilot"');
+  assert.notEqual(requestJson, contract.serializedInputs.requestJson);
+  result.settings.executionEngine = 'warp';
+  contract.schemaVersion = 2;
+  contract.capture.contractStatus = 'gpu-pilot-v2-warp-bound';
+  contract.capture.engineId = 'warp';
+  contract.serializedInputs.requestJson = requestJson;
+  contract.hashes.requestHash = sha(requestJson);
+  result.provenance.inputHash = contract.hashes.requestHash;
+  result.provenance.deviceEvidence.engineId = 'warp';
+  result.provenance.deviceEvidence.warp = '1.9.0';
+  result.provenance.deviceEvidence.warpCudaToolkitVersion = '12.9';
+  result.provenance.deviceEvidence.cudaDriverVersion = '13.4';
+  delete result.provenance.deviceEvidence.torch;
+  delete result.provenance.deviceEvidence.cudaRuntime;
+  result.solver.id = 'enthalpy-fv-6-warp-candidate-1';
+
+  const identity = validateGpuPilotRunIdentity(result);
+  assert.equal(identity.engineId, 'warp');
+  assert.equal(identity.request.executionEngine, 'warp');
+  const job = parseGpuPilotJob({ id: '2bcb01e5799041ec9458a947506d491f', status: 'completed',
+    progress: 1, log: '', error: null, requestSummary: { jobType: 'gpu-thermal-pilot',
+      backend: 'cuda:0', mode: 'standard', material: 'Inconel 718', executionEngine: 'warp' }, result });
+  assert.equal(job.result?.solver.id, 'enthalpy-fv-6-warp-candidate-1');
+  assert.equal(job.result?.provenance.deviceEvidence.warp, '1.9.0');
+  assert.equal('torch' in job.result!.provenance.deviceEvidence, false);
+
+  const masquerade = copy(result);
+  masquerade.solver.id = 'enthalpy-fv-6-cuda-pilot-1';
+  assert.throws(() => validateGpuPilotRunIdentity(masquerade), /capture binding/i);
+  const detached = copy(result);
+  detached.settings.executionEngine = 'torch';
+  assert.throws(() => validateGpuPilotRunIdentity(detached), /engine/i);
+  const legacyRuntime = copy(result);
+  legacyRuntime.provenance.deviceEvidence.cudaRuntime = '12.6';
+  assert.throws(() => validateGpuPilotRunIdentity(legacyRuntime), /device evidence/i);
+  assert.throws(() => parseGpuPilotJob({ ...job, result: legacyRuntime }), /identity/i);
+  const missingDriver = copy(result);
+  delete missingDriver.provenance.deviceEvidence.cudaDriverVersion;
+  assert.throws(() => validateGpuPilotRunIdentity(missingDriver), /device evidence/i);
+  const malformedVersion = copy(result);
+  malformedVersion.provenance.deviceEvidence.cudaDriverVersion = '13.4.1';
+  assert.throws(() => validateGpuPilotRunIdentity(malformedVersion), /device evidence/i);
+  for (const version of ['0.0', '00.9']) {
+    const invalidVersion = copy(result);
+    invalidVersion.provenance.deviceEvidence.warpCudaToolkitVersion = version;
+    assert.throws(() => validateGpuPilotRunIdentity(invalidVersion), /device evidence/i);
+    assert.throws(() => parseGpuPilotJob({ ...job, result: invalidVersion }), /identity/i);
+  }
 });
 
 test('actual manifest accepts additional captured files but rejects field path case mismatch', async () => {

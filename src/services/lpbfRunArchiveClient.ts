@@ -1,5 +1,6 @@
 import type { RunRecord, RunSourceLink, RunDocument, RunSourceBindingStatus, RunKind,
   NistOpticalCaseNumber, NistOpticalReport } from '../types/lpbfRun';
+import { parseGpuPilotJob } from './lpbfSimulationService';
 
 export interface RunPreview {
   document: RunDocument;
@@ -100,7 +101,8 @@ const bindingStatus = (value: unknown): value is RunSourceBindingStatus =>
   value === 'exact-revision-bound' || value === 'legacy-unlinked';
 const runKind = (value: unknown): value is RunKind =>
   value === 'analytical-screening' || value === 'build-screening'
-  || value === 'transient-thermal' || value === 'bounded-material-screening' || value === 'legacy-unspecified';
+  || value === 'transient-thermal' || value === 'bounded-material-screening'
+  || value === 'gpu-thermal-pilot' || value === 'legacy-unspecified';
 const opticalCases = new Set<string>(['0', '1.1', '1.2', '2.1', '2.2', '3.1', '3.2']);
 const opticalDatasetId = 'nist-amb2022-03-optical-table4-local-v1';
 const opticalArtifactSha = 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da';
@@ -116,7 +118,7 @@ function documentIdentity(value: unknown, expectedJobId?: string): asserts value
     || !object(value.capture) || value.capture.schemaVersion !== 1
     || !jobId(value.capture.jobId) || value.runId !== value.capture.jobId
     || (expectedJobId !== undefined && value.runId !== expectedJobId)
-    || !['core-v1-bound', 'legacy-unbound'].includes(value.capture.contractStatus as string)
+    || !['core-v1-bound', 'legacy-unbound', 'gpu-pilot-v1-bound', 'gpu-pilot-v2-warp-bound'].includes(value.capture.contractStatus as string)
     || (value.capture.runKind !== undefined && !runKind(value.capture.runKind))
     || !['resultJson', 'inputJson', 'materialJson'].every(field => typeof value.capture[field] === 'string')
     || !Array.isArray(value.sources) || value.sources.some(source => !object(source)
@@ -129,6 +131,21 @@ function documentIdentity(value: unknown, expectedJobId?: string): asserts value
       : object(result) ? result.runKind : undefined;
     if (!runKind(capturedKind) || (value.capture.runKind !== undefined && value.capture.runKind !== capturedKind)
       || (value.capture.runKind === undefined) !== (capturedKind === 'legacy-unspecified' && object(result) && result.runKind === undefined)) throw invalid();
+    if (capturedKind === 'gpu-thermal-pilot') {
+      const contractVersion = object(result) && object(result.gpuRunContract)
+        ? result.gpuRunContract.schemaVersion : undefined;
+      const expectedStatus = contractVersion === 2 ? 'gpu-pilot-v2-warp-bound' : 'gpu-pilot-v1-bound';
+      if (value.capture.runKind !== capturedKind || value.capture.contractStatus !== expectedStatus
+        || !object(result) || Object.hasOwn(result, 'coreContract') || !object(result.gpuRunContract)
+        || !object(result.gpuRunContract.serializedInputs)
+        || value.capture.inputJson !== result.gpuRunContract.serializedInputs.requestJson
+        || value.capture.materialJson !== result.gpuRunContract.serializedInputs.materialJson) throw invalid();
+      const settings = object(result.settings) ? result.settings : {};
+      parseGpuPilotJob({ id: value.capture.jobId, status: 'completed', progress: 1, log: '', error: null,
+        requestSummary: { jobType: 'gpu-thermal-pilot', backend: settings.backend, mode: settings.mode,
+          material: settings.material, ...(settings.executionEngine === 'warp' ? { executionEngine: 'warp' } : {}) }, result });
+    } else if (value.capture.contractStatus === 'gpu-pilot-v1-bound'
+      || value.capture.contractStatus === 'gpu-pilot-v2-warp-bound') throw invalid();
   } catch { throw invalid(); }
 }
 

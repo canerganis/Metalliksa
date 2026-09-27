@@ -38,17 +38,10 @@ def _require_warp_cuda(device: str):
     if wp is None:
         raise RuntimeError("Warp is unavailable; explicit Warp CUDA candidate cannot run")
     try:
-        import torch
-    except ImportError as exc:
-        raise RuntimeError("CUDA device validation requires PyTorch; no CPU fallback") from exc
-    index = int(device[5:])
-    if not torch.cuda.is_available() or index >= torch.cuda.device_count():
-        raise RuntimeError(f"CUDA device {device} unavailable; no CPU fallback")
-    try:
-        warp_device = wp.get_device(device)
-        if not warp_device.is_cuda:
-            raise RuntimeError(f"Warp device {device} is not CUDA")
         wp.init()
+        warp_device = wp.get_device(device)
+        if not warp_device.is_cuda or warp_device.ordinal != int(device[5:]):
+            raise RuntimeError(f"Warp device {device} is not CUDA")
     except Exception as exc:
         raise RuntimeError(f"Warp CUDA device {device} unavailable; no CPU fallback") from exc
     return warp_device
@@ -249,8 +242,29 @@ def _validate_candidate(raw):
     return p, material, domain
 
 
-def run_warp(raw, device="cuda:0", capture_final=True):
+def _pilot_capture_projection(coordinates_m, temperature_K, enthalpy_J_m3,
+                             density_kg_m3, accepted_dt_s, *, time_s,
+                             initial_temperature_K, cell_volume_m3):
+    """Select the shared codec's five arrays and three scalars without reconstruction."""
+    return {
+        "coordinates_m": coordinates_m,
+        "temperature_K": temperature_K,
+        # Warp's state is volumetric excess enthalpy (J/m^3), not specific H.
+        "enthalpy_J_m3": enthalpy_J_m3,
+        "density_kg_m3": density_kg_m3,
+        "accepted_dt_s": accepted_dt_s,
+        "time_s": time_s,
+        "initial_temperature_K": initial_temperature_K,
+        "cell_volume_m3": cell_volume_m3,
+    }
+
+
+def run_warp(raw, device="cuda:0", capture_final=True, capture_pilot_state=False):
     """Run the explicit Warp candidate; unavailable Warp/CUDA always raises."""
+    if type(capture_pilot_state) is not bool:
+        raise ValueError("capture_pilot_state must be a boolean")
+    if capture_pilot_state and not capture_final:
+        raise ValueError("Pilot-state capture requires capture_final=True")
     warp_device = _require_warp_cuda(device)
     p, material, domain = _validate_candidate(raw)
     nx, ny, nz = (int(domain[key]) for key in ("nx", "ny", "nz"))
@@ -314,6 +328,7 @@ def run_warp(raw, device="cuda:0", capture_final=True):
     time_s = 0.0
     step = 0
     source_retries = 0
+    accepted_dt_s = [] if capture_pilot_state else None
     sigma = 5.670374419e-8
     liquidus = float(material["liquidus_K"])
     capture_min = 1.0
@@ -374,6 +389,8 @@ def run_warp(raw, device="cuda:0", capture_final=True):
             raise ValueError("Warp thermal candidate produced a nonfinite enthalpy")
 
         time_s += dt
+        if accepted_dt_s is not None:
+            accepted_dt_s.append(dt)
         roundoff = min(1e-14, 2 * math.ulp(end) * (step + 1))
         if end - time_s <= roundoff:
             time_s = end
@@ -398,8 +415,17 @@ def run_warp(raw, device="cuda:0", capture_final=True):
             tracker.observe(temperature_host, layer_m, p["scanAngle_deg"], time_s, step, sampled=True)
         peak = max(peak, float(np.max(temperature_host)))
 
-    enthalpy_host = enthalpy.numpy()
-    temperature_host = temperature.numpy()
+    if capture_pilot_state:
+        # Synchronize once before the final full-state readback. Captured fields
+        # come from the actual evolving Warp arrays; no H(T) reconstruction or
+        # per-step full-field capture is performed.
+        wp.synchronize_device(warp_device)
+        enthalpy_host = enthalpy.numpy()
+        temperature_host = temperature.numpy()
+        density_host = rho.numpy()
+    else:
+        enthalpy_host = enthalpy.numpy()
+        temperature_host = temperature.numpy()
     stored = float(np.sum(enthalpy_host)) * dx**3
     closure = abs(energy_in - energy_out - stored) / max(energy_in, 1e-12)
     if closure > .01:
@@ -425,9 +451,22 @@ def run_warp(raw, device="cuda:0", capture_final=True):
                           "sourceRetries": source_retries},
     }
     if capture_final:
-        return result, {"temperature_K": temperature_host,
-                        "coordinates_m": xyz, "time_s": time_s,
-                        "surface_m": layer_m, "steps": step}
+        field = {"temperature_K": temperature_host,
+                 "coordinates_m": xyz, "time_s": time_s,
+                 "surface_m": layer_m, "steps": step}
+        if capture_pilot_state:
+            capture = _pilot_capture_projection(
+                coordinates_m=xyz,
+                temperature_K=temperature_host,
+                enthalpy_J_m3=enthalpy_host,
+                density_kg_m3=density_host,
+                accepted_dt_s=np.asarray(accepted_dt_s, dtype=np.float64),
+                time_s=time_s,
+                initial_temperature_K=t0,
+                cell_volume_m3=dx**3,
+            )
+            return result, field, capture
+        return result, field
     return result
 
 

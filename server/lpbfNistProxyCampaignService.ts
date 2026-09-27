@@ -164,6 +164,9 @@ export class LpbfNistProxyCampaignService {
       for (let index = 0; index < records.length; index++) {
         const record = records[index], result = JSON.parse(record.document.capture.resultJson);
         const settings = result.settings || {}, beam = result.measuredBeamProfileEvidence || {};
+        if (record.runKind === 'gpu-thermal-pilot') {
+          return { campaign: null, validation: unavailable([`Archived GPU pilot ${record.document.runId} is separate from CPU-core proxy eligibility.`]) };
+        }
         if (record.runKind !== 'transient-thermal' || record.document.capture.contractStatus !== 'core-v1-bound'
           || result.coreContract?.modelId !== 'stationary-enthalpy-conduction-v1'
           || result.coreContract?.actualBackend !== 'numpy-reference' || result.effectiveMode !== 'standard'

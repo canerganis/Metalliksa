@@ -10,11 +10,11 @@ export interface RunCapture {
   resultJson: string;
   inputJson: string;
   materialJson: string;
-  contractStatus: 'core-v1-bound' | 'legacy-unbound';
+  contractStatus: 'core-v1-bound' | 'legacy-unbound' | 'gpu-pilot-v1-bound' | 'gpu-pilot-v2-warp-bound';
   runKind?: RunKind;
 }
 
-export type RunKind = 'analytical-screening' | 'build-screening' | 'transient-thermal' | 'bounded-material-screening' | 'legacy-unspecified';
+export type RunKind = 'analytical-screening' | 'build-screening' | 'transient-thermal' | 'bounded-material-screening' | 'gpu-thermal-pilot' | 'legacy-unspecified';
 
 export interface RunDocument {
   schemaVersion: 1;

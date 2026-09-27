@@ -1,6 +1,7 @@
 """Focused correctness coverage for the opt-in Warp thermal candidate."""
 
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import lpbf_gpu_thermal_warp as candidate
@@ -22,12 +23,23 @@ class WarpThermalCandidate(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Warp is unavailable"):
                 candidate._require_warp_cuda("cuda:0")
 
+    def test_device_validation_uses_warp_without_torch_and_rejects_wrong_device(self):
+        from unittest.mock import Mock
+        selected = SimpleNamespace(is_cuda=True, ordinal=0)
+        api = SimpleNamespace(init=Mock(), get_device=Mock(return_value=selected))
+        with patch.object(candidate, "wp", api), patch.dict("sys.modules", {"torch": None}):
+            self.assertIs(candidate._require_warp_cuda("cuda:0"), selected)
+            api.init.assert_called_once_with()
+            api.get_device.assert_called_once_with("cuda:0")
+            selected.ordinal = 1
+            with self.assertRaisesRegex(RuntimeError, "unavailable"):
+                candidate._require_warp_cuda("cuda:0")
+            selected.ordinal, selected.is_cuda = 0, False
+            with self.assertRaisesRegex(RuntimeError, "unavailable"):
+                candidate._require_warp_cuda("cuda:0")
+
     def test_exact_pilot_case_matches_cpu_full_temperature_field(self):
-        try:
-            import torch
-            available = torch.cuda.is_available() and candidate.wp is not None
-        except ImportError:
-            available = False
+        available = candidate.wp is not None and candidate.wp.is_cuda_available()
         if not available:
             self.skipTest("Warp/CUDA unavailable; explicit candidate parity unverified")
 
@@ -46,11 +58,7 @@ class WarpThermalCandidate(unittest.TestCase):
         self.assertLessEqual(result["gpu"]["energyBalance"]["relativeError"], .01)
 
     def test_four_registry_alloys_match_cpu_under_same_warp_model(self):
-        try:
-            import torch
-            available = torch.cuda.is_available() and candidate.wp is not None
-        except ImportError:
-            available = False
+        available = candidate.wp is not None and candidate.wp.is_cuda_available()
         if not available:
             self.skipTest("Warp/CUDA unavailable; four-alloy parity unverified")
 
