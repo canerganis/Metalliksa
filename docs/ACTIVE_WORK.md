@@ -2169,11 +2169,12 @@ read-only CPU audit found duplicate harmonic face-conductivity work in
 a P4 speedup. Keep the live solver fingerprint fixed until session `68021`
 finishes, then profile and compare numerical parity before a performance edit.
 
-## Active LPBF CUDA lifecycle and validation continuation (2026-09-28)
+## LPBF CUDA lifecycle and validation checkpoint (closed for this work package, 2026-09-28)
 
 - Root owns integration, scientific acceptance gates, STATUS/PROOF and commits. Preserve all unrelated dirty files and existing user work.
 - `/root/sol_workflow_audit` (completed, read-only) audited Queue cancellation, timeout, child kill, startup recovery, race behavior and existing GPU-specific tests; concrete gaps were reported to root.
 - `/root/astra_science` (completed, read-only) audited convergence and independent IN718 measurement evidence gates; no solver run or evidence relabeling was proposed.
 - `/root/sol_nvidia` (completed, read-only) checked actual GPU/benchmark evidence and Nsight availability; no code or tests were changed.
-- `/root/luna_source_ui` owns only `python/lpbf_worker.py` and new/focused `python/test_lpbf_worker_lifecycle.py` (existing GPU queue tests only if needed): implement the smallest deterministic GPU job lifecycle fixes/tests after inspecting current behavior. Do not edit STATUS/PROOF, stage, or commit. Root reviews and integrates after the audits.
+- `/root/luna_source_ui` completed the scoped worker/test edits in `python/lpbf_worker.py` and `python/test_lpbf_worker_lifecycle.py`; root reviewed and tightened terminal-state ordering. The focused lifecycle, timeout and CUDA queue group passed **15/15** under the permitted runner, including actual RTX 4060 CUDA queue execution. Changes are ready for an explicit-path commit.
 - Shared acceptance: terminal status must survive refresh; a cancelled/timed-out/restarted job cannot publish partial results, count as completed/cache-hit, or silently fall back; retry identity and artifacts stay explicit. Numerical/experimental evidence remains separately labelled.
+- Remaining boundary: Windows abrupt worker-process death is not covered by a Job Object or equivalent tree-lifetime mechanism; orphan-child recovery remains open. Full queue E2E performance and moving-source convergence/IN718 experimental gates also remain open; see `STATUS.md` for current evidence and next actions.

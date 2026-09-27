@@ -400,6 +400,7 @@ class Queue:
         self.db = self.root/"queue.sqlite"
         self.caps = capabilities()
         self.lock = threading.RLock()
+        self.children = {}
         self.closed = threading.Event()
         self.thread = None
         with self.connect() as c:
@@ -433,6 +434,31 @@ class Queue:
         with self.lock, self.connect() as c:
             c.execute("UPDATE jobs SET "+",".join(k+"=?" for k in values)+" WHERE id=? AND status='running'",
                       [*values.values(), job])
+
+    def terminate_child(self, job, child):
+        """Kill and reap a registered child once; concurrent cancel/poll paths converge here."""
+        with self.lock:
+            if self.children.get(job) is not child:
+                return
+            try:
+                if child.poll() is None:
+                    if os.name == "nt":
+                        child.kill()
+                    else:
+                        try:
+                            os.killpg(child.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            child.kill()
+                wait = getattr(child, "wait", None)
+                if callable(wait):
+                    try:
+                        wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        child.kill()
+                        wait()
+            finally:
+                if self.children.get(job) is child:
+                    self.children.pop(job, None)
 
     def get(self, job):
         if not isinstance(job, str) or len(job) != 32 or any(ch not in "0123456789abcdef" for ch in job):
@@ -579,6 +605,11 @@ class Queue:
         with self.lock:
             state = self.get(job)
             if state["status"] in ("queued", "running"):
+                child = self.children.get(job)
+                if child is not None:
+                    # Keep the persisted state non-terminal until the child is
+                    # confirmed dead, so concurrent pollers cannot stop early.
+                    self.terminate_child(job, child)
                 self.update(job, status="cancelled", error="Cancelled by user")
         return self.get(job)
 
@@ -603,19 +634,22 @@ class Queue:
         params = json.loads((folder/"input.json").read_text())
         timeout_s = params.get("timeout_s", DEFAULT_JOB_TIMEOUT_S)
         with (folder/"progress.log").open("w") as log:
-            child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--execute", str(folder)],
-                                     stdout=log, stderr=log, start_new_session=(os.name != "nt"))
+            # Serialize the status check, spawn and registration against cancel().
+            # This prevents cancellation from acknowledging while an untracked
+            # child is being launched between the two operations.
+            with self.lock:
+                if self.get(job)["status"] != "running":
+                    return
+                child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--execute", str(folder)],
+                                         stdout=log, stderr=log, start_new_session=(os.name != "nt"))
+                self.children[job] = child
             started = time.monotonic()
             try:
                 while child.poll() is None:
                     state = self.get(job)["status"]
                     timed_out = time.monotonic()-started > timeout_s
                     if state == "cancelled" or timed_out or self.closed.is_set():
-                        if os.name == "nt":
-                            child.kill()
-                        else:
-                            os.killpg(child.pid, signal.SIGKILL)
-                        child.wait(timeout=5)
+                        self.terminate_child(job, child)
                         if state == "cancelled":
                             pass
                         elif timed_out:
@@ -658,10 +692,7 @@ class Queue:
                     else:
                         self.finish_running(job, status="failed", error=final_log[-4000:] or f"Solver exit {child.returncode}", log=final_log)
             finally:
-                if child.poll() is None:
-                    if os.name == "nt": child.kill()
-                    else: os.killpg(child.pid, signal.SIGKILL)
-                    child.wait()
+                self.terminate_child(job, child)
 
 
 def main():

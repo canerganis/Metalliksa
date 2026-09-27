@@ -2,6 +2,14 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — LPBF kuyruk iptal onayı ve kanıt sınırları
+- `python/lpbf_worker.py` çalışan alt süreci kaydediyor; çalışan işi iptal ederken child sonlandırılıp beklenmeden veritabanı işi terminal `cancelled` durumuna geçmiyor. Yeni `python/test_lpbf_worker_lifecycle.py` kuyruk iptali, çalışan child kill/reap, timeout, stale-running restart, completion yarışı, tekrar/cache ve kısmi artifact izolasyonunu kapsıyor.
+- Doğrulama: lifecycle + timeout + CUDA queue odaklı Python grubu **15/15 PASS**; gerçek RTX 4060 CUDA kuyruğu/sonuç-integrity alt testi dahil. `py_compile` ve hedefli `git diff --check` PASS. TEMP/SQLite sandbox erişim engeli yüzünden aynı test komutu izinli runner ile çalıştırıldı.
+- **Açık güvenilirlik sınırı:** Windows worker süreci beklenmedik biçimde öldürülürse child sürecini Job Object ile sahiplenip kapatma henüz uygulanmadı ve test edilmedi; hard-crash sonrası yetim GPU işi riski çözülmüş sayılmaz. Kuyruk iptal onayı fix’i bu senaryoyu kapsamaz.
+- **NVIDIA ölçümü:** Bu oturumda RTX 4060 Laptop GPU (8 GiB, driver 617.14) mevcut; `nsys` ve `ncu` bu PowerShell PATH kontrolünde bulunamadı. Önceki tek-vaka Torch/Warp oranı 1.294× yalnız solver runtime’ıdır. Uçtan uca hız, tekrarlı oturumlar ve cihaz-kernel darboğazı kanıtlanmadı; profiler’ın device-kernel süresi hâlâ kullanılamıyor.
+- **Bilimsel kapılar:** P4 moving-source ağ sonucu `failed`/`inconclusive`, yeni fixed-scan-end genişlik ve zaman eksenleri `inconclusive`; enerji kapanışı geçmesi yakınsamayı kanıtlamıyor. IN718 deneysel karşılaştırması ve tam transient IN625 kabulü `unvalidated`/kapalı kalıyor.
+- Sıradaki işler: Windows hard-crash child ownership için Job Object tabanlı kontrollü kill/restart acceptance; sonra queue uçtan uca tekrarlı CPU/Torch/Warp ölçümü ve Nsight timeline erişimi. Bilimsel sonraki koşudan önce güncel RAM/cell/time preflight ve çözünmeyen ayrık kontur tanısı.
+
 ## 2026-09-28 — BIGG HANGAR başvuru raporu güncellendi
 - Uygulamanın LPBF, Materials Intelligence ve Evidence/Qualification kapsamı; sanayi problemi, teknik kanıt sınırları, ilk pilot ve gelir modeli başvuru odaklı PDF’de toplandı: `docs/Metalliksa_BIGG_HANGAR_Basvuru_Raporu.pdf`.
 - Rapor 8 sayfa; kapak bilgileri büyütüldü, siyah-beyaz Times New Roman düzeni, şema ve tablolar korundu. Son iki sayfada uygulamadan alınan sayısal karşılaştırma ile yalnızca dış kaynaklar yer alıyor; şirket içi Markdown belgeleri kaynakçadan çıkarıldı. PDF sayfa sayısı ve metin içeriği kontrol edildi.
