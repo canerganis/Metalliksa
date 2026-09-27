@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-27T12:12:43.230242+00:00",
+  "scope": "Observed local browser software acceptance and archive integrity only",
+  "softwareAcceptance": "pass",
+  "numericalConvergence": "not-assessed-by-this-run",
+  "experimentalValidation": false,
+  "server": "http://127.0.0.1:4176",
+  "storageRoot": ".tmp-lpbf-ui-accept",
+  "browser": "Codex in-app browser",
+  "runId": "4ef107837fe14592b4862e5b3e1aa64d",
+  "runDocumentSha256": "c7bfd26ea917fde3f7c52fe5fe3647a4cb23bf7a0dd0427917b59a5673c99e11",
+  "bundleId": "bea02f5ba6b7457492248c2ec8ecc838",
+  "restoreId": "2c7c9fc41d60413e85ca53f2d391b8b2",
+  "sourceDocumentSha256": "6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0",
+  "download": {
+    "filename": "metalliksa-lpbf-run-bundle-bea02f5ba6b7457492248c2ec8ecc838.tar",
+    "bytes": 465408,
+    "sha256": "9604cc3260705aede47885854cae03716895db7f2e9c3416e6bf97893054a7b7",
+    "tarFiles": 71,
+    "matchesExportedFiles": true
+  },
+  "restore": {
+    "fileCount": 71,
+    "artifactAndSourceFilesByteIdentical": 67,
+    "sqliteLogicalRowsIdentical": {
+      "runs.sqlite": true,
+      "sources/metadata.sqlite": true
+    },
+    "rebuiltMetadataContainers": [
+      "bundle.json",
+      "runs.sqlite",
+      "sources/bundle.json",
+      "sources/metadata.sqlite"
+    ]
+  },
+  "settings": {
+    "mode": "standard",
+    "material": "Inconel 718",
+    "power_W": 40,
+    "speed_mm_s": 800,
+    "beamDiameter_um": 80,
+    "preheat_C": 80,
+    "layer_um": 40,
+    "hatch_um": 100,
+    "mesh_um": 40,
+    "maxDt_s": 1e-06,
+    "trackLength_um": 200,
+    "tracks": 1,
+    "layers": 1,
+    "dwell_s": 0.0002,
+    "cooling_s": 0.0001,
+    "scanAngle_deg": 0,
+    "layerRotation_deg": 67,
+    "strategy": "stripe",
+    "stripeWidth_um": 500,
+    "islandSize_um": 200,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20,
+    "timeout_s": 300,
+    "study": "none",
+    "backend": "reference",
+    "surfaceMode": "powder-layer",
+    "sourcePenetration_um": null,
+    "barePlateGeometry": "square",
+    "absorptivity": 0.38,
+    "emissivity": 0.35,
+    "powderGridPolicy": "layer-conforming"
+  },
+  "materialIdentity": {
+    "materialId": "in718",
+    "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+    "version": "lpbf-materials-1",
+    "quality": "estimated"
+  },
+  "provenance": {
+    "inputHash": "7a05156846cf75fea8d25ff29a23d5bdae7850f6a1134497ba31f7d8d96a2b5c",
+    "executionInputHash": "26c24d0752d52c9d1ebd1873d931e5c481fa07d09d7ce23353e49e79700fa507",
+    "implementationHash": "d0c160f286f3287248f6163327cf7962a384b2540efe38768092232d74fa9522",
+    "materialVersion": "lpbf-materials-1",
+    "solverBinaryHash": "eaee5ddae7cdd0c05eff73430177b4c30cd31ecba729254237a78a543b13fb52",
+    "createdAt": "2026-09-27T12:04:53.992170+00:00",
+    "runtime_s": 3.7030000000086147,
+    "executionRuntime": {
+      "executable": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "python": "3.12.10",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "numpy": "2.5.3"
+    }
+  },
+  "metrics": {
+    "length_um": 119.99999999999999,
+    "width_um": 40.0,
+    "depth_um": 40.0,
+    "volume_um3": 191999.99999999994,
+    "crossSectionArea_um2": 1599.9999999999995,
+    "peakTemperature_K": 2119.81011401591,
+    "thermalGradient_K_m": 23724291.193568666,
+    "solidificationRate_m_s": 0.10013411650322941,
+    "coolingRate_K_s": 2339802.9034487437,
+    "keyholeDepth_um": null,
+    "recoilPressure_Pa": null,
+    "marangoniNumber": 278.59310646525665,
+    "pecletNumber": 6.001103448275862,
+    "aspectRatio": 1.0,
+    "trackOverlapRatio": null,
+    "remeltingRatio": 0.0
+  },
+  "energyBalance": {
+    "input_J": 0.003799999999999999,
+    "losses_J": 7.643353618311094e-07,
+    "stored_J": 0.0037992356646381702,
+    "relativeError": 5.70632722360792e-16
+  },
+  "observedBrowserSteps": [
+    "Previously failed 280 W job 00b94058c50d406b9ec1fde0d7cc3df4 recovered after reopening; boiling validity error shown",
+    "Select canonical IN718 and submit a separate 40 W standard thermal job; completed and unvalidated labels visible",
+    "Select archived Table 4 revision 1, preview 66 artifacts, archive job, reopen archive",
+    "Compare with NIST case 0; unavailable/unvalidated with applicability reasons and no residual",
+    "Create bundle, download actual tar through browser download event, choose that file, upload and verify",
+    "Restore into isolated archive; same run ID and source document hash visible",
+    "Compare restored run; unavailable/unvalidated and applicability reasons preserved",
+    "Reload browser page; original and restored run plus restore ID recovered automatically",
+    "Reselect Table 4 source; stored revision 1 and same document hash recovered; byte check correctly not reused in new view",
+    "Tab from Restore ID focuses Open restored archive; Return activates control without losing restored view"
+  ],
+  "limits": [
+    "Coarse 40 um mesh has under-resolved width/depth; only workflow acceptance",
+    "NIST measurement conditions do not match this powder-layer run; no experimental residual or validation",
+    "3.703 s observed solver runtime is not a repeated performance benchmark",
+    "GPU archive and queue acceptance remain open; CPU convergence diagnostic is separate",
+    "Keyboard check covers the restore control only; not a full accessibility audit"
+  ]
+}

@@ -1,7 +1,7 @@
 # LPBF ortak çekirdek ve veri hattı uygulama planı
 
-Durum: 27 Eylül 2026 hedef revizyonu; Codex hedefi duraklatılmıştır.
-Bu revizyon yürütmeyi yeniden başlatmaz. Başlangıç: `codex/lpbf-buildjob-material-identity`,
+Durum: 27 Eylül 2026 hedef revizyonu kullanıcı isteğiyle Codex hedefi olarak
+oluşturuldu; hedef aktiftir. Başlangıç: `codex/lpbf-buildjob-material-identity`,
 `a35499d` (23 Eylül 2026). Ana program çerçevesi
 `DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md`; güncel sınırlar
 `LPBF_SHARED_CORE_CONTRACT.md`, `LPBF_CORE_BASELINE_2026-09-21.md` ve
@@ -26,9 +26,9 @@ ayrı göster. Kanıt eksikse sonuç `unvalidated` / doğrulanmadı kalır.
 EIS/EDS ve ilgisiz modüller kapsam dışıdır.
 
 Bu bölüm güncel öncelik sırasıdır; aşağıdaki tarihli kayıtlar tarihsel kanıttır.
-Codex hedef kartındaki LPBF dışı genişleme bu konuşmanın kapsamıyla çelişir.
-Mevcut hedef aracı açıklama metnini değiştirmediğinden kart bu revizyonda
-güncellenememiştir; duraklatılmış durumu korunur.
+Önceki karttaki LPBF dışı genişleme bu konuşmanın kapsamıyla çelişiyordu.
+Kullanıcının açık isteği üzerine, önceki hedef artık mevcut değilken bu kapsamla
+yeni hedef oluşturuldu ve araç `active` durumunu doğruladı.
 
 ## Öncelikler ve kabul kapıları
 

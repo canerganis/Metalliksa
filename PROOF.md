@@ -1,3 +1,24 @@
+## 2026-09-27 — CPU browser archive round trip (software evidence)
+
+Observed the local in-app browser select/compute/archive/compare/download/upload/
+restore/reload flow against isolated storage at port 4176. Run
+`4ef107837fe14592b4862e5b3e1aa64d`: IN718, 40 W, 800 mm/s, 40 um mesh,
+200 um track; reference thermal model with estimated material inputs.
+One run, 66 artifacts and one exact source revision survived the portable tar
+round trip. Downloaded 465408 bytes matched every exported file (71 files);
+all 67 artifact/source payload files remained byte-identical after restore.
+SQLite logical rows, including document SHA-256 values, matched; four rebuilt
+metadata containers differ at the byte level and are not claimed identical.
+Original/restored NIST case 0 comparisons were unavailable/unvalidated, with
+no residual, because applicability gates did not pass. Reload recovered both
+archives and restore ID. Restore control was reachable/activated by keyboard;
+this is not a full accessibility audit.
+
+Evidence: [browser acceptance record](docs/LPBF_UI_ARCHIVE_ACCEPTANCE_2026-09-27.json).
+This passes the bounded CPU software workflow gate only. Coarse geometry is
+under-resolved; numerical convergence, independent experimental validity,
+new-alloy admission, repeated performance and GPU archive gates remain open.
+
 ## 2026-09-21 — Shared result identity, software/numerical compatibility
 
 New coreContract v1 binds complete resolved input/material snapshots to allowlisted
