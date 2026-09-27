@@ -846,3 +846,5 @@ Do not alter the existing acceptance thresholds or relabel the study as passed.
 - Same-input CPU/Warp parity passed all 10 comparisons at 1,210 cells / 934 steps; 12 result artifacts (135,783 bytes) and the result/capture/input/material pins passed SHA-256/size verification. Durable record: `docs/LPBF_GPU_WARP_QUEUE_ACCEPTANCE_2026-09-27/`; `report.json` SHA-256 `f1a00c386d1c41993593a7ef9f5ef7097b43595fe2c548f2f03aca9d18a2ee6e`.
 - Evidence class is numerical model parity and software capture integrity. The run uses the existing IN718 identity with estimated, unquantified material properties; it remains `unvalidated`, not an experiment, production qualification, or speedup claim.
 - Persistent application API source/run import, archive selection/export/restore and visible archived comparison remain **unverified**; next check is an isolated local archive round trip after the interface and type gates freeze.
+
+- Başvuruda kullanılmak üzere mevcut, kanıt sınırları korunmuş metin girdileri `docs/BIGG_HANGAR_BASVURU_GIRDILERI.md` dosyasında yeniden adlandırıldı.
