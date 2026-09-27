@@ -324,6 +324,28 @@ repeated geometry and uncertainty. No substituted measurement or residual was
 produced. Experimental validity remains unvalidated; the new-alloy full-model
 admission gate remains closed independently of software/parity acceptance.
 
+## 2026-09-27 — Stronger IN718 geometry candidate found; gate remains unvalidated
+
+Chen et al., *Additive Manufacturing* 37 (2021), article 101642, report an
+IN718 bare-plate conduction case at 250 W and 1.5 m/s. The publisher record
+identifies the 101.6 x 101.6 x 3.18 mm plate, 100–500 C preheat series, top
+surface thermocouple, ex-situ cross-section geometry, and 80 tracks overall.
+Table 2 values were retrieved from the indexed text of the official OSTI
+author manuscript; the PDF bytes/table image were not independently read in
+this run. The experimental W/D values in micrometres are: 100 C 113.66/59.74;
+200 C 122.91/61.24; 300 C 130.40/74.01; 400 C 129.96/86.78; 500 C 131.28/88.99.
+[Official OSTI manuscript](https://www.osti.gov/servlets/purl/1849312),
+[publisher record](https://www.sciencedirect.com/science/article/pii/S2214860420310149).
+
+This is a stronger geometry candidate than the prior Yang et al. 2025 thermal
+candidate, but not yet a like-for-like measurement gate. Beam diameter/profile,
+absorbed power, condition-level replicate count and uncertainty, exact section
+location, and optical boundary operator remain unverified. The current CPU
+solver has a bare-plate path, but its accepted-step maximum-temperature
+liquidus contour has not been shown equivalent to these etched optical
+sections. No fit or model solve was run. Experimental validation remains
+`unvalidated`.
+
 ## 2026-09-27 — Actual browser acceptance with retained input-display failure
 
 Production localhost4176 / IPC5056 accepted an actual keyboard-submitted IN718

@@ -2,6 +2,11 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-27 — IN718 için daha uygun geometri adayı bulundu; deney kapısı açık
+- Chen vd. (2021), çıplak IN718 levhada **250 W / 1.5 m/s** koşulunu iletim rejimi olarak tanımlıyor; 101.6 × 101.6 × 3.18 mm plaka, 100–500 °C ön ısıtma ve kesitlerden W/D bildiriyor. Table 2’deki deneysel W/D (µm): 100 °C 113.66/59.74; 200 °C 122.91/61.24; 300 °C 130.40/74.01; 400 °C 129.96/86.78; 500 °C 131.28/88.99.
+- Kaynak: [OSTI yazar nüshası](https://www.osti.gov/servlets/purl/1849312), [yayıncı makalesi](https://www.sciencedirect.com/science/article/pii/S2214860420310149). Bu turda tablo, OSTI'nin indekslenmiş PDF metninden okundu; PDF bayt/görüntü doğrulaması tamamlanmadı. Işın çapı/tanımı ve soğurulan güç, koşul başına tekrar/ölçüm belirsizliği, kesin kesit konumu ve sınır operatörü doğrulanmadı; “80 track” toplamı her sıcaklık için n anlamına gelmez.
+- **Deney karşılaştırma kapısı `unvalidated`**. CPU çözücünün bare-plate yolu var; mevcut maksimum-sıcaklık/liquidus konturu optik kesitle kanıtlanmış eşdeğer değil. Girdi ışın/soğurma kimliği ve aynı kesit gözlenebiliri kurulmadan model koşusu yapılmadı. Yang vd. 2025 termografi adayı ayrı ve hâlâ eşleşmemiştir.
+
 ## 2026-09-27 — Torch kaynak-integrasyon testi ve profiler sınırı
 - `use_cuda_source=true` CPU parity kapısından geçti; 10 comparison PASS. CPU kaynak yolu ve CUDA kaynak yolu için üçer dönüşümlü ölçüm: CPU path medyan10.5178s/spread0.1577s; CUDA path10.3228s/0.0978s; fark yalnız%1.9. Sonuç korundu, fakat etki küçük ve tek oturum; varsayılan değiştirilmedi. Ölçüm raporu `docs/LPBF_TORCH_SOURCE_INTEGRATION_ALTERNATING_BENCHMARK_2026-09-27.json` SHA `cec05e37cc300d14d4bd32627979a773de10a0adf6c96c1399e593efb197ed97`.
 - Torch profiler bir default-path koşusunda 149,447 `cudaLaunchKernel`, 12,245 `cudaMemcpyAsync` ve 12,245 `cudaStreamSynchronize` çağrısı gözledi; profiler'ın cihaz-kernel süreleri sıfır olduğundan GPU içi hotspot attribution **partial/unavailable**. İzleme overhead'i süreyi yükseltti; rapor `docs/LPBF_TORCH_PROFILER_DIAGNOSTIC_2026-09-27.json` SHA `6f80da165cdf077c3aabaa6d44f04402ce53d9be308a6ca30bc34deb688c6022` yalnız host-dispatch işaretidir, benchmark değildir.
