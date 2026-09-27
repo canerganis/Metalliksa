@@ -1,6 +1,8 @@
 # CURRENT CONTINUATION — LPBF engines and database FIRST
 
 Owner01a0c399 continues LOCAL b8b1f7f. Fullrun+source bundle implemented and
+**Historical handoff (2026-09-21).** This checkpoint is retained for provenance; current execution status is in [ACTIVE_WORK](../../ACTIVE_WORK.md) and the repository [STATUS](../../../STATUS.md).
+
 verified: LPBF_RUN_ARCHIVE and 2026-09-21-lpbf-run-bundle plan ledger. Six new
 tests/combined33PASS, strictTS/lintPASS. Actual66file CPU run+NIST550398609bytes
 two revisions isolated backup/restorePASS; result bytes unchanged, link only
@@ -26,7 +28,7 @@ Preserve existing external dirty files; user confirmed stopping other writer.
 No laterphase accepted. Continue LPBF only; do not fix unrelated EIS/UQ failures.
 
 LATEST owner01a0c383: run capture/repository package implemented, see
-LPBF_RUN_ARCHIVE.md and superpowers/plans/2026-09-21-lpbf-run-capture.md ledger.
+LPBF_RUN_ARCHIVE.md and the local `2026-09-21-lpbf-run-capture.md` plan ledger.
 Python capture5/core8PASS; latest affected Node21PASS; strictTS/lint/buildPASS.
 Actual40W worker66files322352bytes import+metadatarestorePASS; numerics unchanged.
 Fullunit151PASS/4FAIL from external EIS/UQ changes (eis-unavailable plus3UQ).
@@ -71,7 +73,7 @@ Strong mesh sensitivity, no convergence accepted. Old profile was10W, not40W.
 CPU engineering/source/peak/overlap/material suites44PASS/5OpenFOAMskip after
 sandbox temp-directory failure was removed by scoped test permission.
 New spec `LPBF_SHARED_CORE_CONTRACT.md`; first implementation plan
-`superpowers/plans/2026-09-21-lpbf-core-identity.md`. Next: TDD bound result
+`2026-09-21-lpbf-core-identity.md`. Next: TDD bound result
 model/backend/material/input identity, then consumer guard. Phase0 stays OPEN.
 Additional located LPBF risks: ExperimentalValidationLab hardcoded predictions
 and backend unconditional validated; powder worker returns radii instead of packing;
@@ -874,7 +876,7 @@ forward, open the successor yourself, and avoid simultaneous owners editing.
 
 ## Objective and constraints
 
-Continue `docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md` from current code, Phase 0
+Continue `DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md` from current code, Phase 0
 first. User additionally requested all random/dummy/fake outputs removed and Python
 engines repaired. Preserve the earlier explicit distinction: Monte Carlo is not
 itself fake physics; evaluate seed/method/convergence/uncertainty. Remove fabricated

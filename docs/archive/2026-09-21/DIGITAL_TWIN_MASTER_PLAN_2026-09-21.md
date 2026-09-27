@@ -16,7 +16,7 @@ kalmaktadır. Önceki motor birleştirme/ortak çekirdek yasağı geçersizdir.
 
 Ürün iki çalışma alanı olarak ele alınacak: LPBF üretim/simülasyon çekirdeği ve
 ikincil araştırma araçları. İki ayrı uygulama/repo/dağıtım henüz oluşturulmadı.
-Ertelenen bulgular [SECONDARY_MODULE_BACKLOG.md](SECONDARY_MODULE_BACKLOG.md).
+Ertelenen bulgular [SECONDARY_MODULE_BACKLOG.md](../../SECONDARY_MODULE_BACKLOG.md).
 
 İlk sıra: LPBF motor testleri ve kanıt sınırları → ortak malzeme otoritesi →
 kaynak/hash/birim/deney koşulu izlenebilirliği → SQLite kayıt/transaction/backup

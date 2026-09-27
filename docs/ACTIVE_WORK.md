@@ -1126,7 +1126,7 @@ Phase0 OPEN; continue API/UI and shared physics after this package.
 Bundle complete d7dc7e4. Now also owns server/lpbfArchivePaths.ts,
 server/lpbfRunArchiveService.ts, routes/lpbfRuns.ts, narrow bridge/worker/server
 integration, focused API/path/capture tests and .gitignore. No external paths
-adopted. API plan 2026-09-21-lpbf-run-api.md defines current acceptance.
+adopted. The 2026-09-21 API plan is retained at `docs/archive/2026-09-21/2026-09-21-lpbf-run-api.md`; current acceptance is governed by this file and `STATUS.md`.
 
 # Previous owner — 01a0c36f-7006-7eb3-992d-73265a0a354d, 2026-09-21
 
@@ -1377,7 +1377,7 @@ Verification record ownership includes PROOF.md and
 python/benchmark_keyhole_convergence.py. This is prescribed-cavity numerical
 evidence only; curved mesh asymptotic convergence remains unresolved.
 
-Fresh-task handoff requested by the user: see DIGITAL_TWIN_HANDOFF_2026-09-21.md.
+Fresh-task handoff requested by the user: see the archived `docs/archive/2026-09-21/DIGITAL_TWIN_HANDOFF_2026-09-21.md`.
 After successor dispatch the source task stops editing; successor Codex inherits
 the scopes below after rechecking Git/ownership. Continue until acceptance gates
 are satisfied; proactively checkpoint and transfer before context fills.
@@ -1399,7 +1399,7 @@ Codex maintains shared STATUS.md and serial Git index operations until an explic
 
 Checkpoint8157c18 complete. Source task01a0c10a stops writes when successor is
 created. Next owner must read STATUS and the CURRENT CONTINUATION section of
-DIGITAL_TWIN_HANDOFF_2026-09-21.md, verify Git, then continue the claimed open scopes.
+`docs/archive/2026-09-21/DIGITAL_TWIN_HANDOFF_2026-09-21.md`, verify Git, then continue the claimed open scopes.
 No Gemini work assumed; no phase gate accepted. Temporary test servers are stopped.
 # Current owner — 01a0c383-a755-7b53-84c6-3ec040b67aa0, 2026-09-21
 

@@ -3,7 +3,7 @@
 Durum: 27 Eylül 2026 hedef revizyonu kullanıcı isteğiyle Codex hedefi olarak
 oluşturuldu; hedef aktiftir. Başlangıç: `codex/lpbf-buildjob-material-identity`,
 `a35499d` (23 Eylül 2026). Ana program çerçevesi
-`DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md`; güncel sınırlar
+`docs/archive/2026-09-21/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md`; güncel sınırlar
 `LPBF_SHARED_CORE_CONTRACT.md`, `LPBF_CORE_BASELINE_2026-09-21.md` ve
 `STATUS.md` içindedir. Bu belge tamamlanmış paketleri yeniden açmadan kalan
 işlerin yürütme sırasını ve çıkış kapılarını tanımlar.
