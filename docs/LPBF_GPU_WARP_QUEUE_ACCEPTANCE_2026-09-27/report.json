@@ -1,0 +1,220 @@
+{
+  "execution": "real-bounded-Warp-v2-Queue-execute-get-capture",
+  "evidenceClass": "same-model CPU/Warp numerical parity and byte-bound capture; no experimental validation",
+  "jobId": "45fc30a6c3894db4a9d693ccef599c24",
+  "status": "completed",
+  "cacheHit": false,
+  "sourceInput": "input.json",
+  "sourceInputSha256": "bbf0b1b0a0bc46e2c2c5cf25852dd0cfa97c9427445ccd9a3d2fe7c824593df4",
+  "submittedInputSha256": "bbf0b1b0a0bc46e2c2c5cf25852dd0cfa97c9427445ccd9a3d2fe7c824593df4",
+  "submittedInputObjectHash": "7c033b6c6c0f98b7d58216178940321abcead8ad2667f642c8e5f37625345044",
+  "resultJsonSha256": "4a12ebbf5bd276d2a4f583592102cf9c66cc3783a27099ddf110736fe3532aa9",
+  "captureResultJsonSha256": "4a12ebbf5bd276d2a4f583592102cf9c66cc3783a27099ddf110736fe3532aa9",
+  "captureInputSha256": "7c033b6c6c0f98b7d58216178940321abcead8ad2667f642c8e5f37625345044",
+  "captureMaterialSha256": "f5b4a9ee5593611404b104b04cff85c40cfadcdfb485017178fcf8ef78d68db1",
+  "implementationHash": "2bbbc103a2a6c0e8fe92242cb04c0ea17db73853ec72672bd0a2184d68874e51",
+  "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+  "contractStatus": "gpu-pilot-v2-warp-bound",
+  "contractSchemaVersion": 2,
+  "solver": {
+    "id": "enthalpy-fv-6-warp-candidate-1",
+    "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+    "actualBackend": "cuda:0",
+    "thermalEvolutionDevice": "cuda:0",
+    "sourceIntegrationDevice": "cpu",
+    "sourceTimestepLimiterDevice": "cpu",
+    "dtype": "float64"
+  },
+  "deviceEvidence": {
+    "engineId": "warp",
+    "selected": "cuda:0",
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "computeCapability": [
+      8,
+      9
+    ],
+    "warp": "1.17.0",
+    "warpCudaToolkitVersion": "12.9",
+    "cudaDriverVersion": "13.4",
+    "thermalEvolution": "cuda:0",
+    "sourceIntegration": "cpu",
+    "sourceTimestepLimiter": "cpu",
+    "synchronizedAfterSolve": true
+  },
+  "gpuPilotStatus": "pass",
+  "comparisons": {
+    "finalSampling": {
+      "status": "pass",
+      "cpuFinalTime_s": 0.00018666666666666666,
+      "cpuFrameTime_s": 0.00018666666666666666,
+      "gpuFinalTime_s": 0.00018666666666666666,
+      "expectedEnd_s": 0.00018666666666666666,
+      "cpuSteps": 934,
+      "gpuSteps": 934,
+      "cellCount": 1210
+    },
+    "finalTemperatureField": {
+      "status": "pass",
+      "relativeRiseL2": 2.037941233991552e-17,
+      "relativeRiseMax": 4.052881292358288e-17,
+      "cpuEncoding": "float64 final state observer",
+      "gpuEncoding": "float64 final state"
+    },
+    "peakTemperature_K": {
+      "cpu": 1813.8066862827575,
+      "gpu": 1813.8066862827575,
+      "relativeDifference": 0.0,
+      "status": "pass"
+    },
+    "input_J": {
+      "cpu": 0.003799999999999877,
+      "gpu": 0.003799999999999877,
+      "relativeDifference": 0.0,
+      "status": "pass"
+    },
+    "losses_J": {
+      "cpu": 1.97340341646833e-07,
+      "gpu": 1.973403416468326e-07,
+      "relativeDifference": 2.0119894934408372e-15,
+      "status": "pass"
+    },
+    "stored_J": {
+      "cpu": 0.0037998026596582995,
+      "gpu": 0.003799802659658299,
+      "relativeDifference": 1.1413247156187867e-16,
+      "status": "pass"
+    },
+    "width_um": {
+      "cpu": 40.0,
+      "gpu": 40.0,
+      "absoluteDifference_um": 0.0,
+      "status": "pass"
+    },
+    "depth_um": {
+      "cpu": 40.0,
+      "gpu": 40.0,
+      "absoluteDifference_um": 0.0,
+      "status": "pass"
+    },
+    "length_um": {
+      "cpu": 119.99999999999999,
+      "gpu": 119.99999999999999,
+      "absoluteDifference_um": 0.0,
+      "status": "pass"
+    },
+    "volume_um3": {
+      "cpu": 191999.99999999994,
+      "gpu": 191999.99999999994,
+      "relativeDifference": 0.0,
+      "status": "pass"
+    }
+  },
+  "discretization": {
+    "cells": 1210,
+    "mesh_m": 3.9999999999999996e-05,
+    "minimumDt_s": 6.666666666429208e-08,
+    "maximumDt_s": 2e-07,
+    "meanDt_s": 1.9985724482512492e-07,
+    "steps": 934
+  },
+  "artifactCount": 12,
+  "artifactBytes": 135783,
+  "artifactChecks": [
+    {
+      "path": "capabilities.json",
+      "size_bytes": 3906,
+      "sha256": "f7521313ded9572d3168e46b3817685bfd204f9dac71858a4fddf8f7ff06cc24",
+      "archivePath": "capabilities.json"
+    },
+    {
+      "path": "gpu-pilot/cpu-accepted_dt_s.f64le.bin",
+      "size_bytes": 7472,
+      "sha256": "d508221bd2ae9bb7da6c378d5301d1aa6d50f57b2199798b2e83606d7ef05fdc",
+      "archivePath": "gpu-pilot/cpu-accepted_dt_s.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/cpu-coordinates_m.f64le.bin",
+      "size_bytes": 29040,
+      "sha256": "991eb7a95d9fdb6a3d6e3b430a6164ecb2b48351dcecccfecc8e13b01796621b",
+      "archivePath": "gpu-pilot/cpu-coordinates_m.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/cpu-density_kg_m3.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "8c45d290b6707673abca9c98f4d331f1a314d94469c5495a714ef8dcb89f4ac0",
+      "archivePath": "gpu-pilot/cpu-density_kg_m3.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/cpu-enthalpy_J_m3.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "053be29d3d2739b678e181c6e3e27aa0224d98f4c87ca2a7203d464e145f63e6",
+      "archivePath": "gpu-pilot/cpu-enthalpy_J_m3.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/cpu-temperature_K.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "bb8cff75706cbe87af4053a918b3ec566ff0ddeceacd2abdbdc3c0a1d028f408",
+      "archivePath": "gpu-pilot/cpu-temperature_K.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/gpu-accepted_dt_s.f64le.bin",
+      "size_bytes": 7472,
+      "sha256": "d508221bd2ae9bb7da6c378d5301d1aa6d50f57b2199798b2e83606d7ef05fdc",
+      "archivePath": "gpu-pilot/gpu-accepted_dt_s.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/gpu-coordinates_m.f64le.bin",
+      "size_bytes": 29040,
+      "sha256": "991eb7a95d9fdb6a3d6e3b430a6164ecb2b48351dcecccfecc8e13b01796621b",
+      "archivePath": "gpu-pilot/gpu-coordinates_m.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/gpu-density_kg_m3.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "8c45d290b6707673abca9c98f4d331f1a314d94469c5495a714ef8dcb89f4ac0",
+      "archivePath": "gpu-pilot/gpu-density_kg_m3.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/gpu-enthalpy_J_m3.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "f695773592e2c18c23a73c85d04078091e3a5cb065b5c39d8eaa8737510e6846",
+      "archivePath": "gpu-pilot/gpu-enthalpy_J_m3.f64le.bin"
+    },
+    {
+      "path": "gpu-pilot/gpu-temperature_K.f64le.bin",
+      "size_bytes": 9680,
+      "sha256": "8b215c9a61bb6710d60bdbff077b200fd422460c311ad09ec9c7ea4f8793d05f",
+      "archivePath": "gpu-pilot/gpu-temperature_K.f64le.bin"
+    },
+    {
+      "path": "input.json",
+      "size_bytes": 773,
+      "sha256": "bbf0b1b0a0bc46e2c2c5cf25852dd0cfa97c9427445ccd9a3d2fe7c824593df4",
+      "archivePath": "input.json"
+    }
+  ],
+  "capturePath": "capture.json",
+  "queueJobDirectory": ".",
+  "cachePath": ".tmp-lpbf-warp-capture-cache",
+  "preservedB617InputSha256": "bbf0b1b0a0bc46e2c2c5cf25852dd0cfa97c9427445ccd9a3d2fe7c824593df4",
+  "preservedB617ResultSha256": "3873614af7ae8eea12102751be51c4b5000fc89ac24d82c7bddb9bfa275c4ade",
+  "captureFileSha256": "d0de8d158ffff104b93d889cb194024fc1eb1a82ec47cf1e8f237820135852fe",
+  "resultFileSha256": "4a12ebbf5bd276d2a4f583592102cf9c66cc3783a27099ddf110736fe3532aa9",
+  "materialIdentity": {
+    "materialId": "in718",
+    "materialName": "Inconel 718",
+    "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+    "provenanceClass": "estimated-legacy",
+    "quality": "estimated",
+    "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+    "sourceStatement": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified"
+  },
+  "modelOutputBoundary": {
+    "resultType": "model prediction and software/capture evidence",
+    "experimentalMeasurement": false,
+    "experimentalValidation": false,
+    "validationStatus": "unvalidated",
+    "productionReady": false,
+    "speedupClaim": false
+  }
+}
