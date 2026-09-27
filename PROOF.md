@@ -20,7 +20,13 @@ Software integrity: restored/cached CUDA pilot results now bind their self-hash
 to the independently saved queue input. Synthetic queue fixtures (not numerical
 evidence) reject altered power and boolean/integer substitution even after
 recomputing the result's own hash. Three focused Python tests passed, including
-six restore/cache subcases. Client regressions rejected detached GPU scalar
+six restore/cache subcases. A further guard requires the complete material
+snapshot and rehashes it through the shared material identity verifier. The
+combined four lightweight Python tests passed, including twelve material
+restore/cache subcases (altered Cp, absent revision, null/list/missing material).
+Before that repair the new material test produced five failures and four raw
+errors; damaged results now fail cleanly and are not reused. These fixtures
+remain synthetic software checks. Client regressions rejected detached GPU scalar
 comparisons and missing implementation/runtime provenance: 8 related
 client/API/UI tests and TypeScript checking passed. Before the fixes, the new
 queue tamper cases and two new client regressions failed as expected.

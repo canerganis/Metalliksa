@@ -406,6 +406,11 @@ class Queue:
                 out["result"] = json.loads((self.root/job/"result.json").read_text())
                 if settings.get("jobType") == "gpu-thermal-pilot":
                     from lpbf_gpu_thermal import enforce_gpu_pilot_result
+                    from lpbf_core_contract import _verify_material_revision
+                    material = out["result"].get("material") if isinstance(out["result"], dict) else None
+                    if not isinstance(material, dict) or "materialRevisionSha256" not in material:
+                        raise ValueError("CUDA pilot material revision snapshot is required")
+                    _verify_material_revision(material)
                     enforce_gpu_pilot_result(out["result"])
                     # The pilot guard binds a result to its own settings;
                     # also bind it to the separately persisted submitted job.

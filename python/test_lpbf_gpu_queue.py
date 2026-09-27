@@ -48,6 +48,52 @@ def synthetic_pilot_result(settings, material):
 
 
 class GpuQueue(unittest.TestCase):
+    def test_restore_and_cache_rehash_material_snapshot(self):
+        for mutation in ("unchanged", "property", "missing-revision", "null", "list", "missing-material"):
+            for operation in ("restore", "cache"):
+                with self.subTest(mutation=mutation, operation=operation), \
+                        patch("lpbf_gpu_thermal.require_cuda"), \
+                        patch("lpbf_worker.capabilities", return_value={"openfoamVersion": None}), \
+                        tempfile.TemporaryDirectory() as tmp:
+                    queue = Queue(tmp, start=False)
+                    submitted = queue.submit(CASE)
+                    settings, material = validate_pilot_request(CASE)
+                    result = synthetic_pilot_result(settings, material)
+                    if mutation == "property":
+                        # Change specific heat while retaining the original revision.
+                        result["material"]["table"][0][3] += 1.
+                    elif mutation == "missing-revision":
+                        # Both snapshots lack the field: equality alone is insufficient.
+                        del result["material"]["materialRevisionSha256"]
+                    elif mutation == "null":
+                        result["material"] = None
+                    elif mutation == "list":
+                        result["material"] = []
+                    elif mutation == "missing-material":
+                        del result["material"]
+                    if mutation in ("unchanged", "property", "missing-revision"):
+                        enforce_gpu_pilot_result(result)
+                    (queue.root / submitted["id"] / "result.json").write_text(json.dumps(result))
+                    queue.update(submitted["id"], status="completed")
+                    queue.close()
+                    restored = Queue(tmp, start=False)
+                    try:
+                        valid = mutation == "unchanged"
+                        if operation == "restore":
+                            state = restored.get(submitted["id"])
+                            self.assertEqual(state["status"], "completed" if valid else "failed")
+                            if not valid:
+                                self.assertNotIn("result", state)
+                                self.assertIn("material", state["error"].lower())
+                        else:
+                            state = restored.submit(CASE)
+                            self.assertEqual(state["cacheHit"], valid)
+                            self.assertEqual(state["id"] == submitted["id"], valid)
+                            if not valid:
+                                self.assertEqual(restored.get(submitted["id"])["status"], "failed")
+                    finally:
+                        restored.close()
+
     def test_restore_and_cache_bind_result_to_submitted_settings(self):
         # Recomputed self-hashes must not let a different request impersonate
         # the submitted job. JSON comparison must also distinguish True from 1.
