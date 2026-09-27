@@ -34,7 +34,7 @@ const count = (value: unknown) => Number.isSafeInteger(value) && (value as numbe
 function documentIdentity(document: LpbfSourceDocument, datasetId: string) {
   if (!document || document.datasetId !== datasetId || document.schemaVersion !== 1
     || !['ti6al4v', 'ss316l', 'alsi10mg', 'in718', 'in625'].includes(document.materialId)
-    || !['bare-plate', 'powder-bed', 'unknown'].includes(document.processScope)
+    || !['bare-plate', 'powder-bed', 'unknown', 'material-characterization'].includes(document.processScope)
     || !document.source || typeof document.source.citation !== 'string'
     || !Array.isArray(document.artifacts) || !document.artifacts.length) throw invalid();
 }

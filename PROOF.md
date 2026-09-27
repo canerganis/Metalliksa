@@ -1,3 +1,31 @@
+## 2026-09-27 — IN625 property archive API and live UI (software evidence)
+
+Two exact-byte property catalogs now use `material-characterization` scope.
+Source conditions show measured, derived and fitted quantities, units,
+temperature coverage, uncertainty and unresolved specimen applicability.
+No material capability or registry value is promoted by source import.
+Parent combined integration: **12/12 TypeScript tests PASS**, including four
+property-catalog tests covering original bytes, corruption rejection,
+client → HTTP → SQLite → bundle → isolated restore, and rendered source copy.
+The source agent's wider regression set passed **45/45**; typecheck passed.
+
+Real IAB at localhost:4176: select → preview → import → verify → full page
+reload → reselect/reload succeeded for both sources. Georgia Tech import was
+activated with Enter; the property table was visually inspected. This is
+scoped keyboard/visual acceptance, not a full accessibility audit.
+
+| Source | Revision | Files / bytes | Stored document SHA-256 |
+| --- | ---: | ---: | --- |
+| Georgia Tech | 1 | 3 / 197221 | `d78bfa9f4d972e820453611498ef7a3a36544b8b60255e5c5e7e982d96b98f18` |
+| NASA | 1 | 2 / 18307069 | `69368c8f21108fc516869d8619aa3b3939ed22718e8e00b2a6634e85445162bc` |
+
+Byte checks at 13:15:28Z and 13:15:50Z retained the same document identities;
+reload correctly distinguishes loaded metadata from a fresh file check.
+UI retained unknown lot/state fields and NASA's unknown validity range and
+unresolved viscosity conventions. Full IN625 model admission and experimental
+validity remain **unvalidated**. Property bundle restoration was tested at
+API/service level; a property-specific browser download/upload is still open.
+
 ## 2026-09-27 — Lossless GPU field artifact foundation (software evidence)
 
 The new Python writer/reader and TypeScript descriptor/reader preserve explicit
