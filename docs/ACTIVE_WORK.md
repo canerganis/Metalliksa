@@ -3,8 +3,19 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
-Latest checkpoint: worker/capture/client package frozen, parent37Python/18TS
-tests and lint PASS; Sol independent review clean. Actual native-worker retry
+Latest review gate: no missing5um solver has launched. Sol found original
+output paths / prior-failure guard mismatch, undefined case ordinal index, and
+missing40MB NPZ pre-decode admission. Luna owns wrapper/test/addendum fixes;
+Sol independent closure and parent focused tests precede any fine launch.
+The original protocol, runner and coarse evidence stay immutable. Root owns
+PROOF/STATUS/ACTIVE_WORK/index; preserve all unrelated changes. The actual
+browser partial failure and completed job fields are retained for review.
+
+Previous verified checkpoint: worker/capture/client package committed7fb7e66, parent37Python/18TS
+tests, lint and production build PASS; Sol independent review clean. Both actual
+native outputs also pass the production client parser. Parent reconstructed all
+24 committed manifest files from Git objects; byte/numeric readback PASS.
+Actual native-worker retry
 capture/cache/reopen PASS,12 fields/input/capability files,15.898s. First attempt
 cache miss is retained: editing test_lpbf_gpu_queue.py during execution changed
 the broad all-Python cache fingerprint despite identical input/capability bytes.
@@ -17,6 +28,23 @@ numerical assessor; then run types/repository/import/bundle validation. Store
 save is metadata-only and must not claim field verification. Nested CPU core
 never grants GPU CPU/NIST/proxy-campaign eligibility. Freeze all numerical
 manifest sources including Warp throughout the three missing fine CPU rows.
+
+Actual production browser acceptance is partial: keyboard IN718 CUDA submit
+job2bcb01e5799041ec9458a947506d491f completed/bound12files/parityPASS; comparison
+disclosure and same-job/hash reload PASS. Concrete input-presentation defect:
+reload resets advanced controls20um/1us while saved job40um/200ns remains pass,
+without executed-input summary/current-input mismatch. Luna will fix the GPU
+panel and nearest UI tests after continuation handoff. Preserve failed UI
+observation in docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json,
+SHA4873e3bb5eaf746c9f79c3faac698effea69d8941652de1b8dba982b6fa2c3e9.
+Owned production runtime session83814, HTTP4176 loopback/IPC5056; IABtab1.
+The initial default-IPC runtime was stopped after verifying its IPC child PID
+belonged to our node; no unrelated process was stopped. GPU browser job is
+complete; no convergence solver is live. An extra Luna spawn was rejected by
+the agent thread limit; use the existing Luna sequentially rather than retrying.
+Astra new Naderi131um broad-spot candidate is unvalidated: the archived XLSX
+contains72 IN718 rows with48.25168–80um spots only, no110/131um candidate.
+Do not substitute narrow-spot measurements or redownload the same workbook.
 
 Current continuation ownership (2026-09-27):
 

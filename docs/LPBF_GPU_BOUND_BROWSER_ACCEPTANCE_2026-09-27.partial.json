@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "stage": "partial",
+  "experimentalValidation": false,
+  "scope": "Actual production UI keyboard CUDA submit, comparison disclosure and reload",
+  "recordedAt": "2026-09-27T15:31:03.328183+00:00",
+  "executionHead": "7fb7e66c107b8f8dc0f9a82a36a81a9e21cbed89",
+  "httpOrigin": "http://localhost:4176",
+  "ipcPort": 5056,
+  "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "artifactDirectory": "docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/2bcb01e5799041ec9458a947506d491f",
+  "resultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
+  "inputHash": "333c48bf26dca4b747340ebc6b4d917f55653ae3c0cdf0d74ba2a76aa52346f3",
+  "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "sameRunProof": {
+    "status": "pass",
+    "samplingAligned": true,
+    "states": {
+      "cpu": {
+        "cells": 1210,
+        "steps": 934,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 6.666666666429208e-08,
+        "maximumDt_s": 2e-07,
+        "meanDt_s": 1.9985724482512492e-07,
+        "time_s": 0.00018666666666666666,
+        "cell_volume_m3": 6.399999999999998e-14,
+        "integral_J": 0.0037998026596582995,
+        "stored_J": 0.0037998026596582995,
+        "roundoffTolerance_J": 1.02259552459285e-15
+      },
+      "gpu": {
+        "cells": 1210,
+        "steps": 934,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 6.666666666429208e-08,
+        "maximumDt_s": 2e-07,
+        "meanDt_s": 1.9985724482512492e-07,
+        "time_s": 0.00018666666666666666,
+        "cell_volume_m3": 6.399999999999998e-14,
+        "integral_J": 0.003799802659657861,
+        "stored_J": 0.003799802659657861,
+        "roundoffTolerance_J": 1.0225955245927321e-15
+      }
+    },
+    "temperatureField": {
+      "status": "pass",
+      "normsRecomputed": true,
+      "relativeRiseL2": 2.1024253519462413e-09,
+      "relativeRiseMax": 3.0985019967931873e-09
+    },
+    "scalarComparisons": {
+      "peakTemperature_K": {
+        "cpu": 1813.8066862827575,
+        "gpu": 1813.806688189551,
+        "relativeDifference": 1.0512661730112786e-09,
+        "status": "pass"
+      },
+      "input_J": {
+        "cpu": 0.003799999999999877,
+        "gpu": 0.003799999999999877,
+        "relativeDifference": 0.0,
+        "status": "pass"
+      },
+      "losses_J": {
+        "cpu": 1.97340341646833e-07,
+        "gpu": 1.9734034208493558e-07,
+        "relativeDifference": 2.220035645428999e-09,
+        "status": "pass"
+      },
+      "stored_J": {
+        "cpu": 0.0037998026596582995,
+        "gpu": 0.003799802659657861,
+        "relativeDifference": 1.1538792874905932e-13,
+        "status": "pass"
+      },
+      "width_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "depth_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "length_um": {
+        "cpu": 119.99999999999999,
+        "gpu": 119.99999999999999,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "volume_um3": {
+        "cpu": 191999.99999999994,
+        "gpu": 191999.99999999994,
+        "relativeDifference": 0.0,
+        "status": "pass"
+      }
+    }
+  },
+  "observedSoftwareChecks": {
+    "selectFourAlloyIn718Preset": "pass",
+    "sharedPowerSpeedLayerPreheat": "pass",
+    "keyboardSubmit": "pass",
+    "completedBoundResultDisplayed": "pass",
+    "keyboardComparisonDisclosure": "pass",
+    "sameJobIdAndParityAfterReload": "pass",
+    "deviceMaterialRevisionDisplayed": "pass",
+    "experimentalValidationUnavailableDisplayed": "pass",
+    "gpuArchiveUnavailableDisplayed": "pass",
+    "consoleErrorsObserved": [],
+    "activeVersusExecutedInputsClearlySeparatedAfterReload": "failed"
+  },
+  "executedSettings": {
+    "mode": "standard",
+    "material": "Inconel 718",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "beamDiameter_um": 80,
+    "preheat_C": 80,
+    "layer_um": 80,
+    "hatch_um": 100,
+    "mesh_um": 40,
+    "maxDt_s": 2e-07,
+    "trackLength_um": 200,
+    "tracks": 1,
+    "layers": 1,
+    "dwell_s": 0,
+    "cooling_s": 2e-05,
+    "scanAngle_deg": 0,
+    "layerRotation_deg": 67,
+    "strategy": "stripe",
+    "stripeWidth_um": 500,
+    "islandSize_um": 200,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20,
+    "timeout_s": 300,
+    "study": "none",
+    "backend": "cuda:0",
+    "surfaceMode": "powder-layer",
+    "sourcePenetration_um": null,
+    "barePlateGeometry": "square",
+    "powderGridPolicy": "layer-conforming",
+    "absorptivity": 0.38,
+    "emissivity": 0.35,
+    "jobType": "gpu-thermal-pilot"
+  },
+  "observedControlsAfterReload": {
+    "mesh_um": 20,
+    "maxDt_s": 1e-06
+  },
+  "observedProblem": "Advanced controls reset after reload while the saved40um/200ns result remains pass, without an executed-input summary or current-input mismatch signal.",
+  "evidenceMethod": "CUA accessibility/DOM observations and own application API; actual stored byte/numeric readback, no mocked backend.",
+  "remainingAcceptance": [
+    "Executed-input summary and mismatch signal",
+    "Permanent Node archive/export/restore workflow"
+  ],
+  "performanceEvidence": "No timed UI throughput or speedup claim"
+}

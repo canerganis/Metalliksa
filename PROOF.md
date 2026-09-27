@@ -1,3 +1,26 @@
+## 2026-09-27 — Actual browser acceptance with retained input-display failure
+
+Production localhost4176 / IPC5056 accepted an actual keyboard-submitted IN718
+CUDA job2bcb01e5799041ec9458a947506d491f. Bound12-file result, comparison
+disclosure and same-job reload passed; the stored fields pass byte/hash and
+numerical readback. Console errors observed: none. This is software acceptance
+and same-model numerical evidence, not experimental validation or speedup.
+
+Acceptance remains partial: reload reset advanced controls to20um/1us while the
+saved40um/200ns result remained visible without an executed-input summary or
+current-input mismatch signal. The immutable failure report is
+docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json,
+SHA256:4873e3bb5eaf746c9f79c3faac698effea69d8941652de1b8dba982b6fa2c3e9.
+The actual result and its12 manifest files are preserved in the native retry
+acceptance directory under that job id. Permanent GPU archive/export/restore
+acceptance remains unavailable until its separate Node numerical gate exists.
+
+Read-only review found three continuation defects before any missing5um solve:
+original rather than continuation output paths / prior-failure guard mismatch,
+an undefined case ordinal variable, and missing pre-decode40MB admission.
+Luna owns fixes and Sol independent closure. No fine solver has launched; the
+original protocol, runner and coarse evidence remain unchanged.
+
 ## 2026-09-27 — Bound GPU worker, capture and client integration
 
 Worker dispatch now writes actual same-run fields, validates local bytes and
@@ -15,7 +38,10 @@ had one obsolete archive-unavailable assertion; it was updated for the intended
 new contract before the passing rerun. Capture's existing IN625 fixture revision
 was corrected from test to its supported1; no alloy model/gate changed.
 Parent client/API/panel/descriptor/bounded-reader18/18 PASS, no skips. TypeScript
-lint PASS. Sol independent client10-case and worker/capture4-scenario virtual
+lint and production build PASS. Both actual native-worker results also pass the
+production GPU client parser. After commit7fb7e66, all24 manifest files from
+both attempts were reconstructed from Git objects and byte/numeric readback PASS.
+Sol independent client10-case and worker/capture4-scenario virtual
 review PASS, including rehashed T rejection and submitted-input isolation.
 
 Actual native worker acceptance retry:job5907c252d0f44fce978eb506a5613d3a,
