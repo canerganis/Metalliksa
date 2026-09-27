@@ -469,6 +469,7 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || r.solver.thermalEvolutionDevice !== r.settings.backend
     || r.solver.dtype !== 'float64' || !object(r.material)
     || typeof r.material.name !== 'string' || typeof r.material.materialId !== 'string'
+    || typeof r.material.version !== 'string' || !r.material.version.trim()
     || typeof r.material.materialRevisionSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(r.material.materialRevisionSha256)
     || !object(r.metrics) || !dimensions(r.metrics) || typeof r.metrics.volume_um3 !== 'number'
     || r.metrics.volume_um3 < 0 || typeof r.metrics.peakTemperature_K !== 'number' || r.metrics.peakTemperature_K <= 0
@@ -476,6 +477,15 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || !Number.isSafeInteger(r.discretization.steps) || Number(r.discretization.steps) <= 0
     || typeof r.discretization.mesh_m !== 'number' || r.discretization.mesh_m <= 0
     || !object(r.provenance) || !object(r.provenance.deviceEvidence)
+    || typeof r.provenance.inputHash !== 'string' || !/^[a-f0-9]{64}$/.test(r.provenance.inputHash)
+    || typeof r.provenance.implementationHash !== 'string' || !/^[a-f0-9]{64}$/.test(r.provenance.implementationHash)
+    || r.provenance.materialVersion !== r.material.version
+    || typeof r.provenance.createdAt !== 'string' || !Number.isFinite(Date.parse(r.provenance.createdAt))
+    || typeof r.provenance.deviceEvidence.torch !== 'string' || !r.provenance.deviceEvidence.torch.trim()
+    || typeof r.provenance.deviceEvidence.cudaRuntime !== 'string' || !r.provenance.deviceEvidence.cudaRuntime.trim()
+    || !Array.isArray(r.provenance.deviceEvidence.computeCapability)
+    || r.provenance.deviceEvidence.computeCapability.length !== 2
+    || r.provenance.deviceEvidence.computeCapability.some(part => !Number.isSafeInteger(part) || part < 0)
     || !gpuSourceDevicesMatch(r.solver, r.provenance.deviceEvidence, r.settings.backend)
     || r.provenance.deviceEvidence.selected !== r.settings.backend
     || r.provenance.deviceEvidence.thermalEvolution !== r.settings.backend
@@ -499,6 +509,16 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     return object(item) && gpuStatus(item.status);
   })) {
     throw new Error('Incomplete CUDA pilot parity report');
+  }
+  // The report must describe the same GPU result the UI displays, including
+  // failed/inconclusive reports. Equal summaries alone do not prove field parity.
+  for (const key of ['peakTemperature_K', 'width_um', 'depth_um', 'length_um', 'volume_um3',
+    'input_J', 'losses_J', 'stored_J']) {
+    const item = comparisons[key] as Record<string, unknown>;
+    const actual = key.endsWith('_J') ? r.energyBalance[key] : r.metrics[key];
+    if (typeof item.cpu !== 'number' || item.cpu < 0 || item.gpu !== actual) {
+      throw new Error('CUDA pilot parity result binding mismatch');
+    }
   }
   const statuses = GPU_COMPARISON_KEYS.map(key => (comparisons[key] as Record<string, unknown>).status);
   const status = statuses.includes('failed') ? 'failed' : statuses.includes('inconclusive') ? 'inconclusive' : 'pass';

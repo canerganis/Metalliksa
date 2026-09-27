@@ -126,3 +126,38 @@ this boundary until evidence and validation gates below are met.
 No code, registry, source data, or capability flag is changed by this evidence
 review. The existing gate remains closed for P7 full-transient and build-job
 admission.
+
+## 2026-09-27 — Source-candidate follow-up
+
+**Decision unchanged:** IN625 remains `thermal-screening-only`, with
+`sourceValidityRange_K: null`; full-transient and build-job admission stay
+closed. The runtime interval 273.15–1623.15 K is an implementation boundary,
+not an independently established source-validity interval. The following are
+**unverified candidates for data admission**. Their primary publication records
+were reviewed, but complete property tables, specimen identities and quantified
+uncertainties were not acquired or qualified. No candidate values were added to
+the material authority.
+
+| Primary source | Evidence visible in the publication record | Access and admission limits |
+| --- | --- | --- |
+| [Kaschnitz et al. (2019), DOI 10.1007/s10765-019-2490-8](https://link.springer.com/article/10.1007/s10765-019-2490-8) | Measured diffusivity from −120 to 1250 °C, Cp from −170 to 1250 °C, and expansion from −150 to 1295 °C; room-temperature density measured by Archimedes balance. Conductivity is derived from measured properties. | Publisher abstract inspected; subscription full text and numerical uncertainty tables not acquired. Useful solid-state candidate, without demonstrated target-lot equivalence or liquid/optical/vapor coverage. |
+| [Heugenhauser and Kaschnitz (2019), DOI 10.32908/hthp.v48.726](https://www.oldcitypublishing.com/journals/hthp-home/hthp-issue-contents/hthp-volume-48-number-4-2019/17793-2/) | Publisher abstract reports solid/liquid density and expansion up to 1400 °C, an initial 930 °C / 1 h heat treatment, and a detailed uncertainty analysis. | Full text and tables not acquired. The lower-temperature sign differs between indexed descriptions and must be resolved from the original table before transcription. No boiling-range or target-lot claim follows. |
+| [Phillips et al., NASA NTRS 20240007954 (2024)](https://ntrs.nasa.gov/citations/20240007954) | Primary presentation record compares competing IN625/718 vendor formulations using electrostatic levitation; indexed topics include density, viscosity and surface tension. | Record indexed, but direct page/API/PPTX retrieval failed in this environment. Actual measurement ranges, compositions, uncertainty and numerical results remain unverified. This is a retrieval lead only. |
+| [O'Flynn et al. (2020), DOI 10.1080/00325899.2020.1805547](https://journals.sagepub.com/doi/10.1080/00325899.2020.1805547) | Abstract reports measured expansion, Cp and diffusivity of metal-injection-moulded IN625/718 from room temperature to 1000–1200 °C, with conductivity derived from these measurements. | Restricted full text not acquired; exact alloy/property endpoints and uncertainty require the tables. MIM material state cannot be silently assigned to LPBF powder or plate. |
+
+The [Georgia Tech IN625 page](https://gen3csp.gatech.edu/inconel-alloy-625/)
+was rechecked: it describes at least three repeats, workbook uncertainties at
+95% confidence, and conductivity derived using an assumed constant density.
+The linked workbook could not be retrieved in this review; its temperature
+endpoints, uncertainty columns and specimen identity remain unverified.
+
+**Next concrete acquisition:** obtain the NASA presentation, both Kaschnitz
+papers' original tables, and the Georgia Tech workbook through permitted
+publisher/repository access. Preserve original bytes, retrieval URL/date and
+SHA-256; transcribe chemistry/state, temperature endpoints, units, methods and
+uncertainty before deciding whether any bounded property record is admissible.
+Do not merge different specimens into a qualified table without an explicit
+equivalence and uncertainty argument. Optical, powder-bed, flow and vapor
+requirements remain independently open. This follow-up changes no model,
+registry, source snapshot or capability flag and establishes no experimental
+validation.

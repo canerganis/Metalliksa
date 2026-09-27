@@ -1,3 +1,34 @@
+## 2026-09-27 — GPU result integrity and observed parity failure
+
+Software integrity: restored/cached CUDA pilot results now bind their self-hash
+to the independently saved queue input. Synthetic queue fixtures (not numerical
+evidence) reject altered power and boolean/integer substitution even after
+recomputing the result's own hash. Three focused Python tests passed, including
+six restore/cache subcases. Client regressions rejected detached GPU scalar
+comparisons and missing implementation/runtime provenance: 8 related
+client/API/UI tests and TypeScript checking passed. Before the fixes, the new
+queue tamper cases and two new client regressions failed as expected.
+
+Real browser run `d970096774274794a60b8494fba58f73` completed and recovered after
+reload on `cuda:0` (RTX 4060 Laptop GPU, Torch 2.14.0+cu126, float64). IN718,
+40 W, 800 mm/s, 80 um beam, 40 um mesh, 600 um track, 1 us maximum step,
+0.5 ms cooling: **numerical parity FAILED**, correctly shown as such in the UI.
+CPU/GPU final times both equal 0.00145 s, but accepted steps are 1605/1606.
+Final field comparison is withheld by the alignment gate. Scalar peak relative
+difference is 8.896e-10; equal geometry and small integral differences do not
+override the failed field gate. Inspection found PyTorch lacks the endpoint
+roundoff snap already present in CPU and Warp; GPU minimum step is
+3.426078865054194e-17 s. Production sources remain frozen for the active CPU
+convergence diagnostic, so no repair or successful rerun is claimed here.
+
+Local result: `.tmp-lpbf-ui-accept/jobs/d970096774274794a60b8494fba58f73/result.json`,
+SHA-256 `41f150d9eb58eae56580e24365aa84cad0f128f6ff72b5a05d65e1710ef41529`;
+input SHA-256 `2ba45038d12b9edf09d3e6980b3bcc32dd316abd8e707add74d1f00dfcb098d7`;
+implementation `d0c160f286f3287248f6163327cf7962a384b2540efe38768092232d74fa9522`.
+This local diagnostic is not yet in the permanent GPU archive. GPU archival,
+full field/step artifacts, numerical convergence and experimental validity
+remain open; the result remains unvalidated.
+
 ## 2026-09-27 — CPU browser archive round trip (software evidence)
 
 Observed the local in-app browser select/compute/archive/compare/download/upload/

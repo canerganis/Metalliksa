@@ -35,6 +35,10 @@ const comparisons = Object.fromEntries(['finalSampling', 'finalTemperatureField'
   'input_J', 'losses_J', 'stored_J', 'width_um', 'depth_um', 'length_um', 'volume_um3']
   .map(key => [key, { status: 'pass', cpu: 1, gpu: 1, relativeDifference: 0,
     relativeRiseL2: 0, relativeRiseMax: 0 }]));
+for (const [key, value] of Object.entries({ peakTemperature_K: 1800, input_J: 1,
+  losses_J: .2, stored_J: .8, width_um: 40, depth_um: 40, length_um: 100, volume_um3: 1000 })) {
+  comparisons[key] = { ...comparisons[key], cpu: value, gpu: value };
+}
 const completed = {
   id: 'b'.repeat(32), status: 'completed', progress: 1, log: '', error: null,
   requestSummary: { jobType: 'gpu-thermal-pilot', backend: 'cuda:0', mode: 'standard', material: 'Inconel 718' },
@@ -107,6 +111,39 @@ test('GPU pilot parser binds CPU or selected CUDA source and limiter devices', (
   const invalidDevice = structuredClone(cudaSource);
   invalidDevice.result.provenance.deviceEvidence.sourceIntegration = 'cuda:bad';
   assert.throws(() => parseGpuPilotJob(invalidDevice), /identity/);
+});
+
+test('GPU pilot rejects parity scalars detached from the displayed result', () => {
+  for (const key of ['peakTemperature_K', 'width_um', 'depth_um', 'length_um', 'volume_um3']) {
+    const response = clone();
+    response.result.metrics[key] *= 2;
+    assert.throws(() => parseGpuPilotJob(response), /parity.*binding/, key);
+  }
+  const energy = clone();
+  energy.result.energyBalance.input_J *= 2;
+  energy.result.energyBalance.losses_J *= 2;
+  energy.result.energyBalance.stored_J *= 2;
+  assert.throws(() => parseGpuPilotJob(energy), /parity.*binding/);
+  const failed = clone();
+  failed.result.gpuPilot.status = 'failed';
+  failed.result.gpuPilot.comparisons.finalTemperatureField.status = 'failed';
+  failed.result.metrics.width_um *= 2;
+  assert.throws(() => parseGpuPilotJob(failed), /parity.*binding/);
+});
+
+test('GPU pilot requires usable implementation and runtime provenance', () => {
+  for (const change of [
+    (r: any) => { delete r.provenance.inputHash; },
+    (r: any) => { r.provenance.implementationHash = 'missing'; },
+    (r: any) => { r.provenance.materialVersion = 'different'; },
+    (r: any) => { r.provenance.createdAt = 'unknown'; },
+    (r: any) => { delete r.provenance.deviceEvidence.torch; },
+    (r: any) => { r.provenance.deviceEvidence.cudaRuntime = ''; },
+    (r: any) => { r.provenance.deviceEvidence.computeCapability = [8]; },
+  ]) {
+    const response = clone(); change(response.result);
+    assert.throws(() => parseGpuPilotJob(response), /identity/);
+  }
 });
 
 test('GPU pilot client uses the existing job API and preserves explicit CUDA errors', async () => {

@@ -407,6 +407,12 @@ class Queue:
                 if settings.get("jobType") == "gpu-thermal-pilot":
                     from lpbf_gpu_thermal import enforce_gpu_pilot_result
                     enforce_gpu_pilot_result(out["result"])
+                    # The pilot guard binds a result to its own settings;
+                    # also bind it to the separately persisted submitted job.
+                    submitted_hash = hashlib.sha256(
+                        json.dumps(settings, sort_keys=True, allow_nan=False).encode()).hexdigest()
+                    if out["result"]["provenance"]["inputHash"] != submitted_hash:
+                        raise ValueError("CUDA pilot result does not match submitted settings")
                 elif settings.get("jobType") == IN625_BAREPLATE_JOB_TYPE:
                     _enforce_bareplate_result(out["result"], settings, self.root/job)
                 else:
