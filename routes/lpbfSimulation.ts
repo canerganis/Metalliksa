@@ -1,5 +1,12 @@
 import { Router, Request, Response } from "express";
-import { lpbfWorker } from "../server/lpbfWorkerBridge";
+import { lpbfWorker, LpbfWorkerUnavailableError } from "../server/lpbfWorkerBridge";
+
+function workerError(res: Response, error: unknown, fallback: string) {
+  if (error instanceof LpbfWorkerUnavailableError) {
+    return res.status(503).set('Retry-After', '1').json({ error: error.message, code: error.code });
+  }
+  return res.status(400).json({ error: error instanceof Error ? error.message : fallback });
+}
 
 export const lpbfSimulationRouter = Router();
 lpbfSimulationRouter.use("/api/lpbf", (req, res, next) => {
@@ -41,7 +48,7 @@ for (const [method, route, rpc] of [
       const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "experimental-validation", "modulus-fno", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "powder-dem-compaction", "optical-tomography", "support-optimization", "transient-enthalpy-fdm", "thermal-accumulation", "keyhole-raytracing", "bayesian-optimizer", "toolpath-thermal-map"].includes(rpc);
       const data = await lpbfWorker.request(rpc, passBody ? req.body : ("id" in req.params ? req.params.id : null));
       res.status(rpc === "submit" ? 202 : 200).json(data);
-    } catch (e) { res.status(400).json({ error: e instanceof Error ? e.message : "Simulation request failed" }); }
+    } catch (e) { workerError(res, e, "Simulation request failed"); }
   });
 }
 
@@ -53,7 +60,7 @@ lpbfSimulationRouter.post("/api/lpbf/jobs/repeat", async (req, res) => {
     if (Buffer.byteLength(JSON.stringify(req.body)) > 50000000) return res.status(413).json({ error: "Simulation input too large" });
     const data = await lpbfWorker.request("submit-repeat", req.body);
     res.status(202).json(data);
-  } catch (e) { res.status(400).json({ error: e instanceof Error ? e.message : "Simulation request failed" }); }
+  } catch (e) { workerError(res, e, "Simulation request failed"); }
 });
 
 lpbfSimulationRouter.get("/api/lpbf/jobs/:id/artifacts/:name", async (req: Request, res: Response) => {
@@ -64,6 +71,6 @@ lpbfSimulationRouter.get("/api/lpbf/jobs/:id/artifacts/:name", async (req: Reque
     res.setHeader("X-Content-Type-Options","nosniff");
     if (req.params.name.endsWith(".csv")) res.setHeader("Content-Disposition",'attachment; filename="thermal-history.csv"');
     res.send(Buffer.from(data.content,"base64"));
-  } catch(e) {res.status(400).json({error:e instanceof Error?e.message:"Artifact unavailable"});}
+  } catch(e) { workerError(res, e, "Artifact unavailable"); }
 });
 

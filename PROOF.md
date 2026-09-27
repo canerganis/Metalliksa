@@ -1,3 +1,24 @@
+## 2026-09-27 — Worker readiness and recovery (software evidence)
+
+Readiness now has one shared, bounded 60 s background startup; HTTP callers
+retain a 20 s total budget and receive recoverable 503/Retry-After while a
+healthy startup continues. Explicit native Python is not launched twice as
+an automatic fallback; fallback follows an actual WSL attempt only. Transport
+failure is distinct from rejected Python input. A stopping child remains a
+barrier until terminal exit/close; stale requests cannot cross a close/restart
+generation or launch a replacement after invalidation.
+
+Before the change, a controlled 21 s Python import-delay fixture returned
+HTTP400 after 40.151 s and logged two native launches. This is synthetic startup
+evidence, not a natural cold-start benchmark or the established cause of the
+earlier browser400. Parent final readiness/API suite: **13/13 PASS**, no skips;
+`npm run lint` PASS. Tests exercise real Node pipes/HTTP and injected child
+events: concurrent startup, short caller503 then recovery, exit/spawn failure,
+WSL fallback, startup timeout, EPIPE503 and delayed shutdown. Sol independently
+replayed all four race/transport findings against the final implementation;
+all closed, including a still-live child after a SIGKILL request. These tests
+do not claim GPU queue execution speed or a repeated end-to-end speedup.
+
 ## 2026-09-27 — Actual CUDA endpoint correction (numerical backend evidence)
 
 PyTorch now uses the existing CPU/Warp endpoint roundoff snap rule. Before
