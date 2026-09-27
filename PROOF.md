@@ -1,3 +1,29 @@
+## 2026-09-27 — IN718 primary-paper applicability screen
+
+Preserved the 31-page Deisenroth et al. paper, DOI
+`10.1016/j.addma.2026.105330`, in `docs/sources/in718-deisenroth-2026/`:
+12,221,120 bytes, SHA-256
+`7b2a21b29037108ca8f61297c4f8e5aab4df342b1b6c02353f966b1da8e81128`.
+Parent independently verified the saved hash. Retrieval records the failed
+certificate verification and request-local TLS bypass; hashing establishes
+local byte integrity, not cryptographic publisher authentication.
+
+Full-text review: PDF pp.5–8 specify bare IN718, five antiparallel 4.84 mm
+tracks, 960 mm/s, 110 micrometre hatch and 0.75 ms turnaround. Coupling and
+directional-reflection campaigns have different incidence/gas configurations.
+85 W is a lower-regime candidate, but quantitative cross-sections cover
+113/135/285/485 W (pp.15,19). Even the described conduction regime includes
+shallow vapor depression (pp.4,20). Coupling is not directly deposited thermal
+absorptivity. The paper's depth includes material above the initial surface
+(p.12), unlike current CPU liquidus depth. Reported depth uncertainties are
+not a complete raw measurement table. Target raw data are described as future
+PDR publication (pp.8,11,28), without a verified result-dataset DOI here.
+
+**Experimental validation remains unvalidated.** Do not substitute estimated
+absorptivity, extract invented raw measurements, or equate the observation
+operators. Next obtain raw measurements/masks and uncertainties and establish
+an applicable observation/model contract before computing residuals.
+
 ## 2026-09-27 — Actual CPU/CUDA final-state capture
 
 An optional reference-CPU observer copies actual final coordinates, temperature,

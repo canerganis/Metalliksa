@@ -8,17 +8,20 @@ Current continuation ownership (2026-09-27):
 - User model assignment: Astra owns difficult scientific/architecture decisions;
   Sol owns bounded reviews; Luna implements code changes. Parent owns integration,
   live browser acceptance, scoped commits, PROOF and STATUS.
-- `gpu_archive_astra`: read-only design for a distinct GPU archive contract and
-  producer/queue/API/UI integration. No CPU core-v1 relabeling.
-- `artifact_review_sol`: completed artifact review; mixed-list/scalar conversion
-  precision loss was reproduced and handed to Luna.
+- `gpu_archive_astra`: inspecting the retrieved primary IN718 2026 paper;
+  owns only new `docs/sources/in718-deisenroth-2026/` source package. No model
+  admission or solver edits. Parent verified PDF bytes and retrieval caveat.
+- `artifact_review_sol`: completed archive seam review. Manifest must include
+  input/capabilities as well as ten binary refs; new descriptor refs are a
+  matching subset, not the whole manifest. Legacy GPU remains view-only.
 - `artifact_fix_luna`: precision fix `501c43f`, endpoint fix `1249ba1` integrated.
-  Now owns `python/lpbf_simulation.py`, `python/lpbf_gpu_thermal.py`, and new
-  `python/test_lpbf_gpu_final_state_capture.py` for opt-in actual final-state
-  observers and same-run CPU/GPU evidence capture. Preserve pre-existing CPU
-  diagnostic edits. Capture implementation is handed off and parent verified:
+  Capture implementation `e98a424` is handed off and parent verified:
   CPU/CUDA capture/artifacts 13/13 PASS, actual Warp parity 1/1 PASS. No
   worker/archive wiring in this package. No live solver remains from these tests.
+  New ownership: only `python/lpbf_gpu_thermal.py` and new
+  `python/test_lpbf_gpu_archive_producer.py`, opt-in artifact_dir producer and
+  strict versioned GPU contract guard. No worker/capture/TS wiring yet. Default
+  producer must preserve legacy behavior. Parent integration/commit follows.
 - `readiness_finish_luna`: owns `server/lpbfWorkerBridge.ts`,
   `routes/lpbfSimulation.ts`, `tests/lpbf-worker-readiness.test.ts`; completed
   readiness/recovery fixes. Parent 13/13 tests and lint passed; Sol replayed
