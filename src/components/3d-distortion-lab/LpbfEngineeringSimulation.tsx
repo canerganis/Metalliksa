@@ -5,7 +5,7 @@ import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
 import React, { useEffect, useRef, useState } from "react";
 import { LpbfJobArchiver } from "../LpbfRunArchivePanel";
 import { In625BareplatePanel } from "../In625BareplatePanel";
-import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotJob, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
+import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, type GpuPilotJob, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 
 import { LPBF_ENGINEERING_DEFAULTS as defaults, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
@@ -136,6 +136,76 @@ const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strate
 
 const GPU_PILOT_STORAGE_KEY = "metalliksa.lpbf.gpu-pilot.job.v1";
 
+const samePilotValue = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length
+      && left.every((value, index) => samePilotValue(value, right[index]));
+  }
+  const a = left as Record<string, unknown>;
+  const b = right as Record<string, unknown>;
+  const keys = Object.keys(a).sort();
+  const otherKeys = Object.keys(b).sort();
+  return keys.length === otherKeys.length
+    && keys.every((key, index) => key === otherKeys[index] && samePilotValue(a[key], b[key]));
+};
+
+const executedPilotFields: Array<[string, string]> = [
+  ["material", "Material"], ["backend", "CUDA device"], ["power_W", "Laser power · W"],
+  ["speed_mm_s", "Scan speed · mm/s"], ["beamDiameter_um", "Beam diameter · µm"],
+  ["preheat_C", "Preheat · °C"], ["hatch_um", "Hatch spacing · µm"],
+  ["layer_um", "Layer thickness · µm"], ["strategy", "Scan strategy"],
+  ["mesh_um", "Mesh spacing · µm"], ["maxDt_s", "Maximum timestep · s"],
+  ["tracks", "Tracks"], ["layers", "Layers"], ["stripeWidth_um", "Stripe width · µm"],
+  ["islandSize_um", "Island size · µm"], ["trackLength_um", "Track length · µm"],
+  ["dwell_s", "Track dwell · s"], ["cooling_s", "Final cooling · s"],
+  ["scanAngle_deg", "Scan angle · °"], ["layerRotation_deg", "Layer rotation · °"],
+  ["packingFraction", "Powder packing fraction"],
+  ["powderConductivityRatio", "Powder conductivity ratio"],
+  ["convection_W_m2K", "Convection · W/m²K"], ["timeout_s", "Worker timeout · s"],
+  ["absorptivity", "Absorptivity"], ["emissivity", "Emissivity"], ["properties", "Custom material table"],
+  ["barePlateGeometry", "Bare-plate geometry"], ["sourcePenetration_um", "Source penetration · µm"],
+];
+
+export function GpuPilotExecutedInputSummary({saved, current, bound}: {
+  saved: GpuPilotInput; current?: GpuPilotInput; bound: boolean;
+}) {
+  const savedValues = saved as unknown as Record<string, unknown>;
+  const currentValues = current as unknown as Record<string, unknown> | undefined;
+  const differences = currentValues ? Object.keys(currentValues).filter(key =>
+    !Object.hasOwn(savedValues, key) || !samePilotValue(savedValues[key], currentValues[key])) : [];
+  if (currentValues && Object.hasOwn(savedValues, "properties") && !Object.hasOwn(currentValues, "properties")) {
+    differences.push("properties");
+  }
+  const omittedFields = currentValues
+    ? Object.keys(savedValues).filter(key => !Object.hasOwn(currentValues, key)) : [];
+  const warning = !bound || currentValues === undefined || differences.length > 0 || omittedFields.length > 0;
+  const formatValue = (key: string, value: unknown) => {
+    if (!Object.hasOwn(savedValues, key)) return "Not supplied in saved request";
+    if (key === "properties") return "User-supplied table included";
+    if (value === null) return "Not set (null)";
+    return typeof value === "object" ? "Supplied" : String(value);
+  };
+  return <section aria-label="Saved CUDA pilot inputs" className="rounded-lg border border-slate-700/60 bg-slate-950/40 p-3">
+    <h5 className="font-medium">Inputs used by this saved CUDA job</h5>
+    <p className="mt-1 text-xs text-slate-400">Read from the completed job result; these values stay attached to its metrics.</p>
+    <dl className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+      {executedPilotFields.map(([key, label]) => <div key={key}>
+        <dt className="text-xs text-slate-400">{label}</dt>
+        <dd className="mt-0.5 break-all text-sm tabular-nums">{formatValue(key, savedValues[key])}</dd>
+      </div>)}
+    </dl>
+    <p role="status" aria-label="Saved CUDA input comparison" className={`mt-3 text-xs ${warning ? "text-amber-200" : "text-emerald-200"}`}>
+      {!bound ? "This saved run has no exact request binding, so current controls cannot be verified against it."
+        : current === undefined ? "Current controls cannot form a valid request; the displayed result remains from the saved run."
+          : differences.length ? `Current submitted fields differ from this saved result: ${differences.join(", ")}. The displayed result still belongs to the saved run.`
+            : omittedFields.length ? "Current submitted fields match the saved values where both are explicit. Omitted/defaulted fields are not compared, so full request identity is unverified."
+              : "Current explicit fields match the saved values. Full request identity is not asserted."}
+    </p>
+  </section>;
+}
+
 function GpuThermalPilotPanel({input, settings, material, properties, strategy, caps, blocked}: {
   input: SimulationInput; settings: Partial<SimulationInput>; material: string;
   properties: string; strategy: SimulationInput["strategy"];
@@ -201,10 +271,15 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
   const parity = result?.gpuPilot;
   const evidence = result?.provenance.deviceEvidence;
   const comparisons = parity?.comparisons;
+  let currentRequest: GpuPilotInput | undefined;
+  try {
+    currentRequest = buildGpuPilotInput(input, settings, device as `cuda:${number}`,
+      material, strategy, properties.trim() ? JSON.parse(properties) : undefined);
+  } catch { /* Invalid current controls cannot match an archived run. */ }
   return <section className={surface} aria-label="CUDA thermal parity pilot">
     <h4 className="font-medium">CUDA thermal parity pilot</h4>
     <p className="mt-2 text-sm text-slate-300">Explicit CUDA device · one powder-layer track and one layer · standard enthalpy conduction · no convergence study or measurements. Current mesh, time and process values are used. Device availability is checked when submitted.</p>
-    <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above. GPU pilot archiving is unavailable.</p>
+    <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above. Permanent archive export and restoration remain unavailable.</p>
     <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
       <label className="text-sm">CUDA device<input aria-label="CUDA device" className={inputClass} value={device} onChange={e=>setDevice(e.target.value)} pattern="cuda:[0-9]+" aria-invalid={!/^cuda:[0-9]+$/.test(device)} aria-describedby="cuda-pilot-help" required/></label>
       <button type="submit" disabled={blocked||submitting||active||!/^cuda:[0-9]+$/.test(device)} className="rounded-lg border border-sky-400/50 bg-sky-950/50 px-4 py-2.5 text-sm disabled:opacity-40">{submitting?"Submitting…":"Run CUDA parity pilot"}</button>
@@ -215,6 +290,8 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     {job&&<p role="status" className="mt-3 text-sm">CUDA job {job.id} · {job.status}{job.cacheHit?" · cached":""}</p>}
     {job?.error&&<p role="alert" className="mt-2 text-sm text-red-200">{job.error}</p>}
     {result&&<div className="mt-4 space-y-3 text-sm">
+      <GpuPilotExecutedInputSummary saved={result.settings} current={currentRequest}
+        bound={Boolean(result.gpuRunContract)}/>
       <p>CPU/GPU parity: <strong>{parity?.status}</strong> · {parity?.scope} · experimental validation: unavailable.</p>
       <p>Executed device: {evidence?.name} ({evidence?.selected}) · thermal evolution {result.solver.thermalEvolutionDevice} · source integration {result.solver.sourceIntegrationDevice} · {result.solver.dtype}.</p>
       <p>Model: {result.solver.modelId} · material {result.material.name} ({result.material.materialId}) · revision <span className="font-mono break-all">{result.material.materialRevisionSha256}</span>.</p>

@@ -21,7 +21,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'LPBF process physics',
     observation: `${shared} These inputs mainly control deposited energy and inter-layer heat transport.`,
     mechanism: 'The moving laser creates a melt pool that solidifies as thermal gradients, latent heat, and constrained contraction evolve. Too little energy raises lack-of-fusion risk; too much energy increases keyhole porosity, recoil, and residual stress tendency.',
-    variables: [`Computed VED: ${format(ved, 2)} J/mm³`, `Thermal conductivity: ${format(lpbf.thermalConductivity_k_WmK)} W/m·K`, `Preheat: ${format(lpbf.preheatTemp_C)} °C`, `Material family: ${specimen.baseMetal}, ${specimen.xrd.crystalSystem}`],
+    variables: [`Computed VED: ${format(ved, 2)} J/mm³`, 'Thermal conductivity is temperature-dependent; inspect the executed material table for values used.', `Preheat: ${format(lpbf.preheatTemp_C)} °C`, `Material family: ${specimen.baseMetal}, ${specimen.xrd.crystalSystem}`],
     interpretation: 'VED is a first-order signal only. A physically grounded readout should also include beam profile, absorption behavior, scan pattern, shielding quality, and heat accumulation trend.',
     limitation: 'This panel explains process physics only; it does not by itself prove density, strength, or certification readiness.',
   };

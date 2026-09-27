@@ -3,7 +3,27 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
-Latest ready gate: parent18/18 continuation/observer tests PASS9.532s; Sol9/9
+Latest UI acceptance: parent11/11 focused tests, lint and production build PASS;
+Sol15/15 independent pure cases PASS. Actual browser saved/current fields,
+partial match, device difference/return, keyboard comparison and final reload
+PASS, no console errors. Original browser failure retained; new scoped report
+ef16b4d7... does not accept the overall workflow or experiments. No new GPU solve.
+Luna now owns only new server/lpbfGpuRunIdentity.ts, bounded JSON token helper,
+server/lpbfGpuPilotNumerics.ts, shared-resolver server/lpbfGpuPilotArtifacts.ts,
+and nearest tests. No UI/types/repository/import/bundle or Python edits in this
+package. Root docs/index/integration; Sol independent review. Actual committed
+job2bcb fields are cross-language fixtures; no mock data presented as measurement.
+
+LIVE fine CPU continuation: session91816 / PID6556, started
+2026-09-27T15:55:37.665575Z, execution commit0459d6c. Persistent partial stage
+running with2 reused rows/0 new rows at launch; expected fingerprint fbef0...
+matches. Only three missing5um rows run. Hold original protocol/runner/addendum/
+wrapper/coarse bytes and all numerical manifest sources, including Warp, until
+the series ends. Do not restart or replace failed rows. Luna's UI then pure TS
+archive work may proceed; avoid heavy GPU/CPU benchmarks during this solve.
+Root owns process/proofs/docs/index; ordinary slow progress is not failure.
+
+Previous ready gate: parent18/18 continuation/observer tests PASS9.532s; Sol9/9
 independent pure closure PASS. Wrapper e25774cf... and addendum19a5f5c4...
 are frozen. All three continuation defects are closed; no missing5um solver
 has launched. Root preserves exact protocol/coarse/scenario/wrapper dependency

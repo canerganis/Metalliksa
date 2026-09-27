@@ -1,18 +1,27 @@
 {
   "schemaVersion": 1,
-  "stage": "partial",
+  "stage": "completed",
+  "scope": "Actual production browser acceptance of saved-versus-current CUDA input presentation only",
   "experimentalValidation": false,
-  "scope": "Actual production UI keyboard CUDA submit, comparison disclosure and reload",
-  "recordedAt": "2026-09-27T15:31:03.328183+00:00",
-  "executionHead": "7fb7e66c107b8f8dc0f9a82a36a81a9e21cbed89",
+  "overallLpbfWorkflow": "unvalidated",
+  "recordedAt": "2026-09-27T16:11:50.354286+00:00",
+  "qaHead": "0459d6c480076708648cb2b3a107e99c9af2a765",
+  "uiSourceSha256": {
+    "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx": "8dd8f38520487590c36961a8e03421ba8e980680737b3ab01b3847978095f1de",
+    "src/utils/scientificContext.ts": "78d8087590293d968a741cbc69f2c4ff38405406c161f634dfbff3dc4a7069c0",
+    "tests/lpbf-gpu-pilot-ui.test.tsx": "76efda27cbea661e906bf6c0aeffeb30c1c61f9b0f45af783cb2c9ed0fd4a173",
+    "tests/scientific-context-presentation.test.ts": "01c812071add15e790a107fd195f0cffd77b26d2651d361cb6006b6dbda37e12"
+  },
   "httpOrigin": "http://localhost:4176",
   "ipcPort": 5056,
   "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "sameHistoricalJobReused": true,
+  "newGpuSolveDuringFineCpuSeries": false,
   "artifactDirectory": "docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/2bcb01e5799041ec9458a947506d491f",
   "resultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
   "inputHash": "333c48bf26dca4b747340ebc6b4d917f55653ae3c0cdf0d74ba2a76aa52346f3",
   "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
-  "sameRunProof": {
+  "sameRunNumericReadback": {
     "status": "pass",
     "samplingAligned": true,
     "states": {
@@ -100,20 +109,7 @@
       }
     }
   },
-  "observedSoftwareChecks": {
-    "selectFourAlloyIn718Preset": "pass",
-    "sharedPowerSpeedLayerPreheat": "pass",
-    "keyboardSubmit": "pass",
-    "completedBoundResultDisplayed": "pass",
-    "keyboardComparisonDisclosure": "pass",
-    "sameJobIdAndParityAfterReload": "pass",
-    "deviceMaterialRevisionDisplayed": "pass",
-    "experimentalValidationUnavailableDisplayed": "pass",
-    "gpuArchiveUnavailableDisplayed": "pass",
-    "consoleErrorsObserved": [],
-    "activeVersusExecutedInputsClearlySeparatedAfterReload": "failed"
-  },
-  "executedSettings": {
+  "savedExecutedSettings": {
     "mode": "standard",
     "material": "Inconel 718",
     "power_W": 60,
@@ -148,15 +144,52 @@
     "emissivity": 0.35,
     "jobType": "gpu-thermal-pilot"
   },
-  "observedControlsAfterReload": {
-    "mesh_um": 20,
-    "maxDt_s": 1e-06
+  "priorFailureReport": {
+    "path": "docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json",
+    "sha256": "4873e3bb5eaf746c9f79c3faac698effea69d8941652de1b8dba982b6fa2c3e9",
+    "preserved": true
   },
-  "observedProblem": "Advanced controls reset after reload while the saved40um/200ns result remains pass, without an executed-input summary or current-input mismatch signal.",
-  "evidenceMethod": "CUA accessibility/DOM observations and own application API; actual stored byte/numeric readback, no mocked backend.",
-  "remainingAcceptance": [
-    "Executed-input summary and mismatch signal",
-    "Permanent Node archive/export/restore workflow"
+  "observedSoftwareChecks": {
+    "sameJobAndParityAfterReload": "pass",
+    "savedExecutedSettingsVisible": "pass",
+    "resetCurrentControlsIdentifyMeshDtDwellTrackCoolingDifferences": "pass",
+    "fiveControlsAdjustedToExecutedValuesWithoutNewSolve": "pass",
+    "matchingExplicitFieldsKeepOmittedDefaultsFullIdentityUnverified": "pass",
+    "changeDeviceToCuda1ShowsBackendDifferenceWithSavedCuda0Retained": "pass",
+    "returnDeviceToCuda0RestoresPartialMatch": "pass",
+    "comparisonDisclosureKeyboardReturnAndTenVisibleRows": "pass",
+    "finalReloadRestoresSameJobAndCurrentDifferenceWarning": "pass",
+    "heuristicConductivity9AbsentInLpbfContext": "pass",
+    "temperatureDependentWorkerTableContextVisible": "pass",
+    "permanentArchiveUnavailableBoundaryRetained": "pass",
+    "consoleErrorsObserved": []
+  },
+  "observedDifferencesAfterReload": [
+    "mesh_um",
+    "maxDt_s",
+    "dwell_s",
+    "trackLength_um",
+    "cooling_s"
   ],
-  "performanceEvidence": "No timed UI throughput or speedup claim"
+  "observedExplicitMatchMessage": "Current submitted fields match the saved values where both are explicit. Omitted/defaulted fields are not compared, so full request identity is unverified.",
+  "softwareTestEvidence": {
+    "parentFocusedTsTests": {
+      "passed": 11,
+      "skipped": 0
+    },
+    "independentPureRenderCases": 15,
+    "typescriptLint": "pass",
+    "productionBuild": "pass",
+    "buildWarning": "Existing greater-than-500kB chunk warning remains"
+  },
+  "evidenceMethod": "Actual CUA accessibility and DOM observations, native keyboard Return and field edits; original job real byte/hash/numeric readback. Synthetic render fixtures are separate software checks.",
+  "remainingWorkflowAcceptance": [
+    "Permanent Node GPU archive/import/export/restore numerical and identity gate",
+    "Warp full H/rho/dt evidence",
+    "Numerical convergence",
+    "Independent applicable IN718 experimental validation",
+    "New-alloy full-model admission",
+    "Five paired performance repetitions"
+  ],
+  "performanceEvidence": "No UI throughput or speedup claim"
 }

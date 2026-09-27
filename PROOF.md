@@ -1,3 +1,45 @@
+## 2026-09-27 — Saved CUDA input presentation corrected and browser accepted
+
+The GPU panel now displays executed settings attached to the saved result.
+It compares only explicit current request-builder fields; omitted/defaulted
+fields keep full request identity unverified. Changing device/process/grid
+settings or removing a saved custom table reports a difference. Legacy results
+cannot acquire exact binding from this display. The LPBF context removes the
+unbound composition-derived conductivity9W/mK and points to the executed
+temperature-dependent material table. Permanent archive/export/restore stays
+unavailable until the separate Node gate is integrated.
+
+Parent11/11 focused UI/context/client tests PASS, no skips; TypeScript lint and
+production build PASS (existing large-chunk warning remains). Sol independent
+15/15 pure render cases PASS. Actual production browser using original completed
+job2bcb01e5799041ec9458a947506d491f passes saved fields/reload difference,
+five control edits to explicit match with omitted defaults unverified, device
+change/return, keyboard comparison disclosure with ten visible rows, final
+reload retaining the same job and scoped context label. Console errors: none.
+No new GPU solve ran during the fine CPU series. Stored byte/numeric readback
+PASS. Prior failed browser report remains immutable.
+
+Report:docs/LPBF_GPU_BOUND_BROWSER_INPUT_ACCEPTANCE_2026-09-27.json,
+SHA256:ef16b4d7a24af8dc83367fcefe0a3671b6f6321cca63328afc959ef145208290.
+The report binds UI working-source hashes used for the build and separates
+actual browser evidence from synthetic render tests. The committed UI source
+differs only by Git CRLF-to-LF normalization; that equality is checked after
+normalization, without changing the source or claiming identical raw bytes.
+Exact-path Git byte retention also covers the
+original bound/native/browser top-level reports; their JSON contents remain
+unchanged while committed bytes match recorded SHA values. Overall LPBF
+workflow, convergence, performance and experimental validity remain unvalidated.
+
+## 2026-09-27 — Fixed-time continuation launch (results pending)
+
+Actual serial CPU continuation launched once from commit0459d6c at
+2026-09-27T15:55:37.665575Z, session91816/PID6556. The durable partial record
+contains two reused rows and initially zero new rows, stage running, fingerprint
+fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c.
+Only the three missing5um cases are executed. This launch is not convergence
+evidence; complete mesh/time assessments and fields remain pending. Source
+freeze includes Warp. Slow progress does not justify a replacement attempt.
+
 ## 2026-09-27 — Reviewed fixed-time continuation ready for three missing cases
 
 The separately versioned wrapper/addendum reuses only the two admitted20/10um
