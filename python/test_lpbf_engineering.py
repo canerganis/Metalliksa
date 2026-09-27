@@ -434,6 +434,27 @@ class Verification(unittest.TestCase):
         self.assertGreater(errors[0]/errors[1],3.5)
         self.assertGreater(errors[1]/errors[2],3.5)
 
+    def test_joint_conduction_rate_and_diagonal_reuse_face_operator(self):
+        from lpbf_heat_source import conduction_diagonal
+        from lpbf_simulation import conduction_rate, _conduction_rate_and_diagonal
+
+        rng = np.random.default_rng(20260927)
+        shape = (17, 13, 11)
+        temperature = rng.uniform(300.0, 2600.0, shape)
+        conductivity = rng.uniform(8.0, 42.0, shape)
+        active = rng.random(shape) > 0.18
+        dx = 7.5e-6
+
+        expected_rate = conduction_rate(temperature, conductivity, active, dx)
+        expected_diagonal = conduction_diagonal(conductivity, active, dx)
+        actual_rate, actual_diagonal = _conduction_rate_and_diagonal(
+            temperature, conductivity, active, dx
+        )
+
+        np.testing.assert_array_equal(actual_rate, expected_rate)
+        np.testing.assert_array_equal(actual_diagonal, expected_diagonal)
+        self.assertLess(abs(float(np.sum(actual_rate))), 1e-6 * float(np.sum(np.abs(actual_rate))))
+
     def test_heterogeneous_conduction_operator_is_symmetric_and_flux_balanced(self):
         from lpbf_simulation import conduction_rate
 

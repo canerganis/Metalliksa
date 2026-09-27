@@ -325,6 +325,30 @@ def conduction_rate(T, k, active, dx):
     return rate
 
 
+def _conduction_rate_and_diagonal(T, k, active, dx):
+    """Return conductive rate [W/m^3] and row-sum diagonal [W/m^3/K].
+
+    The transient reference path needs both quantities for every accepted
+    timestep. Compute each harmonic face conductance once and reuse it for the
+    conservative flux and explicit-stability bound.
+    """
+    rate = np.zeros_like(T)
+    diagonal = np.zeros_like(k)
+    for axis_id in range(3):
+        left, right = [slice(None)] * 3, [slice(None)] * 3
+        left[axis_id], right[axis_id] = slice(None, -1), slice(1, None)
+        a, b = tuple(left), tuple(right)
+        face_k = 2 * k[a] * k[b] / (k[a] + k[b])
+        face_mask = active[a] & active[b]
+        flux = face_k * (T[b] - T[a]) / dx**2 * face_mask
+        face_diagonal = face_k / dx**2 * face_mask
+        rate[a] += flux
+        rate[b] -= flux
+        diagonal[a] += face_diagonal
+        diagonal[b] += face_diagonal
+    return rate, diagonal
+
+
 def active_gradient_components(T, active, dx):
     """Average active face differences; one-sided at deposition boundaries.
 
@@ -473,8 +497,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None):
                 contact_resistance_m2K_W=p["contactResistance_m2K_W"],
                 interface_z=interface_z, active_cells=active.transpose(2, 1, 0))
             rate = face_power.transpose(2, 1, 0)/dx**3
+            diagonal = conduction_diagonal(k, active, dx)
         else:
-            rate = conduction_rate(T,k,active,dx)
+            rate, diagonal = _conduction_rate_and_diagonal(T, k, active, dx)
         # Explicit support-base boundary; legacy v1 retains its fixed-temperature base.
         bottom = np.zeros((nx, ny))
         isothermal_bottom = (not layered or p["supportBottomBoundary"] == "isothermal-at-preheat")
@@ -486,7 +511,6 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None):
         rate[:, :, top_index] -= surface_loss
         # A local row-sum bound includes heterogeneous faces and boundary cooling.
         # The table minimum cp is a lower bound on enthalpy capacity across a step.
-        diagonal = conduction_diagonal(k, active, dx)
         if isothermal_bottom:
             diagonal[:, :, 0] += 2*k[:, :, 0]/dx**2
         top_temperature = T[:, :, top_index]
