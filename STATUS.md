@@ -865,3 +865,9 @@ Do not alter the existing acceptance thresholds or relabel the study as passed.
 - Verified the archived official `mds2-2923` workbook against its manifest: `Master_TrackList_Measurements.xlsx`, 59,141 bytes, SHA-256 `6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52`.
 - Scanned the `Data` sheet for AMMT, 285 W, 960 mm/s: 54 track-level observations in nine sample/spot groups; measured spot diameters span 48.25168–74.34128 µm. No 131 µm spot group is present. This rules out using the local workbook as an exact match for the 131 µm paper case; it does not validate the present model. IN718 remains `unvalidated`.
 - Next: preserve the workbook observations as source data with their group and uncertainty metadata; only request the distinct 131 µm TIFF/setup package if that paper case remains necessary for the chosen model contract.
+
+## 2026-09-28 — Same-input CPU/PyTorch/Warp thermal contract
+- Added an opt-in one-invocation three-backend parity gate on one frozen IN718 40 µm request. It binds model/material revision, resolved request and discretization, exact accepted timestep vectors, coordinates/density/time, and captured thermal fields; checks enthalpy, energy, peak temperature, melt dimensions and volume under declared tolerances.
+- Real RTX 4060 execution: **1/1 PASS**, 20.873 s, CPU + PyTorch CUDA + Warp CUDA; `py_compile` and `git diff --check` **PASS**. CUDA-absent runs explicitly skip as `unverified`; they do not count as parity evidence.
+- This is one-case software/numerical parity only. It does not establish mesh/time convergence, workload-wide speedup or experimental IN718 validity.
+- Next: deterministic GPU Queue cancel/timeout/restart and device-selection acceptance, followed by synchronized end-to-end stage profiling and repeated benchmark sessions.

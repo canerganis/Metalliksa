@@ -2698,3 +2698,9 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 
 - Verified `data/benchmark/nist-mds2-2923-in718/official/Master_TrackList_Measurements.xlsx` against the official local manifest (59,141 bytes; SHA-256 `6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52`). The workbook `Data` sheet contains 54 AMMT rows at 285 W / 960 mm/s across nine sample/spot groups, with measured beam diameters 48.25168–74.34128 µm; no 131 µm group appears.
 - Therefore this local workbook does not exactly identify the paper's 131 µm case. The public measurements remain useful source evidence only; they are not yet an admitted experimental comparison for the selected solver contract. IN718 remains `unvalidated` pending case/regime/observable and boundary-condition matching.
+
+## 2026-09-28 — Same-input CPU/PyTorch/Warp parity
+
+- `python/test_lpbf_gpu_three_backend_parity.py` exercises one frozen IN718 40 µm request in one test invocation through CPU, PyTorch CUDA and Warp CUDA. It requires identical model/material/input settings, mesh/cells/steps, accepted timestep arrays, coordinates, density, final time and initial state; thermal-rise and volumetric enthalpy norms, each energy term, closure, peak temperature, melt width/depth/length and volume are bounded by declared tolerances.
+- Actual RTX 4060 run **1/1 PASS** in 20.873 s; `py_compile` and `git diff --check` **PASS**. Missing CUDA is labelled `unverified` by an explicit skip and cannot be mistaken for parity.
+- Scope remains one discrete request and one estimated-property IN718 model. No convergence or experimental-validation claim; no application-wide GPU speedup claim.
