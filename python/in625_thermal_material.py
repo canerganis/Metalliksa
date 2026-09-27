@@ -131,6 +131,43 @@ def in625_lpbf_thermal_snapshot():
     return snapshot
 
 
+def validate_in625_screening_admission(snapshot=None):
+    """Admit only the pinned IN625 evidence for bounded enthalpy screening.
+
+    This checks identity, cited source locators, model inputs, scope, and the
+    content digest. It does not validate the constitutive model experimentally
+    or admit a full transient property table.
+    """
+    candidate = in625_lpbf_thermal_snapshot() if snapshot is None else snapshot
+    if not isinstance(candidate, dict):
+        raise ValueError("IN625 screening evidence must be an object")
+
+    expected = in625_lpbf_thermal_snapshot()
+    supplied = dict(candidate)
+    revision = supplied.pop("materialRevisionSha256", None)
+    payload = json.dumps(supplied, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=True, allow_nan=False).encode("utf-8")
+    computed_revision = hashlib.sha256(payload).hexdigest()
+    if revision != computed_revision:
+        raise ValueError("IN625 screening evidence content digest mismatch")
+    if candidate != expected:
+        raise ValueError("IN625 screening evidence does not match the pinned source scope")
+
+    return {
+        "accepted": True,
+        "scope": "bounded-fusion-enthalpy-screening",
+        "materialId": "in625",
+        "materialRevisionSha256": revision,
+        "source": SABAU_URL,
+        "sourceLocators": dict(expected["sourceLocators"]),
+        "modelTemperatureCoverage_K": list(expected["temperatureCoverage_K"]),
+        "sourceValidityRange_K": None,
+        "validationStatus": expected["validationStatus"],
+        "fullTransientAdmitted": False,
+        "experimentalValidation": False,
+    }
+
+
 def in625_lpbf_thermal_at_kelvin(temperature_k):
     """Return bounded Cp, k, liquid fraction and specific enthalpy from 273.15 K."""
     if isinstance(temperature_k, bool) or not isinstance(temperature_k, (int, float)):

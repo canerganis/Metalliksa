@@ -12,7 +12,7 @@ from four_alloy_materials import (
 )
 from in625_thermal_material import (
     SOLID_TEMPERATURE_RANGE_C, SOURCE_URL, in625_lpbf_thermal_snapshot,
-    in625_solid_thermal_at_celsius,
+    in625_solid_thermal_at_celsius, validate_in625_screening_admission,
 )
 from lpbf_build_job_material_snapshot import build_material_property_snapshot
 from lpbf_job_cache import BUILD_JOB_SOLVER_REVISION
@@ -105,6 +105,7 @@ def _four_alloy_capability(alloy_id):
 
 def _in625_capability():
     screening = in625_lpbf_thermal_snapshot()
+    screening_admission = validate_in625_screening_admission(screening)
     low_c, high_c = SOLID_TEMPERATURE_RANGE_C
     registry = next(row for row in catalog() if row["name"] == "Inconel 625")
     return {
@@ -138,7 +139,8 @@ def _in625_capability():
             "evidenceStatus": "source-bounded-bulk-solid-only",
         },
         "boundedFusionEnthalpyScreening": {
-            "available": registry["thermalOnlyAvailable"],
+            "available": screening_admission["accepted"],
+            "admission": screening_admission,
             "authority": "in625_thermal_material.in625_lpbf_thermal_snapshot",
             "snapshot": screening,
             "modelTemperatureCoverage_K": screening["temperatureCoverage_K"],

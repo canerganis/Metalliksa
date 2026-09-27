@@ -1,10 +1,13 @@
 """Current material-route inventory is explicit and cannot admit a surrogate alloy."""
 
+import hashlib
 import json
 import unittest
 
 from four_alloy_materials import ALLOY_MATERIALS, FOUR_ALLOY_IDS, THERMAL_NAME, resolve_alloy_id
-from in625_thermal_material import in625_lpbf_thermal_snapshot
+from in625_thermal_material import (
+    in625_lpbf_thermal_snapshot, validate_in625_screening_admission,
+)
 from lpbf_build_job_material_snapshot import build_material_property_snapshot
 from lpbf_job_cache import BUILD_JOB_SOLVER_REVISION
 from lpbf_material_capabilities import capability_for, material_capability_report
@@ -62,6 +65,12 @@ class MaterialCapabilityAuditTests(unittest.TestCase):
         })
         self.assertTrue(row["boundedFusionEnthalpyScreening"]["available"])
         self.assertEqual(row["boundedFusionEnthalpyScreening"]["snapshot"], snapshot)
+        admission = row["boundedFusionEnthalpyScreening"]["admission"]
+        self.assertTrue(admission["accepted"])
+        self.assertEqual(admission["scope"], "bounded-fusion-enthalpy-screening")
+        self.assertEqual(admission["materialRevisionSha256"], snapshot["materialRevisionSha256"])
+        self.assertFalse(admission["fullTransientAdmitted"])
+        self.assertFalse(admission["experimentalValidation"])
         self.assertEqual(row["boundedFusionEnthalpyScreening"]["modelTemperatureCoverage_K"],
                          [273.15, 1623.15])
         self.assertIsNone(row["boundedFusionEnthalpyScreening"]["sourceValidityRange_K"])
@@ -75,6 +84,30 @@ class MaterialCapabilityAuditTests(unittest.TestCase):
         self.assertNotEqual(row["solidBulkTable"]["source"], snapshot["source"])
         self.assertFalse(row["marangoniAdapter"]["inputsPresent"])
         self.assertFalse(row["inherentStrainAdapter"]["inputsPresent"])
+
+    def test_in625_bounded_admission_rejects_modified_identity_source_or_model_inputs(self):
+        snapshot = in625_lpbf_thermal_snapshot()
+        accepted = validate_in625_screening_admission(snapshot)
+        self.assertTrue(accepted["accepted"])
+        self.assertIsNone(accepted["sourceValidityRange_K"])
+        for field, value in (
+            ("materialId", "in718"),
+            ("source", "https://example.invalid/borrowed-source"),
+            ("solidus_K", snapshot["solidus_K"] + 1),
+        ):
+            changed = dict(snapshot)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "digest mismatch"):
+                validate_in625_screening_admission(changed)
+
+        wrong_but_rehashed = dict(snapshot)
+        wrong_but_rehashed["materialId"] = "in718"
+        wrong_but_rehashed.pop("materialRevisionSha256")
+        payload = json.dumps(wrong_but_rehashed, sort_keys=True, separators=(",", ":"),
+                             ensure_ascii=True, allow_nan=False).encode("utf-8")
+        wrong_but_rehashed["materialRevisionSha256"] = hashlib.sha256(payload).hexdigest()
+        with self.assertRaisesRegex(ValueError, "pinned source scope"):
+            validate_in625_screening_admission(wrong_but_rehashed)
 
     def test_report_is_json_serializable_and_caller_mutation_cannot_change_authorities(self):
         report = material_capability_report()
