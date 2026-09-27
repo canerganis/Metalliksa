@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "partial-failure",
+  "scope": "Actual production browser before missing GPU archiver UI path fix",
+  "observedAt": "2026-09-27T17:32:55.321207+00:00",
+  "head": "070aa375ac8451b3891d23b4f28f5b4275465416",
+  "runtime": {
+    "httpOrigin": "http://localhost:4176",
+    "sessionId": 32477,
+    "serverBundleSha256": "487a8df250b2af615afecd4a5e6a9b824dbc1983edb83fcb389b85bb669c1e83"
+  },
+  "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "cpuSolvesDuringBrowserAcceptance": 0,
+  "gpuSolvesDuringBrowserAcceptance": 0,
+  "evidenceClass": "actual-browser-software-check",
+  "syntheticFixture": false,
+  "experimentalValidation": false,
+  "overallWorkflow": "unvalidated",
+  "builtUiSourceSha256": {
+    "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx": "e988b451156b388834feb9af973ef5e1519dcf7b7e479c84e17140dea6cb974e",
+    "tests/lpbf-gpu-pilot-ui.test.tsx": "b97ea00546da92fe3b5286f730ec88d5a9f38b54070680ad3e689c940d71e291"
+  },
+  "softwareChecks": {
+    "focusedTests": 24,
+    "expandedTests": 48,
+    "uiTests": 4,
+    "lint": "pass",
+    "productionBuild": "pass",
+    "independentMemoryChecks": 21,
+    "skipped": 0
+  },
+  "sourceSelection": {
+    "keyboardOfficialWorkbook": "pass",
+    "reloadSelectionRetained": "pass",
+    "storedRevision": 1,
+    "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6",
+    "reloadedByteStatus": "unchecked-in-this-view",
+    "verifyBrowserActionCompletedBeforeReload": false,
+    "actualSourceApiVerify": "pass"
+  },
+  "gpuApiPreview": {
+    "httpStatus": 200,
+    "artifactCount": 12,
+    "byteSize": 135737,
+    "captureStatus": "gpu-pilot-v1-bound",
+    "savedStringsExact": "pass"
+  },
+  "browserFailure": {
+    "sameCompletedBoundGpuResultVisible": true,
+    "importedSourceRevisionControls": 0,
+    "message": "GpuThermalPilotPanel omits LpbfJobArchiver; existing outer archiver receives CPU job state only. UI copy claims import without exposing GPU action.",
+    "sourceSpan": "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx:279-307; outer CPU archive at498",
+    "uiAcceptance": "failed"
+  },
+  "limitations": [
+    "Expanded48 software checks included one small CPU workflow solve35.614s, not a performance benchmark.",
+    "API preview integrity does not prove browser import/export/restore.",
+    "Source revision link does not establish model applicability or experimental validation."
+  ]
+}

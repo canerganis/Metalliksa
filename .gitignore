@@ -31,3 +31,9 @@ graft/.graph/
 .lpbf-surrogates/
 .lpbf-runs/
 .lpbf-run-bundles/
+
+# Local LPBF validation outputs and GPU compiler caches; provenance lives in docs.
+/.tmp-lpbf-*/
+/.tmp-phase22-*/
+/python/.tmp-*/
+/python/.warp-cache/
