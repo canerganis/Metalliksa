@@ -16,6 +16,14 @@ export interface SourceSnapshot {
   verification?: SourceVerification;
   imported?: boolean;
 }
+export interface SourceRevisionPage {
+  datasetId: string; offset: number; limit: number; revisions: SourceRevisionSummary[]; hasMore: boolean;
+}
+export interface SourceRevisionSummary {
+  revision: number; createdAt: string; documentSha256: string;
+  evidenceStatus: 'unreviewed-source-archive'; artifactIntegrity: 'not-verified';
+  materialId: LpbfSourceDocument['materialId']; processScope: LpbfSourceDocument['processScope'];
+}
 export type SourceAction = 'current' | 'preview' | 'import' | 'verify';
 
 async function request(path: string, signal: AbortSignal, body?: object) {
@@ -48,6 +56,44 @@ export async function sourceCatalog(signal: AbortSignal): Promise<{ datasetId: s
   if (!Array.isArray(result?.sources) || result.sources.some((item: any) =>
     typeof item?.title !== 'string' || typeof item?.datasetId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(item.datasetId))) throw invalid();
   return result.sources;
+}
+
+export async function sourceRevisionHistory(datasetId: string, signal: AbortSignal,
+  offset = 0, limit = 100): Promise<SourceRevisionPage> {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(datasetId)
+    || !Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw invalid();
+  const result = await request(`/${encodeURIComponent(datasetId)}/revisions?offset=${offset}&limit=${limit}`, signal);
+  if (!result || result.datasetId !== datasetId || result.offset !== offset || result.limit !== limit
+    || !Array.isArray(result.revisions) || typeof result.hasMore !== 'boolean') throw invalid();
+  result.revisions.forEach((revision: SourceRevisionSummary) => {
+    if (!revision || !Number.isSafeInteger(revision.revision) || revision.revision < 1
+      || typeof revision.createdAt !== 'string' || !Number.isFinite(Date.parse(revision.createdAt))
+      || !sha(revision.documentSha256) || revision.evidenceStatus !== 'unreviewed-source-archive'
+      || revision.artifactIntegrity !== 'not-verified'
+      || !['ti6al4v', 'ss316l', 'alsi10mg', 'in718', 'in625'].includes(revision.materialId)
+      || !['bare-plate', 'powder-bed', 'unknown', 'material-characterization'].includes(revision.processScope)) throw invalid();
+  });
+  if (result.revisions.length > limit || (result.hasMore && result.revisions.length !== limit)) throw invalid();
+  return result as SourceRevisionPage;
+}
+
+export async function sourceRevision(datasetId: string, revision: number, signal: AbortSignal): Promise<LpbfSourceRevision> {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(datasetId) || !Number.isSafeInteger(revision) || revision < 1) throw invalid();
+  const result = await request(`/${encodeURIComponent(datasetId)}/revisions/${revision}`, signal);
+  if (!result || result.datasetId !== datasetId) throw invalid();
+  revisionIdentity(result.revision, datasetId);
+  if (result.revision.revision !== revision) throw invalid();
+  return result.revision;
+}
+
+export async function allSourceRevisions(datasetId: string, signal: AbortSignal): Promise<SourceRevisionSummary[]> {
+  const revisions: SourceRevisionSummary[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const page = await sourceRevisionHistory(datasetId, signal, offset, 100);
+    revisions.push(...page.revisions);
+    if (!page.hasMore) return revisions;
+    if (!page.revisions.length) throw invalid();
+  }
 }
 
 export async function sourceAction(datasetId: string, action: SourceAction,

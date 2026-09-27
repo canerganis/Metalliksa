@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useInputBoundTask } from '../hooks/useInputBoundTask';
-import { sourceAction, sourceCatalog, type SourceAction, type SourceSnapshot, type LpbfSourceDocument } from '../services/lpbfSourceService';
+import { allSourceRevisions, sourceAction, sourceCatalog, sourceRevision, type SourceAction, type SourceSnapshot, type LpbfSourceDocument, type SourceRevisionSummary } from '../services/lpbfSourceService';
 
 const button = 'rounded-lg border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40';
 const SELECTED_SOURCE_KEY = 'metalliksa.lpbf.sourceArchive.selectedDataset.v1';
+const SELECTED_REVISION_KEY = 'metalliksa.lpbf.sourceArchive.selectedRevision.v1';
 
 export function sourceSelectionForCatalog(datasetIds: string[], savedId: string | null): string {
   return savedId && datasetIds.includes(savedId) ? savedId : datasetIds[0] ?? '';
@@ -16,6 +17,28 @@ function savedSourceId(): string | null {
 export function persistSourceId(datasetId: string): void {
   if (!datasetId) return;
   try { window.localStorage.setItem(SELECTED_SOURCE_KEY, datasetId); } catch { /* Keep the selection for this view. */ }
+}
+
+export function sourceRevisionSelectionForHistory(revisions: SourceRevisionSummary[], saved: { revision: number; documentSha256: string } | null) {
+  if (saved) return revisions.find(item => item.revision === saved.revision && item.documentSha256 === saved.documentSha256) ?? null;
+  return revisions.reduce<SourceRevisionSummary | null>((latest, item) => !latest || item.revision > latest.revision ? item : latest, null);
+}
+
+function savedRevision(datasetId: string): { revision: number; documentSha256: string } | null {
+  try {
+    const value = window.localStorage.getItem(`${SELECTED_REVISION_KEY}.${datasetId}`);
+    if (!value) return null;
+    const parsed = JSON.parse(value);
+    return Number.isSafeInteger(parsed?.revision) && parsed.revision > 0
+      && typeof parsed.documentSha256 === 'string' && /^[a-f0-9]{64}$/.test(parsed.documentSha256)
+      ? parsed : null;
+  } catch { return null; }
+}
+
+function persistRevision(datasetId: string, revision: SourceRevisionSummary | null) {
+  if (!revision) return;
+  try { window.localStorage.setItem(`${SELECTED_REVISION_KEY}.${datasetId}`, JSON.stringify({ revision: revision.revision, documentSha256: revision.documentSha256 })); }
+  catch { /* Keep the exact selection in component state. */ }
 }
 
 export function LpbfSourceArchivePanel() {
@@ -48,19 +71,69 @@ export function LpbfSourceArchivePanel() {
 
 function SourceRecord({ datasetId }: { datasetId: string }) {
   const task = useInputBoundTask<SourceSnapshot>(datasetId);
+  const [history, setHistory] = useState<SourceRevisionSummary[] | null>(null);
+  const [selectedRevision, setSelectedRevision] = useState<SourceRevisionSummary | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{ revision: number; documentSha256: string; document: LpbfSourceDocument } | null>(null);
+  const [revisionError, setRevisionError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyAttempt, setHistoryAttempt] = useState(0);
   const run = async (action: SourceAction) => {
     const preview = task.data?.preview;
     const request = task.begin(action);
-    try { request.publish(await sourceAction(datasetId, action, request.signal, preview)); }
+    try {
+      const snapshot = await sourceAction(datasetId, action, request.signal, preview);
+      if (action === 'import') setHistoryAttempt(value => value + 1);
+      request.publish(snapshot);
+    }
     catch (error) { request.fail(error); }
     finally { request.finish(); }
   };
   useEffect(() => { void run('current'); }, [datasetId]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setHistory(null); setSelectedRevision(null); setHistoryError(null);
+    allSourceRevisions(datasetId, controller.signal).then(revisions => {
+      if (controller.signal.aborted) return;
+      setHistory(revisions);
+      const saved = savedRevision(datasetId);
+      const selected = sourceRevisionSelectionForHistory(revisions, saved);
+      setSelectedRevision(selected);
+      setSelectionError(saved && !selected ? 'The saved source revision is no longer available. Choose a retained revision explicitly; no newer revision was substituted.' : null);
+      if (!saved) persistRevision(datasetId, selected);
+    }).catch(error => { if (!controller.signal.aborted) { setHistory([]); setHistoryError(error instanceof Error ? error.message : 'Retained source revisions are unavailable.'); } });
+    return () => controller.abort();
+  }, [datasetId, historyAttempt]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setSelectedDocument(null); setRevisionError(null);
+    if (!selectedRevision) return () => controller.abort();
+    sourceRevision(datasetId, selectedRevision.revision, controller.signal).then(value => {
+      if (!controller.signal.aborted) {
+        if (value.documentSha256 !== selectedRevision.documentSha256) throw new Error('Selected source revision hash changed.');
+        setSelectedDocument(value);
+      }
+    }).catch(error => { if (!controller.signal.aborted) setRevisionError(error instanceof Error ? error.message : 'Selected source revision unavailable.'); });
+    return () => controller.abort();
+  }, [datasetId, selectedRevision]);
   const data = task.data;
-  const document = data?.preview?.document ?? data?.current?.document;
+  const archivedDocument = selectedRevision && selectedDocument?.revision === selectedRevision.revision
+    && selectedDocument.documentSha256 === selectedRevision.documentSha256 ? selectedDocument.document : null;
   return <div className="space-y-4" aria-busy={!!task.pending}>
+    {history && history.length > 0 && <label className="block text-sm">Archived source revision<select aria-label="Archived source revision" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 focus-visible:outline-2 focus-visible:outline-sky-300"
+      value={selectedRevision ? `${selectedRevision.revision}:${selectedRevision.documentSha256}` : ''} onChange={event => {
+        const revision = history.find(item => `${item.revision}:${item.documentSha256}` === event.target.value) ?? null;
+        setSelectedRevision(revision); setSelectionError(null); persistRevision(datasetId, revision);
+      }}>{history.map(item => <option key={`${item.revision}:${item.documentSha256}`} value={`${item.revision}:${item.documentSha256}`}>
+        {datasetId} · revision {item.revision} · {item.createdAt} · SHA-256 {item.documentSha256}</option>)}</select></label>}
+    {selectionError && <p role="alert" className="text-xs text-amber-200">{selectionError}</p>}
+    {history === null && <p role="status" className="text-xs text-slate-400">Loading retained source revisions…</p>}
+    {historyError && <p role="alert" className="text-xs text-rose-300">{historyError} Reload the archive to retry.</p>}
+    {history?.length === 0 && !historyError && <p className="text-xs text-amber-200">No source revisions have been imported yet.</p>}
+    {selectedRevision && <p className="break-all text-xs text-slate-400">Selected source identity: {datasetId} · revision {selectedRevision.revision} · SHA-256 {selectedRevision.documentSha256}</p>}
+    {revisionError && <p role="alert" className="text-xs text-rose-300">{revisionError}</p>}
     <div className="flex flex-wrap gap-2">
-      <button className={button} disabled={!!task.pending} onClick={() => void run('current')}>Reload archive</button>
+      <button className={button} disabled={!!task.pending} onClick={() => { void run('current'); setHistoryAttempt(value => value + 1); }}>Reload archive</button>
       <button className={button} disabled={!!task.pending} onClick={() => void run('preview')}>Preview local source</button>
       <button className={button} disabled={!!task.pending || !data?.preview} onClick={() => void run('import')}>Import previewed source</button>
       <button className={button} disabled={!!task.pending || !data?.current} onClick={() => void run('verify')}>Verify archived files</button>
@@ -72,10 +145,14 @@ function SourceRecord({ datasetId }: { datasetId: string }) {
       : data?.current ? 'Stored metadata loaded. File bytes have not been checked in this view.'
       : data ? 'This source has not been imported. Preview to inspect its conditions and files.' : ''}</p>
     {task.error && <p role="alert" className="text-rose-300">{task.error}</p>}
-    {data?.current && <div className="text-sm space-y-1"><p>Stored revision {data.current.revision} · created {data.current.createdAt}</p><p className="break-all">Stored document SHA256: {data.current.documentSha256}</p></div>}
+    {data?.current && <div className="text-sm space-y-1"><p>Latest stored revision {data.current.revision} · created {data.current.createdAt}</p><p className="break-all">Latest stored document SHA256: {data.current.documentSha256}</p></div>}
     {data?.preview && <p className="text-xs break-all text-slate-400">Preview SHA256: {data.preview.documentSha256} · expected stored revision {data.preview.expectedRevision}</p>}
     {data?.verification && <div className="border-l-2 border-sky-400 pl-3 text-sm space-y-1"><p>File integrity check · revision {data.verification.revision}</p><p>Checked at {data.verification.verifiedAt}</p><p className="break-all">Checked SHA256: {data.verification.documentSha256}</p><p>Point-in-time byte integrity only; no scientific validation.</p></div>}
-    {document && <SourceConditions document={document} preview={!!data?.preview}/>}
+    {selectedRevision && archivedDocument && <SourceConditions document={archivedDocument} preview={false}/>}
+    {selectedRevision && !archivedDocument && !revisionError && <p role="status" className="text-xs text-slate-400">Loading the selected archived revision…</p>}
+    {data?.preview?.document && <SourceConditions document={data.preview.document} preview/>}
+    {!selectedRevision && !data?.preview?.document && data?.current?.document
+      && <SourceConditions document={data.current.document} preview={false}/>}
   </div>;
 }
 

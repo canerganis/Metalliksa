@@ -5,7 +5,7 @@ import { listRuns, getRun, getRestoredRun, listRestoredRuns, previewRun, importR
   compareNistOpticalRun, listNistProxyCampaigns, previewNistProxyCampaign, createNistProxyCampaign,
   type RunPreview, type RunArchiveList, type ExportedRunBundle, type VerifiedRunBundle,
   type RestoredRunBundle, type ImportedRunBundle, type NistProxyCampaignPreview, type NistProxyCampaignRecord } from '../services/lpbfRunArchiveClient';
-import { sourceAction, sourceCatalog } from '../services/lpbfSourceService';
+import { allSourceRevisions, sourceCatalog } from '../services/lpbfSourceService';
 import type { RunRecord, RunSourceLink, NistOpticalCaseNumber, NistOpticalReport } from '../types/lpbfRun';
 
 const button = 'rounded-lg border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40';
@@ -689,16 +689,14 @@ export function LpbfJobArchiver({ jobId }: { jobId: string }) {
     const controller = new AbortController();
     setSources(null); setSourceError(null); setSelection(null); setPreview(null); setImported(null);
     sourceCatalog(controller.signal).then(async catalog => {
-      const current = await Promise.all(catalog.map(async item => ({ item,
-        revision: (await sourceAction(item.datasetId, 'current', controller.signal)).current })));
+      const retained = await Promise.all(catalog.map(async item => ({ item,
+        revisions: await allSourceRevisions(item.datasetId, controller.signal) })));
       if (controller.signal.aborted) return;
-      const options: ArchivedSourceOption[] = current.flatMap(({ item, revision }) => {
-        if (!revision) return [];
-        const link = { datasetId: item.datasetId, revision: revision.revision,
-          documentSha256: revision.documentSha256 };
-        return [{ key: `${link.datasetId}:${link.revision}:${link.documentSha256}`,
-          label: `${item.title} · revision ${link.revision} · SHA-256 ${link.documentSha256.slice(0, 12)}…`, link }];
-      });
+      const options: ArchivedSourceOption[] = retained.flatMap(({ item, revisions }) => revisions.map(revision => {
+        const link = { datasetId: item.datasetId, revision: revision.revision, documentSha256: revision.documentSha256 };
+        return { key: `${link.datasetId}:${link.revision}:${link.documentSha256}`,
+          label: `${item.title} (${item.datasetId}) · revision ${link.revision} · SHA-256 ${link.documentSha256}`, link };
+      }));
       setSources({ jobId, options });
     }).catch(error => {
       if (!controller.signal.aborted) setSourceError({ jobId,
@@ -748,6 +746,7 @@ export function LpbfJobArchiver({ jobId }: { jobId: string }) {
           setPreview(null); setImported(null);
         }}><option value="">Select a source revision</option>{options.map(item =>
           <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>}
+    {selected && <p className="break-all text-xs text-slate-400">Exact source binding: {selected.link.datasetId} · revision {selected.link.revision} · SHA-256 {selected.link.documentSha256}</p>}
     <button className={button} onClick={() => {
       setSources(null); setSelection(null); setPreview(null); setImported(null);
       setSourceAttempt(value => value + 1);

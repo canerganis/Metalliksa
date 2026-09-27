@@ -58,6 +58,34 @@ export class LpbfSourceArchiveService {
     finally { repository?.close(); }
   }
 
+  revisions(datasetId: string, offset = 0, limit = 100) {
+    this.entry(datasetId);
+    if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new LpbfSourceArchiveError(400, 'Invalid source revision history pagination.');
+    }
+    const repository = this.repository(true);
+    try {
+      const records = repository?.history(datasetId, offset, limit) ?? [];
+      const latest = repository?.current(datasetId)?.revision ?? 0;
+      const revisions = records.map(({ revision, createdAt, documentSha256, evidenceStatus, artifactIntegrity, document }) => ({
+        revision, createdAt, documentSha256, evidenceStatus, artifactIntegrity,
+        materialId: document.materialId, processScope: document.processScope,
+      }));
+      return { datasetId, offset, limit, revisions, hasMore: offset + revisions.length < latest };
+    } finally { repository?.close(); }
+  }
+
+  revision(datasetId: string, revision: number) {
+    this.entry(datasetId);
+    if (!Number.isSafeInteger(revision) || revision < 1) throw new LpbfSourceArchiveError(400, 'Invalid source revision.');
+    const repository = this.repository(true);
+    try {
+      const value = repository?.revision(datasetId, revision) ?? null;
+      if (!value) throw new LpbfSourceArchiveError(404, 'Source revision was not found.');
+      return { datasetId, revision: value };
+    } finally { repository?.close(); }
+  }
+
   private async exclusive<T>(action: () => Promise<T>): Promise<T> {
     if (this.busy) throw new LpbfSourceArchiveError(409, 'A source archive operation is already running.');
     this.busy = true;
