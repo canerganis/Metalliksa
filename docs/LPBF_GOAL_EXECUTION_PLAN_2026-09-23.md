@@ -1,11 +1,75 @@
 # LPBF ortak çekirdek ve veri hattı uygulama planı
 
-Durum: aktif goal. Başlangıç: `codex/lpbf-buildjob-material-identity`,
+Durum: 27 Eylül 2026 hedef revizyonu; Codex hedefi duraklatılmıştır.
+Bu revizyon yürütmeyi yeniden başlatmaz. Başlangıç: `codex/lpbf-buildjob-material-identity`,
 `a35499d` (23 Eylül 2026). Ana program çerçevesi
 `DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md`; güncel sınırlar
 `LPBF_SHARED_CORE_CONTRACT.md`, `LPBF_CORE_BASELINE_2026-09-21.md` ve
 `STATUS.md` içindedir. Bu belge tamamlanmış paketleri yeniden açmadan kalan
 işlerin yürütme sırasını ve çıkış kapılarını tanımlar.
+
+## Güncel hedef ve kapsam — 2026-09-27
+
+Metalliksa-1'de sürümlü malzeme, girdi ve motor kimliğiyle tekrarlanabilir
+LPBF iş akışını tamamla. Ortak fizik motorlarını kaynak, birim, korunum ve
+ağ/zaman yakınsaması açısından doğrula; somut kusurları gider. CPU referansı,
+PyTorch CUDA ve Warp CUDA uygulamalarını aynı termal sözleşmede karşılaştır;
+ölçülmüş veri aktarımı, senkronizasyon ve hesap darboğazlarını sonuçları
+koruyarak azalt. GPU koşularını kalıcı kaynak/koşu/sonuç arşivine bağla ve
+seç→hesapla→karşılaştır→dışa aktar→geri yükle akışını gerçek arayüzde doğrula.
+Dört mevcut alaşımın tek malzeme otoritesini koru. IN625 öncelikli en az bir
+yeni alaşımı ancak kaynak, belirsizlik ve model uygunluğu kapısını geçerse tam
+modele kabul et. CPU sonuçlarını uygun bağımsız IN718 ölçümleriyle karşılaştır.
+Yazılım doğruluğu, sayısal doğrulama ve deneysel geçerlilik için ayrı kanıt sun;
+sentetik verileri, tahmini girdileri, model çıktılarını ve deney ölçümlerini
+ayrı göster. Kanıt eksikse sonuç `unvalidated` / doğrulanmadı kalır.
+EIS/EDS ve ilgisiz modüller kapsam dışıdır.
+
+Bu bölüm güncel öncelik sırasıdır; aşağıdaki tarihli kayıtlar tarihsel kanıttır.
+Codex hedef kartındaki LPBF dışı genişleme bu konuşmanın kapsamıyla çelişir.
+Mevcut hedef aracı açıklama metnini değiştirmediğinden kart bu revizyonda
+güncellenememiştir; duraklatılmış durumu korunur.
+
+## Öncelikler ve kabul kapıları
+
+| Sıra | Hedef | Kabul ölçütü |
+| --- | --- | --- |
+| 1 | Kanıt ve koşu devamlılığı (P0–P4, P10) | Önce mevcut koşuların canlı/tamamlanmış/kesilmiş durumu ve çıktı kimlikleri okunur; yinelenen hesap başlatılmaz. Kaynak baytları, malzeme revizyonu, girdiler ve motor parmak izi korunur. Güncel CPU ağ/zaman sonuçları önceden dondurulmuş kapılarla değerlendirilir. |
+| 2 | Kısa ürün kabul akışı (P3, P8) | Küçük ve sabit gerçek CPU hesabıyla seçim, hesap, kaynak bağlantısı, karşılaştırma durumu, dosya indirme/yükleme, yalıtılmış restore ve sayfa yenileme tamamlanır; kimlikler ve çıktı hash'leri korunur. API ve tarayıcı kanıtları ayrı kaydedilir. |
+| 3 | Aynı fizik için CPU/Torch/Warp tabanı (P6, P11) | Malzeme yasası, ağ, sınırlar, kaynak integrali, zaman adımı ve gözlem operatörü eşleştirilir. Tam sıcaklık alanı, entalpi/enerji, kabul edilen adımlar ve eriyik geometrisi önceden belirlenen toleranslardan geçer. Phase 22 çok-fizik yolu ayrı sözleşme olarak tutulur. |
+| 4 | Ölçülmüş hızlandırma (P11) | Önce GPU indirgemeleri ve kalıcı tamponlarla büyük alan kopyaları azaltılır. Kaynak/sınırlayıcı taşıma, kernel birleştirme ve CUDA Graph ancak profil gerekçelendirirse uygulanır. Her değişiklik aynı-girdi doğruluk kapısı ve eşlenmiş toplam süre ölçümünden geçer. |
+| 5 | Dayanıklı GPU ürün yolu (P12, P8) | Cihaz başına yönetilen GPU kuyruğu, tekrar kullanılan bellek/derleme önbelleği, ilerleme/iptal/hata ve yenileme sonrası işe bağlanma doğrulanır. GPU sonuçları sürümlü kaynak/koşu paketleriyle dışa aktarılır ve geri yüklenir. |
+| 6 | Deney ve alaşım kabulü (P5, P7) | IN718 ölçümünün rejim, geometri, tarama geçmişi, gözlem tanımı ve belirsizliği modele uygundur. Yeni alaşımın gereken özellikleri kaynak ve belirsizlikle kapsanır; desteklenen her yetenek ayrı kabul edilir. Eksik veri tam-model kabulü veya deneysel başarıya dönüştürülmez. |
+| 7 | Birleşik teslim (P9) | İlgili yazılım, sayısal ve arayüz kontrolleri; kanıt tablosu; yerel commit ve devam kaydı tamamlanır. Açık bilimsel kapılar açık kalır; kısmi ürün teslimi tüm hedefin tamamlandığı anlamına gelmez. |
+
+P5/P7 kaynak araştırması bağımsız ilerleyebilir. Kısa P8 akışı eksik bilimsel
+kapıları doğru gösterebilir; bunun için yeni alaşımın kabulünü beklemek gerekmez.
+Tam deneysel karşılaştırma ve yeni alaşım hedefleri bu sırayla kaldırılmaz.
+
+### Performans ölçüm sözleşmesi
+
+- Küçük/orta/büyük iş yükleri ve toleranslar sonuçlar görülmeden sabitlenir;
+  her backend yalnız desteklediği aynı fizik/girdi ile karşılaştırılır.
+- İlk derleme/başlatma ve ısınmış süre ayrı raporlanır. Isınmadan sonra en az
+  beş dönüşümlü eşlenmiş tekrar alınır; medyan, dağılım, donanım, yazılım
+  sürümleri, hassasiyet ve bellek kullanımı saklanır. Ölçüm sırasında aynı
+  cihazda rakip ağır hesap çalıştırılmaz.
+- Kuyruk, başlatma, hesap, CPU–GPU aktarımı, arşiv ve arayüz süreleri ayrılır;
+  kernel süresi ile toplam süre karıştırılmaz. GPU ölçümü uygun cihaz
+  senkronizasyonu/olaylarıyla tamamlanan işi kapsar. Profil ek yükü ayrı tutulur.
+- Hız kazancı ölçüm saçılımından ayırt edilemiyorsa kanıtlanmış sayılmaz.
+  Mikrobenchmark kazancı uygulamanın toplam kazancı olarak sunulmaz.
+- İlk optimizasyonlarda mevcut float64 korunur. Hassasiyet azaltımı ayrı
+  hata bütçesi ve yakınsama değerlendirmesi gerektirir. İndirgeme sırası,
+  tepe seçimi ve kabul edilen zaman adımlarındaki değişiklikler denetlenir.
+- Otomatik CPU/GPU seçimi ancak ölçülmüş iş yükü aralıklarında uygulanır;
+  aksi halde CPU varsayılanı ve açık GPU seçimi korunur. İstenen CUDA cihazı
+  kullanılamıyorsa sessiz CPU dönüşü yapılmaz.
+- Tek malzeme otoritesi ve sürümlü kaynak sözleşmesi korunur. Önbellek ve
+  arşiv kimliği model, girdiler, malzeme revizyonu, uygulama parmak izi ve
+  backend/hassasiyet ayarlarını ayırt eder; fiili cihaz ve çalışma ortamı
+  kayda eklenir. Windows derleme önbelleği ve eşzamanlı kullanım hataları
+  açık raporlanır; süreçler arasında global ayar yarışına izin verilmez.
 
 ## Bitiş tanımı
 
@@ -22,6 +86,12 @@ kabiliyeti ayrıca aynı özellik yasası ve sınır koşullarıyla CPU karşıl
 tabi tutulur; en az bir yeni alaşım için GPU termal yolu doğrulanır. Başarısız
 bilimsel kapı başarılı gibi etiketlenmez.
 
+Sınırlı IN625 bare-plate taraması tam-model alaşım kabulü yerine geçmez.
+Uygun bağımsız IN718 karşılaştırması veya yeni alaşım veri kapısı kapanmamışsa
+bu bilimsel hedefler tamamlanmış sayılmaz; ürün akışı kendi kapsamıyla teslim
+edilebilir. Performans ve GPU işletim/arşiv hedeflerinin bitişi P11/P12 kabul
+ölçütlerine bağlıdır.
+
 ## Paketler ve bağımlılıklar
 
 | Paket | İş | Bağımlılık | Çıkış kanıtı |
@@ -32,11 +102,13 @@ bilimsel kapı başarılı gibi etiketlenmez.
 | P3 | Kaynak/run kalıcılığı ve uygulama API'si | P0, P1 | Tam snapshot, exact kaynak revizyonu, manifest ve bayt doğrulaması; çakışma/bozuk veri/legacy durumu; mevcut iş kuyruğu korunur |
 | P4 | CPU termal sayısal kapısı | P2 | Analitik korunum ve sınır testleri; en az üç ağ ve üç zaman seviyesi; sonuç öncesi sabitlenmiş toleranslarla yakınsama raporu; OpenFOAM kapsamı açık |
 | P5 | IN718 deney/ölçüm karşılaştırması | P3, P4 | Kaynak ve ölçüm operatörü, gerçek proses/geometri, tekrar grubu, belirsizlik ve kalibrasyon/holdout ayrımı bağlıdır; sonuç/eksik veri dürüstçe raporlanır |
-| P6 | GPU termal eşleşmesi ve alaşım adaptörleri | P2, P4, P7 | Açık cihaz seçimi; her GPU'ya açılan alaşımda aynı fizik/girdi/boundary; CPU karşılaştırması, bağımsız analitik kontrol, enerji/alan metrikleri ve bellek/süre profili; en az bir yeni alaşım GPU yolu |
+| P6 | GPU termal eşleşmesi ve alaşım adaptörleri | Mevcut alaşımlar: P2, P4; yeni alaşım: ayrıca P7 | Açık cihaz seçimi; her GPU'ya açılan alaşımda aynı fizik/girdi/boundary; CPU karşılaştırması, bağımsız analitik kontrol, enerji/alan metrikleri ve bellek/süre profili; en az bir yeni alaşım GPU yolu |
 | P7 | Alaşım genişlemesi | P2, P4 | Dört alaşım yeterlilik matrisi; en az bir yeni alaşımın kaynaklı özellik revizyonu, sıcaklık kapsamı, CPU model kabiliyeti, GPU adaptör kararı ve ayrı sayısal kontrolleri |
-| P8 | Bütünleşik ürün akışı | P3, P5, P6, P7 | Seç→hesapla→karşılaştır→dışa aktar→geri yükle; eski sonuç ve başarısız/eksik durumları görünür; gerçek tarayıcı/klavye kontrolü |
-| P9 | Son entegrasyon kapısı | P0–P8, P10 | İlgili Python/TypeScript/sayısal/tarayıcı kontrolleri; değişiklik kapsamı, kanıt ve sınırlamalar; STATUS/PROOF ve bitiş kararı |
+| P8 | Bütünleşik ürün akışı | Kısa kabul: P3; tam kapsam: P5, P6, P7, P12 | Seç→hesapla→karşılaştır→dışa aktar→geri yükle; eski sonuç ve başarısız/eksik durumları görünür; gerçek tarayıcı/klavye kontrolü |
+| P9 | Son entegrasyon kapısı | P0–P8, P10–P12 | İlgili Python/TypeScript/sayısal/tarayıcı kontrolleri; değişiklik kapsamı, kanıt ve sınırlamalar; STATUS/PROOF ve bitiş kararı |
 | P10 | Çekirdek fizik kusurlarının giderilmesi | P0, ilgili motorun kanıt sınırı | Somut başarısız örnekten hareketle entalpi, enerji, sınır akısı, birim ve zaman adımı kusurlarını motor bazında düzelt; ilgili analitik/sayısal testleri ve değişen benchmark'ları çalıştır; çözülemeyen fizik ve deney sınırlarını çıktıda açık tut |
+| P11 | CPU/CUDA/Warp performansı | P0, P2; aday kabulü: P4, P6 | Tekrarlanabilir eşlenmiş profil ve ölçüm; azaltılmış aktarım/senkronizasyon; tam-alan, enerji, adım ve geometri kapıları; toplam süre ve bellek kanıtı; ölçüm saçılımını aşmayan kazanç için iddia yok |
+| P12 | GPU çalışma ve arşiv güvenilirliği | P3, seçilen sözleşmenin P6 kanıtı | Açık cihaz/gerçek backend, yönetilen kuyruk ve önbellek, iptal/hata/kurtarma; GPU kaynak/koşu/sonuç kimlikleriyle API ve gerçek arayüzde paket çevrimi |
 
 P10, P4–P9 ile birlikte yürür: doğrulanmış bir motor kusuru diğer paketlerin
 sonucunu etkiliyorsa önce onarılır, önceki raporlar geriye dönük olarak PASS
