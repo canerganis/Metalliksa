@@ -1550,6 +1550,16 @@ SHA-256 `73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6`,
 and verified the archived bytes. The earlier transcription revision and run
 source binding remained intact. Source-audit/catalog code commit: `ef303e7`.
 
+The focused regression `python/test_nist_optical_transcription.py` passed 2/2.
+It checks the archived workbook digest and publisher sidecar, six original
+Case 0 TIFF digests/row mappings, and the local aggregate means/sample standard
+deviations for the three complete publisher cases (0, 1.1, 1.2). Four other
+aggregate cases lack the six rows required by this check and are skipped. The
+local JSON is a transcription of publisher aggregates, not raw source data.
+This is source-integrity/software evidence only; it does not compare a model
+prediction with those measurements, and experimental validity remains
+`unvalidated`.
+
 **Numerical verification:** The explicit `cuda:0` bounded thermal pilot on an
 RTX 4060 passed its frozen same-model CPU/GPU comparison; the observed final
 3D field relative L2 error was 1.44e-8 in the live 316L job. This is a
