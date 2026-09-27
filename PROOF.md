@@ -1,3 +1,57 @@
+## 2026-09-27 — Reviewed fixed-time continuation ready for three missing cases
+
+The separately versioned wrapper/addendum reuses only the two admitted20/10um
+rows and schedules the three unique5um cases at25/50/12.5ns once each.
+Thresholds, original protocol/runner and coarse result contents are unchanged.
+Coarse input snapshots are explicitly reconstructed; new settings/materials
+are predeclared and checked against actual execution. Failed rows and failed
+preflight records are retained and cannot be silently replaced by another run.
+
+Parent continuation/observer18/18 tests PASS9.532s, no skips; Sol independent
+9/9 pure review checks PASS. Closed launch-path/prior-failure, case ordinal,
+and pre-decode bounded NPZ defects. Review mocks are software evidence only;
+the three missing fine solves have not launched at this checkpoint.
+Wrapper SHA256:e25774cf8267ddd3721d7c4f57d4acbbdadc166a027967141800c724e07ea688.
+Addendum SHA256:19a5f5c49a5f0e1838f249d3df35bcdccf78c91c60e66b4971b514a5305b8289.
+Expected numerical fingerprint remains fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c.
+
+Integration found original protocol/coarse JSON Git blobs had normalized LF
+bytes while recorded SHA values bound CRLF working bytes. Exact-path Git
+attributes now preserve the existing pinned bytes of protocol/scenario/coarse
+report and wrapper dependencies. JSON contents and acceptance thresholds are
+unchanged. Staged-object hashes must match every protocol/addendum SHA before
+launch; this is archive byte retention, not a changed model or new result.
+Actual browser job da90525 Git-object readback12/12 files/numeric PASS.
+Numerical convergence and experimental validity remain unvalidated.
+
+## 2026-09-27 — IN718 independent-measurement applicability remains closed
+
+Astra's bounded primary-source review found no qualifying low-regime IN718
+candidate in the current catalog. Optical AMB2022 case1.2 has285W/960mm/s/
+82um D4sigma, bare plate. The archived official workbook matches publisher
+sidecar SHA256:2cfaac96aaca3dabb77b7029f842cdcc7e75c5a2cf3577d0734823246364a931.
+Rows14–19 represent three tracks with two sections each, not six independent
+experiments. Recomputed means/SD:W141.680/1.788um,D102.419/1.144um;
+published expanded U(k=2):W6.0um,D10.4um. See
+[primary NIST paper, Table4 and Appendix3](https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=957295).
+Its2D/W=1.4458 and the publication places all seven conditions above its
+conduction-transition onset. The no-depression conduction applicability gate
+fails; available raw geometry is not sufficient to validate this thermal model.
+[Published regime description](https://link.springer.com/article/10.1007/s40192-024-00355-5).
+
+The131um Naderi candidate is a distinct dynamic-coupling series, not a beam
+calibration correction: AMB2022 thermography/optical series uses49/67/82um,
++X/5deg; coupling series76/110/131um,+Y/8deg. Repeated case numbers cannot
+transfer sample identity. See
+[official protocol sections2.2.1–2.2.3](https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101).
+[NIST mds2-3842 README](https://data.nist.gov/od/ds/mds2-3842/3842_README.txt)
+describes coupling data without a cross-section W/D package or uncertainty
+budget; coupling includes plume effects and is not direct absorbed melt power.
+The inspected official chain does not identify Naderi Fig2h raw sections,
+repeated geometry and uncertainty. No substituted measurement or residual was
+produced. Experimental validity remains unvalidated; the new-alloy full-model
+admission gate remains closed independently of software/parity acceptance.
+
 ## 2026-09-27 — Actual browser acceptance with retained input-display failure
 
 Production localhost4176 / IPC5056 accepted an actual keyboard-submitted IN718

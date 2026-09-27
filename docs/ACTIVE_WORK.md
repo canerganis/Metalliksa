@@ -3,7 +3,17 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
-Latest review gate: no missing5um solver has launched. Sol found original
+Latest ready gate: parent18/18 continuation/observer tests PASS9.532s; Sol9/9
+independent pure closure PASS. Wrapper e25774cf... and addendum19a5f5c4...
+are frozen. All three continuation defects are closed; no missing5um solver
+has launched. Root preserves exact protocol/coarse/scenario/wrapper dependency
+bytes in Git before launching only the three missing cases. Numerical source
+fingerprint fbef0... stays fixed throughout. Luna now owns only GPU-panel
+executed-input/mismatch presentation and the LPBF scientific-context label
+plus nearest tests; no numerical or archive schema changes yet. The prior
+browser failure is committed da90525 and its12 files pass Git numeric readback.
+
+Previous review gate: no missing5um solver had launched. Sol found original
 output paths / prior-failure guard mismatch, undefined case ordinal index, and
 missing40MB NPZ pre-decode admission. Luna owns wrapper/test/addendum fixes;
 Sol independent closure and parent focused tests precede any fine launch.

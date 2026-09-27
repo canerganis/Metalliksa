@@ -5,3 +5,14 @@
 /docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27/*.npz binary
 *.f64le.bin binary
+/docs/LPBF_P4_FIXED_SCAN_END_CONVERGENCE_PROTOCOL_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_REUSE_ADDENDUM_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/*.npz binary
+/python/run_lpbf_fixed_scan_end_convergence.py -text
+/python/run_lpbf_fixed_scan_end_continuation.py -text
+/python/lpbf_fixed_scan_end_observation.py -text
+/python/lpbf_convergence_study.py -text
+/python/lpbf_peak.py -text
+/docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
