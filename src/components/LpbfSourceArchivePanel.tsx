@@ -13,7 +13,8 @@ function savedSourceId(): string | null {
   try { return window.localStorage.getItem(SELECTED_SOURCE_KEY); } catch { return null; }
 }
 
-function persistSourceId(datasetId: string): void {
+export function persistSourceId(datasetId: string): void {
+  if (!datasetId) return;
   try { window.localStorage.setItem(SELECTED_SOURCE_KEY, datasetId); } catch { /* Keep the selection for this view. */ }
 }
 
