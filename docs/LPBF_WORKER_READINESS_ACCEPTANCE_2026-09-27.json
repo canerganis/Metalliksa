@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "evidenceKind": "synthetic-software-startup-fixture",
+  "recordedAtUtc": "2026-09-27T13:49:52.936516+00:00",
+  "injectedDelaySeconds": 21,
+  "solverPerformanceClaim": false,
+  "experimentalValidation": false,
+  "before": {
+    "evidenceKind": "synthetic-software-startup-fixture",
+    "injectedDelaySeconds": 21,
+    "elapsedMs": 40151,
+    "httpStatus": 400,
+    "body": {
+      "error": "LPBF worker RPC timeout"
+    },
+    "launchTrace": [
+      "35356 1790513871.1024919\r",
+      "29928 1790513891.1002855"
+    ]
+  },
+  "after": {
+    "retry": {
+      "httpStatus": 200,
+      "elapsedMs": 8586,
+      "body": {
+        "openfoamVersion": null,
+        "openfoamThermal": false,
+        "binaryHash": "eaee5ddae7cdd0c05eff73430177b4c30cd31ecba729254237a78a543b13fb52",
+        "freeSurfaceSolver": false,
+        "platform": "win32",
+        "thermalSolver": true,
+        "materials": [
+          {
+            "name": "Ti-6Al-4V",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "316L Stainless Steel",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "AlSi10Mg",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "Inconel 718",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "Inconel 625",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": true,
+            "note": "Bounded fusion-enthalpy literature-model screening only; full transient solver unavailable."
+          },
+          {
+            "name": "CoCrMo",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "Scalmalloy (Al-Mg-Sc-Zr)",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "Hastelloy X",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "Pure Copper (Cu-OF)",
+            "quality": "estimated",
+            "available": true,
+            "thermalOnlyAvailable": false,
+            "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+          },
+          {
+            "name": "17-4PH",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          },
+          {
+            "name": "15-5PH",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          },
+          {
+            "name": "Maraging Steel 18Ni300",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          },
+          {
+            "name": "AlSi7Mg",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          },
+          {
+            "name": "CuCrZr",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          },
+          {
+            "name": "Ti-5553",
+            "quality": "missing",
+            "available": false,
+            "thermalOnlyAvailable": false,
+            "note": "Supply a sourced property table; no surrogate alloy is substituted."
+          }
+        ],
+        "cudaThermalPilot": {
+          "selection": "jobType=gpu-thermal-pilot; backend=cuda:N",
+          "availability": "checked-on-submit",
+          "cpuAlternative": "backend=reference",
+          "evidenceScope": "same-model numerical parity only"
+        },
+        "in625BareplateField": {
+          "jobType": "in625-bareplate-field",
+          "cpuAvailable": true,
+          "cuda": {
+            "selection": "backend=cuda:N",
+            "availability": "checked-on-submit",
+            "cpuAlternative": "backend=cpu",
+            "evidenceScope": "IN625 bareplate bounded enthalpy-conduction screening only",
+            "runtimeAvailable": true,
+            "deviceCount": 1,
+            "torchVersion": "2.14.0+cu126",
+            "cudaRuntime": "12.6"
+          },
+          "alloyId": "in625",
+          "modelId": "in625-bareplate-enthalpy-conduction-v1",
+          "validationStatus": "unvalidated-literature-model-screening",
+          "productionReady": false,
+          "maximumCells": 1000000,
+          "maximumCellSteps": 2000000
+        },
+        "limitation": "No qualified LPBF free-surface CFD solver. High-Fidelity requests return explicitly labelled analytical screening."
+      }
+    },
+    "retryAfter": "1",
+    "evidenceKind": "synthetic-software-startup-fixture",
+    "injectedDelaySeconds": 21,
+    "elapsedMs": 20067,
+    "httpStatus": 503,
+    "body": {
+      "error": "LPBF worker is still starting. Retry shortly.",
+      "code": "LPBF_WORKER_STARTING"
+    },
+    "launchTrace": [
+      "19604 1790516888.555151"
+    ]
+  },
+  "beforeProvenance": "Historical saved fixture output, not rerun in this acceptance; current bridge was fixed in 47b2b67.",
+  "afterHead": "f3b4898a5dba5e46b1b8317cc623bf0bb50807dd",
+  "afterSourceSha256": {
+    "server\\lpbfWorkerBridge.ts": "dfdf304402da72febf7fb47750c829e3392f9ddee0c5619d0ad81df88a5d3552",
+    "routes\\lpbfSimulation.ts": "abf6658f4c12880fac70a53a7613b9eb0acd29dd6054840bc62034ae55907d15"
+  },
+  "runner": {
+    "sha256": "e71fdd0c2d4415011c6bb99723591c2dd614a202017ab8cbd1f78c084295177d",
+    "command": "node --import tsx .tmp-lpbf-cold-start/slow-readiness-after.ts",
+    "source": "import express from 'express';\r\nimport { once } from 'node:events';\r\nimport { mkdir, writeFile, readFile } from 'node:fs/promises';\r\nimport path from 'node:path';\r\n\r\n// Synthetic startup latency injection. This is software failure evidence, not a measured solver workload.\r\nconst base = path.resolve('.tmp-lpbf-cold-start/after-readiness-fix');\r\nconst injection = path.join(base, 'slow-import-fixture');\r\nawait mkdir(injection, { recursive: true });\r\nconst trace = path.join(base, 'slow-starts.log');\r\nawait writeFile(trace, '');\r\nawait writeFile(path.join(injection, 'sitecustomize.py'), `import os, sys, time\\nfrom pathlib import Path\\nif any(str(arg).endswith('lpbf_worker.py') for arg in sys.argv):\\n    with Path(os.environ['COLD_START_TRACE']).open('a') as handle:\\n        handle.write(str(os.getpid()) + ' ' + str(time.time()) + '\\\\n')\\n    time.sleep(21)\\n`);\r\nprocess.env.PYTHONPATH = injection;\r\nprocess.env.COLD_START_TRACE = trace;\r\nprocess.env.METALLIKSA_JOB_ROOT = path.join(base, 'slow-readiness-jobs');\r\nprocess.env.METALLIX_PYTHON = 'C:\\\\Users\\\\can02\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe';\r\nconst { lpbfSimulationRouter } = await import('../routes/lpbfSimulation.ts');\r\nconst { lpbfWorker } = await import('../server/lpbfWorkerBridge.ts');\r\nconst app = express();\r\napp.use(lpbfSimulationRouter);\r\nconst server = app.listen(0, '127.0.0.1');\r\nawait once(server, 'listening');\r\nconst address = server.address();\r\nif (!address || typeof address === 'string') throw new Error('Missing fixture port');\r\ntry {\r\n  const start = performance.now();\r\n  const response = await fetch(`http://127.0.0.1:${address.port}/api/lpbf/capabilities`, { signal: AbortSignal.timeout(50000) });\r\n  const body = await response.json();\r\n  const retryStart = performance.now();\r\n  const retry = await fetch(`http://127.0.0.1:${address.port}/api/lpbf/capabilities`, { signal: AbortSignal.timeout(25000) });\r\n  const retryBody = await retry.json();\r\n  const result = { retry: { httpStatus: retry.status, elapsedMs: Math.round(performance.now() - retryStart), body: retryBody }, retryAfter: response.headers.get('retry-after'), evidenceKind: 'synthetic-software-startup-fixture', injectedDelaySeconds: 21,\r\n    elapsedMs: Math.round(retryStart - start), httpStatus: response.status, body,\r\n    launchTrace: (await readFile(trace, 'utf8')).trim().split('\\n') };\r\n  await writeFile(path.join(base, 'slow-readiness.json'), JSON.stringify(result, null, 2));\r\n  console.log(JSON.stringify(result));\r\n} finally {\r\n  lpbfWorker.close();\r\n  server.closeAllConnections();\r\n  await new Promise<void>(resolve => server.close(() => resolve()));\r\n}\r\n"
+  },
+  "acceptance": {
+    "recoverableFirstResponse": true,
+    "retrySucceeds": true,
+    "oneNativeLaunch": true
+  },
+  "limitations": [
+    "21 second synthetic import delay; not a natural cold-start benchmark.",
+    "One controlled before/after observation, not repeated solver throughput measurement.",
+    "First sandbox attempt failed before fixture startup at esbuild spawn EPERM; authorized runner completed."
+  ]
+}

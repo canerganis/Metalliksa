@@ -77,6 +77,15 @@ yet exposed by this run-view UI. No model or material admission changed.
 
 ## 2026-09-27 — Worker readiness and recovery (software evidence)
 
+Follow-up real-Python/local-HTTP acceptance completed with the same injected
+21 s import delay: first response **503 / LPBF_WORKER_STARTING** in 20.067 s,
+`Retry-After: 1`; immediate retry returned **200** in 8.586 s. Launch trace
+contains exactly one native Python PID. The earlier controlled fixture had
+returned 400 after 40.151 s with two launches. Saved report, exact runner text
+and current source hashes: `docs/LPBF_WORKER_READINESS_ACCEPTANCE_2026-09-27.json`.
+This is one synthetic startup/recovery observation, not repeated performance
+evidence or proof of the earlier browser failure's cause.
+
 Readiness now has one shared, bounded 60 s background startup; HTTP callers
 retain a 20 s total budget and receive recoverable 503/Retry-After while a
 healthy startup continues. Explicit native Python is not launched twice as
