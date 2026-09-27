@@ -2710,3 +2710,8 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - Worker capabilities now list Torch and Warp CUDA devices from their respective runtimes with ordinal, name, compute capability and memory. UI selection is engine-specific, refreshable, disabled during active submit/run, and revalidated against both ordinal and device metadata before submission. Missing or remapped devices remain an explicit error; no CPU fallback.
 - Evidence: both runtimes listed the local RTX 4060; focused UI suite **8/8 PASS**, worker optional-backend case **1/1 PASS**, TypeScript `npm run lint` **PASS**, Python compilation **PASS**, diff check **PASS**. No GPU solve was part of this device-inventory check.
 - Queue cancellation/timeout/restart behavior, performance profiling and IN718 experimental validation remain separate open gates.
+
+## 2026-09-28 — Worker error cleanup and source identity UI
+- Worker lifecycle/timeout **13/13 PASS**; exact retained source-revision selection tests and API/client tests **20/20 PASS**; lint and production build **PASS**. The build has an existing large-chunk advisory.
+- Regression demonstrates a job remains `running` while a registered process cannot yet be killed, and becomes `failed` only after termination/reap. Browser reload restored exact source revision 1 plus full document SHA; latest revision is shown separately. Stale saved revisions require an explicit user selection.
+- Evidence remains software/persistence correctness only. Public bare-plate camera signals are not measured thermal/melt-pool values. IN718 remains **unvalidated**; IN625 full transient model remains gated; no workload-wide GPU speedup or current-code convergence claim.
