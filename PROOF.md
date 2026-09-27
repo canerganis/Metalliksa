@@ -1,3 +1,66 @@
+## 2026-09-27 — GPU Node foundation accepted after independent defect closure
+
+Parent27/27 focused tests, lint and diff check PASS, no skips. Sol final31/31
+pure checks PASS and earlier8/8 reader matrix PASS; these are separate review
+results, not an assertion of39 distinct cases. The actual committed job2bcb
+passes exact saved-string identity, local/store bounded reader, sequential dt
+clock and numeric reassessment of ten fields within its twelve-file manifest.
+Hash-refreshed T/H mutation is rejected by numeric integrity. No new solve ran.
+
+Closed defects: equivalent Unicode/float spellings could forge material
+revision; unsafe integers could falsely bind request to CPU settings; tiny
+island size could derive an infinite scan loop. Prior failure records below
+remain historical evidence. The final reader binds exact-case field refs to
+the complete manifest; import/store/bundle whole-content acceptance is still
+pending. Historical reads require no current registry/CUDA/fingerprint.
+
+Astra509 bounded cross-language serializer fixtures PASS, mismatched0:
+230 Python floats,230 reverse JS/oracle floats,35 strings,6 Unicode key orders,
+4 integers and the actual four serialized inputs. Python3.12.10/Node24.20.0.
+This finite sample does not prove all binary64 serialization. Supported
+producer token spellings fail closed;16/17 digits/subnormals are covered by
+examples, and no15-digit cap is claimed. Raw string SHA remains separate from
+canonical material/core identity. Volumetric H integrates asV*sum(H), no rho
+multiplier; this helper does not reconstruct H(T) or experimental validity.
+
+Report:docs/LPBF_GPU_NODE_FOUNDATION_ACCEPTANCE_2026-09-27.json,
+SHA256:038291f5019c5980c1f4050fd6aeae26e5bdcb5ee51a40414d479021b0944290.
+Working source hashes are bound in the report; committed source equality is
+checked with Git newline normalization accounted for. Overall workflow remains
+unvalidated. Luna is implementing the separate Node/API/archive UI connection.
+
+## 2026-09-27 — Actual GPU run API baseline fails classification
+
+Existing production runtime4176/session83814 accepted local official optical
+source preview/import/verify as revision1, document SHA73293ca6...;
+both source artifact bytes were verified, source status remains unreviewed.
+The workbook SHA2cfaac96... matches the previously recorded publisher hash.
+Empty run source selection correctly returned400. With that exact saved
+source revision, actual completed job2bcb run preview returned503; runtime
+stdout showed validateRunDocument:Invalid captured run classification.
+No solver ran and no GPU run was imported. This actual baseline is retained
+before integration; source integrity does not grant experimental validity.
+Export/restore/reload/browser selection remain pending. In-memory loaded
+backend hash was not recorded, so no current disk-bundle hash is substituted.
+Evidence:docs/LPBF_GPU_RUN_API_BASELINE_2026-09-27.json.
+SHA256:0ee6bc77fb8f5bf7e625d081e8fa4334f5f261ff5f5b5da36a1fed02ff5bd3ad.
+Sol independently passed13 content checks and7/7 retained Git-byte guards
+across this baseline and the CPU profile report. Four saved API bodies agree;
+two source objects25875bytes and committed result/five CPU fields65552bytes
+match SHA/size/HEAD. HTTP status, runtime stdout and profiler counts remain
+owner observations rather than newly repeated measurements.
+
+## 2026-09-27 — Additional independent GPU foundation failures retained
+
+At BoundJson72e100d3.../Identityf4e02fcf... the first Unicode/float spoof
+closures passed16 independent cases, but request integer9007199254740993
+and CPU integer9007199254740992 rounded to one JS Number and could falsely
+bind after hashes were updated. Python parsed integers remained unequal.
+Separately, Numerics801fdea2... with islandSize_um=Number.MIN_VALUE derived
+columns=Infinity and failed a25ms VM timeout guard. These are pure adversarial
+software fixtures, no solve or measurement. Luna is adding safe integer token
+and derived segment resource admission; fresh independent closure is required.
+
 ## 2026-09-27 — Bounded new IN625 source review keeps full admission closed
 
 Astra checked the existing property matrix/runtime gate and made two targeted

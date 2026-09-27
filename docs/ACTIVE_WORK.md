@@ -3,6 +3,22 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
+User requests sustained parallel independent work. Current capacity is root
+plus three agents: Astra science/architecture, Luna implementation, Sol
+independent read-only review. Split owned paths; do not create duplicate work
+or edit numerical manifest sources during the live fine continuation.
+
+Foundation final gate: parent27/27+lint PASS, Sol31/31 final and prior8/8 reader
+PASS, Astra509 serializer/oracle examples PASS. All three reported defects
+closed; frozen five helper/test source hashes are in the foundation report.
+Root integrates only that package and evidence. Luna next owns run types,
+repository/import/bundle/client/archive panel and necessary NIST/proxy exclusions
+plus nearest tests. Foundation five files stay frozen; no Python changes.
+Actual source API official optical revision1 import/verify PASS. Same completed
+GPUjob preview fails503/classification; baseline report retained. Next actual
+acceptance uses this same job/revision, avoiding a replacement GPU solve.
+Fine state2reused+2newcomplete; final12.5ns row running. Hold source freeze.
+
 Current integration HEAD8e59c3e; saved-input browser package committed. Five
 top-level evidence reports pass exact Git-byte hashes. TS GPU foundation is
 frozen: new bounded JSON/identity/numerics modules, shared artifact reader,

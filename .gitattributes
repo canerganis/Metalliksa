@@ -22,3 +22,5 @@
 /docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_GPU_BOUND_BROWSER_INPUT_ACCEPTANCE_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_CPU_PROFILE_DIAGNOSTIC_2026-09-27.json -text
+/docs/LPBF_GPU_RUN_API_BASELINE_2026-09-27.json -text
+/docs/LPBF_GPU_NODE_FOUNDATION_ACCEPTANCE_2026-09-27.json -text

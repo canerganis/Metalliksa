@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "scope": "Existing local production runtime before GPU Node archive integration",
+  "runtime": {"url": "http://localhost:4176", "sessionId": 83814, "loadedBackendHash": null},
+  "evidenceClass": "actual-local-api-observation",
+  "syntheticFixture": false,
+  "experimentalValidation": false,
+  "cpuSolves": 0,
+  "gpuSolves": 0,
+  "observedAt": "2026-09-27T16:49:49.414Z",
+  "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "resultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
+  "source": {
+    "datasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+    "revision": 1,
+    "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6",
+    "evidenceStatus": "unreviewed-source-archive",
+    "artifactIntegrity": "verified-now",
+    "artifactCount": 2,
+    "byteSize": 25875,
+    "artifacts": [
+      {"relativePath": "AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx", "sha256": "2cfaac96aaca3dabb77b7029f842cdcc7e75c5a2cf3577d0734823246364a931", "byteSize": 25811},
+      {"relativePath": "AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx.sha256", "sha256": "770c0826e53e42c242110e69c032f2cbc74f6183048c43a530c5b62e746ae09b", "byteSize": 64}
+    ]
+  },
+  "steps": [
+    {"method": "GET", "path": "/api/lpbf/sources", "httpStatus": 200},
+    {"method": "GET", "path": "/api/lpbf/sources/nist-amb2022-03-optical-xlsx-official-v1", "httpStatus": 200, "observedCurrentBeforeImport": null},
+    {"method": "POST", "path": "/api/lpbf/sources/nist-amb2022-03-optical-xlsx-official-v1/preview", "body": {}, "httpStatus": 200, "expectedRevision": 0, "artifactIntegrity": "verified-at-dry-run"},
+    {"method": "POST", "path": "/api/lpbf/sources/nist-amb2022-03-optical-xlsx-official-v1/import", "body": {"expectedRevision": 0, "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"}, "httpStatus": 200, "savedRevision": 1},
+    {"method": "POST", "path": "/api/lpbf/sources/nist-amb2022-03-optical-xlsx-official-v1/verify", "body": {}, "httpStatus": 200, "artifactIntegrity": "verified-now", "evidenceStatus": "unreviewed-source-archive"},
+    {"method": "POST", "path": "/api/lpbf/runs/preview", "body": {"jobId": "2bcb01e5799041ec9458a947506d491f", "sources": []}, "httpStatus": 400, "error": "Select at least one registered source revision."},
+    {"method": "POST", "path": "/api/lpbf/runs/preview", "body": {"jobId": "2bcb01e5799041ec9458a947506d491f", "sources": [{"datasetId": "nist-amb2022-03-optical-xlsx-official-v1", "revision": 1, "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"}]}, "httpStatus": 503, "error": "Run archive unavailable or integrity check failed."}
+  ],
+  "backendFailure": {"observedInRuntimeStdout": true, "function": "validateRunDocument", "message": "Invalid captured run classification", "callers": ["dryRunRunImport", "LpbfRunArchiveService.exclusive"]},
+  "sourceApiPartialAcceptance": "pass",
+  "gpuRunArchiveAcceptance": "failed",
+  "overallWorkflowAcceptance": "unvalidated",
+  "limitations": ["No GPU run was imported.", "Export, restore, reload and browser source selection remain pending.", "Source byte integrity does not establish model applicability or experimental validation.", "The in-memory backend loaded-source hash was not recorded; a disk bundle hash is not substituted."]
+}
