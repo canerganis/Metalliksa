@@ -892,3 +892,6 @@ Do not alter the existing acceptance thresholds or relabel the study as passed.
 - Isolated 4177 browser confirmed revision 1 selection survives page reload with full SHA while the latest revision is shown distinctly. The archived CMU-Ti64 bare-plate camera signal is not a measured temperature or melt-pool geometry and does not validate the model.
 - No scientific acceptance gate changed: four existing alloys remain under the single registry authority with estimated/incomplete property evidence; full IN625 admission and independent IN718 experimental validation remain **unvalidated**. CPU/GPU agreement is numerical software evidence only; production-case convergence and end-to-end speedup remain open.
 - Next: profile the frozen production workload with paired repeated measurements, rerun current-code mesh/time convergence, and acquire a setup-matched IN718 case package before computing any experimental residual.
+
+## Commit record — 2026-09-28
+Scoped local commits: worker lifecycle `4c6fb21`; exact source revision restore/selection `3f3e048`; proof/status checkpoint `67495aa`. No push or merge.
