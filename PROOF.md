@@ -1,3 +1,35 @@
+## 2026-09-27 — Actual CPU/CUDA final-state capture
+
+An optional reference-CPU observer copies actual final coordinates, temperature,
+volumetric excess enthalpy, density and accepted timestep arrays, plus final time,
+preheat and cell volume. It is limited to standard reference powder-layer runs
+without a refinement study. The CUDA capture uses its actual H/rho/dt arrays;
+there is no reconstruction from temperature or second solve. The parity sink
+runs after numerical comparisons. The private helper retains its default
+four-item return for Warp and existing callers. Capture arrays stay outside
+the ordinary JSON result.
+
+Parent verification: **13/13 PASS, no skips** for final-state capture and artifact
+writer/reader tests, including actual cuda:0 field write/read and a mutating
+sink. Actual Warp/CPU existing full-temperature-field pilot: **1/1 PASS, no
+skips**, 73,568 cells and 934 steps, RTX 4060 Laptop GPU, Warp 1.17.0. Initial
+sandbox attempts encountered Windows TEMP/cache access errors; the final
+permitted runs completed cleanly with a repository Warp cache. The agent also
+passed the existing CUDA endpoint and mocked-helper regressions (2/2).
+
+Working-tree implementation fingerprint:
+`cef3e50894ce5b06408a37b42a3794cbe7a08d006678b77899e22d7fcc0889a0`.
+This includes preserved earlier CPU diagnostic edits; it is not a claim that
+every manifest source is clean at this commit. CPU/CUDA artifact integration
+uses a short synthetic process case (60 W, 1200 mm/s, 40 micrometre mesh,
+200 micrometre track). It demonstrates software preservation and bounded
+backend parity, not convergence, experimental validation or speedup. Queue,
+persistent GPU archive and browser export/restore integration remain pending.
+
+The prior UI/source package production build completed successfully (Vite and
+server bundle), with the existing large-chunk warning. No page-load or solver
+performance improvement follows from build success.
+
 ## 2026-09-27 — IN625 sources in browser portable bundle (software evidence)
 
 The later real-browser acceptance closes the property-source download/upload

@@ -16,7 +16,9 @@ Current continuation ownership (2026-09-27):
   Now owns `python/lpbf_simulation.py`, `python/lpbf_gpu_thermal.py`, and new
   `python/test_lpbf_gpu_final_state_capture.py` for opt-in actual final-state
   observers and same-run CPU/GPU evidence capture. Preserve pre-existing CPU
-  diagnostic edits. No worker/archive wiring in this package.
+  diagnostic edits. Capture implementation is handed off and parent verified:
+  CPU/CUDA capture/artifacts 13/13 PASS, actual Warp parity 1/1 PASS. No
+  worker/archive wiring in this package. No live solver remains from these tests.
 - `readiness_finish_luna`: owns `server/lpbfWorkerBridge.ts`,
   `routes/lpbfSimulation.ts`, `tests/lpbf-worker-readiness.test.ts`; completed
   readiness/recovery fixes. Parent 13/13 tests and lint passed; Sol replayed

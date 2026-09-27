@@ -395,7 +395,14 @@ def liquidus_crossing_sums(old, new, active, dx, dt, liquidus):
             float(cooling[good].sum()), int(good.sum())]
 
 
-def transient(p, m, report=lambda *args: None, artifact_dir=None):
+def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None):
+    if final_state_observer is not None:
+        if not callable(final_state_observer):
+            raise ValueError("Final state observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer"
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Final state capture supports standard reference powder-layer runs only")
     segments, end = scan_segments(p)
     thermal_inputs = thermal_si_inputs(p, m)
     layer_m = thermal_inputs["layer_m"]
@@ -589,6 +596,17 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None):
     balance = abs(energy_in-energy_out-stored)/max(energy_in, 1e-12)
     if balance > .01:
         raise ValueError(f"Energy balance failed: {balance:.3%}")
+    if final_state_observer is not None:
+        final_state_observer({
+            "coordinates_m": np.column_stack((x.ravel(), y.ravel(), zz.ravel())).copy(),
+            "temperature_K": T.ravel().copy(),
+            "enthalpy_J_m3": H.ravel().copy(),
+            "density_kg_m3": rho.ravel().copy(),
+            "accepted_dt_s": np.asarray(accepted_dt_s, dtype=np.float64).copy(),
+            "time_s": float(time),
+            "initial_temperature_K": float(t0),
+            "cell_volume_m3": float(dx**3),
+        })
     discretization = dict(cells=int(T.size), mesh_m=dx, minimumDt_s=min_dt, meanDt_s=end/step, steps=step)
     timestep_diagnostics = summarize_accepted_timesteps(
         accepted_dt_s, p["maxDt_s"], source_limited_steps, source_retries)
@@ -663,7 +681,8 @@ def _layer_aligned_mesh_levels(p):
     return tuple((n, layer_um / n) for n in cells)
 
 
-def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None):
+def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
+        final_state_observer=None):
     requested_p, requested_m = validate(raw)
     requested_backend = requested_p["backend"]
     p, m = requested_p, requested_m
@@ -695,6 +714,13 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None):
     elif use_cfd:
         from lpbf_cfd import cfd_multiphysics
         thermal_solver = cfd_multiphysics
+    if final_state_observer is not None:
+        if not callable(final_state_observer):
+            raise ValueError("Final state observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Final state capture supports standard reference powder-layer runs only")
     result = dict(schemaVersion=1, requestedMode=p["mode"], effectiveMode="screening" if fallback else p["mode"],
                   solver=dict(id=("layered-enthalpy-fv-1" if p.get("thermalModelId") == "layered-plate-enthalpy-v1"
                                   else "rosenthal+goldak" if p["mode"] == "screening" or fallback else VERSION),
@@ -728,7 +754,12 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None):
                                   if (capabilities or {}).get("openfoamVersion") else "OpenFOAM / a qualified free-surface LPBF solver is unavailable in this worker.") if fallback else None)
     if p["mode"] in ("standard", "calibration"):
         n_runs = 1 if p["study"] == "none" else 3
-        result.update(thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir))
+        if final_state_observer is None:
+            thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir)
+        else:
+            thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
+                                            final_state_observer=final_state_observer)
+        result.update(thermal_result)
         if use_foam:
             result["solver"]["id"] = "metalliksaThermal-OpenFOAM14-6"
         if p["study"] != "none":

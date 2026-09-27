@@ -11,7 +11,6 @@ import re
 import hashlib
 import json
 import datetime
-from unittest.mock import patch
 
 import numpy as np
 
@@ -231,6 +230,7 @@ def run_gpu(raw, device="cuda:0", capture_final=False, use_cuda_source=False):
     peak = t0
     time = 0.
     step = 0
+    accepted_dt_s = [] if capture_final else None
     min_dt = p["maxDt_s"]
     max_dt = 0.
     while time < end:
@@ -273,6 +273,8 @@ def run_gpu(raw, device="cuda:0", capture_final=False, use_cuda_source=False):
                 or torch.max(specific_h).item() >= h_boil):
             raise ValueError("Thermal model validity exceeded (boiling or nonphysical enthalpy)")
         temperature = _interp(torch, specific_h, hh, tt)
+        if accepted_dt_s is not None:
+            accepted_dt_s.append(float(dt))
         time += dt
         roundoff = min(1e-14, 2 * math.ulp(end) * (step + 1))
         if end - time <= roundoff:
@@ -309,33 +311,32 @@ def run_gpu(raw, device="cuda:0", capture_final=False, use_cuda_source=False):
             "validationStatus": "unvalidated", "productionReady": False}
     if capture_final:
         return result, {"temperature_K": temperature.cpu().numpy().ravel(),
+                        "enthalpy_J_m3": enthalpy.cpu().numpy().ravel(),
+                        "density_kg_m3": rho.cpu().numpy().ravel(),
                         "coordinates_m": xyz, "time_s": time, "surface_m": layer_m,
+                        "accepted_dt_s": np.asarray(accepted_dt_s, dtype=np.float64),
+                        "initial_temperature_K": float(t0), "cell_volume_m3": float(dx**3),
                         "steps": step}
     return result
 
 
-def _run_cpu_with_final(raw):
-    """Observe the reference solver's sampled final field without filesystem IO."""
+def _run_cpu_with_final(raw, include_final_state=False):
+    """Observe the reference solver's final state without filesystem IO."""
     captured = {}
-
-    class FinalFieldRecorder:
-        def __init__(self, folder, coords, spacing, material, process=None):
-            self.coords = np.asarray(coords).copy()
-
-        def record(self, time, temperature, surface):
-            captured["frame"] = {"time_s": float(time), "surface_m": float(surface)}
-            captured["temperature"] = np.asarray(temperature).ravel().copy()
-            captured["coordinates"] = self.coords
-
-        def finish(self):
-            return None
-
-    # The recorder observes accepted samples; it does not participate in physics.
-    with patch("lpbf_simulation.FieldRecorder", FinalFieldRecorder):
-        cpu = cpu_run(raw)
-    if not captured:
-        raise ValueError("CPU final temperature frame missing")
-    return cpu, captured["frame"], captured["temperature"], captured["coordinates"]
+    cpu = cpu_run(raw, final_state_observer=lambda state: captured.setdefault("state", state))
+    state = captured.get("state")
+    if state is None:
+        raise ValueError("CPU final state capture missing")
+    settings = cpu["settings"]
+    segments, _ = scan_segments(settings)
+    active_layer = max((segment["layer"] for segment in segments
+                        if segment["start_s"] <= state["time_s"] + 1e-14), default=0)
+    surface = 0. if settings["surfaceMode"] == "bare-plate" else (
+        active_layer + 1) * thermal_si_inputs(settings, cpu["material"])["layer_m"]
+    frame = {"time_s": state["time_s"], "surface_m": surface}
+    if include_final_state:
+        return cpu, frame, state["temperature_K"], state["coordinates_m"], state
+    return cpu, frame, state["temperature_K"], state["coordinates_m"]
 
 
 def _field_parity(cpu, gpu, frame, cpu_temperature, cpu_coordinates, gpu_field):
@@ -369,15 +370,22 @@ def _field_parity(cpu, gpu, frame, cpu_temperature, cpu_coordinates, gpu_field):
     status = ("pass" if l2 <= PARITY_TARGETS["fieldRiseL2RelativeMax"]
               and maximum <= PARITY_TARGETS["fieldRiseMaxRelativeMax"] else "failed")
     return alignment, {"status": status, "relativeRiseL2": l2,
-                       "relativeRiseMax": maximum, "cpuEncoding": "float64 final recorder sample",
+                       "relativeRiseMax": maximum, "cpuEncoding": "float64 final state observer",
                        "gpuEncoding": "float64 final state"}
 
 
-def compare_with_cpu(raw, device="cuda:0", use_cuda_source=False):
+def compare_with_cpu(raw, device="cuda:0", use_cuda_source=False, evidence_sink=None):
     """Run the same fixed case and assess frozen integral and grid-cell targets."""
+    if evidence_sink is not None and not callable(evidence_sink):
+        raise ValueError("Evidence sink must be callable")
     gpu, gpu_field = run_gpu(raw, device, capture_final=True,
                              use_cuda_source=use_cuda_source)
-    cpu, frame, cpu_temperature, cpu_coordinates = _run_cpu_with_final(raw)
+    if evidence_sink is None:
+        cpu, frame, cpu_temperature, cpu_coordinates = _run_cpu_with_final(raw)
+        cpu_state = None
+    else:
+        cpu, frame, cpu_temperature, cpu_coordinates, cpu_state = _run_cpu_with_final(
+            raw, include_final_state=True)
     if (cpu["coreContract"]["modelId"] != gpu["solver"]["modelId"]
             or cpu["material"]["materialRevisionSha256"] != gpu["material"]["materialRevisionSha256"]):
         raise ValueError("CPU/GPU model or material revision mismatch")
@@ -408,6 +416,12 @@ def compare_with_cpu(raw, device="cuda:0", use_cuda_source=False):
             "pass" if difference <= PARITY_TARGETS["peakMeltVolumeRelativeMax"] else "failed")}
     statuses = [x["status"] for x in comparisons.values()]
     status = "failed" if "failed" in statuses else "inconclusive" if "inconclusive" in statuses else "pass"
+    if evidence_sink is not None:
+        if cpu_state is None:
+            raise ValueError("CPU final state is unavailable for evidence capture")
+        evidence_sink(cpu_state, {key: gpu_field[key] for key in (
+            "coordinates_m", "temperature_K", "enthalpy_J_m3", "density_kg_m3",
+            "accepted_dt_s", "time_s", "initial_temperature_K", "cell_volume_m3")})
     return {"status": status, "scope": "same-model CPU/GPU numerical parity only",
             "experimentalValidation": False, "targets": dict(PARITY_TARGETS),
             "gpu": gpu, "cpu": {"solver": cpu["solver"], "coreContract": cpu["coreContract"],
