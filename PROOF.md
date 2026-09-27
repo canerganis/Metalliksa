@@ -1,3 +1,67 @@
+## 2026-09-27 — Same-run CPU/CUDA archive numerical integrity
+
+The opt-in GPU producer now binds exact Python request/material/CPU-input and
+actual resolved CPU-setting JSON strings and hashes, a separate versioned GPU
+contract, the nested CPU core, ten lossless final-field files, and the whole
+folder manifest. Local byte verification now invokes the pure numerical guard:
+temperature norms, volumetric excess enthalpy energy, accepted-step metadata,
+all scalar differences and pass/failed/inconclusive verdicts are checked.
+Historical records use archived settings/materials without current input,
+device or implementation checks. Legacy GPU records remain outside this new
+bound-field archive path. Worker/capture/TS/UI archive integration is pending.
+
+Parent real acceptance: 60 W IN718, 1200 mm/s, 40 micrometre mesh,
+200 ns maximum timestep, 80 micrometre layer, 200 micrometre track,
+20 microsecond cooling; RTX4060 Laptop cuda:0, float64. Both backends have
+1,210 cells and 934 steps, and the accepted dt arrays are exactly equal.
+Recomputed final temperature rise-relative L2/max are
+`2.1024253519462413e-9` / `3.0985019967931873e-9`, below the frozen 1% limits.
+Stored energy is `0.0037998026596582995` J CPU vs
+`0.003799802659657861` J CUDA; each matches its own H-field integral within
+the cancellation-safe FP64 reduction bound. W/D/L/V comparisons pass.
+
+The 12-file manifest contains 131,480 bytes, including input/capabilities and
+ten binary fields. Actual readback and historical restore guards pass.
+Before/after implementation hash is
+`fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c`.
+The report preserves execution HEAD, source hashes, execution source patch
+(including the existing uncommitted boiling diagnostics), codec/helper hashes
+and exact runner text. Evidence: `docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27.json`,
+SHA-256 `dccdd770c77338cef18eb9b8b6002047dc14a7690c6e7798c8cfe6eff12d48b4`,
+and the same-named artifact directory. Single-case wall time 17.156 seconds
+includes producer/readback; it is not a speedup or repeated throughput result.
+
+Parent combined producer/numerical/codec/default-queue regression:
+**33/33 PASS**, no skips, 26.539 seconds, including real CUDA queue execution.
+Independent Sol producer closure: **40/40 PASS** in memory/virtual filesystem,
+including rehashed altered T/H rejection. Pure helper boolean/type holes were
+then closed and are covered by the parent 11-test helper suite.
+This is software/integrity and selected-contract backend numerical evidence;
+convergence, full persistent workflow acceptance and experimental validity
+remain unvalidated.
+
+## 2026-09-27 — Fixed first-scan-end CPU observation software checks
+
+Added an opt-in copied accepted-state observer at an existing scan-segment
+end. It adds no timestep event and preserves historical peak metrics. The
+40 W P4 protocol observes the first scan end at nominal 250 microseconds,
+with five unique cases: 20/10/5 micrometres at 25 ns, and 5 micrometres at
+50/12.5 ns. The shared 5 micrometre / 25 ns case belongs to both axes.
+Energy (1%), finest-pair change (5%) and the existing trend gates are unchanged.
+
+Parent reran seven focused tests: **7/7 PASS**, including two short real
+reference solves (4,913 cells, 500 steps, 10 W, 20 micrometre mesh,
+250 ns maximum timestep, 100 micrometre track, 20 microsecond cooling).
+Mutating all observer copies and metadata leaves metrics, energy, accepted
+steps, thermal history and peak contour exactly equal to the observer-off run.
+The frozen protocol preflight passes. The five-case P4 series has not run;
+this is software behavior evidence, not convergence or experimental validity.
+
+Related engineering/heat-source regression: **53 PASS, 2 SKIP** out of 55
+tests in 60.647 seconds. The skipped tests require Linux/compiled OpenFOAM14.
+The initial sandbox run hit six Windows TEMP/SQLite permission errors; the
+permitted runner completed without those errors.
+
 ## 2026-09-27 — IN718 primary-paper applicability screen
 
 Preserved the 31-page Deisenroth et al. paper, DOI
@@ -25,6 +89,14 @@ operators. Next obtain raw measurements/masks and uncertainties and establish
 an applicable observation/model contract before computing residuals.
 
 ## 2026-09-27 — Actual CPU/CUDA final-state capture
+
+Later integration check of the unchanged default queue path:
+`test_lpbf_gpu_queue` **5/5 PASS, no skips**, 25.803 s in the permitted runner.
+This includes an actual CUDA queued job plus restore/cache settings/material
+binding. The agent's sandbox attempt failed before validation at Windows
+SQLite/TEMP access; the permitted run did not reproduce that access failure.
+This validates queue compatibility during the producer foundation work; it is
+not the new bound-field archive acceptance or a frozen-source benchmark.
 
 An optional reference-CPU observer copies actual final coordinates, temperature,
 volumetric excess enthalpy, density and accepted timestep arrays, plus final time,

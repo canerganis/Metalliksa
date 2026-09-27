@@ -34,6 +34,264 @@ PARITY_TARGETS = {"integralRelativeMax": .01, "widthDepthAbsoluteCellsMax": 1.0,
                   "peakMeltVolumeRelativeMax": .01,
                   "source": "docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md#11"}
 PILOT_JOB_TYPE = "gpu-thermal-pilot"
+MAX_ARCHIVE_INPUT_JSON_BYTES = 1024 * 1024
+MAX_ARCHIVE_FILES = 10_000
+MAX_ARCHIVE_TOTAL_BYTES = 256 * 1024 * 1024
+
+
+def _python_json(value):
+    return json.dumps(value, sort_keys=True, allow_nan=False)
+
+
+def _strict_json_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("Duplicate key in serialized GPU archive input")
+        value[key] = item
+    return value
+
+
+def _reject_json_constant(value):
+    raise ValueError(f"Invalid JSON constant in GPU archive input: {value}")
+
+
+def _parse_bound_json(value, expected, digest, name):
+    if not isinstance(value, str) or not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+        raise ValueError(f"Invalid serialized {name} binding")
+    encoded = value.encode("utf-8")
+    if len(encoded) > MAX_ARCHIVE_INPUT_JSON_BYTES:
+        raise ValueError(f"Serialized {name} exceeds GPU archive input limit")
+    try:
+        parsed = json.loads(value, object_pairs_hook=_strict_json_object, parse_constant=_reject_json_constant)
+        canonical = _python_json(parsed)
+    except (TypeError, ValueError, json.JSONDecodeError) as error:
+        raise ValueError(f"Invalid serialized {name} JSON") from error
+    if ((expected is not None and canonical != _python_json(expected))
+            or hashlib.sha256(encoded).hexdigest() != digest):
+        raise ValueError(f"Serialized {name} binding changed")
+    return parsed
+
+
+def _enforce_gpu_archive_contract(result, verify_folder=None):
+    provenance = result.get("provenance")
+    evidence = provenance.get("deviceEvidence") if isinstance(provenance, dict) else None
+    if (type(result.get("schemaVersion")) is not int or result["schemaVersion"] != 1
+            or result.get("requestedMode") != "standard"
+            or result.get("label") != "Unvalidated CUDA thermal parity pilot"
+            or result.get("confidence") != "low"
+            or not isinstance(provenance, dict) or not isinstance(evidence, dict)
+            or not isinstance(result.get("metrics"), dict)
+            or not isinstance(result.get("discretization"), dict)):
+        raise ValueError("Invalid archived CUDA pilot result envelope")
+    metric_values = result["metrics"]
+    if (not _finite_nonnegative(metric_values.get("peakTemperature_K"))
+            or metric_values["peakTemperature_K"] <= 0
+            or any(not _finite_nonnegative(metric_values.get(key))
+                   for key in ("width_um", "depth_um", "length_um", "volume_um3"))):
+        raise ValueError("Invalid archived CUDA pilot metrics")
+    contract = result.get("gpuRunContract")
+    descriptor = result.get("gpuFieldArtifacts")
+    if (not isinstance(contract, dict) or set(contract) != {
+            "schemaVersion", "runKind", "capture", "serializedInputs", "hashes"}
+            or type(contract["schemaVersion"]) is not int or contract["schemaVersion"] != 1
+            or contract["runKind"] != PILOT_JOB_TYPE):
+        raise ValueError("Unsupported GPU archive run contract")
+    capture = contract["capture"]
+    hashes = contract["hashes"]
+    serialized = contract["serializedInputs"]
+    if (not isinstance(capture, dict) or set(capture) != {
+            "contractStatus", "modelId", "backend", "device", "dtype"}
+            or not isinstance(hashes, dict) or set(hashes) != {
+                "requestHash", "materialHash", "cpuInputHash", "cpuResolvedSettingsHash", "implementationHash"}
+            or not isinstance(serialized, dict) or set(serialized) != {
+                "requestJson", "materialJson", "cpuInputJson", "cpuResolvedSettingsJson"}):
+        raise ValueError("Invalid GPU archive contract fields")
+    if (capture["contractStatus"] != "gpu-pilot-v1-bound"
+            or capture["modelId"] != result.get("solver", {}).get("modelId")
+            or capture["backend"] != result.get("settings", {}).get("backend")
+            or capture["device"] != result.get("provenance", {}).get("deviceEvidence", {}).get("selected")
+            or capture["dtype"] != result.get("solver", {}).get("dtype")
+            or "coreContract" in result):
+        raise ValueError("GPU archive metadata binding changed")
+    if (capture["dtype"] != "float64" or result.get("solver", {}).get("dtype") != "float64"
+            or not isinstance(provenance.get("inputHash"), str)
+            or not re.fullmatch(r"[a-f0-9]{64}", provenance["inputHash"])
+            or not isinstance(provenance.get("implementationHash"), str)
+            or not re.fullmatch(r"[a-f0-9]{64}", provenance["implementationHash"])
+            or provenance.get("materialVersion") != result.get("material", {}).get("version")
+            or not isinstance(provenance.get("createdAt"), str)
+            or not math.isfinite(_parse_created_at(provenance["createdAt"]))):
+        raise ValueError("Invalid archived CUDA pilot provenance")
+    capability = evidence.get("computeCapability")
+    if (not isinstance(evidence.get("name"), str) or not evidence["name"].strip()
+            or not isinstance(evidence.get("torch"), str) or not evidence["torch"].strip()
+            or not isinstance(evidence.get("cudaRuntime"), str) or not evidence["cudaRuntime"].strip()
+            or not isinstance(capability, list) or len(capability) != 2
+            or any(type(value) is not int or value < 0 for value in capability)):
+        raise ValueError("Invalid archived CUDA device evidence")
+    settings = result.get("settings")
+    material = result.get("material")
+    if not isinstance(settings, dict) or not isinstance(material, dict):
+        raise ValueError("GPU archive inputs are missing")
+    cpu_input = {key: value for key, value in settings.items() if key != "jobType"}
+    cpu_input["backend"] = "reference"
+    _parse_bound_json(serialized["requestJson"], settings, hashes["requestHash"], "request")
+    _parse_bound_json(serialized["materialJson"], material, hashes["materialHash"], "material")
+    parsed_cpu_input = _parse_bound_json(serialized["cpuInputJson"], cpu_input, hashes["cpuInputHash"], "CPU input")
+    resolved_settings = _parse_bound_json(
+        serialized["cpuResolvedSettingsJson"], None, hashes["cpuResolvedSettingsHash"],
+        "resolved CPU settings")
+    if not isinstance(resolved_settings, dict) or resolved_settings.get("backend") != "reference":
+        raise ValueError("Invalid serialized resolved CPU settings")
+    if _python_json(parsed_cpu_input) != _python_json(resolved_settings):
+        raise ValueError("Resolved CPU settings do not match archived CPU input")
+    cpu = result.get("gpuPilot", {}).get("cpu", {})
+    core = cpu.get("coreContract") if isinstance(cpu, dict) else None
+    cpu_solver = cpu.get("solver", {}) if isinstance(cpu, dict) else {}
+    if not isinstance(core, dict) or not isinstance(cpu_solver, dict):
+        raise ValueError("GPU archive CPU core binding is missing")
+    from lpbf_core_contract import build_core_contract
+    expected_core = build_core_contract(resolved_settings, material, cpu_solver.get("id"), "standard")
+    if _python_json(core) != _python_json(expected_core):
+        raise ValueError("GPU archive CPU core contract binding changed")
+    implementation_hash = result.get("provenance", {}).get("implementationHash")
+    if (not isinstance(implementation_hash, str) or not re.fullmatch(r"[a-f0-9]{64}", implementation_hash)
+            or hashes["implementationHash"] != implementation_hash
+            or hashes["requestHash"] != result.get("provenance", {}).get("inputHash")):
+        raise ValueError("GPU archive provenance binding changed")
+    from lpbf_gpu_pilot_artifacts import pilot_artifact_refs, read_pilot_artifacts
+    refs = pilot_artifact_refs(descriptor)
+    manifest = result.get("artifacts")
+    if not isinstance(manifest, list):
+        raise ValueError("GPU archive manifest is missing")
+    manifest_refs = []
+    seen_paths = set()
+    folded_paths = set()
+    total_bytes = 0
+    if len(manifest) > MAX_ARCHIVE_FILES:
+        raise ValueError("GPU archive manifest exceeds file count limit")
+    for entry in manifest:
+        if (not isinstance(entry, dict) or set(entry) != {"path", "size_bytes", "sha256"}
+                or not isinstance(entry["path"], str) or not entry["path"] or entry["path"] in seen_paths
+                or entry["path"].lower() in folded_paths
+                or type(entry["size_bytes"]) is not int or not 0 <= entry["size_bytes"] <= 2**53-1
+                or not isinstance(entry["sha256"], str)
+                or not re.fullmatch(r"[a-f0-9]{64}", entry["sha256"])):
+            raise ValueError("Invalid GPU archive artifact manifest")
+        from pathlib import Path
+        relative = Path(entry["path"])
+        if (relative.is_absolute() or ".." in relative.parts
+                or relative.as_posix() != entry["path"] or "\\" in entry["path"]
+                or ":" in entry["path"] or any(ord(char) < 32 for char in entry["path"])):
+            raise ValueError("Invalid GPU archive artifact path")
+        seen_paths.add(entry["path"])
+        folded_paths.add(entry["path"].lower())
+        total_bytes += entry["size_bytes"]
+        if total_bytes > MAX_ARCHIVE_TOTAL_BYTES:
+            raise ValueError("GPU archive manifest exceeds total byte limit")
+        manifest_refs.append(entry)
+    if any(ref not in manifest_refs for ref in refs):
+        raise ValueError("GPU field artifacts are not bound by the folder manifest")
+    _enforce_gpu_archive_field_metadata(result, descriptor)
+    if verify_folder is not None:
+        from pathlib import Path
+        root_path = Path(verify_folder).absolute()
+        if root_path.is_symlink() or getattr(root_path, "is_junction", lambda: False)():
+            raise ValueError("GPU archive folder must be an ordinary directory")
+        root = root_path.resolve(strict=True)
+        actual_paths = set()
+        actual_folded = set()
+        folder_bytes = 0
+        for candidate in root.rglob("*"):
+            if candidate.is_symlink() or getattr(candidate, "is_junction", lambda: False)():
+                raise ValueError("GPU archive folder contains a linked path")
+            if candidate.is_dir():
+                continue
+            if not candidate.is_file():
+                raise ValueError("GPU archive folder contains a non-file entry")
+            relative_name = candidate.relative_to(root).as_posix()
+            if relative_name in ("result.json", "result.tmp", "progress.log"):
+                continue
+            actual_paths.add(relative_name)
+            actual_folded.add(relative_name.lower())
+            folder_bytes += candidate.stat().st_size
+            if len(actual_paths) > MAX_ARCHIVE_FILES:
+                raise ValueError("GPU archive folder exceeds file count limit")
+            if folder_bytes > MAX_ARCHIVE_TOTAL_BYTES:
+                raise ValueError("GPU archive folder exceeds total byte limit")
+        if actual_paths != seen_paths or len(actual_folded) != len(actual_paths):
+            raise ValueError("GPU archive folder manifest is incomplete")
+        for entry in manifest:
+            relative = Path(entry["path"])
+            path = root / relative
+            current = root
+            for part in relative.parts:
+                current = current / part
+                if current.is_symlink():
+                    raise ValueError("GPU archive folder manifest path or size changed")
+            resolved = path.resolve(strict=True)
+            if (root not in resolved.parents or not resolved.is_file()
+                    or resolved.stat().st_size != entry["size_bytes"]):
+                raise ValueError("GPU archive folder manifest path or size changed")
+            file_digest = hashlib.sha256()
+            with resolved.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    file_digest.update(chunk)
+            digest = file_digest.hexdigest()
+            if digest != entry["sha256"]:
+                raise ValueError("GPU archive folder manifest bytes changed")
+        decoded_states = read_pilot_artifacts(root, descriptor)
+        from lpbf_gpu_pilot_numerics import validate_pilot_numerics
+        validate_pilot_numerics(result, decoded_states, PARITY_TARGETS)
+
+
+def _enforce_gpu_archive_field_metadata(result, descriptor):
+    states = descriptor["states"]
+    pilot = result["gpuPilot"]
+    cpu = pilot.get("cpu")
+    cpu_disc = cpu.get("discretization") if isinstance(cpu, dict) else None
+    gpu_disc = result.get("discretization")
+    comparisons = pilot.get("comparisons")
+    cpu_sampling = comparisons.get("finalSampling") if isinstance(comparisons, dict) else None
+    if not isinstance(cpu_disc, dict) or not isinstance(gpu_disc, dict) or not isinstance(cpu_sampling, dict):
+        raise ValueError("GPU archive field metadata is incomplete")
+    for name, discretization in (("CPU", cpu_disc), ("GPU", gpu_disc)):
+        if (type(discretization.get("cells")) is not int or discretization["cells"] <= 0
+                or type(discretization.get("steps")) is not int or discretization["steps"] <= 0
+                or not _finite_positive(discretization.get("mesh_m"))):
+            raise ValueError(f"GPU archive {name} discretization metadata is invalid")
+        try:
+            cell_volume = discretization["mesh_m"] ** 3
+        except OverflowError as error:
+            raise ValueError(f"GPU archive {name} cell volume is invalid") from error
+        if not _finite_positive(cell_volume):
+            raise ValueError(f"GPU archive {name} cell volume is invalid")
+    for name in ("cpuFinalTime_s", "cpuFrameTime_s", "gpuFinalTime_s"):
+        if not _finite_positive(cpu_sampling.get(name)):
+            raise ValueError("GPU archive final sampling metadata is invalid")
+    preheat = result.get("settings", {}).get("preheat_C")
+    if type(preheat) not in (int, float) or not math.isfinite(preheat):
+        raise ValueError("GPU archive initial temperature metadata is invalid")
+    expectations = {
+        "cpu": (cpu_disc["cells"], cpu_disc["steps"],
+                cpu_sampling["cpuFinalTime_s"], cpu_sampling["cpuFrameTime_s"],
+                preheat + 273.15,
+                cpu_disc["mesh_m"]),
+        "gpu": (gpu_disc["cells"], gpu_disc["steps"],
+                cpu_sampling["gpuFinalTime_s"], cpu_sampling["gpuFinalTime_s"],
+                preheat + 273.15,
+                gpu_disc["mesh_m"]),
+    }
+    for backend, (cells, steps, final_time, frame_time, initial_temperature, mesh_m) in expectations.items():
+        state = states[backend]
+        if (state["cells"] != cells or state["steps"] != steps
+                or not math.isclose(state["time_s"], final_time, rel_tol=1e-12, abs_tol=1e-14)
+                or not math.isclose(state["time_s"], frame_time, rel_tol=1e-12, abs_tol=1e-14)
+                or not math.isclose(state["initial_temperature_K"], initial_temperature,
+                                    rel_tol=1e-12, abs_tol=1e-12)
+                or not math.isclose(state["cell_volume_m3"], mesh_m ** 3, rel_tol=1e-12, abs_tol=1e-30)):
+            raise ValueError(f"GPU archive {backend} state metadata conflicts with result")
 
 
 def require_cuda(device):
@@ -422,20 +680,32 @@ def compare_with_cpu(raw, device="cuda:0", use_cuda_source=False, evidence_sink=
         evidence_sink(cpu_state, {key: gpu_field[key] for key in (
             "coordinates_m", "temperature_K", "enthalpy_J_m3", "density_kg_m3",
             "accepted_dt_s", "time_s", "initial_temperature_K", "cell_volume_m3")})
+    cpu_summary = {"solver": cpu["solver"], "coreContract": cpu["coreContract"],
+                   "material": {k: cpu["material"][k] for k in ("name", "materialId", "materialRevisionSha256", "version")},
+                   "discretization": cpu["discretization"]}
+    if evidence_sink is not None:
+        cpu_summary["resolvedSettings"] = cpu["settings"]
     return {"status": status, "scope": "same-model CPU/GPU numerical parity only",
             "experimentalValidation": False, "targets": dict(PARITY_TARGETS),
-            "gpu": gpu, "cpu": {"solver": cpu["solver"], "coreContract": cpu["coreContract"],
-                         "material": {k: cpu["material"][k] for k in ("name", "materialId", "materialRevisionSha256", "version")},
-                         "discretization": cpu["discretization"]}, "comparisons": comparisons}
+            "gpu": gpu, "cpu": cpu_summary, "comparisons": comparisons}
 
 
-def run_queued_pilot(raw):
+def run_queued_pilot(raw, artifact_dir=None):
     """Execute a queue-selected CUDA pilot while retaining separate CPU evidence."""
     request, material = validate_pilot_request(raw)
     device = request["backend"]
     reference = {k: v for k, v in request.items() if k != "jobType"}
     reference["backend"] = "reference"
-    parity = compare_with_cpu(reference, device)
+    captured = {}
+    if artifact_dir is None:
+        parity = compare_with_cpu(reference, device)
+    else:
+        from lpbf_gpu_pilot_artifacts import write_pilot_artifacts
+
+        def capture(cpu_state, gpu_state):
+            captured["descriptor"] = write_pilot_artifacts(artifact_dir, cpu_state, gpu_state)
+
+        parity = compare_with_cpu(reference, device, evidence_sink=capture)
     gpu = parity["gpu"]
     torch, cuda = require_cuda(device)
     torch.cuda.synchronize(cuda)
@@ -465,24 +735,106 @@ def run_queued_pilot(raw):
             },
         },
     }
-    enforce_gpu_pilot_result(result)
+    if artifact_dir is not None:
+        request_json = _python_json(request)
+        material_json = _python_json(material)
+        cpu_input_json = _python_json(reference)
+        cpu_resolved_settings = parity["cpu"].get("resolvedSettings")
+        if not isinstance(cpu_resolved_settings, dict):
+            raise ValueError("Resolved CPU settings are unavailable for archive binding")
+        cpu_resolved_settings_json = _python_json(cpu_resolved_settings)
+        result["gpuRunContract"] = {
+            "schemaVersion": 1,
+            "runKind": PILOT_JOB_TYPE,
+            "capture": {
+                "contractStatus": "gpu-pilot-v1-bound",
+                "modelId": gpu["solver"]["modelId"],
+                "backend": device,
+                "device": device,
+                "dtype": gpu["solver"]["dtype"],
+            },
+            "serializedInputs": {
+                "requestJson": request_json,
+                "materialJson": material_json,
+                "cpuInputJson": cpu_input_json,
+                "cpuResolvedSettingsJson": cpu_resolved_settings_json,
+            },
+            "hashes": {
+                "requestHash": hashlib.sha256(request_json.encode("utf-8")).hexdigest(),
+                "materialHash": hashlib.sha256(material_json.encode("utf-8")).hexdigest(),
+                "cpuInputHash": hashlib.sha256(cpu_input_json.encode("utf-8")).hexdigest(),
+                "cpuResolvedSettingsHash": hashlib.sha256(cpu_resolved_settings_json.encode("utf-8")).hexdigest(),
+                "implementationHash": result["provenance"]["implementationHash"],
+            },
+        }
+        result["gpuFieldArtifacts"] = captured["descriptor"]
+        from lpbf_evidence import write_artifacts
+        write_artifacts(result, artifact_dir)
+    enforce_gpu_pilot_result(result, artifact_dir=artifact_dir)
     json.dumps(result, allow_nan=False)
     return result
 
 
-def enforce_gpu_pilot_result(result):
+def _finite_nonnegative(value):
+    return type(value) in (int, float) and math.isfinite(value) and value >= 0
+
+
+def _finite_positive(value):
+    return type(value) in (int, float) and math.isfinite(value) and value > 0
+
+
+def _strict_json_equal(left, right):
+    try:
+        return _python_json(left) == _python_json(right)
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def _parse_created_at(value):
+    try:
+        parsed = datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        timestamp = parsed.timestamp()
+    except (OverflowError, TypeError, ValueError) as error:
+        raise ValueError("Invalid archived CUDA pilot timestamp") from error
+    if parsed.tzinfo is None or not math.isfinite(timestamp):
+        raise ValueError("Invalid archived CUDA pilot timestamp")
+    return timestamp
+
+
+def enforce_gpu_pilot_result(result, artifact_dir=None):
     """Fail closed on queue restore without claiming the CPU core contract."""
     if not isinstance(result, dict) or result.get("jobType") != PILOT_JOB_TYPE:
         raise ValueError("Not a CUDA thermal pilot result")
     solver, settings = result.get("solver", {}), result.get("settings", {})
-    pilot, evidence = result.get("gpuPilot", {}), result.get("provenance", {}).get("deviceEvidence", {})
+    pilot, provenance = result.get("gpuPilot", {}), result.get("provenance", {})
+    if not isinstance(result.get("material"), dict):
+        raise ValueError("CUDA pilot material binding invalid")
+    if not all(isinstance(value, dict) for value in (solver, settings, pilot, provenance)):
+        raise ValueError("CUDA pilot identity fields invalid")
+    evidence = provenance.get("deviceEvidence", {})
+    if not isinstance(evidence, dict):
+        raise ValueError("CUDA pilot device evidence invalid")
+    cpu_identity = pilot.get("cpu", {})
+    if not isinstance(cpu_identity, dict):
+        raise ValueError("CUDA pilot CPU evidence invalid")
+    cpu_core = cpu_identity.get("coreContract", {})
+    cpu_material = cpu_identity.get("material", {})
+    if not isinstance(cpu_core, dict) or not isinstance(cpu_material, dict):
+        raise ValueError("CUDA pilot CPU material/core evidence invalid")
     device = settings.get("backend")
+    has_contract = "gpuRunContract" in result
+    has_fields = "gpuFieldArtifacts" in result
+    if has_contract != has_fields or (has_contract and (result["gpuRunContract"] is None
+                                                        or result["gpuFieldArtifacts"] is None)):
+        raise ValueError("Incomplete GPU archive contract")
+    archived = has_contract
     if (not isinstance(device, str) or not re.fullmatch(r"cuda:[0-9]+", device)
             or result.get("effectiveMode") != "gpu-pilot"
             or result.get("validationStatus") != "unvalidated"
             or result.get("productionReady") is not False
-            or result.get("artifacts") != []
+            or (not archived and result.get("artifacts") != [])
             or solver.get("id") != GPU_SOLVER_ID or solver.get("modelId") != _model_id_for_settings(settings)
+            or solver.get("dtype") != "float64"
             or solver.get("actualBackend") != device
             or solver.get("thermalEvolutionDevice") != device
             or solver.get("sourceIntegrationDevice") not in ("cpu", device)
@@ -497,34 +849,68 @@ def enforce_gpu_pilot_result(result):
                 and evidence.get("sourceTimestepLimiter") != device)
             or evidence.get("synchronizedAfterSolve") is not True
             or pilot.get("experimentalValidation") is not False
-            or pilot.get("cpu", {}).get("coreContract", {}).get("modelId") != _model_id_for_settings(settings)
-            or pilot.get("cpu", {}).get("coreContract", {}).get("actualBackend") != "numpy-reference"
-            or pilot.get("cpu", {}).get("material", {}).get("materialRevisionSha256")
+            or cpu_core.get("modelId") != _model_id_for_settings(settings)
+            or cpu_core.get("actualBackend") != "numpy-reference"
+            or cpu_material.get("materialRevisionSha256")
                 != result.get("material", {}).get("materialRevisionSha256")):
         raise ValueError("CUDA pilot identity or CPU parity binding failed")
     energy = result.get("energyBalance", {})
+    if not isinstance(energy, dict):
+        raise ValueError("CUDA pilot energy accounting invalid")
     values = [energy.get(k) for k in ("input_J", "losses_J", "stored_J")]
     if (any(type(v) not in (int, float) or not math.isfinite(v) or v < 0 for v in values)
             or values[0] <= 0):
         raise ValueError("CUDA pilot energy accounting invalid")
+    if archived:
+        metrics = result.get("metrics", {})
+        metric_keys = ("peakTemperature_K", "width_um", "depth_um", "length_um", "volume_um3")
+        if (not isinstance(metrics, dict)
+                or any(not _finite_nonnegative(metrics.get(key)) for key in metric_keys)):
+            raise ValueError("CUDA pilot metrics contain invalid numeric values")
     error = abs(values[0]-values[1]-values[2])/values[0]
     if (error > PARITY_TARGETS["integralRelativeMax"]
-            or not math.isclose(error, energy.get("relativeError", float("nan")), abs_tol=1e-10)):
+            or type(energy.get("relativeError")) not in (int, float)
+            or not math.isfinite(energy["relativeError"])
+            or not math.isclose(error, energy["relativeError"], abs_tol=1e-10)):
         raise ValueError("CUDA pilot energy closure failed")
     comparisons = pilot.get("comparisons", {})
     expected = ("finalSampling", "finalTemperatureField", "peakTemperature_K",
                 "input_J", "losses_J", "stored_J", "width_um", "depth_um",
                 "length_um", "volume_um3")
-    if any(comparisons.get(key, {}).get("status") not in ("pass", "failed", "inconclusive")
-           for key in expected):
+    if (not isinstance(comparisons, dict)
+            or any(not isinstance(comparisons.get(key), dict)
+                   or comparisons[key].get("status") not in ("pass", "failed", "inconclusive")
+           for key in expected)):
         raise ValueError("CUDA pilot parity report incomplete")
     statuses = [comparisons[key]["status"] for key in expected]
     status = "failed" if "failed" in statuses else "inconclusive" if "inconclusive" in statuses else "pass"
-    if pilot.get("status") != status or pilot.get("targets") != PARITY_TARGETS:
+    if (pilot.get("status") != status
+            or (archived and not _strict_json_equal(pilot.get("targets"), PARITY_TARGETS))
+            or (not archived and pilot.get("targets") != PARITY_TARGETS)):
         raise ValueError("CUDA pilot parity status or frozen targets changed")
+    if archived:
+        for key in ("peakTemperature_K", "input_J", "losses_J", "stored_J",
+                    "width_um", "depth_um", "length_um", "volume_um3"):
+            item = comparisons[key]
+            if (not isinstance(item, dict) or not _finite_nonnegative(item.get("cpu"))
+                    or not _finite_nonnegative(item.get("gpu"))):
+                raise ValueError("CUDA pilot parity report contains invalid numeric values")
+            actual_gpu = result["energyBalance"][key] if key.endswith("_J") else result["metrics"][key]
+            if item["gpu"] != actual_gpu:
+                raise ValueError("CUDA pilot GPU parity result binding changed")
+            difference_key = "absoluteDifference_um" if key in ("width_um", "depth_um", "length_um") else "relativeDifference"
+            denominator = max(abs(item["cpu"]), 1e-30)
+            actual_difference = abs(item["cpu"] - item["gpu"])
+            if difference_key == "relativeDifference":
+                actual_difference /= denominator
+            if (not _finite_nonnegative(item.get(difference_key))
+                    or not math.isclose(actual_difference, item[difference_key], rel_tol=1e-12, abs_tol=1e-12)):
+                raise ValueError("CUDA pilot parity difference report changed")
     if result.get("provenance", {}).get("inputHash") != hashlib.sha256(
             json.dumps(settings, sort_keys=True, allow_nan=False).encode()).hexdigest():
         raise ValueError("CUDA pilot input binding changed")
+    if archived:
+        _enforce_gpu_archive_contract(result, verify_folder=artifact_dir)
     if status == "pass":
         sampling = comparisons["finalSampling"]
         cpu_disc, gpu_disc = pilot["cpu"]["discretization"], result["discretization"]
@@ -537,7 +923,9 @@ def enforce_gpu_pilot_result(result):
                 or not math.isclose(sampling["cpuFinalTime_s"], sampling["expectedEnd_s"], rel_tol=1e-12, abs_tol=1e-14)):
             raise ValueError("CUDA pilot final sampling report conflicts with discretization")
         field = comparisons["finalTemperatureField"]
-        if (field["relativeRiseL2"] > PARITY_TARGETS["fieldRiseL2RelativeMax"]
+        if (not _finite_nonnegative(field.get("relativeRiseL2"))
+                or not _finite_nonnegative(field.get("relativeRiseMax"))
+                or field["relativeRiseL2"] > PARITY_TARGETS["fieldRiseL2RelativeMax"]
                 or field["relativeRiseMax"] > PARITY_TARGETS["fieldRiseMaxRelativeMax"]):
             raise ValueError("CUDA pilot final-field parity exceeds frozen targets")
         for key in ("peakTemperature_K", "input_J", "losses_J", "stored_J"):

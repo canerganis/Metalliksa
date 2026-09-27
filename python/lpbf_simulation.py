@@ -395,7 +395,8 @@ def liquidus_crossing_sums(old, new, active, dx, dt, liquidus):
             float(cooling[good].sum()), int(good.sum())]
 
 
-def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None):
+def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None,
+              selected_time_observer=None, selected_time_s=None):
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")
@@ -404,6 +405,19 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
             raise ValueError("Final state capture supports standard reference powder-layer runs only")
     segments, end = scan_segments(p)
+    if selected_time_observer is not None:
+        if not callable(selected_time_observer):
+            raise ValueError("Selected-time observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer"
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Selected-time capture supports standard reference powder-layer runs only")
+        if (isinstance(selected_time_s, bool) or not isinstance(selected_time_s, (int, float))
+                or not math.isfinite(selected_time_s) or selected_time_s <= 0
+                or not any(selected_time_s == segment["end_s"] for segment in segments)):
+            raise ValueError("Selected time must be an existing scan-segment end event")
+    elif selected_time_s is not None:
+        raise ValueError("Selected time requires a selected-time observer")
     thermal_inputs = thermal_si_inputs(p, m)
     layer_m = thermal_inputs["layer_m"]
     speed_m_s = thermal_inputs["speed_m_s"]
@@ -476,6 +490,8 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
     minimum_capture, source_retries = 1., 0
     source_limited_steps = 0
     accepted_dt_s = []
+    accepted_clock_s = 0.
+    selected_time_captured = False
     cp_floor = min(row[3] for row in m["table"])
     if layered:
         cp_floor = min(cp_floor, float(np.min(ss_cp_table)))
@@ -531,6 +547,7 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             incidence_angle_deg=p.get("incidenceAngle_deg", 0.),
             incidence_azimuth_deg=p.get("incidenceAzimuth_deg", 0.))
         accepted_dt_s.append(dt)
+        accepted_clock_s += dt
         source_limited_steps += int(retries > 0)
         require_source_capture(capture, MINIMUM_SOURCE_CAPTURE_FRACTION)
         min_dt = min(min_dt, dt)
@@ -554,10 +571,34 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             if not np.isfinite(h).all() or float(h.min()) < hh[0]-1e-8 or float(h.max()) >= np.interp(m["boiling_K"], tt, hh):
                 raise ValueError("Thermal model validity exceeded (boiling or nonphysical enthalpy); evaporation/free-surface CFD required")
             T = np.interp(h, hh, tt)
+        previous_time = time
         time += dt
         end_roundoff = min(1e-14, 2*math.ulp(end)*(step+1))
         if end-time <= end_roundoff:
             time = end
+        if (selected_time_observer is not None and not selected_time_captured
+                and previous_time <= selected_time_s + end_roundoff
+                and time >= selected_time_s - end_roundoff):
+            difference_s = float(selected_time_s - accepted_clock_s)
+            sample_tolerance_s = min(1e-14, 2*math.ulp(float(selected_time_s))*(step+1))
+            if abs(difference_s) > sample_tolerance_s:
+                raise ValueError("Accepted selected-time state missed the requested event beyond roundoff")
+            selected_time_observer({
+                "coordinates_m": np.column_stack((x.ravel(), y.ravel(), zz.ravel())).copy(),
+                "temperature_K": T.ravel().copy(),
+                "enthalpy_J_m3": H.ravel().copy(),
+                "density_kg_m3": rho.ravel().copy(),
+                "accepted_dt_s": np.asarray(accepted_dt_s, dtype=np.float64).copy(),
+                "target_time_s": float(selected_time_s),
+                "time_s": float(accepted_clock_s),
+                "scheduler_time_s": float(time),
+                "time_difference_s": difference_s,
+                "roundoff_tolerance_s": sample_tolerance_s,
+                "step": int(step+1),
+                "initial_temperature_K": float(t0),
+                "cell_volume_m3": float(dx**3),
+            })
+            selected_time_captured = True
         step += 1
         energy_in += float(source.sum())*dx**3*dt
         energy_out += (float(bottom.sum())+float(surface_loss.sum()))*dx**3*dt
@@ -592,6 +633,8 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             next_sample = time+end/60
         if step > 250000:
             raise ValueError("Reference solver step budget exceeded")
+    if selected_time_observer is not None and not selected_time_captured:
+        raise ValueError("Selected-time event was not reached by an accepted timestep")
     stored = float(H.sum())*dx**3
     balance = abs(energy_in-energy_out-stored)/max(energy_in, 1e-12)
     if balance > .01:
@@ -682,7 +725,7 @@ def _layer_aligned_mesh_levels(p):
 
 
 def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
-        final_state_observer=None):
+        final_state_observer=None, selected_time_observer=None, selected_time_s=None):
     requested_p, requested_m = validate(raw)
     requested_backend = requested_p["backend"]
     p, m = requested_p, requested_m
@@ -721,6 +764,20 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                 or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
                 or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
             raise ValueError("Final state capture supports standard reference powder-layer runs only")
+    if selected_time_observer is not None:
+        if not callable(selected_time_observer):
+            raise ValueError("Selected-time observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Selected-time capture supports standard reference powder-layer runs only")
+        segments, _ = scan_segments(p)
+        if (isinstance(selected_time_s, bool) or not isinstance(selected_time_s, (int, float))
+                or not math.isfinite(selected_time_s) or selected_time_s <= 0
+                or not any(selected_time_s == segment["end_s"] for segment in segments)):
+            raise ValueError("Selected time must be an existing scan-segment end event")
+    elif selected_time_s is not None:
+        raise ValueError("Selected time requires a selected-time observer")
     result = dict(schemaVersion=1, requestedMode=p["mode"], effectiveMode="screening" if fallback else p["mode"],
                   solver=dict(id=("layered-enthalpy-fv-1" if p.get("thermalModelId") == "layered-plate-enthalpy-v1"
                                   else "rosenthal+goldak" if p["mode"] == "screening" or fallback else VERSION),
@@ -754,11 +811,20 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                   if (capabilities or {}).get("openfoamVersion") else "OpenFOAM / a qualified free-surface LPBF solver is unavailable in this worker.") if fallback else None)
     if p["mode"] in ("standard", "calibration"):
         n_runs = 1 if p["study"] == "none" else 3
-        if final_state_observer is None:
+        if final_state_observer is None and selected_time_observer is None:
             thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir)
-        else:
+        elif selected_time_observer is None:
             thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
                                             final_state_observer=final_state_observer)
+        elif final_state_observer is None:
+            thermal_result = thermal_solver(
+                p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
+                selected_time_observer=selected_time_observer, selected_time_s=selected_time_s)
+        else:
+            thermal_result = thermal_solver(
+                p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
+                final_state_observer=final_state_observer,
+                selected_time_observer=selected_time_observer, selected_time_s=selected_time_s)
         result.update(thermal_result)
         if use_foam:
             result["solver"]["id"] = "metalliksaThermal-OpenFOAM14-6"

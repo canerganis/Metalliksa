@@ -5,15 +5,57 @@ shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
 Current continuation ownership (2026-09-27):
 
+After the model-switch interruption, the previous agent handles were absent.
+Replacement agents now own the same bounded tasks: `gpu_producer_luna` owns
+only `python/lpbf_gpu_thermal.py` and `python/test_lpbf_gpu_archive_producer.py`;
+`gpu_review_sol` is read-only; `gpu_numeric_astra` defined numerical archive
+guards and historical raw/resolved-input binding. `fixed_observer_luna` owns
+only `python/lpbf_simulation.py` plus new fixed-scan-end protocol/test files.
+Both numerical-source owners finished/froze before parent real CUDA acceptance.
+No new convergence series is live.
+Sol reproduced accepted invalid nested CPU hashes, traversal/oversize/duplicate
+manifest entries and float32 declarations. Luna is closing those defects.
+Producer foundation is now held stable after seven focused tests. Parent's
+permitted default queue compatibility suite passed 5/5 including one real CUDA
+job; this is not the new bound-field archive acceptance or a frozen benchmark.
+`gpu_review_sol` closed 29 previous defects and found one remaining malformed
+field-metadata error path. Luna added typed guards and five malformed fixtures;
+the seven focused producer tests pass without CUDA. Sol now rechecks that
+closure and numeric overflow handling. `gpu_numerics_luna` handed off the new
+pure numeric validator/test files (11 tests). The producer integrates it after
+bounded byte/hash readback. Sol final producer closure is 40/40; parent combined
+producer/numeric/codec/legacy-queue regression is 33/33 PASS with real CUDA.
+Parent real bound acceptance is PASS: 1,210 cells, 934 equal accepted dt steps,
+12 manifest files/131,480 bytes, stable source hash fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c.
+Evidence is in docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27.json and its
+artifact directory. This does not enable worker/capture/TS/UI GPU archives.
+Fixed-time observer parent tests are 7/7 PASS, including a bounded real-solver
+callback mutation comparison with cooling after the selected event.
+The physical observation is the first scan end (250 microseconds), not the
+cooling endpoint (350 microseconds). The prior UI session 17083 handle is missing and HTTP4176
+refuses connection; create/restart an owned acceptance runtime when needed.
+
+Next concrete integration: wire the bound producer through lpbf_worker.py and
+lpbf_run_capture.py, then separate GPU TS parser/repository/bundle byte resolver
+and UI without granting CPU/NIST eligibility. Preserve the already recorded
+acceptance fields and legacy GPU behavior. Warp still lacks actual H/rho/dt
+capture; five alternating CPU/Torch and CPU/Warp end-to-end pairs remain open.
+The five-case fixed-time protocol has not run. Refresh its implementation
+binding only before execution if covered numerical sources change again;
+hold all covered sources throughout the five-row series once it starts.
+
 - User model assignment: Astra owns difficult scientific/architecture decisions;
   Sol owns bounded reviews; Luna implements code changes. Parent owns integration,
   live browser acceptance, scoped commits, PROOF and STATUS.
-- `gpu_archive_astra`: inspecting the retrieved primary IN718 2026 paper;
-  owns only new `docs/sources/in718-deisenroth-2026/` source package. No model
-  admission or solver edits. Parent verified PDF bytes and retrieval caveat.
+- `gpu_archive_astra`: primary-paper screen finished and committed `f3b4898`.
+  Now read-only scientific design of archive numerical consistency guards:
+  recomputed temperature norms, enthalpy energy, accepted timesteps and valid
+  failed-parity records. No code edits or heavy runs.
 - `artifact_review_sol`: completed archive seam review. Manifest must include
   input/capabilities as well as ten binary refs; new descriptor refs are a
   matching subset, not the whole manifest. Legacy GPU remains view-only.
+  Now maps TS parser/repository/bundle/resolver integration and checks the
+  observed broad capability availability labels against the four-alloy guard.
 - `artifact_fix_luna`: precision fix `501c43f`, endpoint fix `1249ba1` integrated.
   Capture implementation `e98a424` is handed off and parent verified:
   CPU/CUDA capture/artifacts 13/13 PASS, actual Warp parity 1/1 PASS. No
@@ -26,6 +68,11 @@ Current continuation ownership (2026-09-27):
   `routes/lpbfSimulation.ts`, `tests/lpbf-worker-readiness.test.ts`; completed
   readiness/recovery fixes. Parent 13/13 tests and lint passed; Sol replayed
   four concrete race/transport repros and closed all. No live restart.
+  Parent subsequently completed isolated real-Python HTTP delayed-startup
+  recovery: 503 then 200, one native launch, committed `c5b0b93`. This fixture
+  is stopped; user/runtime ports were not changed. No new agent was started
+  for fixed-time convergence because the agent thread limit was reached;
+  its observer/protocol work remains pending the current Luna handoff.
 - `in625_gate`: finished the two property-source catalog entries, source scope,
   UI and tests. Parent owns acceptance/commit. Original sources were committed
   as `cdc4c58`; full model admission remains closed.
@@ -61,6 +108,70 @@ import/bundle byte/numeric verifier, client and RunImport UI in that order.
 Permit sound failed-parity records; legacy GPU records remain view-only.
 Recompute saved temperature norms and energy/step metadata consistency from
 artifacts at archive boundaries. Experimental validity remains false.
+
+Sol TS integration map (read-only review, not implemented):
+- `lpbfSimulationService.parseGpuPilotJob`: separate legacy/new branches;
+  partial/null new fields and top-level CPU coreContract are errors. Keep
+  `parseSimulationJob/checkCoreContract` CPU-only.
+- `src/types/lpbfRun.ts` and repository unions: add distinct GPU run/status;
+  repository dispatch uses GPU requestSummary from stored settings. Validate
+  SHA256 of exact Python serialized strings in Node, structural snapshots and
+  nested CPU input binding; never hash a Node reserialization. Historical
+  implementation binds to saved provenance, not current source.
+- `server/lpbfGpuPilotArtifacts.ts`: internal ref resolver with default local
+  read and archive `store.verify({sha256,byteSize})`; both use the same bounded
+  reader/numeric checks. Do not derive object-store paths from logical paths.
+- Import dry-run uses local artifacts; post-putFile/save and bundle
+  backup/verify/restore use the object-store resolver. Preserve original
+  source revisions even if current source archive has newer revisions.
+- GPU must remain ineligible for CPU NIST/proxy campaigns, including direct
+  repository saves and bundle references. A nested CPU parity core contract
+  does not grant experimental eligibility. Test local/store equivalence,
+  rehashed invalid fields, failed-parity archives, missing queue folder after
+  restore, legacy/partial contracts and unchanged CPU archive regressions.
+- Current numerical guard checks detailed summary math only for overall
+  `pass`. Before enabling GPU archive capture, verify self-consistency for
+  `failed/inconclusive` too; failed backend agreement is valid evidence,
+  fabricated/inconsistent stored report values are not.
+
+Astra numerical guard design (not yet implemented): validate every backend's
+own cells/steps/time/preheat/mesh and accepted-dt min/max/mean; compare actual
+H integral `V*sum(H)` to stored energy without multiplying density again.
+Use FP64 roundoff bounds based on `u=2^-53`, `gamma(k)=ku/(1-ku)` and `sumabs(H)`,
+not an energy-relative or arbitrary absolute floor. Suggested energy envelope
+`2*gamma(n+2)*V*sumabs(H)/(1-gamma(n-1))`, n<=100000, with explicit overflow/
+underflow treatment. Recompute T rise L2/max only for matching ordered grids
+and sampling; mismatched but internally sound grids remain failed evidence
+without fabricated norms. Norm integrity envelope may use gamma(4*n+32);
+the original parity decision thresholds remain unchanged. Validate scalar
+difference math and status precedence for pass/failed/inconclusive alike.
+Final fields cannot reconstruct peak/history geometry, input/loss integrals
+or alone prove constitutive H–T correctness. These limits must remain explicit.
+
+Historical input binding decision: `validate_pilot_request` already returns
+resolved p, including defaults/optics. The reference passed to CPU is derived
+from that resolved request; the second CPU validate pass is a fixed point in
+this allowlisted scope. Persist actual CPU result settings separately in
+`cpuResolvedSettingsJson`; require it to equal `cpuInputJson` and the reference
+derived from `requestJson`. Build the nested CPU core contract using archived
+settings/material, not current registry replay. JSON string hashes remain
+independent of the core's compact serialization. Future material/defaults
+changes must not silently invalidate sound historical records.
+
+Astra benchmark design (not yet implemented): current Warp module's
+`benchmark_alternating` has only three Torch/Warp repeats and no CPU oracle/
+full artifacts. Freeze the existing 60 W, 1200 mm/s, 10 micrometre,
+layer-conforming IN718 case (expected 73568 cells/934 steps). After real Warp
+H/rho/dt capture is added, run five alternating-order pairs for CPU–Torch and
+CPU–Warp, one warm-up/backend, result cache disabled, no concurrent solve.
+Measure host normalization/solve/synchronization/capture/write/readback wall
+time; assess captured runs without a second solve. Keep every failed/slow
+row. Save raw times, order, fields/hashes, versions/hardware/thread settings,
+start/end fingerprints and parity. Separate profiling from timing; measure
+source integration, transfers, host synchronization and observation costs
+before optimizing. This driver alone is not application end-to-end evidence:
+also measure submit/queue/result/persistent archive/readable-result, retaining
+the GPU pilot CPU oracle cost. No speedup claim exists from this design.
 
 Astra convergence decision (read-only assessment): the existing contours are
 sampled at different peak-count times (250.150/250.100/250.0875 microseconds).
