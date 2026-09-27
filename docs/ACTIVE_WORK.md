@@ -1,4 +1,20 @@
-# Current LPBF goal owner — 01a0cfbf-d2ad-7f70-b94f-b89183eb819c, 2026-09-25
+# Active delegated LPBF work — 2026-09-27
+
+Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
+shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
+
+- Parent: integration complete for the packages below; owns the pending endpoint fix after the CPU diagnostic finishes.
+- `gpu_result_contract`: completed queue input/material integrity repairs (`66aed0b`, `ed9cc9e`); left the real CUDA endpoint regression in `python/test_lpbf_gpu_thermal.py` failing and uncommitted pending the frozen run. No numerical manifest edits.
+- `hmr_binding`: completed HTTP/HMR isolation (`89703e5`) and application-only dependency discovery (`aedc614`); existing uncommitted HOST edit preserved. Combined runtime tests 4/4 passed.
+- `in625_gate`: completed source-candidate follow-up in the existing IN625 evidence matrix (`66aed0b`); full admission remains closed.
+
+Workers have finished editing. Integration owner reviewed, tested and committed
+the completed packages; unrelated edits remain untouched.
+CPU diagnostic session 1840 remains live; its numerical implementation manifest
+must remain byte-stable until the final report. GPU archival needs a distinct
+contract and complete field artifacts; CPU core-v1 must not be relabeled.
+
+# Previous LPBF goal owner — 01a0cfbf-d2ad-7f70-b94f-b89183eb819c, 2026-09-25
 
 ## NIST case 0 raw six-observation source regression (2026-09-25)
 
