@@ -1,14 +1,20 @@
 """Deterministic queue lifecycle tests; child processes and CUDA execution are controlled."""
 import json
+import io
+import os
+import sqlite3
+import subprocess
+import sys
 import tempfile
 import threading
+import time
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
 from lpbf_gpu_thermal import PILOT_JOB_TYPE
-from lpbf_worker import Queue
+from lpbf_worker import Queue, _WindowsJobChild
 
 
 GPU_CASE = {
@@ -46,6 +52,9 @@ class FakeChild:
         self.output = output
         self.killed = False
         self.waited = False
+        self.kill_error = None
+        self.exit_on_kill_error = False
+        self.wait_timeouts = []
         self._polled = False
         if partial_name:
             output.write("partial artifact produced before child exit\n")
@@ -58,6 +67,10 @@ class FakeChild:
         return self.returncode
 
     def kill(self):
+        if self.kill_error:
+            if self.exit_on_kill_error:
+                self.returncode = 0
+            raise self.kill_error
         if self.on_kill:
             self.on_kill()
         self.killed = True
@@ -65,18 +78,75 @@ class FakeChild:
 
     def wait(self, timeout=None):
         self.waited = True
+        self.wait_timeouts.append(timeout)
+        return self.returncode
+
+
+class ResumeFailureChild(_WindowsJobChild):
+    def __init__(self, failed_kills):
+        self.pid = 1234
+        self.returncode = None
+        self.failed_kills = failed_kills
+        self.kill_attempts = 0
+        self.wait_timeouts = []
+        self.final_kill_started = threading.Event()
+        self.allow_final_kill = threading.Event()
+
+    def resume(self):
+        raise OSError("ResumeThread failed")
+
+    def poll(self):
+        return self.returncode
+
+    def kill(self):
+        self.kill_attempts += 1
+        if self.kill_attempts <= self.failed_kills:
+            raise PermissionError(5, "Access is denied")
+        self.final_kill_started.set()
+        if not self.allow_final_kill.wait(timeout=3):
+            raise TimeoutError("test did not release final termination")
+        self.returncode = -9
+
+    def wait(self, timeout=None):
+        self.wait_timeouts.append(timeout)
         return self.returncode
 
 
 class QueueLifecycle(unittest.TestCase):
+    def test_resume_failure_keeps_job_running_until_child_cleanup_is_confirmed(self):
+        with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+            submitted = submit_gpu(queue)
+            job = submitted["id"]
+            child = ResumeFailureChild(failed_kills=2)
+            with patch("lpbf_worker._spawn_execution_child", return_value=child):
+                queue.thread = threading.Thread(target=queue.work, daemon=True)
+                queue.thread.start()
+                self.assertTrue(child.final_kill_started.wait(timeout=3),
+                                "worker did not retry child termination")
+                self.assertEqual(queue.get(job)["status"], "running",
+                                 "failed ResumeThread cleanup must not become terminal")
+                self.assertIs(queue.children.get(job), child)
+                self.assertEqual(child.kill_attempts, 3)
+                self.assertEqual(child.wait_timeouts, [])
+                child.allow_final_kill.set()
+
+                deadline = time.monotonic() + 3
+                while queue.get(job)["status"] == "running" and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                queue.close()
+
+            self.assertEqual(queue.get(job)["status"], "failed")
+            self.assertNotIn(job, queue.children)
+            self.assertEqual(child.wait_timeouts, [5])
+
     def test_queued_cancel_is_terminal_and_never_launches_child(self):
         with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
             submitted = submit_gpu(queue)
-            with patch("lpbf_worker.subprocess.Popen") as popen:
+            with patch("lpbf_worker._spawn_execution_child") as spawn_child:
                 state = queue.cancel(submitted["id"])
             self.assertEqual(state["status"], "cancelled")
             self.assertEqual(state["error"], "Cancelled by user")
-            popen.assert_not_called()
+            spawn_child.assert_not_called()
 
     def test_running_cancel_kills_child_and_preserves_cancelled_status(self):
         with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
@@ -88,13 +158,13 @@ class QueueLifecycle(unittest.TestCase):
             execution_errors = []
             status_seen_at_kill = []
 
-            def spawn(*_args, **kwargs):
-                child = FakeChild(kwargs["stdout"], on_kill=lambda: status_seen_at_kill.append(queue.get(job)["status"]))
+            def spawn(_command, log):
+                child = FakeChild(log, on_kill=lambda: status_seen_at_kill.append(queue.get(job)["status"]))
                 children.append(child)
                 child_started.set()
                 return child
 
-            with patch("lpbf_worker.subprocess.Popen", side_effect=spawn):
+            with patch("lpbf_worker._spawn_execution_child", side_effect=spawn):
                 worker = threading.Thread(target=lambda: self._execute_capture(queue, job, execution_errors))
                 worker.start()
                 self.assertTrue(child_started.wait(timeout=3), "execution child did not start")
@@ -111,6 +181,32 @@ class QueueLifecycle(unittest.TestCase):
             self.assertEqual(state["status"], "cancelled")
             self.assertEqual(len(children), 1)
 
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object access-denied handling")
+    def test_access_denied_keeps_live_child_running_but_signaled_child_can_be_reaped(self):
+        job = "c" * 32
+        queue = Queue.__new__(Queue)
+        queue.lock = threading.RLock()
+        state = {"status": "running"}
+        child = FakeChild(io.StringIO())
+        child.kill_error = PermissionError(5, "Access is denied")
+        queue.children = {job: child}
+        queue.get = lambda _job: dict(state)
+        queue.update = lambda _job, **values: state.update(values)
+
+        with self.assertRaises(PermissionError):
+            queue.cancel(job)
+        self.assertEqual(state["status"], "running", "a live child must not be persisted as cancelled")
+        self.assertIs(queue.children.get(job), child, "a live child must remain registered for recovery")
+        self.assertFalse(child.waited)
+
+        child.exit_on_kill_error = True
+        result = queue.cancel(job)
+        self.assertEqual(result["status"], "cancelled")
+        self.assertTrue(child.waited, "signaled child must still be waited/reaped")
+        self.assertEqual(child.wait_timeouts, [5])
+        self.assertNotIn(job, queue.children)
+        child.output.close()
+
     def test_forced_timeout_kills_child_and_marks_timed_out(self):
         with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
             submitted = submit_gpu(queue)
@@ -122,12 +218,12 @@ class QueueLifecycle(unittest.TestCase):
             input_path.write_text(json.dumps(params))
             children = []
 
-            def spawn(*_args, **kwargs):
-                child = FakeChild(kwargs["stdout"])
+            def spawn(_command, log):
+                child = FakeChild(log)
                 children.append(child)
                 return child
 
-            with patch("lpbf_worker.subprocess.Popen", side_effect=spawn):
+            with patch("lpbf_worker._spawn_execution_child", side_effect=spawn):
                 queue.execute(job)
             state = queue.get(job)
             self.assertEqual(state["status"], "timed_out")
@@ -213,12 +309,12 @@ class QueueLifecycle(unittest.TestCase):
             queue.update(job, status="running")
             partial_name = "temperature-slice.svg"
 
-            def spawn(*_args, **kwargs):
-                child = FakeChild(kwargs["stdout"], returncode=17)
+            def spawn(_command, log):
+                child = FakeChild(log, returncode=17)
                 (Path(root) / job / partial_name).write_text("partial artifact")
                 return child
 
-            with patch("lpbf_worker.subprocess.Popen", side_effect=spawn):
+            with patch("lpbf_worker._spawn_execution_child", side_effect=spawn):
                 queue.execute(job)
             self.assertEqual(queue.get(job)["status"], "failed")
             self.assertTrue((Path(root) / job / partial_name).exists())
@@ -240,6 +336,97 @@ class QueueLifecycle(unittest.TestCase):
                         queue.submit({**GPU_CASE, "backend": backend})
             finally:
                 queue.close()
+
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object hard-crash integration")
+    def test_abrupt_parent_death_kills_execute_child_and_prevents_publication(self):
+        test_root = Path(os.environ.get(
+            "METALLIX_LPBF_TEST_ROOT", Path(__file__).resolve().parent / "codex-lpbf-test-tmp"))
+        self.assertTrue(test_root.is_dir(), f"test root must exist before the run: {test_root}")
+        with tempfile.TemporaryDirectory(prefix="job-owner-crash-", dir=test_root) as root:
+            job = "b" * 32
+            folder = Path(root) / job
+            folder.mkdir()
+            (folder / "input.json").write_text(json.dumps({"mode": "standard", "backend": "cpu"}))
+            db = sqlite3.connect(Path(root) / "queue.sqlite")
+            try:
+                db.execute("CREATE TABLE jobs(id TEXT PRIMARY KEY, cache_key TEXT, status TEXT, progress REAL, log TEXT, error TEXT, created REAL)")
+                db.execute("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", (job, "crash-test", "running", 0., "", None, 1.))
+                db.commit()
+            finally:
+                db.close()
+            helper = r'''
+import sys, time
+from pathlib import Path
+from lpbf_worker import _spawn_windows_job_child
+folder = Path(sys.argv[1])
+payload = "import sys,time; from pathlib import Path; time.sleep(1.2); p=Path(sys.argv[1]); (p/'result.json').write_text('{}'); (p/'orphan-artifact.svg').write_text('orphan')"
+with (folder / "progress.log").open("w") as log:
+    child = _spawn_windows_job_child([sys.executable, "-c", payload, str(folder)], log)
+    child.resume()
+    print(child.pid, flush=True)
+    time.sleep(60)
+'''
+            parent = subprocess.Popen([sys.executable, "-c", helper, str(folder)],
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      text=True, cwd=str(Path(__file__).resolve().parent))
+            pid = None
+            child_handle = None
+            try:
+                ready = threading.Event()
+                output = []
+                reader = threading.Thread(target=lambda: (output.append(parent.stdout.readline()), ready.set()), daemon=True)
+                reader.start()
+                self.assertTrue(ready.wait(15), "helper parent did not report its child PID")
+                if not output[0].strip():
+                    parent.kill()
+                    parent.wait(timeout=5)
+                    self.fail(f"helper failed to start child: {parent.stderr.read()}")
+                pid = int(output[0].strip())
+                import ctypes
+                kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+                kernel.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+                kernel.OpenProcess.restype = ctypes.c_void_p
+                kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+                kernel.WaitForSingleObject.restype = ctypes.c_ulong
+                kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+                child_handle = kernel.OpenProcess(0x00100000, False, pid)  # SYNCHRONIZE
+                self.assertTrue(child_handle, "child PID could not be opened to verify liveness")
+                self.assertEqual(kernel.WaitForSingleObject(child_handle, 0), 0x102,
+                                 "reported child was not live before parent termination")
+                parent.kill()
+                parent.wait(timeout=5)
+                self.assertEqual(kernel.WaitForSingleObject(child_handle, 5000), 0,
+                                 "child survived abrupt Job Object owner death")
+
+                with isolated_queue(root) as queue:
+                    state = queue.get(job)
+                    self.assertEqual(state["status"], "failed")
+                    self.assertEqual(state["error"], "Worker restarted during execution")
+                self.assertFalse((folder / "result.json").exists())
+                self.assertFalse((folder / "orphan-artifact.svg").exists())
+            finally:
+                if parent.poll() is None:
+                    parent.kill()
+                    parent.wait(timeout=5)
+                if child_handle:
+                    kernel.CloseHandle(child_handle)
+                if pid is not None:
+                    import ctypes
+                    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+                    kernel.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+                    kernel.OpenProcess.restype = ctypes.c_void_p
+                    kernel.TerminateProcess.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+                    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+                    child_handle = kernel.OpenProcess(0x0001, False, pid)
+                    if child_handle:
+                        try:
+                            kernel.TerminateProcess(child_handle, 1)
+                        finally:
+                            kernel.CloseHandle(child_handle)
+                if parent.stdout:
+                    parent.stdout.close()
+                if parent.stderr:
+                    parent.stderr.close()
 
     @staticmethod
     def _execute_capture(queue, job, errors):

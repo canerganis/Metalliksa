@@ -19,6 +19,9 @@ class _CompletedChild:
         self.poll_count += 1
         return None if self.poll_count == 1 else 0
 
+    def wait(self, timeout=None):
+        return 0
+
 
 class WorkerTimeout(unittest.TestCase):
     def test_worker_run_kind_is_explicit_and_keeps_gpu_archive_closed(self):
@@ -46,7 +49,7 @@ class WorkerTimeout(unittest.TestCase):
                 )
 
             try:
-                with patch("lpbf_worker.subprocess.Popen", return_value=_CompletedChild()), \
+                with patch("lpbf_worker._spawn_execution_child", return_value=_CompletedChild()), \
                      patch("lpbf_worker.enforce_thermal_balances"):
                     queue.execute(job)
 

@@ -4,6 +4,7 @@ Normally launched inside WSL by the Node bridge. No browser-supplied shell comma
 """
 import hashlib
 import base64
+import ctypes
 import json
 import math
 import os
@@ -394,6 +395,242 @@ def capabilities():
                 limitation="No qualified LPBF free-surface CFD solver. High-Fidelity requests return explicitly labelled analytical screening.")
 
 
+class _WindowsJobChild:
+    """Windows child held in a kill-on-close Job Object for its whole lifetime."""
+    def __init__(self, process_handle, job_handle, thread_handle, pid):
+        self._process_handle, self._job_handle, self._thread_handle = process_handle, job_handle, thread_handle
+        self.pid, self.returncode = pid, None
+
+    def _close_handles(self):
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.CloseHandle.argtypes = [ctypes.c_void_p]
+        api.CloseHandle.restype = ctypes.c_int
+        for name in ("_process_handle", "_job_handle", "_thread_handle"):
+            handle = getattr(self, name)
+            if handle:
+                api.CloseHandle(handle)
+                setattr(self, name, None)
+
+    def resume(self):
+        if not self._thread_handle:
+            return
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.ResumeThread.argtypes = [ctypes.c_void_p]
+        api.ResumeThread.restype = ctypes.c_ulong
+        if api.ResumeThread(self._thread_handle) == 0xFFFFFFFF:
+            error = ctypes.get_last_error()
+            api.TerminateJobObject.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+            api.TerminateJobObject(self._job_handle, 1)
+            api.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+            api.WaitForSingleObject.restype = ctypes.c_ulong
+            if api.WaitForSingleObject(self._process_handle, 5000) == 0x102:
+                api.TerminateProcess.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+                api.TerminateProcess(self._process_handle, 1)
+                api.WaitForSingleObject(self._process_handle, 5000)
+            if api.WaitForSingleObject(self._process_handle, 0) == 0:
+                self.poll()  # Reap and close every owned handle before surfacing setup failure.
+            raise ctypes.WinError(error)
+        api.CloseHandle.argtypes = [ctypes.c_void_p]
+        api.CloseHandle(self._thread_handle)
+        self._thread_handle = None
+
+    def poll(self):
+        if self.returncode is not None:
+            return self.returncode
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+        api.WaitForSingleObject.restype = ctypes.c_ulong
+        api.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
+        api.GetExitCodeProcess.restype = ctypes.c_int
+        state = api.WaitForSingleObject(self._process_handle, 0)
+        if state == 0x102:
+            return None
+        if state != 0:
+            raise ctypes.WinError(ctypes.get_last_error())
+        code = ctypes.c_ulong()
+        if not api.GetExitCodeProcess(self._process_handle, ctypes.byref(code)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        self.returncode = ctypes.c_int32(code.value).value
+        self._close_handles()
+        return self.returncode
+
+    def wait(self, timeout=None):
+        if self.returncode is not None:
+            return self.returncode
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+        api.WaitForSingleObject.restype = ctypes.c_ulong
+        ms = 0xFFFFFFFF if timeout is None else max(0, min(0xFFFFFFFE, int(timeout * 1000)))
+        state = api.WaitForSingleObject(self._process_handle, ms)
+        if state == 0x102:
+            raise subprocess.TimeoutExpired(str(self.pid), timeout)
+        if state != 0:
+            raise ctypes.WinError(ctypes.get_last_error())
+        return self.poll()
+
+    def kill(self):
+        if self.poll() is not None:
+            return
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.TerminateJobObject.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+        api.TerminateJobObject.restype = ctypes.c_int
+        if not api.TerminateJobObject(self._job_handle, 1):
+            error = ctypes.get_last_error()
+            if error == 5 and self.poll() is not None:
+                return
+            raise ctypes.WinError(error)
+
+
+def _spawn_windows_job_child(args, log):
+    """Create suspended and atomically assign via JOB_LIST before returning."""
+    if os.name != "nt":
+        raise RuntimeError("Windows Job Object launcher is only available on Windows")
+    from ctypes import wintypes
+
+    class IoCounters(ctypes.Structure):
+        _fields_ = [(n, ctypes.c_ulonglong) for n in (
+            "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+            "ReadTransferCount", "WriteTransferCount", "OtherTransferCount")]
+
+    class BasicLimit(ctypes.Structure):
+        _fields_ = [("PerProcessUserTimeLimit", ctypes.c_longlong), ("PerJobUserTimeLimit", ctypes.c_longlong),
+                    ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
+                    ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
+                    ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD),
+                    ("SchedulingClass", wintypes.DWORD)]
+
+    class ExtendedLimit(ctypes.Structure):
+        _fields_ = [("BasicLimitInformation", BasicLimit), ("IoInfo", IoCounters),
+                    ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+                    ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+    class StartupInfo(ctypes.Structure):
+        _fields_ = [("cb", wintypes.DWORD), ("lpReserved", wintypes.LPWSTR), ("lpDesktop", wintypes.LPWSTR),
+                    ("lpTitle", wintypes.LPWSTR), ("dwX", wintypes.DWORD), ("dwY", wintypes.DWORD),
+                    ("dwXSize", wintypes.DWORD), ("dwYSize", wintypes.DWORD),
+                    ("dwXCountChars", wintypes.DWORD), ("dwYCountChars", wintypes.DWORD),
+                    ("dwFillAttribute", wintypes.DWORD), ("dwFlags", wintypes.DWORD),
+                    ("wShowWindow", wintypes.WORD), ("cbReserved2", wintypes.WORD),
+                    ("lpReserved2", ctypes.POINTER(ctypes.c_ubyte)), ("hStdInput", wintypes.HANDLE),
+                    ("hStdOutput", wintypes.HANDLE), ("hStdError", wintypes.HANDLE)]
+
+    class StartupInfoEx(ctypes.Structure):
+        _fields_ = [("StartupInfo", StartupInfo), ("lpAttributeList", ctypes.c_void_p)]
+
+    class ProcessInfo(ctypes.Structure):
+        _fields_ = [("hProcess", wintypes.HANDLE), ("hThread", wintypes.HANDLE),
+                    ("dwProcessId", wintypes.DWORD), ("dwThreadId", wintypes.DWORD)]
+
+    class SecurityAttributes(ctypes.Structure):
+        _fields_ = [("nLength", wintypes.DWORD), ("lpSecurityDescriptor", ctypes.c_void_p),
+                    ("bInheritHandle", wintypes.BOOL)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+    kernel.CreateJobObjectW.restype = wintypes.HANDLE
+    kernel.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+    kernel.SetInformationJobObject.restype = wintypes.BOOL
+    kernel.CreateProcessW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
+        wintypes.BOOL, wintypes.DWORD, ctypes.c_void_p, wintypes.LPCWSTR, ctypes.POINTER(StartupInfo),
+        ctypes.POINTER(ProcessInfo)]
+    kernel.CreateProcessW.restype = wintypes.BOOL
+    kernel.ResumeThread.argtypes = [wintypes.HANDLE]
+    kernel.ResumeThread.restype = wintypes.DWORD
+    kernel.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+    kernel.TerminateJobObject.argtypes = [wintypes.HANDLE, wintypes.UINT]
+    kernel.TerminateJobObject.restype = wintypes.BOOL
+    kernel.DuplicateHandle.argtypes = [wintypes.HANDLE, wintypes.HANDLE, wintypes.HANDLE,
+        ctypes.POINTER(wintypes.HANDLE), wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.DuplicateHandle.restype = wintypes.BOOL
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+        ctypes.POINTER(SecurityAttributes), wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.InitializeProcThreadAttributeList.argtypes = [ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD,
+                                                          ctypes.POINTER(ctypes.c_size_t)]
+    kernel.InitializeProcThreadAttributeList.restype = wintypes.BOOL
+    kernel.UpdateProcThreadAttribute.argtypes = [ctypes.c_void_p, wintypes.DWORD, ctypes.c_size_t,
+        ctypes.c_void_p, ctypes.c_size_t, ctypes.c_void_p, ctypes.c_void_p]
+    kernel.UpdateProcThreadAttribute.restype = wintypes.BOOL
+    kernel.DeleteProcThreadAttributeList.argtypes = [ctypes.c_void_p]
+    kernel.DeleteProcThreadAttributeList.restype = None
+    kernel.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    kernel.WaitForSingleObject.restype = wintypes.DWORD
+
+    job = kernel.CreateJobObjectW(None, None)
+    if not job:
+        raise ctypes.WinError(ctypes.get_last_error())
+    process = thread = stdin_handle = attr_list = log_handle = None
+    attr_initialized = False
+    attr_storage = None
+    try:
+        limits = ExtendedLimit()
+        limits.BasicLimitInformation.LimitFlags = 0x00002000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if not kernel.SetInformationJobObject(job, 9, ctypes.byref(limits), ctypes.sizeof(limits)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        security = SecurityAttributes(ctypes.sizeof(SecurityAttributes), None, True)
+        stdin_handle = kernel.CreateFileW("NUL", 0x80000000, 3, ctypes.byref(security), 3, 0x80, None)
+        if ctypes.cast(stdin_handle, ctypes.c_void_p).value == ctypes.c_void_p(-1).value:
+            stdin_handle = None
+            raise ctypes.WinError(ctypes.get_last_error())
+        import msvcrt
+        current = ctypes.c_void_p(-1)
+        duplicate = wintypes.HANDLE()
+        if not kernel.DuplicateHandle(current, wintypes.HANDLE(msvcrt.get_osfhandle(log.fileno())),
+                                      current, ctypes.byref(duplicate), 0, True, 0x2):
+            raise ctypes.WinError(ctypes.get_last_error())
+        log_handle = duplicate
+        startup_ex = StartupInfoEx()
+        startup = startup_ex.StartupInfo
+        startup.cb, startup.dwFlags = ctypes.sizeof(startup_ex), 0x100  # STARTF_USESTDHANDLES
+        startup.hStdInput, startup.hStdOutput, startup.hStdError = stdin_handle, log_handle, log_handle
+        required = ctypes.c_size_t()
+        kernel.InitializeProcThreadAttributeList(None, 2, 0, ctypes.byref(required))
+        if not required.value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        attr_storage = ctypes.create_string_buffer(required.value)
+        attr_list = ctypes.cast(attr_storage, ctypes.c_void_p)
+        if not kernel.InitializeProcThreadAttributeList(attr_list, 2, 0, ctypes.byref(required)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        attr_initialized = True
+        startup_ex.lpAttributeList = attr_list
+        job_list = (wintypes.HANDLE * 1)(job)
+        # PROC_THREAD_ATTRIBUTE_JOB_LIST assigns the Job atomically as the
+        # suspended process is created, removing a parent-death gap before assignment.
+        if not kernel.UpdateProcThreadAttribute(attr_list, 0, 0x0002000D, ctypes.byref(job_list),
+                                                ctypes.sizeof(job_list), None, None):
+            raise ctypes.WinError(ctypes.get_last_error())
+        inherited_handles = (wintypes.HANDLE * 2)(stdin_handle, log_handle)
+        # Restrict inheritance to exactly the standard streams required by the child.
+        if not kernel.UpdateProcThreadAttribute(attr_list, 0, 0x00020002,
+                                                ctypes.byref(inherited_handles),
+                                                ctypes.sizeof(inherited_handles), None, None):
+            raise ctypes.WinError(ctypes.get_last_error())
+        info = ProcessInfo()
+        command = ctypes.create_unicode_buffer(subprocess.list2cmdline([str(arg) for arg in args]))
+        if not kernel.CreateProcessW(str(args[0]), command, None, None, True, 0x00080004, None, None,
+                                     ctypes.cast(ctypes.byref(startup_ex), ctypes.POINTER(StartupInfo)),
+                                     ctypes.byref(info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        process, thread = info.hProcess, info.hThread
+        child = _WindowsJobChild(process, job, thread, int(info.dwProcessId))
+        process = job = thread = None
+        return child
+    finally:
+        if attr_initialized:
+            kernel.DeleteProcThreadAttributeList(attr_list)
+        for handle in (thread, process, job, stdin_handle, log_handle):
+            if handle:
+                kernel.CloseHandle(handle)
+
+
+def _spawn_execution_child(command, log):
+    """Platform seam for a solver child; Windows requires Job Object ownership."""
+    if os.name == "nt":
+        return _spawn_windows_job_child(command, log)
+    return subprocess.Popen(command, stdout=log, stderr=log, start_new_session=True)
+
+
 class Queue:
     def __init__(self, root=ROOT, start=True):
         self.root = Path(root); self.root.mkdir(parents=True, exist_ok=True)
@@ -401,6 +638,7 @@ class Queue:
         self.caps = capabilities()
         self.lock = threading.RLock()
         self.children = {}
+        self.pending_child_failures = {}
         self.closed = threading.Event()
         self.thread = None
         with self.connect() as c:
@@ -440,25 +678,65 @@ class Queue:
         with self.lock:
             if self.children.get(job) is not child:
                 return
+            reaped = False
+
+            def kill_or_confirm_exit():
+                try:
+                    child.kill()
+                except OSError as error:
+                    code = getattr(error, "winerror", None) or getattr(error, "errno", None)
+                    if os.name != "nt" or code != 5 or child.poll() is None:
+                        raise
+
             try:
                 if child.poll() is None:
                     if os.name == "nt":
-                        child.kill()
+                        kill_or_confirm_exit()
                     else:
                         try:
                             os.killpg(child.pid, signal.SIGKILL)
                         except ProcessLookupError:
-                            child.kill()
+                            kill_or_confirm_exit()
                 wait = getattr(child, "wait", None)
-                if callable(wait):
+                if not callable(wait):
+                    raise RuntimeError("Execution child cannot be waited and reaped")
+                try:
+                    wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    kill_or_confirm_exit()
                     try:
                         wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        child.kill()
-                        wait()
+                    except subprocess.TimeoutExpired as error:
+                        raise RuntimeError("Execution child did not exit within the termination deadline") from error
+                if child.poll() is None:
+                    raise RuntimeError("Execution child is still running after termination")
+                reaped = True
             finally:
-                if self.children.get(job) is child:
+                if reaped and self.children.get(job) is child:
                     self.children.pop(job, None)
+
+    def _record_execution_failure(self, job, error):
+        child = self.children.get(job)
+        if child is None:
+            self.finish_running(job, status="failed", error=str(error))
+            return
+        try:
+            self.terminate_child(job, child)
+        except Exception as cleanup_error:
+            # A terminal record must not outlive an unconfirmed child. Keep its
+            # handles and registry entry so the worker can retry bounded cleanup.
+            self.pending_child_failures[job] = (child, f"{error}; child cleanup pending: {cleanup_error}")
+            return
+        self.finish_running(job, status="failed", error=str(error))
+
+    def _retry_pending_child_failures(self):
+        for job, (child, error) in list(self.pending_child_failures.items()):
+            try:
+                self.terminate_child(job, child)
+            except Exception:
+                continue
+            self.pending_child_failures.pop(job, None)
+            self.finish_running(job, status="failed", error=error)
 
     def get(self, job):
         if not isinstance(job, str) or len(job) != 32 or any(ch not in "0123456789abcdef" for ch in job):
@@ -617,6 +895,7 @@ class Queue:
         while not self.closed.is_set():
             row = None
             try:
+                self._retry_pending_child_failures()
                 with self.lock, self.connect() as c:
                     row = c.execute("SELECT id FROM jobs WHERE status='queued' ORDER BY created LIMIT 1").fetchone()
                     if row:
@@ -626,7 +905,7 @@ class Queue:
                 self.execute(row["id"])
             except Exception as e:
                 if row:
-                    self.finish_running(row["id"], status="failed", error=str(e))
+                    self._record_execution_failure(row["id"], e)
                 time.sleep(.1)
 
     def execute(self, job):
@@ -640,9 +919,16 @@ class Queue:
             with self.lock:
                 if self.get(job)["status"] != "running":
                     return
-                child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--execute", str(folder)],
-                                         stdout=log, stderr=log, start_new_session=(os.name != "nt"))
+                command = [sys.executable, str(Path(__file__).resolve()), "--execute", str(folder)]
+                child = _spawn_execution_child(command, log)
                 self.children[job] = child
+                if isinstance(child, _WindowsJobChild):
+                    try:
+                        # The queue owns the Job Object before execution can begin.
+                        child.resume()
+                    except Exception:
+                        self.terminate_child(job, child)
+                        raise
             started = time.monotonic()
             try:
                 while child.poll() is None:
