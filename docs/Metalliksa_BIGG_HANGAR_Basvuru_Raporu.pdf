@@ -3,13 +3,15 @@
 1 0 obj
 <<
 /Producer (pypdf)
+/Title (\376\377\000M\000e\000t\000a\000l\000l\000i\000k\000s\000a\000 \000\174\000 \000B\000I\000G\000G\000 \000H\000A\000N\000G\000A\000R\000 \000B\000a\001\137\000v\000u\000r\000u\000 \000R\000a\000p\000o\000r\000u)
+/Subject (\376\377\000M\000e\000t\000a\000l\000l\000i\000k\000s\000a\000 \000u\000y\000g\000u\000l\000a\000m\000a\000 \000k\000a\000p\000s\000a\000m\0011\000 \000v\000e\000 \000t\000i\000c\000a\000r\000i\000l\000e\001\137\000m\000e\000 \000p\000l\000a\000n\0011)
 >>
 endobj
 2 0 obj
 <<
 /Type /Pages
 /Count 8
-/Kids [ 4 0 R 28 0 R 31 0 R 33 0 R 35 0 R 37 0 R 49 0 R 61 0 R ]
+/Kids [ 5 0 R 29 0 R 32 0 R 34 0 R 36 0 R 38 0 R 50 0 R 62 0 R ]
 >>
 endobj
 3 0 obj
@@ -20,31 +22,7 @@ endobj
 endobj
 4 0 obj
 <<
-/Contents 5 0 R
-/MediaBox [ 0 0 595.2756 841.8898 ]
-/Resources <<
-/Font <<
-/F1 6 0 R
-/F1-0 7 0 R
-/F2+0 8 0 R
-/F2+0-0 12 0 R
-/F3+0 16 0 R
-/F3+0-0 20 0 R
-/F4+0 24 0 R
->>
-/ProcSet [ /ImageB /ImageC /ImageI /PDF /Text ]
->>
-/Rotate 0
-/Trans <<
->>
-/Type /Page
-/Annots [ ]
-/Parent 2 0 R
->>
-endobj
-5 0 obj
-<<
-/Length 6217
+/Length 6221
 >>
 stream
 q
@@ -54,7 +32,7 @@ q
 .45 w
 n 51.02362 36.85039 m 544.252 36.85039 l S
 0 0 0 rg
-BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BiGG Garaj i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
 BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (1) Tj T* ET
 Q
 q
@@ -77,7 +55,7 @@ q
 1 0 0 1 57.02362 607.3386 cm
 q
 0 0 0 rg
-BT 1 0 0 1 0 4 Tm 136.6427 0 Td /F2+0 13 Tf 17 TL (BiGG Garaj i\001 fikri ve uygulama raporu) Tj T* -136.6427 0 Td ET
+BT 1 0 0 1 0 4 Tm 136.6427 0 Td /F2+0 13 Tf 17 TL (BIGG HANGAR i\001 fikri ve uygulama raporu) Tj T* -136.6427 0 Td ET
 Q
 Q
 q
@@ -226,7 +204,7 @@ Q
 q
 1 0 0 1 57.02362 227.2819 cm
 q
-BT 1 0 0 1 0 22.6 Tm 10.2 TL 0 0 0 rg /F2+0 8 Tf 10.2 TL (Haz\003rlanma: 27 Eyl\002l 2026) Tj  T* (\011r\002n kan\003tlar\003: g\002ncel uygulama belgeleri ve proje durumu) Tj  T* (Ba\001vuru oda\007\003: BiGG Garaj A\001ama 1) Tj T* ET
+BT 1 0 0 1 0 22.6 Tm 10.2 TL 0 0 0 rg /F2+0 8 Tf 10.2 TL (Haz\003rlanma: 27 Eyl\002l 2026) Tj  T* (\011r\002n kan\003tlar\003: g\002ncel uygulama belgeleri ve proje durumu) Tj  T* (Ba\001vuru oda\007\003: BIGG HANGAR A\001ama 1) Tj T* ET
 Q
 Q
  
@@ -286,13 +264,37 @@ BT
 1 0 0 1 142 224 Tm
 /F3+0-0 11.5 Tf
 13.8 TL
-(BiGG Garaj A\004ama 1 i\004 fikrini anlatmak) Tj
+(BIGG HANGAR A\004ama 1 i\004 fikrini anlatmak) Tj
 T*
 ET
 Q
 
 
 endstream
+endobj
+5 0 obj
+<<
+/Contents 4 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font <<
+/F1 6 0 R
+/F1-0 7 0 R
+/F2+0 8 0 R
+/F2+0-0 12 0 R
+/F3+0 16 0 R
+/F3+0-0 20 0 R
+/F4+0 24 0 R
+>>
+/ProcSet [ /ImageB /ImageC /ImageI /PDF /Text ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Annots [ ]
+/Parent 2 0 R
+>>
 endobj
 6 0 obj
 <<
@@ -1390,22 +1392,7 @@ endstream
 endobj
 28 0 obj
 <<
-/Contents 29 0 R
-/MediaBox [ 0 0 595.2756 841.8898 ]
-/Resources <<
-/Font 30 0 R
-/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->>
-/Rotate 0
-/Trans <<
->>
-/Type /Page
-/Parent 2 0 R
->>
-endobj
-29 0 obj
-<<
-/Length 9375
+/Length 9376
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1414,7 +1401,7 @@ q
 .45 w
 n 51.02362 36.85039 m 544.252 36.85039 l S
 0 0 0 rg
-BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BiGG Garaj i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
 BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (2) Tj T* ET
 Q
 q
@@ -1752,6 +1739,21 @@ Q
 
 endstream
 endobj
+29 0 obj
+<<
+/Contents 28 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font 30 0 R
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Parent 2 0 R
+>>
+endobj
 30 0 obj
 <<
 /F1 6 0 R
@@ -1762,46 +1764,7 @@ endobj
 endobj
 31 0 obj
 <<
-/Contents 32 0 R
-/MediaBox [ 0 0 595.2756 841.8898 ]
-/Resources <<
-/Font 30 0 R
-/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->>
-/Rotate 0
-/Trans <<
->>
-/Type /Page
-/Parent 2 0 R
->>
-endobj
-32 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ]
-/Length 2356
->>
-stream
-Gatm<h/h=/&qBX_Z&`TOU%p-@bsNkMVS6B#hPF*<-0YLW_D4dre:D-keD)-q]*f5qA'=FB2]g!_Yf)"jn68?ni_RMmDCU2&'jU_P5nq6%(8<WV@J(\uXY0To&[KW!2]"cK_4MMJZ7$"=A._27#d1He=[E9pRKdai=jleRGggO`nF1,<k?j7u+C(f.&lo`^NrKk]:9(Lfjqf+M/$r>g,N-=UX_r%77TaX@l:Vs`E2uU3E$NZe?*A5see!W,i]C8u_s/Nc51Q'U6(XWHR7uK:LlVAao>0KMO+JWIopa+EAaWh0WB35Y_kS_C4c]@-:Vqoo'b]qffd_.iQI)C&]iZeeljko>O6_kde,&*4EU[m<Y$jL-[c.2"Y()%oXW,s/<b`+UX)'*0XGRFtPGV1$)\?3"*r[K$I$N(0HdHoiRI1ehU/XV1WYTqqTr^hmdook:2tYEHB[O(W5groab'VYeUMs)a8nb_uNEEO>kjf+`E)3iO".^(RnR]21%H(/S$!tt6)eiD>oW/A5MGeCM(Wq7R;mc1GBiQQ#^qZ^G)GLr0Rg;I=o]W#$"I)4h["c=URu_?#AYH(t\*;+uXjKYt%5'>OB)X,!^$[]]#gMgl2c6!&e?Y7NJmK@s!JA*h'&2$h7G="l!/ITS&k;5%Ji7"cDRD%:b?U`T((FJl7;(N9*f"7oo#HccZeeC"!jC!;W3N&2]bVFc3m46fVAbt\aS'HUKk*'0,'UUD([:1Ibd-7TH/4%_CK3#GcIZ*_7U]\8`>(2T5#k$O(K/.Ofn*+Z63[csQD2q#S+J4:8ZFj'FXp*g^]=E2o;<=W(12FciUsT8Rlfnk/QV2M,+Y;kF]*5_V^7?`XA*JGc04cG:p)e.UK&VT'tFDVg#2$:-,+o]A5FRg8OfheB]p"F#!o.7)cuX<fZ9@;HdQo,U2b)W"(Udd.<^\lb6[n=f,X=:&YKrPM)VWr(A74^A(UGIfZi4LZ;c-`G-ttRL_kcTiu3Kpko[79U'V]r2<?#^8IAG172Q"TG$)N97b(&^%]-d&`Dh2Td2i6U-"D/(I4ds`rD7IpCG$>X="3pkbY$#U=*5$'BrH&uTp/"WXbGW7&N"<VI_$g-%>0gSqg@(J(b;@!:r@OE8<[JW%T4Um'0^&Y4JS[WjjhJ5MO.+^</J[@=QLMu&<lT\mMn?sU(Pt"[j]N:c".2=a$+5ET_8D@/])mW/t<AZMuDKYlmkC?L2-)-P+b<$^6B4<q:PX89L9C=NFJj7U?N]203i5gc9S';o2EaDiNfTHrf+s*-ri,Mk1bjcblEJ`Q>PG"!-=IVP+ok0m;QKo\qknCs*CaB",;!t(3'uA6Bnep)f?"!)>mjr[?YOG!NoF056jEZ4?o8$A3q^b4j,h6W%HOG\Jp5I`5Hob8W3Q3l4S$7NA!V9T0;$of\OQB$'r\I1Xg.P/0:6o81IdG3MahP8<ugWYG3C-@cQ:Y`+/"DOBYJ6ioOYoMlW$ca=Lu(ZH%WCrFrO!mY2_-fTTV03Gug]gZ^eTUdXFC:C@h!nse(ub<3LhjhZXj1s/[["^-RLr+2.cCAT^29jMlnZ\>0CP<9/=XoDtWs4"pq7R^EMj>VTcs,B?P0@T^Ya\t&=76"%9GWPD>VfjWi-o).u_$5bV,sbA@UKd?WLBF@eCQ(m?I<@L%l0+aNd#Sg5LWM7P/0W:Yk(lc1HDV+&d:5XQfA1V#0c*e2`tsch&>h:?`r"f&K$WX\N0ZWg%m+aSSbIot>p9rma%=6UCTZ=K/UeZn+A:#.4./q?P'UnNh]T0SebZdRT><?I,D4U$jjUaF[3MpEL_:k\O]0Dqb)maD@9Hc.Z]h4iCJ<o"dYiJsYuIj0"$U*RT977e,3f5Sq<6K*m%iY!I"hrT]jbcoS_@R%Tj_!"*@bqhM)q3b1X5\MR?2_T7YF.u+H)4gQ>Ma(N\fV/P,PpZ`$20/;-Z7;Ms&d-E[5F`YGYRnN#7Pl4n1lZqHI).X%G#.-S!&IkR?"VO#3o!a>7+G'g-nP_gnP^\Ioec6[:\&DOdaV="(r;hK/PXs'XmJCWSOtSEcr#i:$X*A"*:\2Y*d2^fT:mI6TM=4P:'SbMc-:,'<I]j\4(mY^t#6Z@Pg3#(PG")oHk_c`s@)kh0fB;<Y$2/Fa6L99R8Zb6:K4LP*OcUHCBXJg?14KoZV[Tbf\Wj".]\3DOjGEh#03mf=DOCq%k\7AV5<i5!%.UhLR\fWK,RhL/W)4+DcPp[45;k!,h!dK#=d0k">b$?<9B)r+j`V<\n3gCbW@["f<6M5+.fEtNG>SgAWSamEaM1OLGc808>:rl@*j0&g7ac:!=$&3ATj-6r:)bO?C7-^o9"*ScFX7e64"bAX9p\G./I^t!H~>
-endstream
-endobj
-33 0 obj
-<<
-/Contents 34 0 R
-/MediaBox [ 0 0 595.2756 841.8898 ]
-/Resources <<
-/Font 30 0 R
-/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->>
-/Rotate 0
-/Trans <<
->>
-/Type /Page
-/Parent 2 0 R
->>
-endobj
-34 0 obj
-<<
-/Length 7488
+/Length 5685
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1810,7 +1773,224 @@ q
 .45 w
 n 51.02362 36.85039 m 544.252 36.85039 l S
 0 0 0 rg
-BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BiGG Garaj i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (3) Tj T* ET
+Q
+q
+1 0 0 1 57.02362 771.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 4 Tm /F3+0 18 Tf 22 TL (Sanayide hangi i\002e yarayabilir?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 712.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 42.6 Tm /F2+0 9.4 Tf 13 TL (LPBF proses geli\001tirmede m\002hendis; ala\001\003m ve toz lotunu, makine ve lazer ko\001ullar\003n\003, tarama stratejisini, termal hesab\003,) Tj T* (literat\002r\002 ve kupon \005l\006\002m\002n\002 ayn\003 vaka i\006in e\001le\001tirmelidir. Veriler ayr\003 dosyalarda kald\003\007\003nda bir sonucun hangi ko\001ula) Tj T* (dayand\003\007\003n\003 bulmak veya ayn\003 incelemeyi yeniden kurmak zorla\001abilir. Metalliksa\012n\003n hedefledi\007i sorun budur; hen\002z m\002\001teri) Tj T* (ara\001t\003rmas\003yla do\007rulanm\003\001 bulgu de\007ildir.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 642.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 55.6 Tm /F2+0 9.4 Tf 13 TL (Bu ihtiyac\003n teknik zemini, \005l\006\002m ve model girdilerinin dikkatle e\001le\001tirilmesini gerektirir. NIST\012in AM-Bench program\003,) Tj T* (model \006\003kt\003lar\003n\003n kontroll\002 \005l\006\002m verileriyle kar\001\003la\001t\003r\003lmas\003 i\006in benchmark problemleri ve kal\003c\003 veri setleri yay\003mlar; 2022) Tj T* (kapsam\003na IN718 LPBF yap\003lar\003, farkl\003 tarama yollar\003 ve tekil lazer izleri de dahildir [4]. NIST\012in 2025 \003\001\003n metrologisi raporu) Tj T* (ise g\002\006 yo\007unlu\007u da\007\003l\003m\003, yap\003 d\002zleminin \003\001\003na g\005re konumu, \005l\006\002m de\007i\001kenli\007i ve belirsizli\007in s\002re\006 girdileri a\006\003s\003ndan) Tj T* (\005nemini a\006\003klar [5].) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 598.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 29.6 Tm /F2+0 9.4 Tf 13 TL (Bu kaynaklar Metalliksa\012ya talep veya tasarruf kan\003t\003 olu\001turmaz. \017unu g\005sterir: g\002venilir teknik k\003yas i\006in yaln\003zca) Tj T* (\013sim\002lasyon \006al\003\001t\003\014 demek yetmez; ko\001ul kimli\007i, \005l\006\002m\002n neyi g\005zledi\007i ve belirsizlik kayd\003 gerekir. Metalliksa bu bilgiyi) Tj T* (uygulama ak\003\001\003nda bir arada tutmay\003 hedefliyor.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 577.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 3 Tm /F3+0 12 Tf 15 TL (\004lk g\010r\001\002melerde s\003nayaca\006\003m\003z kullan\003c\003lar) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 456.6701 cm
+q
+0 0 0 rg
+n 0 116.7 490.3937 -19.7 re f*
+1 1 1 rg
+n 0 97 490.3937 -29 re f*
+1 1 1 rg
+n 0 68 490.3937 -29 re f*
+1 1 1 rg
+n 0 39 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 19.5 490.3937 -19.5 re f*
+1 1 1 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 5 102 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Kullan\003c\003 aday\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 115.5512 102 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Soraca\006\003m\003z somut soru) Tj T* ET
+Q
+Q
+q
+1 0 0 1 373.5039 102 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Olas\003 \010deyen rol) Tj T* ET
+Q
+Q
+0 0 0 rg
+q
+1 0 0 1 5 73 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (\011niversite/teknopark AM) Tj T* (laboratuvar\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 115.5512 73 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Deney, makale ve sim\002lasyon sonu\006lar\003n\003 bir vaka i\006in bug\002n nas\003l) Tj T* (e\001liyorsunuz?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 373.5039 82.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Laboratuvar/proje y\005neticisi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 53.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (LPBF proses veya Ar-Ge ekibi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 115.5512 44 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Bir ala\001\003m ya da parametre de\007i\001ikli\007ini de\007erlendirmek i\006in hangi i\001) Tj T* (tekrarlan\003yor?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 373.5039 53.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Ar-Ge / proses geli\001tirme y\005neticisi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 24.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Metal AM hizmet sa\007lay\003c\003s\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 115.5512 24.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (M\002\001teriye proses \005n de\007erlendirmesi verirken hangi kan\003t ve rapor bekleniyor?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 373.5039 24.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Teknik y\005netici) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Makine veya toz tedarik\006isi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 115.5512 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Uygulama deste\007inde tekrar eden malzeme/proses incelemesi var m\003?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 373.5039 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Uygulama m\002hendisli\007i y\005neticisi) Tj T* ET
+Q
+Q
+q
+1 J
+1 j
+0 0 0 RG
+.5 w
+n 0 116.7 m 490.3937 116.7 l S
+n 0 0 m 490.3937 0 l S
+n 0 0 m 0 116.7 l S
+n 490.3937 0 m 490.3937 116.7 l S
+n 0 97 m 490.3937 97 l S
+n 0 68 m 490.3937 68 l S
+n 0 39 m 490.3937 39 l S
+n 0 19.5 m 490.3937 19.5 l S
+n 110.5512 0 m 110.5512 116.7 l S
+n 368.5039 0 m 368.5039 116.7 l S
+Q
+Q
+Q
+q
+1 0 0 1 57.02362 445.3315 cm
+Q
+q
+1 0 0 1 57.02362 420.3315 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 15.8 Tm /F4+0 9.2 Tf 12.5 TL (Bu gruplar m\004\001teri segmenti hipotezidir. Hen\004z do\005rulanm\002\001 al\002c\002, sat\002\001 veya pilot orta\005\002 yoktur. \006lk hedef g\007r\004\001melerle bir) Tj T* (kullan\002c\002 rol\004 ve s\002k ya\001anan tek i\001 ak\002\001\002n\002 se\003mek.) Tj T* ET
+Q
+Q
+ 
+
+endstream
+endobj
+32 0 obj
+<<
+/Contents 31 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font 30 0 R
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Parent 2 0 R
+>>
+endobj
+33 0 obj
+<<
+/Length 7489
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+0 0 0 RG
+.45 w
+n 51.02362 36.85039 m 544.252 36.85039 l S
+0 0 0 rg
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
 BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (4) Tj T* ET
 Q
 q
@@ -2125,9 +2305,9 @@ Q
 
 endstream
 endobj
-35 0 obj
+34 0 obj
 <<
-/Contents 36 0 R
+/Contents 33 0 R
 /MediaBox [ 0 0 595.2756 841.8898 ]
 /Resources <<
 /Font 30 0 R
@@ -2140,33 +2320,426 @@ endobj
 /Parent 2 0 R
 >>
 endobj
-36 0 obj
+35 0 obj
 <<
-/Filter [ /ASCII85Decode /FlateDecode ]
-/Length 3492
+/Length 10050
 >>
 stream
-GatU6968mu&\dR4i2AV=R!A+#5,=oY>H+]pGdDJEWkCYRPYC['$A[-^9]a<m]0QK8M=XhD\Lc!U@&)-E])1fJ"H231TV'D^Z.fG/s%+mfg#@Phbr&^QAfhgjs1O;'c@>8b\;o5a="T=6O/,An;[Le08EHp]Z.<1"_,/C**T-3)Y<]T7f5iT<c(eP0S1PX]=oL9f.5%1EQ*7q:]rC>'g)0NJG$EhZYrgF&n#ZFMM?J8SX0.*\11_Q:2%7Tqa[db.@>jSjnI?9Ef@1C.j-*-U_:u`?`nftFW,e=6Y#8ANff6V1mk/)'$<J?TA11_U&q3p3A]L84$@]H1CX!'j<]-q4c7BEP:@S/KDgOOhCE_`%>0*3]W5oJ]O4#9dJh?s=\")JriJ85Jom7sI\mg_rh6Z?(ArCslm`4aMh8:I6F(btd)>Im:2Prd8/,!4%2#ad2qRWJZT>063@S^RKmK^0<g;[*^h$sj;-qn,OL7q_+?i-QJ[roO`U4T3l__q\PT`e@ZJE3l'C_<B7f64:+*c32B<io6C:tMQhD-G;\+N\2-V2un&GZ].ll<9VQU#)+;DZGsg8\a,hllI`U(N%iFp8Qi9*[T^j40,))=Lm[9M%gI4,X*!RF94PVfVpGYF^pa4OY"WBLM7^ZO!pio[L^5g!!IJaZDdQ_UPG&o9#PuF49Jr4XpL*rrr<5jK6u*STkB6FadE5.M`?]!F!X5miu#GbNR]^0GohglNsQ'p=el1!1!`9<<A9SURA?fmb:>N;9.jbFB-_72K2@^X3b;'4ScF/e*2S]W\<3W>eW#,2Hr"C(..U7\^ZZ=(m'Ne_Mc4p9i:cit,0R$*=1@X1]a84]i'`I!MPkFa\bGUCq@ZKC-?#?#iTp?\q-X?.R3l(*YW1gN9]O&]UVr$_H"+`E-H?+Rk^D+7`B>FC5eN#"U6@/&_=le"'`lj$!^VEi]FYBFZW+7Vk$Y1t5Qf+/Cn3'?a"YZr>`bl3N$T?sPL/Tr\Uq_%b3\'A3@G7MEL!R]KJIA*-b7Gg-qfis81X)J,ier_r=0Qk`'`4;"]4o&'Bks.LIe=1!+i'D#\BF_RfVT(9XrI5(=#e4Le"lm$NTV8*6oqrhLT%elNkj+,!e3LMUOgt(]mIMl>gB<8nITj'Su;sA=c9f:Pe=Bd=Ush(t2]R8qE5rImAIGniYOe5TS9HB0)NkLdaSiIg(1u+\Kj]KWpe(UT"%ka\mbZn-B-GT:G145<Euto.j'cXC<2Z*]D.sV3;J^$708gn7)fa'4jbp&`Q;Ck1s-iGs=3\dReZ(FZKYmGIe!GQa)9(Fl43('Y2Fe*-d\enX+N1!Ts?JoAW?Qp[hP\3eDXFBqCoKpn*ZK+V7QXo$NI13;tlOj<H9VSt5u[h]Ve0-V4_TP9cVBOI'?4.CD,;njV:LO.Fs?fBk)aWs"#V)W`-j<=/sD-g=;%inRc?AIP5\HEP<br7j<:X%[OplN$94bBOLN$,Ncc?pZWmi&XqIQ:uR;p^n$[2\pr"O%jS8dN)kh%KY4QXo[0T(?(`Kd"blH23p_gQ/%0#],M-nm`1jp:=?h6^TuH'Y\V>E.aR/nE;t.6RgSq2C[-0ZC(^&.WA=PR`DgDQ=:ShU,2/8C%`ef+T^s]p/"f6i;H?aQCrukU6-!4XBPV-!GTJ,*e!>^DEbm85^Q0ZJ<"h4#F/f_3j4hN2PEH(C7-:(a"k>Jf#T6T]($j$hW+68R<O>0u3G&Gk`2Um7c>j:G@.po?1tL:=KV7OEE>E@&+Zj<4*s<-K#-'i!o,^BmA.m)fXthd\Ij$53S!9d44t-fD>C;/VGkm`&W@JQXaXURl_V#/2c<(@-n+]3d@ZUgTe`1<`?]\?d/t2?=jctI4.1a.<R4ffA,uqP\e[84[*aDPK@9MEU=8Z.9Fo^Qg_1*q+/'9@q3suNcHe*l#j("&P=>gZC-hIk7NbRa]<,TI#;>_ChBdAbB,bR[i][Ud9GU*jJ:!oDI]A<t`d+T8Q\"[/nS%>[<7^6u(om4.Nj6tSpf:@1jGJiD1gE4OKeerfd@uN)l;Z+Gb:I4(`YhsuiVCir-TS0Gu'P<)>Qedc>!J<dZJSr5"2i<,`Z(`_?k*c1!UV(D[36G7KZ3R_:bpsuKRj]4SeUZm'<jp2G`]afulcEs[3bceULNf/H(>51"gY'Re>Kp.u%CLuFZJ-)6N[e'W<&kG:b8@K/<tC*+#NU0AGMp[Xolb+Q15qoC6XJ:Wcc`"(HaC.;SC0M>&KA/G;\,)3B:RM+#.cDPa-'?-I)ZhoIN@^a_;f63@&JR@hg06'>A(*iok]VokL>d!YV1=h5h4&jr$Q=VOgOGtk5DN4*"_4J<D6-,e&Q^\dT(R"[b-fk#"+qXlB7=ZoaH>h@&jL$SJL=HL&W$'G_omRY,f-On(.al<;X1L:t.J\eYc\IkY&SF;V1XdCUK]-]WcY>id6+EJiS)BAN,NaRmX.S]J9V"LuKHN@sOBX?/TQ-gK+E^:g17iG9G9=V7,UPJq0<H/L0W7<+c*2*b^0neJf=1XsqN=.K*';s#mlQZI_qe")^5bZid`X`Q>rkBQ#laRi4s]-k'7#p^k/7O7GFSErQU]k26i"T,nVB%Na'ml(Q>=7ku/.^jnij.dFa$MQ1?+%cRok`R">@ckV2!C9Gq9",%$L\EnY&QmBr%*kN^R(7QlXW8]8p=D'*-3aG[%JT:'P?[,s#lBF21nt>j7^YZOB*\Hpa-IkfSBtCUdcStaQ;S^S8<I&(513`Tt]@\#[?4V0:1-?=smmJ%u/":S"[VL6ceJ>r=C*Y?DT6jfK6`VJA/o=B5Oq.N0Fu=C"kBNQKYFiVn+bq8HXd]@X`YirmJ-W=_\Q/mM!A>KpKld([G/.G(+e-BrDD/(t?W0\.B/OS00"/aIDK4iEnG;Rl`>)F]0'eR$1>YlBCs<Dh1hbFWRQ$I"<"398U2*MI?aRG>Hen5GRO:1<*(sSA5eXq#(32IhY,C'*PgQ%[cd]2hB`i2iKTu"mQ%\Qbqb6A-ShD[(>--WM#I$7N#M<F$3@=8[9?HMi^(U)BUXiO=S9JnLFRj%A_S-=U%=(?5:UFdj0i\g-h'p/?:Eos)Xc(\jQ0(.7H$WL9+jJ:\m,R^&J!HW\M8kTP45D=+eD&.1J!c#J*&O^P1maR4hCANVF^oiUOBM64LH&M;-`8B`;/QD>7`:(uic]It.R1\X`d)k0N=PU^Hu=nj^5dePb]FOO7O$5AP0m$9L97)/ZVc7t"Z02RQ'0Ts\n$f*.I[f+fu'k;Y@lTCns-B41.KGAej1i@)`-V!Uj`uENgW=B6r!1],gK1)k-@u@c2#-J\?UOPYpjnLdW'c\6%A>XZJ^25_X/B$fCb3kWE],_C/'!IBLRB$.n++[EJ?8TYfKV;gIjun2F5sRL/$:piud@7Uc@OTm5/(,DIibkaVN(P>J]IEVYi7:S$L$TnNE4c#;bPBpR\<?gZ-YKHP!r"cuI."eK0?D\L6tDr`f#CUt<.?0OiYoB;^VucKsirF!a&f~>
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+0 0 0 RG
+.45 w
+n 51.02362 36.85039 m 544.252 36.85039 l S
+0 0 0 rg
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (5) Tj T* ET
+Q
+q
+1 0 0 1 57.02362 771.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 4 Tm /F3+0 18 Tf 22 TL (Gelir modelini nas\003l kuraca\006\003z?) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 725.3701 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 29.6 Tm -0.076011 Tw /F2+0 9.4 Tf 13 TL (\016lk gelir varsay\003m\003m\003z, bir kuruma dar kapsaml\003 ve \002cretli bir LPBF pilotu sunmak. Bu a\001amada m\002\001teriyle tek vaka se\006ilir; veri) Tj T* 0 Tw (ve \005l\006\002m ko\001ullar\003 netle\001tirilir; pilot eforu ve kabul \005l\006\002tleri ba\001tan belirlenir. Fiyat\003, \005deme iste\007ini ve ger\006ek sat\003n almac\003y\003 bu) Tj T* (g\005r\002\001me g\005sterecek.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 601.315 cm
+.8 w
+0 0 0 RG
+1 1 1 rg
+1 1 1 rg
+0 0 0 RG
+n
+4.251969 34.01575 m
+110.5512 34.01575 l
+112.9017 34.01575 114.8031 35.91723 114.8031 38.26772 c
+114.8031 92.12598 l
+114.8031 94.47647 112.9017 96.37795 110.5512 96.37795 c
+4.251969 96.37795 l
+1.90148 96.37795 0 94.47647 0 92.12598 c
+0 38.26772 l
+0 35.91723 1.90148 34.01575 4.251969 34.01575 c
+h
+B*
+0 0 0 rg
+BT 1 0 0 1 38.80763 73.70079 Tm /F3+0 7.4 Tf 8.88 TL (\012cretli PoC) Tj T* ET
+BT 1 0 0 1 29.76876 59.52756 Tm /F2+0 6.4 Tf 7.68 TL (Tek vaka \004 \005l\006\002lebilir) Tj T* ET
+BT 1 0 0 1 50.64689 51.02362 Tm /F2+0 6.4 Tf 7.68 TL (k\003yas) Tj T* ET
+1 w
+n 116.7874 65.19685 m 122.1732 65.19685 l S
+n 117.6378 68.59843 m 122.1732 65.19685 l S
+n 117.6378 61.79528 m 122.1732 65.19685 l S
+1 1 1 rg
+0 0 0 RG
+n
+130.3937 34.01575 m
+236.6929 34.01575 l
+239.0434 34.01575 240.9449 35.91723 240.9449 38.26772 c
+240.9449 92.12598 l
+240.9449 94.47647 239.0434 96.37795 236.6929 96.37795 c
+130.3937 96.37795 l
+128.0432 96.37795 126.1417 94.47647 126.1417 92.12598 c
+126.1417 38.26772 l
+126.1417 35.91723 128.0432 34.01575 130.3937 34.01575 c
+h
+B*
+0 0 0 rg
+BT 1 0 0 1 162.2611 73.70079 Tm /F3+0 7.4 Tf 8.88 TL (Tak\003m lisans\003) Tj T* ET
+BT 1 0 0 1 159.5511 59.52756 Tm /F2+0 6.4 Tf 7.68 TL (D\002zenli kullan\003c\003 \004) Tj T* ET
+BT 1 0 0 1 167.9949 51.02362 Tm /F2+0 6.4 Tf 7.68 TL (tekrarl\003 i\001ler) Tj T* ET
+1 w
+n 242.9291 65.19685 m 248.315 65.19685 l S
+n 243.7795 68.59843 m 248.315 65.19685 l S
+n 243.7795 61.79528 m 248.315 65.19685 l S
+1 1 1 rg
+0 0 0 RG
+n
+256.5354 34.01575 m
+362.8346 34.01575 l
+365.1851 34.01575 367.0866 35.91723 367.0866 38.26772 c
+367.0866 92.12598 l
+367.0866 94.47647 365.1851 96.37795 362.8346 96.37795 c
+256.5354 96.37795 l
+254.1849 96.37795 252.2835 94.47647 252.2835 92.12598 c
+252.2835 38.26772 l
+252.2835 35.91723 254.1849 34.01575 256.5354 34.01575 c
+h
+B*
+0 0 0 rg
+BT 1 0 0 1 284.71 73.70079 Tm /F3+0 7.4 Tf 8.88 TL (Kurum \007\010z\001m\001) Tj T* ET
+BT 1 0 0 1 290.1397 59.52756 Tm /F2+0 6.4 Tf 7.68 TL (Yerel \006al\003\001ma \004) Tj T* ET
+BT 1 0 0 1 294.2241 51.02362 Tm /F2+0 6.4 Tf 7.68 TL (entegrasyon) Tj T* ET
+1 w
+n 369.0709 65.19685 m 374.4567 65.19685 l S
+n 369.9213 68.59843 m 374.4567 65.19685 l S
+n 369.9213 61.79528 m 374.4567 65.19685 l S
+1 1 1 rg
+0 0 0 RG
+n
+382.6772 34.01575 m
+488.9764 34.01575 l
+491.3269 34.01575 493.2283 35.91723 493.2283 38.26772 c
+493.2283 92.12598 l
+493.2283 94.47647 491.3269 96.37795 488.9764 96.37795 c
+382.6772 96.37795 l
+380.3267 96.37795 378.4252 94.47647 378.4252 92.12598 c
+378.4252 38.26772 l
+378.4252 35.91723 380.3267 34.01575 382.6772 34.01575 c
+h
+B*
+0 0 0 rg
+BT 1 0 0 1 416.3982 73.70079 Tm /F3+0 7.4 Tf 8.88 TL (Ortak kanal) Tj T* ET
+BT 1 0 0 1 415.033 59.52756 Tm /F2+0 6.4 Tf 7.68 TL (Makine \004 ala\001\003m) Tj T* ET
+BT 1 0 0 1 422.4986 51.02362 Tm /F2+0 6.4 Tf 7.68 TL (tedarik\006isi) Tj T* ET
+BT 1 0 0 1 145.4652 9.637795 Tm /F4+0 7.1 Tf 8.52 TL (A\001amalar, kan\002t ve tekrar kullan\002ma g\007re a\003\002lacak ticari se\003eneklerdir.) Tj T* ET
+Q
+q
+1 0 0 1 57.02362 589.9764 cm
+Q
+q
+1 0 0 1 57.02362 444.2764 cm
+q
+0 0 0 rg
+n 0 145.7 490.3937 -19.7 re f*
+1 1 1 rg
+n 0 126 490.3937 -29 re f*
+1 1 1 rg
+n 0 97 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 77.5 490.3937 -29 re f*
+1 1 1 rg
+n 0 48.5 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 29 490.3937 -29 re f*
+1 1 1 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 5 131 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Gelir kalemi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 131 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (M\001\002teriye verilen) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 131 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Ne zaman mant\003kl\003?) Tj T* ET
+Q
+Q
+0 0 0 rg
+q
+1 0 0 1 5 111.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Pilot / PoC) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 102 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Bir kullan\003m senaryosunun m\002hendislik analizi ve izlenebilir) Tj T* (raporu.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 111.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (\016lk ticari ad\003m; kapsam ve fiyat teklif ile do\007rulan\003r.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 82.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Y\003ll\003k ekip lisans\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 82.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Birden fazla \006al\003\001may\003 saklama, inceleme ve payla\001ma.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 82.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Pilot sonras\003 d\002zenli kullan\003m istenirse.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 53.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Yerel kurulum ve) Tj T* (entegrasyon) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 63 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Kurum verisi ve mevcut i\001 ak\003\001\003yla uyumlu kurulum.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 53.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Bilgi g\002venli\007i ve sistem entegrasyonu ihtiyac\003 ortaya) Tj T* (\006\003karsa.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 34 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (E\007itim/uygulama deste\007i) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 34 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Ekibin mod\002lleri ve kay\003t y\005ntemini kullanmas\003.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 34 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Ger\006ek onboarding ihtiyac\003 g\005zlenirse.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 14.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Makine/ala\001\003m kanal\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 95.70866 14.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (M\002\001teriye uygulama m\002hendisli\007i kapsam\003nda ortak eri\001im.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 311.1417 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 11.25 Tm /F2+0 7.75 Tf 9.5 TL (Tekrarlanabilir pilotlar ve net \002r\002n s\003n\003r\003 olu\001tuktan) Tj T* (sonra.) Tj T* ET
+Q
+Q
+q
+1 J
+1 j
+0 0 0 RG
+.5 w
+n 0 145.7 m 490.3937 145.7 l S
+n 0 0 m 490.3937 0 l S
+n 0 0 m 0 145.7 l S
+n 490.3937 0 m 490.3937 145.7 l S
+n 0 126 m 490.3937 126 l S
+n 0 97 m 490.3937 97 l S
+n 0 77.5 m 490.3937 77.5 l S
+n 0 48.5 m 490.3937 48.5 l S
+n 0 29 m 490.3937 29 l S
+n 90.70866 0 m 90.70866 145.7 l S
+n 306.1417 0 m 306.1417 145.7 l S
+Q
+Q
+Q
+q
+1 0 0 1 57.02362 423.2764 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 3 Tm /F3+0 12 Tf 15 TL (Pazar ve fiyat i\007in hen\001z rakam vermiyoruz) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 367.2764 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 42.6 Tm /F2+0 9.4 Tf 13 TL (Bug\002n do\007rulanm\003\001 sat\003\001, m\002\001teri adedi, fiyat, \005deme iste\007i veya yat\003r\003m getirisi verimiz yok. Bu nedenle pazar b\002y\002kl\002\007\002) Tj T* (uydurma bir toplamla sunulmuyor. \010nce T\002rkiye\012de eri\001ilebilir LPBF ekiplerini ve sat\003n almac\003lar\003 listeleyece\007iz.) Tj T* (G\005r\002\001melerde mevcut \006\005z\002m\002n maliyetini, y\003lda ka\006 benzer \006al\003\001ma yap\003ld\003\007\003n\003 ve hangi b\002t\006eden \005deme \006\003kabilece\007ini) Tj T* (soraca\007\003z. Lisans fiyat\003 ancak bu bilgilerle ve pilot teklifleriyle \001ekillenecek.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 346.2764 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 3 Tm /F3+0 12 Tf 15 TL (\004lk 90 g\001nl\001k ticarile\002me plan\003) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 244.5764 cm
+q
+0 0 0 rg
+n 0 97.7 490.3937 -19.7 re f*
+1 1 1 rg
+n 0 78 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 58.5 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 39 490.3937 -19.5 re f*
+1 1 1 rg
+n 0 19.5 490.3937 -19.5 re f*
+1 1 1 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 5 83 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Hafta) Tj T* ET
+Q
+Q
+q
+1 0 0 1 104.2126 83 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.7 Tm /F3+0 8 Tf 9.7 TL (Somut \007\003kt\003) Tj T* ET
+Q
+Q
+0 0 0 rg
+q
+1 0 0 1 5 63.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (1\0153) Tj T* ET
+Q
+Q
+q
+1 0 0 1 104.2126 63.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Kullan\003c\003 g\005r\002\001meleri; bug\002n kullan\003lan ara\006lar ve tekrarlanan i\001 ad\003m\003.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 44 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (4\0156) Tj T* ET
+Q
+Q
+q
+1 0 0 1 104.2126 44 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (\016lk hedef kullan\003c\003 ve veri payla\001\003m\003 yapabilecek tasar\003m orta\007\003.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 24.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (7\0159) Tj T* ET
+Q
+Q
+q
+1 0 0 1 104.2126 24.5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (\010l\006\002m, belirsizlik ve kabul e\001i\007i tan\003ml\003 PoC protokol\002.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 5 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (10\01513) Tj T* ET
+Q
+Q
+q
+1 0 0 1 104.2126 5 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 1.75 Tm /F2+0 7.75 Tf 9.5 TL (Dar pilot teklifi; kullan\003m, k\003yas ve \005deme g\005r\002\001melerine g\005re i\001 modeli g\002ncellemesi.) Tj T* ET
+Q
+Q
+q
+1 J
+1 j
+0 0 0 RG
+.5 w
+n 0 97.7 m 490.3937 97.7 l S
+n 0 0 m 490.3937 0 l S
+n 0 0 m 0 97.7 l S
+n 490.3937 0 m 490.3937 97.7 l S
+n 0 78 m 490.3937 78 l S
+n 0 58.5 m 490.3937 58.5 l S
+n 0 39 m 490.3937 39 l S
+n 0 19.5 m 490.3937 19.5 l S
+n 99.2126 0 m 99.2126 97.7 l S
+Q
+Q
+Q
+ 
+
 endstream
 endobj
-37 0 obj
+36 0 obj
 <<
-/Annots [ 38 0 R 39 0 R 40 0 R 41 0 R 42 0 R ]
-/Contents 43 0 R
+/Contents 35 0 R
 /MediaBox [ 0 0 595.2756 841.8898 ]
 /Resources <<
-/Font <<
-/F1 6 0 R
-/F1-0 7 0 R
-/F1-1 44 0 R
-/F2+0 8 0 R
-/F2+0-0 12 0 R
-/F2+0-1 45 0 R
-/F3+0 16 0 R
-/F3+0-0 20 0 R
-/F4+0 24 0 R
->>
-/ProcSet [ /ImageB /ImageC /ImageI /PDF /Text ]
+/Font 30 0 R
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
 >>
 /Rotate 0
 /Trans <<
@@ -2175,74 +2748,9 @@ endobj
 /Parent 2 0 R
 >>
 endobj
-38 0 obj
+37 0 obj
 <<
-/A <<
-/S /URI
-/Type /Action
-/URI (https\072\057\057ambench2022\056nist\056gov\057)
->>
-/Border [ 0 0 0 ]
-/Rect [ 57.02362 335.5701 129.4572 345.1701 ]
-/Subtype /Link
-/Type /Annot
->>
-endobj
-39 0 obj
-<<
-/A <<
-/S /URI
-/Type /Action
-/URI (https\072\057\057doi\056org\05710\0566028\057NIST\056AMS\056100\05567)
->>
-/Border [ 0 0 0 ]
-/Rect [ 159.8908 312.1701 249.8947 321.7701 ]
-/Subtype /Link
-/Type /Annot
->>
-endobj
-40 0 obj
-<<
-/A <<
-/S /URI
-/Type /Action
-/URI (https\072\057\057tubitak\056gov\056tr\057sites\057default\057files\0572026\05503\0571812\0552026\0552028\137Yatirim\137Plani\137Tasnif\137Disi\137260225\056pdf)
->>
-/Border [ 0 0 0 ]
-/Rect [ 384.9767 275.5701 421.1955 285.1701 ]
-/Subtype /Link
-/Type /Annot
->>
-endobj
-41 0 obj
-<<
-/A <<
-/S /URI
-/Type /Action
-/URI (https\072\057\057tubitak\056gov\056tr\057tr\057destekler\057destek\057sanayi\057ulusal\055destek\055programlari\057cagri\055bigg\055yatirim\055programi\0552026\0552\055cagrisi\055acildi)
->>
-/Border [ 0 0 0 ]
-/Rect [ 372.0783 262.3701 442.2892 271.9701 ]
-/Subtype /Link
-/Type /Annot
->>
-endobj
-42 0 obj
-<<
-/A <<
-/S /URI
-/Type /Action
-/URI (https\072\057\057tubitak\056gov\056tr\057tr\057destekler\057sanayi\057ulusal\055destek\055programlari\0571812\055yatirim\055tabanli\055girisimcilik\055destek\055programi\055bigg\055yatirim)
->>
-/Border [ 0 0 0 ]
-/Rect [ 410.4846 249.1701 484.2463 258.7701 ]
-/Subtype /Link
-/Type /Annot
->>
-endobj
-43 0 obj
-<<
-/Length 8047
+/Length 8052
 >>
 stream
 q
@@ -2253,21 +2761,21 @@ q
 .45 w
 n 51.02362 36.85039 m 544.252 36.85039 l S
 0 0 0 rg
-BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BiGG Garaj i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
+BT 1 0 0 1 51.02362 24.09449 Tm /F2+0 7 Tf 8.4 TL (Metalliksa | BIGG HANGAR i\001 fikri | 27 Eyl\002l 2026) Tj T* ET
 BT 1 0 0 1 540.752 24.09449 Tm /F2+0 7 Tf 8.4 TL (6) Tj T* ET
 Q
 q
 1 0 0 1 57.02362 771.3701 cm
 q
 0 0 0 rg
-BT 1 0 0 1 0 4 Tm /F3+0 18 Tf 22 TL (BiGG Garaj ile hedefimiz) Tj T* ET
+BT 1 0 0 1 0 4 Tm /F3+0 18 Tf 22 TL (BIGG HANGAR ile hedefimiz) Tj T* ET
 Q
 Q
 q
 1 0 0 1 57.02362 725.3701 cm
 q
 0 0 0 rg
-BT 1 0 0 1 0 29.6 Tm /F2+0 9.4 Tf 13 TL (BiGG Garaj ba\001vurusunda arad\003\007\003m\003z katk\003, i\001 fikrini teknik prototipten m\002\001teriyle s\003nanm\003\001 bir i\001 plan\003na ta\001\003mak: do\007ru ilk) Tj T* (kullan\003c\003ya ula\001mak, pilot orta\007\003n\003 bulmak, \005l\006\002m ve veri ko\001ullar\003n\003 netle\001tirmek, fiyat ve sat\003n alma s\002recini \005\007renmek.) Tj T* (T\011B\016TAK\012\003n 2026\0152028 uygulay\003c\003 kurulu\001 listesinde BiGG Garaj, BiGG Yat\003r\003m A\001ama 1 program\003 olarak yer al\003yor [7].) Tj T* ET
+BT 1 0 0 1 0 29.6 Tm /F2+0 9.4 Tf 13 TL (BIGG HANGAR ba\001vurusunda arad\003\007\003m\003z katk\003, i\001 fikrini teknik prototipten m\002\001teriyle s\003nanm\003\001 bir i\001 plan\003na ta\001\003mak: do\007ru ilk) Tj T* (kullan\003c\003ya ula\001mak, pilot orta\007\003n\003 bulmak, \005l\006\002m ve veri ko\001ullar\003n\003 netle\001tirmek, fiyat ve sat\003n alma s\002recini \005\007renmek.) Tj T* (T\011B\016TAK\012\003n 2026\0152028 uygulay\003c\003 kurulu\001 listesinde BIGG HANGAR, BiGG Yat\003r\003m A\001ama 1 program\003 olarak yer al\003yor [7].) Tj T* ET
 Q
 Q
 q
@@ -2380,7 +2888,7 @@ Q
 q
 1 0 0 1 57.02362 274.9701 cm
 q
-BT 1 0 0 1 0 2.2 Tm 10.2 TL 0 0 0 rg /F2+0 8 Tf 10.2 TL ([7] T\011B\016TAK, 1812-2026-2028 Tohum \010ncesi Yat\003r\003m Plan\003) Tj (; BiGG Garaj uygulay\003c\003 kurulu\001 listesi. ) Tj (Resm\021 plan) Tj (.) Tj T* ET
+BT 1 0 0 1 0 2.2 Tm 10.2 TL 0 0 0 rg /F2+0 8 Tf 10.2 TL ([7] T\011B\016TAK, 1812-2026-2028 Tohum \010ncesi Yat\003r\003m Plan\003) Tj (; BIGG HANGAR uygulay\003c\003 kurulu\001 listesi. ) Tj (Resm\021 plan) Tj (.) Tj T* ET
 Q
 Q
 q
@@ -2460,6 +2968,97 @@ Q
 
 
 endstream
+endobj
+38 0 obj
+<<
+/Annots [ 39 0 R 40 0 R 41 0 R 42 0 R 43 0 R ]
+/Contents 37 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font <<
+/F1 6 0 R
+/F1-0 7 0 R
+/F1-1 44 0 R
+/F2+0 8 0 R
+/F2+0-0 12 0 R
+/F2+0-1 45 0 R
+/F3+0 16 0 R
+/F3+0-0 20 0 R
+/F4+0 24 0 R
+>>
+/ProcSet [ /ImageB /ImageC /ImageI /PDF /Text ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Parent 2 0 R
+>>
+endobj
+39 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057ambench2022\056nist\056gov\057)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 57.02362 335.5701 129.4572 345.1701 ]
+/Subtype /Link
+/Type /Annot
+>>
+endobj
+40 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057doi\056org\05710\0566028\057NIST\056AMS\056100\05567)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 159.8908 312.1701 249.8947 321.7701 ]
+/Subtype /Link
+/Type /Annot
+>>
+endobj
+41 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057tubitak\056gov\056tr\057sites\057default\057files\0572026\05503\0571812\0552026\0552028\137Yatirim\137Plani\137Tasnif\137Disi\137260225\056pdf)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 384.9767 275.5701 421.1955 285.1701 ]
+/Subtype /Link
+/Type /Annot
+>>
+endobj
+42 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057tubitak\056gov\056tr\057tr\057destekler\057destek\057sanayi\057ulusal\055destek\055programlari\057cagri\055bigg\055yatirim\055programi\0552026\0552\055cagrisi\055acildi)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 372.0783 262.3701 442.2892 271.9701 ]
+/Subtype /Link
+/Type /Annot
+>>
+endobj
+43 0 obj
+<<
+/A <<
+/S /URI
+/Type /Action
+/URI (https\072\057\057tubitak\056gov\056tr\057tr\057destekler\057sanayi\057ulusal\055destek\055programlari\0571812\055yatirim\055tabanli\055girisimcilik\055destek\055programi\055bigg\055yatirim)
+>>
+/Border [ 0 0 0 ]
+/Rect [ 410.4846 249.1701 484.2463 258.7701 ]
+/Subtype /Link
+/Type /Annot
+>>
 endobj
 44 0 obj
 <<
@@ -2666,7 +3265,165 @@ endstream
 endobj
 49 0 obj
 <<
-/Contents 50 0 R
+/Length 3381
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 57.02362 760.8661 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 4 Tm /F2+0 20 Tf 24 TL (Uygulamadaki say\001sal kar\002\001la\002t\001rma) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 710.8661 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 31.8 Tm /F3+0 10.2 Tf 14 TL (Metalliksa\001n\002n bug\003nk\003 hesaplama ak\002\004\002ndan somut bir \005rnek: IN718 termal vakas\002nda CPU ve Warp ayn\002 girdi i\006in) Tj T* (say\002sal olarak kar\004\002la\004t\002r\002ld\002. Bu, uygulaman\002n iki y\003r\003tme yolunun ara alanlar\002n\002 ve zaman ad\002mlar\002n\002 da) Tj T* (k\002yaslayabildi\007ini g\005sterir.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 52.44094 525.8661 cm
+q
+0 0 0 rg
+n 0 179 490.3937 -23 re f*
+0 0 0 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 162 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.8 Tm /F2+0 9.2 Tf 11 TL (Kar\002\001la\002t\001rma kayd\001) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 162 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 1.8 Tm /F2+0 9.2 Tf 11 TL (Raporlanan de\003er) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 138 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Girdi) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 138 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (IN718; 60 W; 1200 mm/s; 10 \010m a\007; 200 \010m tarama/katman girdisi.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 114 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Hesap boyutu) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 114 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (73.568 h\003cre; 934 kabul edilmi\004 ad\002m.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 90 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Diziler) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 90 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Koordinatlar ve kabul edilen zaman ad\002mlar\002 byte-exact; rho alanlar\002 exact.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 66 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (S\002cakl\002k alan\002) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 66 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (CPU\011Warp ba\007\002l L2 fark\002 6,80786 \012 10\013\014\015.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 42 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Enthalpi integrali) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 42 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Her iki tarafta 0,0037997413708473005 J.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 18 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 2.6 Tm /F3+0 9.4 Tf 12 TL (Yorum) Tj T* ET
+Q
+Q
+q
+1 0 0 1 127.8898 6 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 14.6 Tm -0.030732 Tw /F3+0 9.4 Tf 12 TL (Bu tek girdi i\006in yaz\002l\002m/n\003merik parite kan\002t\002d\002r. Performans k\002yas\002, deneysel do\007rulama veya) Tj T* 0 Tw (\003retim yeterlili\007i de\007ildir.) Tj T* ET
+Q
+Q
+q
+1 J
+1 j
+0 0 0 RG
+.6 w
+n 0 179 m 490.3937 179 l S
+n 0 0 m 490.3937 0 l S
+n 0 0 m 0 179 l S
+n 490.3937 0 m 490.3937 179 l S
+n 0 156 m 490.3937 156 l S
+n 0 132 m 490.3937 132 l S
+n 0 108 m 490.3937 108 l S
+n 0 84 m 490.3937 84 l S
+n 0 60 m 490.3937 60 l S
+n 0 36 m 490.3937 36 l S
+n 121.8898 0 m 121.8898 179 l S
+Q
+Q
+Q
+q
+1 0 0 1 57.02362 511.6929 cm
+Q
+q
+1 0 0 1 57.02362 469.6929 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 31.8 Tm /F3+0 10.2 Tf 14 TL (Bu tek kay\002t, \006\005z\003m alanlar\002n\002n ve zaman ad\002mlar\002n\002n CPU/Warp aras\002nda k\002yaslanabildi\007ini g\005sterir. M\003hendislik) Tj T* (modelinin fiziksel do\007rulu\007unu kan\002tlamaz. Ba\007\002ms\002z IN718 deney kar\004\002la\004t\002rmas\002 ve \003retim yeterlili\007i h\016l\016) Tj T* (do\007rulanmam\002\004t\002r.) Tj T* ET
+Q
+Q
+ 
+
+endstream
+endobj
+50 0 obj
+<<
+/Contents 49 0 R
 /MediaBox [ 0 0 595.2756 841.8898 ]
 /Resources <<
 /Font 51 0 R
@@ -2678,15 +3435,6 @@ endobj
 /Type /Page
 /Parent 2 0 R
 >>
-endobj
-50 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ]
-/Length 1354
->>
-stream
-GatU2>I0eW&:XAWfLImn_%L-.p"O30Uq(SfE@0/&]ZA.!9ot#Y+=[<_h%^d]Vm^Z$%Kf8'f^$!_%Lb#YSduatIK@pT3H-&UCZ(m&_Vu"e?]=t*na>Hhp6Zpi5/\')Oso>b+-N$:gW^!an=D*.Y*#FX1BX6]9A_HDIqgmL&mDA)Sj=fo09#F!.*.+]V,(;ABN<I.C@Mrg^;AkIWU_+69Bu!gWtTG*Bf-5o,Q+5ke*6L*<^Nc:01diV,i-8AhV]S33B^e$9<f_T60+T.Tf]^r#0K9a'eD-Kph=?"b^Y1.reu+(PsbuoHkX%=]ArDH]2.oj_Im;$+;uU:2ORi^OPr7Cbe`:YlQ2\R;^c'ChKd47G$YNt9>:"f>1(fOqg&<dkN'pQ$scSt!]h/t>!c/dg=-=g.0q5YC;&LSK?ETGB+U*"4sR6,J;g$D)Gr!3Lh3GaUjei%%*3Fp&oGsrG<L>f(PXIMEA>'>5!u7-'Z-)[5oR[\k6GB@XIl&;fO<>3N0*oBYn:rnLZ=;jn9PM$*Yj@WZi^JUTQkkoO;NY**5etK`r4O_Ou2tVdQ`On@50GQKpAI48UFGW=rATp_!cWt&c4"gp;'tn(BhAu(c#3DbC_fC$pN#-)e5Q6[%((=^+dhhODj/>&>f>%+Xjack+X%.]$)S/lSq5s0o^r;pQDg#Q:4_Rob3iL=ABi\ZRCAV"nKLP3M\rs0O!$7j=4)s1+,2[gFZ?&2Gf%`Z@/Tf@&Q#)Y_:UsJWV^^_K%pgjCk,A([DAYRnDPZJ&F]3#J2Q_$PBnp[lb6k"82R_r#\>0kaaf/[/.%?#"umdO3$Idi%H,+?+ktO5-0H\<>;0!_Vui8'_!h9n.jl@Kq?V.Gp2eblL`k2>G65mF%dl=<i@A[J\f309'^d7AbN\J^a>ERELOlj%q:iXEIduh?JWiqU%RTP_UePi_7df/V]j+\Nd30`EIaRo?PIZjA&lpA]/_]Wn)E`=5:*N;)I$\]4(5IQ'#bjEMsh:sHLO\`Fb.6GP]5iloU9/D0X<.(JlP*%ZEDG^\i"n?Au+57FaI8&)B+Hl=CnN"c>>LsWEW`rc*-X9g:?1[M\4\A^$io9fSaIEi1hO%;Z]&XbYAY>*4`qBc_<3.DL3#mr02lhT#?dJ&oJ5U,Wqp]mQcTRFGPrL#A4qX#6hW`>F<cerT9dMqeLiKN,pXErKOO/nN[qfrII7uCBqA^*>GO\%A4;-?[E$as3,ZKk&=sH2P%:/WBC`ma#VINTC^tm8_cpjh&8fJIRqu-8h)r>@#Z`d5D*iJDk'2l'Hf*uEJ3_;UioAs]4ouMs4Rm_>D:27X5M#&bTfQ;?GBtk)(kJhZu9)2:(S9@$UoY3=T~>
-endstream
 endobj
 51 0 obj
 <<
@@ -3175,8 +3923,72 @@ endstream
 endobj
 61 0 obj
 <<
-/Annots [ 62 0 R 63 0 R 64 0 R 65 0 R 66 0 R ]
-/Contents 67 0 R
+/Length 2495
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 57.02362 760.8661 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 4 Tm /F2+0 20 Tf 24 TL (Kaynaklar ve dayanaklar) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 724.8661 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 17.8 Tm /F3+0 10.2 Tf 14 TL (D\002\004 kaynaklar a\004a\007\002daki sekt\005rel ve program iddialar\002n\002 destekliyor. Metalliksa\001n\002n m\003\004teri talebi, maliyet etkisi veya) Tj T* (sat\002\004 performans\002n\002 kan\002tlamazlar.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 690.8661 cm
+q
+BT 1 0 0 1 0 17.8 Tm 14 TL 0 0 0 rg /F3+0 10.2 Tf 14 TL ([4] NIST, AM-Bench 2022) Tj (. Kontroll\003 \005l\006\003m verileri ve modelleme challenge\001lar\002; IN718 LPBF build, tarama) Tj T* (stratejileri ve \006\002plak levhada tek lazer izleri. ) Tj (ambench2022.nist.gov) Tj (.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 642.8661 cm
+q
+BT 1 0 0 1 0 31.8 Tm 14 TL 0 0 0 rg /F3+0 10.2 Tf 14 TL ([5] Deisenroth, Weaver, Mekhontsev, Grantham & Moylan \(2025\), Laser Beam Metrology for AM-Bench 2022) Tj (,) Tj T* (NIST AMS 100-67. I\004\002n g\003\006 yo\007unlu\007u, build-plane konumu, de\007i\004kenlik ve \005l\006\003m belirsizli\007i. DOI:) Tj T* (10.6028/NIST.AMS.100-67) Tj (.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 608.8661 cm
+q
+BT 1 0 0 1 0 17.8 Tm 14 TL 0 0 0 rg /F3+0 10.2 Tf 14 TL ([7] T\017B\020TAK, 1812-2026-2028 Tohum \021ncesi Yat\002r\002m Plan\002) Tj (. BIGG HANGAR\001\002n A\004ama 1 uygulay\002c\002 kurulu\004lar\002) Tj T* (aras\002ndaki konumu. ) Tj (Resm\022 plan) Tj (.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 574.8661 cm
+q
+BT 1 0 0 1 0 17.8 Tm 14 TL 0 0 0 rg /F3+0 10.2 Tf 14 TL ([8] T\017B\020TAK, BiGG Yat\002r\002m Program\002 2026-2 \023a\007r\002s\002) Tj (. A\004ama 2 ba\004vuru d\005nemi ve yat\002r\002m \004artlar\002; 31 A\007ustos\01130) Tj T* (Eyl\003l 2026 d\005nemi. ) Tj (Resm\022 \006a\007r\002 duyurusu) Tj (.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 540.8661 cm
+q
+BT 1 0 0 1 0 17.8 Tm 14 TL 0 0 0 rg /F3+0 10.2 Tf 14 TL ([9] T\017B\020TAK, 1812 Yat\002r\002m Tabanl\002 Giri\004imcilik Destek Program\002) Tj (. Program a\004amalar\002 ve uygulama \006er\006evesi.) Tj T* (Resm\022 program sayfas\002) Tj (.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 57.02362 520.6929 cm
+Q
+q
+1 0 0 1 57.02362 492.6929 cm
+q
+0 0 0 rg
+BT 1 0 0 1 0 17.8 Tm /F3+0 10.2 Tf 14 TL (Program takvimi ve ko\004ullar\002 de\007i\004ebilir. Bu bilgiler 27 Eyl\003l 2026 tarihli rapor i\006in kontrol edildi; ba\004vuru an\002nda) Tj T* (T\017B\020TAK\001\002n g\003ncel duyurusu esas al\002nmal\002d\002r.) Tj T* ET
+Q
+Q
+ 
+
+endstream
+endobj
+62 0 obj
+<<
+/Annots [ 63 0 R 64 0 R 65 0 R 66 0 R 67 0 R ]
+/Contents 61 0 R
 /MediaBox [ 0 0 595.2756 841.8898 ]
 /Resources <<
 /Font 51 0 R
@@ -3189,7 +4001,7 @@ endobj
 /Parent 2 0 R
 >>
 endobj
-62 0 obj
+63 0 obj
 <<
 /A <<
 /S /URI
@@ -3202,7 +4014,7 @@ endobj
 /Type /Annot
 >>
 endobj
-63 0 obj
+64 0 obj
 <<
 /A <<
 /S /URI
@@ -3215,7 +4027,7 @@ endobj
 /Type /Annot
 >>
 endobj
-64 0 obj
+65 0 obj
 <<
 /A <<
 /S /URI
@@ -3228,7 +4040,7 @@ endobj
 /Type /Annot
 >>
 endobj
-65 0 obj
+66 0 obj
 <<
 /A <<
 /S /URI
@@ -3241,7 +4053,7 @@ endobj
 /Type /Annot
 >>
 endobj
-66 0 obj
+67 0 obj
 <<
 /A <<
 /S /URI
@@ -3254,85 +4066,76 @@ endobj
 /Type /Annot
 >>
 endobj
-67 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ]
-/Length 1220
->>
-stream
-Gatn$;/b2K%*.9&.JS#KmTe(9*';iF)KZ@E[_(A?^gXbF6&F,[[4M&_4+R4m7nSf2Fr?SbMBI'^;\]&fT+ln`5KmD7-,;'a[iZJA%bVl,3/f#mL(DtZIj_>,*2d5`7gXr-M8DiI0O0C:,PTop:XB1_SDs)P*V)E=i"<N\cJe#Qk_ppsYcsCSMba&F2iui_p,d-d(Ocj2b2]+3b0k7gpDr5,/.28bgs-^o.,t#]Tbq5MoLtU9?KRtY:s5TLLU!,56@?#fg56MBSh#@baNi-9E`k?,d&O-_#WK%$>-"AEB?V51..K3i*?&W,TRg@J!(qfXA-9+d<3:,#:@,8NX[P$6q&o'1AP6IsV`bFHmYr!YGf4:4T6!Z&qo(UPb6-HA4\Y>%p_H&!I`VXN^H%cTZeAem3Ht@mL2^.\``?8A`^'=_=$f\/An[GV!f41aEiHGt-*0!19U`@7?p30:E;:qo'=e$(qZtAGkr_4ILjtI^@mqX2#D`79r'?5B[+oOe/cb2=>!,CblB)KBn8X>+8Wcs0Ti#qGY,cE3_%@f"rZdLLp-1g&DrF$_=rLU&RfNGM!W`J'TONNbCUjm^DM;d_W4LmEVWtNBYW0Upa,;kW>`0NlRRqmbU-n(n\cWYhTt1@/2C]_NI)0KjZQp"=Ou2<4]'a-u5Z^f5ZpqOm*r$YD+^61bW(^FTIlUL[<OBK%"uY;)@DCkrWKjRt^2gY*>l8mCD?pH',S?Z]V4^-`.eH"I?\rIe.[!PF+^7>cSLl$,A`m+qYR0?&a=j4p3iY)TM7IV<<YBcPX)Ce3eIk&]hi55hR&Tm$js\i.P-ekKmKQ?60Y"Pq[p!nGs2m9ACKj:imc?Y566Er+h*ghlG8gHbei6_j#HGqoaMqrl.``so+`gf$!97^h9@C^'L*JWiSOpMUD*Z$Jl/qLO\NioI19u!rhE>rKltnQ&N"L+pd^F$CoZYr9)G#>@gdojGN[La^_'J8/`<U\C@1[R.4Q#pVVX3rJ,[^&c`)7H>!hCk-3`2.m7BLgn%]0+2lnJ0`og`?!43Io5=!gsu-qN[,>L`P3pR^Sp0=C$3`-rSb5fBqpVgM*m%N<8a4rF4G$,9-<&]IdrjV0Q!i`>NRh&B[F(up^p[VZ%pXm&4ST#,Qfi9@!p>(ID!3+?T-U'u/i9jWoAN^rbk?akJ0@,ha`T%3FH1:X<A@mpo;"'LO#KIa,QrB5@9In:GO^&_d<QA>~>
-endstream
-endobj
 xref
 0 68
 0000000000 65535 f 
 0000000015 00000 n 
-0000000054 00000 n 
-0000000162 00000 n 
-0000000211 00000 n 
-0000000512 00000 n 
-0000006781 00000 n 
-0000006888 00000 n 
-0000006995 00000 n 
-0000008115 00000 n 
-0000008376 00000 n 
-0000057743 00000 n 
-0000058556 00000 n 
-0000059700 00000 n 
-0000059969 00000 n 
-0000097711 00000 n 
-0000098495 00000 n 
-0000099641 00000 n 
-0000099910 00000 n 
-0000137977 00000 n 
-0000138771 00000 n 
-0000139892 00000 n 
-0000140154 00000 n 
-0000188194 00000 n 
-0000188967 00000 n 
-0000190104 00000 n 
-0000190382 00000 n 
-0000226374 00000 n 
-0000227163 00000 n 
-0000227365 00000 n 
-0000236793 00000 n 
-0000236863 00000 n 
-0000237065 00000 n 
-0000239514 00000 n 
-0000239716 00000 n 
-0000247257 00000 n 
-0000247459 00000 n 
-0000251044 00000 n 
-0000251410 00000 n 
-0000251610 00000 n 
-0000251832 00000 n 
-0000252144 00000 n 
-0000252482 00000 n 
-0000252823 00000 n 
-0000260923 00000 n 
-0000261031 00000 n 
-0000262174 00000 n 
-0000262443 00000 n 
-0000300070 00000 n 
-0000300850 00000 n 
-0000301052 00000 n 
-0000302499 00000 n 
-0000302558 00000 n 
-0000302666 00000 n 
-0000303813 00000 n 
-0000304082 00000 n 
-0000341702 00000 n 
-0000342475 00000 n 
-0000343597 00000 n 
-0000343859 00000 n 
-0000393429 00000 n 
-0000394246 00000 n 
-0000394495 00000 n 
-0000394695 00000 n 
-0000394917 00000 n 
-0000395228 00000 n 
-0000395565 00000 n 
-0000395906 00000 n 
+0000000536 00000 n 
+0000000644 00000 n 
+0000000693 00000 n 
+0000006966 00000 n 
+0000007267 00000 n 
+0000007374 00000 n 
+0000007481 00000 n 
+0000008601 00000 n 
+0000008862 00000 n 
+0000058229 00000 n 
+0000059042 00000 n 
+0000060186 00000 n 
+0000060455 00000 n 
+0000098197 00000 n 
+0000098981 00000 n 
+0000100127 00000 n 
+0000100396 00000 n 
+0000138463 00000 n 
+0000139257 00000 n 
+0000140378 00000 n 
+0000140640 00000 n 
+0000188680 00000 n 
+0000189453 00000 n 
+0000190590 00000 n 
+0000190868 00000 n 
+0000226860 00000 n 
+0000227649 00000 n 
+0000237078 00000 n 
+0000237280 00000 n 
+0000237350 00000 n 
+0000243088 00000 n 
+0000243290 00000 n 
+0000250832 00000 n 
+0000251034 00000 n 
+0000261138 00000 n 
+0000261340 00000 n 
+0000269445 00000 n 
+0000269811 00000 n 
+0000270011 00000 n 
+0000270233 00000 n 
+0000270545 00000 n 
+0000270883 00000 n 
+0000271224 00000 n 
+0000271332 00000 n 
+0000272475 00000 n 
+0000272744 00000 n 
+0000310371 00000 n 
+0000311151 00000 n 
+0000314585 00000 n 
+0000314787 00000 n 
+0000314846 00000 n 
+0000314954 00000 n 
+0000316101 00000 n 
+0000316370 00000 n 
+0000353990 00000 n 
+0000354763 00000 n 
+0000355885 00000 n 
+0000356147 00000 n 
+0000405717 00000 n 
+0000406534 00000 n 
+0000409082 00000 n 
+0000409331 00000 n 
+0000409531 00000 n 
+0000409753 00000 n 
+0000410064 00000 n 
+0000410401 00000 n 
 trailer
 <<
 /Size 68
@@ -3340,5 +4143,5 @@ trailer
 /Info 1 0 R
 >>
 startxref
-397219
+410742
 %%EOF
