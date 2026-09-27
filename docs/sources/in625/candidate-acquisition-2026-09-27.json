@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "admission": "unverified-candidates-only",
+  "sources": [
+    {
+      "file": "georgia-tech-inconel625.xlsx",
+      "sourceUrl": "https://gen3csp.gatech.edu/wp-content/uploads/2020/10/Inconel625.xlsx",
+      "resolvedUrl": "https://gen3csp.gatech.edu/wp-content/uploads/2020/10/Inconel625.xlsx",
+      "retrievedAt": "2026-09-27T12:42:27.506976+00:00",
+      "bytes": 11127,
+      "sha256": "aa4821bf2845333af590e9b384c781c46df18529e718a66adad65155a4df8b60",
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "status": "retrieved-unverified-candidate"
+    },
+    {
+      "file": "nasa-20240007954-inconel-properties.pptx",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20240007954/downloads/Inconel%20Thermophysical%20Properties%20Study_FINAL.pptx",
+      "resolvedUrl": "https://ntrs.nasa.gov/api/citations/20240007954/downloads/Inconel%20Thermophysical%20Properties%20Study_FINAL.pptx",
+      "retrievedAt": "2026-09-27T12:42:32.479142+00:00",
+      "bytes": 18301541,
+      "sha256": "fe5ef34928d67f9967dfa06bc0f55439560a1ed81f0d9ddbc08cfc835a589bcb",
+      "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "status": "retrieved-unverified-candidate"
+    },
+    {
+      "file": "nasa-20240007954-metadata.json",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20240007954",
+      "resolvedUrl": "https://ntrs.nasa.gov/api/citations/20240007954",
+      "retrievedAt": "2026-09-27T12:42:33.369624+00:00",
+      "bytes": 5528,
+      "sha256": "f2395f58c1d300719b2f42c93702396298eea57d3b49c0612c2a74a5fef01301",
+      "contentType": "application/json; charset=utf-8",
+      "status": "retrieved-unverified-candidate"
+    },
+    {
+      "file": "georgia-tech-inconel625-page.html",
+      "sourceUrl": "https://gen3csp.gatech.edu/inconel-alloy-625/",
+      "resolvedUrl": "https://gen3csp.gatech.edu/inconel-alloy-625/",
+      "retrievedAt": "2026-09-27T12:42:34.354014+00:00",
+      "bytes": 76255,
+      "sha256": "7182d05b63e8b8b47252af42c099c49c3b66df539c4beca7cc3d6bbcb0ef28b8",
+      "contentType": "text/html; charset=UTF-8",
+      "status": "retrieved-unverified-candidate"
+    },
+    {
+      "file": "georgia-tech-uncertainty.html",
+      "sourceUrl": "https://gen3csp.gatech.edu/uncertainty/",
+      "resolvedUrl": "https://gen3csp.gatech.edu/uncertainty/",
+      "retrievedAt": "2026-09-27T12:42:35.422338+00:00",
+      "bytes": 109839,
+      "sha256": "13526bee6fc1d99c92a895b759a325957b4e9eb7325ead9bf8f8b3b855b9d911",
+      "contentType": "text/html; charset=UTF-8",
+      "status": "retrieved-unverified-candidate"
+    }
+  ]
+}

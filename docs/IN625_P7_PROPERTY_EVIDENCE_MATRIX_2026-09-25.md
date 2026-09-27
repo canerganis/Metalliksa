@@ -161,3 +161,52 @@ equivalence and uncertainty argument. Optical, powder-bed, flow and vapor
 requirements remain independently open. This follow-up changes no model,
 registry, source snapshot or capability flag and establishes no experimental
 validation.
+
+### Original-file acquisition and inspection — 2026-09-27, 12:42 UTC
+
+This acquisition supersedes the NASA and Georgia Tech access limitations above.
+Permitted public downloads succeeded after the sandbox network restriction was
+resolved. Original files and their URL, UTC retrieval time, byte count and
+SHA-256 are preserved in
+[`candidate-acquisition-2026-09-27.json`](sources/in625/candidate-acquisition-2026-09-27.json).
+The [property inspection](sources/in625/candidate-property-inspection-2026-09-27.json)
+records source locators, evidence classes, unresolved fields and the workbook's
+20 numeric rows. Neither file changes the runtime material authority.
+
+| Original artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [Georgia Tech workbook](sources/in625/georgia-tech-inconel625.xlsx) | 11,127 | `aa4821bf2845333af590e9b384c781c46df18529e718a66adad65155a4df8b60` |
+| [NASA presentation](sources/in625/nasa-20240007954-inconel-properties.pptx) | 18,301,541 | `fe5ef34928d67f9967dfa06bc0f55439560a1ed81f0d9ddbc08cfc835a589bcb` |
+
+**Georgia Tech:** `Sheet1!A1:G21` contains 20 temperature points from **260 to
+1000 °C (533.15–1273.15 K)**, with Cp, diffusivity and conductivity and separate
+95% confidence uncertainty columns. Cp units are J/g-K; diffusivity units are
+mm²/s. The database method interpolates measured Cp onto the diffusivity
+temperature coordinates. Conductivity is derived using an assumed 8440 kg/m³
+density; recalculation reproduces all 20 values within `4.98e-14 W/m-K`.
+The archived [uncertainty method](sources/in625/georgia-tech-uncertainty.html)
+assumes negligible density uncertainty. Lot, chemistry and heat treatment are
+not established by these acquired records. This closes the workbook-access and
+temperature/uncertainty-column gaps, but supplies neither liquid properties nor
+a complete uncertainty budget for transfer to the target LPBF material.
+
+**NASA:** slide 4 identifies ESPI IN625 lot **DK 15344B** and different ESPI and
+Böhler compositions. Slides 6–8 contain density, surface-tension and viscosity
+plots/fits; their IN625 plots mark `T_L = 1630 K`. Density and surface-tension
+fit tables contain plus/minus coefficient entries, but confidence level,
+coverage factor, covariance and full uncertainty budget are not established.
+Exact numerical measurement series and range endpoints are not tabulated, and
+the PPTX has no embedded spreadsheet. The finite near-liquidus plot ranges
+(including undercooled density points) must not become inferred boiling-range
+validity. The displayed viscosity equation and coefficient units have not been
+reconciled with its plotted values, so they must not be implemented as a law.
+Instrument capability ranges on slide 3 are not specimen measurement conditions.
+
+**Remaining acquisition:** obtain the NASA numeric series, fit conventions and
+uncertainty/specimen-condition details through permitted public supplementary
+data or a separately authorized author request; obtain the Kaschnitz original
+tables. Establish chemistry/state/lot applicability before combining records.
+The new files are **source-inspected, unverified candidates for admission**;
+`sourceValidityRange_K` for the current runtime snapshot remains `null`,
+full-transient/build-job stay closed, and experimental validation remains
+unestablished.

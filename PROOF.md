@@ -1,3 +1,22 @@
+## 2026-09-27 — IN625 primary candidate acquisition (source evidence)
+
+Original Georgia Tech IN625 workbook, property/method pages, NASA NTRS
+20240007954 presentation and citation metadata are now locally preserved with
+retrieval URL/date, byte count and SHA-256. All five source byte checks passed.
+Independent transcription checking matched all 140 numeric workbook cells
+(20 rows x 7 columns), including the three reported 95% uncertainty columns.
+The workbook spans 533.15–1273.15 K. Conductivity is derived, not independently
+measured: alpha x Cp x the assumed 8440 kg/m^3 density reproduces its values
+within 4.98e-14 W/m-K. The source method neglects density uncertainty and the
+target lot/chemistry/heat-treatment applicability is unresolved. NASA supplies
+additional specimen/fit leads but not an admitted complete liquid-property
+uncertainty budget. No runtime material values or capability flags changed;
+full IN625 admission and experimental validity remain unvalidated.
+
+Evidence: [acquisition manifest](docs/sources/in625/candidate-acquisition-2026-09-27.json),
+[property inspection](docs/sources/in625/candidate-property-inspection-2026-09-27.json),
+[admission matrix](docs/IN625_P7_PROPERTY_EVIDENCE_MATRIX_2026-09-25.md).
+
 ## 2026-09-27 — Development server isolation (software evidence)
 
 HMR now uses its application's HTTP listener instead of competing for the
