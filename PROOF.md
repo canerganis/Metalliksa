@@ -2693,3 +2693,8 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 
 - Corrected the Warp thermal energy-loss record to integrate explicit bottom/top boundary rates; internal finite-volume conductive rates are independently required to cancel within a float64 roundoff-scaled tolerance. Total-rate and boundary-rate energy closures are checked separately. The state update is unchanged and the pre-existing 1% energy-closure threshold remains in force.
 - Evidence: focused ledger regression **1/1 PASS**; actual RTX 4060 Laptop GPU / Warp CUDA pilot suite **5/5 PASS** (including four registered-alloy CPU parity checks); `git diff --check` **PASS**. This verifies bounded implementation/software behavior, not production-case convergence or experimental validity. The IN718 result remains `unvalidated`.
+
+## 2026-09-28 — Local NIST AMMT case lookup
+
+- Verified `data/benchmark/nist-mds2-2923-in718/official/Master_TrackList_Measurements.xlsx` against the official local manifest (59,141 bytes; SHA-256 `6cd32669f5c84cdb9e90890ba40ddc5548c85b0dbb95cf038f2f6fc69da67a52`). The workbook `Data` sheet contains 54 AMMT rows at 285 W / 960 mm/s across nine sample/spot groups, with measured beam diameters 48.25168–74.34128 µm; no 131 µm group appears.
+- Therefore this local workbook does not exactly identify the paper's 131 µm case. The public measurements remain useful source evidence only; they are not yet an admitted experimental comparison for the selected solver contract. IN718 remains `unvalidated` pending case/regime/observable and boundary-condition matching.
