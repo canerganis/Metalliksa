@@ -1,3 +1,22 @@
+## 2026-09-27 — Completed frozen CPU time refinement (numerical evidence)
+
+The 5 micrometre, 50/25/12.5 ns diagnostic completed all three levels
+(7000/14000/28000 accepted steps). Protocol, runner and both assessment module
+hashes were rechecked; the implementation stayed
+`d0c160f286f3287248f6163327cf7962a384b2540efe38768092232d74fa9522`
+before, during and after execution. Maximum relative energy error was
+`3.5675957801988197e-13` (PASS). Discrete geometry and the predeclared continuous
+liquidus contour assessments both remain **inconclusive**. Finest-pair contour
+relative changes are 3.05118e-5 (width) and 1.18891e-5 (depth); small differences
+do not establish an asymptotic convergence order. No threshold was changed.
+The prior failed P4 and inconclusive refined-time reports remain intact.
+
+Final [report](docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_2026-09-27.json)
+SHA-256: `f4f9c1cc04142504e01a50d5cd0696cc8bbd100ddbbecb70af38430f04ce002f`.
+The separate [contour assessment](docs/LPBF_P4_CPU_OPERATOR_CONTOUR_ASSESSMENT_2026-09-27.json)
+binds this report and the frozen assessor. This is neither mesh convergence,
+experimental validation nor a repeated end-to-end performance benchmark.
+
 ## 2026-09-27 — IN625 primary candidate acquisition (source evidence)
 
 Original Georgia Tech IN625 workbook, property/method pages, NASA NTRS

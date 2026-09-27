@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "predeclared-continuous-contour-assessment",
+  "reportFile": "docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_2026-09-27.json",
+  "reportSha256": "f4f9c1cc04142504e01a50d5cd0696cc8bbd100ddbbecb70af38430f04ce002f",
+  "protocolSha256": "fa2c3f57c0821331faef3b760004ba6c816c8b2e8208bb1181ae5745e48fc97e",
+  "assessmentModuleSha256": "79fd4c2bdd4ef76aa66d0c5a001c3ad6db29ce5f96f68f6a46ea42a724a33f60",
+  "implementationFingerprint": "d0c160f286f3287248f6163327cf7962a384b2540efe38768092232d74fa9522",
+  "scope": "Fixed 5 micrometre mesh, accepted 50/25/12.5 ns mean timestep; numerical thermal proxy only",
+  "experimentalValidation": false,
+  "assessment": {
+    "status": "inconclusive",
+    "energyStatus": "pass",
+    "maximumEnergyRelativeError": 3.5675957801988197e-13,
+    "metrics": {
+      "width_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 3.051176319615314e-05,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "Non-monotonic, unresolved or identical discrete geometry"
+        },
+        "reason": "Non-monotonic, unresolved or identical discrete geometry"
+      },
+      "depth_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 1.1889128639596753e-05,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "Non-monotonic, unresolved or identical discrete geometry"
+        },
+        "reason": "Non-monotonic, unresolved or identical discrete geometry"
+      }
+    }
+  }
+}
