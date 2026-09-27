@@ -16,6 +16,26 @@ CASE = {
 
 
 class WarpThermalCandidate(unittest.TestCase):
+    def test_energy_step_uses_boundary_fluxes_and_checks_internal_conservation(self):
+        # Rates are W/m^3. Internal face terms cancel; the explicit boundary
+        # terms are the negative bottom and top surface losses.
+        total_rate = [-3.0, -9.0]
+        boundary_rate = [-5.0, -7.0]
+        loss = candidate._boundary_loss_for_step(total_rate, boundary_rate, 2.0, .5)
+        self.assertEqual(loss, 12.0)
+        self.assertEqual(-sum(total_rate) * 2.0 * .5, loss)
+
+        with self.assertRaisesRegex(ValueError, "internal conductive rates do not cancel"):
+            candidate._boundary_loss_for_step([1.0, 2.0], [0.0, 0.0], 1.0, 1.0)
+
+        # Fail closed for invalid rate arrays and preserve zero-flux steps.
+        self.assertEqual(candidate._boundary_loss_for_step([-2.0, 2.0], [0.0, 0.0], 1.0, 1.0), 0.0)
+        with self.assertRaisesRegex(ValueError, "invalid step rates"):
+            candidate._boundary_loss_for_step([float("nan")], [0.0], 1.0, 1.0)
+        self.assertEqual(candidate._energy_closure(100.0, 0.0, 99.0), .01)
+        with self.assertRaisesRegex(ValueError, "energy balance failed"):
+            candidate._energy_closure(100.0, 0.0, 98.99)
+
     def test_explicit_device_and_dependency_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "Explicit cuda:N"):
             candidate._require_warp_cuda("cpu")

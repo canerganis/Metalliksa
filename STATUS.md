@@ -855,3 +855,8 @@ Do not alter the existing acceptance thresholds or relabel the study as passed.
 - Next: make one frozen-input CPU/PyTorch/Warp run bind a shared CPU state, exact accepted-timestep vectors, full fields, energy and W/D/L/volume; add an independent Warp boundary-loss/internal-flux invariant; add deterministic GPU cancellation, timeout, restart and device-selection checks; then resume measured production-case mesh/time convergence and IN718 evidence acquisition. Keep execution performance claims scoped to repeated end-to-end measurements.
 
 - Başvuruda kullanılmak üzere mevcut, kanıt sınırları korunmuş metin girdileri `docs/BIGG_HANGAR_BASVURU_GIRDILERI.md` dosyasında yeniden adlandırıldı.
+
+## 2026-09-28 — Warp boundary-energy conservation
+- Warp finite-volume output now records bottom/top boundary rates separately. The step energy ledger computes loss from those explicit boundary fluxes and independently checks internal conductive-rate cancellation and total-rate consistency using floating-point-scaled tolerances; the enthalpy update and existing 1% energy-closure limit are unchanged.
+- Focused energy-ledger regression **1/1 PASS** and RTX 4060 Laptop GPU Warp CUDA pilot suite **5/5 PASS** across the four registered alloys and CPU parity checks. This is solver/software conservation evidence for the tested cases, not mesh/time convergence or experimental validation.
+- Next: make one frozen-input CPU/PyTorch/Warp triangle with identical accepted timestep vectors/full fields/energy/geometry; then close GPU cancel/timeout/restart/device-picker behavior and benchmark transfer/synchronization/compute end-to-end before optimizing.

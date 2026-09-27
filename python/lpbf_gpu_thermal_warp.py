@@ -109,6 +109,7 @@ if wp is not None:
         rate_out: wp.array(dtype=wp.float64),
         diagonal_out: wp.array(dtype=wp.float64),
         diffusivity_out: wp.array(dtype=wp.float64),
+        boundary_rate_out: wp.array(dtype=wp.float64),
     ):
         i = wp.tid()
         plane = ny * nz
@@ -116,6 +117,7 @@ if wp is not None:
         iy = (i // nz) % ny
         iz = i % nz
         rate = wp.float64(0.0)
+        boundary_rate = wp.float64(0.0)
         diagonal = wp.float64(0.0)
         if active[i] != 0:
             if ix > 0:
@@ -157,15 +159,18 @@ if wp is not None:
             if iz == 0:
                 bottom = wp.float64(2.0) * k[i] * (temperature[i] - t0) / (dx * dx)
                 rate -= bottom
+                boundary_rate -= bottom
                 diagonal += wp.float64(2.0) * k[i] / (dx * dx)
             if iz == top_index:
                 t = temperature[i]
                 surface_loss = (convection * (t - t0)
                     + emissivity * wp.float64(5.670374419e-8) * (t*t*t*t - t0*t0*t0*t0)) / dx
                 rate -= surface_loss
+                boundary_rate -= surface_loss
                 diagonal += (convection + emissivity * wp.float64(5.670374419e-8)
                     * (t+t0) * (t*t+t0*t0)) / dx
         rate_out[i] = rate
+        boundary_rate_out[i] = boundary_rate
         diagonal_out[i] = diagonal
         diffusivity_out[i] = k[i] / (rho[i] * cp[i])
 
@@ -220,6 +225,46 @@ def _launch_candidate_kernel(kernel, *, dim, inputs, device):
         wp.launch(kernel, dim=dim, inputs=inputs, device=device)
     finally:
         wp.config.use_precompiled_headers = use_pch
+
+
+def _boundary_loss_for_step(total_rate, boundary_rate, cell_volume, dt):
+    """Return explicit bottom/surface losses after checking internal FV conservation."""
+    total_rate = np.asarray(total_rate, dtype=np.float64)
+    boundary_rate = np.asarray(boundary_rate, dtype=np.float64)
+    if (total_rate.ndim != 1 or boundary_rate.shape != total_rate.shape
+            or not np.isfinite(total_rate).all() or not np.isfinite(boundary_rate).all()
+            or not math.isfinite(cell_volume) or cell_volume <= 0
+            or not math.isfinite(dt) or dt <= 0):
+        raise ValueError("Warp candidate energy ledger received invalid step rates")
+
+    conductive_rate = total_rate - boundary_rate
+    conductive_net = float(np.sum(conductive_rate, dtype=np.float64))
+    conductive_scale = float(np.sum(np.abs(conductive_rate), dtype=np.float64))
+    rate_scale = max(float(np.sum(np.abs(total_rate), dtype=np.float64)),
+                     float(np.sum(np.abs(boundary_rate), dtype=np.float64)))
+    conservation_tolerance = 64.0 * np.finfo(np.float64).eps * max(conductive_scale, rate_scale, 1e-300)
+    if abs(conductive_net) > conservation_tolerance:
+        raise ValueError("Warp candidate internal conductive rates do not cancel")
+
+    volume_dt = cell_volume * dt
+    explicit_loss = -float(np.sum(boundary_rate, dtype=np.float64)) * volume_dt
+    total_rate_loss = -float(np.sum(total_rate, dtype=np.float64)) * volume_dt
+    conductive_net_energy = conductive_net * volume_dt
+    summation_scale = volume_dt * max(
+        float(np.sum(np.abs(total_rate), dtype=np.float64)),
+        float(np.sum(np.abs(boundary_rate), dtype=np.float64)))
+    ledger_tolerance = 128.0 * np.finfo(np.float64).eps * max(
+        abs(explicit_loss), abs(total_rate_loss), abs(conductive_net_energy), summation_scale, 1e-300)
+    if abs(total_rate_loss - (explicit_loss - conductive_net_energy)) > ledger_tolerance:
+        raise ValueError("Warp candidate boundary energy ledger does not match total finite-volume rate")
+    return explicit_loss
+
+
+def _energy_closure(energy_in, energy_out, stored):
+    closure = abs(energy_in - energy_out - stored) / max(energy_in, 1e-12)
+    if not math.isfinite(closure) or closure > .01:
+        raise ValueError(f"Warp candidate energy balance failed: {closure:.3%}")
+    return closure
 
 
 def _validate_candidate(raw):
@@ -313,12 +358,14 @@ def run_warp(raw, device="cuda:0", capture_final=True, capture_pilot_state=False
     k = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     cp = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     rate = wp.zeros(cells, dtype=wp.float64, device=warp_device)
+    boundary_rate = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     diagonal = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     diffusivity = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     source = wp.zeros(cells, dtype=wp.float64, device=warp_device)
     invalid = wp.zeros(1, dtype=wp.int32, device=warp_device)
     cp_host = np.empty(cells, dtype=np.float64)
     rate_host = np.empty(cells, dtype=np.float64)
+    boundary_rate_host = np.empty(cells, dtype=np.float64)
     diagonal_host = np.empty(cells, dtype=np.float64)
     diffusivity_host = np.empty(cells, dtype=np.float64)
     min_dt = float(p["maxDt_s"])
@@ -349,11 +396,12 @@ def run_warp(raw, device="cuda:0", capture_final=True, capture_pilot_state=False
             inputs=[temperature, k, active, rho, cp, nx, ny, nz, top_index,
                     dx, t0, float(p["convection_W_m2K"]),
                     float(material["emissivity"]), cp_floor, rate, diagonal,
-                    diffusivity], device=warp_device)
-        # These four bulk transfers replace the Torch path's many elementwise
+                     diffusivity, boundary_rate], device=warp_device)
+        # These five bulk transfers replace the Torch path's many elementwise
         # launches and reductions. Source remains CPU-authoritative by design.
         cp_host[:] = cp.numpy()
         rate_host[:] = rate.numpy()
+        boundary_rate_host[:] = boundary_rate.numpy()
         diagonal_host[:] = diagonal.numpy()
         diffusivity_host[:] = diffusivity.numpy()
         wp.synchronize_device(warp_device)
@@ -398,9 +446,9 @@ def run_warp(raw, device="cuda:0", capture_final=True, capture_pilot_state=False
         min_dt = min(min_dt, dt)
         max_dt = max(max_dt, dt)
         energy_in += float(source_np.sum()) * dx**3 * dt
-        # Internal finite-volume faces cancel in the sum; the remaining net
-        # passive rate is exactly the modeled bottom plus top loss operator.
-        energy_out += -float(rate_host.sum()) * dx**3 * dt
+        # Count the modeled bottom and exposed-surface fluxes directly, while
+        # independently checking that internal face fluxes cancel each step.
+        energy_out += _boundary_loss_for_step(rate_host, boundary_rate_host, dx**3, dt)
 
         # Pull the field only for melt/tracker updates. A few comparisons are
         # deliberately on CPU to retain the existing PeakMeltTracker contract.
@@ -427,9 +475,7 @@ def run_warp(raw, device="cuda:0", capture_final=True, capture_pilot_state=False
         enthalpy_host = enthalpy.numpy()
         temperature_host = temperature.numpy()
     stored = float(np.sum(enthalpy_host)) * dx**3
-    closure = abs(energy_in - energy_out - stored) / max(energy_in, 1e-12)
-    if closure > .01:
-        raise ValueError(f"Warp candidate energy balance failed: {closure:.3%}")
+    closure = _energy_closure(energy_in, energy_out, stored)
     metrics, extraction = tracker.finish(None, step)
     metrics["peakTemperature_K"] = peak
     result = {
