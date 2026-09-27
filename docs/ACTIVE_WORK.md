@@ -3,6 +3,21 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
+Latest checkpoint: worker/capture/client package frozen, parent37Python/18TS
+tests and lint PASS; Sol independent review clean. Actual native-worker retry
+capture/cache/reopen PASS,12 fields/input/capability files,15.898s. First attempt
+cache miss is retained: editing test_lpbf_gpu_queue.py during execution changed
+the broad all-Python cache fingerprint despite identical input/capability bytes.
+No solver is live. Luna now owns only new fixed-scan-end continuation wrapper,
+reuse addendum and focused tests; original protocol/runner/coarse report stay
+immutable. Astra actual coarse admission PASS. Root integrates scoped commit.
+Permanent GPU Node archive remains disabled: next Luna package is exact-string
+identity verifier, shared local/content-store bounded reader, and pure TS
+numerical assessor; then run types/repository/import/bundle validation. Store
+save is metadata-only and must not claim field verification. Nested CPU core
+never grants GPU CPU/NIST/proxy-campaign eligibility. Freeze all numerical
+manifest sources including Warp throughout the three missing fine CPU rows.
+
 Current continuation ownership (2026-09-27):
 
 After the model-switch interruption, the previous agent handles were absent.
@@ -43,6 +58,57 @@ capture; five alternating CPU/Torch and CPU/Warp end-to-end pairs remain open.
 The five-case fixed-time protocol has not run. Refresh its implementation
 binding only before execution if covered numerical sources change again;
 hold all covered sources throughout the five-row series once it starts.
+
+Current package is committed as `4c15513`. Parent re-exported all 12 artifact
+files from committed Git objects into a new isolated directory: exact manifest
+hashes and full numerical readback PASS. Raw acceptance JSON and f64 files have
+Git attributes preserving bytes across line-ending conversion. Graft refresh
+was attempted and stopped at the known inaccessible lpbf-run-shape directory;
+use exact source fallback for uncovered/new nodes.
+
+Next active ownership: `gpu_producer_luna` owns only Python worker/capture plus
+focused tests. `gpu_review_sol` maps the current client parser rejection before
+enabling new queue output. GPU bound results must be accepted by the client
+parser in the same integration package; its old empty-artifact requirement
+would otherwise reject newly bound jobs. Astra completed the five-pair IO
+protocol: add single-backend write/read APIs plus an assembling descriptor to
+the codec, retaining the existing pair writer's validation-before-write.
+Each backend row times its own normalize/solve/capture/write/readback; pair
+assessment and overall pair wall are separate, never allocated arbitrarily
+between backends. No second CPU solve or dummy other-backend state is allowed.
+Warm-up is separate; five alternating pairs retain failures and elapsed error
+durations without replacement runs or speedup claims from failed parity.
+`gpu_producer_luna` additionally owns src/services/lpbfSimulationService.ts and
+tests/lpbf-gpu-pilot-client.test.ts, after Sol reproduced the actual bound
+result rejection. Client bound/legacy branches must reject partial/null GPU
+metadata and any top-level CPU core; preserve existing numerical identity
+guards. Only enable worker bound output coherently with this parser change.
+Warp actual-field capture task is not started (agent thread slot limit);
+finish/release current bounded work before assigning it to a Luna.
+
+Parent coarse P4 observation check completed (session4160 exit0). 20 micrometres
+at25ns:8,228 cells/14,000 final steps,25.922s;10 micrometres:65,824 cells,
+14,000 final steps,149.319s. Both selected-state clocks differ from the250us
+target by5.708e-17s within1.084e-15s; final energy error1.631e-13. Selected
+NPZ fields contain10,000 steps at250us; final row metrics are at350us. Their
+enthalpy integrals must not be compared to final stored energy. Parent field
+byte/array hashes, finite values and sequential accepted-clock replay PASS.
+This two-row observation check does not establish numerical convergence.
+The report/NPZ directory are docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json
+and docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27. Report SHA
+e35bc891d167db66e39c3ee7a24daf4f2cdbbd0a103dadf3da8bbc9efb0948a7.
+Astra approved a separate hash-bound reuse addendum and continuation wrapper,
+preserving the original five-case protocol/runner and coarse report unchanged.
+The addendum must explicitly record this execution change after coarse results
+and before fine results. Admission must recompute contours and resolved input
+identity, validate model/material/source identities and final energy closure,
+pin report/NPZ/array/protocol/harness/wrapper hashes, and retain all five unique
+cases. Only the three missing5um cases then run; no cherry-picking or replacement
+failures. All manifest sources including Warp stay frozen throughout those rows.
+Current numerical fingerprint fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c.
+No solver is live. Astra is auditing actual coarse admission; Luna finishes the
+worker/capture/client package before implementing the separate wrapper/addendum.
+Sol independently reviews that package. Root owns combined tests and commits.
 
 - User model assignment: Astra owns difficult scientific/architecture decisions;
   Sol owns bounded reviews; Luna implements code changes. Parent owns integration,

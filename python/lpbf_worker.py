@@ -300,7 +300,15 @@ def _run_in625_bareplate_job(raw, folder):
 
 def _archive_run_kind(job_type, result=None):
     if job_type == "gpu-thermal-pilot":
-        return None  # Its archive contract is intentionally unavailable.
+        contract = result.get("gpuRunContract") if isinstance(result, dict) else None
+        fields = result.get("gpuFieldArtifacts") if isinstance(result, dict) else None
+        capture = contract.get("capture") if isinstance(contract, dict) else None
+        if (isinstance(contract, dict) and contract.get("runKind") == job_type
+                and isinstance(fields, dict)
+                and isinstance(capture, dict)
+                and capture.get("contractStatus") == "gpu-pilot-v1-bound"):
+            return "gpu-thermal-pilot"
+        return None  # Legacy pilot output remains view-only.
     if job_type == IN625_BAREPLATE_JOB_TYPE:
         return "bounded-material-screening"
     if job_type == "build-job":
@@ -411,7 +419,7 @@ class Queue:
                     if not isinstance(material, dict) or "materialRevisionSha256" not in material:
                         raise ValueError("CUDA pilot material revision snapshot is required")
                     _verify_material_revision(material)
-                    enforce_gpu_pilot_result(out["result"])
+                    enforce_gpu_pilot_result(out["result"], artifact_dir=self.root/job)
                     # The pilot guard binds a result to its own settings;
                     # also bind it to the separately persisted submitted job.
                     submitted_hash = hashlib.sha256(
@@ -433,8 +441,6 @@ class Queue:
             state = self.get(job)
             if state['status'] != 'completed':
                 raise ValueError('Only completed jobs can be captured')
-            if state['result'].get('jobType') == 'gpu-thermal-pilot':
-                raise ValueError('CUDA pilot archive unavailable until the run-document contract supports its distinct backend')
             return capture_run(self.root/job, job)
 
     def archive_capture(self, job):
@@ -589,7 +595,7 @@ class Queue:
                         result = json.loads((folder/"result.json").read_text())
                         if params.get("jobType") == "gpu-thermal-pilot":
                             from lpbf_gpu_thermal import enforce_gpu_pilot_result
-                            enforce_gpu_pilot_result(result)
+                            enforce_gpu_pilot_result(result, artifact_dir=folder)
                         elif params.get("jobType") == IN625_BAREPLATE_JOB_TYPE:
                             _enforce_bareplate_result(result, params, folder)
                         else:
@@ -624,7 +630,7 @@ def main():
 
             if job_type == "gpu-thermal-pilot":
                 from lpbf_gpu_thermal import run_queued_pilot
-                result = run_queued_pilot(input_data)
+                result = run_queued_pilot(input_data, artifact_dir=folder)
             elif job_type == IN625_BAREPLATE_JOB_TYPE:
                 result = _run_in625_bareplate_job(input_data, folder)
             elif job_type == "build-job":

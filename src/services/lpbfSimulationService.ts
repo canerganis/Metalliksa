@@ -1,3 +1,6 @@
+import { parseGpuPilotArtifactDescriptor } from '../types/lpbfGpuArtifacts';
+import type { GpuPilotArtifactDescriptor } from '../types/lpbfGpuArtifacts';
+
 export type SimulationMode = "screening" | "standard" | "high-fidelity" | "calibration";
 export interface SimulationInput {
   material: string; power_W: number; speed_mm_s: number; beamDiameter_um: number;
@@ -388,7 +391,7 @@ export interface GpuPilotComparison {
   absoluteDifference_um?: number; relativeRiseL2?: number; relativeRiseMax?: number;
   reason?: string;
 }
-export interface GpuPilotResult {
+interface GpuPilotResultBase {
   schemaVersion: 1; jobType: 'gpu-thermal-pilot';
   requestedMode: 'standard'; effectiveMode: 'gpu-pilot';
   validationStatus: 'unvalidated'; productionReady: false; label: string;
@@ -412,8 +415,13 @@ export interface GpuPilotResult {
       sourceIntegration: 'cpu' | `cuda:${number}`; sourceTimestepLimiter?: 'cpu' | `cuda:${number}`;
       synchronizedAfterSolve: true };
     runtime_s?: number };
-  artifacts: [];
 }
+export type GpuPilotArtifactManifestEntry = { path: string; size_bytes: number; sha256: string };
+export type GpuPilotResult = GpuPilotResultBase & (
+  | { artifacts: []; gpuRunContract?: never; gpuFieldArtifacts?: never }
+  | { artifacts: GpuPilotArtifactManifestEntry[]; gpuRunContract: Record<string, unknown>;
+      gpuFieldArtifacts: GpuPilotArtifactDescriptor }
+);
 export interface GpuPilotJob {
   id: string;
   status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'timed_out';
@@ -440,6 +448,95 @@ const gpuSourceDevicesMatch = (solver: unknown, evidence: unknown, selected: unk
     && evidence.sourceIntegration === selected && evidence.sourceTimestepLimiter === selected;
 };
 
+function exactKeys(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
+  return object(value) && Object.keys(value).length === keys.length
+    && keys.every(key => Object.hasOwn(value, key));
+}
+
+function sameJsonValue(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length
+      && left.every((item, index) => sameJsonValue(item, right[index]));
+  }
+  if (!object(left) || !object(right)) return false;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length && leftKeys.every(key =>
+    Object.hasOwn(right, key) && sameJsonValue(left[key], right[key]));
+}
+
+function validateGpuBoundArchive(result: Record<string, unknown>): void {
+  const fail = () => { throw new Error('Invalid bound CUDA pilot archive contract'); };
+  if (!Object.hasOwn(result, 'gpuRunContract') || !Object.hasOwn(result, 'gpuFieldArtifacts')
+    || 'coreContract' in result || !Array.isArray(result.artifacts)
+    || result.artifacts.length > 10_000) return fail();
+  const contract = result.gpuRunContract;
+  if (!exactKeys(contract, ['schemaVersion', 'runKind', 'capture', 'serializedInputs', 'hashes'])
+    || contract.schemaVersion !== 1 || contract.runKind !== 'gpu-thermal-pilot') return fail();
+  const capture = contract.capture;
+  const serialized = contract.serializedInputs;
+  const hashes = contract.hashes;
+  if (!exactKeys(capture, ['contractStatus', 'modelId', 'backend', 'device', 'dtype'])
+    || capture.contractStatus !== 'gpu-pilot-v1-bound'
+    || capture.modelId !== 'stationary-enthalpy-conduction-layer-conforming-v1'
+    || !object(result.settings) || capture.backend !== result.settings.backend
+    || capture.device !== result.settings.backend
+    || capture.dtype !== 'float64'
+    || !exactKeys(serialized, ['requestJson', 'materialJson', 'cpuInputJson', 'cpuResolvedSettingsJson'])
+    || !exactKeys(hashes, ['requestHash', 'materialHash', 'cpuInputHash', 'cpuResolvedSettingsHash', 'implementationHash'])
+    || Object.values(serialized).some(value => typeof value !== 'string')
+    || Object.values(hashes).some(value => typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value))) return fail();
+  if (!object(result.settings) || !object(result.material) || !object(result.solver)
+    || !object(result.provenance) || result.solver.modelId !== capture.modelId
+    || result.solver.dtype !== capture.dtype || result.provenance.implementationHash !== hashes.implementationHash
+    || result.provenance.inputHash !== hashes.requestHash) return fail();
+
+  let request: unknown; let material: unknown; let cpuInput: unknown; let resolved: unknown;
+  try {
+    request = JSON.parse(serialized.requestJson as string);
+    material = JSON.parse(serialized.materialJson as string);
+    cpuInput = JSON.parse(serialized.cpuInputJson as string);
+    resolved = JSON.parse(serialized.cpuResolvedSettingsJson as string);
+  } catch { return fail(); }
+  const expectedCpuInput = { ...result.settings };
+  delete expectedCpuInput.jobType;
+  expectedCpuInput.backend = 'reference';
+  if (!sameJsonValue(request, result.settings) || !sameJsonValue(material, result.material)
+    || !sameJsonValue(cpuInput, expectedCpuInput) || !sameJsonValue(resolved, cpuInput)) return fail();
+
+  let descriptor: GpuPilotArtifactDescriptor;
+  try { descriptor = parseGpuPilotArtifactDescriptor(result.gpuFieldArtifacts); }
+  catch { return fail(); }
+  const expected = new Map<string, { size_bytes: number; sha256: string }>();
+  for (const backend of ['cpu', 'gpu'] as const) {
+    for (const ref of Object.values(descriptor.states[backend].fields)) {
+      if (expected.has(ref.path)) return fail();
+      expected.set(ref.path, { size_bytes: ref.size_bytes, sha256: ref.sha256 });
+    }
+  }
+  const found = new Set<string>();
+  const foundExact = new Set<string>();
+  let totalBytes = 0;
+  for (const raw of result.artifacts) {
+    if (!exactKeys(raw, ['path', 'size_bytes', 'sha256']) || typeof raw.path !== 'string'
+      || !raw.path || raw.path.length > 512 || /[\\:\u0000-\u001f]/.test(raw.path)
+      || raw.path.split('/').some(part => !part || part === '.' || part === '..' || /[. ]$/.test(part)
+        || /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\.|$)/i.test(part))
+      || typeof raw.size_bytes !== 'number' || !Number.isSafeInteger(raw.size_bytes) || raw.size_bytes < 0
+      || typeof raw.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(raw.sha256)) return fail();
+    const key = raw.path.toLocaleLowerCase('en-US');
+    if (found.has(key)) return fail();
+    found.add(key);
+    foundExact.add(raw.path);
+    totalBytes += raw.size_bytes;
+    if (!Number.isSafeInteger(totalBytes) || totalBytes > 256 * 1024 * 1024) return fail();
+    const field = expected.get(raw.path);
+    if (field && (field.size_bytes !== raw.size_bytes || field.sha256 !== raw.sha256)) return fail();
+  }
+  if ([...expected.keys()].some(path => !foundExact.has(path))) return fail();
+}
+
 export function parseGpuPilotJob(value: unknown): GpuPilotJob {
   if (!object(value) || !finiteTree(value) || typeof value.id !== 'string' || !/^[a-f0-9]{32}$/.test(value.id)
     || !['queued', 'running', 'completed', 'failed', 'cancelled', 'timed_out'].includes(String(value.status))
@@ -455,6 +552,14 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     return value as unknown as GpuPilotJob;
   }
   const r = value.result;
+  if (!object(r) || 'coreContract' in r) throw new Error('Invalid CUDA pilot result identity');
+  const hasBoundContract = Object.hasOwn(r, 'gpuRunContract');
+  const hasBoundFields = Object.hasOwn(r, 'gpuFieldArtifacts');
+  if (hasBoundContract !== hasBoundFields
+    || (hasBoundContract && (r.gpuRunContract === null || r.gpuFieldArtifacts === null))) {
+    throw new Error('Invalid bound CUDA pilot archive contract');
+  }
+  if (hasBoundContract) validateGpuBoundArchive(r);
   if (!object(r) || r.schemaVersion !== 1 || r.jobType !== 'gpu-thermal-pilot'
     || r.requestedMode !== 'standard' || r.effectiveMode !== 'gpu-pilot'
     || r.validationStatus !== 'unvalidated' || r.productionReady !== false
@@ -499,7 +604,7 @@ export function parseGpuPilotJob(value: unknown): GpuPilotJob {
     || !object(r.gpuPilot.cpu.material)
     || r.gpuPilot.cpu.material.materialRevisionSha256 !== r.material.materialRevisionSha256
     || !object(r.gpuPilot.targets) || !object(r.gpuPilot.comparisons)
-    || !Array.isArray(r.artifacts) || r.artifacts.length !== 0) {
+    || !Array.isArray(r.artifacts) || (!hasBoundContract && r.artifacts.length !== 0)) {
     throw new Error('Invalid CUDA pilot result identity');
   }
   checkClosure(r.energyBalance, ['input_J', 'losses_J', 'stored_J'], .01);

@@ -1,3 +1,69 @@
+## 2026-09-27 — Bound GPU worker, capture and client integration
+
+Worker dispatch now writes actual same-run fields, validates local bytes and
+numerical consistency during completion/read/cache/capture, and preserves the
+distinct gpu-thermal-pilot / gpu-pilot-v1-bound classification. Capture returns
+the original Python request/material JSON strings. Legacy pilots remain view-only.
+The client accepts bound manifests and retains a separate legacy union, rejects
+partial/null contracts and top-level CPU cores, and binds exact-case descriptor
+refs to manifests. Node permanent repository/bundle and archive UI integration
+remain pending; this package does not enable the complete persistence workflow.
+
+Parent combined Python capture/queue/producer/numerics37/37 PASS, no skips,
+55.125s, including actual CUDA child-worker execution. An initial37-test run
+had one obsolete archive-unavailable assertion; it was updated for the intended
+new contract before the passing rerun. Capture's existing IN625 fixture revision
+was corrected from test to its supported1; no alloy model/gate changed.
+Parent client/API/panel/descriptor/bounded-reader18/18 PASS, no skips. TypeScript
+lint PASS. Sol independent client10-case and worker/capture4-scenario virtual
+review PASS, including rehashed T rejection and submitted-input isolation.
+
+Actual native worker acceptance retry:job5907c252d0f44fce978eb506a5613d3a,
+12 files,1,210 cells/934 steps. Byte/numeric capture, same-input cache hit,
+queue close/reopen, and exact capture readback PASS. Report
+docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27.json,
+SHA256:97514aa9adc45b41ff397ce54f7d256554d65ce8db2b384c330d720fdb9870b0.
+Numerical fingerprint fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c
+remained unchanged.15.898s is one acceptance duration, not speedup evidence.
+
+The first native attempt is retained separately, report SHA256
+c4cac69eb9f9861909d920bdec29ee88c47a36c4c5c0c2be67249a5ac1521111:
+fields/capture pass, cache miss. Input/capability bytes were identical; a test
+file changed between submissions. The current cache fingerprint covers all
+Python files, including tests, so development edits invalidate cache identity.
+The retry froze those sources. This is an observed development invalidation,
+not an accepted throughput result or an experimentally validated prediction.
+
+## 2026-09-27 — Two coarse fixed-time CPU observations and reuse admission
+
+The separate observation check completed two model-generated reference CPU
+rows at20/10 micrometres and25ns. These are thermal model outputs, not
+measurements, and two mesh levels do not establish convergence. The selected
+first scan-end is nominal250us/10,000 accepted steps; final energy and metrics
+are at350us/14,000 steps. Selected H fields are not compared with final energy.
+
+20um:8,228 cells,25.922s, liquidus contour W/D72.4624557588048 /
+29.63404383872775um,32 sample cells/60 crossings.10um:65,824 cells,149.319s,
+W/D74.36212556233751 /33.33499926313726um,278 cells/250 crossings.
+Both clocks differ from target by5.708324438136181e-17s within the existing
+1.0842021724855044e-15s roundoff bound. Final energy relative error is
+1.6308683205074085e-13 for both rows.
+
+Parent byte/array hashes, finite fields and sequential dt replay PASS. Independent
+Astra source-bound admission audit PASS: exact NPZ contours and full observation
+metadata recompute; frozen scenario plus each mesh/dt reconstructs saved input
+hashes; material/model identities, final energy, original protocol/scenario/
+runner/observer/assessor/contour hashes and before/after fingerprint match.
+Fingerprint:fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c.
+Report:docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json,
+SHA256:e35bc891d167db66e39c3ee7a24daf4f2cdbbd0a103dadf3da8bbc9efb0948a7.
+Actual NPZ files are in the same prefix's FIELD directory.
+
+A separate reuse addendum/continuation wrapper is being prepared after these
+coarse results and before fine results. The original protocol, runner and report
+remain unchanged. No missing5um case has run. Numerical convergence and
+experimental validity remain unvalidated.
+
 ## 2026-09-27 — Same-run CPU/CUDA archive numerical integrity
 
 The opt-in GPU producer now binds exact Python request/material/CPU-input and

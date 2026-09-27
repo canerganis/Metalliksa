@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { parseGpuPilotJob, parseSimulationJob, gpuPilotApi, buildGpuPilotInput } from '../src/services/lpbfSimulationService';
 
@@ -71,6 +72,8 @@ const completed = {
   },
 };
 const clone = () => structuredClone(completed);
+const boundArchive = JSON.parse(readFileSync(new URL('../docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27/result.json', import.meta.url), 'utf8'));
+const boundClone = () => ({ ...clone(), result: structuredClone(boundArchive) });
 
 test('GPU pilot has its own parser and cannot be presented as standard LPBF evidence', () => {
   assert.equal(parseGpuPilotJob(clone()).result?.gpuPilot.status, 'pass');
@@ -83,6 +86,39 @@ test('GPU pilot has its own parser and cannot be presented as standard LPBF evid
   assert.throws(() => parseGpuPilotJob(movedTarget), /frozen parity targets/);
   const fakeExperiment = clone(); fakeExperiment.result.gpuPilot.experimentalValidation = true;
   assert.throws(() => parseGpuPilotJob(fakeExperiment), /identity/);
+});
+
+test('GPU client accepts the versioned bound archive while keeping its CPU core nested', () => {
+  const response = boundClone();
+  assert.equal(parseGpuPilotJob(response).result?.gpuRunContract?.runKind, 'gpu-thermal-pilot');
+  assert.equal(parseGpuPilotJob(response).result?.gpuFieldArtifacts?.kind, 'lpbf-final-field-parity-evidence');
+  assert.throws(() => parseSimulationJob(response));
+  assert.equal(parseGpuPilotJob(clone()).result?.artifacts.length, 0);
+});
+
+test('GPU client rejects partial, malformed, or detached bound archive metadata', () => {
+  const bad: Array<(response: any) => void> = [
+    response => { response.result.gpuRunContract = null; },
+    response => { delete response.result.gpuFieldArtifacts; },
+    response => { response.result.coreContract = {}; },
+    response => { response.result.gpuRunContract.capture.dtype = 'float32'; },
+    response => { response.result.gpuRunContract.hashes.implementationHash = '0'.repeat(64); },
+    response => { response.result.gpuRunContract.hashes.requestHash = '0'.repeat(64); },
+    response => { response.result.gpuRunContract.hashes.requestHash = 'bad'; },
+    response => { response.result.gpuRunContract.serializedInputs.requestJson = '{"changed":true}'; },
+    response => { response.result.artifacts = response.result.artifacts.filter((item: any) => !item.path.includes('cpu-coordinates')); },
+    response => { response.result.artifacts.push({ ...response.result.artifacts[0], path: '../escape.bin' }); },
+    response => { response.result.artifacts.push({ ...response.result.artifacts[0], path: 'extra\u0000.json' }); },
+    response => {
+      const entry = response.result.artifacts.find((item: any) => item.path === 'gpu-pilot/cpu-temperature_K.f64le.bin');
+      entry.path = entry.path.toUpperCase(); entry.sha256 = '0'.repeat(64);
+    },
+    response => { response.result.gpuFieldArtifacts.states.gpu.fields.temperature_K.sha256 = '0'.repeat(64); },
+  ];
+  for (const change of bad) {
+    const response = boundClone(); change(response);
+    assert.throws(() => parseGpuPilotJob(response));
+  }
 });
 
 test('GPU pilot parser binds CPU or selected CUDA source and limiter devices', () => {

@@ -153,7 +153,7 @@ class CaptureTests(unittest.TestCase):
             'validationStatus': 'unvalidated-literature-model-screening', 'productionReady': False,
             'settings': settings, 'material': in625_lpbf_thermal_snapshot(),
             'solver': {'id': 'in625-bareplate-field-v1', 'modelId': 'in625-bareplate-enthalpy-conduction-v1',
-                       'revision': 'test', 'actualBackend': 'cpu'},
+                       'revision': '1', 'actualBackend': 'cpu'},
             'metrics': {'cells': 8, 'peakTemperature_K': 298.15, 'finalTime_s': 1e-8},
             'energyBalance': {'input_J': 0.0, 'losses_J': 0.0, 'stored_J': 0.0, 'relativeError': 0.0},
             'field': {'artifact': field_name, 'shapeXYZ': [2, 2, 2], 'dtype': 'float64',

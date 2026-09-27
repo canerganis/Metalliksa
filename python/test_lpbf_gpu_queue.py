@@ -179,8 +179,19 @@ class GpuQueue(unittest.TestCase):
                 self.assertEqual(result["gpuPilot"]["comparisons"]["finalTemperatureField"]["status"], "pass")
                 self.assertFalse(result["gpuPilot"]["experimentalValidation"])
                 self.assertTrue(result["provenance"]["deviceEvidence"]["synchronizedAfterSolve"])
-                with self.assertRaisesRegex(ValueError, "archive unavailable"):
-                    queue.capture(submitted["id"])
+                captured = queue.capture(submitted["id"])
+                archived = json.loads(captured["resultJson"])
+                self.assertEqual(captured["contractStatus"], "gpu-pilot-v1-bound")
+                self.assertEqual(captured["runKind"], "gpu-thermal-pilot")
+                self.assertEqual(captured["inputJson"], result["gpuRunContract"]["serializedInputs"]["requestJson"])
+                self.assertEqual(captured["materialJson"], result["gpuRunContract"]["serializedInputs"]["materialJson"])
+                self.assertNotIn("coreContract", archived)
+                manifest = {item["path"]: item for item in archived["artifacts"]}
+                for backend in ("cpu", "gpu"):
+                    for field in archived["gpuFieldArtifacts"]["states"][backend]["fields"].values():
+                        self.assertIn(field["path"], manifest)
+                        self.assertEqual(manifest[field["path"]]["size_bytes"], field["size_bytes"])
+                        self.assertEqual(manifest[field["path"]]["sha256"], field["sha256"])
                 tampered = copy.deepcopy(result)
                 tampered["solver"]["actualBackend"] = "numpy-reference"
                 with self.assertRaises(ValueError):

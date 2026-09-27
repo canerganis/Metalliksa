@@ -1,0 +1,22 @@
+{
+  "status": "failed",
+  "stage": "same-request-cache-check",
+  "reason": "different cache keys; cache fingerprint includes all Python files changed during acceptance",
+  "jobs": [
+    [
+      "8508f5e9060845eb881f62bd5cd83a69",
+      "completed",
+      1790521827.7868173,
+      "bc3cc9d5628c68115543fb24af9de9c3bd8a0abea3bca3338fa16bc01a3715ac"
+    ],
+    [
+      "f4b05308658d47ceb104aec5dfd9d32e",
+      "queued",
+      1790521842.7170124,
+      "77a6a9f39d23f101ac37462506a4beb5d64fc1a46b6f82011528b0f6a04a351b"
+    ]
+  ],
+  "inputBytesEqual": true,
+  "capsBytesEqual": true,
+  "scope": "Development source freeze failure; no throughput or complete workflow claim"
+}

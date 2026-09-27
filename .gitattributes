@@ -1,4 +1,7 @@
 /data/benchmark/nist-mds2-2923-in718/official/2923_README.txt -text whitespace=-blank-at-eol,-blank-at-eof
 /data/benchmark/nist-mds2-2923-in718/official/manifest.json -text
 /docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27/*.npz binary
 *.f64le.bin binary

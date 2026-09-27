@@ -12,7 +12,7 @@ from lpbf_evidence import enforce_thermal_balances
 MAX_JSON_BYTES = 16 * 1024 * 1024
 EXCLUDED = {'result.json', 'result.tmp', 'progress.log'}
 RUN_KINDS = {'analytical-screening', 'build-screening', 'transient-thermal',
-             'bounded-material-screening', 'legacy-unspecified'}
+             'bounded-material-screening', 'gpu-thermal-pilot', 'legacy-unspecified'}
 
 
 def _validate_bounded_material_screening(result):
@@ -146,6 +146,20 @@ def capture_run(folder, job_id):
     if run_kind is not None and (not isinstance(run_kind, str) or run_kind not in RUN_KINDS):
         raise ValueError('Invalid captured run kind')
     settings = result.get('settings')
+    gpu_identity = (run_kind == 'gpu-thermal-pilot'
+                    or (result.get('jobType') == 'gpu-thermal-pilot'
+                        and isinstance(settings, dict)
+                        and settings.get('jobType') == 'gpu-thermal-pilot'))
+    if gpu_identity:
+        if (not isinstance(settings, dict) or settings.get('jobType') != 'gpu-thermal-pilot'
+                or result.get('jobType') != 'gpu-thermal-pilot'
+                or run_kind != 'gpu-thermal-pilot'):
+            raise ValueError('CUDA pilot capture requires its distinct bound archive contract')
+        from lpbf_gpu_thermal import enforce_gpu_pilot_result
+        enforce_gpu_pilot_result(result, artifact_dir=folder)
+    elif run_kind == 'gpu-thermal-pilot':
+        raise ValueError('GPU pilot classification conflicts with captured settings')
+    is_gpu_pilot = gpu_identity
     if (isinstance(settings, dict) and settings.get('jobType') == 'in625-bareplate-field'
             and run_kind != 'bounded-material-screening'):
         raise ValueError('IN625 bare-plate fields require bounded material-screening classification')
@@ -160,7 +174,7 @@ def capture_run(folder, job_id):
             or settings.get('jobType') not in (None, 'transient-thermal')
             or _is_analytical_screening(result)):
         raise ValueError('Transient thermal classification conflicts with captured settings')
-    if run_kind != 'bounded-material-screening':
+    if run_kind not in ('bounded-material-screening', 'gpu-thermal-pilot'):
         enforce_thermal_balances(result)
     refs = result.get('artifacts')
     if not isinstance(refs, list) or len(refs) > 10000:
@@ -208,7 +222,16 @@ def capture_run(folder, job_id):
     encoded(result)
     if result_path.read_bytes().decode('utf-8') != result_json:
         raise ValueError('Capture result changed during verification')
+    if is_gpu_pilot:
+        inputs = result['gpuRunContract']['serializedInputs']
+        input_json = inputs['requestJson']
+        material_json = inputs['materialJson']
+        contract_status = 'gpu-pilot-v1-bound'
+    else:
+        input_json = encoded(result['settings'])
+        material_json = encoded(result['material'])
+        contract_status = 'core-v1-bound' if 'coreContract' in result else 'legacy-unbound'
     return dict(schemaVersion=1, jobId=job_id, resultJson=result_json,
-                inputJson=encoded(result['settings']), materialJson=encoded(result['material']),
-                contractStatus='core-v1-bound' if 'coreContract' in result else 'legacy-unbound',
+                inputJson=input_json, materialJson=material_json,
+                contractStatus=contract_status,
                 **({'runKind': run_kind} if run_kind is not None else {}))

@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "scope": "Two coarse fixed scan-end observation checks; insufficient levels for convergence",
+  "experimentalValidation": false,
+  "convergenceStatus": "unvalidated",
+  "protocolSha256": "a384c0e0a72aa8fe1bf3a5543d70c0558971a5a9a8dcea45550c034c58cd93e1",
+  "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "runnerSha256": "1e70784260b2987bb13378223e2832a32e3bbb804d27c9d764a59d6235c68021",
+  "runnerText": "\"\"\"Two coarse P4 observation checks before the separate five-case series.\"\"\"\nimport copy\nimport hashlib\nimport json\nfrom pathlib import Path\nimport subprocess\nimport sys\nimport time\n\nROOT = Path(__file__).resolve().parents[1]\nsys.path.insert(0, str(ROOT / \"python\"))\nfrom lpbf_simulation import implementation_fingerprint, run\nfrom lpbf_peak import interpolated_peak_melt_pool\nfrom lpbf_fixed_scan_end_observation import write_selected_state_artifact\nfrom run_lpbf_fixed_scan_end_convergence import preflight, _row_from_result\n\nREPORT = ROOT / \"docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json\"\nFIELDS = ROOT / \"docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27\"\nprotocol, scenario, specs, frozen, _, _, _, protocol_sha, _ = preflight()\nif REPORT.exists() or FIELDS.exists():\n    raise ValueError(\"Preserve existing observation-check evidence\")\nFIELDS.mkdir()\nreport = {\"schemaVersion\": 1,\n          \"scope\": \"Two coarse fixed scan-end observation checks; insufficient levels for convergence\",\n          \"experimentalValidation\": False, \"convergenceStatus\": \"unvalidated\",\n          \"protocolSha256\": protocol_sha, \"implementationHash\": frozen,\n          \"runnerSha256\": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),\n          \"runnerText\": Path(__file__).read_text(encoding=\"utf-8\"),\n          \"executionHead\": subprocess.run([\"git\", \"rev-parse\", \"HEAD\"], cwd=ROOT,\n                                          capture_output=True, text=True, check=True).stdout.strip(),\n          \"rows\": [], \"stage\": \"running\"}\n\n\ndef save():\n    REPORT.write_text(json.dumps(report, indent=2, allow_nan=False) + \"\\n\", encoding=\"utf-8\")\n\n\nsave()\nfor spec in specs:\n    if spec[\"mesh_um\"] not in (20, 10):\n        continue\n    payload = copy.deepcopy(scenario)\n    payload.update(mesh_um=spec[\"mesh_um\"], maxDt_s=spec[\"maxDt_s\"])\n    before = implementation_fingerprint()\n    assert before == frozen\n    captured = []\n    started = time.perf_counter()\n    result = run(payload, selected_time_observer=captured.append,\n                 selected_time_s=protocol[\"targetTime_s\"])\n    duration = time.perf_counter() - started\n    after = implementation_fingerprint()\n    assert len(captured) == 1 and after == before\n    state = captured[0]\n    contour = interpolated_peak_melt_pool(\n        state[\"coordinates_m\"], state[\"temperature_K\"], protocol[\"surfaceZ_m\"],\n        payload[\"scanAngle_deg\"], result[\"discretization\"][\"mesh_m\"],\n        result[\"material\"][\"liquidus_K\"])\n    contour.update(temporalSelection=protocol[\"temporalSelection\"],\n                   observationOperator=protocol[\"contourOperator\"],\n                   targetTime_s=state[\"target_time_s\"], actualTime_s=state[\"time_s\"],\n                   targetMinusActualTime_s=state[\"time_difference_s\"],\n                   roundoffTolerance_s=state[\"roundoff_tolerance_s\"])\n    artifact = write_selected_state_artifact(state, FIELDS / f\"mesh-{spec['mesh_um']}um.npz\")\n    row = _row_from_result(spec, result, contour, artifact, before, after, frozen)\n    row[\"wallSeconds\"] = duration\n    report[\"rows\"].append(row)\n    save()\n    print(json.dumps({\"mesh_um\": spec[\"mesh_um\"], \"cells\": row[\"cells\"],\n                      \"steps\": row[\"steps\"], \"contour\": contour,\n                      \"energyError\": row[\"energyBalance\"][\"relativeError\"],\n                      \"wall_s\": duration}), flush=True)\nreport[\"stage\"] = \"completed\"\nreport[\"implementationFingerprintAtEnd\"] = implementation_fingerprint()\nassert report[\"implementationFingerprintAtEnd\"] == frozen\nsave()\n",
+  "executionHead": "4c155132ffa0141ff31f6eb0b865d718e2f9a72d",
+  "rows": [
+    {
+      "axes": [
+        "mesh"
+      ],
+      "requested": {
+        "mesh_um": 20,
+        "maxDt_s": 2.5e-08
+      },
+      "mesh_um": 20,
+      "requestedMaxDt_s": 2.5e-08,
+      "status": "completed",
+      "actualMesh_m": 1.9999999999999998e-05,
+      "cells": 8228,
+      "actualMeanDt_s": 2.4999999999999996e-08,
+      "actualMinimumDt_s": 2.5e-08,
+      "steps": 14000,
+      "metrics": {
+        "length_um": 199.99999999999994,
+        "width_um": 80.00000000000001,
+        "depth_um": 19.99999999999997,
+        "volume_um3": 255999.9999999999,
+        "crossSectionArea_um2": 1599.9999999999995,
+        "peakTemperature_K": 2793.7367969127454,
+        "thermalGradient_K_m": 23914878.345892448,
+        "solidificationRate_m_s": 0.047437502889335854,
+        "coolingRate_K_s": 1099626.4916957442,
+        "keyholeDepth_um": null,
+        "recoilPressure_Pa": null,
+        "marangoniNumber": 1292.5141657700246,
+        "pecletNumber": 12.002206896551726,
+        "aspectRatio": 0.2499999999999996,
+        "trackOverlapRatio": null,
+        "remeltingRatio": 0.0
+      },
+      "historicalPeakSelection": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.00023079999999994644,
+        "peakMeltStep": 9232,
+        "peakMeltCellCount": 32,
+        "equalMaximumEndpointCount": 2349,
+        "firstEqualMaximumTime_s": 0.00023079999999994644,
+        "lastEqualMaximumTime_s": 0.00029127499999996625
+      },
+      "historicalPeakContour": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "accepted-step-molten-volume-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 72.3674593673221,
+        "depth_um": 29.6104959575283,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 32,
+        "crossingCount": 60
+      },
+      "fixedScanEndObservation": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "first-scan-end-accepted-state-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 72.4624557588048,
+        "depth_um": 29.63404383872775,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 32,
+        "crossingCount": 60,
+        "observationOperator": "fixed-scan-end-liquidus-cell-edge-contour-v1",
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999994287,
+        "targetMinusActualTime_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15
+      },
+      "fieldArtifact": {
+        "path": "mesh-20um.npz",
+        "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+        "format": "numpy-npz-compressed-little-endian-float64-v1",
+        "cells": 8228,
+        "steps": 10000,
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999994287,
+        "schedulerTime_s": 0.00024999999999994287,
+        "targetMinusActualTime_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15,
+        "uncompressedBytes": 474944,
+        "byteSize": 80745,
+        "sha256": "20aeca654e2637ea08fc880912508fd5fdbc3854ff794a586c4e54f8f4c7a098",
+        "fieldSha256": {
+          "coordinates_m": "fc3b45a7afab6c49d1b4e7178b34e2d446e5471a6a1662bb7ed3ac7c46978ff8",
+          "temperature_K": "18840efcad04b64ef046026eb3dfe2a45da18ab3a2b8cd4873093d3064bb3ec5",
+          "enthalpy_J_m3": "b995eebfa2cfed4949910bbcfc5cb99513c53bf6fc668224f2ee78cd71a10042",
+          "density_kg_m3": "3c64b9a809a6c2916891ee2a8028297fd3c0edff50d66edcc462cbba5ba29fb4",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+        }
+      },
+      "energyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.2896745805830204e-06,
+        "stored_J": 0.003798710325419418,
+        "relativeError": 1.6308683205074085e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "provenance": {
+        "inputHash": "98ba7cb77c7f3c71c0a402c66897070232831bfed6b640cb4737f2123fec767a",
+        "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c"
+      },
+      "implementationIntegrity": {
+        "before": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "recorded": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "after": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "stable": true
+      },
+      "wallSeconds": 25.922246799993445
+    },
+    {
+      "axes": [
+        "mesh"
+      ],
+      "requested": {
+        "mesh_um": 10,
+        "maxDt_s": 2.5e-08
+      },
+      "mesh_um": 10,
+      "requestedMaxDt_s": 2.5e-08,
+      "status": "completed",
+      "actualMesh_m": 9.999999999999999e-06,
+      "cells": 65824,
+      "actualMeanDt_s": 2.4999999999999996e-08,
+      "actualMinimumDt_s": 2.5e-08,
+      "steps": 14000,
+      "metrics": {
+        "length_um": 189.99999999999997,
+        "width_um": 79.99999999999997,
+        "depth_um": 30.00000000000001,
+        "volume_um3": 279999.99999999994,
+        "crossSectionArea_um2": 1999.9999999999998,
+        "peakTemperature_K": 2615.0308261508067,
+        "thermalGradient_K_m": 12966005.558277138,
+        "solidificationRate_m_s": 0.15536957425074996,
+        "coolingRate_K_s": 948488.0314650821,
+        "keyholeDepth_um": null,
+        "recoilPressure_Pa": null,
+        "marangoniNumber": 1097.5263444305776,
+        "pecletNumber": 12.00220689655172,
+        "aspectRatio": 0.3750000000000003,
+        "trackOverlapRatio": null,
+        "remeltingRatio": 0.0
+      },
+      "historicalPeakSelection": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.0002471999999999413,
+        "peakMeltStep": 9888,
+        "peakMeltCellCount": 280,
+        "equalMaximumEndpointCount": 190,
+        "firstEqualMaximumTime_s": 0.0002471999999999413,
+        "lastEqualMaximumTime_s": 0.000259049999999948
+      },
+      "historicalPeakContour": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "accepted-step-molten-volume-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 74.38855895228527,
+        "depth_um": 33.28006394621963,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 280,
+        "crossingCount": 254
+      },
+      "fixedScanEndObservation": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "first-scan-end-accepted-state-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 74.36212556233751,
+        "depth_um": 33.33499926313726,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 278,
+        "crossingCount": 250,
+        "observationOperator": "fixed-scan-end-liquidus-cell-edge-contour-v1",
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999994287,
+        "targetMinusActualTime_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15
+      },
+      "fieldArtifact": {
+        "path": "mesh-10um.npz",
+        "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+        "format": "numpy-npz-compressed-little-endian-float64-v1",
+        "cells": 65824,
+        "steps": 10000,
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999994287,
+        "schedulerTime_s": 0.00024999999999994287,
+        "targetMinusActualTime_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15,
+        "uncompressedBytes": 3239552,
+        "byteSize": 624453,
+        "sha256": "5224fda93d8b820a19100d3d8b742e164a7e74fd8cae360a9316645477a3af7b",
+        "fieldSha256": {
+          "coordinates_m": "c10b0493899e1eacb6885dfe730fff8c7205686816cab1b81ea864d305c48470",
+          "temperature_K": "5a8c4f84b7998d16281a4081c2070ce09924bcae0bb258143526cb1e75ff0ca3",
+          "enthalpy_J_m3": "903767357f8f174e3ab440f7b7b5311c2461d9199a4c731b021f5bea26e3916a",
+          "density_kg_m3": "bde223ae6c48935778f9f78ee674256d37f19523dd9204b5fe05b55a2617323f",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+        }
+      },
+      "energyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.1282380218262212e-06,
+        "stored_J": 0.0037988717619781747,
+        "relativeError": 1.6308683205074085e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "provenance": {
+        "inputHash": "ae5b179d5260e8356c993f066d92e329ac3913a70f46153dbe3ec9df17eb81a1",
+        "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c"
+      },
+      "implementationIntegrity": {
+        "before": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "recorded": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "after": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+        "stable": true
+      },
+      "wallSeconds": 149.31851520000782
+    }
+  ],
+  "stage": "completed",
+  "implementationFingerprintAtEnd": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c"
+}
