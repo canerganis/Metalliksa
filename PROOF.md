@@ -1,3 +1,22 @@
+## 2026-09-27 — IN625 sources in browser portable bundle (software evidence)
+
+The later real-browser acceptance closes the property-source download/upload
+gap noted below. Bundle `d1d4ac888d9643f1b1601e2d78d9abc5` includes one archived
+CPU run, three source revisions (NIST plus both IN625 sources), and six source
+artifacts. The browser downloaded 18,985,472 bytes; SHA-256
+`9a0da663dec3d90596c7cd55eff7913fe13bdaf12dc5ebe4f59420f2566ca859`.
+All 76 tar members matched the server export bytes. The same downloaded file
+was chosen through the browser picker, uploaded, verified, and restored with
+Enter to isolated archive `f1e9d4364fc94ee28f2f2e9c7280c244`.
+
+All 72 payload files (66 run and 6 source) are byte-identical after restore;
+every row in both SQLite databases is logically identical. Metadata containers
+were rebuilt, so this is not a claim that all restored container bytes match.
+After full page reload the restored ID, run, source binding and unvalidated
+model status reappeared. The source records' three revisions also survive in
+the restored database; dedicated browsing of restored source documents is not
+yet exposed by this run-view UI. No model or material admission changed.
+
 ## 2026-09-27 — Worker readiness and recovery (software evidence)
 
 Readiness now has one shared, bounded 60 s background startup; HTTP callers
