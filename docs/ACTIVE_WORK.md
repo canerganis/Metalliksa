@@ -2168,3 +2168,12 @@ read-only CPU audit found duplicate harmonic face-conductivity work in
 `conduction_rate` and `conduction_diagonal`; existing timings do not establish
 a P4 speedup. Keep the live solver fingerprint fixed until session `68021`
 finishes, then profile and compare numerical parity before a performance edit.
+
+## Active LPBF CUDA lifecycle and validation continuation (2026-09-28)
+
+- Root owns integration, scientific acceptance gates, STATUS/PROOF and commits. Preserve all unrelated dirty files and existing user work.
+- `/root/sol_workflow_audit` (completed, read-only) audited Queue cancellation, timeout, child kill, startup recovery, race behavior and existing GPU-specific tests; concrete gaps were reported to root.
+- `/root/astra_science` (completed, read-only) audited convergence and independent IN718 measurement evidence gates; no solver run or evidence relabeling was proposed.
+- `/root/sol_nvidia` (completed, read-only) checked actual GPU/benchmark evidence and Nsight availability; no code or tests were changed.
+- `/root/luna_source_ui` owns only `python/lpbf_worker.py` and new/focused `python/test_lpbf_worker_lifecycle.py` (existing GPU queue tests only if needed): implement the smallest deterministic GPU job lifecycle fixes/tests after inspecting current behavior. Do not edit STATUS/PROOF, stage, or commit. Root reviews and integrates after the audits.
+- Shared acceptance: terminal status must survive refresh; a cancelled/timed-out/restarted job cannot publish partial results, count as completed/cache-hit, or silently fall back; retry identity and artifacts stay explicit. Numerical/experimental evidence remains separately labelled.
