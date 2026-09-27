@@ -3,16 +3,73 @@
 Integration owner: current goal task `01a0df9c-3718-7451-8f47-39d2bd9c7168`,
 shared checkout `Metalliksa-1`, branch `codex/lpbf-buildjob-material-identity`.
 
+Current continuation ownership (2026-09-27):
+
+- User model assignment: Astra owns difficult scientific/architecture decisions;
+  Sol owns bounded reviews; Luna implements code changes. Parent owns integration,
+  live browser acceptance, scoped commits, PROOF and STATUS.
+- `gpu_archive_astra`: read-only design for a distinct GPU archive contract and
+  producer/queue/API/UI integration. No CPU core-v1 relabeling.
+- `artifact_review_sol`: completed artifact review; mixed-list/scalar conversion
+  precision loss was reproduced and handed to Luna.
+- `artifact_fix_luna`: precision fix `501c43f`, endpoint fix `1249ba1` integrated.
+  Now owns `python/lpbf_simulation.py`, `python/lpbf_gpu_thermal.py`, and new
+  `python/test_lpbf_gpu_final_state_capture.py` for opt-in actual final-state
+  observers and same-run CPU/GPU evidence capture. Preserve pre-existing CPU
+  diagnostic edits. No worker/archive wiring in this package.
+- `readiness_finish_luna`: owns `server/lpbfWorkerBridge.ts`,
+  `routes/lpbfSimulation.ts`, `tests/lpbf-worker-readiness.test.ts`; completed
+  readiness/recovery fixes. Parent 13/13 tests and lint passed; Sol replayed
+  four concrete race/transport repros and closed all. No live restart.
+- `in625_gate`: finished the two property-source catalog entries, source scope,
+  UI and tests. Parent owns acceptance/commit. Original sources were committed
+  as `cdc4c58`; full model admission remains closed.
+- `hmr_binding`: handed off its readiness patch (8 tests passed) to Luna.
+  Current parent-owned live server: session 17083, port 4176, IPC port 5056,
+  DISABLE_HMR=true for stable acceptance during parallel edits. Preserve other
+  applications using 5055. Prior agent-owned session 62530 has ended.
+
+Completed previous package:
+
 - Parent: integration complete for the packages below; owns the pending endpoint fix after the CPU diagnostic finishes.
 - `gpu_result_contract`: completed queue input/material integrity repairs (`66aed0b`, `ed9cc9e`); left the real CUDA endpoint regression in `python/test_lpbf_gpu_thermal.py` failing and uncommitted pending the frozen run. No numerical manifest edits.
 - `hmr_binding`: completed HTTP/HMR isolation (`89703e5`) and application-only dependency discovery (`aedc614`); existing uncommitted HOST edit preserved. Combined runtime tests 4/4 passed.
 - `in625_gate`: completed source-candidate follow-up in the existing IN625 evidence matrix (`66aed0b`); full admission remains closed.
 
-Workers have finished editing. Integration owner reviewed, tested and committed
-the completed packages; unrelated edits remain untouched.
-CPU diagnostic session 1840 remains live; its numerical implementation manifest
-must remain byte-stable until the final report. GPU archival needs a distinct
-contract and complete field artifacts; CPU core-v1 must not be relabeled.
+Previous packages were reviewed, tested and committed; current work above is
+still in progress. Unrelated edits remain untouched.
+CPU diagnostic session 1840 completed, exit 0, all frozen hashes verified.
+`06132ae` preserves the inconclusive discrete/continuous time refinement.
+The numerical source freeze is lifted. GPU archival needs a distinct contract
+and complete field artifacts; CPU core-v1 must not be relabeled.
+
+Astra's next implementation contract: `runKind=gpu-thermal-pilot`,
+`contractStatus=gpu-pilot-v1-bound`, separate `gpuRunContract` and
+`gpuFieldArtifacts`. Preserve Python-serialized input/material/CPU-input JSON
+hashes and the historical implementation fingerprint; do not rehash JSON by
+Node serialization or compare restored runs to current source code. Add opt-in
+CPU final-state observer and GPU final H/rho/dt capture from actual arrays;
+never reconstruct H from T or run a second solve for archive capture. Descriptor
+references ten binary arrays, while `write_artifacts` must manifest the whole
+job folder including input/capabilities. Extend worker, capture, repository,
+import/bundle byte/numeric verifier, client and RunImport UI in that order.
+Permit sound failed-parity records; legacy GPU records remain view-only.
+Recompute saved temperature norms and energy/step metadata consistency from
+artifacts at archive boundaries. Experimental validity remains false.
+
+Astra convergence decision (read-only assessment): the existing contours are
+sampled at different peak-count times (250.150/250.100/250.0875 microseconds).
+Do not reinterpret the small W/D changes as convergence. Next freeze a distinct
+`fixed-scan-end-liquidus-cell-edge-contour-v1` observation at physical scan end
+250 microseconds, laser x=100 micrometres, surface z=40 micrometres. Reuse the
+same spatial contour calculation without peak-time selection or extrapolation.
+Five unique cases cover mesh 20/10/5 micrometres at 25 ns and time 50/25/12.5 ns
+at 5 micrometres. Run 20/10 micrometre observation checks before expensive fine
+runs; do not launch before protocol/observer review and frozen hashes. Preserve
+current energy/trend/finest-pair thresholds and historical P4 statuses. Record
+T/H fields and crossing locations for diagnosis; no automatic further refinement
+if the new observation is also nonmonotonic. Peak-selection is a plausible
+contributor, not a proven explanation of the mesh trend.
 
 # Previous LPBF goal owner — 01a0cfbf-d2ad-7f70-b94f-b89183eb819c, 2026-09-25
 
