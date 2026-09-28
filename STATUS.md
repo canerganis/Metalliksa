@@ -18,6 +18,11 @@
 - Doğrulama: LPBF archive/API/client/UI testleri **28/28 PASS**; TypeScript lint **PASS**. İlk sandbox test girişimi `spawn EPERM` verdi; yetkili Windows runner’da tekrar PASS. 4177 sekmesindeki ilk bundle denemesi 503 döndü; yeni 4178 sunucusunda aynı verilerle API/UI export ve restore PASS. 4177’nin ayrı çalışma zamanı farkı henüz açıklanmadı. Kod/kanıt commit'i `b184c46`.
 - Sıradaki: farklı çalışma zamanı kullanan 4177/4176 akışında bundle API hata yolunu ve persistent selection/refresh’i incele; NIST rev1 artifact mismatch nedenini eski kaynak baytlarıyla kapatamıyorsak comparison `unavailable` kalsın. Ölçülmüş match olmadan residual/validasyon üretme.
 
+## 2026-09-28 — Ortak termal bilim crosswalk kapsamı
+- `docs/LPBF_SHARED_THERMAL_SCIENCE_CROSSWALK.md` uygulamadaki entalpi integrali/inversiyonu, sıvı kesri, ilk-liquidus sonrası toz iletkenliği geçişi, Gauss quadrature ve ışın çapı varsayımı, base/ambient/radyasyon sınırları ve timestep limitlerinin açık varsayımlarını içeriyor. Matematik/metot atıfları malzeme verisi veya fiziksel geçerlilik kanıtı olarak kullanılmıyor.
+- Belgedeki 24 göreli dosya/satır referansı mevcut kaynak dosyalarında geçerli; hedefli `git diff --check` PASS. İlgili resmi NIST, DLMF, ISO, ASME ve BIPM sayfaları açılarak kapsamları incelendi.
+- Bu doküman uygulama kusuru düzeltmesi veya yeni deney kanıtı değil. Enthalpy/inverse error, nonlinear stability, matched powder/beam/emissivity uncertainty, domain sensitivity, yakınsama ve IN718 deney operatörü hâlâ açık. Solver/test çalıştırılmadı.
+
 ## 2026-09-28 — Windows Job Object hata yolları
 - `_WindowsJobChild` artık başarısız `CloseHandle`'ı hata olarak bildirip handle kimliğini koruyor; process handle en son kapatılıyor ve child ancak tüm sahipli handle'lar başarıyla kapandıktan sonra `returncode` ile reaped sayılıyor. `ResumeThread` sonrası thread-handle kapanması da kontrol ediliyor.
 - `ResumeThread`, `TerminateJobObject`, `WaitForSingleObject` ve `CloseHandle` hata davranışları kontrollü WinAPI mock'larıyla sınandı; canlı parent-kill testi aynı pakette geçti. Lifecycle/timeout grubu **17/17 PASS**, `py_compile` ve hedefli diff check PASS.

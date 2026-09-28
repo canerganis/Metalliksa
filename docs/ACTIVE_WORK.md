@@ -31,6 +31,13 @@ tree. Next: produce a source/hash-bound mapping dossier for all six Table 4
 observations plus beam-profile applicability before spending on a matched
 converged solve. Preserve the current code tree and all incomplete artifacts.
 
+The shared thermal science crosswalk review is also integrated in the working
+tree: 24 relative source/line references resolve, and official NIST/DLMF/ISO/
+ASME/BIPM references were opened. This is method/assumption documentation;
+no solver was run and no scientific status changed. Remaining numerical gates
+include inversion error, nonlinear stability, source/domain/time sensitivity,
+and experimental applicability.
+
 
 ## Active implementation handoff — 2026-09-27
 

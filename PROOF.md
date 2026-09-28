@@ -7,6 +7,12 @@
 - Ayrı transient deneme `f54ddb8d534647f1a2a9177c2794fe35`, tahmini legacy IN718 tablosunda 1. adımda 3123.15 K kaynama sınırını aşarak durdu. Fail-closed davranış korundu; bu başarısız koşu arşivlenmiş başarılı sonuç veya ölçüm diye sunulmadı.
 - Ortam: HEAD `7e34c9b6fd9992a1a0c6aed6b7274222f70318c4`; implementation fingerprint `8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8`; koşular izole 4183 localhost server'ında, geçici storage altında. Bu kayıt yazılım/arşiv akışı kanıtıdır; bilimsel model doğrulaması, transient doğrulama, convergence veya deneysel geçerlilik değildir. Tar dosyası repoya eklenmemiştir; UI indirme tıklamasının tarayıcı download eventi bu hidden-tab denemesinde gözlenmedi, baytlar aynı origin download route'undan alındı.
 
+## 2026-09-28 — Ortak termal bilim crosswalk kaynak denetimi
+
+- `docs/LPBF_SHARED_THERMAL_SCIENCE_CROSSWALK.md` şimdi uygulamanın model-spesifik matematik ve sınır varsayımlarını, birimlerini ve hangi kanıtların eksik kaldığını ayırıyor. Kontrol edilen 24 göreli kaynak dosyası/satır atfının tüm hedefleri var; diff whitespace kontrolü PASS.
+- Resmi NIST powder-property kaydı IN625/Ti64 laser-flash + inverse method kapsamını; NIST emissivity/temperature paper belirli high-purity nickel koşulunu; ISO 11146-1 beam-width metrology kapsamını; ASME VVUQ ve BIPM JCGM sayfaları ise metot/uncertainty çerçevesini destekliyor. Hiçbiri modelin IN718 fizik değerlerini veya validasyonunu doğrulamıyor.
+- Sadece doküman incelemesi yapıldı. Entalpi inversion hata ölçümü, tam nonlinear stability/accuracy, physical parameter uncertainty ve domain/time/space sensitivity henüz gösterilmedi; bilimsel statüler yükseltilmedi.
+
 ## 2026-09-27 — Five-case continuation completed; convergence unresolved
 
 Session91816 exited0, completed17:34:27Z. Five unique cases retain equal

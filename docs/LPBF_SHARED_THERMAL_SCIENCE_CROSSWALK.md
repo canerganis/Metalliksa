@@ -18,6 +18,116 @@ silently covered by this map.
 | Timestep and integration | Explicit first-order Euler; `dt` bounded by requested maximum, diffusion/stability row sum, scan events, and a source sensible-increment limiter. [Step assembly](../python/lpbf_simulation.py#L513) (`L513-L548`), [enthalpy update](../python/lpbf_simulation.py#L559) (`L559-L561`), and [source limiter](../python/lpbf_heat_source.py#L25) (`L25-L37`). | Time in seconds; rate in W m⁻³; volumetric enthalpy in J m⁻³. | This is the implemented numerical contract, not a cited physical law. Milton's one-dimensional boundary-stability analysis below does not establish the implemented `0.9` factor or stability of the complete nonlinear enthalpy/source update. The code enforces a 250,000-step budget and fails on material validity bounds rather than clipping. Temporal and spatial resolution still require separate convergence evidence. |
 | External units | Request geometry in µm, scan speed in mm/s, and temperatures in °C are converted at input/geometry boundaries; solver coordinates, `dx`, time, and temperature are SI (`m`, `s`, `K`). `python/lpbf_core_physics.py:calculate_mesh_domain`; `python/lpbf_simulation.py:validate`, `transient` | SI dimensional consistency follows BIPM definitions for `m`, `kg`, `s`, `K`, `J`, and `W`. | [BIPM SI Brochure, 9th edition, updated 2026](https://doi.org/10.59161/AUEZ1291). This is a unit-system authority, not a code-conversion or model validation result. |
 
+## Model-specific assumptions and numerical choices
+
+The equations below describe this reference implementation. A mathematical or
+method citation supports only the stated construction; it supplies no missing
+material measurements, parameter uncertainty, or experimental validation.
+
+### Enthalpy, phase fraction, and inversion
+
+[enthalpy_table](../python/lpbf_material_registry.py#L190) constructs
+`h(T) = integral(Cp(theta) dtheta) + L*f(T)`, with an arbitrary sensible-enthalpy
+reference at the first table temperature and
+`f(T) = clip((T-Ts)/(Tl-Ts), 0, 1)`. `Cp` is in J kg⁻¹ K⁻¹, `L` and `h` in
+J kg⁻¹, and `f` is dimensionless. Trapezoidal integration is exact for the
+represented piecewise-linear `Cp` between its knots; this does not establish
+accuracy or measured provenance of the property values. The grid combines 12,000
+uniform temperatures from 273.15 K to the boiling limit with property knots
+and the solidus/liquidus temperatures. Temperature recovery uses linear
+[inverse interpolation](../python/lpbf_simulation.py#L595) in that table.
+
+**Method versus material gate:** Voller's enthalpy-method citation above does
+not establish the linear liquid-fraction law, phase temperatures, latent heat,
+or adequacy of this inversion resolution. Require independently evaluated
+enthalpy/inverse-interpolation errors and a suitable phase-change reference
+problem for numerical verification. Material-specific source ranges and
+uncertainty remain separate requirements. Neither a dense table nor an
+energy-ledger pass establishes these missing results.
+
+### Packed powder and irreversible conductivity switching
+
+[Reference density](../python/lpbf_simulation.py#L455) is
+`rho_ref = rho(T0)*packingFraction` in cells with `z > 0`, and `rho(T0)` below;
+it is fixed throughout the stationary-grid update. In powder cells,
+[conductivity](../python/lpbf_simulation.py#L507) is
+`k(T)*powderConductivityRatio` until the accepted state first satisfies
+`T >= Tl`; [the persistent ever-melted flag](../python/lpbf_simulation.py#L627)
+then causes subsequent steps to use full `k(T)`, including after cooling.
+This threshold is liquidus, not solidus or the first nonzero liquid fraction.
+The packed reference density remains fixed after this conductivity switch;
+densification, shrinkage, and evolving porosity are not resolved here.
+
+**Measurement applicability gate:** [Zhang, Lane, Whiting & Chou (2019), NIST](https://www.nist.gov/publications/thermal-properties-metallic-powder-laser-powder-bed-fusion-additive-manufacturing)
+reports effective powder thermal properties for IN625 and Ti-6Al-4V using
+laser-flash measurements and an inverse model. It supports the need for
+powder-specific characterization, not a universal conductivity ratio or this
+irreversible transition rule. Require matching alloy, powder morphology,
+packing, atmosphere, temperature range, and uncertainty; those measurements
+do not establish IN718 parameters or the validity of the switch.
+
+### Source quadrature and beam-diameter convention
+
+[GAUSS_NODES](../python/lpbf_core_physics.py#L7) maps two-point Gauss-Legendre
+quadrature onto an accepted interval: nodes `c = 1/2 +/- 1/(2*sqrt(3))`, weights
+`1/2`, and sample times `t + c*dt`. [NIST DLMF §3.5(v)](https://dlmf.nist.gov/3.5#v)
+is a mathematical reference for Gauss quadrature; DLMF §7.2 above covers the
+Gaussian interval functions. Neither proves the moving-source integration
+error is small for the requested speed, mesh, and accepted timestep. Separate
+source/time refinement evidence is needed; the enthalpy update remains Euler.
+
+The implemented profile is `exp(-2*r^2/w^2)` at normal incidence, with
+[`w = beamDiameter_um*0.5e-6`](../python/lpbf_core_physics.py#L118) in metres.
+Thus the input diameter is interpreted as `2*w`, the ideal Gaussian 1/e²
+intensity diameter. For this ideal profile, the derived transverse standard
+deviation is `w/2`, so `D4sigma = 2*w`; that identity does not determine the
+profile of a measured non-Gaussian beam. [ISO 11146-1:2021, official scope](https://www.iso.org/standard/77769.html)
+concerns beam-width/divergence measurements for stigmatic and simple
+astigmatic beams. Its scope is a metrology reference, not proof of this
+machine's beam map or a claim of standard compliance. Record the measurement
+convention, profile, calibration and uncertainty before mapping an experimental
+diameter to the model. Domain capture and renormalization preserve requested
+absorbed power in the represented cells; they do not validate absorption or
+penetration. Domain-extent sensitivity remains a separate numerical gate.
+
+### Base, ambient, and gray radiation
+
+The reference base is held at preheat `T0`; the same `T0` is used as gas and
+radiative-surroundings temperature in [the top loss](../python/lpbf_simulation.py#L532).
+Side faces have no external heat-transfer term in this contract. The scalar
+emissivity assumes gray radiation with an effective total hemispherical
+emissivity; it is not automatically equal to laser absorptivity or a spectral,
+directional pyrometry emissivity. [Deisenroth et al. (2021), NIST](https://www.nist.gov/publications/measurement-uncertainty-surface-temperature-distributions-laser-powder-bed-fusion)
+demonstrates temperature/emissivity measurement and uncertainty analysis for
+a specific high-purity nickel experiment. It provides a measurement-method
+reference, not transferable IN718 emissivity values or uncertainty bounds.
+**Physical-parameter gate:** base temperature/thermal coupling, ambient and
+surroundings, gas coefficient, surface state and emissivity need matching
+measurements and uncertainty. The CODATA constant alone supplies none of them;
+numerical domain/base-location sensitivity must also be checked independently.
+
+### Timestep safety factors and failure limits
+
+[The initial step bound](../python/lpbf_simulation.py#L513) includes
+`0.12*dx^2/max(k/(rho*Cp))`, `w/(4*v)`, the requested maximum step, final time,
+and scan events. [The boundary/conduction row-sum bound](../python/lpbf_simulation.py#L535)
+uses `0.9*rho*Cp_min/max(diagonal, 1e-30)`, with `Cp_min` from the property
+table and the current radiation secant coefficient. [source_limited_step](../python/lpbf_heat_source.py#L25)
+limits the combined passive-plus-source rate using
+`allowed = min(25 K*rho*Cp/max(abs(rate), 1e-30))`; it accepts when
+`allowed >= dt*(1-1e-12)`, otherwise retries with `dt = 0.95*allowed` and
+reintegrates the moving source. At most 12 attempts are made before failure.
+The reference loop raises when its accepted-step count exceeds 250,000.
+
+These coefficients, denominator floors, comparison tolerance, and work limits
+are implementation choices. The 25 K expression is a sensible-capacity
+limiter, not a proven maximum temperature change through a nonlinear phase
+transition. Neither Milton's boundary-stability reference nor Gauss
+quadrature establishes stability, accuracy, or convergence of this complete
+update. Preserve these settings while deriving/checking their applicable
+conditions; retry success and staying below the step budget are not accuracy
+evidence.
+
 ## Primary-source applicability and uncertainty gates
 
 The following sources support bounded methodological or experimental claims.
@@ -136,12 +246,24 @@ For verification terminology, [Veeraragavan et al. (2016)](https://doi.org/10.10
 describes manufactured solutions as a solver-verification method. Its paper is
 methodology evidence, not an LPBF measurement dataset.
 
+[ASME's verification, validation and uncertainty framework](https://www.asme.org/codes-standards/publications-information/verification-validation-uncertainty)
+separates implementation/mathematical verification from agreement with the
+physical world. [BIPM's GUM publications](https://www.bipm.org/en/web/guest/publications/guides),
+including JCGM 100 and its Monte Carlo supplement JCGM 101, provide uncertainty
+evaluation methodology. They assign no uncertainty to this model by citation
+alone. Keep measured-input uncertainty, model assumptions, numerical error,
+and experimental comparison evidence explicit; no standards-compliance or
+validation claim follows from this crosswalk.
+
 ## Evidence still required
 
 1. Close the applicability gates above: derive/check stability for the exact
    nonlinear update, establish variable-conductivity accuracy, and obtain
    matching base-boundary, convection, optical, and emissivity evidence with
-   uncertainty. The cited methods and measurements do not close these gates.
+   uncertainty. Also quantify enthalpy-table/inversion error, justify the
+   liquid-fraction and powder-transition assumptions, and check source/time
+   and domain-extent sensitivity. The cited methods and measurements do not
+   close these gates.
 2. Extend the bounded energy oracle to additional contracts/backends only with
    independent pre-update inputs and explicit scope. Keep broad/full-run energy
    conservation **not verified** beyond the one tested reference case; do not
