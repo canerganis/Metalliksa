@@ -1,3 +1,11 @@
+## 2026-09-28 — Windows Job Object lifecycle ve HTTP DELETE cancellation
+
+- **PASS:** Native Windows `python -m unittest test_lpbf_worker_lifecycle -v`: 16/16, 0 skip, 2.217 s. Fresh writable `%TEMP%` root verildi.
+- **PASS:** `QueueLifecycle.test_abrupt_parent_death_kills_execute_child_and_prevents_publication`: 1/1, 1.201 s. Gerçek owner ölümünde execution child ve descendant process handles signaled; yeniden açılan queue eski koşuyu failed yaptı, result ve delayed artifact yoktu.
+- **PASS:** `& .\node_modules\.bin\tsx.cmd --test tests/lpbf-worker-delete-integration.test.ts`: 1/1, 0 skip, 10.261 s. Express HTTP DELETE → worker RPC; gerçek execution child/descendant cevap öncesi reaped, gecikmeli artifact yok.
+- `npx vitest ...` ilk denemesi Vitest bu projede kurulu olmadığı ve npm cache-only modunda ağ yanıtı bulunmadığı için test çalıştırmadı (`ENOTCACHED`); doğru repo runner'ı `tsx --test` ile hedef test geçti. İlk deneme **PASS sayılmadı**.
+- Rapor: `docs/LPBF_WINDOWS_JOB_OBJECT_LIFECYCLE_2026-09-28.json`, SHA-256 `7aa9af83422669c701f49b7c42d8b633d7ed87a36332f053c66679a0a587147c`. Bu gerçek Windows process-lifecycle/software evidence'tir; herhangi bir fiziksel çözücü, CUDA işinin kalıcı artifact'i veya UI cancel→refresh→restore zinciri değildir. `Queue.close()` altı saniyelik bounded join'in her cleanup failure'da sonuna kadar beklediği kanıtlanmadı.
+
 ## 2026-09-28 — CPU / Torch CUDA / Warp CUDA parity
 
 - **PASS:** `python -m unittest test_lpbf_gpu_three_backend_parity.ThreeBackendThermalParity.test_canonical_40um_cpu_torch_warp_same_invocation -v` (`python/` working directory), 1 test, 21.996 s.

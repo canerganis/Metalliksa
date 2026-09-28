@@ -1,6 +1,19 @@
 # Active delegated LPBF work — 2026-09-27
 
-## Current checkpoint — 2026-09-28T14:29+03:00
+## Current checkpoint — 2026-09-28T14:34+03:00
+
+Native Windows lifecycle gates were rerun successfully on this checkout:
+`python -m unittest test_lpbf_worker_lifecycle -v` **16/16, zero skips**,
+including actual owner death that closed an execution child and grandchild,
+marked the reopened queue row failed, and left no result or delayed artifact.
+`tsx --test tests/lpbf-worker-delete-integration.test.ts` also **1/1 PASS**;
+HTTP DELETE waits for the real fixture child/grandchild cleanup. See
+`PROOF.md` and `docs/LPBF_WINDOWS_JOB_OBJECT_LIFECYCLE_2026-09-28.json`.
+Lifecycle report SHA-256:
+`7aa9af83422669c701f49b7c42d8b633d7ed87a36332f053c66679a0a587147c`.
+This does not test CUDA result artifact timing or a browser cancel→refresh→
+restore journey. Bounded `Queue.close()` six-second-join failure behavior is
+still an open limit.
 
 Current-code CPU/Torch CUDA/Warp CUDA same-invocation parity is **PASS** for
 the bounded 40 µm IN718 contract (1,210 cells, 934 observed accepted steps);
@@ -19,19 +32,22 @@ the build-job fast script; effective material snapshots and alloy IDs remain
 unchanged.
 
 Current next actions:
-1. Run the native Windows Job Object lifecycle and abrupt-parent-death tests
-   against a fresh writable test root. Source review finds required lifecycle
-   guards and test cases, but this turn has not yet re-executed the Windows
-   integration; `Queue.close()`'s six-second join boundary also needs explicit
-   disposition.
+1. Run the complete native Windows Job Object, API, and UI cancel-refresh-
+   restore acceptance as one bounded workflow. API and parent-death gates now
+   pass separately; the live browser cancelled-job persistence path is still
+   unverified. Keep the six-second `Queue.close()` boundary explicit.
 2. Continue IN718/NIST operator and measured-beam applicability gate. Keep the
    comparison unavailable and residual null until three tracks × sections at
    4.9/6.0 mm, measured profile mapping, and convergence all bind to one exact
    run.
-3. Measure alternating multi-session CPU/Torch/Warp stage times on the same
+3. Validate and run the alternating multi-session CPU/Torch/Warp solver-time
+   harness now being implemented. Split fresh process/session and warmup from
+   capture-inclusive solver calls; queue/API/archive/UI and per-kernel time
+   remain unmeasured.
+4. Measure alternating multi-session CPU/Torch/Warp stage times on the same
    frozen input; current parity runtime is not a performance benchmark. Nsight
    availability and kernel attribution remain unverified for this checkpoint.
-4. Finish the fresh 20/10/5 µm spatial/time preflight matrix and keep the known
+5. Finish the fresh 20/10/5 µm spatial/time preflight matrix and keep the known
    growing-width trend inconclusive unless new fixed-protocol evidence closes it.
 
 Separate evidence categories: software/archive correctness, backend parity,
