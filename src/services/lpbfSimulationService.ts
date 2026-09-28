@@ -114,6 +114,9 @@ export interface SimulationJob {
   id: string; status: "queued" | "running" | "completed" | "failed" | "cancelled" | "timed_out";
   requestSummary?: { mode: string; backend: string; material: string };
   progress: number; log: string; error: string | null; cacheHit?: boolean; deduplicated?: boolean; result?: SimulationResult;
+  partialArtifacts?:
+    | { status: 'retained-unverified'; fileCount: number; totalBytes: number }
+    | { status: 'inventory-unavailable'; fileCount?: number; totalBytes?: number };
 }
 export interface SimulationCapabilities {
   openfoamVersion: string | null; openfoamThermal: boolean; freeSurfaceSolver: boolean; platform: string;
@@ -228,6 +231,20 @@ export function parseSimulationJob(value: unknown): SimulationJob {
     || typeof value.progress !== "number" || value.progress < 0 || value.progress > 1 || typeof value.log !== "string"
     || !(value.error === null || typeof value.error === "string")) throw new Error("Invalid LPBF job response");
   if (value.status !== "completed" && value.result !== undefined) throw new Error("Unfinished job must not contain a result");
+  if (value.partialArtifacts !== undefined) {
+    const partial = value.partialArtifacts;
+    if (!["failed", "cancelled", "timed_out"].includes(String(value.status)) || !object(partial)
+      || Object.keys(partial).some(key => !["status", "fileCount", "totalBytes"].includes(key))
+      || (partial.status === "retained-unverified"
+        ? Object.keys(partial).length !== 3 || !Number.isSafeInteger(partial.fileCount)
+          || Number(partial.fileCount) < 1 || !Number.isSafeInteger(partial.totalBytes)
+          || Number(partial.totalBytes) < 0
+        : partial.status !== "inventory-unavailable"
+          || (partial.fileCount !== undefined && (!Number.isSafeInteger(partial.fileCount) || Number(partial.fileCount) < 0))
+          || (partial.totalBytes !== undefined && (!Number.isSafeInteger(partial.totalBytes) || Number(partial.totalBytes) < 0)))) {
+      throw new Error("Invalid LPBF partial artifact inventory");
+    }
+  }
   if (value.status === "completed") {
     const r = value.result;
     if (!object(r)

@@ -484,14 +484,58 @@ class QueueLifecycle(unittest.TestCase):
 
             with patch("lpbf_worker._spawn_execution_child", side_effect=spawn):
                 queue.execute(job)
-            self.assertEqual(queue.get(job)["status"], "failed")
+            state = queue.get(job)
+            self.assertEqual(state["status"], "failed")
             self.assertTrue((Path(root) / job / partial_name).exists())
+            self.assertEqual(state["partialArtifacts"], {
+                "status": "retained-unverified", "fileCount": 1,
+                "totalBytes": len("partial artifact"),
+            })
             with self.assertRaisesRegex(ValueError, "Artifact unavailable"):
                 queue.artifact({"id": job, "name": partial_name})
 
             replacement = submit_gpu(queue)
             self.assertNotEqual(replacement["id"], job)
             self.assertFalse((Path(root) / replacement["id"] / partial_name).exists())
+
+    def test_terminal_incomplete_jobs_report_partial_files_without_exposing_them(self):
+        for status in ("cancelled", "timed_out"):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+                job = submit_gpu(queue)["id"]
+                payload = b"partial field bytes"
+                (Path(root) / job / "field-frame-000.bin").write_bytes(payload)
+                queue.update(job, status=status)
+
+                state = queue.get(job)
+                self.assertEqual(state["status"], status)
+                self.assertNotIn("result", state)
+                self.assertEqual(state["partialArtifacts"], {
+                    "status": "retained-unverified", "fileCount": 1,
+                    "totalBytes": len(payload),
+                })
+                with self.assertRaisesRegex(ValueError, "Only completed jobs"):
+                    queue.capture(job)
+                with self.assertRaisesRegex(ValueError, "Artifact unavailable"):
+                    queue.artifact({"id": job, "name": "field-frame-000.bin"})
+
+    def test_partial_artifact_inventory_failure_does_not_break_terminal_job_read(self):
+        with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+            job = submit_gpu(queue)["id"]
+            (Path(root) / job / "field-coordinates.bin").write_bytes(b"partial")
+            queue.update(job, status="cancelled")
+
+            with patch("lpbf_worker.os.scandir", side_effect=PermissionError("inaccessible")):
+                state = queue.get(job)
+
+            self.assertEqual(state["status"], "cancelled")
+            self.assertEqual(state["partialArtifacts"], {"status": "inventory-unavailable"})
+
+    def test_partial_artifact_inventory_rejects_junction_job_root(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root)
+            with patch.object(Path, "is_junction", return_value=True, create=True):
+                summary = Queue._partial_artifact_summary(folder)
+            self.assertEqual(summary, {"status": "inventory-unavailable"})
 
     def test_gpu_queue_never_accepts_implicit_or_cpu_fallback_backend(self):
         with tempfile.TemporaryDirectory() as root, \

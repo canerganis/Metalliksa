@@ -50,6 +50,20 @@ IN625_BAREPLATE_MAX_CELL_STEPS = 2_000_000
 IN625_BAREPLATE_MAX_STEPS = 25_000
 
 
+def _is_allowed_artifact_name(name):
+    return isinstance(name, str) and (
+        name in ("temperature-slice.svg", "phase-slice.svg", "thermal-history.csv",
+                 "field-series.json", "field-coordinates.bin", IN625_BAREPLATE_ARTIFACT)
+        or re.fullmatch(r"field-frame-[0-9]{3}\.bin", name) is not None
+    )
+
+
+def _is_partial_artifact_candidate(name):
+    # peak-field.npz is an execution intermediate used to render completed previews;
+    # it is retained as local diagnostic output but is never directly downloadable.
+    return _is_allowed_artifact_name(name) or name == "peak-field.npz"
+
+
 def _validate_in625_bareplate_request(raw):
     """Strictly normalize the worker API payload for the bounded IN625 solver."""
     from in625_bareplate_field import BareplateConfig, _validate
@@ -787,7 +801,39 @@ class Queue:
                 out.pop("result", None)
                 out.update(status="failed", error=f"Saved result integrity failed: {error}")
                 self.update(job, status=out["status"], error=out["error"])
+        if out["status"] in ("failed", "cancelled", "timed_out"):
+            out["partialArtifacts"] = self._partial_artifact_summary(self.root/job)
+            if out["partialArtifacts"] is None:
+                del out["partialArtifacts"]
         return out
+
+    @staticmethod
+    def _partial_artifact_summary(folder):
+        """Report retained terminal-job outputs as incomplete, without exposing bytes."""
+        count = 0
+        total_bytes = 0
+        try:
+            is_junction = getattr(folder, "is_junction", None)
+            if (folder.is_symlink() or (callable(is_junction) and is_junction())
+                    or not folder.is_dir()):
+                return {"status": "inventory-unavailable"}
+            with os.scandir(folder) as entries:
+                for entry in entries:
+                    if not _is_partial_artifact_candidate(entry.name):
+                        continue
+                    if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                        return {"status": "inventory-unavailable"}
+                    size = entry.stat(follow_symlinks=False).st_size
+                    if type(size) is not int or size < 0:
+                        return {"status": "inventory-unavailable"}
+                    count += 1
+                    total_bytes += size
+        except OSError:
+            return {"status": "inventory-unavailable"}
+        if count == 0:
+            return None
+        return {"status": "retained-unverified", "fileCount": count,
+                "totalBytes": total_bytes}
 
     def capture(self, job):
         with self.lock:
@@ -803,8 +849,7 @@ class Queue:
     def artifact(self, payload):
         state = self.get(payload["id"])
         name = payload.get("name")
-        import re
-        allowed = isinstance(name, str) and (name in ("temperature-slice.svg", "phase-slice.svg", "thermal-history.csv", "field-series.json", "field-coordinates.bin", IN625_BAREPLATE_ARTIFACT) or re.fullmatch(r"field-frame-[0-9]{3}\.bin", name))
+        allowed = _is_allowed_artifact_name(name)
         if state["status"] != "completed" or not allowed:
             raise ValueError("Artifact unavailable")
         entry = next((a for a in state["result"].get("artifacts",[]) if a["path"] == name),None)

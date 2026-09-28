@@ -16,6 +16,22 @@ const result = {
   analyticalComparison: { goldak: { width_um: 100, depth_um: 50, length_um: 200 } },
 };
 assert.equal(parseSimulationJob({ ...base, status: "completed", result }).result?.label, "Screening only");
+const retained = { status: 'retained-unverified', fileCount: 2, totalBytes: 4096 };
+for (const status of ['failed', 'cancelled', 'timed_out'] as const) {
+  assert.deepEqual(parseSimulationJob({ ...base, status, partialArtifacts: retained }).partialArtifacts, retained);
+  assert.equal(parseSimulationJob({ ...base, status, partialArtifacts: { status: 'inventory-unavailable' } }).partialArtifacts?.status, 'inventory-unavailable');
+}
+for (const partialArtifacts of [
+  null, {}, { ...retained, fileCount: 0 }, { ...retained, fileCount: 1.5 },
+  { ...retained, totalBytes: -1 }, { ...retained, totalBytes: Number.MAX_SAFE_INTEGER + 1 },
+  { ...retained, unexpected: true }, { status: 'inventory-unavailable', fileCount: -1 },
+  { status: 'inventory-unavailable', totalBytes: 'unknown' }, { status: 'verified', fileCount: 2, totalBytes: 4096 },
+]) assert.throws(() => parseSimulationJob({ ...base, status: 'cancelled', partialArtifacts }), /partial artifact inventory/);
+for (const status of ['queued', 'running', 'completed'] as const) {
+  assert.throws(() => parseSimulationJob({ ...base, status, result: status === 'completed' ? result : undefined,
+    partialArtifacts: retained }), /partial artifact inventory/);
+}
+assert.equal(parseSimulationJob({ ...base, status: 'completed', result }).partialArtifacts, undefined);
 for (const patch of [
   { validationStatus: "validated" }, { productionReady: true },
   { metrics: { width_um: -1, depth_um: 50, length_um: 200 } },

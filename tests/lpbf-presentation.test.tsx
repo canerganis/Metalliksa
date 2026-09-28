@@ -24,6 +24,16 @@ for (const status of ["queued", "running", "failed", "cancelled", "timed_out"] a
   if(status==="queued"||status==="running") assert.match(html,/>Cancel</);
   else {assert.doesNotMatch(html,/>Cancel</);assert.match(html,/No completed result/);}
 }
+const cancelledWithPartials = render({ ...job, status: 'cancelled', result: undefined,
+  partialArtifacts: { status: 'retained-unverified', fileCount: 2, totalBytes: 4096 } });
+assert.match(cancelledWithPartials, /2 partial files retained locally \(4096 bytes\)/);
+assert.match(cancelledWithPartials, /Integrity not verified; unavailable as a result\/download and excluded from completed-run archives/);
+assert.match(cancelledWithPartials, /No completed result/);
+assert.doesNotMatch(cancelledWithPartials, /321/);
+assert.doesNotMatch(cancelledWithPartials, />Cancel</);
+assert.match(render({ ...job, status: 'failed', result: undefined,
+  partialArtifacts: { status: 'inventory-unavailable' } }), /Partial output inventory unavailable; no integrity claim/);
+assert.doesNotMatch(render(job), /partial files retained|Partial output inventory unavailable/);
 assert.match(renderToStaticMarkup(<ConvergencePanel study={undefined}/>),/Not run/);
 const audit=renderToStaticMarkup(<ConvergencePanel study={{kind:"mesh",spacings:[4e-5,2e-5,1e-5],results:[{width_um:100,depth_um:40},{width_um:110,depth_um:42},{width_um:112,depth_um:43}],checks:{width_um:{status:"inconclusive",reason:"Fixture",observedOrder:2,fineGCI_pct:3}}}}/>);
 for(const label of ["Coarse","Medium","Fine","inconclusive","observed order 2","fine GCI 3"]) assert.ok(audit.includes(label));

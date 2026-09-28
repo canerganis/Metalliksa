@@ -1,5 +1,34 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T15:24+03:00
+
+The partial-file follow-up now has a real isolated UI acceptance. Job
+`4c984a3fd1f446018dc6c4965b65316d` was cancelled, refreshed, and remained
+cancelled in the UI/API. The API disclosed only `retained-unverified`, 9
+allowlisted local files / 1,319,472 bytes; no result, download, or completed
+archive was exposed. File hashes were stable across two reads, which does not
+attest their scientific or result integrity. Input SHA-256 is
+`22545da52c562e4beda7ba51ca88c451517befbac87a5f172751d10f1ace3fda`.
+Evidence: `docs/LPBF_BROWSER_UI_PARTIAL_ARTIFACT_STATUS_2026-09-28.json`.
+
+The implementation reports optional metadata only on terminal incomplete jobs,
+fails closed if local inventory cannot be inspected, and keeps artifact fetch
+completed-only. Lifecycle tests **19/19 PASS** in the authorized Windows
+runner; `py_compile`, TypeScript, and 2 targeted frontend tests pass. The
+sandbox lifecycle run failed before setup due TEMP/SQLite permissions and was
+not counted. Isolated server stopped; temporary evidence root retained. This
+is software-workflow evidence with estimated-legacy IN718 inputs, not model or
+experimental validation.
+
+Next: define bounded local partial-file retention/cleanup without weakening
+completed-only artifact APIs; then continue NIST IN718 observer/beam-source
+applicability and multi-level convergence. Keep CPU/Torch/Warp solver timing
+stage boundaries explicit and seek Nsight/CUDA-event attribution before
+optimizing. Preserve the existing three-way distinction: software correctness,
+numerical verification, and experimental validity. Current overall goal remains
+open; spatial/time convergence is inconclusive, experiment unvalidated, and the
+IN625 full-model evidence gate remains closed.
+
 ## Current checkpoint — 2026-09-28T15:01+03:00
 
 Isolated real UI cancel→refresh acceptance now passes. On a fresh 4187 server

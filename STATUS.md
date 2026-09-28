@@ -2,6 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — İptal edilen LPBF işinde kısmi dosya durumu
+- **PASS (yazılım/arayüz):** İzole gerçek UI işi `4c984a3fd1f446018dc6c4965b65316d` iptal edildi; yenilemede aynı `cancelled` durumu ve kısmi dosya uyarısı geri yüklendi. API yalnız `retained-unverified`, 9 dosya / 1,319,472 B özetini verdi; sonuç alanı, download veya tamamlanmış arşiv sunulmadı. Dosyaların SHA-256 değerleri iki okumada sabit kaldı; bu bütünlük/doğruluk tasdiki değildir.
+- Lifecycle paketi **19/19 PASS** (yetkili Windows runner), `py_compile` ve hedefli TypeScript kontrolleri PASS. Sandbox geçici dosya/SQLite erişim hatası verdi; başarısız sandbox çalışması PASS sayılmadı.
+- Kanıt: `docs/LPBF_BROWSER_UI_PARTIAL_ARTIFACT_STATUS_2026-09-28.json`. IN718 girdisi estimated-legacy; deneysel doğrulama `unvalidated`. Geçici kanıt kökü saklandı; sunucu durduruldu.
+- **Açık:** Kısmi dosyalar local geçici depoda kalıyor; süreli saklama/temizlik politikası yok. IN718/NIST bağımsız optik gözlem eşlemesi ve yakınsama; P4 yakınsaması; Nsight/profil atfı hâlâ açık. IN625 tam model kabul kapısı kapalı.
+
 ## 2026-09-28 — İzole gerçek UI iptal → yenileme kabulü
 - **PASS:** Yeni yerel sunucu 4187 ve ayrı `%TEMP%` job/run/source/bundle depolarında kullanıcı sekmesi 4179'a dokunmadan gerçek arayüzden IN718 işi `6074781072904a7d9db63ecc50016aef` kuyruğa alındı, UI'den iptal edildi ve tam sayfa yenilemesinden sonra UI ile SQLite queue satırı `cancelled` gösterdi (son raporlanan ilerleme 5.0446%). Girdi SHA-256 `22545da52c562e4beda7ba51ca88c451517befbac87a5f172751d10f1ace3fda`.
 - İptal edilmiş işte `result.json` ve tamamlanmış sonuç yok; kullanıcı arayüzü de `Cancelled by user` / `No completed result` gösterdi. İş klasöründe 5 kısmi `field-*.bin` dosyası (koordinat ve frame checkpoint'leri) kaldı; bunlar arşivlenmiş/tamamlanmış sonuç değil. Kısmi dosyaların iptal sonrası saklama/temizlik davranışı ayrıca incelenecek.

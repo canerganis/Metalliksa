@@ -207,6 +207,29 @@ be refreshed when the corresponding functions move.
    fixed base at [L526-L531](../python/lpbf_simulation.py#L526), surface
    emissivity, and use of preheat as ambient also need separate evidence.
 
+6. **Published LPBF boundary and surface-source example.** [Ma et al. (2015),
+   NIST](https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=919064),
+   sections 2.2 and 2.4, describes a three-dimensional single-track thermal
+   model with top-surface convection/radiation, adiabatic remaining surfaces,
+   and a moving Gaussian surface heat flux. It is a methodological example,
+   not the boundary contract of Metalliksa's reference transient: this code
+   holds its base at preheat, omits side-surface transfer, and distributes the
+   Gaussian in depth. Ma et al. used IN625 and their own material/process
+   assumptions; none of those values or the reported model behavior transfers
+   to IN718 without matched evidence. **Gate:** compare the implemented
+   boundary/source equations on their own terms, and retain material/process
+   properties as estimated until independently sourced with uncertainty.
+
+7. **Finite-volume conservation construction.** [NIST FiPy 3.4.5 finite-volume
+   documentation](https://pages.nist.gov/fipy/en/3.4.5/numerical/discret.html)
+   derives control-volume transient and face-flux diffusion discretizations
+   and describes zero-flux as the natural cell-centered boundary condition.
+   This supports the general finite-volume method family and natural no-flux
+   boundary semantics; it does not independently verify Metalliksa's Python,
+   its harmonic face interpolation, nonlinear enthalpy inversion, or explicit
+   update. **Gate:** retain the separate manufactured-solution, conservation,
+   stability, mesh/time-refinement, and experimental evidence requirements.
+
 ## Conservation and validation status
 
 - **Internal conduction:** paired-face discrete sum is zero by construction for
