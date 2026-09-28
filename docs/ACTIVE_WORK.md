@@ -1,5 +1,34 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T16:20+03:00
+
+Three scoped LPBF packages are now committed on
+`codex/lpbf-buildjob-material-identity`:
+
+- `6a3d0ae` — live transient UI → compare → portable bundle upload/restore/
+  refresh proof plus the current-HEAD Job Object lifecycle rerun.
+- `5eebb26` — independently reviewed NIST Table 4 source/observer audit,
+  including the four-versus-six observation discrepancy and hash caveats.
+- `d5a5eaa` — heterogeneous internal-face conservation regression and its
+  scoped software-evidence record.
+
+This checkpoint update is the fourth scoped commit in the sequence. The branch
+is 104 commits ahead of the configured origin. The working tree still contains
+300 tracked changes and 21 untracked paths; these remain unstaged/uncommitted.
+They include unrelated user EIS/EDS changes and runtime/partial/cache
+artifacts, so each future commit still requires exact ownership and path review.
+
+The conduction regression ran at its recorded parent HEAD `5eebb26` and passed
+1/1; it verifies only operator-level software conservation. The NIST audit
+still cannot open comparison: publisher PDF byte hashes, measured beam profile,
+an equivalent optical-boundary observation operator, and matched convergence
+are absent. The isolated 4195/5195 listeners are stopped; temporary evidence
+roots remain preserved. Next: inspect explicit completed LPBF packages in the
+remaining diff for separately tested/owned work; otherwise continue source-to-
+equation coverage and identity-bound end-to-end CPU/Torch/Warp stage timing.
+Do not claim numerical convergence, experimental validity, full IN625 admission,
+or general GPU speedup.
+
 ## Current checkpoint — 2026-09-28T16:11+03:00
 
 The audited transient UI/archive and Job Object evidence package is committed
