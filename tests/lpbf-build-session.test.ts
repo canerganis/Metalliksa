@@ -75,6 +75,18 @@ beforeEach(() => {
 });
 after(() => { pythonComputationService.solveLpbfBuildJob = originalSolve; });
 
+test("resetting the shared specimen selects an admitted LPBF alloy", () => {
+  const before = useMaterialSpecimenStore.getState().activeSpecimen;
+  try {
+    useMaterialSpecimenStore.getState().resetToDefault();
+    const specimen = useMaterialSpecimenStore.getState().activeSpecimen;
+    assert.equal(specimen.name, "Inconel 718 (AMS 5662 / UNS N07718)");
+    assert.equal(mapSpecimenToBuildJobMaterials(specimen.name, specimen.baseMetal)?.alloyId, "in718");
+  } finally {
+    useMaterialSpecimenStore.setState({ activeSpecimen: before });
+  }
+});
+
 test("identical fast requests reuse the result; changed CT threshold recomputes", async () => {
   setLpbfMurakamiInput({ ctDetectionThreshold_um: 10 });
   await requestLpbfBuildJob();

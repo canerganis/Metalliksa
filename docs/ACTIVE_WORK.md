@@ -2237,3 +2237,13 @@ Next: inspect 4177/4176 bundle roots and refresh persistence without changing
 run/source records; locate the historical Table 4 artifact if available,
 otherwise preserve `unavailable`. Continue shared-physics literature,
 spatial-convergence, NVIDIA profiling, and four-alloy authority checks.
+
+## Shared LPBF default material — 2026-09-28
+
+The generic shared specimen previously defaulted/reset to the unqualified
+custom AeroTurbine-850 preset. LPBF build-job submission already rejects that
+unsupported identity; the default now uses the canonical IN718 preset and its
+existing four-alloy mapping. Existing browser-persisted selections are
+preserved. Focused build-session tests **16/16 PASS**, TypeScript lint PASS.
+Next: assess remaining paths that can display or transfer unqualified custom
+materials; retain the source/uncertainty gate and label any screening-only use.

@@ -2769,3 +2769,9 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - Point-in-time local file check: all 21 historical source artifact references and all 134 run artifact references matched archived byte counts and SHA-256 values. This is file integrity only, not scientific validation.
 - Archived IN718 run `aad3bc4b6ceb4abbbc56942554f202cb` remains linked to Table 4 source revision 1. The live UI comparison correctly returned `unavailable` / `unvalidated` because the fixed Table 4 artifact did not match the reviewed local comparison revision; it supplied a reason and no numeric residual. IN718 experimental validity is not established.
 - A prior click in the already-running 4177 UI returned 503. The same store and workflow passed on the fresh 4178 server; cause of the old server's failure remains unresolved. The user's 4176 tab was left untouched.
+
+## 2026-09-28 — Shared material default admission boundary
+- Source inspection confirmed the generic shared specimen initialized/reset to the custom AeroTurbine-850 preset, while `requestLpbfBuildJob` rejects any material without the explicit four-alloy mapping before solver submission. The LPBF solver allowlist was already effective; no unsupported job was submitted.
+- Changed initial/reset specimen to canonical IN718. Existing persisted browser selection is not migrated or overwritten. Added regression asserting reset maps to `in718`.
+- `npx tsx --test tests/lpbf-build-session.test.ts`: **16/16 PASS** (sandbox attempt could not spawn Node child process; same command passed with Windows process permission). `npm run lint`: **PASS**. Targeted `git diff --check`: **PASS**.
+- This is software/default-selection correctness, not material-property validation. AeroTurbine-850 remains unqualified and must not enter LPBF authority until source/uncertainty admission succeeds.

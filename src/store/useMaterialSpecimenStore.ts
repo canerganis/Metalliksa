@@ -544,15 +544,15 @@ export const SPECIMEN_PRESETS: Record<string, { name: string; composition: Recor
   },
 };
 
-// Initial default specimen is the user's custom superalloy
+// Keep the default within the LPBF material allowlist; experimental presets must be explicitly selected.
 const INITIAL_SPECIMEN_PROPS = deriveSpecimenProperties(
-  SPECIMEN_PRESETS["custom-ni-superalloy"].composition,
-  SPECIMEN_PRESETS["custom-ni-superalloy"].name,
-  SPECIMEN_PRESETS["custom-ni-superalloy"].base
+  SPECIMEN_PRESETS["inconel-718"].composition,
+  SPECIMEN_PRESETS["inconel-718"].name,
+  SPECIMEN_PRESETS["inconel-718"].base
 );
 
 const INITIAL_SPECIMEN: ActiveSpecimenState = {
-  id: "specimen-custom-rené-850",
+  id: "specimen-inconel-718",
   ...INITIAL_SPECIMEN_PROPS,
   sourceTab: "Alloy Formulator (Tab 1)",
   lastModified: Date.now(),
