@@ -23,6 +23,11 @@
 - Sonuç: mevcut JMatPro/model temelli IN625 snapshot'ı belirsizliksiz ve açıkça screening-only olduğu için tam transient modele kabul **kapalı**. Dört alaşımın otoritesi/girdileri değiştirilmedi; IN625 `unvalidated` kalır.
 - Doğrulama: dört alaşım/IN625 capability ve IN625 malzeme tablosu testleri **7/7 PASS**; XLSX/iki HTML artifact hash'i ve 20 satırın sıcaklık/ortalama/U95 hücre eşleşmesi **PASS**. TypeScript kaynak-katalog Vitest denemesi yerel `vitest` cache'inde paket olmadığı ve registry ağ erişimi kullanılamadığı için **çalıştırılamadı** (`ENOTCACHED`); bunu PASS saymıyoruz.
 
+## 2026-09-28 — IN718 bağımsız kıyas kapısı
+- NIST AMB2022-03 Table 4 yerel, checksum bağlı kaydı case 0 için 285 W / 960 mm/s / 67 µm D4σ ve koşul başına 6 optik genişlik/derinlik gözlemi (ortalama + standart sapma) içeriyor. Mevcut GPU pilot benchmark'ı 60 W / 1200 mm/s / 80 µm; güncel P4 CPU zaman çalışması da farklı 40 W 80 µm girdisi. Bunlar NIST case 0 ile eşleşmiyor.
+- NIST profiline bağlanmış tekil 2D ışınım dosyası ve Table 4'ün üç iz × iki konum gözlem operatörü mevcut koşu/sonuçta bağlı değil. `compare_nist_in718_optical_geometry` bu yüzden residual'ı `unavailable`/`errors=null` bırakır.
+- Kıyas ve NIST ham ölçüm/parsing testleri **10/10 PASS**; bu testler kapının doğru kapalı kalmasını kanıtlıyor, fiziksel model doğruluğunu değil. CPU–IN718 deney karşılaştırması **doğrulanmadı**.
+
 ## 2026-09-28 — LPBF kuyruk iptal onayı ve kanıt sınırları
 - `python/lpbf_worker.py` çalışan alt süreci kaydediyor; çalışan işi iptal ederken child sonlandırılıp beklenmeden veritabanı işi terminal `cancelled` durumuna geçmiyor. Yeni `python/test_lpbf_worker_lifecycle.py` kuyruk iptali, çalışan child kill/reap, timeout, stale-running restart, completion yarışı, tekrar/cache ve kısmi artifact izolasyonunu kapsıyor.
 - Doğrulama: lifecycle + timeout + CUDA queue odaklı Python grubu **15/15 PASS**; gerçek RTX 4060 CUDA kuyruğu/sonuç-integrity alt testi dahil. `py_compile` ve hedefli `git diff --check` PASS. TEMP/SQLite sandbox erişim engeli yüzünden aynı test komutu izinli runner ile çalıştırıldı.
