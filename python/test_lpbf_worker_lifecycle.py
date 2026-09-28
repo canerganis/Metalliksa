@@ -15,7 +15,7 @@ from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 from lpbf_gpu_thermal import PILOT_JOB_TYPE
-from lpbf_worker import Queue, _WindowsJobChild
+from lpbf_worker import Queue, _WindowsJobChild, _spawn_windows_job_child
 
 
 GPU_CASE = {
@@ -271,6 +271,83 @@ class QueueLifecycle(unittest.TestCase):
             state = queue.get(job)
             self.assertEqual(state["status"], "cancelled")
             self.assertEqual(len(children), 1)
+
+    def test_queue_close_reaps_real_child_before_terminal_state_or_artifacts(self):
+        test_root = Path(os.environ.get(
+            "METALLIX_LPBF_TEST_ROOT", Path(__file__).resolve().parent / "codex-lpbf-test-tmp"))
+        self.assertTrue(test_root.is_dir(), f"test root must exist before the run: {test_root}")
+        with tempfile.TemporaryDirectory(prefix="queue-close-", dir=test_root) as root, \
+             isolated_queue(root) as queue:
+            submitted = submit_gpu(queue)
+            job = submitted["id"]
+            folder = Path(root) / job
+            started = folder / "child-started"
+            result = folder / "result.json"
+            artifact = folder / "late-artifact.svg"
+            payload = (
+                "import sys,time; from pathlib import Path; "
+                "started,result,artifact=map(Path,sys.argv[1:]); "
+                "started.write_text('ready'); time.sleep(30); "
+                "result.write_text('{}'); artifact.write_text('late')"
+            )
+            children = []
+            status_at_kill = []
+            status_at_reap = []
+
+            def spawn(_command, log):
+                command = [sys.executable, "-c", payload, str(started), str(result), str(artifact)]
+                if os.name == "nt":
+                    child = _spawn_windows_job_child(command, log)
+                else:
+                    child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                                              start_new_session=True)
+                original_kill = child.kill
+                original_wait = child.wait
+
+                def observed_kill():
+                    status_at_kill.append(queue.get(job)["status"])
+                    return original_kill()
+
+                def observed_wait(timeout=None):
+                    code = original_wait(timeout=timeout)
+                    status_at_reap.append((queue.get(job)["status"], child.poll(), code))
+                    return code
+
+                child.kill = observed_kill
+                child.wait = observed_wait
+                children.append(child)
+                return child
+
+            with patch("lpbf_worker._spawn_execution_child", side_effect=spawn):
+                queue.thread = threading.Thread(target=queue.work, daemon=True)
+                queue.thread.start()
+                deadline = time.monotonic() + 10
+                while not started.exists() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(started.exists(), "real execution child did not start")
+                try:
+                    queue.close()
+                    self.assertFalse(queue.thread.is_alive(), "queue close returned before its worker exited")
+                    self.assertEqual(len(children), 1)
+                    self.assertEqual(status_at_kill, ["running"],
+                                     "shutdown must not publish terminal state before termination")
+                    self.assertTrue(status_at_reap, "shutdown did not wait for the real child")
+                    self.assertEqual(status_at_reap[-1][0], "running",
+                                     "terminal state was published before the child was reaped")
+                    self.assertIsNotNone(status_at_reap[-1][1], "child was still live when wait returned")
+                    self.assertEqual(status_at_reap[-1][1], status_at_reap[-1][2])
+                    self.assertEqual(queue.get(job)["status"], "failed")
+                    self.assertFalse(result.exists(), "shutdown allowed result publication")
+                    self.assertFalse(artifact.exists(), "shutdown allowed late artifact publication")
+                finally:
+                    # Keep test cleanup bounded even when an assertion exposes a shutdown regression.
+                    for child in children:
+                        if child.poll() is None:
+                            child.kill()
+                            child.wait(timeout=5)
+                    if queue.thread.is_alive():
+                        queue.thread.join(timeout=5)
+                    self.assertFalse(queue.thread.is_alive(), "test child cleanup did not finish")
 
     @unittest.skipUnless(os.name == "nt", "Windows Job Object access-denied handling")
     def test_access_denied_keeps_live_child_running_but_signaled_child_can_be_reaped(self):
