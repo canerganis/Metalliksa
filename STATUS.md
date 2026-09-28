@@ -16,6 +16,7 @@
 ## 2026-09-28 — RTX 4060 güncel Torch/Warp tekrarları
 - Aynı 10 µm IN718 isteğinde, aynı implementation fingerprint ile iki ayrı sıcak/alternatif oturum ve oturum başına 3 örnek ölçüldü. Rapor `docs/LPBF_GPU_ALTERNATING_BENCHMARK_2026-09-28.json`; Torch/Warp medyanı oturum 1'de 12.084/12.047 s (1.003×), oturum 2'de 12.361/12.044 s (1.026×).
 - Bu küçük farklar örnek saçılımından düşük; önceki 1.294× tek-oturum değeri tekrarlanmadı. Son-alan yakalama ve API/kuyruk/arşiv/UI süreleri ölçülmedi; E2E hızlanması ve kernel atfı **unmeasured**. Karşılaştırma bu nedenle Warp hız üstünlüğünü göstermiyor.
+- `nsys` / `ncu` PATH sorgusu ve standart NVIDIA program dizinlerinin kurulum ağacı taraması sonuçsuz; Nsight Systems/Compute bu hostta **bulunamadı**. Eski enstrümantasyon 149,447 kernel launch, 12,245 async copy ve 12,245 stream sync saymıştı ama kernel süresi yok. Nsight veya eşdeğer timeline erişimi bulunana kadar kernel atıflı optimizasyon kanıtlanmış değil.
 
 ## 2026-09-28 — Ortak termal sözleşme ve yakınsama regresyonları
 - Core contract, transient enthalpy fizik, mesh/time convergence ve contour convergence odaklı Python grubu yetkili Windows runner'da **35/35 PASS**. Sandboxed ilk deneme Windows TEMP/SQLite ACL yüzünden 1 hata verdi; aynı komut yetkili runner'da tamamlandı.

@@ -2203,6 +2203,8 @@ Next: freeze and preflight a separately versioned spatial mesh protocol using th
 ## 2026-09-28 continuation — repeated RTX 4060 Torch/Warp benchmark
 The frozen 10 µm IN718 request (73,568 cells / 934 steps) was measured in two separate sessions with the existing warmed, alternating three-trial/backend procedure. Report: `docs/LPBF_GPU_ALTERNATING_BENCHMARK_2026-09-28.json`. Torch/Warp medians were 12.084/12.047 s (1.003×) and 12.361/12.044 s (1.026×). Within-session spreads exceeded the median differences; the previous single-session 1.294× Warp result was not reproduced. The measured scope omits final-field capture, queue and persistence, so end-to-end performance remains unmeasured. Do not optimize based on this result alone. Next profile the full request lifecycle and device timeline, then select one attribution-backed target; require unchanged numerical parity after any optimization.
 
+Nsight availability was rechecked beyond PATH: no `nsys.exe` or `ncu.exe` exists under the standard NVIDIA Program Files roots. Prior instrumentation counted 149,447 launches, 12,245 async copies and 12,245 synchronizations without device-kernel durations. GPU kernel attribution remains unavailable; do not treat dispatch counts as kernel time.
+
 Focused shared-core contract, transient enthalpy, mesh-convergence and contour-convergence regressions passed **35/35** on the permitted Windows runner. The sandbox attempt's sole failure was Windows TEMP/SQLite access and passed on rerun. Software/conservation regression evidence is distinct from scientific-source review and independent experiment validation; both remain open.
 
 ## 2026-09-28 continuation — alloy evidence gate review
