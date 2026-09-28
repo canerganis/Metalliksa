@@ -9,7 +9,7 @@ class HarnessProtocolTests(unittest.TestCase):
     def sessions():
         sessions=[]
         for i, order in enumerate(bench.ORDERS):
-            samples={k:[float(i+1),float(i+2),float(i+3)] for k in bench.BACKENDS}
+            samples={k:[float(i+1),float(i+2),float(i+3),float(i+4),float(i+5)] for k in bench.BACKENDS}
             measurements=[]
             for round_no in range(1,bench.ROUNDS+1):
                 for label in order:
@@ -22,7 +22,7 @@ class HarnessProtocolTests(unittest.TestCase):
     def test_rotated_orders_and_bounds(self):
         self.assertEqual(bench.ORDERS, (("cpu", "torch", "warp"),
             ("torch", "warp", "cpu"), ("warp", "cpu", "torch")))
-        self.assertEqual(bench.ROUNDS, 3)
+        self.assertEqual(bench.ROUNDS, 5)
         with self.assertRaises(ValueError): bench.run(None, 0)
         with self.assertRaises(ValueError): bench.run(None, bench.MAX_TIMEOUT + 1)
         with self.assertRaises(ValueError): bench._positive(float("nan"))
@@ -31,10 +31,14 @@ class HarnessProtocolTests(unittest.TestCase):
         sessions=self.sessions()
         report=bench._aggregate(sessions)
         self.assertEqual(report["schemaVersion"],1)
-        self.assertEqual(report["roundsPerBackendPerSession"],3)
-        self.assertEqual(report["summary"]["cpu"]["median_s"],3.0)
+        self.assertEqual(report["roundsPerBackendPerSession"],5)
+        self.assertEqual(report["totalSamplesPerBackend"],15)
+        self.assertEqual(report["summary"]["cpu"]["median_s"],4.0)
+        self.assertEqual(report["summary"]["cpu"]["sampleCount"],15)
         self.assertIn("kernel stages",report["scope"]["excludedTiming"])
+        self.assertEqual(report["scope"]["unmeasuredStages"]["kernelStages"],"not-measured")
         self.assertIn("parityPreflight",report["timingStage"])
+        self.assertIn("firstCudaCall",report["timingStage"])
         self.assertIn("not separated",report["sessionWallDefinition"])
         self.assertEqual(report["scope"]["geometryCellQuantization_um"],40)
         self.assertTrue(report["scope"]["finalStateFieldGate"])

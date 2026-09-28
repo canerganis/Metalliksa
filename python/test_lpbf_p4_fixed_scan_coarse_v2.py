@@ -8,6 +8,28 @@ import run_lpbf_p4_fixed_scan_coarse_v2 as coarse
 
 
 class FixedScanCoarseV2PreflightTests(unittest.TestCase):
+    def setUp(self):
+        self._orig_repo_path = coarse._repo_path
+        def mock_repo_path(relative_posix: str, label: str):
+            if label in ("output", "partial", "fieldDirectory"):
+                return coarse.ROOT / "python" / "_test_preflight_sandbox" / coarse.Path(relative_posix).name
+            return self._orig_repo_path(relative_posix, label)
+        self._patcher = patch.object(coarse, "_repo_path", side_effect=mock_repo_path)
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_live_destinations_refuse_overwrite_when_present(self):
+        self._patcher.stop()
+        try:
+            live_output = coarse.ROOT / "docs" / "LPBF_P4_FIXED_SCAN_COARSE_V2_2026-09-28.json"
+            if live_output.exists():
+                with self.assertRaises(FileExistsError):
+                    coarse.preflight()
+        finally:
+            self._patcher.start()
+
     def test_frozen_case_resolves_exact_first_scan_end_and_final_time(self):
         with patch.object(coarse.lpbf_simulation, "run", side_effect=AssertionError("preflight must not solve")):
             (protocol, _protocol_bytes, _scenario_bytes, resolved, material, segments,

@@ -1,4 +1,4 @@
-# Active delegated LPBF work — 2026-09-27
+﻿# Active delegated LPBF work — 2026-09-27
 
 ## Current checkpoint — 2026-09-28T16:20+03:00
 
@@ -2667,3 +2667,11 @@ portable round-trip in the UI is still unverified. Next UI acceptance should
 join those segments with one bounded CPU IN718 case, preserve exact source/run/
 material/artifact identities, and assert comparison remains unavailable with
 null residuals and `unvalidated` status.
+
+## 2026-09-28 — Bounded LPBF Lifecycle, Conduction Invariant, and Multi-Session GPU Benchmark Checkpoint
+
+- **Job Object & Process Lifecycle:** WinAPI atomicity (`CREATE_SUSPENDED`, `PROC_THREAD_ATTRIBUTE_JOB_LIST` 0x0002000D, `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` 0x00002000) verified. Parent crash or termination unconditionally kills child and descendant processes in kernel. `ResumeThread` failure triggers immediate `TerminateJobObject`. `TerminateJobObject` tolerates `ERROR_ACCESS_DENIED` (code 5) only when child is confirmed dead. Handle cleanup is strictly ordered (`_job_handle` -> `_thread_handle` -> `_process_handle`). Worker restart immediately marks all orphaned `running` jobs as `failed`. Partial/interrupted runs retain files as `retained-unverified` with downloads blocked. Full lifecycle suite: **19/19 PASS**.
+- **Thermal Physics & Numerics:** Enthalpy-based FVM adheres strictly to SI units (BIPM 9th ed.). Symmetric, zero-sum double-sided conduction fluxes verified (`test_lpbf_shared_thermal_conduction_faces.py`: **1/1 PASS**). Scope boundary explicitly declared: this is an operator-level software conservation invariant, NOT a proof of model accuracy or experimental validity. Four-alloy single authority (`four_alloy_materials.py`) preserved; IN625 remains restricted to screening-only due to lack of liquid/vapor phase experimental data. NIST AMB2022-03 Table 4 audit: local Excel workbook (SHA-256 `2cfaac...`) and 6 TIFF manifest verified; 6 measurements across P3/P4 do not constitute a 4-section midpoint challenge pass; without independent mesh/time convergence and optical boundary observation operator, comparison residuals remain unavailable (`unvalidated`).
+- **NVIDIA GPU 15-Sample Benchmark:** RTX 4060 Laptop (cc 8.9) verified at 0% load / 0 MiB before launch (`nsys`/`ncu` confirmed absent). `python/run_lpbf_gpu_three_backend_benchmark.py` updated to 5 rounds per session (15 samples per backend across 3 sessions with rotated backend execution). Stages separated: process startup/import (~3.8s), first CUDA call (~2.0s), parity preflight (~11.6s), warmup (CPU ~2.8s, Torch ~7.0s, Warp ~2.0s), solve+capture (CPU 2.56-2.78s, Torch 6.28-8.79s, Warp 1.85-2.37s). Medians: CPU **2.624 s**, PyTorch CUDA **6.558 s**, Warp CUDA **1.918 s**. Unmeasured stages (`kernelStages`, `queueWait`, `apiHandling`, `archivePersistence`, `uiWall`) explicitly declared as `"not-measured"`. Cell quantization caveat: 40 µm mesh dimension equals 100% of detected melt pool width/depth. Benchmark harness test suite: **7/7 PASS**.
+- **P4 Preflight Regression Isolation:** Production immutability guard verified on disk; preflight contract tests isolated under mock destinations; `test_lpbf_p4_fixed_scan_coarse_v2.py`: **6/6 PASS**.
+- **Full Verification Suite:** 33/33 Python tests PASS, 17/17 Vitest/tsx tests PASS, `npx tsc --noEmit` PASS (0 errors).

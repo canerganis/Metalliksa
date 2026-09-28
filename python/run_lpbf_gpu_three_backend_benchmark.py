@@ -24,9 +24,9 @@ CASE = {"mode":"standard", "backend":"reference", "material":"Inconel 718",
         "powderGridPolicy":"layer-conforming"}
 BACKENDS = ("cpu", "torch", "warp")
 ORDERS = (BACKENDS, ("torch", "warp", "cpu"), ("warp", "cpu", "torch"))
-ROUNDS = 3
+ROUNDS = 5
 MAX_TIMEOUT = 7200
-TIMING_STAGE = "freshProcessStartupAndImport+parityPreflight+warmup+measurements"
+TIMING_STAGE = "freshProcessStartupAndImport+firstCudaCall+parityPreflight+warmup+measurements"
 
 def _hash(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -54,22 +54,30 @@ def _warmup_call(call, synchronize):
     return _positive(time.perf_counter() - started)
 
 def _worker(session: int) -> dict:
+    t_start = time.perf_counter()
     import numpy as np
     import torch
     import lpbf_gpu_thermal as tc
     import lpbf_gpu_thermal_warp as wc
     from lpbf_simulation import implementation_fingerprint
     from test_lpbf_gpu_three_backend_parity import CASE as CANONICAL, _relative_field_errors
+    t_imports = time.perf_counter() - t_start
+
+    t_cuda_probe_start = time.perf_counter()
     if CANONICAL != CASE: raise RuntimeError("canonical input identity changed")
     if not torch.cuda.is_available() or not wc.wp or not wc.wp.is_cuda_available():
         raise RuntimeError("CUDA unavailable; refusing benchmark")
     device="cuda:0"; prop=torch.cuda.get_device_properties(device)
+    t_first_cuda = time.perf_counter() - t_cuda_probe_start
+
     order=ORDERS[session]
     def solve(label, capture):
         if label == "cpu": return tc._run_cpu_with_final(CASE, include_final_state=capture)
         if label == "torch": return tc.run_gpu(CASE, device, capture_final=capture, use_cuda_source=False)
         return wc.run_warp(CASE, device, capture_final=capture, capture_pilot_state=capture)
+
     # A full canonical parity pass in this fresh process; discard states locally.
+    t_preflight_start = time.perf_counter()
     cpu=solve("cpu", True); cpu_result, cpu_state=cpu[0], cpu[-1]
     torch_result, torch_state=solve("torch", True)
     warp_pack=solve("warp", True); warp_result, warp_state=warp_pack[0], warp_pack[-1]
@@ -121,6 +129,7 @@ def _worker(session: int) -> dict:
         if (not math.isfinite(expected) or expected <= 0 or
             not _within_relative(actual, expected, .01)):
             raise RuntimeError(f"{label} melt-volume parity gate failed")
+    t_preflight = time.perf_counter() - t_preflight_start
     del cpu, torch_state, warp_pack, warp_state, states
     samples={k:[] for k in BACKENDS}; warm={}; timings=[]
     for label in order:
@@ -136,8 +145,21 @@ def _worker(session: int) -> dict:
             timings.append({"round":round_no+1,"backend":label,"order":list(order),"solveAndFinalCaptureWall_s":elapsed})
     files=[Path(tc.__file__),Path(wc.__file__),Path(__import__("lpbf_simulation").__file__),
            Path(__file__).resolve(),Path(__import__("test_lpbf_gpu_three_backend_parity").__file__).resolve()]
+    stages = {
+        "processStartupAndImport_s": _positive(t_imports),
+        "firstCudaCall_s": _positive(t_first_cuda),
+        "parityPreflight_s": _positive(t_preflight),
+        "warmupWall_s": warm,
+        "unmeasured": {
+            "kernelStages": "not-measured",
+            "queueWait": "not-measured",
+            "apiHandling": "not-measured",
+            "archivePersistence": "not-measured",
+            "uiWall": "not-measured"
+        }
+    }
     return {"session":session+1,"pid":os.getpid(),"order":list(order),
-      "warmupWall_s":warm,"samples":samples,"measurements":timings,
+      "stages":stages,"warmupWall_s":warm,"samples":samples,"measurements":timings,
       "identity":{"inputSha256":_hash(_canonical(CASE)),"sourceSha256":{p.name:_hash(p.read_bytes()) for p in files},
       "implementationFingerprint":implementation_fingerprint(),"materialId":cpu_result["material"]["materialId"],
       "materialRevisionSha256":cpu_result["material"]["materialRevisionSha256"],
@@ -159,7 +181,7 @@ def _aggregate(sessions):
         for i, s in enumerate(sessions):
             per_session=s["samples"].get(backend, [])
             if len(per_session)!=ROUNDS or any(not math.isfinite(v) or v <= 0 for v in per_session):
-                raise ValueError("requires exactly three finite positive samples per backend/session")
+                raise ValueError(f"requires exactly {ROUNDS} finite positive samples per backend/session")
             values.extend(per_session)
         for i,s in enumerate(sessions):
             measurements=s.get("measurements", [])
@@ -175,15 +197,22 @@ def _aggregate(sessions):
                 by_backend[m["backend"]].append(float(value))
             if any(by_backend[k] != list(map(float,s["samples"][k])) for k in BACKENDS):
                 raise ValueError("measurement values must match per-backend sample arrays")
-        summary[backend]={"median_s":statistics.median(values),"min_s":min(values),"max_s":max(values),"range_s":max(values)-min(values)}
+        summary[backend]={"median_s":statistics.median(values),"min_s":min(values),"max_s":max(values),"range_s":max(values)-min(values),"sampleCount":len(values)}
     return {"schemaVersion":1,"benchmarkId":"lpbf-cpu-torch-warp-fresh-process-wall-v1",
       "timingStage":TIMING_STAGE,
       "sessionWallDefinition":"complete child subprocess wall duration; startup/import/parity preflight/warmup/measurements combined and not separated",
       "scope":{"measured":"solver call plus final-state capture wall time",
        "parity":"final-state fields; input/loss/stored energy and peak temperature within 1%; width/depth/length within 40 um geometry cell quantization; volume within 1%",
        "geometryCellQuantization_um":40,"finalStateFieldGate":True,
+       "unmeasuredStages":{
+           "kernelStages":"not-measured",
+           "queueWait":"not-measured",
+           "apiHandling":"not-measured",
+           "archivePersistence":"not-measured",
+           "uiWall":"not-measured"
+       },
        "excludedTiming":["kernel stages","queue","API","archive/persistence","UI"]},
-      "roundsPerBackendPerSession":ROUNDS,"sessions":sessions,"summary":summary}
+      "roundsPerBackendPerSession":ROUNDS,"totalSamplesPerBackend":ROUNDS*len(sessions),"sessions":sessions,"summary":summary}
 
 def run(output: Path, timeout: int=MAX_TIMEOUT):
     if not 1 <= timeout <= MAX_TIMEOUT: raise ValueError("timeout must be in [1, 7200]")

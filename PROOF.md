@@ -1,4 +1,4 @@
-## 2026-09-28 — Heterojen conduction face-pair invariant
+﻿## 2026-09-28 — Heterojen conduction face-pair invariant
 
 - At HEAD `5eebb26241584d6a15a23ee475114168cd3382d7`, `python -m unittest test_lpbf_shared_thermal_conduction_faces -v` from `python/` passed **1/1** (0.301 s). Test SHA-256: `3405b5e18594b50d2a8204238e3225c0ac07fcaa1ddb0b2b31fde115401617e4`.
 - The test independently assembles each active heterogeneous internal face once, checks the production vectorized operator, verifies integrated equal/opposite internal power cancellation, inactive-cell insulation, and inverse-square spacing scaling.
@@ -2951,3 +2951,15 @@ Recorded fixed-scan widths at 20/10/5 µm: 72.46245576/74.36212556/77.70163613 �
 - İzole sunucu 4191, IPC 5191, ayrı temp köklerle başlatıldı; kullanıcı 4179 sekmesi etkilenmedi. Server durduruldu; geçici kök silinmedi. API/UI dışında bu yeni koşunun SQLite satırı ayrıca sorgulanmadı.
 - Lifecycle suite: **19/19 PASS**, `py_compile` **PASS**, `npx tsc --noEmit` **PASS**, hedefli contract/presentation tests **2/2 PASS**. Sandbox test teşebbüsü TEMP/SQLite erişiminde başlamadan hata verdi; yalnız yetkili Windows runner sonucu PASS sayıldı. Ayrıntı, partial dosya hash'leri ve kaynak hash'leri `docs/LPBF_BROWSER_UI_PARTIAL_ARTIFACT_STATUS_2026-09-28.json` içinde.
 - Bu kanıt yalnız yazılım/arayüz davranışıdır. IN718 deney durumu `unvalidated`, kısmi sonuç bütünlüğü `unverified`; yakınsama, NIST gözlem eşleşmesi veya fizik doğruluğu göstermez. Kısmi dosyaların saklama/temizlik politikası açık kalır.
+
+# 2026-09-28 — 5-Round / 15-Örnekli Çoklu Oturum GPU/CPU Benchmarkı ve Yaşam Döngüsü/Fizik Kanıtı
+
+- **Job Object ve Kuyruk Yaşam Döngüsü:** WinAPI atomisitesi (`CREATE_SUSPENDED`, `PROC_THREAD_ATTRIBUTE_JOB_LIST` 0x0002000D, `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` 0x00002000), doğrulanmış hata yolları (`ResumeThread` hata fırlatması durumunda `TerminateJobObject` çağrısı, `TerminateJobObject`'in süreç ölmüşse `ERROR_ACCESS_DENIED` kodunu tolere etmesi, sıralı handle kapatma `_job_handle` -> `_thread_handle` -> `_process_handle`). Canlı child gerçekten sonlanmadan terminal sonuç yayımlanması engellenmiştir. Worker yeniden başladığında açık `running` işler fail-closed olarak `failed` yapılır; yarım kalan dosyalar `retained-unverified` statüsünde kilitlenir. `test_lpbf_worker_lifecycle.py`: **19/19 PASS**.
+- **Ortak Termal Fizik ve Korunum Invariantı:** SI birimleri (BIPM 9. baskı). Çiftli iç yüzey iletim akılarının simetrik ve zıt işaretli olduğu, makine hassasiyetinde sıfıra kapandığı doğrulanmıştır (`test_lpbf_shared_thermal_conduction_faces.py`: **1/1 PASS**). Bu test KESİNLİKLE tüm model doğruluğu veya deneysel geçerlilik DEĞİL, operatör düzeyi yazılım korunum invariantıdır. Dört alaşımın tek otoritesi (`four_alloy_materials.py`) korunmuş, IN625 veri kapılarını geçemediği için tam modele alınmamıştır. NIST Table 4'teki 6 ölçüm resmi 4-kesit midpoint challenge pass'i değildir; mesh/time convergence ve optik gözlem operatörü bağlanmadan residual üretilmez (`unvalidated`).
+- **NVIDIA RTX 4060 Güncel Benchmark (15 Örnek / Backend):** GPU %0 kullanımda ve 0 MiB boşta doğrulanmıştır (`nsys`/`ncu` sistemde bulunamadı). `run_lpbf_gpu_three_backend_benchmark.py` 3 oturum x 5 round = 15 örnek/backend ile çalıştırılmıştır (`docs/LPBF_CPU_TORCH_WARP_BENCHMARK_2026-09-28.json`).
+  - **Medyanlar:** CPU **2.624 s**, Torch CUDA **6.558 s**, Warp CUDA **1.918 s** (1,210 hücre / 934 adım).
+  - **Aşama Ayrıştırması:** Startup/import ~3.8-4.1 s, first CUDA call ~2.0 s, parity preflight ~11.6-12.5 s, warmup (CPU ~2.8s, Torch ~7.0s, Warp ~2.0s), solve+capture (CPU 2.56-2.78s, Torch 6.28-8.79s, Warp 1.85-2.37s).
+  - **Ölçülemeyen Aşamalar:** `kernelStages`, `queueWait`, `apiHandling`, `archivePersistence`, `uiWall` dürüstçe `"not-measured"` olarak kaydedilmiştir.
+  - **Kuantizasyon Sınırı:** 40 µm hücrede genişlik 40 µm, derinlik 40 µm (1 hücre); 40 µm tolerans %100 hücre boyutuna denktir.
+- **P4 Preflight Regression İzolasyonu:** Canlı ağaçtaki delil dosyaları korundu; `test_lpbf_p4_fixed_scan_coarse_v2.py`: **6/6 PASS**.
+- **Doğrulama Özeti:** Python testleri: **33/33 PASS**, Vitest/tsx testleri: **17/17 PASS**, `npx tsc --noEmit`: **PASS**.
