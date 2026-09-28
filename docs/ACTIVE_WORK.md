@@ -1,6 +1,30 @@
 # Active delegated LPBF work — 2026-09-27
 
-## Current checkpoint — 2026-09-28T14:34+03:00
+## Current checkpoint — 2026-09-28T15:01+03:00
+
+Isolated real UI cancel→refresh acceptance now passes. On a fresh 4187 server
+with distinct temporary job/run/source/bundle/IPC roots and without touching
+the user's 4179 tab, job `6074781072904a7d9db63ecc50016aef` was submitted at
+60 W / 1200 mm/s, cancelled in the UI at 5.0446% reported progress, and still
+appeared as the same cancelled job in the refreshed UI and SQLite row. No
+`result.json` or completed result exists; five partial field/checkpoint files
+remain. Their retention/cleanup is an open follow-up. A default 280 W attempt
+failed closed at the boiling limit on step 1; it was not altered or counted as
+a result. See `PROOF.md` and
+`docs/LPBF_BROWSER_UI_CANCEL_REFRESH_2026-09-28.json`. Native fixture reaping
+evidence remains separate; the exact live UI execution-child PID was not
+captured. Temporary evidence directory retained; isolated server process tree
+stopped.
+
+Three-process CPU/Torch/Warp benchmark completed on current source at the
+canonical bounded IN718 case. Nine solve+final-capture samples/backend,
+rotated order, shared input/material/implementation identity and parity
+preflight all passed. Medians: CPU 3.263 s, Torch 9.042 s, Warp 2.555 s;
+report SHA-256 `b3e2dea647a231f788daf2db2ea941087e8f1474ac3d3176e234ede57447c104`.
+This is a measured solver+capture result for one coarse 40 µm case only;
+session startup/import/preflight/warmup are combined, and no queue/API/archive/
+UI/kernel time or convergence/experiment is measured. Harness protocol tests
+pass 7/7 and py_compile passes. No solver optimization was made yet.
 
 Native Windows lifecycle gates were rerun successfully on this checkout:
 `python -m unittest test_lpbf_worker_lifecycle -v` **16/16, zero skips**,
@@ -32,21 +56,23 @@ the build-job fast script; effective material snapshots and alloy IDs remain
 unchanged.
 
 Current next actions:
-1. Run the complete native Windows Job Object, API, and UI cancel-refresh-
-   restore acceptance as one bounded workflow. API and parent-death gates now
-   pass separately; the live browser cancelled-job persistence path is still
-   unverified. Keep the six-second `Queue.close()` boundary explicit.
+1. Audit and decide retention/cleanup of partial field frames left by the UI
+   cancelled job; exact live UI child PID was not captured. API DELETE and
+   parent-death fixtures separately prove child/grandchild reaping. Cancelled
+   jobs cannot be bundled (`Queue.capture()` accepts completed only), so keep
+   completed bundle restore and cancelled-job persistence as separate paths.
+   Keep the six-second `Queue.close()` boundary explicit.
 2. Continue IN718/NIST operator and measured-beam applicability gate. Keep the
    comparison unavailable and residual null until three tracks × sections at
    4.9/6.0 mm, measured profile mapping, and convergence all bind to one exact
    run.
-3. Validate and run the alternating multi-session CPU/Torch/Warp solver-time
-   harness now being implemented. Split fresh process/session and warmup from
-   capture-inclusive solver calls; queue/API/archive/UI and per-kernel time
-   remain unmeasured.
-4. Measure alternating multi-session CPU/Torch/Warp stage times on the same
-   frozen input; current parity runtime is not a performance benchmark. Nsight
-   availability and kernel attribution remain unverified for this checkpoint.
+3. Profile the measured solver-cost difference with Nsight Systems and then
+   Nsight Compute if tools are available; prior PATH/standard-install search
+   reported them absent. Do not infer a kernel hotspot from this benchmark.
+4. Add distinct startup/import/preflight/warmup/queue/capture/persist timings
+   only where the current runtime exposes those stages without changing solver
+   behavior. Current benchmark has combined session wall only and excludes
+   queue/API/archive/UI.
 5. Finish the fresh 20/10/5 µm spatial/time preflight matrix and keep the known
    growing-width trend inconclusive unless new fixed-protocol evidence closes it.
 

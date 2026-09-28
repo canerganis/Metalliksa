@@ -1,0 +1,480 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "lpbf-cpu-torch-warp-fresh-process-wall-v1",
+  "timingStage": "freshProcessStartupAndImport+parityPreflight+warmup+measurements",
+  "sessionWallDefinition": "complete child subprocess wall duration; startup/import/parity preflight/warmup/measurements combined and not separated",
+  "scope": {
+    "measured": "solver call plus final-state capture wall time",
+    "parity": "final-state fields; input/loss/stored energy and peak temperature within 1%; width/depth/length within 40 um geometry cell quantization; volume within 1%",
+    "geometryCellQuantization_um": 40,
+    "finalStateFieldGate": true,
+    "excludedTiming": [
+      "kernel stages",
+      "queue",
+      "API",
+      "archive/persistence",
+      "UI"
+    ]
+  },
+  "roundsPerBackendPerSession": 3,
+  "sessions": [
+    {
+      "session": 1,
+      "pid": 31608,
+      "order": [
+        "cpu",
+        "torch",
+        "warp"
+      ],
+      "warmupWall_s": {
+        "cpu": 3.530802900000708,
+        "torch": 8.501643199997488,
+        "warp": 2.579503200016916
+      },
+      "samples": {
+        "cpu": [
+          3.294507300015539,
+          3.240240300016012,
+          3.2725510000018403
+        ],
+        "torch": [
+          9.041757900005905,
+          9.028895399998873,
+          9.070422699995106
+        ],
+        "warp": [
+          2.53625489998376,
+          2.575364099990111,
+          2.5583111999731045
+        ]
+      },
+      "measurements": [
+        {
+          "round": 1,
+          "backend": "cpu",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 3.294507300015539
+        },
+        {
+          "round": 1,
+          "backend": "torch",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 9.041757900005905
+        },
+        {
+          "round": 1,
+          "backend": "warp",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 2.53625489998376
+        },
+        {
+          "round": 2,
+          "backend": "cpu",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 3.240240300016012
+        },
+        {
+          "round": 2,
+          "backend": "torch",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 9.028895399998873
+        },
+        {
+          "round": 2,
+          "backend": "warp",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 2.575364099990111
+        },
+        {
+          "round": 3,
+          "backend": "cpu",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 3.2725510000018403
+        },
+        {
+          "round": 3,
+          "backend": "torch",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 9.070422699995106
+        },
+        {
+          "round": 3,
+          "backend": "warp",
+          "order": [
+            "cpu",
+            "torch",
+            "warp"
+          ],
+          "solveAndFinalCaptureWall_s": 2.5583111999731045
+        }
+      ],
+      "identity": {
+        "inputSha256": "f7f3ace0e91f533f270ff3d7e54a4e5a00189bea7ed46651851a5642fca6afce",
+        "sourceSha256": {
+          "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
+          "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
+          "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+          "run_lpbf_gpu_three_backend_benchmark.py": "d77c443e8eb54892cff2fd752420d64fddc67b36f8f245aab4205041e588b622",
+          "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
+        },
+        "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "cells": 1210,
+        "acceptedSteps": 934,
+        "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+        "computeCapability": "8.9",
+        "python": "3.12.10",
+        "torch": "2.14.0+cu126",
+        "cudaRuntime": "12.6",
+        "warp": "1.17.0"
+      },
+      "sessionWall_s": 91.12646480000694
+    },
+    {
+      "session": 2,
+      "pid": 33560,
+      "order": [
+        "torch",
+        "warp",
+        "cpu"
+      ],
+      "warmupWall_s": {
+        "torch": 8.41907849998097,
+        "warp": 2.52843869998469,
+        "cpu": 3.260123599990038
+      },
+      "samples": {
+        "cpu": [
+          3.23738289999892,
+          3.2633132000046317,
+          3.262667800008785
+        ],
+        "torch": [
+          8.985942400002386,
+          9.11501639999915,
+          9.184851199999684
+        ],
+        "warp": [
+          2.5523721000063233,
+          2.547577100020135,
+          2.5691109000181314
+        ]
+      },
+      "measurements": [
+        {
+          "round": 1,
+          "backend": "torch",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 8.985942400002386
+        },
+        {
+          "round": 1,
+          "backend": "warp",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 2.5523721000063233
+        },
+        {
+          "round": 1,
+          "backend": "cpu",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 3.23738289999892
+        },
+        {
+          "round": 2,
+          "backend": "torch",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 9.11501639999915
+        },
+        {
+          "round": 2,
+          "backend": "warp",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 2.547577100020135
+        },
+        {
+          "round": 2,
+          "backend": "cpu",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 3.2633132000046317
+        },
+        {
+          "round": 3,
+          "backend": "torch",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 9.184851199999684
+        },
+        {
+          "round": 3,
+          "backend": "warp",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 2.5691109000181314
+        },
+        {
+          "round": 3,
+          "backend": "cpu",
+          "order": [
+            "torch",
+            "warp",
+            "cpu"
+          ],
+          "solveAndFinalCaptureWall_s": 3.262667800008785
+        }
+      ],
+      "identity": {
+        "inputSha256": "f7f3ace0e91f533f270ff3d7e54a4e5a00189bea7ed46651851a5642fca6afce",
+        "sourceSha256": {
+          "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
+          "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
+          "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+          "run_lpbf_gpu_three_backend_benchmark.py": "d77c443e8eb54892cff2fd752420d64fddc67b36f8f245aab4205041e588b622",
+          "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
+        },
+        "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "cells": 1210,
+        "acceptedSteps": 934,
+        "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+        "computeCapability": "8.9",
+        "python": "3.12.10",
+        "torch": "2.14.0+cu126",
+        "cudaRuntime": "12.6",
+        "warp": "1.17.0"
+      },
+      "sessionWall_s": 83.01171569997678
+    },
+    {
+      "session": 3,
+      "pid": 39492,
+      "order": [
+        "warp",
+        "cpu",
+        "torch"
+      ],
+      "warmupWall_s": {
+        "warp": 2.5231976000068244,
+        "cpu": 3.252717700001085,
+        "torch": 8.831996000022627
+      },
+      "samples": {
+        "cpu": [
+          3.259080800024094,
+          3.2988093000021763,
+          3.2662944000039715
+        ],
+        "torch": [
+          8.719677700020839,
+          9.127538700005971,
+          8.770390199992107
+        ],
+        "warp": [
+          2.5342374999891035,
+          2.571117699990282,
+          2.5546869999961928
+        ]
+      },
+      "measurements": [
+        {
+          "round": 1,
+          "backend": "warp",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 2.5342374999891035
+        },
+        {
+          "round": 1,
+          "backend": "cpu",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 3.259080800024094
+        },
+        {
+          "round": 1,
+          "backend": "torch",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 8.719677700020839
+        },
+        {
+          "round": 2,
+          "backend": "warp",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 2.571117699990282
+        },
+        {
+          "round": 2,
+          "backend": "cpu",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 3.2988093000021763
+        },
+        {
+          "round": 2,
+          "backend": "torch",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 9.127538700005971
+        },
+        {
+          "round": 3,
+          "backend": "warp",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 2.5546869999961928
+        },
+        {
+          "round": 3,
+          "backend": "cpu",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 3.2662944000039715
+        },
+        {
+          "round": 3,
+          "backend": "torch",
+          "order": [
+            "warp",
+            "cpu",
+            "torch"
+          ],
+          "solveAndFinalCaptureWall_s": 8.770390199992107
+        }
+      ],
+      "identity": {
+        "inputSha256": "f7f3ace0e91f533f270ff3d7e54a4e5a00189bea7ed46651851a5642fca6afce",
+        "sourceSha256": {
+          "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
+          "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
+          "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+          "run_lpbf_gpu_three_backend_benchmark.py": "d77c443e8eb54892cff2fd752420d64fddc67b36f8f245aab4205041e588b622",
+          "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
+        },
+        "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "cells": 1210,
+        "acceptedSteps": 934,
+        "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+        "computeCapability": "8.9",
+        "python": "3.12.10",
+        "torch": "2.14.0+cu126",
+        "cudaRuntime": "12.6",
+        "warp": "1.17.0"
+      },
+      "sessionWall_s": 82.7638641000085
+    }
+  ],
+  "summary": {
+    "cpu": {
+      "median_s": 3.2633132000046317,
+      "min_s": 3.23738289999892,
+      "max_s": 3.2988093000021763,
+      "range_s": 0.061426400003256276
+    },
+    "torch": {
+      "median_s": 9.041757900005905,
+      "min_s": 8.719677700020839,
+      "max_s": 9.184851199999684,
+      "range_s": 0.46517349997884594
+    },
+    "warp": {
+      "median_s": 2.5546869999961928,
+      "min_s": 2.5342374999891035,
+      "max_s": 2.575364099990111,
+      "range_s": 0.04112660000100732
+    }
+  }
+}
