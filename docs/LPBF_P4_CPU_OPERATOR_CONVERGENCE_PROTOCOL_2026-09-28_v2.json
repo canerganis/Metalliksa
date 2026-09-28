@@ -14,7 +14,7 @@
   ],
   "expectedImplementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
   "runnerFile": "python/run_lpbf_p4_accepted_dt_diagnostic_v2.py",
-  "runnerSha256": "724c5baae45c2eae005a7a1697b22b2643db9aff8beb0a421da44eb34295b17c",
+  "runnerSha256": "e2def2636cd67899209c99a7bb47cfa69dc2dc06de40d94f9e5f5baf65fc9b6f",
   "assessmentModuleFile": "python/lpbf_convergence_study.py",
   "assessmentModuleSha256": "62e04531004b6d57b30890bdc0568dc46a420a52ee8af5b75fa4436b03931d50",
   "contourAssessmentModuleFile": "python/lpbf_contour_convergence_study.py",

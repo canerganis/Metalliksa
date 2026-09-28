@@ -272,9 +272,11 @@ def run_protocol(protocol_path=PROTOCOL_PATH):
     original_run = convergence_study.run
     original_step_limiter = lpbf_simulation.source_limited_step
     runtime_steps = {"caseSteps": 0, "totalSteps": 0}
+    current_requested = None
     try:
         destinations["fieldDirectory"].mkdir()
         for requested in protocol["requestedMaxDt_s"]:
+            current_requested = requested
             if implementation_fingerprint() != source_fingerprint:
                 raise ValueError("Numerical source fingerprint changed before P4 v2 row")
             captured = []
@@ -324,7 +326,12 @@ def run_protocol(protocol_path=PROTOCOL_PATH):
             report["runtimeWork"] = {"acceptedSteps": runtime_steps["totalSteps"],
                                      "acceptedCellSteps": runtime_steps["totalSteps"] * resources["cells"]}
             _replace_partial(destinations["partial"], report)
-    except Exception as error:
+            current_requested = None
+    except BaseException as error:
+        report["runtimeWork"] = {"acceptedSteps": runtime_steps["totalSteps"],
+                                 "acceptedCellSteps": runtime_steps["totalSteps"] * resources["cells"]}
+        if current_requested is not None:
+            report["failedCaseRequestedMaxDt_s"] = current_requested
         _mark_failed_partial(destinations["partial"], report, error)
         raise
     finally:
@@ -351,7 +358,7 @@ def run_protocol(protocol_path=PROTOCOL_PATH):
             report["status"] = "failed"
         _replace_partial(destinations["partial"], report)
         _write_new(destinations["output"], report)
-    except Exception as error:
+    except BaseException as error:
         _mark_failed_partial(destinations["partial"], report, error)
         raise
     return report
