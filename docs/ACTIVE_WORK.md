@@ -2351,3 +2351,52 @@ HTTP DELETE child+grandchild integration is 1/1 PASS, Python parent-death lifecy
 2026-09-28 build-job material snapshot archive package complete: build archive detail renders `materialPropertySnapshot` and the root `materialPropertySha256` bound to it; deliberate nested-hash conflict regression prevents displaying an unbound alias. The end-to-end test performs an actual IN718 build job, archives it with no optical source link, exports/restores the bundle, then verifies snapshot equality, canonical hash, and restored SQLite document digest. UI 12/12, TypeScript PASS, archive workflow 1/1, scoped diff check PASS in authorized runner. This is software/persistence evidence only.
 
 2026-09-28 P4 spatial preflight: current 20/10/5 µm fixed scan-end widths are 72.46246/74.36213/77.70164 µm; corrections grow 1.89967→3.33951 µm, negative observed order, so keep convergence `inconclusive`. 2.5 µm projects 4,212,736 cells, exceeding current 5 µm minimum and 600,000-cell cap; do not relax gates. No solver run launched. Next: prepare a fresh-source/material/operator 20/10/5 µm, 25 ns fixed scan-end protocol, run only its 20 µm preflight case first, and record wall time/RSS before deciding whether to execute remaining rows. Preserve thresholds and old reports.
+
+## 2026-09-28 — Fresh P4 coarse-v2 CPU record
+
+Luna owns only `python/run_lpbf_p4_fixed_scan_coarse_v2.py`,
+`docs/LPBF_P4_FIXED_SCAN_COARSE_V2_PROTOCOL_2026-09-28.json`, and
+`python/test_lpbf_p4_fixed_scan_coarse_v2.py`; no agent committed. Initial
+independent review caught and fixed two pre-solve defects: the runtime guard
+installation and missing observer-module SHA binding. The added tests cover
+guard counts/caps/restoration and observer hash rejection; Astra re-reviewed
+and found no remaining blocker. Root reran the focused test **5/5 PASS**,
+`py_compile` **PASS**, and `--preflight-only` **PASS** before launching exactly
+one bounded 20 µm CPU solve.
+
+The run completed in 23.827 s with 8,228 cells, 14,000 accepted steps, 115.192M
+cell-steps, and 236,306,432 B sampled RSS. Source, scenario, protocol, runner,
+observer and material/input identities remained bound and stable; report
+integrity is **PASS**. Ordered accepted-dt replay equals the recorded 249.999999999943
+µs field time within 1.084e-15 s of the 250 µs scan-end target. Final 350 µs
+enthalpy agrees with the energy ledger (relative closure 1.631e-13). Field file
+and all five array hashes were independently checked. Solver record status and
+spatial/time convergence remain **inconclusive** (only one mesh/time level);
+model/IN718 experimental validation remains **unvalidated**. This is not an
+experimental comparison or a GPU/performance result.
+
+Independent IN718 review: official NIST case-0 workbook and six TIFF assets
+have checksum-bound measurements, but the six-section optical observer is
+unimplemented and currently fails closed unconditionally. No residual is valid
+yet; next evidence work is to establish the three-track × two-position section
+mapping and beam-profile applicability before any long solve.
+
+Independent GPU review: the 2026-09-28 fresh three-session solver-only report
+has Torch/Warp medians 12.519/8.520 s, but its pinned implementation fingerprint
+`05ac6db2…` differs from the live `implementation_fingerprint()`
+`8742af1f…`. It excludes final-field capture and end-to-end stages; treat it as
+historical for the current code. Live RTX 4060/Torch CUDA are available; Nsight
+is not found. No kernel attribution or current-code speed claim; build a fresh
+identity-bound, capture-inclusive CPU/Torch/Warp measurement after safe idle-GPU
+preflight.
+
+Archive/workflow audit: the integration test covers a real bounded CPU solve,
+comparison API, bundle export/restore and SQLite/source/artifact hash checks,
+but source selection, solver submission and archive API are exercised through
+separate service/RPC/HTTP boundaries. Live browser proofs cover source
+selection, comparison gating, and portable download→real file chooser→restore→
+reload in separate journeys; one uninterrupted fresh compute→compare→archive
+portable round-trip in the UI is still unverified. Next UI acceptance should
+join those segments with one bounded CPU IN718 case, preserve exact source/run/
+material/artifact identities, and assert comparison remains unavailable with
+null residuals and `unvalidated` status.
