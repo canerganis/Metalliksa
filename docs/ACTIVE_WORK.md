@@ -2216,3 +2216,24 @@ IN718 case 0 residual remains withheld. The checksum-bound NIST Table 4 transcri
 
 ## 2026-09-28 continuation — Windows Job Object cleanup paths
 Worker lifecycle cleanup now checks Win32 `CloseHandle` and does not publish a process return code until all owned handles close; a failed close retains the handle for cleanup retry. Direct WinAPI mock regressions cover ResumeThread failure/reap, TerminateJobObject error, wait error, and CloseHandle error/retry. Actual parent-kill test confirms the child is gone, stale job failed, and artifact absent. Focused lifecycle/timeout suite **17/17 PASS**; `py_compile` and diff check PASS. These mocks are not real OS fault injection, and descendant process-tree behavior remains **unverified**. Commit this package after final diff/status review.
+# LPBF archive follow-up — 2026-09-28
+
+Completed this package: source-link status now checks the archived dataset ID,
+revision, and SHA-256 before saying `exact-revision-bound`; unresolved links
+remain explicitly unverified. Focused API/client/UI tests **28/28 PASS** and
+TypeScript lint **PASS**. A fresh local server completed API export/verify/
+isolated restore/readback and real UI bundle verify/restore/export; a restored
+run preserved its ID, document hash, and `unvalidated-model` status. The tar
+route returned 200 with 134,133,760 bytes. All 21 source and 134 run artifact
+references matched local byte counts and SHA-256 values.
+
+Open evidence: IN718 Table 4 comparison still reports `unavailable` because the
+fixed artifact does not match the reviewed local comparison revision. No
+residual was calculated. An older 4177 server's bundle create returned 503,
+while 4178 passed; investigate runtime/root configuration before calling the
+existing local instance healthy. Keep the user's 4176 browser tab untouched.
+
+Next: inspect 4177/4176 bundle roots and refresh persistence without changing
+run/source records; locate the historical Table 4 artifact if available,
+otherwise preserve `unavailable`. Continue shared-physics literature,
+spatial-convergence, NVIDIA profiling, and four-alloy authority checks.

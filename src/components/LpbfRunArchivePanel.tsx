@@ -467,7 +467,9 @@ function ArchivedRunRecord({ runId, restoreId }: { runId: string; restoreId?: st
       <p>Contract: {record.document.capture.contractStatus === 'gpu-pilot-v2-warp-bound' ? 'Warp GPU pilot v2 bound'
         : record.document.capture.contractStatus === 'gpu-pilot-v1-bound' ? 'PyTorch CUDA pilot v1 bound'
         : record.document.capture.contractStatus === 'legacy-unbound' ? 'Legacy run · core contract unbound' : 'Core v1 bound'}</p>
-      <p>Source binding: {record.sourceBindingStatus === 'exact-revision-bound' ? 'Exact archived source revision' : 'Legacy run · no archived source revision'}</p>
+      <p>Source binding: {record.sourceBindingStatus === 'exact-revision-bound' ? 'Exact archived source revision'
+        : record.sourceBindingStatus === 'unverified-source-link' ? 'Unverified source link · archived revision is missing or its hash does not match'
+        : 'Legacy run · no archived source revision'}</p>
       <p>Job ID: {record.document.capture.jobId}</p>
       <details><summary className="cursor-pointer font-medium mt-3">Document Payload</summary>
       <pre className="text-xs bg-slate-950 p-3 overflow-auto mt-2 text-slate-300">{JSON.stringify(record.document, null, 2)}</pre>

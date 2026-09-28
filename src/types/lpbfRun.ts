@@ -23,7 +23,7 @@ export interface RunDocument {
   sources: RunSourceLink[];
 }
 
-export type RunSourceBindingStatus = 'exact-revision-bound' | 'legacy-unlinked';
+export type RunSourceBindingStatus = 'exact-revision-bound' | 'legacy-unlinked' | 'unverified-source-link';
 
 export interface RunRecord {
   document: RunDocument;

@@ -11,9 +11,18 @@ import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
 const MAX_RUN_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const MAX_ARCHIVE_SIZE_BYTES = 15 * 1024 * 1024 * 1024; // 15 GB
 const QUOTA_WARNING_THRESHOLD = 0.9; // Warn at 90%
-export type RunSourceBindingStatus = 'exact-revision-bound' | 'legacy-unlinked';
-const bindingStatus = (record: RunRecord): RunSourceBindingStatus =>
-  record.document.sources.length ? 'exact-revision-bound' : 'legacy-unlinked';
+export type RunSourceBindingStatus = 'exact-revision-bound' | 'legacy-unlinked' | 'unverified-source-link';
+const bindingStatus = (record: RunRecord, sources: LpbfSourceRepository | null): RunSourceBindingStatus => {
+  if (!record.document.sources.length) return 'legacy-unlinked';
+  if (!sources) return 'unverified-source-link';
+  for (const link of record.document.sources) {
+    try {
+      const revision = sources.revision(link.datasetId, link.revision);
+      if (!revision || revision.documentSha256 !== link.documentSha256) return 'unverified-source-link';
+    } catch { return 'unverified-source-link'; }
+  }
+  return 'exact-revision-bound';
+};
 
 function getDirectorySizeBytes(dir: string): number {
   try {
@@ -60,24 +69,28 @@ export class LpbfRunArchiveService {
   list(): { runId: string; createdAt: string; evidenceStatus: string; sourceBindingStatus: RunSourceBindingStatus; runKind: RunRecord['runKind'] }[] {
     const repository = this.runRepository(true);
     if (!repository) return [];
+    let sources: LpbfSourceRepository | null = null;
     try {
+      try { sources = this.sourceRepository(); } catch { /* Keep run history visible, but do not claim source links are verified. */ }
       const runs = [];
       for (const record of repository.allRuns()) {
         runs.push({ runId: record.document.runId, createdAt: record.createdAt,
-          evidenceStatus: record.evidenceStatus, sourceBindingStatus: bindingStatus(record), runKind: record.runKind });
+          evidenceStatus: record.evidenceStatus, sourceBindingStatus: bindingStatus(record, sources), runKind: record.runKind });
       }
       return runs;
-    } finally { repository.close(); }
+    } finally { sources?.close(); repository.close(); }
   }
 
   get(runId: string): RunRecord & { sourceBindingStatus: RunSourceBindingStatus } {
     const repository = this.runRepository(true);
     if (!repository) throw new LpbfRunArchiveError(404, 'Run repository not found.');
+    let sources: LpbfSourceRepository | null = null;
     try {
+      try { sources = this.sourceRepository(); } catch { /* Preserve run visibility when source verification is unavailable. */ }
       const record = repository.get(runId);
       if (!record) throw new LpbfRunArchiveError(404, 'Run not found.');
-      return { ...record, sourceBindingStatus: bindingStatus(record) };
-    } finally { repository.close(); }
+      return { ...record, sourceBindingStatus: bindingStatus(record, sources) };
+    } finally { sources?.close(); repository.close(); }
   }
 
   async getVerified(runId: string): Promise<RunRecord & { sourceBindingStatus: RunSourceBindingStatus }> {

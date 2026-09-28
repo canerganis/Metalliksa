@@ -100,6 +100,18 @@ test('run HTTP archive resolves exact source and preserves analytical screening 
   assert.equal(legacy.sourceBindingStatus, 'legacy-unlinked');
   assert.equal(legacy.evidenceStatus, 'unvalidated-model');
 
+  const unresolvedId = 'c'.repeat(32);
+  const unresolvedRepo = new LpbfRunRepository(path.join(runRoot, 'runs.sqlite'));
+  try { unresolvedRepo.save({ schemaVersion: 1, runId: unresolvedId,
+    capture: { ...capture, jobId: unresolvedId },
+    sources: [{ datasetId: 'synthetic', revision: 99, documentSha256: sha('missing-source-revision') }] }); }
+  finally { unresolvedRepo.close(); }
+  const unresolved = await (await fetch(`${endpoint}/${unresolvedId}`)).json();
+  assert.equal(unresolved.sourceBindingStatus, 'unverified-source-link');
+  const unresolvedList = await (await fetch(endpoint)).json();
+  assert.equal(unresolvedList.find((item: { runId: string }) => item.runId === unresolvedId).sourceBindingStatus,
+    'unverified-source-link');
+
   writeFileSync((await sourceStore.verify(artifact)).path, 'bad');
   const invalidBytes = await post('preview', selected);
   assert.equal(invalidBytes.status, 409); assert.match(invalidBytes.body.error, /artifact bytes/i);

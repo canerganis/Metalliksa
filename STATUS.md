@@ -2,10 +2,18 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — LPBF kayıt arşivi ve bundle UI/API round-trip
+- API durum listesi artık kaynak bağı etiketini yalnızca run belgesinde bağlantı satırı bulunmasına göre “exact” saymıyor: kaynak metadata deposundaki dataset/revision ve SHA-256 kaydı da eşleşmeli. Eksik/erişilemeyen/eski hash’li bağlantı `unverified-source-link`; kaynak belirtmeyen eski koşu `legacy-unlinked` olarak kalır. Bundle geri yükleme doğrulaması kaynak ve artifact baytlarını ayrıca yapar.
+- `POST /api/lpbf/runs/bundles/export` ve `verify`, izole `restore`, restored list/detail API akışı geçici yerel sunucuda PASS: manifest 3 run / 132 benzersiz run artifact / 3 source link; geri yüklenen run aynı ID ve document SHA-256 ile okundu, model durumu `unvalidated-model` kaldı. Gerçek arayüzde seçme, bundle verify/restore, restored-run görünümü ve yeni bundle üretimi PASS; bundle `.tar` yanıtı 200 (`application/x-tar`, 134,133,760 bayt).
+- IN718 NIST Table 4 UI comparison **unavailable / unvalidated** kaldı; run revizyon 1 SHA’sı saklandı fakat karşılaştırma servisi bu sabit transkripsiyon artifact’ını gözden geçirilmiş yerel revizyonla eşleştiremedi. Sayısal residual üretilmedi. Üç koşudan yalnızca biri transient; altı-kesit proxy kampanyası devreye girmedi.
+- Kaynak arşivindeki tarihsel 21 source-artifact referansı ve run kayıtlarındaki 134 artifact referansı yerel boyut/SHA-256 denetiminden geçti. IN625 revision 1, run hash’iyle eşleşiyor; NIST güncel önizleme hash’i tarihsel revision 1’in yerine geçirilmedi. IN625 tam model kabulü/single-authority değişmedi.
+- Doğrulama: LPBF archive/API/client/UI testleri **28/28 PASS**; TypeScript lint **PASS**. İlk sandbox test girişimi `spawn EPERM` verdi; yetkili Windows runner’da tekrar PASS. 4177 sekmesindeki ilk bundle denemesi 503 döndü; yeni 4178 sunucusunda aynı verilerle API/UI export ve restore PASS. 4177’nin ayrı çalışma zamanı farkı henüz açıklanmadı.
+- Sıradaki: farklı çalışma zamanı kullanan 4177/4176 akışında bundle API hata yolunu ve persistent selection/refresh’i incele; NIST rev1 artifact mismatch nedenini eski kaynak baytlarıyla kapatamıyorsak comparison `unavailable` kalsın. Ölçülmüş match olmadan residual/validasyon üretme.
+
 ## 2026-09-28 — Windows Job Object hata yolları
 - `_WindowsJobChild` artık başarısız `CloseHandle`'ı hata olarak bildirip handle kimliğini koruyor; process handle en son kapatılıyor ve child ancak tüm sahipli handle'lar başarıyla kapandıktan sonra `returncode` ile reaped sayılıyor. `ResumeThread` sonrası thread-handle kapanması da kontrol ediliyor.
 - `ResumeThread`, `TerminateJobObject`, `WaitForSingleObject` ve `CloseHandle` hata davranışları kontrollü WinAPI mock'larıyla sınandı; canlı parent-kill testi aynı pakette geçti. Lifecycle/timeout grubu **17/17 PASS**, `py_compile` ve hedefli diff check PASS.
-- Sınır: bu kontrollü hatalar gerçek kernel API arızası enjekte etmez; descendant süreç ağacı davranışı da **doğrulanmadı**. Bunları doğrulanmış sayma. Kod/kanıt paketi henüz commit edilmedi.
+- Sınır: bu kontrollü hatalar gerçek kernel API arızası enjekte etmez; descendant süreç ağacı davranışı da **doğrulanmadı**. Bunları doğrulanmış sayma. Kod ve kanıt paketi `ad0b345` commit'inde.
 
 ## 2026-09-28 — Güncel P4 v2 CPU zaman-adımı koşusu tamamlandı
 - Dondurulmuş protokol `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_PROTOCOL_2026-09-28_v2.json` altında IN718 / `enthalpy-fv-6` / NumPy CPU-reference, sabit 5 µm ağ ve aynı girdi-kaynak-malzeme kimliğiyle 50/25/12,5 ns istekleri tamamlandı. Çalıştırma HEAD'i `c20f69cfaaaf3365374cc2ba7343ea36a1b2befa`; rapor `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.json`, üç son-alan NPZ'si `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_FIELDS_2026-09-28/` altında.

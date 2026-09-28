@@ -98,7 +98,7 @@ const bundleId = (value: unknown): value is string => typeof value === 'string' 
 const count = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 const date = (value: unknown): value is string => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const bindingStatus = (value: unknown): value is RunSourceBindingStatus =>
-  value === 'exact-revision-bound' || value === 'legacy-unlinked';
+  value === 'exact-revision-bound' || value === 'legacy-unlinked' || value === 'unverified-source-link';
 const runKind = (value: unknown): value is RunKind =>
   value === 'analytical-screening' || value === 'build-screening'
   || value === 'transient-thermal' || value === 'bounded-material-screening'
@@ -156,7 +156,8 @@ function recordIdentity(value: unknown, expectedJobId: string): asserts value is
     || !runKind(value.runKind)
     || value.runKind !== (value.document.capture.runKind ?? 'legacy-unspecified')
     || !bindingStatus(value.sourceBindingStatus)
-    || value.sourceBindingStatus !== (value.document.sources.length ? 'exact-revision-bound' : 'legacy-unlinked')) throw invalid();
+    || (value.document.sources.length === 0 && value.sourceBindingStatus !== 'legacy-unlinked')
+    || (value.document.sources.length > 0 && value.sourceBindingStatus === 'legacy-unlinked')) throw invalid();
 }
 
 async function request(path: string, signal: AbortSignal, body?: object) {

@@ -51,6 +51,11 @@ test('run client rejects a source binding status inconsistent with its document'
   await assert.rejects(getRun(jobId, signal), /invalid/i);
 });
 
+test('run client preserves unresolved source links without claiming a verified revision', async t => {
+  respond(t, { ...record, document: boundDocument, sourceBindingStatus: 'unverified-source-link' });
+  assert.equal((await getRun(jobId, signal)).sourceBindingStatus, 'unverified-source-link');
+});
+
 test('run list accepts current server rows', async t => {
   respond(t, [{ runId: jobId, createdAt: record.createdAt, evidenceStatus: record.evidenceStatus,
     sourceBindingStatus: record.sourceBindingStatus, runKind: record.runKind }]);
