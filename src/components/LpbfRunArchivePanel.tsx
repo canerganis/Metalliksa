@@ -277,6 +277,33 @@ export function restoreRunSelectionForArchive(runIds: string[],
   return selected;
 }
 
+function restoredBundleRunSelectionKey(restoreId: string): string {
+  return `metalliksa.lpbf.restoredBundle.${restoreId}.selectedRun.v1`;
+}
+
+export function restoreRunSelectionForBundle(restoreId: string, runIds: string[],
+  getStorage: () => RunSelectionStorage = () => window.localStorage): string {
+  const fallback = runIds[0] ?? '';
+  if (!/^[a-f0-9]{32}$/.test(restoreId)) return fallback;
+  let storage: RunSelectionStorage;
+  let savedId: string | null;
+  try {
+    storage = getStorage();
+    savedId = storage.getItem(restoredBundleRunSelectionKey(restoreId));
+  } catch { return fallback; }
+  const selected = runSelectionForArchive(runIds, savedId && /^[a-f0-9]{32}$/.test(savedId) ? savedId : null);
+  if (selected) {
+    try { storage.setItem(restoredBundleRunSelectionKey(restoreId), selected); } catch { /* Preserve the verified stored selection in memory. */ }
+  }
+  return selected;
+}
+
+export function persistRunSelectionForBundle(restoreId: string, runId: string,
+  getStorage: () => RunSelectionStorage = () => window.localStorage): void {
+  if (!/^[a-f0-9]{32}$/.test(restoreId) || !/^[a-f0-9]{32}$/.test(runId)) return;
+  try { getStorage().setItem(restoredBundleRunSelectionKey(restoreId), runId); } catch { /* Keep the selection for this view. */ }
+}
+
 export function portableBundleSelectionKey(file: Pick<File, 'name' | 'size' | 'lastModified'> | null,
   selectionRevision: number): string {
   return file ? `${selectionRevision}:${file.name}:${file.size}:${file.lastModified}` : `no-file:${selectionRevision}`;
@@ -459,7 +486,7 @@ function RestoredBundleRuns({ restoreId }: { restoreId: string }) {
   useEffect(() => {
     const controller = new AbortController();
     listRestoredRuns(restoreId, controller.signal).then(items => {
-      if (!controller.signal.aborted) { setRuns(items); setRunId(items[0]?.runId ?? ''); }
+      if (!controller.signal.aborted) { setRuns(items); setRunId(restoreRunSelectionForBundle(restoreId, items.map(item => item.runId))); }
     }).catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Restored records unavailable.'); });
     return () => controller.abort();
   }, [restoreId]);
@@ -470,7 +497,7 @@ function RestoredBundleRuns({ restoreId }: { restoreId: string }) {
       : runs?.length === 0 ? <p>No run records are present in this bundle.</p>
       : runs && <>
         <label className="block text-sm">Open a restored run<select aria-label="Open a restored run" className="mt-2 block w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2"
-          value={runId} onChange={event => setRunId(event.target.value)}>{runs.map(item => <option key={item.runId} value={item.runId}>{item.runId.slice(0, 8)}… · {item.runKind} · {item.createdAt}</option>)}</select></label>
+          value={runId} onChange={event => { setRunId(event.target.value); persistRunSelectionForBundle(restoreId, event.target.value); }}>{runs.map(item => <option key={item.runId} value={item.runId}>{item.runId.slice(0, 8)}… · {item.runKind} · {item.createdAt}</option>)}</select></label>
         {runId && <ArchivedRunRecord key={runId} restoreId={restoreId} runId={runId} />}
       </>}
   </div>;
