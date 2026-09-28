@@ -2221,7 +2221,7 @@ Worker lifecycle cleanup now checks Win32 `CloseHandle` and does not publish a p
 Completed this package: source-link status now checks the archived dataset ID,
 revision, and SHA-256 before saying `exact-revision-bound`; unresolved links
 remain explicitly unverified. Focused API/client/UI tests **28/28 PASS** and
-TypeScript lint **PASS**. A fresh local server completed API export/verify/
+TypeScript lint **PASS**; code/evidence commit `b184c46`. A fresh local server completed API export/verify/
 isolated restore/readback and real UI bundle verify/restore/export; a restored
 run preserved its ID, document hash, and `unvalidated-model` status. The tar
 route returned 200 with 134,133,760 bytes. All 21 source and 134 run artifact
