@@ -5,7 +5,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GpuPilotArchiveAction, GpuPilotExecutedInputSummary, LpbfEngineeringSimulation, gpuPilotRuntimeLabel,
-  recoverMissingSavedGpuPilot, gpuDevicesForEngine, sameGpuDeviceIdentity } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
+  materialSourceEvidenceReadiness, materialTableAvailabilityReadiness, recoverMissingSavedGpuPilot, gpuDevicesForEngine, sameGpuDeviceIdentity } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
 import { ArchivedRunMaterialProvenance, ExecutedMaterialProvenance, GpuPilotParityTable, gpuPilotEngineLabel, persistRunSelectionForArchive,
   restoreRunSelectionForArchive } from '../src/components/LpbfRunArchivePanel';
 import { buildGpuPilotInput, parseGpuPilotJob, type GpuPilotInput } from '../src/services/lpbfSimulationService';
@@ -28,6 +28,39 @@ test('engineering screen keeps the CUDA pilot visibly separate from standard CPU
   assert.ok(html.includes('NVIDIA Warp candidate · v2'));
   assert.ok(html.includes('No PyTorch CUDA devices available'));
   assert.match(html, /type="submit"/);
+});
+
+test('material availability does not pass source and uncertainty evidence readiness', () => {
+  const available = materialTableAvailabilityReadiness(true, false, false);
+  assert.equal(available.status, 'pass');
+  assert.match(available.details, /availability does not establish source quality/i);
+  const missing = materialTableAvailabilityReadiness(false, false, true);
+  assert.equal(missing.status, 'fail');
+  const userSupplied = materialTableAvailabilityReadiness(undefined, true, false);
+  assert.equal(userSupplied.status, 'pending');
+  assert.match(userSupplied.details, /awaiting worker validation/i);
+  assert.equal(materialTableAvailabilityReadiness(true, true, false).status, 'pending', 'user override must not inherit canonical registry availability');
+  const overrideEvidence = materialSourceEvidenceReadiness('user-supplied-unverified');
+  assert.equal(overrideEvidence.status, 'warn');
+  assert.match(overrideEvidence.details, /User-supplied material data/);
+  assert.equal(materialTableAvailabilityReadiness(undefined, false, false).status, 'pending');
+  for (const quality of ['estimated', 'estimated-legacy', 'user-supplied-unverified']) {
+    const evidence = materialSourceEvidenceReadiness(quality);
+    assert.equal(evidence.status, 'warn', quality);
+    assert.match(evidence.details, /source review and quantified property uncertainty are not established/i);
+    assert.match(evidence.details, /exploratory execution remains available/i);
+  }
+  const pending = materialSourceEvidenceReadiness();
+  assert.equal(pending.status, 'pending');
+  assert.match(pending.details, /treat material data as unverified/i);
+  const html = renderToStaticMarkup(<LpbfEngineeringSimulation input={{
+    material: 'Inconel 718', power_W: 60, speed_mm_s: 1200,
+    beamDiameter_um: 80, preheat_C: 25, layer_um: 80, hatch_um: 100,
+  }}/>);
+  assert.ok(html.includes('Material table availability'));
+  assert.ok(html.includes('Material source and uncertainty evidence'));
+  assert.ok(html.includes('Source review and quantified property uncertainty are not established'));
+  assert.ok(html.includes('treat material data as unverified'));
 });
 
 test('CUDA device picker uses only the selected runtime inventory and rejects malformed entries', () => {

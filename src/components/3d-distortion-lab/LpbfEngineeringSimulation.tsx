@@ -28,6 +28,21 @@ const fmt = number;
 const inputClass = "w-full min-w-0 rounded-lg bg-slate-950/60 border border-slate-600/70 px-3 py-2.5 text-slate-100 transition-colors hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300";
 type ReadinessStatus = "pass" | "warn" | "fail" | "pending";
 type ReadinessItem = { status: ReadinessStatus; label: string; details: string };
+export function materialTableAvailabilityReadiness(available: boolean | undefined, userSupplied: boolean, missing: boolean): Pick<ReadinessItem, "status" | "details"> {
+  if (missing) return { status: "fail", details: "Material thermophysical table is missing; exploratory execution requires a table." };
+  if (userSupplied) return { status: "pending", details: "User-supplied material table is awaiting worker validation; exploratory execution remains available." };
+  if (available === true) return { status: "pass", details: "Registry reports a material table for exploratory execution; availability does not establish source quality." };
+  return { status: "pending", details: "Material table availability is waiting for worker capability metadata." };
+}
+export function materialSourceEvidenceReadiness(quality?: string): Pick<ReadinessItem, "status" | "details"> {
+  if (!quality) return { status: "pending", details: "Source review and quantified property uncertainty are not established; treat material data as unverified." };
+  const label = quality === "estimated" || quality === "estimated-legacy"
+    ? "Estimated legacy material data"
+    : quality === "user-supplied-unverified"
+      ? "User-supplied material data"
+      : `Material data quality: ${quality}`;
+  return { status: "warn", details: `${label}; source review and quantified property uncertainty are not established. Exploratory execution remains available; this is not a material quality PASS.` };
+}
 const readinessGlyph: Record<ReadinessStatus, string> = {
   pass: "✓",
   warn: "!",
@@ -522,12 +537,13 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
   const readinessChecks: ReadinessItem[] = [
     {status: invalidProcess ? "fail" : "pass", label: "Shared process ranges", details: invalidProcess ? "Shared P, v, beam, hatch, layer, or preheat is outside allowed bounds." : "Shared process parameters are within expected limits."},
     {status: invalidControls ? "warn" : "pass", label: "Advanced control ranges", details: invalidControls ? "One or more advanced controls are out of valid bounds." : "Advanced control block is currently valid."},
-    {status: missingMaterial ? "fail" : "pass", label: "Material input quality", details: missingMaterial ? "Material thermophysical table is missing; provide sourced data before reliable numerical analysis." : "Material quality input is present."},
+    { ...materialTableAvailabilityReadiness(materialEvidence?.available, Boolean(properties.trim()), missingMaterial), label: "Material table availability" },
+    { ...materialSourceEvidenceReadiness(properties.trim() ? "user-supplied-unverified" : materialEvidence?.quality), label: "Material source and uncertainty evidence" },
     {status: mode === "high-fidelity" && !caps?.freeSurfaceSolver ? "warn" : "pass", label: "Mode compatibility", details: mode === "high-fidelity" ? caps?.freeSurfaceSolver ? "High-fidelity free-surface solver appears available." : "Free-surface solver is unavailable; this mode will run screening fallback." : "Selected mode is compatible with current solver stack."},
     {status: estimateError ? "warn" : !estimate ? "pending" : estimate.exceedsCellBudget || estimate.exceedsStepBudget ? "warn" : "pass", label: "Resource estimate", details: estimateError ? estimateError : !estimate ? "Resource estimate is waiting for worker capabilities and input snapshot." : estimate.exceedsCellBudget ? "Estimated mesh size exceeds budget; reduce mesh resolution or shorten process history." : estimate.exceedsStepBudget ? "Estimated step count exceeds budget; increase maxDt or simplify build schedule." : "Resource estimate is within budget."},
     {status: caps ? "pass" : "pending", label: "Worker availability", details: caps ? `OpenFOAM thermal: ${caps.openfoamThermal ? "available" : "unavailable"}; free-surface: ${caps.freeSurfaceSolver ? "available" : "unavailable"}.` : "Worker capabilities are still loading."},
     {status: mode !== "calibration" && measurements.trim() ? parsedMeasurements.status === "invalid" ? "fail" : "pass" : calibrationReadinessStatus, label: "Calibration inputs", details: calibrationReadinessLabel},
-    {status: r && r.material.name === (material || input.material) && Array.isArray(r.material.table) && r.material.table.length > 0 ? "pass" : r ? "warn" : "pending", label: "Executed material evidence", details: r ? r.material.name === (material || input.material) ? "Result uses current material selection." : "Result material does not match current material selection." : "No completed run to compare yet."},
+    {status: r && r.material.name === (material || input.material) && Array.isArray(r.material.table) && r.material.table.length > 0 ? "pass" : r ? "warn" : "pending", label: "Executed material identity", details: r ? r.material.name === (material || input.material) ? "Result identity and table match current material selection; source quality and uncertainty are assessed separately above." : "Result material does not match current material selection." : "No completed run to compare yet."},
   ];
   const payload = (selectedMode:SimulationMode):SimulationInput => ({...input,...settings,mode:selectedMode,
     material:material || input.material, strategy:resolvedStrategy,
