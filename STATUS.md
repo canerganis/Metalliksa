@@ -2,6 +2,11 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — Windows Job Object hata yolları
+- `_WindowsJobChild` artık başarısız `CloseHandle`'ı hata olarak bildirip handle kimliğini koruyor; process handle en son kapatılıyor ve child ancak tüm sahipli handle'lar başarıyla kapandıktan sonra `returncode` ile reaped sayılıyor. `ResumeThread` sonrası thread-handle kapanması da kontrol ediliyor.
+- `ResumeThread`, `TerminateJobObject`, `WaitForSingleObject` ve `CloseHandle` hata davranışları kontrollü WinAPI mock'larıyla sınandı; canlı parent-kill testi aynı pakette geçti. Lifecycle/timeout grubu **17/17 PASS**, `py_compile` ve hedefli diff check PASS.
+- Sınır: bu kontrollü hatalar gerçek kernel API arızası enjekte etmez; descendant süreç ağacı davranışı da **doğrulanmadı**. Bunları doğrulanmış sayma. Kod/kanıt paketi henüz commit edilmedi.
+
 ## 2026-09-28 — Güncel P4 v2 CPU zaman-adımı koşusu tamamlandı
 - Dondurulmuş protokol `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_PROTOCOL_2026-09-28_v2.json` altında IN718 / `enthalpy-fv-6` / NumPy CPU-reference, sabit 5 µm ağ ve aynı girdi-kaynak-malzeme kimliğiyle 50/25/12,5 ns istekleri tamamlandı. Çalıştırma HEAD'i `c20f69cfaaaf3365374cc2ba7343ea36a1b2befa`; rapor `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.json`, üç son-alan NPZ'si `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_FIELDS_2026-09-28/` altında.
 - 526,592 hücrede 7,000/14,000/28,000 kabul edilmiş adım; toplam 49,000 adım / 25,803,008,000 hücre-adım. Enerji bağıl hataları `9.32e-14`, `1.63e-13`, `3.57e-13`; enerji kapısı ve artifact bütünlüğü PASS. Kaynak parmak izi koşu boyunca sabit, alan boyutları/hash'leri raporla eşleşiyor.

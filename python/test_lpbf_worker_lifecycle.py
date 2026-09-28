@@ -1,4 +1,5 @@
 """Deterministic queue lifecycle tests; child processes and CUDA execution are controlled."""
+import ctypes
 import json
 import io
 import os
@@ -11,7 +12,7 @@ import time
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 from lpbf_gpu_thermal import PILOT_JOB_TYPE
 from lpbf_worker import Queue, _WindowsJobChild
@@ -138,6 +139,96 @@ class QueueLifecycle(unittest.TestCase):
             self.assertEqual(queue.get(job)["status"], "failed")
             self.assertNotIn(job, queue.children)
             self.assertEqual(child.wait_timeouts, [5])
+
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object API contract")
+    def test_resume_thread_failure_reaps_process_before_closing_owned_handles(self):
+        api = Mock()
+        api.ResumeThread.return_value = 0xFFFFFFFF
+        api.TerminateJobObject.return_value = 1
+        api.WaitForSingleObject.side_effect = [0, 0, 0]
+        api.CloseHandle.return_value = 1
+
+        def set_exit_code(_process_handle, code_pointer):
+            ctypes.cast(code_pointer, ctypes.POINTER(ctypes.c_ulong)).contents.value = 23
+            return 1
+
+        api.GetExitCodeProcess.side_effect = set_exit_code
+        child = _WindowsJobChild(11, 22, 33, 44)
+        with patch("lpbf_worker.ctypes.WinDLL", return_value=api), \
+             patch("lpbf_worker.ctypes.get_last_error", return_value=5), \
+             patch("lpbf_worker.ctypes.WinError", side_effect=lambda code: OSError(code, "injected WinAPI failure")):
+            with self.assertRaisesRegex(OSError, "injected WinAPI failure"):
+                child.resume()
+
+        self.assertEqual(child.returncode, 23)
+        self.assertEqual(api.ResumeThread.call_args, call(33))
+        api.TerminateJobObject.assert_called_once_with(22, 1)
+        self.assertEqual([entry.args for entry in api.CloseHandle.call_args_list], [(22,), (33,), (11,)])
+        self.assertIsNone(child._job_handle)
+        self.assertIsNone(child._thread_handle)
+        self.assertIsNone(child._process_handle)
+
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object API contract")
+    def test_close_handle_failure_preserves_handle_and_exit_state_for_retry(self):
+        api = Mock()
+        api.WaitForSingleObject.return_value = 0
+        api.CloseHandle.side_effect = [1, 0, 1, 1]
+
+        def set_exit_code(_process_handle, code_pointer):
+            ctypes.cast(code_pointer, ctypes.POINTER(ctypes.c_ulong)).contents.value = 37
+            return 1
+
+        api.GetExitCodeProcess.side_effect = set_exit_code
+        child = _WindowsJobChild(11, 22, 33, 44)
+        with patch("lpbf_worker.ctypes.WinDLL", return_value=api), \
+             patch("lpbf_worker.ctypes.get_last_error", return_value=6), \
+             patch("lpbf_worker.ctypes.WinError", side_effect=lambda code: OSError(code, "injected close failure")):
+            with self.assertRaisesRegex(OSError, "injected close failure"):
+                child.poll()
+            self.assertIsNone(child.returncode)
+            self.assertIsNone(child._job_handle)
+            self.assertEqual(child._thread_handle, 33)
+            self.assertEqual(child._process_handle, 11)
+
+            self.assertEqual(child.poll(), 37)
+
+        self.assertEqual([entry.args for entry in api.CloseHandle.call_args_list],
+                         [(22,), (33,), (33,), (11,)])
+        self.assertIsNone(child._job_handle)
+        self.assertIsNone(child._thread_handle)
+        self.assertIsNone(child._process_handle)
+
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object API contract")
+    def test_terminate_job_failure_does_not_claim_live_child_is_killed(self):
+        api = Mock()
+        api.WaitForSingleObject.side_effect = [0x102, 0x102]
+        api.TerminateJobObject.return_value = 0
+        child = _WindowsJobChild(11, 22, 33, 44)
+        with patch("lpbf_worker.ctypes.WinDLL", return_value=api), \
+             patch("lpbf_worker.ctypes.get_last_error", return_value=5), \
+             patch("lpbf_worker.ctypes.WinError", side_effect=lambda code: OSError(code, "injected terminate failure")):
+            with self.assertRaisesRegex(OSError, "injected terminate failure"):
+                child.kill()
+
+        api.TerminateJobObject.assert_called_once_with(22, 1)
+        self.assertIsNone(child.returncode)
+        self.assertEqual((child._process_handle, child._job_handle, child._thread_handle), (11, 22, 33))
+        self.assertEqual([entry.args for entry in api.WaitForSingleObject.call_args_list],
+                         [(11, 0), (11, 0)])
+
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object API contract")
+    def test_wait_api_failure_does_not_mark_child_reaped(self):
+        api = Mock()
+        api.WaitForSingleObject.return_value = 0xFFFFFFFF
+        child = _WindowsJobChild(11, 22, 33, 44)
+        with patch("lpbf_worker.ctypes.WinDLL", return_value=api), \
+             patch("lpbf_worker.ctypes.get_last_error", return_value=6), \
+             patch("lpbf_worker.ctypes.WinError", side_effect=lambda code: OSError(code, "injected wait failure")):
+            with self.assertRaisesRegex(OSError, "injected wait failure"):
+                child.wait(timeout=0.1)
+
+        self.assertIsNone(child.returncode)
+        self.assertEqual((child._process_handle, child._job_handle, child._thread_handle), (11, 22, 33))
 
     def test_queued_cancel_is_terminal_and_never_launches_child(self):
         with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:

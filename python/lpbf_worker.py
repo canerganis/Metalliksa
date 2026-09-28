@@ -405,10 +405,13 @@ class _WindowsJobChild:
         api = ctypes.WinDLL("kernel32", use_last_error=True)
         api.CloseHandle.argtypes = [ctypes.c_void_p]
         api.CloseHandle.restype = ctypes.c_int
-        for name in ("_process_handle", "_job_handle", "_thread_handle"):
+        # Keep the process handle until last so an intermediate close error can
+        # be retried without losing the only handle that proves process exit.
+        for name in ("_job_handle", "_thread_handle", "_process_handle"):
             handle = getattr(self, name)
             if handle:
-                api.CloseHandle(handle)
+                if not api.CloseHandle(handle):
+                    raise ctypes.WinError(ctypes.get_last_error())
                 setattr(self, name, None)
 
     def resume(self):
@@ -431,7 +434,8 @@ class _WindowsJobChild:
                 self.poll()  # Reap and close every owned handle before surfacing setup failure.
             raise ctypes.WinError(error)
         api.CloseHandle.argtypes = [ctypes.c_void_p]
-        api.CloseHandle(self._thread_handle)
+        if not api.CloseHandle(self._thread_handle):
+            raise ctypes.WinError(ctypes.get_last_error())
         self._thread_handle = None
 
     def poll(self):
@@ -450,9 +454,10 @@ class _WindowsJobChild:
         code = ctypes.c_ulong()
         if not api.GetExitCodeProcess(self._process_handle, ctypes.byref(code)):
             raise ctypes.WinError(ctypes.get_last_error())
-        self.returncode = ctypes.c_int32(code.value).value
+        returncode = ctypes.c_int32(code.value).value
         self._close_handles()
-        return self.returncode
+        self.returncode = returncode
+        return returncode
 
     def wait(self, timeout=None):
         if self.returncode is not None:
