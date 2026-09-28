@@ -2,6 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — Güncel P4 v2 CPU zaman-adımı koşusu tamamlandı
+- Dondurulmuş protokol `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_PROTOCOL_2026-09-28_v2.json` altında IN718 / `enthalpy-fv-6` / NumPy CPU-reference, sabit 5 µm ağ ve aynı girdi-kaynak-malzeme kimliğiyle 50/25/12,5 ns istekleri tamamlandı. Çalıştırma HEAD'i `c20f69cfaaaf3365374cc2ba7343ea36a1b2befa`; rapor `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.json`, üç son-alan NPZ'si `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_FIELDS_2026-09-28/` altında.
+- 526,592 hücrede 7,000/14,000/28,000 kabul edilmiş adım; toplam 49,000 adım / 25,803,008,000 hücre-adım. Enerji bağıl hataları `9.32e-14`, `1.63e-13`, `3.57e-13`; enerji kapısı ve artifact bütünlüğü PASS. Kaynak parmak izi koşu boyunca sabit, alan boyutları/hash'leri raporla eşleşiyor.
+- Zaman yakınsaması **inconclusive**: ayrık genişlik/derinlik 80/35 µm'de aynı kaldığı için değişim gözlenemiyor; sürekli kontur küçükçe ve tekdüze olmayan değişim gösteriyor. Eşikler değiştirilmedi. Bu yalnızca sabit ağda sayısal zaman-adımı tanısıdır; eski mekânsal P4 sonucu ve IN718 deney doğrulaması hâlâ `inconclusive`/`unvalidated`.
+- Önceki `Fresh P4 v2 preflight gate` bölümündeki “solver çalıştırılmadı” durumu bu tamamlanan raporla güncelliğini yitirmiştir. Sıradaki: ayrı mekânsal yakınsama matrisini yeni kimlikli protokolle ön kontrol etmek; CPU/Warp/Torch profillemesini son-alan ve uçtan uca süreyi kapsayacak biçimde tekrarlamak; deney eşleşme kapısını kapalı tutmak.
+
 ## 2026-09-28 — LPBF kuyruk iptal onayı ve kanıt sınırları
 - `python/lpbf_worker.py` çalışan alt süreci kaydediyor; çalışan işi iptal ederken child sonlandırılıp beklenmeden veritabanı işi terminal `cancelled` durumuna geçmiyor. Yeni `python/test_lpbf_worker_lifecycle.py` kuyruk iptali, çalışan child kill/reap, timeout, stale-running restart, completion yarışı, tekrar/cache ve kısmi artifact izolasyonunu kapsıyor.
 - Doğrulama: lifecycle + timeout + CUDA queue odaklı Python grubu **15/15 PASS**; gerçek RTX 4060 CUDA kuyruğu/sonuç-integrity alt testi dahil. `py_compile` ve hedefli `git diff --check` PASS. TEMP/SQLite sandbox erişim engeli yüzünden aynı test komutu izinli runner ile çalıştırıldı.
