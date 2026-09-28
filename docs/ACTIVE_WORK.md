@@ -2264,3 +2264,5 @@ New narrow code-verification evidence: the shared insulated conduction operator 
 Queue HTTP cancellation gate update: direct child end-to-end is now covered from Express DELETE through worker RPC and real Windows Job Object reap (1/1 PASS; commit 06c9808). Do not infer descendant cleanup or real solver artifact timing from this fixture.
 
 Material status: keep the canonical four-alloy authority unchanged. IN625 is not eligible for full transient admission until traceable uncertainty and full-range density, viscosity, optical/source, and constitutive evidence are supplied; its bounded screen remains unvalidated.
+
+P4 v2 continuation: the previously frozen study has now completed. Current implementation/material/input identity remained stable across 5 µm fixed-mesh dt levels 50/25/12.5 ns; 49,000 steps / 25.803B cell-steps, 539 MB preflight, energy closure 3.57e-13 PASS. Discrete W/D are unresolved, continuous contour trend is non-monotonic/tiny; temporal convergence stays inconclusive, and spatial convergence is still a separate inconclusive gate. Do not rerun or overwrite the bound outputs.
