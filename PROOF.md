@@ -1,3 +1,10 @@
+## 2026-09-28 — NIST Table 4 source/operator audit reviewed
+
+- Independent science and workflow reviews confirmed the case-0 workbook and six TIFF hashes/sidecars, P3/P4 positions, Table 4's three-track × two-section rows, and the distinct sample SD versus expanded `U(k=2)` quantities. The source methods PDF's three-track × four-section midpoint challenge description conflicts with the Table 4/workbook's six P3/P4 observations; the report preserves this discrepancy.
+- Review tightened the report: the six P3/P4 observations are not a formal challenge pass; the cited publications do not specify an equivalent model-field optical-boundary operator; and local `manifest.json` is called an ingestion manifest, not a NIST-published artifact. PDF byte hashes remain unknown, so reported U values are not yet eligible for the typed uncertainty contract.
+- No residual or validation status was raised. Details and remaining source-boundary caveats: `docs/LPBF_NIST_IN718_TABLE4_OBSERVATION_AUDIT_2026-09-28.md`.
+- Previous workflow evidence commit: `6a3d0ae7b5e6fd769e316014cd995609b167b98d` (five exact LPBF proof/status paths).
+
 ## 2026-09-28 — Gerçek transient UI ve taşınabilir arşiv round-trip
 
 - İzole localhost UI'da source revision 1 seçildi, CPU `reference` standard transient tamamlandı, arşive alındı ve NIST Table 4 ile karşılaştırıldı. Run ID `b7c7bf40e9c3479d96ef9c522995f42e`; 29.988 hücre, 2.421 accepted step, 16.829 s worker solver interval; `unvalidated-model`. Process/material/input/model kimlikleri, enerji defteri, ölçümler ve exact source SHA `docs/LPBF_BROWSER_UI_TRANSIENT_BUNDLE_ROUNDTRIP_2026-09-28.json` içinde.

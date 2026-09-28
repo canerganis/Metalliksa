@@ -2,6 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — NIST Table 4 denetimi bağımsız gözden geçirildi
+- **PASS (kaynak eşlemesi, sınırlı):** Bilim ve iş akışı incelemesi case-0 workbook ile altı TIFF hash/sidecar'ını, P3/P4 konumlarını ve Table 4'ün üç track × iki section satırlarını doğruladı. Sample SD ile genişletilmiş `U(k=2)` ayrı tutuldu; yöntem PDF'indeki üç track × dört kesit/midpoint anlatımı ile Table 4/workbook altı P3/P4 ölçümü arasındaki fark açıkça korundu.
+- **Rapor düzeltmesi:** Altı P3/P4 gözlemi resmi challenge pass değildir. Kaynak yayınlar, optik etched-boundary ölçümüne eşdeğer model-field observation operator'ını tarif etmiyor. Yerel `manifest.json` NIST tarafından yayınlanmış/signed kaynak diye nitelenmiyor.
+- Results/methods PDF byte hash'leri yerelde yok. Makaleden aktarılan expanded U değerleri bu nedenle henüz hash-bound değil; doğrulanmış publisher PDF baytları olmadan typed uncertainty contract'a aktarılmayacak. Beam profili, eşdeğer operatör ve mesh/time yakınsama eksikleri nedeniyle residual yok; IN718 `unvalidated`.
+- Ayrıntı: `docs/LPBF_NIST_IN718_TABLE4_OBSERVATION_AUDIT_2026-09-28.md`. İncelenen transient/arşiv kanıtı commit'i `6a3d0ae`.
+
 ## 2026-09-28 — Gerçek transient UI → karşılaştırma → bundle restore zinciri
 - **PASS (yazılım/API/UI):** İzole localhost arayüzünde CPU reference transient işi `b7c7bf40e9c3479d96ef9c522995f42e` tamamlandı ve `transient-thermal` koşu kaydı üretildi. 29.988 hücre, 2.421 kabul edilmiş adım, worker solver aralığı 16,829 s. Sonuç `Unvalidated transient thermal` / `unvalidated-model` kaldı.
 - Exact NIST AMB2022-03 Table 4 local aggregate source revision 1, SHA-256 `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0`, run'a bağlandı. Run document SHA-256 `82ad65dafc46d94cb9472c455aab1e6384e3debea0030a3804ab55f7732ea3fe`, source binding `exact-revision-bound`; input hash `ca8ce2ebbe2a52e411297e050608d417b4018858f997d9a0a2301763953bbdf4`, execution input hash `fdebb0486e30f1744fc83cfd4451fa8544879f395861d5a57990d1f07012dc67`.

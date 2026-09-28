@@ -1,5 +1,33 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T16:11+03:00
+
+The audited transient UI/archive and Job Object evidence package is committed
+as `6a3d0ae7b5e6fd769e316014cd995609b167b98d` (five scoped documentation and
+evidence files). The nested repo remains on
+`codex/lpbf-buildjob-material-identity`, now 101 commits ahead of origin, with
+300 tracked working-tree changes and additional untracked files. The remaining
+diff was not staged; unrelated EIS/EDS, graft refresh output, partial studies,
+worker databases/locks, and Warp compilation caches remain untouched.
+
+The independent NIST Table 4 review is complete. Workbook and six TIFF hashes,
+the P3/P4 positions, the paper/workbook six-observation record, and the
+methods-PDF four-section discrepancy are documented. The six P3/P4
+observations are not a formal midpoint/four-section challenge pass. The
+published papers do not define the equivalent model-field optical-boundary
+operator; their byte hashes are unavailable, so their reported expanded U
+values are not yet eligible for the typed uncertainty contract. Audit:
+`docs/LPBF_NIST_IN718_TABLE4_OBSERVATION_AUDIT_2026-09-28.md`. No residual,
+challenge pass, or experimental validation was produced.
+
+The isolated test server was stopped; the latest listener check returned no
+listener on ports 4195/5195. Its temporary source/run/bundle roots are retained.
+The reviewed NIST audit records the source/hash boundary and corrected
+challenge/observer interpretation. Next continue the independent
+source-to-equation and current-identity CPU/Torch/Warp measurement gates.
+Keep numerical convergence `inconclusive`, IN718 comparison `unvalidated`,
+and IN625 full-model admission closed.
+
 ## Current checkpoint — 2026-09-28T16:02+03:00
 
 A successful real UI CPU transient now completes the missing compute-to-archive
