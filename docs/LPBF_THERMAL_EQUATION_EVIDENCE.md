@@ -21,6 +21,8 @@ where \(H\) is J/m³, \(h\) is J/kg, \(q'''\) is W/m³, \(k\) is W/(m K), and ti
 | Surface and support losses | [`transient`](../python/lpbf_simulation.py#L510) applies explicit bottom-boundary and convection plus Stefan–Boltzmann radiation terms. | Convection coefficient, emissivity, support contact and bottom boundary are setup-dependent inputs. | Bookkeeping and unit path are present; boundary parameter provenance/ranges need source records for any validation case. |
 | Global energy check | [`transient`](../python/lpbf_simulation.py#L625) compares integrated input, recorded boundary loss and stored enthalpy. | This is a conservation/implementation diagnostic. It reuses the solver's own rates and is not an independent physical validation. | The current closure threshold is 1%. Closure passes do not establish spatial or temporal convergence. |
 
+For LPBF context, Mirkoohi et al. write the moving-source heat equation in enthalpy/conduction/source form and compare Gaussian heat-source models; their study explicitly omits convection and radiation, so it supports the equation-family comparison but not this solver's boundary terms: [Materials 12(13), 2052 (2019)](https://doi.org/10.3390/ma12132052). An LPBF model that includes convection and radiation as boundary exchanges is described by Wang et al.; those boundary parameters remain setup-specific and require case evidence here: [Metals 11(7), 1003 (2021)](https://doi.org/10.3390/met11071003).
+
 ## Verification and validation gates
 
 * **Software correctness:** tests establish API contracts, unit conversions, deterministic identity and implementation invariants.
