@@ -75,6 +75,7 @@ def build_cache_key(data: Dict[str, Any]) -> str:
         "thermalMaterial": data.get("thermalMaterial"),
         "slicerMaterial": data.get("slicerMaterial"),
         "materialPropertySha256": data.get("materialPropertySha256"),
+        "materialAuthorityRevisionSha256": data.get("materialAuthorityRevisionSha256"),
         "buildJobIdentitySha256": build_job_identity_sha256,
         "amBenchMaterialPropertySha256": data.get("amBenchMaterialPropertySha256") if include_amb else None,
         "P": round(float(data.get("laserPower_W", 0)), 6),

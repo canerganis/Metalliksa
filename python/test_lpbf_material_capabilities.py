@@ -4,7 +4,10 @@ import hashlib
 import json
 import unittest
 
-from four_alloy_materials import ALLOY_MATERIALS, FOUR_ALLOY_IDS, THERMAL_NAME, resolve_alloy_id
+from four_alloy_materials import (
+    ALLOY_MATERIALS, FOUR_ALLOY_IDS, THERMAL_NAME,
+    canonical_material_source, resolve_alloy_id,
+)
 from in625_thermal_material import (
     in625_lpbf_thermal_snapshot, validate_in625_screening_admission,
 )
@@ -27,13 +30,20 @@ class MaterialCapabilityAuditTests(unittest.TestCase):
                     alloy_id, names["thermal"], names["slicer"]
                 )
                 expected_transient = material(THERMAL_NAME[alloy_id])
+                authority_snapshot, authority_revision_sha256 = canonical_material_source(alloy_id)
                 self.assertTrue(row["buildJob"]["available"])
                 self.assertEqual(row["buildJob"]["modelId"], "rosenthal-screening-v1")
                 self.assertEqual(row["buildJob"]["solverRevision"], BUILD_JOB_SOLVER_REVISION)
                 self.assertEqual(row["buildJob"]["effectiveThermal"], expected_build["thermal"])
                 self.assertEqual(row["buildJob"]["effectiveSlicer"], expected_build["slicer"])
                 self.assertEqual(row["buildJob"]["materialPropertySha256"], expected_sha)
+                self.assertEqual(row["buildJob"]["authority"], authority_snapshot["authority"])
+                self.assertEqual(row["buildJob"]["authorityRevisionSha256"], authority_revision_sha256)
                 self.assertTrue(row["fullTransient"]["available"])
+                self.assertEqual(expected_transient["materialAuthority"], authority_snapshot["authority"])
+                self.assertEqual(expected_transient["materialAuthorityRevisionSha256"], authority_revision_sha256)
+                self.assertEqual(row["fullTransient"]["authority"], authority_snapshot["authority"])
+                self.assertEqual(row["fullTransient"]["authorityRevisionSha256"], authority_revision_sha256)
                 self.assertEqual(row["fullTransient"]["provenanceClass"], "estimated-legacy")
                 self.assertEqual(row["fullTransient"]["materialRevisionSha256"],
                                  expected_transient["materialRevisionSha256"])
@@ -114,6 +124,21 @@ class MaterialCapabilityAuditTests(unittest.TestCase):
         self.assertEqual(json.loads(json.dumps(report, allow_nan=False)), report)
         report["alloys"]["in718"]["buildJob"]["effectiveThermal"]["absorptivity_IR"] = 999
         self.assertNotEqual(material_capability_report()["alloys"]["in718"]["buildJob"]["effectiveThermal"]["absorptivity_IR"], 999)
+
+    def test_executed_in718_build_job_and_transient_bind_same_authority_revision(self):
+        from lpbf_build_job_solver import solve_lpbf_build_job
+
+        result = solve_lpbf_build_job({
+            "alloyId": "in718", "laserPower_W": 200, "scanSpeed_mm_s": 900,
+            "beamDiameter_um": 80, "preheatTemp_C": 100,
+            "layerThickness_um": 30, "hatchSpacing_um": 100,
+            "preset": "nozzle", "bypassCache": True,
+        })
+        transient = material(THERMAL_NAME["in718"])
+        self.assertTrue(result["success"], result.get("error"))
+        self.assertEqual(result["materialAuthority"], transient["materialAuthority"])
+        self.assertEqual(result["materialAuthorityRevisionSha256"],
+                         transient["materialAuthorityRevisionSha256"])
 
     def test_identity_resolution_rejects_unsupported_alloys_without_fallback(self):
         self.assertEqual(capability_for("Ti-6Al-4V")["alloyId"], "ti6al4v")

@@ -13,6 +13,7 @@ import time
 from four_alloy_materials import (
     ALLOY_MATERIALS,
     LITERATURE_PV_WINDOWS,
+    canonical_material_source,
     evaluate_literature_pv,
     resolve_alloy_id,
 )
@@ -381,6 +382,7 @@ def solve_lpbf_build_job(data):
         material_snapshot, material_property_sha256 = build_material_property_snapshot(
             alloy_id, thermal_mat, slicer_mat
         )
+        material_authority_snapshot, material_authority_revision_sha256 = canonical_material_source(alloy_id)
         build_job_identity = build_build_job_identity(
             alloy_id,
             BUILD_JOB_MODEL_ID,
@@ -401,6 +403,7 @@ def solve_lpbf_build_job(data):
     cache_data["thermalMaterial"] = thermal_mat
     cache_data["slicerMaterial"] = slicer_mat
     cache_data["materialPropertySha256"] = material_property_sha256
+    cache_data["materialAuthorityRevisionSha256"] = material_authority_revision_sha256
     cache_data["buildJobIdentity"] = build_job_identity
     cache_data["amBenchMaterialPropertySha256"] = ambench_property_sha256
     try:
@@ -416,6 +419,7 @@ def solve_lpbf_build_job(data):
             and cached.get("buildJobIdentity") == build_job_identity
             and cached.get("alloyId") == alloy_id
             and cached.get("materialPropertySha256") == material_property_sha256
+            and cached.get("materialAuthorityRevisionSha256") == material_authority_revision_sha256
             and cached.get("materialPropertySnapshot") == material_snapshot
             and cached.get("amBenchMaterialPropertySha256") == ambench_property_sha256
             and cached.get("amBenchMaterialPropertySnapshot") == ambench_snapshot
@@ -617,6 +621,8 @@ def solve_lpbf_build_job(data):
         "materialPropertyRevision": MATERIAL_PROPERTY_REVISION,
         "materialPropertySha256": material_property_sha256,
         "materialPropertySnapshot": material_snapshot,
+        "materialAuthority": material_authority_snapshot["authority"],
+        "materialAuthorityRevisionSha256": material_authority_revision_sha256,
         "amBenchMaterialPropertySha256": ambench_property_sha256,
         "amBenchMaterialPropertySnapshot": ambench_snapshot,
         "processSeed": process_seed,

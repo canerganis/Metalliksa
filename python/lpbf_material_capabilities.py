@@ -8,7 +8,8 @@ import json
 
 from four_alloy_materials import (
     ALLOY_MATERIALS, FOUR_ALLOY_IDS, LITERATURE_MELT_POOL_CASES,
-    THERMAL_NAME, inherent_strain_props, marangoni_props, resolve_alloy_id,
+    THERMAL_NAME, canonical_material_source, inherent_strain_props,
+    marangoni_props, resolve_alloy_id,
 )
 from in625_thermal_material import (
     SOLID_TEMPERATURE_RANGE_C, SOURCE_URL, in625_lpbf_thermal_snapshot,
@@ -27,6 +28,7 @@ def _four_alloy_capability(alloy_id):
     build_snapshot, build_sha = build_material_property_snapshot(
         alloy_id, names["thermal"], names["slicer"]
     )
+    authority_snapshot, authority_revision_sha256 = canonical_material_source(alloy_id)
     transient = material(THERMAL_NAME[alloy_id])
     marangoni = marangoni_props(alloy_id)
     inherent_strain = inherent_strain_props(alloy_id)
@@ -40,7 +42,8 @@ def _four_alloy_capability(alloy_id):
             "available": True,
             "modelId": "rosenthal-screening-v1",
             "solverRevision": BUILD_JOB_SOLVER_REVISION,
-            "authority": "four_alloy_materials.py via lpbf_build_job_material_snapshot.py",
+            "authority": authority_snapshot["authority"],
+            "authorityRevisionSha256": authority_revision_sha256,
             "materialPropertySha256": build_sha,
             "thermalName": names["thermal"],
             "slicerName": names["slicer"],
@@ -51,7 +54,8 @@ def _four_alloy_capability(alloy_id):
         },
         "fullTransient": {
             "available": True,
-            "authority": "lpbf_material_registry.material (legacy four-alloy endpoints)",
+            "authority": transient["materialAuthority"],
+            "authorityRevisionSha256": transient["materialAuthorityRevisionSha256"],
             "materialRevisionSha256": transient["materialRevisionSha256"],
             "provenanceClass": transient["provenanceClass"],
             "modelTemperatureCoverage_K": transient["temperatureCoverage_K"],

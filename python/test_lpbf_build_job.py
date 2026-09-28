@@ -194,6 +194,20 @@ def main():
     finally:
         _THERMAL["in718"]["thermal_conductivity_W_mK"] = old_conductivity
 
+    # Source-only fields are part of the shared authority revision even when the
+    # build-job effective-property projection does not consume them.
+    old_surface_tension = _THERMAL["in718"]["surface_tension_N_m"]
+    try:
+        _THERMAL["in718"]["surface_tension_N_m"] = old_surface_tension + 0.01
+        source_changed = run_job({"alloyId": "in718", "laserPower_W": 285,
+                                  "scanSpeed_mm_s": 960, "beamDiameter_um": 80,
+                                  "layerThickness_um": 40, "hatchSpacing_um": 110})
+        assert source_changed["cache"]["hit"] is False
+        assert source_changed["materialPropertySha256"] == a["materialPropertySha256"]
+        assert source_changed["materialAuthorityRevisionSha256"] != a["materialAuthorityRevisionSha256"]
+    finally:
+        _THERMAL["in718"]["surface_tension_N_m"] = old_surface_tension
+
     # A legacy or corrupted hit cannot bypass the current snapshot contract.
     with patch.object(build_job_solver, "cache_get", return_value={
         "success": True, "alloyId": "in718", "computeTimeMs": 1,

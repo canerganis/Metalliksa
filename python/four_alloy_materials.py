@@ -7,7 +7,12 @@ Do not copy k, ρ, Cp, or P–v boxes into other Python modules.
 Secondary alloys (CoCrMo, Scalmalloy, Cu, Hastelloy) stay local to those solvers.
 """
 
+import hashlib
+import json
+
 FOUR_ALLOY_IDS = ("ti6al4v", "ss316l", "alsi10mg", "in718")
+MATERIAL_AUTHORITY = "four_alloy_materials.py"
+MATERIAL_AUTHORITY_SCHEMA_VERSION = 1
 
 # Canonical display names used by the Rosenthal thermal solver.
 THERMAL_NAME = {
@@ -283,6 +288,22 @@ def thermal_props(name):
     if aid is None:
         return None
     return _THERMAL[aid]
+
+
+def canonical_material_source(alloy_id):
+    """Return the locked source snapshot and digest shared by LPBF model routes."""
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None:
+        raise ValueError(f"Unsupported LPBF alloy identity: {alloy_id!r}")
+    snapshot = {
+        "schemaVersion": MATERIAL_AUTHORITY_SCHEMA_VERSION,
+        "authority": MATERIAL_AUTHORITY,
+        "alloyId": aid,
+        "thermal": dict(_THERMAL[aid]),
+    }
+    payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=False, allow_nan=False).encode("utf-8")
+    return snapshot, hashlib.sha256(payload).hexdigest()
 
 
 def four_alloy_thermophysical_db():

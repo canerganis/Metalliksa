@@ -8,7 +8,10 @@ import hashlib
 import json
 import math
 import numpy as np
-from four_alloy_materials import four_alloy_thermophysical_db, resolve_alloy_id, THERMAL_NAME
+from four_alloy_materials import (
+    canonical_material_source, four_alloy_thermophysical_db,
+    resolve_alloy_id, THERMAL_NAME,
+)
 from lpbf_thermal_solver import SECONDARY_THERMOPHYSICAL_DB
 from in625_thermal_material import in625_lpbf_thermal_at_kelvin, in625_lpbf_thermal_snapshot
 
@@ -165,6 +168,10 @@ def material(name, supplied=None):
     m["materialId"] = aid if aid else f"registry:{name}"
     m["provenanceClass"] = "estimated-legacy" if supplied is None else "user-supplied-unverified"
     m["materialIdentitySchemaVersion"] = 1
+    if aid is not None and supplied is None:
+        source_snapshot, source_revision_sha256 = canonical_material_source(aid)
+        m["materialAuthority"] = source_snapshot["authority"]
+        m["materialAuthorityRevisionSha256"] = source_revision_sha256
     _require_json_value(m)
     try:
         identity_payload = json.dumps(m, sort_keys=True, separators=(",", ":"),
