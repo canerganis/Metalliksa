@@ -240,6 +240,35 @@ test('missing or malformed archived material provenance is rendered as not repor
   }
 });
 
+test('archived build-job provenance renders its captured effective material property snapshot', () => {
+  const propertySha256 = 'a'.repeat(64);
+  const conflictingNestedPropertySha256 = 'b'.repeat(64);
+  const materialPropertySnapshot = {
+    schemaVersion: 1,
+    alloyId: 'in718',
+    thermal: { base: 'Ni', liquidus_C: 1336, thermal_conductivity_W_mK: 11.4 },
+    slicer: { density_gcm3: 8.19 },
+  };
+  const html = renderToStaticMarkup(<ArchivedRunMaterialProvenance resultJson={JSON.stringify({
+    runKind: 'build-screening',
+    material: { id: 'in718', propertySha256: conflictingNestedPropertySha256 },
+    materialPropertySha256: propertySha256,
+    materialPropertySnapshot,
+  })}/>);
+  assert.match(html, /Build-job material property snapshot/);
+  assert.match(html, /Captured effective identity and properties/);
+  assert.match(html, /in718/);
+  assert.match(html, /Recorded property SHA-256/);
+  assert.match(html, new RegExp(propertySha256));
+  assert.ok(!html.includes(conflictingNestedPropertySha256), 'display the top-level digest bound to the snapshot, not the unbound nested alias');
+  assert.match(html, /Captured thermal and slicer properties/);
+  assert.match(html, /liquidus_C/);
+  assert.match(html, /density_gcm3/);
+  assert.match(html, /8\.19/);
+  assert.match(html, /does not establish source validation/);
+  assert.match(html, /model remains unvalidated/i);
+});
+
 test('GPU engine label requires matching outer capture, contract, runtime, settings and solver identities', () => {
   const actual = JSON.parse(readFileSync(new URL(
     '../docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/2bcb01e5799041ec9458a947506d491f/result.json',

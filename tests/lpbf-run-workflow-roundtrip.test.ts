@@ -11,11 +11,13 @@ import { LpbfArtifactStore } from '../server/lpbfArtifactStore';
 import { LpbfNistComparisonService } from '../server/lpbfNistComparisonService';
 import { LpbfRunArchiveService } from '../server/lpbfRunArchiveService';
 import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
+import { importRun } from '../server/lpbfRunImport';
 import { LpbfRunRepository } from '../server/lpbfRunRepository';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
+import { canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
 
 const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 
@@ -120,15 +122,59 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.equal(compared.payload.errors, null);
   assert.ok(compared.payload.reasons.length > 0);
 
+  const buildSubmission = await lpbfWorker.request('submit', { jobType: 'build-job', alloyId: 'in718' }) as { id: string };
+  assert.match(buildSubmission.id, /^[a-f0-9]{32}$/);
+  let buildJob: any;
+  const buildDeadline = Date.now() + 90_000;
+  do {
+    buildJob = await lpbfWorker.request('get', buildSubmission.id);
+    if (['completed', 'failed', 'cancelled'].includes(buildJob.status)) break;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } while (Date.now() < buildDeadline);
+  assert.equal(buildJob.status, 'completed', buildJob.error ?? `Build job remained ${buildJob.status}`);
+  assert.equal(buildJob.result.runKind, 'build-screening');
+  assert.equal(buildJob.result.success, true, buildJob.result.error);
+  const materialSnapshot = buildJob.result.materialPropertySnapshot;
+  const materialHash = buildJob.result.materialPropertySha256;
+  assert.equal(materialSnapshot.alloyId, 'in718');
+  assert.match(materialHash, /^[a-f0-9]{64}$/);
+  assert.equal(sha256(canonicalBuildJobMaterialSnapshot(materialSnapshot)), materialHash);
+  assert.equal(buildJob.result.material.propertySha256, materialHash);
+  // The selected optical source does not establish derivation of build-job material properties.
+  // Import this run without source links at the repository boundary; the HTTP import requires a selection.
+  const buildCapture = await lpbfWorker.captureForArchive(buildSubmission.id);
+  const buildRuns = new LpbfRunRepository(path.join(runRoot, 'runs.sqlite'));
+  const buildSources = new LpbfSourceRepository(path.join(sourceRoot, 'metadata.sqlite'), { readOnly: true });
+  let buildImport;
+  try {
+    buildImport = await importRun(buildRuns, new LpbfArtifactStore(path.join(runRoot, 'artifacts')),
+      buildCapture.capture, [], buildSources, buildCapture.root);
+  } finally { buildRuns.close(); buildSources.close(); }
+  assert.equal(buildImport.runKind, 'build-screening');
+  assert.deepEqual(buildImport.document.sources, []);
+  const buildRunId = buildImport.document.runId;
+  const archivedBuild = JSON.parse(buildImport.document.capture.resultJson);
+  assert.deepEqual(archivedBuild.materialPropertySnapshot, materialSnapshot);
+  assert.equal(archivedBuild.materialPropertySha256, materialHash);
+  assert.equal(archivedBuild.material.propertySha256, materialHash);
+
   const exported = await jsonRequest(base, '/bundles/export', 'POST');
   assert.equal(exported.status, 200, JSON.stringify(exported.payload));
   const bundleId = exported.payload.bundleId as string;
-  assert.equal(exported.payload.manifest.runCount, 1);
+  assert.equal(exported.payload.manifest.runCount, 2);
   assert.equal(exported.payload.manifest.sourceLinkCount, 1);
   assert.equal((await jsonRequest(base, `/bundles/${bundleId}/verify`, 'POST')).payload.verified, true);
   const restored = await jsonRequest(base, `/bundles/${bundleId}/restore`, 'POST');
   assert.equal(restored.status, 200, JSON.stringify(restored.payload));
   assert.equal(restored.payload.verified, true);
+  const restoredBuildResponse = await jsonRequest(base,
+    `/bundles/restores/${restored.payload.restoreId}/runs/${buildRunId}`);
+  assert.equal(restoredBuildResponse.status, 200);
+  assert.equal(restoredBuildResponse.payload.runKind, 'build-screening');
+  const restoredBuildResult = JSON.parse(restoredBuildResponse.payload.document.capture.resultJson);
+  assert.deepEqual(restoredBuildResult.materialPropertySnapshot, materialSnapshot);
+  assert.equal(restoredBuildResult.materialPropertySha256, materialHash);
+  assert.equal(sha256(canonicalBuildJobMaterialSnapshot(restoredBuildResult.materialPropertySnapshot)), materialHash);
 
   const restoredRoot = path.join(bundleRoot, 'restores', restored.payload.restoreId);
   const restoredRuns = new LpbfRunRepository(path.join(restoredRoot, 'runs.sqlite'), { readOnly: true });
@@ -138,6 +184,10 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
     assert.ok(record);
     assert.equal(record.documentSha256, importResponse.payload.documentSha256);
     assert.deepEqual(record.document.sources, selection);
+    const buildRecord = restoredRuns.get(buildRunId);
+    assert.ok(buildRecord);
+    assert.equal(buildRecord.documentSha256, buildImport.documentSha256);
+    assert.deepEqual(buildRecord.document.sources, []);
     const restoredSource = restoredSources.revision(sourceLink.datasetId, sourceLink.revision);
     assert.ok(restoredSource);
     assert.equal(restoredSource.documentSha256, sourceLink.documentSha256);

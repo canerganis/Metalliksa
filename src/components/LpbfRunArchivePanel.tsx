@@ -144,8 +144,14 @@ function materialProvenanceValue(material: UnknownRecord | undefined, key: strin
 }
 
 /** Show only provenance recorded on the executed material snapshot. */
-export function ExecutedMaterialProvenance({ material }: { material: unknown }) {
+export function ExecutedMaterialProvenance({ material, materialPropertySnapshot, materialPropertySha256 }: {
+  material: unknown;
+  materialPropertySnapshot?: unknown;
+  materialPropertySha256?: unknown;
+}) {
   const snapshot = isRecord(material) ? material : undefined;
+  const buildJobSnapshot = isRecord(materialPropertySnapshot) ? materialPropertySnapshot : undefined;
+  const buildJobSnapshotText = buildJobSnapshot ? JSON.stringify(buildJobSnapshot, null, 2) : undefined;
   return <section aria-label="Executed material provenance" className="rounded-lg border border-slate-700/60 p-3 text-sm">
     <h4 className="font-medium">Executed material provenance</h4>
     <p className="mt-1 text-xs text-amber-200">Recorded material metadata. The model remains unvalidated.</p>
@@ -155,13 +161,30 @@ export function ExecutedMaterialProvenance({ material }: { material: unknown }) 
         <dd className="mt-1 break-all">{materialProvenanceValue(snapshot, key)}</dd>
       </div>)}
     </dl>
+    {buildJobSnapshot && <section aria-label="Build-job material property snapshot" className="mt-4 border-t border-slate-700/60 pt-3">
+      <h5 className="font-medium">Build-job material property snapshot</h5>
+      <p className="mt-1 text-xs text-slate-400">Captured effective identity and properties. This snapshot does not establish source validation.</p>
+      <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><dt className="text-xs text-slate-400">Snapshot alloy identity</dt><dd className="mt-1 break-all">{materialProvenanceValue(buildJobSnapshot, 'alloyId')}</dd></div>
+        <div><dt className="text-xs text-slate-400">Snapshot schema version</dt><dd className="mt-1">{typeof buildJobSnapshot.schemaVersion === 'number' ? buildJobSnapshot.schemaVersion : 'Not reported'}</dd></div>
+        <div className="sm:col-span-2"><dt className="text-xs text-slate-400">Recorded property SHA-256</dt><dd className="mt-1 break-all">{typeof materialPropertySha256 === 'string' && materialPropertySha256.trim() ? materialPropertySha256 : 'Not reported'}</dd></div>
+      </dl>
+      <details className="mt-3">
+        <summary className="cursor-pointer text-xs">Captured thermal and slicer properties</summary>
+        <pre className="mt-2 max-h-72 overflow-auto rounded bg-slate-950/60 p-3 text-xs leading-5">{buildJobSnapshotText}</pre>
+      </details>
+    </section>}
   </section>;
 }
 
 /** Decode the archived result snapshot directly; malformed legacy payloads remain display-safe. */
 export function ArchivedRunMaterialProvenance({ resultJson }: { resultJson: string }) {
   const result = parseCapturedResult(resultJson);
-  return <ExecutedMaterialProvenance material={isRecord(result) ? result.material : undefined} />;
+  return <ExecutedMaterialProvenance
+    material={isRecord(result) ? result.material : undefined}
+    materialPropertySnapshot={isRecord(result) ? result.materialPropertySnapshot : undefined}
+    materialPropertySha256={isRecord(result) ? result.materialPropertySha256 : undefined}
+  />;
 }
 
 const GPU_PARITY_FIELDS = ['finalSampling', 'finalTemperatureField', 'peakTemperature_K', 'input_J', 'losses_J',
