@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "protocolId": "lpbf-p4-cpu-operator-accepted-dt-v2",
+  "status": "frozen-before-execution",
+  "scope": "Fresh CPU reference accepted-timestep convergence after the current harmonic-face operator implementation; numerical thermal proxy only",
+  "experimentalValidation": false,
+  "scenarioFile": "docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json",
+  "scenarioDocumentProtocolId": "lpbf-p4-current-layer-conforming-40w-2026-09-25-v1",
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "requestedMaxDt_s": [
+    5e-08,
+    2.5e-08,
+    1.25e-08
+  ],
+  "expectedImplementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+  "runnerFile": "python/run_lpbf_p4_accepted_dt_diagnostic_v2.py",
+  "runnerSha256": "724c5baae45c2eae005a7a1697b22b2643db9aff8beb0a421da44eb34295b17c",
+  "assessmentModuleFile": "python/lpbf_convergence_study.py",
+  "assessmentModuleSha256": "62e04531004b6d57b30890bdc0568dc46a420a52ee8af5b75fa4436b03931d50",
+  "contourAssessmentModuleFile": "python/lpbf_contour_convergence_study.py",
+  "contourAssessmentModuleSha256": "79fd4c2bdd4ef76aa66d0c5a001c3ad6db29ce5f96f68f6a46ea42a724a33f60",
+  "expectedModelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+  "expectedSolverId": "enthalpy-fv-6",
+  "expectedActualBackend": "numpy-reference",
+  "expectedMaterialId": "in718",
+  "expectedMaterialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+  "expectedResolvedInputSha256": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+  "output": "docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.json",
+  "partial": "docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.partial.json",
+  "fieldDirectory": "docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_FIELDS_2026-09-28",
+  "resourceLimits": {
+    "maximumCells": 600000,
+    "estimatedBytesPerCell": 1024,
+    "maximumEstimatedBytes": 805306368,
+    "maximumStepsPerCase": 40000,
+    "maximumTotalCellSteps": 30000000000
+  },
+  "acceptanceReference": {
+    "discreteAssessment": "python/lpbf_convergence_study.py#ACCEPTANCE",
+    "continuousContourAssessment": "python/lpbf_contour_convergence_study.py#ACCEPTANCE",
+    "thresholdsChanged": false
+  }
+}
