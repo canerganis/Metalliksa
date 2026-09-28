@@ -2,6 +2,19 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — Gerçek transient UI → karşılaştırma → bundle restore zinciri
+- **PASS (yazılım/API/UI):** İzole localhost arayüzünde CPU reference transient işi `b7c7bf40e9c3479d96ef9c522995f42e` tamamlandı ve `transient-thermal` koşu kaydı üretildi. 29.988 hücre, 2.421 kabul edilmiş adım, worker solver aralığı 16,829 s. Sonuç `Unvalidated transient thermal` / `unvalidated-model` kaldı.
+- Exact NIST AMB2022-03 Table 4 local aggregate source revision 1, SHA-256 `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0`, run'a bağlandı. Run document SHA-256 `82ad65dafc46d94cb9472c455aab1e6384e3debea0030a3804ab55f7732ea3fe`, source binding `exact-revision-bound`; input hash `ca8ce2ebbe2a52e411297e050608d417b4018858f997d9a0a2301763953bbdf4`, execution input hash `fdebb0486e30f1744fc83cfd4451fa8544879f395861d5a57990d1f07012dc67`.
+- UI comparison, archive API, and restored comparison all withheld residuals: `unavailable` / `unvalidated`. Run is 60 W / 1200 mm/s / 80 µm, 600 µm square powder-layer domain, estimated-legacy IN718; NIST case is 285 W / 960 mm/s / 67 µm D4σ bare plate/10 mm. Measured beam profile, matching six-section observer and mesh/time convergence are absent. Energy relative closure `2.13036e-15` is accounting only.
+- Browser download event was observed; the actual `.tar` is 8.087.552 B, SHA-256 `7bcda7d04d405b5cac2f8144d24c346729ca564064de1327d0663909310c6c8f`. UI uploaded and verified 1 run / 69 artifacts / 1 source link; isolated restore `ff2d0dda7269436c84aad122a1841156` returned the same run document SHA. After full page reload, selected source/run/material identity and restored archive remained visible; API confirmed matching original/restored document SHA.
+- Evidence: `docs/LPBF_BROWSER_UI_TRANSIENT_BUNDLE_ROUNDTRIP_2026-09-28.json`. This proves workflow, hash integrity and guarded status only; scientific correctness, convergence and experimental validity remain `unvalidated` / `not-established`.
+
+## 2026-09-28 — Job Object lifecycle güncel HEAD'de yeniden doğrulandı
+- **PASS (yazılım/süreç):** `3271eb63f8a15265a5692f3f71b8fae03ccb5a58` üzerinde temiz, izole `%TEMP%` kökünde `python -m unittest test_lpbf_worker_lifecycle -v` **19/19**, 0 skip, 2.337 s; aynı Python 3.12.10 ile `py_compile` PASS.
+- Gerçek parent-death fixture'ında execution child ve torun süreç handle'ları owner sonlandırılmadan önce signaled değildi; sonrasında ikisi de signaled oldu. Queue recovery stale koşuyu `failed` yaptı; `result.json` ve gecikmeli orphan artifact oluşmadı; test cleanup süreci handle'larının kapandığını gördü.
+- Ham test çıktısı `%TEMP%\metalliksa-jobobject-3271eb6-20260928\lifecycle-unittest.log`, SHA-256 `80e40cecbf9d168b7ca4d0e28ad28bb5ef3892527203615974f44638399e072b`. Kaynak/test hash'leri ve sınırlamalar `docs/LPBF_WINDOWS_JOB_OBJECT_LIFECYCLE_2026-09-28.json` içindeki `currentHeadRerun` kaydında.
+- **Sınır:** WinAPI hata enjeksiyonu kontrollü mock'tur; bu yalnız süreç/yazılım doğruluğudur. Fizik, sayısal yakınsama veya deney doğrulaması değildir. IN718 kıyası `unvalidated`, P4 yakınsaması `inconclusive`, IN625 tam model kapısı kapalıdır.
+
 ## 2026-09-28 — İptal edilen LPBF işinde kısmi dosya durumu
 - **PASS (yazılım/arayüz):** İzole gerçek UI işi `4c984a3fd1f446018dc6c4965b65316d` iptal edildi; yenilemede aynı `cancelled` durumu ve kısmi dosya uyarısı geri yüklendi. API yalnız `retained-unverified`, 9 dosya / 1,319,472 B özetini verdi; sonuç alanı, download veya tamamlanmış arşiv sunulmadı. Dosyaların SHA-256 değerleri iki okumada sabit kaldı; bu bütünlük/doğruluk tasdiki değildir.
 - Lifecycle paketi **19/19 PASS** (yetkili Windows runner), `py_compile` ve hedefli TypeScript kontrolleri PASS. Sandbox geçici dosya/SQLite erişim hatası verdi; başarısız sandbox çalışması PASS sayılmadı.

@@ -30,6 +30,39 @@
       "elapsedSeconds": 10.261
     }
   ],
+  "currentHeadRerun": {
+    "repository": {
+      "branch": "codex/lpbf-buildjob-material-identity",
+      "head": "3271eb63f8a15265a5692f3f71b8fae03ccb5a58"
+    },
+    "runtime": {
+      "executable": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "version": "3.12.10",
+      "platform": "Windows"
+    },
+    "testRoot": "%TEMP%\\metalliksa-jobobject-3271eb6-20260928",
+    "command": "python -m unittest test_lpbf_worker_lifecycle -v",
+    "result": "19 tests passed, 0 skipped",
+    "elapsedSeconds": 2.337,
+    "testOutput": {
+      "path": "%TEMP%\\metalliksa-jobobject-3271eb6-20260928\\lifecycle-unittest.log",
+      "sha256": "80e40cecbf9d168b7ca4d0e28ad28bb5ef3892527203615974f44638399e072b"
+    },
+    "pyCompile": {
+      "command": "python -m py_compile lpbf_worker.py test_lpbf_worker_lifecycle.py",
+      "result": "PASS"
+    },
+    "sourceSha256": {
+      "python/lpbf_worker.py": "1f30c0c2ef7de4d253f448a766e8cc5714ac746481c501e351a2aba8c3802357",
+      "python/test_lpbf_worker_lifecycle.py": "8a25e8f8a6d38de9c86fa297515e7a736df11238282c1034a73185e5cc5cad0e"
+    },
+    "parentDeathAcceptance": "PASS: the execution child and grandchild handles were observed unsignaled before owner termination and signaled after; queue recovery marked the stale run failed; result.json and delayed orphan artifact were absent; child handles were signaled during test cleanup.",
+    "limitations": [
+      "This is software process-lifecycle evidence, not LPBF physics or experimental validation.",
+      "WinAPI fault cases use controlled mocks; this run does not induce kernel-level API faults.",
+      "The full browser UI cancellation/refresh/restore journey is covered by separate evidence, not this run."
+    ]
+  },
   "testedBehaviors": [
     "Suspended child process assigned to a kill-on-job-close Job Object before resume.",
     "Parent-death integration observes the execute child and its descendant terminate; reopening the queue marks the stale run failed and exposes no result or orphan artifact.",

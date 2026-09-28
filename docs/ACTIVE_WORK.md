@@ -1,5 +1,68 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T16:02+03:00
+
+A successful real UI CPU transient now completes the missing compute-to-archive
+link in the isolated run/source workflow. Job/run `b7c7bf40e9c3479d96ef9c522995f42e`
+ran standard reference enthalpy FV on 29,988 cells for 2,421 accepted steps;
+worker solver time was 16.829 s. The result was archived against the exact
+NIST Table 4 source revision 1/hash `6c9d9f80…`; run document SHA is
+`82ad65da…`, material revision `5c9179e9…`. The UI/API and portable workflow
+then verified 1 run, 69 artifacts, 1 source link, browser-download event,
+real file-chooser upload, bundle hash verification, isolated restore
+`ff2d0dda7269436c84aad122a1841156`, reload, and matching restored document
+SHA. The restored run still reports `Comparison unavailable · unvalidated`
+with no residual because model/process/beam/observer/convergence gates fail.
+Evidence: `docs/LPBF_BROWSER_UI_TRANSIENT_BUNDLE_ROUNDTRIP_2026-09-28.json`.
+
+This is software/workflow and energy-accounting evidence only. IN718 input is
+estimated-legacy with unquantified property uncertainty; the run is a 600 µm
+square powder-layer scan at 60 W / 1200 mm/s, not NIST's 10 mm bare-plate
+case. A new NIST observation audit maps official workbook/TIFFs and records
+the 4-vs-6 section discrepancy, but measured beam-profile applicability and
+comparison operator implementation remain open; independent review is pending.
+P4 remains inconclusive. `nsys`/`ncu` remain unavailable, so no kernel-stage
+attribution or end-to-end speed claim exists.
+
+Current branch/HEAD remains `codex/lpbf-buildjob-material-identity` /
+`3271eb63…`, ahead 100, with 300 tracked working-tree changes including
+unrelated EIS/EDS. Preserve those. Isolated server roots remain in `%TEMP%`;
+stop only the isolated 4195 server after final evidence checks, and retain its
+files. Next highest-value work: independently review the NIST mapping, bind
+its `U(k=2)` uncertainty into the comparison data contract, implement the
+matching three-track × two-section observation operator only after those data
+and beam/applicability gates are demonstrably sufficient, and separate
+queue/solve/capture/persist measurements before optimizing.
+
+## Current checkpoint — 2026-09-28T15:45+03:00
+
+Windows Job Object lifecycle was independently re-run at HEAD
+`3271eb63f8a15265a5692f3f71b8fae03ccb5a58` in a fresh isolated writable
+`%TEMP%` root. `python -m unittest test_lpbf_worker_lifecycle -v` passed
+**19/19, 0 skipped, 2.337 s**; the exact output is retained at
+`%TEMP%\metalliksa-jobobject-3271eb6-20260928\lifecycle-unittest.log`
+(SHA-256 `80e40cecbf9d168b7ca4d0e28ad28bb5ef3892527203615974f44638399e072b`).
+`py_compile` passed. The parent-death fixture observed the execution child and
+grandchild terminate, startup recovery marked the stale run failed, and neither
+`result.json` nor the delayed orphan artifact appeared. Current worker/test
+SHA-256 values and limits are in
+`docs/LPBF_WINDOWS_JOB_OBJECT_LIFECYCLE_2026-09-28.json`.
+
+This closes only the tested software lifecycle cases. Existing fault injection
+uses controlled WinAPI mocks, and this run is not physical-model validation.
+The project is still on the verified actual branch, 100 commits ahead, with
+300 tracked working-tree changes including unrelated EIS/EDS; preserve them
+and do not stage broadly. The isolated 4195 test server was stopped; its
+temporary evidence root was retained. GPU was idle at the last check; `nsys`
+and `ncu` were not found on PATH.
+
+Next: finish the source/run/archive and performance-scope audit; define bounded
+retention for cancelled/failed partial files without exposing them as results;
+build the NIST Table 4 six-section/beam applicability map; and keep the current
+P4 refinement inconclusive until a frozen identity/operator study supports it.
+No convergence, experimental validation, full IN625 admission, kernel
+attribution, or end-to-end speed claim is established.
+
 ## Current checkpoint — 2026-09-28T15:24+03:00
 
 The partial-file follow-up now has a real isolated UI acceptance. Job
