@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GpuPilotArchiveAction, GpuPilotExecutedInputSummary, LpbfEngineeringSimulation, gpuPilotRuntimeLabel,
   recoverMissingSavedGpuPilot, gpuDevicesForEngine, sameGpuDeviceIdentity } from '../src/components/3d-distortion-lab/LpbfEngineeringSimulation';
-import { GpuPilotParityTable, gpuPilotEngineLabel, persistRunSelectionForArchive,
+import { ArchivedRunMaterialProvenance, ExecutedMaterialProvenance, GpuPilotParityTable, gpuPilotEngineLabel, persistRunSelectionForArchive,
   restoreRunSelectionForArchive } from '../src/components/LpbfRunArchivePanel';
 import { buildGpuPilotInput, parseGpuPilotJob, type GpuPilotInput } from '../src/services/lpbfSimulationService';
 
@@ -170,6 +170,41 @@ test('saved CUDA results show their executed inputs and label changed current co
   const legacy = renderToStaticMarkup(<GpuPilotExecutedInputSummary
     saved={saved} current={changed} bound={false}/>);
   assert.match(legacy, /no exact request binding/);
+});
+
+test('custom GPU material provenance is shown from both executed and archived result snapshots', () => {
+  const actual = JSON.parse(readFileSync(new URL(
+    '../docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/2bcb01e5799041ec9458a947506d491f/result.json',
+    import.meta.url), 'utf8')) as Record<string, any>;
+  const material = {
+    ...actual.material,
+    quality: 'user-supplied-unverified',
+    provenanceClass: 'user-supplied-unverified',
+    source: 'Custom LPBF material table · supplier datasheet supplied by operator',
+    uncertaintyNote: 'Supplier uncertainty was not independently checked.',
+  };
+  const executed = renderToStaticMarkup(<ExecutedMaterialProvenance material={material}/>);
+  const archived = renderToStaticMarkup(<ArchivedRunMaterialProvenance
+    resultJson={JSON.stringify({...actual, material})}/>);
+  for (const html of [executed, archived]) {
+    assert.match(html, /Executed material provenance/);
+    assert.match(html, /user-supplied-unverified/);
+    assert.match(html, /Custom LPBF material table · supplier datasheet supplied by operator/);
+    assert.match(html, /Supplier uncertainty was not independently checked/);
+    assert.match(html, new RegExp(material.materialRevisionSha256));
+    assert.match(html, /model remains unvalidated/i);
+  }
+});
+
+test('missing or malformed archived material provenance is rendered as not reported', () => {
+  const missing = renderToStaticMarkup(<ArchivedRunMaterialProvenance
+    resultJson={JSON.stringify({material: {name: 'Legacy material'}})}/>);
+  const malformed = renderToStaticMarkup(<ArchivedRunMaterialProvenance resultJson="{"/>);
+  for (const html of [missing, malformed]) {
+    assert.match(html, /Executed material provenance/);
+    assert.equal((html.match(/Not reported/g) ?? []).length, 5);
+    assert.match(html, /model remains unvalidated/i);
+  }
 });
 
 test('GPU engine label requires matching outer capture, contract, runtime, settings and solver identities', () => {

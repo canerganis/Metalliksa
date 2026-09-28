@@ -3,7 +3,7 @@ import { Badge, ResultHeader, ThermalHistory, ConvergencePanel, MeasurementPanel
 import { LpbfPhysicsDiagnostics } from "./LpbfPhysicsDiagnostics";
 import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
 import React, { useEffect, useRef, useState } from "react";
-import { LpbfJobArchiver, gpuPilotEngineLabel as validatedGpuPilotEngineLabel } from "../LpbfRunArchivePanel";
+import { ExecutedMaterialProvenance, LpbfJobArchiver, gpuPilotEngineLabel as validatedGpuPilotEngineLabel } from "../LpbfRunArchivePanel";
 import { In625BareplatePanel } from "../In625BareplatePanel";
 import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, type GpuPilotJob, type GpuPilotResult, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
@@ -431,6 +431,7 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
       <p>CPU/GPU parity: <strong>{parity?.status}</strong> · {parity?.scope} · experimental validation: unavailable.</p>
       <p>Executed engine: {gpuPilotEngineLabel(result)} · device: {evidence?.name} ({evidence?.selected}) · thermal evolution {result.solver.thermalEvolutionDevice} · source integration {result.solver.sourceIntegrationDevice} · {result.solver.dtype}.</p>
       <p>Model: {result.solver.modelId} · material {result.material.name} ({result.material.materialId}) · revision <span className="font-mono break-all">{result.material.materialRevisionSha256}</span>.</p>
+      <ExecutedMaterialProvenance material={result.material} />
       <p>GPU W/D/L: {fmt(result.metrics.width_um)} / {fmt(result.metrics.depth_um)} / {fmt(result.metrics.length_um)} µm · peak {fmt(result.metrics.peakTemperature_K)} K · energy closure {fmt(result.energyBalance.relativeError*100)}%.</p>
       <p>CPU reference: {parity?.cpu.solver.id} / {parity?.cpu.coreContract.actualBackend}. Final 3D field L2 {fmt(comparisons?.finalTemperatureField.relativeRiseL2)}; max {fmt(comparisons?.finalTemperatureField.relativeRiseMax)}. Frozen field targets ≤ {fmt(parity?.targets.fieldRiseL2RelativeMax)} / {fmt(parity?.targets.fieldRiseMaxRelativeMax)}.</p>
       <details className="border-t border-slate-700/50 pt-2"><summary className="cursor-pointer">CPU/GPU comparison and device evidence</summary>

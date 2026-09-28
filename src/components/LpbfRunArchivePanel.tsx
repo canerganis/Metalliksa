@@ -130,6 +130,40 @@ function parseCapturedResult(resultJson: string): unknown {
   try { return JSON.parse(resultJson); } catch { return undefined; }
 }
 
+const MATERIAL_PROVENANCE_FIELDS = [
+  ['quality', 'Data quality'],
+  ['provenanceClass', 'Provenance class'],
+  ['source', 'Source'],
+  ['uncertaintyNote', 'Uncertainty note'],
+  ['materialRevisionSha256', 'Material revision SHA-256'],
+] as const;
+
+function materialProvenanceValue(material: UnknownRecord | undefined, key: string): string {
+  const value = material?.[key];
+  return typeof value === 'string' && value.trim() ? value : 'Not reported';
+}
+
+/** Show only provenance recorded on the executed material snapshot. */
+export function ExecutedMaterialProvenance({ material }: { material: unknown }) {
+  const snapshot = isRecord(material) ? material : undefined;
+  return <section aria-label="Executed material provenance" className="rounded-lg border border-slate-700/60 p-3 text-sm">
+    <h4 className="font-medium">Executed material provenance</h4>
+    <p className="mt-1 text-xs text-amber-200">Recorded material metadata. The model remains unvalidated.</p>
+    <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+      {MATERIAL_PROVENANCE_FIELDS.map(([key, label]) => <div key={key}>
+        <dt className="text-xs text-slate-400">{label}</dt>
+        <dd className="mt-1 break-all">{materialProvenanceValue(snapshot, key)}</dd>
+      </div>)}
+    </dl>
+  </section>;
+}
+
+/** Decode the archived result snapshot directly; malformed legacy payloads remain display-safe. */
+export function ArchivedRunMaterialProvenance({ resultJson }: { resultJson: string }) {
+  const result = parseCapturedResult(resultJson);
+  return <ExecutedMaterialProvenance material={isRecord(result) ? result.material : undefined} />;
+}
+
 const GPU_PARITY_FIELDS = ['finalSampling', 'finalTemperatureField', 'peakTemperature_K', 'input_J', 'losses_J',
   'stored_J', 'width_um', 'depth_um', 'length_um', 'volume_um3'] as const;
 const displayedNumber = (value: unknown) => typeof value === 'number' && Number.isFinite(value)
@@ -449,8 +483,8 @@ function ArchivedRunRecord({ runId, restoreId }: { runId: string; restoreId?: st
   useEffect(() => { void run('current'); }, [runId]);
   
   const record = task.data;
-  const capturedResult = record?.runKind === 'gpu-thermal-pilot'
-    ? parseCapturedResult(record.document.capture.resultJson) : undefined;
+  const archivedResult = record ? parseCapturedResult(record.document.capture.resultJson) : undefined;
+  const capturedResult = record?.runKind === 'gpu-thermal-pilot' ? archivedResult : undefined;
   const gpuEngine = record?.runKind === 'gpu-thermal-pilot'
     ? gpuPilotEngineLabel(record.document.capture, capturedResult)
     : GPU_ENGINE_UNVERIFIED;
@@ -475,6 +509,8 @@ function ArchivedRunRecord({ runId, restoreId }: { runId: string; restoreId?: st
       <pre className="text-xs bg-slate-950 p-3 overflow-auto mt-2 text-slate-300">{JSON.stringify(record.document, null, 2)}</pre>
       </details>
     </div>}
+    {record && (record.runKind === 'gpu-thermal-pilot' || (isRecord(archivedResult) && isRecord(archivedResult.material)))
+      && <ArchivedRunMaterialProvenance resultJson={record.document.capture.resultJson} />}
     {record?.runKind === 'gpu-thermal-pilot'
       ? <><p className="rounded-lg border border-sky-500/30 p-3 text-sm text-sky-100">GPU thermal pilot · {gpuEngine} parity evidence is archived separately from CPU core runs. NIST optical and CPU proxy comparisons are unavailable for this run kind.</p>
         <GpuPilotParityTable captureValue={record.document.capture} resultValue={capturedResult}/></>
