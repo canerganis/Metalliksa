@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "numerical-backend-parity",
+  "status": "PASS",
+  "validationStatus": "unvalidated",
+  "experimentalValidation": false,
+  "observedAt": "2026-09-28",
+  "repository": {
+    "branch": "codex/lpbf-buildjob-material-identity",
+    "head": "d16719f",
+    "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8"
+  },
+  "test": {
+    "workingDirectory": "python",
+    "command": "python -m unittest test_lpbf_gpu_three_backend_parity.ThreeBackendThermalParity.test_canonical_40um_cpu_torch_warp_same_invocation -v",
+    "result": "Ran 1 test, OK",
+    "elapsedSeconds": 21.996,
+    "diagnosticRerun": "A second in-memory wrapper call collected scalar differences; it was not a separately archived test run.",
+    "testSourceSha256": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
+  },
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "cudaDevice": "cuda:0",
+    "computeCapability": "8.9",
+    "vramBytes": 8585216000,
+    "nvidiaDriver": "617.14",
+    "torchBackend": "PyTorch CUDA",
+    "torchVersion": "2.14.0+cu126",
+    "torchCudaRuntime": "12.6",
+    "warpVersion": "1.17.0",
+    "warpCudaToolkit": "12.9",
+    "cudaDriverApi": "13.4"
+  },
+  "case": {
+    "alloyId": "in718",
+    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "materialAuthorityRevisionSha256": "b7788a745e9fa90bf7af0b2de4516233e33726638a3a06b33268995813db5d1f",
+    "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "mesh_um": 40,
+    "maxDt_s": 2e-7,
+    "trackLength_um": 200,
+    "layerThickness_um": 80,
+    "coolingTime_us": 20,
+    "preheat_C": 80,
+    "packingFraction": 0.55,
+    "gridShape": [11, 11, 10],
+    "cells": 1210,
+    "acceptedSteps": 934,
+    "acceptedStepsEvidence": "Observed during execution; the test asserts inter-backend step count and accepted-dt sequence equality, not a fixed expected count.",
+    "acceptedTimestepSequence": "exactly equal across CPU, Torch CUDA, and Warp CUDA",
+    "fieldEndTime_us": 186.6666667
+  },
+  "sourceSha256": {
+    "torchSolver": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
+    "warpSolver": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468"
+  },
+  "acceptanceLimits": {
+    "energyClosureRelative": 0.01,
+    "cpuGpuEnergyRelative": 0.01,
+    "fieldTemperatureRiseRelativeL2AndLinf": 0.01,
+    "fieldEnthalpyRelativeL2AndLinf": 0.01,
+    "peakTemperatureRelative": 0.01,
+    "meltPoolWidthDepthLengthAbsolute_um": 40,
+    "meltVolumeRelative": 0.01
+  },
+  "observedDifferences": {
+    "evidenceOrigin": "in-memory diagnostic rerun; raw result and field artifacts were not retained",
+    "torch": {
+      "temperatureRiseRelativeL2": 2.1e-9,
+      "temperatureRiseRelativeLinf": 3.1e-9,
+      "enthalpyRelativeL2": 2.68e-9,
+      "enthalpyRelativeLinf": 3.76e-9,
+      "inputEnergyRelative": 0,
+      "lossEnergyRelative": 2.22e-9,
+      "storedEnergyRelative": 1.15e-13,
+      "peakTemperatureRelative": 1.05e-9
+    },
+    "warp": {
+      "temperatureRiseRelativeL2": 2.04e-17,
+      "temperatureRiseRelativeLinf": 4.05e-17,
+      "enthalpyRelativeL2": 6.9e-17,
+      "enthalpyRelativeLinf": 9.51e-17,
+      "inputEnergyRelative": 0,
+      "lossEnergyRelative": 4.02e-16,
+      "storedEnergyRelative": 1.14e-16,
+      "peakTemperatureRelative": 0
+    }
+  },
+  "observedMeltPoolMetrics": {
+    "classification": "absolute geometry values observed by the in-memory diagnostic rerun, not differences",
+    "torch": { "width_um": 40, "depth_um": 40, "length_um": 120, "volume_um3": 192000 },
+    "warp": { "width_um": 40, "depth_um": 40, "length_um": 120, "volume_um3": 192000 },
+    "cpuMetricsRetained": false,
+    "rawFieldArtifactsRetained": false
+  },
+  "diagnosticCapture": {
+    "origin": "in-memory diagnostic rerun with wrappers around the same production solver functions",
+    "rawResultArtifactsRetained": false,
+    "rawFieldArtifactsRetained": false,
+    "scalarValuesIndependentlyReplayable": false
+  },
+  "limitations": [
+    "This is same-input implementation/backend parity only; it does not establish spatial or temporal convergence. Field norms compare the final captured fields, not every transient state or peak-time trajectory.",
+    "This case does not match the NIST AMB2022-03 case 0 process conditions or its observation operator; no residual or experimental validation is implied.",
+    "The reported 21.996 s is the focused test wall time, not a stage-separated solver benchmark or an end-to-end application speedup.",
+    "The test shares CPU source integration and timestep limiting with both CUDA candidates; parity does not compare three independent physical formulations.",
+    "Melt geometry is quantized at 40 µm cell resolution; width and depth are one cell and volume is three cells. The allowed 40 µm geometry difference equals 100% of this case's reported width/depth.",
+    "Raw CPU/GPU result and field artifacts were not retained; exact scalar values from the in-memory diagnostic rerun cannot be byte-replayed. The unittest assertions remain the PASS evidence."
+  ]
+}

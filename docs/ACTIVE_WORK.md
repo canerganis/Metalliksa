@@ -1,5 +1,43 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T14:29+03:00
+
+Current-code CPU/Torch CUDA/Warp CUDA same-invocation parity is **PASS** for
+the bounded 40 µm IN718 contract (1,210 cells, 934 observed accepted steps);
+see `PROOF.md` and
+`docs/LPBF_CPU_TORCH_WARP_PARITY_2026-09-28.json` (SHA-256
+`6fc45cada03f1e194a423b85022a8769f53788ef7ad4f28b1fcbb1a534eeb98a`). The
+unit test asserts backend-to-backend accepted-step/dt equality; 934 is the
+observed execution count, not a frozen expected count. Norms cover the final
+captured fields, not all transient states. Melt width/depth are one 40 µm
+cell and volume is three cells; the allowed geometry tolerance is therefore
+coarse. Diagnostic scalar values were captured in-memory; no replayable raw
+fields/results were retained. This closes only the missing small-case backend
+parity check; it is neither convergence nor experiment and does not match
+NIST case 0. Four-alloy source-authority/cache changes passed focused tests and
+the build-job fast script; effective material snapshots and alloy IDs remain
+unchanged.
+
+Current next actions:
+1. Run the native Windows Job Object lifecycle and abrupt-parent-death tests
+   against a fresh writable test root. Source review finds required lifecycle
+   guards and test cases, but this turn has not yet re-executed the Windows
+   integration; `Queue.close()`'s six-second join boundary also needs explicit
+   disposition.
+2. Continue IN718/NIST operator and measured-beam applicability gate. Keep the
+   comparison unavailable and residual null until three tracks × sections at
+   4.9/6.0 mm, measured profile mapping, and convergence all bind to one exact
+   run.
+3. Measure alternating multi-session CPU/Torch/Warp stage times on the same
+   frozen input; current parity runtime is not a performance benchmark. Nsight
+   availability and kernel attribution remain unverified for this checkpoint.
+4. Finish the fresh 20/10/5 µm spatial/time preflight matrix and keep the known
+   growing-width trend inconclusive unless new fixed-protocol evidence closes it.
+
+Separate evidence categories: software/archive correctness, backend parity,
+mesh/time numerical verification, and experimental validity. Existing IN625
+full-model data admission remains closed.
+
 ## Current checkpoint — 2026-09-28T14:10+03:00
 
 An isolated real-browser acceptance run was completed on localhost:4183 with

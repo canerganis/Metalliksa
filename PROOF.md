@@ -1,3 +1,11 @@
+## 2026-09-28 — CPU / Torch CUDA / Warp CUDA parity
+
+- **PASS:** `python -m unittest test_lpbf_gpu_three_backend_parity.ThreeBackendThermalParity.test_canonical_40um_cpu_torch_warp_same_invocation -v` (`python/` working directory), 1 test, 21.996 s.
+- Kanıt raporu: `docs/LPBF_CPU_TORCH_WARP_PARITY_2026-09-28.json`. 1,210 hücre, 934 accepted step, tam eşit accepted-`dt` dizisi; testin enerji/alan/geometri eşikleri altında CPU↔Torch ve CPU↔Warp farkları.
+- **Sınır:** alan normları yalnız son yakalanan alanı karşılaştırır; tüm transient alan/peak-time yolu değil. İki CUDA arka ucu ortak CPU source integration ve timestep limiter kullanır. Geometri 40 µm hücrede çok kaba kuantalanmıştır: genişlik/derinlik bir hücre, hacim üç hücre; izin verilen 40 µm fark genişlik ve derinliğin %100’üdür. Diagnostic scalar metrikleri in-memory alındı, ham alan/sonuç artifact’ı tutulmadı; bunlar tekrar oynatılarak yeniden hesaplanamaz. Case 285 W / 960 mm/s / 67 µm D4σ NIST case 0 ile eşleşmez.
+- **PASS:** `python python/test_lpbf_build_job.py` (fast cache/lazy-default/Murakami package); iki hedefli test `python -m unittest test_lpbf_material_capabilities.MaterialCapabilityAuditTests.test_four_existing_alloys_reflect_actual_build_and_transient_snapshots test_lpbf_material_capabilities.MaterialCapabilityAuditTests.test_executed_in718_build_job_and_transient_bind_same_authority_revision -v` (`python/` working directory), 2/2 PASS. Bunlar mevcut dört alaşımın otorite eşleşmesini ve otorite-only source revision değişiminde cache miss davranışını yazılım düzeyinde destekler; bilimsel girdileri deneysel olarak doğrulamaz.
+- **Test discovery:** `test_lpbf_build_job.py` executable `main()` scriptidir, pytest test module değildir. İlk pytest collection denemesi exit 1 / no tests; doğru `python python/test_lpbf_build_job.py` yolu **PASS** verdi. Collection denemesi PASS sayılmadı.
+
 ## 2026-09-28 — İzole LPBF gerçek UI koşu ve bundle kanıtı
 
 - Run: `872dbcdba0d7495d932c535507d5946a` (`analytical-screening`, model `unvalidated`), 280 W / 940 mm/s / 80 µm; etkin hesap `rosenthal+goldak`, 1.562999999994645 s. Analytical width/depth/length çıktıları sırasıyla Rosenthal 150/75/1061.6667 µm ve Goldak 100/50/525 µm. Bunlar analitik tahminlerdir; geçici alan/enerji sonucu değildir.
