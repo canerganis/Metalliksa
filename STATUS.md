@@ -2,6 +2,11 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-28 — Heterojen iç-yüz korunum regression'ı
+- `python/` dizininde `python -m unittest test_lpbf_shared_thermal_conduction_faces -v`: **1/1 PASS**, 0.301 s; test SHA-256 `3405b5e18594b50d2a8204238e3225c0ac07fcaa1ddb0b2b31fde115401617e4`.
+- Bağımsız cell/face assembly production vectorized operator ile uyuştu; aktif heterojen iç-yüz aktarımının hacim integrali sayısal tolerans içinde kapandı; inactive-cell insulation ve `dx × 2 → rate / 4` kontrolleri geçti.
+- Kanıt yalnızca operator-level yazılım invariantıdır. Kaynak/sınır fizik doğruluğu, tüm modelin enerji kapanımı, malzeme özellikleri, yakınsama veya deneysel geçerlilik kanıtlanmamıştır. Ayrıntı `PROOF.md` içindedir.
+
 ## 2026-09-28 — NIST Table 4 denetimi bağımsız gözden geçirildi
 - **PASS (kaynak eşlemesi, sınırlı):** Bilim ve iş akışı incelemesi case-0 workbook ile altı TIFF hash/sidecar'ını, P3/P4 konumlarını ve Table 4'ün üç track × iki section satırlarını doğruladı. Sample SD ile genişletilmiş `U(k=2)` ayrı tutuldu; yöntem PDF'indeki üç track × dört kesit/midpoint anlatımı ile Table 4/workbook altı P3/P4 ölçümü arasındaki fark açıkça korundu.
 - **Rapor düzeltmesi:** Altı P3/P4 gözlemi resmi challenge pass değildir. Kaynak yayınlar, optik etched-boundary ölçümüne eşdeğer model-field observation operator'ını tarif etmiyor. Yerel `manifest.json` NIST tarafından yayınlanmış/signed kaynak diye nitelenmiyor.

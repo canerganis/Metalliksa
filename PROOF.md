@@ -1,3 +1,9 @@
+## 2026-09-28 — Heterojen conduction face-pair invariant
+
+- At HEAD `5eebb26241584d6a15a23ee475114168cd3382d7`, `python -m unittest test_lpbf_shared_thermal_conduction_faces -v` from `python/` passed **1/1** (0.301 s). Test SHA-256: `3405b5e18594b50d2a8204238e3225c0ac07fcaa1ddb0b2b31fde115401617e4`.
+- The test independently assembles each active heterogeneous internal face once, checks the production vectorized operator, verifies integrated equal/opposite internal power cancellation, inactive-cell insulation, and inverse-square spacing scaling.
+- Evidence class: operator-level software conservation invariant only. It does not establish boundary/source correctness, full-model conservation, material-property validity, mesh/time convergence, GPU parity, or experiment.
+
 ## 2026-09-28 — NIST Table 4 source/operator audit reviewed
 
 - Independent science and workflow reviews confirmed the case-0 workbook and six TIFF hashes/sidecars, P3/P4 positions, Table 4's three-track × two-section rows, and the distinct sample SD versus expanded `U(k=2)` quantities. The source methods PDF's three-track × four-section midpoint challenge description conflicts with the Table 4/workbook's six P3/P4 observations; the report preserves this discrepancy.
