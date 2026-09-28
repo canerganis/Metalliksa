@@ -16,6 +16,11 @@
 - Core contract, transient enthalpy fizik, mesh/time convergence ve contour convergence odaklı Python grubu yetkili Windows runner'da **35/35 PASS**. Sandboxed ilk deneme Windows TEMP/SQLite ACL yüzünden 1 hata verdi; aynı komut yetkili runner'da tamamlandı.
 - Bunlar yazılım sözleşmesi/korunum ve kabul kapısı regresyonlarıdır; bağımsız bilimsel kaynak uygunluğu veya deneysel geçerlilik kanıtı değildir. IN718 `unvalidated`, P4 mesh `inconclusive` olarak kalır.
 
+## 2026-09-28 — IN625 kaynak/belirsizlik kapısı kapalı
+- Georgia Tech Thermophysical Properties sayfası katı IN625 için `c_p`, termal yayınım ve bunlardan türetilen `k` ölçümlerini ve XLSX içinde %95 güven düzeyi belirsizliklerini bildiriyor; sayfadaki yoğunluk sabit 8.44 g/cm³ varsayılmıştır. İndirme/XLSX bu ortamda içerik olarak alınamadığından değerler, bayt ve belirsizlik sütunları uygulamadaki materyal tablosuna bağlanmadı.
+- NIST’in LPBF IN625 toz çalışması, 100–500 °C için yaklaşık 0.65–1.02 W/(m·K) toz iletkenliği veriyor; aynı yayında kabul edilen bazı parametre belirsizliklerinin ters çözüm duyarlılığı henüz incelenmemiş. Bu, yalnız toz iletim kanıtıdır; tam katı/sıvı alaşım yasası veya %95 belirsizlik bütçesi değildir.
+- Sonuç: mevcut JMatPro/model temelli IN625 snapshot'ı belirsizliksiz ve açıkça screening-only olduğu için tam transient modele kabul **kapalı**. Dört alaşımın otoritesi/girdileri değiştirilmedi; IN625 `unvalidated` kalır.
+
 ## 2026-09-28 — LPBF kuyruk iptal onayı ve kanıt sınırları
 - `python/lpbf_worker.py` çalışan alt süreci kaydediyor; çalışan işi iptal ederken child sonlandırılıp beklenmeden veritabanı işi terminal `cancelled` durumuna geçmiyor. Yeni `python/test_lpbf_worker_lifecycle.py` kuyruk iptali, çalışan child kill/reap, timeout, stale-running restart, completion yarışı, tekrar/cache ve kısmi artifact izolasyonunu kapsıyor.
 - Doğrulama: lifecycle + timeout + CUDA queue odaklı Python grubu **15/15 PASS**; gerçek RTX 4060 CUDA kuyruğu/sonuç-integrity alt testi dahil. `py_compile` ve hedefli `git diff --check` PASS. TEMP/SQLite sandbox erişim engeli yüzünden aynı test komutu izinli runner ile çalıştırıldı.
