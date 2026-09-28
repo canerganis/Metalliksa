@@ -2733,6 +2733,10 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - The warmed solver-only alternating protocol was run in two separate sessions with 3 trials per backend per session. Torch/Warp medians: **12.084/12.047 s (1.003×)** and **12.361/12.044 s (1.026×)**. Trial spreads (0.292–0.517 s) exceed the median deltas; the prior isolated 1.294× Warp result is not reproduced. Full trial data are in `docs/LPBF_GPU_ALTERNATING_BENCHMARK_2026-09-28.json`.
 - Timing used `capture_final=false`; it excludes archive/API/queue/UI. It establishes neither an E2E speed gain nor parity (separate same-input parity evidence remains separate). No kernel-duration attribution or experimental validation. **No performance edit is justified by this measurement.**
 
+## 2026-09-28 — Core thermal/convergence regression group
+- Focused Python suites `test_lpbf_core_contract`, `test_lpbf_transient_enthalpy_fdm_physics`, `test_lpbf_convergence_study`, and `test_lpbf_contour_convergence_study`: **35/35 PASS** in the permitted Windows runner (13.194 s). The sandbox attempt failed one SQLite temp-file test from a Windows TEMP ACL denial; the elevated rerun passed all tests.
+- Evidence covers software contract/hash/material binding, selected analytic/conservation regressions, and unchanged numerical acceptance behavior. It does not establish literature-source completeness, actual-case mesh convergence, backend-wide parity, or experiment validity.
+
 ## 2026-09-28 — Fresh P4 v2 preflight gate
 - `64cae84` adds a new versioned, hash-bound CPU accepted-timestep study and exclusive output targets; runtime accepted-step/cell-step caps guard the run, lower-bound estimates are labelled, symlink/junction paths are refused, and failed partial records are explicitly failed.
 - Verification: v2 tests **9/9 PASS**, `py_compile` **PASS**, protocol/identity/resource/destination smoke **PASS**. No solver rows were executed. Preflight estimate is 526,592 cells / 539,230,208 bytes / 25.803B lower-bound cell-steps against fixed caps.
