@@ -2808,3 +2808,46 @@ Material gate: the canonical four identities remain unchanged. IN625 is still a 
 P4 correction to earlier “not run” checkpoint: `docs/LPBF_P4_CPU_OPERATOR_CONVERGENCE_V2_2026-09-28.json` completed three accepted-dt levels (50/25/12.5 ns) on the frozen 5 µm, 526,592-cell IN718 input. All 49,000 steps (25.803B cell-steps) completed with identity stable and max energy closure **3.57e-13 PASS**. Geometry/contour trend is unresolved or non-monotonic (continuous finest-pair changes 3.05e-5 width, 1.19e-5 depth); time convergence remains **inconclusive**. It does not address spatial-mesh convergence or experimental validity.
 
 Fresh performance evidence: the identity-bound runner completed three fresh processes and nine alternating timings/backend on RTX 4060 for the same estimated IN718 73,568-cell/934-step request. Torch median 12.519 s (MAD 0.064), Warp 8.520 s (MAD 0.162); session ratios 1.398×/1.473×/1.489×. Report SHA `cebd1857…c6e0a14`. Scope excludes final-field capture, queue, archive/persistence and UI. Prior same-case report measured Warp around 12.05 s, so its ~29% cross-report shift remains unexplained; no broad speedup claim or optimization is justified yet.
+
+## 2026-09-28 — Live archive UI and local bundle round-trip
+On isolated localhost:4179 with unique temporary roots, the UI selected NIST Table 4 source revision 1 (document SHA-256 `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0`) and loaded two archived runs. After page reload, run `101131d83b3b4ba9897ed71059f44e02` still showed exact source binding and `Unvalidated model`; its Table 4 comparison withheld residuals as unavailable/unvalidated. UI-created bundle `1d7aebcf7fb64c0dbbf497150f830be0` verified as 2 runs + 2 source links. Restore ID `2e991ae788354e97a096e18a6651e8bc` opened an isolated archive with both run identities; material provenance, source hash and unvalidated label remained visible. Portable `.tar` download succeeded. Portable upload via UI remains **unverified**: browser `fileChooser.setFiles` failed before selection, so no upload-verification claim is made. Test data used isolated storage, no production archive data changed, and the temporary server was stopped. This is persistence/file-integrity evidence only, not numerical or experimental validation.
+
+Downloaded portable bundle verification: `metalliksa-lpbf-run-bundle-1d7aebcf7fb64c0dbbf497150f830be0.tar`, 8,168,448 bytes, SHA-256 `bbe33f9ccb479a12b71a80d57d206602c5bb71d02588694022802e21d59ddfaa`. UI upload did not accept this file; it remains unverified.
+
+## 2026-09-28 — Shared thermal crosswalk and independent face check
+
+Root added `docs/LPBF_SHARED_THERMAL_SCIENCE_CROSSWALK.md`, scoped to the
+reference transient enthalpy contract. It records implemented source/update,
+conduction and boundary units, exact code spans, primary methodological/unit
+references, and explicitly missing model-specific citations. It keeps
+same-ledger closure separate from independent energy verification and numerical
+or experimental validation. Independent 3D heterogeneous harmonic-face test
+`python/test_lpbf_shared_thermal_conduction_faces.py`: **1/1 PASS** (Pytest cache
+write warning only). All-four material capability test: **6/6 PASS**. A full
+transient energy oracle, full citation/applicability matrix, and convergence
+remain open.
+
+Material cache regression completed after the prior checkpoint: `python test_lpbf_build_job.py` **PASS** (Phase 5 fast); source-only `surface_tension_N_m` mutation causes cache miss and a new authority digest while effective property SHA stays constant. `python -m unittest test_lpbf_material_capabilities` **6/6 PASS**. No allowlist change or IN625 admission.
+
+## Windows Job Object descendant proof — 2026-09-28
+`python/test_lpbf_worker_lifecycle.py::QueueLifecycle.test_abrupt_parent_death_kills_execute_child_and_prevents_publication` now starts a grandchild under the production Job Object-owned execution child. Windows retained process handles confirmed both PIDs unsignaled before owner kill and signaled afterward; startup recovery marked the running row failed; `result.json` and the delayed orphan artifact were absent. Targeted test **PASS**; complete `test_lpbf_worker_lifecycle` module **16/16 PASS**. A sandbox temp ACL failure occurred before spawn; the identical test was rerun successfully through the authorized runner. This proves parent-death descendant termination and non-publication for the controlled fixture; HTTP DELETE over a descendant tree and a real LPBF execution remain **unverified**.
+
+## HTTP DELETE descendant and archive picker state — 2026-09-28
+`tests/lpbf-worker-delete-integration.test.ts` passes **1/1**: child and grandchild live before the actual HTTP DELETE, both exit before the route returns `cancelled`, and the delayed artifact writer produces no file. This covers the real worker bridge and Job Object with an injected sleeper, not an actual LPBF simulation. Portable archive UI selection metadata collision is fixed with a per-change selection revision; `tests/lpbf-run-bundle-ui.test.tsx` **2/2 PASS**, `npx tsc --noEmit` **PASS**. Current UI assertions are SSR/task-key checks, not a real browser file selection. Portable upload → verify → isolated restore → refresh remains **unverified**.
+
+## 2026-09-28 — New bounded evidence and archive workflow proof
+
+- **Worker lifecycle/software:** HTTP DELETE through Express → worker bridge → Windows Job Object reaped its controlled execution child and grandchild before returning `cancelled`; delayed artifact absent. Test 1/1 PASS. Cleanup filters recorded PIDs to positive safe integers. Parent-death suite: 16/16 PASS.
+- **Energy accounting/software:** `python/test_lpbf_shared_thermal_energy_oracle.py` 1/1 PASS for a single bounded CPU 316L reference/default-powder case. Independently integrated accepted laser-on power and reconstructed base/top boundary terms from pre-update fields, compared with final `sum(H)*V`. Limitation: source-limiter state seam and independently reassembled equations remain implementation-coupled. No beam, broad conservation, convergence, backend, or experimental claim.
+- **Scientific traceability:** crosswalk corrected the two-node quadrature weight and now limits the new oracle claim. Source parameter gates, model applicability, and uncertainty are still open.
+- **Live UI/archive:** real local file chooser selected and uploaded the portable `.tar`; server verified 2 runs + 69 artifacts + 2 source links. Isolated restore `ac345126e1d447198803f7218ae3c311` and selected run persisted after reload with archived source SHA and material digest. UI withheld residuals and displayed `Unvalidated model` with unmet matching/convergence gates. Evidence is persistence and correct gating only.
+- **Engineering checks:** `npx tsc --noEmit` PASS; HTTP DELETE test 1/1 PASS; `python -m unittest test_lpbf_worker_lifecycle` 16/16 PASS. UI path ran with Vite websocket errors in browser console, while archive/API actions completed.
+
+Numerical convergence is inconclusive. IN718 comparison remains unvalidated. No new alloy admitted. GPU end-to-end attribution/Nsight evidence, full workflow source/run/result/API coverage, and model-specific parameter uncertainty remain open.
+
+## 2026-09-28 — GPU and independent IN718 evidence limits
+
+- Device: RTX 4060 Laptop GPU, driver 617.14, compute capability 8.9; one snapshot at 38% GPU utilization / 411 MiB. Torch CUDA and Warp are available. `nsys`/`ncu` were not present on PATH or checked standard NVIDIA install roots; no Nsight claim.
+- Existing solver-only fresh alternating benchmark shows Warp median 8.520 s vs Torch 12.519 s for one estimated 73,568-cell/934-step IN718 request, but a prior same-case Warp report was ~12.05 s. Device occupancy and end-to-end stage attribution remain absent; the GPU was not idle, so no new timing was run. The old Torch profiler has zero valid device-kernel timings despite many launches/copies/syncs.
+- IN718 result comparison remains unvalidated: available CPU request does not match NIST case 0 and lacks converged mesh/time evidence; old archive source hash is stale; current Table 4 source/run flow withholds residuals. The three-run × two-section proxy campaign is not a measured optical section operator. No experimental validation claim.
+- Small next GPU step when idle: five alternating matched Torch/Warp runs with captured sync, identities, cells/steps; then stage timing via Nsight Systems if installed, otherwise CUDA events. Optimize only after attribution and rerun parity.

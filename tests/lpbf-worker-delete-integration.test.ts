@@ -12,14 +12,34 @@ import { getHostPython } from '../server/pythonRuntime';
 
 const python = getHostPython();
 
+async function killAndWaitForRecordedTestProcess(pid: number) {
+  try { process.kill(pid, 'SIGKILL'); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+  }
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    try { process.kill(pid, 0); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ESRCH') return;
+      throw error;
+    }
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
+  assert.fail(`test-owned process ${pid} did not exit during bounded cleanup`);
+}
+
 test('HTTP DELETE waits for the real worker RPC to terminate and reap its execution child', { timeout: 30000 }, async t => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'metalliksa-lpbf-delete-'));
   const priorJobRoot = process.env.METALLIKSA_JOB_ROOT;
   process.env.METALLIKSA_JOB_ROOT = path.join(root, 'jobs');
   const repoPython = path.resolve('python');
   const pidFile = path.join(root, 'execution-child.pid');
+  const descendantPidFile = path.join(root, 'execution-grandchild.pid');
+  const orphanArtifact = path.join(root, 'orphan-result.json');
   const fixtureScript = path.join(root, 'worker_fixture.py');
-  const childCode = `from pathlib import Path; import os,time; Path(${JSON.stringify(pidFile)}).write_text(str(os.getpid())); time.sleep(120)`;
+  const descendantCode = `from pathlib import Path; import time; time.sleep(15); Path(${JSON.stringify(orphanArtifact)}).write_text('{}')`;
+  const childCode = `from pathlib import Path; import os,subprocess,sys,time; Path(${JSON.stringify(pidFile)}).write_text(str(os.getpid())); d=subprocess.Popen([sys.executable,'-c',${JSON.stringify(descendantCode)}]); Path(${JSON.stringify(descendantPidFile)}).write_text(str(d.pid)); time.sleep(120)`;
   await writeFile(fixtureScript, [
     'import sys',
     `sys.path.insert(0, ${JSON.stringify(repoPython)})`,
@@ -52,6 +72,8 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
   await once(server, 'listening');
   const address = server.address() as { port: number };
   const baseUrl = `http://127.0.0.1:${address.port}`;
+  let childPid: number | undefined;
+  let descendantPid: number | undefined;
 
   try {
     const submittedResponse = await fetch(`${baseUrl}/api/lpbf/jobs`, {
@@ -62,14 +84,17 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
     assert.ok(submitted.id);
 
     const deadline = Date.now() + 10000;
-    let childPid: number | undefined;
-    while (!childPid && Date.now() < deadline) {
+    while ((!childPid || !descendantPid) && Date.now() < deadline) {
       try { childPid = Number((await readFile(pidFile, 'utf8')).trim()); }
       catch { await new Promise(resolve => setTimeout(resolve, 50)); }
+      try { descendantPid = Number((await readFile(descendantPidFile, 'utf8')).trim()); }
+      catch { await new Promise(resolve => setTimeout(resolve, 50)); }
     }
-    assert.ok(childPid, 'real worker did not start its execution child');
-    assert.equal(Number.isSafeInteger(childPid), true);
+    assert.ok(childPid && descendantPid, 'real worker did not start its execution child and descendant');
+    assert.equal(Number.isSafeInteger(childPid) && childPid > 0, true);
+    assert.equal(Number.isSafeInteger(descendantPid) && descendantPid > 0, true);
     process.kill(childPid, 0);
+    process.kill(descendantPid, 0);
 
     const cancelledResponse = await fetch(`${baseUrl}/api/lpbf/jobs/${submitted.id}`, { method: 'DELETE' });
     assert.equal(cancelledResponse.status, 200);
@@ -78,18 +103,29 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
     assert.equal(cancelled.status, 'cancelled');
     assert.throws(() => process.kill(childPid!, 0), error => (error as NodeJS.ErrnoException).code === 'ESRCH',
       'HTTP cancellation returned before the execution child exited');
+    assert.throws(() => process.kill(descendantPid!, 0), error => (error as NodeJS.ErrnoException).code === 'ESRCH',
+      'HTTP cancellation returned before the execution descendant exited');
+    await assert.rejects(readFile(orphanArtifact), { code: 'ENOENT' });
   } finally {
     server.closeAllConnections();
     await new Promise<void>(resolve => server.close(() => resolve()));
     bridge.close();
-    await Promise.all(workerChildren.map(async child => {
-      if (child.exitCode !== null || child.signalCode !== null || !child.pid) return;
-      const closed = once(child, 'close');
-      child.kill();
-      await closed;
-    }));
-    if (priorJobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
-    else process.env.METALLIKSA_JOB_ROOT = priorJobRoot;
-    await rm(root, { recursive: true, force: true });
+    try {
+      await Promise.all(workerChildren.map(async child => {
+        if (child.exitCode !== null || child.signalCode !== null || !child.pid) return;
+        const closed = once(child, 'close');
+        child.kill();
+        await closed;
+      }));
+      const cleanup = await Promise.allSettled([descendantPid, childPid]
+        .filter((pid): pid is number => Number.isSafeInteger(pid) && pid > 0)
+        .map(killAndWaitForRecordedTestProcess));
+      const failedCleanup = cleanup.filter(result => result.status === 'rejected');
+      assert.equal(failedCleanup.length, 0, failedCleanup.map(result => String(result.reason)).join('; '));
+    } finally {
+      if (priorJobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
+      else process.env.METALLIKSA_JOB_ROOT = priorJobRoot;
+      await rm(root, { recursive: true, force: true });
+    }
   }
 });

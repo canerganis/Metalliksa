@@ -23,6 +23,22 @@ from this weak delta. CPU/Warp and CPU/Torch parity both pass. IN718 experiment
 remains unvalidated; IN625 remains screening-only; fine CPU convergence remains
 inconclusive.
 
+Correction: HTTP DELETE with an execution grandchild is now covered end to end
+in `tests/lpbf-worker-delete-integration.test.ts`: both PIDs were live before
+DELETE, both had exited before HTTP 200/cancelled, and the delayed artifact was
+absent. Focused test **1/1 PASS** (11.47 s). The fixture exercises the real HTTP
+router, bridge, Python worker, and Windows Job Object but substitutes a sleeper
+for the LPBF solver; a real solve remains unverified.
+
+Portable UI import state fix is reviewed in
+`src/components/LpbfRunArchivePanel.tsx`: every file selection advances a
+selection revision, so metadata collisions cannot keep a previous verified
+import attached to the next selection. Focused test **2/2 PASS** and
+`npx tsc --noEmit` **PASS**. Its SSR test does not dispatch a real file-selection
+event. Browser `.tar` upload, verification, isolated restore, and reload are the
+next archive gate; use Playwright `setInputFiles` against a fresh isolated app
+instance, not the stale native chooser route. No commits yet.
+
 ## Current checkpoint — 2026-09-27T18:18Z
 
 User chose the old shared checkout workflow and deferred worktree workflow. Do
@@ -2268,3 +2284,62 @@ Material status: keep the canonical four-alloy authority unchanged. IN625 is not
 P4 v2 continuation: the previously frozen study has now completed. Current implementation/material/input identity remained stable across 5 µm fixed-mesh dt levels 50/25/12.5 ns; 49,000 steps / 25.803B cell-steps, 539 MB preflight, energy closure 3.57e-13 PASS. Discrete W/D are unresolved, continuous contour trend is non-monotonic/tiny; temporal convergence stays inconclusive, and spatial convergence is still a separate inconclusive gate. Do not rerun or overwrite the bound outputs.
 
 Performance checkpoint: the fresh 3-session runner captured 9 trials/backend at identical request/material/implementation/runtime identities (Torch median 12.519 s, Warp 8.520 s; within-run session ratios 1.398–1.489). These are solver wall times only. A prior same-case report had Warp around 12.05 s; explain this ~29% drift and instrument full submit/queue/solve/capture/persist stages before any optimization or end-to-end claim. Profiler has no CUDA kernel timing; Nsight tools remain unavailable.
+
+## 2026-09-28 — Isolated UI archive/bundle E2E checkpoint
+
+On isolated `127.0.0.1:4179` storage, source selection and archived run identity
+survived reload. Bundle `1d7aebcf7fb64c0dbbf497150f830be0` was created by the UI,
+then verified after manual ID entry; isolated restore
+`2e991ae788354e97a096e18a6651e8bc` reopened both runs and retained exact source
+revision/hash plus `unvalidated` status. Comparison withheld numeric residuals.
+Portable `.tar` download passed. Portable UI upload remains **unverified**:
+browser file chooser failed before selecting the file. No production archive data
+changed; isolated server stopped. Luna owns a focused canonical four-alloy
+source/revision consistency change. Next: review that package, retry portable
+upload with a working picker, then address independent-energy and source-to-equation
+evidence. Physics convergence, IN718 experimental validity, Nsight attribution,
+and descendant process cleanup remain open.
+Downloaded artifact: `metalliksa-lpbf-run-bundle-1d7aebcf7fb64c0dbbf497150f830be0.tar`, 8,168,448 bytes, SHA-256 `bbe33f9ccb479a12b71a80d57d206602c5bb71d02588694022802e21d59ddfaa`. Its bytes were hashed locally; no UI upload was completed.
+
+## 2026-09-28 — Science crosswalk / face invariant checkpoint
+
+Root owns the new `docs/LPBF_SHARED_THERMAL_SCIENCE_CROSSWALK.md`. Luna owns
+only seven Python material/cache files (canonical per-alloy authority digest,
+cache identity propagation/hit validation, and regressions); root reviews and
+integrates. The independent small-grid heterogeneous conduction-face test is
+1/1 PASS; `test_lpbf_material_capabilities` is 6/6 PASS. The build-job script
+regression is currently being rechecked. Crosswalk identifies missing
+model-specific sources/uncertainties and distinguishes same-ledger accounting
+from an independent energy oracle. Do not alter solver equations or infer
+experiment validity from these software checks.
+
+Build-job cache/source regression is now complete: `python test_lpbf_build_job.py`
+**PASS** (Phase 5 fast); source-only canonical field change invalidates the cache
+without changing the effective model-property hash. The earlier “currently being
+rechecked” note is superseded. No commit yet; root is integrating the two bounded
+Luna code/test packages and the scientific crosswalk.
+
+2026-09-28 progress: the Windows Job Object parent-death test now launches and
+observes both execution child and grandchild. Both were confirmed alive before
+owner termination and signaled afterward; stale queue state was failed and no
+result or delayed artifact was present. Targeted test PASS; worker lifecycle
+module 16/16 PASS on Windows via the authorized runner after a sandbox temp ACL
+failure. Root owns only `python/test_lpbf_worker_lifecycle.py`; no commit yet.
+Luna's archive UI fix invalidates stale import state on every file selection,
+including same-name/size/timestamp collisions; focused test 2/2 PASS. Its SSR
+test does not simulate an interactive file selection, so browser file selection
+remains unverified. Next: verify portable tar import/isolated restore with actual
+browser `setInputFiles`; test HTTP descendant cancellation if feasible; continue
+independent transient energy/source applicability and end-to-end performance
+attribution. Keep IN718 experimental status unvalidated and P4 convergence
+inconclusive.
+
+2026-09-28 continuation correction: actual portable `.tar` upload succeeded through browser file selection on isolated localhost:4179, verified (2 runs, 69 artifacts, 2 source links), restored into isolated archive `ac345126e1d447198803f7218ae3c311`, and remained addressable after refresh. The selected restored run retained exact NIST Table 4 revision/hash and material provenance; comparison correctly withheld residuals and remained unvalidated. Earlier UI upload “unverified” checkpoints are superseded. A Vite HMR websocket warning was present in the dev browser; archive/API flow succeeded.
+
+Independent reference transient energy-accounting test now exists and passes 1/1 for a bounded CPU 316L case. It reconstructs laser-on input and base/top losses from accepted dt/pre-update fields. This is implementation-level accounting consistency only; beam/material validity, other backends and experiment remain unverified. Crosswalk updated with oracle scope and two-point time-quadrature 1/2 weight.
+
+HTTP DELETE child+grandchild integration is 1/1 PASS, Python parent-death lifecycle suite 16/16 PASS, TypeScript check PASS. The test cleanup now excludes PID 0/negative values. Temporary app/server shutdown and listener check are the immediate next actions, followed by scoped diff review. Continue with measured bottleneck attribution/Nsight, independent IN718 observations, spatial/time convergence, source/parameter uncertainty, and complete saved-run/provenance workflows; keep unmet items `unverified` and do not commit until review scope is clear.
+
+2026-09-28 GPU gate: RTX 4060 Laptop (driver 617.14, cc 8.9), Torch CUDA and Warp available. One snapshot showed GPU at 38% utilization / 411 MiB. `nsys` and `ncu` absent from PATH and standard NVIDIA roots; no fresh benchmark while GPU was non-idle. Prior solver-only medians remain mixed across reports; kernel/device time, stage breakdown, and queue/archive/UI cost are unmeasured. Next: five alternating same-input Torch/Warp pairs when idle, record explicit synchronization and input identity; attribute stages with Nsight Systems if present, otherwise CUDA-event timing. Never infer a general speedup from existing per-case reports.
+
+2026-09-28 IN718 independent measurement gate: recorded CPU job does not match NIST Table 4 case 0 process conditions; temporal/spatial convergence is not established; a previously archived comparison used a stale source hash. Current exact source binding correctly withholds residuals. Existing six-sample proxy records thermal estimates only, not a matched three-track × two-position experimental optical operator. Next safe step is operator/data-binding specification review; no residual should be calculated until matched run, measured beam, and convergence evidence exist.

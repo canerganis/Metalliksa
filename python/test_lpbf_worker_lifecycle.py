@@ -523,48 +523,60 @@ class QueueLifecycle(unittest.TestCase):
             finally:
                 db.close()
             helper = r'''
-import sys, time
+import subprocess, sys, time
 from pathlib import Path
 from lpbf_worker import _spawn_windows_job_child
 folder = Path(sys.argv[1])
-payload = "import sys,time; from pathlib import Path; time.sleep(1.2); p=Path(sys.argv[1]); (p/'result.json').write_text('{}'); (p/'orphan-artifact.svg').write_text('orphan')"
+grandchild_payload = "import sys,time; from pathlib import Path; time.sleep(15); p=Path(sys.argv[1]); (p/'result.json').write_text('{}'); (p/'orphan-artifact.svg').write_text('orphan')"
+payload = "import subprocess,sys,time; from pathlib import Path; p=Path(sys.argv[1]); c=subprocess.Popen([sys.executable,'-c',sys.argv[2],str(p)]); (p/'grandchild.pid').write_text(str(c.pid)); time.sleep(60)"
 with (folder / "progress.log").open("w") as log:
-    child = _spawn_windows_job_child([sys.executable, "-c", payload, str(folder)], log)
+    child = _spawn_windows_job_child([sys.executable, "-c", payload, str(folder), grandchild_payload], log)
     child.resume()
-    print(child.pid, flush=True)
+    deadline = time.monotonic() + 10
+    pid_file = folder / "grandchild.pid"
+    while not pid_file.exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    if not pid_file.exists():
+        raise RuntimeError("execution child did not report its descendant PID")
+    print(child.pid, pid_file.read_text(), flush=True)
     time.sleep(60)
 '''
             parent = subprocess.Popen([sys.executable, "-c", helper, str(folder)],
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                       text=True, cwd=str(Path(__file__).resolve().parent))
-            pid = None
-            child_handle = None
+            pids = []
+            process_handles = []
             try:
                 ready = threading.Event()
                 output = []
                 reader = threading.Thread(target=lambda: (output.append(parent.stdout.readline()), ready.set()), daemon=True)
                 reader.start()
-                self.assertTrue(ready.wait(15), "helper parent did not report its child PID")
+                self.assertTrue(ready.wait(15), "helper parent did not report its child and descendant PIDs")
                 if not output[0].strip():
                     parent.kill()
                     parent.wait(timeout=5)
                     self.fail(f"helper failed to start child: {parent.stderr.read()}")
-                pid = int(output[0].strip())
+                pids = [int(value) for value in output[0].split()]
+                self.assertEqual(len(pids), 2, "helper must report the execution child and its descendant")
                 import ctypes
                 kernel = ctypes.WinDLL("kernel32", use_last_error=True)
                 kernel.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
                 kernel.OpenProcess.restype = ctypes.c_void_p
                 kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
                 kernel.WaitForSingleObject.restype = ctypes.c_ulong
+                kernel.TerminateProcess.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+                kernel.TerminateProcess.restype = ctypes.c_int
                 kernel.CloseHandle.argtypes = [ctypes.c_void_p]
-                child_handle = kernel.OpenProcess(0x00100000, False, pid)  # SYNCHRONIZE
-                self.assertTrue(child_handle, "child PID could not be opened to verify liveness")
-                self.assertEqual(kernel.WaitForSingleObject(child_handle, 0), 0x102,
-                                 "reported child was not live before parent termination")
+                process_handles = [kernel.OpenProcess(0x00100001, False, pid) for pid in pids]  # SYNCHRONIZE | TERMINATE
+                self.assertTrue(all(process_handles), "child and descendant PIDs must be openable for liveness checks")
+                for label, handle in zip(("execution child", "descendant"), process_handles):
+                    self.assertEqual(kernel.WaitForSingleObject(handle, 0), 0x102,
+                                     f"reported {label} was not live before parent termination")
                 parent.kill()
                 parent.wait(timeout=5)
-                self.assertEqual(kernel.WaitForSingleObject(child_handle, 5000), 0,
-                                 "child survived abrupt Job Object owner death")
+                for label, handle in zip(("execution child", "descendant"), process_handles):
+                    self.assertEqual(kernel.WaitForSingleObject(handle, 5000), 0,
+                                     f"{label} survived abrupt Job Object owner death")
 
                 with isolated_queue(root) as queue:
                     state = queue.get(job)
@@ -576,21 +588,22 @@ with (folder / "progress.log").open("w") as log:
                 if parent.poll() is None:
                     parent.kill()
                     parent.wait(timeout=5)
-                if child_handle:
-                    kernel.CloseHandle(child_handle)
-                if pid is not None:
-                    import ctypes
-                    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-                    kernel.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
-                    kernel.OpenProcess.restype = ctypes.c_void_p
-                    kernel.TerminateProcess.argtypes = [ctypes.c_void_p, ctypes.c_uint]
-                    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
-                    child_handle = kernel.OpenProcess(0x0001, False, pid)
-                    if child_handle:
+                for handle in process_handles:
+                    if handle:
                         try:
-                            kernel.TerminateProcess(child_handle, 1)
+                            if kernel.WaitForSingleObject(handle, 0) == 0x102:
+                                terminated = kernel.TerminateProcess(handle, 1)
+                                state = kernel.WaitForSingleObject(handle, 5000)
+                                if state != 0:
+                                    error = ctypes.get_last_error()
+                                    self.fail(
+                                        "test child cleanup failed: "
+                                        f"TerminateProcess={bool(terminated)}, wait={state}, winerror={error}"
+                                    )
+                            elif kernel.WaitForSingleObject(handle, 0) != 0:
+                                self.fail("test child cleanup could not confirm process exit")
                         finally:
-                            kernel.CloseHandle(child_handle)
+                            kernel.CloseHandle(handle)
                 if parent.stdout:
                     parent.stdout.close()
                 if parent.stderr:

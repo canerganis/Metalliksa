@@ -277,6 +277,11 @@ export function restoreRunSelectionForArchive(runIds: string[],
   return selected;
 }
 
+export function portableBundleSelectionKey(file: Pick<File, 'name' | 'size' | 'lastModified'> | null,
+  selectionRevision: number): string {
+  return file ? `${selectionRevision}:${file.name}:${file.size}:${file.lastModified}` : `no-file:${selectionRevision}`;
+}
+
 export function LpbfRunArchivePanel() {
   const [runs, setRuns] = useState<RunArchiveList | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -312,6 +317,7 @@ export function LpbfRunArchivePanel() {
 function RunBundleControls() {
   const [bundleId, setBundleId] = useState('');
   const [portableFile, setPortableFile] = useState<File | null>(null);
+  const [portableSelectionRevision, setPortableSelectionRevision] = useState(0);
   const [restored, setRestored] = useState<RestoredRunBundle | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [restoreSelection, setRestoreSelection] = useState(() => {
@@ -321,7 +327,7 @@ function RunBundleControls() {
   const exportTask = useInputBoundTask<ExportedRunBundle>('run-bundle-export');
   const verifyTask = useInputBoundTask<VerifiedRunBundle>(bundleId);
   const restoreTask = useInputBoundTask<RestoredRunBundle>(bundleId);
-  const importTask = useInputBoundTask<ImportedRunBundle>(portableFile ? `${portableFile.name}:${portableFile.size}:${portableFile.lastModified}` : 'no-file');
+  const importTask = useInputBoundTask<ImportedRunBundle>(portableBundleSelectionKey(portableFile, portableSelectionRevision));
   const importedRestoreTask = useInputBoundTask<RestoredRunBundle>(importTask.data?.importId ?? 'no-import');
   const busy = !!(exportTask.pending || verifyTask.pending || restoreTask.pending || importTask.pending || importedRestoreTask.pending);
   const verified = verifyTask.data?.bundleId === bundleId;
@@ -432,7 +438,7 @@ function RunBundleControls() {
       <h5 className="font-medium">Restore a portable bundle</h5>
       <label className="block text-sm">Run bundle file
         <input type="file" aria-label="Run bundle file" accept=".tar,application/x-tar" className="mt-2 block w-full text-sm"
-          onChange={event => { setPortableFile(event.currentTarget.files?.[0] ?? null); setRestored(null); }} />
+          onChange={event => { setPortableSelectionRevision(revision => revision + 1); setPortableFile(event.currentTarget.files?.[0] ?? null); setRestored(null); }} />
       </label>
       <button type="button" className={button} disabled={busy || !portableFile} onClick={() => void runImport()}>Upload and verify bundle</button>
       {importTask.pending && <p role="status">Uploading bundle and checking file hashes, run identities, and source revisions…</p>}
