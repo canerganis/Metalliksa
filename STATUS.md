@@ -962,3 +962,26 @@ Transient thermal and GPU parity pilot routes can accept an explicitly supplied 
 
 ## Material provenance in results and archive — 2026-09-28
 GPU result details and archived/restored run details now expose the executed material snapshot's quality, provenance class, source, uncertainty note, and material revision SHA-256. Values come from the result snapshot, never from the current shared selection or catalog. Missing/malformed fields display `Not reported`; the model remains explicitly unvalidated. Custom `user-supplied-unverified` and malformed/missing provenance UI regressions: **10/10 PASS**; `tsc --noEmit` and scoped diff check PASS. Real browser QA **unavailable** because no browser surface was exposed to this task. Archive metadata/API remained unchanged.
+
+## 2026-09-28 — Queue orderly shutdown with a live child
+- Added a real execution-child regression around `Queue.close()` using the production Windows Job Object spawn path. It asserts the job remains `running` during kill and wait/reap, then becomes `failed` only after the child has exited and been reaped; no result or late artifact may appear.
+- Windows lifecycle test module **16/16 PASS**, focused regression **PASS**, `git diff --check` **PASS**. No production defect was reproduced; only `python/test_lpbf_worker_lifecycle.py` changed.
+- This covers orderly shutdown and a direct child. Descendant-process behavior remains **unverified**; API DELETE → worker RPC → real child end-to-end integration is still open.
+- Next: exercise the real HTTP cancel path against a live child, then resume current-identity performance and convergence gates.
+
+## 2026-09-28 — Revised performance evidence and scientific gates
+- Read-only review of the fresh RTX 4060 alternating benchmark found Torch/Warp medians of 12.084/12.047 s and 12.361/12.044 s in two sessions, each only three trials/backend. Trial spread exceeded the backend differences; no robust Warp advantage is demonstrated. The older 1.294× result was not reproduced. These timings omit field capture, queue, persistence and UI.
+- The Torch profiler counted 149,447 launches and 12,245 each of async copies/synchronizations; device timing was zero and Nsight was unavailable, so only host-dispatch/synchronization is a bottleneck candidate, not kernel attribution. No optimization is justified yet.
+- Shared-core source/equation citations are missing for conduction, enthalpy/latent heat, source quadrature and boundary assumptions. SI conversion boundaries and internal-flux pairing were reviewed; energy closure uses the same implemented ledger and is not independent physics validation. Fresh P4 temporal and spatial convergence remain `inconclusive`.
+- IN718 NIST case 0 data are locally present, but the official workbook, derived Table 4 transcription and six TIFF sections are distinct linked sources. The current solver lacks the matching six-section optical observer and measured 2D beam binding; its prior run stopped before complete capture. Experimental residual remains withheld and model status `unvalidated`.
+- Next: add the source-to-equation/validity matrix and independent manufactured-solution verification; build a non-overwriting current-identity performance runner with ≥7 paired samples across ≥3 sessions and capture-inclusive stage timings. Optimize only after it attributes a reproducible hotspot.
+
+Numerical verification addition: `python/test_lpbf_conduction_manufactured.py` compares the shared insulated conduction stencil against an independent 3D cosine manufactured field at 8/16/32/64 cells. Focused test **1/1 PASS**; error refinement ratios **3.98461, 3.99615, 3.99904** (about second-order spatial consistency). This does not verify transient integration, LPBF sources, heterogeneous properties, conservation ledger, GPU, or experimental validity.
+
+## 2026-09-28 — HTTP DELETE cancellation with a real execution child
+- Added `tests/lpbf-worker-delete-integration.test.ts`: actual Express LPBF router → `LpbfWorkerBridge` RPC → real Python worker → production Windows Job Object spawn. Only the solver command is replaced with a PID-marking long sleeper.
+- The test observed the child alive before DELETE, then HTTP 200 / `cancelled` and child ESRCH before the response completed. Targeted integration test **1/1 PASS** (~8.3 s), TypeScript `tsc --noEmit` **PASS**, diff check **PASS**. Test-only commit `06c9808`.
+- Direct child ordering is now verified across the HTTP path. Descendant process trees and solver-result/artifact timing under an actual LPBF solve remain **unverified**.
+
+## 2026-09-28 — Material admission gate reaffirmed
+The four-alloy authority remains exactly Ti-6Al-4V, SS316L, AlSi10Mg and IN718. Its shared static properties still have estimated/legacy evidence and lack quantified property-level uncertainty. IN625's separate bounded fusion-enthalpy screen is model-derived, lacks quantified uncertainty and full-range density/viscosity/optical data, and explicitly does not admit full transient simulation. No new alloy passes the full-model source/uncertainty gate; none was admitted.

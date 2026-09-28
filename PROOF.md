@@ -2790,3 +2790,17 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - GPU result detail renders quality, provenance class, source, uncertainty note, and revision SHA from `result.material`. Archived/restored run detail decodes these from `document.capture.resultJson` itself, including non-GPU archived results with a material snapshot. Missing or malformed legacy fields render as `Not reported`.
 - Added custom unverified-provenance and absent/malformed snapshot regressions in `tests/lpbf-gpu-pilot-ui.test.tsx`. Focused UI suite **10/10 PASS**, TypeScript `tsc --noEmit` **PASS**, scoped `git diff --check` **PASS**. Browser verification **unavailable**: CUA reported no browser tabs/apps.
 - No run/source/archive data or API behavior changed. The displayed label explicitly keeps physics validation `unvalidated`.
+
+## 2026-09-28 — Queue orderly shutdown with a live child
+`Queue.close()` regression launches a real child through the production Windows Job Object path and observes the persisted queue state during termination and reap. Test confirms it is `running` until the child is signaled/reaped, then `failed`, with no result or late artifact. Windows lifecycle module **16/16 PASS**, focused test **PASS**, `git diff --check` **PASS**. No production defect reproduced; only `python/test_lpbf_worker_lifecycle.py` changed. Descendants and HTTP DELETE → RPC cancellation remain **unverified**.
+
+## 2026-09-28 — Performance reproducibility and validation limits
+Fresh RTX 4060 benchmark review reports Torch/Warp median pairs 12.084/12.047 s and 12.361/12.044 s across two sessions of only three trials/backend; differences are smaller than trial spread. Older 1.294x Warp result was not reproduced. Queue, field capture and persistence are omitted. Profiler host call counts suggest dispatch/sync may matter, but CUDA device timing was not captured and Nsight was unavailable; no kernel claim or optimization is supported.
+
+Shared-core SI boundaries and internal flux pairing appear consistent in the inspected paths. Primary equation citations are absent for the conduction/enthalpy/source/boundary contract, and same-ledger energy closure is not independent physics verification. Current temporal and spatial convergence are `inconclusive`. IN718 Table 4 has six optical sections across three tracks, but the current model observer and bound beam profile do not match it; no residual is valid and model remains `unvalidated`.
+
+Independent manufactured-solution check: insulated constant-k 3D cosine field, grids 8/16/32/64, focused test **1/1 PASS**; RMS error ratios on 2× refinement **3.98461 / 3.99615 / 3.99904**. Evidence is limited to second-order spatial consistency of `conduction_rate`; no full-solver or experimental claim follows.
+
+HTTP cancel integration: a real child was confirmed alive before HTTP DELETE; the route returned 200/cancelled only after the production Windows worker path had terminated it (`tests/lpbf-worker-delete-integration.test.ts`, 1/1 PASS). This closes direct-child HTTP→RPC→reap ordering; descendant trees and artifacts from a real LPBF solver execution remain unverified.
+
+Material gate: the canonical four identities remain unchanged. IN625 is still a separate bounded, model-derived fusion-enthalpy screen with unquantified uncertainty and missing full-range constitutive fields; full transient admission and experimental validation remain false.
