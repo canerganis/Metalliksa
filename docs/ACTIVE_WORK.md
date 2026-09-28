@@ -1,5 +1,36 @@
 # Active delegated LPBF work — 2026-09-27
 
+## Current checkpoint — 2026-09-28T14:10+03:00
+
+An isolated real-browser acceptance run was completed on localhost:4183 with
+separate temp `runs/sources/bundles/jobs` roots. Exact NIST AMB2022-03 Table 4
+transcription was previewed/imported (dataset
+`nist-amb2022-03-optical-table4-local-v1`, revision 1, document SHA
+`6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0`). A
+280 W transient attempt failed closed at the material boiling guard on step 1;
+no thresholds were relaxed. A separate explicit Quick Screening run completed
+as estimated/unvalidated analytical `rosenthal+goldak`, run
+`872dbcdba0d7495d932c535507d5946a`; run document SHA
+`36d520f36c7dfa260278d6a1b21c01da18624eecd4046898249cae047903e296`, input
+SHA `098ace31826b3de0600047c3ee7c1d2eb1769abddf3f51cccb973ee1d7f88d02`,
+material revision SHA `5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749`.
+UI archive source binding was exact. The NIST compare remained unavailable
+because analytical screening has no transient evolution; there are no residuals.
+
+Bundle export/verify, HTTP tar download, real UI file chooser upload/verify,
+isolated restore `4d4cfcd7a3f54d90b8cf512cf5930e29`, and refresh persistence
+passed for 1 run / 2 artifacts / 1 source link. Bundle id
+`0ea7644d609c4c19bb6f8f95b61a3e83`; tar SHA
+`8a709c72a1fe528d606d6cf595744fa5085742bb6b19a283e2865cf704d587f5`.
+Evidence: `PROOF.md` dated 2026-09-28 section and
+`docs/LPBF_BROWSER_UI_SOURCE_RUN_BUNDLE_ROUNDTRIP_2026-09-28.json`.
+The portable archive bytes remain in the isolated temp directory rather than
+the repository. Current-code GPU benchmark and NIST optical observer remain
+open; the prior benchmark's fingerprint is stale for today's dirty solver
+tree. Next: produce a source/hash-bound mapping dossier for all six Table 4
+observations plus beam-profile applicability before spending on a matched
+converged solve. Preserve the current code tree and all incomplete artifacts.
+
 
 ## Active implementation handoff — 2026-09-27
 
