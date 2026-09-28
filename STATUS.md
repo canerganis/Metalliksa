@@ -950,3 +950,6 @@ Scoped local commits: worker lifecycle `4c6fb21`; exact source revision restore/
 
 ## Shared LPBF default material — 2026-09-28
 The shared specimen's initial/reset value was the unqualified custom AeroTurbine-850 preset. LPBF build-job submission already blocks unsupported material mappings, but the unsafe default was misleading in shared context. Initial/reset specimen now uses canonical IN718; persisted browser choices remain intact. Regression: LPBF build-session suite 16/16 PASS; `npm run lint` PASS. Custom presets remain outside the four-alloy LPBF authority unless they pass source and uncertainty admission. Next: inspect other cross-module material routes and UI labels for screening-only properties.
+
+## Custom material route audit — 2026-09-28
+Transient thermal and GPU parity pilot routes can accept an explicitly supplied property table for an unqualified material. The registry requires a source string, but does not verify the source or quantify property uncertainty; it labels the table `user-supplied-unverified`, and these pilot results stay `unvalidated`. This is a bounded research input path, not admission to the canonical four-alloy build-job model. No extra alloy was admitted. Follow up by checking that API/archive/result UI keeps these provenance and unvalidated labels visible after restore/export.

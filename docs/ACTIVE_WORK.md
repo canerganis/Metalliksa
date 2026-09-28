@@ -2247,3 +2247,5 @@ existing four-alloy mapping. Existing browser-persisted selections are
 preserved. Focused build-session tests **16/16 PASS**, TypeScript lint PASS.
 Next: assess remaining paths that can display or transfer unqualified custom
 materials; retain the source/uncertainty gate and label any screening-only use.
+
+Further route audit: the transient thermal registry and GPU parity pilot allow explicitly supplied tables for custom identities, but store provenance as `user-supplied-unverified` and results as unvalidated; the source string is not externally checked and uncertainties are not quantified. These routes remain research pilots, outside canonical four-alloy build-job admission. Next exact check: ensure run archive, restore, and export preserve these labels. No new alloy was admitted.

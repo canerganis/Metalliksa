@@ -2775,3 +2775,7 @@ Decision: **experimental validation remains unvalidated**. Preserve the measured
 - Changed initial/reset specimen to canonical IN718. Existing persisted browser selection is not migrated or overwritten. Added regression asserting reset maps to `in718`.
 - `npx tsx --test tests/lpbf-build-session.test.ts`: **16/16 PASS** (sandbox attempt could not spawn Node child process; same command passed with Windows process permission). `npm run lint`: **PASS**. Targeted `git diff --check`: **PASS**.
 - This is software/default-selection correctness, not material-property validation. AeroTurbine-850 remains unqualified and must not enter LPBF authority until source/uncertainty admission succeeds.
+
+## 2026-09-28 — Custom material route boundary
+- Source review found the transient material registry accepts a user-supplied property table for otherwise unregistered identities if a source string and valid fields are present. It strips caller identity metadata, recomputes material identity/hash, and labels provenance `user-supplied-unverified`; uncertainty is explicitly not quantified. The GPU parity route reuses this validation and remains a numerical pilot with `validationStatus=unvalidated`.
+- This does not admit the custom material to the canonical four-alloy build-job authority and is not evidence of source verification or physical validity. No alloy was added. Keep custom routes visibly unvalidated and verify persistence in archive/restore/export presentation.
