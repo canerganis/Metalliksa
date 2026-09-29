@@ -1,4 +1,26 @@
-﻿## 2026-09-28 — Heterojen conduction face-pair invariant
+## 2026-09-29 — LPBF 4 aşamalı yol haritası tamamlandı (Adım 1, 2, 3, 4)
+
+- **Commit:** `7b06573` (`feat(lpbf): complete 4-step workflow: artifact purge, hardware timing, IN625 liquid/U95, graded mesh/evaporation, NIST optical operator`).
+- **Adım 1 (Disk Temizleme & CUDA Event Donanım Zamanlaması):**
+  - `python/lpbf_worker.py`: `purge_unverified_artifacts` ve `purge-unverified-artifacts` RPC çağrısı eklendi. Yalnızca terminal (`failed`, `cancelled`, `timed_out`) ve aktif çocuğu olmayan işlerin kısmi/.tmp dosyaları silinir. Canlı alt süreçler, tamamlanmış işler, `input.json` ve loglar korunur; junction/symlink korumalıdır.
+  - `python/run_lpbf_gpu_three_backend_benchmark.py`: `torch.cuda.Event(enable_timing=True)` ile senkronize donanım zamanlaması (`cudaEventWall_ms`) entegre edildi; `kernelStages` alanlarındaki `not-measured` durumu kapatıldı. 3 oturum x 5 round RTX 4060 üzerinde çalıştırıldı ve `docs/LPBF_CPU_TORCH_WARP_BENCHMARK_2026-09-28.json` güncellendi (Warp medyan: 1930.19 ms CUDA Event).
+  - Testler: `test_lpbf_worker_lifecycle` **22/22 PASS**, `test_lpbf_gpu_three_backend_benchmark` **7/7 PASS**.
+- **Adım 2 (IN625 Sıvı Faz Verisi & Sıcaklığa Bağlı $U_{95}$ Belirsizliği):**
+  - `python/in625_thermal_material.py`: Mills 2002 (DOI: `10.1533/9781845690144`) ve Kim 1975 (ANL-75-55) kaynaklı sıvı faz ($T > 1623.15\text{ K}$) verileri ($C_p = 720\text{ J/(kg K)}$, $k = 30\text{ W/(m K)}$, $\rho = 7750\text{ kg/m}^3$, $L_f = 2.27 \times 10^5\text{ J/kg}$, $T_b = 3173.15\text{ K}$) eklendi.
+  - `python/four_alloy_materials.py`: 4 kilitli alaşım (`in718`, `ti6al4v`, `ss316l`, `alsi10mg`) için katı, lapa ve sıvı rejimlerinde sıcaklığa bağlı $U_{95}$ (k=2, %95 güven) belirsizlik tablosu ve `four_alloy_u95_at_temperature` fonksiyonu eklendi; mevcut `_THERMAL` hash'i bozulmadı.
+  - `in625_transient_material_specification()` adaptörü ile tam transient 5 özellikli tablo `lpbf_material_registry`'ye tanıtıldı.
+  - Testler: `test_in625_extended_transient_and_u95` **5/5 PASS**, tüm malzeme regresyonları **20/20 PASS**.
+- **Adım 3 (Dereceli Izgara & Buharlaşma Isı Yutağı / $k_{eff}$ Marangoni):**
+  - `python/lpbf_graded_mesh.py`: Lazer odak koridorunda 2.5 µm (< 5 µm) çözünürlük sağlayan ve dış sınırlarda 25 µm'ye kadar genişleyen dereceli 1D/3D ızgara oluşturuldu; >10x hücre tasarrufu sağlandı.
+  - `python/lpbf_evaporation_marangoni.py`: Sıvı faz Marangoni konveksiyonu efektif iletkenlik artışı ($k_{eff} = \lambda \cdot k_L$, $\lambda = 2.2$) ve Langmuir buharlaşma gizil ısı yutağı ($\dot{q}_{evap}$) formüle edildi. `invert_enthalpy_with_evaporation` ile 280 W lazer gücünde tepe entalpisi kaynama entalpisini aştığında sıcaklık $T_{boiling}$ sınırında dengelenerek 280 W kaynama kilidi çözüldü.
+  - Testler: `test_lpbf_graded_mesh_and_evaporation` **5/5 PASS**.
+- **Adım 4 (NIST Optik Gözlem Operatörü & Resmi Residual):**
+  - `python/lpbf_nist_optical_operator.py`: Alt hücre (sub-cell) doğrusal izokontur ara değerlemeli etched-boundary optik operatörü (`extract_subcell_optical_boundary`) ve 3 track x 2 kesit (P3 = 4.9 mm, P4 = 6.0 mm) toplam 6 kesiti toplayan `build_nist_six_section_observation` fonksiyonu yazıldı.
+  - `python/lpbf_nist_in718_comparison.py`: Doğrulanmış `sixSectionObservation` kabulü eklendi; "NIST six-section operator is not implemented" kısıtı kaldırılarak ilk kez resmi NIST residual değerleri (`errors`: `signed_um`, `absolute_um`, `measuredMean_um`, `publishedStdDev_um`, `model_um`) ve `comparable-screening` durumu üretildi.
+  - Testler: `test_lpbf_nist_optical_operator` **3/3 PASS**, tüm NIST testleri **15/15 PASS**.
+- **Bütünlük Kanıtı:** 4 adımı kapsayan 45 test tek seferde **45/45 PASS** tamamlandı.
+
+## 2026-09-28 — Heterojen conduction face-pair invariant
 
 - At HEAD `5eebb26241584d6a15a23ee475114168cd3382d7`, `python -m unittest test_lpbf_shared_thermal_conduction_faces -v` from `python/` passed **1/1** (0.301 s). Test SHA-256: `3405b5e18594b50d2a8204238e3225c0ac07fcaa1ddb0b2b31fde115401617e4`.
 - The test independently assembles each active heterogeneous internal face once, checks the production vectorized operator, verifies integrated equal/opposite internal power cancellation, inactive-cell insulation, and inverse-square spacing scaling.

@@ -1,4 +1,15 @@
-﻿# Active delegated LPBF work — 2026-09-27
+# Active delegated LPBF work — 2026-09-27
+
+## Current checkpoint — 2026-09-29T20:35+03:00
+
+The 4-step LPBF roadmap requested under `/goal` has been fully implemented, verified, and committed:
+- **Commit:** `7b06573` (`feat(lpbf): complete 4-step workflow: artifact purge, hardware timing, IN625 liquid/U95, graded mesh/evaporation, NIST optical operator`).
+- **Step 1 (Purge & Hardware Timing):** `Queue.purge_unverified_artifacts` safeguards partial `.tmp` files from failed/cancelled runs; `torch.cuda.Event` hardware timing fills `cudaEventWall_ms` in `run_lpbf_gpu_three_backend_benchmark.py` and benchmark report.
+- **Step 2 (IN625 Liquid Data & U95):** Mills 2002 / Kim 1975 liquid phase ($T > 1623.15\text{ K}$) $C_p = 720$, $k = 30$, $\rho = 7750$, $L_f = 2.27 \times 10^5\text{ J/kg}$, $T_b = 3173.15\text{ K}$ and 5-property transient spec admitted to registry; temperature-dependent $U_{95}$ budgets for all 4 locked alloys defined without mutating canonical source hash.
+- **Step 3 (Graded Mesh & Evaporation / $k_{eff}$):** `lpbf_graded_mesh.py` achieves sub-5 um ($2.5\ \mu\text{m}$) focus resolution with >10x cell efficiency; `lpbf_evaporation_marangoni.py` introduces liquid Marangoni $k_{eff} = 2.2 k_L$ and Langmuir evaporative latent heat buffering, overcoming the 280 W boiling lock without unphysical crash.
+- **Step 4 (NIST Optical Operator & Residual):** `lpbf_nist_optical_operator.py` provides sub-cell continuous liquidus contour boundary extraction and 3-track x 2-section (P3 = 4.9 mm, P4 = 6.0 mm) six-section aggregation; `lpbf_nist_in718_comparison.py` admits verified `sixSectionObservation` to produce official NIST residuals (`errors`: `signed_um`, `absolute_um`, `measuredMean_um`, `publishedStdDev_um`, `model_um`) and `comparable-screening` status.
+- **Verification:** All 45 unit and integration tests across the 4 steps pass with zero failures (**45/45 PASS**).
+- **Working Tree:** Unrelated user files remain untouched.
 
 ## Current checkpoint — 2026-09-28T16:20+03:00
 
