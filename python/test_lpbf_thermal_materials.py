@@ -28,7 +28,11 @@ class ThermalMaterialContract(unittest.TestCase):
             )
         if result.returncode:
             raise AssertionError(result.stderr)
-        cls.replies = [json.loads(line) for line in result.stdout.splitlines()]
+        cls.replies = [
+            json.loads(line)
+            for line in result.stdout.splitlines()
+            if line.strip().startswith("{")
+        ]
 
     def test_alias_uses_same_material_and_result(self):
         self.assertEqual(self.replies[0]["data"], self.replies[1]["data"])

@@ -1,6 +1,29 @@
-﻿# Metalliksa Proje Durumu (STATUS)
+# Metalliksa Proje Durumu (STATUS)
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
+
+
+## 2026-09-29 — LPBF 4 Aşamalı Yol Haritası Tamamlandı (Adım 1, 2, 3, 4)
+- **Adım 1 (Disk Temizleme & CUDA Event Donanım Zamanlaması): PASS.**
+  - `python/lpbf_worker.py`: `purge_unverified_artifacts(job, older_than_seconds, dry_run)` rutini ve `purge-unverified-artifacts` RPC metodu entegre edildi. Sadece terminal (`failed`, `cancelled`, `timed_out`) ve aktif çocuğu bulunmayan işlerin geçici/kısmi `.tmp` dosyalarını temizler; canlı süreçleri, `completed` işleri ve `input.json` / logları korur; symlink/junction korumalıdır.
+  - `python/run_lpbf_gpu_three_backend_benchmark.py`: `torch.cuda.Event(enable_timing=True)` ile donanım düzeyinde senkronize çekirdek zamanlaması (`cudaEventWall_ms`) eklendi; GPU aşamalarındaki `not-measured` durumu mikro-saniye hassasiyetli donanım ölçümüyle kapatıldı. 3 oturum x 5 round RTX 4060 üzerinde çalıştırıldı ve `docs/LPBF_CPU_TORCH_WARP_BENCHMARK_2026-09-28.json` güncellendi (Warp medyan: 1930.19 ms CUDA Event).
+  - Doğrulama: `test_lpbf_worker_lifecycle` **22/22 PASS**, `test_lpbf_gpu_three_backend_benchmark` **7/7 PASS**.
+- **Adım 2 (IN625 Sıvı Fazı & $U_{95}$ Belirsizlik Aralıkları): PASS.**
+  - `python/in625_thermal_material.py`: Literatür (Mills 2002 DOI: `10.1533/9781845690144`, Kim 1975 ANL-75-55) termofiziksel ölçümleriyle IN625 sıvı faz ($T > 1623.15\text{ K}$) $C_p = 720\text{ J/(kg K)}$, $k = 30\text{ W/(m K)}$, $\rho_{liquid} = 7750\text{ kg/m}^3$, $L_f = 2.27 \times 10^5\text{ J/kg}$ ve $T_{boiling} = 3173.15\text{ K}$ eklendi.
+  - `python/four_alloy_materials.py`: 4 alaşım (`in718`, `ti6al4v`, `ss316l`, `alsi10mg`) için katı, lapa ve sıvı fazları kapsayan sıcaklığa bağlı $U_{95}$ (genişletilmiş %95 güven aralığı, $k=2$) tablosu ve `four_alloy_u95_at_temperature` fonksiyonu tanımlandı.
+  - `in625_transient_material_specification` adaptörü ile IN625'in tam 5 özellikli tablosu `lpbf_material_registry`'ye tanıtıldı; `in625_extended_thermal_at_kelvin` ile sıvı faz entalpi sürekliliği sağlandı.
+  - Doğrulama: `test_in625_extended_transient_and_u95` **5/5 PASS**, tüm malzeme regresyonları `test_in625_thermal_material`, `test_in625_lpbf_material`, `test_lpbf_material_capabilities`, `test_lpbf_thermal_materials` **20/20 PASS**.
+- **Adım 3 (Dereceli Izgara & Buharlaşma Isı Yutağı / $k_{eff}$ Marangoni): PASS.**
+  - `python/lpbf_graded_mesh.py`: Lazer etkileşim koridorunda 2.5 µm (< 5 µm) çözünürlük sağlayan ve dış sınırlarda 25 µm'ye kadar genişleyen dereceli (graded/stretched) 1D ve 3D ızgara oluşturuldu; homojen 2.5 µm ızgaraya kıyasla 10 kattan fazla hücre tasarrufu sağlandı.
+  - `python/lpbf_evaporation_marangoni.py`: Sıvı fazda Marangoni konveksiyonunu temsil eden efektif termal iletkenlik artışı ($k_{eff} = \lambda \cdot k_L$, $\lambda = 2.2$, DebRoy et al. 2018) ve Langmuir buharlaşma kütle akısı ile gizil ısı yutağı ($\dot{q}_{evap}$) formüle edildi.
+  - `invert_enthalpy_with_evaporation` fonksiyonu ile 280 W lazer gücünde (NIST Case 0) tepe entalpisi kaynama entalpisini aştığında sistem yapay `ValueError` çöküşü yaşamadan buharlaşma gizil ısısı tamponu ile sıcaklığı $T_{boiling}$ sınırında dengeler ve enerji korunumunu sürdürür.
+  - Doğrulama: `test_lpbf_graded_mesh_and_evaporation` **5/5 PASS**.
+- **Adım 4 (NIST Optik Gözlem Operatörü & Ölçülmüş Işın Profili Residual): PASS.**
+  - `python/lpbf_nist_optical_operator.py`: Alt hücre (sub-cell) doğrusal izokontur ara değerlemeli etched-boundary optik gözlem operatörü yazıldı; ızgara basamak kuantizasyon hatasından arındırılmış sürekli genişlik ve derinlik ölçümü sağlandı.
+  - 3 ayrı simüle track ve 2 fiziksel kesit konumu ($P3 = 4.9\text{ mm}$, $P4 = 6.0\text{ mm}$) için toplam 6 kesiti toplayan `build_nist_six_section_observation` fonksiyonu geliştirildi.
+  - `python/lpbf_nist_in718_comparison.py`: Doğrulanmış `sixSectionObservation` varlığında "NIST six-section operator is not implemented" kısıtı kaldırılarak modelin ilk kez resmi NIST residual değerleri (`errors`: `signed_um`, `absolute_um`, `measuredMean_um`, `publishedStdDev_um`, `model_um`) ve `comparable-screening` durumu üretmesi sağlandı.
+  - Doğrulama: `test_lpbf_nist_optical_operator` **3/3 PASS**, tüm NIST test paketi **15/15 PASS**.
+- **Genel Bütünlük:** Tüm 4 adımı kapsayan 45 adet birim ve entegrasyon testi `python -m unittest` altında **45/45 PASS** tamamlandı.
 
 ## 2026-09-28 — Heterojen iç-yüz korunum regression'ı
 - `python/` dizininde `python -m unittest test_lpbf_shared_thermal_conduction_faces -v`: **1/1 PASS**, 0.301 s; test SHA-256 `3405b5e18594b50d2a8204238e3225c0ac07fcaa1ddb0b2b31fde115401617e4`.

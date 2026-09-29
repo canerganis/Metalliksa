@@ -8,15 +8,21 @@
     "parity": "final-state fields; input/loss/stored energy and peak temperature within 1%; width/depth/length within 40 um geometry cell quantization; volume within 1%",
     "geometryCellQuantization_um": 40,
     "finalStateFieldGate": true,
+    "cudaEventInstrumentation": {
+      "status": "enabled",
+      "measuredBackends": [
+        "torch",
+        "warp"
+      ],
+      "unit": "milliseconds"
+    },
     "unmeasuredStages": {
-      "kernelStages": "not-measured",
       "queueWait": "not-measured",
       "apiHandling": "not-measured",
       "archivePersistence": "not-measured",
       "uiWall": "not-measured"
     },
     "excludedTiming": [
-      "kernel stages",
       "queue",
       "API",
       "archive/persistence",
@@ -28,23 +34,34 @@
   "sessions": [
     {
       "session": 1,
-      "pid": 22152,
+      "pid": 16488,
       "order": [
         "cpu",
         "torch",
         "warp"
       ],
       "stages": {
-        "processStartupAndImport_s": 3.829882600000019,
-        "firstCudaCall_s": 2.014409400000659,
-        "parityPreflight_s": 11.593663300000117,
+        "processStartupAndImport_s": 3.174098799994681,
+        "firstCudaCall_s": 1.8165109000037774,
+        "parityPreflight_s": 11.68165140000201,
         "warmupWall_s": {
-          "cpu": 2.8052698999999848,
-          "torch": 6.969669299999623,
-          "warp": 2.0526701999997385
+          "cpu": 2.7209266999998363,
+          "torch": 6.5685624000034295,
+          "warp": 1.9240816999954404
+        },
+        "cudaEventStages_ms": {
+          "torch": {
+            "median_ms": 6387.42041015625,
+            "min_ms": 6254.22119140625,
+            "max_ms": 6724.23876953125
+          },
+          "warp": {
+            "median_ms": 1930.1871337890625,
+            "min_ms": 1897.1678466796875,
+            "max_ms": 1959.003662109375
+          }
         },
         "unmeasured": {
-          "kernelStages": "not-measured",
           "queueWait": "not-measured",
           "apiHandling": "not-measured",
           "archivePersistence": "not-measured",
@@ -52,31 +69,31 @@
         }
       },
       "warmupWall_s": {
-        "cpu": 2.8052698999999848,
-        "torch": 6.969669299999623,
-        "warp": 2.0526701999997385
+        "cpu": 2.7209266999998363,
+        "torch": 6.5685624000034295,
+        "warp": 1.9240816999954404
       },
       "samples": {
         "cpu": [
-          2.647353300000759,
-          2.6769813000000795,
-          2.6239313000005495,
-          2.725842499999999,
-          2.688944399999855
+          2.840020600000571,
+          2.7101490999993985,
+          2.713595900000655,
+          2.8461988999988534,
+          2.687735799998336
         ],
         "torch": [
-          6.5319470000004,
-          6.539027400000123,
-          6.593371699999807,
-          6.527713399999811,
-          6.736519699999917
+          6.394737000002351,
+          6.3746386999991955,
+          6.254807299999811,
+          6.72473280000122,
+          6.387963700006367
         ],
         "warp": [
-          1.921688099999301,
-          1.888409000000138,
-          1.9683003999998618,
-          2.0473908999993,
-          2.0771152000006623
+          1.9123548999996274,
+          1.8977482999980566,
+          1.9310391999970307,
+          1.9308428000003914,
+          1.9596302000063588
         ]
       },
       "measurements": [
@@ -88,7 +105,7 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.647353300000759
+          "solveAndFinalCaptureWall_s": 2.840020600000571
         },
         {
           "round": 1,
@@ -98,7 +115,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 6.5319470000004
+          "solveAndFinalCaptureWall_s": 6.394737000002351,
+          "cudaEventWall_ms": 6394.20361328125
         },
         {
           "round": 1,
@@ -108,7 +126,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 1.921688099999301
+          "solveAndFinalCaptureWall_s": 1.9123548999996274,
+          "cudaEventWall_ms": 1911.7498779296875
         },
         {
           "round": 2,
@@ -118,7 +137,7 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.6769813000000795
+          "solveAndFinalCaptureWall_s": 2.7101490999993985
         },
         {
           "round": 2,
@@ -128,7 +147,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 6.539027400000123
+          "solveAndFinalCaptureWall_s": 6.3746386999991955,
+          "cudaEventWall_ms": 6374.06884765625
         },
         {
           "round": 2,
@@ -138,7 +158,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 1.888409000000138
+          "solveAndFinalCaptureWall_s": 1.8977482999980566,
+          "cudaEventWall_ms": 1897.1678466796875
         },
         {
           "round": 3,
@@ -148,7 +169,7 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.6239313000005495
+          "solveAndFinalCaptureWall_s": 2.713595900000655
         },
         {
           "round": 3,
@@ -158,7 +179,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 6.593371699999807
+          "solveAndFinalCaptureWall_s": 6.254807299999811,
+          "cudaEventWall_ms": 6254.22119140625
         },
         {
           "round": 3,
@@ -168,7 +190,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 1.9683003999998618
+          "solveAndFinalCaptureWall_s": 1.9310391999970307,
+          "cudaEventWall_ms": 1930.3121337890625
         },
         {
           "round": 4,
@@ -178,7 +201,7 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.725842499999999
+          "solveAndFinalCaptureWall_s": 2.8461988999988534
         },
         {
           "round": 4,
@@ -188,7 +211,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 6.527713399999811
+          "solveAndFinalCaptureWall_s": 6.72473280000122,
+          "cudaEventWall_ms": 6724.23876953125
         },
         {
           "round": 4,
@@ -198,7 +222,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.0473908999993
+          "solveAndFinalCaptureWall_s": 1.9308428000003914,
+          "cudaEventWall_ms": 1930.1871337890625
         },
         {
           "round": 5,
@@ -208,7 +233,7 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.688944399999855
+          "solveAndFinalCaptureWall_s": 2.687735799998336
         },
         {
           "round": 5,
@@ -218,7 +243,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 6.736519699999917
+          "solveAndFinalCaptureWall_s": 6.387963700006367,
+          "cudaEventWall_ms": 6387.42041015625
         },
         {
           "round": 5,
@@ -228,7 +254,8 @@
             "torch",
             "warp"
           ],
-          "solveAndFinalCaptureWall_s": 2.0771152000006623
+          "solveAndFinalCaptureWall_s": 1.9596302000063588,
+          "cudaEventWall_ms": 1959.003662109375
         }
       ],
       "identity": {
@@ -237,7 +264,7 @@
           "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
           "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
           "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
-          "run_lpbf_gpu_three_backend_benchmark.py": "d642af693fd22f4cd5d718468225b2e63e53006e5ea2b9fc5c2f244714f41376",
+          "run_lpbf_gpu_three_backend_benchmark.py": "fe2c5c7356b240bef886fb81dcdf7bccb19aca7722234a52ee053d8de8c3d48a",
           "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
         },
         "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
@@ -253,27 +280,38 @@
         "cudaRuntime": "12.6",
         "warp": "1.17.0"
       },
-      "sessionWall_s": 86.4737710999998
+      "sessionWall_s": 84.2703662999993
     },
     {
       "session": 2,
-      "pid": 24180,
+      "pid": 24504,
       "order": [
         "torch",
         "warp",
         "cpu"
       ],
       "stages": {
-        "processStartupAndImport_s": 3.889588399999411,
-        "firstCudaCall_s": 0.9548163999997996,
-        "parityPreflight_s": 11.487605199999962,
+        "processStartupAndImport_s": 3.0205068000068422,
+        "firstCudaCall_s": 0.7898726999992505,
+        "parityPreflight_s": 11.408073300000979,
         "warmupWall_s": {
-          "torch": 6.463484200000494,
-          "warp": 1.898524900000666,
-          "cpu": 2.651247200000398
+          "torch": 6.415481299998646,
+          "warp": 1.8765462999945157,
+          "cpu": 2.6403511999960756
+        },
+        "cudaEventStages_ms": {
+          "torch": {
+            "median_ms": 6600.4130859375,
+            "min_ms": 6559.99951171875,
+            "max_ms": 6673.41552734375
+          },
+          "warp": {
+            "median_ms": 1936.0889892578125,
+            "min_ms": 1875.2938232421875,
+            "max_ms": 2052.7119140625
+          }
         },
         "unmeasured": {
-          "kernelStages": "not-measured",
           "queueWait": "not-measured",
           "apiHandling": "not-measured",
           "archivePersistence": "not-measured",
@@ -281,31 +319,31 @@
         }
       },
       "warmupWall_s": {
-        "torch": 6.463484200000494,
-        "warp": 1.898524900000666,
-        "cpu": 2.651247200000398
+        "torch": 6.415481299998646,
+        "warp": 1.8765462999945157,
+        "cpu": 2.6403511999960756
       },
       "samples": {
         "cpu": [
-          2.5595033999998122,
-          2.600677800000085,
-          2.776218300000437,
-          2.6140038000003187,
-          2.636871599999722
+          2.655904699997336,
+          2.621964600002684,
+          2.6322380999990855,
+          2.6468757999973604,
+          2.6078397999954177
         ],
         "torch": [
-          6.8261013000001185,
-          6.493652199999815,
-          7.00806509999984,
-          8.786975400000301,
-          6.354311900000539
+          6.673928899996099,
+          6.560511699994095,
+          6.600968099999591,
+          6.626115299994126,
+          6.58540040000662
         ],
         "warp": [
-          1.9175138000000516,
-          1.9080683000001954,
-          2.368997799999306,
-          1.9331597999998849,
-          1.995054899999559
+          2.0533156000019517,
+          1.9366679000013391,
+          1.8768641999995452,
+          1.9571811000059824,
+          1.906101699998544
         ]
       },
       "measurements": [
@@ -317,7 +355,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 6.8261013000001185
+          "solveAndFinalCaptureWall_s": 6.673928899996099,
+          "cudaEventWall_ms": 6673.41552734375
         },
         {
           "round": 1,
@@ -327,7 +366,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 1.9175138000000516
+          "solveAndFinalCaptureWall_s": 2.0533156000019517,
+          "cudaEventWall_ms": 2052.7119140625
         },
         {
           "round": 1,
@@ -337,7 +377,7 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.5595033999998122
+          "solveAndFinalCaptureWall_s": 2.655904699997336
         },
         {
           "round": 2,
@@ -347,7 +387,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 6.493652199999815
+          "solveAndFinalCaptureWall_s": 6.560511699994095,
+          "cudaEventWall_ms": 6559.99951171875
         },
         {
           "round": 2,
@@ -357,7 +398,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 1.9080683000001954
+          "solveAndFinalCaptureWall_s": 1.9366679000013391,
+          "cudaEventWall_ms": 1936.0889892578125
         },
         {
           "round": 2,
@@ -367,7 +409,7 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.600677800000085
+          "solveAndFinalCaptureWall_s": 2.621964600002684
         },
         {
           "round": 3,
@@ -377,7 +419,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 7.00806509999984
+          "solveAndFinalCaptureWall_s": 6.600968099999591,
+          "cudaEventWall_ms": 6600.4130859375
         },
         {
           "round": 3,
@@ -387,7 +430,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.368997799999306
+          "solveAndFinalCaptureWall_s": 1.8768641999995452,
+          "cudaEventWall_ms": 1875.2938232421875
         },
         {
           "round": 3,
@@ -397,7 +441,7 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.776218300000437
+          "solveAndFinalCaptureWall_s": 2.6322380999990855
         },
         {
           "round": 4,
@@ -407,7 +451,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 8.786975400000301
+          "solveAndFinalCaptureWall_s": 6.626115299994126,
+          "cudaEventWall_ms": 6625.46142578125
         },
         {
           "round": 4,
@@ -417,7 +462,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 1.9331597999998849
+          "solveAndFinalCaptureWall_s": 1.9571811000059824,
+          "cudaEventWall_ms": 1956.5989990234375
         },
         {
           "round": 4,
@@ -427,7 +473,7 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.6140038000003187
+          "solveAndFinalCaptureWall_s": 2.6468757999973604
         },
         {
           "round": 5,
@@ -437,7 +483,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 6.354311900000539
+          "solveAndFinalCaptureWall_s": 6.58540040000662,
+          "cudaEventWall_ms": 6584.859375
         },
         {
           "round": 5,
@@ -447,7 +494,8 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 1.995054899999559
+          "solveAndFinalCaptureWall_s": 1.906101699998544,
+          "cudaEventWall_ms": 1905.5284423828125
         },
         {
           "round": 5,
@@ -457,7 +505,7 @@
             "warp",
             "cpu"
           ],
-          "solveAndFinalCaptureWall_s": 2.636871599999722
+          "solveAndFinalCaptureWall_s": 2.6078397999954177
         }
       ],
       "identity": {
@@ -466,7 +514,7 @@
           "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
           "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
           "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
-          "run_lpbf_gpu_three_backend_benchmark.py": "d642af693fd22f4cd5d718468225b2e63e53006e5ea2b9fc5c2f244714f41376",
+          "run_lpbf_gpu_three_backend_benchmark.py": "fe2c5c7356b240bef886fb81dcdf7bccb19aca7722234a52ee053d8de8c3d48a",
           "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
         },
         "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
@@ -482,27 +530,38 @@
         "cudaRuntime": "12.6",
         "warp": "1.17.0"
       },
-      "sessionWall_s": 87.22113150000041
+      "sessionWall_s": 82.97107169999799
     },
     {
       "session": 3,
-      "pid": 16796,
+      "pid": 8164,
       "order": [
         "warp",
         "cpu",
         "torch"
       ],
       "stages": {
-        "processStartupAndImport_s": 3.9480895999995482,
-        "firstCudaCall_s": 1.005189500000597,
-        "parityPreflight_s": 10.963175500000034,
+        "processStartupAndImport_s": 3.0881953999996767,
+        "firstCudaCall_s": 0.7661192000014125,
+        "parityPreflight_s": 11.680963799997699,
         "warmupWall_s": {
-          "warp": 1.825554000000011,
-          "cpu": 2.6274834000005285,
-          "torch": 6.424012800000128
+          "warp": 1.7003595999995014,
+          "cpu": 2.547496699997282,
+          "torch": 6.256454299997131
+        },
+        "cudaEventStages_ms": {
+          "torch": {
+            "median_ms": 6600.74560546875,
+            "min_ms": 6334.6845703125,
+            "max_ms": 6777.93994140625
+          },
+          "warp": {
+            "median_ms": 1920.3955078125,
+            "min_ms": 1859.312255859375,
+            "max_ms": 2014.9910888671875
+          }
         },
         "unmeasured": {
-          "kernelStages": "not-measured",
           "queueWait": "not-measured",
           "apiHandling": "not-measured",
           "archivePersistence": "not-measured",
@@ -510,31 +569,31 @@
         }
       },
       "warmupWall_s": {
-        "warp": 1.825554000000011,
-        "cpu": 2.6274834000005285,
-        "torch": 6.424012800000128
+        "warp": 1.7003595999995014,
+        "cpu": 2.547496699997282,
+        "torch": 6.256454299997131
       },
       "samples": {
         "cpu": [
-          2.606604800000241,
-          2.6213166999996247,
-          2.6014007000003403,
-          2.603411399999459,
-          2.753107600000476
+          2.584666200003994,
+          2.618187599997327,
+          2.693302899999253,
+          2.594745900001726,
+          2.599266600002011
         ],
         "torch": [
-          6.5579031999996005,
-          6.399122799999532,
-          6.281351300000097,
-          6.797962700000426,
-          6.8212492000002385
+          6.686976799996046,
+          6.56052169999748,
+          6.778454300001613,
+          6.601042800000869,
+          6.335209700002451
         ],
         "warp": [
-          1.89956119999988,
-          1.8762903999995615,
-          1.9106351999998878,
-          1.85354180000013,
-          1.882148600000619
+          1.9527271000042674,
+          1.8853611000013188,
+          2.0156872999941697,
+          1.8600078000017675,
+          1.9209854999935487
         ]
       },
       "measurements": [
@@ -546,7 +605,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 1.89956119999988
+          "solveAndFinalCaptureWall_s": 1.9527271000042674,
+          "cudaEventWall_ms": 1952.04296875
         },
         {
           "round": 1,
@@ -556,7 +616,7 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 2.606604800000241
+          "solveAndFinalCaptureWall_s": 2.584666200003994
         },
         {
           "round": 1,
@@ -566,7 +626,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 6.5579031999996005
+          "solveAndFinalCaptureWall_s": 6.686976799996046,
+          "cudaEventWall_ms": 6686.44482421875
         },
         {
           "round": 2,
@@ -576,7 +637,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 1.8762903999995615
+          "solveAndFinalCaptureWall_s": 1.8853611000013188,
+          "cudaEventWall_ms": 1884.736083984375
         },
         {
           "round": 2,
@@ -586,7 +648,7 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 2.6213166999996247
+          "solveAndFinalCaptureWall_s": 2.618187599997327
         },
         {
           "round": 2,
@@ -596,7 +658,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 6.399122799999532
+          "solveAndFinalCaptureWall_s": 6.56052169999748,
+          "cudaEventWall_ms": 6559.955078125
         },
         {
           "round": 3,
@@ -606,7 +669,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 1.9106351999998878
+          "solveAndFinalCaptureWall_s": 2.0156872999941697,
+          "cudaEventWall_ms": 2014.9910888671875
         },
         {
           "round": 3,
@@ -616,7 +680,7 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 2.6014007000003403
+          "solveAndFinalCaptureWall_s": 2.693302899999253
         },
         {
           "round": 3,
@@ -626,7 +690,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 6.281351300000097
+          "solveAndFinalCaptureWall_s": 6.778454300001613,
+          "cudaEventWall_ms": 6777.93994140625
         },
         {
           "round": 4,
@@ -636,7 +701,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 1.85354180000013
+          "solveAndFinalCaptureWall_s": 1.8600078000017675,
+          "cudaEventWall_ms": 1859.312255859375
         },
         {
           "round": 4,
@@ -646,7 +712,7 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 2.603411399999459
+          "solveAndFinalCaptureWall_s": 2.594745900001726
         },
         {
           "round": 4,
@@ -656,7 +722,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 6.797962700000426
+          "solveAndFinalCaptureWall_s": 6.601042800000869,
+          "cudaEventWall_ms": 6600.74560546875
         },
         {
           "round": 5,
@@ -666,7 +733,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 1.882148600000619
+          "solveAndFinalCaptureWall_s": 1.9209854999935487,
+          "cudaEventWall_ms": 1920.3955078125
         },
         {
           "round": 5,
@@ -676,7 +744,7 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 2.753107600000476
+          "solveAndFinalCaptureWall_s": 2.599266600002011
         },
         {
           "round": 5,
@@ -686,7 +754,8 @@
             "cpu",
             "torch"
           ],
-          "solveAndFinalCaptureWall_s": 6.8212492000002385
+          "solveAndFinalCaptureWall_s": 6.335209700002451,
+          "cudaEventWall_ms": 6334.6845703125
         }
       ],
       "identity": {
@@ -695,7 +764,7 @@
           "lpbf_gpu_thermal.py": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
           "lpbf_gpu_thermal_warp.py": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
           "lpbf_simulation.py": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
-          "run_lpbf_gpu_three_backend_benchmark.py": "d642af693fd22f4cd5d718468225b2e63e53006e5ea2b9fc5c2f244714f41376",
+          "run_lpbf_gpu_three_backend_benchmark.py": "fe2c5c7356b240bef886fb81dcdf7bccb19aca7722234a52ee053d8de8c3d48a",
           "test_lpbf_gpu_three_backend_parity.py": "3a6662ad16e284d6a9b0b2496c8415c4c2b1628523d5c8e11605bc0cd0f661f7"
         },
         "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8",
@@ -711,30 +780,42 @@
         "cudaRuntime": "12.6",
         "warp": "1.17.0"
       },
-      "sessionWall_s": 83.42306590000044
+      "sessionWall_s": 82.5301948999986
     }
   ],
   "summary": {
     "cpu": {
-      "median_s": 2.6239313000005495,
-      "min_s": 2.5595033999998122,
-      "max_s": 2.776218300000437,
-      "range_s": 0.21671490000062477,
+      "median_s": 2.6468757999973604,
+      "min_s": 2.584666200003994,
+      "max_s": 2.8461988999988534,
+      "range_s": 0.2615326999948593,
       "sampleCount": 15
     },
     "torch": {
-      "median_s": 6.5579031999996005,
-      "min_s": 6.281351300000097,
-      "max_s": 8.786975400000301,
-      "range_s": 2.5056241000002046,
-      "sampleCount": 15
+      "median_s": 6.58540040000662,
+      "min_s": 6.254807299999811,
+      "max_s": 6.778454300001613,
+      "range_s": 0.5236470000018016,
+      "sampleCount": 15,
+      "cudaEvent_ms": {
+        "median_ms": 6584.859375,
+        "min_ms": 6254.22119140625,
+        "max_ms": 6777.93994140625,
+        "sampleCount": 15
+      }
     },
     "warp": {
-      "median_s": 1.9175138000000516,
-      "min_s": 1.85354180000013,
-      "max_s": 2.368997799999306,
-      "range_s": 0.5154559999991761,
-      "sampleCount": 15
+      "median_s": 1.9308428000003914,
+      "min_s": 1.8600078000017675,
+      "max_s": 2.0533156000019517,
+      "range_s": 0.19330780000018422,
+      "sampleCount": 15,
+      "cudaEvent_ms": {
+        "median_ms": 1930.1871337890625,
+        "min_ms": 1859.312255859375,
+        "max_ms": 2052.7119140625,
+        "sampleCount": 15
+      }
     }
   }
 }

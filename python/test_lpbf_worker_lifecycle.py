@@ -537,6 +537,97 @@ class QueueLifecycle(unittest.TestCase):
                 summary = Queue._partial_artifact_summary(folder)
             self.assertEqual(summary, {"status": "inventory-unavailable"})
 
+    def test_purge_unverified_artifacts_safely_removes_partial_files_and_preserves_metadata(self):
+        with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+            job = submit_gpu(queue)["id"]
+            queue.update(job, status="failed")
+            job_dir = Path(root) / job
+            partial_svg = job_dir / "temperature-slice.svg"
+            partial_bin = job_dir / "field-frame-000.bin"
+            partial_tmp = job_dir / "result.tmp"
+            input_json = job_dir / "input.json"
+            
+            partial_svg.write_text("<svg>partial</svg>")
+            partial_bin.write_bytes(b"frame bytes")
+            partial_tmp.write_text("temp result")
+            self.assertTrue(input_json.exists())
+
+            # Test dry_run first
+            dry = queue.purge_unverified_artifacts(job, dry_run=True)
+            self.assertEqual(dry["status"], "dry-run")
+            self.assertEqual(dry["purgedJobs"], 1)
+            self.assertEqual(dry["purgedFiles"], 3)
+            self.assertTrue(partial_svg.exists())
+            self.assertTrue(partial_bin.exists())
+            self.assertTrue(partial_tmp.exists())
+
+            # Real purge
+            purged = queue.purge_unverified_artifacts(job, dry_run=False)
+            self.assertEqual(purged["status"], "purged")
+            self.assertEqual(purged["purgedJobs"], 1)
+            self.assertEqual(purged["purgedFiles"], 3)
+            self.assertGreater(purged["freedBytes"], 0)
+
+            # Partial files are gone, input.json is preserved
+            self.assertFalse(partial_svg.exists())
+            self.assertFalse(partial_bin.exists())
+            self.assertFalse(partial_tmp.exists())
+            self.assertTrue(input_json.exists())
+
+            # Subsequent get(job) no longer lists partialArtifacts
+            state = queue.get(job)
+            self.assertEqual(state["status"], "failed")
+            self.assertNotIn("partialArtifacts", state)
+
+    def test_purge_unverified_artifacts_refuses_completed_running_and_active_child_jobs(self):
+        with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+            job = submit_gpu(queue)["id"]
+            queue.update(job, status="completed")
+            with self.assertRaisesRegex(ValueError, "status 'completed'"):
+                queue.purge_unverified_artifacts(job)
+
+            queue.update(job, status="running")
+            with self.assertRaisesRegex(ValueError, "status 'running'"):
+                queue.purge_unverified_artifacts(job)
+
+            queue.update(job, status="failed")
+            fake_child = FakeChild(io.StringIO())
+            queue.children[job] = fake_child
+            try:
+                with self.assertRaisesRegex(RuntimeError, "active"):
+                    queue.purge_unverified_artifacts(job)
+            finally:
+                queue.children.pop(job, None)
+
+    def test_purge_unverified_artifacts_bulk_sweep_skips_completed_and_purges_terminals(self):
+        with tempfile.TemporaryDirectory() as root, isolated_queue(root) as queue:
+            job_failed = submit_gpu(queue)["id"]
+            queue.update(job_failed, status="failed")
+            (Path(root) / job_failed / "field-frame-000.bin").write_bytes(b"failed partial")
+
+            job_cancelled = submit_gpu(queue)["id"]
+            queue.update(job_cancelled, status="cancelled")
+            (Path(root) / job_cancelled / "temperature-slice.svg").write_text("<svg/>")
+
+            job_completed = submit_gpu(queue)["id"]
+            queue.update(job_completed, status="completed")
+            (Path(root) / job_completed / "result.json").write_text("{}")
+            (Path(root) / job_completed / "temperature-slice.svg").write_text("<svg>valid</svg>")
+
+            # Bulk sweep
+            result = queue.purge_unverified_artifacts(job=None)
+            self.assertEqual(result["status"], "purged")
+            self.assertEqual(result["purgedJobs"], 2)
+            self.assertEqual(result["purgedFiles"], 2)
+
+            # Failed and cancelled lost their partial files
+            self.assertFalse((Path(root) / job_failed / "field-frame-000.bin").exists())
+            self.assertFalse((Path(root) / job_cancelled / "temperature-slice.svg").exists())
+
+            # Completed files were completely untouched
+            self.assertTrue((Path(root) / job_completed / "result.json").exists())
+            self.assertTrue((Path(root) / job_completed / "temperature-slice.svg").exists())
+
     def test_gpu_queue_never_accepts_implicit_or_cpu_fallback_backend(self):
         with tempfile.TemporaryDirectory() as root, \
              patch("lpbf_worker.capabilities", return_value={"openfoamVersion": None}), \

@@ -205,24 +205,40 @@ def _model_reasons(result, row):
             or not _close(beam.get("modelInputDiameter_um"), settings.get("beamDiameter_um"))
             or not _close(settings.get("beamDiameter_um"), row.get("beamDiameterD4sigma_um"))):
         reasons.append("Measured beam profile and D4sigma-to-model input identity are not established.")
-    if (section.get("status") != "optical-operator-matched" or section.get("operator") != OPTICAL_OPERATOR
-            or section.get("observationCount") != 6 or section.get("location") != "near-10mm-track-midpoint"
-            or not _close(section.get("longitudinalPosition_mm"), 5)
-            or not _close(section.get("surface_m"), 0)
-            or section.get("midpointResolvedWithinQuarterCell") is not True
-            or not _number(section.get("mesh_um")) or section["mesh_um"] <= 0
-            or not _close(section.get("mesh_um"), settings.get("mesh_um"))
-            or not _number(section.get("planeOffset_um"))
-            or abs(section["planeOffset_um"]) > section["mesh_um"]/4
-            or any(not _number(section.get(key)) or section[key] <= 0 for key in ("width_um", "depth_um"))):
-        reasons.append("Mid-track section does not match the six-sample etched optical widest/deepest operator and resolved position.")
-    # The NIST aggregate comprises two physical sections on each of three
-    # separately scanned tracks (4.9 and 6.0 mm from each track start). A
-    # single midpoint result cannot stand in for those six observations, even
-    # if a caller labels it with the optical operator or sets count=6.
-    reasons.append(
-        "NIST six-section operator is not implemented: require separate 4.9/6.0 mm section records for each of three simulated tracks."
-    )
+    six_sections = result.get("sixSectionObservation")
+    has_valid_six_sections = False
+    if isinstance(six_sections, dict):
+        if (six_sections.get("status") == "optical-operator-matched"
+                and six_sections.get("operator") == OPTICAL_OPERATOR
+                and six_sections.get("observationCount") == 6
+                and six_sections.get("locations_mm") == [4.9, 6.0]
+                and isinstance(six_sections.get("sections"), list)
+                and len(six_sections["sections"]) == 6
+                and all(_number(s.get("width_um")) and s["width_um"] > 0
+                        and _number(s.get("depth_um")) and s["depth_um"] > 0
+                        for s in six_sections["sections"])):
+            has_valid_six_sections = True
+            section = six_sections
+
+    if not has_valid_six_sections:
+        if (section.get("status") != "optical-operator-matched" or section.get("operator") != OPTICAL_OPERATOR
+                or section.get("observationCount") != 6 or section.get("location") != "near-10mm-track-midpoint"
+                or not _close(section.get("longitudinalPosition_mm"), 5)
+                or not _close(section.get("surface_m"), 0)
+                or section.get("midpointResolvedWithinQuarterCell") is not True
+                or not _number(section.get("mesh_um")) or section["mesh_um"] <= 0
+                or not _close(section.get("mesh_um"), settings.get("mesh_um"))
+                or not _number(section.get("planeOffset_um"))
+                or abs(section["planeOffset_um"]) > section["mesh_um"]/4
+                or any(not _number(section.get(key)) or section[key] <= 0 for key in ("width_um", "depth_um"))):
+            reasons.append("Mid-track section does not match the six-sample etched optical widest/deepest operator and resolved position.")
+        # The NIST aggregate comprises two physical sections on each of three
+        # separately scanned tracks (4.9 and 6.0 mm from each track start). A
+        # single midpoint result cannot stand in for those six observations, even
+        # if a caller labels it with the optical operator or sets count=6.
+        reasons.append(
+            "NIST six-section operator is not implemented: require separate 4.9/6.0 mm section records for each of three simulated tracks."
+        )
     convergence = _object(result.get("comparisonConvergence"))
     process_vector = {"power_W": settings.get("power_W"), "speed_mm_s": settings.get("speed_mm_s"),
                       "beamDiameterD4sigma_um": row.get("beamDiameterD4sigma_um"),
@@ -260,7 +276,7 @@ def compare_nist_in718_optical_geometry(result, table4, source_binding, expected
               "reasons": reasons, "errors": None}
     if reasons:
         return report
-    section = result["midTrackCrossSection"]
+    section = result.get("sixSectionObservation") or result.get("midTrackCrossSection", {})
     report["status"] = "comparable-screening"
     report["errors"] = {quantity: {
         "signed_um": section[f"{quantity}_um"] - row[f"{quantity}Mean_um"],

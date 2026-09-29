@@ -13,8 +13,10 @@ class HarnessProtocolTests(unittest.TestCase):
             measurements=[]
             for round_no in range(1,bench.ROUNDS+1):
                 for label in order:
-                    measurements.append({"round":round_no,"backend":label,
-                        "solveAndFinalCaptureWall_s":samples[label][round_no-1]})
+                    meas = {"round":round_no,"backend":label,"solveAndFinalCaptureWall_s":samples[label][round_no-1]}
+                    if label != "cpu":
+                        meas["cudaEventWall_ms"] = samples[label][round_no-1] * 1000.0
+                    measurements.append(meas)
             sessions.append({"session":i+1,"order":list(order),"identity":{"hash":"same"},
                 "samples":samples,"measurements":measurements})
         return sessions
@@ -35,8 +37,10 @@ class HarnessProtocolTests(unittest.TestCase):
         self.assertEqual(report["totalSamplesPerBackend"],15)
         self.assertEqual(report["summary"]["cpu"]["median_s"],4.0)
         self.assertEqual(report["summary"]["cpu"]["sampleCount"],15)
-        self.assertIn("kernel stages",report["scope"]["excludedTiming"])
-        self.assertEqual(report["scope"]["unmeasuredStages"]["kernelStages"],"not-measured")
+        self.assertEqual(report["scope"]["cudaEventInstrumentation"]["status"],"enabled")
+        self.assertEqual(report["summary"]["torch"]["cudaEvent_ms"]["sampleCount"],15)
+        self.assertEqual(report["summary"]["warp"]["cudaEvent_ms"]["sampleCount"],15)
+        self.assertNotIn("kernel stages",report["scope"]["excludedTiming"])
         self.assertIn("parityPreflight",report["timingStage"])
         self.assertIn("firstCudaCall",report["timingStage"])
         self.assertIn("not separated",report["sessionWallDefinition"])

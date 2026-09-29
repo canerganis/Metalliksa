@@ -835,6 +835,72 @@ class Queue:
         return {"status": "retained-unverified", "fileCount": count,
                 "totalBytes": total_bytes}
 
+    def purge_unverified_artifacts(self, job=None, older_than_seconds=0, dry_run=False):
+        """Safely clean up partial, unverified artifact files from terminal non-completed jobs.
+
+        Completed jobs and running/queued jobs are never modified.
+        If a child process is active for a job, cleanup is refused.
+        """
+        with self.lock:
+            if job is not None:
+                if not isinstance(job, str) or len(job) != 32 or any(ch not in "0123456789abcdef" for ch in job):
+                    raise ValueError("Invalid job id")
+                if job in self.children:
+                    raise RuntimeError("Cannot purge artifacts while child execution is active")
+                with self.connect() as c:
+                    row = c.execute("SELECT status, created FROM jobs WHERE id=?", (job,)).fetchone()
+                if row is None:
+                    raise ValueError("Job not found")
+                if row["status"] not in ("failed", "cancelled", "timed_out"):
+                    raise ValueError(f"Cannot purge artifacts from job with status '{row['status']}'")
+                job_ids = [job]
+            else:
+                with self.connect() as c:
+                    rows = c.execute(
+                        "SELECT id FROM jobs WHERE status IN ('failed', 'cancelled', 'timed_out')"
+                    ).fetchall()
+                job_ids = [r["id"] for r in rows if r["id"] not in self.children]
+
+            purged_files = 0
+            freed_bytes = 0
+            purged_jobs = 0
+            now = time.time()
+
+            for jid in job_ids:
+                folder = self.root / jid
+                is_junction = getattr(folder, "is_junction", None)
+                if (folder.is_symlink() or (callable(is_junction) and is_junction())
+                        or not folder.is_dir()):
+                    continue
+                job_purged = 0
+                try:
+                    with os.scandir(folder) as entries:
+                        for entry in entries:
+                            if not (_is_partial_artifact_candidate(entry.name) or entry.name.endswith(".tmp")):
+                                continue
+                            if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                                continue
+                            stat = entry.stat(follow_symlinks=False)
+                            if older_than_seconds > 0 and (now - stat.st_mtime) < older_than_seconds:
+                                continue
+                            size = stat.st_size
+                            if not dry_run:
+                                os.unlink(entry.path)
+                            purged_files += 1
+                            freed_bytes += size
+                            job_purged += 1
+                except OSError:
+                    continue
+                if job_purged > 0:
+                    purged_jobs += 1
+
+            return {
+                "status": "dry-run" if dry_run else "purged",
+                "purgedJobs": purged_jobs,
+                "purgedFiles": purged_files,
+                "freedBytes": freed_bytes,
+            }
+
     def capture(self, job):
         with self.lock:
             state = self.get(job)
@@ -1446,6 +1512,14 @@ def main():
             elif method == "keyhole-raytracing":            # Phase 26
                 from lpbf_keyhole_raytracing import compute_keyhole_raytracing
                 data = compute_keyhole_raytracing(request.get("payload", {}))
+
+            elif method == "purge-unverified-artifacts":
+                payload = request.get("payload", {})
+                data = queue.purge_unverified_artifacts(
+                    job=payload.get("job"),
+                    older_than_seconds=float(payload.get("olderThanSeconds", 0)),
+                    dry_run=bool(payload.get("dryRun", False))
+                )
 
             else: raise ValueError("Unknown method")
             response = dict(id=request["id"], data=data)

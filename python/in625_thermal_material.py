@@ -203,3 +203,157 @@ def in625_lpbf_thermal_at_kelvin(temperature_k):
         "liquidFraction": fraction,
         "specificEnthalpy_J_kg": enthalpy,
     }
+
+
+# ============================================================================
+# IN625 Extended Liquid Phase & Transient Model (Mills 2002 / Kim 1975)
+# ============================================================================
+# Mills, K. C. (2002). Recommended values of thermophysical properties for
+# selected commercial alloys. Woodhead Publishing / ASM International.
+# ISBN: 978-1-85573-569-9 / DOI: 10.1533/9781845690144
+#
+# Kim, C. S. (1975). Thermophysical properties of stainless steels and
+# superalloys. Argonne National Laboratory (ANL-75-55).
+
+MILLS_2002_DOI = "10.1533/9781845690144"
+KIM_1975_REF = "ANL-75-55"
+
+IN625_SOLIDUS_K = 1563.15      # 1290 C
+IN625_LIQUIDUS_K = 1623.15     # 1350 C
+IN625_BOILING_K = 3173.15      # 2900 C
+
+# Literature liquid-phase and fusion constants (Mills 2002 / Kim 1975):
+IN625_LATENT_HEAT_FUSION_MILLS_J_KG = 227_000.0   # 2.27e5 J/kg
+IN625_LIQUID_CP_MILLS_J_KGK = 720.0               # 720 J/(kg K)
+IN625_LIQUID_K_MILLS_W_MK = 30.0                  # 30 W/(m K)
+IN625_LIQUID_RHO_MILLS_KG_M3 = 7750.0             # 7750 kg/m^3
+IN625_SOLID_RHO_KG_M3 = 8440.0                    # 8440 kg/m^3
+IN625_VISCOSITY_LIQUID_PA_S = 0.0055              # 5.5 mPa.s
+IN625_SURFACE_TENSION_N_M = 1.75                  # 1.75 N/m
+IN625_D_GAMMA_DT_N_MK = -0.00040                  # -0.4 mN/(m K)
+IN625_ABSORPTIVITY_IR = 0.40
+IN625_EMISSIVITY = 0.35
+
+# Temperature-dependent U95 relative uncertainties (expanded k=2):
+# Based on Georgia Tech (260..1000 C) and high-temperature metrology budgets
+# (Mills 2002, Touloukian 1970).
+IN625_U95_BUDGET = {
+    "solid": {
+        "temperatureRange_K": [273.15, 1563.15],
+        "conductivity_relative_u95": 0.06,    # ~6% expanded uncertainty
+        "specificHeat_relative_u95": 0.05,    # ~5% expanded uncertainty
+        "density_relative_u95": 0.015,        # ~1.5%
+    },
+    "mushy": {
+        "temperatureRange_K": [1563.15, 1623.15],
+        "conductivity_relative_u95": 0.12,    # ~12%
+        "specificHeat_relative_u95": 0.10,    # ~10%
+        "latentHeat_relative_u95": 0.10,      # ~10%
+        "density_relative_u95": 0.03,         # ~3%
+    },
+    "liquid": {
+        "temperatureRange_K": [1623.15, 3173.15],
+        "conductivity_relative_u95": 0.10,    # ~10%
+        "specificHeat_relative_u95": 0.08,    # ~8%
+        "density_relative_u95": 0.04,         # ~4%
+        "viscosity_relative_u95": 0.15,       # ~15%
+    },
+}
+
+
+def in625_u95_uncertainty_at_kelvin(temperature_k, property_name):
+    """Return temperature-dependent expanded U95 relative uncertainty for IN625."""
+    if isinstance(temperature_k, bool) or not isinstance(temperature_k, (int, float)):
+        raise ValueError("IN625 temperature must be a finite Kelvin number")
+    temperature_k = float(temperature_k)
+    if not math.isfinite(temperature_k) or not 273.15 <= temperature_k <= IN625_BOILING_K:
+        raise ValueError(f"IN625 U95 temperature outside 273.15..{IN625_BOILING_K} K")
+    if temperature_k <= IN625_SOLIDUS_K:
+        regime = "solid"
+    elif temperature_k <= IN625_LIQUIDUS_K:
+        regime = "mushy"
+    else:
+        regime = "liquid"
+    key = f"{property_name}_relative_u95"
+    regime_dict = IN625_U95_BUDGET[regime]
+    if key not in regime_dict:
+        if key in IN625_U95_BUDGET["solid"]:
+            return IN625_U95_BUDGET["solid"][key]
+        raise ValueError(f"Property {property_name} has no U95 specification in {regime} regime")
+    return regime_dict[key]
+
+
+def in625_transient_material_specification():
+    """Return complete 5-property transient material specification for IN625.
+
+    Compatible with lpbf_material_registry.material(..., supplied=spec).
+    """
+    table = [
+        # [T_K, rho_kg_m3, k_W_mK, cp_J_kgK, viscosity_Pa_s]
+        [273.15, IN625_SOLID_RHO_KG_M3, 9.8, 410.0, 0.0055],
+        [500.0, 8400.0, 13.5, 470.0, 0.0055],
+        [1000.0, 8310.0, 21.0, 580.0, 0.0055],
+        [IN625_SOLIDUS_K, 8220.0, 27.5, 680.0, 0.0055],
+        [IN625_LIQUIDUS_K, IN625_LIQUID_RHO_MILLS_KG_M3, IN625_LIQUID_K_MILLS_W_MK, IN625_LIQUID_CP_MILLS_J_KGK, IN625_VISCOSITY_LIQUID_PA_S],
+        [IN625_BOILING_K, IN625_LIQUID_RHO_MILLS_KG_M3, IN625_LIQUID_K_MILLS_W_MK, IN625_LIQUID_CP_MILLS_J_KGK, IN625_VISCOSITY_LIQUID_PA_S],
+    ]
+    return {
+        "name": "Inconel 625",
+        "source": (
+            f"Mills (2002) DOI:{MILLS_2002_DOI}; Kim (1975) {KIM_1975_REF}; "
+            "Special Metals (2013) Table 2/3"
+        ),
+        "solidus_K": IN625_SOLIDUS_K,
+        "liquidus_K": IN625_LIQUIDUS_K,
+        "boiling_K": IN625_BOILING_K,
+        "latentHeat_J_kg": IN625_LATENT_HEAT_FUSION_MILLS_J_KG,
+        "absorptivity": IN625_ABSORPTIVITY_IR,
+        "emissivity": IN625_EMISSIVITY,
+        "dGamma_dT": IN625_D_GAMMA_DT_N_MK,
+        "table": table,
+        "uncertaintyNote": (
+            "Mills (2002) & Kim (1975) liquid thermophysical compilation; "
+            "U95 expanded uncertainty bounds (k=2) evaluated across solid, mushy, and liquid regimes."
+        ),
+    }
+
+
+def in625_extended_thermal_at_kelvin(temperature_k):
+    """Return Cp, k, rho, liquid fraction, and specific enthalpy from 273.15 K up to 3173.15 K."""
+    if isinstance(temperature_k, bool) or not isinstance(temperature_k, (int, float)):
+        raise ValueError("IN625 temperature must be a finite Kelvin number")
+    temperature_k = float(temperature_k)
+    if not math.isfinite(temperature_k) or not 273.15 <= temperature_k <= IN625_BOILING_K:
+        raise ValueError(f"IN625 extended thermal outside 273.15..{IN625_BOILING_K} K")
+    
+    if temperature_k <= IN625_LIQUIDUS_K:
+        # Use existing screening model below liquidus
+        base = in625_lpbf_thermal_at_kelvin(temperature_k)
+        rho = IN625_SOLID_RHO_KG_M3 if temperature_k <= IN625_SOLIDUS_K else (
+            IN625_SOLID_RHO_KG_M3 + (IN625_LIQUID_RHO_MILLS_KG_M3 - IN625_SOLID_RHO_KG_M3) * base["liquidFraction"]
+        )
+        return {
+            **base,
+            "density_kg_m3": rho,
+            "liquidCp_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
+            "latentHeatFusion_J_kg": IN625_LATENT_HEAT_FUSION_MILLS_J_KG,
+        }
+    
+    # Liquid regime (T > LIQUIDUS_K)
+    base_liq = in625_lpbf_thermal_at_kelvin(IN625_LIQUIDUS_K)
+    delta_liq = temperature_k - IN625_LIQUIDUS_K
+    enthalpy = base_liq["specificEnthalpy_J_kg"] + IN625_LIQUID_CP_MILLS_J_KGK * delta_liq
+    return {
+        "materialId": "in625",
+        "materialRevisionSha256": in625_lpbf_thermal_snapshot()["materialRevisionSha256"],
+        "validationStatus": "unvalidated-literature-extended-liquid",
+        "temperature_K": temperature_k,
+        "specificHeat_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
+        "effectiveHeatCapacity_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
+        "thermalConductivity_W_mK": IN625_LIQUID_K_MILLS_W_MK,
+        "density_kg_m3": IN625_LIQUID_RHO_MILLS_KG_M3,
+        "liquidFraction": 1.0,
+        "specificEnthalpy_J_kg": enthalpy,
+        "liquidCp_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
+        "latentHeatFusion_J_kg": IN625_LATENT_HEAT_FUSION_MILLS_J_KG,
+    }

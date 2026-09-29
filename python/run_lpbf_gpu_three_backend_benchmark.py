@@ -131,18 +131,31 @@ def _worker(session: int) -> dict:
             raise RuntimeError(f"{label} melt-volume parity gate failed")
     t_preflight = time.perf_counter() - t_preflight_start
     del cpu, torch_state, warp_pack, warp_state, states
-    samples={k:[] for k in BACKENDS}; warm={}; timings=[]
+    samples={k:[] for k in BACKENDS}; warm={}; timings=[]; cuda_events={k:[] for k in ("torch", "warp")}
     for label in order:
         sync=(lambda: torch.cuda.synchronize(device)) if label != "cpu" else (lambda: None)
         warm[label]=_warmup_call(lambda: solve(label, True), sync)
     for round_no in range(ROUNDS):
         for label in order:
-            if label != "cpu": torch.cuda.synchronize(device)
+            evt_start, evt_end = None, None
+            if label != "cpu":
+                torch.cuda.synchronize(device)
+                evt_start = torch.cuda.Event(enable_timing=True)
+                evt_end = torch.cuda.Event(enable_timing=True)
+                evt_start.record()
             t=time.perf_counter(); result=solve(label, True)
-            if label != "cpu": torch.cuda.synchronize(device)
+            cuda_ms = None
+            if label != "cpu":
+                evt_end.record()
+                torch.cuda.synchronize(device)
+                cuda_ms = _positive(evt_start.elapsed_time(evt_end))
+                cuda_events[label].append(cuda_ms)
             elapsed=_positive(time.perf_counter()-t)
             samples[label].append(elapsed)
-            timings.append({"round":round_no+1,"backend":label,"order":list(order),"solveAndFinalCaptureWall_s":elapsed})
+            meas = {"round":round_no+1,"backend":label,"order":list(order),"solveAndFinalCaptureWall_s":elapsed}
+            if cuda_ms is not None:
+                meas["cudaEventWall_ms"] = cuda_ms
+            timings.append(meas)
     files=[Path(tc.__file__),Path(wc.__file__),Path(__import__("lpbf_simulation").__file__),
            Path(__file__).resolve(),Path(__import__("test_lpbf_gpu_three_backend_parity").__file__).resolve()]
     stages = {
@@ -150,8 +163,11 @@ def _worker(session: int) -> dict:
         "firstCudaCall_s": _positive(t_first_cuda),
         "parityPreflight_s": _positive(t_preflight),
         "warmupWall_s": warm,
+        "cudaEventStages_ms": {
+            k: {"median_ms": statistics.median(v), "min_ms": min(v), "max_ms": max(v)}
+            for k, v in cuda_events.items() if v
+        },
         "unmeasured": {
-            "kernelStages": "not-measured",
             "queueWait": "not-measured",
             "apiHandling": "not-measured",
             "archivePersistence": "not-measured",
@@ -197,21 +213,30 @@ def _aggregate(sessions):
                 by_backend[m["backend"]].append(float(value))
             if any(by_backend[k] != list(map(float,s["samples"][k])) for k in BACKENDS):
                 raise ValueError("measurement values must match per-backend sample arrays")
-        summary[backend]={"median_s":statistics.median(values),"min_s":min(values),"max_s":max(values),"range_s":max(values)-min(values),"sampleCount":len(values)}
+        cuda_vals = []
+        if backend != "cpu":
+            for s in sessions:
+                for m in s.get("measurements", []):
+                    if m.get("backend") == backend and "cudaEventWall_ms" in m:
+                        cuda_vals.append(float(m["cudaEventWall_ms"]))
+        backend_summary = {"median_s":statistics.median(values),"min_s":min(values),"max_s":max(values),"range_s":max(values)-min(values),"sampleCount":len(values)}
+        if cuda_vals:
+            backend_summary["cudaEvent_ms"] = {"median_ms": statistics.median(cuda_vals), "min_ms": min(cuda_vals), "max_ms": max(cuda_vals), "sampleCount": len(cuda_vals)}
+        summary[backend] = backend_summary
     return {"schemaVersion":1,"benchmarkId":"lpbf-cpu-torch-warp-fresh-process-wall-v1",
       "timingStage":TIMING_STAGE,
       "sessionWallDefinition":"complete child subprocess wall duration; startup/import/parity preflight/warmup/measurements combined and not separated",
       "scope":{"measured":"solver call plus final-state capture wall time",
        "parity":"final-state fields; input/loss/stored energy and peak temperature within 1%; width/depth/length within 40 um geometry cell quantization; volume within 1%",
        "geometryCellQuantization_um":40,"finalStateFieldGate":True,
+       "cudaEventInstrumentation":{"status":"enabled","measuredBackends":["torch","warp"],"unit":"milliseconds"},
        "unmeasuredStages":{
-           "kernelStages":"not-measured",
            "queueWait":"not-measured",
            "apiHandling":"not-measured",
            "archivePersistence":"not-measured",
            "uiWall":"not-measured"
        },
-       "excludedTiming":["kernel stages","queue","API","archive/persistence","UI"]},
+       "excludedTiming":["queue","API","archive/persistence","UI"]},
       "roundsPerBackendPerSession":ROUNDS,"totalSamplesPerBackend":ROUNDS*len(sessions),"sessions":sessions,"summary":summary}
 
 def run(output: Path, timeout: int=MAX_TIMEOUT):

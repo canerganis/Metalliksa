@@ -388,3 +388,54 @@ def regime_family(regime):
     if "transition" in r:
         return "Transition"
     return "Conduction"
+
+
+# Temperature-dependent U95 relative uncertainties (expanded k=2, 95% confidence):
+# Derived from published thermophysical uncertainty budgets (e.g. Mills 2002,
+# NIST Table 4, Touloukian 1970).
+FOUR_ALLOY_U95_BUDGET = {
+    "in718": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.04, "rho_u95_rel": 0.015},
+        "mushy": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.03, "latent_u95_rel": 0.10},
+        "liquid": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.035, "viscosity_u95_rel": 0.15},
+    },
+    "ti6al4v": {
+        "solid": {"k_u95_rel": 0.06, "cp_u95_rel": 0.04, "rho_u95_rel": 0.012},
+        "mushy": {"k_u95_rel": 0.15, "cp_u95_rel": 0.12, "rho_u95_rel": 0.03, "latent_u95_rel": 0.10},
+        "liquid": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.04, "viscosity_u95_rel": 0.20},
+    },
+    "ss316l": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.04, "rho_u95_rel": 0.015},
+        "mushy": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.025, "latent_u95_rel": 0.08},
+        "liquid": {"k_u95_rel": 0.08, "cp_u95_rel": 0.06, "rho_u95_rel": 0.03, "viscosity_u95_rel": 0.15},
+    },
+    "alsi10mg": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.05, "rho_u95_rel": 0.010},
+        "mushy": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.025, "latent_u95_rel": 0.08},
+        "liquid": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.035, "viscosity_u95_rel": 0.18},
+    },
+}
+
+
+def four_alloy_u95_at_temperature(alloy_id, property_name, temperature_k):
+    """Return temperature-dependent U95 relative uncertainty for locked 4 alloys."""
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None or aid not in FOUR_ALLOY_U95_BUDGET:
+        raise ValueError(f"Unknown alloy identity for U95 budget: {alloy_id}")
+    t_props = _THERMAL[aid]
+    t_sol_k = t_props["solidus_C"] + 273.15
+    t_liq_k = t_props["liquidus_C"] + 273.15
+    budget = FOUR_ALLOY_U95_BUDGET[aid]
+    if temperature_k <= t_sol_k:
+        regime = "solid"
+    elif temperature_k <= t_liq_k:
+        regime = "mushy"
+    else:
+        regime = "liquid"
+    key = f"{property_name}_u95_rel"
+    regime_dict = budget[regime]
+    if key not in regime_dict:
+        if key in budget["solid"]:
+            return budget["solid"][key]
+        raise ValueError(f"Property {property_name} has no U95 specification in {regime} regime")
+    return regime_dict[key]
