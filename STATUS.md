@@ -5,9 +5,9 @@
 ## 2026-09-30 — Temiz kurulum ve kaynak manifesti düzeltmesi
 - Kilit dosyası normal `npm ci` ile yeniden üretilebilir hale getirildi; temiz Git arşivinde flagsiz `npm ci`, `npm run lint` ve build geçti.
 - Temiz test koşusunda IN625 türetilmiş snapshot ve NIST case 0 manifest pinlerinin commit edilmiş baytlarla uyuşmadığı bulundu. IN625 manifest boyut/hash kayıtları, katalog pinleri ve NIST manifest pin/testi Git blob baytlarına göre düzeltildi. `.gitattributes` içindeki bilimsel benchmark `-text` kuralı, hash-bağlı kaynakların Windows satır sonu dönüşümünü önlüyor.
-- Doğrulama: IN625 + optik kaynak katalog/API testleri **14/14 PASS**; worker readiness testi tek başına **11/11 PASS**; `npm run lint` **PASS**. Önceki temiz arşiv tam birim koşusundaki 8 hata içinden kaynak pinleri kapanmıştır. Zamanlama testi izole tekrarında geçti; tam koşudaki hata muhtemel paralel yük kaynaklıdır.
-- Tam test süiti en son commit edilmiş arşivde henüz yeniden çalıştırılmadı. Gerçek CPU workflow round-trip testi de temiz arşiv + kilitli Python 3.12.10 ortamında doğrulanmalıdır.
-- Sıradaki adım: scoped değişiklikleri commit et; yeni `git archive` temiz kopyasında flagsiz Node kurulumu, kilitli Python ortamıyla tam unit suite ve CPU workflow round-trip'i çalıştır; sonra 60 W kayıtlı replay ve hata/kurtarma kapılarına dön. Deneysel doğruluk ve NIST residual durumu `unvalidated` kalır.
+- Doğrulama: IN625 + optik kaynak katalog/API testleri **14/14 PASS**; worker readiness testi tek başına **11/11 PASS**; `npm run lint` **PASS**. Temiz arşivde gerçek CPU workflow round-trip'i de geçti. Tam unit koşusu 353 testte 351 pass / 1 skip / 1 fail verdi: readiness testinin 150 ms yapay request deadline'ı paralel yükte yeni child'ın başlaması için fazla kısa kaldı.
+- Test varsayımı 1000 ms'e çıkarıldı; hedefli readiness tekrarı **11/11 PASS**. Tam temiz-arşiv suite'i bu küçük sağlamlaştırmadan sonra yeniden çalıştırılmalı. Deneysel doğruluk ve NIST residual durumu `unvalidated` kalır.
+- Sıradaki adım: bu test düzeltmesini commit et; güncel temiz snapshot'ta flagsiz Node kurulumunu, tam unit suite'i, CPU workflow round-trip'ini ve production build'i tekrar çalıştır; sonra 60 W kayıtlı replay ve hata/kurtarma kapılarına dön.
 
 
 ## 2026-09-30 — V1 Araştırma İş İstasyonu goal'u ve NIST kanıt kapısı düzeltmesi

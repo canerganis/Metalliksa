@@ -226,7 +226,7 @@ test('a request invalidated by close cannot be sent to the replacement worker', 
 });
 
 test('a retry waits for terminal child exit and close invalidates waiters before replacement launch', { timeout: 10000 }, async () => {
-  const instance = fixture({ requestTimeoutMs: 150 });
+  const instance = fixture({ requestTimeoutMs: 1000 });
   let restoreKill = () => {};
   let killRequested = false;
   try {
