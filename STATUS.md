@@ -5,9 +5,9 @@
 ## 2026-09-30 — Temiz kurulum ve kaynak manifesti düzeltmesi
 - Kilit dosyası normal `npm ci` ile yeniden üretilebilir hale getirildi; temiz Git arşivinde flagsiz `npm ci`, `npm run lint` ve build geçti.
 - Temiz test koşusunda IN625 türetilmiş snapshot ve NIST case 0 manifest pinlerinin commit edilmiş baytlarla uyuşmadığı bulundu. IN625 manifest boyut/hash kayıtları, katalog pinleri ve NIST manifest pin/testi Git blob baytlarına göre düzeltildi. `.gitattributes` içindeki bilimsel benchmark `-text` kuralı, hash-bağlı kaynakların Windows satır sonu dönüşümünü önlüyor.
-- Doğrulama: IN625 + optik kaynak katalog/API testleri **14/14 PASS**; worker readiness testi tek başına **11/11 PASS**; `npm run lint` **PASS**. Temiz arşivde gerçek CPU workflow round-trip'i de geçti. Tam unit koşusu 353 testte 351 pass / 1 skip / 1 fail verdi: readiness testinin 150 ms yapay request deadline'ı paralel yükte yeni child'ın başlaması için fazla kısa kaldı.
-- Test varsayımı 1000 ms'e çıkarıldı; hedefli readiness tekrarı **11/11 PASS**. Tam temiz-arşiv suite'i bu küçük sağlamlaştırmadan sonra yeniden çalıştırılmalı. Deneysel doğruluk ve NIST residual durumu `unvalidated` kalır.
-- Sıradaki adım: bu test düzeltmesini commit et; güncel temiz snapshot'ta flagsiz Node kurulumunu, tam unit suite'i, CPU workflow round-trip'ini ve production build'i tekrar çalıştır; sonra 60 W kayıtlı replay ve hata/kurtarma kapılarına dön.
+- Doğrulama: IN625 + optik kaynak katalog/API testleri **14/14 PASS**; worker readiness testi **11/11 PASS**. Güncel temiz kaynak arşivinde tam suite **352 PASS / 1 SKIP / 0 FAIL**; skip temiz arşive kasıtlı olarak dahil edilmeyen opsiyonel CMU ham ölçüm dosyalarına ait. CPU workflow round-trip testi suite içinde geçti. `npm run lint` **PASS**, `npm run build` **PASS**; Vite'ın mevcut büyük chunk uyarısı sürüyor.
+- `npm ci --no-audit --no-fund` ve lint, aynı lockfile'ı içeren temiz arşivde **PASS**; son test-only commit'in tam source arşivi test/build'de kullanıldı ve aynı kilitli node_modules ağacını kullandı. Kurulumdaki 9 install-script onay uyarısı gözlendi; build/test başarılı oldu.
+- Sıradaki adım: güncel solver kimliğiyle arşivli 60 W kullanıcı vakasını worker/UI yolunda tekrar çalıştır ve çözümlenmiş input, material, solver, adım sayısı ve artifact hash'lerini kaydet; sonra browser/archive turu ile kritik hata-kurtarma kapılarını tamamla. Deneysel doğruluk ve NIST residual durumu `unvalidated` kalır.
 
 
 ## 2026-09-30 — V1 Araştırma İş İstasyonu goal'u ve NIST kanıt kapısı düzeltmesi
