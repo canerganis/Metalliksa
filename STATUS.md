@@ -3,6 +3,14 @@
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
 
+## 2026-09-30 — IN718 sentetik solver-duyarlılık pilotu
+- `python/run_in718_solver_branch_sensitivity_pilot.py` ile repo içindeki üç IN718 proses noktasında 18 koşul (absorptivite ×0.9/1.0/1.1, Rosenthal/Eagar–Tsai) ve tekrarlı baseline üretildi. Çıktı: `data/synthetic/in718_solver_branch_sensitivity_v2_20260929T213040Z/` (19 değerlendirme).
+- Tekrarlı ölçüme benzersiz `evaluation_id` eklendi; `run_id` DOE koşul kimliği olarak kaldı. Önceki v1 artefaktı korunuyor; kimlik çakışması olan v1, v2 ile düzeltilmiş biçimde yinelendi.
+- Hedefli doğrulama: pilot testleri **5/5 PASS**; 19/19 solver çağrısı tamamlandı, geometri alanları mevcut/sonlu, baseline tekrarı kararlı, evaluation ID'leri benzersiz. Mevcut `data/synthetic_process_map.csv` SHA-256 değişmedi (`dcef1b74…ea55`).
+- Yerel taramada absorptivite artışı W/D'yi çoğunlukla artırdı; Rosenthal bazı koşullarda plato/floor gösterdi. Rosenthal ve Eagar–Tsai kolları absorptivite/derinlik düzeltmelerini birlikte değiştirdiğinden saf ısı-kaynağı etkisi ayrıştırılamaz. Gürültü modeli, gözlem operatörü ve inverse recovery olmadığı için bu çalışma **sensitivity pilotudur; identifiability kanıtı değildir**. Soğuma hızı, kusur ve yorulma hedefleri dışarıda bırakıldı; deney doğrulaması/ML benchmark iddiası yoktur.
+- Sonraki somut adım: ölçüm operatörü ve belirsizlik/gürültü modeli belirlendikten sonra inverse-recovery ayırt edilebilirlik deneyi tasarlamak; o zamana kadar çıktıyı yalnız solver-içi sentetik duyarlılık olarak kullanmak.
+
+
 ## 2026-09-29 — LPBF 4 Aşamalı Yol Haritası & Simülasyon Motoru Entegrasyonu Tamamlandı (Adım 1, 2, 3, 4)
 - **Commit'ler:**
   - `7b06573`: `feat(lpbf): complete 4-step workflow: artifact purge, hardware timing, IN625 liquid/U95, graded mesh/evaporation, NIST optical operator`

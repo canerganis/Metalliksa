@@ -1,0 +1,56 @@
+{
+  "absorptivity_scales": [
+    0.9,
+    1.0,
+    1.1
+  ],
+  "acceptance_checks": {
+    "all_numeric_metrics_finite": true,
+    "all_solver_rows_completed": true,
+    "baseline_repeat_stable_projection_matches": true,
+    "evaluation_ids_unique": true,
+    "preexisting_dataset_unchanged": true,
+    "required_geometry_metrics_present": true
+  },
+  "base_absorptivity_IR": 0.38,
+  "claim_boundary": "Synthetic solver output; not experimental validation, qualification, or an ML benchmark.",
+  "common_inputs": {
+    "beam_diameter_um": 80.0,
+    "hatch_spacing_um": 100.0,
+    "laser_wavelength": "IR_1064nm",
+    "layer_thickness_um": 40.0,
+    "preheat_temp_C": 80.0,
+    "process_seed_metadata_only": 42
+  },
+  "dataset_integrity": {
+    "postrun_synthetic_process_map_sha256": "dcef1b74b29363f9d19edf115a90722fc6410ac82a3a752c786f8a819498ea55",
+    "preexisting_synthetic_process_map_sha256": "dcef1b74b29363f9d19edf115a90722fc6410ac82a3a752c786f8a819498ea55"
+  },
+  "dataset_kind": "synthetic_solver_branch_sensitivity",
+  "design_rows": 18,
+  "evaluation_ids_unique": true,
+  "evaluations_including_repeat": 19,
+  "generated_at_utc": "2026-09-29T21:30:52.087118+00:00",
+  "heat_source_branches": [
+    "rosenthal",
+    "eagar-tsai"
+  ],
+  "interpretation": "Solver-internal sensitivity only. Rosenthal and Eagar-Tsai branches bundle different absorptivity and depth corrections; results do not isolate a pure heat-source model-form effect.",
+  "material_id": "in718",
+  "material_name": "Inconel 718",
+  "material_property_source": "python/four_alloy_materials.py",
+  "omitted_metrics": {
+    "cooling_rate": "not included: current result thermal field was null in baseline; legacy generator reads a different key",
+    "defect_and_fatigue_targets": "not included: legacy generator supplies heuristic values"
+  },
+  "process_case_source": "python/benchmark_phase7_microstructure.py",
+  "repository_revision": "dee842c72477fe90f1477e347156ff2ce9113efb",
+  "repository_worktree_dirty_at_start": true,
+  "schema_version": 2,
+  "source_files_sha256": {
+    "python/benchmark_phase7_microstructure.py": "074fd2c90678a0c8d358b050328c9b6ce159d87ae584189f566e3788c0176037",
+    "python/four_alloy_materials.py": "fc448b418cdc25148ddbee8273fcc047053783292bc2e3b0b0007069894ddbdf",
+    "python/lpbf_thermal_solver.py": "ae4f6191adf13a18424a4e70e1b954a1d92ae186d40b51d0d12c14a47aefc781",
+    "python/powder_bed_raytracer.py": "63d2f0bdb5a1b2e9bfce3101f4d37f0288af23da4252bc7d58649c248d122531"
+  }
+}
