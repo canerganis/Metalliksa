@@ -76,7 +76,9 @@ DEFAULTS = dict(mode="screening", material="Inconel 718", power_W=200., speed_mm
                 strategy="meander", stripeWidth_um=500., islandSize_um=200., packingFraction=0.55, powderConductivityRatio=0.12,
                 convection_W_m2K=20., timeout_s=300., study="none", backend="auto",
                 surfaceMode="powder-layer", sourcePenetration_um=None,
-                barePlateGeometry="square")
+                barePlateGeometry="square",
+                evaporationModel=False, marangoniMultiplier=2.2,
+                opticalObserver=None)
 BOUNDS = dict(power_W=(10, 1500), speed_mm_s=(10, 10000), beamDiameter_um=(20, 500),
               preheat_C=(0, 1200), layer_um=(10, 150), hatch_um=(10, 1000), mesh_um=(5, 80),
               maxDt_s=(1e-9, 1e-4), trackLength_um=(100, 10000), tracks=(1, 8), layers=(1, 5),
@@ -132,7 +134,7 @@ def validate(raw):
                       "contactResistance_m2K_W", "supportBottomBoundary",
                       "incidenceAngle_deg", "incidenceAzimuth_deg", "beamProfileModelId",
                       "sourcePenetration_um"}
-    if not isinstance(raw, dict) or set(raw)-set(DEFAULTS)-{"properties", "measurements", "absorptivity", "emissivity", "corridorWidth_um", "powderGridPolicy"}-layered_fields:
+    if not isinstance(raw, dict) or set(raw)-set(DEFAULTS)-{"properties", "measurements", "absorptivity", "emissivity", "corridorWidth_um", "powderGridPolicy", "evaporationModel", "marangoniMultiplier", "opticalObserver"}-layered_fields:
         raise ValueError("Unknown simulation input fields")
     finite_tree(raw)
     p = {**DEFAULTS, **raw}
@@ -505,6 +507,13 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         active = zz < surface
         top_index = int(np.flatnonzero(z < surface)[-1])
         k = property_at(m, T, 2)*np.where((zz > 0)&~ever, p["powderConductivityRatio"], 1.)
+        if p.get("evaporationModel", False):
+            from lpbf_evaporation_marangoni import calculate_keff_marangoni
+            liquidus_t = float(m["liquidus_K"])
+            solidus_t = float(m["solidus_K"])
+            fraction = np.clip((T - solidus_t) / max(1e-6, liquidus_t - solidus_t), 0.0, 1.0)
+            lambda_m = float(p.get("marangoniMultiplier", 2.2))
+            k = calculate_keff_marangoni(k, fraction, lambda_marangoni=lambda_m)
         cp = property_at(m, T, 3)
         if layered:
             ss_rho, ss_cp, ss_k, _ = ss304_support_thermal_fields(T[support_mask])
@@ -580,19 +589,25 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                     f"at {float(tt[0]):.6g} K)"
                 )
             if maximum_h >= boiling_enthalpy:
-                hot_cell = np.unravel_index(int(np.argmax(h)), h.shape)
-                cell_density = float(rho[hot_cell])
-                cell_rate = float(rate[hot_cell])
-                prior_specific_h = maximum_h-dt*cell_rate/cell_density
-                raise ValueError(
-                    "Thermal model validity exceeded at or above the material boiling limit "
-                    f"(specific enthalpy {maximum_h:.9g} J/kg; limit {boiling_enthalpy:.9g} J/kg "
-                    f"at {m['boiling_K']:.6g} K; cell={hot_cell}, previous T={float(old[hot_cell]):.6g} K, "
-                    f"previous specific enthalpy={prior_specific_h:.9g} J/kg, dt={dt:.9g} s, "
-                    f"source rate={float(source[hot_cell]):.9g} W/m³, "
-                    f"net rate={cell_rate:.9g} W/m³); evaporation/free-surface CFD required"
-                )
-            T = np.interp(h, hh, tt)
+                if p.get("evaporationModel", False):
+                    from lpbf_evaporation_marangoni import invert_enthalpy_with_evaporation
+                    l_vap = float(m.get("latent_heat_vap_J_kg", 6.4e6))
+                    T, _ = invert_enthalpy_with_evaporation(h, hh, tt, m["boiling_K"], l_vap)
+                else:
+                    hot_cell = np.unravel_index(int(np.argmax(h)), h.shape)
+                    cell_density = float(rho[hot_cell])
+                    cell_rate = float(rate[hot_cell])
+                    prior_specific_h = maximum_h-dt*cell_rate/cell_density
+                    raise ValueError(
+                        "Thermal model validity exceeded at or above the material boiling limit "
+                        f"(specific enthalpy {maximum_h:.9g} J/kg; limit {boiling_enthalpy:.9g} J/kg "
+                        f"at {m['boiling_K']:.6g} K; cell={hot_cell}, previous T={float(old[hot_cell]):.6g} K, "
+                        f"previous specific enthalpy={prior_specific_h:.9g} J/kg, dt={dt:.9g} s, "
+                        f"source rate={float(source[hot_cell]):.9g} W/m³, "
+                        f"net rate={cell_rate:.9g} W/m³); evaporation/free-surface CFD required"
+                    )
+            else:
+                T = np.interp(h, hh, tt)
         previous_time = time
         time += dt
         end_roundoff = min(1e-14, 2*math.ulp(end)*(step+1))
@@ -704,6 +719,20 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 midTrackInterpolatedCrossSection=interpolated_midtrack_bare_plate_section(
                     axis_y, z, midpoint_temperature_max, dx, m["liquidus_K"], axis[midpoint_plane]
                 ) if bare else None,
+                **({"sixSectionObservation": (lambda: (
+                    __import__("lpbf_nist_optical_operator").build_nist_six_section_observation([
+                        {"track": tr, "position_mm": pos,
+                         "width_um": max(1.0, float(__import__("lpbf_nist_optical_operator").extract_subcell_optical_boundary(
+                             axis_y, z, T[int(np.argmin(np.abs(axis - (segments[0]["start"][0] + (0.0049 if pos == 4.9 else 0.0060))))), :, :],
+                             m["liquidus_K"]
+                         )["width_um"])),
+                         "depth_um": max(1.0, float(__import__("lpbf_nist_optical_operator").extract_subcell_optical_boundary(
+                             axis_y, z, T[int(np.argmin(np.abs(axis - (segments[0]["start"][0] + (0.0049 if pos == 4.9 else 0.0060))))), :, :],
+                             m["liquidus_K"]
+                         )["depth_um"]))}
+                        for tr in (1, 2, 3) for pos in (4.9, 6.0)
+                    ])
+                ))()} if p.get("opticalObserver") == "nist-six-section" and bare else {}),
                 **({"barePlateSectionObservations": rectangular_corridor_section_observations(
                     axis_y, z, corridor_peak_planes, corridor_section_samples, dx, m["liquidus_K"])}
                     if rectangular_corridor else {}),
