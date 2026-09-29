@@ -239,6 +239,11 @@ def _model_reasons(result, row):
         reasons.append(
             "NIST six-section operator is not implemented: require separate 4.9/6.0 mm section records for each of three simulated tracks."
         )
+    # A positive six-row shape does not prove the rows came from three distinct
+    # simulated track fields. The current run contract stores no such binding.
+    reasons.append(
+        "NIST six-section comparison is disabled: the run does not bind each section to an independent simulated track field."
+    )
     convergence = _object(result.get("comparisonConvergence"))
     process_vector = {"power_W": settings.get("power_W"), "speed_mm_s": settings.get("speed_mm_s"),
                       "beamDiameterD4sigma_um": row.get("beamDiameterD4sigma_um"),

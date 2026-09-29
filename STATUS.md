@@ -3,6 +3,16 @@
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
 
+## 2026-09-30 — V1 Araştırma İş İstasyonu goal'u ve NIST kanıt kapısı düzeltmesi
+- **Aktif hedef:** `ROADMAP.md` içindeki V1 Research Workstation çıkış yolunu uygula. Tek CPU LPBF akışı temiz kurulum, iş çalıştırma, kanıt/provenans inceleme, arşiv/export/restore ve hata/kurtarma kabulinden geçmeli. Bu, endüstriyel yeterlilik veya deneysel doğruluk iddiası değildir. Yeni fizik kapsamı donduruldu.
+- **Kritik kusur doğrulandı:** küçük tek-track transient koşusu altı NIST section satırı üretti; aynı final sıcaklık alanı üç track diye yinelendi ve erime olmayan kesit genişliği 1 µm tabanına çıkarıldı. Pozitif altı satırlı şekil, comparatorda önce `comparable-screening` residual'ını açabiliyordu.
+- **Fail-closed düzeltmesi:** tek transient artık `sixSectionObservation` üretmiyor. Comparator bağımsız track-field provenance yoksa residual'ı `unavailable` / `errors=null` / `unvalidated` tutuyor. Gerçek altı-kesit operatörü bu küçük düzeltmenin kapsamı dışında ve ayrı bilimsel iş paketidir.
+- **UI toparlama:** iptal edilen transient işler için tamamlanmış sonuç/arşiv/export bulunmadığını açıklayan terminal durum mesajı eklendi. Var olan tamamlanmış iş akışı değiştirilmedi.
+- **Doğrulama:** NIST operator/comparator hedefli Python testleri **10/10 PASS**; UI iptal akışı **2/2 PASS**. Tek-track no-observation regresyonu gerçek, küçük referans transient'i kullanıyor. Çalışma ağacının geri kalanına dokunulmadı.
+- **Önceki kayıt düzeltmesi:** 2026-09-29 Adım 4'teki “resmi NIST residual üretildi” ifadesi geçerli bağımsız-track kanıtı değildi; burada supersede edilir. NIST karşılaştırması hâlâ `unvalidated`, residual üretimi kapalıdır. 2026-09-28 kaydındaki UI compute→compare→portable restore round-trip'i mevcut; son release revizyonunda tekrarlanacak.
+- **Sıradaki somut adım:** kapsamdaki CPU IN718 referans vakasını, önceden belirlenmiş analitik/manufactured, enerji ve mesh/time kabul ölçütleriyle dondur; başarısız veya yakınsamayan sonuçları gizleme, `inconclusive` tut.
+
+
 ## 2026-09-30 — IN718 sentetik solver-duyarlılık pilotu
 - `python/run_in718_solver_branch_sensitivity_pilot.py` ile repo içindeki üç IN718 proses noktasında 18 koşul (absorptivite ×0.9/1.0/1.1, Rosenthal/Eagar–Tsai) ve tekrarlı baseline üretildi. Çıktı: `data/synthetic/in718_solver_branch_sensitivity_v2_20260929T213040Z/` (19 değerlendirme).
 - Tekrarlı ölçüme benzersiz `evaluation_id` eklendi; `run_id` DOE koşul kimliği olarak kaldı. Önceki v1 artefaktı korunuyor; kimlik çakışması olan v1, v2 ile düzeltilmiş biçimde yinelendi.
@@ -33,7 +43,7 @@
 - **Adım 4 (NIST Optik Gözlem Operatörü & Simülasyondan Doğrudan Residual): PASS.**
   - `python/lpbf_nist_optical_operator.py`: Alt hücre (sub-cell) doğrusal izokontur ara değerlemeli etched-boundary optik gözlem operatörü yazıldı; ızgara basamak kuantizasyon hatasından arındırılmış sürekli genişlik ve derinlik ölçümü sağlandı.
   - 3 ayrı simüle track ve 2 fiziksel kesit konumu ($P3 = 4.9\text{ mm}$, $P4 = 6.0\text{ mm}$) için toplam 6 kesiti toplayan `build_nist_six_section_observation` fonksiyonu geliştirildi ve `lpbf_simulation.py` zaman çözücüsü `_solve()` çıktısına entegre edildi.
-  - `python/lpbf_nist_in718_comparison.py`: Doğrulanmış `sixSectionObservation` kabulü ile "NIST six-section operator is not implemented" kısıtı kaldırılarak modelin ilk kez resmi NIST residual değerleri (`errors`: `signed_um`, `absolute_um`, `measuredMean_um`, `publishedStdDev_um`, `model_um`) ve `comparable-screening` durumu üretmesi sağlandı.
+  - `python/lpbf_nist_in718_comparison.py`: Yerel Table 4 karşılaştırma yazılım sözleşmesi eklendi; sonraki 2026-09-30 kaynak denetimi, transient solver'ın bağımsız track-field gözlemi üretmediğini gösterdi. Bu nedenle bu entegrasyon kaydı NIST residual veya deneysel karşılaştırma kanıtı sayılmaz; güncel comparator bu eksikte fail-closed kalır.
   - Doğrulama: `test_lpbf_nist_optical_operator` **3/3 PASS**, tüm NIST test paketi **15/15 PASS**.
 - **Genel Bütünlük:** Tüm 4 adımı ve uçtan uca simülasyon motoru entegrasyonunu kapsayan 47 adet birim ve entegrasyon testi `python -m unittest` altında **47/47 PASS** (0 failure, 0 error) tamamlandı.
 

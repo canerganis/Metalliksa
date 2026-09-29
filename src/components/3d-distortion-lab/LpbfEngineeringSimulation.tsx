@@ -25,6 +25,10 @@ const modes: {id:SimulationMode;name:string;scope:string}[] = [
   {id:"calibration",name:"Calibration / Validation",scope:"Transient thermal + measured comparison · matching process vector required for calibration · independent validation pending"},
 ];
 const fmt = number;
+export function CancelledRunNotice({ status }: { status?: SimulationJob["status"] }) {
+  if (status !== "cancelled") return null;
+  return <p role="status" className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4 text-sm text-amber-200">Run cancelled. No completed result is available, so this run cannot be archived or exported.</p>;
+}
 const inputClass = "w-full min-w-0 rounded-lg bg-slate-950/60 border border-slate-600/70 px-3 py-2.5 text-slate-100 transition-colors hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300";
 type ReadinessStatus = "pass" | "warn" | "fail" | "pending";
 type ReadinessItem = { status: ReadinessStatus; label: string; details: string };
@@ -589,6 +593,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     <In625BareplatePanel />
     <ResultHeader job={job} material={material||input.material} availability={caps?`${caps.openfoamVersion||"Unavailable"} · free-surface ${caps.freeSurfaceSolver?"reported available":"unavailable"}`:"Checking…"} stale={resultSignature!==signature} elapsed={elapsed} cancel={cancel} cancelling={cancelling}/>
     {active&&submittedSignature!==signature&&<p role="status" className="text-sm text-amber-200">Inputs changed — the running job uses submitted settings. Local changes apply to the next run.</p>}
+    <CancelledRunNotice status={job?.status} />
     {(error||job?.error)&&<p role="alert" className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 text-sm text-red-200 whitespace-pre-wrap">{error||job?.error}</p>}
     {job&&<details className="border-t border-slate-700 pt-3"><summary className="cursor-pointer">Worker log · {job.id}</summary><pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-slate-400 mt-3">{job.log||job.status}</pre></details>}
     {(!caps?.freeSurfaceSolver)&&<p role="status" className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-5 py-3 text-sm leading-6 text-amber-200">{mode==="high-fidelity"?"Free-surface LPBF CFD is unavailable. Result is Screening only.":"Free-surface LPBF CFD is unavailable. Thermal runs do not resolve fluid flow, recoil pressure or a keyhole cavity."}</p>}

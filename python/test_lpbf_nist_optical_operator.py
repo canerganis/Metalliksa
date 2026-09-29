@@ -72,8 +72,8 @@ class TestNistOpticalOperator(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_nist_six_section_observation(sections[:4])
 
-    def test_residual_generation_when_six_sections_provided(self):
-        # Construct valid mock Table 4 case 0 comparison environment
+    def test_unverified_six_section_shape_cannot_enable_residual(self):
+        # A valid-looking six-row aggregate lacks evidence of independent track fields.
         from test_lpbf_nist_in718_comparison import (
             synthetic_result,
             source_binding,
@@ -103,23 +103,26 @@ class TestNistOpticalOperator(unittest.TestCase):
             result, table4, binding, binding, "0"
         )
 
-        # Verification: six-section error reason must be absent
-        for r in report["reasons"]:
-            self.assertNotIn("NIST six-section operator is not implemented", r)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertEqual(report["validationStatus"], "unvalidated")
+        self.assertIsNone(report["errors"])
+        self.assertIn("independent simulated track field", " ".join(report["reasons"]))
 
-        # When all other mock conditions in _valid_case_zero_result are met, status is comparable-screening
-        self.assertEqual(report["status"], "comparable-screening")
-        self.assertIsNotNone(report["errors"])
-        self.assertIn("width", report["errors"])
-        self.assertIn("depth", report["errors"])
+    def test_single_transient_does_not_emit_repeated_field_as_six_sections(self):
+        from lpbf_simulation import run
 
-        # Check calculated residual structure
-        w_err = report["errors"]["width"]
-        self.assertIn("signed_um", w_err)
-        self.assertIn("absolute_um", w_err)
-        self.assertIn("measuredMean_um", w_err)
-        self.assertIn("model_um", w_err)
-        self.assertAlmostEqual(w_err["model_um"], 140.0, places=2)
+        result = run({
+            "mode": "standard", "material": "Inconel 718", "power_W": 220.0,
+            "speed_mm_s": 900.0, "beamDiameter_um": 80.0, "preheat_C": 23.5,
+            "layer_um": 40.0, "hatch_um": 100.0, "mesh_um": 80.0,
+            "maxDt_s": 1e-5, "trackLength_um": 100.0, "tracks": 1, "layers": 1,
+            "dwell_s": 0.0, "cooling_s": 0.0, "backend": "reference",
+            "surfaceMode": "bare-plate", "barePlateGeometry": "square",
+            "sourcePenetration_um": 50.0, "opticalObserver": "nist-six-section",
+        })
+
+        self.assertIn("metrics", result)
+        self.assertNotIn("sixSectionObservation", result)
 
 
 if __name__ == "__main__":

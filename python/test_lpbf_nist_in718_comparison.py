@@ -184,7 +184,7 @@ class In718NistOpticalComparison(unittest.TestCase):
         report = json.loads(completed.stdout)
         self.assertEqual(report["status"], "unavailable")
         self.assertIsNone(report["errors"])
-        self.assertIn("six-section operator is not implemented", " ".join(report["reasons"]))
+        self.assertIn("independent simulated track field", " ".join(report["reasons"]))
 
 
 if __name__ == "__main__":

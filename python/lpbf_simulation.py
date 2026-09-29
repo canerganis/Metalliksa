@@ -719,20 +719,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 midTrackInterpolatedCrossSection=interpolated_midtrack_bare_plate_section(
                     axis_y, z, midpoint_temperature_max, dx, m["liquidus_K"], axis[midpoint_plane]
                 ) if bare else None,
-                **({"sixSectionObservation": (lambda: (
-                    __import__("lpbf_nist_optical_operator").build_nist_six_section_observation([
-                        {"track": tr, "position_mm": pos,
-                         "width_um": max(1.0, float(__import__("lpbf_nist_optical_operator").extract_subcell_optical_boundary(
-                             axis_y, z, T[int(np.argmin(np.abs(axis - (segments[0]["start"][0] + (0.0049 if pos == 4.9 else 0.0060))))), :, :],
-                             m["liquidus_K"]
-                         )["width_um"])),
-                         "depth_um": max(1.0, float(__import__("lpbf_nist_optical_operator").extract_subcell_optical_boundary(
-                             axis_y, z, T[int(np.argmin(np.abs(axis - (segments[0]["start"][0] + (0.0049 if pos == 4.9 else 0.0060))))), :, :],
-                             m["liquidus_K"]
-                         )["depth_um"]))}
-                        for tr in (1, 2, 3) for pos in (4.9, 6.0)
-                    ])
-                ))()} if p.get("opticalObserver") == "nist-six-section" and bare else {}),
+                # A single transient execution does not retain independently
+                # simulated track fields. Do not label repeated final-field
+                # slices as a three-track six-section observation.
                 **({"barePlateSectionObservations": rectangular_corridor_section_observations(
                     axis_y, z, corridor_peak_planes, corridor_section_samples, dx, m["liquidus_K"])}
                     if rectangular_corridor else {}),

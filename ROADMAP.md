@@ -16,6 +16,19 @@
 - **Evidence boundary:** the application is a traceable engineering research workstation. Solver outputs remain screening results unless the matching evidence is recorded in `PROOF.md`.
 - **Historical plan:** the previous six-phase roadmap is preserved at [`docs/archive/ROADMAP_LEGACY_PHASES.md`](docs/archive/ROADMAP_LEGACY_PHASES.md).
 
+## Active release goal — V1 Research Workstation
+
+Bring one bounded CPU LPBF workflow to a reproducible, honest, release-ready research tool. V1 does not mean industrial qualification: unsupported comparisons stay unavailable, solver limits remain visible, and other workspaces stay Research/Preview. Freeze new physics phases until this exit path is accepted.
+
+1. **Close claim and provenance gaps.** Do not emit a six-section NIST observation unless each section is tied to an independently simulated track field; do not turn missing melt geometry into a positive measurement. Keep NIST residuals unavailable until the observer and its artifact bindings are implemented and tested.
+2. **Freeze one CPU reference case.** Bind alloy/material source, process vector, solver implementation, mesh/time policy and outputs. Test conservation and the applicable analytic/manufactured references; call unresolved spatial or temporal trends `inconclusive`, and keep experimental validity `unvalidated`.
+3. **Keep one complete user path trustworthy.** Configure → run → inspect provenance and limitations → archive → export → restore → reload. Retain separate acceptance for cancellation, stale inputs, malformed bundles and recovery. The 2026-09-28 workflow record already covers a real CPU round trip; repeat acceptance against the final release commit.
+4. **Make the research release reproducible.** Verify clean installation, locked dependencies, supported CPU runtime, visible failure states, traceable report/manifest, and a release/rollback checklist.
+
+**V1 exit evidence:** the same release revision passes targeted numerical checks, clean-install reproduction, one end-to-end browser/archive round trip and the critical error/recovery paths; every displayed scientific claim maps to recorded evidence. NIST residuals, customer pilot, commercial launch, ML performance, GPU speed advantage and production labels are not V1 requirements.
+
+The A01–H02 / K0–K4 matrix in `src/data/engineeringRoadmap.ts` remains the later engineering/industrial-pilot track. Its customer discovery and external validation gates are not inferred from internal software tests.
+
 ## Implemented milestones
 
 Phases 1–6 established the data, standards, thermal, optics, powder, and CFD foundations. Phases 7–11 added plume/shielding, solidification microstructure, thermomechanics, experimental traceability, and GPU/optimization workflows. Phases 12–16 added toolpath kinematics, fatigue/fracture screening, spatial defect twin, adaptive feed-forward mitigation, and multi-laser/plume coordination. Phases 17–21 added thermal accumulation, powder-bed compaction, optical tomography/NETD, support optimization, and transient latent-heat phase change.
@@ -32,4 +45,4 @@ Each milestone must remain backed by its focused tests and a dated entry in [`PR
 
 ## Working order
 
-The next implementation decision should target one of the five gaps above. Do not add another physics phase until the selected gap has a clear input contract, acceptance test, evidence boundary, and user-facing workflow.
+Follow the active V1 release goal above. Start with the observer/provenance correction, then freeze the CPU reference case and release acceptance. Do not add another physics phase until V1 is accepted or a measured research need justifies a bounded new contract.
