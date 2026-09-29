@@ -2,6 +2,13 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## 2026-09-30 — Temiz kurulum ve kaynak manifesti düzeltmesi
+- Kilit dosyası normal `npm ci` ile yeniden üretilebilir hale getirildi; temiz Git arşivinde flagsiz `npm ci`, `npm run lint` ve build geçti.
+- Temiz test koşusunda IN625 türetilmiş snapshot ve NIST case 0 manifest pinlerinin commit edilmiş baytlarla uyuşmadığı bulundu. IN625 manifest boyut/hash kayıtları, katalog pinleri ve NIST manifest pin/testi Git blob baytlarına göre düzeltildi. `.gitattributes` içindeki bilimsel benchmark `-text` kuralı, hash-bağlı kaynakların Windows satır sonu dönüşümünü önlüyor.
+- Doğrulama: IN625 + optik kaynak katalog/API testleri **14/14 PASS**; worker readiness testi tek başına **11/11 PASS**; `npm run lint` **PASS**. Önceki temiz arşiv tam birim koşusundaki 8 hata içinden kaynak pinleri kapanmıştır. Zamanlama testi izole tekrarında geçti; tam koşudaki hata muhtemel paralel yük kaynaklıdır.
+- Tam test süiti en son commit edilmiş arşivde henüz yeniden çalıştırılmadı. Gerçek CPU workflow round-trip testi de temiz arşiv + kilitli Python 3.12.10 ortamında doğrulanmalıdır.
+- Sıradaki adım: scoped değişiklikleri commit et; yeni `git archive` temiz kopyasında flagsiz Node kurulumu, kilitli Python ortamıyla tam unit suite ve CPU workflow round-trip'i çalıştır; sonra 60 W kayıtlı replay ve hata/kurtarma kapılarına dön. Deneysel doğruluk ve NIST residual durumu `unvalidated` kalır.
+
 
 ## 2026-09-30 — V1 Araştırma İş İstasyonu goal'u ve NIST kanıt kapısı düzeltmesi
 - **Aktif hedef:** `ROADMAP.md` içindeki V1 Research Workstation çıkış yolunu uygula. Tek CPU LPBF akışı temiz kurulum, iş çalıştırma, kanıt/provenans inceleme, arşiv/export/restore ve hata/kurtarma kabulinden geçmeli. Bu, endüstriyel yeterlilik veya deneysel doğruluk iddiası değildir. Yeni fizik kapsamı donduruldu.

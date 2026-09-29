@@ -12,8 +12,8 @@
     {
       "path": "in625-thermal-snapshot-v1.json",
       "source_url": "https://doi.org/10.1007/s11663-020-01808-w",
-      "bytes": 1389,
-      "sha256": "27220ec4738b4a85dfc5bb130ccd92931bc4ffeea4fb9d9186f49a981ff86a48"
+      "bytes": 1353,
+      "sha256": "a35ab7258eee08139fdfb4a7571f3f8fa5b8b9e9074fabca381becab4dda340d"
     },
     {
       "path": "density-assumption-v1.json",

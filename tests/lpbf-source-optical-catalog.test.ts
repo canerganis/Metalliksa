@@ -240,7 +240,7 @@ test('NIST case 0 original micrographs are a distinct source with mapped measure
   const root = path.join(sourceRoot, 'official');
   const manifestPath = path.join(root, 'single-track-case0', 'manifest.json');
   const manifestBytes = readFileSync(manifestPath);
-  assert.equal(sha(manifestBytes), '85ec5ce316a2d51c87854b644aef3fc0d601ca884e5a316d23e9a1dc6158b03e');
+  assert.equal(sha(manifestBytes), 'c33ff22d370f75754d89eb7e05721a0bb21e3192f5563a6213116d098ca65148');
   const manifest = JSON.parse(manifestBytes.toString('utf8'));
   const document = nistOpticalCase0MicrographsCatalogEntry(root).loadDocument() as any;
   assert.equal(document.datasetId, 'nist-amb2022-03-optical-case0-micrographs-v1');

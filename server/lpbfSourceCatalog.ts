@@ -288,7 +288,7 @@ export function nistSupplementalIn718CatalogEntry(root = path.resolve('data/benc
 export function nistOpticalCase0MicrographsCatalogEntry(root = path.resolve('data/benchmark/nist-amb2022-03-optical/official')): LpbfSourceCatalogEntry {
   const datasetId = 'nist-amb2022-03-optical-case0-micrographs-v1';
   const manifestPath = 'single-track-case0/manifest.json';
-  const manifestSha = '85ec5ce316a2d51c87854b644aef3fc0d601ca884e5a316d23e9a1dc6158b03e';
+  const manifestSha = 'c33ff22d370f75754d89eb7e05721a0bb21e3192f5563a6213116d098ca65148';
   const baseUrl = 'https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/';
   return { datasetId, title: 'NIST AMB2022-03 · case 0 original optical micrographs', sourceRoot: root,
     loadDocument() {
@@ -390,7 +390,7 @@ export function in625BareplateScreeningCatalogEntry(root = path.resolve('data/be
   const densityPath = 'density-assumption-v1.json';
   const thermalUrl = 'https://doi.org/10.1007/s11663-020-01808-w';
   const densityUrl = 'https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-625.pdf';
-  const thermalSha = '27220ec4738b4a85dfc5bb130ccd92931bc4ffeea4fb9d9186f49a981ff86a48';
+  const thermalSha = 'a35ab7258eee08139fdfb4a7571f3f8fa5b8b9e9074fabca381becab4dda340d';
   const densitySha = '135cb88f6c0398dc4df05b5c9e238b86fc98827732f5d5c20ac7172a14cfbc9e';
   const readPinnedArtifact = (file: any, expected: { path: string; url: string; bytes: number; sha256: string }) => {
     if (file?.path !== expected.path || file?.source_url !== expected.url
@@ -425,7 +425,7 @@ export function in625BareplateScreeningCatalogEntry(root = path.resolve('data/be
         || context.experiment?.experimental_validation !== false) {
         throw new Error('IN625 screening manifest/context identity mismatch');
       }
-      const thermal = readPinnedArtifact(files[0], { path: thermalPath, url: thermalUrl, bytes: 1389, sha256: thermalSha });
+      const thermal = readPinnedArtifact(files[0], { path: thermalPath, url: thermalUrl, bytes: 1353, sha256: thermalSha });
       const density = readPinnedArtifact(files[1], { path: densityPath, url: densityUrl, bytes: 549, sha256: densitySha });
       if (thermal.schemaVersion !== 1 || thermal.materialId !== 'in625'
         || thermal.capability !== 'bounded-fusion-enthalpy-screening'
