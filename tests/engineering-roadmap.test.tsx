@@ -43,5 +43,5 @@ test('real roadmap and UI expose all 20 packages, gates, evidence limits and rem
   summarizeRoadmap(engineeringRoadmap);
   const html = renderToStaticMarkup(<EngineeringRoadmapPanel/>);
   for (const card of engineeringRoadmap) assert.ok(html.includes(card.id));
-  for (const phrase of ['remaining', 'K0', 'K4', 'does not establish scientific validation', 'Acceptance prerequisites', 'Next:']) assert.ok(html.includes(phrase));
+  for (const phrase of ['remaining', 'K0', 'K4', 'Deferred qualification backlog', 'V1 Research Workstation release is active', 'does not establish scientific validation', 'Acceptance prerequisites', 'Next:']) assert.ok(html.includes(phrase));
 });

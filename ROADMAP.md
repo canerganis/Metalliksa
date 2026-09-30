@@ -1,19 +1,14 @@
 # Metalliksa roadmap
 
-> **Important Navigation Note:** 
-> Metalliksa operates on two distinct, parallel roadmaps to separate physical simulation features from commercial and engineering readiness.
-> 
-> 1. **Physics & Features Roadmap (This Document):** Tracks the technical implementation of physical solvers, simulation models, and algorithms across 21 implementation milestones (Phases 1-21).
-> 2. **Engineering & Pilot Roadmap (UI & Code):** Tracks strict software, quality, and pilot qualification gates (Tasks A01-H02 / Gates K0-K4) needed for industrial usage. This is managed in `src/data/engineeringRoadmap.ts` and visible in the application's Engineering Roadmap UI panel.
-> 
-> *A completed phase in this document is an algorithmic implementation milestone, not a claim of experimental qualification or production readiness (which belongs to the Engineering Roadmap).*
+> **Single active plan:** this document governs current Metalliksa work. The only active release objective is the V1 Research Workstation below; historical solver phases and the A01–H02 / K0–K4 engineering ledger are reference records, not parallel active plans or V1 acceptance gates. The in-app ledger is a deferred qualification backlog and cannot imply industrial, customer-pilot, or commercial readiness.
 
 ## Current position
 
 - **Latest implementation milestone:** Phase 21 — transient enthalpy-method phase-change solver (FDM).
 - **Active worktree:** Phase 22 GPU-accelerated 3D transient enthalpy work is present as uncommitted changes; it is intentionally not treated as a completed milestone here.
-- **Application surface:** 30 registered workspaces; the current inventory marks them as Research or Preview, with no module labelled Production.
+- **Application surface:** the current workspace inventory marks modules as Research or Preview; none is labelled Production.
 - **Evidence boundary:** the application is a traceable engineering research workstation. Solver outputs remain screening results unless the matching evidence is recorded in `PROOF.md`.
+- **Plan authority:** this ROADMAP owns sequencing and acceptance. `STATUS.md` records the latest verified state; `docs/ACTIVE_WORK.md` and the in-app engineering ledger preserve dated history/deferred qualification work.
 - **Historical plan:** the previous six-phase roadmap is preserved at [`docs/archive/ROADMAP_LEGACY_PHASES.md`](docs/archive/ROADMAP_LEGACY_PHASES.md).
 
 ## Active release goal — V1 Research Workstation
@@ -27,7 +22,7 @@ Bring one bounded CPU LPBF workflow to a reproducible, honest, release-ready res
 
 **V1 exit evidence:** the same release revision passes the separate numerical-oracle suite, clean-install reproduction, replay of the archived workflow case, one end-to-end browser/archive round trip and critical error/recovery paths; every displayed scientific claim maps to recorded evidence. Report operator-level software checks, scenario-level convergence and experimental validity as separate statuses. NIST residuals, customer pilot, commercial launch, ML performance, GPU speed advantage and production labels are not V1 requirements.
 
-The A01–H02 / K0–K4 matrix in `src/data/engineeringRoadmap.ts` remains the later engineering/industrial-pilot track. Its customer discovery and external validation gates are not inferred from internal software tests.
+The A01–H02 / K0–K4 matrix in `src/data/engineeringRoadmap.ts` is a deferred qualification backlog. It becomes active only through an explicit later scope decision; its customer discovery and external validation gates are never inferred from internal software tests.
 
 ## Implemented milestones
 

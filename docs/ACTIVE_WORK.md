@@ -1,4 +1,6 @@
-# Active delegated LPBF work — 2026-09-27
+# Historical LPBF work log — 2026-09-27 onward
+
+> This file preserves dated implementation records and older handoffs; it is not an active plan. Follow the single active objective and sequencing in [`ROADMAP.md`](../ROADMAP.md), and use [`STATUS.md`](../STATUS.md) for the latest verified checkpoint. Re-verify historical claims before reuse. In particular, the earlier NIST residual claims below were superseded; current residual status is unavailable until independent observation provenance is established.
 
 ## Current checkpoint — 2026-09-29T20:56+03:00
 

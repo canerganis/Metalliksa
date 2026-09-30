@@ -2,6 +2,13 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel aktif checkpoint — 2026-09-30
+- Tek aktif plan `ROADMAP.md` içindeki V1 Research Workstation hedefidir. `docs/ACTIVE_WORK.md` tarihsel kayıt; uygulamadaki Engineering roadmap ise ertelenmiş yeterlilik backlog'udur. Aşağıdaki eski checkpoint'lerin “sıradaki adım” satırları kendi tarihlerindeki durumu anlatır, bugünkü aktif sıra değildir.
+- Güncel workspace envanteri modülleri Research/Preview olarak sınıflandırıyor; Production etiketi yok. V1 bilimsel sınırları değişmedi: deneysel doğrulama yok, mesh/time yakınsaması kurulmadı, NIST residual `unavailable`/null, solver `unvalidated`.
+- Bu turda roadmap UI testi **4/4 PASS**, TypeScript lint **PASS**, worker lifecycle/restart/cancel/recovery suite **22/22 PASS**. Önceki kilitli release kaydındaki tam suite **352 PASS / 1 SKIP / 0 FAIL** ve temiz kurulum/build kanıtı mevcut; yeni son release commit'ine birlikte bağlanması ayrıca kontrol edilecek.
+- Son tarayıcı kabulinde aynı sunucu içi bundle doğrulama/restore/reload geçti. Dosyanın gerçek indir-yükle/import aktarımı kanıtlanmadı; `127.0.0.1:4198` şu anda bağlantıyı reddediyor. Önce kesin release commit'inden temiz kurulum başlat, sonra portable dosyayı indirip SHA-256 ile upload/import→verify→restore→reload zincirini kanıtla. Bu, mevcut tek aktif sonraki eylemdir.
+- `ROADMAP.md` bu hedefin kabul kapılarını ve sırasını belirler; bu dosya güncel test/runtime durumunu kaydeder. V1 bütün kapılar aynı release revizyonunda doğrulanana dek yayın eşiği açık kalır.
+
 ## 2026-09-30 — V1 temiz arşiv ve canlı LPBF kabulü
 - Temiz Git arşivinde flagsiz `npm ci`, lint ve production build geçti. Son kilitli bağımlılık ağacında tam test suite **352 PASS / 1 SKIP / 0 FAIL**; tek skip, temiz arşive alınmayan isteğe bağlı CMU ham veri dosyasıdır.
 - Arşivli IN718 60 W / 1200 mm/s referans koşusu commit `f99765b28b9cca377ed29c5f37a72401db96e153` üzerinde donduruldu. Temiz arşivden üretilen rapor `.runtime/LPBF_V1_CPU_WORKFLOW_REPLAY_2026-09-30.json`, execution HEAD'i ve implementation fingerprint'ini bağlar. 29.988 hücre, 69 artefakt, indirilen bundle byte/hash ve restore hedefli testte doğrulandı; enerji kapanımı muhasebe kontrolüdür.
