@@ -12,8 +12,9 @@
 
 ## 2026-09-30 — V1 portable transfer kabulü
 - Kaynak release `1b24658114e1e1f4313146433727e6c5539d37b2`; koşu `b84525867e4e4e17b4af05729a9d2197`, 69 artefakt, NIST Table 4 kaynak bağı 1 revizyon.
-- Transfer arşivi: 8,087,040 byte, SHA-256 `9EE962CC4A321CC117891D1A860069C45BAF2201AAC36E262BB6A77914796928`. Farklı instance `127.0.0.1:4200`, ayrı boş run/source/bundle kökleriyle açıldı; import `b6161d0aa0cf48e5b54c17806af3fecf` `verified=true`, restore `fe58950aa20b4835874e45373a99546f` `verified=true` döndü.
-- Hedef instance'da koşu kaydı, `exact-revision-bound`, `unvalidated-model`, material revision SHA `5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749` ve NIST document SHA `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0` UI'da yeniden yüklendi. Bilimsel karşılaştırma / fiziksel validasyon iddiası üretilmedi.
+- Bağımsız hedef kurulum, aynı release kaynak arşivinden yeni dizine çıkarıldı; temiz `npm ci` **850 paket** kurdu, TypeScript lint ve production build **PASS**. Sunucu `127.0.0.1:4200`, Python servisi `5057`; run/source/bundle kökleri yeni ve birbirinden ayrıydı.
+- Transfer arşivi: 8,087,040 byte, SHA-256 `9EE962CC4A321CC117891D1A860069C45BAF2201AAC36E262BB6A77914796928`. Yeni kurulum import `3378b126c6d84d30a143a41bdb34cdde` `verified=true` (1 koşu/69 artefakt/1 source link), restore `853f243f65f94b0880112db61564f6fe` `verified=true` döndürdü.
+- Hedef kurulum UI'sında koşu `b84525867e4e4e17b4af05729a9d2197`, `exact-revision-bound`, `unvalidated-model`, material revision SHA `5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749` ve NIST document SHA `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0` yeniden yüklendi. Bilimsel karşılaştırma / fiziksel validasyon iddiası üretilmedi.
 - Production build büyük `three.module` chunk uyarısı verdi; derleme PASS. Sandbox'ta alt süreç isteyen tam testler EPERM ile başlayamadı; aynı revizyonun tam paketi normal child-process izniyle PASS oldu. Bu bir ürün hatası değildi.
 
 ## 2026-09-30 — V1 temiz arşiv ve canlı LPBF kabulü
