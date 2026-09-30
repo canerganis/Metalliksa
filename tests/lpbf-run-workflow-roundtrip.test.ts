@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { once } from 'node:events';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -77,11 +77,13 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.ok(address && typeof address !== 'string');
   const base = `http://127.0.0.1:${address.port}/api/lpbf/runs`;
 
-  // This is a fresh, deterministic-size CPU transient solve. Its settings are a
-  // numerical screening case and intentionally do not reproduce NIST Table 4.
+  // Freeze the V1 CPU user-path reference. It is a workflow replay, not a
+  // numerical-convergence oracle and does not reproduce NIST Table 4.
   const submission = await lpbfWorker.request('submit', {
-    mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 40,
-    mesh_um: 40, trackLength_um: 200, cooling_s: 0.0001, dwell_s: 0,
+    mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60,
+    speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,
+    mesh_um: 20, maxDt_s: 0.000001, trackLength_um: 600, tracks: 1, layers: 1,
+    surfaceMode: 'powder-layer', cooling_s: 0.0005, dwell_s: 0.0002,
   }) as { id: string };
   assert.match(submission.id, /^[a-f0-9]{32}$/);
   let job: any;
@@ -96,6 +98,25 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.equal(job.result.validationStatus, 'unvalidated');
   assert.equal(job.result.productionReady, false);
   assert.ok(job.result.thermalHistory?.length > 0, 'the CPU solver produced a thermal history');
+  for (const [key, value] of Object.entries({ mode: 'standard', backend: 'reference', power_W: 60,
+    speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40, mesh_um: 20,
+    maxDt_s: 0.000001, trackLength_um: 600, tracks: 1, layers: 1, surfaceMode: 'powder-layer',
+    cooling_s: 0.0005, dwell_s: 0.0002 })) {
+    assert.equal(job.result.settings[key], value, `resolved workflow setting ${key}`);
+  }
+  assert.equal(job.result.material.materialId, 'in718');
+  assert.equal(job.result.material.materialRevisionSha256,
+    '5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749');
+  assert.match(job.result.provenance.inputHash, /^[a-f0-9]{64}$/);
+  assert.match(job.result.provenance.implementationHash, /^[a-f0-9]{64}$/);
+  assert.equal(job.result.solver.id, 'enthalpy-fv-6');
+  assert.equal(job.result.coreContract.modelId, 'stationary-enthalpy-conduction-layer-conforming-v1');
+  assert.equal(job.result.coreContract.actualBackend, 'numpy-reference');
+  // The core contract uses compact canonical JSON; worker provenance hashes
+  // Python's default JSON separators, so preserve and validate both bindings.
+  assert.match(job.result.coreContract.inputSha256, /^[a-f0-9]{64}$/);
+  assert.match(job.result.provenance.executionInputHash, /^[a-f0-9]{64}$/);
+  assert.ok(job.result.energyBalance.relativeError <= 0.01, 'numerical ledger closes within the workflow gate');
 
   const selection = [{ ...sourceLink }];
   const previewResponse = await jsonRequest(base, '/preview', 'POST', { jobId: submission.id, sources: selection });
@@ -163,6 +184,10 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   const bundleId = exported.payload.bundleId as string;
   assert.equal(exported.payload.manifest.runCount, 2);
   assert.equal(exported.payload.manifest.sourceLinkCount, 1);
+  const bundleDownload = await fetch(`${base}/bundles/${bundleId}/download`);
+  assert.equal(bundleDownload.status, 200);
+  const bundleBytes = Buffer.from(await bundleDownload.arrayBuffer());
+  assert.ok(bundleBytes.byteLength > 0);
   assert.equal((await jsonRequest(base, `/bundles/${bundleId}/verify`, 'POST')).payload.verified, true);
   const restored = await jsonRequest(base, `/bundles/${bundleId}/restore`, 'POST');
   assert.equal(restored.status, 200, JSON.stringify(restored.payload));
@@ -205,4 +230,68 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   const sourceBytes = readFileSync((await restoredSourceStore.verify(sourceArtifact)).path);
   assert.equal(sha256(sourceBytes), sourceArtifact.sha256);
   assert.equal(sourceBytes.byteLength, sourceArtifact.byteSize);
+
+  const evidencePath = process.env.METALLIKSA_WORKFLOW_EVIDENCE_OUT;
+  if (evidencePath) {
+    const output = path.resolve(evidencePath);
+    mkdirSync(path.dirname(output), { recursive: true });
+    writeFileSync(output, `${JSON.stringify({
+      schemaVersion: 1,
+      evidenceClass: 'isolated-live-cpu-workflow-archive-roundtrip',
+      executionHead: process.env.METALLIKSA_WORKFLOW_EVIDENCE_HEAD ?? 'not-recorded',
+      validationStatus: job.result.validationStatus,
+      productionReady: job.result.productionReady,
+      experimentalValidation: false,
+      numericalConvergenceStatus: 'not-established',
+      settings: job.result.settings,
+      solver: job.result.solver,
+      coreContract: job.result.coreContract,
+      material: {
+        materialId: job.result.material.materialId,
+        quality: job.result.material.quality,
+        provenanceClass: job.result.material.provenanceClass,
+        materialRevisionSha256: job.result.material.materialRevisionSha256,
+        propertyUncertainty: job.result.material.propertyUncertainty,
+      },
+      provenance: {
+        inputHash: job.result.provenance.inputHash,
+        executionInputHash: job.result.provenance.executionInputHash,
+        implementationHash: job.result.provenance.implementationHash,
+        executionRuntime: job.result.provenance.executionRuntime,
+        solverSeconds: job.result.provenance.runtime_s,
+      },
+      energyBalance: job.result.energyBalance,
+      thermalHistorySamples: job.result.thermalHistory.length,
+      artifactCount: runArtifactRefs.length,
+      run: {
+        id: runId,
+        documentSha256: importResponse.payload.documentSha256,
+        sourceBindingStatus: selectedRun.payload.sourceBindingStatus,
+        evidenceStatus: selectedRun.payload.evidenceStatus,
+      },
+      bundle: {
+        id: bundleId,
+        downloadSha256: sha256(bundleBytes),
+        downloadByteSize: bundleBytes.byteLength,
+        verified: true,
+      },
+      restore: {
+        id: restored.payload.restoreId,
+        verified: restored.payload.verified,
+        runDocumentSha256: importResponse.payload.documentSha256,
+        sourceDocumentSha256: sourceLink.documentSha256,
+        artifactBytesRechecked: true,
+      },
+      comparison: {
+        status: compared.payload.status,
+        validationStatus: compared.payload.validationStatus,
+        errors: compared.payload.errors,
+      },
+      limitations: [
+        'Workflow replay and archive-integrity evidence only; no mesh/time convergence or experimental validation.',
+        'NIST comparison residual remains unavailable and unvalidated.',
+        'IN718 material properties are estimated legacy values with unquantified uncertainty.',
+      ],
+    }, null, 2)}\n`, 'utf8');
+  }
 });
