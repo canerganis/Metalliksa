@@ -1,10 +1,45 @@
 import math
+from functools import lru_cache
 import numpy as np
 from lpbf_material_registry import property_at as _registry_property_at
 from lpbf_material_registry import enthalpy_table as _registry_enthalpy_table
 
-SOURCE_INTEGRATION = "cell-integrated-gaussian-gl2-v1"
+SOURCE_INTEGRATION = "cell-integrated-gaussian-adaptive-gl-v2"
 GAUSS_NODES = (.5-.5/math.sqrt(3), .5+.5/math.sqrt(3))
+SOURCE_QUADRATURE_MAX_ORDER = 256
+SOURCE_QUADRATURE_RELATIVE_TOLERANCE = 1e-8
+
+
+@lru_cache(maxsize=32)
+def source_gauss_rule(order):
+    """Immutable Gauss-Legendre nodes and unit-sum weights on [0, 1]."""
+    if order == 2:
+        return GAUSS_NODES, (.5, .5)
+    nodes, weights = np.polynomial.legendre.leggauss(order)
+    return tuple((nodes+1)*.5), tuple(weights*.5)
+
+
+def source_time_quadrature(segment, dt, radius):
+    """Select temporal order from the laser's XY travel in beam radii.
+
+    Long intervals require an additional N-versus-2N field convergence check.
+    The finite ceiling rejects unresolved intervals rather than lowering order.
+    """
+    duration = segment["end_s"]-segment["start_s"]
+    if not all(math.isfinite(v) and v > 0 for v in (dt, duration, radius)):
+        raise ValueError("Source duration, interval and radius must be positive and finite")
+    travel = np.linalg.norm(np.asarray(segment["end"], dtype=float)[:2]
+                            - np.asarray(segment["start"], dtype=float)[:2])*dt/duration
+    ratio = float(travel/radius)
+    if not math.isfinite(ratio):
+        raise ValueError("Source scan displacement must be finite")
+    for bound, order in ((.1, 2), (.5, 4), (1., 6), (2., 8), (4., 20)):
+        if ratio <= bound:
+            return order, False
+    order = max(20, 4*math.ceil(3*ratio/4))
+    if 2*order > SOURCE_QUADRATURE_MAX_ORDER:
+        raise ValueError("Moving source quadrature exceeds maximum order; shorten the source interval")
+    return order, True
 
 
 def _evaluate(function, values):
@@ -97,21 +132,36 @@ def integrated_source(axis, z, dx, segment, time, dt, surface, radius, penetrati
     if dt <= 0 or time < segment["start_s"]-1e-13 or time+dt > segment["end_s"]+1e-13:
         raise ValueError("Source interval must remain inside one laser-on segment")
     start, stop = np.asarray(segment["start"]), np.asarray(segment["end"])
+    order, refine = source_time_quadrature(segment, dt, radius)
     minimum_capture = 1.
-    for node in GAUSS_NODES:
-        fraction = np.clip((time+node*dt-segment["start_s"])/(segment["end_s"]-segment["start_s"]), 0., 1.)
-        position = start+fraction*(stop-start)
-        if incidence_angle_deg == 0:
-            weights = cell_weights(axis, z, dx, position, surface, radius, penetration, axis_y)
-        else:
-            weights = _oblique_cell_weights(axis, z, axis_y, dx, position, surface, radius,
-                                             penetration, incidence_angle_deg, incidence_azimuth_deg)
-        total = float(weights.sum())
-        if not math.isfinite(total) or total <= 0:
-            raise ValueError("Gaussian source is outside the represented active domain")
-        minimum_capture = min(minimum_capture, 2*total)
-        source += weights*(.5*power/(total*dx**3))
-    return source, minimum_capture
+    previous = None
+    while True:
+        source.fill(0.)
+        nodes, temporal_weights = source_gauss_rule(order)
+        for node, temporal_weight in zip(nodes, temporal_weights):
+            fraction = np.clip((time+node*dt-segment["start_s"])/(segment["end_s"]-segment["start_s"]), 0., 1.)
+            position = start+fraction*(stop-start)
+            if incidence_angle_deg == 0:
+                weights = cell_weights(axis, z, dx, position, surface, radius, penetration, axis_y)
+            else:
+                weights = _oblique_cell_weights(axis, z, axis_y, dx, position, surface, radius,
+                                                 penetration, incidence_angle_deg, incidence_azimuth_deg)
+            total = float(weights.sum())
+            if not math.isfinite(total) or total <= 0:
+                raise ValueError("Gaussian source is outside the represented active domain")
+            minimum_capture = min(minimum_capture, 2*total)
+            source += weights*(temporal_weight*power/(total*dx**3))
+        if not refine:
+            return source, minimum_capture
+        if previous is not None:
+            difference = np.linalg.norm(source-previous)
+            scale = np.linalg.norm(source)
+            if difference <= SOURCE_QUADRATURE_RELATIVE_TOLERANCE*scale:
+                return source, minimum_capture
+        if 2*order > SOURCE_QUADRATURE_MAX_ORDER:
+            raise ValueError("Moving source quadrature did not converge; shorten the source interval")
+        previous = source.copy()
+        order *= 2
 
 def calculate_mesh_domain(p):
     """Calculates the 3D computational domain size and discretization (SI units)."""

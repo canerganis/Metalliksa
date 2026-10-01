@@ -14,6 +14,38 @@ from lpbf_heat_source import (require_source_capture, gaussian_interval, cell_we
 from lpbf_simulation import MINIMUM_SOURCE_CAPTURE_FRACTION, validate
 
 
+def _moving_source_case(travel_radii):
+    radius = 100e-6
+    dx = 0.4 * radius
+    axis = (np.arange(27, dtype=np.float64) - 13) * dx
+    z = -(np.arange(14, dtype=np.float64) + 0.5) * dx
+    surface = 0.0
+    segment = {
+        "start": np.array([-0.5 * travel_radii * radius, 0.0]),
+        "end": np.array([0.5 * travel_radii * radius, 0.0]),
+        "start_s": 0.0,
+        "end_s": 1.0,
+    }
+    return axis, z, dx, segment, surface, radius, 1.5 * radius, 75.0
+
+
+def _high_order_moving_source_reference(case, *, reverse=False, order=96):
+    """Independent temporal GL reference; spatial cell integrals stay shared."""
+    axis, z, dx, segment, surface, radius, penetration, power = case
+    if reverse:
+        segment = {**segment, "start": segment["end"], "end": segment["start"]}
+    nodes, weights = np.polynomial.legendre.leggauss(order)
+    source = np.zeros((len(axis), len(axis), len(z)), dtype=np.float64)
+    capture = 1.0
+    for node, weight in zip((nodes + 1.0) * 0.5, weights * 0.5):
+        position = segment["start"] + node * (segment["end"] - segment["start"])
+        cell_mass = cell_weights(axis, z, dx, position, surface, radius, penetration, axis)
+        total = float(cell_mass.sum())
+        capture = min(capture, 2.0 * total)
+        source += cell_mass * (power / (total * dx**3)) * weight
+    return source, capture
+
+
 class HeatSourceVerification(unittest.TestCase):
     def test_layer_conforming_powder_grid_aligns_surfaces_and_captures_source(self):
         for requested_mesh in (36.7, 13.34, 6.667):
@@ -175,6 +207,29 @@ class HeatSourceVerification(unittest.TestCase):
         self.assertLess(np.linalg.norm(actual-reference), np.linalg.norm(left-reference)*.01)
         reverse, _ = integrated_source(axis, z, .2, {**seg, "start":seg["end"], "end":seg["start"]}, 0, 1, 0, .5, .3, 1)
         np.testing.assert_allclose(actual, reverse, rtol=1e-13, atol=1e-13)
+
+    def test_adaptive_moving_source_matches_high_order_oracle_through_four_radii(self):
+        for travel_radii in (.5, 1., 2., 4., 8.):
+            with self.subTest(travel_radii=travel_radii):
+                case = _moving_source_case(travel_radii)
+                axis, z, dx, segment, surface, radius, penetration, power = case
+                actual, capture = integrated_source(
+                    axis, z, dx, segment, 0., 1., surface, radius, penetration,
+                    power, axis_y=axis)
+                expected, expected_capture = _high_order_moving_source_reference(case)
+                relative_l2 = np.linalg.norm(actual - expected) / np.linalg.norm(expected)
+                self.assertTrue(np.isfinite(actual).all())
+                self.assertLessEqual(relative_l2, 1e-6, (travel_radii, relative_l2))
+                self.assertAlmostEqual(float(actual.sum()) * dx**3, power, delta=1e-12)
+                self.assertAlmostEqual(capture, expected_capture, delta=1e-12)
+                self.assertGreaterEqual(capture, MINIMUM_SOURCE_CAPTURE_FRACTION)
+
+                reverse, reverse_capture = integrated_source(
+                    axis, z, dx,
+                    {**segment, "start": segment["end"], "end": segment["start"]},
+                    0., 1., surface, radius, penetration, power, axis_y=axis)
+                np.testing.assert_allclose(actual, reverse, rtol=1e-12, atol=1e-10)
+                self.assertAlmostEqual(capture, reverse_capture, delta=1e-12)
 
     def test_source_recomputed_after_cap_and_dwell_is_dark(self):
         axis = np.arange(-1.5, 2, 1.)

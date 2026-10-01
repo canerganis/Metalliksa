@@ -1,7 +1,7 @@
 """CUDA thermal evolution for the CPU reference LPBF enthalpy-conduction model.
 
 The common cell-integrated moving source defaults to the host reference helper;
-an opt-in CUDA prototype evaluates the same GL2 cell integrals and timestep cap.
+an opt-in CUDA prototype evaluates the same adaptive Gaussian cell integrals and timestep cap.
 Conduction, enthalpy update, constitutive interpolation and melt state run on
 CUDA in float64. Queue integration uses a separate, explicit pilot job type.
 """
@@ -14,7 +14,9 @@ import datetime
 
 import numpy as np
 
-from lpbf_core_physics import GAUSS_NODES, calculate_mesh_domain, scan_segments, thermal_si_inputs
+from lpbf_core_physics import (calculate_mesh_domain, scan_segments, thermal_si_inputs,
+                               source_gauss_rule, source_time_quadrature,
+                               SOURCE_QUADRATURE_MAX_ORDER, SOURCE_QUADRATURE_RELATIVE_TOLERANCE)
 from lpbf_heat_source import require_source_capture, source_limited_step
 from lpbf_peak import PeakMeltTracker
 from lpbf_simulation import (MINIMUM_SOURCE_CAPTURE_FRACTION, validate,
@@ -372,7 +374,7 @@ def _gaussian_interval_torch(torch, lower, upper, center, radius):
 
 def _integrated_source_torch(torch, axis, z, dx, segment, time, dt, surface,
                              radius, penetration, power, defer_capture_check=False):
-    """CUDA version of the powder-layer, normal-incidence shared GL2 source."""
+    """CUDA version of the shared adaptive, normal-incidence Gaussian source."""
     source = torch.zeros((axis.numel(), axis.numel(), z.numel()),
                          dtype=axis.dtype, device=axis.device)
     if segment is None:
@@ -394,24 +396,43 @@ def _integrated_source_torch(torch, axis, z, dx, segment, time, dt, surface,
     start = np.asarray(segment["start"], dtype=np.float64)
     stop = np.asarray(segment["end"], dtype=np.float64)
     duration = segment["end_s"] - segment["start_s"]
-    source_scale = 0.5 * power / (dx ** 3)
-    nodes = np.asarray(GAUSS_NODES, dtype=np.float64)
-    fractions = np.clip((time + nodes * dt - segment["start_s"]) / duration, 0.0, 1.0)
-    positions = torch.as_tensor(start[None, :] + fractions[:, None] * (stop - start)[None, :],
-                                dtype=axis.dtype, device=axis.device)
-    # Batch both GL2 nodes so each interval/operator launch handles the pair.
-    x_mass = _gaussian_interval_torch(
-        torch, x_lower[None, :], x_upper[None, :], positions[:, 0, None], radius)
-    y_mass = _gaussian_interval_torch(
-        torch, x_lower[None, :], x_upper[None, :], positions[:, 1, None], radius)
-    weights = (x_mass[:, :, None, None] * y_mass[:, None, :, None]
-               * depth_lower[None, None, None, :])
-    totals = weights.sum(dim=(1, 2, 3))
-    captures = torch.clamp(totals * 2.0, max=1.0)
-    safe_totals = torch.clamp(totals, min=torch.finfo(totals.dtype).tiny)
-    sources = weights * (source_scale / safe_totals[:, None, None, None])
-    source = sources.sum(dim=0)
-    capture = torch.min(captures)
+    order, refine = source_time_quadrature(segment, dt, radius)
+    capture = torch.ones((), dtype=axis.dtype, device=axis.device)
+    previous = None
+    while True:
+        source = torch.zeros_like(source)
+        rule_nodes, rule_weights = source_gauss_rule(order)
+        # Bound the temporary 4D allocation while sharing the CPU quadrature rule.
+        for offset in range(0, order, 8):
+            nodes = np.asarray(rule_nodes[offset:offset+8], dtype=np.float64)
+            temporal_weights = torch.as_tensor(rule_weights[offset:offset+8],
+                                               dtype=axis.dtype, device=axis.device)
+            fractions = np.clip((time + nodes * dt - segment["start_s"]) / duration, 0.0, 1.0)
+            positions = torch.as_tensor(start[None, :] + fractions[:, None] * (stop - start)[None, :],
+                                        dtype=axis.dtype, device=axis.device)
+            x_mass = _gaussian_interval_torch(
+                torch, x_lower[None, :], x_upper[None, :], positions[:, 0, None], radius)
+            y_mass = _gaussian_interval_torch(
+                torch, x_lower[None, :], x_upper[None, :], positions[:, 1, None], radius)
+            weights = (x_mass[:, :, None, None] * y_mass[:, None, :, None]
+                       * depth_lower[None, None, None, :])
+            totals = weights.sum(dim=(1, 2, 3))
+            captures = torch.clamp(totals * 2.0, max=1.0)
+            safe_totals = torch.clamp(totals, min=torch.finfo(totals.dtype).tiny)
+            scales = temporal_weights * power / (dx ** 3) / safe_totals
+            source = source + (weights * scales[:, None, None, None]).sum(dim=0)
+            capture = torch.minimum(capture, torch.min(captures))
+        if not refine:
+            break
+        if previous is not None:
+            difference = torch.linalg.vector_norm(source-previous)
+            scale = torch.linalg.vector_norm(source)
+            if bool((difference <= SOURCE_QUADRATURE_RELATIVE_TOLERANCE*scale).item()):
+                break
+        if 2*order > SOURCE_QUADRATURE_MAX_ORDER:
+            raise ValueError("Moving source quadrature did not converge; shorten the source interval")
+        previous = source
+        order *= 2
     if defer_capture_check:
         return source, capture
     capture_value = float(capture.item())

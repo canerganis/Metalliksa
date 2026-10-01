@@ -12,13 +12,34 @@ from lpbf_gpu_thermal import (PARITY_TARGETS, _integrated_source_torch,
 from lpbf_simulation import validate
 from lpbf_core_physics import calculate_mesh_domain, scan_segments, thermal_si_inputs
 from lpbf_heat_source import (MINIMUM_SOURCE_CAPTURE_FRACTION, integrated_source,
-                              source_limited_step)
+                              source_limited_step, cell_weights)
 from lpbf_material_registry import property_at
 
 
 CASE = {"mode": "standard", "backend": "reference", "material": "Inconel 718",
         "power_W": 60, "speed_mm_s": 1200, "mesh_um": 40, "maxDt_s": 2e-7,
         "layer_um": 80, "trackLength_um": 200, "cooling_s": 2e-5, "dwell_s": 0}
+
+
+def _moving_source_oracle(travel_radii):
+    radius = 100e-6
+    dx = 0.4 * radius
+    axis = (np.arange(27, dtype=np.float64) - 13) * dx
+    z = -(np.arange(14, dtype=np.float64) + 0.5) * dx
+    segment = {"start": np.array([-0.5 * travel_radii * radius, 0.0]),
+               "end": np.array([0.5 * travel_radii * radius, 0.0]),
+               "start_s": 0.0, "end_s": 1.0}
+    surface, penetration, power = 0.0, 1.5 * radius, 75.0
+    nodes, weights = np.polynomial.legendre.leggauss(96)
+    reference = np.zeros((len(axis), len(axis), len(z)), dtype=np.float64)
+    capture = 1.0
+    for node, weight in zip((nodes + 1.0) * 0.5, weights * 0.5):
+        position = segment["start"] + node * (segment["end"] - segment["start"])
+        mass = cell_weights(axis, z, dx, position, surface, radius, penetration, axis)
+        total = float(mass.sum())
+        capture = min(capture, 2.0 * total)
+        reference += mass * (power / (total * dx**3)) * weight
+    return axis, z, dx, segment, surface, radius, penetration, power, reference, capture
 
 
 class GpuThermal(unittest.TestCase):
@@ -44,6 +65,37 @@ class GpuThermal(unittest.TestCase):
         self.assertEqual(settings["study"], "none")
         self.assertEqual(settings["powderGridPolicy"], "layer-conforming")
         self.assertEqual(material["materialId"], "in718")
+
+    def test_torch_cpu_source_matches_adaptive_cpu_source_and_high_order_oracle(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("Torch unavailable; CPU Torch source parity unverified")
+
+        for travel_radii in (.5, 1., 2., 4., 8.):
+            with self.subTest(travel_radii=travel_radii):
+                (axis, z, dx, segment, surface, radius, penetration, power,
+                 reference, expected_capture) = _moving_source_oracle(travel_radii)
+                source_cpu, capture_cpu = integrated_source(
+                    axis, z, dx, segment, 0., 1., surface, radius, penetration,
+                    power, axis_y=axis)
+                axis_t = torch.as_tensor(axis, dtype=torch.float64, device="cpu")
+                z_t = torch.as_tensor(z, dtype=torch.float64, device="cpu")
+                source_torch, capture_torch = _integrated_source_torch(
+                    torch, axis_t, z_t, dx, segment, 0., 1., surface, radius,
+                    penetration, power)
+                source_torch = source_torch.detach().cpu().numpy()
+
+                relative_l2 = np.linalg.norm(source_cpu - reference) / np.linalg.norm(reference)
+                self.assertLessEqual(relative_l2, 1e-6, (travel_radii, "CPU", relative_l2))
+                torch_relative_l2 = np.linalg.norm(source_torch - reference) / np.linalg.norm(reference)
+                self.assertLessEqual(torch_relative_l2, 1e-6,
+                                     (travel_radii, "Torch CPU", torch_relative_l2))
+                np.testing.assert_allclose(source_torch, source_cpu, rtol=1e-12, atol=1e-10)
+                self.assertAlmostEqual(capture_cpu, expected_capture, delta=1e-12)
+                self.assertAlmostEqual(capture_torch, capture_cpu, delta=1e-12)
+                self.assertAlmostEqual(float(source_torch.sum()) * dx**3, power, delta=1e-12)
+                self.assertGreaterEqual(capture_torch, MINIMUM_SOURCE_CAPTURE_FRACTION)
 
     def test_cuda_source_field_capture_and_limited_dt_match_shared_cpu_source(self):
         try:

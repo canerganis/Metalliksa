@@ -53,6 +53,13 @@ test("physics diagnostics retain numerical limits and do not claim porosity", ()
   assert.match(html, /Harkin/);
 });
 
+test("LPBF result parsing accepts the versioned adaptive Gaussian source diagnostics", () => {
+  const diagnostics = { ...result.numericalDiagnostics,
+    sourceIntegration: "cell-integrated-gaussian-adaptive-gl-v2" };
+  assert.equal(parse({ numericalDiagnostics: diagnostics }).result!.numericalDiagnostics!.sourceIntegration,
+    "cell-integrated-gaussian-adaptive-gl-v2");
+});
+
 test("aggregate geometry presents unknown overlap without fake zero values", () => {
   const geometricDefectScreen = { ...result.geometricDefectScreen, scope: "aggregate-multi-track", status: "unresolved",
     lackOfFusion: { status: "unresolved", ellipseIndex: null, signedMargin: null, overlapDepth_um: null,

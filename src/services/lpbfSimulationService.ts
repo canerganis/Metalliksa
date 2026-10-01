@@ -276,7 +276,9 @@ export function parseSimulationJob(value: unknown): SimulationJob {
     if (r.fieldSeries != null && r.fieldSeries !== "field-series.json") throw new Error("Invalid field series artifact");
     if (r.numericalDiagnostics !== undefined) {
       const d = r.numericalDiagnostics;
-      if (!object(d) || d.sourceIntegration !== "cell-integrated-gaussian-gl2-v1" || d.stabilityLimit !== "local-conductance-row-sum"
+      if (!object(d) || (d.sourceIntegration !== "cell-integrated-gaussian-gl2-v1"
+        && d.sourceIntegration !== "cell-integrated-gaussian-adaptive-gl-v2")
+        || d.stabilityLimit !== "local-conductance-row-sum"
         || !["minimumCapturedSourceFraction", "maximumSourceRenormalization", "maximumSurfaceOffset_um", "maximumTimestep_s", "maximumEnthalpyIncrement_K", "sourceTimestepRetries"].every(k => typeof d[k] === "number" && Number(d[k]) >= 0)
         || Number(d.minimumCapturedSourceFraction) <= 0 || Number(d.minimumCapturedSourceFraction) > 1
         || Number(d.maximumSourceRenormalization) < 1 || !Number.isSafeInteger(d.sourceTimestepRetries)) throw new Error("Invalid numerical source diagnostics");
