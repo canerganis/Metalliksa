@@ -8,6 +8,7 @@ import numpy as np
 
 import lpbf_heat_source
 import lpbf_simulation
+from lpbf_material_registry import material as make_material
 from lpbf_core_physics import GAUSS_NODES, scan_segments
 from lpbf_evidence import FieldRecorder
 from lpbf_simulation import (calculate_mesh_domain, conduction_rate, enthalpy_table,
@@ -30,6 +31,158 @@ CASE = {
 
 
 class ProductionTransientManufactured(unittest.TestCase):
+    def test_piecewise_enthalpy_ramp_crosses_mushy_interval_with_refinement(self):
+        """Check phase-change enthalpy inversion against an analytic H(T) law."""
+        density = 8000.0
+        cp_solid = cp_mushy = cp_liquid = 500.0
+        latent_heat = 100_000.0
+        solidus_K, liquidus_K = 500.0, 700.0
+        initial_K, final_K = 353.15, 900.0
+        reference_K = 273.15
+        results = []
+
+        def exact_enthalpy(temperature):
+            """Specific H(T): constant sensible cp plus linear mushy latent heat."""
+            t = np.asarray(temperature, dtype=np.float64)
+            mushy_delta = np.clip(t-solidus_K, 0.0, liquidus_K-solidus_K)
+            return (cp_solid*(t-reference_K)
+                    + (cp_mushy-cp_solid)*mushy_delta
+                    + latent_heat*mushy_delta/(liquidus_K-solidus_K))
+
+        def exact_temperature(specific_enthalpy):
+            """Independent monotone inverse of the piecewise analytic H(T)."""
+            h = np.asarray(specific_enthalpy, dtype=np.float64)
+            h_s = cp_solid*(solidus_K-reference_K)
+            h_l = h_s + cp_mushy*(liquidus_K-solidus_K) + latent_heat
+            solid = reference_K + h/cp_solid
+            mushy_capacity = cp_mushy + latent_heat/(liquidus_K-solidus_K)
+            mushy = solidus_K + (h-h_s)/mushy_capacity
+            liquid = liquidus_K + (h-h_l)/cp_liquid
+            return np.where(h <= h_s, solid, np.where(h <= h_l, mushy, liquid))
+
+        for dt_cap in (1e-5, 5e-6, 2.5e-6):
+            request = {**CASE, "maxDt_s": dt_cap, "surfaceMode": "bare-plate",
+                       "sourcePenetration_um": 80, "convection_W_m2K": 0}
+            settings, original_material = validate(request)
+            end = scan_segments(settings)[1]
+            material = make_material(original_material["name"], supplied={
+                "source": "synthetic manufactured-test enthalpy law; no physical claim",
+                "solidus_K": solidus_K,
+                "liquidus_K": liquidus_K,
+                "boiling_K": 5000.0,
+                "latentHeat_J_kg": latent_heat,
+                "absorptivity": 0.35,
+                "emissivity": 0.0,
+                "dGamma_dT": original_material["dGamma_dT"],
+                "table": [[273.15, density, 15.0, cp_solid, 1e-3],
+                          [5000.0, density, 15.0, cp_liquid, 1e-3]],
+            })
+            h_initial = float(exact_enthalpy(initial_K))
+            h_final = float(exact_enthalpy(final_K))
+            delta_h = h_final-h_initial
+            source_context = {}
+
+            def manufactured_source(axis, z, dx, segment, time, dt, surface,
+                                    radius, penetration, power, *, axis_y=None,
+                                    incidence_angle_deg=0.0,
+                                    incidence_azimuth_deg=0.0):
+                # H(u)=H0+deltaH*(0.65u+0.35u^5). Its quartic dH/dt
+                # intentionally exceeds the degree integrated exactly by GL2.
+                del segment, surface, radius, penetration, power
+                del incidence_angle_deg, incidence_azimuth_deg
+                nodes = GAUSS_NODES
+                sample_times = time + np.asarray(nodes)*dt
+                u = sample_times/end
+                dh_dt = (delta_h/end*(0.65 + 1.75*np.clip(u, 0.0, 1.0)**4)
+                         * (sample_times < end))
+                specific_rate = float(np.mean(dh_dt))
+                shape = (len(axis), len(z)) if axis_y is None else (
+                    len(axis), len(axis_y), len(z))
+                cell_density = density*np.where(
+                    np.asarray(z)[None, None, :] > 0,
+                    settings["packingFraction"], 1.0)
+                target_rate = np.broadcast_to(cell_density*specific_rate, shape).copy()
+                return target_rate-source_context["passive_rate"], 1.0
+
+            original_step = lpbf_heat_source.source_limited_step
+
+            def source_limited(*args, **kwargs):
+                source_context["passive_rate"] = args[10]
+                return original_step(*args, **kwargs)
+
+            with patch("lpbf_simulation.validate", return_value=(settings, material)), \
+                    patch("lpbf_simulation.FieldRecorder", _CapturingFieldRecorder), \
+                    patch("lpbf_heat_source.integrated_source", side_effect=manufactured_source), \
+                    patch("lpbf_simulation.source_limited_step", side_effect=source_limited):
+                _CapturingFieldRecorder.instances.clear()
+                result = run(request)
+
+            recorder = _CapturingFieldRecorder.instances[-1]
+            field = recorder.last_temperature
+            self.assertIsNotNone(field)
+            self.assertGreater(float(field.max()), liquidus_K)
+            self.assertLessEqual(result["energyBalance"]["relativeError"], 1e-10)
+            temperature_errors, fraction_errors, energy_errors = [], [], []
+            observed_temperatures = []
+            mushy_samples = 0
+            for sample_time, sample_field in recorder.samples:
+                u = float(np.clip(sample_time/end, 0.0, 1.0))
+                target_h = h_initial+delta_h*(0.65*u+0.35*u**5)
+                target_temperature = float(exact_temperature(target_h))
+                actual_temperature = float(np.mean(sample_field))
+                observed_temperatures.append(actual_temperature)
+                target_fraction = float(np.clip((target_temperature-solidus_K)
+                                                /(liquidus_K-solidus_K), 0.0, 1.0))
+                actual_fraction = float(np.clip((actual_temperature-solidus_K)
+                                                /(liquidus_K-solidus_K), 0.0, 1.0))
+                temperature_errors.append(abs(actual_temperature-target_temperature))
+                fraction_errors.append(abs(actual_fraction-target_fraction))
+                energy_errors.append(abs(float(exact_enthalpy(actual_temperature))-target_h))
+                if solidus_K < target_temperature < liquidus_K:
+                    mushy_samples += 1
+            self.assertGreater(mushy_samples, 0)
+            self.assertLess(min(observed_temperatures), solidus_K)
+            self.assertGreater(max(observed_temperatures), liquidus_K)
+            results.append((result, max(temperature_errors), max(fraction_errors),
+                            max(energy_errors)))
+
+        steps = [item[0]["discretization"]["steps"] for item in results]
+        self.assertEqual(len(set(steps)), 3)
+        temperature_errors = [item[1] for item in results]
+        fraction_errors = [item[2] for item in results]
+        energy_errors = [item[3] for item in results]
+        self.assertLess(temperature_errors[-1], temperature_errors[0]/4)
+        self.assertLess(fraction_errors[-1], fraction_errors[0]/4)
+        self.assertLess(energy_errors[-1], energy_errors[0]/4)
+
+        # Production table must pass continuously through both phase thresholds.
+        settings, original_material = validate(CASE)
+        del settings
+        material = make_material(original_material["name"], supplied={
+            "source": "synthetic manufactured-test enthalpy law; no physical claim",
+            "solidus_K": solidus_K,
+            "liquidus_K": liquidus_K,
+            "boiling_K": 5000.0,
+            "latentHeat_J_kg": latent_heat,
+            "absorptivity": 0.35,
+            "emissivity": 0.0,
+            "dGamma_dT": original_material["dGamma_dT"],
+            "table": [[273.15, density, 15.0, cp_solid, 1e-3],
+                      [5000.0, density, 15.0, cp_liquid, 1e-3]],
+        })
+        temperatures, enthalpies = enthalpy_table(material)
+        for threshold in (solidus_K, liquidus_K):
+            analytic = float(exact_enthalpy(threshold))
+            numerical = float(np.interp(threshold, temperatures, enthalpies))
+            self.assertAlmostEqual(numerical, analytic, delta=1e-6)
+            epsilon = 1e-4
+            below = float(np.interp(threshold-epsilon, temperatures, enthalpies))
+            above = float(np.interp(threshold+epsilon, temperatures, enthalpies))
+            self.assertGreater(above, below)
+            expected_delta = float(exact_enthalpy(threshold+epsilon)
+                                   - exact_enthalpy(threshold-epsilon))
+            self.assertAlmostEqual(above-below, expected_delta, delta=1e-3)
+
     def test_uniform_enthalpy_ramp_is_time_step_independent_and_conservative(self):
         """A manufactured volumetric source exactly drives a uniform T(t) ramp."""
         slope_K_s = 3.5e5
@@ -197,10 +350,12 @@ class _CapturingFieldRecorder(FieldRecorder):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_temperature = None
+        self.samples = []
         self.instances.append(self)
 
     def record(self, time, temperature, surface):
         self.last_temperature = np.array(temperature, dtype=np.float64, copy=True)
+        self.samples.append((float(time), self.last_temperature.copy()))
         return super().record(time, temperature, surface)
 
 

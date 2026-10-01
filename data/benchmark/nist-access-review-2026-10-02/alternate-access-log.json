@@ -1,0 +1,23 @@
+[
+  {
+    "url": "https://data.nist.gov/od/ds/ark:/88434/mds2-4103/SampleIParameters.csv",
+    "timeout_seconds": 12,
+    "status": "timeout",
+    "bytes_received": 0,
+    "error": "The request was canceled due to the configured HttpClient.Timeout of 12 seconds elapsing."
+  },
+  {
+    "url": "https://data.nist.gov/od/ds/mds2-3842/summary_of_data_files.csv",
+    "timeout_seconds": 12,
+    "status": "timeout",
+    "bytes_received": 0,
+    "error": "The request was canceled due to the configured HttpClient.Timeout of 12 seconds elapsing."
+  },
+  {
+    "url": "https://data.nist.gov/od/ds/mds2-3842/_aip/_head",
+    "timeout_seconds": 12,
+    "status": "timeout",
+    "bytes_received": 0,
+    "error": "The request was canceled due to the configured HttpClient.Timeout of 12 seconds elapsing."
+  }
+]
