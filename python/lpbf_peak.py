@@ -208,6 +208,101 @@ def rectangular_corridor_section_observations(axis_y, z, peak_temperature_planes
     return observations
 
 
+def fixed_event_liquidus_cross_section(coordinates, temperature_K, x_position_m, dx_m,
+                                      liquidus_K, substrate_interface_z_m=0.0):
+    """Reconstruct a transverse liquidus section of one supplied event field.
+
+    Ordered uniform Cartesian cell centers are interpolated to the physical X
+    plane. Width uses all resolved Y/Z edge crossings; depth is measured below
+    the original substrate interface. No temporal maximum, time verification,
+    surface extrapolation, or equivalence to an etched section is implied.
+    """
+    result = dict(status="inconclusive", operator="fixed-event-x-linear-liquidus-section-v1",
+                  temporalSelection="single accepted event supplied by caller; time alignment not verified here",
+                  contour="linear liquidus crossings between neighboring Y/Z cell centers",
+                  surfaceTreatment="no-extrapolation", topBoundaryMolten=False,
+                  depthReference="original substrate interface",
+                  experimentalValidation=False,
+                  evidenceScope="Numerical thermal proxy; no etched-boundary or experimental equivalence",
+                  width_um=None, depth_um=None)
+    try:
+        xyz = np.asarray(coordinates, dtype=float)
+        temperature = np.asarray(temperature_K, dtype=float)
+        x_position, dx, liquidus, interface = map(float, (
+            x_position_m, dx_m, liquidus_K, substrate_interface_z_m))
+    except (TypeError, ValueError, OverflowError):
+        result["reason"] = "Invalid numeric section inputs"
+        return result
+    if (xyz.ndim != 2 or xyz.shape[1] != 3 or temperature.shape != (len(xyz),)
+            or not len(xyz) or not np.isfinite(xyz).all()
+            or not np.isfinite(temperature).all() or np.any(temperature <= 0)
+            or not all(math.isfinite(v) for v in (x_position, dx, liquidus, interface))
+            or dx <= 0 or liquidus <= 0):
+        result["reason"] = "Invalid finite Cartesian field or physical section inputs"
+        return result
+    axes = [np.unique(xyz[:, dimension]) for dimension in range(3)]
+    shape = tuple(len(axis) for axis in axes)
+    if (any(n < 2 for n in shape) or math.prod(shape) != len(xyz)
+            or any(not np.allclose(np.diff(axis), dx, rtol=1e-8, atol=dx*1e-8)
+                   for axis in axes)):
+        result["reason"] = "Section field is not a nondegenerate uniform Cartesian grid"
+        return result
+    grid = xyz.reshape(*shape, 3)
+    for dimension, axis in enumerate(axes):
+        axis_shape = [1, 1, 1]
+        axis_shape[dimension] = len(axis)
+        if not np.allclose(grid[..., dimension], axis.reshape(axis_shape),
+                           rtol=0, atol=dx*1e-8):
+            result["reason"] = "Section field is not an ordered Cartesian grid"
+            return result
+    axis_x, axis_y, axis_z = axes
+    result.update(xPosition_m=x_position, substrateInterfaceZ_m=interface,
+                  mesh_um=dx*1e6, sampledZRange_m=[float(axis_z[0]), float(axis_z[-1])])
+    if x_position < axis_x[0] or x_position > axis_x[-1]:
+        result["reason"] = "Physical section lies outside X cell-center support"
+        return result
+    upper = int(np.searchsorted(axis_x, x_position))
+    if axis_x[upper] == x_position:
+        lower, fraction = upper, 0.
+    else:
+        lower = upper - 1
+        fraction = float((x_position-axis_x[lower]) / (axis_x[upper]-axis_x[lower]))
+    values = temperature.reshape(shape)
+    section = (1.-fraction)*values[lower] + fraction*values[upper]
+    molten = section >= liquidus
+    result.update(sourcePlaneIndices=[lower, upper], xInterpolationFraction=fraction,
+                  sampleCells=int(np.count_nonzero(molten)),
+                  topBoundaryMolten=bool(molten[:, -1].any()))
+    if not result["sampleCells"]:
+        result["status"] = "no-melt"
+        return result
+    if molten[0].any() or molten[-1].any() or molten[:, 0].any():
+        result["reason"] = "Liquidus contour reaches a lateral or bottom domain boundary"
+        return result
+    yz = np.stack(np.meshgrid(axis_y, axis_z, indexing="ij"), axis=-1)
+    points = []
+    for dimension in range(2):
+        lower_slice, upper_slice = [slice(None)]*2, [slice(None)]*2
+        lower_slice[dimension], upper_slice[dimension] = slice(None, -1), slice(1, None)
+        low, high = tuple(lower_slice), tuple(upper_slice)
+        pairs = molten[low] != molten[high]
+        if pairs.any():
+            fractions = (liquidus-section[low][pairs]) / (section[high][pairs]-section[low][pairs])
+            points.append(yz[low][pairs] + fractions[:, None]*(yz[high][pairs]-yz[low][pairs]))
+    if not points:
+        result["reason"] = "Liquidus contour is not resolved between cell centers"
+        return result
+    crossings = np.concatenate(points)
+    width = float(np.ptp(crossings[:, 0]))
+    if len(crossings) < 2 or width <= 0:
+        result["reason"] = "Liquidus contour has no positive resolved width"
+        return result
+    result.update(status="thermal-proxy", width_um=width*1e6,
+                  depth_um=max(0., interface-float(crossings[:, 1].min()))*1e6,
+                  crossingCount=int(len(crossings)))
+    return result
+
+
 def interpolated_peak_melt_pool(coordinates, temperature, surface, angle, dx, liquidus_K):
     """Width/depth from linear liquidus crossings on a Cartesian peak field.
 
