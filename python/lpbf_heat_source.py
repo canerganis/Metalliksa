@@ -5,6 +5,7 @@ Gauss-Legendre quadrature. This improves source discretization, not model fideli
 to fluid flow. The heat equation still advances with explicit Euler.
 """
 import numpy as np
+from lpbf_run_progress import current_progress
 from lpbf_core_physics import (SOURCE_INTEGRATION, GAUSS_NODES, _evaluate,
                                gaussian_interval, cell_weights, integrated_source)
 
@@ -25,10 +26,18 @@ def require_source_capture(capture, minimum_fraction):
 def source_limited_step(axis, z, dx, segment, time, dt, surface, radius, penetration, power, passive_rate, capacity, axis_y=None,
                         incidence_angle_deg=0.0, incidence_azimuth_deg=0.0):
     """Reintegrate the moving source whenever its sensible-increment cap cuts dt."""
+    progress = current_progress()
     for retries in range(12):
-        source, capture = integrated_source(axis, z, dx, segment, time, dt, surface, radius, penetration, power,
-                                           axis_y=axis_y, incidence_angle_deg=incidence_angle_deg,
-                                           incidence_azimuth_deg=incidence_azimuth_deg)
+        if progress is not None:
+            progress.before_source_evaluation(retries)
+        try:
+            source, capture = integrated_source(axis, z, dx, segment, time, dt, surface, radius, penetration, power,
+                                               axis_y=axis_y, incidence_angle_deg=incidence_angle_deg,
+                                               incidence_azimuth_deg=incidence_azimuth_deg)
+        except Exception:
+            if progress is not None:
+                progress.source_evaluation_failed()
+            raise
         rate = passive_rate+source
         allowed = float(np.min(25.*capacity/np.maximum(np.abs(rate), 1e-30)))
         if allowed >= dt*(1-1e-12):

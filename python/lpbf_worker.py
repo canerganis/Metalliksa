@@ -1097,6 +1097,55 @@ class Queue:
                 self.terminate_child(job, child)
 
 
+def _cpu_run_progress_for(settings):
+    """Track only an explicit supported CPU solve; other backends keep their path."""
+    if (settings.get("mode") != "standard" or settings.get("backend") != "reference"
+            or settings.get("study", "none") != "none"
+            or settings.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+        return None
+    from lpbf_run_progress import CpuRunProgress
+    return CpuRunProgress()
+
+
+def _cpu_failure_progress_message(error):
+    """Format verified counters from the failed solver, never infer them from a log."""
+    progress = getattr(error, "progress", None)
+    if (not isinstance(progress, dict) or type(progress.get("schemaVersion")) is not int
+            or progress.get("schemaVersion") != 1
+            or progress.get("scope") != "cpu-reference" or progress.get("stage") != "failed"):
+        return None
+    count_names = ("acceptedSteps", "attemptedSourceEvaluations", "sourceEvaluationRetries",
+                   "attemptedSourceCellSteps", "sourceEvaluationFailures")
+    if any(type(progress.get(name)) is not int or not 0 <= progress[name] <= 2**53-1
+           for name in count_names):
+        return None
+    accepted, evaluations = progress["acceptedSteps"], progress["attemptedSourceEvaluations"]
+    if (accepted > evaluations or progress["sourceEvaluationRetries"] > evaluations
+            or progress["sourceEvaluationFailures"] > evaluations):
+        return None
+    for name in ("lastAcceptedTime_s", "lastAcceptedSchedulerTime_s"):
+        value = progress.get(name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            return None
+    dt, cells = progress.get("lastAcceptedDt_s"), progress.get("cells")
+    if accepted == 0:
+        if dt is not None or progress["lastAcceptedTime_s"] != 0 or progress["lastAcceptedSchedulerTime_s"] != 0:
+            return None
+    elif (isinstance(dt, bool) or not isinstance(dt, (int, float)) or not math.isfinite(dt)
+          or dt <= 0 or dt > progress["lastAcceptedTime_s"] or progress["lastAcceptedSchedulerTime_s"] <= 0):
+        return None
+    if cells is None:
+        if evaluations or progress["attemptedSourceCellSteps"]:
+            return None
+    elif (type(cells) is not int or cells < 1
+          or progress["attemptedSourceCellSteps"] != evaluations*cells):
+        return None
+    return (f"Last valid CPU state: {accepted} accepted steps at {progress['lastAcceptedTime_s']:.9g} s. "
+            f"Source work: {evaluations} source evaluations, {progress['sourceEvaluationRetries']} retries, "
+            f"{progress['attemptedSourceCellSteps']} source cell-evaluations "
+            "(excludes conduction and other solver work). No completed result.")
+
+
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == "--execute":
         folder = Path(sys.argv[2])
@@ -1110,6 +1159,7 @@ def main():
             threading.Thread(target=monitor_parent, daemon=True).start()
         def report(progress, message):
             print(json.dumps(dict(progress=progress, message=message)), flush=True)
+        run_progress = None
         try:
             execution_start = time.monotonic()
             input_data = json.loads((folder/"input.json").read_text())
@@ -1137,8 +1187,10 @@ def main():
                 from lpbf_evidence import write_artifacts
                 write_artifacts(result, folder)
             else:
+                run_progress = _cpu_run_progress_for(input_data)
+                options = {"run_progress": run_progress} if run_progress is not None else {}
                 result = run(input_data, report, folder,
-                             json.loads((folder/"capabilities.json").read_text()))
+                             json.loads((folder/"capabilities.json").read_text()), **options)
 
             run_kind = _archive_run_kind(job_type, result)
             if run_kind is not None:
@@ -1152,7 +1204,19 @@ def main():
             (folder/"result.tmp").write_text(json.dumps(result, allow_nan=False))
             (folder/"result.tmp").replace(folder/"result.json")
         except Exception as e:
-            print(str(e), flush=True); sys.exit(1)
+            # A valid thermal solve can still fail result audits or artifact writes.
+            # Preserve its work counts at the job boundary without publishing a result.
+            if run_progress is not None and getattr(e, "progress", None) is None:
+                state = run_progress.snapshot()
+                if state["cells"] is not None:
+                    run_progress.fail(e)
+                    if state["stage"] == "completed":
+                        e.progress["failureStage"] = "postprocessing"
+            print(str(e), flush=True)
+            detail = _cpu_failure_progress_message(e)
+            if detail is not None:
+                print(detail, flush=True)
+            sys.exit(1)
         return
     ROOT.mkdir(parents=True, exist_ok=True)
     # OS-held lock prevents a second worker from invalidating live running jobs.

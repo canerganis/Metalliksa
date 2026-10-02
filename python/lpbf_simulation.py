@@ -11,6 +11,7 @@ import datetime
 from pathlib import Path
 import numpy as np
 from lpbf_material_registry import material
+from lpbf_run_progress import current_progress, track_cpu_progress, validate_cpu_progress
 from lpbf_core_physics import property_at, enthalpy_table
 from lpbf_core_physics import calculate_mesh_domain, scan_segments, thermal_si_inputs, SOURCE_INTEGRATION
 from lpbf_core_contract import build_core_contract
@@ -47,6 +48,9 @@ IMPLEMENTATION_SOURCE_FILES = (
     "lpbf_cfd.py",
     "lpbf_defect_diagnostics.py",
     "lpbf_evidence.py",
+    "lpbf_evaporation_marangoni.py",
+    "lpbf_gpu_pilot_artifacts.py",
+    "lpbf_gpu_pilot_numerics.py",
     "lpbf_gpu_thermal.py",
     "lpbf_gpu_thermal_warp.py",
     "lpbf_heat_source.py",
@@ -56,6 +60,7 @@ IMPLEMENTATION_SOURCE_FILES = (
     "lpbf_openfoam.py",
     "lpbf_overlap.py",
     "lpbf_peak.py",
+    "lpbf_run_progress.py",
     "powder_packer.py",
     "powder_bed_raytracer.py",
     "lpbf_simulation.py",
@@ -397,9 +402,10 @@ def liquidus_crossing_sums(old, new, active, dx, dt, liquidus):
             float(cooling[good].sum()), int(good.sum())]
 
 
+@track_cpu_progress
 def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None,
               selected_time_observer=None, selected_time_s=None,
-              local_history_observer=None, local_history_indices_ijk=None):
+              local_history_observer=None, local_history_indices_ijk=None, run_progress=None):
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")
@@ -463,6 +469,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
            for i, j, k_index in local_indices):
         raise ValueError("Local history cell index exceeds the resolved grid")
     cell_count = nx*ny*nz
+    progress = current_progress()
+    if progress is not None:
+        progress.set_cells(cell_count)
     if cell_count > 600000:
         geometry = "rectangular corridor" if p["barePlateGeometry"] == "rectangular-corridor" else "square"
         raise ValueError(f"{geometry.capitalize()} mesh requires {cell_count:,} cells, above the 600000-cell reference solver limit; reduce the scan length or use a coarser mesh")
@@ -583,8 +592,6 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             absorbed_power_W, rate, rho*cp, axis_y=axis_y,
             incidence_angle_deg=p.get("incidenceAngle_deg", 0.),
             incidence_azimuth_deg=p.get("incidenceAzimuth_deg", 0.))
-        accepted_dt_s.append(dt)
-        accepted_clock_s += dt
         source_limited_steps += int(retries > 0)
         require_source_capture(capture, MINIMUM_SOURCE_CAPTURE_FRACTION)
         min_dt = min(min_dt, dt)
@@ -636,11 +643,16 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                     )
             else:
                 T = np.interp(h, hh, tt)
+        # Only candidates passing capture, enthalpy and inversion validity are accepted.
+        accepted_dt_s.append(dt)
+        accepted_clock_s += dt
         previous_time = time
         time += dt
         end_roundoff = min(1e-14, 2*math.ulp(end)*(step+1))
         if end-time <= end_roundoff:
             time = end
+        if progress is not None:
+            progress.accept(dt, accepted_clock_s, time)
         if (selected_time_observer is not None and not selected_time_captured
                 and previous_time <= selected_time_s + end_roundoff
                 and time >= selected_time_s - end_roundoff):
@@ -815,7 +827,7 @@ def _layer_aligned_mesh_levels(p):
 
 def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
         final_state_observer=None, selected_time_observer=None, selected_time_s=None,
-        local_history_observer=None, local_history_indices_ijk=None):
+        local_history_observer=None, local_history_indices_ijk=None, run_progress=None):
     requested_p, requested_m = validate(raw)
     requested_backend = requested_p["backend"]
     p, m = requested_p, requested_m
@@ -832,6 +844,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
         execution_input = dict(raw)
         execution_input.update(backend="reference", powderGridPolicy="layer-conforming")
         p, m = validate(execution_input)
+    validate_cpu_progress(run_progress, p)
     bare = p["surfaceMode"] == "bare-plate"
     analytical = None if bare else screening(p, m)
     fallback = p["mode"] == "high-fidelity"
@@ -908,7 +921,14 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                   if (capabilities or {}).get("openfoamVersion") else "OpenFOAM / a qualified free-surface LPBF solver is unavailable in this worker.") if fallback else None)
     if p["mode"] in ("standard", "calibration"):
         n_runs = 1 if p["study"] == "none" else 3
-        if local_history_observer is not None:
+        if run_progress is not None:
+            thermal_result = thermal_solver(
+                p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
+                final_state_observer=final_state_observer,
+                selected_time_observer=selected_time_observer, selected_time_s=selected_time_s,
+                local_history_observer=local_history_observer,
+                local_history_indices_ijk=local_history_indices_ijk, run_progress=run_progress)
+        elif local_history_observer is not None:
             thermal_result = thermal_solver(
                 p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
                 final_state_observer=final_state_observer,

@@ -16,6 +16,7 @@ SMALL_CASE = {
     "maxDt_s": 2e-7, "layer_um": 80, "trackLength_um": 100,
     "cooling_s": 0, "dwell_s": 0,
 }
+FROZEN_IMPLEMENTATION = json.loads(probe.PROTOCOL_PATH.read_bytes())["expectedImplementationFingerprint"]
 
 
 class LocalTimeHistoryObserverTests(unittest.TestCase):
@@ -68,8 +69,9 @@ class LocalTimeHistoryObserverTests(unittest.TestCase):
 
     def test_runner_preflight_binds_prior_fields_without_solving(self):
         # The completed diagnostic owns these frozen destinations. Bypass only
-        # the freshness guard so validation can be repeated without touching them.
-        with mock.patch.object(probe, "fresh_destinations"):
+        # freshness and source identity only for this historical archive fixture.
+        with mock.patch.object(probe, "fresh_destinations"), \
+                mock.patch.object(lpbf_simulation, "implementation_fingerprint", return_value=FROZEN_IMPLEMENTATION):
             with mock.patch.object(lpbf_simulation, "run", side_effect=AssertionError("must not solve")):
                 plan = probe.preflight()
         self.assertEqual(len(plan["cases"]), 2)
@@ -80,10 +82,18 @@ class LocalTimeHistoryObserverTests(unittest.TestCase):
         self.assertFalse(plan["protocol"]["experimentalValidation"])
 
     def test_runner_rejects_changed_prior_report_identity(self):
-        with mock.patch.object(probe, "fresh_destinations"):
+        with mock.patch.object(probe, "fresh_destinations"), \
+                mock.patch.object(lpbf_simulation, "implementation_fingerprint", return_value=FROZEN_IMPLEMENTATION):
             with mock.patch.object(probe, "sha256_file", return_value="1" * 64):
                 with self.assertRaisesRegex(ValueError, "report hash"):
                     probe.preflight()
+
+    def test_runner_rejects_changed_source_before_solving(self):
+        with mock.patch.object(probe, "fresh_destinations"), \
+                mock.patch.object(lpbf_simulation, "implementation_fingerprint", return_value="1" * 64), \
+                mock.patch.object(lpbf_simulation, "run", side_effect=AssertionError("must not solve")):
+            with self.assertRaisesRegex(ValueError, "implementation differs"):
+                probe.preflight()
 
     def test_runner_still_rejects_existing_diagnostic_destinations(self):
         protocol = json.loads(probe.PROTOCOL_PATH.read_bytes())

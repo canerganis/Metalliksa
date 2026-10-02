@@ -28,6 +28,13 @@ def history(times, ever=None, values=None):
 
 
 class RefinementProtocolTests(unittest.TestCase):
+    def test_live_source_change_is_rejected_before_solver(self):
+        with mock.patch.object(probe, "fresh_destinations"), \
+                mock.patch.object(probe.lpbf_simulation, "implementation_fingerprint", return_value="1" * 64), \
+                mock.patch.object(probe.lpbf_simulation, "run", side_effect=AssertionError("solver called")):
+            with self.assertRaisesRegex(ValueError, "Frozen numerical implementation changed"):
+                probe.preflight()
+
     def test_protocol_is_frozen_and_has_only_one_new_case_and_fresh_outputs(self):
         protocol = json.loads(probe.PROTOCOL_PATH.read_text(encoding="utf-8"))
         probe._validate_protocol(protocol)
@@ -59,7 +66,9 @@ class RefinementProtocolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cell-step"):
             probe._validate_protocol(altered)
 
-    def test_report_archive_and_ordered_cell_identity_fail_before_solver(self):
+    @mock.patch.object(probe.lpbf_simulation, "implementation_fingerprint", return_value=probe.IMPLEMENTATION)
+    def test_report_archive_and_ordered_cell_identity_fail_before_solver(self, _frozen_fingerprint):
+        # Isolate archive guards from the separately tested live-source guard.
         original_protocol = probe.PROTOCOL_PATH.read_bytes()
         protocol = json.loads(original_protocol)
         actual_exists = Path.exists
@@ -252,7 +261,8 @@ class RefinementProtocolTests(unittest.TestCase):
                 self.assertEqual(write.call_args.args[1]["stage"], "partial")
                 self.assertIn(message, write.call_args.args[1]["reason"])
 
-    def test_execute_one_mocked_case_checks_observer_fields_and_completes_artifacts(self):
+    @mock.patch.object(probe.lpbf_simulation, "implementation_fingerprint", return_value=probe.IMPLEMENTATION)
+    def test_execute_one_mocked_case_checks_observer_fields_and_completes_artifacts(self, _frozen_fingerprint):
         protocol = json.loads(probe.PROTOCOL_PATH.read_text(encoding="utf-8"))
         event_time = 2e-8
         protocol["expectedEventTime_s"] = event_time

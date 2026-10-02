@@ -46,3 +46,11 @@
 /docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/*.npz binary
 /python/run_lpbf_fixed_event_time_refinement_probe.py -text
 /python/test_lpbf_fixed_event_time_refinement_probe.py -text
+
+# Keep the recorded CPU progress sources and archive-analysis bytes unchanged.
+/python/lpbf_simulation.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_heat_source.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_run_progress.py -text
+/python/analyze_lpbf_fixed_event_transitions.py -text
+/docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

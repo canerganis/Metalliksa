@@ -24,7 +24,8 @@ class LayeredPlateSolverTests(unittest.TestCase):
         self.assertEqual({key: settings[key] for key in DEFAULTS}, DEFAULTS)
         self.assertFalse((set(LAYERED) - set(DEFAULTS)) & set(settings))
         digest = hashlib.sha256(json.dumps(settings, sort_keys=True, allow_nan=False).encode()).hexdigest()
-        self.assertEqual(digest, "2b43bf06fc5752eb077d3f15b076f1215b4c9ffd10ec0befeb1855319bb96922")
+        # Frozen against the default payload before CPU progress instrumentation.
+        self.assertEqual(digest, "6118a1df4bb616c72b5fafee828ebad3f80d96cc78f11ae80695682a74af19f9")
 
     def test_layered_inputs_are_explicit_and_strict(self):
         with self.assertRaisesRegex(ValueError, "all explicit"):

@@ -1,6 +1,7 @@
 import ast
 import re
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from lpbf_simulation import (
@@ -8,6 +9,8 @@ from lpbf_simulation import (
     _fingerprint_implementation_sources,
     _fingerprint_manifest_entries,
     implementation_fingerprint,
+    fingerprint,
+    validate,
 )
 
 
@@ -66,6 +69,25 @@ class ImplementationFingerprintTests(unittest.TestCase):
                     self.assertIn(local_header.relative_to(source_root.resolve()).as_posix(),
                                   manifested,
                                   f"{relative} includes unmanifested local source {include}")
+
+    def test_production_helper_changes_bind_implementation_and_cache_identity(self):
+        root = Path(__file__).parent
+        helpers = ("lpbf_evaporation_marangoni.py", "lpbf_gpu_pilot_artifacts.py",
+                   "lpbf_gpu_pilot_numerics.py", "lpbf_run_progress.py")
+        p, material = validate({"mode": "standard", "backend": "reference"})
+        implementation_before = implementation_fingerprint()
+        cache_before = fingerprint(p, material)
+        read_bytes = Path.read_bytes
+        for relative in helpers:
+            with self.subTest(helper=relative):
+                self.assertIn(relative, IMPLEMENTATION_SOURCE_FILES)
+                target = (root / relative).resolve()
+                def changed_content(path):
+                    content = read_bytes(path)
+                    return content+b"\n# identity mutation oracle\n" if path.resolve() == target else content
+                with patch.object(Path, "read_bytes", changed_content):
+                    self.assertNotEqual(implementation_fingerprint(), implementation_before)
+                    self.assertNotEqual(fingerprint(p, material), cache_before)
 
     def test_public_fingerprint_is_stable_and_sha256_shaped(self):
         self.assertRegex(implementation_fingerprint(), r"^[0-9a-f]{64}$")
