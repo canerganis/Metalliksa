@@ -30,7 +30,7 @@
 
 ## 4. Commit ve dış yayın
 
-- Her tamamlanan ve ilgili kontrolleri geçen anlamlı iş paketi için yerel commit oluştur.
+- Dosya/kod değiştiren tamamlanmış işi uygun doğrulamadan sonra yalnız o işe ait değişikliklerle yerel Git commit'ine al; değişiklik yoksa boş commit üretme.
 - Önce ilgili diff ve staged kapsamını incele; yalnız kendi görev değişikliklerini ekle.
 - Kullanıcı/diğer ajan değişikliklerini, gizli bilgileri, .env dosyalarını ve üretilmiş çıktıları yanlışlıkla commit etme.
 - Açık dosya yollarıyla stage et; ortak çalışma sırasında git add . veya git add -A kullanma.
