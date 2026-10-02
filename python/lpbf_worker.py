@@ -1092,9 +1092,33 @@ class Queue:
                             enforce_thermal_balances(result)
                         self.finish_running(job, status="completed", progress=1., log=final_log)
                     else:
-                        self.finish_running(job, status="failed", error=final_log[-4000:] or f"Solver exit {child.returncode}", log=final_log)
+                        self.finish_running(job, status="failed", error=_execution_failure_message(final_log, child.returncode), log=final_log)
             finally:
                 self.terminate_child(job, child)
+
+
+def _execution_failure_message(final_log, returncode):
+    """Keep diagnostic lines verbatim; omit only typed child progress frames."""
+    def unique_object(pairs):
+        value = dict(pairs)
+        if len(value) != len(pairs):
+            raise ValueError("Duplicate JSON fields are not a progress frame")
+        return value
+
+    retained = []
+    for line in final_log.splitlines(keepends=True):
+        try:
+            event = json.loads(line, object_pairs_hook=unique_object)
+            if (isinstance(event, dict) and set(event) == {"progress", "message"}
+                    and type(event["progress"]) in (int, float)
+                    and 0 <= event["progress"] <= 1 and math.isfinite(event["progress"])
+                    and isinstance(event["message"], str)):
+                continue
+        except (ValueError, TypeError, RecursionError):
+            pass
+        retained.append(line)
+    diagnostic = "".join(retained)
+    return diagnostic[-4000:] if diagnostic.strip() else f"Solver exit {returncode}"
 
 
 def _cpu_run_progress_for(settings, capabilities=None):
