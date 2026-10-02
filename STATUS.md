@@ -2,6 +2,17 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — sürümlü kaynak kimliği ve termal önbellek (2026-10-02)
+
+- **Kod / commit:** Sol 6.1 kimlik ve cache sözleşmesini/uygulamasını, Luna yeni testleri, root CPU/Torch/Warp sonuç metadatası ve entegrasyonu tamamladı. Yerel kod commit'i `3c9385f`; push yok. Sayısal denklemler veya varsayılanlar değişmedi.
+- **Kimlik:** Yeni `lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf` şeması, 37 dosyalık üretim manifestinde yalnız UTF-8 metin CRLF çiftlerini LF yapar; BOM, lone-CR, diğer içerik ve binary baytları kimlik taşır. Kaynak/path/sürüm bağlıdır; eksik, yinelenen, alias/escape ve bozuk UTF-8 girdiler reddedilir. Mevcut canonical hash `66c4bc7a9c58dbc0010714c1b246416eaeb9bb50397ad19fc6dcdbe65c78c7e6`. Tüm manifestin LF/CRLF fixture'ları ve commit edilmiş kaynak kimliği eşleşti; bu platformlar arası sayısal eşdeğerlik değildir.
+- **Önbellek / geçmiş:** Termal key üretim kimliği + sürüm + etkili girdiler + malzemeyi içerir; test/worker/tanı dosyası değişiklikleri bu key'i bozmaz. Non-null jobType taşıyan build-job/GPU/future işleri eski broad/raw algoritmayı korur. Worker capability/binary bağı korunur. Eski raw-v2 ayrı API ile yalnız eski manifest/bayt/sürüm verilince yeniden üretilebilir; yeni sonuçlarda optional schema metadatası var. Eski rapor, protokol ve alanlar yeniden yazılmadı; canlı guard yeni kaynak revizyonunu reddetmeye devam eder.
+- **Kontrol:** Nihai birleşik **119 PASS / 1 SKIP / 0 FAIL** (120 test, 36.335 s); son 20 kimlik testi ek path vakalarıyla tekrar 19 PASS / 1 SKIP. Windows symlink oluşturma yetkisi yokluğu skip sebebidir. `tsc --noEmit`, py_compile, 46 üretim fonksiyonunda kimlik/metadatadan bağımsız AST eşitliği ve eski arşiv kontrolü PASS. Ana Graft eski temp dizini EPERM nedeniyle yenilenemedi; altı byte-exact sahip olunan kaynakta izole 147 node / 369 edge / 6 card build PASS; kullanıcı cache değişiklikleri korundu.
+- **Kayıt / sınır:** `docs/LPBF_SOURCE_IDENTITY_2026-10-02.md` ve `.json`; JSON SHA-256 `aebf1e453588f91a7e7db850afb647a75a9ec7b59712f95b56ca184082b0a81d`. Yeni büyük solver koşusu yok. NIST karşılaştırması unavailable; fiziksel yakınsama inconclusive, deneysel geçerlik unvalidated. Bu paket kaynak ve kayıt tutarlılığı kanıtıdır.
+- **Sıradaki somut iş:** Direct run() downstream hata bağlamını ve güvenli Automatic→CPU dispatch ilerleme muhasebesini tamamla; gerçek CPU parity ve worker hata/yayınlamama kontrollerini küçük bounded vakalarda koru. Genel geliştirme hedefi devam ediyor.
+
+### Önceki kayıtlar — CPU hata muhasebesi ve geçiş analizi
+
 ## Güncel devam — CPU hata muhasebesi ve üç seviyeli geçiş analizi (2026-10-02)
 
 - **Kod / commit:** Zor kararlar ve CPU entegrasyonu Sol 6.1, arşiv analizinin saf API/CLI ve testleri Luna, worker tüketicisi ve entegrasyon root tarafından yapıldı. Yerel kod commit'i `771079c`; push yok. `CpuRunProgress` son geçerli kabul edilmiş adım/saat/dt ile kaynak değerlendirme, iç retry ve kaynak hücre-işini ayrı kaydeder; isteğe bağlı kaynak bütçesi bir sonraki değerlendirmeden önce durdurur. Kaynama STOP'u korunur; geçersiz aday kabul sayılmaz. Kapsam Standard / Reference / tek CPU koşusudur; worker yalnız açık Reference seçiminde etkinleştirir. Automatic, studies, layered-plate, OpenFOAM/Torch/Warp ve hard-kill ilerlemesi kapsam dışıdır; kaynak işi bütçesi diğer hesap maliyetlerini veya OS sınırlarını kapsamaz.
