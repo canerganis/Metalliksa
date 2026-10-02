@@ -2,6 +2,17 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — Automatic CPU ve public run hata bağlamı (2026-10-02)
+
+- **Kod / commit:** Sol 6.1 public boundary/context sözleşmesini ve üretim entegrasyonunu, Luna 14 yeni public-run kontrolünü, root worker/candidate helper entegrasyonu, 5 yeni worker kontrolü ve kanıt kaydını tamamladı. Yerel kod commit'i `3498da5`; push yok. Varsayılanlar, geçerli backend yönlendirmesi ve sayısal transient gövdesi değişmedi.
+- **Davranış:** Geçerli Standard Automatic powder koşuları mevcut dönüşümle Reference CPU'da izlenir; bare-auto/auto+explicit grid hâlâ geçersizdir. `run()` CPU başladıktan sonraki core/audit/artifact/JSON hatasında aynı exception'a geçerli `.progress` ekler; termal sonrası hata `failureStage=postprocessing` taşır. Public completed bildirimi tüm run işlemleri bitince verilir; worker'ın runtime/sonuç yayınlama hataları da sayaçları korur. Studies/layered/OpenFOAM/Torch/Warp/hard-kill kapsam dışıdır; kaynak işi bütçesi OS süre/bellek sınırı değildir.
+- **Ek kusur düzeltmesi:** Callback içinden tracker verilmeden nested run/transient çağrısı ContextVar üzerinden dış sayaçları kirletebiliyordu. Her iki giriş artık iç gövde başlamadan reddeder; begin/ilk kabul/completion/direct-transient kontrollerinde dış 0/1/230 adım ve kaynak sayaçları korunur. Aynı hata iki boundary'den geçince failed bildirimi tek kalır, context temizlenir ve başlamamış tracker geçerli çağrıda yeniden kullanılabilir.
+- **Gerçek kontrol:** Önceki run/transient kaynağıyla final tracked Reference ve Automatic arasında 230 adımda koordinat/T/H/rho/dt, kabul saati, metrik, enerji-kütle-faz, termal geçmiş ve settings birebir eşleşti. Ayrı gerçek worker süreçleri aynı kaynama STOP'unda 132 geçerli adım / 3.19345553 µs, 266 kaynak değerlendirme / 133 retry / 42,560 hücre-işiyle exit 1 verdi; çıktı aynı, result.json/tmp yok. Yeni büyük 5 µm solve yok.
+- **Nihai paket:** **186 PASS / 2 SKIP / 0 FAIL** (188 test, 113.621 s), py_compile PASS. Skip: Linux-only OpenFOAM oracle ve Windows symlink yetkisi. Güncel canonical FP `4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35`; commit edilmiş manifestle eşit. Altı dondurulmuş arşiv/source-record baytı değişmedi. Ana Graft eski temp EPERM yüzünden unavailable; altı byte-exact kaynakta izole 146 node / 390 edge / 6 card build PASS. `docs/LPBF_PUBLIC_RUN_PROGRESS_2026-10-02.md` / `.json`, JSON SHA-256 `ed4759668a777ed117d9b52a9463d2f163851d6be1a21fc75ca87d67863cc5c1`; mevcut CPU progress API belgesi güncellendi.
+- **Sıradaki somut iş:** Yeni revizyonda V1 CPU configure→run→hata/provenance→archive/export→import/restore→reload zincirini izole veri köküyle uçtan uca doğrula; eksik/yanlış tüketici davranışını düzelt. NIST karşılaştırması unavailable, fiziksel yakınsama inconclusive, deneysel geçerlik unvalidated; genel geliştirme hedefi devam eder.
+
+### Önceki kayıtlar — sürümlü kaynak kimliği ve önbellek
+
 ## Güncel devam — sürümlü kaynak kimliği ve termal önbellek (2026-10-02)
 
 - **Kod / commit:** Sol 6.1 kimlik ve cache sözleşmesini/uygulamasını, Luna yeni testleri, root CPU/Torch/Warp sonuç metadatası ve entegrasyonu tamamladı. Yerel kod commit'i `3c9385f`; push yok. Sayısal denklemler veya varsayılanlar değişmedi.
