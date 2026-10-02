@@ -11,7 +11,8 @@ import datetime
 from pathlib import Path
 import numpy as np
 from lpbf_material_registry import material
-from lpbf_run_progress import current_progress, track_cpu_progress, validate_cpu_progress
+from lpbf_run_progress import (current_progress, track_cpu_progress, track_cpu_run_boundary,
+                               validate_cpu_progress)
 from lpbf_source_identity import (CANONICAL_SCHEMA, RAW_SCHEMA, fingerprint_sources,
                                   fingerprint_manifest_entries, source_identity)
 from lpbf_core_physics import property_at, enthalpy_table
@@ -826,6 +827,7 @@ def _layer_aligned_mesh_levels(p):
     return tuple((n, layer_um / n) for n in cells)
 
 
+@track_cpu_run_boundary
 def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
         final_state_observer=None, selected_time_observer=None, selected_time_s=None,
         local_history_observer=None, local_history_indices_ijk=None, run_progress=None):
@@ -845,7 +847,6 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
         execution_input = dict(raw)
         execution_input.update(backend="reference", powderGridPolicy="layer-conforming")
         p, m = validate(execution_input)
-    validate_cpu_progress(run_progress, p)
     bare = p["surfaceMode"] == "bare-plate"
     analytical = None if bare else screening(p, m)
     fallback = p["mode"] == "high-fidelity"
@@ -861,6 +862,9 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
     elif use_cfd:
         from lpbf_cfd import cfd_multiphysics
         thermal_solver = cfd_multiphysics
+    validate_cpu_progress(run_progress, p)
+    if run_progress is not None and thermal_solver is not transient:
+        raise ValueError("Run progress supports standard reference CPU runs without a study only")
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")

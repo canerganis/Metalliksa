@@ -5,6 +5,24 @@ from inspect import signature
 import math
 
 _CURRENT = ContextVar("lpbf_cpu_run_progress", default=None)
+_PUBLIC_BOUNDARY = ContextVar("lpbf_cpu_public_run_boundary", default=None)
+
+
+def cpu_reference_progress_supported(p, capabilities=None):
+    """Predict existing CPU dispatch for validated settings; never change dispatch."""
+    if (p.get("mode", "screening") != "standard" or p.get("study", "none") != "none"
+            or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+        return False
+    backend = p.get("backend", "auto")
+    surface = p.get("surfaceMode", "powder-layer")
+    # An explicit powder policy with auto is rejected by public input validation.
+    if backend == "auto" and "powderGridPolicy" in p:
+        return False
+    if backend == "auto" and surface == "bare-plate":
+        return False
+    if backend == "auto" and surface == "powder-layer":
+        backend = "reference"
+    return backend == "reference" or (backend == "auto" and not (capabilities or {}).get("openfoamThermal"))
 
 
 def current_progress():
@@ -36,6 +54,8 @@ class CpuRunProgress:
         self.maximum_source_cell_steps = maximum_source_cell_steps
         self._started = False
         self._observer_failed = False
+        self._thermal_finished = False
+        self._failure_exception = None
         self._state = {"schemaVersion": 1, "scope": "cpu-reference", "stage": "running",
                        "acceptedSteps": 0, "lastAcceptedTime_s": 0.,
                        "lastAcceptedSchedulerTime_s": 0., "lastAcceptedDt_s": None,
@@ -95,8 +115,13 @@ class CpuRunProgress:
         self._state["stage"] = "completed"
         self._emit()
 
-    def fail(self, exception):
+    def fail(self, exception, *, failure_stage=None):
+        if self._failure_exception is exception:
+            return
+        self._failure_exception = exception
         self._state.update(stage="failed", failureType=type(exception).__name__, reason=str(exception))
+        if failure_stage is not None:
+            self._state["failureStage"] = failure_stage
         # A failed observer must never replace the original solver/callback failure.
         if not self._observer_failed:
             try:
@@ -114,7 +139,12 @@ def track_cpu_progress(function):
         bound = call_signature.bind_partial(*args, **kwargs)
         progress = bound.arguments.get("run_progress")
         if progress is None:
+            if _PUBLIC_BOUNDARY.get() is not None or current_progress() is not None:
+                raise ValueError("CPU run-progress scopes cannot be nested")
             return function(*args, **kwargs)
+        boundary = _PUBLIC_BOUNDARY.get()
+        if boundary is not None and boundary is not progress:
+            raise ValueError("CPU run-progress scopes cannot be nested")
         validate_cpu_progress(progress, bound.arguments["p"])
         if current_progress() is not None:
             raise ValueError("CPU run-progress scopes cannot be nested")
@@ -122,11 +152,46 @@ def track_cpu_progress(function):
         try:
             progress.begin()
             result = function(*args, **kwargs)
-            progress.complete()
+            progress._thermal_finished = True
+            if boundary is None:
+                progress.complete()
             return result
         except Exception as exc:
             progress.fail(exc)
             raise
         finally:
             _CURRENT.reset(token)
+    return tracked
+
+
+def track_cpu_run_boundary(function):
+    """Finish opt-in progress only after the public result passes all processing."""
+    call_signature = signature(function)
+
+    @wraps(function)
+    def tracked(*args, **kwargs):
+        bound = call_signature.bind_partial(*args, **kwargs)
+        progress = bound.arguments.get("run_progress")
+        if progress is None:
+            if _PUBLIC_BOUNDARY.get() is not None or current_progress() is not None:
+                raise ValueError("CPU run-progress scopes cannot be nested")
+            return function(*args, **kwargs)
+        if not isinstance(progress, CpuRunProgress):
+            raise ValueError("run_progress must be a CpuRunProgress instance")
+        if progress._started:
+            raise ValueError("CpuRunProgress instances are single-use")
+        if _PUBLIC_BOUNDARY.get() is not None or current_progress() is not None:
+            raise ValueError("CPU run-progress scopes cannot be nested")
+        token = _PUBLIC_BOUNDARY.set(progress)
+        try:
+            result = function(*args, **kwargs)
+            if progress._started:
+                progress.complete()
+            return result
+        except Exception as exc:
+            if progress._started:
+                progress.fail(exc, failure_stage="postprocessing" if progress._thermal_finished else None)
+            raise
+        finally:
+            _PUBLIC_BOUNDARY.reset(token)
     return tracked

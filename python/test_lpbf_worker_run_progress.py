@@ -20,11 +20,12 @@ def failed_progress():
 
 
 class WorkerRunProgressTests(unittest.TestCase):
-    def test_only_supported_explicit_cpu_single_solves_get_tracker(self):
+    def test_only_supported_cpu_single_solves_get_tracker(self):
         raw = dict(mode="standard", backend="reference", study="none")
         self.assertIsNotNone(worker._cpu_run_progress_for(raw))
+        self.assertIsNotNone(worker._cpu_run_progress_for({**raw, "backend": "auto"}))
         for key, value in (("mode", "screening"), ("mode", "high-fidelity"),
-                           ("backend", "auto"), ("backend", "openfoam-thermal"),
+                           ("backend", "openfoam-thermal"),
                            ("study", "mesh"), ("study", "timestep"),
                            ("thermalModelId", "layered-plate-enthalpy-v1")):
             with self.subTest(key=key, value=value):

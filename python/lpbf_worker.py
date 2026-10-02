@@ -1097,13 +1097,11 @@ class Queue:
                 self.terminate_child(job, child)
 
 
-def _cpu_run_progress_for(settings):
-    """Track only an explicit supported CPU solve; other backends keep their path."""
-    if (settings.get("mode") != "standard" or settings.get("backend") != "reference"
-            or settings.get("study", "none") != "none"
-            or settings.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+def _cpu_run_progress_for(settings, capabilities=None):
+    """Track supported CPU candidates without changing automatic dispatch."""
+    from lpbf_run_progress import CpuRunProgress, cpu_reference_progress_supported
+    if not cpu_reference_progress_supported(settings, capabilities):
         return None
-    from lpbf_run_progress import CpuRunProgress
     return CpuRunProgress()
 
 
@@ -1187,10 +1185,11 @@ def main():
                 from lpbf_evidence import write_artifacts
                 write_artifacts(result, folder)
             else:
-                run_progress = _cpu_run_progress_for(input_data)
+                execution_capabilities = json.loads((folder/"capabilities.json").read_text())
+                run_progress = _cpu_run_progress_for(input_data, execution_capabilities)
                 options = {"run_progress": run_progress} if run_progress is not None else {}
                 result = run(input_data, report, folder,
-                             json.loads((folder/"capabilities.json").read_text()), **options)
+                             execution_capabilities, **options)
 
             run_kind = _archive_run_kind(job_type, result)
             if run_kind is not None:
@@ -1209,9 +1208,8 @@ def main():
             if run_progress is not None and getattr(e, "progress", None) is None:
                 state = run_progress.snapshot()
                 if state["cells"] is not None:
-                    run_progress.fail(e)
-                    if state["stage"] == "completed":
-                        e.progress["failureStage"] = "postprocessing"
+                    run_progress.fail(e, failure_stage=(
+                        "postprocessing" if state["stage"] == "completed" else None))
             print(str(e), flush=True)
             detail = _cpu_failure_progress_message(e)
             if detail is not None:
