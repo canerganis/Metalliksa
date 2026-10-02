@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "bounded-cpu-workflow-and-bundle-inventory",
+  "sourceRevision": "4cb6c39a959d1b72063cec642a64426162a29d96",
+  "executionDates": [
+    "2026-10-02",
+    "2026-10-03"
+  ],
+  "sourceSnapshot": {
+    "trackedFiles": 1511,
+    "beforeAndAfterBytesEqual": true,
+    "manifestSha256": "429b273ef4e047bcf75752cd959c597ec7b2e58a9816098b8b7801bd22bda180"
+  },
+  "installation": {
+    "node": "24.20.0",
+    "npm": "11.19.0",
+    "lockedNodePackagesInstalled": 850,
+    "command": "npm ci --no-audit --no-fund",
+    "status": "PASS",
+    "offlineAttempt": "ENOTCACHED: yallist; partial snapshot retained, normal locked retry passed",
+    "installScriptPolicy": "unchanged; nine allowScripts warnings retained",
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "pipCheck": "PASS",
+    "pythonEnvironment": "existing separately locked CPU venv; no new pip installation claim"
+  },
+  "verification": {
+    "targetedBundle": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "skip": 0,
+      "duration_s": 15.2312486
+    },
+    "cleanTypes": "PASS",
+    "cleanProductionBuild": "PASS",
+    "viteBuild_s": 168,
+    "buildWarning": "existing chunk over 500 kB",
+    "cleanUnit": {
+      "tests": 359,
+      "pass": 358,
+      "fail": 0,
+      "skip": 1,
+      "duration_s": 80.271765,
+      "skipReason": "Optional CMU source payload not restored: STMeasurements.csv, MTMeasurements.csv, README.txt"
+    },
+    "manufacturedUninstrumented": {
+      "tests": 4,
+      "pass": 4,
+      "duration_s": 16.059
+    },
+    "manufacturedDiagnostics": {
+      "tests": 4,
+      "pass": 4,
+      "recordSha256": "86fc67b8819b16b0a99960919eb6daa5d528bc49a4b7289075408fcad8214bad"
+    },
+    "graft": {
+      "mainGraph": "unavailable: existing private temp EPERM",
+      "isolatedOwnedFiles": 3,
+      "nodes": 19,
+      "edges": 68,
+      "cards": 3,
+      "status": "PASS"
+    }
+  },
+  "workflow": {
+    "browser": "Codex in-app browser",
+    "stages": [
+      "configure",
+      "run",
+      "inspect",
+      "archive",
+      "download",
+      "upload",
+      "verify",
+      "isolated restore",
+      "reload"
+    ],
+    "status": "PASS",
+    "jobId": "a17d2fba20d0403884dd67578470be2a",
+    "runDocumentSha256": "72e3011710162171af63feca029b7ce0d61b332336a7f2d59c09df078f2436f1",
+    "resolvedSettings": {
+      "mode": "standard",
+      "material": "Inconel 718",
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "beamDiameter_um": 80,
+      "preheat_C": 200,
+      "layer_um": 40,
+      "hatch_um": 100,
+      "mesh_um": 20,
+      "maxDt_s": 1e-06,
+      "trackLength_um": 600,
+      "tracks": 1,
+      "layers": 1,
+      "dwell_s": 0.0002,
+      "cooling_s": 0.0005,
+      "scanAngle_deg": 0,
+      "layerRotation_deg": 67,
+      "strategy": "meander",
+      "stripeWidth_um": 500,
+      "islandSize_um": 200,
+      "packingFraction": 0.55,
+      "powderConductivityRatio": 0.12,
+      "convection_W_m2K": 20,
+      "timeout_s": 300,
+      "study": "none",
+      "backend": "reference",
+      "surfaceMode": "powder-layer",
+      "sourcePenetration_um": null,
+      "barePlateGeometry": "square",
+      "evaporationModel": false,
+      "marangoniMultiplier": 2.2,
+      "opticalObserver": null,
+      "powderGridPolicy": "layer-conforming",
+      "absorptivity": 0.38,
+      "emissivity": 0.35
+    },
+    "discretization": {
+      "cells": 29988,
+      "mesh_m": 1.9999999999999998e-05,
+      "minimumDt_s": 8.321136634598103e-08,
+      "meanDt_s": 4.956629491945477e-07,
+      "steps": 2421
+    },
+    "coreContract": {
+      "schemaVersion": 1,
+      "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+      "actualBackend": "numpy-reference",
+      "requestedBackend": "reference",
+      "effectiveMode": "standard",
+      "solverId": "enthalpy-fv-6",
+      "inputSha256": "327cb265a33e852d31fc81a6a7c88dd64036292f8b7a2c1fdb0e1522dbd3b3ba",
+      "materialSha256": "6a8d7bde8277b45093a26faab435e6a27167a9e3b67631a0c0b6b04f65b28ce4",
+      "units": {
+        "power": "W",
+        "speed": "mm/s",
+        "length": "um",
+        "preheat": "degC",
+        "temperature": "K",
+        "internalLength": "m",
+        "time": "s",
+        "energy": "J",
+        "beamDiameter": "1/e2-intensity"
+      },
+      "resolvedPhysics": {
+        "conduction": true,
+        "transient": true,
+        "latentHeat": true,
+        "momentum": false,
+        "freeSurface": false,
+        "evaporation": false
+      },
+      "evidenceClass": "unvalidated-model"
+    },
+    "provenance": {
+      "inputHash": "f574f98c207aa55ac2ed6001597cde7c76b54c76f4aacb6d8f94c2b8b1a18dab",
+      "executionInputHash": "f574f98c207aa55ac2ed6001597cde7c76b54c76f4aacb6d8f94c2b8b1a18dab",
+      "implementationHash": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+      "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+      "materialVersion": "lpbf-materials-1",
+      "solverBinaryHash": null,
+      "createdAt": "2026-10-02T19:34:51.178285+00:00",
+      "runtime_s": 20.96899999998277,
+      "executionRuntime": {
+        "executable": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "python": "3.12.10",
+        "platform": "Windows-11-10.0.26300-SP0",
+        "numpy": "2.2.6"
+      }
+    },
+    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "energyBalance": {
+      "input_J": 0.011399999999999976,
+      "losses_J": 9.628912162511727e-06,
+      "stored_J": 0.011390371087837487,
+      "relativeError": 1.9781934375174158e-15
+    },
+    "sourceLinks": [
+      {
+        "datasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+        "revision": 1,
+        "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"
+      }
+    ],
+    "originalAndRestoredRecordEqual": true,
+    "sourceBindingStatus": "exact-revision-bound",
+    "comparison": {
+      "schemaVersion": 1,
+      "benchmark": "AMB2022-03-TMPG",
+      "caseNumber": "0",
+      "status": "unavailable",
+      "validationStatus": "unvalidated",
+      "reference": {
+        "doi": "10.18434/mds2-2718",
+        "results": "https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10",
+        "resultsLocator": "Table 4, CHAL-AMB2022-03-TMPG",
+        "methods": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+        "measurement": "six optical cross-section depth/width measurements per condition",
+        "archiveKind": "local transcription of published aggregate means and standard deviations"
+      },
+      "sourceBinding": null,
+      "reasons": [
+        "Archived run is not bound to exactly one local AMB2022-03 Table 4 source revision."
+      ],
+      "errors": null
+    },
+    "secondLiveArchiveEmpty": true
+  },
+  "portableBundle": {
+    "exportId": "4cb53c4b941346dd940ad26807946443",
+    "importId": "4a6ea680df5a4727bc5234cd018fb253",
+    "restoreId": "1680a2e098e44fb4bb5e7005823afd52",
+    "tarSha256": "7388ceddc08da6945ac50319acb0b715a9785b8863b72140fa0f8c32f54a95bd",
+    "tarBytes": 8109568,
+    "manifest": {
+      "schemaVersion": 2,
+      "kind": "metalliksa-lpbf-run-bundle",
+      "metadata": {
+        "sha256": "a683dc2e3c08f2efeec661121395a6f8302863cbee65751aec35165b900fab97",
+        "byteSize": 65536
+      },
+      "sourceBundle": {
+        "sha256": "f6005c39e94ced5f05c9a40e2a18b229e186714d73f7a5492928d06b86c22d8a",
+        "byteSize": 236
+      },
+      "runCount": 1,
+      "artifactCount": 69,
+      "sourceLinkCount": 1,
+      "campaignCount": 0
+    },
+    "portableFilesByteEqual": 75,
+    "restoredObjectsByteEqual": 71,
+    "restoredSQLiteBytes": "new independently verified backups; record bytes/identities equal, database container hashes may differ"
+  },
+  "criticalPaths": {
+    "staleInputs": {
+      "status": "PASS",
+      "powerChangedFrom_W": 60,
+      "powerChangedTo_W": 61,
+      "visibleLabel": "Stale \u00b7 executed snapshot retained"
+    },
+    "cancelled": {
+      "status": "PASS",
+      "jobId": "ee3fc5aa4f1c41cc8ba4dd354518b3dd",
+      "partialArtifacts": {
+        "status": "retained-unverified",
+        "fileCount": 7,
+        "totalBytes": 1079568
+      },
+      "completedResultPublished": false,
+      "archiveAndExportUnavailable": true
+    },
+    "boilingFailure": {
+      "status": "PASS",
+      "jobId": "6d0784d010454d4ba2c8c27a8a6476d7",
+      "power_W": 300,
+      "error": "{\"progress\": 3.668666969425061e-05, \"message\": \"step=1 t=4.4024e-08s peak=496.5K cells=29988\"}\nThermal model validity exceeded at or above the material boiling limit (specific enthalpy 2163442.31 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(6), np.int64(20), np.int64(16)), previous T=3113.11 K, previous specific enthalpy=2146112.22 J/kg, dt=7.05632048e-08 s, source rate=1.2709219e+15 W/m\u00b3, net rate=1.09132608e+15 W/m\u00b3); evaporation/free-surface CFD required\nLast valid CPU state: 128 accepted steps at 7.73757725e-06 s. Source work: 258 source evaluations, 129 retries, 7736904 source cell-evaluations (excludes conduction and other solver work). No completed result.\n",
+      "partialArtifacts": {
+        "status": "retained-unverified",
+        "fileCount": 2,
+        "totalBytes": 479808
+      },
+      "completedResultPublished": false,
+      "presentationGap": "Raw transport progress frame appears before real error; separate bounded cleanup follows"
+    },
+    "malformedBundle": {
+      "status": "PASS in targeted API/service/TAR tests",
+      "browserFilePickerMalformedReplay": "not run; terminal tests cover final verification cleanup and unchanged live bytes"
+    },
+    "recoveryScope": "browser reload of isolated restored record; no forced worker crash/restart browser claim"
+  },
+  "browserAutomationLimitations": {
+    "downloadWaitReported_s": 658.1042,
+    "fileChooserWaitReported_s": 4348.372,
+    "note": "CUA wait calls exceeded their advertised timeouts; no application latency or unattended picker reliability claim"
+  },
+  "scientificStatus": {
+    "operatorVerification": "PASS within manufactured cases",
+    "physicalLpbfConvergence": "inconclusive",
+    "experimentalValidation": "unvalidated",
+    "nistComparison": "unavailable",
+    "productionReady": false,
+    "newLarge5umSolve": false
+  },
+  "fullV1ExitAccepted": false
+}

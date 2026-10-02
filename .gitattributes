@@ -57,3 +57,11 @@
 /python/lpbf_source_identity.py -text
 /docs/LPBF_SOURCE_IDENTITY_2026-10-02.json -text
 /docs/LPBF_PUBLIC_RUN_PROGRESS_2026-10-02.json -text
+
+# Preserve the byte-pinned V1 CPU workflow and observational evidence.
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03.json -text
+/docs/LPBF_V1_CPU_NUMERICAL_2026-10-03.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/snapshot-source.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/numerical_diagnostics.py.txt -text
+/docs/LPBF_WORKER_FAILURE_MESSAGE_2026-10-03.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/failed-job.json -text

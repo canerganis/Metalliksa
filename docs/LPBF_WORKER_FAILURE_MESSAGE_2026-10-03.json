@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "revision": "d1cda657e4c1e6e49a524e4d4d9ad17db3d80642",
+  "scope": "Failure formatter replay against recorded actual CPU child log; not a new browser/solver run",
+  "productionSourceSha256": {
+    "python/lpbf_worker.py": "f56b164b21477e054a1d8175df42a8398cedb73033d3c0f74068a0e8986a266b",
+    "python/test_lpbf_worker_failure_message.py": "3d592fafdf73fcae71350ca7151feb320ad4b31f731dd9c5f81f812ba5747d2b"
+  },
+  "recordedJobId": "6d0784d010454d4ba2c8c27a8a6476d7",
+  "recordedJobSourceRevision": "4cb6c39a959d1b72063cec642a64426162a29d96",
+  "recordedJobFileSha256": "a81b47919393c69c26632aa71528ed029eb8301ded2c01d6643ee5c31b58f527",
+  "recordedJobFile": "LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/failed-job.json",
+  "rawLogSha256": "b8518f595725dd3e5cc74bb1316755477fa57fe45e051c173098c338f356abb1",
+  "formattedErrorSha256": "384a749682879eeec91d2e6b1a86e0742a5ba35d4f9603005dcfaba40da5f61f",
+  "exactDiagnosticRetention": true,
+  "rawLogUnchanged": true,
+  "acceptedSteps": 128,
+  "sourceEvaluations": 258,
+  "sourceRetries": 129,
+  "sourceCellEvaluations": 7736904,
+  "canonicalThermalImplementationFingerprint": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+  "focusedTests": {
+    "total": 20,
+    "passed": 20,
+    "skipped": 0,
+    "failed": 0,
+    "unittestSeconds": 0.14,
+    "runner": "Authorized Windows Python 3.12; initial sandbox attempt had 7 temporary-directory permission errors"
+  },
+  "latestRevisionBrowserReplay": false,
+  "forcedWorkerRestartRecovery": false,
+  "isolatedGraph": {
+    "files": 2,
+    "nodes": 68,
+    "edges": 206,
+    "cards": 2
+  },
+  "ownedRuntimeCleanup": [
+    {
+      "name": "first",
+      "pid": 25724,
+      "startedAt": "2026-10-02T22:32:41.4604076+03:00",
+      "status": "owned-tree-stopped"
+    },
+    {
+      "name": "second",
+      "pid": 20752,
+      "startedAt": "2026-10-02T22:35:55.5642143+03:00",
+      "status": "owned-tree-stopped"
+    }
+  ],
+  "experimentalValidity": "unvalidated",
+  "physicalConvergence": "inconclusive",
+  "nistComparison": "unavailable"
+}
