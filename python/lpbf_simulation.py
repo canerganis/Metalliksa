@@ -398,7 +398,8 @@ def liquidus_crossing_sums(old, new, active, dx, dt, liquidus):
 
 
 def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None,
-              selected_time_observer=None, selected_time_s=None):
+              selected_time_observer=None, selected_time_s=None,
+              local_history_observer=None, local_history_indices_ijk=None):
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")
@@ -420,6 +421,28 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             raise ValueError("Selected time must be an existing scan-segment end event")
     elif selected_time_s is not None:
         raise ValueError("Selected time requires a selected-time observer")
+    if local_history_observer is None:
+        if local_history_indices_ijk is not None:
+            raise ValueError("Local history indices require an observer")
+        local_indices = ()
+    else:
+        if not callable(local_history_observer):
+            raise ValueError("Local history observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer"
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Local history supports standard reference powder-layer runs only")
+        if (not isinstance(local_history_indices_ijk, (tuple, list))
+                or not 1 <= len(local_history_indices_ijk) <= 32):
+            raise ValueError("Local history needs 1 to 32 selected cell indices")
+        local_indices = []
+        for index in local_history_indices_ijk:
+            if (not isinstance(index, (tuple, list)) or len(index) != 3
+                    or any(type(value) is not int for value in index)):
+                raise ValueError("Local history indices must be integer (x,y,z) triples")
+            local_indices.append(tuple(index))
+        if len(set(local_indices)) != len(local_indices):
+            raise ValueError("Local history indices must be unique")
     thermal_inputs = thermal_si_inputs(p, m)
     layer_m = thermal_inputs["layer_m"]
     speed_m_s = thermal_inputs["speed_m_s"]
@@ -436,6 +459,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         domain["substrate_depth"] = domain["plate_depth"]+domain["support_depth"]
         domain["nz"] = plate_cells+support_cells
     radius, span, nx, ny, nz, dx, substrate = (domain[k] for k in ("radius", "span", "nx", "ny", "nz", "dx", "substrate_depth"))
+    if any(not (0 <= i < nx and 0 <= j < ny and 0 <= k_index < nz)
+           for i, j, k_index in local_indices):
+        raise ValueError("Local history cell index exceeds the resolved grid")
     cell_count = nx*ny*nz
     if cell_count > 600000:
         geometry = "rectangular corridor" if p["barePlateGeometry"] == "rectangular-corridor" else "square"
@@ -532,6 +558,8 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             diagonal = conduction_diagonal(k, active, dx)
         else:
             rate, diagonal = _conduction_rate_and_diagonal(T, k, active, dx)
+        if local_history_observer is not None:
+            local_conduction = [float(rate[index]) for index in local_indices]
         # Explicit support-base boundary; legacy v1 retains its fixed-temperature base.
         bottom = np.zeros((nx, ny))
         isothermal_bottom = (not layered or p["supportBottomBoundary"] == "isothermal-at-preheat")
@@ -643,7 +671,28 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         if layered:
             melt &= in718_mask
         remelt |= melt&ever&~previous_melt
+        if local_history_observer is not None:
+            local_ever_before = [bool(ever[index]) for index in local_indices]
         ever |= melt
+        if local_history_observer is not None:
+            local_history_observer({
+                "step": int(step), "time_s": float(accepted_clock_s),
+                "acceptedDt_s": float(dt), "schedulerTime_s": float(time),
+                "cell_indices_ijk": [list(index) for index in local_indices],
+                "cells": [{
+                    "coordinate_m": [float(axis[index[0]]), float(axis_y[index[1]]),
+                                     float(z[index[2]])],
+                    "temperature_K": float(T[index]),
+                    "enthalpy_J_m3": float(H[index]),
+                    "everLiquidusBefore": before,
+                    "everLiquidusAfter": bool(ever[index]),
+                    "effectiveConductivity_W_mK": float(k[index]),
+                    "sourceRate_W_m3": float(source[index]),
+                    "conductionRate_W_m3": conduction,
+                    "passiveRate_W_m3": float(rate[index]-source[index]),
+                } for index, before, conduction in zip(
+                    local_indices, local_ever_before, local_conduction)],
+            })
         if bare:
             np.maximum(midpoint_temperature_max, T[midpoint_plane], out=midpoint_temperature_max)
             if rectangular_corridor:
@@ -765,7 +814,8 @@ def _layer_aligned_mesh_levels(p):
 
 
 def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
-        final_state_observer=None, selected_time_observer=None, selected_time_s=None):
+        final_state_observer=None, selected_time_observer=None, selected_time_s=None,
+        local_history_observer=None, local_history_indices_ijk=None):
     requested_p, requested_m = validate(raw)
     requested_backend = requested_p["backend"]
     p, m = requested_p, requested_m
@@ -818,6 +868,13 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
             raise ValueError("Selected time must be an existing scan-segment end event")
     elif selected_time_s is not None:
         raise ValueError("Selected time requires a selected-time observer")
+    if local_history_observer is not None or local_history_indices_ijk is not None:
+        if local_history_observer is None or not callable(local_history_observer):
+            raise ValueError("Local history observer must be callable")
+        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
+                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+            raise ValueError("Local history supports standard reference powder-layer runs only")
     result = dict(schemaVersion=1, requestedMode=p["mode"], effectiveMode="screening" if fallback else p["mode"],
                   solver=dict(id=("layered-enthalpy-fv-1" if p.get("thermalModelId") == "layered-plate-enthalpy-v1"
                                   else "rosenthal+goldak" if p["mode"] == "screening" or fallback else VERSION),
@@ -851,7 +908,14 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                   if (capabilities or {}).get("openfoamVersion") else "OpenFOAM / a qualified free-surface LPBF solver is unavailable in this worker.") if fallback else None)
     if p["mode"] in ("standard", "calibration"):
         n_runs = 1 if p["study"] == "none" else 3
-        if final_state_observer is None and selected_time_observer is None:
+        if local_history_observer is not None:
+            thermal_result = thermal_solver(
+                p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,
+                final_state_observer=final_state_observer,
+                selected_time_observer=selected_time_observer, selected_time_s=selected_time_s,
+                local_history_observer=local_history_observer,
+                local_history_indices_ijk=local_history_indices_ijk)
+        elif final_state_observer is None and selected_time_observer is None:
             thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir)
         elif selected_time_observer is None:
             thermal_result = thermal_solver(p, m, lambda f, msg: report(f/n_runs, msg), artifact_dir,

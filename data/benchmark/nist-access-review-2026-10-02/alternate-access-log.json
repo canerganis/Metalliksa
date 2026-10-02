@@ -19,5 +19,14 @@
     "status": "timeout",
     "bytes_received": 0,
     "error": "The request was canceled due to the configured HttpClient.Timeout of 12 seconds elapsing."
+  },
+  {
+    "dataset": "mds2-3707",
+    "url": "https://data.nist.gov/od/ds/ark:/88434/mds2-3707/MeltPoolCrossSection/20241010_AMB_SL_1_mask.tif",
+    "timeout_seconds": 30,
+    "status": "timeout",
+    "bytes_received": 0,
+    "interface": "Codex browser download event",
+    "error": "Timed out waiting for download; the NIST PDR page exposed the direct file link and advertised size 29.2 kB, but no payload was transferred."
   }
 ]

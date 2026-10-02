@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-local-history-5um-2026-10-02-v1",
+  "protocolSha256": "fd5e20e0f64efebfaa7aa257bef61bff4e778dddb1ef014ae5fb968cd860aa9b",
+  "executionHeadCommit": "b9616a91d52f47851e9bd19ec109d9a8a7b516ca",
+  "scope": "Same 5um physical grid and first-scan-end event; recompute frozen 50/25ns cases with an opt-in scalar local-history observer to locate switch timing and explain local temperature differences; no experimental or convergence claim",
+  "status": "diagnostic-only",
+  "stage": "completed",
+  "experimentalValidation": false,
+  "convergenceConclusion": "inconclusive",
+  "implementationFingerprint": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+  "priorImplementationFingerprint": "d5eae56b9bd1ef0ab241153eb44efe7a1652c41f1aa50a7b652ee5a9e11ac2fe",
+  "priorReportSha256": "a509d8e8e67021956414be013aae54c52569f0c43c0db04dbad17a6423738a4d",
+  "selectedCells": [
+    {
+      "indices_ijk": [
+        29,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -7.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        42,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -7.4999999999999926e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        59
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        -2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        31,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        58,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        58,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        42,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -7.4999999999999926e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        45,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        7.4999999999999926e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        60,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        60,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    }
+  ],
+  "centerIndices_ijk": [
+    [
+      30,
+      43,
+      60
+    ],
+    [
+      59,
+      43,
+      61
+    ],
+    [
+      59,
+      44,
+      61
+    ]
+  ],
+  "rows": [
+    {
+      "maxDt_s": 5e-08,
+      "resolvedInputSha256": "eb428f6741a6803fd3705526801c5a12255861a7aa9db0a66b3edafd9b099a28",
+      "priorFieldSha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+      "acceptedSteps": 5000,
+      "acceptedCellSteps": 2632960000,
+      "wallTime_s": 577.3155972000095,
+      "priorFieldExactMatch": true,
+      "historyArtifact": {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-5.0000e-08.npz",
+        "sha256": "d82faa7c1eaad34600707ca1619fd8848b9223feee55757104be4b7a35ce434b",
+        "byteSize": 2369584
+      },
+      "everSwitchEvents": [
+        {
+          "step": 2312,
+          "time_s": 0.00011560000000000239,
+          "indices_ijk": [
+            30,
+            43,
+            61
+          ]
+        },
+        {
+          "step": 4602,
+          "time_s": 0.00023010000000000516,
+          "indices_ijk": [
+            59,
+            43,
+            62
+          ]
+        },
+        {
+          "step": 4602,
+          "time_s": 0.00023010000000000516,
+          "indices_ijk": [
+            59,
+            44,
+            62
+          ]
+        },
+        {
+          "step": 4876,
+          "time_s": 0.0002438000000000055,
+          "indices_ijk": [
+            58,
+            43,
+            61
+          ]
+        },
+        {
+          "step": 4876,
+          "time_s": 0.0002438000000000055,
+          "indices_ijk": [
+            58,
+            44,
+            61
+          ]
+        }
+      ]
+    },
+    {
+      "maxDt_s": 2.5e-08,
+      "resolvedInputSha256": "a1ef98548edfd1aee7ec9386fe8f3b034917fdc887492b316c226e654c4a403e",
+      "priorFieldSha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+      "acceptedSteps": 10000,
+      "acceptedCellSteps": 5265920000,
+      "wallTime_s": 1109.2316658000054,
+      "priorFieldExactMatch": true,
+      "historyArtifact": {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-2.5000e-08.npz",
+        "sha256": "74a6f40a17e8833ea63e065426807be0ec60184beb75438481c5c95e5b8f05b6",
+        "byteSize": 4712681
+      },
+      "everSwitchEvents": [
+        {
+          "step": 9202,
+          "time_s": 0.00023004999999994683,
+          "indices_ijk": [
+            59,
+            43,
+            62
+          ]
+        },
+        {
+          "step": 9202,
+          "time_s": 0.00023004999999994683,
+          "indices_ijk": [
+            59,
+            44,
+            62
+          ]
+        },
+        {
+          "step": 9750,
+          "time_s": 0.00024374999999993973,
+          "indices_ijk": [
+            58,
+            43,
+            61
+          ]
+        },
+        {
+          "step": 9750,
+          "time_s": 0.00024374999999993973,
+          "indices_ijk": [
+            58,
+            44,
+            61
+          ]
+        },
+        {
+          "step": 10000,
+          "time_s": 0.00024999999999994287,
+          "indices_ijk": [
+            59,
+            43,
+            61
+          ]
+        },
+        {
+          "step": 10000,
+          "time_s": 0.00024999999999994287,
+          "indices_ijk": [
+            59,
+            44,
+            61
+          ]
+        }
+      ]
+    }
+  ],
+  "runtimeWork": {
+    "acceptedSteps": 15000,
+    "acceptedCellSteps": 7898880000,
+    "maximumSampledRssBytes": 0
+  },
+  "startedAt": "2026-10-02T01:41:00.180919+00:00",
+  "physicalCheckpointComparison": {
+    "matchedPhysicalCheckpoints": 5000,
+    "maximumAbsoluteTemperatureDifference_K": 73.59940992771453,
+    "maximumDifferenceAt": {
+      "time_s": 0.0001868500000000041,
+      "coordinates_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "state50ns": {
+        "temperature_K": 1130.9297801791076,
+        "enthalpy_J_m3": 1876553415.4586143,
+        "effectiveConductivity_W_mK": 2.724073356796562,
+        "sourceRate_W_m3": 1690433.05948418,
+        "conductionRate_W_m3": -2201631025220.8906,
+        "passiveRate_W_m3": -2201631025220.8906,
+        "everLiquidusBefore": false,
+        "everLiquidusAfter": false
+      },
+      "state25ns": {
+        "temperature_K": 1057.330370251393,
+        "enthalpy_J_m3": 1673344669.904132,
+        "effectiveConductivity_W_mK": 2.6076939045830643,
+        "sourceRate_W_m3": 1685515.070058634,
+        "conductionRate_W_m3": -2173206485514.2969,
+        "passiveRate_W_m3": -2173206485514.2969,
+        "everLiquidusBefore": false,
+        "everLiquidusAfter": false
+      }
+    },
+    "firstEverMismatchTime_s": 0.00011560000000000239,
+    "everMismatchCheckpointCells": 2695,
+    "comparisonRule": "exact same physical accepted-step times; no step-index pairing"
+  },
+  "finishedAt": "2026-10-02T02:09:07.067686+00:00"
+}
