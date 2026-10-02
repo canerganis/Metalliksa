@@ -12,6 +12,8 @@ from pathlib import Path
 import numpy as np
 from lpbf_material_registry import material
 from lpbf_run_progress import current_progress, track_cpu_progress, validate_cpu_progress
+from lpbf_source_identity import (CANONICAL_SCHEMA, RAW_SCHEMA, fingerprint_sources,
+                                  fingerprint_manifest_entries, source_identity)
 from lpbf_core_physics import property_at, enthalpy_table
 from lpbf_core_physics import calculate_mesh_domain, scan_segments, thermal_si_inputs, SOURCE_INTEGRATION
 from lpbf_core_contract import build_core_contract
@@ -32,7 +34,8 @@ from lpbf_overlap import FieldOverlapTracker, OVERLAP_MODEL_ID
 from lpbf_evidence import finite_tree, measurement_evidence, resource_estimate, thermal_audits, enforce_thermal_balances, write_artifacts, FieldRecorder
 
 VERSION = "enthalpy-fv-6"
-IMPLEMENTATION_FINGERPRINT_SCHEMA = "lpbf-thermal-implementation-manifest-v2"
+IMPLEMENTATION_FINGERPRINT_SCHEMA = CANONICAL_SCHEMA
+CACHE_FINGERPRINT_SCHEMA = "lpbf-thermal-cache-v2-canonical-production"
 # Reviewed production closure for the shared thermal path and supported CPU,
 # OpenFOAM, CUDA, and Warp implementations. Keep orchestration, tests, scratch
 # scripts, and unrelated physics modules out of this numerical implementation ID.
@@ -61,6 +64,7 @@ IMPLEMENTATION_SOURCE_FILES = (
     "lpbf_overlap.py",
     "lpbf_peak.py",
     "lpbf_run_progress.py",
+    "lpbf_source_identity.py",
     "powder_packer.py",
     "powder_bed_raytracer.py",
     "lpbf_simulation.py",
@@ -243,7 +247,19 @@ def validate(raw):
 
 
 def fingerprint(p, m):
-    # Cache identity includes the implementation and effective inputs.
+    # Nonthermal jobs retain the broad source closure used by their existing dispatch.
+    if p.get("jobType") is not None:
+        return _legacy_broad_cache_fingerprint(p, m)
+    implementation = implementation_fingerprint()
+    payload = json.dumps([VERSION, p, m], sort_keys=True, allow_nan=False).encode()
+    h = hashlib.sha256()
+    h.update((CACHE_FINGERPRINT_SCHEMA + "\0" + implementation + "\0").encode())
+    h.update(len(payload).to_bytes(8, "big")); h.update(payload)
+    return h.hexdigest()
+
+
+def _legacy_broad_cache_fingerprint(p, m):
+    # Keep the historical algorithm byte-identical for build/GPU pilot jobs.
     root = Path(__file__).parent
     h = hashlib.sha256()
     for f in sorted(root.glob("*.py")):
@@ -256,38 +272,23 @@ def fingerprint(p, m):
     return h.hexdigest()
 
 
-def implementation_fingerprint():
-    """Hash reviewed thermal implementation sources, independent of run inputs."""
+def implementation_fingerprint(*, schema=CANONICAL_SCHEMA):
+    """Hash the reviewed closure using an explicit versioned source-byte policy."""
     return _fingerprint_implementation_sources(Path(__file__).parent,
-                                               IMPLEMENTATION_SOURCE_FILES, VERSION)
+                                               IMPLEMENTATION_SOURCE_FILES, VERSION, schema=schema)
 
 
-def _fingerprint_implementation_sources(root, source_files, version):
-    """Hash a deterministic, fail-closed relative source manifest."""
-    paths = tuple(source_files)
-    if len(paths) != len(set(paths)):
-        raise ValueError("Implementation source manifest contains duplicate paths")
-    root = Path(root).resolve()
-    entries = []
-    for relative in paths:
-        path = Path(relative)
-        if path.is_absolute() or ".." in path.parts:
-            raise ValueError(f"Implementation source path must stay within its root: {relative}")
-        source = (root / path).resolve()
-        if root not in source.parents or not source.is_file():
-            raise FileNotFoundError(f"Implementation source is missing from manifest: {relative}")
-        entries.append((path.as_posix(), source.read_bytes()))
-    return _fingerprint_manifest_entries(entries, version)
+def implementation_source_identity():
+    """Inspection metadata; raw-v2 here identifies current bytes, not old records."""
+    return source_identity(Path(__file__).parent, IMPLEMENTATION_SOURCE_FILES, VERSION)
 
 
-def _fingerprint_manifest_entries(entries, version):
-    h = hashlib.sha256()
-    h.update((IMPLEMENTATION_FINGERPRINT_SCHEMA + "\0" + str(version) + "\0").encode())
-    for relative, content in sorted(entries):
-        name = relative.encode("utf-8")
-        h.update(len(name).to_bytes(4, "big")); h.update(name)
-        h.update(len(content).to_bytes(8, "big")); h.update(content)
-    return h.hexdigest()
+def _fingerprint_implementation_sources(root, source_files, version, *, schema=CANONICAL_SCHEMA):
+    return fingerprint_sources(root, source_files, version, schema=schema)
+
+
+def _fingerprint_manifest_entries(entries, version, *, schema=CANONICAL_SCHEMA):
+    return fingerprint_manifest_entries(entries, version, schema=schema)
 
 
 def screening(p, m):
@@ -897,7 +898,8 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                   label="Screening only" if p["mode"] == "screening" or fallback else "Unvalidated transient thermal",
                   provenance=dict(inputHash=hashlib.sha256(json.dumps(requested_p, sort_keys=True, allow_nan=False).encode()).hexdigest(),
                                   executionInputHash=hashlib.sha256(json.dumps(p, sort_keys=True, allow_nan=False).encode()).hexdigest(),
-                                  implementationHash=implementation_fingerprint(), materialVersion=m["version"],
+                                  implementationHash=implementation_fingerprint(),
+                                  implementationFingerprintSchema=IMPLEMENTATION_FINGERPRINT_SCHEMA, materialVersion=m["version"],
                                   solverBinaryHash=(capabilities or {}).get("binaryHash"),
                                   createdAt=datetime.datetime.now(datetime.timezone.utc).isoformat()),
                   analyticalComparison=analytical,

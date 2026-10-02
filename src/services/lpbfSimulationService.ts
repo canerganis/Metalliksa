@@ -99,7 +99,7 @@ export interface SimulationResult {
   resourceEstimate?: ResourceEstimate;
   confidenceReason?: string;
   scanPath?: { start_s: number; end_s: number; layer: number; track?: number; start?: number[]; end?: number[] }[];
-  provenance?: { createdAt: string; inputHash: string; executionInputHash?: string; implementationHash: string; solverBinaryHash: string | null; runtime_s?: number };
+  provenance?: { createdAt: string; inputHash: string; executionInputHash?: string; implementationHash: string; implementationFingerprintSchema?: string; solverBinaryHash: string | null; runtime_s?: number };
   massBalance?: { initial_kg: number; deposited_kg: number; final_kg: number; relativeError: number; scope: string };
   phaseAudit?: { liquidVolume_m3: number; solidVolume_m3: number; activeVolume_m3: number; minFraction: number; maxFraction: number; scope: string };
   fieldSeries?: "field-series.json" | null;
@@ -442,7 +442,7 @@ interface GpuPilotResultBase {
     cpu: { solver: { id: string }; coreContract: { modelId: 'stationary-enthalpy-conduction-layer-conforming-v1'; actualBackend: 'numpy-reference' };
       material: { materialRevisionSha256: string }; discretization: { cells: number; steps: number; mesh_m: number } };
     comparisons: Record<string, GpuPilotComparison> };
-  provenance: { inputHash: string; implementationHash: string; materialVersion: string; createdAt: string;
+  provenance: { inputHash: string; implementationHash: string; implementationFingerprintSchema?: string; materialVersion: string; createdAt: string;
     deviceEvidence: GpuPilotDeviceEvidence;
     runtime_s?: number };
 }

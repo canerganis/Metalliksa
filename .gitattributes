@@ -54,3 +54,5 @@
 /python/analyze_lpbf_fixed_event_transitions.py -text
 /docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_source_identity.py -text
+/docs/LPBF_SOURCE_IDENTITY_2026-10-02.json -text

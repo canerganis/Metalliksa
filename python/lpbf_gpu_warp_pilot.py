@@ -15,6 +15,7 @@ from lpbf_gpu_thermal import (
     _enforce_gpu_archive_field_metadata,
 )
 from lpbf_core_contract import _encoded, build_core_contract
+from lpbf_source_identity import CANONICAL_SCHEMA
 
 WARP_SOLVER_ID = "enthalpy-fv-6-warp-candidate-1"
 MODEL_ID = "stationary-enthalpy-conduction-layer-conforming-v1"
@@ -363,6 +364,7 @@ def run_queued_warp_pilot(raw, artifact_dir):
         "provenance": {
             "inputHash": _digest_text(_python_json(request)),
             "implementationHash": implementation_fingerprint(),
+            "implementationFingerprintSchema": CANONICAL_SCHEMA,
             "materialVersion": material["version"],
             "createdAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "deviceEvidence": device_evidence,
