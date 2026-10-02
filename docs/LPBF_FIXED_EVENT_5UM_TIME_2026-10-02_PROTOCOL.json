@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-5um-time-2026-10-02-v1",
+  "status": "diagnostic-only",
+  "experimentalValidation": false,
+  "convergenceConclusion": "inconclusive",
+  "scope": "Fixed 5um grid at first scan end; verified adaptive 100ns baseline reused; new 50/25ns CPU rows; phase/plane and full-field diagnostics only; no convergence or experimental claim",
+  "scenarioFile": "docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json",
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "scenarioOverrides": {
+    "mesh_um": 5,
+    "cooling_s": 0
+  },
+  "levels": [
+    5e-08,
+    2.5e-08
+  ],
+  "mesh_um": 5,
+  "cooling_s": 0,
+  "eventRule": "first-scan-segment-end",
+  "expectedEventTime_s": 0.00024999999999999995,
+  "expectedEventEndpoint_m": [
+    9.999999999999999e-05,
+    0.0,
+    4e-05
+  ],
+  "expectedDomain": {
+    "nx": 88,
+    "ny": 88,
+    "nz": 68,
+    "dx_um": 5.0
+  },
+  "expectedCells": 526592,
+  "expectedInputSha256ByMaxDt": {
+    "1e-07": "333da864f34e26dd23466df299bf55bc42dda9ebd9568349c0bcb18b753e0da5",
+    "5e-08": "eb428f6741a6803fd3705526801c5a12255861a7aa9db0a66b3edafd9b099a28",
+    "2.5e-08": "a1ef98548edfd1aee7ec9386fe8f3b034917fdc887492b316c226e654c4a403e"
+  },
+  "expectedImplementationFingerprint": "d5eae56b9bd1ef0ab241153eb44efe7a1652c41f1aa50a7b652ee5a9e11ac2fe",
+  "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+  "baseline": {
+    "report": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_2026-10-02.json",
+    "reportSha256": "7f791aebe6a56175e1243882ae4cc95551c3624eb13e2e1617ed65a2a97cdff4",
+    "field": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-05um.npz",
+    "fieldSha256": "0372f6568b5cec8f786c0d9610b5a52e519815c2d1205843877c4e726f1a92ae",
+    "inputSha256": "333da864f34e26dd23466df299bf55bc42dda9ebd9568349c0bcb18b753e0da5",
+    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "requestedMaxDt_s": 1e-07
+  },
+  "supportSourceSha256": {
+    "python/run_lpbf_fixed_event_mesh_refinement_probe.py": "6d099611598246f73ac0e44bd31b07fdd5ebc5368580aaec4bfc01ffe88cf2eb",
+    "python/lpbf_fixed_scan_end_observation.py": "74b4574747cf8ea1f42e570bdbd31d2523d67a3d0190c0e7268c65dcdc8fcf9a"
+  },
+  "predictedStepsByMaxDt": {
+    "5e-08": 5000,
+    "2.5e-08": 10000
+  },
+  "predictedTotalSteps": 15000,
+  "predictedTotalCellSteps": 7898880000,
+  "maximumStepsByMaxDt": {
+    "5e-08": 5500,
+    "2.5e-08": 11000
+  },
+  "maximumTotalCellSteps": 8688768000,
+  "maximumCells": 600000,
+  "maximumUncompressedFieldBytes": 40000000,
+  "estimatedWorkingSetBytes": 539230208,
+  "maximumSampledRssBytes": 805306368,
+  "maximumWallTimeByMaxDt_s": {
+    "5e-08": 1200,
+    "2.5e-08": 2400
+  },
+  "resourceAssumptions": "Working set estimate is cells*1024 bytes; RSS sampled at source-step guards when psutil is available, not a hard OS peak; wall caps checked at source-step guards, not a hard watchdog; field/observer copies and imports add memory; prediction is a lower bound, retries can add steps",
+  "commonZPlane_m": 2e-05,
+  "substrateInterfaceZ_m": 0.0,
+  "surface_m": 4e-05,
+  "output": "docs/LPBF_FIXED_EVENT_5UM_TIME_2026-10-02.json",
+  "partial": "docs/LPBF_FIXED_EVENT_5UM_TIME_2026-10-02.partial.json",
+  "fieldDirectory": "docs/LPBF_FIXED_EVENT_5UM_TIME_FIELDS_2026-10-02"
+}

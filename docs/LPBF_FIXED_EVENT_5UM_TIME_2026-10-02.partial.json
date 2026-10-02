@@ -1,0 +1,635 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-5um-time-2026-10-02-v1",
+  "protocolSha256": "96b9b28d2100fc378477925160ded096bb8a0a8e7c06767ff022fdb3870c4c6a",
+  "executionHeadCommit": "a31ed20e5baf02d2101cf11a49d969e67503ee7c",
+  "runnerSha256": "ccc98a2edb87c51ccb11322d4ab3a592aa28c0d6ef2431021595bb3999185a36",
+  "implementationFingerprint": "d5eae56b9bd1ef0ab241153eb44efe7a1652c41f1aa50a7b652ee5a9e11ac2fe",
+  "supportSourceSha256": {
+    "python/run_lpbf_fixed_event_mesh_refinement_probe.py": "6d099611598246f73ac0e44bd31b07fdd5ebc5368580aaec4bfc01ffe88cf2eb",
+    "python/lpbf_fixed_scan_end_observation.py": "74b4574747cf8ea1f42e570bdbd31d2523d67a3d0190c0e7268c65dcdc8fcf9a"
+  },
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "scope": "Fixed 5um grid at first scan end; verified adaptive 100ns baseline reused; new 50/25ns CPU rows; phase/plane and full-field diagnostics only; no convergence or experimental claim",
+  "status": "diagnostic-only",
+  "experimentalValidation": false,
+  "convergenceConclusion": "inconclusive",
+  "stage": "completed",
+  "rows": [
+    {
+      "mesh_um": 5,
+      "requestedMaxDt_s": 1e-07,
+      "cells": 526592,
+      "acceptedSteps": 2920,
+      "acceptedCellSteps": 1537648640,
+      "resolvedInputSha256": "333da864f34e26dd23466df299bf55bc42dda9ebd9568349c0bcb18b753e0da5",
+      "actualEventTime_s": 0.00024999999999999995,
+      "finalRunTime_s": 0.00024999999999999995,
+      "finalRunStep": 2920,
+      "discretization": {
+        "cells": 526592,
+        "mesh_m": 4.9999999999999996e-06,
+        "minimumDt_s": 6.801255197702236e-09,
+        "meanDt_s": 8.561643835616436e-08,
+        "steps": 2920
+      },
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 2920,
+        "total_s": 0.00024999999999999757,
+        "sumSquared_s2": 2.2037051867488542e-11,
+        "mean_s": 8.561643835616355e-08,
+        "minimum_s": 6.801255197702236e-09,
+        "p50_s": 8.80489074762892e-08,
+        "p90_s": 1e-07,
+        "p99_s": 1e-07,
+        "maximum_s": 1e-07,
+        "eulerFirstOrderWeightedDt_s": 8.814820746995503e-08,
+        "requestedMaxDt_s": 1e-07,
+        "requestedMaxDtHitFraction": 0.4267123287671233,
+        "sourceLimitedStepCount": 1673,
+        "sourceTimestepRetries": 1673
+      },
+      "sourceLimitedStepCount": 1673,
+      "sourceTimestepRetries": 1673,
+      "energyBalance": {
+        "input_J": 0.003800000000000015,
+        "losses_J": 7.043595887945898e-07,
+        "stored_J": 0.0037992956404111684,
+        "relativeError": 1.3695185336658948e-14
+      },
+      "fixedEventCrossSectionThermalProxy": {
+        "status": "thermal-proxy",
+        "operator": "fixed-event-x-linear-liquidus-section-v1",
+        "temporalSelection": "single accepted event supplied by caller; time alignment not verified here",
+        "contour": "linear liquidus crossings between neighboring Y/Z cell centers",
+        "surfaceTreatment": "no-extrapolation",
+        "topBoundaryMolten": true,
+        "depthReference": "original substrate interface",
+        "experimentalValidation": false,
+        "evidenceScope": "Numerical thermal proxy; no etched-boundary or experimental equivalence",
+        "width_um": 50.71508796700699,
+        "depth_um": 0.0,
+        "xPosition_m": 9.999999999999999e-05,
+        "substrateInterfaceZ_m": 0.0,
+        "mesh_um": 5.0,
+        "sampledZRange_m": [
+          -0.00029749999999999997,
+          3.749999999999999e-05
+        ],
+        "sourcePlaneIndices": [
+          63,
+          64
+        ],
+        "xInterpolationFraction": 0.5,
+        "sampleCells": 40,
+        "crossingCount": 20
+      },
+      "fieldArtifact": {
+        "path": "mesh-05um.npz",
+        "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+        "format": "numpy-npz-compressed-little-endian-float64-v1",
+        "cells": 526592,
+        "steps": 2920,
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999999995,
+        "schedulerTime_s": 0.00024999999999999995,
+        "targetMinusActualTime_s": 0.0,
+        "roundoffTolerance_s": 3.165870343657673e-16,
+        "uncompressedBytes": 25299776,
+        "byteSize": 6406230,
+        "sha256": "0372f6568b5cec8f786c0d9610b5a52e519815c2d1205843877c4e726f1a92ae",
+        "fieldSha256": {
+          "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+          "temperature_K": "14836671dfdcf354d9bbdb41491cbd4b39e1a4e2ce105e0b1fa7ac6a2e29ae23",
+          "enthalpy_J_m3": "86f4421130d3e9189cc41d094fdae8f132d6306cade0c9c8818f8d198104252e",
+          "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+          "accepted_dt_s": "11edbdaa86df43b7273eeb3ce4725cf0334ffc4da3e7c2f0e658f1edc4120036"
+        }
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "version": "lpbf-materials-1"
+      },
+      "reused": true,
+      "freshRuntimeCellSteps": 0,
+      "phasePlaneAudit": {
+        "substrate": {
+          "cells": 464640,
+          "maximumTemperature_K": 873.9275678758868,
+          "solidusCells": 0,
+          "liquidusCells": 0,
+          "liquidusVolume_m3": 0.0
+        },
+        "powder": {
+          "cells": 61952,
+          "maximumTemperature_K": 2568.5460024294457,
+          "solidusCells": 3212,
+          "liquidusCells": 2190,
+          "liquidusVolume_m3": 2.7375000000000007e-13
+        },
+        "solidus_K": 1533.15,
+        "liquidus_K": 1609.15,
+        "lowestMoltenCellZ_m": 7.50000000000002e-06,
+        "fixedEventCrossSection": {
+          "status": "thermal-proxy",
+          "operator": "fixed-event-x-linear-liquidus-section-v1",
+          "temporalSelection": "single accepted event supplied by caller; time alignment not verified here",
+          "contour": "linear liquidus crossings between neighboring Y/Z cell centers",
+          "surfaceTreatment": "no-extrapolation",
+          "topBoundaryMolten": true,
+          "depthReference": "original substrate interface",
+          "experimentalValidation": false,
+          "evidenceScope": "Numerical thermal proxy; no etched-boundary or experimental equivalence",
+          "width_um": 50.715087967006966,
+          "depth_um": 0.0,
+          "xPosition_m": 0.0001,
+          "substrateInterfaceZ_m": 0.0,
+          "mesh_um": 5.0,
+          "sampledZRange_m": [
+            -0.00029749999999999997,
+            3.749999999999999e-05
+          ],
+          "sourcePlaneIndices": [
+            63,
+            64
+          ],
+          "xInterpolationFraction": 0.5000000000000027,
+          "sampleCells": 40,
+          "crossingCount": 20
+        },
+        "surfaceReferencedMeltDepth_um": 25.306682752013195,
+        "substratePenetration_um": 0.0,
+        "surfaceReferenceZ_m": 4e-05,
+        "substrateReferenceZ_m": 0.0,
+        "commonZWidth": {
+          "operator": "fixed-x-z-linear-liquidus-width-v1",
+          "status": "thermal-proxy",
+          "xPosition_m": 0.0001,
+          "zPosition_m": 2e-05,
+          "width_um": 32.68286049820716,
+          "surfaceTreatment": "no-extrapolation",
+          "acceptanceMetric": false
+        },
+        "evidenceScope": "Same-time thermal proxy; powder melt and substrate penetration are distinct; no experimental validation"
+      },
+      "acceptedClockReplay": {
+        "count": 2920,
+        "replayedTime_s": 0.00024999999999999995,
+        "targetTime_s": 0.00024999999999999995,
+        "targetMinusReplay_s": 0.0,
+        "roundoffTolerance_s": 3.165870343657673e-16
+      },
+      "independentFieldEnergy": {
+        "storedFromField_J": 0.0037992956404111684,
+        "ledgerStored_J": 0.0037992956404111684,
+        "relativeClosureFromField": 1.3695185336658948e-14
+      },
+      "fieldDifferences": {
+        "verified100nsBaseline": {
+          "temperature_K": {
+            "volumeL2Difference": 0.0,
+            "relativeL2Difference": 0.0,
+            "rmsDifference": 0.0,
+            "maximumAbsoluteDifference": 0.0
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 0.0,
+            "relativeL2Difference": 0.0,
+            "rmsDifference": 0.0,
+            "maximumAbsoluteDifference": 0.0
+          }
+        },
+        "25nsReference": {
+          "temperature_K": {
+            "volumeL2Difference": 1.6374379213510162e-06,
+            "relativeL2Difference": 0.0005112404888446289,
+            "rmsDifference": 0.20182395336835499,
+            "maximumAbsoluteDifference": 64.06843052041222
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 6.25399159948624,
+            "relativeL2Difference": 0.0017781213537933797,
+            "rmsDifference": 770841.625494648,
+            "maximumAbsoluteDifference": 174554071.09204626
+          }
+        }
+      }
+    },
+    {
+      "discretization": {
+        "cells": 526592,
+        "mesh_m": 4.9999999999999996e-06,
+        "minimumDt_s": 4.9999999997480445e-08,
+        "meanDt_s": 4.999999999999999e-08,
+        "steps": 5000
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "version": "lpbf-materials-1"
+      },
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 5000,
+        "total_s": 0.0002499999999999975,
+        "sumSquared_s2": 1.2499999999999716e-11,
+        "mean_s": 4.99999999999995e-08,
+        "minimum_s": 4.9999999997480445e-08,
+        "p50_s": 5e-08,
+        "p90_s": 5e-08,
+        "p99_s": 5e-08,
+        "maximum_s": 5e-08,
+        "eulerFirstOrderWeightedDt_s": 4.999999999999936e-08,
+        "requestedMaxDt_s": 5e-08,
+        "requestedMaxDtHitFraction": 0.9998,
+        "sourceLimitedStepCount": 0,
+        "sourceTimestepRetries": 0
+      },
+      "sourceLimitedStepCount": 0,
+      "sourceTimestepRetries": 0,
+      "energyBalance": {
+        "input_J": 0.003799999999999607,
+        "losses_J": 7.04304449428183e-07,
+        "stored_J": 0.003799295695550533,
+        "relativeError": 9.312726028929085e-14
+      },
+      "maxDt_s": 5e-08,
+      "cells": 526592,
+      "acceptedSteps": 5000,
+      "reused": false,
+      "resolvedInputSha256": "eb428f6741a6803fd3705526801c5a12255861a7aa9db0a66b3edafd9b099a28",
+      "acceptedCellSteps": 2632960000,
+      "wallTime_s": 564.2536846000003,
+      "acceptedClockReplay": {
+        "count": 5000,
+        "replayedTime_s": 0.00024999999999999995,
+        "targetTime_s": 0.00024999999999999995,
+        "targetMinusReplay_s": 0.0,
+        "roundoffTolerance_s": 5.421010862427522e-16
+      },
+      "independentFieldEnergy": {
+        "storedFromField_J": 0.003799295695550533,
+        "ledgerStored_J": 0.003799295695550533,
+        "relativeClosureFromField": 9.312726028929085e-14
+      },
+      "phasePlaneAudit": {
+        "substrate": {
+          "cells": 464640,
+          "maximumTemperature_K": 873.914830962943,
+          "solidusCells": 0,
+          "liquidusCells": 0,
+          "liquidusVolume_m3": 0.0
+        },
+        "powder": {
+          "cells": 61952,
+          "maximumTemperature_K": 2568.3404334978222,
+          "solidusCells": 3212,
+          "liquidusCells": 2188,
+          "liquidusVolume_m3": 2.734999999999999e-13
+        },
+        "solidus_K": 1533.15,
+        "liquidus_K": 1609.15,
+        "lowestMoltenCellZ_m": 7.50000000000002e-06,
+        "fixedEventCrossSection": {
+          "status": "thermal-proxy",
+          "operator": "fixed-event-x-linear-liquidus-section-v1",
+          "temporalSelection": "single accepted event supplied by caller; time alignment not verified here",
+          "contour": "linear liquidus crossings between neighboring Y/Z cell centers",
+          "surfaceTreatment": "no-extrapolation",
+          "topBoundaryMolten": true,
+          "depthReference": "original substrate interface",
+          "experimentalValidation": false,
+          "evidenceScope": "Numerical thermal proxy; no etched-boundary or experimental equivalence",
+          "width_um": 50.71610637195018,
+          "depth_um": 0.0,
+          "xPosition_m": 0.0001,
+          "substrateInterfaceZ_m": 0.0,
+          "mesh_um": 5.0,
+          "sampledZRange_m": [
+            -0.00029749999999999997,
+            3.749999999999999e-05
+          ],
+          "sourcePlaneIndices": [
+            63,
+            64
+          ],
+          "xInterpolationFraction": 0.5000000000000027,
+          "sampleCells": 40,
+          "crossingCount": 20
+        },
+        "surfaceReferencedMeltDepth_um": 25.307068794807048,
+        "substratePenetration_um": 0.0,
+        "surfaceReferenceZ_m": 4e-05,
+        "substrateReferenceZ_m": 0.0,
+        "commonZWidth": {
+          "operator": "fixed-x-z-linear-liquidus-width-v1",
+          "status": "thermal-proxy",
+          "xPosition_m": 0.0001,
+          "zPosition_m": 2e-05,
+          "width_um": 32.70208832270942,
+          "surfaceTreatment": "no-extrapolation",
+          "acceptanceMetric": false
+        },
+        "evidenceScope": "Same-time thermal proxy; powder melt and substrate penetration are distinct; no experimental validation"
+      },
+      "fieldArtifact": {
+        "path": "maxdt-5.0000e-08.npz",
+        "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+        "format": "numpy-npz-compressed-little-endian-float64-v1",
+        "cells": 526592,
+        "steps": 5000,
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999999995,
+        "schedulerTime_s": 0.00024999999999999995,
+        "targetMinusActualTime_s": 0.0,
+        "roundoffTolerance_s": 5.421010862427522e-16,
+        "uncompressedBytes": 25316416,
+        "byteSize": 5832892,
+        "sha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+        "fieldSha256": {
+          "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+          "temperature_K": "25ec6642a32fca334bbc1edaa7b52015953a8e0b010331a7708372d036e7ded3",
+          "enthalpy_J_m3": "d11df66ebe988302fcbabe35281882d5afcfc38868bcaf1c22f50413303472b7",
+          "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+          "accepted_dt_s": "c6333540d6435edff542dd978522a2fb097d0508e8c60711d24f6dc5f4009492"
+        }
+      },
+      "fieldDifferences": {
+        "verified100nsBaseline": {
+          "temperature_K": {
+            "volumeL2Difference": 4.855247794946452e-07,
+            "relativeL2Difference": 0.00015158928625938443,
+            "rmsDifference": 0.05984381403299745,
+            "maximumAbsoluteDifference": 13.94755618009276
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 1.6081464048422878,
+            "relativeL2Difference": 0.0004572723631097648,
+            "rmsDifference": 198213.5999101498,
+            "maximumAbsoluteDifference": 45615398.551096916
+          }
+        },
+        "25nsReference": {
+          "temperature_K": {
+            "volumeL2Difference": 1.5418922466067785e-06,
+            "relativeL2Difference": 0.000481409240388546,
+            "rmsDifference": 0.19004738122923007,
+            "maximumAbsoluteDifference": 64.0481246967986
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 6.01059260104718,
+            "relativeL2Difference": 0.001708918677433538,
+            "rmsDifference": 740841.2526742003,
+            "maximumAbsoluteDifference": 174498106.55174375
+          }
+        }
+      }
+    },
+    {
+      "discretization": {
+        "cells": 526592,
+        "mesh_m": 4.9999999999999996e-06,
+        "minimumDt_s": 2.5e-08,
+        "meanDt_s": 2.4999999999999996e-08,
+        "steps": 10000
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+        "version": "lpbf-materials-1"
+      },
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 10000,
+        "total_s": 0.00025,
+        "sumSquared_s2": 6.250000000000031e-12,
+        "mean_s": 2.5e-08,
+        "minimum_s": 2.5e-08,
+        "p50_s": 2.5e-08,
+        "p90_s": 2.5e-08,
+        "p99_s": 2.5e-08,
+        "maximum_s": 2.5e-08,
+        "eulerFirstOrderWeightedDt_s": 2.5000000000000125e-08,
+        "requestedMaxDt_s": 2.5e-08,
+        "requestedMaxDtHitFraction": 1.0,
+        "sourceLimitedStepCount": 0,
+        "sourceTimestepRetries": 0
+      },
+      "sourceLimitedStepCount": 0,
+      "sourceTimestepRetries": 0,
+      "energyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 7.04336879285806e-07,
+        "stored_J": 0.003799295663120714,
+        "relativeError": 1.628585789617965e-13
+      },
+      "maxDt_s": 2.5e-08,
+      "cells": 526592,
+      "acceptedSteps": 10000,
+      "reused": false,
+      "resolvedInputSha256": "a1ef98548edfd1aee7ec9386fe8f3b034917fdc887492b316c226e654c4a403e",
+      "acceptedCellSteps": 5265920000,
+      "wallTime_s": 1089.172678300005,
+      "acceptedClockReplay": {
+        "count": 10000,
+        "replayedTime_s": 0.00024999999999994287,
+        "targetTime_s": 0.00024999999999999995,
+        "targetMinusReplay_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15
+      },
+      "independentFieldEnergy": {
+        "storedFromField_J": 0.003799295663120714,
+        "ledgerStored_J": 0.003799295663120714,
+        "relativeClosureFromField": 1.628585789617965e-13
+      },
+      "phasePlaneAudit": {
+        "substrate": {
+          "cells": 464640,
+          "maximumTemperature_K": 873.9175407860093,
+          "solidusCells": 0,
+          "liquidusCells": 0,
+          "liquidusVolume_m3": 0.0
+        },
+        "powder": {
+          "cells": 61952,
+          "maximumTemperature_K": 2568.0293461075457,
+          "solidusCells": 3212,
+          "liquidusCells": 2190,
+          "liquidusVolume_m3": 2.737499999999999e-13
+        },
+        "solidus_K": 1533.15,
+        "liquidus_K": 1609.15,
+        "lowestMoltenCellZ_m": 7.50000000000002e-06,
+        "fixedEventCrossSection": {
+          "status": "thermal-proxy",
+          "operator": "fixed-event-x-linear-liquidus-section-v1",
+          "temporalSelection": "single accepted event supplied by caller; time alignment not verified here",
+          "contour": "linear liquidus crossings between neighboring Y/Z cell centers",
+          "surfaceTreatment": "no-extrapolation",
+          "topBoundaryMolten": true,
+          "depthReference": "original substrate interface",
+          "experimentalValidation": false,
+          "evidenceScope": "Numerical thermal proxy; no etched-boundary or experimental equivalence",
+          "width_um": 50.71593191638018,
+          "depth_um": 0.0,
+          "xPosition_m": 0.0001,
+          "substrateInterfaceZ_m": 0.0,
+          "mesh_um": 5.0,
+          "sampledZRange_m": [
+            -0.00029749999999999997,
+            3.749999999999999e-05
+          ],
+          "sourcePlaneIndices": [
+            63,
+            64
+          ],
+          "xInterpolationFraction": 0.5000000000000027,
+          "sampleCells": 40,
+          "crossingCount": 20
+        },
+        "surfaceReferencedMeltDepth_um": 25.30839655937287,
+        "substratePenetration_um": 0.0,
+        "surfaceReferenceZ_m": 4e-05,
+        "substrateReferenceZ_m": 0.0,
+        "commonZWidth": {
+          "operator": "fixed-x-z-linear-liquidus-width-v1",
+          "status": "thermal-proxy",
+          "xPosition_m": 0.0001,
+          "zPosition_m": 2e-05,
+          "width_um": 32.70131108299137,
+          "surfaceTreatment": "no-extrapolation",
+          "acceptanceMetric": false
+        },
+        "evidenceScope": "Same-time thermal proxy; powder melt and substrate penetration are distinct; no experimental validation"
+      },
+      "fieldArtifact": {
+        "path": "maxdt-2.5000e-08.npz",
+        "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+        "format": "numpy-npz-compressed-little-endian-float64-v1",
+        "cells": 526592,
+        "steps": 10000,
+        "targetTime_s": 0.00024999999999999995,
+        "actualTime_s": 0.00024999999999994287,
+        "schedulerTime_s": 0.00024999999999999995,
+        "targetMinusActualTime_s": 5.708324438136181e-17,
+        "roundoffTolerance_s": 1.0842021724855044e-15,
+        "uncompressedBytes": 25356416,
+        "byteSize": 5837849,
+        "sha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+        "fieldSha256": {
+          "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+          "temperature_K": "528493f331a99ce180de34534cc487ffe537bcda3b0bbc60e28cce13d0ffa4ea",
+          "enthalpy_J_m3": "93f5d885c6d853697ce02ae9c10a99462cb933bf8bd0624676be37c9420b2186",
+          "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+        }
+      },
+      "fieldDifferences": {
+        "verified100nsBaseline": {
+          "temperature_K": {
+            "volumeL2Difference": 1.6374379213510162e-06,
+            "relativeL2Difference": 0.000511236617109443,
+            "rmsDifference": 0.20182395336835499,
+            "maximumAbsoluteDifference": 64.06843052041222
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 6.25399159948624,
+            "relativeL2Difference": 0.0017783066945612775,
+            "rmsDifference": 770841.625494648,
+            "maximumAbsoluteDifference": 174554071.09204626
+          }
+        },
+        "25nsReference": {
+          "temperature_K": {
+            "volumeL2Difference": 0.0,
+            "relativeL2Difference": 0.0,
+            "rmsDifference": 0.0,
+            "maximumAbsoluteDifference": 0.0
+          },
+          "enthalpy_J_m3": {
+            "volumeL2Difference": 0.0,
+            "relativeL2Difference": 0.0,
+            "rmsDifference": 0.0,
+            "maximumAbsoluteDifference": 0.0
+          }
+        }
+      }
+    }
+  ],
+  "resourcePreflight": {
+    "predictedStepsByMaxDt": {
+      "5e-08": 5000,
+      "2.5e-08": 10000
+    },
+    "predictedTotalSteps": 15000,
+    "predictedTotalCellSteps": 7898880000,
+    "maximumStepsByMaxDt": {
+      "5e-08": 5500,
+      "2.5e-08": 11000
+    },
+    "maximumTotalCellSteps": 8688768000,
+    "maximumCells": 600000,
+    "maximumUncompressedFieldBytes": 40000000,
+    "estimatedWorkingSetBytes": 539230208,
+    "maximumSampledRssBytes": 805306368,
+    "maximumWallTimeByMaxDt_s": {
+      "5e-08": 1200,
+      "2.5e-08": 2400
+    }
+  },
+  "resourceAssumptions": "Working set estimate is cells*1024 bytes; RSS sampled at source-step guards when psutil is available, not a hard OS peak; wall caps checked at source-step guards, not a hard watchdog; field/observer copies and imports add memory; prediction is a lower bound, retries can add steps",
+  "baselineReuse": {
+    "report": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_2026-10-02.json",
+    "reportSha256": "7f791aebe6a56175e1243882ae4cc95551c3624eb13e2e1617ed65a2a97cdff4",
+    "field": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-05um.npz",
+    "fieldSha256": "0372f6568b5cec8f786c0d9610b5a52e519815c2d1205843877c4e726f1a92ae",
+    "inputSha256": "333da864f34e26dd23466df299bf55bc42dda9ebd9568349c0bcb18b753e0da5",
+    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "requestedMaxDt_s": 1e-07
+  },
+  "startedAt": "2026-10-02T00:42:05.189022+00:00",
+  "rssMeasurement": "process RSS sampled at source-step guards; not hard OS peak",
+  "runtimeWork": {
+    "acceptedSteps": 15000,
+    "caseSteps": 10000,
+    "acceptedCellSteps": 7898880000,
+    "maximumSampledRssBytes": 203620352
+  },
+  "wallTime_s": 1655.7623801000009,
+  "finishedAt": "2026-10-02T01:09:41.096829+00:00"
+}
