@@ -39,3 +39,10 @@
 /docs/LPBF_GPU_NODE_ARCHIVE_API_STEPS_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 /docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.partial.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve the exact bytes bound by the synthetic refinement protocol.
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_AUDIT.py -text
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/*.npz binary
+/python/run_lpbf_fixed_event_time_refinement_probe.py -text
+/python/test_lpbf_fixed_event_time_refinement_probe.py -text
