@@ -98,6 +98,17 @@ test('bundle snapshots and restores immutable six-proxy campaign run references'
     assert.equal([...restored.allProxyCampaigns()].length, 1);
   } finally { restored.close(); }
 
+  const completion = path.join(f.bundle, 'bundle.json');
+  const original = readFileSync(completion);
+  const legacy = JSON.parse(original.toString('utf8'));
+  legacy.schemaVersion = 1; delete legacy.campaignCount;
+  writeFileSync(completion, JSON.stringify(legacy));
+  await assert.rejects(verifyRunBundle(f.bundle), /counts mismatch/i);
+  const rejected = path.join(f.root, 'legacy-campaign-rejected');
+  await assert.rejects(restoreRunBundle(f.bundle, rejected), /counts mismatch/i);
+  assert.equal(existsSync(rejected), false);
+  writeFileSync(completion, original);
+
   const invalid = structuredClone(campaign);
   invalid.campaignId = '8'.repeat(32);
   invalid.tracks[0].runIdentity.runDocumentSha256 = sha('mixed provenance');
@@ -173,4 +184,61 @@ test('run snapshot precedes source snapshot; later runs stay out and historical 
     assert.equal(snapshot.current('synthetic')!.revision, 3);
     assert.equal(snapshot.revision('synthetic', 1)!.documentSha256, f.record.document.sources[0].documentSha256);
   } finally { snapshot.close(); }
+});
+
+test('bundle verification rejects every unreferenced file before restore creates a destination', async t => {
+  for (const relative of ['unexpected.json', `artifacts/objects/ee/${'e'.repeat(64)}`,
+    `sources/artifacts/objects/ff/${'f'.repeat(64)}`]) {
+    const f = await fixture(t); await f.backup();
+    const completion = readFileSync(path.join(f.bundle, 'bundle.json'));
+    const extra = path.join(f.bundle, relative);
+    mkdirSync(path.dirname(extra), { recursive: true });
+    writeFileSync(extra, 'not a referenced or hash-verified payload');
+    await assert.rejects(verifyRunBundle(f.bundle), /inventory|unexpected/i);
+    const destination = path.join(f.root, 'rejected-restore');
+    await assert.rejects(restoreRunBundle(f.bundle, destination), /inventory|unexpected/i);
+    assert.equal(existsSync(destination), false);
+    assert.deepEqual(readFileSync(path.join(f.bundle, 'bundle.json')), completion);
+    assert.deepEqual(f.runs.get(f.record.document.runId), f.record);
+  }
+});
+
+test('all frozen source revisions retain their objects even when a run links an older revision', async t => {
+  const f = await fixture(t);
+  const raw = path.join(f.root, 'later-source'); mkdirSync(raw);
+  writeFileSync(path.join(raw, 'later'), 'later source bytes');
+  const ref = { relativePath: 'later', sha256: sha('later source bytes'), byteSize: 18,
+    sourceUrl: 'https://example.org/later' };
+  await f.sourceStore.putFile(raw, 'later', ref);
+  const document = structuredClone(f.sources.current('synthetic')!.document);
+  document.artifacts = [ref]; document.source.version = '3';
+  f.sources.save(document, 2);
+  await f.backup(); await verifyRunBundle(f.bundle);
+  const destination = path.join(f.root, 'superset-restored');
+  await restoreRunBundle(f.bundle, destination);
+  const store = new LpbfArtifactStore(path.join(destination, 'sources/artifacts'), { readOnly: true });
+  assert.equal(readFileSync((await store.verify(ref)).path, 'utf8'), 'later source bytes');
+});
+
+test('legacy v1 completion remains readable without changing archived record bytes', async t => {
+  const f = await fixture(t); await f.backup();
+  const file = path.join(f.bundle, 'bundle.json');
+  const manifest = JSON.parse(readFileSync(file, 'utf8'));
+  manifest.schemaVersion = 1; delete manifest.campaignCount;
+  writeFileSync(file, JSON.stringify(manifest));
+  const before = readFileSync(file);
+  assert.equal((await verifyRunBundle(f.bundle)).schemaVersion, 1);
+  const destination = path.join(f.root, 'legacy-restored');
+  await restoreRunBundle(f.bundle, destination);
+  const runs = new LpbfRunRepository(path.join(destination, 'runs.sqlite'), { readOnly: true });
+  try { assert.deepEqual(runs.get(f.record.document.runId), f.record); }
+  finally { runs.close(); }
+  assert.deepEqual(readFileSync(file), before);
+});
+
+test('unreferenced linked directories are rejected by the complete inventory', async t => {
+  const f = await fixture(t); await f.backup();
+  const outside = path.join(f.root, 'outside'); mkdirSync(outside);
+  symlinkSync(outside, path.join(f.bundle, 'unreferenced-link'), 'junction');
+  await assert.rejects(verifyRunBundle(f.bundle), /link|inventory/i);
 });

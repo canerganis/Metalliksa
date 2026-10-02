@@ -2,7 +2,7 @@
  * All paths are trusted server configuration; no live restore or HTTP paths.
  */
 import { createHash } from 'node:crypto';
-import { createReadStream, lstatSync, readFileSync } from 'node:fs';
+import { createReadStream, lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { open } from 'node:fs/promises';
 import path from 'node:path';
 import { artifactDirectory, LpbfArtifactStore, verifyLocalArtifact, type ArtifactIdentity } from './lpbfArtifactStore';
@@ -66,6 +66,15 @@ function references(root: string) {
     const sources = new LpbfSourceRepository(path.join(root, 'sources/metadata.sqlite'), { readOnly: true });
     try {
       const artifacts = new Map<string, ArtifactIdentity>();
+      const sourceArtifacts = new Map<string, ArtifactIdentity>();
+      // The source snapshot includes every frozen revision, not just run links.
+      for (const revision of sources.allRevisions()) {
+        for (const ref of revision.document.artifacts) {
+          const prior = sourceArtifacts.get(ref.sha256);
+          if (prior && prior.byteSize !== ref.byteSize) throw new Error('Conflicting source artifact sizes');
+          sourceArtifacts.set(ref.sha256, { sha256: ref.sha256, byteSize: ref.byteSize });
+        }
+      }
       let runCount = 0, sourceLinkCount = 0;
       const gpuResults: { runId: string; result: unknown }[] = [];
       for (const record of runs.allRuns()) {
@@ -99,12 +108,33 @@ function references(root: string) {
           }
         }
       }
-      return { artifacts, runCount, sourceLinkCount, campaignCount, gpuResults };
+      return { artifacts, sourceArtifacts, runCount, sourceLinkCount, campaignCount, gpuResults };
     } finally { sources.close(); }
   } finally { runs.close(); }
 }
 
-async function verifyContents(root: string, manifest: RunBundleManifest) {
+function verifyInventory(root: string, refs: ReturnType<typeof references>, completed: boolean) {
+  const expected = new Set(['runs.sqlite', 'sources/metadata.sqlite', 'sources/bundle.json']);
+  if (completed) expected.add('bundle.json');
+  for (const [prefix, artifacts] of [['artifacts', refs.artifacts], ['sources/artifacts', refs.sourceArtifacts]] as const) {
+    for (const ref of artifacts.values()) expected.add(`${prefix}/objects/${ref.sha256.slice(0, 2)}/${ref.sha256}`);
+  }
+  const visit = (relative: string) => {
+    const directory = artifactDirectory(path.join(root, relative), false);
+    for (const name of readdirSync(directory)) {
+      const item = relative ? `${relative}/${name}` : name;
+      const stat = lstatSync(path.join(root, item));
+      if (stat.isSymbolicLink()) throw new Error('Bundle inventory contains a link');
+      if (stat.isDirectory()) visit(item); // Empty staging/object directories carry no payload.
+      else if (!stat.isFile()) throw new Error('Bundle inventory contains a non-regular file');
+      else if (!expected.delete(item)) throw new Error(`Unexpected file in bundle inventory: ${item}`);
+    }
+  };
+  visit('');
+  if (expected.size) throw new Error('Bundle inventory is missing expected files');
+}
+
+async function verifyContents(root: string, manifest: RunBundleManifest, completed = true) {
   noSidecars(root);
   await verifyLocalArtifact(root, 'runs.sqlite', manifest.metadata);
   await verifyLocalArtifact(root, 'sources/bundle.json', manifest.sourceBundle);
@@ -118,6 +148,7 @@ async function verifyContents(root: string, manifest: RunBundleManifest) {
   for (const ref of refs.artifacts.values()) await store.verify(ref);
   const resolver = storeGpuPilotArtifactResolver(store);
   for (const item of refs.gpuResults) await verifyGpuPilotArchive(item.result, item.runId, resolver);
+  verifyInventory(root, refs, completed);
 }
 
 /** Snapshot runs first, then sources. Includes the full source snapshot as a superset
@@ -140,7 +171,7 @@ export async function backupRunBundle(runs: LpbfRunRepository, runStore: LpbfArt
     metadata: await fileIdentity(target, 'runs.sqlite'), sourceBundle: await fileIdentity(target, 'sources/bundle.json'),
     runCount: refs.runCount, artifactCount: refs.artifacts.size, sourceLinkCount: refs.sourceLinkCount,
     campaignCount: refs.campaignCount };
-  await verifyContents(target, manifest);
+  await verifyContents(target, manifest, false);
   const completion = await open(path.join(target, 'bundle.json'), 'wx', 0o600);
   try { await completion.writeFile(JSON.stringify(manifest, null, 2)); await completion.sync(); }
   finally { await completion.close(); }
