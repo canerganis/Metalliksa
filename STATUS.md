@@ -2,6 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — kabul-adımı kesit alanı arşivleme (2026-10-03)
+
+- **Uygulama:** Rectangular-corridor tek-track çalışması, 4.9 ve 6.0 mm thermal-proxy kesitlerinin accepted-step maksimumlarında kullanılan X düzlemlerinin birleşimini float64, pickle gerektirmeyen sıkıştırılmış NPZ olarak saklıyor. Sonuç descriptor'ı yalnız yazım başarılıysa `captured`; kesitler desteklenmiyorsa `unavailable` kaydediliyor. `write_artifacts` NPZ'yi gerçek göreli yol/SHA-256/byte-size manifestine ekliyor.
+- **Kontrol / sınır:** `python -B -m unittest test_lpbf_bare_plate`: **16 PASS**; exact/off-grid source-plane/interpolation provenance ve eksik/bozuk/nonfinite girdi reddi dahil. Sol 6.1 producer/capture incelemesi GO. Bu testler gerçek solver arşiv round-trip'i veya alanlardan W/D yeniden türetimini kanıtlamıyor; servis tüketicisi henüz NPZ'yi yeniden doğrulamıyor. NIST residual `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated` kalır.
+- **Sıradaki:** Verified bytes üzerinden NPZ açıp W/D ve `sampleCells` değerlerini source plane'lerden yeniden türeten servis kapısını ekle ve gerçek ayrı solver execution arşivleriyle doğrula.
+
 ## Güncel devam — arşivlenmiş kesit metadata doğrulaması (2026-10-03)
 
 - **Bulgu / düzeltme:** Gerçek `LpbfNistProxyCampaignService` entegrasyon fixture'ı, `result.json` içinde taşınan kesit metadata'sının servisçe sabit beklenen değerlerle sessizce değiştirildiğini gösterdi. Servis artık kesit kaydının mesafe ve X koordinatını tarama başlangıcından hesaplanan konumla; bölüm/kontur operatörünü, accepted-step temporal aggregation'ı, source-plane indeks/X/fraction değerlerini ve proxy kapsam etiketlerini karşılaştırıyor. Eksik veya uyumsuz kayıt kampanyayı `unavailable` bırakıyor.

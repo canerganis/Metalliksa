@@ -1,10 +1,13 @@
 """Bare-plate reference physics and location-specific thermal section checks."""
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import numpy as np
 
+import lpbf_peak
 from lpbf_peak import (midtrack_bare_plate_section,
                        interpolated_midtrack_bare_plate_section,
                        rectangular_corridor_section_samples,
@@ -126,6 +129,105 @@ class BarePlate(unittest.TestCase):
         self.assertNotEqual(off_grid["depth_um"], exact["depth_um"])
         self.assertEqual(off_grid["temporalAggregation"],
                          "accepted-step maximum per source X plane, then spatially interpolated")
+
+    def test_rectangular_corridor_field_artifact_preserves_source_plane_provenance(self):
+        self.assertTrue(hasattr(lpbf_peak, "write_rectangular_corridor_section_field_artifact"))
+        axis_x = np.arange(-.005, .0091, .002)
+        axis_y = np.arange(-.01, .0101, .002)
+        z = np.arange(-.01, .0021, .002)
+        requests = rectangular_corridor_section_samples(axis_x, -.005, .01)
+        left = np.full((len(axis_y), len(z)), 300., dtype=np.float64)
+        right = np.full_like(left, 300.)
+        for iy, y_value in enumerate(axis_y):
+            if abs(y_value) <= .006:
+                left[iy, z >= -.008] = 1800.
+            if abs(y_value) <= .002:
+                right[iy, z >= -.004] = 1800.
+        fields = {2: left, 3: right}
+        observations = rectangular_corridor_section_observations(
+            axis_y, z, fields, requests, .002, 1000.)
+        self.assertEqual([row["status"] for row in observations],
+                         ["thermal-proxy", "thermal-proxy"])
+
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "corridor-sections.npz"
+            lpbf_peak.write_rectangular_corridor_section_field_artifact(
+                output, axis_x, axis_y, z, observations, fields, .002, 1000., 17)
+            self.assertEqual(sorted(path.name for path in Path(directory).iterdir()),
+                             ["corridor-sections.npz"])
+            with np.load(output, allow_pickle=False) as artifact:
+                self.assertEqual(set(artifact.files), {
+                    "schema_version", "scan_start_x_m", "section_x_m", "section_distance_mm",
+                    "temperature_planes_K", "plane_indices", "plane_x_m", "axis_y_m", "z_m",
+                    "mesh_m", "liquidus_K", "accepted_step_count",
+                    "section_source_plane_indices", "section_interpolation_fraction",
+                    "section_interpolation_operator", "section_record_id",
+                })
+                self.assertEqual(artifact["temperature_planes_K"].dtype, np.dtype(np.float64))
+                self.assertEqual(int(artifact["schema_version"]), 1)
+                self.assertEqual(float(artifact["scan_start_x_m"]), -.005)
+                np.testing.assert_allclose(artifact["section_x_m"], [-.0001, .001])
+                np.testing.assert_allclose(artifact["section_distance_mm"], [4.9, 6.0])
+                np.testing.assert_array_equal(artifact["temperature_planes_K"],
+                                              np.stack([left, right]))
+                np.testing.assert_array_equal(artifact["plane_indices"], [2, 3])
+                np.testing.assert_array_equal(artifact["plane_x_m"], axis_x[[2, 3]])
+                np.testing.assert_array_equal(artifact["axis_y_m"], axis_y)
+                np.testing.assert_array_equal(artifact["z_m"], z)
+                self.assertEqual(float(artifact["mesh_m"]), .002)
+                self.assertEqual(float(artifact["liquidus_K"]), 1000.)
+                self.assertEqual(int(artifact["accepted_step_count"]), 17)
+                np.testing.assert_array_equal(artifact["section_source_plane_indices"],
+                                              [[2, 3], [3, -1]])
+                np.testing.assert_allclose(artifact["section_interpolation_fraction"], [.45, 0.])
+                np.testing.assert_array_equal(artifact["section_interpolation_operator"],
+                                              ["linear-interpolation-between-accepted-peak-temperature-planes-v1",
+                                               "exact-cell-center"])
+                np.testing.assert_array_equal(artifact["section_record_id"],
+                                              ["single-line-x-4p9mm", "single-line-x-6p0mm"])
+
+    def test_rectangular_corridor_field_artifact_rejects_unbound_or_invalid_fields(self):
+        self.assertTrue(hasattr(lpbf_peak, "write_rectangular_corridor_section_field_artifact"))
+        axis_x = np.arange(-.005, .0091, .002)
+        axis_y = np.arange(-.01, .0101, .002)
+        z = np.arange(-.01, .0021, .002)
+        requests = rectangular_corridor_section_samples(axis_x, -.005, .01)
+        left = np.full((len(axis_y), len(z)), 300., dtype=np.float64)
+        right = np.full_like(left, 300.)
+        for iy, y_value in enumerate(axis_y):
+            if abs(y_value) <= .006:
+                left[iy, z >= -.008] = 1800.
+            if abs(y_value) <= .002:
+                right[iy, z >= -.004] = 1800.
+        fields = {2: left, 3: right}
+        observations = rectangular_corridor_section_observations(
+            axis_y, z, fields, requests, .002, 1000.)
+
+        invalid_fields = [
+            {3: right},
+            {2: np.zeros((len(axis_y)-1, len(z))), 3: right},
+            {2: np.full((len(axis_y), len(z)), np.nan), 3: right},
+        ]
+        unsupported = [dict(row) for row in observations]
+        unsupported[0]["status"] = "unsupported"
+        with TemporaryDirectory() as directory:
+            for index, candidate in enumerate(invalid_fields + [fields]):
+                output = Path(directory) / f"invalid-{index}.npz"
+                summaries = unsupported if index == len(invalid_fields) else observations
+                with self.subTest(candidate=index):
+                    with self.assertRaises(ValueError):
+                        lpbf_peak.write_rectangular_corridor_section_field_artifact(
+                            output, axis_x, axis_y, z, summaries, candidate,
+                            .002, 1000., 17)
+                    self.assertFalse(output.exists())
+            for index, count in enumerate((0, -1, True, 1.5)):
+                output = Path(directory) / f"invalid-count-{index}.npz"
+                with self.subTest(accepted_step_count=count):
+                    with self.assertRaises(ValueError):
+                        lpbf_peak.write_rectangular_corridor_section_field_artifact(
+                            output, axis_x, axis_y, z, observations, fields,
+                            .002, 1000., count)
+                    self.assertFalse(output.exists())
 
     def test_rectangular_corridor_sections_report_unsupported_without_extrapolation(self):
         axis_x = np.array([-.003, -.002, -.001])

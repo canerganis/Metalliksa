@@ -30,7 +30,8 @@ from lpbf_defect_diagnostics import defect_diagnostics
 from lpbf_peak import (PeakMeltTracker, midtrack_bare_plate_section,
                        interpolated_midtrack_bare_plate_section,
                        rectangular_corridor_section_samples,
-                       rectangular_corridor_section_observations)
+                       rectangular_corridor_section_observations,
+                       write_rectangular_corridor_section_field_artifact)
 from lpbf_overlap import FieldOverlapTracker, OVERLAP_MODEL_ID
 from lpbf_evidence import finite_tree, measurement_evidence, resource_estimate, thermal_audits, enforce_thermal_balances, write_artifacts, FieldRecorder
 
@@ -775,6 +776,33 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 aspectRatio=best["depth_um"]/best["width_um"] if width else None,
                 trackOverlapRatio=overlap_metrics["trackOverlapRatio"] if overlap_metrics else None,
                 remeltingRatio=overlap_metrics["globalRemeltRatio"] if overlap_metrics else None)
+    bare_plate_section_observations = (rectangular_corridor_section_observations(
+        axis_y, z, corridor_peak_planes, corridor_section_samples, dx, m["liquidus_K"])
+        if rectangular_corridor else None)
+    section_field_artifact = None
+    if rectangular_corridor and artifact_dir is not None:
+        if all(row.get("status") == "thermal-proxy"
+               for row in bare_plate_section_observations):
+            section_field_path = "rectangular-corridor-section-fields.npz"
+            write_rectangular_corridor_section_field_artifact(
+                Path(artifact_dir) / section_field_path, axis, axis_y, z,
+                bare_plate_section_observations, corridor_peak_planes, dx,
+                m["liquidus_K"], int(step))
+            section_field_artifact = {
+                "schemaVersion": 1,
+                "status": "captured",
+                "path": section_field_path,
+                "binding": "accepted-step-maximum-per-source-X-plane",
+            }
+        else:
+            section_field_artifact = {
+                "schemaVersion": 1,
+                "status": "unavailable",
+                "path": None,
+                "reason": "Both 4.9 mm and 6.0 mm sections must have supported thermal-proxy fields; "
+                          + "; ".join(f"{row.get('recordId')}={row.get('status')}"
+                                       for row in bare_plate_section_observations),
+            }
     return dict(metrics=best, thermalHistory=history, fieldSeries=recorder.finish(),
                 peakInterpolatedMeltPool=interpolated_peak,
                 fieldOverlapDiagnostics=overlap_metrics,
@@ -785,9 +813,10 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 # A single transient execution does not retain independently
                 # simulated track fields. Do not label repeated final-field
                 # slices as a three-track six-section observation.
-                **({"barePlateSectionObservations": rectangular_corridor_section_observations(
-                    axis_y, z, corridor_peak_planes, corridor_section_samples, dx, m["liquidus_K"])}
-                    if rectangular_corridor else {}),
+                **({"barePlateSectionObservations": bare_plate_section_observations}
+                   if rectangular_corridor else {}),
+                **({"barePlateSectionFieldArtifact": section_field_artifact}
+                   if section_field_artifact is not None else {}),
                 numericalDiagnostics=dict(**peak_diagnostics, overlapExtraction=OVERLAP_MODEL_ID if overlap_metrics else None, sourceIntegration=SOURCE_INTEGRATION, solidificationExtraction="linear-liquidus-crossing-v1",
                     stabilityLimit="local-conductance-row-sum", minimumCapturedSourceFraction=minimum_capture,
                     maximumSourceRenormalization=1/minimum_capture, maximumSurfaceOffset_um=surface_offset,

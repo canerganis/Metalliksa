@@ -208,6 +208,180 @@ def rectangular_corridor_section_observations(axis_y, z, peak_temperature_planes
     return observations
 
 
+def write_rectangular_corridor_section_field_artifact(
+        output_path, axis_x_m, axis_y_m, z_m, samples, peak_temperature_planes,
+        mesh_m, liquidus_K, accepted_step_count):
+    """Persist the source peak planes bound to the two corridor section summaries.
+
+    The artifact contains only source X planes referenced by the 4.9 mm and
+    6.0 mm thermal-proxy observations. It preserves the source-plane indices
+    and interpolation operation so the section coordinate can be audited or
+    reconstructed without treating the summary geometry as an observation.
+    """
+    def invalid(message):
+        raise ValueError(f"Invalid rectangular-corridor section field artifact: {message}")
+
+    def finite_scalar(value):
+        return (not isinstance(value, (bool, np.bool_))
+                and isinstance(value, (int, float, np.integer, np.floating))
+                and math.isfinite(float(value)))
+
+    if (type(accepted_step_count) is not int or accepted_step_count <= 0):
+        invalid("accepted step count must be a positive integer")
+    if not finite_scalar(mesh_m) or float(mesh_m) <= 0:
+        invalid("mesh must be positive and finite")
+    if not finite_scalar(liquidus_K) or float(liquidus_K) <= 0:
+        invalid("liquidus must be positive and finite")
+    try:
+        axis_x = np.asarray(axis_x_m, dtype=np.float64)
+        axis_y = np.asarray(axis_y_m, dtype=np.float64)
+        z = np.asarray(z_m, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError):
+        invalid("coordinate axes must be numeric vectors")
+    mesh = float(mesh_m)
+    for name, axis in (("X", axis_x), ("Y", axis_y), ("Z", z)):
+        if (axis.ndim != 1 or len(axis) < 2 or not np.isfinite(axis).all()
+                or not np.all(np.diff(axis) > 0)
+                or not np.allclose(np.diff(axis), mesh, rtol=1e-8, atol=1e-12)):
+            invalid(f"{name} axis must be finite, increasing, and uniform at the declared mesh")
+    if not isinstance(samples, (list, tuple)) or len(samples) != 2:
+        invalid("exactly two section summaries are required")
+    if not isinstance(peak_temperature_planes, dict):
+        invalid("source peak planes must be a mapping")
+
+    expected = {
+        "single-line-x-4p9mm": 4.9,
+        "single-line-x-6p0mm": 6.0,
+    }
+    normalized = []
+    seen = set()
+    scan_start_x_m = None
+    plane_union = set()
+    for row in samples:
+        if not isinstance(row, dict):
+            invalid("section summaries must be mappings")
+        record_id = row.get("recordId")
+        if record_id not in expected or record_id in seen:
+            invalid("section summaries must uniquely identify the 4.9 mm and 6.0 mm locations")
+        seen.add(record_id)
+        distance = expected[record_id]
+        if (row.get("status") != "thermal-proxy"
+                or row.get("distanceFromScanStart_mm") != distance
+                or row.get("operator") != RECTANGULAR_CORRIDOR_SECTION_OPERATOR
+                or row.get("scanLineScope") != "one simulated +X track; not experimental repeats"
+                or row.get("temporalAggregation") != "accepted-step maximum per source X plane, then spatially interpolated"
+                or row.get("contourOperator") != "linear-liquidus-crossings-between-cell-centers-v1"
+                or row.get("evidenceScope") != "Numerical thermal proxy; no etched-boundary or experimental validation; one simulated line only"):
+            invalid("section summary is unsupported or has an unexpected observation contract")
+        if (not isinstance(row.get("sampleCells"), int)
+                or isinstance(row.get("sampleCells"), bool) or row["sampleCells"] <= 0
+                or any(not finite_scalar(row.get(key)) or float(row[key]) <= 0
+                       for key in ("width_um", "depth_um"))):
+            invalid("section summary must have positive finite geometry and sampled cells")
+        start_x = row.get("scanStartX_m")
+        section_x = row.get("xCoordinate_m")
+        if not finite_scalar(start_x) or not finite_scalar(section_x):
+            invalid("section scan start and X coordinate must be finite")
+        if scan_start_x_m is None:
+            scan_start_x_m = float(start_x)
+        elif not math.isclose(float(start_x), scan_start_x_m, rel_tol=0., abs_tol=1e-12):
+            invalid("section summaries disagree on scan start")
+        if not math.isclose(float(section_x), scan_start_x_m+distance*1e-3,
+                            rel_tol=0., abs_tol=1e-12):
+            invalid("section coordinate is detached from scan start and distance")
+
+        indices = row.get("sourcePlaneIndices")
+        positions = row.get("sourcePlaneX_m")
+        fraction = row.get("interpolationFraction")
+        interpolation = row.get("interpolationOperator")
+        if (not isinstance(indices, (list, tuple)) or not isinstance(positions, (list, tuple))
+                or len(indices) not in (1, 2) or len(positions) != len(indices)
+                or any(type(index) is not int or not 0 <= index < len(axis_x) for index in indices)
+                or any(not finite_scalar(position) for position in positions)
+                or any(not math.isclose(float(axis_x[index]), float(position),
+                                        rel_tol=0., abs_tol=1e-12)
+                       for index, position in zip(indices, positions))):
+            invalid("source-plane indices or positions are invalid")
+        if not finite_scalar(fraction) or not 0. <= float(fraction) <= 1.:
+            invalid("interpolation fraction must be finite and within [0, 1]")
+        if interpolation == "exact-cell-center":
+            if (len(indices) != 1 or float(fraction) != 0.
+                    or not math.isclose(float(positions[0]), float(section_x),
+                                        rel_tol=0., abs_tol=1e-12)):
+                invalid("exact-cell-center provenance is inconsistent")
+        elif interpolation == "linear-interpolation-between-accepted-peak-temperature-planes-v1":
+            if (len(indices) != 2 or indices[1] != indices[0]+1
+                    or not 0. < float(fraction) < 1.
+                    or not axis_x[indices[0]] < float(section_x) < axis_x[indices[1]]):
+                invalid("linear interpolation provenance is inconsistent")
+            derived_fraction = ((float(section_x)-float(axis_x[indices[0]]))
+                                / (float(axis_x[indices[1]])-float(axis_x[indices[0]])) )
+            if not math.isclose(float(fraction), derived_fraction, rel_tol=1e-9, abs_tol=1e-12):
+                invalid("interpolation fraction is detached from source-plane positions")
+        else:
+            invalid("unsupported interpolation operator")
+        if any(index not in peak_temperature_planes for index in indices):
+            invalid("a referenced source peak-temperature plane is missing")
+        normalized.append((distance, float(section_x), list(indices), float(fraction),
+                           interpolation, record_id))
+        plane_union.update(indices)
+    if seen != set(expected):
+        invalid("one of the required section summaries is missing")
+    normalized.sort(key=lambda row: row[0])
+
+    plane_indices = sorted(plane_union)
+    planes = []
+    for index in plane_indices:
+        try:
+            field = np.asarray(peak_temperature_planes[index], dtype=np.float64)
+        except (TypeError, ValueError, OverflowError):
+            invalid("a source peak-temperature plane is not a numeric array")
+        if field.shape != (len(axis_y), len(z)) or not np.isfinite(field).all():
+            invalid("source peak-temperature planes must match the Y/Z grid and be finite")
+        planes.append(field)
+
+    padded_indices = np.full((2, 2), -1, dtype=np.int64)
+    for row_index, (_, _, indices, _, _, _) in enumerate(normalized):
+        padded_indices[row_index, :len(indices)] = indices
+    arrays = {
+        "schema_version": np.asarray(1, dtype=np.int64),
+        "scan_start_x_m": np.asarray(scan_start_x_m, dtype=np.float64),
+        "section_x_m": np.asarray([row[1] for row in normalized], dtype=np.float64),
+        "section_distance_mm": np.asarray([row[0] for row in normalized], dtype=np.float64),
+        "temperature_planes_K": np.stack(planes).astype(np.float64, copy=False),
+        "plane_indices": np.asarray(plane_indices, dtype=np.int64),
+        "plane_x_m": np.asarray([axis_x[index] for index in plane_indices], dtype=np.float64),
+        "axis_y_m": axis_y,
+        "z_m": z,
+        "mesh_m": np.asarray(mesh, dtype=np.float64),
+        "liquidus_K": np.asarray(float(liquidus_K), dtype=np.float64),
+        "accepted_step_count": np.asarray(accepted_step_count, dtype=np.int64),
+        "section_source_plane_indices": padded_indices,
+        "section_interpolation_fraction": np.asarray([row[3] for row in normalized], dtype=np.float64),
+        "section_interpolation_operator": np.asarray([row[4] for row in normalized], dtype=np.str_),
+        "section_record_id": np.asarray([row[5] for row in normalized], dtype=np.str_),
+    }
+    if any(np.asarray(value).dtype.hasobject for value in arrays.values()):
+        invalid("artifact arrays must not require pickle")
+    try:
+        path = Path(output_path)
+        if not path.parent.is_dir():
+            invalid("output directory does not exist")
+        created = False
+        try:
+            with path.open("xb") as stream:
+                created = True
+                np.savez_compressed(stream, **arrays)
+        except FileExistsError:
+            invalid("output path already exists")
+        except Exception:
+            if created:
+                path.unlink(missing_ok=True)
+            raise
+    except (TypeError, OSError) as exc:
+        raise ValueError("Invalid rectangular-corridor section field artifact output path") from exc
+
+
 def fixed_event_liquidus_cross_section(coordinates, temperature_K, x_position_m, dx_m,
                                       liquidus_K, substrate_interface_z_m=0.0):
     """Reconstruct a transverse liquidus section of one supplied event field.
