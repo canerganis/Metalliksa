@@ -1,0 +1,69 @@
+import re
+import subprocess
+import unittest
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import lpbf_worker
+import lpbf_worker_rpc
+
+BASE_COMMIT = "01eb3f0"
+
+
+def original_method_names():
+    repo = Path(__file__).resolve().parents[1]
+    source = subprocess.run(
+        ["git", "show", f"{BASE_COMMIT}:python/lpbf_worker.py"],
+        cwd=repo, capture_output=True, text=True, check=True).stdout
+    return re.findall(r'(?:if|elif) method == "([^"]+)"', source)
+
+
+class WorkerDispatchTest(unittest.TestCase):
+    def test_original_method_list_is_complete(self):
+        names = original_method_names()
+        self.assertGreaterEqual(len(names), 28)
+        self.assertEqual(len(names), len(set(names)))
+
+    def test_every_original_method_has_a_handler(self):
+        served = lpbf_worker_rpc.method_names()
+        for name in original_method_names():
+            self.assertIn(name, served, name)
+        self.assertEqual(served, set(original_method_names()))
+
+    def test_table_handlers_are_callable_and_disjoint(self):
+        tables = (lpbf_worker_rpc.QUEUE_HANDLERS, lpbf_worker_rpc.RESEARCH_HANDLERS)
+        for table in tables:
+            for name, handler in table.items():
+                self.assertTrue(callable(handler), name)
+        self.assertFalse(set(tables[0]) & set(tables[1]))
+
+    def test_queue_methods_route_to_queue(self):
+        queue = MagicMock()
+        for method, attr in (("submit", "submit"), ("get", "get"), ("cancel", "cancel"),
+                             ("artifact", "artifact"), ("capture", "capture"),
+                             ("archive-capture", "archive_capture")):
+            lpbf_worker_rpc.dispatch({"method": method, "payload": "x"}, queue, lambda q: None)
+            getattr(queue, attr).assert_called_once_with("x")
+        lpbf_worker_rpc.dispatch({"method": "submit-repeat", "payload": "y"}, queue, lambda q: None)
+        queue.submit.assert_called_with("y", execution_scope="repeat")
+
+    def test_capabilities_uses_injected_handler(self):
+        self.assertEqual(
+            lpbf_worker_rpc.dispatch({"method": "capabilities"}, "q", lambda q: {"q": q}), {"q": "q"})
+
+    def test_unknown_method_error_shape(self):
+        with self.assertRaises(ValueError) as caught:
+            lpbf_worker_rpc.dispatch({"id": 1, "method": "no-such-method"}, MagicMock(), lambda q: None)
+        self.assertEqual(str(caught.exception), "Unknown method")
+
+    def test_missing_method_key_error_matches_original(self):
+        with self.assertRaises(KeyError) as caught:
+            lpbf_worker_rpc.dispatch({"id": 1}, MagicMock(), lambda q: None)
+        self.assertEqual(str(caught.exception), "'method'")
+
+    def test_worker_module_wires_rpc(self):
+        self.assertIs(lpbf_worker.lpbf_worker_rpc, lpbf_worker_rpc)
+
+
+if __name__ == "__main__":
+    unittest.main()
