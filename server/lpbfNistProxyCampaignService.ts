@@ -21,6 +21,9 @@ const SECTION_RECORD_IDS = ['single-line-x-4p9mm', 'single-line-x-6p0mm'];
 const SECTION_DISTANCES = [4.9, 6.0];
 const SECTION_OPERATOR = 'bare-plate-corridor-accepted-peak-x-linear-section-v1';
 const CONTOUR_OPERATOR = 'linear-liquidus-crossings-between-cell-centers-v1';
+const SECTION_FIELD_PATH = 'rectangular-corridor-section-fields.npz';
+const SECTION_FIELD_BINDING = 'accepted-step-maximum-per-source-X-plane';
+const MAX_SECTION_FIELD_BYTES = 32 * 1024 * 1024;
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
   status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
@@ -46,6 +49,75 @@ function validatePython(campaign: unknown, source: unknown): Promise<any> {
     child.stdin.on('error', fail);
     child.stdin.end(JSON.stringify({ campaign, source }));
   });
+}
+
+function rederivePythonSections(result: unknown, bytes: Buffer): Promise<any> {
+  return new Promise((resolve, reject) => {
+    let python;
+    try { python = getHostPython(); }
+    catch { reject(new Error('Host Python is unavailable for NPZ re-derivation.')); return; }
+    const code = [
+      'import json,sys',
+      'sys.path.insert(0,"python")',
+      'try:',
+      ' from lpbf_nist_proxy_sections import rederive_rectangular_corridor_sections',
+      ' from lpbf_nist_proxy_sections import SectionArtifactError',
+      ' header=json.loads(sys.stdin.buffer.readline())',
+      ' payload=sys.stdin.buffer.read()',
+      ' answer=rederive_rectangular_corridor_sections(payload,header["result"])',
+      ' print(json.dumps(answer,allow_nan=False))',
+      'except SectionArtifactError as exc:',
+      ' print(json.dumps({"status":"unavailable","reason":str(exc)}))',
+    ].join('\n');
+    const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
+    let stdout = '', stderr = '', done = false;
+    const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };
+    const timer = setTimeout(() => { child.kill(); fail(new Error('Python NPZ re-derivation timed out.')); }, 15000);
+    child.stdout.on('data', chunk => { stdout += chunk.toString(); if (stdout.length > 256 * 1024) { child.kill(); fail(new Error('Python NPZ re-derivation response is too large.')); } });
+    child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-2048); });
+    child.on('error', () => fail(new Error('Python NPZ re-derivation reader is unavailable.')));
+    child.on('close', code => {
+      if (done) return;
+      if (code !== 0) { fail(new Error(stderr.includes('No module named') ? 'Python NPZ re-derivation reader or dependency is unavailable.' : 'Python NPZ re-derivation failed.')); return; }
+      try { const answer = JSON.parse(stdout); done = true; clearTimeout(timer); resolve(answer); }
+      catch { fail(new Error('Python NPZ re-derivation returned an invalid response.')); }
+    });
+    child.stdin.on('error', () => fail(new Error('Could not send verified NPZ bytes to Python.')));
+    child.stdin.write(`${JSON.stringify({ result })}\n`);
+    child.stdin.end(bytes);
+  });
+}
+
+async function validateArchivedSections(record: RunRecord, result: any, store: LpbfArtifactStore,
+  reader: (result: unknown, bytes: Buffer) => Promise<any> = rederivePythonSections): Promise<string | null> {
+  const descriptor = result?.barePlateSectionFieldArtifact;
+  if (descriptor?.schemaVersion !== 1 || descriptor?.status !== 'captured'
+    || descriptor?.path !== SECTION_FIELD_PATH || descriptor?.binding !== SECTION_FIELD_BINDING) {
+    return 'Archived run lacks the exact captured section-field artifact descriptor.';
+  }
+  if (!Array.isArray(result?.artifacts)) return 'Archived run artifact manifest is missing.';
+  const matches = result.artifacts.filter((item: any) => item?.path === SECTION_FIELD_PATH);
+  if (matches.length !== 1) return 'Archived run manifest must contain exactly one section-field artifact entry.';
+  const artifact = matches[0];
+  if (typeof artifact.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(artifact.sha256)
+    || !Number.isSafeInteger(artifact.size_bytes) || artifact.size_bytes <= 0
+    || artifact.size_bytes > MAX_SECTION_FIELD_BYTES) {
+    return 'Archived section-field artifact manifest has an invalid identity or exceeds the compressed-byte budget.';
+  }
+  try {
+    const verified = await store.verify({ sha256: artifact.sha256, byteSize: artifact.size_bytes });
+    const bytes = readFileSync(verified.path);
+    if (bytes.length !== artifact.size_bytes || sha(bytes) !== artifact.sha256) {
+      return 'Archived section-field artifact bytes changed or failed SHA-256 verification after store verification.';
+    }
+    const answer = await reader(result, bytes);
+    if (answer?.status !== 'validated') {
+      return typeof answer?.reason === 'string' ? answer.reason : 'Archived section-field artifact could not re-derive both thermal-proxy sections.';
+    }
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Archived section-field artifact verification failed.';
+  }
 }
 
 function exactCase(table: any, caseNumber: string) {
@@ -124,7 +196,8 @@ function runCampaignIdentity(record: RunRecord, result: any, observations: any[]
 
 export class LpbfNistProxyCampaignService {
   constructor(private readonly runRoot = path.resolve(process.env.METALLIKSA_LPBF_RUN_ROOT || '.lpbf-runs'),
-    private readonly sourceRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources')) {}
+    private readonly sourceRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources'),
+    private readonly sectionReader: (result: unknown, bytes: Buffer) => Promise<any> = rederivePythonSections) {}
 
   async list(): Promise<ProxyCampaignRecord[]> {
     const runDb = path.join(this.runRoot, 'runs.sqlite');
@@ -220,6 +293,9 @@ export class LpbfNistProxyCampaignService {
           || !Array.isArray(result.barePlateSectionObservations)) {
           return { campaign: null, validation: unavailable([`Archived run ${record.document.runId} is not a matching, core-bound IN718 bare-plate thermal track for Table 4 case ${caseNumber}.`]) };
         }
+        const sectionFailure = await validateArchivedSections(record, result,
+          new LpbfArtifactStore(path.join(this.runRoot, 'artifacts'), { readOnly: true }), this.sectionReader);
+        if (sectionFailure) return { campaign: null, validation: unavailable([`Archived run ${record.document.runId}: ${sectionFailure}`]) };
         const run = runCampaignIdentity(record, result, result.barePlateSectionObservations, sourceBinding);
         if (!run) return { campaign: null, validation: unavailable([`Archived run ${record.document.runId} lacks both finite 4.9/6.0 mm thermal-proxy sections.`]) };
         const identity = run.runIdentity;

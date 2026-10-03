@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -14,9 +15,52 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { LpbfRunRepository } from '../server/lpbfRunRepository';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
+import { getHostPython } from '../server/pythonRuntime';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex');
 const tableRoot = path.resolve('data/benchmark/nist-amb2022-03-optical');
+
+function createProxySectionFieldFixture(): { bytes: Buffer; observations: any[] } {
+  const python = getHostPython();
+  const code = [
+    'import base64,json,sys,tempfile',
+    'from pathlib import Path',
+    'import numpy as np',
+    'sys.path.insert(0,"python")',
+    'from lpbf_peak import rectangular_corridor_section_samples,rectangular_corridor_section_observations,write_rectangular_corridor_section_field_artifact',
+    'mesh=.001; axis_x=-.005+np.arange(11,dtype=np.float64)*mesh',
+    'axis_y=np.arange(-.004,.0041,mesh,dtype=np.float64); z=np.arange(-.004,.0001,mesh,dtype=np.float64)',
+    'requests=rectangular_corridor_section_samples(axis_x,-.005,.01); fields={}',
+    'for index in sorted({i for row in requests for i in row["sourcePlaneIndices"]}):',
+    ' field=np.full((len(axis_y),len(z)),300.,dtype=np.float64); field[(np.abs(axis_y)<=.001)[:,None]&((z>=-.003)&(z<=-.001))[None,:]]=1800.; fields[index]=field',
+    'observations=rectangular_corridor_section_observations(axis_y,z,fields,requests,mesh,1600.)',
+    'with tempfile.TemporaryDirectory() as directory:',
+    ' target=Path(directory)/"rectangular-corridor-section-fields.npz"',
+    ' write_rectangular_corridor_section_field_artifact(target,axis_x,axis_y,z,observations,fields,mesh,1600.,17)',
+    ' print(json.dumps({"bytes":base64.b64encode(target.read_bytes()).decode("ascii"),"observations":observations},allow_nan=False))',
+  ].join('\n');
+  const generated = spawnSync(python.cmd, [...python.prefix, '-c', code], { encoding: 'utf8', windowsHide: true,
+    cwd: process.cwd(), maxBuffer: 4 * 1024 * 1024 });
+  if (generated.error || generated.status !== 0) throw generated.error || new Error(`Could not create producer NPZ fixture: ${generated.stderr}`);
+  const parsed = JSON.parse(generated.stdout);
+  return { bytes: Buffer.from(parsed.bytes, 'base64'), observations: parsed.observations };
+}
+
+function alterProxySectionField(bytes: Buffer): Buffer {
+  const python = getHostPython();
+  const code = [
+    'import base64,io,sys',
+    'import numpy as np',
+    'source=np.load(io.BytesIO(base64.b64decode(sys.stdin.buffer.read())),allow_pickle=False)',
+    'arrays={name:source[name].copy() for name in source.files}; source.close()',
+    'arrays["temperature_planes_K"][0,2,1]=1801.',
+    'output=io.BytesIO(); np.savez_compressed(output,**arrays); sys.stdout.buffer.write(base64.b64encode(output.getvalue()))',
+  ].join('\n');
+  const changed = spawnSync(python.cmd, [...python.prefix, '-c', code], { input: bytes.toString('base64'),
+    encoding: 'utf8', windowsHide: true, cwd: process.cwd(), maxBuffer: 4 * 1024 * 1024 });
+  if (changed.error || changed.status !== 0) throw changed.error || new Error(`Could not mutate producer NPZ fixture: ${changed.stderr}`);
+  return Buffer.from(changed.stdout.trim(), 'base64');
+}
 
 test('NIST optical HTTP gate uses archived exact source and verified bytes, and withholds pilot errors', async t => {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-nist-http-'));
@@ -104,55 +148,50 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
 
   const proxyRunIds = ['4', '5', '6'].map(value => value.repeat(32));
   const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0'].map(value => value.repeat(16)));
+  const sectionFailureIds = ['2a', '2b', '2c', '2d', '2e', '2f', '30', '31'].map(value => value.repeat(16));
   const proxyResultJson = new Map<string, string>();
   const tableCase = JSON.parse(readFileSync(path.join(tableRoot, artifact.relativePath), 'utf8'))
     .cases.find((item: any) => item.caseNumber === '0');
-  function proxySections(trackIndex: number,
-    corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction') {
-    return [4.9, 6.0].map((distance, sectionIndex) => {
-      const xCoordinate = -0.005 + distance * 1e-3;
-      const linear = trackIndex === 2;
-      const sourcePlaneX = linear ? [xCoordinate - 1e-4, xCoordinate + 1e-4] : [xCoordinate];
-      return {
-        recordId: sectionIndex === 0 ? 'single-line-x-4p9mm' : 'single-line-x-6p0mm',
-        status: 'thermal-proxy',
-        operator: corruption === 'operator' && sectionIndex === 0
-          ? 'unverified-operator' : 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
-        scanLineScope: 'one simulated +X track; not experimental repeats',
-        distanceFromScanStart_mm: corruption === 'distance' && sectionIndex === 0 ? 4.8 : distance,
-        xCoordinate_m: corruption === 'x-coordinate' && sectionIndex === 0 ? xCoordinate + 1e-4 : xCoordinate,
-        scanStartX_m: -0.005,
-        interpolationOperator: linear
-          ? 'linear-interpolation-between-accepted-peak-temperature-planes-v1' : 'exact-cell-center',
-        sourcePlaneIndices: linear ? [Math.round(distance * 10), Math.round(distance * 10) + 1] : [Math.round(distance * 10)],
-        sourcePlaneX_m: sourcePlaneX,
-        interpolationFraction: linear
-          ? corruption === 'linear-fraction' && sectionIndex === 0 ? 0.25 : 0.5 : 0,
-        width_um: 140 + trackIndex + sectionIndex,
-        depth_um: 120 + trackIndex + sectionIndex,
-        location: `section ${distance.toFixed(1)} mm from +X scan start`,
-        temporalAggregation: 'accepted-step maximum per source X plane, then spatially interpolated',
-        contourOperator: 'linear-liquidus-crossings-between-cell-centers-v1',
-        sourcePlaneX_um: sourcePlaneX.map(value => value * 1e6),
-        sampleCells: 4,
-        evidenceScope: 'Numerical thermal proxy; no etched-boundary or experimental validation; one simulated line only',
-      };
-    });
-  }
-  function saveProxyRun(runId: string, trackIndex: number,
-    corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction') {
+  const producerFixture = createProxySectionFieldFixture();
+  async function saveProxyRun(runId: string, corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
+    | 'missing-descriptor' | 'mismatched-descriptor' | 'missing-manifest'
+    | 'changed-width' | 'changed-depth' | 'changed-sample-cells' | 'changed-plane') {
     const settings = {
       backend: 'auto',
       power_W: tableCase.laserPower_W, speed_mm_s: tableCase.scanSpeed_mm_s,
       beamDiameter_um: tableCase.beamDiameterD4sigma_um, preheat_C: 23.5,
-      surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0,
+      surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0, mesh_um: 1000,
     };
     const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision'),
-      name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture' };
+      name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture', liquidus_K: 1600 };
     const inputJson = JSON.stringify(settings), materialJsonForRun = JSON.stringify(material);
+    const observations = producerFixture.observations.map(row => ({ ...row,
+      sourcePlaneIndices: [...row.sourcePlaneIndices], sourcePlaneX_m: [...row.sourcePlaneX_m],
+      sourcePlaneX_um: [...row.sourcePlaneX_um] }));
+    if (corruption === 'distance') observations[0].distanceFromScanStart_mm = 4.8;
+    if (corruption === 'operator') observations[0].operator = 'unverified-operator';
+    if (corruption === 'x-coordinate') observations[0].xCoordinate_m += 1e-4;
+    if (corruption === 'linear-fraction') observations[0].interpolationFraction = .25;
+    if (corruption === 'changed-width') observations[0].width_um += 1;
+    if (corruption === 'changed-depth') observations[0].depth_um += 1;
+    if (corruption === 'changed-sample-cells') observations[0].sampleCells += 1;
+    const sectionBytes = corruption === 'changed-plane' ? alterProxySectionField(producerFixture.bytes) : producerFixture.bytes;
+    const sectionJob = path.join(root, `section-${runId}`); mkdirSync(sectionJob);
+    writeFileSync(path.join(sectionJob, 'rectangular-corridor-section-fields.npz'), sectionBytes);
+    const sectionArtifact = { path: 'rectangular-corridor-section-fields.npz', size_bytes: sectionBytes.length, sha256: sha(sectionBytes) };
+    await runStore.putFile(sectionJob, sectionArtifact.path, { relativePath: sectionArtifact.path,
+      sha256: sectionArtifact.sha256, byteSize: sectionArtifact.size_bytes });
+    const artifacts = [runArtifact, ...(corruption === 'missing-manifest' ? [] : [sectionArtifact])];
     const result = {
       ...baseResult, runKind: 'transient-thermal', requestedMode: 'standard', effectiveMode: 'standard',
       settings, material,
+      artifacts,
+      discretization: { cells: 1000, mesh_m: .001, steps: 17 },
+      barePlateSectionFieldArtifact: corruption === 'missing-descriptor' ? undefined : {
+        schemaVersion: 1, status: 'captured',
+        path: 'rectangular-corridor-section-fields.npz',
+        binding: corruption === 'mismatched-descriptor' ? 'summary-only' : 'accepted-step-maximum-per-source-X-plane',
+      },
       solver: { ...baseResult.solver, id: 'enthalpy-fv-6' },
       energyBalance: { input_J: 0, losses_J: 0, stored_J: 0, relativeError: 0 },
       massBalance: { initial_kg: 0, deposited_kg: 0, final_kg: 0, relativeError: 0, scope: 'synthetic fixture' },
@@ -166,7 +205,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       measuredBeamProfileEvidence: { D4sigma_um: tableCase.beamDiameterD4sigma_um },
       scanPath: [{ start: [-0.005, 0], end: [0.005, 0], start_s: 0,
         end_s: 10 / tableCase.scanSpeed_mm_s }],
-      barePlateSectionObservations: proxySections(trackIndex, corruption),
+      barePlateSectionObservations: observations,
     };
     const resultJson = JSON.stringify(result);
     proxyResultJson.set(runId, resultJson);
@@ -175,10 +214,12 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
         contractStatus: 'core-v1-bound', runKind: 'transient-thermal' },
       sources: [exactLink] });
   }
-  proxyRunIds.forEach((runId, index) => saveProxyRun(runId, index));
+  for (const runId of proxyRunIds) await saveProxyRun(runId);
   const corruptions = ['distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
-  malformedProxyRunIds.forEach((runId, index) =>
-    saveProxyRun(runId, index === 3 ? 2 : index, corruptions[index]));
+  for (let index = 0; index < malformedProxyRunIds.length; index++) await saveProxyRun(malformedProxyRunIds[index], corruptions[index]);
+  const sectionCorruptions = ['missing-descriptor', 'mismatched-descriptor', 'missing-manifest',
+    'changed-width', 'changed-depth', 'changed-sample-cells', 'changed-plane'] as const;
+  for (let index = 0; index < sectionCorruptions.length; index++) await saveProxyRun(sectionFailureIds[index], sectionCorruptions[index]);
   runs.close(); sources.close();
 
   const app = express();
@@ -218,12 +259,15 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     assert.equal(track.runIdentity.resultArtifact.sha256, sha(resultJson));
     assert.equal(track.runIdentity.resultArtifact.size_bytes, Buffer.byteLength(resultJson));
     assert.deepEqual(track.observations.map((item: any) => item.distanceFromScanStart_mm), [4.9, 6.0]);
-    assert.deepEqual(track.observations.map((item: any) => item.geometry.width_um), [140 + index, 141 + index]);
-    assert.deepEqual(track.observations.map((item: any) => item.geometry.depth_um), [120 + index, 121 + index]);
+    assert.deepEqual(track.observations.map((item: any) => item.geometry.width_um),
+      producerFixture.observations.map(row => row.width_um));
+    assert.deepEqual(track.observations.map((item: any) => item.geometry.depth_um),
+      producerFixture.observations.map(row => row.depth_um));
     assert.ok(track.observations.every((item: any) => item.provenance.runIdentity.runId === runId));
   }
-  assert.equal(proxyPreview.body.campaign.tracks[2].observations[0].operator.interpolationOperatorId,
+  assert.equal(proxyPreview.body.campaign.tracks[0].observations[0].operator.interpolationOperatorId,
     'linear-interpolation-between-accepted-peak-temperature-planes-v1');
+  assert.equal(proxyPreview.body.campaign.tracks[0].observations[1].operator.interpolationOperatorId, 'exact-cell-center');
 
   for (const malformedRunId of malformedProxyRunIds) {
     const malformedProxy = await postCampaignPreview([proxyRunIds[0], proxyRunIds[1], malformedRunId]);
@@ -232,6 +276,21 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       'the service must reject malformed source section metadata instead of replacing it with expected values');
     assert.equal(malformedProxy.body.validation.status, 'unavailable');
   }
+
+  for (const malformedRunId of sectionFailureIds) {
+    const malformedProxy = await postCampaignPreview([proxyRunIds[0], proxyRunIds[1], malformedRunId]);
+    assert.equal(malformedProxy.status, 200);
+    assert.equal(malformedProxy.body.campaign, null,
+      'the service must reject missing bindings and any non-reproducible archived section');
+    assert.equal(malformedProxy.body.validation.status, 'unavailable');
+  }
+  const noPythonReader = new LpbfNistProxyCampaignService(runRoot, sourceRoot, async () => {
+    throw new Error('Python NPZ re-derivation reader is unavailable.');
+  });
+  const unavailablePreview = await noPythonReader.preview(proxyRunIds, '0');
+  assert.equal(unavailablePreview.campaign, null);
+  assert.equal(unavailablePreview.validation.status, 'unavailable');
+  assert.match(unavailablePreview.validation.reasons.join(' '), /Python NPZ re-derivation reader is unavailable/i);
 
   const createProxy = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds,
