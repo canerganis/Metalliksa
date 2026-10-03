@@ -5,17 +5,17 @@
 ## Güncel durum özeti (2026-10-03)
 
 - **Birleşim:** `81694c3` (`orch/integration`) security hardening, airgap guards, a11y statik düzeltmeleri, bundle chunking, CI/packaging taslakları, genişletilmiş TypeScript kapsamı ve ESLint baseline'ını birleştirdi. V1 NPZ yeniden türetim kapısı `a72b2da` ile eklendi, `1cf1067` ile testleri sertleştirildi.
-- **Açık kabul kapıları:** Üç ayrı gerçek solver execution kabulü tamamlanmadı; gerçek tarayıcıda arşiv round-trip yapılmadı; bu revision üzerinde clean-install tekrarı yapılmadı. CI hiç çalıştırılmadı ve Docker build hiç çalıştırılmadı. Token-mode SPA login sürüyor.
+- **Açık kabul kapıları:** Üç ayrı gerçek solver execution kabulü tamamlanmadı; 81694c3 revision'ında gerçek tarayıcı arşiv round-trip kabulü yapılmadı. STATUS.md:1336 ve :1352'deki tarihsel canlı TAR upload/restore ve refresh-persistence kayıtları bu revision'ın kabulünü kanıtlamaz. Bu revision üzerinde clean-install tekrarı yapılmadı. CI hiç çalıştırılmadı ve Docker build hiç çalıştırılmadı. Token-mode SPA login sürüyor.
 - **Bilimsel durum:** NIST optical residual `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated`; tam-alan zaman tanısı yalnız tanıdır.
 - **Sıradaki 3 eylem:**
   1. Üç ayrı gerçek solver execution için NPZ yeniden türetim kabulünü tamamla; sentetik fixture sonuçlarını gerçek koşu kabulü sayma.
-  2. Aynı revision üzerinde clean-install tekrarı ve gerçek tarayıcı arşiv indir/yükle/restore round-trip kabulünü tamamla.
-  3. Token-mode SPA login'i tamamla; CI ve Docker build'i ayrı çalıştırıp sonuçlarını kaydet.
+  2. Aynı revision üzerinde clean-install tekrarı ve tam V1 kabul sözleşmesini tamamla: UI manual/JSON → stale/cancel/reload/keyboard → TAR indir/yükle/restore ve owner-only recovery akışlarını gerçek tarayıcıda doğrula (tam kontrat: aşağıdaki V1 kabul maddeleri, :40 ve :50).
+  3. Token-mode SPA login'i tamamla; Docker build'den önce Linux CPython 3.12 lock dosyası `python/requirements-lpbf-linux-py312.lock` dosyasını üret, gözden geçir ve commit et (Dockerfile ve [APPLICATION_PACKAGING_NOTES.md](docs/APPLICATION_PACKAGING_NOTES.md), “Blocking prerequisite”); sonra CI ve Docker build'i ayrı çalıştırıp sonuçlarını kaydet.
 ## Güncel devam — kabul-adımı kesit alanı arşivleme (2026-10-03)
 
 - **Uygulama:** Rectangular-corridor tek-track çalışması, 4.9 ve 6.0 mm thermal-proxy kesitlerinin accepted-step maksimumlarında kullanılan X düzlemlerinin birleşimini float64, pickle gerektirmeyen sıkıştırılmış NPZ olarak saklıyor. Sonuç descriptor'ı yalnız yazım başarılıysa `captured`; kesitler desteklenmiyorsa `unavailable` kaydediliyor. `write_artifacts` NPZ'yi gerçek göreli yol/SHA-256/byte-size manifestine ekliyor.
-- **Kontrol / sınır:** `python -B -m unittest test_lpbf_bare_plate`: **16 PASS**; exact/off-grid source-plane/interpolation provenance ve eksik/bozuk/nonfinite girdi reddi dahil. Sol 6.1 producer/capture incelemesi GO. Bu testler gerçek solver arşiv round-trip'i veya alanlardan W/D yeniden türetimini kanıtlamıyor; servis tüketicisi henüz NPZ'yi yeniden doğrulamıyor. NIST residual `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated` kalır.
-- **Sıradaki:** Verified bytes üzerinden NPZ açıp W/D ve `sampleCells` değerlerini source plane'lerden yeniden türeten servis kapısını ekle ve gerçek ayrı solver execution arşivleriyle doğrula.
+- **Kontrol / sınır:** `python -B -m unittest test_lpbf_bare_plate`: **16 PASS**; exact/off-grid source-plane/interpolation provenance ve eksik/bozuk/nonfinite girdi reddi dahil. Sol 6.1 producer/capture incelemesi GO. Bu testler gerçek solver arşiv round-trip'ini veya alanlardan W/D yeniden türetimini kanıtlamıyor. “Servis tüketicisi henüz NPZ'yi yeniden doğrulamıyor” notu, `a72b2da` ve `1cf1067` ile eklenen/sertleştirilen servis kapısından önceki durumu anlatan tarihsel kayıttır; güncel durumu göstermez. Üç ayrı gerçek solver execution ile bu kapının kabulü hâlâ beklemede. NIST residual `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated` kalır.
+- **Sıradaki:** Üç ayrı gerçek solver execution arşiviyle NPZ servis kapısının kabulünü tamamla; verified bytes üzerinden W/D ve `sampleCells` değerlerinin source plane'lerden yeniden türetildiğini doğrula.
 
 ## Güncel devam — arşivlenmiş kesit metadata doğrulaması (2026-10-03)
 

@@ -14,6 +14,6 @@ Eski bölümlerin kopyasını `docs/archive/status-YYYY-MM.md` olarak eklemek, m
 
 1. Aday eski bölümleri ve her birinin tarihini listele; güncel özet, açık eylemler ve bilimsel durum ifadelerini kaynakta bırak.
 2. Her bölümün tam metnini uygun `docs/archive/status-YYYY-MM.md` hedefine kopyala; hedefin mevcut olmadığını veya içerikle uyumlu olduğunu doğrula.
-3. Kopya ile kaynak bölümü karakter ve newline düzeyinde karşılaştır; bağlantıların ve başlıkların bağlamını koru.
+3. Kopya ile kaynak bölümü karakter ve newline düzeyinde karşılaştır; bağlantıların ve başlıkların bağlamını koru. Bayt düzeyinde aynı kopya, kök STATUS.md konumuna göreli bağlantıları arşiv altında farklı çözebilir (ör. STATUS.md:821). Arşiv kopyasındaki gezinme notlarını yeni konuma göre düzelt veya bağlantıları yeniden tabanlama adımını ayrı ve gözden geçirilmiş bir değişiklik olarak yürüt.
 4. Ayrı bir değişiklikte ancak arşiv kopyaları gözden geçirildikten sonra STATUS'tan çıkarılacak bölümleri belirle. Hash manifestleri varsa yeni canlı STATUS hash'ini ayrıca güncellemek gerekip gerekmediğini manifest amacına göre değerlendir; tarihsel kayıtları geriye dönük değiştirme.
 5. Değişiklik kapsamını, kopya/çıkarma farkını ve manifest etkisini gözden geçir; uygun doküman kontrollerini çalıştır.
