@@ -1113,6 +1113,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
 
   // Export ASTM Metallurgical Inspection Report as PDF
   const handleExportPdfReport = async () => {
+    try {
     const [{ jsPDF }, { default: autoTable }] = await Promise.all([
       import("jspdf"),
       import("jspdf-autotable"),
@@ -1233,6 +1234,10 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
     doc.text("Laboratory Stamp & Verification Seal", 120, signY + 5);
 
     doc.save(`SEM_Phase_Report_${sampleName.replace(/\s+/g, "_")}.pdf`);
+    } catch (err: any) {
+      console.error("SEM PDF export failed:", err);
+      setAiError(`PDF export failed: ${err?.message || "could not load the PDF library."}`);
+    }
   };
 
   return (
