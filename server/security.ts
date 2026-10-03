@@ -104,7 +104,7 @@ export function isAuthenticated(req: Request, token: string | null): boolean {
 export function tokenAuth(token: string | null) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!token) return next();
-    const p = (req.originalUrl || req.url || "").split("?")[0];
+    const p = (req.originalUrl || req.url || "").split("?")[0].toLowerCase();
     // Only API routes are protected; the SPA shell and /api/health stay reachable.
     if (!p.startsWith("/api/") || p === "/api/health") return next();
     if (isAuthenticated(req, token)) return next();
@@ -133,7 +133,7 @@ export function rateLimit(opts: RateLimitOptions = {}) {
   const buckets = new Map<string, { count: number; resetAt: number }>();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const p = (req.originalUrl || req.url || "").split("?")[0];
+    const p = (req.originalUrl || req.url || "").split("?")[0].toLowerCase();
     if (!p.startsWith("/api/")) return next();
     const ai = AI_ROUTE_PATTERN.test(p);
     const limit = ai ? aiLimit : generalLimit;

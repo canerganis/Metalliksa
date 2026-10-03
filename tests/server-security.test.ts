@@ -120,3 +120,18 @@ test("errorHandler hides 5xx details and includes request id", () => {
   assert.equal(res2.statusCode, 400);
   assert.equal(res2.body.error, "bad json");
 });
+
+test("tokenAuth and rateLimit treat /api paths case-insensitively (Express routers do)", () => {
+  const mw = tokenAuth("s3cret");
+  for (const url of ["/API/orchestrator/collect-source", "/Api/Consult", "/api/Consult/"]) {
+    const res = mockRes();
+    assert.equal(run(mw, mockReq({ originalUrl: url }), res), false, url);
+    assert.equal(res.statusCode, 401, url);
+  }
+  assert.equal(run(mw, mockReq({ originalUrl: "/API/health" }), mockRes()), true);
+
+  const rl = rateLimit({ now: () => 0, aiLimit: 2, generalLimit: 100, windowMs: 1000 });
+  const hit = (url: string) => run(rl, mockReq({ originalUrl: url }), mockRes());
+  assert.ok(hit("/api/consult") && hit("/API/Consult"));
+  assert.equal(hit("/Api/CONSULT"), false);
+});
