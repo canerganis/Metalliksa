@@ -22,10 +22,10 @@
 ## 3. Süreklilik ve teslim
 
 - Aktif devam noktası üst proje ../STATUS.md dosyasıdır.
-- Anlamlı iş paketi sonunda veya kontrollü duruşta tamamlananı, kontrolleri, commit'i, açık işleri ve sıradaki somut adımı kaydet.
+- Durum notunu yalnız kilometre taşında veya işe devam etmek için gerektiğinde güncelle; her ara işlemi kaydetme.
 - Ani kesinti kayıt yazmayı engellerse sonraki başlangıçta repo durumundan devam notunu tamamla.
 - sonkayıtlar/LOG.md tarihsel kayıttır; her araç çağrısı veya küçük işlem için ikinci bir uzun kayıt zorunlu değildir.
-- Kalıcı kararları ve dersleri uygun olduğunda Agent Memory'ye aktar; aktif durum metnini çoğaltma.
+- Agent Memory'yi yalnızca kalıcı bir kararı hatırlatmaya yardım edecekse kullan.
 - Kullanıcıya sonucu, doğrulama kanıtını ve kalan sınırlamaları kısa biçimde bildir.
 
 ## 4. Commit ve dış yayın
@@ -44,7 +44,7 @@
 - Başkasının erişimini veya otomatik mesaj alacağını varsayma. Bir dosyaya not yazmak karşı tarafa teslim onayı değildir.
 - Eşzamanlı işlerde görev, ajan, branch/worktree, sahip olunan yollar, ortak sözleşme ve kabul kontrollerini görünür biçimde kaydet.
 - Aynı dosyada eşzamanlı yazma yapma. Shared schema, package lock, ana router ve STATUS.md gibi ortak dosyalar için tek entegrasyon sahibi belirle.
-- Aktif paralel işler için docs/ACTIVE_WORK.md kaydını kullan. Kayıt koordinasyon yardımcısıdır; atomik kilit veya diğer ajanın onayı değildir.
+- docs/ACTIVE_WORK.md paralel işleri koordine etmek için isteğe bağlıdır; atomik kilit veya onay değildir.
 - Yazmadan ve commit'ten önce değişiklikleri yeniden kontrol et. Beklenmeyen örtüşmede dosyayı ezme; etkilenmeyen işte ilerle ve koordinasyon iste.
 - Ayrı worktree gerekiyorsa başlangıç commit'ini ve gerekli mevcut değişiklikleri açıkça belirt; kirli çalışma ağacının otomatik taşındığını varsayma.
 - Ortak checkout'ta Git index işlemlerini sırala. Diğer ajanın staged değişikliklerini kendi commit'ine alma.
