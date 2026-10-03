@@ -16,16 +16,39 @@
  */
 import React, { useEffect, useRef } from "react";
 
-type EscapeEntry = { current: () => void };
+type EscapeEntry = { current: () => void; seq?: number };
 
-// Open overlays register here in opening order; only the topmost one reacts to Escape,
-// so nested dialogs (for example a CNLS import dialog inside the CNLS studio modal) close one at a time.
+// Open overlays register here ordered by open sequence number (not effect order), so the most
+// recently opened overlay is topmost even when a child effect runs before its parent in one commit.
 const escapeStack: EscapeEntry[] = [];
 let listenerInstalled = false;
+let openCounter = 0;
+
+/** Monotonic sequence number; take one when an overlay opens (render time). */
+export function nextOpenSeq(): number {
+  openCounter += 1;
+  return openCounter;
+}
+
+/** Pure: inserts entry keeping the stack sorted by seq (entries without seq go on top, in order). */
+export function insertByOpenOrder(stack: EscapeEntry[], entry: EscapeEntry): void {
+  const seq = entry.seq;
+  if (seq === undefined) {
+    stack.push(entry);
+    return;
+  }
+  let index = stack.length;
+  while (index > 0) {
+    const prev = stack[index - 1].seq;
+    if (prev !== undefined && prev > seq) index -= 1;
+    else break;
+  }
+  stack.splice(index, 0, entry);
+}
 
 /** Registers an overlay on the stack; returns the unregister function. */
 export function registerEscapeEntry(entry: EscapeEntry): () => void {
-  escapeStack.push(entry);
+  insertByOpenOrder(escapeStack, entry);
   if (!listenerInstalled && typeof window !== "undefined") {
     window.addEventListener("keydown", onKeyDown);
     listenerInstalled = true;
@@ -66,6 +89,9 @@ function onKeyDown(event: KeyboardEvent): void {
 export function useEscapeToClose(active: boolean, onClose: () => void): void {
   const entry = useRef<EscapeEntry>({ current: onClose });
   entry.current.current = onClose;
+  // Sequence is taken at render time (parents render before children), reset when closed.
+  if (!active) entry.current.seq = undefined;
+  else if (entry.current.seq === undefined) entry.current.seq = nextOpenSeq();
 
   useEffect(() => {
     if (!active) return undefined;
@@ -74,7 +100,47 @@ export function useEscapeToClose(active: boolean, onClose: () => void): void {
 }
 
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex], [contenteditable]:not([contenteditable="false"])';
+
+/** Minimal element shape used by the tabbable predicate (lets tests use plain objects). */
+export interface TabbableCandidate {
+  disabled?: boolean;
+  hidden?: boolean;
+  tabIndex?: number;
+  inert?: boolean;
+  hasInertAncestor?: boolean;
+  /** true when the element has no layout box (display:none / visibility:hidden / detached). */
+  notRendered?: boolean;
+}
+
+/** Pure rule: is this candidate actually reachable with Tab? */
+export function isTabbableCandidate(c: TabbableCandidate): boolean {
+  if (c.disabled || c.hidden || c.inert || c.hasInertAncestor || c.notRendered) return false;
+  if (typeof c.tabIndex === "number" && c.tabIndex < 0) return false;
+  return true;
+}
+
+function toCandidate(el: HTMLElement): TabbableCandidate {
+  let notRendered = false;
+  if (typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
+    const style = window.getComputedStyle(el);
+    const hasBox = el.getClientRects().length > 0 || el.offsetParent !== null;
+    notRendered = style.visibility === "hidden" || style.display === "none" || !hasBox;
+  }
+  return {
+    disabled: (el as HTMLButtonElement).disabled === true,
+    hidden: el.hidden || el.closest("[hidden]") !== null,
+    tabIndex: el.tabIndex,
+    inert: (el as HTMLElement & { inert?: boolean }).inert === true,
+    hasInertAncestor: el.closest("[inert]") !== null,
+    notRendered,
+  };
+}
+
+/** Returns the elements inside `root` that Tab can actually reach. Browser-only (DOM). */
+export function getTabbableElements(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((el) => isTabbableCandidate(toCandidate(el)));
+}
 
 /**
  * Pure focus-wrap rule. Returns the index to focus when Tab would leave the trap, or null to let
@@ -85,6 +151,27 @@ export function nextTrapIndex(count: number, current: number, shiftKey: boolean)
   if (shiftKey) return current <= 0 ? count - 1 : null;
   return current === -1 || current >= count - 1 ? 0 : null;
 }
+
+export interface ScrollLockState {
+  count: number;
+  original: string;
+}
+
+/** Pure ref-counted lock step: stores the original value at 0->1. */
+export function acquireScrollLock(state: ScrollLockState, currentOverflow: string): void {
+  if (state.count === 0) state.original = currentOverflow;
+  state.count += 1;
+}
+
+/** Returns the value to restore at 1->0, otherwise null. */
+export function releaseScrollLock(state: ScrollLockState): string | null {
+  if (state.count === 0) return null;
+  state.count -= 1;
+  return state.count === 0 ? state.original : null;
+}
+
+const scrollLockState: ScrollLockState = { count: 0, original: "" };
+let devWarned = false;
 
 export interface AccessibleModalProps {
   open: boolean;
@@ -122,21 +209,35 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   useEscapeToClose(open, onClose);
 
+  // Focus management: depends only on `open`, so toggling other props never moves focus.
   useEffect(() => {
     if (!open) return undefined;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const panel = panelRef.current;
     if (panel && !panel.contains(document.activeElement)) {
-      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      const first = getTabbableElements(panel)[0];
       (first ?? panel).focus();
     }
-    const previousOverflow = document.body.style.overflow;
-    if (lockScroll) document.body.style.overflow = "hidden";
     return () => {
-      if (lockScroll) document.body.style.overflow = previousOverflow;
       if (previous && previous.isConnected) previous.focus();
     };
+  }, [open]);
+
+  // Scroll lock: module-level ref count shared by all modals.
+  useEffect(() => {
+    if (!open || !lockScroll) return undefined;
+    acquireScrollLock(scrollLockState, document.body.style.overflow);
+    document.body.style.overflow = "hidden";
+    return () => {
+      const restore = releaseScrollLock(scrollLockState);
+      if (restore !== null) document.body.style.overflow = restore;
+    };
   }, [open, lockScroll]);
+
+  if (!devWarned && !label && !labelledBy && typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+    devWarned = true;
+    console.warn("AccessibleModal: provide `label` or `labelledBy` so the dialog has an accessible name.");
+  }
 
   if (!open) return null;
 
@@ -144,7 +245,7 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
     if (event.key !== "Tab" || event.defaultPrevented) return;
     const panel = panelRef.current;
     if (!panel) return;
-    const focusables = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    const focusables = getTabbableElements(panel);
     if (focusables.length === 0) {
       event.preventDefault();
       panel.focus();

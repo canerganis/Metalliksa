@@ -2,14 +2,13 @@ import React from "react";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Field, buildFieldIds, describedByIds } from "../src/components/Field";
+import { Field, buildFieldIds, describedByIds, mergeIdList } from "../src/components/Field";
 
 test("id helpers are deterministic", () => {
   const ids = buildFieldIds("f1");
   assert.deepEqual(ids, { control: "f1", hint: "f1-hint", error: "f1-error" });
-  assert.equal(describedByIds(ids, false, false), undefined);
-  assert.equal(describedByIds(ids, true, false), "f1-hint");
-  assert.equal(describedByIds(ids, true, true), "f1-hint f1-error");
+  assert.equal(describedByIds(ids, false), undefined);
+  assert.equal(describedByIds(ids, true), "f1-hint");
 });
 
 test("render-prop field wires label, hint, error, required and unit", () => {
@@ -20,7 +19,7 @@ test("render-prop field wires label, hint, error, required and unit", () => {
   );
   assert.match(html, /<label for="temp">Temperature/);
   assert.match(html, /id="temp"/);
-  assert.match(html, /aria-describedby="temp-hint temp-error"/);
+  assert.match(html, /aria-describedby="temp-hint"/);
   assert.match(html, /aria-invalid="true"/);
   assert.match(html, /aria-required="true"/);
   assert.match(html, /id="temp-hint"/);
@@ -47,4 +46,25 @@ test("generated ids are unique and match label for", () => {
   assert.equal(ids.length, 2);
   assert.notEqual(ids[0], ids[1]);
   for (const id of ids) assert.ok(html.includes(`for="${id}"`));
+});
+
+test("error is not referenced by aria-describedby (role=alert only)", () => {
+  const html = renderToStaticMarkup(<Field id="e" label="E" error="bad"><input /></Field>);
+  assert.doesNotMatch(html, /aria-describedby/);
+  assert.match(html, /role="alert"/);
+});
+
+test("mergeIdList dedupes and keeps existing ids first", () => {
+  assert.equal(mergeIdList(undefined, undefined), undefined);
+  assert.equal(mergeIdList("a b", "b c"), "a b c");
+  assert.equal(mergeIdList("  ", "x"), "x");
+});
+
+test("cloned child keeps its own id and describedby merged with hint", () => {
+  const html = renderToStaticMarkup(
+    <Field label="L" hint="h"><input id="mine" aria-describedby="ext" /></Field>,
+  );
+  assert.match(html, /<label for="mine">/);
+  assert.match(html, /id="mine"/);
+  assert.match(html, /aria-describedby="ext [^"]+-hint"/);
 });

@@ -31,12 +31,21 @@ export function buildFieldIds(baseId: string): FieldIds {
   return { control: baseId, hint: `${baseId}-hint`, error: `${baseId}-error` };
 }
 
-/** Space-separated aria-describedby value, or undefined when nothing is described. */
-export function describedByIds(ids: FieldIds, hasHint: boolean, hasError: boolean): string | undefined {
-  const parts: string[] = [];
-  if (hasHint) parts.push(ids.hint);
-  if (hasError) parts.push(ids.error);
-  return parts.length > 0 ? parts.join(" ") : undefined;
+/**
+ * aria-describedby value, or undefined when nothing is described. Only the hint is referenced:
+ * the error paragraph is role="alert" and is announced by itself (referencing it would double announce).
+ */
+export function describedByIds(ids: FieldIds, hasHint: boolean): string | undefined {
+  return hasHint ? ids.hint : undefined;
+}
+
+/** Merges space-separated id lists, dropping blanks and duplicates (existing ids first). */
+export function mergeIdList(...lists: Array<string | undefined>): string | undefined {
+  const seen: string[] = [];
+  for (const list of lists) {
+    for (const part of (list ?? "").split(/\s+/)) if (part && !seen.includes(part)) seen.push(part);
+  }
+  return seen.length > 0 ? seen.join(" ") : undefined;
 }
 
 export interface FieldProps {
@@ -64,9 +73,16 @@ export const Field: React.FC<FieldProps> = ({
   children,
 }) => {
   const generated = useId();
-  const ids = buildFieldIds(id ?? `field-${generated.replace(/:/g, "")}`);
-  const controlProps: FieldControlProps = { id: ids.control };
-  const describedBy = describedByIds(ids, Boolean(hint), Boolean(error));
+  const baseId = id ?? `field-${generated.replace(/:/g, "")}`;
+  const childProps: Record<string, unknown> = isValidElement(children)
+    ? ((children as React.ReactElement<Record<string, unknown>>).props ?? {})
+    : {};
+  // A cloned child's own id wins so its existing references keep working; the label follows it.
+  const ownId = typeof childProps.id === "string" && childProps.id ? childProps.id : undefined;
+  const ids = buildFieldIds(baseId);
+  const controlId = typeof children !== "function" && ownId ? ownId : ids.control;
+  const controlProps: FieldControlProps = { id: controlId };
+  const describedBy = describedByIds(ids, Boolean(hint));
   if (describedBy) controlProps["aria-describedby"] = describedBy;
   if (error) controlProps["aria-invalid"] = true;
   if (required) controlProps["aria-required"] = true;
@@ -75,14 +91,17 @@ export const Field: React.FC<FieldProps> = ({
   if (typeof children === "function") {
     control = children(controlProps);
   } else if (isValidElement(children)) {
-    control = cloneElement(children as React.ReactElement<Record<string, unknown>>, controlProps as unknown as Record<string, unknown>);
+    const merged: Record<string, unknown> = { ...controlProps };
+    const mergedDescribedBy = mergeIdList(childProps["aria-describedby"] as string | undefined, describedBy);
+    if (mergedDescribedBy) merged["aria-describedby"] = mergedDescribedBy;
+    control = cloneElement(children as React.ReactElement<Record<string, unknown>>, merged);
   } else {
     control = children;
   }
 
   return (
     <div className={className}>
-      <label htmlFor={ids.control} className={labelClassName}>
+      <label htmlFor={controlId} className={labelClassName}>
         {label}
         {required ? <span aria-hidden="true"> *</span> : null}
       </label>
