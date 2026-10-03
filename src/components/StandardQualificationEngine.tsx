@@ -754,12 +754,12 @@ export const StandardQualificationEngine: React.FC = () => {
   };
 
   // Export PDF Handler
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExportingPdf(true);
     setExportSuccessMsg(null);
     try {
       const payload = generateCoCPayload();
-      const doc = generateAerospaceCoCPDF(payload);
+      const doc = await generateAerospaceCoCPDF(payload);
       doc.save(`${alloyName.replace(/[^a-zA-Z0-9]/g, "_")}_screening_audit.pdf`);
       setExportSuccessMsg("Screening PDF exported (not a certificate).");
       setTimeout(() => setExportSuccessMsg(null), 4000);

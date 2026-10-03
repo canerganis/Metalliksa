@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
-import * as d3 from "d3";
+import { area as d3Area, axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, axisRight as d3AxisRight, bisector as d3Bisector, curveMonotoneX as d3CurveMonotoneX, line as d3Line, max as d3Max, min as d3Min, pointer as d3Pointer, scaleLinear as d3ScaleLinear, select as d3Select } from "d3";
+import type { ScaleLinear } from "d3";
 import {
   TrendingUp,
   Activity,
@@ -145,7 +146,7 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
   useEffect(() => {
     if (!svgRef.current || enrichedTimePoints.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Select(svgRef.current);
     svg.selectAll("*").remove();
 
     const { width, height } = dimensions;
@@ -163,66 +164,59 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // X Scale (Time in minutes)
     const maxX = Math.max(1, totalTime_min);
-    const xScale = d3.scaleLinear().domain([0, maxX]).range([0, innerWidth]);
+    const xScale = d3ScaleLinear().domain([0, maxX]).range([0, innerWidth]);
 
     // Primary Y Scale (Left Axis) - Depends on Mode
-    let yPrimaryScale: d3.ScaleLinear<number, number>;
-    let ySecondaryScale: d3.ScaleLinear<number, number> | null = null;
+    let yPrimaryScale: ScaleLinear<number, number>;
+    let ySecondaryScale: ScaleLinear<number, number> | null = null;
 
     if (displayMode === "grain-zener") {
       const maxVal = Math.max(
         30,
-        d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => Math.max(d.grainSize_um, Math.min(250, d.zenerLimit_um))) ?? 30
+        d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => Math.max(d.grainSize_um, Math.min(250, d.zenerLimit_um))) ?? 30
       );
-      yPrimaryScale = d3
-        .scaleLinear()
+      yPrimaryScale = d3ScaleLinear()
         .domain([0, maxVal * 1.1])
         .nice()
         .range([innerHeight, 0]);
 
       // Secondary axis for ASTM G Number
-      ySecondaryScale = d3.scaleLinear().domain([14, 0]).range([innerHeight, 0]);
+      ySecondaryScale = d3ScaleLinear().domain([14, 0]).range([innerHeight, 0]);
     } else if (displayMode === "dual-temp") {
-      const maxGrain = Math.max(30, d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
-      yPrimaryScale = d3
-        .scaleLinear()
+      const maxGrain = Math.max(30, d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
+      yPrimaryScale = d3ScaleLinear()
         .domain([0, maxGrain * 1.15])
         .nice()
         .range([innerHeight, 0]);
 
-      const maxTemp = Math.max(1000, d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.temperature_C) ?? 1000);
-      ySecondaryScale = d3
-        .scaleLinear()
+      const maxTemp = Math.max(1000, d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.temperature_C) ?? 1000);
+      ySecondaryScale = d3ScaleLinear()
         .domain([0, maxTemp * 1.1])
         .nice()
         .range([innerHeight, 0]);
     } else if (displayMode === "growth-rate") {
-      const maxRate = Math.max(0.05, d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.growthRate_um_per_min) ?? 0.05);
-      yPrimaryScale = d3
-        .scaleLinear()
+      const maxRate = Math.max(0.05, d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.growthRate_um_per_min) ?? 0.05);
+      yPrimaryScale = d3ScaleLinear()
         .domain([0, maxRate * 1.2])
         .nice()
         .range([innerHeight, 0]);
 
-      const maxGrain = Math.max(30, d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
-      ySecondaryScale = d3
-        .scaleLinear()
+      const maxGrain = Math.max(30, d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
+      ySecondaryScale = d3ScaleLinear()
         .domain([0, maxGrain * 1.15])
         .nice()
         .range([innerHeight, 0]);
     } else {
       // Hall-Petch Mode
-      const minYield = Math.max(0, ((d3.min(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.yieldStrength_MPa) ?? 300) as number) * 0.85);
-      const maxYield = ((d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.yieldStrength_MPa) ?? 1200) as number) * 1.1;
-      yPrimaryScale = d3
-        .scaleLinear()
+      const minYield = Math.max(0, ((d3Min(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.yieldStrength_MPa) ?? 300) as number) * 0.85);
+      const maxYield = ((d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.yieldStrength_MPa) ?? 1200) as number) * 1.1;
+      yPrimaryScale = d3ScaleLinear()
         .domain([minYield, maxYield])
         .nice()
         .range([innerHeight, 0]);
 
-      const maxGrain = Math.max(30, d3.max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
-      ySecondaryScale = d3
-        .scaleLinear()
+      const maxGrain = Math.max(30, d3Max(enrichedTimePoints, (d: EnrichedSimulationTimePoint) => d.grainSize_um) ?? 30);
+      ySecondaryScale = d3ScaleLinear()
         .domain([0, maxGrain * 1.15])
         .nice()
         .range([innerHeight, 0]);
@@ -339,18 +333,16 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
     // --- 3. CURVE RENDERINGS BASED ON ACTIVE DISPLAY MODE ---
 
     // A. Grain Size Area & Line
-    const grainAreaGenerator = d3
-      .area<SimulationTimePoint>()
+    const grainAreaGenerator = d3Area<SimulationTimePoint>()
       .x((d) => xScale(d.time_min))
       .y0(innerHeight)
       .y1((d) => (displayMode === "grain-zener" || displayMode === "dual-temp" ? yPrimaryScale(d.grainSize_um) : (ySecondaryScale ? ySecondaryScale(d.grainSize_um) : innerHeight)))
-      .curve(d3.curveMonotoneX);
+      .curve(d3CurveMonotoneX);
 
-    const grainLineGenerator = d3
-      .line<SimulationTimePoint>()
+    const grainLineGenerator = d3Line<SimulationTimePoint>()
       .x((d) => xScale(d.time_min))
       .y((d) => (displayMode === "grain-zener" || displayMode === "dual-temp" ? yPrimaryScale(d.grainSize_um) : (ySecondaryScale ? ySecondaryScale(d.grainSize_um) : innerHeight)))
-      .curve(d3.curveMonotoneX);
+      .curve(d3CurveMonotoneX);
 
     if (displayMode === "grain-zener" || displayMode === "dual-temp") {
       // Area under grain curve
@@ -370,11 +362,10 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // B. Zener Pinning Limit Curve (Mode: grain-zener)
     if (displayMode === "grain-zener") {
-      const zenerLineGenerator = d3
-        .line<SimulationTimePoint>()
+      const zenerLineGenerator = d3Line<SimulationTimePoint>()
         .x((d) => xScale(d.time_min))
         .y((d) => yPrimaryScale(Math.min(yPrimaryScale.domain()[1], d.zenerLimit_um)))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
       g.append("path")
         .datum(enrichedTimePoints)
@@ -387,18 +378,16 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // C. Temperature Curve (Mode: dual-temp)
     if (displayMode === "dual-temp" && ySecondaryScale) {
-      const tempAreaGenerator = d3
-        .area<SimulationTimePoint>()
+      const tempAreaGenerator = d3Area<SimulationTimePoint>()
         .x((d) => xScale(d.time_min))
         .y0(innerHeight)
         .y1((d) => ySecondaryScale!(d.temperature_C))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
-      const tempLineGenerator = d3
-        .line<SimulationTimePoint>()
+      const tempLineGenerator = d3Line<SimulationTimePoint>()
         .x((d) => xScale(d.time_min))
         .y((d) => ySecondaryScale!(d.temperature_C))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
       g.append("path")
         .datum(enrichedTimePoints)
@@ -437,18 +426,16 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // D. Growth Velocity Curve (Mode: growth-rate)
     if (displayMode === "growth-rate") {
-      const rateAreaGenerator = d3
-        .area<any>()
+      const rateAreaGenerator = d3Area<any>()
         .x((d) => xScale(d.time_min))
         .y0(innerHeight)
         .y1((d) => yPrimaryScale(d.growthRate_um_per_min || 0))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
-      const rateLineGenerator = d3
-        .line<any>()
+      const rateLineGenerator = d3Line<any>()
         .x((d) => xScale(d.time_min))
         .y((d) => yPrimaryScale(d.growthRate_um_per_min || 0))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
       g.append("path")
         .datum(enrichedTimePoints)
@@ -477,11 +464,10 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // E. Hall-Petch Yield Strength Curve (Mode: hall-petch)
     if (displayMode === "hall-petch") {
-      const hpLineGenerator = d3
-        .line<SimulationTimePoint>()
+      const hpLineGenerator = d3Line<SimulationTimePoint>()
         .x((d) => xScale(d.time_min))
         .y((d) => yPrimaryScale(d.yieldStrength_MPa))
-        .curve(d3.curveMonotoneX);
+        .curve(d3CurveMonotoneX);
 
       g.append("path")
         .datum(enrichedTimePoints)
@@ -503,13 +489,11 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
     }
 
     // --- 4. AXES RENDERING ---
-    const xAxis = d3
-      .axisBottom(xScale)
+    const xAxis = d3AxisBottom(xScale)
       .ticks(Math.min(8, Math.floor(innerWidth / 75)))
       .tickFormat((d) => `${(Number(d) / 60).toFixed(1)}h`);
 
-    const yAxisLeft = d3
-      .axisLeft(yPrimaryScale)
+    const yAxisLeft = d3AxisLeft(yPrimaryScale)
       .ticks(5)
       .tickFormat((d) => `${d}`);
 
@@ -571,7 +555,7 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
 
     // Right Y Axis (If applicable)
     if (ySecondaryScale) {
-      let yAxisRight = d3.axisRight(ySecondaryScale).ticks(5);
+      let yAxisRight = d3AxisRight(ySecondaryScale).ticks(5);
       let rightAxisLabel = "";
       let rightAxisColor = "#64748b";
 
@@ -646,7 +630,7 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
       .attr("cursor", "crosshair");
 
     // D3 Bisector
-    const bisectTime = d3.bisector<SimulationTimePoint, number>((d) => d.time_min).left;
+    const bisectTime = d3Bisector<SimulationTimePoint, number>((d) => d.time_min).left;
 
     const crosshairG = g.append("g").attr("class", "crosshair-group").style("display", "none");
 
@@ -683,7 +667,7 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
         setHoveredPoint(null);
       })
       .on("pointermove", function (event: MouseEvent) {
-        const [mx, my] = d3.pointer(event);
+        const [mx, my] = d3Pointer(event);
         const tVal = xScale.invert(mx);
         const idx = bisectTime(enrichedTimePoints, tVal, 1);
         const d0 = enrichedTimePoints[idx - 1];
@@ -729,7 +713,7 @@ export const GrainEvolutionD3Chart: React.FC<GrainEvolutionD3ChartProps> = ({
         });
       })
       .on("click", function (event: MouseEvent) {
-        const [mx] = d3.pointer(event);
+        const [mx] = d3Pointer(event);
         const tVal = Math.max(0, Math.min(totalTime_min, xScale.invert(mx)));
         if (onSeekTime) {
           onSeekTime(parseFloat(tVal.toFixed(1)));
