@@ -1,0 +1,6 @@
+{
+  "exitCode": 0,
+  "durationSeconds": 24.175,
+  "log": "clean-lint.log",
+  "command": "npm run lint"
+}

@@ -1,0 +1,6 @@
+{
+  "exitCode": 1,
+  "log": "clean-unit-elevated.log",
+  "durationSeconds": 48.236,
+  "command": "npm run test:unit"
+}

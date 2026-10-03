@@ -1,0 +1,5 @@
+Cleanup evidence helper note
+
+The owned helper first verified each private process by PID, creation time, executable name, command line, frozen snapshot working directory, and private METALLIKSA_* data roots/PORT values from its own restart records. It then attempted exact per-process tree termination with `taskkill.exe /PID <verified PID> /T /F`, rechecked the process start identity, and waited up to five seconds for listeners on ports 3030, 3031, 5070, and 5071 to disappear. The narrow sandbox attempt returned Access Denied. The exact authorized elevated helper run completed successfully and wrote `cleanup-current.json` at 2026-10-03T08:27:28.999Z. It confirms both private Node server trees stopped, all four ports released, and data roots preserved. No broad process selection or data deletion was performed.
+
+PIDs 12312 and 7860 were both Node server processes in this cleanup record; PID 7860 is not described as a worker.

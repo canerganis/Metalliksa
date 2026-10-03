@@ -1,0 +1,58 @@
+{
+  "kind": "explicit derivative from before-recovery.json and after-recovery-confirmed.json",
+  "runId": "419c408729b44f36905c60085b9f1467",
+  "sourceBindingStatus": "exact-revision-bound",
+  "sourceLinks": [
+    {
+      "datasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+      "revision": 1,
+      "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"
+    }
+  ],
+  "comparatorSourceContract": {
+    "requiredDatasetId": "nist-amb2022-03-optical-table4-local-v1",
+    "officialWorkbookArchiveDatasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+    "relationship": "distinct source contracts; official workbook exact binding is valid and comparator reason that no eligible local Table 4 binding exists is also valid"
+  },
+  "archivedCase": {
+    "mode": null,
+    "surfaceMode": "powder-layer",
+    "settings": {
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "trackLength_um": 600,
+      "preheat_C": 200,
+      "beamDiameter_um": 80,
+      "backend": "reference"
+    },
+    "opticalObserver": null
+  },
+  "nistComparison": {
+    "schemaVersion": 1,
+    "benchmark": "AMB2022-03-TMPG",
+    "caseNumber": "0",
+    "status": "unavailable",
+    "validationStatus": "unvalidated",
+    "reference": {
+      "doi": "10.18434/mds2-2718",
+      "results": "https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10",
+      "resultsLocator": "Table 4, CHAL-AMB2022-03-TMPG",
+      "methods": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+      "measurement": "six optical cross-section depth/width measurements per condition",
+      "archiveKind": "local transcription of published aggregate means and standard deviations"
+    },
+    "sourceBinding": null,
+    "reasons": [
+      "Archived run is not bound to exactly one local AMB2022-03 Table 4 source revision."
+    ],
+    "errors": null
+  },
+  "recoveryInvariants": {
+    "priorCompletedJobAndArchiveExactlyEqual": true,
+    "priorJobRunSourceByteExact": true,
+    "priorJobFiles": 71,
+    "runArchiveFiles": 72,
+    "sourceArchiveFiles": 5,
+    "sourceSnapshotFiles": 1520
+  }
+}

@@ -1,0 +1,3 @@
+Recovery invariants derivative
+
+This is a compact derivative of scratch `before-recovery.json` and `after-recovery-confirmed.json`; the full after record embeds large fresh-job logs and archive metadata and is not copied. Recorded source fields: before job ID 419c408729b44f36905c60085b9f1467; after fresh job ID 3e4d91d25763402bba3fbfa68d5ecbcd; prior completed job/archive exact equality true; prior job/run/source archived files byte exact true; prior job/run/source counts 71/72/5; all 1,520 source snapshot files equal. The after record's comparison remains unavailable/unvalidated. These booleans summarize equality assertions; the exact source archive manifest is retained separately as `snapshot-source.json`.

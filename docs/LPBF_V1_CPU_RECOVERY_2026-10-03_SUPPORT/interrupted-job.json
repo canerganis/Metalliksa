@@ -1,0 +1,28 @@
+{
+  "job": {
+    "id": "3723637ab80a4b1394d2bb2827c9ea84",
+    "cache_key": "07b051df868f3e29d714da63e74a1941a5a3e9974440cc6b6f7161d8e8765303",
+    "status": "failed",
+    "progress": 0.16675000000000334,
+    "log": "{\"progress\": 8.333333333333332e-05, \"message\": \"step=1 t=1e-07s peak=483.8K cells=29988\"}\n{\"progress\": 0.01675, \"message\": \"step=201 t=2.01e-05s peak=1730.8K cells=29988\"}\n{\"progress\": 0.033416666666666775, \"message\": \"step=401 t=4.01e-05s peak=2555.1K cells=29988\"}\n{\"progress\": 0.05008333333333385, \"message\": \"step=601 t=6.01e-05s peak=2898.4K cells=29988\"}\n{\"progress\": 0.06675000000000092, \"message\": \"step=801 t=8.01e-05s peak=3012.4K cells=29988\"}\n{\"progress\": 0.08341666666666799, \"message\": \"step=1001 t=0.0001001s peak=2958.6K cells=29988\"}\n{\"progress\": 0.10008333333333505, \"message\": \"step=1201 t=0.0001201s peak=2902.8K cells=29988\"}\n{\"progress\": 0.11675000000000213, \"message\": \"step=1401 t=0.0001401s peak=2964.1K cells=29988\"}\n{\"progress\": 0.1334166666666692, \"message\": \"step=1601 t=0.0001601s peak=3000.9K cells=29988\"}\n{\"progress\": 0.15008333333333626, \"message\": \"step=1801 t=0.0001801s peak=3014.9K cells=29988\"}\n{\"progress\": 0.16675000000000334, \"message\": \"step=2001 t=0.0002001s peak=2952.2K cells=29988\"}\n",
+    "error": "Worker restarted during execution",
+    "created": 1790978005.7482285,
+    "requestSummary": {
+      "jobType": null,
+      "mode": "standard",
+      "backend": "reference",
+      "material": "Inconel 718"
+    },
+    "partialArtifacts": {
+      "status": "retained-unverified",
+      "fileCount": 12,
+      "totalBytes": 1679328
+    }
+  },
+  "artifactRejection": {
+    "httpStatus": 400,
+    "body": "{\"error\":\"Artifact unavailable\"}"
+  },
+  "resultsAbsent": true,
+  "hardKillLastValidCpuState": "unavailable"
+}

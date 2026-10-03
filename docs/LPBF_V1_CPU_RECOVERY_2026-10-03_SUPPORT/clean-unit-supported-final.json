@@ -1,0 +1,7 @@
+{
+  "durationSeconds": 51.041,
+  "log": "clean-unit-supported-final.log",
+  "exitCode": 0,
+  "pythonVersion": "3.12 / pydantic 2.13.5",
+  "command": "METALLIX_PYTHON=<locked lpbf-win-py312>; PYTHONDONTWRITEBYTECODE=1; npm run test:unit"
+}

@@ -1,0 +1,6 @@
+{
+  "command": "npm run test:unit",
+  "log": "clean-unit.log",
+  "exitCode": 1,
+  "durationSeconds": 1.769
+}

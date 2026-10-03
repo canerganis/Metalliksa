@@ -1,0 +1,6 @@
+{
+  "command": "npm run build",
+  "durationSeconds": 141.792,
+  "exitCode": 0,
+  "log": "clean-build-elevated.log"
+}

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-03",
+  "status": "bounded-recovery-evidence-full-v1-acceptance-open",
+  "candidate": {
+    "revision": "33efb32b7d9734587a78d1cb9de8224d7ef2a4ec",
+    "trackedSourceFiles": 1520,
+    "sourceManifestSha256": "1570a5186cf02cd3f53d1c96883bce0cb6c2f0495c7da08c83bc8a31aeb180a7",
+    "runtime": ".runtime/v1-recovery-acceptance-20261003"
+  },
+  "cleanRuntime": {
+    "offlineNpmInstall": { "status": "PASS", "packages": 850 },
+    "typecheck": "PASS",
+    "productionBuild": "PASS",
+    "unitSuite": {
+      "status": "PASS",
+      "passed": 358,
+      "skipped": 1,
+      "failed": 0,
+      "total": 359,
+      "python": "3.12 / pydantic 2.13.5",
+      "lockedRuntime": ".runtime/lpbf-win-py312",
+      "environment": "PYTHONDONTWRITEBYTECODE=1"
+    },
+    "supportedSourceGuard": {
+      "before": "PASS",
+      "after": "PASS",
+      "mismatches": 0,
+      "trackedSourceFiles": 1520,
+      "manifestSha256": "1570a5186cf02cd3f53d1c96883bce0cb6c2f0495c7da08c83bc8a31aeb180a7"
+    },
+    "discardedAttempt": {
+      "defaultPython": "missing pydantic; 357 PASS / 1 FAIL / 1 SKIP; separate non-elevated attempt hit spawn EPERM",
+      "npmInstallRetries": "non-elevated attempts failed ENOTEMPTY then EPERM during cleanup; authorized elevated retry installed 850 packages",
+      "sourceIntegrity": "tracked CPython 3.10 bytecode temporarily rewritten then restored to HEAD; not an uninterrupted guard sequence"
+    }
+  },
+  "numericalDiagnostics": {
+    "status": "PASS",
+    "checks": 4,
+    "failures": 0,
+    "experimentalValidation": false,
+    "solverValidation": "unvalidated",
+    "physicalLpbfConvergence": "inconclusive",
+    "diagnosticOnly": true
+  },
+  "jobs": {
+    "boilingFailure": {
+      "jobId": "72367015fbcc42ea9772eaa9b9e48b75",
+      "acceptedSteps": 128,
+      "sourceEvaluations": 258,
+      "retries": 129,
+      "sourceCellEvaluations": 7736904,
+      "completedResult": false,
+      "partialArtifacts": { "status": "retained-unverified", "files": 2, "bytes": 479808 }
+    },
+    "ownerCrash": {
+      "jobId": "3723637ab80a4b1394d2bb2827c9ea84",
+      "error": "Worker restarted during execution",
+      "ownerChildSignalSeconds": 0.343,
+      "nodeSurvived": true,
+      "resultFilesAbsent": true,
+      "artifactAccessHttp": 400,
+      "partialArtifacts": { "status": "retained-unverified", "files": 12, "bytes": 1679328 },
+      "hardKillLastValidCpuState": "unavailable"
+    },
+    "postRecoveryCompletion": {
+      "jobId": "3e4d91d25763402bba3fbfa68d5ecbcd",
+      "status": "completed",
+      "runtimeSeconds": 19.25,
+      "previousJobArchiveAndSourceByteExact": true,
+      "previousJobFiles": 71,
+      "runArchiveFiles": 72,
+      "sourceArchiveFiles": 5,
+      "sourceSnapshotFiles": 1520
+    },
+    "nodeDisappearance": {
+      "oldPids": [28016, 25984],
+      "cause": "unknown",
+      "isolatedServerPids": [12312, 7860],
+      "state": "both-identity-checked-and-stopped",
+      "portsReleased": [3030, 3031, 5070, 5071],
+      "dataRootsPreserved": true,
+      "stopEvidence": "cleanup-current.json",
+      "distinctFromDeliberateOwnerCrash": true
+    }
+  },
+  "browserRoundTrip": {
+    "browser": "Codex in-app browser",
+    "runId": "419c408729b44f36905c60085b9f1467",
+    "exportId": "026751ab54be4b299d5a2dc72d690f1a",
+    "importId": "79c6072d26d54140902bdf142b16ff3d",
+    "restoreId": "ce5b7ac053cc49caa4878c600fb402dc",
+    "exportImportFiles": { "count": 75, "byteExact": true },
+    "restoredObjects": { "count": 71, "byteExact": true },
+    "recordExact": true,
+    "tarBytes": 8109568,
+    "tarSha256": "efedf1570f43a33156c36b827f51f583d6c6fadf30589c4a89a802133118c661",
+    "sqliteContainerByteIdentity": "not-claimed",
+    "providerDownloadSeconds": 33082.12,
+    "fileChooserSeconds": 51.321,
+    "productLatencyEvidence": false,
+    "freshScreenshotAndSameCandidateChecks": "pending; no CUA tabs after reset and local browser access denied by policy"
+  },
+  "limitations": {
+    "nistComparison": "unavailable",
+    "nistSourceBinding": {
+      "status": "exact-revision-bound",
+      "datasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+      "revision": 1,
+      "sha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"
+    },
+    "nistEvidenceLimit": "two distinct source contracts: the official workbook archive binding is exact-revision-bound, while the comparator requires a separate eligible local Table 4 dataset binding. Both records are valid. The official workbook is bare-plate optical data; archived case is a 600 um powder-layer fixture at 60 W, 1200 mm/s and 200 C; a validated matching optical operator and comparable conditions are absent.",
+    "newNistDownload": false,
+    "experimentalValidation": "unvalidated",
+    "productionReady": false,
+    "fullV1Acceptance": false,
+    "pending": [
+      "same-candidate stale-input and cancellation/malformed checks",
+      "fresh browser confirmation when access is available",
+      "root integration of scoped claim audit and PROOF supersession",
+      "STATUS/PROOF/index integration by root owner",
+      "retained isolated data roots remain available"
+    ]
+  },
+  "claimAudit": {
+    "activeInvalidNistResidualPublishingPathFound": false,
+    "historicalProofSixSectionAndResidualClaim": "contradicted-by-frozen-candidate",
+    "sixSectionHelper": "test-only and insufficient independent section/run provenance",
+    "legacy280wPythonTest": "expects-six-sections-from-single-track; not-run; no all-Python-suite claim",
+    "integrationPending": true
+  },
+  "supportDirectory": "LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT"
+}

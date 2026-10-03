@@ -1,0 +1,20 @@
+{
+  "id": "72367015fbcc42ea9772eaa9b9e48b75",
+  "cache_key": "de111b7f5a440ebd232ab3d05f15cb1a5016cdc6b23c35f80650db229d34e1fb",
+  "status": "failed",
+  "progress": 3.668666969425061e-05,
+  "log": "{\"progress\": 3.668666969425061e-05, \"message\": \"step=1 t=4.4024e-08s peak=496.5K cells=29988\"}\nThermal model validity exceeded at or above the material boiling limit (specific enthalpy 2163442.31 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(6), np.int64(20), np.int64(16)), previous T=3113.11 K, previous specific enthalpy=2146112.22 J/kg, dt=7.05632048e-08 s, source rate=1.2709219e+15 W/m\u00b3, net rate=1.09132608e+15 W/m\u00b3); evaporation/free-surface CFD required\nLast valid CPU state: 128 accepted steps at 7.73757725e-06 s. Source work: 258 source evaluations, 129 retries, 7736904 source cell-evaluations (excludes conduction and other solver work). No completed result.\n",
+  "error": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2163442.31 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(6), np.int64(20), np.int64(16)), previous T=3113.11 K, previous specific enthalpy=2146112.22 J/kg, dt=7.05632048e-08 s, source rate=1.2709219e+15 W/m\u00b3, net rate=1.09132608e+15 W/m\u00b3); evaporation/free-surface CFD required\nLast valid CPU state: 128 accepted steps at 7.73757725e-06 s. Source work: 258 source evaluations, 129 retries, 7736904 source cell-evaluations (excludes conduction and other solver work). No completed result.\n",
+  "created": 1790977823.56978,
+  "requestSummary": {
+    "jobType": null,
+    "mode": "standard",
+    "backend": "reference",
+    "material": "Inconel 718"
+  },
+  "partialArtifacts": {
+    "status": "retained-unverified",
+    "fileCount": 2,
+    "totalBytes": 479808
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "arguments": {
+    "owner_pid": 30248,
+    "owner_created": 1790977407.8049057,
+    "child_pid": 22316,
+    "child_created": 1790978005.8055675,
+    "child_base_pid": 2824,
+    "child_base_created": 1790978005.837934,
+    "launcher_pid": 27244,
+    "launcher_created": 1790977407.7511227,
+    "node_pid": 28016,
+    "node_created": 1790977372.2183993,
+    "job_id": "3723637ab80a4b1394d2bb2827c9ea84",
+    "python_exe": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+    "output": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-recovery-acceptance-20261003\\crash-oracle.json"
+  },
+  "stage": "crash-oracle-passed-restart-not-tested",
+  "killAttempted": true,
+  "postKillHttpRequested": false,
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003",
+  "jobRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-recovery-acceptance-20261003\\first\\jobs",
+  "baseExecutableFromVenvCfg": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "processes": {
+    "owner": {
+      "pid": 30248,
+      "ppid": 27244,
+      "created": 1790977407.8049057,
+      "exe": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-u",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003\\python\\lpbf_worker.py"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003"
+    },
+    "child": {
+      "pid": 22316,
+      "ppid": 30248,
+      "created": 1790978005.8055675,
+      "exe": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003\\python\\lpbf_worker.py",
+        "--execute",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-recovery-acceptance-20261003\\first\\jobs\\3723637ab80a4b1394d2bb2827c9ea84"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003"
+    },
+    "child-base": {
+      "pid": 2824,
+      "ppid": 22316,
+      "created": 1790978005.837934,
+      "exe": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003\\python\\lpbf_worker.py",
+        "--execute",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-recovery-acceptance-20261003\\first\\jobs\\3723637ab80a4b1394d2bb2827c9ea84"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003"
+    },
+    "launcher": {
+      "pid": 27244,
+      "ppid": 28016,
+      "created": 1790977407.7511227,
+      "exe": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-u",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003\\python\\lpbf_worker.py"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003"
+    },
+    "node": {
+      "pid": 28016,
+      "ppid": 28040,
+      "created": 1790977372.2183993,
+      "exe": "C:\\Program Files\\nodejs\\node.exe",
+      "cmdline": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "dist/server.cjs"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-recovery-acceptance-20261003"
+    }
+  },
+  "preKillApi": {
+    "id": "3723637ab80a4b1394d2bb2827c9ea84",
+    "cache_key": "07b051df868f3e29d714da63e74a1941a5a3e9974440cc6b6f7161d8e8765303",
+    "status": "running",
+    "progress": 0.16675000000000334,
+    "log": "{\"progress\": 8.333333333333332e-05, \"message\": \"step=1 t=1e-07s peak=483.8K cells=29988\"}\n{\"progress\": 0.01675, \"message\": \"step=201 t=2.01e-05s peak=1730.8K cells=29988\"}\n{\"progress\": 0.033416666666666775, \"message\": \"step=401 t=4.01e-05s peak=2555.1K cells=29988\"}\n{\"progress\": 0.05008333333333385, \"message\": \"step=601 t=6.01e-05s peak=2898.4K cells=29988\"}\n{\"progress\": 0.06675000000000092, \"message\": \"step=801 t=8.01e-05s peak=3012.4K cells=29988\"}\n{\"progress\": 0.08341666666666799, \"message\": \"step=1001 t=0.0001001s peak=2958.6K cells=29988\"}\n{\"progress\": 0.10008333333333505, \"message\": \"step=1201 t=0.0001201s peak=2902.8K cells=29988\"}\n{\"progress\": 0.11675000000000213, \"message\": \"step=1401 t=0.0001401s peak=2964.1K cells=29988\"}\n{\"progress\": 0.1334166666666692, \"message\": \"step=1601 t=0.0001601s peak=3000.9K cells=29988\"}\n{\"progress\": 0.15008333333333626, \"message\": \"step=1801 t=0.0001801s peak=3014.9K cells=29988\"}\n{\"progress\": 0.16675000000000334, \"message\": \"step=2001 t=0.0002001s peak=2952.2K cells=29988\"}\n",
+    "error": null,
+    "created": 1790978005.7482285,
+    "requestSummary": {
+      "jobType": null,
+      "mode": "standard",
+      "backend": "reference",
+      "material": "Inconel 718"
+    }
+  },
+  "taskkill": {
+    "command": [
+      "C:\\WINDOWS\\System32\\taskkill.exe",
+      "/PID",
+      "30248",
+      "/F"
+    ],
+    "returncode": 0,
+    "stdout": "SUCCESS: The process with PID 30248 has been terminated.\n",
+    "stderr": ""
+  },
+  "waitResults": {
+    "owner": 0,
+    "child": 0,
+    "child-base": 0,
+    "launcher": 0
+  },
+  "elapsed_s": 0.34299999999348074,
+  "nodeAlive": true,
+  "resultFilesAbsent": true
+}

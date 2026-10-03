@@ -65,3 +65,9 @@
 /docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/numerical_diagnostics.py.txt -text
 /docs/LPBF_WORKER_FAILURE_MESSAGE_2026-10-03.json -text
 /docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/failed-job.json -text
+
+# Preserve the byte-pinned recovery acceptance records and support inventory.
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03.json -text
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/* -text
+# Raw runner logs retain their original spacing as hash-verified evidence.
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/*.log -whitespace

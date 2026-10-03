@@ -1,0 +1,33 @@
+✔ HTTP export, verify and isolated restore preserve live bytes and historical links (1134.4198ms)
+✔ portable tar round-trip verifies, restores in isolation, and exposes restored run records (1325.1157ms)
+✔ HTTP rejects corrupted bundles before restore and accepts no filesystem path (583.2275ms)
+✔ generated ID collisions cannot overwrite a bundle or restored copy (1019.6571ms)
+✔ bundle API retains router write guards and disjoint storage roots (200.962ms)
+✔ portable import rejects an unreferenced allowed artifact and removes its isolated import directory (455.6609ms)
+✔ portable bundle extractor rejects traversal, links, and duplicate files without leaving a target (35.5224ms)
+✔ portable bundle picker is visible and gates upload until a file is selected (12.3531ms)
+✔ a new portable bundle selection invalidates prior import state even when file metadata collides (0.5382ms)
+✔ a restored bundle run selection survives reload and is scoped to its verified restore (0.808ms)
+✔ full bundle independently restores exact run and historical source revision with all bytes (864.1754ms)
+✔ bundle snapshots and restores immutable six-proxy campaign run references (705.4275ms)
+✔ missing or corrupted run/source objects prevent restore before destination creation (1702.015ms)
+✔ backup failures leave no top-level completion and preserve live data (740.6828ms)
+✔ both SQLite snapshots reject sidecars; metadata and completion hashes/counts are checked (3578.574ms)
+✔ linked roots and nested source directories are rejected (514.0346ms)
+✔ run snapshot precedes source snapshot; later runs stay out and historical links stay exact (444.8676ms)
+✔ bundle verification rejects every unreferenced file before restore creates a destination (1666.3801ms)
+✔ all frozen source revisions retain their objects even when a run links an older revision (826.6509ms)
+✔ legacy v1 completion remains readable without changing archived record bytes (691.3796ms)
+✔ unreferenced linked directories are rejected by the complete inventory (424.2139ms)
+✔ bundle restores all immutable revisions and independent bytes into a new directory (335.7499ms)
+✔ missing or corrupt bundle bytes prevent restore before destination is created (193.0171ms)
+✔ metadata corruption and incomplete backup cannot be opened as a valid bundle (216.294ms)
+✔ a bundle cannot acquire unchecksummed SQLite sidecar state (134.8505ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12614.625
