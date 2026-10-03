@@ -17,7 +17,7 @@ import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { getHostPython } from '../server/pythonRuntime';
 
-const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+const sha = (value: string | Uint8Array) => createHash('sha256').update(value).digest('hex');
 const tableRoot = path.resolve('data/benchmark/nist-amb2022-03-optical');
 
 function createProxySectionFieldFixture(): { bytes: Buffer; observations: any[] } {
@@ -183,8 +183,9 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     const sectionJob = path.join(root, `section-${runId}`); mkdirSync(sectionJob);
     writeFileSync(path.join(sectionJob, 'rectangular-corridor-section-fields.npz'), sectionBytes);
     const sectionArtifact = { path: 'rectangular-corridor-section-fields.npz', size_bytes: sectionBytes.length, sha256: sha(sectionBytes) };
-    await runStore.putFile(sectionJob, sectionArtifact.path, { relativePath: sectionArtifact.path,
-      sha256: sectionArtifact.sha256, byteSize: sectionArtifact.size_bytes });
+    // Variable (not literal) so the extra relativePath key is not an excess-property error; runtime input is unchanged.
+    const sectionArtifactIdentity = { relativePath: sectionArtifact.path, sha256: sectionArtifact.sha256, byteSize: sectionArtifact.size_bytes };
+    await runStore.putFile(sectionJob, sectionArtifact.path, sectionArtifactIdentity);
     const artifacts = [runArtifact, ...(corruption === 'missing-manifest' ? [] : [sectionArtifact])];
     const result = {
       ...baseResult, runKind: 'transient-thermal', requestedMode: 'standard', effectiveMode: 'standard',
