@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import express from "express";
 import type { Express, NextFunction, Request, Response } from "express";
 
 // Small hand-rolled security middleware (no external dependencies).
@@ -28,6 +29,18 @@ export function resolveBindConfig(env: Record<string, string | undefined>): Bind
   const loopback = isLoopbackHost(host);
   const accessCode = !loopback && !token ? crypto.randomBytes(24).toString("base64url") : null;
   return { host, token, loopback, accessCode };
+}
+
+/**
+ * Parse METALLIKSA_TRUST_PROXY into an Express "trust proxy" value: "true", a hop count, or a
+ * subnet/address string. Unset, empty, "false" and "0" mean off (false).
+ */
+export function resolveTrustProxy(env: Record<string, string | undefined>): boolean | number | string {
+  const raw = (env.METALLIKSA_TRUST_PROXY || "").trim();
+  if (!raw || raw.toLowerCase() === "false") return false;
+  if (raw.toLowerCase() === "true") return true;
+  if (/^\d+$/.test(raw)) return Number(raw) > 0 ? Number(raw) : false;
+  return raw;
 }
 
 /** Login URL printed to the console. Wildcard binds are shown as localhost. */
@@ -119,13 +132,30 @@ function authMethod(req: Request, token: string | null, auth?: LoginAuth | null)
 /** Same-origin check for cookie-authenticated mutating requests (CSRF defence). Missing Origin is rejected. */
 export function isSameOrigin(req: Request): boolean {
   const origin = req.headers.origin;
-  const host = req.headers.host;
+  let host: unknown = req.headers.host;
+  let proto: string | null = null;
+  // Forwarded headers are honoured only when the operator enabled "trust proxy".
+  const trusted = Boolean((req as any).app?.get?.("trust proxy"));
+  if (trusted) {
+    const fwdHost = firstHeaderValue(req.headers["x-forwarded-host"]);
+    if (fwdHost) host = fwdHost;
+    proto = firstHeaderValue(req.headers["x-forwarded-proto"])?.toLowerCase() ?? null;
+  }
   if (typeof origin !== "string" || !origin || typeof host !== "string" || !host) return false;
   try {
-    return new URL(origin).host.toLowerCase() === host.toLowerCase();
+    const o = new URL(origin);
+    if (proto && o.protocol.replace(/:$/, "") !== proto) return false;
+    return o.host.toLowerCase() === host.toLowerCase();
   } catch {
     return false;
   }
+}
+
+function firstHeaderValue(v: string | string[] | undefined): string | null {
+  const s = Array.isArray(v) ? v[0] : v;
+  if (typeof s !== "string") return null;
+  const first = s.split(",")[0].trim();
+  return first || null;
 }
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -155,7 +185,7 @@ export function tokenAuth(token: string | null, auth?: LoginAuth | null) {
 export const SESSION_COOKIE = "metalliksa_session";
 
 export interface LoginAuthOptions {
-  /** Static METALLIKSA_TOKEN; also accepted as a login code. */
+  /** Static METALLIKSA_TOKEN; accepted as a login code only via POST /login. */
   token?: string | null;
   /** Auto-generated one-time code; invalidated after the first successful login. */
   accessCode?: string | null;
@@ -285,11 +315,32 @@ function sendPlain(res: Response, status: number, body: string) {
   (res as any).end(body);
 }
 
-/** Register GET /login and POST /logout. Express matches paths case-insensitively. */
+function escapeHtml(v: string): string {
+  return v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+function loginPage(code: string): string {
+  return (
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    "<title>Sign in</title></head><body>" +
+    '<form method="post" action="/login"><input type="hidden" name="code" value="' + escapeHtml(code) + '">' +
+    '<button type="submit">Sign in</button></form></body></html>'
+  );
+}
+
+function loginIp(req: Request): string {
+  return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+/**
+ * Register GET /login, POST /login and POST /logout. Express matches paths case-insensitively.
+ * GET /login?code= has no side effect: for the auto-generated code it returns a tiny page with a POST
+ * form, so link previews and prefetchers cannot burn the one-time code. The static METALLIKSA_TOKEN
+ * is accepted only by POST /login (form or JSON body), never in a URL.
+ */
 export function installLogin(app: Express, auth: LoginAuth) {
   app.get("/login", (req: Request, res: Response) => {
-    const ip = req.ip || req.socket?.remoteAddress || "unknown";
-    if (!auth.allowLoginAttempt(ip)) {
+    if (!auth.allowLoginAttempt(loginIp(req))) {
       res.setHeader("Retry-After", "60");
       return sendPlain(res, 429, "Too many login attempts. Try again later.");
     }
@@ -299,12 +350,34 @@ export function installLogin(app: Express, auth: LoginAuth) {
     } catch {
       code = null;
     }
+    // Only the auto code is honoured in a URL; the static token never is.
+    if (auth.checkCode(code) !== "auto") return sendPlain(res, 401, "Login required");
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    (res as any).end(loginPage(code!));
+  });
+
+  app.post("/login", express.urlencoded({ extended: false, limit: "4kb" }), express.json({ limit: "4kb" }), (req: Request, res: Response) => {
+    if (!auth.allowLoginAttempt(loginIp(req))) {
+      res.setHeader("Retry-After", "60");
+      return sendPlain(res, 429, "Too many login attempts. Try again later.");
+    }
+    const raw = (req as any).body?.code;
+    const code = typeof raw === "string" ? raw : null;
     const kind = auth.checkCode(code);
     if (!kind) return sendPlain(res, 401, "Login required");
     auth.consume(kind);
     const id = auth.createSession();
     res.setHeader("Set-Cookie", sessionCookie(req, id, auth.ttlSeconds));
     res.setHeader("Cache-Control", "no-store");
+    const json = /^application\/json/i.test(String(req.headers["content-type"] || ""));
+    if (json) {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      (res as any).end(JSON.stringify({ ok: true }));
+      return;
+    }
     res.setHeader("Location", "/");
     res.statusCode = 303;
     (res as any).end();

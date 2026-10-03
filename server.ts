@@ -3,7 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer, type Server } from "node:http";
 import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
-import { LoginAuth, applySecurity, buildLoginUrl, errorHandler, isAuthenticated, resolveBindConfig } from "./server/security.ts";
+import { LoginAuth, applySecurity, buildLoginUrl, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -56,6 +56,10 @@ try {
 }
 
 const app = express();
+// Off by default. Behind a TLS reverse proxy set METALLIKSA_TRUST_PROXY so req.secure, req.ip and the
+// same-origin check use the X-Forwarded-* headers.
+const trustProxy = resolveTrustProxy(process.env);
+if (trustProxy !== false) app.set("trust proxy", trustProxy);
 const configuredPort = Number(process.env.PORT ?? 3000);
 const PORT = Number.isInteger(configuredPort) && configuredPort >= 1 && configuredPort <= 65535 ? configuredPort : 3000;
 
@@ -144,10 +148,10 @@ async function startServer() {
       console.warn(`[MetalliX-Server] Network exposure: host ${bindConfig.host} is not loopback. Prefer HTTPS (reverse proxy) for non-local use.`);
     }
     if (bindConfig.accessCode) {
-      console.log("[MetalliX-Server] Login required. Open this one-time link in your browser (valid until first use or restart):");
+      console.log("[MetalliX-Server] Login required. Open this one-time link in your browser and press Sign in (valid until used or restart):");
       console.log(`[MetalliX-Server] ${buildLoginUrl(bindConfig.host, PORT, bindConfig.accessCode)}`);
     } else if (bindConfig.token) {
-      console.log("[MetalliX-Server] METALLIKSA_TOKEN is set: API clients use it as a Bearer token; browsers log in at /login?code=<token>.");
+      console.log("[MetalliX-Server] METALLIKSA_TOKEN is set: API clients send it as 'Authorization: Bearer <token>'; browsers sign in by POSTing it to /login (form field or JSON 'code'). It is never accepted in a URL.");
     }
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");

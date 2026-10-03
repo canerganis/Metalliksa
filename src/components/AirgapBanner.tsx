@@ -15,36 +15,79 @@ const FALLBACK: RuntimeConfig = {
 
 let cached: RuntimeConfig | null = null;
 let accessRequired = false;
+const accessListeners = new Set<(v: boolean) => void>();
+const nativeFetch: typeof fetch | null = typeof window !== "undefined" && window.fetch ? window.fetch.bind(window) : null;
 
-export async function fetchRuntimeConfig(): Promise<RuntimeConfig> {
-  if (cached) return cached;
+function setAccessRequired(v: boolean) {
+  if (accessRequired === v) return;
+  accessRequired = v;
+  accessListeners.forEach((l) => l(v));
+}
+
+export async function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
+  if (cached && !force) return cached;
   try {
-    const res = await fetch("/api/runtime-config");
-    accessRequired = res.status === 401;
-    if (!res.ok) return FALLBACK;
+    const res = await (nativeFetch ?? fetch)("/api/runtime-config");
+    setAccessRequired(res.status === 401);
+    if (!res.ok) return cached ?? FALLBACK;
     cached = (await res.json()) as RuntimeConfig;
     return cached;
   } catch {
-    return FALLBACK;
+    return cached ?? FALLBACK;
   }
+}
+
+/** Re-check access after any /api call returned 401 (expired session, server restart). */
+let recheckPending = false;
+function onApiUnauthorized() {
+  if (recheckPending) return;
+  recheckPending = true;
+  void fetchRuntimeConfig(true).finally(() => {
+    recheckPending = false;
+  });
+}
+
+if (typeof window !== "undefined" && nativeFetch) {
+  window.fetch = async (...args: Parameters<typeof fetch>) => {
+    const res = await nativeFetch(...args);
+    if (res.status === 401) {
+      const input = args[0];
+      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : (input as Request).url;
+      if (/^(https?:\/\/[^/]+)?\/api\//i.test(url) && !/\/api\/runtime-config/i.test(url)) onApiUnauthorized();
+    }
+    return res;
+  };
 }
 
 export function useRuntimeConfig(): RuntimeConfig {
   const [cfg, setCfg] = useState<RuntimeConfig>(cached ?? FALLBACK);
   useEffect(() => {
-    void fetchRuntimeConfig().then((c) => setCfg({ ...c }));
+    void fetchRuntimeConfig().then(setCfg);
   }, []);
   return cfg;
+}
+
+function useAccessRequired(): boolean {
+  const [required, setRequired] = useState(accessRequired);
+  useEffect(() => {
+    accessListeners.add(setRequired);
+    setRequired(accessRequired);
+    return () => {
+      accessListeners.delete(setRequired);
+    };
+  }, []);
+  return required;
 }
 
 /** Honest banner when AIRGAPPED=1 — lists which cloud services are cut. */
 export const AirgapBanner: React.FC = () => {
   const cfg = useRuntimeConfig();
+  const required = useAccessRequired();
   const [open, setOpen] = useState(false);
-  if (accessRequired) {
+  if (required) {
     return (
       <div role="alert" className="border-b border-red-500/40 bg-red-500/10 text-red-100 px-3 py-2 text-xs font-mono">
-        Access code required: open the login link printed in the server console.
+        Sign-in required: open the one-time login link printed in the server console, or, if METALLIKSA_TOKEN is set, sign in by POSTing it to /login.
       </div>
     );
   }
