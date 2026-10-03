@@ -205,12 +205,12 @@ test('portable HTTP import rejects a recomputed bundle carrying forged v2 eviden
   const bundlePath = path.join(f.bundleRoot, 'exports', exported.bundleId);
   const db = new DatabaseSync(path.join(bundlePath, 'runs.sqlite'));
   const row = db.prepare('SELECT campaign_id, document_json FROM lpbf_proxy_campaigns').all()
-    .map(value => ({ ...value, document: JSON.parse(String(value.document_json)) }))
+    .map(value => ({ campaignId: String(value.campaign_id), document: JSON.parse(String(value.document_json)) }))
     .find(value => value.document.schemaVersion === 2)!;
   row.document.claimBoundary.opticalOperatorMatched = true;
   const documentJson = JSON.stringify(row.document);
   db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
-    .run(documentJson, sha(documentJson), row.campaign_id);
+    .run(documentJson, sha(documentJson), row.campaignId);
   db.close();
   const manifestPath = path.join(bundlePath, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   const metadata = readFileSync(path.join(bundlePath, 'runs.sqlite'));
