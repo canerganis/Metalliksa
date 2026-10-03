@@ -3,7 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer, type Server } from "node:http";
 import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
-import { LoginAuth, applySecurity, buildLoginBannerLines, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
+import { LoginAuth, applySecurity, buildLoginBannerLines, buildTrustProxyWarning, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -147,6 +147,8 @@ async function startServer() {
     if (!bindConfig.loopback) {
       console.warn(`[MetalliX-Server] Network exposure: host ${bindConfig.host} is not loopback. Prefer HTTPS (reverse proxy) for non-local use.`);
     }
+    const proxyWarning = buildTrustProxyWarning(bindConfig, trustProxy);
+    if (proxyWarning) console.warn(`[MetalliX-Server] ${proxyWarning}`);
     for (const line of buildLoginBannerLines(bindConfig, PORT)) console.log(`[MetalliX-Server] ${line}`);
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");

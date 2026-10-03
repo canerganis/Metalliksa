@@ -10,6 +10,8 @@ import {
   accessLog,
   applySecurity,
   buildLoginUrl,
+  buildTrustProxyWarning,
+  errorHandler,
   installLogin,
   isLoopbackHost,
   isSameOrigin,
@@ -47,6 +49,7 @@ function run(mw: any, req: any, res: any) {
 function loginHandlers(auth: LoginAuth) {
   const routes: Record<string, any> = {};
   const fakeApp: any = {
+    use() {},
     get(path: string, h: any) { routes[`GET ${path}`] = h; },
     head(path: string, h: any) { routes[`HEAD ${path}`] = h; },
     // POST /login registers body parsers before the handler; the handler is always last.
@@ -557,16 +560,31 @@ test("every /login response is no-store and no-referrer (success, failure, throt
   check(login(auth, "s3cret"), "success form");
   check(login(auth, "s3cret", { headers: { "content-type": "application/json" }, ip: "5.5.5.5" }), "success json");
   check(login(auth, "bad"), "failure form");
-  check(login(auth, "bad", { headers: { "content-type": "application/json" } }), "failure json");
+  const jsonFail = login(auth, "bad", { headers: { "content-type": "application/json" } });
+  check(jsonFail, "failure json");
+  assert.equal(jsonFail.statusCode, 401);
+  assert.equal(jsonFail.headers["content-type"], "text/plain; charset=utf-8", "JSON clients get a plain-text 401");
+  assert.equal(jsonFail.ended, "Login required");
   const throttled = login(auth, "bad");
   assert.equal(throttled.statusCode, 429);
   check(throttled, "throttled");
-  check(getLogin(auth, null), "get form");
+  const plain = getLogin(auth, null);
+  assert.equal(plain.statusCode, 200);
+  check(plain, "get form");
   check(getLogin(auth, "x", { ip: "6.6.6.6" }), "get with code");
   check(login(auth, "s3cret", { headers: { origin: "http://evil.example", host: "h" }, ip: "7.7.7.7" }), "foreign origin");
   const head = mockRes();
   loginHandlers(auth)["HEAD /login"](mockReq({ method: "HEAD", originalUrl: "/login", url: "/login" }), head);
   check(head, "head");
+});
+
+test("plain GET /login visits are free; only requests carrying a code are rate limited", () => {
+  const auth = new LoginAuth({ token: "s3cret", loginLimit: 3 });
+  for (let i = 0; i < 20; i++) assert.equal(getLogin(auth, null).statusCode, 200, `plain visit ${i}`);
+  const statuses = [1, 2, 3, 4, 5].map(() => getLogin(auth, "guess").statusCode);
+  assert.deepEqual(statuses, [200, 200, 200, 429, 429]);
+  // A throttled address can still load the plain form.
+  assert.equal(getLogin(auth, null).statusCode, 200);
 });
 
 test("POST /login rejects a present foreign Origin with 403 and accepts same-origin or absent Origin", () => {
@@ -588,7 +606,7 @@ test("login attempt window resets after loginWindowMs", () => {
   assert.equal(auth.allowLoginAttempt("a"), true);
 });
 
-test("login attempt map is hard-capped; expired buckets go first, then the oldest", () => {
+test("login attempt map is hard-capped; expired buckets are swept, live ones are never evicted", () => {
   let t = 0;
   const auth = new LoginAuth({ maxAttemptKeys: 50, loginWindowMs: 1000, now: () => t });
   const size = () => (auth as any).attempts.size;
@@ -597,17 +615,39 @@ test("login attempt map is hard-capped; expired buckets go first, then the oldes
     assert.ok(size() <= 50);
   }
   assert.equal(size(), 50);
-  assert.equal((auth as any).attempts.has("ip-0"), false, "oldest evicted");
-  assert.equal((auth as any).attempts.has("ip-499"), true);
+  assert.equal((auth as any).attempts.has("ip-0"), true, "live buckets are not evicted");
+  assert.equal((auth as any).attempts.has("ip-499"), false, "unknown keys overflow into the shared bucket");
   t = 5000; // all expired: the next insert clears them in one bounded sweep
   auth.allowLoginAttempt("fresh");
   assert.equal(size(), 1);
+});
+
+test("an exhausted key cannot be reset through eviction churn; new keys work again after expiry", () => {
+  let t = 0;
+  const auth = new LoginAuth({ maxAttemptKeys: 5, loginLimit: 2, loginWindowMs: 1000, now: () => t });
+  assert.ok(auth.allowLoginAttempt("A") && auth.allowLoginAttempt("A"));
+  assert.equal(auth.allowLoginAttempt("A"), false);
+  for (let i = 0; i < 100; i++) auth.allowLoginAttempt(`churn-${i}`);
+  assert.equal(auth.allowLoginAttempt("A"), false, "A stays throttled after churn");
+  assert.equal((auth as any).attempts.has("A"), true);
+  // Unknown keys beyond the cap share one bucket and fail closed.
+  assert.equal(auth.allowLoginAttempt("brand-new"), false);
+  t = 1000; // window over: everything is swept and legitimate keys are served again
+  assert.equal(auth.allowLoginAttempt("brand-new"), true);
+  assert.equal(auth.allowLoginAttempt("A"), true);
 });
 
 test("HEAD /login never consumes the one-time code or creates a session; HEAD then GET then POST still works", async () => {
   const app = express();
   const auth = new LoginAuth({ accessCode: "ONCE" });
   applySecurity(app, null, { log: () => {}, auth });
+  // Behaviour alone cannot tell the explicit HEAD handler from Express's GET fallback, so also inspect
+  // the route stack: an explicit HEAD route must be registered and precede the GET route.
+  const routes = (app as any)._router.stack.filter((l: any) => l.route?.path === "/login").map((l: any) => l.route);
+  const headIdx = routes.findIndex((r: any) => r.methods.head === true);
+  const getIdx = routes.findIndex((r: any) => r.methods.get === true);
+  assert.ok(headIdx >= 0, "explicit HEAD /login handler registered");
+  assert.ok(headIdx < getIdx, "HEAD handler registered before GET");
   await withServer(app, async (port) => {
     const head = await request(port, "HEAD", "/login?code=ONCE");
     assert.equal(head.status, 200);
@@ -692,4 +732,80 @@ test("startup banner: token mode never prints the token or a URL containing it; 
   const autoLines = buildLoginBannerLines(autoCfg, 3000);
   assert.ok(autoLines.includes(buildLoginUrl("0.0.0.0", 3000, autoCfg.accessCode!)));
   assert.deepEqual(buildLoginBannerLines(resolveBindConfig({}), 3000), []);
+});
+
+test("parser failures on /login and /logout carry no-store and no-referrer (malformed JSON 400, oversized body 413)", async () => {
+  const app = express();
+  applySecurity(app, null, { log: () => {}, auth: new LoginAuth({ token: "s3cret" }) });
+  app.use(errorHandler(() => {}));
+  await withServer(app, async (port) => {
+    const json = { "content-type": "application/json" };
+    const bad = await request(port, "POST", "/login", json, "{not json");
+    assert.equal(bad.status, 400);
+    assert.equal(bad.headers["cache-control"], "no-store");
+    assert.equal(bad.headers["referrer-policy"], "no-referrer");
+    assert.equal(bad.headers["set-cookie"], undefined);
+    assert.equal(JSON.parse(bad.body).code, "BAD_REQUEST");
+
+    const big = await request(port, "POST", "/login", json, JSON.stringify({ code: "x".repeat(8192) }));
+    assert.equal(big.status, 413);
+    assert.equal(big.headers["cache-control"], "no-store");
+    assert.equal(big.headers["referrer-policy"], "no-referrer");
+
+    const bigForm = await request(port, "POST", "/login", { "content-type": "application/x-www-form-urlencoded" }, "code=" + "x".repeat(8192));
+    assert.equal(bigForm.status, 413);
+    assert.equal(bigForm.headers["cache-control"], "no-store");
+
+    const logout = await request(port, "POST", "/logout", { origin: `http://127.0.0.1:${port}` });
+    assert.equal(logout.headers["cache-control"], "no-store");
+  });
+});
+
+test("CROSS_ORIGIN 403 hints at METALLIKSA_TRUST_PROXY only when forwarded headers arrive with trust proxy off", async () => {
+  const build = (trust: boolean) => {
+    const app = express();
+    if (trust) app.set("trust proxy", true);
+    const auth = new LoginAuth({ accessCode: "C" });
+    applySecurity(app, null, { log: () => {}, auth });
+    app.put("/api/ping", (_req, res) => res.json({ ok: true }));
+    return { app, auth };
+  };
+  const fwd = { "x-forwarded-proto": "https", "x-forwarded-host": "app.example.com", origin: "https://app.example.com" };
+
+  const off = build(false);
+  await withServer(off.app, async (port) => {
+    const cookie = `${SESSION_COOKIE}=${off.auth.createSession()}`;
+    const hinted = await request(port, "PUT", "/api/ping", { cookie, ...fwd });
+    assert.equal(hinted.status, 403);
+    const body = JSON.parse(hinted.body);
+    assert.equal(body.code, "CROSS_ORIGIN");
+    assert.match(body.hint, /METALLIKSA_TRUST_PROXY/);
+    const plain = JSON.parse((await request(port, "PUT", "/api/ping", { cookie, origin: "http://evil.example" })).body);
+    assert.equal(plain.code, "CROSS_ORIGIN");
+    assert.equal(plain.hint, undefined, "no hint without forwarded headers");
+    const form = await request(port, "POST", "/login", { "content-type": "application/x-www-form-urlencoded", ...fwd }, "code=C");
+    assert.equal(form.status, 403);
+    assert.match(form.body, /METALLIKSA_TRUST_PROXY/);
+  });
+
+  const on = build(true);
+  await withServer(on.app, async (port) => {
+    const cookie = `${SESSION_COOKIE}=${on.auth.createSession()}`;
+    const res = await request(port, "PUT", "/api/ping", { cookie, ...fwd, origin: "https://evil.example" });
+    assert.equal(res.status, 403);
+    assert.equal(JSON.parse(res.body).hint, undefined, "trust proxy is on, so the hint would mislead");
+  });
+});
+
+test("buildTrustProxyWarning fires only for a non-loopback bind with trust proxy off", () => {
+  const exposed = resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0", METALLIKSA_TOKEN: "t" });
+  const warning = buildTrustProxyWarning(exposed, false);
+  assert.ok(warning);
+  assert.match(warning!, /METALLIKSA_TRUST_PROXY/);
+  assert.match(warning!, /403/);
+  assert.ok(!warning!.includes("t\""));
+  assert.equal(buildTrustProxyWarning(exposed, true), null);
+  assert.equal(buildTrustProxyWarning(exposed, 1), null);
+  assert.equal(buildTrustProxyWarning(exposed, "10.0.0.0/8"), null);
+  assert.equal(buildTrustProxyWarning(resolveBindConfig({}), false), null);
 });

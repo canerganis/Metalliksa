@@ -194,6 +194,27 @@ function firstHeaderValue(v: string | string[] | undefined): string | null {
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+const TRUST_PROXY_HINT =
+  "X-Forwarded-* headers were ignored; if this server runs behind a TLS reverse proxy, set METALLIKSA_TRUST_PROXY.";
+
+/** Hint text when a request carries forwarded headers but trust proxy is off (common proxy misconfiguration). */
+export function crossOriginHint(req: Request): string | null {
+  const h = req.headers || {};
+  if (h["x-forwarded-proto"] === undefined && h["x-forwarded-host"] === undefined) return null;
+  const setting = (req as any).app?.get?.("trust proxy");
+  return setting === undefined || setting === false ? TRUST_PROXY_HINT : null;
+}
+
+/** Startup warning for a network-exposed bind without trust proxy, or null when it does not apply. */
+export function buildTrustProxyWarning(cfg: BindConfig, trustProxy: boolean | number | string): string | null {
+  if (cfg.loopback || trustProxy !== false) return null;
+  return (
+    "METALLIKSA_TRUST_PROXY is not set. If a TLS-terminating reverse proxy fronts this server, browser sign-in and " +
+    "cookie-authenticated API writes will be rejected with 403 (the proxy's https origin does not match the http request it forwards); " +
+    "set METALLIKSA_TRUST_PROXY (true, a hop count or a proxy subnet) so X-Forwarded-Proto and X-Forwarded-Host are honoured."
+  );
+}
+
 export function tokenAuth(token: string | null, auth?: LoginAuth | null) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!token && !auth) return next();
@@ -204,7 +225,8 @@ export function tokenAuth(token: string | null, auth?: LoginAuth | null) {
     if (method === "bearer") return next();
     if (method === "session") {
       if (MUTATING_METHODS.has(String(req.method).toUpperCase()) && !isSameOrigin(req)) {
-        return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN", requestId: getRequestId(req) });
+        const hint = crossOriginHint(req);
+        return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN", ...(hint ? { hint } : {}), requestId: getRequestId(req) });
       }
       return next();
     }
@@ -243,6 +265,7 @@ export class LoginAuth {
   private readonly now: () => number;
   private readonly sessions = new Map<string, number>();
   private readonly attempts = new Map<string, { count: number; resetAt: number }>();
+  private overflow: { count: number; resetAt: number } | null = null;
 
   constructor(opts: LoginAuthOptions = {}) {
     this.token = opts.token || null;
@@ -313,8 +336,9 @@ export class LoginAuth {
 
   /**
    * Fixed-window limiter for /login attempts. Returns true when the attempt is allowed. Buckets are kept
-   * in window-start order (Map insertion order), so expired ones sit at the front and cleanup is bounded;
-   * the map never exceeds maxAttemptKeys (the oldest bucket is evicted when full).
+   * in window-start order (Map insertion order), so expired ones sit at the front and cleanup is bounded.
+   * A live bucket is never evicted: when the map is full of live buckets, unknown addresses share one
+   * overflow bucket with the same limit, so enforcement fails closed under key churn.
    */
   allowLoginAttempt(ip: string): boolean {
     const t = this.now();
@@ -325,13 +349,13 @@ export class LoginAuth {
         if (old.resetAt > t) break;
         this.attempts.delete(k);
       }
-      while (this.attempts.size >= this.maxAttemptKeys) {
-        const oldest = this.attempts.keys().next().value;
-        if (oldest === undefined) break;
-        this.attempts.delete(oldest);
+      if (this.attempts.size >= this.maxAttemptKeys) {
+        if (!this.overflow || this.overflow.resetAt <= t) this.overflow = { count: 0, resetAt: t + this.loginWindowMs };
+        b = this.overflow;
+      } else {
+        b = { count: 0, resetAt: t + this.loginWindowMs };
+        this.attempts.set(ip, b);
       }
-      b = { count: 0, resetAt: t + this.loginWindowMs };
-      this.attempts.set(ip, b);
     }
     b.count += 1;
     return b.count <= this.loginLimit;
@@ -415,6 +439,13 @@ function loginIp(req: Request): string {
  * POST /login (form or JSON body), never in a URL. Every /login response is no-store / no-referrer.
  */
 export function installLogin(app: Express, auth: LoginAuth) {
+  // Runs before body parsing so parser failures (400/413) also carry the privacy headers.
+  app.use(["/login", "/logout"], (_req: Request, res: Response, next: NextFunction) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+
   // Registered before GET so Express 4 does not dispatch HEAD to the GET handler.
   app.head("/login", (_req: Request, res: Response) => {
     res.statusCode = 200;
@@ -444,7 +475,8 @@ export function installLogin(app: Express, auth: LoginAuth) {
   app.post("/login", express.urlencoded({ extended: false, limit: "4kb" }), express.json({ limit: "4kb" }), (req: Request, res: Response) => {
     // Browsers always send Origin on cross-site form posts; reject when present and not same-origin.
     if (req.headers.origin !== undefined && !isSameOrigin(req)) {
-      return sendPlain(res, 403, "Cross-origin request rejected.");
+      const hint = crossOriginHint(req);
+      return sendPlain(res, 403, "Cross-origin request rejected." + (hint ? " " + hint : ""));
     }
     if (!auth.allowLoginAttempt(loginIp(req))) {
       res.setHeader("Retry-After", "60");
@@ -474,7 +506,8 @@ export function installLogin(app: Express, auth: LoginAuth) {
   app.post("/logout", (req: Request, res: Response) => {
     // A cookie-authenticated mutating request must be same-origin.
     if (!isSameOrigin(req)) {
-      return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN" });
+      const hint = crossOriginHint(req);
+      return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN", ...(hint ? { hint } : {}) });
     }
     auth.deleteSession(readCookie(req.headers.cookie, SESSION_COOKIE));
     res.setHeader("Set-Cookie", sessionCookie(req, "", 0));
