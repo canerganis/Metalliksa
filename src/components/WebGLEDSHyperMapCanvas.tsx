@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useVisibleAnimationFrame } from "../hooks/useVisibleAnimationFrame";
 import {
   createGLProgram,
   EDS_MAP_VERTEX_SHADER,
@@ -133,15 +134,7 @@ export const WebGLEDSHyperMapCanvas: React.FC<WebGLEDSHyperMapCanvasProps> = ({
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }, [localGamma, localContrast, brightness, activeBitmask]);
 
-  useEffect(() => {
-    let animId: number;
-    const loop = () => {
-      renderFrame();
-      animId = requestAnimationFrame(loop);
-    };
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
-  }, [renderFrame]);
+  useVisibleAnimationFrame(renderFrame);
 
   const toggleElement = (el: string) => {
     setEnabledChannels((prev) => ({
