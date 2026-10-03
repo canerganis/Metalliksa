@@ -19,6 +19,17 @@ the source tables carries a per-value citation, so every value is tagged
 per-value citation in ``source_ref``. ``validity=None`` means the source states
 no validity range; it does not mean "valid everywhere".
 
+Non-physical placeholders: the kinetics Ms_C/Mf_C entries for in718 (-50/-100 degC)
+and al7075 (-200/-273 degC) are solver placeholders, not martensite-start/finish
+temperatures (neither alloy forms martensite on quenching; -273 degC is effectively
+absolute zero). They are copied unchanged so the drift test holds, and each record
+carries KINETICS_PLACEHOLDER_NOTE. No replacement value is invented here.
+
+Bare grade numbers ("304", "316", "4140", "4340", "6061", "7075", "1018", "D2") are
+refused consistently: a bare grade does not say which variant is meant (304 is not
+304L; 7075 says nothing about temper). Callers must send a prefixed name such as
+"AISI 4140", "steel-304" or "al-7075". No string the UI sends is a bare grade.
+
 Leaf module: standard library + four_alloy_materials (hashlib/json) only; no
 numpy/scipy at import. It must NOT be imported by any manifest file until the
 planned implementation-fingerprint bump.
@@ -259,13 +270,26 @@ _CORROSION_UNITS = {
 }
 
 
+KINETICS_PLACEHOLDER_NOTE = (
+    "NON-PHYSICAL PLACEHOLDER copied from the solver table: this alloy does not form "
+    "martensite on quenching, so this Ms/Mf value is not a measured or literature "
+    "transformation temperature and must not be reported as one."
+)
+# (alloy id, key) pairs in _KINETICS that are placeholders, not physical values.
+KINETICS_PLACEHOLDERS = frozenset({
+    ("in718", "Ms_C"), ("in718", "Mf_C"), ("al7075", "Ms_C"), ("al7075", "Mf_C"),
+})
+BARE_GRADES = frozenset({"304", "316", "4140", "4340", "6061", "7075", "1018", "d2"})
+
+
 def _record(value: Any, unit: str, ref: str, model_version: str, note: str = "") -> ValueRecord:
     return ValueRecord(value=value, unit=unit, source_type="estimated", source_ref=ref,
                        validity=None, model_version=model_version, note=note)
 
 
 def _domain_table(raw: Mapping[str, Any], units: Mapping[str, str], ref: str,
-                  model_version: str, note: str, skip: Iterable[str] = ()) -> Mapping[str, ValueRecord]:
+                  model_version: str, note: str, skip: Iterable[str] = (),
+                  key_notes: Optional[Mapping[str, str]] = None) -> Mapping[str, ValueRecord]:
     skip = set(skip)
     out: Dict[str, ValueRecord] = {}
     for key, value in raw.items():
@@ -273,7 +297,8 @@ def _domain_table(raw: Mapping[str, Any], units: Mapping[str, str], ref: str,
             continue
         if key not in units:
             raise RegistryIntegrityError(f"{ref}: key {key!r} has no registered unit")
-        out[key] = _record(value, units[key], ref, model_version, note)
+        out[key] = _record(value, units[key], ref, model_version,
+                           (key_notes or {}).get(key, note))
     return MappingProxyType(out)
 
 
@@ -308,6 +333,7 @@ _KINETICS = {
     },
     "in718": {
         "composition_wt": {"Ni": 52.5, "Cr": 19.0, "Fe": 18.5, "Nb": 5.1, "Mo": 3.05, "Ti": 0.90, "Al": 0.55, "C": 0.04},
+        # Ms_C/Mf_C: NON-PHYSICAL placeholders (see KINETICS_PLACEHOLDERS).
         "Ae3_C": 1020.0, "Ae1_C": 620.0, "Ms_C": -50.0, "Mf_C": -100.0, "Q_diff_kJ_mol": 285.0,
         "grain_size_d_um_default": 35.0, "aust_temp_C_default": 980.0,
         "critical_cooling_rate_C_s": 150.0,
@@ -320,6 +346,7 @@ _KINETICS = {
     },
     "al7075": {
         "composition_wt": {"Al": 90.0, "Zn": 5.6, "Mg": 2.5, "Cu": 1.6, "Cr": 0.23},
+        # Ms_C/Mf_C: NON-PHYSICAL placeholders (see KINETICS_PLACEHOLDERS).
         "Ae3_C": 480.0, "Ae1_C": 100.0, "Ms_C": -200.0, "Mf_C": -273.0, "Q_diff_kJ_mol": 130.0,
         "grain_size_d_um_default": 20.0, "aust_temp_C_default": 475.0,
         "critical_cooling_rate_C_s": 250.0,
@@ -432,30 +459,30 @@ _IDENTITIES: Dict[str, Dict[str, Any]] = {
             "Inconel 718 (AMS 5664 / AMS 5662)", "inconel718_ams5664",
         ),
     },
-    "aisi4140": {"display": ("AISI 4140",), "base": "Fe", "aliases": ("4140",)},
+    "aisi4140": {"display": ("AISI 4140",), "base": "Fe", "aliases": ()},
     "aisi4340": {
         "display": ("AISI 4340",), "base": "Fe",
-        "aliases": ("4340", "steel4340_ams6414", "AISI 4340 Ultra-High Strength (AMS 6414)",
+        "aliases": ("steel4340_ams6414", "AISI 4340 Ultra-High Strength (AMS 6414)",
                     "AISI 4340 Ultra-High Strength Steel"),
     },
-    "aisid2": {"display": ("AISI D2",), "base": "Fe", "aliases": ("D2",)},
+    "aisid2": {"display": ("AISI D2",), "base": "Fe", "aliases": ()},
     "al7075": {
         "display": ("Al 7075",), "base": "Al",
-        "aliases": ("al-7075", "7075", "Aerospace Aluminum 7075-T6", "Aerospace Al 7075-T6",
+        "aliases": ("al-7075", "Aerospace Aluminum 7075-T6", "Aerospace Al 7075-T6",
                     "Al 7075-T6 Aerospace Aluminum"),
     },
     "al6061": {
         "display": ("Al 6061",), "base": "Al",
-        "aliases": ("al-6061", "6061", "Structural Aluminum 6061-T6", "Structural Al 6061-T6",
+        "aliases": ("al-6061", "Structural Aluminum 6061-T6", "Structural Al 6061-T6",
                     "Al 6061-T6 Structural Aluminum"),
     },
     "ss304": {
         "display": ("AISI 304 Stainless Steel",), "base": "Fe",
-        "aliases": ("steel-304", "304", "AISI 304"),
+        "aliases": ("steel-304", "AISI 304"),
     },
     "steel1018": {
         "display": ("Carbon Steel (AISI 1018)",), "base": "Fe",
-        "aliases": ("steel-1018", "1018", "AISI 1018", "AISI 1018 Carbon Steel"),
+        "aliases": ("steel-1018", "AISI 1018", "AISI 1018 Carbon Steel"),
     },
     "cu_c110": {
         "display": ("Pure Copper (ETP C11000)",), "base": "Cu",
@@ -511,9 +538,14 @@ def _copied_domains(aid: str) -> Dict[str, Mapping[str, ValueRecord]]:
     )
     for domain, table, units, ref in tables:
         if aid in table:
+            key_notes = None
+            if domain == DOMAIN_KINETICS:
+                key_notes = {k: KINETICS_PLACEHOLDER_NOTE
+                             for a, k in KINETICS_PLACEHOLDERS if a == aid}
             out[domain] = _domain_table(
                 table[aid], units, ref, f"{REGISTRY_VERSION}:{domain}",
-                "Solver-local screening value copied unchanged; no per-value citation in source.")
+                "Solver-local screening value copied unchanged; no per-value citation in source.",
+                key_notes=key_notes)
     return out
 
 
@@ -554,6 +586,8 @@ def build_alias_index(records: Mapping[str, AlloyRecord]) -> Tuple[Dict[str, str
             key = normalise_name(alias)
             if key is None:
                 raise RegistryIntegrityError(f"Empty alias on {aid!r}")
+            if key in BARE_GRADES or _compact(key) in BARE_GRADES:
+                raise RegistryIntegrityError(f"Bare grade alias {alias!r} on {aid!r} is refused")
             owner = exact.get(key)
             if owner is not None and owner != aid:
                 raise RegistryIntegrityError(f"Alias {alias!r} is shared by {owner!r} and {aid!r}")
@@ -580,6 +614,9 @@ def resolve_alloy_id(name: object) -> str:
     key = normalise_name(name)
     if key is None:
         raise UnknownAlloyError(name)
+    if key in BARE_GRADES:
+        # Bare grade numbers are refused consistently (304 is not 304L).
+        raise UnknownAlloyError(name, None, _suggest(key, None), reason="bare-grade")
     if key in _EXACT_INDEX:
         return _EXACT_INDEX[key]
     candidates = _COMPACT_INDEX.get(_compact(key), frozenset())
@@ -595,7 +632,7 @@ def resolve_alloy(name: object, domain: Optional[str] = None) -> AlloyRecord:
     try:
         aid = resolve_alloy_id(name)
     except UnknownAlloyError as exc:
-        if domain is None:
+        if domain is None or exc.reason == "bare-grade":
             raise
         raise UnknownAlloyError(name, domain, _suggest(normalise_name(name), domain)) from exc
     record = REGISTRY[aid]

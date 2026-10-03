@@ -6,6 +6,15 @@ Every check raises ValidationError(code, field, message, detail). Solvers migrat
 in Phase 6a catch it in ``__main__`` and print ``validation_envelope(err)`` with
 exit code 2 (see .orchestra/DESIGN-6a-materials.md section 2).
 
+Code mapping for type errors (the seven design codes have no dedicated "wrong
+type" code, so the nearest one is used deliberately):
+- a non-numeric value (str, None, bool, list, ...) where a number is required is
+  reported as NON_FINITE, with ``detail["type"]`` naming the received type;
+- a composition that is not a non-empty element -> wt% mapping, or that repeats an
+  element, is reported as OUT_OF_RANGE, with ``detail["type"]`` / ``detail["element"]``;
+- an ambiguous or bare-grade alloy name is reported as UNKNOWN_ALLOY, with
+  ``detail["reason"]`` set to "ambiguous" or "bare-grade".
+
 Leaf module: standard library + physical_constants + alloy_registry only. It must
 NOT be imported by any manifest file until the planned fingerprint bump.
 """

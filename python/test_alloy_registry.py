@@ -97,6 +97,21 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(fam._THERMAL["in718"]["density_kg_m3"], 8190.0)
 
 
+class PlaceholderAnnotationTest(unittest.TestCase):
+    def test_non_physical_ms_mf_placeholders_are_annotated(self):
+        for aid, key in reg.KINETICS_PLACEHOLDERS:
+            rec = reg.REGISTRY[aid].get(key, reg.DOMAIN_KINETICS)
+            self.assertEqual(rec.note, reg.KINETICS_PLACEHOLDER_NOTE, f"{aid}.{key}")
+            self.assertIn("NON-PHYSICAL", rec.note)
+            self.assertEqual(rec.source_type, "estimated")
+        self.assertEqual(reg.REGISTRY["in718"].value("Ms_C", reg.DOMAIN_KINETICS), -50.0)
+        self.assertEqual(reg.REGISTRY["al7075"].value("Mf_C", reg.DOMAIN_KINETICS), -273.0)
+
+    def test_physical_ms_values_keep_the_default_note(self):
+        rec = reg.REGISTRY["aisi4140"].get("Ms_C", reg.DOMAIN_KINETICS)
+        self.assertNotIn("NON-PHYSICAL", rec.note)
+
+
 class CopiedTableDriftTest(unittest.TestCase):
     """Registry copies must equal the live solver tables until each solver migrates."""
 
@@ -199,7 +214,7 @@ class AliasTest(unittest.TestCase):
         b = reg.REGISTRY["aisi4340"]
         clash = {"aisi4140": a,
                  "aisi4340": reg.AlloyRecord(b.id, b.display_names, b.base_element,
-                                             b.aliases + ("4140",), b.domains)}
+                                             b.aliases + ("AISI 4140",), b.domains)}
         with self.assertRaises(reg.RegistryIntegrityError):
             reg.build_alias_index(clash)
 
@@ -293,6 +308,35 @@ class NoSilentDefaultTest(unittest.TestCase):
             with self.assertRaises(reg.AmbiguousAlloyError) as ctx:
                 reg.resolve_alloy("foo-alloy")
         self.assertEqual(ctx.exception.candidates, ("aisi4140", "aisi4340"))
+
+    def test_bare_grades_are_refused_consistently(self):
+        # 304 is not 304L and 7075 names no temper: every bare grade is refused the same way.
+        for name in ("304", "316", "4140", "4340", "6061", "7075", "1018", "D2", "d2", " 4140 "):
+            with self.subTest(name=name):
+                with self.assertRaises(reg.UnknownAlloyError) as ctx:
+                    reg.resolve_alloy(name)
+                self.assertEqual(ctx.exception.reason, "bare-grade")
+                with self.assertRaises(reg.UnknownAlloyError):
+                    reg.resolve_alloy(name, reg.DOMAIN_KINETICS)
+        # Prefixed names still resolve; "316L" carries its variant and stays valid.
+        self.assertEqual(reg.resolve_alloy_id("AISI 4140"), "aisi4140")
+        self.assertEqual(reg.resolve_alloy_id("steel-304"), "ss304")
+        self.assertEqual(reg.resolve_alloy_id("al-7075"), "al7075")
+        self.assertEqual(reg.resolve_alloy_id("316L"), "ss316l")
+
+    def test_no_record_carries_a_bare_grade_alias(self):
+        for aid, rec in reg.REGISTRY.items():
+            for alias in rec.aliases:
+                self.assertNotIn(reg.normalise_name(alias), reg.BARE_GRADES, f"{aid}:{alias}")
+        a = reg.REGISTRY["ss304"]
+        bad = {"ss304": reg.AlloyRecord(a.id, a.display_names, a.base_element,
+                                        a.aliases + ("304",), a.domains)}
+        with self.assertRaises(reg.RegistryIntegrityError):
+            reg.build_alias_index(bad)
+
+    def test_no_ui_string_is_a_bare_grade(self):
+        for name in UI_ALIASES:
+            self.assertNotIn(reg.normalise_name(name), reg.BARE_GRADES, name)
 
     def test_registry_is_read_only(self):
         self.assertIsInstance(reg.REGISTRY, MappingProxyType)

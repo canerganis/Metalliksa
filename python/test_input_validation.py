@@ -99,6 +99,28 @@ class AlloyChecksTest(unittest.TestCase):
             iv.require_property(rec, "gamma_solvus_C", "kinetics")
         self.assertEqual(ctx.exception.code, iv.MISSING_PROPERTY)
 
+    def test_bare_grade_is_reported_as_unknown_alloy(self):
+        for domain in (None, "kinetics"):
+            with self.assertRaises(iv.ValidationError) as ctx:
+                iv.require_known_alloy("304", domain)
+            self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
+            self.assertEqual(ctx.exception.detail["reason"], "bare-grade")
+
+    def test_documented_type_error_codes(self):
+        with self.assertRaises(iv.ValidationError) as ctx:
+            iv.require_finite("power_W", "200")
+        self.assertEqual(ctx.exception.code, iv.NON_FINITE)
+        self.assertEqual(ctx.exception.detail["type"], "str")
+        with self.assertRaises(iv.ValidationError) as ctx:
+            iv.require_composition(["Ni"])
+        self.assertEqual(ctx.exception.code, iv.OUT_OF_RANGE)
+        self.assertEqual(ctx.exception.detail["type"], "list")
+
+    def test_new_spec_elements_are_accepted(self):
+        self.assertEqual(iv.require_composition({"Fe": 99.9, "S": 0.03, "P": 0.04}),
+                         {"Fe": 99.9, "S": 0.03, "P": 0.04})
+        self.assertEqual(iv.require_element("element", "Sn"), "Sn")
+
     def test_unknown_element(self):
         with self.assertRaises(iv.ValidationError) as ctx:
             iv.require_element("element", "Xx")
