@@ -21,6 +21,10 @@ export interface RunDocument { schemaVersion: 1; runId: string; capture: RunCapt
 export interface RunRecord { document: RunDocument; documentSha256: string; createdAt: string; evidenceStatus: 'unvalidated-model'; runKind: RunKind }
 export interface ProxyCampaignRecord { campaignId: string; document: Record<string, any>; documentSha256: string; createdAt: string }
 const MAX_BYTES = 32 * 1024 * 1024;
+const NIST_TABLE4_DATASET_ID = 'nist-amb2022-03-optical-table4-local-v1';
+const NIST_TABLE4_ARTIFACT_PATH = 'table4-aggregate-v2.json';
+const NIST_TABLE4_ARTIFACT_SHA256 = 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da';
+const NIST_TABLE4_ARTIFACT_SIZE = 4321;
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 const hash = (value: unknown) => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 function keys(value: any, fields: string[]) {
@@ -173,9 +177,15 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
     document = JSON.parse(json);
   } catch { throw new Error('Invalid proxy campaign document'); }
   if (!document || typeof document !== 'object' || Array.isArray(document)
-    || document.schemaVersion !== 1 || document.kind !== 'lpbf-nist-amb2022-03-proxy-campaign'
+    || ![1, 2].includes(document.schemaVersion) || document.kind !== 'lpbf-nist-amb2022-03-proxy-campaign'
     || typeof document.campaignId !== 'string' || !/^[a-f0-9]{32}$/.test(document.campaignId)
     || !Array.isArray(document.tracks) || document.tracks.length !== 3) throw new Error('Invalid proxy campaign document');
+  if (document.schemaVersion === 2) {
+    try {
+      keys(document, ['schemaVersion', 'kind', 'campaignId', 'benchmark', 'caseNumber', 'sourceBinding',
+        'beamInputDeclaration', 'claimBoundary', 'samplingPlan', 'tracks']);
+    } catch { throw new Error('Invalid v2 proxy campaign fields'); }
+  }
   const ids = new Set<string>();
   for (const track of document.tracks) {
     const identity = track?.runIdentity;
@@ -183,6 +193,36 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
       || typeof identity.runDocumentSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(identity.runDocumentSha256)
       || ids.has(identity.runId)) throw new Error('Invalid or duplicate campaign run reference');
     ids.add(identity.runId);
+  }
+  if (document.schemaVersion === 2) {
+    const declaration = document.beamInputDeclaration;
+    try {
+      keys(declaration, ['status', 'definition', 'value_um', 'mappingStatus', 'measuredProfileMatched', 'sourceBinding']);
+      keys(document.sourceBinding, ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber']);
+    } catch { throw new Error('Invalid v2 proxy campaign beam input declaration'); }
+    if (declaration.status !== 'published-source-declared' || declaration.definition !== 'D4sigma'
+      || typeof declaration.value_um !== 'number' || !Number.isFinite(declaration.value_um) || declaration.value_um <= 0
+      || declaration.mappingStatus !== 'conditional-ideal-Gaussian' || declaration.measuredProfileMatched !== false
+      || !isDeepStrictEqual(declaration.sourceBinding, document.sourceBinding)
+      || document.benchmark !== 'AMB2022-03-TMPG' || document.caseNumber !== '0'
+      || document.sourceBinding.caseNumber !== document.caseNumber
+      || document.sourceBinding.datasetId !== NIST_TABLE4_DATASET_ID
+      || document.sourceBinding.artifactPath !== NIST_TABLE4_ARTIFACT_PATH
+      || document.sourceBinding.artifactSha256 !== NIST_TABLE4_ARTIFACT_SHA256
+      || document.sourceBinding.artifactSizeBytes !== NIST_TABLE4_ARTIFACT_SIZE
+      || declaration.value_um !== 67
+      || !Number.isSafeInteger(document.sourceBinding.revision) || document.sourceBinding.revision < 1
+      || !hash(document.sourceBinding.documentSha256) || !hash(document.sourceBinding.artifactSha256)
+      || !Number.isSafeInteger(document.sourceBinding.artifactSizeBytes) || document.sourceBinding.artifactSizeBytes <= 0) {
+      throw new Error('Invalid v2 proxy campaign beam input declaration');
+    }
+    const expectedId = digest(JSON.stringify({ schemaVersion: 2, runIds: document.tracks.map((track: any) => track.runIdentity.runId),
+      caseNumber: document.caseNumber, revision: document.sourceBinding.revision, doc: document.sourceBinding.documentSha256 })).slice(0, 32);
+    if (document.campaignId !== expectedId) throw new Error('Invalid v2 proxy campaign identity');
+    if (document.samplingPlan?.replicateSemantics !== 'reproducibility-evidence-not-independent-replicates'
+      || document.tracks.some((track: any) => track.replicateKind !== 'reproducibility-execution')) {
+      throw new Error('Invalid v2 proxy campaign reproducibility semantics');
+    }
   }
   return document;
 }

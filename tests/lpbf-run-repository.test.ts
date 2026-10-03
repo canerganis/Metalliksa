@@ -170,28 +170,56 @@ test('saved proxy campaigns list in creation order and reject broken archived re
   const filename = path.join(runRoot, 'runs.sqlite');
   const repository = new LpbfRunRepository(filename);
   const sourceBinding = { datasetId: 'nist-fixture', revision: 1, documentSha256: sha('source') };
+  const v2SourceBinding = { datasetId: 'nist-amb2022-03-optical-table4-local-v1', revision: 1,
+    documentSha256: sha('verified table source'), artifactPath: 'table4-aggregate-v2.json',
+    artifactSha256: 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da',
+    artifactSizeBytes: 4321, caseNumber: '0' };
   const runIds = ['a', 'b', 'c'].map(value => value.repeat(32));
   const runs = runIds.map(id => {
     const raw = capture('transient-thermal'); raw.jobId = id;
-    return repository.save({ schemaVersion: 1, runId: id, capture: raw, sources: [sourceBinding] });
+    return repository.save({ schemaVersion: 1, runId: id, capture: raw, sources: [sourceBinding,
+      { datasetId: v2SourceBinding.datasetId, revision: v2SourceBinding.revision,
+        documentSha256: v2SourceBinding.documentSha256 }] });
   });
   const campaign = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign',
     campaignId: 'e'.repeat(32), sourceBinding,
     tracks: runs.map(run => ({ runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
   repository.saveProxyCampaign(campaign);
+  const v2 = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
+    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: runs.map(run => run.document.runId), caseNumber: '0',
+      revision: 1, doc: v2SourceBinding.documentSha256 })).slice(0, 32), caseNumber: '0', sourceBinding: v2SourceBinding,
+    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
+      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: v2SourceBinding },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
+      experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
+    tracks: runs.map(run => ({ replicateKind: 'reproducibility-execution',
+      runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
+  repository.saveProxyCampaign(v2);
+  for (const mutate of [
+    (doc: any) => { doc.beamInputDeclaration.value_um = 72; },
+    (doc: any) => { doc.beamInputDeclaration.sourceBinding.documentSha256 = sha('other'); },
+    (doc: any) => { doc.beamInputDeclaration.status = 'measured'; },
+    (doc: any) => { doc.beamInputDeclaration.measuredProfileMatched = true; },
+    (doc: any) => { doc.beamInputDeclaration.clientNote = 'forged'; },
+  ]) {
+    const invalid = structuredClone(v2); mutate(invalid);
+    assert.throws(() => repository.saveProxyCampaign(invalid), /v2 proxy campaign/i);
+  }
   repository.close();
 
   const service = new LpbfNistProxyCampaignService(runRoot, path.join(root, 'sources'));
   const listed = await service.list();
-  assert.equal(listed.length, 1);
-  assert.equal(listed[0].campaignId, campaign.campaignId);
-  assert.equal(listed[0].documentSha256, sha(JSON.stringify(campaign)));
+  assert.equal(listed.length, 2);
+  assert.deepEqual(new Set(listed.map(item => item.campaignId)), new Set([campaign.campaignId, v2.campaignId]));
+  assert.equal(listed.find(item => item.campaignId === campaign.campaignId)!.documentSha256, sha(JSON.stringify(campaign)));
+  assert.equal(listed.find(item => item.campaignId === v2.campaignId)!.documentSha256, sha(JSON.stringify(v2)));
 
   const db = new DatabaseSync(filename);
-  const changed = JSON.parse(String(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').get()!.document_json));
+  const changed = JSON.parse(String(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns WHERE campaign_id=?').get(campaign.campaignId)!.document_json));
   changed.tracks[0].runIdentity.runDocumentSha256 = 'f'.repeat(64);
   const documentJson = JSON.stringify(changed);
-  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=?').run(documentJson, sha(documentJson));
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?').run(documentJson, sha(documentJson), campaign.campaignId);
   db.close();
   await assert.rejects(service.list(), /reference integrity/i);
 });

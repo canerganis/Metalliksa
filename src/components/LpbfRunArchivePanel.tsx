@@ -703,7 +703,7 @@ export function NistProxyCampaign({ runs }: { runs: RunArchiveList }) {
 
   return <section aria-label="NIST proxy campaign" className="space-y-3 rounded-xl border border-slate-700 p-4 text-sm">
     <div><h4 className="font-medium">NIST AMB2022-03 · six-section thermal proxy campaign</h4>
-      <p className="mt-1 text-xs text-amber-200">Proxy screening only · unvalidated. This flow records six simulated section observations from three archived runs. It does not calculate optical residuals or claim experimental validation.</p></div>
+      <p className="mt-1 text-xs text-amber-200">Proxy screening only · unvalidated. This flow records six simulated section observations from three archived runs. Published nominal diameter adopted as a declared Gaussian model input. It does not calculate optical residuals or claim experimental validation.</p></div>
     {candidates.length < 3 ? <p className="text-slate-300">Three archived transient-thermal runs are required. Available: {candidates.length}.</p>
       : <>
         {currentRunIds.map((runId, index) => <label key={index} className="block">Archived thermal run {index + 1}

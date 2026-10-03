@@ -113,6 +113,23 @@ def _campaign():
     }
 
 
+def _campaign_v2():
+    campaign = _campaign()
+    campaign["schemaVersion"] = 2
+    campaign["beamInputDeclaration"] = {
+        "status": "published-source-declared",
+        "definition": "D4sigma",
+        "value_um": 67.0,
+        "mappingStatus": "conditional-ideal-Gaussian",
+        "measuredProfileMatched": False,
+        "sourceBinding": copy.deepcopy(campaign["sourceBinding"]),
+    }
+    campaign["samplingPlan"]["replicateSemantics"] = "reproducibility-evidence-not-independent-replicates"
+    for track in campaign["tracks"]:
+        track["replicateKind"] = "reproducibility-execution"
+    return campaign
+
+
 class TestNistProxyCampaign(unittest.TestCase):
     def test_complete_campaign_is_proxy_screening_only(self):
         report = validate_proxy_campaign(_campaign(), _source_binding())
@@ -129,7 +146,46 @@ class TestNistProxyCampaign(unittest.TestCase):
         campaign["schemaVersion"] = True
         report = validate_proxy_campaign(campaign, _source_binding())
         self.assertEqual(report["status"], "unavailable")
-        self.assertTrue(any("schemaVersion must be 1" in reason for reason in report["reasons"]))
+        self.assertTrue(any("schemaVersion must be 1 or 2" in reason for reason in report["reasons"]))
+
+    def test_v2_declared_source_input_is_accepted_without_measurement_claim(self):
+        report = validate_proxy_campaign(_campaign_v2(), _source_binding(), 67.0)
+        self.assertEqual(report["status"], "proxy-screening-only")
+        self.assertEqual(report["reasons"], [])
+        self.assertIsNone(report["comparisonResiduals"])
+        self.assertIs(report["experimentalValidation"], False)
+
+    def test_v2_rejects_untrusted_or_forged_declaration(self):
+        mutations = (
+            ("value_um", 68.0, "trusted Table 4 D4sigma"),
+            ("status", "measured", "status must be published-source-declared"),
+            ("measuredProfileMatched", True, "measuredProfileMatched must be false"),
+        )
+        for key, value, expected_reason in mutations:
+            with self.subTest(key=key):
+                campaign = _campaign_v2()
+                campaign["beamInputDeclaration"][key] = value
+                report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+                self.assertEqual(report["status"], "unavailable")
+                self.assertTrue(any(expected_reason in reason for reason in report["reasons"]))
+
+        campaign = _campaign_v2()
+        campaign["beamInputDeclaration"]["sourceBinding"]["artifactSha256"] = "0" * 64
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("sourceBinding does not match the trusted source revision" in reason
+                            for reason in report["reasons"]))
+
+        campaign = _campaign_v2()
+        campaign["beamInputDeclaration"]["measuredEvidence"] = {"present": True}
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("unsupported fields" in reason for reason in report["reasons"]))
+
+    def test_v2_requires_trusted_source_value(self):
+        report = validate_proxy_campaign(_campaign_v2(), _source_binding())
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("trusted source-derived Table 4 D4sigma" in reason for reason in report["reasons"]))
 
     def test_unsafe_artifact_paths_are_rejected(self):
         for unsafe_path in ("../outside.json", "C:/outside.json", "/outside.json"):

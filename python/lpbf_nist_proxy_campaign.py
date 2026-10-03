@@ -10,6 +10,7 @@ import re
 
 
 SCHEMA_VERSION = 1
+CAMPAIGN_SCHEMA_VERSION = 2
 CAMPAIGN_KIND = "lpbf-nist-amb2022-03-proxy-campaign"
 BENCHMARK = "AMB2022-03-TMPG"
 SOURCE_DATASET_ID = "nist-amb2022-03-optical-table4-local-v1"
@@ -200,21 +201,51 @@ def _validate_observation(observation, track, section_index, campaign_source, ex
             reasons.append(f"{label}.provenance.runIdentity differs from its simulated track run.")
 
 
-def validate_proxy_campaign(campaign, expected_source_binding=None):
+def _validate_beam_input_declaration(declaration, expected_source_binding, expected_beam_diameter_um, reasons):
+    label = "campaign.beamInputDeclaration"
+    fields = {"status", "definition", "value_um", "mappingStatus", "measuredProfileMatched", "sourceBinding"}
+    if not _check_keys(declaration, fields, set(), label, reasons):
+        return
+    if declaration.get("status") != "published-source-declared":
+        reasons.append(f"{label}.status must be published-source-declared.")
+    if declaration.get("definition") != "D4sigma":
+        reasons.append(f"{label}.definition must be D4sigma.")
+    value = declaration.get("value_um")
+    if not _is_number(value) or value <= 0:
+        reasons.append(f"{label}.value_um must be positive and finite.")
+    if declaration.get("mappingStatus") != "conditional-ideal-Gaussian":
+        reasons.append(f"{label}.mappingStatus must be conditional-ideal-Gaussian.")
+    if declaration.get("measuredProfileMatched") is not False:
+        reasons.append(f"{label}.measuredProfileMatched must be false.")
+    if declaration.get("sourceBinding") != expected_source_binding:
+        reasons.append(f"{label}.sourceBinding does not match the trusted source revision.")
+    if expected_beam_diameter_um is None or not _is_number(expected_beam_diameter_um):
+        reasons.append("A trusted source-derived Table 4 D4sigma value is required for schema v2.")
+    elif value != expected_beam_diameter_um:
+        reasons.append(f"{label}.value_um does not match the trusted Table 4 D4sigma value.")
+
+
+def validate_proxy_campaign(campaign, expected_source_binding=None, expected_beam_diameter_um=None):
     """Validate a six-section thermal-proxy campaign without optical claims.
 
     ``expected_source_binding`` must come from a trusted, byte-verified source
     archive lookup. Structural validity alone is not enough to accept a source.
     """
     reasons = []
+    schema_version = campaign.get("schemaVersion") if _is_record(campaign) else None
     fields = {
         "schemaVersion", "kind", "campaignId", "benchmark", "caseNumber",
         "sourceBinding", "claimBoundary", "samplingPlan", "tracks",
     }
+    if schema_version == CAMPAIGN_SCHEMA_VERSION and type(schema_version) is int:
+        fields.add("beamInputDeclaration")
     structurally_closed = _check_keys(campaign, fields, set(), "campaign", reasons)
     if _is_record(campaign):
-        if type(campaign.get("schemaVersion")) is not int or campaign["schemaVersion"] != SCHEMA_VERSION:
-            reasons.append("campaign.schemaVersion must be 1.")
+        if type(schema_version) is not int or schema_version not in (SCHEMA_VERSION, CAMPAIGN_SCHEMA_VERSION):
+            reasons.append("campaign.schemaVersion must be 1 or 2.")
+        if schema_version == CAMPAIGN_SCHEMA_VERSION and type(schema_version) is int:
+            _validate_beam_input_declaration(campaign.get("beamInputDeclaration"),
+                                             expected_source_binding, expected_beam_diameter_um, reasons)
         if campaign.get("kind") != CAMPAIGN_KIND:
             reasons.append(f"campaign.kind must be {CAMPAIGN_KIND}.")
         if not isinstance(campaign.get("campaignId"), str) or RUN_ID.fullmatch(campaign["campaignId"]) is None:
@@ -259,8 +290,11 @@ def validate_proxy_campaign(campaign, expected_source_binding=None):
                 reasons.append("campaign.samplingPlan.expectedTrackCount must be 3.")
             if type(plan.get("expectedObservationCount")) is not int or plan["expectedObservationCount"] != 6:
                 reasons.append("campaign.samplingPlan.expectedObservationCount must be 6.")
-            if plan.get("replicateSemantics") != "independent-computational-runs-only":
-                reasons.append("campaign.samplingPlan.replicateSemantics must identify computational runs only.")
+            expected_replicate_semantics = ("reproducibility-evidence-not-independent-replicates"
+                                            if schema_version == CAMPAIGN_SCHEMA_VERSION
+                                            else "independent-computational-runs-only")
+            if plan.get("replicateSemantics") != expected_replicate_semantics:
+                reasons.append(f"campaign.samplingPlan.replicateSemantics must be {expected_replicate_semantics}.")
 
         tracks = campaign.get("tracks")
         if not isinstance(tracks, list) or len(tracks) != 3:
@@ -287,8 +321,11 @@ def validate_proxy_campaign(campaign, expected_source_binding=None):
                     trusted_ids = []
                 if experimental_id is not None and experimental_id not in trusted_ids:
                     reasons.append(f"{label}.experimentalTrackId is not supplied by the trusted source revision.")
-                if track.get("replicateKind") != "independent-computational-run":
-                    reasons.append(f"{label}.replicateKind must be independent-computational-run.")
+                expected_replicate_kind = ("reproducibility-execution"
+                                           if schema_version == CAMPAIGN_SCHEMA_VERSION
+                                           else "independent-computational-run")
+                if track.get("replicateKind") != expected_replicate_kind:
+                    reasons.append(f"{label}.replicateKind must be {expected_replicate_kind}.")
 
                 _validate_run_identity(track.get("runIdentity"), f"{label}.runIdentity", reasons)
                 run = track.get("runIdentity")

@@ -148,13 +148,13 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     sources: [exactLink] });
 
   const proxyRunIds = ['4', '5', '6'].map(value => value.repeat(32));
-  const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0'].map(value => value.repeat(16)));
+  const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0', 'c0'].map(value => value.repeat(16)));
   const sectionFailureIds = ['2a', '2b', '2c', '2d', '2e', '2f', '30', '31'].map(value => value.repeat(16));
   const proxyResultJson = new Map<string, string>();
   const tableCase = JSON.parse(readFileSync(path.join(tableRoot, artifact.relativePath), 'utf8'))
     .cases.find((item: any) => item.caseNumber === '0');
   const producerFixture = createProxySectionFieldFixture();
-  async function saveProxyRun(runId: string, corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
+  async function saveProxyRun(runId: string, corruption?: 'wrong-diameter' | 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
     | 'missing-descriptor' | 'mismatched-descriptor' | 'missing-manifest'
     | 'changed-width' | 'changed-depth' | 'changed-sample-cells' | 'changed-plane'
     | 'compressed-budget') {
@@ -164,6 +164,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       beamDiameter_um: tableCase.beamDiameterD4sigma_um, preheat_C: 23.5,
       surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0, mesh_um: 1000,
     };
+    if (corruption === 'wrong-diameter') settings.beamDiameter_um += 1;
     const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision'),
       name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture', liquidus_K: 1600 };
     const inputJson = JSON.stringify(settings), materialJsonForRun = JSON.stringify(material);
@@ -207,7 +208,6 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
         resolvedPhysics: { conduction: true, transient: true, latentHeat: true,
           momentum: false, freeSurface: false, evaporation: false },
         inputSha256: sha(inputJson), materialSha256: sha(materialJsonForRun) },
-      measuredBeamProfileEvidence: { D4sigma_um: tableCase.beamDiameterD4sigma_um },
       scanPath: [{ start: [-0.005, 0], end: [0.005, 0], start_s: 0,
         end_s: 10 / tableCase.scanSpeed_mm_s }],
       barePlateSectionObservations: observations,
@@ -220,7 +220,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       sources: [exactLink] });
   }
   for (const runId of proxyRunIds) await saveProxyRun(runId);
-  const corruptions = ['distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
+  const corruptions = ['wrong-diameter', 'distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
   for (let index = 0; index < malformedProxyRunIds.length; index++) await saveProxyRun(malformedProxyRunIds[index], corruptions[index]);
   const sectionCorruptions = ['missing-descriptor', 'mismatched-descriptor', 'missing-manifest',
     'changed-width', 'changed-depth', 'changed-sample-cells', 'changed-plane', 'compressed-budget'] as const;
@@ -265,6 +265,15 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(proxyPreview.body.campaign.claimBoundary.opticalOperatorMatched, false);
   assert.equal(proxyPreview.body.campaign.claimBoundary.experimentalValidation, false);
   assert.equal(proxyPreview.body.campaign.tracks.length, 3);
+  assert.equal(proxyPreview.body.campaign.schemaVersion, 2);
+  assert.deepEqual(proxyPreview.body.campaign.beamInputDeclaration, {
+    status: 'published-source-declared', definition: 'D4sigma', value_um: tableCase.beamDiameterD4sigma_um,
+    mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false,
+    sourceBinding: proxyPreview.body.campaign.sourceBinding,
+  });
+  assert.equal(proxyPreview.body.campaign.samplingPlan.replicateSemantics,
+    'reproducibility-evidence-not-independent-replicates');
+  assert.ok(proxyPreview.body.campaign.tracks.every((track: any) => track.replicateKind === 'reproducibility-execution'));
   for (let index = 0; index < proxyRunIds.length; index++) {
     const runId = proxyRunIds[index];
     const track = proxyPreview.body.campaign.tracks[index];
@@ -342,6 +351,10 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const listedProxy = await fetch(`${endpoint}/proxy-campaigns`, { cache: 'no-store' });
   assert.equal(listedProxy.status, 200);
   assert.equal((await listedProxy.json()).length, 1);
+  const forgedDeclaration = await fetch(`${endpoint}/proxy-campaigns/preview`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds, caseNumber: '0',
+      beamInputDeclaration: proxyPreview.body.campaign.beamInputDeclaration }) });
+  assert.equal(forgedDeclaration.status, 400);
 
   const valid = await post(boundId, { caseNumber: '0' });
   assert.equal(valid.status, 200);

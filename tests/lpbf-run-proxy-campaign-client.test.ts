@@ -38,6 +38,16 @@ function campaignDocument() {
   };
 }
 
+function v2CampaignDocument() {
+  const legacy = campaignDocument();
+  const sourceBinding = legacy.sourceBinding;
+  return { ...legacy, schemaVersion: 2, beamInputDeclaration: { status: 'published-source-declared',
+    definition: 'D4sigma', value_um: 67, mappingStatus: 'conditional-ideal-Gaussian',
+    measuredProfileMatched: false, sourceBinding },
+  samplingPlan: { ...legacy.samplingPlan, replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
+  tracks: legacy.tracks.map(track => ({ ...track, replicateKind: 'reproducibility-execution' })) };
+}
+
 const validation = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
   status: 'proxy-screening-only', validationStatus: 'unvalidated', experimentalValidation: false,
   numericalConvergenceStatus: 'not-evaluated', comparisonResiduals: null, observationCount: 6, reasons: [] };
@@ -64,6 +74,32 @@ test('proxy campaign save requires exact preview hash and immutable record ident
   const [url, init] = fetchMock.mock.calls[0].arguments as [string, RequestInit];
   assert.equal(url, '/api/lpbf/runs/proxy-campaigns');
   assert.deepEqual(JSON.parse(init.body as string), { runIds, caseNumber: '0', previewSha256 });
+});
+
+test('proxy campaign client accepts v2 declared input while preserving legacy v1 records', async t => {
+  const campaign = v2CampaignDocument();
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ campaign, validation, previewSha256 })));
+  const result = await previewNistProxyCampaign(runIds, '0', signal);
+  assert.equal(result.campaign?.schemaVersion, 2);
+  assert.equal(result.campaign?.beamInputDeclaration?.value_um, 67);
+  assert.equal(result.campaign?.tracks[0].replicateKind, 'reproducibility-execution');
+  t.mock.restoreAll();
+});
+
+test('proxy campaign client rejects forged or mismatched v2 declarations', async t => {
+  const valid = v2CampaignDocument();
+  const invalids = [
+    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, value_um: 68 } },
+    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, sourceBinding: { ...valid.sourceBinding, revision: 5 } } },
+    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, status: 'measured' } },
+    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, measuredProfileMatched: true } },
+    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, forged: true } },
+  ];
+  for (const campaign of invalids) {
+    t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ campaign, validation, previewSha256 })));
+    await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i);
+    t.mock.restoreAll();
+  }
 });
 
 test('proxy campaign client rejects residuals, validation claims, and untrusted measurements', async t => {
@@ -105,4 +141,16 @@ test('saved proxy campaign list preserves exact run, source and unvalidated reco
   const changed = { ...record, document: { ...campaign, tracks: campaign.tracks.slice(0, 2) } };
   t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify([changed])));
   await assert.rejects(listNistProxyCampaigns(signal), /invalid/i);
+});
+
+test('saved proxy campaign list reads v1 and v2 records with distinct identities', async t => {
+  const v1 = campaignDocument();
+  const v2 = v2CampaignDocument();
+  v2.campaignId = 'f'.repeat(32);
+  const records = [v1, v2].map((document, index) => ({ campaignId: document.campaignId, document,
+    documentSha256: String(index + 1).repeat(64), createdAt: `2026-09-2${index + 5}T10:00:00.000Z` }));
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(records)));
+  const result = await listNistProxyCampaigns(signal);
+  assert.deepEqual(result.map(record => record.document.schemaVersion), [1, 2]);
+  assert.notEqual(result[0].campaignId, result[1].campaignId);
 });

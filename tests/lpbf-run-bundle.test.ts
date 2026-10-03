@@ -73,10 +73,26 @@ test('full bundle independently restores exact run and historical source revisio
 
 test('bundle snapshots and restores immutable six-proxy campaign run references', async t => {
   const f = await fixture(t);
-  const runRecords = [f.record];
-  for (const id of ['b'.repeat(32), 'c'.repeat(32)]) {
+  const table4Path = 'data/benchmark/nist-amb2022-03-optical/table4-aggregate-v2.json';
+  const table4Bytes = readFileSync(table4Path);
+  const table4Artifact = { relativePath: 'table4-aggregate-v2.json',
+    sha256: createHash('sha256').update(table4Bytes).digest('hex'), byteSize: table4Bytes.length,
+    sourceUrl: 'https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10' };
+  const table4Input = path.join(f.root, 'table4-input'); mkdirSync(table4Input);
+  writeFileSync(path.join(table4Input, table4Artifact.relativePath), table4Bytes);
+  await f.sourceStore.putFile(table4Input, table4Artifact.relativePath, table4Artifact);
+  const table4Source = { schemaVersion: 1, datasetId: 'nist-amb2022-03-optical-table4-local-v1', materialId: 'in718',
+    processScope: 'bare-plate', source: { url: 'https://doi.org/10.18434/mds2-2718', citation: 'NIST AMB2022-03',
+      version: 'Table 4 transcription', terms: null, termsMissingReason: 'Unknown' },
+    artifacts: [table4Artifact], sourceContext: null };
+  const table4Revision = f.sources.save(table4Source, 0);
+  const table4Link = { datasetId: table4Source.datasetId, revision: table4Revision.revision,
+    documentSha256: table4Revision.documentSha256 };
+  const runRecords = [];
+  for (const id of ['b'.repeat(32), 'c'.repeat(32), 'd'.repeat(32)]) {
     const document = structuredClone(f.record.document);
     document.runId = document.capture.jobId = id;
+    document.sources.push(table4Link);
     runRecords.push(f.runs.save(document));
   }
   const binding = { datasetId: 'synthetic', revision: 1, documentSha256: f.record.document.sources[0].documentSha256,
@@ -86,16 +102,31 @@ test('bundle snapshots and restores immutable six-proxy campaign run references'
       runIdentity: { runId: record.document.runId, runDocumentSha256: record.documentSha256 },
     })) };
   f.runs.saveProxyCampaign(campaign);
+  const v2Binding = { ...table4Link, artifactPath: table4Artifact.relativePath, artifactSha256: table4Artifact.sha256,
+    artifactSizeBytes: table4Artifact.byteSize, caseNumber: '0' };
+  const v2 = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign',
+    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: runRecords.map(record => record.document.runId), caseNumber: '0',
+      revision: 1, doc: v2Binding.documentSha256 })).slice(0, 32), benchmark: 'AMB2022-03-TMPG', caseNumber: '0',
+    sourceBinding: v2Binding,
+    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
+      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: v2Binding },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
+      experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
+    tracks: runRecords.map(record => ({ replicateKind: 'reproducibility-execution',
+      runIdentity: { runId: record.document.runId, runDocumentSha256: record.documentSha256 } })) };
+  f.runs.saveProxyCampaign(v2);
   const manifest = await f.backup();
   assert.equal(manifest.schemaVersion, 2);
-  assert.equal(manifest.campaignCount, 1);
+  assert.equal(manifest.campaignCount, 2);
   const destination = path.join(f.root, 'campaign-restored');
   await restoreRunBundle(f.bundle, destination);
   const restored = new LpbfRunRepository(path.join(destination, 'runs.sqlite'), { readOnly: true });
   try {
     const record = restored.getProxyCampaign(campaign.campaignId)!;
     assert.deepEqual(record.document, campaign);
-    assert.equal([...restored.allProxyCampaigns()].length, 1);
+    assert.deepEqual(restored.getProxyCampaign(v2.campaignId)!.document, v2);
+    assert.equal([...restored.allProxyCampaigns()].length, 2);
   } finally { restored.close(); }
 
   const completion = path.join(f.bundle, 'bundle.json');

@@ -15,6 +15,7 @@ test('proxy campaign UI collects exactly three archived runs and a case without 
   assert.match(html, /six-section thermal proxy campaign/);
   assert.match(html, /Proxy screening only/);
   assert.match(html, /unvalidated/);
+  assert.match(html, /published nominal diameter adopted as a declared Gaussian model input/i);
   assert.match(html, /aria-label="Archived thermal run 1"/);
   assert.match(html, /aria-label="Archived thermal run 2"/);
   assert.match(html, /aria-label="Archived thermal run 3"/);

@@ -95,6 +95,16 @@ function references(root: string) {
       let campaignCount = 0;
       for (const campaign of runs.allProxyCampaigns()) {
         campaignCount++;
+        if (campaign.document.schemaVersion === 2) {
+          const binding = campaign.document.sourceBinding;
+          const revision = sources.revision(binding.datasetId, binding.revision);
+          const sourceArtifact = revision?.document.artifacts.find(item => item.relativePath === binding.artifactPath);
+          if (!revision || revision.documentSha256 !== binding.documentSha256 || !sourceArtifact
+            || sourceArtifact.sha256 !== binding.artifactSha256 || sourceArtifact.byteSize !== binding.artifactSizeBytes
+            || !sourceArtifacts.has(binding.artifactSha256)) {
+            throw new Error('Campaign Table 4 source artifact binding mismatch');
+          }
+        }
         for (const track of campaign.document.tracks) {
           const identity = track.runIdentity;
           const referenced = runs.get(identity.runId);

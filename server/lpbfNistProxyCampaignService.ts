@@ -31,10 +31,10 @@ const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist
   status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
   numericalConvergenceStatus: 'not-evaluated', comparisonResiduals: null, observationCount: null, reasons });
 
-function validatePython(campaign: unknown, source: unknown): Promise<any> {
+function validatePython(campaign: unknown, source: unknown, expectedBeamDiameterUm: number): Promise<any> {
   return new Promise((resolve, reject) => {
     const python = getHostPython();
-    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"]), allow_nan=False))`;
+    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"], q["expectedBeamDiameterUm"]), allow_nan=False))`;
     const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
     let stdout = '', stderr = '', done = false;
     const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };
@@ -49,7 +49,7 @@ function validatePython(campaign: unknown, source: unknown): Promise<any> {
       catch { fail(new Error('Invalid proxy validation response')); }
     });
     child.stdin.on('error', fail);
-    child.stdin.end(JSON.stringify({ campaign, source }));
+    child.stdin.end(JSON.stringify({ campaign, source, expectedBeamDiameterUm }));
   });
 }
 
@@ -275,7 +275,7 @@ export class LpbfNistProxyCampaignService {
       let sharedRunIdentity: any = null;
       for (let index = 0; index < records.length; index++) {
         const record = records[index], result = JSON.parse(record.document.capture.resultJson);
-        const settings = result.settings || {}, beam = result.measuredBeamProfileEvidence || {};
+        const settings = result.settings || {};
         if (record.runKind === 'gpu-thermal-pilot') {
           return { campaign: null, validation: unavailable([`Archived GPU pilot ${record.document.runId} is separate from CPU-core proxy eligibility.`]) };
         }
@@ -285,7 +285,7 @@ export class LpbfNistProxyCampaignService {
           || result.material?.materialId !== 'in718' || settings.surfaceMode !== 'bare-plate' || settings.tracks !== 1
           || settings.layers !== 1 || settings.trackLength_um !== 10000 || settings.scanAngle_deg !== 0
           || settings.power_W !== row.laserPower_W || settings.speed_mm_s !== row.scanSpeed_mm_s
-          || settings.beamDiameter_um !== row.beamDiameterD4sigma_um || beam.D4sigma_um !== row.beamDiameterD4sigma_um
+          || settings.beamDiameter_um !== row.beamDiameterD4sigma_um
           || !Number.isFinite(settings.preheat_C) || settings.preheat_C < 22.5 || settings.preheat_C > 24.5
           || !Number.isFinite(settings.speed_mm_s) || settings.speed_mm_s <= 0
           || !Array.isArray(result.scanPath) || result.scanPath.length !== 1
@@ -311,13 +311,20 @@ export class LpbfNistProxyCampaignService {
         tracks.push({ simulatedTrackId: `sim-${record.document.runId}`, experimentalTrackId: null,
           replicateKind: 'independent-computational-run', runIdentity: run.runIdentity, observations: run.observations });
       }
-      const campaignId = sha(JSON.stringify({ runIds, caseNumber, revision: link.revision, doc: link.documentSha256 })).slice(0, 32);
-      const campaign = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign', campaignId,
+      const schemaVersion = 2;
+      const campaignId = sha(JSON.stringify({ schemaVersion, runIds, caseNumber, revision: link.revision, doc: link.documentSha256 })).slice(0, 32);
+      const beamInputDeclaration = { status: 'published-source-declared', definition: 'D4sigma',
+        value_um: row.beamDiameterD4sigma_um, mappingStatus: 'conditional-ideal-Gaussian',
+        measuredProfileMatched: false, sourceBinding };
+      const campaign = { schemaVersion, kind: 'lpbf-nist-amb2022-03-proxy-campaign', campaignId,
         benchmark: 'AMB2022-03-TMPG', caseNumber, sourceBinding,
+        beamInputDeclaration,
         claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated', experimentalValidation: false, opticalOperatorMatched: false },
         samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: SECTION_DISTANCES,
-          expectedTrackCount: 3, expectedObservationCount: 6, replicateSemantics: 'independent-computational-runs-only' }, tracks };
-      const validation = await validatePython(campaign, sourceBinding);
+          expectedTrackCount: 3, expectedObservationCount: 6,
+          replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
+        tracks: tracks.map(track => ({ ...track, replicateKind: 'reproducibility-execution' })) };
+      const validation = await validatePython(campaign, sourceBinding, row.beamDiameterD4sigma_um);
       if (validation?.status !== 'proxy-screening-only' || validation.comparisonResiduals !== null
         || validation.experimentalValidation !== false || validation.validationStatus !== 'unvalidated') {
         return { campaign: null, validation: unavailable(Array.isArray(validation?.reasons) ? validation.reasons : ['Python proxy validator returned an invalid result.']) };
