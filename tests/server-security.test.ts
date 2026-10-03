@@ -37,9 +37,9 @@ function run(mw: any, req: any, res: any) {
   return nexted;
 }
 
-test("resolveBindConfig defaults to loopback and refuses open bind without token", () => {
+test("resolveBindConfig defaults to loopback and uses an access code on open bind without token", () => {
   assert.equal(resolveBindConfig({}).host, "127.0.0.1");
-  assert.throws(() => resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0" }), /METALLIKSA_TOKEN/);
+  assert.ok(resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0" }).accessCode);
   const cfg = resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0", METALLIKSA_TOKEN: "s3cret" });
   assert.equal(cfg.token, "s3cret");
   assert.equal(isLoopbackHost("localhost"), true);

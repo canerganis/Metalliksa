@@ -14,11 +14,13 @@ const FALLBACK: RuntimeConfig = {
 };
 
 let cached: RuntimeConfig | null = null;
+let accessRequired = false;
 
 export async function fetchRuntimeConfig(): Promise<RuntimeConfig> {
   if (cached) return cached;
   try {
     const res = await fetch("/api/runtime-config");
+    accessRequired = res.status === 401;
     if (!res.ok) return FALLBACK;
     cached = (await res.json()) as RuntimeConfig;
     return cached;
@@ -30,7 +32,7 @@ export async function fetchRuntimeConfig(): Promise<RuntimeConfig> {
 export function useRuntimeConfig(): RuntimeConfig {
   const [cfg, setCfg] = useState<RuntimeConfig>(cached ?? FALLBACK);
   useEffect(() => {
-    void fetchRuntimeConfig().then(setCfg);
+    void fetchRuntimeConfig().then((c) => setCfg({ ...c }));
   }, []);
   return cfg;
 }
@@ -39,6 +41,13 @@ export function useRuntimeConfig(): RuntimeConfig {
 export const AirgapBanner: React.FC = () => {
   const cfg = useRuntimeConfig();
   const [open, setOpen] = useState(false);
+  if (accessRequired) {
+    return (
+      <div role="alert" className="border-b border-red-500/40 bg-red-500/10 text-red-100 px-3 py-2 text-xs font-mono">
+        Access code required: open the login link printed in the server console.
+      </div>
+    );
+  }
   if (!cfg.airgapped) return null;
 
   return (

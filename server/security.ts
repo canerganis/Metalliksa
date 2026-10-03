@@ -14,20 +14,28 @@ export interface BindConfig {
   host: string;
   token: string | null;
   loopback: boolean;
+  /** Random one-time login code, generated only for a non-loopback bind without METALLIKSA_TOKEN. */
+  accessCode: string | null;
 }
 
-/** Resolve bind host and token. Throws when a non-loopback bind has no token. */
+/**
+ * Resolve bind host and token. A non-loopback bind without METALLIKSA_TOKEN is allowed: a random
+ * access code is generated (memory only) and the caller prints a login URL for it.
+ */
 export function resolveBindConfig(env: Record<string, string | undefined>): BindConfig {
   const host = (env.METALLIKSA_HOST || "").trim() || "127.0.0.1";
   const token = (env.METALLIKSA_TOKEN || "").trim() || null;
   const loopback = isLoopbackHost(host);
-  if (!loopback && !token) {
-    throw new Error(
-      `Refusing to bind to non-loopback host "${host}" without METALLIKSA_TOKEN. ` +
-        `Set METALLIKSA_TOKEN to a strong secret or bind to 127.0.0.1.`,
-    );
-  }
-  return { host, token, loopback };
+  const accessCode = !loopback && !token ? crypto.randomBytes(24).toString("base64url") : null;
+  return { host, token, loopback, accessCode };
+}
+
+/** Login URL printed to the console. Wildcard binds are shown as localhost. */
+export function buildLoginUrl(host: string, port: number, code: string): string {
+  const h = host.trim();
+  const wildcard = h === "0.0.0.0" || h === "::" || h === "[::]";
+  const shown = wildcard ? "localhost" : h.includes(":") && !h.startsWith("[") ? `[${h}]` : h;
+  return `http://${shown}:${port}/login?code=${encodeURIComponent(code)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,24 +101,224 @@ export function tokenMatches(expected: string, header: string | undefined): bool
 }
 
 /**
- * True when the request is authenticated. With no token configured (loopback-only
- * default) every request is considered local and therefore authenticated.
+ * True when the request is authenticated. With no token and no login configured (loopback-only
+ * default) every request is considered local and therefore authenticated. A valid Bearer token or
+ * a valid session cookie counts.
  */
-export function isAuthenticated(req: Request, token: string | null): boolean {
-  if (!token) return true;
-  return tokenMatches(token, req.headers.authorization);
+export function isAuthenticated(req: Request, token: string | null, auth?: LoginAuth | null): boolean {
+  if (!token && !auth) return true;
+  return authMethod(req, token, auth) !== null;
 }
 
-export function tokenAuth(token: string | null) {
+function authMethod(req: Request, token: string | null, auth?: LoginAuth | null): "bearer" | "session" | null {
+  if (token && tokenMatches(token, req.headers.authorization)) return "bearer";
+  if (auth && auth.hasValidSession(req)) return "session";
+  return null;
+}
+
+/** Same-origin check for cookie-authenticated mutating requests (CSRF defence). Missing Origin is rejected. */
+export function isSameOrigin(req: Request): boolean {
+  const origin = req.headers.origin;
+  const host = req.headers.host;
+  if (typeof origin !== "string" || !origin || typeof host !== "string" || !host) return false;
+  try {
+    return new URL(origin).host.toLowerCase() === host.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+export function tokenAuth(token: string | null, auth?: LoginAuth | null) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!token) return next();
+    if (!token && !auth) return next();
     const p = (req.originalUrl || req.url || "").split("?")[0].toLowerCase();
-    // Only API routes are protected; the SPA shell and /api/health stay reachable.
+    // Only API routes are protected; the SPA shell, /login and /api/health stay reachable.
     if (!p.startsWith("/api/") || p === "/api/health") return next();
-    if (isAuthenticated(req, token)) return next();
+    const method = authMethod(req, token, auth);
+    if (method === "bearer") return next();
+    if (method === "session") {
+      if (MUTATING_METHODS.has(String(req.method).toUpperCase()) && !isSameOrigin(req)) {
+        return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN", requestId: getRequestId(req) });
+      }
+      return next();
+    }
     res.setHeader("WWW-Authenticate", "Bearer");
     return res.status(401).json({ error: "Authentication required.", code: "UNAUTHORIZED", requestId: getRequestId(req) });
   };
+}
+
+// ---------------------------------------------------------------------------
+// Login (Jupyter-style): access code -> in-memory session cookie
+// ---------------------------------------------------------------------------
+export const SESSION_COOKIE = "metalliksa_session";
+
+export interface LoginAuthOptions {
+  /** Static METALLIKSA_TOKEN; also accepted as a login code. */
+  token?: string | null;
+  /** Auto-generated one-time code; invalidated after the first successful login. */
+  accessCode?: string | null;
+  sessionTtlMs?: number;
+  maxSessions?: number;
+  loginLimit?: number;
+  loginWindowMs?: number;
+  now?: () => number;
+}
+
+export class LoginAuth {
+  private readonly token: string | null;
+  private accessCode: string | null;
+  private readonly ttlMs: number;
+  private readonly maxSessions: number;
+  private readonly loginLimit: number;
+  private readonly loginWindowMs: number;
+  private readonly now: () => number;
+  private readonly sessions = new Map<string, number>();
+  private readonly attempts = new Map<string, { count: number; resetAt: number }>();
+
+  constructor(opts: LoginAuthOptions = {}) {
+    this.token = opts.token || null;
+    this.accessCode = opts.accessCode || null;
+    this.ttlMs = opts.sessionTtlMs ?? 12 * 60 * 60 * 1000;
+    this.maxSessions = opts.maxSessions ?? 1000;
+    this.loginLimit = opts.loginLimit ?? 10;
+    this.loginWindowMs = opts.loginWindowMs ?? 60_000;
+    this.now = opts.now ?? Date.now;
+  }
+
+  get ttlSeconds(): number {
+    return Math.floor(this.ttlMs / 1000);
+  }
+
+  /** Constant-time check against the token and the (still unused) auto code. */
+  checkCode(candidate: string | null | undefined): "token" | "auto" | null {
+    if (!candidate) return null;
+    const d = digest(candidate);
+    // Evaluate both comparisons so timing does not reveal which one matched.
+    const tokenOk = this.token ? crypto.timingSafeEqual(d, digest(this.token)) : false;
+    const autoOk = this.accessCode ? crypto.timingSafeEqual(d, digest(this.accessCode)) : false;
+    if (tokenOk) return "token";
+    if (autoOk) return "auto";
+    return null;
+  }
+
+  /** Called after a successful login: auto codes are single use, the static token is not. */
+  consume(kind: "token" | "auto") {
+    if (kind === "auto") this.accessCode = null;
+  }
+
+  createSession(): string {
+    const id = crypto.randomBytes(32).toString("base64url");
+    const t = this.now();
+    if (this.sessions.size >= this.maxSessions) {
+      for (const [k, exp] of this.sessions) if (exp <= t) this.sessions.delete(k);
+      while (this.sessions.size >= this.maxSessions) {
+        const oldest = this.sessions.keys().next().value;
+        if (oldest === undefined) break;
+        this.sessions.delete(oldest);
+      }
+    }
+    this.sessions.set(digestHex(id), t + this.ttlMs);
+    return id;
+  }
+
+  isValidSession(id: string | null | undefined): boolean {
+    if (!id) return false;
+    const key = digestHex(id);
+    const exp = this.sessions.get(key);
+    if (exp === undefined) return false;
+    if (exp <= this.now()) {
+      this.sessions.delete(key);
+      return false;
+    }
+    return true;
+  }
+
+  deleteSession(id: string | null | undefined) {
+    if (id) this.sessions.delete(digestHex(id));
+  }
+
+  hasValidSession(req: Request): boolean {
+    return this.isValidSession(readCookie(req.headers.cookie, SESSION_COOKIE));
+  }
+
+  /** Fixed-window limiter for /login attempts. Returns true when the attempt is allowed. */
+  allowLoginAttempt(ip: string): boolean {
+    const t = this.now();
+    if (this.attempts.size > 10_000) {
+      for (const [k, b] of this.attempts) if (b.resetAt <= t) this.attempts.delete(k);
+    }
+    let b = this.attempts.get(ip);
+    if (!b || b.resetAt <= t) {
+      b = { count: 0, resetAt: t + this.loginWindowMs };
+      this.attempts.set(ip, b);
+    }
+    b.count += 1;
+    return b.count <= this.loginLimit;
+  }
+}
+
+function digestHex(value: string): string {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+export function readCookie(header: string | undefined, name: string): string | null {
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const i = part.indexOf("=");
+    if (i < 0) continue;
+    if (part.slice(0, i).trim() === name) return part.slice(i + 1).trim() || null;
+  }
+  return null;
+}
+
+function sessionCookie(req: Request, value: string, maxAgeSeconds: number): string {
+  const secure = (req as any).secure ? "; Secure" : "";
+  return `${SESSION_COOKIE}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAgeSeconds}${secure}`;
+}
+
+function sendPlain(res: Response, status: number, body: string) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  (res as any).end(body);
+}
+
+/** Register GET /login and POST /logout. Express matches paths case-insensitively. */
+export function installLogin(app: Express, auth: LoginAuth) {
+  app.get("/login", (req: Request, res: Response) => {
+    const ip = req.ip || req.socket?.remoteAddress || "unknown";
+    if (!auth.allowLoginAttempt(ip)) {
+      res.setHeader("Retry-After", "60");
+      return sendPlain(res, 429, "Too many login attempts. Try again later.");
+    }
+    let code: string | null = null;
+    try {
+      code = new URL(req.originalUrl || req.url || "", "http://localhost").searchParams.get("code");
+    } catch {
+      code = null;
+    }
+    const kind = auth.checkCode(code);
+    if (!kind) return sendPlain(res, 401, "Login required");
+    auth.consume(kind);
+    const id = auth.createSession();
+    res.setHeader("Set-Cookie", sessionCookie(req, id, auth.ttlSeconds));
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Location", "/");
+    res.statusCode = 303;
+    (res as any).end();
+  });
+
+  app.post("/logout", (req: Request, res: Response) => {
+    // A cookie-authenticated mutating request must be same-origin.
+    if (!isSameOrigin(req)) {
+      return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN" });
+    }
+    auth.deleteSession(readCookie(req.headers.cookie, SESSION_COOKIE));
+    res.setHeader("Set-Cookie", sessionCookie(req, "", 0));
+    res.status(200).json({ ok: true });
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -194,10 +402,15 @@ export function isOwnKey(obj: object, key: unknown): key is string {
  * Install the pre-route security stack. Used by server.ts and by route tests so both
  * exercise the same middleware order.
  */
-export function applySecurity(app: Express, token: string | null, opts: { log?: (line: string) => void; rate?: RateLimitOptions } = {}) {
+export function applySecurity(
+  app: Express,
+  token: string | null,
+  opts: { log?: (line: string) => void; rate?: RateLimitOptions; auth?: LoginAuth | null } = {},
+) {
   app.use(requestId);
   app.use(accessLog(opts.log));
   app.use(securityHeaders);
   app.use(rateLimit(opts.rate));
-  app.use(tokenAuth(token));
+  if (opts.auth) installLogin(app, opts.auth);
+  app.use(tokenAuth(token, opts.auth));
 }

@@ -1805,7 +1805,14 @@ class PythonComputationService {
       body: JSON.stringify({ scriptCode, data, title }),
     });
     if (!res.ok) {
-      throw new Error(`Python script execution failed with status HTTP ${res.status}`);
+      let serverMessage = "";
+      try {
+        const body = await res.json();
+        if (body?.code === "SCRIPT_EXEC_DISABLED" && typeof body.error === "string") serverMessage = body.error;
+      } catch {
+        // Non-JSON error body: fall back to the generic message.
+      }
+      throw new Error(serverMessage || `Python script execution failed with status HTTP ${res.status}`);
     }
     return await res.json();
   }
