@@ -7,6 +7,7 @@ import { isOwnKey } from "../server/security.ts";
 export const orchestratorRouter = Router();
 const MAX_SOURCE_URL_CHARS = 2048;
 const MAX_PLAN_FIELD_CHARS = 4000;
+// Evaluated once at import time; the server/airgap.ts guards read process.env on every call, so changing AIRGAPPED at run time only affects the guards (restart to refresh this route flag).
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
 function approvedSourceForUrl(rawUrl: string): keyof typeof APPROVED_SOURCE_HOSTS | null {

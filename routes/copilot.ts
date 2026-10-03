@@ -4,6 +4,7 @@ import { airgapDenyPayload, isAirgappedFromEnv } from "../server/airgap.ts";
 
 export const copilotRouter = Router();
 
+// Evaluated once at import time; the server/airgap.ts guards read process.env on every call, so changing AIRGAPPED at run time only affects the guards (restart to refresh this route flag).
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
 const MAX_PROMPT_CHARS = 8000;
