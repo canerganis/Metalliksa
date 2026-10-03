@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import type { LpbfSourceDocument } from '../src/types/lpbfSource';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -124,7 +125,7 @@ test('IN625 worker capture shape round-trips through source-bound run preview', 
   mkdirSync(sourceRoot); mkdirSync(jobRoot);
   const sourceRepo = new LpbfSourceRepository(path.join(sourceRoot, 'metadata.sqlite'));
   const sourceEntry = in625BareplateScreeningCatalogEntry();
-  const sourceDocument = sourceEntry.loadDocument();
+  const sourceDocument = sourceEntry.loadDocument() as LpbfSourceDocument; // LpbfSourceCatalogEntry.loadDocument is typed unknown; catalogs return validated source documents
   const sourceObjects = new LpbfArtifactStore(path.join(sourceRoot, 'artifacts'));
   for (const artifact of sourceDocument.artifacts) await sourceObjects.putFile(sourceEntry.sourceRoot, artifact.relativePath, artifact);
   const sourceRevision = sourceRepo.save(sourceDocument, 0);

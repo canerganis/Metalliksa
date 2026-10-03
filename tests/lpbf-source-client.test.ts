@@ -45,8 +45,8 @@ test('preview is invalidated by concurrent metadata revision', async t => {
 });
 test('IN625 screening source preview is accepted without upgrading its evidence status', async t => {
   const in625Id = 'in625-bareplate-screening-local-v1';
-  const in625Document = { ...document, datasetId: in625Id, materialId: 'in625',
-    sourceContext: { evidence_status: 'unreviewed-source-archive', density_assumption: { lot_matched: false } } } as const;
+  const in625Document = { ...document, artifacts: [...document.artifacts], datasetId: in625Id, materialId: 'in625' as const,
+    sourceContext: { evidence_status: 'unreviewed-source-archive', density_assumption: { lot_matched: false } } };
   const in625Preview: SourcePreview = { document: in625Document, documentSha256: hash, expectedRevision: 0,
     artifactCount: 1, byteSize: 12, evidenceStatus: 'unreviewed-source-archive', artifactIntegrity: 'verified-at-dry-run' };
   responses(t, [{ body: in625Preview }, { body: { current: null } }]);
