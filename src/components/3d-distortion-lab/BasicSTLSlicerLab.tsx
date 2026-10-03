@@ -437,7 +437,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     const segments = activeSlice.segments;
     if (segments.length === 0) {
       ctx.fillStyle = "#64748b";
-      ctx.font = "13px JetBrains Mono, monospace";
+      ctx.font = "13px Fira Code, monospace";
       ctx.textAlign = "center";
       ctx.fillText(
         `No cross-sectional geometry intersection at Z = ${currentLayerZ.toFixed(2)} mm (Layer ${activeLayerIndex}/${stackSummary.totalLayers})`,
@@ -545,7 +545,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
       ctx.setLineDash([]);
 
       ctx.fillStyle = "#f59e0b";
-      ctx.font = "9px JetBrains Mono, monospace";
+      ctx.font = "9px Fira Code, monospace";
       ctx.fillText(
         `ΔX: ${(bb.maxX - bb.minX).toFixed(1)} mm × ΔY: ${(bb.maxY - bb.minY).toFixed(1)} mm`,
         bx1,
@@ -565,7 +565,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
       ctx.setLineDash([]);
 
       ctx.fillStyle = "#10b981";
-      ctx.font = "10px JetBrains Mono, monospace";
+      ctx.font = "10px Fira Code, monospace";
       ctx.fillText("⮞ Recoater Wiper Blade Sweep Axis (+X)", 30, 24);
     }
 
@@ -584,7 +584,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     ctx.stroke();
 
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "9px JetBrains Mono, monospace";
+    ctx.font = "9px Fira Code, monospace";
     ctx.fillText(`${barLength_mm} mm`, 25 + barLength_px / 2 - 12, height - 12);
   }, [
     workspaceVisible,
