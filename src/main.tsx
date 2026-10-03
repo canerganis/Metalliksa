@@ -11,7 +11,10 @@ import '@fontsource/fira-code/600.css';
 import '@fontsource/fira-code/700.css';
 import App from './App.tsx';
 import './index.css';
+import { installApiUnauthorizedWatcher } from './components/AirgapBanner.tsx';
 import { DigitalTwinProvider } from './context/DigitalTwinContext.tsx';
+
+installApiUnauthorizedWatcher();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
