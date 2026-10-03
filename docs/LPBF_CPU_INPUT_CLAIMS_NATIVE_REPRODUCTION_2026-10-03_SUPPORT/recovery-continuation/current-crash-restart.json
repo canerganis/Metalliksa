@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "purpose": "bounded lazy worker recovery continuation after the pinned owner-only crash",
+  "candidate": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "nodeBefore": {
+    "pid": 22812,
+    "ppid": 39020,
+    "created": 1791025718.9152389,
+    "exe": "C:\\Program Files\\nodejs\\node.exe",
+    "cmdline": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "dist/server.cjs"
+    ],
+    "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003"
+  },
+  "endpoint": "http://127.0.0.1:3032/api/lpbf/jobs/28a998c4c3464ae583f884decd20dffe",
+  "preflightGuard": {
+    "sourceFiles": 1579,
+    "buildFiles": 126,
+    "allMatched": true,
+    "serverEntrySha256": "5f6c96bbf2b9429e533772b0d6a689d6d7f8bf81ac87309ec021a8ef87b9f535"
+  },
+  "preRestartPartials": {
+    "field-coordinates.bin": {
+      "bytes": 359856,
+      "sha256": "99a585a3c18cec9ba3ed9869944cab47fd8c71f2ea44670d79c612788ebb3b48"
+    },
+    "field-frame-000.bin": {
+      "bytes": 119952,
+      "sha256": "626de5457e9e1d555fe70ba2f39dc9e8b9428615554581ab5420fa0623a8fad1"
+    },
+    "field-frame-001.bin": {
+      "bytes": 119952,
+      "sha256": "f2fd28c4460e27352faf251fc8fcbad1da27921ff5ff5bfcdd0cacdaa25aa8fe"
+    },
+    "field-frame-002.bin": {
+      "bytes": 119952,
+      "sha256": "455820a9ab5b708d3df169505637aff69bdd8707814448477605dc1451bb1576"
+    },
+    "field-frame-003.bin": {
+      "bytes": 119952,
+      "sha256": "30587a6d7665edeb25f803d078ea749e58afbf2c7c292425ca42d34a1e8130ec"
+    },
+    "field-frame-004.bin": {
+      "bytes": 119952,
+      "sha256": "d9dcdaba232be9e9bbcd96235fd695f31228ad71878dd49905574ab547a8670b"
+    }
+  },
+  "postKillHttpRequestedBeforeThisSequence": false,
+  "attempts": [
+    {
+      "number": 1,
+      "httpStatus": 200,
+      "elapsed_s": 1.25,
+      "body": {
+        "id": "28a998c4c3464ae583f884decd20dffe",
+        "cache_key": "07b051df868f3e29d714da63e74a1941a5a3e9974440cc6b6f7161d8e8765303",
+        "status": "failed",
+        "progress": 0.06675000000000092,
+        "log": "{\"progress\": 8.333333333333332e-05, \"message\": \"step=1 t=1e-07s peak=483.8K cells=29988\"}\n{\"progress\": 0.01675, \"message\": \"step=201 t=2.01e-05s peak=1730.8K cells=29988\"}\n{\"progress\": 0.033416666666666775, \"message\": \"step=401 t=4.01e-05s peak=2555.1K cells=29988\"}\n{\"progress\": 0.05008333333333385, \"message\": \"step=601 t=6.01e-05s peak=2898.4K cells=29988\"}\n{\"progress\": 0.06675000000000092, \"message\": \"step=801 t=8.01e-05s peak=3012.4K cells=29988\"}\n",
+        "error": "Worker restarted during execution",
+        "created": 1791026401.0084236,
+        "requestSummary": {
+          "jobType": null,
+          "mode": "standard",
+          "backend": "reference",
+          "material": "Inconel 718"
+        },
+        "partialArtifacts": {
+          "status": "retained-unverified",
+          "fileCount": 6,
+          "totalBytes": 959616
+        }
+      }
+    }
+  ],
+  "stage": "lazy-restart-and-partial-quarantine-passed",
+  "interruptedJobAfterRestart": {
+    "id": "28a998c4c3464ae583f884decd20dffe",
+    "cache_key": "07b051df868f3e29d714da63e74a1941a5a3e9974440cc6b6f7161d8e8765303",
+    "status": "failed",
+    "progress": 0.06675000000000092,
+    "log": "{\"progress\": 8.333333333333332e-05, \"message\": \"step=1 t=1e-07s peak=483.8K cells=29988\"}\n{\"progress\": 0.01675, \"message\": \"step=201 t=2.01e-05s peak=1730.8K cells=29988\"}\n{\"progress\": 0.033416666666666775, \"message\": \"step=401 t=4.01e-05s peak=2555.1K cells=29988\"}\n{\"progress\": 0.05008333333333385, \"message\": \"step=601 t=6.01e-05s peak=2898.4K cells=29988\"}\n{\"progress\": 0.06675000000000092, \"message\": \"step=801 t=8.01e-05s peak=3012.4K cells=29988\"}\n",
+    "error": "Worker restarted during execution",
+    "created": 1791026401.0084236,
+    "requestSummary": {
+      "jobType": null,
+      "mode": "standard",
+      "backend": "reference",
+      "material": "Inconel 718"
+    },
+    "partialArtifacts": {
+      "status": "retained-unverified",
+      "fileCount": 6,
+      "totalBytes": 959616
+    }
+  },
+  "newWorkerProcesses": {
+    "launcher": {
+      "pid": 13204,
+      "ppid": 22812,
+      "created": 1791027139.5307114,
+      "exe": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-u",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003\\python\\lpbf_worker.py"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+      "jobRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\jobs"
+    },
+    "owner": {
+      "pid": 13172,
+      "ppid": 13204,
+      "created": 1791027139.5755088,
+      "exe": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "cmdline": [
+        "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-u",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003\\python\\lpbf_worker.py"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+      "jobRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\jobs"
+    },
+    "verifiedPrivateRoots": {
+      "METALLIKSA_JOB_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\jobs",
+      "METALLIKSA_LPBF_RUN_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\runs",
+      "METALLIKSA_LPBF_SOURCE_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\sources",
+      "METALLIKSA_LPBF_BUNDLE_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\bundles",
+      "RESEARCH_REGISTRY_DIR": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\registry",
+      "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+      "METALLIX_IPC_SOCK": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\ipc.sock"
+    }
+  },
+  "nodeAfter": {
+    "pid": 22812,
+    "ppid": 39020,
+    "created": 1791025718.9152389,
+    "exe": "C:\\Program Files\\nodejs\\node.exe",
+    "cmdline": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "dist/server.cjs"
+    ],
+    "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003"
+  },
+  "queueStatusReadOnly": {
+    "28a998c4c3464ae583f884decd20dffe": "failed",
+    "682b6e94e1874174b2e08ab14f4713b9": "completed"
+  },
+  "postRestartPartials": {
+    "field-coordinates.bin": {
+      "bytes": 359856,
+      "sha256": "99a585a3c18cec9ba3ed9869944cab47fd8c71f2ea44670d79c612788ebb3b48"
+    },
+    "field-frame-000.bin": {
+      "bytes": 119952,
+      "sha256": "626de5457e9e1d555fe70ba2f39dc9e8b9428615554581ab5420fa0623a8fad1"
+    },
+    "field-frame-001.bin": {
+      "bytes": 119952,
+      "sha256": "f2fd28c4460e27352faf251fc8fcbad1da27921ff5ff5bfcdd0cacdaa25aa8fe"
+    },
+    "field-frame-002.bin": {
+      "bytes": 119952,
+      "sha256": "455820a9ab5b708d3df169505637aff69bdd8707814448477605dc1451bb1576"
+    },
+    "field-frame-003.bin": {
+      "bytes": 119952,
+      "sha256": "30587a6d7665edeb25f803d078ea749e58afbf2c7c292425ca42d34a1e8130ec"
+    },
+    "field-frame-004.bin": {
+      "bytes": 119952,
+      "sha256": "d9dcdaba232be9e9bbcd96235fd695f31228ad71878dd49905574ab547a8670b"
+    }
+  },
+  "postGuard": {
+    "sourceFiles": 1579,
+    "buildFiles": 126,
+    "allMatched": true,
+    "serverEntrySha256": "5f6c96bbf2b9429e533772b0d6a689d6d7f8bf81ac87309ec021a8ef87b9f535"
+  },
+  "restartProves": "worker PID differs from terminated generation; Node stayed alive; interrupted record failed with the recorded restart reason"
+}
