@@ -101,6 +101,84 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     capture: { schemaVersion: 1, jobId: floatId, resultJson: floatResultJson,
       inputJson: JSON.stringify(baseResult.settings), materialJson, contractStatus: 'core-v1-bound' },
     sources: [exactLink] });
+
+  const proxyRunIds = ['4', '5', '6'].map(value => value.repeat(32));
+  const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0'].map(value => value.repeat(16)));
+  const proxyResultJson = new Map<string, string>();
+  const tableCase = JSON.parse(readFileSync(path.join(tableRoot, artifact.relativePath), 'utf8'))
+    .cases.find((item: any) => item.caseNumber === '0');
+  function proxySections(trackIndex: number,
+    corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction') {
+    return [4.9, 6.0].map((distance, sectionIndex) => {
+      const xCoordinate = -0.005 + distance * 1e-3;
+      const linear = trackIndex === 2;
+      const sourcePlaneX = linear ? [xCoordinate - 1e-4, xCoordinate + 1e-4] : [xCoordinate];
+      return {
+        recordId: sectionIndex === 0 ? 'single-line-x-4p9mm' : 'single-line-x-6p0mm',
+        status: 'thermal-proxy',
+        operator: corruption === 'operator' && sectionIndex === 0
+          ? 'unverified-operator' : 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+        scanLineScope: 'one simulated +X track; not experimental repeats',
+        distanceFromScanStart_mm: corruption === 'distance' && sectionIndex === 0 ? 4.8 : distance,
+        xCoordinate_m: corruption === 'x-coordinate' && sectionIndex === 0 ? xCoordinate + 1e-4 : xCoordinate,
+        scanStartX_m: -0.005,
+        interpolationOperator: linear
+          ? 'linear-interpolation-between-accepted-peak-temperature-planes-v1' : 'exact-cell-center',
+        sourcePlaneIndices: linear ? [Math.round(distance * 10), Math.round(distance * 10) + 1] : [Math.round(distance * 10)],
+        sourcePlaneX_m: sourcePlaneX,
+        interpolationFraction: linear
+          ? corruption === 'linear-fraction' && sectionIndex === 0 ? 0.25 : 0.5 : 0,
+        width_um: 140 + trackIndex + sectionIndex,
+        depth_um: 120 + trackIndex + sectionIndex,
+        location: `section ${distance.toFixed(1)} mm from +X scan start`,
+        temporalAggregation: 'accepted-step maximum per source X plane, then spatially interpolated',
+        contourOperator: 'linear-liquidus-crossings-between-cell-centers-v1',
+        sourcePlaneX_um: sourcePlaneX.map(value => value * 1e6),
+        sampleCells: 4,
+        evidenceScope: 'Numerical thermal proxy; no etched-boundary or experimental validation; one simulated line only',
+      };
+    });
+  }
+  function saveProxyRun(runId: string, trackIndex: number,
+    corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction') {
+    const settings = {
+      backend: 'auto',
+      power_W: tableCase.laserPower_W, speed_mm_s: tableCase.scanSpeed_mm_s,
+      beamDiameter_um: tableCase.beamDiameterD4sigma_um, preheat_C: 23.5,
+      surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0,
+    };
+    const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision'),
+      name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture' };
+    const inputJson = JSON.stringify(settings), materialJsonForRun = JSON.stringify(material);
+    const result = {
+      ...baseResult, runKind: 'transient-thermal', requestedMode: 'standard', effectiveMode: 'standard',
+      settings, material,
+      solver: { ...baseResult.solver, id: 'enthalpy-fv-6' },
+      energyBalance: { input_J: 0, losses_J: 0, stored_J: 0, relativeError: 0 },
+      massBalance: { initial_kg: 0, deposited_kg: 0, final_kg: 0, relativeError: 0, scope: 'synthetic fixture' },
+      phaseAudit: { activeVolume_m3: 0, liquidVolume_m3: 0, solidVolume_m3: 0,
+        minFraction: 0, maxFraction: 0, scope: 'synthetic fixture' },
+      coreContract: { ...core, modelId: 'stationary-enthalpy-conduction-v1', effectiveMode: 'standard',
+        actualBackend: 'numpy-reference', solverId: 'enthalpy-fv-6',
+        resolvedPhysics: { conduction: true, transient: true, latentHeat: true,
+          momentum: false, freeSurface: false, evaporation: false },
+        inputSha256: sha(inputJson), materialSha256: sha(materialJsonForRun) },
+      measuredBeamProfileEvidence: { D4sigma_um: tableCase.beamDiameterD4sigma_um },
+      scanPath: [{ start: [-0.005, 0], end: [0.005, 0], start_s: 0,
+        end_s: 10 / tableCase.scanSpeed_mm_s }],
+      barePlateSectionObservations: proxySections(trackIndex, corruption),
+    };
+    const resultJson = JSON.stringify(result);
+    proxyResultJson.set(runId, resultJson);
+    runs.save({ schemaVersion: 1, runId,
+      capture: { schemaVersion: 1, jobId: runId, resultJson, inputJson, materialJson: materialJsonForRun,
+        contractStatus: 'core-v1-bound', runKind: 'transient-thermal' },
+      sources: [exactLink] });
+  }
+  proxyRunIds.forEach((runId, index) => saveProxyRun(runId, index));
+  const corruptions = ['distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
+  malformedProxyRunIds.forEach((runId, index) =>
+    saveProxyRun(runId, index === 3 ? 2 : index, corruptions[index]));
   runs.close(); sources.close();
 
   const app = express();
@@ -123,6 +201,48 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber: '0' }) });
     return { status: response.status, body: await response.json() };
   }
+
+  const proxyPreview = await postCampaignPreview(proxyRunIds);
+  assert.equal(proxyPreview.status, 200);
+  assert.equal(proxyPreview.body.validation.status, 'proxy-screening-only', JSON.stringify(proxyPreview.body.validation));
+  assert.equal(proxyPreview.body.validation.comparisonResiduals, null);
+  assert.equal(proxyPreview.body.campaign.claimBoundary.opticalOperatorMatched, false);
+  assert.equal(proxyPreview.body.campaign.claimBoundary.experimentalValidation, false);
+  assert.equal(proxyPreview.body.campaign.tracks.length, 3);
+  for (let index = 0; index < proxyRunIds.length; index++) {
+    const runId = proxyRunIds[index];
+    const track = proxyPreview.body.campaign.tracks[index];
+    const resultJson = proxyResultJson.get(runId)!;
+    assert.equal(track.runIdentity.runId, runId);
+    assert.equal(track.runIdentity.resultArtifact.path, 'capture/result.json');
+    assert.equal(track.runIdentity.resultArtifact.sha256, sha(resultJson));
+    assert.equal(track.runIdentity.resultArtifact.size_bytes, Buffer.byteLength(resultJson));
+    assert.deepEqual(track.observations.map((item: any) => item.distanceFromScanStart_mm), [4.9, 6.0]);
+    assert.deepEqual(track.observations.map((item: any) => item.geometry.width_um), [140 + index, 141 + index]);
+    assert.deepEqual(track.observations.map((item: any) => item.geometry.depth_um), [120 + index, 121 + index]);
+    assert.ok(track.observations.every((item: any) => item.provenance.runIdentity.runId === runId));
+  }
+  assert.equal(proxyPreview.body.campaign.tracks[2].observations[0].operator.interpolationOperatorId,
+    'linear-interpolation-between-accepted-peak-temperature-planes-v1');
+
+  for (const malformedRunId of malformedProxyRunIds) {
+    const malformedProxy = await postCampaignPreview([proxyRunIds[0], proxyRunIds[1], malformedRunId]);
+    assert.equal(malformedProxy.status, 200);
+    assert.equal(malformedProxy.body.campaign, null,
+      'the service must reject malformed source section metadata instead of replacing it with expected values');
+    assert.equal(malformedProxy.body.validation.status, 'unavailable');
+  }
+
+  const createProxy = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds,
+      caseNumber: '0', previewSha256: proxyPreview.body.previewSha256 }) });
+  assert.equal(createProxy.status, 200);
+  const createdProxy = await createProxy.json();
+  assert.deepEqual(createdProxy.campaign, proxyPreview.body.campaign);
+  assert.deepEqual(createdProxy.record.document, proxyPreview.body.campaign);
+  const listedProxy = await fetch(`${endpoint}/proxy-campaigns`, { cache: 'no-store' });
+  assert.equal(listedProxy.status, 200);
+  assert.equal((await listedProxy.json()).length, 1);
 
   const valid = await post(boundId, { caseNumber: '0' });
   assert.equal(valid.status, 200);

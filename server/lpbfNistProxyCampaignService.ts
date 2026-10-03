@@ -57,6 +57,8 @@ function exactCase(table: any, caseNumber: string) {
 function runCampaignIdentity(record: RunRecord, result: any, observations: any[], sourceBinding: any) {
   const core = result.coreContract, material = result.material;
   if (!core || !material || !Array.isArray(observations) || observations.length !== 2) return null;
+  const scanStartX = result.scanPath?.[0]?.start?.[0];
+  if (!Number.isFinite(scanStartX)) return null;
   const captureBytes = Buffer.from(record.document.capture.resultJson, 'utf8');
   const runIdentity = {
     runId: record.document.runId,
@@ -75,9 +77,43 @@ function runCampaignIdentity(record: RunRecord, result: any, observations: any[]
     if (!sample || sample.status !== 'thermal-proxy' || !Number.isFinite(sample.width_um)
       || !Number.isFinite(sample.depth_um) || sample.width_um <= 0 || sample.depth_um <= 0) return null;
     const interp = sample.interpolationOperator;
-    if (!['exact-cell-center', 'linear-interpolation-between-accepted-peak-temperature-planes-v1'].includes(interp)) return null;
+    const expectedX = scanStartX + SECTION_DISTANCES[index] * 1e-3;
+    const close = (left: unknown, right: number, tolerance = 1e-12) =>
+      typeof left === 'number' && Number.isFinite(left) && Math.abs(left - right) <= tolerance;
+    if (sample.operator !== SECTION_OPERATOR
+      || sample.scanLineScope !== 'one simulated +X track; not experimental repeats'
+      || !close(sample.distanceFromScanStart_mm, SECTION_DISTANCES[index], 1e-9)
+      || !close(sample.scanStartX_m, scanStartX)
+      || !close(sample.xCoordinate_m, expectedX)
+      || sample.temporalAggregation !== 'accepted-step maximum per source X plane, then spatially interpolated'
+      || sample.contourOperator !== CONTOUR_OPERATOR
+      || !Number.isSafeInteger(sample.sampleCells) || sample.sampleCells < 1
+      || sample.evidenceScope !== 'Numerical thermal proxy; no etched-boundary or experimental validation; one simulated line only'
+      || !Array.isArray(sample.sourcePlaneIndices) || !Array.isArray(sample.sourcePlaneX_m)
+      || !Array.isArray(sample.sourcePlaneX_um)
+      || sample.sourcePlaneIndices.some((value: unknown) => !Number.isSafeInteger(value) || Number(value) < 0)
+      || sample.sourcePlaneX_m.some((value: unknown) => typeof value !== 'number' || !Number.isFinite(value))
+      || sample.sourcePlaneX_um.some((value: unknown) => typeof value !== 'number' || !Number.isFinite(value))) return null;
+    if (interp === 'exact-cell-center') {
+      if (sample.sourcePlaneIndices.length !== 1 || sample.sourcePlaneX_m.length !== 1
+        || sample.sourcePlaneX_um.length !== 1 || sample.interpolationFraction !== 0
+        || !close(sample.sourcePlaneX_m[0], expectedX)
+        || !close(sample.sourcePlaneX_um[0], expectedX * 1e6, 1e-6)) return null;
+    } else if (interp === 'linear-interpolation-between-accepted-peak-temperature-planes-v1') {
+      if (sample.sourcePlaneIndices.length !== 2 || sample.sourcePlaneX_m.length !== 2
+        || sample.sourcePlaneX_um.length !== 2
+        || sample.sourcePlaneIndices[1] !== sample.sourcePlaneIndices[0] + 1
+        || sample.sourcePlaneX_m[0] > expectedX || sample.sourcePlaneX_m[1] < expectedX
+        || sample.sourcePlaneX_m[0] >= sample.sourcePlaneX_m[1]
+        || typeof sample.interpolationFraction !== 'number' || !Number.isFinite(sample.interpolationFraction)
+        || sample.interpolationFraction < 0 || sample.interpolationFraction > 1
+        || !close(sample.sourcePlaneX_m[0] + (sample.sourcePlaneX_m[1] - sample.sourcePlaneX_m[0])
+          * sample.interpolationFraction, expectedX)
+        || !close(sample.sourcePlaneX_um[0], sample.sourcePlaneX_m[0] * 1e6, 1e-6)
+        || !close(sample.sourcePlaneX_um[1], sample.sourcePlaneX_m[1] * 1e6, 1e-6)) return null;
+    } else return null;
     converted.push({ sectionId: SECTION_IDS[index], coordinateFrame: 'scan-start-relative', scanDirection: '+X',
-      distanceFromScanStart_mm: SECTION_DISTANCES[index], surfaceZ_m: 0, status: 'thermal-proxy',
+      distanceFromScanStart_mm: sample.distanceFromScanStart_mm, surfaceZ_m: 0, status: 'thermal-proxy',
       geometry: { width_um: sample.width_um, depth_um: sample.depth_um },
       operator: { sectionOperatorId: SECTION_OPERATOR, interpolationOperatorId: interp,
         contourOperatorId: CONTOUR_OPERATOR, evidenceClass: 'thermal-proxy-only' },
