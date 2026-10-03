@@ -6,7 +6,7 @@ import type { ExperimentalEISDataset } from '../src/types/eisData';
 import { runAsyncAutoFit } from '../src/utils/cnlsOptimizer';
 
 const topology: CircuitTopology = { id: 'fixture', name: 'Synthetic resistor', description: '', category: 'custom', cdcNotation: 'R', branches: [
-  { id: 'b1', name: 'Series', connection: 'series', elements: [{ id: 'r1', name: 'R1', label: 'Resistance', type: 'R', value: 3, unit: 'Ω', isFixed: false }] },
+  { id: 'b1', name: 'Series', connection: 'series', elements: [{ id: 'r1', name: 'R1', label: 'Resistance', description: 'Resistance element.', type: 'R', value: 3, unit: 'Ω', isFixed: false }] },
 ] };
 const dataset: ExperimentalEISDataset = { id: 'fixture', name: 'Synthetic', source: 'csv', description: '', points: [{frequency:10, zReal:2, minusZImag:0, zImag:0, zMag:2, phaseDeg:0}] };
 const response = {

@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { persistSourceId, sourceRevisionSelectionForHistory, sourceSelectionForCatalog } from '../src/components/LpbfSourceArchivePanel';
 import type { LpbfSourceRevision } from '../src/types/lpbfSource';
+import type { SourceRevisionSummary } from '../src/services/lpbfSourceService';
 
-const sourceRevision = (revision: number, documentSha256: string): LpbfSourceRevision => ({
+const sourceRevision = (revision: number, documentSha256: string): LpbfSourceRevision & Pick<SourceRevisionSummary, 'materialId' | 'processScope'> => ({
+  materialId: 'in718', processScope: 'bare-plate',
   revision, createdAt: `2026-09-2${revision}T00:00:00Z`,
   document: { schemaVersion: 1, datasetId: 'nist-amb2022-03-workbook-v1', materialId: 'in718', processScope: 'bare-plate',
     source: { url: 'https://example.org/source', citation: 'Test fixture', version: String(revision), terms: null, termsMissingReason: 'Unknown' },

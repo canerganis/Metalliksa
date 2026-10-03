@@ -160,7 +160,7 @@ test('bundle client rejects invalid IDs before a network request', async t => {
 const opticalLink = { datasetId: 'nist-amb2022-03-optical-table4-local-v1',
   revision: 2, documentSha256: 'e'.repeat(64) };
 const opticalRun = { ...record, document: { ...document, sources: [opticalLink] },
-  sourceBindingStatus: 'exact-revision-bound' } as const;
+  sourceBindingStatus: 'exact-revision-bound' as const };
 const opticalBinding = { ...opticalLink, sourceDatasetId: 'nist-mds2-2718',
   artifactSha256: 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da' };
 const opticalReport = { schemaVersion: 1, benchmark: 'AMB2022-03-TMPG', caseNumber: '0',

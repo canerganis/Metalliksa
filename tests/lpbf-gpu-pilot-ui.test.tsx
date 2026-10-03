@@ -152,7 +152,7 @@ test('completed bound GPU jobs expose an archive action for that job only', () =
   const unfinished = renderToStaticMarkup(<GpuPilotArchiveAction job={{...job, status: 'running', result: undefined}}/>);
   assert.equal(unfinished, '');
 
-  const legacyResult = {...actual, artifacts: []};
+  const legacyResult: Record<string, unknown> = {...actual, artifacts: []};
   delete legacyResult.gpuRunContract;
   delete legacyResult.gpuFieldArtifacts;
   const legacy = parseGpuPilotJob({

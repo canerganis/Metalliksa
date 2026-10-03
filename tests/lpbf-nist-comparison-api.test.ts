@@ -37,8 +37,9 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const job = path.join(root, 'job'); mkdirSync(job);
   writeFileSync(path.join(job, 'field.bin'), 'abc');
   const runArtifact = { path: 'field.bin', size_bytes: 3, sha256: sha('abc') };
-  await runStore.putFile(job, runArtifact.path, { relativePath: runArtifact.path,
-    sha256: runArtifact.sha256, byteSize: runArtifact.size_bytes });
+  // Variable (not literal) so the extra relativePath key is not an excess-property error; runtime input is unchanged.
+  const runArtifactIdentity = { relativePath: runArtifact.path, sha256: runArtifact.sha256, byteSize: runArtifact.size_bytes };
+  await runStore.putFile(job, runArtifact.path, runArtifactIdentity);
   const baseResult = { schemaVersion: 1, requestedMode: 'screening', effectiveMode: 'screening',
     fallbackReason: null, validationStatus: 'unvalidated', productionReady: false, confidence: 'low',
     settings: { backend: 'auto', power_W: 0 }, solver: { id: 'rosenthal+goldak', version: 'enthalpy-fv-6' },
