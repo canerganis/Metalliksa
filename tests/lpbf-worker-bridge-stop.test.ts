@@ -58,3 +58,43 @@ test('non-JSON stdout is kept as a bounded diagnostic in the exit error', async 
   });
   bridge.close();
 });
+
+test('oversized non-JSON stdout line is capped at 500 characters in the diagnostic', async () => {
+  const { child } = fakeChild(104, { exitOnTerm: true });
+  const bridge = new LpbfWorkerBridge({
+    command: () => ({ cmd: 'native-python', args: [] }),
+    spawn: () => child,
+  });
+  const request = bridge.request('ping');
+  setImmediate(() => {
+    (child.stdout as unknown as PassThrough).write(`${'x'.repeat(2000)}\n`);
+    setTimeout(() => { (child as unknown as Record<string, unknown>).exitCode = 3; child.emit('exit', 3); }, 20);
+  });
+  await assert.rejects(request, (error: Error) => {
+    const run = error.message.match(/x+/g)?.sort((a, b) => b.length - a.length)[0] ?? '';
+    assert.ok(run.length > 0 && run.length <= 500, `oversized line kept ${run.length} chars`);
+    return true;
+  });
+  bridge.close();
+});
+
+test('only the last 20 non-JSON stdout lines are kept', async () => {
+  const { child } = fakeChild(105, { exitOnTerm: true });
+  const bridge = new LpbfWorkerBridge({
+    command: () => ({ cmd: 'native-python', args: [] }),
+    spawn: () => child,
+  });
+  const request = bridge.request('ping');
+  setImmediate(() => {
+    for (let i = 0; i < 25; i++) (child.stdout as unknown as PassThrough).write(`noise-${i}-end\n`);
+    setTimeout(() => { (child as unknown as Record<string, unknown>).exitCode = 3; child.emit('exit', 3); }, 20);
+  });
+  await assert.rejects(request, (error: Error) => {
+    const kept = error.message.match(/noise-\d+-end/g) ?? [];
+    assert.equal(kept.length, 20);
+    assert.equal(kept[0], 'noise-5-end');
+    assert.equal(kept[19], 'noise-24-end');
+    return true;
+  });
+  bridge.close();
+});
