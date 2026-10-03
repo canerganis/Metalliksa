@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useEscapeToClose } from "./AccessibleModal";
 import {
   Zap,
   Flame,
@@ -38,6 +39,8 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   onNavigate,
 }) => {
   const [dispatchedTarget, setDispatchedTarget] = useState<ModuleTargetId | null>(null);
+
+  useEscapeToClose(isOpen, onClose);
 
   if (!isOpen || !payload) return null;
 
@@ -173,7 +176,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-[#090e18] border border-[#162032] rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-[0_12px_45px_rgba(0,0,0,0.85)] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div role="dialog" aria-modal="true" aria-label="Cross-module data pipeline" className="bg-[#090e18] border border-[#162032] rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-[0_12px_45px_rgba(0,0,0,0.85)] overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#162032] bg-[#0c1322]">
           <div className="flex items-center gap-3">
@@ -197,6 +200,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition"
           >
             <X className="w-5 h-5" />

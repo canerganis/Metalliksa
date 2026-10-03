@@ -1,3 +1,4 @@
+import { useEscapeToClose } from "./AccessibleModal";
 import { useInputBoundTask } from "../hooks/useInputBoundTask";
 import { requestPythonAnalysis } from "../services/pythonAnalysis";
 import { normalizePythonCnlsReport } from "../utils/pythonCnlsReport";
@@ -118,6 +119,7 @@ function CNLSFittingSession({
     "plotly" | "nyquist" | "bode" | "residuals" | "kk" | "astm_g106" | "validation" | "drt" | "python_code" | "synthetic_noise"
   >("plotly");
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  useEscapeToClose(isImportModalOpen, () => setIsImportModalOpen(false));
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
   const [appliedNotification, setAppliedNotification] = useState<boolean>(false);
 
@@ -1481,7 +1483,7 @@ def objective_function(params, freqs, z_exp, weighting="${weighting}"):
       {/* File Import Modal */}
       {isImportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-2xl p-5 shadow-2xl space-y-4">
+          <div role="dialog" aria-modal="true" aria-label="Import impedance data" className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-2xl p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#162032] pb-3">
               <div className="flex items-center gap-2">
                 <Upload className="w-5 h-5 text-sky-400" />
