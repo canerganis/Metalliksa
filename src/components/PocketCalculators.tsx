@@ -872,7 +872,7 @@ export const PocketCalculators: React.FC = () => {
                       <g>
                         <circle cx={cx} cy={cy} r="10" fill="rgba(56, 189, 248, 0.3)" className="animate-ping" />
                         <circle cx={cx} cy={cy} r="5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
-                        <text x={cx + 8} y={cy - 5} fill="#bae6fd" fontSize="10" fontWeight="bold" fontFamily="JetBrains Mono">
+                        <text x={cx + 8} y={cy - 5} fill="#bae6fd" fontSize="10" fontWeight="bold" fontFamily="Fira Code">
                           Alloy ({schaefflerResult.primaryPhase})
                         </text>
                       </g>
