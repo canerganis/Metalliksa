@@ -71,3 +71,8 @@
 /docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/* -text
 # Raw runner logs retain their original spacing as hash-verified evidence.
 /docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/*.log -whitespace
+
+# Keep the input-contract evidence and original runner logs byte-exact.
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.json -text
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/* -text
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/*.log -whitespace

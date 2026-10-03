@@ -1,0 +1,20 @@
+"""Read-only check of the preserved release archive against its recorded bytes."""
+from pathlib import Path
+import hashlib
+import json
+
+task = Path(__file__).resolve().parent
+root = task.parent
+manifest = json.loads((root / '.tmp-lpbf-recovery-acceptance-20261003/snapshot-source.json').read_text(encoding='utf-8'))
+snapshot = Path(manifest['snapshot'])
+mismatches = []
+for name, expected in manifest['sha256'].items():
+    file = snapshot / name
+    if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != expected:
+        mismatches.append(name)
+assert not mismatches, mismatches
+record = {'sourceRevision': manifest['revision'], 'matchedFiles': len(manifest['sha256']),
+          'mismatches': mismatches, 'scope': 'Preserved historical frozen source, not acceptance of the new UI candidate.'}
+with (task / 'frozen-source-check.json').open('x', encoding='utf-8', newline='\n') as stream:
+    json.dump(record, stream, indent=2)
+print(json.dumps(record))

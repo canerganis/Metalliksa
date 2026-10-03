@@ -4,17 +4,36 @@ This procedure verifies a committed application snapshot independently of the ac
 
 ## Create a clean snapshot
 
-The checked host uses Windows x64, Node **24.20.0** and npm **11.19.0**. Use a new destination for each check. Run from the repository root:
+The checked host uses Windows x64, Node **24.20.0** and npm **11.19.0**. First prepare the separately [locked CPU Python environment](LPBF_CPU_REPRODUCTION.md). Unit tests launch Python workers, so select that interpreter **before** the test suite, using its absolute path from the original repository root. The resolver does not automatically select `.runtime`; a global interpreter missing `pydantic` is not a supported reproduction environment. Use a new destination for each check:
 
 ```powershell
+$env:METALLIX_PYTHON = (Resolve-Path -LiteralPath .runtime/lpbf-win-py312/Scripts/python.exe -ErrorAction Stop).Path
+$env:PYTHONDONTWRITEBYTECODE = '1'
+& $env:METALLIX_PYTHON -B -c "import sys, numpy, pydantic; assert sys.version_info[:2] == (3, 12); print(sys.version); print('NumPy', numpy.__version__, 'pydantic', pydantic.__version__)"
+if ($LASTEXITCODE -ne 0) { throw 'Supported CPU interpreter/import check failed' }
+& $env:METALLIX_PYTHON -B -m pip check
+if ($LASTEXITCODE -ne 0) { throw 'CPU dependency check failed' }
 $revision = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve revision' }
+$sourceEntries = @(git -c core.quotepath=false ls-tree -r $revision)
+if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate tracked source' }
+$sourcePaths = @($sourceEntries | Where-Object { $_ -match '^\d{6} blob ' } | ForEach-Object { ($_ -split "`t", 2)[1] })
+if ($sourcePaths.Count -eq 0) { throw 'Tracked file inventory is empty' }
 $destination = Join-Path (Get-Location) ".runtime/clean-$revision"
 $archive = "$destination.zip"
 if (Test-Path -LiteralPath $destination) { throw 'Choose a new clean destination' }
 git archive --format=zip --output=$archive $revision
 if ($LASTEXITCODE -ne 0) { throw 'Archive failed' }
 Expand-Archive -LiteralPath $archive -DestinationPath $destination
+function Get-LpbfSnapshotHashes([string]$snapshotPath, [string[]]$relativePaths) {
+  $inventory = [ordered]@{}
+  foreach ($relativePath in $relativePaths) {
+    $inventory[$relativePath] = (Get-FileHash -LiteralPath (Join-Path $snapshotPath $relativePath) -Algorithm SHA256 -ErrorAction Stop).Hash
+  }
+  ConvertTo-Json -InputObject $inventory -Compress
+}
+$sourceBefore = Get-LpbfSnapshotHashes $destination $sourcePaths
+$sourceBefore | Set-Content -LiteralPath "$destination.source-before.json" -Encoding utf8
 Push-Location -LiteralPath $destination
 try {
   npm ci --no-audit --no-fund
@@ -25,10 +44,19 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Unit tests failed' }
   npm run build
   if ($LASTEXITCODE -ne 0) { throw 'Production build failed' }
-} finally { Pop-Location }
+} finally {
+  Pop-Location
+  $sourceAfter = Get-LpbfSnapshotHashes $destination $sourcePaths
+  $sourceAfter | Set-Content -LiteralPath "$destination.source-after.json" -Encoding utf8
+  if ($sourceBefore -cne $sourceAfter) { throw 'Tracked source integrity changed; preserve both manifests and this failed attempt' }
+}
 ```
 
 `npm ci` uses the committed `package-lock.json`; do not replace it with `npm install` when claiming this reproduction. The archive includes tracked files only. Offline raw benchmarks, local tool installations and uncommitted UI changes are excluded. npm may report install-script policy warnings; preserve these with the run evidence and confirm the actual build works under the recorded policy.
+
+The file inventory excludes Git submodule pointers. `git archive` does not include the `spparks` submodule's checkout; this procedure does not reproduce that optional solver or verify its source bytes.
+
+Keep `METALLIX_PYTHON` and `PYTHONDONTWRITEBYTECODE` set for the entire sequence, including child workers. Record the resolved interpreter and compare the tracked-source SHA-256 inventory before and after the checks. A source mismatch is a failed integrity check; restoring a changed file later does not make that attempt pass. Preserve the failed attempt separately and start a fresh guarded sequence when retrying. Python dependency checks alone do not establish source integrity or solver validity.
 
 ## Start with an explicit Python interpreter
 

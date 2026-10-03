@@ -1,0 +1,33 @@
+# Legacy 280 W observer assertion correction — 2026-10-03
+
+## Scope and baseline
+
+- Repository HEAD before the test edit: `bd979c7` (`docs(lpbf): record guarded CPU recovery and correct NIST claims`).
+- Target `python/test_lpbf_280w_simulation.py` was clean before editing. Its initial blob/worktree SHA-1 was `13d5941051b38b9fb5ce50eee4ca22261f57795e`.
+- Target-only edit: rename the old six-section test and replace the false positive-observer assertions with: no `sixSectionObservation`; comparator returns `unavailable`, `unvalidated`, and `errors=None`; reasons include the missing three-track operator and disabled comparison. Retained completion, energy-balance, peak-range assertions, and the separate no-evaporation boiling fail-closed test. No production code changed.
+
+## Graft and source basis
+
+Ran explicit workspace CLI `..\\.graft-cli\\node_modules\\.bin\\graft.cmd ask "test_lpbf_280w_simulation" --source`, then `graft grep "opticalObserver"`. Graph indexed 622 files and included the target and current comparator/repeated-field regression; refresh was skipped after EPERM on a stale temp owner-crash directory. Exact source fallback confirmed test lines 36-75, comparator's local Table 4 identity and model/operator gates in `python/lpbf_nist_in718_comparison.py`, and existing regression `test_single_transient_does_not_emit_repeated_field_as_six_sections` in `python/test_lpbf_nist_optical_operator.py`. That test already requires a one-transient run to omit the six-section observation.
+
+## Reproduction and verification
+
+Bounded environment: `.runtime/lpbf-win-py312/Scripts/python.exe` (Python 3.12), `-B`, `PYTHONDONTWRITEBYTECODE=1`, `TEMP`/`TMP` set to `..\\.tmp-lpbf-claim-contract-20261003\\python-temp`.
+
+Before the edit:
+
+```powershell
+& '..\\.runtime\\lpbf-win-py312\\Scripts\\python.exe' -B -m unittest test_lpbf_280w_simulation.Test280wSimulationIntegration.test_280w_completes_with_evaporation_and_produces_six_sections
+```
+
+Result: 1 test, 5.314 s, failed exactly at old `assertIn("sixSectionObservation", result)` (line 69). Earlier assertions in the same test had already confirmed the run returned metrics/energy balance and peak-temperature bounds.
+
+After the edit:
+
+```powershell
+& '..\\.runtime\\lpbf-win-py312\\Scripts\\python.exe' -B -m unittest test_lpbf_280w_simulation
+```
+
+Result: 2 tests in 5.598 s, OK. This includes the preserved no-evaporation boiling-limit failure test and the corrected complete-but-unavailable comparison test. The selected case is 280 W / 960 mm/s / 500 µm / one track. The test only checks software output and comparator gating; it does not validate evaporation physics, material laws, optical observations, convergence, experiments, or production readiness. NIST comparison remains unavailable/unvalidated.
+
+After-edit target SHA-1: `559361bcd5319577aab08b5ae73e3cc5061e31df`. `git diff --check -- python/test_lpbf_280w_simulation.py` passed. Semantic diff is limited to the test method name/comment and its optical-comparison assertions; Git emitted only its normal LF-to-CRLF checkout warning. No additional Python/GPU suites were run. The source candidate remains the pre-edit frozen `33efb32b7d9734587a78d1cb9de8224d7ef2a4ec`; these test edits do not retroactively validate it.

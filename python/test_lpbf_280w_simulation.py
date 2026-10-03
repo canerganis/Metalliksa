@@ -33,8 +33,8 @@ class Test280wSimulationIntegration(unittest.TestCase):
             run(config)
         self.assertIn("material boiling limit", str(ctx.exception))
 
-    def test_280w_completes_with_evaporation_and_produces_six_sections(self):
-        # With evaporationModel=True, boiling lock is overcome and opticalObserver produces sixSectionObservation
+    def test_280w_completes_but_withholds_single_track_optical_comparison(self):
+        # A completed single-track run must not be promoted to a six-section optical observation.
         config = {
             "power_W": 280.0,
             "speed_mm_s": 960.0,
@@ -65,14 +65,18 @@ class Test280wSimulationIntegration(unittest.TestCase):
         self.assertLessEqual(peak_t_k, 3130.0)
         self.assertGreater(peak_t_k, 2000.0)
         
-        # Verify NIST six-section observation exists
-        self.assertIn("sixSectionObservation", result)
-        obs = result["sixSectionObservation"]
-        self.assertEqual(obs["status"], "optical-operator-matched")
-        self.assertEqual(obs["observationCount"], 6)
-        self.assertEqual(len(obs["sections"]), 6)
-        self.assertTrue(obs["widthMean_um"] > 0)
-        self.assertTrue(obs["depthMean_um"] > 0)
+        # This 500 um track is not the NIST 10 mm, three-track optical operator.
+        self.assertNotIn("sixSectionObservation", result)
+        table4 = json.loads(TABLE_PATH.read_text(encoding="utf-8"))
+        binding = source_binding()
+        comparison = compare_nist_in718_optical_geometry(
+            result, table4, binding, binding, "0"
+        )
+        self.assertEqual(comparison["status"], "unavailable")
+        self.assertEqual(comparison["validationStatus"], "unvalidated")
+        self.assertIsNone(comparison["errors"])
+        self.assertIn("NIST six-section operator is not implemented", " ".join(comparison["reasons"]))
+        self.assertIn("NIST six-section comparison is disabled", " ".join(comparison["reasons"]))
 
 
 if __name__ == "__main__":

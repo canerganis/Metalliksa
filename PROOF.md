@@ -1,3 +1,11 @@
+## 2026-10-03 — CPU ölçüm gönderimi ve kayıttan yöntem etiketi
+
+- **Kapsam / başlangıç:** `bd979c7` sonrası UI sözleşme düzeltmesi; [girdiler ve iddialar kaydı](docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.md). Backend ve sayısal algoritma/eşik değişikliği yok. Eski `33efb32` release kanıtı bu yeni revizyona aktarılmaz.
+- **Ölçüm kabul ölçütü:** Tam kullanıcı processVector'ının 22 alanı korunur; belirtilmeyen koşul uydurulmaz; eksik/bozuk vektörler, yanlış sayı türleri ve bilinmeyen alanlar reddedilir. Worker eşleştirmesi öncesinde UI matched iddiası kurmaz. Manual/koşulsuz ölçümler unverified, calibrationFactor withheld kalır. Backend'in eski katı kontrolü hatalı yedi alanlı gönderimi zaten reddediyordu; başarılı sahte kalibrasyon iddiası yok.
+- **Yöntem kabul ölçütü:** Adaptive GL v2/legacy GL2 etiketi kayıtlı sourceIntegration kimliğine bağlıdır. Eksik/bilinmeyen yöntem için component fallback'i algoritma uydurmaz; API parser'ın katı reddini gevşetmez. Eski tek-track optik testi artık six-section observation/residual yayınlanmadığını denetler.
+- **Kontrol sonucu:** Root ilgili Node regresyonları **41/41 PASS**, ilgili Python kontrolleri **3/3 PASS**, TypeScript PASS. Bağımsız backend testi **1/1**, malformed-schema assertion **8/8** PASS. Reproduction snippet syntax ve değişen dosyayı yakalayan hash fixture PASS; mevcut locked runtime import/pip check PASS. Bunlar tam clean-install veya bütün suite kanıtı değildir.
+- **Geçerlilik sınırı:** Sentetik şema/yazılım ve kayıt doğruluğu kanıtıdır. Ölçüm doğruluğu, optik gözlem, fiziksel yakınsama, malzeme kaynak doğruluğu, bağımsız kalibrasyon veya deneysel doğrulama kurulmadı. Yeni adayın build/clean/browser kabulü ayrı kaydedilmeden tam V1 hükmü verilmez; gerçek UI/klavye kontrolü önceki tarayıcı izin reddi nedeniyle bekler.
+
 ## 2026-10-03 — Sınırlı CPU toparlanma ve arşiv kanıtı; NIST iddiası düzeltmesi
 
 - **Aday / kapsam:** `33efb32b7d9734587a78d1cb9de8224d7ef2a4ec`, 1.520 tracked dosyalı izole kaynak. Manifest SHA-256 `1570a5186cf02cd3f53d1c96883bce0cb6c2f0495c7da08c83bc8a31aeb180a7`. Ayrıntılar ve ham kanıtlar: [CPU recovery kaydı](docs/LPBF_V1_CPU_RECOVERY_2026-10-03.md). Bu kayıt tam V1 kabulü değildir.

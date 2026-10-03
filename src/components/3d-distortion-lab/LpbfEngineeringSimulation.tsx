@@ -67,30 +67,16 @@ type ParsedMeasurementState = {
   missingProcessVectorCount: number;
   count: number;
 };
-const processVectorKeys = ["power_W","speed_mm_s","beamDiameter_um","preheat_C","layer_um","hatch_um","strategy"] as const;
+// Keep this supplied-evidence schema aligned with python/lpbf_evidence.py PROCESS_KEYS.
+// Never derive missing measurement conditions from the simulation controls.
+const processVectorKeys = ["material", "power_W", "speed_mm_s", "beamDiameter_um", "preheat_C",
+  "layer_um", "hatch_um", "tracks", "layers", "trackLength_um", "strategy", "scanAngle_deg",
+  "layerRotation_deg", "dwell_s", "packingFraction", "stripeWidth_um", "islandSize_um",
+  "absorptivity", "emissivity", "powderConductivityRatio", "convection_W_m2K", "cooling_s"] as const;
+const measurementFields = new Set(["width_um", "depth_um", "source", "processVector", "uncertainty_um", "independentHoldout"]);
 const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
-const normalizeProcessVector = (value: unknown) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {} as Record<string, unknown>;
-  const normalized: Record<string, unknown> = {};
-  for (const key of processVectorKeys) {
-    const v = (value as Record<string, unknown>)[key];
-    if (isFiniteNumber(v) || typeof v === "string") normalized[key] = v;
-  }
-  return normalized;
-};
-const currentProcessVectorFromInput = (nextInput: SimulationInput, strategy: string) => ({
-  power_W: nextInput.power_W,
-  speed_mm_s: nextInput.speed_mm_s,
-  beamDiameter_um: nextInput.beamDiameter_um,
-  preheat_C: nextInput.preheat_C,
-  layer_um: nextInput.layer_um,
-  hatch_um: nextInput.hatch_um,
-  strategy,
-});
-const processVectorMatches = (a: Record<string, unknown>, b: Record<string, unknown>) => processVectorKeys.every((key) => a[key] === b[key]);
-const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strategy: string): ParsedMeasurementState => {
-  const nextStrategy = strategy || "meander";
-  const defaultVector = currentProcessVectorFromInput(nextInput, nextStrategy);
+export const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strategy: string): ParsedMeasurementState => {
+  const knownInput = { ...nextInput, strategy: nextInput.strategy || strategy };
   const text = raw.trim();
   if (!text) return {status:"empty", errors:[], mismatchedCount:0, missingProcessVectorCount:0, count:0, measurements: undefined};
   try {
@@ -110,29 +96,45 @@ const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strate
         errors.push(`Replicate #${index + 1}: expected object.`);
         continue;
       }
-      const width = Number(rawEntry.width_um);
-      const depth = Number(rawEntry.depth_um);
+      const unknownFields = Object.keys(rawEntry).filter(key => !measurementFields.has(key));
+      if (unknownFields.length) errors.push(`Replicate #${index + 1}: unknown fields: ${unknownFields.join(", ")}. Supported fields: ${[...measurementFields].join(", ")}.`);
+      const width = rawEntry.width_um;
+      const depth = rawEntry.depth_um;
       const source = typeof rawEntry.source === "string" ? rawEntry.source.trim() : "";
-      if (!Number.isFinite(width) || !Number.isFinite(depth) || width <= 0 || depth <= 0) {
+      if (!isFiniteNumber(width) || !isFiniteNumber(depth) || width <= 0 || depth <= 0) {
         errors.push(`Replicate #${index + 1}: width and depth must be positive finite numbers (µm).`);
       }
       if (!source) errors.push(`Replicate #${index + 1}: source is required.`);
       const entry: NonNullable<SimulationInput["measurements"]>[number] = { width_um: width, depth_um: depth, source };
-      const hasProcessVector = typeof rawEntry.processVector === "object" && rawEntry.processVector !== null && !Array.isArray(rawEntry.processVector);
-      const suppliedVector = hasProcessVector ? normalizeProcessVector(rawEntry.processVector) : {};
-      entry.processVector = { ...defaultVector, ...suppliedVector };
-      if (!hasProcessVector) {
+      if (!Object.hasOwn(rawEntry, "processVector")) {
         missingProcessVectorCount += 1;
-      } else if (!processVectorMatches(suppliedVector, defaultVector)) {
-        mismatchedCount += 1;
+      } else {
+        const vector = rawEntry.processVector;
+        const isObject = vector !== null && typeof vector === "object" && !Array.isArray(vector);
+        const hasExactKeys = isObject && Object.keys(vector).length === processVectorKeys.length
+          && processVectorKeys.every(key => Object.hasOwn(vector, key));
+        const validTypes = hasExactKeys && processVectorKeys.every(key => key === "material"
+          ? typeof vector[key] === "string" && Boolean(vector[key].trim())
+          : key === "strategy" ? ["meander", "unidirectional", "stripe", "island"].includes(vector[key])
+          : isFiniteNumber(vector[key]));
+        if (!validTypes) {
+          errors.push(`Replicate #${index + 1}: processVector requires exactly ${processVectorKeys.join(", ")}. Use a nonempty material name, a supported strategy, and finite numbers for all other fields; omit processVector if measurement conditions are unknown.`);
+        } else {
+          entry.processVector = { ...vector };
+          // Only detect differences in known controls. Material/optical defaults are
+          // resolved by the worker; completeness alone never establishes a match.
+          if (processVectorKeys.some(key => knownInput[key] !== undefined && vector[key] !== knownInput[key])) mismatchedCount += 1;
+        }
       }
       if (rawEntry.uncertainty_um !== undefined) {
         if (!rawEntry.uncertainty_um || typeof rawEntry.uncertainty_um !== "object" || Array.isArray(rawEntry.uncertainty_um)) {
           errors.push(`Replicate #${index + 1}: uncertainty_um must be an object when provided.`);
         } else {
-          const widthUnc = Number(rawEntry.uncertainty_um.width_um);
-          const depthUnc = Number(rawEntry.uncertainty_um.depth_um);
-          if (!Number.isFinite(widthUnc) || !Number.isFinite(depthUnc) || widthUnc < 0 || depthUnc < 0) {
+          const unknownUncertaintyFields = Object.keys(rawEntry.uncertainty_um).filter(key => key !== "width_um" && key !== "depth_um");
+          if (unknownUncertaintyFields.length) errors.push(`Replicate #${index + 1}: uncertainty_um requires exactly width_um and depth_um; unknown fields: ${unknownUncertaintyFields.join(", ")}.`);
+          const widthUnc = rawEntry.uncertainty_um.width_um;
+          const depthUnc = rawEntry.uncertainty_um.depth_um;
+          if (!isFiniteNumber(widthUnc) || !isFiniteNumber(depthUnc) || widthUnc < 0 || depthUnc < 0) {
             errors.push(`Replicate #${index + 1}: uncertainty_um.width_um and uncertainty_um.depth_um must be nonnegative finite numbers.`);
           } else {
             entry.uncertainty_um = { width_um: widthUnc, depth_um: depthUnc };
@@ -152,6 +154,25 @@ const parseMeasurementPayload = (raw: string, nextInput: SimulationInput, strate
     return {status:"invalid", errors:["Replicate JSON is not valid JSON."], mismatchedCount:0, missingProcessVectorCount:0, count:0, measurements: undefined};
   }
 };
+
+type ManualMeasurementDraft = { width: string; depth: string; source: string; specimen: string; uncertainty: string; holdout: string };
+export function measurementSubmission(input: SimulationInput, raw: string, draft: ManualMeasurementDraft, strategy: string): SimulationInput["measurements"] {
+  const state = parseMeasurementPayload(raw, input, input.strategy || strategy);
+  const { width, depth, source, specimen, uncertainty, holdout } = draft;
+  const validDimensions = Boolean(width && depth && source.trim()) && isFiniteNumber(Number(width))
+    && isFiniteNumber(Number(depth)) && Number(width) > 0 && Number(depth) > 0;
+  if (input.mode === "calibration" || state.status !== "empty") {
+    if (state.status === "invalid") throw new Error(state.errors.join(" "));
+    if (state.status === "valid") return state.measurements;
+    if (!validDimensions) throw new Error("Calibration requires finite positive measured width and depth and a measurement source.");
+  }
+  if (state.status === "empty" && (width || depth || source)) {
+    if (!validDimensions) throw new Error("Calibration requires finite positive measured width and depth and a measurement source.");
+    if (uncertainty !== "" && (!Number.isFinite(Number(uncertainty)) || Number(uncertainty) < 0)) throw new Error("Measurement uncertainty must be nonnegative in µm.");
+    return [{ width_um: Number(width), depth_um: Number(depth), source: source + (specimen ? ` · ${specimen}` : ""), ...(uncertainty !== "" ? { uncertainty_um: { width_um: Number(uncertainty), depth_um: Number(uncertainty) } } : {}), ...(holdout !== "unknown" ? { independentHoldout: holdout === "yes" } : {}) }];
+  }
+  return undefined;
+}
 
 const GPU_PILOT_STORAGE_KEY = "metalliksa.lpbf.gpu-pilot.job.v1";
 
@@ -503,38 +524,38 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
   const invalidProcess=([[input.power_W,10,1500],[input.speed_mm_s,10,10000],[input.beamDiameter_um,20,500],[input.hatch_um,10,1000],[input.layer_um,10,150],[input.preheat_C,0,1200]]).some(([v,min,max])=>!Number.isFinite(v)||v<min||v>max);
   const r = job?.status === "completed" ? job.result : undefined;
   const resolvedStrategy = settings.strategy ?? (sharedStrategy==="meander-67"?"meander":sharedStrategy);
-  const parsedMeasurements = parseMeasurementPayload(measurements, input, resolvedStrategy);
+  const parsedMeasurements = parseMeasurementPayload(measurements, {...input,...settings,material:material||input.material,strategy:resolvedStrategy}, resolvedStrategy);
   const isManualCalibrationProvided = width.trim() || depth.trim() || source.trim();
   const hasManualCalibration = Boolean(width && depth && source.trim());
-  const manualCalibrationValuesPositive = hasManualCalibration && Number(width) > 0 && Number(depth) > 0;
+  const manualCalibrationValuesPositive = hasManualCalibration && isFiniteNumber(Number(width)) && isFiniteNumber(Number(depth)) && Number(width) > 0 && Number(depth) > 0;
   const calibrationReadinessLabel = (() => {
     if (mode !== "calibration") return "Calibration mode is not selected.";
     if (parsedMeasurements.status === "invalid") return `Invalid replicate JSON: ${parsedMeasurements.errors.join(" ")}`;
     if (parsedMeasurements.status === "valid") {
       const mismatchText = parsedMeasurements.mismatchedCount
-        ? `${parsedMeasurements.mismatchedCount} replicates with processVector mismatch, `
+        ? `${parsedMeasurements.mismatchedCount} replicates differ from known current controls; the worker rejects mismatched conditions. `
         : "";
       const missingText = parsedMeasurements.missingProcessVectorCount
-        ? `${parsedMeasurements.missingProcessVectorCount} replicates with missing processVector, `
+        ? `${parsedMeasurements.missingProcessVectorCount} replicates have unknown conditions; calibration factor is withheld. `
         : "";
       const suffix = `${parsedMeasurements.count} replicate${parsedMeasurements.count === 1 ? "" : "s"} supplied`;
       if (parsedMeasurements.mismatchedCount > 0 || parsedMeasurements.missingProcessVectorCount > 0) {
-        return `${suffix}; ${mismatchText}${missingText}will be reported with reduced calibration confidence.`;
+        return `${suffix}; ${mismatchText}${missingText}Exact process matching is checked by the worker.`;
       }
-      return `${suffix}; process vectors are matched and ready for calibration comparison.`;
+      return `${suffix}; complete user-supplied conditions; exact process matching is pending worker checks.`;
     }
     if (isManualCalibrationProvided) {
-      return manualCalibrationValuesPositive ? "Manual width/depth/source is provided and usable." : "Calibration mode needs valid positive width/depth and source.";
+      return manualCalibrationValuesPositive ? "Manual dimensions have no measurement conditions; comparison is available with unverified process matching and calibration factor withheld." : "Calibration mode needs finite positive width/depth and source.";
     }
     return "Calibration mode needs valid JSON replicates or manual width/depth/source.";
   })();
   const calibrationReadinessStatus: ReadinessStatus = (() => {
     if (mode !== "calibration") return "pass";
     if (parsedMeasurements.status === "invalid") return "fail";
-    if (isManualCalibrationProvided && parsedMeasurements.status === "empty") return manualCalibrationValuesPositive ? "pass" : "warn";
+    if (isManualCalibrationProvided && parsedMeasurements.status === "empty") return "warn";
     if (parsedMeasurements.status === "valid") {
       if (parsedMeasurements.mismatchedCount > 0 || parsedMeasurements.missingProcessVectorCount > 0) return "warn";
-      return "pass";
+      return "warn";
     }
     return "warn";
   })();
@@ -571,17 +592,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
       for(const [key,,min,max] of controls){const v=settings[key];if(typeof v!=="number"||!Number.isFinite(v)||v<min||v>max)throw new Error(`${key} must be in [${min}, ${max}]`);}
       if(invalidProcess||invalidControls)throw new Error("Correct the highlighted parameter ranges before running.");
       const p=payload(mode);
-      const measurementState=parseMeasurementPayload(measurements,p, p.strategy || resolvedStrategy);
-      if (mode==="calibration" || measurementState.status !== "empty") {
-        if (measurementState.status==="invalid") throw new Error(measurementState.errors.join(" "));
-        if (measurementState.status==="valid") p.measurements = measurementState.measurements;
-        else if(!width||!depth||Number(width)<=0||Number(depth)<=0||!source.trim()) throw new Error("Calibration requires positive measured width and depth and a measurement source.");
-      }
-      if (measurementState.status==="empty" && (width || depth || source)) {
-        if (!width||!depth||Number(width)<=0||Number(depth)<=0||!source.trim()) throw new Error("Calibration requires positive measured width and depth and a measurement source.");
-        if(uncertainty!==""&&(!Number.isFinite(Number(uncertainty))||Number(uncertainty)<0))throw new Error("Measurement uncertainty must be nonnegative in µm.");
-        p.measurements=[{width_um:Number(width),depth_um:Number(depth),source:source+(specimen?` · ${specimen}`:""),processVector:currentProcessVectorFromInput(p,p.strategy||resolvedStrategy),...(uncertainty!==""?{uncertainty_um:{width_um:Number(uncertainty),depth_um:Number(uncertainty)}}:{}),...(holdout!=="unknown"?{independentHoldout:holdout==="yes"}:{})}];
-      }
+      p.measurements=measurementSubmission(p,measurements,{width,depth,source,specimen,uncertainty,holdout},resolvedStrategy);
       const next=await simulationApi.submit(p,repeatExecution&&canRepeatCurrentInput?{executionScope:'repeat'}:undefined);useLpbfEngineeringStore.setState({job:next,submittedSignature:signature,submittedInput:p,resultSignature:next.status==="completed"?signature:""});setFieldTime(undefined);setRepeatExecution(false);resumeEngineeringJob();
     }catch(e){setError(e instanceof Error?e.message:"Submission failed");}finally{setBusy(false);}
   };
@@ -666,7 +677,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     <section className={surface} aria-label="Material evidence"><h4 className="font-medium">Material evidence</h4><dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[["Material name",material||input.material],["Data quality",properties.trim()?"User-supplied · awaiting worker checks":materialEvidence?.quality||"Awaiting registry lookup"],["Source",r?.material.name===(material||input.material)?`Executed result source: ${r.material.source}`:materialEvidence?.note||"Registry evidence available after execution"],["Model table coverage",r?.material.name===(material||input.material)&&Array.isArray(r.material.temperatureCoverage_K)?`${r.material.temperatureCoverage_K.map(fmt).join("–")} K · executed material table`:"Not reported for current inputs; inspect sourced table"],["Source validity range",r?.material.name===(material||input.material)&&Array.isArray(r.material.sourceValidityRange_K)?`${r.material.sourceValidityRange_K.map(fmt).join("–")} K · supplied source bound`:"Unknown · no source validity range supplied"],["Estimated / missing fields",materialEvidence?.note||"Not reported"],["Property table",properties.trim()?"User-supplied JSON · unverified":materialEvidence?.available?"Estimated endpoint interpolation available":"No table supplied"]].map(([k,v])=><div key={k}><dt className="text-xs text-slate-400">{k}</dt><dd className="mt-2 text-sm leading-6">{v}</dd></div>)}</dl>{Array.isArray(r?.material.table)&&r.material.table.every(row=>Array.isArray(row)&&row.length===5)&&<details className="mt-4 border-t border-slate-700/50 pt-2"><summary className="cursor-pointer text-sm">Executed property table · {r.material.name}</summary><p className="my-3 text-xs text-amber-200">{r.material.quality} · table used by the displayed result. {r.material.uncertaintyNote}</p><div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-xs"><caption className="sr-only">Thermophysical properties used by the displayed simulation</caption><thead><tr>{["Temperature · K","Density · kg/m³","Conductivity · W/mK","Heat capacity · J/kgK","Viscosity · Pa·s"].map(h=><th key={h} className="py-3 pr-4 font-normal text-slate-400">{h}</th>)}</tr></thead><tbody>{r.material.table.map((row,i)=><tr key={i} className="border-t border-slate-700/50">{row.map((v,j)=><td key={j} className="py-3 pr-4 tabular-nums">{fmt(v)}</td>)}</tr>)}</tbody></table></div></details>}<details className="mt-4 border-t border-slate-700/50 pt-2"><summary className="cursor-pointer text-sm">Supply sourced material data</summary><p className="my-3 text-xs text-slate-400">JSON table rows: temperature K, density kg/m³, conductivity W/mK, heat capacity J/kgK, viscosity Pa·s. Include source and required phase/optical properties. Optional <code>sourceValidityRange_K</code> must span the full property table and the declared boiling temperature; it is checked separately from model table coverage. Without it, source validity remains unknown. The transient solver stops at the declared boiling limit.</p><textarea aria-label="Sourced material property JSON" className={inputClass} placeholder="Optional sourced material JSON; see docs/LPBF_ENGINEERING.md" rows={5} value={properties} onChange={e=>setProperties(e.target.value)}/></details></section>
     <details open={mode==="calibration"?true:undefined} className={surface}><summary className="cursor-pointer font-medium">Validation and calibration</summary><p className="my-4 text-sm leading-6 text-amber-200">Calibration improves comparison reporting. It does not establish independent validation and is not automatically applied to the solver.</p>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"><label className="text-xs text-slate-400">Measured width · µm<input aria-label="Measured width in micrometres" className={`${inputClass} mt-2`} min={0} step="any" type="number" value={width} onChange={e=>setWidth(e.target.value)}/></label><label className="text-xs text-slate-400">Measured depth · µm<input aria-label="Measured depth in micrometres" className={`${inputClass} mt-2`} min={0} step="any" type="number" value={depth} onChange={e=>setDepth(e.target.value)}/></label><label className="text-xs text-slate-400">Measurement source<input aria-label="Measurement source" className={`${inputClass} mt-2`} value={source} onChange={e=>setSource(e.target.value)}/></label><label className="text-xs text-slate-400">Specimen ID or DOI<input className={`${inputClass} mt-2`} value={specimen} onChange={e=>setSpecimen(e.target.value)}/></label><label className="text-xs text-slate-400">Width / depth uncertainty · µm<input className={`${inputClass} mt-2`} type="number" min={0} step="any" value={uncertainty} onChange={e=>setUncertainty(e.target.value)}/></label><label className="text-xs text-slate-400">Independent holdout status<select className={`${inputClass} mt-2`} value={holdout} onChange={e=>setHoldout(e.target.value)}><option value="unknown">Unknown</option><option value="no">Calibration data</option><option value="yes">User-declared independent</option></select></label></div>
-      <p className="text-xs text-slate-400 my-2">Comparison requires real measurements. Calibration factor is withheld without an exact processVector in replicate JSON. Optional uncertainty_um and independentHoldout record supplied evidence; no automatic validation. See docs/LPBF_ENGINEERING.md.</p>
+      <p className="text-xs text-slate-400 my-2">Comparison requires real measurements. Manual dimensions have no measurement conditions; process matching remains unverified and calibration factor is withheld. To request calibration comparison, supply all 22 processVector fields in replicate JSON from the measurement conditions, including material and optical properties; the worker checks them against resolved simulation inputs. Partial vectors are rejected. Optional uncertainty_um and independentHoldout record supplied evidence; no automatic validation. See docs/LPBF_ENGINEERING.md.</p>
       <textarea aria-label="Replicate measurement JSON" className={inputClass} placeholder="Optional replicate measurement JSON" value={measurements} onChange={e=>setMeasurements(e.target.value)}/>
 
     </details>

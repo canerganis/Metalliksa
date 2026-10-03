@@ -58,6 +58,24 @@ test("LPBF result parsing accepts the versioned adaptive Gaussian source diagnos
     sourceIntegration: "cell-integrated-gaussian-adaptive-gl-v2" };
   assert.equal(parse({ numericalDiagnostics: diagnostics }).result!.numericalDiagnostics!.sourceIntegration,
     "cell-integrated-gaussian-adaptive-gl-v2");
+  const html = renderToStaticMarkup(<LpbfPhysicsDiagnostics result={parse({ numericalDiagnostics: diagnostics }).result!}/>);
+  assert.match(html, /Adaptive Gauss-Legendre source integration/);
+  assert.doesNotMatch(html, /two-point time integration/);
+});
+
+test("source integration label follows the recorded method and handles absent or unknown identifiers", () => {
+  const legacy = parse().result!;
+  assert.match(renderToStaticMarkup(<LpbfPhysicsDiagnostics result={legacy}/>), /Two-point Gauss-Legendre source integration/);
+
+  const renderWithSourceIntegration = (sourceIntegration: unknown) => renderToStaticMarkup(
+    <LpbfPhysicsDiagnostics result={{ ...legacy, numericalDiagnostics: {
+      ...legacy.numericalDiagnostics!, sourceIntegration,
+    } } as SimulationResult}/>);
+  assert.match(renderWithSourceIntegration(undefined), /Source integration method unavailable/);
+  assert.match(renderWithSourceIntegration("future-integrator-v3"),
+    /Source integration method unavailable · recorded identifier: future-integrator-v3/);
+  assert.match(renderWithSourceIntegration("future <integrator>"),
+    /future &lt;integrator&gt;/);
 });
 
 test("aggregate geometry presents unknown overlap without fake zero values", () => {

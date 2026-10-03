@@ -1,0 +1,39 @@
+# Measurement submission contract fix — 2026-10-03
+
+## Scope and revision
+
+Working source based on HEAD `bd979c715cd774aa2f4585b641177f5dc55e4e4e`; frozen acceptance source remains `33efb32b7d9734587a78d1cb9de8224d7ef2a4ec`. These new frontend edits are not covered by the old candidate's acceptance. The component was clean and equal to HEAD/frozen before this owned task; the existing unrelated dirty tree and all other agents' work were preserved.
+
+Owned production/test paths only:
+- `src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx`
+- `tests/lpbf-measurement-submission.test.ts` (new)
+
+Final raw file SHA-256:
+- Component: `8043ee0c3841d0f15ed66c5be4eb3d408fe5e6b28abc930304edc9c75cba9036`
+- Test: `9a06139a7746a971b1bedae19352a168373f9206caee25b1a5a14a55664bd6a9`
+
+## Verified defect and changes
+
+Existing UI created seven current-simulation conditions for absent/manual measurement conditions, and reduced every explicit supplied vector to seven fields. Actual Python `measurement_evidence` requires exactly 22 PROCESS_KEYS and rejects incomplete vectors (`python/lpbf_evidence.py:8-11,23-52`; validation called by `python/lpbf_simulation.py:243-245`). This was a frontend submit-contract failure; an active successful false-matched calibration factor was **not** demonstrated.
+
+The tested `measurementSubmission` builder now drives the real component submit path:
+1. Conditionless replicate/manual rows omit processVector; backend returns unverified and withholds calibrationFactor (`lpbf_simulation.py:1107-1113`).
+2. Explicit complete 22-field vectors are retained unchanged. Partial/malformed/extra-key/type-invalid vectors produce actionable local errors. Definite equality stays with the worker's resolved inputs; preview detects only differences in supplied known controls and never claims exact matching.
+3. Raw JSON width/depth and uncertainty must be finite numbers, excluding bool, numeric strings, null and containers. This agrees with backend exact int/float, non-bool checks; manual HTML numeric text is explicitly converted and separately checked for finite positive dimensions/nonnegative uncertainty.
+4. Allowed replicate fields are exactly width_um, depth_um, source, processVector, uncertainty_um, independentHoldout, matching backend required/optional sets. Unknown metadata/typos are rejected with field names instead of being dropped. Nested uncertainty permits exactly width_um/depth_um; extras are named and rejected, missing values fail numeric validation.
+5. Supported dimensions, source/specimen, uncertainty and user-declared holdout semantics remain available. Mixed batches with conditionless and explicitly complete vectors retain known supplied values. Backend/source flags, material normalization, calibration application, numerical thresholds and physics were not edited.
+
+Frontend explicitly rejects supplied null processVector/uncertainty and requires supported strategy/nonblank material; Python treats null optional values as absent and checks resolved equality instead. This intentional stricter local input guidance never invents evidence.
+
+## Narrow verification
+
+- Initial behavior-preserving parser export/manual-builder extraction enabled RED: 7/7 assertion failures on condition invention, truncation, incomplete-vector acceptance, manual injection, nonfinite manual dimensions and premature exact-match copy. GREEN 7/7.
+- Source-schema fixture key agreement added: GREEN 8/8.
+- Strict JSON numeric edge RED: 8 PASS / 1 FAIL (`width_um:true` formerly accepted as 1); GREEN 9/9.
+- Final unknown-metadata and nested-uncertainty RED: 10 PASS / 2 FAIL; mixed-batch fixture already PASS. Final GREEN **12/12 PASS, 0 FAIL, 0 SKIP**.
+- Command: `node_modules/.bin/tsx.cmd --test tests/lpbf-measurement-submission.test.ts`. Sandbox first attempt spawned EPERM; authorized Windows runner executed actual tests. No full suite claimed.
+- `git diff --check` on both owned paths: PASS (only normal LF→CRLF Git warning).
+
+Parent owns final combined regression/type checks, documentation and local commit. Previous parent 38/38/type PASS predates the last five-line validation addition; it must not be relabelled as final acceptance. Related checks: lpbf-presentation, lpbf-contract, lpbf-workflow, lpbf-gpu-pilot-ui (material readiness), lpbf-engineering-repeat-ui, plus Python `Verification.test_nested_schema_and_measurement_evidence`. No existing manual-usable PASS expectation was found in those inspected tests.
+
+No browser access/retry/emulation, backend edits, index/stage/commit, network or new solver/model work. Browser interaction/keyboard/render verification remains pending under the explicit access denial; this fix does not establish full V1, experimental validation or production readiness. The earlier UI claim map retains its explicitly historical pre-fix audit scope.

@@ -5,11 +5,19 @@ const format = (value: number | null) => value === null ? "Unresolved" : value.t
 export function LpbfPhysicsDiagnostics({ result }: { result: SimulationResult }) {
   const diagnostics = result.numericalDiagnostics;
   const screen = result.geometricDefectScreen;
+  const sourceIntegration = diagnostics?.sourceIntegration;
+  const sourceIntegrationLabel = sourceIntegration === "cell-integrated-gaussian-adaptive-gl-v2"
+    ? "Adaptive Gauss-Legendre source integration"
+    : sourceIntegration === "cell-integrated-gaussian-gl2-v1"
+      ? "Two-point Gauss-Legendre source integration"
+      : sourceIntegration
+        ? `Source integration method unavailable · recorded identifier: ${sourceIntegration}`
+        : "Source integration method unavailable";
   if (!diagnostics && !screen && !result.fieldOverlapDiagnostics) return null;
   return <section aria-label="Physics resolution and overlap" className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 space-y-5">
     <h4 className="font-medium text-slate-100">Physics resolution and overlap</h4>
     {diagnostics && <div className="space-y-3">
-      <p className="text-sm text-slate-200">Cell-integrated Gaussian heating · two-point time integration</p>
+      <p className="text-sm text-slate-200">{sourceIntegrationLabel}</p>
       <dl className="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">
         {([
           ["Minimum captured source", `${format(diagnostics.minimumCapturedSourceFraction * 100)}%`],
