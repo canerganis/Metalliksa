@@ -1,0 +1,35 @@
+# DRAFT / UNVERIFIED: never run with Docker. Needs the Linux Python lock first.
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "3000:3000"
+    environment:
+      AIRGAPPED: "1"
+      METALLIKSA_LPBF_SOURCE_ROOT: /data/lpbf-sources
+      METALLIKSA_LPBF_RUN_ROOT: /data/lpbf-runs
+      METALLIKSA_LPBF_BUNDLE_ROOT: /data/lpbf-run-bundles
+      METALLIKSA_JOB_ROOT: /data/lpbf-jobs
+      RESEARCH_REGISTRY_DIR: /data/research-registry
+    volumes:
+      - metalliksa-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/python/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  # Verification run (lint, unit tests, build, CPU meltpool tests):
+  #   docker compose --profile repro build repro
+  repro:
+    profiles: ["repro"]
+    build:
+      context: .
+      target: verify
+
+volumes:
+  metalliksa-data:
