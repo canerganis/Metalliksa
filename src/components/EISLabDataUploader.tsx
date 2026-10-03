@@ -348,7 +348,7 @@ export function EISLabDataUploader({
           {/* Preset Benchmark Picker */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-              <span>Or pick experimental benchmark:</span>
+              <span>Or pick a synthetic training example (not a measurement):</span>
             </div>
             <select
               value={uploadedDataset?.id || ""}
@@ -359,11 +359,11 @@ export function EISLabDataUploader({
               className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-2.5 py-1.5 text-[11px] text-slate-200 font-mono focus:outline-none focus:border-sky-400"
             >
               <option value="" disabled>
-                -- Select {domain === "battery" ? "Battery" : "Corrosion"} Benchmark --
+                -- Select {domain === "battery" ? "Battery" : "Corrosion"} Training Example --
               </option>
               {domainBenchmarks.map((bm) => (
                 <option key={bm.id} value={bm.id}>
-                  {bm.name}
+                  [SYNTHETIC TRAINING] {bm.name}
                 </option>
               ))}
             </select>
