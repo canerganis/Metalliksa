@@ -37,3 +37,17 @@ graft/.graph/
 /.tmp-phase22-*/
 /python/.tmp-*/
 /python/.warp-cache/
+
+# Orchestra shared state (agent coordination, local only)
+/.orchestra/
+
+
+# Local runtime state and test temp directories (not evidence)
+/server/graft/
+/.npm-cache/
+/tmp*/
+/python/python/
+/python/codex-lpbf-test-tmp/
+/python/lpbf-run-shape-*/
+docs/**/queue.sqlite
+docs/**/worker.lock
