@@ -2,6 +2,13 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — termal geometri iddia ve giriş koruması (2026-10-03)
+
+- **Bulgu / düzeltme:** Sol 6.1 ve Luna, canlı residual yolunun zaten provenance yokken `unavailable` kaldığını; yalnız testlerde çağrılan eski NIST yardımcısının keyfî altı satırı optik-eşleşmiş diye etiketlediğini doğruladı. Yardımcı artık `build_six_section_diagnostic_aggregate`; tam ve benzersiz 3×2 track-konum çiftlerini, sonlu pozitif geometriyi zorunlu kılıyor ve sonucu `unverified` termal tanı olarak işaretliyor. Termal izokontur fonksiyonu optik adından ayrıldı; sınır kesik/eksik, sıcaklık veya koordinatlar geçersiz olduğunda pozitif ölçü yerine `None`/invalid ya da `ValueError` verir.
+- **Orkestrasyon sınırı:** Gemini 3.1 Pro ile Claude Sonnet/Opus 5.5 bağımsız öneriler sundu; repo kaynaklarını görmediklerini belirttiler ve yerel kanıt yerine alınmadılar. Gemini 3.8 Flash High uygulama araçları hatalı `googlecloudtools.datacloud_telemetry` PreToolUse yolunda durdu; makine ayarı değiştirilmedi, kod root tarafından tamamlandı. Sol son bilimsel incelemede NaN/koordinat sırası için ek kapı istedi; regresyon testiyle doğrulanıp eklendi.
+- **Kontrol / sınır:** Önce hedef testler eski davranışta beklenen 7 assertion failure verdi. Kilitli Python 3.12 ile `python -m unittest test_lpbf_nist_optical_operator` **7 PASS**; test dosyasındaki mevcut tek-run no-observer kontrolü de dahildir. `git diff --check` PASS. NIST optical residual hâlâ `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated`; bağımsız field/artifact bağları bu düzeltmeyle kurulmuş sayılmaz.
+- **Sıradaki:** NIST residualı açmadan, archived run-result artefaktlarından bağımsız üç track-field → altı kesit türetim sözleşmesinin mevcut servis/API kapsamını denetle; yalnız gerçek test edilebilir bir güven açığı kalırsa dar düzeltme yap.
+
 ## Güncel devam — arşivlenmiş tam-alan sentetik zaman tanısı (2026-10-03)
 
 - **Orkestrasyon / seçim:** 6.1 Sol, yeni solver koşusu yerine mevcut tam-alan NPZ karşılaştırmasını en değerli bilimsel tanı olarak seçti; Luna üç arşivin SHA, dizi şeması, grid, yoğunluk ve tarihsel fingerprint köprüsünü doğruladı. Gemini 3.1 Pro, Claude Sonnet 5.5 ve Opus 5.5 tarayıcısız API round-trip testi önerdi; bu işlev `tests/lpbf-run-workflow-roundtrip.test.ts` içinde zaten bulunduğundan test kopyalanmadı. Gemini 3.8 Flash'ın kodlama aracı `googlecloudtools.datacloud_telemetry` PreToolUse hook yolunda hata verdi; makine yapılandırması değiştirilmedi, aracı yalnız yeni Python dosyasıyla sınırlı olarak root tamamladı.

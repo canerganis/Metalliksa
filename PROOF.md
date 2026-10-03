@@ -31,7 +31,7 @@
 
 ## 2026-09-29 — Tarihsel LPBF 4 aşamalı entegrasyon kaydı
 
-> **Güncel geçerlilik notu (2026-10-03):** Aşağıdaki Adım 4'ün six-section üretimi ve resmi NIST residual iddiaları güncel aday tarafından desteklenmez; yukarıdaki düzeltme geçerlidir. Eski test sayıları tarihsel kayıttır. Diğer aşamaların burada korunması da yeni adayda yeniden doğrulandıkları anlamına gelmez.
+> **Güncel geçerlilik notu (2026-10-03):** Aşağıdaki Adım 4'ün six-section üretimi ve resmi NIST residual iddiaları güncel aday tarafından desteklenmez; yukarıdaki düzeltme geçerlidir. Eski optik yardımcı artık yalnızca bağımsız track-field provenansı olmayan, açıkça `unverified` termal geometri tanısıdır; NIST residual kapısı kapalı kalır. Eski test sayıları tarihsel kayıttır. Diğer aşamaların burada korunması da yeni adayda yeniden doğrulandıkları anlamına gelmez.
 
 - **Commit'ler:**
   - `7b06573`: `feat(lpbf): complete 4-step workflow: artifact purge, hardware timing, IN625 liquid/U95, graded mesh/evaporation, NIST optical operator`

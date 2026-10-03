@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 
 from lpbf_nist_optical_operator import (
-    extract_subcell_optical_boundary,
-    build_nist_six_section_observation,
+    extract_subcell_liquidus_geometry,
+    build_six_section_diagnostic_aggregate,
 )
 from lpbf_nist_in718_comparison import (
     compare_nist_in718_optical_geometry,
@@ -42,13 +42,47 @@ class TestNistOpticalOperator(unittest.TestCase):
                 else:
                     plane[iy, iz] = t_liquidus - 200.0 * (r_sq - 1.0)
 
-        res = extract_subcell_optical_boundary(y_coords, z_coords, plane, t_liquidus)
+        res = extract_subcell_liquidus_geometry(y_coords, z_coords, plane, t_liquidus)
         self.assertTrue(res["valid"])
         self.assertTrue(res["subcell_interpolated"])
 
         # Check sub-cell accuracy is within 2 um despite 10 um cell spacing
         self.assertAlmostEqual(res["width_um"], 100.0, delta=2.5)
         self.assertAlmostEqual(res["depth_um"], 50.0, delta=2.5)
+
+    def test_melt_geometry_without_closed_width_and_depth_contours_is_invalid(self):
+        t_liquidus = 1609.15
+        y_coords = np.array([-10e-6, 0.0, 10e-6])
+        z_coords = np.array([0.0, -10e-6, -20e-6])
+        plane = np.full((3, 3), t_liquidus - 100.0)
+        plane[1, 2] = t_liquidus + 100.0
+
+        result = extract_subcell_liquidus_geometry(y_coords, z_coords, plane, t_liquidus)
+
+        self.assertIsNone(result["width_um"])
+        self.assertIsNone(result["depth_um"])
+        self.assertFalse(result["valid"])
+
+    def test_liquidus_geometry_rejects_nonfinite_or_misordered_inputs(self):
+        t_liquidus = 1609.15
+        y_coords = np.array([-10e-6, 0.0, 10e-6])
+        z_coords = np.array([0.0, -10e-6, -20e-6])
+        plane = np.full((3, 3), t_liquidus - 100.0)
+        plane[1, 0] = t_liquidus + 100.0
+        plane[1, 1] = t_liquidus + 100.0
+
+        nonfinite_plane = plane.copy()
+        nonfinite_plane[0, 0] = float("nan")
+        invalid_inputs = [
+            (y_coords, z_coords, nonfinite_plane, t_liquidus),
+            (y_coords[::-1], z_coords, plane, t_liquidus),
+            (y_coords, z_coords[::-1], plane, t_liquidus),
+            (y_coords, z_coords, plane, float("nan")),
+        ]
+        for inputs in invalid_inputs:
+            with self.subTest(inputs=inputs):
+                with self.assertRaises(ValueError):
+                    extract_subcell_liquidus_geometry(*inputs)
 
     def test_six_section_observation_construction(self):
         sections = [
@@ -60,8 +94,14 @@ class TestNistOpticalOperator(unittest.TestCase):
             {"track": 3, "position_mm": 6.0, "width_um": 113.0, "depth_um": 57.0},
         ]
 
-        obs = build_nist_six_section_observation(sections)
-        self.assertEqual(obs["status"], "optical-operator-matched")
+        obs = build_six_section_diagnostic_aggregate(sections)
+        self.assertEqual(obs["status"], "unverified-aggregate")
+        self.assertEqual(obs["resultKind"], "thermal-geometry-diagnostic")
+        self.assertFalse(obs["claimBoundary"]["opticalOperatorMatched"])
+        self.assertFalse(obs["claimBoundary"]["experimentalValidation"])
+        self.assertFalse(obs["claimBoundary"]["independentTrackFieldBinding"])
+        self.assertNotIn("operator", obs)
+        self.assertNotIn("subcellInterpolation", obs)
         self.assertEqual(obs["observationCount"], 6)
         self.assertEqual(obs["locations_mm"], [4.9, 6.0])
         self.assertEqual(len(obs["sections"]), 6)
@@ -70,7 +110,44 @@ class TestNistOpticalOperator(unittest.TestCase):
 
         # Invalid count check
         with self.assertRaises(ValueError):
-            build_nist_six_section_observation(sections[:4])
+            build_six_section_diagnostic_aggregate(sections[:4])
+
+    def test_six_section_aggregate_rejects_incomplete_or_invalid_pairs(self):
+        sections = [
+            {"track": 1, "position_mm": 4.9, "width_um": 110.0, "depth_um": 55.0},
+            {"track": 1, "position_mm": 6.0, "width_um": 112.0, "depth_um": 56.0},
+            {"track": 2, "position_mm": 4.9, "width_um": 108.0, "depth_um": 54.0},
+            {"track": 2, "position_mm": 6.0, "width_um": 111.0, "depth_um": 55.5},
+            {"track": 3, "position_mm": 4.9, "width_um": 109.0, "depth_um": 54.5},
+            {"track": 3, "position_mm": 6.0, "width_um": 113.0, "depth_um": 57.0},
+        ]
+        invalid_cases = []
+
+        duplicate = [dict(section) for section in sections]
+        duplicate[-1]["track"] = 2
+        duplicate[-1]["position_mm"] = 4.9
+        invalid_cases.append(duplicate)
+
+        invalid_track = [dict(section) for section in sections]
+        invalid_track[-1]["track"] = 4
+        invalid_cases.append(invalid_track)
+
+        invalid_position = [dict(section) for section in sections]
+        invalid_position[-1]["position_mm"] = 5.5
+        invalid_cases.append(invalid_position)
+
+        non_finite = [dict(section) for section in sections]
+        non_finite[-1]["width_um"] = float("nan")
+        invalid_cases.append(non_finite)
+
+        non_positive = [dict(section) for section in sections]
+        non_positive[-1]["depth_um"] = 0.0
+        invalid_cases.append(non_positive)
+
+        for invalid_sections in invalid_cases:
+            with self.subTest(sections=invalid_sections):
+                with self.assertRaises(ValueError):
+                    build_six_section_diagnostic_aggregate(invalid_sections)
 
     def test_unverified_six_section_shape_cannot_enable_residual(self):
         # A valid-looking six-row aggregate lacks evidence of independent track fields.
@@ -94,7 +171,7 @@ class TestNistOpticalOperator(unittest.TestCase):
             {"track": 3, "position_mm": 4.9, "width_um": 138.0, "depth_um": 149.0},
             {"track": 3, "position_mm": 6.0, "width_um": 140.0, "depth_um": 150.0},
         ]
-        result["sixSectionObservation"] = build_nist_six_section_observation(sections)
+        result["sixSectionObservation"] = build_six_section_diagnostic_aggregate(sections)
         # Match finest reported optical section exactly to mean
         result["sixSectionObservation"]["width_um"] = 140.0
         result["sixSectionObservation"]["depth_um"] = 150.0
