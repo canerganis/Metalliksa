@@ -79,8 +79,12 @@ COPY --chown=metalliksa package.json ./
 COPY --chown=metalliksa python ./python
 COPY --chown=metalliksa data ./data
 COPY --chown=metalliksa assets ./assets
-# Tracked surrogate models; python/phase9_surrogate.py reads and writes .lpbf-surrogates
-# relative to the working directory.
+# docs/sources/in625 is read at run time (server/lpbfPropertySourceCatalog.ts resolves it
+# against the working directory; lpbfSourceArchiveService archives from it).
+COPY --chown=metalliksa docs/sources/in625 ./docs/sources/in625
+# Tracked surrogate models. Only python/phase9_surrogate.py (offline scripts/tests, not called by
+# the server) uses .lpbf-surrogates; it imports sklearn/joblib, which the lpbf lock does not
+# provide, so this copy is inert unless scikit-learn is added to the image.
 COPY --chown=metalliksa .lpbf-surrogates ./.lpbf-surrogates
 USER metalliksa
 VOLUME ["/data"]

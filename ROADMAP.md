@@ -4,7 +4,7 @@
 
 ## Current position
 
-- **Latest implementation milestone:** V1 Research Workstation hardening — archived proxy section metadata validation (`c38f933`) and fail-closed optical geometry guard (`f46dc8c`), as recorded in `STATUS.md`; the full V1 exit is not yet accepted.
+- **Latest implementation milestone:** V1 Research Workstation hardening — latest V1 LPBF milestone is the fail-closed NIST 3707 Table 5 proxy preflight (`f06359a`), after archived proxy section metadata validation (`c38f933`) and the fail-closed optical geometry guard (`f46dc8c`); the newest code commit on this integration line is `ab7a55b` (v2 security, packaging, a11y, bundle and air-gap hardening); the full V1 exit is not yet accepted.
 - **Active goal:** V1 Research Workstation (see below); new physics phases, including GPU-accelerated 3D transient enthalpy work, stay frozen until its exit path is accepted.
 - **Application surface:** the current workspace inventory marks modules as Research or Preview; none is labelled Production.
 - **Evidence boundary:** the application is a traceable engineering research workstation. Solver outputs remain screening results unless the matching evidence is recorded in `PROOF.md`.
