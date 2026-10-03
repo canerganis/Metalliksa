@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["src", "server.ts", "routes", "server", "tests"],
   "exclude": ["node_modules", "dist", "build", "coverage", ".lpbf-jobs"],
   "compilerOptions": {
     "target": "ES2022",

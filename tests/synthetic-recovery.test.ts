@@ -7,7 +7,7 @@ import type { CircuitTopology } from '../src/components/EquivalentCircuitBuilder
 import type { CNLSFitReport } from '../src/types/eisData';
 
 const topology: CircuitTopology = { id:'r', name:'Synthetic resistor', description:'', category:'custom', cdcNotation:'R',
-  branches:[{id:'b', name:'Series', connection:'series', elements:[{id:'R', name:'R', label:'R', type:'R', value:20, unit:'Ohm', isFixed:false}]}] };
+  branches:[{id:'b', name:'Series', connection:'series', elements:[{id:'R', name:'R', label:'R', description:'Resistance element.', type:'R', value:20, unit:'Ohm', isFixed:false}]}] };
 const clean = computeCleanSpectrum(topology, [100,10,1]);
 const config = {...defaults, randomSeed:37};
 const points = injectSyntheticNoise(clean, config);
