@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfRunArchiveError } from './lpbfRunArchiveService';
 import { LpbfRunRepository, type ProxyCampaignRecord, type RunRecord } from './lpbfRunRepository';
@@ -24,6 +25,7 @@ const CONTOUR_OPERATOR = 'linear-liquidus-crossings-between-cell-centers-v1';
 const SECTION_FIELD_PATH = 'rectangular-corridor-section-fields.npz';
 const SECTION_FIELD_BINDING = 'accepted-step-maximum-per-source-X-plane';
 const MAX_SECTION_FIELD_BYTES = 32 * 1024 * 1024;
+const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
   status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
@@ -32,7 +34,7 @@ const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist
 function validatePython(campaign: unknown, source: unknown): Promise<any> {
   return new Promise((resolve, reject) => {
     const python = getHostPython();
-    const code = 'import json,sys; sys.path.insert(0,"python"); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"]), allow_nan=False))';
+    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"]), allow_nan=False))`;
     const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
     let stdout = '', stderr = '', done = false;
     const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };
@@ -58,7 +60,7 @@ function rederivePythonSections(result: unknown, bytes: Buffer): Promise<any> {
     catch { reject(new Error('Host Python is unavailable for NPZ re-derivation.')); return; }
     const code = [
       'import json,sys',
-      'sys.path.insert(0,"python")',
+      `sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)})`,
       'try:',
       ' from lpbf_nist_proxy_sections import rederive_rectangular_corridor_sections',
       ' from lpbf_nist_proxy_sections import SectionArtifactError',
@@ -88,7 +90,7 @@ function rederivePythonSections(result: unknown, bytes: Buffer): Promise<any> {
   });
 }
 
-async function validateArchivedSections(record: RunRecord, result: any, store: LpbfArtifactStore,
+async function validateArchivedSections(result: any, store: LpbfArtifactStore,
   reader: (result: unknown, bytes: Buffer) => Promise<any> = rederivePythonSections): Promise<string | null> {
   const descriptor = result?.barePlateSectionFieldArtifact;
   if (descriptor?.schemaVersion !== 1 || descriptor?.status !== 'captured'
@@ -116,7 +118,8 @@ async function validateArchivedSections(record: RunRecord, result: any, store: L
     }
     return null;
   } catch (error) {
-    return error instanceof Error ? error.message : 'Archived section-field artifact verification failed.';
+    return error instanceof Error && error.message ? `Archived section-field artifact verification failed: ${error.message}`
+      : 'Archived section-field artifact verification failed with a non-Error exception.';
   }
 }
 
@@ -293,7 +296,7 @@ export class LpbfNistProxyCampaignService {
           || !Array.isArray(result.barePlateSectionObservations)) {
           return { campaign: null, validation: unavailable([`Archived run ${record.document.runId} is not a matching, core-bound IN718 bare-plate thermal track for Table 4 case ${caseNumber}.`]) };
         }
-        const sectionFailure = await validateArchivedSections(record, result,
+        const sectionFailure = await validateArchivedSections(result,
           new LpbfArtifactStore(path.join(this.runRoot, 'artifacts'), { readOnly: true }), this.sectionReader);
         if (sectionFailure) return { campaign: null, validation: unavailable([`Archived run ${record.document.runId}: ${sectionFailure}`]) };
         const run = runCampaignIdentity(record, result, result.barePlateSectionObservations, sourceBinding);

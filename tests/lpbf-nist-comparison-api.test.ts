@@ -155,7 +155,8 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const producerFixture = createProxySectionFieldFixture();
   async function saveProxyRun(runId: string, corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
     | 'missing-descriptor' | 'mismatched-descriptor' | 'missing-manifest'
-    | 'changed-width' | 'changed-depth' | 'changed-sample-cells' | 'changed-plane') {
+    | 'changed-width' | 'changed-depth' | 'changed-sample-cells' | 'changed-plane'
+    | 'compressed-budget') {
     const settings = {
       backend: 'auto',
       power_W: tableCase.laserPower_W, speed_mm_s: tableCase.scanSpeed_mm_s,
@@ -175,7 +176,9 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     if (corruption === 'changed-width') observations[0].width_um += 1;
     if (corruption === 'changed-depth') observations[0].depth_um += 1;
     if (corruption === 'changed-sample-cells') observations[0].sampleCells += 1;
-    const sectionBytes = corruption === 'changed-plane' ? alterProxySectionField(producerFixture.bytes) : producerFixture.bytes;
+    const sectionBytes = corruption === 'changed-plane' ? alterProxySectionField(producerFixture.bytes)
+      : corruption === 'compressed-budget' ? Buffer.concat([producerFixture.bytes, Buffer.alloc(32 * 1024 * 1024)])
+        : producerFixture.bytes;
     const sectionJob = path.join(root, `section-${runId}`); mkdirSync(sectionJob);
     writeFileSync(path.join(sectionJob, 'rectangular-corridor-section-fields.npz'), sectionBytes);
     const sectionArtifact = { path: 'rectangular-corridor-section-fields.npz', size_bytes: sectionBytes.length, sha256: sha(sectionBytes) };
@@ -218,7 +221,17 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const corruptions = ['distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
   for (let index = 0; index < malformedProxyRunIds.length; index++) await saveProxyRun(malformedProxyRunIds[index], corruptions[index]);
   const sectionCorruptions = ['missing-descriptor', 'mismatched-descriptor', 'missing-manifest',
-    'changed-width', 'changed-depth', 'changed-sample-cells', 'changed-plane'] as const;
+    'changed-width', 'changed-depth', 'changed-sample-cells', 'changed-plane', 'compressed-budget'] as const;
+  const sectionFailureReasons = [
+    'Archived run lacks the exact captured section-field artifact descriptor.',
+    'Archived run lacks the exact captured section-field artifact descriptor.',
+    'Archived run manifest must contain exactly one section-field artifact entry.',
+    'result.json section single-line-x-4p9mm width_um is not reproducible',
+    'result.json section single-line-x-4p9mm depth_um is not reproducible',
+    'result.json section single-line-x-4p9mm status or sampleCells is not reproducible',
+    'result.json section single-line-x-4p9mm width_um is not reproducible',
+    'compressed-byte budget',
+  ];
   for (let index = 0; index < sectionCorruptions.length; index++) await saveProxyRun(sectionFailureIds[index], sectionCorruptions[index]);
   runs.close(); sources.close();
 
@@ -277,12 +290,15 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     assert.equal(malformedProxy.body.validation.status, 'unavailable');
   }
 
-  for (const malformedRunId of sectionFailureIds) {
+  for (let index = 0; index < sectionFailureIds.length; index++) {
+    const malformedRunId = sectionFailureIds[index];
     const malformedProxy = await postCampaignPreview([proxyRunIds[0], proxyRunIds[1], malformedRunId]);
     assert.equal(malformedProxy.status, 200);
     assert.equal(malformedProxy.body.campaign, null,
       'the service must reject missing bindings and any non-reproducible archived section');
     assert.equal(malformedProxy.body.validation.status, 'unavailable');
+    assert.ok(malformedProxy.body.validation.reasons.some((reason: string) => reason.includes(sectionFailureReasons[index])),
+      `expected specific section failure reason: ${sectionFailureReasons[index]}`);
   }
   const noPythonReader = new LpbfNistProxyCampaignService(runRoot, sourceRoot, async () => {
     throw new Error('Python NPZ re-derivation reader is unavailable.');
@@ -291,6 +307,28 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(unavailablePreview.campaign, null);
   assert.equal(unavailablePreview.validation.status, 'unavailable');
   assert.match(unavailablePreview.validation.reasons.join(' '), /Python NPZ re-derivation reader is unavailable/i);
+
+  const verifiedSection = JSON.parse(proxyResultJson.get(proxyRunIds[0])!).artifacts
+    .find((item: any) => item.path === 'rectangular-corridor-section-fields.npz');
+  const verifiedSectionPath = path.join(runRoot, 'artifacts', 'objects', verifiedSection.sha256.slice(0, 2), verifiedSection.sha256);
+  const originalVerify = LpbfArtifactStore.prototype.verify;
+  let sectionVerifications = 0;
+  LpbfArtifactStore.prototype.verify = async function(ref) {
+    const verified = await originalVerify.call(this, ref);
+    if (ref.sha256 === verifiedSection.sha256 && ++sectionVerifications === 4) {
+      writeFileSync(verified.path, Buffer.from('changed after successful store verification'));
+    }
+    return verified;
+  };
+  let rereadMismatch;
+  try {
+    rereadMismatch = await new LpbfNistProxyCampaignService(runRoot, sourceRoot).preview(proxyRunIds, '0');
+  } finally {
+    LpbfArtifactStore.prototype.verify = originalVerify;
+    writeFileSync(verifiedSectionPath, producerFixture.bytes);
+  }
+  assert.equal(rereadMismatch.campaign, null);
+  assert.match(rereadMismatch.validation.reasons.join(' '), /changed or failed SHA-256 verification after store verification/i);
 
   const createProxy = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds,

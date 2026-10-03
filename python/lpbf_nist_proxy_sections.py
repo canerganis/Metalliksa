@@ -139,6 +139,8 @@ def rederive_rectangular_corridor_sections(payload, result):
     if (axis_y.size < 2 or z.size < 2 or axis_y.size * z.size > _MAX_CELLS
             or temperatures.shape[1:] != (len(axis_y), len(z))):
         _fail("NPZ temperature planes do not fit the bounded Y/Z grid")
+    # result.json records executed mesh and steps but carries no executed domain origin/extent.
+    # Keep the Y/Z coordinate axes internally uniform; do not invent a domain binding here.
     for name, axis in (("Y", axis_y), ("Z", z)):
         if (not np.all(np.diff(axis) > 0)
                 or not np.allclose(np.diff(axis), mesh, rtol=1e-8, atol=1e-12)):
