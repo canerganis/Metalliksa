@@ -1,6 +1,8 @@
 /** Crossref supplies bibliographic metadata, never extracted measurement ground truth.
  * Contract: https://www.crossref.org/documentation/retrieve-metadata/rest-api/
  */
+import { assertNotAirgapped } from './airgap';
+
 export interface LiteratureSearchItem {
   doi: string;
   title: string;
@@ -12,6 +14,7 @@ export interface LiteratureSearchItem {
 }
 
 export function researchSearchUrl(query: unknown): URL {
+  assertNotAirgapped('Crossref literature search');
   if (typeof query !== 'string' || query.trim().length < 3 || query.length > 500) {
     throw new Error('Enter a research query or DOI between 3 and 500 characters.');
   }

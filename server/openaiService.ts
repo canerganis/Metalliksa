@@ -1,3 +1,5 @@
+import { assertNotAirgapped } from "./airgap";
+
 export type Gpt6Model = "gpt-6-astra" | "gpt-6-sol" | "gpt-6-luna";
 
 type Gpt6Input = string | {
@@ -29,6 +31,7 @@ export async function generateGpt6Response(
   request: Gpt6Request,
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ text: string; modelUsed: Gpt6Model }> {
+  assertNotAirgapped("GPT-6 AI (copilot / micrograph vision)");
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured in the environment.");
 
