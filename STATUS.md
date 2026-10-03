@@ -6,8 +6,8 @@
 
 - **Bulgu / düzeltme:** Gerçek `LpbfNistProxyCampaignService` entegrasyon fixture'ı, `result.json` içinde taşınan kesit metadata'sının servisçe sabit beklenen değerlerle sessizce değiştirildiğini gösterdi. Servis artık kesit kaydının mesafe ve X koordinatını tarama başlangıcından hesaplanan konumla; bölüm/kontur operatörünü, accepted-step temporal aggregation'ı, source-plane indeks/X/fraction değerlerini ve proxy kapsam etiketlerini karşılaştırıyor. Eksik veya uyumsuz kayıt kampanyayı `unavailable` bırakıyor.
 - **Kontrol / sınır:** Sentetik arşivlerle gerçek `preview → create → list` servisi ve capture SHA/byte bağı doğrulandı. Her bozuk arşiv ayrı çağrıda yanlış mesafe, operatör, X koordinatı veya linear interpolation fraction nedeniyle reddedildi; exact-center ve iki düzlemli interpolation yolları başarıyla işlendi. `tests/lpbf-nist-comparison-api.test.ts` **1/1 PASS**; `npm run lint` (`tsc --noEmit`) PASS; Sol 6.1 diff incelemesi GO. Fixture sentetiktir; solver çalıştırılmadı. Kampanya hâlâ `proxy-screening-only`, residual `null`, deneysel validasyon `false`; bu, üç bağımsız accepted-step field artefaktı kanıtı değildir ve NIST optical residualı açmaz.
-- **Commit:** Bu güncelleme paketi yerel commit için hazırlanıyor; push yok.
-- **Sıradaki:** Bağımsız inceleme sonucunu al; bu dar servis/test/STATUS değişikliğini kullanıcı değişikliklerinden ayrı yerel commit et. Ardından V1 tarayıcı/portable archive kabulü kapısını ele al; erişim engelini kabul geçilmiş gibi göstermeden sürdür.
+- **Commit:** `c38f933` (`fix(lpbf): validate archived proxy section metadata`), yerel; push yok.
+- **Sıradaki:** Aynı adaydaki V1 tarayıcı/portable archive kabulü kapısını ele al; erişim engelini kabul geçilmiş gibi göstermeden sürdür.
 
 ## Güncel devam — termal geometri iddia ve giriş koruması (2026-10-03)
 
