@@ -4,8 +4,8 @@
 
 ## Current position
 
-- **Latest implementation milestone:** Phase 21 — transient enthalpy-method phase-change solver (FDM).
-- **Active worktree:** Phase 22 GPU-accelerated 3D transient enthalpy work is present as uncommitted changes; it is intentionally not treated as a completed milestone here.
+- **Latest implementation milestone:** V1 Research Workstation hardening — archived proxy section metadata validation (`c38f933`) and fail-closed optical geometry guard (`f46dc8c`), as recorded in `STATUS.md`; the full V1 exit is not yet accepted.
+- **Active goal:** V1 Research Workstation (see below); new physics phases, including GPU-accelerated 3D transient enthalpy work, stay frozen until its exit path is accepted.
 - **Application surface:** the current workspace inventory marks modules as Research or Preview; none is labelled Production.
 - **Evidence boundary:** the application is a traceable engineering research workstation. Solver outputs remain screening results unless the matching evidence is recorded in `PROOF.md`.
 - **Plan authority:** this ROADMAP owns sequencing and acceptance. `STATUS.md` records the latest verified state; `docs/ACTIVE_WORK.md` and the in-app engineering ledger preserve dated history/deferred qualification work.
