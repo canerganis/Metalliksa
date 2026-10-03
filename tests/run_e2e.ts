@@ -7,7 +7,7 @@ import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { LpbfRunArchiveService } from '../server/lpbfRunArchiveService';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
 
-(async function() { const t = { after: () => {} };
+(async function() { const t: { after: (callback: () => void) => void } = { after: () => {} };
   try {
     const directory = mkdtempSync(path.join(tmpdir(), 'metalliksa-e2e-'));
     const sourceRoot = path.join(directory, 'sources');
