@@ -54,6 +54,7 @@ import {
   SpectrumPoint,
 } from "../data/edsReferenceData";
 import { parseRawEDSFile, ParsedEDSSpectrum } from "../utils/edsParser";
+import { archiveEDSSource, EDSSourceRecord, restoreLatestEDSSource, sha256Bytes } from "../utils/edsSourceArchive";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { dispatchNavigateToTab } from "../utils/materialDataPipeline";
 import { WebGLSpectrometerCanvas } from "./WebGLSpectrometerCanvas";
@@ -62,6 +63,11 @@ import { WebGLEDSHyperMapCanvas } from "./WebGLEDSHyperMapCanvas";
 export const EDSSpectrumLab: React.FC<{
   onSendToAlloyBuilder?: (composition: Record<string, number>) => void;
 }> = ({ onSendToAlloyBuilder }) => {
+  type UploadedSource = Pick<EDSSourceRecord, "fileName" | "mediaType" | "bytes"> & {
+    sha256?: string;
+    persisted: boolean;
+  };
+  type UploadedSpectrum = ParsedEDSSpectrum & { source: UploadedSource | null };
   // Active sample selection
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>(
     EDS_SAMPLE_DATASETS[0].id
@@ -112,11 +118,12 @@ export const EDSSpectrumLab: React.FC<{
   ]);
 
   // Custom Upload States
-  const [uploadedSpectrum, setUploadedSpectrum] =
-    useState<ParsedEDSSpectrum | null>(null);
+  const [uploadedSpectrum, setUploadedSpectrum] = useState<UploadedSpectrum | null>(null);
+  const [sourceRestoreState, setSourceRestoreState] = useState<"checking" | "ready" | "empty" | "failed">("checking");
   const [customMicrographUrl, setCustomMicrographUrl] = useState<string | null>(
     null
   );
+  const spectrumRequestGenerationRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const micrographInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,6 +152,29 @@ export const EDSSpectrumLab: React.FC<{
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
 
+  useEffect(() => {
+    let active = true;
+    const generation = spectrumRequestGenerationRef.current;
+    void restoreLatestEDSSource().then(record => {
+      if (!active || generation !== spectrumRequestGenerationRef.current) return;
+      if (!record) {
+        setSourceRestoreState("empty");
+        return;
+      }
+      const binary = record.fileName.toLowerCase().endsWith(".spc");
+      const content = binary ? record.bytes : new TextDecoder().decode(record.bytes);
+      const parsed = parseRawEDSFile(content, record.fileName);
+      setUploadedSpectrum({ ...parsed, source: { ...record, persisted: true } });
+      setAnalysisMode("spot_spectrum");
+      if (Number.isFinite(parsed.beamEnergyKv) && parsed.beamEnergyKv! > 0) setBeamKv(parsed.beamEnergyKv!);
+      if (parsed.liveTimeSec !== undefined) setLiveTimeSec(parsed.liveTimeSec);
+      setSourceRestoreState("ready");
+    }).catch(() => {
+      if (active && generation === spectrumRequestGenerationRef.current) setSourceRestoreState("failed");
+    });
+    return () => { active = false; };
+  }, []);
+
   // Generate real-time theoretical / empirical spectrum data
   const spectrumData: SpectrumPoint[] = useMemo(() => {
     if (uploadedSpectrum && uploadedSpectrum.points.length > 0) {
@@ -167,11 +197,19 @@ export const EDSSpectrumLab: React.FC<{
     }));
   }, [spectrumData]);
 
+  const declaredImportedBeamKv = uploadedSpectrum &&
+    Number.isFinite(uploadedSpectrum.beamEnergyKv) &&
+    uploadedSpectrum.beamEnergyKv! > 0
+    ? uploadedSpectrum.beamEnergyKv
+    : undefined;
+
   const webglAnnotations = useMemo(() => {
     const ann: { x: number; label: string; intensity: number }[] = [];
+    const activeBeamKv = uploadedSpectrum ? declaredImportedBeamKv : beamKv;
+    if (activeBeamKv === undefined) return ann;
     activeElementMarkers.forEach((sym) => {
       const lineInfo = CHARACTERISTIC_XRAY_LINES[sym];
-      if (lineInfo && lineInfo.lines.kAlpha && lineInfo.lines.kAlpha <= beamKv) {
+      if (lineInfo && lineInfo.lines.kAlpha && lineInfo.lines.kAlpha <= activeBeamKv) {
         ann.push({
           x: lineInfo.lines.kAlpha,
           label: `${sym} Kα`,
@@ -180,7 +218,7 @@ export const EDSSpectrumLab: React.FC<{
       }
     });
     return ann;
-  }, [activeElementMarkers, beamKv]);
+  }, [activeElementMarkers, beamKv, declaredImportedBeamKv, uploadedSpectrum]);
 
   // Toggle active element cursor lines
   const toggleElementMarker = (elemSymbol: string) => {
@@ -191,30 +229,62 @@ export const EDSSpectrumLab: React.FC<{
     );
   };
 
-  // Handle Raw EDS File Upload (.csv, .txt, .emsa, .spc)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle calibrated EMSA/MAS or delimited EDS source files.
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const isBinary = file.name.toLowerCase().endsWith(".spc");
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    const generation = ++spectrumRequestGenerationRef.current;
+    try {
+      const bytes = await file.arrayBuffer();
+      if (generation !== spectrumRequestGenerationRef.current) return;
+      const content = file.name.toLowerCase().endsWith(".spc")
+        ? bytes
+        : new TextDecoder().decode(bytes);
+      const parsed = parseRawEDSFile(content, file.name);
+      let source: UploadedSource = {
+        fileName: file.name,
+        mediaType: file.type || "application/octet-stream",
+        bytes: bytes.slice(0),
+        persisted: false,
+      };
       try {
-        const content = event.target?.result as string | ArrayBuffer;
-        const parsed = parseRawEDSFile(content, file.name);
-        setUploadedSpectrum(parsed);
-        if (parsed.beamEnergyKv) setBeamKv(parsed.beamEnergyKv);
-        if (parsed.liveTimeSec) setLiveTimeSec(parsed.liveTimeSec);
-      } catch (err: any) {
-        alert("Error parsing EDS file: " + (err.message || err));
+        const archived = await archiveEDSSource(
+          file.name,
+          file.type,
+          bytes,
+          undefined,
+          () => generation === spectrumRequestGenerationRef.current,
+        );
+        if (generation !== spectrumRequestGenerationRef.current) return;
+        source = { ...archived, persisted: true };
+        setSourceRestoreState("ready");
+      } catch {
+        if (generation !== spectrumRequestGenerationRef.current) return;
+        source.sha256 = await sha256Bytes(bytes).catch(() => undefined);
+        if (generation !== spectrumRequestGenerationRef.current) return;
+        setSourceRestoreState("failed");
       }
-    };
-
-    if (isBinary) {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file);
+      setUploadedSpectrum({ ...parsed, source });
+      setAnalysisMode("spot_spectrum");
+      if (Number.isFinite(parsed.beamEnergyKv) && parsed.beamEnergyKv! > 0) setBeamKv(parsed.beamEnergyKv!);
+      if (parsed.liveTimeSec !== undefined) setLiveTimeSec(parsed.liveTimeSec);
+    } catch (err: unknown) {
+      if (generation !== spectrumRequestGenerationRef.current) return;
+      setSourceRestoreState("empty");
+      const message = err instanceof Error ? err.message : String(err);
+      alert("Error importing EDS file: " + message);
     }
+  };
+
+  const downloadOriginalSource = () => {
+    const source = uploadedSpectrum?.source;
+    if (!source) return;
+    const url = URL.createObjectURL(new Blob([source.bytes], { type: source.mediaType }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = source.fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   // Handle Custom Micrograph Image Upload
@@ -293,7 +363,26 @@ Provide:
   // Export CSV of EDS Results
   const exportCsvReport = () => {
     if (!activeSpot) return;
-    let csv = `MetalliX Quantitative EDS Microanalysis Report (ASTM E1508)\n`;
+    if (uploadedSpectrum) {
+      const rows = [
+        "Imported EDS spectrum; parser output only; no energy calibration review, background validation, peak deconvolution, or quantitative analysis has been performed.",
+        `Source filename:,${uploadedSpectrum.fileName}`,
+        `Source SHA-256:,${uploadedSpectrum.source?.sha256 ?? "not computed"}`,
+        `Source retained in browser:,${uploadedSpectrum.source?.persisted ? "yes" : "session only"}`,
+        `Energy calibration declaration:,${uploadedSpectrum.energyCalibrationSource ?? "unavailable"}`,
+        "Energy (keV),Parsed counts",
+        ...uploadedSpectrum.points.map((point) => `${point.energyKeV},${point.counts}`),
+      ];
+      const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `EDS_parsed_${uploadedSpectrum.fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+    let csv = `MetalliX built-in EDS training example; not measured data; no ASTM E1508 quantitative analysis performed.\n`;
     csv += `Sample:,${activeDataset.sampleName}\n`;
     csv += `Material Class:,${activeDataset.materialClass}\n`;
     csv += `Accelerating Voltage:,${beamKv} kV\n`;
@@ -334,12 +423,12 @@ Provide:
                   <h2 className="text-xl font-bold tracking-tight text-white">
                     SEM-EDS & X-Ray Microanalysis Studio
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                    ASTM E1508 / SDD Calibrated
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/40">
+                    {uploadedSpectrum ? "Imported spectrum · review required" : "Synthetic training example · not measured"}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Point Spectrum, Line Scans & Multi-Channel Elemental HyperMapping with ZAF Matrix Quantification
+                  Imported spectrum preview, plus separate built-in training examples; no calibrated quantification is available yet
                 </p>
               </div>
             </div>
@@ -351,15 +440,15 @@ Provide:
               id="eds-upload-spectrum-btn"
               onClick={() => fileInputRef.current?.click()}
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-medium flex items-center gap-2 transition-all shadow-sm cursor-pointer"
-              title="Import raw .spc, .emsa, .csv or .txt spectrum"
+              title="Import EMSA/MAS or delimited spectra with a source-declared eV/keV energy axis"
             >
               <Upload className="w-4 h-4 text-cyan-400" />
-              <span>Import Raw EDS (.spc / .emsa)</span>
+              <span>Import Calibrated EDS (.msa / .emsa / .csv)</span>
             </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.txt,.emsa,.spc"
+              accept=".csv,.txt,.dat,.emsa,.msa"
               onChange={handleFileUpload}
               className="hidden"
             />
@@ -370,8 +459,21 @@ Provide:
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-medium flex items-center gap-2 transition-all shadow-sm cursor-pointer"
             >
               <Download className="w-4 h-4 text-emerald-400" />
-              <span>Export ASTM Report</span>
+              <span>{uploadedSpectrum ? "Export Raw Spectrum CSV" : "Export Training Example CSV"}</span>
             </button>
+
+            {uploadedSpectrum && (
+              <button
+                id="eds-download-original-btn"
+                onClick={downloadOriginalSource}
+                disabled={!uploadedSpectrum.source}
+                title={uploadedSpectrum.source ? "Download the byte-identical imported source file" : "The source bytes are unavailable"}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 border border-slate-700 rounded-xl text-xs font-medium flex items-center gap-2 transition-all"
+              >
+                <Download className="w-4 h-4 text-cyan-400" />
+                <span>Download Original</span>
+              </button>
+            )}
 
             <button
               id="eds-send-to-module-btn"
@@ -398,12 +500,22 @@ Provide:
           </div>
         </div>
 
+        <div role="status" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          {uploadedSpectrum
+            ? `Imported ${uploadedSpectrum.fileName}: spectrum preview only. Energy axis declaration: ${uploadedSpectrum.energyCalibrationSource ?? "unknown"}. Source ${uploadedSpectrum.source?.persisted ? `is retained in this browser (SHA-256 ${uploadedSpectrum.source.sha256})` : uploadedSpectrum.source ? `is available for this session only (SHA-256 ${uploadedSpectrum.source.sha256 ?? "unavailable"})` : "is unavailable"}. Physical calibration review, background correction, peak deconvolution, and composition quantification have not been validated. Map and line-scan views use built-in training examples.`
+            : sourceRestoreState === "checking"
+              ? "Checking the browser's local EDS source archive…"
+              : sourceRestoreState === "failed"
+                ? "The latest local EDS source could not be restored or verified. Built-in spectra, maps, and compositions remain training examples, not measurements."
+                : "Built-in spectra, maps, and compositions are training examples with no verified measurement provenance."}
+        </div>
+
         {/* Dataset & Mode Selector Toolbar */}
         <div className="mt-5 pt-4 border-t border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           {/* Sample Selector */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Calibrated Specimen:
+              Built-in Training Example (not a measurement):
             </span>
             <div className="flex gap-1.5 flex-wrap">
               {EDS_SAMPLE_DATASETS.map((ds) => (
@@ -411,8 +523,10 @@ Provide:
                   key={ds.id}
                   id={`eds-sample-${ds.id}`}
                   onClick={() => {
+                    spectrumRequestGenerationRef.current += 1;
                     setSelectedDatasetId(ds.id);
                     setUploadedSpectrum(null);
+                    setSourceRestoreState("empty");
                     setCustomMicrographUrl(null);
                     setBeamKv(ds.acceleratingVoltageKv);
                     setLiveTimeSec(ds.liveTimeSec);
@@ -446,6 +560,7 @@ Provide:
             <button
               id="eds-mode-linescan"
               onClick={() => setAnalysisMode("line_scan")}
+              disabled={!!uploadedSpectrum}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 analysisMode === "line_scan"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md"
@@ -458,6 +573,7 @@ Provide:
             <button
               id="eds-mode-map"
               onClick={() => setAnalysisMode("elemental_map")}
+              disabled={!!uploadedSpectrum}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 analysisMode === "elemental_map"
                   ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md"
@@ -517,8 +633,10 @@ Provide:
                         key={spot.id}
                         id={`eds-spot-marker-${spot.id}`}
                         onClick={() => {
+                          spectrumRequestGenerationRef.current += 1;
                           setSelectedSpotId(spot.id);
                           setUploadedSpectrum(null);
+                          setSourceRestoreState("empty");
                         }}
                         style={{
                           left: `${spot.xPct}%`,
@@ -645,10 +763,14 @@ Provide:
             <div className="mt-3 text-xs text-slate-400 space-y-2">
               <div className="flex items-center justify-between">
                 <span>
-                  {activeDataset.sampleCondition}
+                  {uploadedSpectrum
+                    ? `Imported source: ${uploadedSpectrum.sampleTitle || uploadedSpectrum.fileName}`
+                    : activeDataset.sampleCondition}
                 </span>
                 <span className="font-mono text-cyan-400">
-                  {beamKv} kV | {liveTimeSec}s
+                  {uploadedSpectrum
+                    ? `${declaredImportedBeamKv === undefined ? "Beam energy unavailable" : `${declaredImportedBeamKv} kV (source-declared)`} | ${uploadedSpectrum.liveTimeSec ?? "Unknown"} s`
+                    : `${beamKv} kV | ${liveTimeSec}s`}
                 </span>
               </div>
 
@@ -849,11 +971,15 @@ Provide:
                     <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
                       <span>EDS X-Ray Emission Spectrum</span>
                       <span className="text-xs font-mono text-cyan-400 font-normal">
-                        ({activeSpot.name})
+                        ({uploadedSpectrum
+                          ? uploadedSpectrum.sampleTitle || uploadedSpectrum.fileName
+                          : activeSpot.name})
                       </span>
                     </h3>
                     <p className="text-[11px] text-slate-400">
-                      X-Ray Energy (0.0 to {beamKv} keV) vs Detector Counts / CPS
+                      {uploadedSpectrum
+                        ? `Imported raw counts · ${declaredImportedBeamKv === undefined ? "beam-energy limit unavailable" : `source-declared beam energy ${declaredImportedBeamKv} keV`}`
+                        : `X-Ray Energy (0.0 to ${beamKv} keV) vs Detector Counts / CPS`}
                     </p>
                   </div>
 
@@ -932,7 +1058,7 @@ Provide:
                     xLabel="X-Ray Energy"
                     yLabel="Counts"
                     xUnit="keV"
-                    yUnit="CPS"
+                    yUnit={uploadedSpectrum ? "counts" : "CPS"}
                     height={280}
                     lineColor={[0.02, 0.71, 0.83, 1.0]} // cyan-500
                     fillColor={[0.02, 0.71, 0.83, 0.28]}
@@ -992,12 +1118,15 @@ Provide:
                           stroke="#64748b"
                           fontSize={10}
                           unit=" keV"
-                          domain={[0, beamKv]}
+                          domain={[0, uploadedSpectrum
+                            ? declaredImportedBeamKv ?? uploadedSpectrum.points.at(-1)?.energyKeV ?? "auto"
+                            : beamKv]}
                           tickCount={10}
                         />
                         <YAxis
                           stroke="#64748b"
                           fontSize={10}
+                          unit={uploadedSpectrum ? " counts" : " CPS"}
                           tickFormatter={(v) => `${v}`}
                         />
                         <Tooltip
@@ -1019,15 +1148,16 @@ Provide:
                         />
 
                         {/* Reference Marker Lines for Selected Elements */}
-                        {activeElementMarkers.map((sym) => {
+                        {(uploadedSpectrum ? declaredImportedBeamKv !== undefined : true) && activeElementMarkers.map((sym) => {
                           const lineInfo = CHARACTERISTIC_XRAY_LINES[sym];
                           if (!lineInfo) return null;
+                          const activeBeamKv = uploadedSpectrum ? declaredImportedBeamKv! : beamKv;
                           const kAlpha = lineInfo.lines.kAlpha;
                           const lAlpha = lineInfo.lines.lAlpha;
 
                           return (
                             <React.Fragment key={sym}>
-                              {kAlpha && kAlpha < beamKv && (
+                              {kAlpha && kAlpha < activeBeamKv && (
                                 <ReferenceLine
                                   x={kAlpha}
                                   stroke={lineInfo.defaultColor}
@@ -1040,7 +1170,7 @@ Provide:
                                   }}
                                 />
                               )}
-                              {lAlpha && lAlpha < beamKv && (
+                              {lAlpha && lAlpha < activeBeamKv && (
                                 <ReferenceLine
                                   x={lAlpha}
                                   stroke={lineInfo.defaultColor}
@@ -1233,20 +1363,21 @@ Provide:
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
                 <h4 className="text-sm font-bold text-slate-200">
-                  Quantitative ZAF Composition (ASTM E1508)
+                  {uploadedSpectrum ? "Imported spectrum: quantitative analysis unavailable" : "Training example values (not measured; no ASTM E1508 analysis)"}
                 </h4>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                  Total: {activeSpot.totalWeightPct}%
+                  {uploadedSpectrum ? "No measured quantification" : `Training total: ${activeSpot.totalWeightPct}%`}
                 </span>
                 <button
                   onClick={runAiPhaseConsultation}
-                  disabled={isAiDiagnosing}
+                  disabled
+                  title="AI phase diagnosis is disabled until a measured spectrum has been calibrated, peaks resolved, and composition quantified against suitable standards."
                   className="px-2.5 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>{isAiDiagnosing ? "Analyzing..." : "AI Phase Diagnosis"}</span>
+                  <span>{isAiDiagnosing ? "Analyzing..." : "AI Phase Diagnosis unavailable"}</span>
                 </button>
               </div>
             </div>
@@ -1266,7 +1397,9 @@ Provide:
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {activeSpot.elements.map((elem) => {
+                  {uploadedSpectrum ? (
+                    <tr><td colSpan={7} className="p-4 text-amber-200">No composition is reported for the imported spectrum. Calibration, peak resolution, and suitable standards are required first.</td></tr>
+                  ) : activeSpot.elements.map((elem) => {
                     const color =
                       CHARACTERISTIC_XRAY_LINES[elem.symbol]?.defaultColor ||
                       "#38bdf8";
@@ -1308,7 +1441,7 @@ Provide:
             </div>
 
             {/* Stoichiometric Phase Identification Footer */}
-            <div className="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {!uploadedSpectrum && <div className="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
                 <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-0.5">
                   Identified Stoichiometric Phase:
@@ -1331,7 +1464,7 @@ Provide:
                   {activeSpot.notes}
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* AI Diagnosis Report Accordion */}
             {aiReport && (
