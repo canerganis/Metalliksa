@@ -1,8 +1,9 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer } from "node:http";
+import { createServer, type Server } from "node:http";
 import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
+import { applySecurity, errorHandler, isAuthenticated, resolveBindConfig } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -30,13 +31,35 @@ process.on("unhandledRejection", (reason: any) => {
   console.error("[ProcessGuard] Unhandled Promise Rejection intercepted:", reason?.stack || reason);
 });
 
+// An uncaught exception leaves the process in an undefined state: log, stop accepting
+// connections and exit non-zero (force-exit after 5s if close hangs).
+let activeHttpServer: Server | null = null;
 process.on("uncaughtException", (error: Error) => {
-  console.error("[ProcessGuard] Uncaught Exception intercepted:", error?.stack || error);
+  console.error("[ProcessGuard] Uncaught Exception, shutting down:", error?.stack || error);
+  const forceExit = setTimeout(() => process.exit(1), 5000);
+  forceExit.unref();
+  if (activeHttpServer) {
+    activeHttpServer.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });
+
+// Default bind is 127.0.0.1; a non-loopback METALLIKSA_HOST requires METALLIKSA_TOKEN.
+let bindConfig: ReturnType<typeof resolveBindConfig>;
+try {
+  bindConfig = resolveBindConfig(process.env);
+} catch (error: any) {
+  console.error(`[MetalliX-Server] ${error?.message || error}`);
+  process.exit(1);
+}
 
 const app = express();
 const configuredPort = Number(process.env.PORT ?? 3000);
 const PORT = Number.isInteger(configuredPort) && configuredPort >= 1 && configuredPort <= 65535 ? configuredPort : 3000;
+
+// Request id, access log, security headers, rate limit and optional Bearer auth.
+applySecurity(app, bindConfig.token);
 
 // Registry payloads have a smaller limit and must run before the global parser.
 app.use(createResearchRegistryRouter());
@@ -51,11 +74,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(processOrchestrationMiddleware);
 
 // Server & Infrastructure Health Endpoint
-app.get("/api/health", (_req: Request, res: Response) => {
+app.get("/api/health", (req: Request, res: Response) => {
   res.json({
     status: "ok",
     service: "MetalliX-Unified-Server",
-    hasApiKey: AIRGAPPED ? false : !!process.env.OPENAI_API_KEY?.trim(),
+    hasApiKey: AIRGAPPED ? false : isAuthenticated(req, bindConfig.token) && !!process.env.OPENAI_API_KEY?.trim(),
     airgapped: AIRGAPPED,
     timestamp: new Date().toISOString(),
   });
@@ -93,19 +116,14 @@ app.all("/api/*", (req: Request, res: Response) => {
 
 // Global Process-Isolated Error Handling Middleware
 // Prevents unhandled JSON parsing errors or route exceptions from terminating the Node server process
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("[ServerError] Unhandled Express pipeline error:", err?.stack || err);
-  res.status(err.status || 500).json({
-    error: err.message || "An internal server error occurred.",
-    code: err.code || "INTERNAL_SERVER_ERROR",
-  });
-});
+app.use(errorHandler());
 
 // =========================================================================
 // Vite Middleware & SPA Serving Pipeline
 // =========================================================================
 async function startServer() {
   const httpServer = createServer(app);
+  activeHttpServer = httpServer;
   if (process.env.NODE_ENV !== "production") {
     await attachDevelopmentMiddleware(app, httpServer);
   } else {
@@ -116,8 +134,8 @@ async function startServer() {
     });
   }
 
-  httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`[MetalliX-Server] Modular server running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, bindConfig.host, () => {
+    console.log(`[MetalliX-Server] Modular server running on http://${bindConfig.host}:${PORT}`);
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");
     }
