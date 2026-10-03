@@ -4,16 +4,13 @@
 
 ## Güncel durum özeti (2026-10-03)
 
-- **Hedef:** V1 Research Workstation hâlâ devam ediyor; tam V1 çıkışı için aynı adayda gerçek UI manual/JSON → stale/cancel/reload → TAR indir/yükle/restore kabulü açık ve önceki tarayıcı erişim reddi aşılmadı.
-- **Son kod kayıtları:** Accepted-step kesit alanları sıkıştırılmış NPZ olarak arşivleniyor; servis arşivlenmiş kesit metadata'sını doğruluyor (`c38f933`); optik geometri yardımcısı fail-closed (`f46dc8c`).
-- **Servis sınırı:** Servis tüketicisi NPZ'yi henüz yeniden açıp W/D ve `sampleCells` değerlerini source plane'lerden doğrulamıyor.
+- **Birleşim:** `81694c3` (`orch/integration`) security hardening, airgap guards, a11y statik düzeltmeleri, bundle chunking, CI/packaging taslakları, genişletilmiş TypeScript kapsamı ve ESLint baseline'ını birleştirdi. V1 NPZ yeniden türetim kapısı `a72b2da` ile eklendi, `1cf1067` ile testleri sertleştirildi.
+- **Açık kabul kapıları:** Üç ayrı gerçek solver execution kabulü tamamlanmadı; gerçek tarayıcıda arşiv round-trip yapılmadı; bu revision üzerinde clean-install tekrarı yapılmadı. CI hiç çalıştırılmadı ve Docker build hiç çalıştırılmadı. Token-mode SPA login sürüyor.
 - **Bilimsel durum:** NIST optical residual `unavailable`, yakınsama `inconclusive`, deneysel doğrulama `unvalidated`; tam-alan zaman tanısı yalnız tanıdır.
-- **Yerel commit'ler (NIST fingerprint kapısı `5e3c7f9` sonrası):** `17880b1` chore(graft): stop tracking generated graft cards; `1b62847` docs(product): add product overview and research vision; `2a01eeb` fix(ui): label synthetic EIS training datasets; `f06359a` feat(lpbf): add fail-closed NIST 3707 Table 5 proxy preflight; `9ea4b22` docs(agents): make graft optional and relax continuity rules; `95a9e43` chore(tooling): refresh graft hook paths and ignore local state. Push yok.
-- **Sıradaki 3 adım:**
-  1. Verified bytes üzerinden NPZ açıp W/D ve `sampleCells` değerlerini source plane'lerden yeniden türeten servis kapısını ekle ve gerçek ayrı solver execution arşivleriyle doğrula.
-  2. Aynı adayda V1 tarayıcı/portable archive kabulünü (manual/JSON → stale/cancel/reload → TAR indir/yükle/restore) erişim engelini kabul geçilmiş gibi göstermeden sürdür.
-  3. NIST residualı açmadan, archived run-result artefaktlarından bağımsız üç track-field → altı kesit türetim sözleşmesinin mevcut servis/API kapsamını denetle; yalnız gerçek test edilebilir bir güven açığı kalırsa dar düzeltme yap.
-
+- **Sıradaki 3 eylem:**
+  1. Üç ayrı gerçek solver execution için NPZ yeniden türetim kabulünü tamamla; sentetik fixture sonuçlarını gerçek koşu kabulü sayma.
+  2. Aynı revision üzerinde clean-install tekrarı ve gerçek tarayıcı arşiv indir/yükle/restore round-trip kabulünü tamamla.
+  3. Token-mode SPA login'i tamamla; CI ve Docker build'i ayrı çalıştırıp sonuçlarını kaydet.
 ## Güncel devam — kabul-adımı kesit alanı arşivleme (2026-10-03)
 
 - **Uygulama:** Rectangular-corridor tek-track çalışması, 4.9 ve 6.0 mm thermal-proxy kesitlerinin accepted-step maksimumlarında kullanılan X düzlemlerinin birleşimini float64, pickle gerektirmeyen sıkıştırılmış NPZ olarak saklıyor. Sonuç descriptor'ı yalnız yazım başarılıysa `captured`; kesitler desteklenmiyorsa `unavailable` kaydediliyor. `write_artifacts` NPZ'yi gerçek göreli yol/SHA-256/byte-size manifestine ekliyor.
