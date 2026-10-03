@@ -44,8 +44,6 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { MICROGRAPH_SAMPLES } from "../data/micrographSamples";
 import { MicrographSample } from "../types";
 
@@ -1114,7 +1112,11 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
   };
 
   // Export ASTM Metallurgical Inspection Report as PDF
-  const handleExportPdfReport = () => {
+  const handleExportPdfReport = async () => {
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
 
     // Header banner

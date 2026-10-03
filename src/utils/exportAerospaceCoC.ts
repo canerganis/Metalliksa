@@ -1,5 +1,4 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import type { jsPDF } from "jspdf";
 import { ENGINEERING_ESTIMATE_DISCLAIMER } from "./engineeringDisclaimer";
 
 export interface LabMultiTestData {
@@ -116,7 +115,11 @@ export interface AerospaceAuditReportData { sampleLotNumber?: string;
 
 export type CoCData = AerospaceAuditReportData;
 
-export function generateAerospaceCoCPDF(data: AerospaceAuditReportData): jsPDF {
+export async function generateAerospaceCoCPDF(data: AerospaceAuditReportData): Promise<jsPDF> {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",

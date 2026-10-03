@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import * as d3 from "d3";
+import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, curveMonotoneX as d3CurveMonotoneX, extent as d3Extent, line as d3Line, pointer as d3Pointer, scaleLinear as d3ScaleLinear, select as d3Select, zoom as d3Zoom, zoomIdentity as d3ZoomIdentity } from "d3";
+import type { ScaleLinear, ZoomBehavior } from "d3";
 import {
   ZoomIn,
   ZoomOut,
@@ -49,7 +50,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const zoomBehaviorRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Display toggles
   const [orientation, setOrientation] = useState<"evans" | "potentiodynamic">(initialOrientation);
@@ -97,7 +98,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
   useEffect(() => {
     if (!svgRef.current || rawPoints.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous render
 
     // Color definitions
@@ -133,8 +134,8 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     filter.append("feMerge").selectAll("feMergeNode").data(["blur", "SourceGraphic"]).enter().append("feMergeNode").attr("in", (d) => d);
 
     // Compute Base Domain Extents
-    const potentialExtent = d3.extent(rawPoints, (d: { potential: number }) => d.potential) as [number, number];
-    const logIExtent = d3.extent(rawPoints, (d: { logI: number }) => d.logI) as [number, number];
+    const potentialExtent = d3Extent(rawPoints, (d: { potential: number }) => d.potential) as [number, number];
+    const logIExtent = d3Extent(rawPoints, (d: { logI: number }) => d.logI) as [number, number];
 
     // Ensure Ecorr and Icorr fit within domain with margin
     const eMin = Math.min(potentialExtent[0] ?? -1.0, fitResult.eCorr - 0.25);
@@ -146,17 +147,17 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     const logIPad = (logIMax - logIMin) * 0.06;
 
     // Base Scales according to orientation
-    let xScaleBase: d3.ScaleLinear<number, number>;
-    let yScaleBase: d3.ScaleLinear<number, number>;
+    let xScaleBase: ScaleLinear<number, number>;
+    let yScaleBase: ScaleLinear<number, number>;
 
     if (orientation === "evans") {
       // Evans Diagram: X = Log(i), Y = Potential E
-      xScaleBase = d3.scaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([0, innerWidth]);
-      yScaleBase = d3.scaleLinear().domain([eMin - ePad, eMax + ePad]).range([innerHeight, 0]);
+      xScaleBase = d3ScaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([0, innerWidth]);
+      yScaleBase = d3ScaleLinear().domain([eMin - ePad, eMax + ePad]).range([innerHeight, 0]);
     } else {
       // Potentiodynamic Curve: X = Potential E, Y = Log(i)
-      xScaleBase = d3.scaleLinear().domain([eMin - ePad, eMax + ePad]).range([0, innerWidth]);
-      yScaleBase = d3.scaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([innerHeight, 0]);
+      xScaleBase = d3ScaleLinear().domain([eMin - ePad, eMax + ePad]).range([0, innerWidth]);
+      yScaleBase = d3ScaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([innerHeight, 0]);
     }
 
     let currentXScale = xScaleBase;
@@ -241,17 +242,15 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     };
 
     // Line generator for experimental points
-    const expLineGenerator = d3
-      .line<{ potential: number; logI: number }>()
+    const expLineGenerator = d3Line<{ potential: number; logI: number }>()
       .x((d) => getXCoord(d, currentXScale))
       .y((d) => getYCoord(d, currentYScale))
-      .curve(d3.curveMonotoneX);
+      .curve(d3CurveMonotoneX);
 
     // Render Function (Called on initial draw and every zoom/pan event)
     const render = () => {
       // 1. Render Axes
-      const xAxis = d3
-        .axisBottom(currentXScale)
+      const xAxis = d3AxisBottom(currentXScale)
         .ticks(Math.max(5, Math.floor(innerWidth / 90)))
         .tickFormat((d) => {
           const val = typeof d === "number" ? d : Number(d);
@@ -260,8 +259,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
             : `${val >= 0 ? "+" : ""}${val.toFixed(2)}V`;
         });
 
-      const yAxis = d3
-        .axisLeft(currentYScale)
+      const yAxis = d3AxisLeft(currentYScale)
         .ticks(Math.max(5, Math.floor(innerHeight / 60)))
         .tickFormat((d) => {
           const val = typeof d === "number" ? d : Number(d);
@@ -365,8 +363,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           .map((t) => ({ potential: t.potential, logI: t.logI_cathodic! }));
 
         if (anodicPts.length >= 2) {
-          const anodicLineGen = d3
-            .line<{ potential: number; logI: number }>()
+          const anodicLineGen = d3Line<{ potential: number; logI: number }>()
             .x((d) => getXCoord(d, currentXScale))
             .y((d) => getYCoord(d, currentYScale));
 
@@ -381,8 +378,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
         }
 
         if (cathodicPts.length >= 2) {
-          const cathodicLineGen = d3
-            .line<{ potential: number; logI: number }>()
+          const cathodicLineGen = d3Line<{ potential: number; logI: number }>()
             .x((d) => getXCoord(d, currentXScale))
             .y((d) => getYCoord(d, currentYScale));
 
@@ -405,11 +401,10 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           logI: b.logI_model,
         }));
 
-        const bvLineGen = d3
-          .line<{ potential: number; logI: number }>()
+        const bvLineGen = d3Line<{ potential: number; logI: number }>()
           .x((d) => getXCoord(d, currentXScale))
           .y((d) => getYCoord(d, currentYScale))
-          .curve(d3.curveMonotoneX);
+          .curve(d3CurveMonotoneX);
 
         bvG
           .append("path")
@@ -680,8 +675,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     render();
 
     // 9. D3 Zoom & Pan Setup
-    const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
+    const zoom = d3Zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.6, 25])
       .extent([
         [0, 0],
@@ -727,7 +721,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
       .on("mousemove", (event) => {
         if (!showCrosshairs) return;
 
-        const [mouseX, mouseY] = d3.pointer(event, g.node());
+        const [mouseX, mouseY] = d3Pointer(event, g.node());
         if (mouseX < 0 || mouseX > innerWidth || mouseY < 0 || mouseY > innerHeight) {
           setHoverState(null);
           crosshairLineX.attr("opacity", 0);
@@ -784,7 +778,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
 
     // Double click to reset zoom
     overlay.on("dblclick", () => {
-      svg.transition().duration(500).call(zoom.transform as any, d3.zoomIdentity);
+      svg.transition().duration(500).call(zoom.transform as any, d3ZoomIdentity);
     });
 
   }, [
@@ -805,23 +799,23 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
   // Zoom Button Handlers
   const handleZoomIn = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 1.35);
+    d3Select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 1.35);
   };
 
   const handleZoomOut = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 0.75);
+    d3Select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 0.75);
   };
 
   const handleResetZoom = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(400).call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
+    d3Select(svgRef.current).transition().duration(400).call(zoomBehaviorRef.current.transform as any, d3ZoomIdentity);
   };
 
   // Center specifically on Ecorr / Icorr
   const handleCenterOnEcorr = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(500).call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
+    d3Select(svgRef.current).transition().duration(500).call(zoomBehaviorRef.current.transform as any, d3ZoomIdentity);
   };
 
   // Export SVG handler
