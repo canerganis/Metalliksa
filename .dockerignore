@@ -4,8 +4,8 @@
 #    directories listed below
 #  - tracked but not needed to build, test or run the app: .git, .github, .claude,
 #    .agents, .cursor, .gemini, sonkayıtlar and the stale tracked **/__pycache__ files
-# NOT excluded on purpose: .lpbf-surrogates/ (tracked; python/phase9_surrogate.py reads
-# it), *.log (tracked evidence logs under docs/), docs/, data/, scripts/, tests/.
+# NOT excluded on purpose: .lpbf-surrogates/ (tracked; only the offline python/phase9_surrogate.py reads
+# it), docs/sources/in625 (read at run time by the server), *.log (tracked evidence logs under docs/), docs/, data/, scripts/, tests/.
 node_modules
 dist
 .runtime
