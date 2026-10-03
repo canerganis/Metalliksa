@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshotRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003",
+  "snapshotManifestSha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+  "snapshotManifestFileCount": 1579,
+  "boundSourceSha256": {
+    "python/four_alloy_materials.py": "fc448b418cdc25148ddbee8273fcc047053783292bc2e3b0b0007069894ddbdf",
+    "python/eagar_tsai_solver.py": "fbe8372b8eeed07883d228ce66b183395618c44e776134c4d91fd2350155be40",
+    "python/fabbro_keyhole.py": "e066607ed329c3c900eba3c827c8ee1ac2fe46c772d2c13e28366239771a61b7",
+    "python/goldak_solver.py": "e7446ceb84d0bd660b167c6fa6ae12e7d8c9bbf0a37fbcd02fe5c8a6501b0b0c",
+    "python/in625_gpu_thermal_material.py": "9a0a988da00253e16378c9a4b48995b5b05b4fb43b4a52f58e3c05e1b3cb8940",
+    "python/in625_thermal_material.py": "bccc4404bcf4e41edd36922c7b60819458e11f8c4efc4005ba0f9bf8b12e80ef",
+    "python/lpbf_core_contract.py": "a24691b488773821f20a1b652ae05030dbf54cecbe78986f6b0a4aa2ea95d019",
+    "python/lpbf_core_physics.py": "9eecd2844b45bc633a1f308642ed2c53bcb18486f5580737a3c7457b12a410b6",
+    "python/lpbf_cfd.py": "f2ee7ed015b24f0c2357afe2537777abed2a1f2f149dde3704d0a792a5d3ceb1",
+    "python/lpbf_defect_diagnostics.py": "57bcbc58ee7a62efd93768be03fe75c644625ac765221056730972cb4646a3e5",
+    "python/lpbf_evidence.py": "0c17a1772feda788842b5219163c14c778f48f5b6f9ecf8c701fb8c32746e1e4",
+    "python/lpbf_evaporation_marangoni.py": "904f54269ffa26f090202888edd1258cf33f8209753f455630f083ce8abbd3b5",
+    "python/lpbf_gpu_pilot_artifacts.py": "b5b4ee6fd4f913bb5d0f527bbae6e473837018cfa18bb0d3ddd2993b2c58ee20",
+    "python/lpbf_gpu_pilot_numerics.py": "47d007437ace0e6b4b8a80e463042236bdb38db155824c51f9ebeb7ea5185767",
+    "python/lpbf_gpu_thermal.py": "561384e3973f252d1fd6aac82c2d566f491ad641036a3ca64018a94004b5f10b",
+    "python/lpbf_gpu_thermal_warp.py": "90db8f39e16c86561d509066f55bfb45ea684b7d881217d1ff939fce611c649d",
+    "python/lpbf_heat_source.py": "7c4442bcf6316d3ddce375a9214a784cf1c01fb4b0f6441df945211c3e36f2d1",
+    "python/lpbf_layered_conduction.py": "e485d0741cd3ec87dfa0064cc44f387b07eedf325ced6ac86195c2166709d78e",
+    "python/lpbf_material_registry.py": "24c1522997d861a8b0acd48c91f6fcb09d4210f272e1564c7672dc8ea8e5d2f3",
+    "python/marangoni_screening.py": "9286000dd2873b2531d61d6be54059d820bf26fa651373bb23519080ead83ddc",
+    "python/lpbf_openfoam.py": "3814fd827d4573d2f6d61e2fb7e69f0f0d168d88532c61ab945676a1f61c9a21",
+    "python/lpbf_overlap.py": "b53f6b2c72efc564d4c6a876127447db6a7ba74cb643a32dd5f6225c46994655",
+    "python/lpbf_peak.py": "e25cf699c7ee6c8f2909008c2219b9183149c3f0c61623c633ac41dda8c43534",
+    "python/lpbf_run_progress.py": "bfa4878369a4d5ae39818e180fd9146d7554060aa93ce370291a41c3cd1fc6a5",
+    "python/lpbf_source_identity.py": "1634f93e385ca6d20108116e4c9d32a4f0a6da659f3a54dd906b4d40784d107c",
+    "python/powder_packer.py": "343327f1ec877a9c6374123a8e90debed8037348ea96dff85b9115fbd68895a3",
+    "python/powder_bed_raytracer.py": "9ef29cce8f0fcd8cd98c68d35cfb0a450a04af41f879cb3cc6cf7c8d9378196e",
+    "python/lpbf_simulation.py": "2be8b27fbbc4390c44a6aaa1876579a95f3a643e8a2c5fbf1e65dc5f050040c5",
+    "python/lpbf_ss304_support_material.py": "674ddca5a939848630415e47081f82304442ddfa4af2168e8183118b120f97bf",
+    "python/lpbf_thermal_solver.py": "31b5840fefc981f041dcbca63bc0d5c25f2ace9b83bc836c98aaef2c1bbf9ba0",
+    "python/lpbf_transient_3d_gpu.py": "78206ebecd9a5b3a214de9d761d138c7678c999220b512db5d7b206959a0a6fc",
+    "python/lpbf_verification.py": "347358fd1e37fbb3c210d0657779d28bd8f827a8ea293ce7ee0c2b81665c959e",
+    "python/solidification_front.py": "63f2f4e9aa12f7a0d2546b2b55db55e968eb14efaef8f63bd10a683452dcd9b1",
+    "python/warp_thermal_solver.py": "f866f205f78a17b4c8865628c2c0d4307885ef987e85bf66def58e6c1bfc1b9b",
+    "python/openfoam/Make/files": "4c651908cb38ed31d6b10e90441d22f653343a6c366723e4dc4b443d675bb1ca",
+    "python/openfoam/Make/options": "6a7eba9f68e84da2ec635842a6637b6a03fd5d1b8ed99183ed9988bafeb24902",
+    "python/openfoam/metalliksaThermal.C": "49cff8482236609ee53148518aaf279b7a234174fa3aa82ef6121da3f48267f1",
+    "python/test_lpbf_production_transient_manufactured.py": "8d0ba26dc40b2ac35e56ec01a7157b655627446363af42dcf9393003c85e4e4d"
+  },
+  "harnessSha256": "52c4134115ce6be3356efb3b6c38ad1d29f2b6b5568616157082edee748b69fe",
+  "pythonExecutable": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+  "pythonVersion": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+  "implementationFingerprintBefore": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+  "implementationFingerprintAfter": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+  "observationMethod": "sys.settrace on only four existing test-method frames; no production line tracing or operator/test mutation",
+  "testsRun": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "status": "PASS",
+  "wallTime_s": 13.047000000020489,
+  "sourceStatedAcceptanceBounds": {
+    "allCasesEnergyBalanceRelativeError": 1e-10,
+    "uniformAndNonuniformFinalTemperatureAbsoluteError_K": 1e-07,
+    "uniformAndNonuniformFinalTimeDecimalPlaces": 14,
+    "nonuniformPassiveOperatorRtol": 2e-12,
+    "nonuniformPassiveOperatorAtol_W_m3": 1e-07,
+    "piecewiseFineToCoarseSampleErrorRatioUpperExclusive": 0.25,
+    "piecewiseThresholdEnthalpyAbsoluteError_J_kg": 1e-06,
+    "piecewiseThresholdEnthalpyJumpAbsoluteError_J_kg": 0.001,
+    "diffusionObservedOrderLowerExclusive": 1.0
+  },
+  "diagnosticOnly": true,
+  "experimentalValidation": false,
+  "solverValidationStatus": "unvalidated",
+  "physicalLpbfConvergenceStatus": "inconclusive",
+  "scope": "Existing synthetic manufactured forcing through the production CPU transient loop; diffusion order follows coupled dx and dt proportional to dx squared, not a physical LPBF convergence claim",
+  "tests": [
+    {
+      "testId": "test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_nonuniform_enthalpy_solution_matches_independent_production_operator",
+      "status": "PASS",
+      "storedInstanceDiagnostics": null,
+      "storedDiagnosticsAvailability": "not-retained-by-test-instance",
+      "levels": [
+        {
+          "requestedMaxDt_s": 1e-05,
+          "acceptedSteps": 23,
+          "cells": 1210,
+          "energyBalanceRelativeError": 0.0,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 23,
+            "total_s": 0.00018666666666666663,
+            "sumSquared_s2": 1.5388888888888878e-09,
+            "mean_s": 8.115942028985506e-06,
+            "minimum_s": 3.333333333333324e-06,
+            "p50_s": 8.333333333333334e-06,
+            "p90_s": 8.333333333333334e-06,
+            "p99_s": 8.333333333333334e-06,
+            "maximum_s": 8.333333333333334e-06,
+            "eulerFirstOrderWeightedDt_s": 8.244047619047615e-06,
+            "requestedMaxDt_s": 1e-05,
+            "requestedMaxDtHitFraction": 0.0,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0,
+          "independentPassiveOperatorChecks": 23
+        },
+        {
+          "requestedMaxDt_s": 5e-06,
+          "acceptedSteps": 38,
+          "cells": 1210,
+          "energyBalanceRelativeError": 1.2510918584541314e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 38,
+            "total_s": 0.00018666666666666658,
+            "sumSquared_s2": 9.277777777777772e-10,
+            "mean_s": 4.912280701754383e-06,
+            "minimum_s": 1.6666666666665536e-06,
+            "p50_s": 5e-06,
+            "p90_s": 5e-06,
+            "p99_s": 5e-06,
+            "maximum_s": 5e-06,
+            "eulerFirstOrderWeightedDt_s": 4.970238095238094e-06,
+            "requestedMaxDt_s": 5e-06,
+            "requestedMaxDtHitFraction": 0.9736842105263158,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0,
+          "independentPassiveOperatorChecks": 38
+        },
+        {
+          "requestedMaxDt_s": 2.5e-06,
+          "acceptedSteps": 75,
+          "cells": 1210,
+          "energyBalanceRelativeError": 3.751829927236567e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 75,
+            "total_s": 0.00018666666666666636,
+            "sumSquared_s2": 4.652777777777767e-10,
+            "mean_s": 2.4888888888888848e-06,
+            "minimum_s": 1.666666666666391e-06,
+            "p50_s": 2.5e-06,
+            "p90_s": 2.5e-06,
+            "p99_s": 2.5e-06,
+            "maximum_s": 2.5e-06,
+            "eulerFirstOrderWeightedDt_s": 2.492559523809522e-06,
+            "requestedMaxDt_s": 2.5e-06,
+            "requestedMaxDtHitFraction": 0.9866666666666667,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0,
+          "independentPassiveOperatorChecks": 75
+        }
+      ],
+      "actualStepCounts": [
+        23,
+        38,
+        75
+      ]
+    },
+    {
+      "testId": "test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_piecewise_enthalpy_ramp_crosses_mushy_interval_with_refinement",
+      "status": "PASS",
+      "storedInstanceDiagnostics": null,
+      "storedDiagnosticsAvailability": "not-retained-by-test-instance",
+      "levels": [
+        {
+          "requestedMaxDt_s": 1e-05,
+          "acceptedSteps": 34,
+          "cells": 968,
+          "energyBalanceRelativeError": 1.4562399335777903e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 34,
+            "total_s": 0.00018666666666666666,
+            "sumSquared_s2": 1.2335816655360321e-09,
+            "mean_s": 5.490196078431373e-06,
+            "minimum_s": 4.6195312418176033e-07,
+            "p50_s": 5.3997547608375756e-06,
+            "p90_s": 8.333333333333334e-06,
+            "p99_s": 8.333333333333334e-06,
+            "maximum_s": 8.333333333333334e-06,
+            "eulerFirstOrderWeightedDt_s": 6.6084732082287435e-06,
+            "requestedMaxDt_s": 1e-05,
+            "requestedMaxDtHitFraction": 0.0,
+            "sourceLimitedStepCount": 21,
+            "sourceTimestepRetries": 21
+          },
+          "maxSampleTemperatureError_K": 1.7378251982336224e-05,
+          "maxSampleLiquidFractionError": 4.32548301620983e-08,
+          "maxSampleSpecificEnthalpyError_J_kg": 0.008689125999808311
+        },
+        {
+          "requestedMaxDt_s": 5e-06,
+          "acceptedSteps": 42,
+          "cells": 968,
+          "energyBalanceRelativeError": 4.3674732064702755e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 42,
+            "total_s": 0.00018666666666666663,
+            "sumSquared_s2": 8.649879614340386e-10,
+            "mean_s": 4.444444444444443e-06,
+            "minimum_s": 1.8559068687761069e-06,
+            "p50_s": 5e-06,
+            "p90_s": 5e-06,
+            "p99_s": 5e-06,
+            "maximum_s": 5e-06,
+            "eulerFirstOrderWeightedDt_s": 4.633864079110922e-06,
+            "requestedMaxDt_s": 5e-06,
+            "requestedMaxDtHitFraction": 0.6904761904761905,
+            "sourceLimitedStepCount": 11,
+            "sourceTimestepRetries": 11
+          },
+          "maxSampleTemperatureError_K": 3.1172131684797932e-06,
+          "maxSampleLiquidFractionError": 7.634470833295381e-09,
+          "maxSampleSpecificEnthalpyError_J_kg": 0.0015586065710522234
+        },
+        {
+          "requestedMaxDt_s": 2.5e-06,
+          "acceptedSteps": 75,
+          "cells": 968,
+          "energyBalanceRelativeError": 1.455322961291951e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 75,
+            "total_s": 0.00018666666666666636,
+            "sumSquared_s2": 4.652777777777767e-10,
+            "mean_s": 2.4888888888888848e-06,
+            "minimum_s": 1.666666666666391e-06,
+            "p50_s": 2.5e-06,
+            "p90_s": 2.5e-06,
+            "p99_s": 2.5e-06,
+            "maximum_s": 2.5e-06,
+            "eulerFirstOrderWeightedDt_s": 2.492559523809522e-06,
+            "requestedMaxDt_s": 2.5e-06,
+            "requestedMaxDtHitFraction": 0.9866666666666667,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "maxSampleTemperatureError_K": 2.3194309051177697e-07,
+          "maxSampleLiquidFractionError": 4.927613872496295e-10,
+          "maxSampleSpecificEnthalpyError_J_kg": 0.00011597154662013054
+        }
+      ],
+      "actualStepCounts": [
+        34,
+        42,
+        75
+      ]
+    },
+    {
+      "testId": "test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_uniform_enthalpy_ramp_is_time_step_independent_and_conservative",
+      "status": "PASS",
+      "storedInstanceDiagnostics": null,
+      "storedDiagnosticsAvailability": "not-retained-by-test-instance",
+      "levels": [
+        {
+          "requestedMaxDt_s": 1e-05,
+          "acceptedSteps": 23,
+          "cells": 1210,
+          "energyBalanceRelativeError": 1.9294770900210698e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 23,
+            "total_s": 0.00018666666666666663,
+            "sumSquared_s2": 1.5388888888888878e-09,
+            "mean_s": 8.115942028985506e-06,
+            "minimum_s": 3.333333333333324e-06,
+            "p50_s": 8.333333333333334e-06,
+            "p90_s": 8.333333333333334e-06,
+            "p99_s": 8.333333333333334e-06,
+            "maximum_s": 8.333333333333334e-06,
+            "eulerFirstOrderWeightedDt_s": 8.244047619047615e-06,
+            "requestedMaxDt_s": 1e-05,
+            "requestedMaxDtHitFraction": 0.0,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0
+        },
+        {
+          "requestedMaxDt_s": 5e-06,
+          "acceptedSteps": 38,
+          "cells": 1210,
+          "energyBalanceRelativeError": 0.0,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 38,
+            "total_s": 0.00018666666666666658,
+            "sumSquared_s2": 9.277777777777772e-10,
+            "mean_s": 4.912280701754383e-06,
+            "minimum_s": 1.6666666666665536e-06,
+            "p50_s": 5e-06,
+            "p90_s": 5e-06,
+            "p99_s": 5e-06,
+            "maximum_s": 5e-06,
+            "eulerFirstOrderWeightedDt_s": 4.970238095238094e-06,
+            "requestedMaxDt_s": 5e-06,
+            "requestedMaxDtHitFraction": 0.9736842105263158,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0
+        },
+        {
+          "requestedMaxDt_s": 2.5e-06,
+          "acceptedSteps": 75,
+          "cells": 1210,
+          "energyBalanceRelativeError": 3.853775410889003e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 75,
+            "total_s": 0.00018666666666666636,
+            "sumSquared_s2": 4.652777777777767e-10,
+            "mean_s": 2.4888888888888848e-06,
+            "minimum_s": 1.666666666666391e-06,
+            "p50_s": 2.5e-06,
+            "p90_s": 2.5e-06,
+            "p99_s": 2.5e-06,
+            "maximum_s": 2.5e-06,
+            "eulerFirstOrderWeightedDt_s": 2.492559523809522e-06,
+            "requestedMaxDt_s": 2.5e-06,
+            "requestedMaxDtHitFraction": 0.9866666666666667,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "finalTimeError_s": 0.0,
+          "finalPeakTemperatureError_K": 0.0,
+          "finalCenterTemperatureError_K": 0.0
+        }
+      ],
+      "actualStepCounts": [
+        23,
+        38,
+        75
+      ]
+    },
+    {
+      "testId": "test_lpbf_production_transient_manufactured.ProductionTransientManufacturedDiffusion.test_mixed_boundary_eigenmode_converges_on_three_fixed_levels",
+      "status": "PASS",
+      "storedInstanceDiagnostics": {
+        "convergence_diagnostics": {
+          "levels_cells_z": [
+            8,
+            16,
+            32
+          ],
+          "field_rms_error_K": [
+            0.0005655962123059979,
+            0.00014208115656360516,
+            3.5562976742937e-05
+          ],
+          "observed_order": [
+            1.993057228096286,
+            1.9982672377696242
+          ],
+          "energy_balance_relative_error": [
+            2.788693840525603e-16,
+            2.7920569890415406e-16,
+            5.585796312287039e-16
+          ]
+        }
+      },
+      "storedDiagnosticsAvailability": "present",
+      "levels": [
+        {
+          "requestedMaxDt_s": 4.000000000000001e-06,
+          "acceptedSteps": 47,
+          "cells": 72,
+          "energyBalanceRelativeError": 2.788693840525603e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 47,
+            "total_s": 0.0001866666666666667,
+            "sumSquared_s2": 7.431111111111122e-10,
+            "mean_s": 3.9716312056737595e-06,
+            "minimum_s": 2.6666666666667134e-06,
+            "p50_s": 4.000000000000001e-06,
+            "p90_s": 4.000000000000001e-06,
+            "p99_s": 4.000000000000001e-06,
+            "maximum_s": 4.000000000000001e-06,
+            "eulerFirstOrderWeightedDt_s": 3.980952380952386e-06,
+            "requestedMaxDt_s": 4.000000000000001e-06,
+            "requestedMaxDtHitFraction": 0.9787234042553191,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "cells_z": 8
+        },
+        {
+          "requestedMaxDt_s": 1.0000000000000002e-06,
+          "acceptedSteps": 187,
+          "cells": 144,
+          "energyBalanceRelativeError": 2.7920569890415406e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 187,
+            "total_s": 0.00018666666666666707,
+            "sumSquared_s2": 1.8644444444444496e-10,
+            "mean_s": 9.982174688057063e-07,
+            "minimum_s": 6.666666666670172e-07,
+            "p50_s": 1.0000000000000002e-06,
+            "p90_s": 1.0000000000000002e-06,
+            "p99_s": 1.0000000000000002e-06,
+            "maximum_s": 1.0000000000000002e-06,
+            "eulerFirstOrderWeightedDt_s": 9.988095238095244e-07,
+            "requestedMaxDt_s": 1.0000000000000002e-06,
+            "requestedMaxDtHitFraction": 0.9946524064171123,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "cells_z": 16
+        },
+        {
+          "requestedMaxDt_s": 2.5000000000000004e-07,
+          "acceptedSteps": 747,
+          "cells": 288,
+          "energyBalanceRelativeError": 5.585796312287039e-16,
+          "acceptedTimestepDistribution": {
+            "methodId": "accepted-timestep-distribution-v1",
+            "count": 747,
+            "total_s": 0.00018666666666666384,
+            "sumSquared_s2": 4.665277777777673e-11,
+            "mean_s": 2.4988844265952323e-07,
+            "minimum_s": 1.666666666642403e-07,
+            "p50_s": 2.5000000000000004e-07,
+            "p90_s": 2.5000000000000004e-07,
+            "p99_s": 2.5000000000000004e-07,
+            "maximum_s": 2.5000000000000004e-07,
+            "eulerFirstOrderWeightedDt_s": 2.499255952380934e-07,
+            "requestedMaxDt_s": 2.5000000000000004e-07,
+            "requestedMaxDtHitFraction": 0.9973226238286479,
+            "sourceLimitedStepCount": 0,
+            "sourceTimestepRetries": 0
+          },
+          "cells_z": 32
+        }
+      ],
+      "actualStepCounts": [
+        47,
+        187,
+        747
+      ]
+    }
+  ]
+}

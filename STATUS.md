@@ -2,6 +2,16 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — ec3a5fc sayısal kabul ve temiz kurulum devamı (2026-10-03)
+
+- **Kod / kayıt:** Son kod commit'i `ec3a5fc`; yeni sayısal kanıt `docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.md/.json` ve byte-exact support envanterinde. Sol 6.1 kurulum devam kararını, Luna bağımsız commit-blob/hash kontrolünü, root aynı adayda CPU/tanı entegrasyonunu yürüttü. Bu belge commit'i kaynak adayını yeniden etiketlemez; push yok.
+- **Ayrı CPU kabulü:** 27 mevcut CPU testi **27 PASS / 0 FAIL / 0 SKIP** (22.988 s); bu 27 içindeki dört manufactured/diffusion testinin ayrı tanı koşusu **4/4 PASS** (13.038 s). 31 benzersiz test veya tüm Python suite iddiası yok. Uniform/nonuniform ve piecewise gerçek adımları sırasıyla 23/38/75 ve 34/42/75; diffusion 47/187/747. Diffusion RMS `5.655962e-4 → 1.420812e-4 → 3.556298e-5 K`, coupled dx/dt mertebeleri 1.993057/1.998267.
+- **Kaynak koruması:** Commit arşivindeki 1.579 dosyanın CPU öncesi, sonrası ve tanı sonrası hashleri eşit; bağımsız Luna kaynak blob'larıyla da eşleştirdi. Dosya restore edilmedi; canonical FP `4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35` sabit. Locked CPU venv tekrar kullanıldı, yeni venv kurulum kanıtı yok. Paylaşılan checkout'taki kullanıcı değişiklikleri korundu.
+- **Kurulumun gerçek durumu:** Aynı adayın offline `npm ci` denemesi 141.075 s sonunda `ENOTCACHED: yallist` ve cleanup EPERM uyarılarıyla başarısız oldu; type/full unit/build bu denemede çalışmadı. 1.579 kaynak guard'ı yine PASS; başarısız deneme/loglar korundu. Sol önerisiyle aynı commit'ten yeni hedefte `npm ci --offline=false --no-audit --no-fund` yolu seçildi; ağlı deneme offline başarısı olarak sunulmayacak, script politikası gevşetilmeyecek. Scratch `.tmp-lpbf-input-claims-acceptance-20261003` devam kanıtlarını tutar.
+- **Sıradaki:** Yeni ağlı kurulumda exact source guard → type/full unit/build kapılarını sonuçlandırıp ayrı kaydet. Başarılı build sonrasında yeni adayın yerel UI kabulü için önceki açık tarayıcı reddi nedeniyle kullanıcıdan yeniden erişim al; manual/JSON calibration ve method etiketi → stale/cancel/reload/keyboard zincirini tamamla. Fiziksel mesh/time inconclusive, NIST unavailable, deneysel unvalidated; **tam V1 kabulü ve geliştirme hedefi devam ediyor**. Yeni büyük 5 µm solve/fizik fazı yok.
+
+### Önceki kayıt — ölçüm sözleşmesi
+
 ## Güncel devam — CPU ölçüm sözleşmesi ve yöntem iddiaları (2026-10-03)
 
 - **Uygulama:** Sol 6.1 ölçüm parser/submit yolunu, Luna yöntem etiketi ve eski test beklentisini düzeltti; root birleşik doğrulama ve yeniden kurulum kılavuzunu entegre etti. `docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.md/.json` kapsamı ve ham kanıtı tutar. Başlangıç HEAD `bd979c7`; yalnız görev değişiklikleri yerel commit'e alınır, push yok.

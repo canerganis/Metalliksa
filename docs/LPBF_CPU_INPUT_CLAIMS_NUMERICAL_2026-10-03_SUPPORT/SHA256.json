@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "candidate": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "sha256": {
+    "source-manifest.json": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+    "cpu-commands.json": "12f7edef6b8ae4f1d9dc79a4fac77856e988df8b4d6b27258837fd44303abbe9",
+    "cpu-suite.log": "a795ac2abcac1cab769a12f358b3412b24d6fbca9ccdd440b797e0fb3e8f9de1",
+    "numerical-diagnostics.log": "ae04ef303d047ee10e693a7c88d2d8a8d32fdbf11243dabdb5d8eb240359f96a",
+    "numerical_diagnostics.json": "9fde31605ab1110ca9f2e142d178fc3052a819a5f70133363b2e6d6ba7f2204e",
+    "numerical_diagnostics.py.txt": "52c4134115ce6be3356efb3b6c38ad1d29f2b6b5568616157082edee748b69fe",
+    "run_cpu_acceptance.py.txt": "3de0c5f73d1d79b7384e21a54234afb2b8b57f3ee47a9922db50e68ba9a4c137",
+    "cpu-source-before.json": "b5b2cd1f2fb255e99ddecbb2f18cd1b3f83b52fc21d3c3ae8d8c9aeee6ce027b",
+    "cpu-source-after-cpu-suite.json": "b5b2cd1f2fb255e99ddecbb2f18cd1b3f83b52fc21d3c3ae8d8c9aeee6ce027b",
+    "cpu-source-after-numerical-diagnostics.json": "b5b2cd1f2fb255e99ddecbb2f18cd1b3f83b52fc21d3c3ae8d8c9aeee6ce027b",
+    "numerical-review.md": "f6c0cd16b9e68848dd9c0621656d6a90ee56881a82d0e39f76bf3729f2dbbebf"
+  }
+}

@@ -76,3 +76,8 @@
 /docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.json -text
 /docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/* -text
 /docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/*.log -whitespace
+
+# Preserve the exact-candidate CPU numerical records and original logs.
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.json -text
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/* -text
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/*.log -whitespace

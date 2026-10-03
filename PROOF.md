@@ -1,3 +1,9 @@
+## 2026-10-03 — ec3a5fc adayında ayrı CPU sayısal kabul
+
+- **Aday / kaynak:** `ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce`; commit arşivinden çıkarılan 1.579 kaynak dosyası. [Sayısal kayıt](docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.md) komutları, ham logları, gözlem harness'ini ve before/after SHA envanterlerini saklar. Bağımsız Luna incelemesi dosya hashlerini commit blob'larıyla da eşleştirdi; kirli paylaşılan checkout'ın tamamının clean olduğu iddia edilmez.
+- **Kontrol / ölçüt:** Sınırlı mevcut CPU paketi **27 PASS / 0 FAIL / 0 SKIP**, 22.988 s. İçindeki dört manufactured test ayrı tanı koşusunda tekrar **4/4 PASS**, 13.038 s; toplam 31 benzersiz test değildir. Uniform/nonuniform final sıcaklık mutlak sınırı `1e-7 K`, bütün vakalarda enerji bağıl sınırı `1e-10`; eşikler değiştirilmedi. Gerçek adımlar uniform/nonuniform 23/38/75, piecewise 34/42/75, diffusion 47/187/747.
+- **Sonuç / sınır:** Diffusion RMS `5.655962e-4 → 1.420812e-4 → 3.556298e-5 K`, coupled dx/dt gözlenen mertebe 1.993057/1.998267. Bütün 1.579 dosya CPU öncesi, sonrası ve tanı sonrası eşit; source restore yapılmadı. Canonical FP `4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35` değişmedi. Mevcut locked Python tekrar kullanıldı; fresh venv veya bütün Python suite kanıtı değildir. Fiziksel LPBF yakınsaması inconclusive, NIST unavailable, deneysel unvalidated kalır. Temiz Node/build ve gerçek UI kabulü bu kayıttan çıkarılmaz; V1 tamamlanmadı.
+
 ## 2026-10-03 — CPU ölçüm gönderimi ve kayıttan yöntem etiketi
 
 - **Kapsam / başlangıç:** `bd979c7` sonrası UI sözleşme düzeltmesi; [girdiler ve iddialar kaydı](docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.md). Backend ve sayısal algoritma/eşik değişikliği yok. Eski `33efb32` release kanıtı bu yeni revizyona aktarılmaz.

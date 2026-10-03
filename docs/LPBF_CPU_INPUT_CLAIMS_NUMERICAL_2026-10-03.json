@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-03",
+  "recordType": "exact-candidate-cpu-numerical-evidence",
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshotManifestFileCount": 1579,
+  "snapshotManifestSha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+  "supportDirectory": "docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT",
+  "supportInventorySha256": "bfbf146c6132e2c356c987021d366adb56ea0294e6ef087f97bc1b4203429657",
+  "sourceIntegrity": {
+    "before": "1579/1579 PASS",
+    "afterCpuSuite": "1579/1579 PASS",
+    "afterDiagnostics": "1579/1579 PASS",
+    "restoredFiles": false
+  },
+  "cpuSuite": {
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "unittestDuration_s": 22.988,
+    "processDuration_s": 24.32799999997951,
+    "command": [
+      "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+      "-B",
+      "-m",
+      "unittest",
+      "test_lpbf_production_transient_manufactured",
+      "test_lpbf_worker_failure_message",
+      "test_lpbf_worker_run_progress",
+      "test_lpbf_worker_auto_progress",
+      "test_lpbf_280w_simulation",
+      "test_lpbf_engineering.Verification.test_nested_schema_and_measurement_evidence",
+      "-v"
+    ]
+  },
+  "numericalDiagnosticRerun": {
+    "tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "subsetOfCpuSuite": true,
+    "additionalUniqueTests": 0,
+    "unittestDuration_s": 13.038,
+    "observerWallTime_s": 13.047000000020489,
+    "method": "sys.settrace on only four existing test-method frames; no production line tracing or operator/test mutation"
+  },
+  "pythonExecutable": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+  "pythonVersion": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "pythonEnvironmentFreshlyInstalled": false,
+  "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+  "implementationFingerprint": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+  "acceptanceBounds": {
+    "allCasesEnergyBalanceRelativeError": 1e-10,
+    "uniformAndNonuniformFinalTemperatureAbsoluteError_K": 1e-07,
+    "uniformAndNonuniformFinalTimeDecimalPlaces": 14,
+    "nonuniformPassiveOperatorRtol": 2e-12,
+    "nonuniformPassiveOperatorAtol_W_m3": 1e-07,
+    "piecewiseFineToCoarseSampleErrorRatioUpperExclusive": 0.25,
+    "piecewiseThresholdEnthalpyAbsoluteError_J_kg": 1e-06,
+    "piecewiseThresholdEnthalpyJumpAbsoluteError_J_kg": 0.001,
+    "diffusionObservedOrderLowerExclusive": 1.0
+  },
+  "actualStepCounts": {
+    "test_nonuniform_enthalpy_solution_matches_independent_production_operator": [
+      23,
+      38,
+      75
+    ],
+    "test_piecewise_enthalpy_ramp_crosses_mushy_interval_with_refinement": [
+      34,
+      42,
+      75
+    ],
+    "test_uniform_enthalpy_ramp_is_time_step_independent_and_conservative": [
+      23,
+      38,
+      75
+    ],
+    "test_mixed_boundary_eigenmode_converges_on_three_fixed_levels": [
+      47,
+      187,
+      747
+    ]
+  },
+  "diffusion": {
+    "levels_cells_z": [
+      8,
+      16,
+      32
+    ],
+    "field_rms_error_K": [
+      0.0005655962123059979,
+      0.00014208115656360516,
+      3.5562976742937e-05
+    ],
+    "observed_order": [
+      1.993057228096286,
+      1.9982672377696242
+    ],
+    "energy_balance_relative_error": [
+      2.788693840525603e-16,
+      2.7920569890415406e-16,
+      5.585796312287039e-16
+    ]
+  },
+  "limitations": {
+    "operatorLevelSoftwareEvidenceOnly": true,
+    "fullPythonSuite": "not run",
+    "cleanApplicationAcceptance": "recorded separately; not established by these CPU tests",
+    "browserAcceptance": "pending explicit renewed browser permission",
+    "physicalLpbfConvergence": "inconclusive",
+    "nistComparison": "unavailable",
+    "experimentalValidation": "unvalidated",
+    "v1ReleaseAccepted": false,
+    "newPhysicsOrLargeFiveMicronSolve": false
+  }
+}

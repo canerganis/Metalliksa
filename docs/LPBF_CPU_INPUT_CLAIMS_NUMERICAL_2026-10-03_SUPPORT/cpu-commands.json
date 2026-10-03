@@ -1,0 +1,45 @@
+{
+  "revision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "pythonExecutable": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+  "environmentOverrides": {
+    "TEMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\cpu-temp",
+    "TMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\cpu-temp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe"
+  },
+  "harnessSha256": "52c4134115ce6be3356efb3b6c38ad1d29f2b6b5568616157082edee748b69fe",
+  "commands": [
+    {
+      "stage": "cpu-suite",
+      "command": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "test_lpbf_production_transient_manufactured",
+        "test_lpbf_worker_failure_message",
+        "test_lpbf_worker_run_progress",
+        "test_lpbf_worker_auto_progress",
+        "test_lpbf_280w_simulation",
+        "test_lpbf_engineering.Verification.test_nested_schema_and_measurement_evidence",
+        "-v"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\python",
+      "exitCode": 0,
+      "elapsed_s": 24.32799999997951,
+      "logSha256": "a795ac2abcac1cab769a12f358b3412b24d6fbca9ccdd440b797e0fb3e8f9de1"
+    },
+    {
+      "stage": "numerical-diagnostics",
+      "command": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-B",
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\numerical_diagnostics.py"
+      ],
+      "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1",
+      "exitCode": 0,
+      "elapsed_s": 13.797000000020489,
+      "logSha256": "ae04ef303d047ee10e693a7c88d2d8a8d32fdbf11243dabdb5d8eb240359f96a"
+    }
+  ]
+}

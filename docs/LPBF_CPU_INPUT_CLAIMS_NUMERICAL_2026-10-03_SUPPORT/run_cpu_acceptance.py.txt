@@ -1,0 +1,86 @@
+"""Bounded exact-candidate CPU verification; preserve every attempt and source byte."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRATCH = Path(__file__).resolve().parent
+SNAPSHOT = ROOT / ".runtime/v1-input-claims-20261003"
+PYTHON = ROOT / ".runtime/lpbf-win-py312/Scripts/python.exe"
+REVISION = "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce"
+MANIFEST = SCRATCH / "source-manifest.json"
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_record(path, value):
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
+        json.dump(value, stream, indent=2, allow_nan=False)
+        stream.write("\n")
+
+
+def source_guard(label):
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    assert manifest["revision"] == REVISION
+    assert sha(MANIFEST) == "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2"
+    checks = {name: sha(SNAPSHOT / name) for name in manifest["sha256"]}
+    mismatches = [name for name, digest in checks.items() if digest != manifest["sha256"][name]]
+    result = {"sourceRevision": REVISION, "fileCount": len(checks), "mismatches": mismatches,
+              "status": "PASS" if not mismatches else "FAIL", "sha256": checks}
+    write_record(SCRATCH / f"cpu-source-{label}.json", result)
+    assert not mismatches, mismatches
+
+
+def main():
+    old = ROOT / ".tmp-lpbf-recovery-acceptance-20261003/numerical_diagnostics.py"
+    harness = SCRATCH / "numerical_diagnostics.py"
+    text = old.read_text(encoding="utf-8")
+    replacements = {
+        ".runtime/v1-recovery-acceptance-20261003": ".runtime/v1-input-claims-20261003",
+        "33efb32b7d9734587a78d1cb9de8224d7ef2a4ec": REVISION,
+        ".tmp-lpbf-recovery-acceptance-20261003/snapshot-source.json":
+            ".tmp-lpbf-input-claims-acceptance-20261003/source-manifest.json",
+    }
+    for before, after in replacements.items():
+        assert text.count(before) == 1, before
+        text = text.replace(before, after)
+    with harness.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(text)
+    temp = SCRATCH / "cpu-temp"
+    temp.mkdir(exist_ok=False)
+    env = os.environ.copy()
+    env.update(TEMP=str(temp), TMP=str(temp), PYTHONDONTWRITEBYTECODE="1", METALLIX_PYTHON=str(PYTHON))
+    modules = ["test_lpbf_production_transient_manufactured", "test_lpbf_worker_failure_message",
+               "test_lpbf_worker_run_progress", "test_lpbf_worker_auto_progress", "test_lpbf_280w_simulation",
+               "test_lpbf_engineering.Verification.test_nested_schema_and_measurement_evidence"]
+    commands = [("cpu-suite", [str(PYTHON), "-B", "-m", "unittest", *modules, "-v"], SNAPSHOT / "python"),
+                ("numerical-diagnostics", [str(PYTHON), "-B", str(harness)], ROOT)]
+    source_guard("before")
+    records = []
+    for name, command, cwd in commands:
+        started = time.monotonic()
+        with (SCRATCH / f"{name}.log").open("xb") as stream:
+            proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=stream, stderr=subprocess.STDOUT)
+            print(json.dumps({"stage": name, "pid": proc.pid, "command": command}), flush=True)
+            code = proc.wait()
+        record = {"stage": name, "command": command, "cwd": str(cwd), "exitCode": code,
+                  "elapsed_s": time.monotonic() - started, "logSha256": sha(SCRATCH / f"{name}.log")}
+        records.append(record)
+        print(json.dumps(record), flush=True)
+        source_guard(f"after-{name}")
+        if code:
+            break
+    write_record(SCRATCH / "cpu-commands.json", {"revision": REVISION, "pythonExecutable": str(PYTHON),
+        "environmentOverrides": {key: env[key] for key in ("TEMP", "TMP", "PYTHONDONTWRITEBYTECODE", "METALLIX_PYTHON")},
+        "harnessSha256": sha(harness), "commands": records})
+    return 0 if len(records) == len(commands) and all(row["exitCode"] == 0 for row in records) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
