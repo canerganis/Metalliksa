@@ -59,7 +59,6 @@ Bu nedenle başvurularda "üretim kusurunu önceden tahmin eder", "hurdayı azal
 
 ## İlgili belgeler
 
-- [HANGAR BİGG başvuru ön çalışması](HANGAR_BIGG_BASVURU_TASLAGI.md) — ürün özetini kullanan, doğrulanması gereken alanları işaretli başvuru taslağı.
 - [Araştırma çalışma alanı ve iş akışları](RESEARCH_WORKSTATION.md) — uygulamanın teknik organizasyonu.
 - [Bilimsel araştırma vizyonu](SCIENTIFIC_RESEARCH_VISION.md) — mevcut kapsamdan ayrı, araştırılması gereken aday yönler.
 - [Dokümantasyon haritası](README.md) — teknik ve tarihsel dokümanların dizini.

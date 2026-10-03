@@ -11,7 +11,6 @@ This directory contains the maintained product and engineering documentation. Th
 - [LPBF engineering](LPBF_ENGINEERING.md) — thermal model contract, execution modes, verification, and known limitations.
 - [UQ evidence](UQ_EVIDENCE.md) — uncertainty-quantification scope and what the worksheets do not establish.
 - [Module evidence inventory](MODULE_EVIDENCE_INVENTORY.md) — dated software evidence snapshot; runtime registry and current proof are authoritative for live status.
-- [HANGAR BİGG application draft](HANGAR_BIGG_BASVURU_TASLAGI.md) — internal venture-application draft; customer, market, budget, and program claims still require validation.
 
 ## Governing project documents
 
