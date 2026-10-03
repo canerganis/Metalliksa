@@ -21,6 +21,12 @@ from typing import Any, Optional, Tuple, Union
 # --- Closed vocabularies ---------------------------------------------------
 
 # Mirrors EVIDENCE_TYPES in src/types/research.ts (order preserved).
+# TODO(maintainer-review): reusing the research.ts source-classification enum
+# as the run-output status vocabulary is unreviewed
+# (.orchestra/REVIEW-prep-opus-python.md, maintainer item 2).
+# TODO(maintainer-review): "unresolved" is both an evidence type here and,
+# semantically, close to a run state (no claim); the double meaning is
+# unreviewed (.orchestra/REVIEW-prep-opus-python.md, maintainer item 8).
 EVIDENCE_TYPES: Tuple[str, ...] = (
     "measured",
     "validated-simulation",
@@ -41,13 +47,21 @@ EVIDENCE_STATUSES: Tuple[str, ...] = EVIDENCE_TYPES + RUN_STATES
 
 # TODO(maintainer-review): strength order used only for ceiling comparison.
 # Lower index = stronger claim. The relative position of literature-estimate
-# and screening-only is a skeleton assumption pending review.
+# and screening-only is a skeleton assumption pending review
+# (.orchestra/REVIEW-prep-opus-python.md, maintainer item 1).
 EVIDENCE_RANK = {status: index for index, status in enumerate(EVIDENCE_TYPES)}
 
 # Ceiling cap applied while a module's oracle test is pending (design 1).
+# TODO(maintainer-review): this cap also blocks literature-estimate (e.g. DB
+# lookups) until an oracle exists (.orchestra/REVIEW-prep-opus-python.md,
+# maintainer item 3).
 PENDING_ORACLE_CEILING = "screening-only"
 
 # Claim keys a module output must never set truthy unless allowed (design 1).
+# TODO(maintainer-review): exact, case-sensitive, top-level closed list;
+# synonyms (isQualified, certifiable, flightReady, approved, compliant) are not
+# covered and a field named "measured" is barred even at a measured ceiling
+# (.orchestra/REVIEW-prep-opus-python.md, maintainer item 5).
 FORBIDDEN_CLAIM_KEYS: Tuple[str, ...] = (
     "qualified",
     "certified",
@@ -57,7 +71,8 @@ FORBIDDEN_CLAIM_KEYS: Tuple[str, ...] = (
     "airworthy",
 )
 # TODO(maintainer-review): claims forbidden for every module while maturity
-# is barred from Production (roadmap G03).
+# is barred from Production (roadmap G03). Hard-coded until G03
+# (.orchestra/REVIEW-prep-opus-python.md, maintainer item 6).
 ALWAYS_FORBIDDEN_CLAIMS: Tuple[str, ...] = ("qualified", "certified", "productionReady", "airworthy")
 
 MATURITY = ("Research", "Preview")  # Production barred until roadmap G03.
@@ -204,6 +219,11 @@ class OutputSchema:
         for key in self.fields:
             _require(key not in FORBIDDEN_CLAIM_KEYS, f"output field {key!r} is a forbidden claim key")
         _text(self.status_key, "output.statusKey")
+        # The status key is reserved by the same claim names as the fields.
+        _require(self.status_key not in FORBIDDEN_CLAIM_KEYS,
+                 f"output.statusKey {self.status_key!r} is a forbidden claim key")
+        _require(self.status_key not in self.fields,
+                 f"output.statusKey {self.status_key!r} collides with an output field")
 
     def to_dict(self) -> dict:
         return {"fields": list(self.fields), "statusKey": self.status_key}
@@ -313,6 +333,9 @@ class Evidence:
         if self.ceiling != "measured":
             _require("measured" in self.forbidden_claims,
                      "'measured' must be forbidden unless the ceiling is measured")
+        # TODO(maintainer-review): allowing "validated" at a validated-simulation
+        # ceiling mixes numerical verification with experimental validation
+        # (.orchestra/REVIEW-prep-opus-python.md, maintainer item 4).
         if self.ceiling not in ("measured", "validated-simulation"):
             _require("validated" in self.forbidden_claims,
                      "'validated' must be forbidden below a validated ceiling")

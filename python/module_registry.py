@@ -69,24 +69,63 @@ def _unescape(value: str) -> str:
     return re.sub(r"\\(.)", r"\1", value)
 
 
+_MODULES_START = "export const MODULES = ["
+_MODULE_ID_KEY = re.compile(r"(?<![\w$])id:\s*'")
+
+
+def modules_array_body(text: str) -> str:
+    """Source text between ``export const MODULES = [`` and its ``] as const``."""
+    start = text.index(_MODULES_START) + len(_MODULES_START)
+    return text[start:text.index("] as const", start)]
+
+
+def count_module_ids(text: str) -> int:
+    """Structural count of ``id: '...'`` keys inside the MODULES array."""
+    return len(_MODULE_ID_KEY.findall(modules_array_body(text)))
+
+
 def parse_workspaces_modules(text: str) -> List[Dict[str, str]]:
-    """Extract MODULES rows from src/data/workspaces.ts source text."""
-    start = text.index("export const MODULES = [")
-    end = text.index("] as const", start)
+    """Extract MODULES rows from src/data/workspaces.ts source text.
+
+    Every non-blank, non-comment line of the array must be exactly one row;
+    anything else raises instead of being skipped.
+    """
     rows = []
-    for match in _MODULE_ROW.finditer(text[start:end]):
+    for line in modules_array_body(text).splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//"):
+            continue
+        match = _MODULE_ROW.fullmatch(stripped.rstrip(",").rstrip())
+        if match is None:
+            raise ValueError(f"unparseable MODULES row in workspaces.ts: {stripped!r}")
         module_id, workspace, label, scope, description, next_id = match.groups()
         rows.append({"id": module_id, "workspace": workspace, "label": _unescape(label),
                      "scope": scope, "description": _unescape(description), "next": next_id})
     return rows
 
 
+def _function_body(text: str, marker: str) -> str:
+    """Text of the brace-balanced body of the function starting at ``marker``."""
+    open_index = text.index("{", text.index(marker))
+    depth = 0
+    for index in range(open_index, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_index:index + 1]
+    raise ValueError(f"unbalanced braces after {marker!r}")
+
+
 def parse_app_views(text: str) -> Dict[str, Dict[str, str]]:
     """Map module id -> view component from the renderModule switch in App.tsx."""
     lazy = {name: (path, export) for name, path, export in _LAZY_IMPORT.findall(text)}
-    switch = text[text.index("function renderModule"):]
+    switch = _function_body(text, "function renderModule")
     views = {}
     for module_id, component in _CASE.findall(switch):
+        if module_id in views:
+            raise ValueError(f"duplicate renderModule case {module_id!r}")
         if component not in lazy:
             raise ValueError(f"view {component!r} for {module_id!r} is not a lazy component import")
         path, export = lazy[component]
@@ -125,6 +164,8 @@ def legacy_contract(row: Dict[str, str]) -> ModuleContract:
         label=row["label"],
         description=row["description"],
         next=row["next"],
+        # TODO(maintainer-review): maturity is copied from the UI scope without
+        # review (.orchestra/REVIEW-prep-opus-python.md, maintainer item 7).
         maturity=row["scope"],  # Must already be Research or Preview.
         navigation="listed",  # The UI stays unchanged in step 0.
         view=View(component=row["viewComponent"], export=row["viewExport"]),

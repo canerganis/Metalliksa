@@ -12,6 +12,10 @@ import module_registry as mr
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
+# one legacy contract per listed module. Migration may only lower this number.
+LEGACY_CEILING = 37
+
 
 def _view():
     return mc.View(component="src/components/UQLab.tsx", export="UQLab")
@@ -196,6 +200,14 @@ class ForbiddenClaimTests(unittest.TestCase):
             with self.subTest(claim=claim), self.assertRaises(mc.ContractError):
                 mc.OutputSchema(fields=("value", claim))
 
+    def test_status_key_cannot_be_claim_key(self):
+        for claim in mc.FORBIDDEN_CLAIM_KEYS:
+            with self.subTest(claim=claim), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("value",), status_key=claim)
+        with self.assertRaises(mc.ContractError):
+            mc.OutputSchema(fields=("value",), status_key="value")
+        self.assertEqual(mc.OutputSchema(fields=("value",)).status_key, "evidenceStatus")
+
     def test_contracted_requires_reviewed_owner_and_operations(self):
         with self.assertRaises(mc.ContractError):
             _contract(owner=f"{mc.TODO_MARKER}: unassigned")
@@ -212,11 +224,28 @@ class LegacyRegistryTests(unittest.TestCase):
         cls.workspaces = (REPO_ROOT / "src" / "data" / "workspaces.ts").read_text(encoding="utf-8")
         cls.app = (REPO_ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
 
-    def test_one_legacy_contract_per_listed_module(self):
+    def test_one_contract_per_listed_module_and_legacy_ratchet(self):
         modules = mr.parse_workspaces_modules(self.workspaces)
-        self.assertEqual(len(modules), self.workspaces.count("{ id: '") - 4)  # minus WORKSPACES rows
-        self.assertEqual([c.id for c in self.registry], [m["id"] for m in modules])
-        self.assertTrue(all(c.migration_state == "legacy" for c in self.registry))
+        self.assertEqual(len(modules), mr.count_module_ids(self.workspaces))
+        ids = [c.id for c in self.registry]
+        self.assertEqual(len(ids), len(modules))
+        self.assertEqual(set(ids), {m["id"] for m in modules})
+        legacy = [c for c in self.registry if c.migration_state == "legacy"]
+        # Ratchet: migration may lower the legacy count; it must never grow.
+        self.assertLessEqual(len(legacy), LEGACY_CEILING)
+
+    def test_unparseable_module_row_fails_loudly(self):
+        bad = self.workspaces.replace("scope: 'Research'", "scope: \"Research\"", 1)
+        with self.assertRaisesRegex(ValueError, "unparseable MODULES row"):
+            mr.parse_workspaces_modules(bad)
+
+    def test_render_module_switch_is_bounded_and_rejects_duplicates(self):
+        trailing = self.app + "\nfunction later() { switch (x) { case 'zzz-extra': return <UQLab />; } }\n"
+        self.assertNotIn("zzz-extra", mr.parse_app_views(trailing))
+        first_case = re.search(r"case\s+'[^']+':\s*return\s*<\w+\s*/>;", self.app).group(0)
+        duplicated = self.app.replace(first_case, first_case + " " + first_case, 1)
+        with self.assertRaisesRegex(ValueError, "duplicate renderModule case"):
+            mr.parse_app_views(duplicated)
 
     def test_seed_matches_typescript_sources(self):
         self.assertEqual(mr.load_seed(), mr.build_seed(self.workspaces, self.app),

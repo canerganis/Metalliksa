@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MODULES } from '../src/data/workspaces';
 import { EVIDENCE_TYPES } from '../src/types/research';
-import type { ModuleRegistryDocument } from '../src/generated/moduleRegistry';
+import { MODULE_REGISTRY, type ModuleRegistryDocument } from '../src/generated/moduleRegistry';
 
 // Reads only the committed JSON emitted by python/module_registry.py, so Node CI never needs Python.
 const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistry.json', import.meta.url), 'utf8')) as ModuleRegistryDocument;
@@ -12,12 +12,16 @@ const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistr
 // lower this number. Raising it needs an explicit edit here and maintainer review.
 const LEGACY_CEILING = 37;
 
-test('legacy contracts cover exactly the modules listed in workspaces.ts', () => {
+test('contracts cover exactly the modules listed in workspaces.ts and legacy never grows', () => {
   const legacy = registry.contracts.filter(contract => contract.migrationState === 'legacy');
-  assert.equal(registry.contracts.length, MODULES.length);
-  assert.deepEqual(registry.contracts.map(contract => contract.id), MODULES.map(module => module.id));
-  assert.equal(legacy.length, MODULES.length);
+  const ids = registry.contracts.map(contract => contract.id);
+  assert.equal(ids.length, MODULES.length);
+  assert.deepEqual(new Set(ids), new Set(MODULES.map(module => module.id)));
   assert.ok(legacy.length <= LEGACY_CEILING, `legacy count ${legacy.length} exceeds ratchet ${LEGACY_CEILING}`);
+});
+
+test('generated TypeScript registry equals the committed JSON', () => {
+  assert.deepEqual(MODULE_REGISTRY, registry);
 });
 
 test('registry ids are unique and next links resolve', () => {
