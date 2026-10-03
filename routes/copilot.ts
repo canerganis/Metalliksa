@@ -6,6 +6,12 @@ export const copilotRouter = Router();
 
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
+const MAX_PROMPT_CHARS = 8000;
+const MAX_SYSTEM_INSTRUCTION_CHARS = 2000;
+const MAX_CONTEXT_CHARS = 50000;
+const MAX_VISION_PROMPT_CHARS = 4000;
+const MAX_IMAGE_CHARS = 14_000_000; // ~10 MB of decoded image data
+
 function denyIfAirgapped(res: Response, service: string): boolean {
   if (!AIRGAPPED) return false;
   res.status(503).json(airgapDenyPayload(service));
@@ -16,11 +22,26 @@ function denyIfAirgapped(res: Response, service: string): boolean {
 copilotRouter.post(["/api/metallurgy/consult", "/api/consult"], async (req: Request, res: Response) => {
   if (denyIfAirgapped(res, "GPT-6 AI consultation")) return;
   try {
-    const { prompt, message, context, systemInstruction } = req.body;
-    const userPrompt = prompt || message || "Provide metallurgical analysis and ICME optimization advice.";
+    const { prompt, message, context, systemInstruction } = req.body ?? {};
+    const rawPrompt = prompt || message;
+    if (rawPrompt !== undefined && (typeof rawPrompt !== "string" || rawPrompt.length > MAX_PROMPT_CHARS)) {
+      return res.status(400).json({ error: `prompt must be a string of at most ${MAX_PROMPT_CHARS} characters.` });
+    }
+    if (systemInstruction !== undefined && systemInstruction !== null && (typeof systemInstruction !== "string" || systemInstruction.length > MAX_SYSTEM_INSTRUCTION_CHARS)) {
+      return res.status(400).json({ error: `systemInstruction must be a string of at most ${MAX_SYSTEM_INSTRUCTION_CHARS} characters.` });
+    }
+    const userPrompt = rawPrompt || "Provide metallurgical analysis and ICME optimization advice.";
 
-    const fullPrompt = context
-      ? `Material Context: ${typeof context === "string" ? context : JSON.stringify(context)}\n\nQuery: ${userPrompt}`
+    let contextText = "";
+    if (context) {
+      contextText = typeof context === "string" ? context : (JSON.stringify(context) ?? "");
+      if (contextText.length > MAX_CONTEXT_CHARS) {
+        return res.status(400).json({ error: `context must be at most ${MAX_CONTEXT_CHARS} characters when serialized.` });
+      }
+    }
+
+    const fullPrompt = contextText
+      ? `Material Context: ${contextText}\n\nQuery: ${userPrompt}`
       : userPrompt;
 
     const response = await generateGpt6Response({
@@ -41,7 +62,17 @@ copilotRouter.post(["/api/metallurgy/consult", "/api/consult"], async (req: Requ
 copilotRouter.post("/api/metallurgy/diagnose-micrograph", async (req: Request, res: Response) => {
   if (denyIfAirgapped(res, "GPT-6 micrograph vision")) return;
   try {
-    const { imageBase64, prompt } = req.body;
+    const { imageBase64, prompt } = req.body ?? {};
+    if (imageBase64 !== undefined && imageBase64 !== null && typeof imageBase64 !== "string") {
+      return res.status(400).json({ error: "imageBase64 must be a string." });
+    }
+    if (typeof imageBase64 === "string" && imageBase64.length > MAX_IMAGE_CHARS) {
+      return res.status(413).json({ error: "Micrograph image is too large." });
+    }
+    if (prompt !== undefined && prompt !== null && (typeof prompt !== "string" || prompt.length > MAX_VISION_PROMPT_CHARS)) {
+      return res.status(400).json({ error: `prompt must be a string of at most ${MAX_VISION_PROMPT_CHARS} characters.` });
+    }
+    // The data-URI mime type wins over the client-supplied mimeType field.
     const mimeType = typeof imageBase64 === "string" && imageBase64.startsWith("data:")
       ? imageBase64.match(/^data:([^;]+);base64,/)?.[1]
       : req.body?.mimeType || "image/jpeg";
