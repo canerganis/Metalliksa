@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 :root {
   --mk-bg: #020409;
@@ -441,18 +442,19 @@
   background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.55), transparent);
 }
 
-.text-slate-600 { color: #94a3b8 !important; }
-.text-slate-500 { color: #a8b7c7 !important; }
-.text-slate-400 { color: #c3d0dc !important; }
-.text-slate-300 { color: #e2edf5 !important; }
-.text-slate-200 { color: #f0f7fb !important; }
-.text-cyan-200\/55 { color: rgba(207, 250, 254, 0.8) !important; }
-.text-cyan-200\/45 { color: rgba(207, 250, 254, 0.74) !important; }
-.border-slate-800 { border-color: rgba(125, 211, 252, 0.24) !important; }
-.border-slate-700 { border-color: rgba(148, 163, 184, 0.38) !important; }
-.bg-slate-900\/40 { background-color: rgba(15, 23, 42, 0.72) !important; }
-.bg-slate-950\/80 { background-color: rgba(2, 6, 14, 0.9) !important; }
-.divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(125, 211, 252, 0.22) !important; }
+/* Semantic slate overrides: each token mirrors the previous literal value, so computed colors are unchanged. */
+.text-slate-600 { color: var(--mk-text-faint) !important; }
+.text-slate-500 { color: var(--mk-text-dim) !important; }
+.text-slate-400 { color: var(--mk-text-subtle) !important; }
+.text-slate-300 { color: var(--mk-text-soft) !important; }
+.text-slate-200 { color: var(--mk-text-strong) !important; }
+.text-cyan-200\/55 { color: var(--mk-text-cyan-soft) !important; }
+.text-cyan-200\/45 { color: var(--mk-text-cyan-faint) !important; }
+.border-slate-800 { border-color: var(--mk-line-subtle) !important; }
+.border-slate-700 { border-color: var(--mk-line-neutral) !important; }
+.bg-slate-900\/40 { background-color: var(--mk-fill-panel) !important; }
+.bg-slate-950\/80 { background-color: var(--mk-fill-deep) !important; }
+.divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: var(--mk-line-divider) !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }

@@ -1,214 +1,140 @@
-# Design System Master File
+# Metalliksa Design System — Master
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+> Page files in `design-system/metalliksa/pages/` override this file for their page only.
+> Source of truth for values: `src/index.css` (base palette) and `src/styles/tokens.css` (token layer).
+> Contrast gate: `tests/design-tokens-contrast.test.ts`.
 
----
-
-**Project:** Metalliksa
-**Generated:** 2026-09-15 20:29:57
-**Category:** Analytics Dashboard
+**Identity:** dark mission-control research workstation (Phase 9, DESIGN-9 sections 1-2).
+**Rule zero:** motion and light decorate real state. They never replace, delay or de-emphasize an evidence label.
 
 ---
 
-## Global Rules
+## 1. Principles
 
-### Color Palette
+1. **Honest telemetry.** Every number on screen traces to an API response or a user input. No placeholder values, ticking clocks or fake progress. Missing data reads "unavailable".
+2. **Calm density.** Dense information on a quiet dark field; hierarchy comes from type and spacing before color.
+3. **Light = energy.** Glow and bright accents mark active, focused or energised state only (laser, live engine, current selection). Idle chrome stays matte.
+4. **Evidence first.** Labels such as `unavailable`, `inconclusive` and `unvalidated` always render at full text contrast. No opacity, blur, glow, truncation or reduced size may hide them.
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#1E40AF` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| On Secondary | `#000000` | `--color-on-secondary` |
-| Accent/CTA | `#D97706` | `--color-accent` |
-| On Accent/CTA | `#000000` | `--color-on-accent` |
-| Background | `#F8FAFC` | `--color-background` |
-| Foreground | `#1E3A8A` | `--color-foreground` |
-| Card | `#FFFFFF` | `--color-card` |
-| Card Foreground | `#1E3A8A` | `--color-card-foreground` |
-| Muted | `#E9EEF6` | `--color-muted` |
-| Muted Foreground | `#475569` | `--color-muted-foreground` |
-| Border | `#DBEAFE` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| On Destructive | `#FFFFFF` | `--color-on-destructive` |
-| Ring | `#1E40AF` | `--color-ring` |
+## 2. Air-gap and fonts
 
-**Color Notes:** Blue data + amber highlights [Accent adjusted from #F59E0B]
+- No external URLs in CSS, HTML or docs snippets. No Google Fonts or CDN imports.
+- Fonts are self-hosted with `@fontsource/fira-sans` and `@fontsource/fira-code`, **latin + latin-ext subsets only**, imported in `src/main.tsx`.
+- `--mk-font-sans`: `"Fira Sans", ui-sans-serif, system-ui, sans-serif`
+- `--mk-font-mono`: `"Fira Code", ui-monospace, SFMono-Regular, monospace`
 
-### Typography
+## 3. Color tokens
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap)
+### Base palette (`src/index.css`)
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
-```
+| Token | Value | Role |
+|---|---|---|
+| `--mk-bg` | `#020409` | Page background |
+| `--mk-surface` | `#06111c` | Panels |
+| `--mk-surface-raised` | `#0a1827` | Cards, popovers |
+| `--mk-border` | `rgba(34,211,238,.18)` | Decorative separators |
+| `--mk-border-bright` | `rgba(34,211,238,.54)` | Hover borders |
+| `--mk-ice` | `#67e8f9` | Primary accent, focus |
+| `--mk-plasma` | `#38bdf8` | Secondary accent, toolpaths |
+| `--mk-amber` | `#f5b84b` | Energy, warnings, air-gap notice |
+| `--mk-text` | `#f4fdff` | Primary text |
+| `--mk-muted` | `#c7d7e2` | Secondary text |
 
-### Spacing Variables
+### Token layer (`src/styles/tokens.css`)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+| Token | Value | Role |
+|---|---|---|
+| `--mk-text-strong` | `#f0f7fb` | Emphasised body text |
+| `--mk-text-soft` | `#e2edf5` | Body text |
+| `--mk-text-subtle` | `#c3d0dc` | Secondary text |
+| `--mk-text-dim` | `#a8b7c7` | Captions |
+| `--mk-text-faint` | `#94a3b8` | Lowest text tier (still AA) |
+| `--mk-text-cyan-soft` / `-faint` | `rgba(207,250,254,.8 / .74)` | Cyan captions |
+| `--mk-line-subtle` / `-neutral` / `-divider` | translucent | Decorative lines (no contrast requirement) |
+| `--mk-fill-panel` / `-deep` | translucent | Panel fills over `--mk-bg` |
+| `--mk-border-strong` | `#4f87a8` | Component boundaries that must be perceivable (≥3:1) |
 
-### Shadow Depths
+### Status and evidence
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+| Token | Value | Meaning |
+|---|---|---|
+| `--mk-signal-ok` | `#6ee7b7` | Check passed / online |
+| `--mk-signal-warn` | `#f5b84b` | Degraded, limited mode, air-gap notice (not an error) |
+| `--mk-signal-fail` | `#fb7185` | Failed, error, timed out |
+| `--mk-evidence-unvalidated` | `#f0abfc` | Not experimentally validated, preview scope |
 
----
+Status color is never the only signal: always pair it with a text label and, where useful, an icon.
+`unavailable` and `inconclusive` use the text ramp at `--mk-text-subtle` or stronger, never a faded style.
 
-## Component Specs
+### Contrast rules
 
-### Buttons
+- Text tokens (`--mk-text*`, `--mk-muted`, `--mk-signal-*`, `--mk-evidence-*`, `--mk-ice`, `--mk-plasma`, `--mk-amber`): **≥4.5:1** on `--mk-bg`, `--mk-surface`, `--mk-surface-raised`, `--mk-glass-bg`, `--mk-fill-panel`, `--mk-fill-deep`.
+- UI tokens (`--mk-border-strong`, `--mk-focus-color`): **≥3:1** on the same backgrounds.
+- Enforced by `npx tsx --test tests/design-tokens-contrast.test.ts`. Any new text or UI color token must be added under a covered name.
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #D97706;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+## 4. Typography
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
+| Token | Size | Use |
+|---|---|---|
+| `--mk-fs-2xs` | 11px | Uppercase HUD labels |
+| `--mk-fs-xs` | 12px | Captions, table meta |
+| `--mk-fs-sm` | 14px | Dense UI body |
+| `--mk-fs-md` | 16px | Body, inputs |
+| `--mk-fs-lg` | 20px | Section titles |
+| `--mk-fs-xl` | 28px | Page titles |
+| `--mk-fs-2xl` | 40px | Boot / hero only |
 
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #1E40AF;
-  border: 2px solid #1E40AF;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
+- Numbers and units: `--mk-font-mono` with `font-variant-numeric: tabular-nums`.
+- Uppercase tracking: `--mk-tracking-caps` (0.12em), never above `--mk-tracking-caps-max` (0.18em).
+- Headings: line-height 1.18; body: 1.45.
 
-### Cards
+## 5. Spacing
 
-```css
-.card {
-  background: #F8FAFC;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+`--mk-space-1..7` = 4 / 8 / 12 / 16 / 24 / 32 / 48 px. Use these steps only.
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
+## 6. Glass, glow, elevation
 
-### Inputs
+- **Glass:** `--mk-glass-bg` `rgba(6,17,28,.72)` + `blur(var(--mk-glass-blur))` (12px). Shell chrome only (header, sidebar, palette). Never behind charts, plots or data marks.
+- **Glow:** `--mk-glow-sm`, `--mk-glow-md`. Active and focus states only; never on data marks or evidence labels.
+- **Elevation:** border + shadow, no stacked blur.
 
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
+| Token | Use |
+|---|---|
+| `--mk-elev-0` | Flat, inline content |
+| `--mk-elev-1` | Cards |
+| `--mk-elev-2` | Popovers, menus |
+| `--mk-elev-3` | Modals |
 
-.input:focus {
-  border-color: #1E40AF;
-  outline: none;
-  box-shadow: 0 0 0 3px #1E40AF20;
-}
-```
+## 7. Motion
 
-### Modals
+| Token | Value | Use |
+|---|---|---|
+| `--mk-dur-fast` | 120ms | Hover, press |
+| `--mk-dur-base` | 200ms | Panels, toggles |
+| `--mk-dur-slow` | 420ms | Enter/exit of large surfaces |
+| `--mk-ease-out` | `cubic-bezier(.16,1,.3,1)` | Entering |
+| `--mk-ease-inout` | `cubic-bezier(.65,0,.35,1)` | Moving, looping sweeps |
 
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
+- `prefers-reduced-motion: reduce` collapses animation and transition (global rule in `src/index.css`).
+- Motion never gates content: a label is readable before any animation finishes.
+- No percent tweens for progress; progress comes only from backend steps.
 
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+## 8. Focus
 
----
+- `outline: var(--mk-focus-width) solid var(--mk-focus-color)` (2px ice), `outline-offset: var(--mk-focus-offset)` (3px), optional halo `box-shadow: var(--mk-focus-halo)` (4px `rgba(103,232,249,.25)`).
+- The focus ring **never animates or transitions**. Do not include `outline` or the halo in a `transition` list.
+- Focus is always visible on `:focus-visible` for buttons, links, inputs, selects, textareas and summaries.
 
-## Style Guidelines
+## 9. Shell and components (summary)
 
-**Style:** Data-Dense Dashboard
+Shell, boot, placeholders and viz palette are owned by later Phase 9 packages (DESIGN-9 sections 3-7). Until they land, components keep the existing classes (`aero-panel`, `mk-header`, `mk-sidebar`, `mk-status`, `mk-scope-badge`, `mk-hud-chip`) and adopt tokens incrementally without visual change.
 
-**Keywords:** Multiple charts/widgets, data tables, KPI cards, minimal padding, grid layout, space-efficient, maximum data visibility
+## 10. QA gates
 
-**Best For:** Business intelligence dashboards, financial analytics, enterprise reporting, operational dashboards, data warehousing
-
-**Key Effects:** Hover tooltips, chart zoom on click, row highlighting on hover, smooth filter animations, data loading spinners
-
-### Page Pattern
-
-**Pattern Name:** Enterprise Gateway
-
-- **Conversion Strategy:** Path selection (I am a...). Mega menu navigation. Trust signals prominent. Provide pause/stop for video and rotating logos; stop on focus and reduced motion. Logo carousel controls must be keyboard operable; pause moving media offscreen/hidden and render a static final state under reduced motion.
-- **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
-- **Section Order:** Hero (Video/Mission) > Solutions by Industry > Solutions by Role > Client Logos > Contact Sales
-
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Ornate design
-- ❌ No filtering
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- [ ] Contrast test passes (≥4.5:1 text, ≥3:1 UI).
+- [ ] No external URLs; fonts only from `@fontsource` latin + latin-ext.
+- [ ] Evidence labels visible at full contrast in every screenshot.
+- [ ] Focus ring visible and static on keyboard navigation.
+- [ ] Reduced motion respected.
+- [ ] Viewports 375×812, 768×1024, 1440×900; no horizontal scroll on mobile.
+- [ ] No emojis as icons; use `lucide-react`.
