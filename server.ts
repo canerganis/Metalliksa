@@ -3,7 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer, type Server } from "node:http";
 import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
-import { applySecurity, errorHandler, isAuthenticated, resolveBindConfig } from "./server/security.ts";
+import { LoginAuth, applySecurity, buildLoginBannerLines, buildTrustProxyWarning, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -45,7 +45,8 @@ process.on("uncaughtException", (error: Error) => {
   }
 });
 
-// Default bind is 127.0.0.1; a non-loopback METALLIKSA_HOST requires METALLIKSA_TOKEN.
+// Default bind is 127.0.0.1 (no login). A non-loopback METALLIKSA_HOST enables the login flow:
+// METALLIKSA_TOKEN (if set) or a random access code printed at startup.
 let bindConfig: ReturnType<typeof resolveBindConfig>;
 try {
   bindConfig = resolveBindConfig(process.env);
@@ -55,11 +56,18 @@ try {
 }
 
 const app = express();
+// Off by default. Behind a TLS reverse proxy set METALLIKSA_TRUST_PROXY so req.secure, req.ip and the
+// same-origin check use the X-Forwarded-* headers.
+const trustProxy = resolveTrustProxy(process.env);
+if (trustProxy !== false) app.set("trust proxy", trustProxy);
 const configuredPort = Number(process.env.PORT ?? 3000);
 const PORT = Number.isInteger(configuredPort) && configuredPort >= 1 && configuredPort <= 65535 ? configuredPort : 3000;
 
-// Request id, access log, security headers, rate limit and optional Bearer auth.
-applySecurity(app, bindConfig.token);
+// Login mode: non-loopback bind, or an explicit token. Loopback without a token stays open.
+const loginAuth = bindConfig.token || bindConfig.accessCode ? new LoginAuth({ token: bindConfig.token, accessCode: bindConfig.accessCode }) : null;
+
+// Request id, access log, security headers, rate limit, /login and Bearer/session auth.
+applySecurity(app, bindConfig.token, { auth: loginAuth });
 
 // Registry payloads have a smaller limit and must run before the global parser.
 app.use(createResearchRegistryRouter());
@@ -78,7 +86,7 @@ app.get("/api/health", (req: Request, res: Response) => {
   res.json({
     status: "ok",
     service: "MetalliX-Unified-Server",
-    hasApiKey: AIRGAPPED ? false : isAuthenticated(req, bindConfig.token) && !!process.env.OPENAI_API_KEY?.trim(),
+    hasApiKey: AIRGAPPED ? false : isAuthenticated(req, bindConfig.token, loginAuth) && !!process.env.OPENAI_API_KEY?.trim(),
     airgapped: AIRGAPPED,
     timestamp: new Date().toISOString(),
   });
@@ -136,6 +144,12 @@ async function startServer() {
 
   httpServer.listen(PORT, bindConfig.host, () => {
     console.log(`[MetalliX-Server] Modular server running on http://${bindConfig.host}:${PORT}`);
+    if (!bindConfig.loopback) {
+      console.warn(`[MetalliX-Server] Network exposure: host ${bindConfig.host} is not loopback. Prefer HTTPS (reverse proxy) for non-local use.`);
+    }
+    const proxyWarning = buildTrustProxyWarning(bindConfig, trustProxy);
+    if (proxyWarning) console.warn(`[MetalliX-Server] ${proxyWarning}`);
+    for (const line of buildLoginBannerLines(bindConfig, PORT)) console.log(`[MetalliX-Server] ${line}`);
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");
     }
