@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertNotAirgapped } from "./airgap";
 
 const MAX_BYTES = 25 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -22,6 +23,7 @@ function safeFileName(value: string) {
 }
 
 export async function collectApprovedSource(sourceId: ApprovedSourceId, rawUrl: string) {
+  assertNotAirgapped("Approved external source download");
   const url = new URL(rawUrl);
   if (url.protocol !== "https:") throw new Error("Only HTTPS source URLs are allowed.");
   if (!isApprovedHost(url.hostname, APPROVED_SOURCE_HOSTS[sourceId])) {

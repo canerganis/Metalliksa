@@ -1,4 +1,5 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
+import { useEscapeToClose } from "./AccessibleModal";
 import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   Upload,
@@ -77,6 +78,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
+  useEscapeToClose(isPasteModalOpen, () => setIsPasteModalOpen(false));
   const [pastedText, setPastedText] = useState<string>("");
 
   // Specimen & Environment Config
@@ -1553,7 +1555,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
       {/* 5. PASTE RAW TEXT MODAL */}
       {isPasteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-[#090e18] border border-[#1e2d46] rounded-2xl max-w-2xl w-full p-5 space-y-4 shadow-2xl animate-fadeIn">
+          <div role="dialog" aria-modal="true" aria-label="Paste polarization data" className="bg-[#090e18] border border-[#1e2d46] rounded-2xl max-w-2xl w-full p-5 space-y-4 shadow-2xl animate-fadeIn">
             <div className="flex items-center justify-between border-b border-[#162032] pb-3">
               <h3 className="text-sm font-bold text-white font-mono flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-400" />

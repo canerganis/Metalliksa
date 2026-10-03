@@ -235,7 +235,7 @@ test("unsupported alloy identity refuses computation and clears a previous suppo
   assert.ok(useLpbfBuildJobStore.getState().job);
   const supported = useMaterialSpecimenStore.getState().activeSpecimen;
   useLpbfBuildJobStore.setState({
-    sessionUq: { enabled: true, nSamples: 8, source: "synthetic stale fixture" } as NonNullable<typeof initialBuild.sessionUq>,
+    sessionUq: { enabled: true, nSamples: 8, source: "synthetic stale fixture" } as unknown as NonNullable<typeof initialBuild.sessionUq>, // intentionally partial stale fixture
     sessionAmbench: {} as NonNullable<typeof initialBuild.sessionAmbench>,
     sessionEvidenceKey: "stale-evidence",
   });

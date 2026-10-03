@@ -14,6 +14,7 @@ import { LpbfArtifactStore } from '../server/lpbfArtifactStore';
 import { backupSourceBundle, restoreSourceBundle } from '../server/lpbfSourceBundle';
 import { createLpbfSourcesRouter } from '../routes/lpbfSources';
 import { sourceAction, sourceCatalog } from '../src/services/lpbfSourceService';
+import type { LpbfSourceDocument } from '../src/types/lpbfSource';
 import { SourceConditions } from '../src/components/LpbfSourceArchivePanel';
 
 const entries = () => [in625GeorgiaTechPropertyCatalogEntry(), in625NasaPropertyCatalogEntry()];
@@ -21,7 +22,7 @@ const entries = () => [in625GeorgiaTechPropertyCatalogEntry(), in625NasaProperty
 test('property catalogs bind original bytes and distinguish evidence from material admission', () => {
   const catalog = new LpbfSourceArchiveService().catalog().sources;
   for (const entry of entries()) {
-    const document = entry.loadDocument();
+    const document = entry.loadDocument() as LpbfSourceDocument; // LpbfSourceCatalogEntry.loadDocument is typed unknown; catalogs return validated source documents
     assert.ok(catalog.some(item => item.datasetId === document.datasetId));
     assert.equal(document.processScope, 'material-characterization');
     assert.equal(document.materialId, 'in625');
@@ -36,7 +37,7 @@ test('property catalogs bind original bytes and distinguish evidence from materi
     }
     // Mutating a returned record cannot promote the next catalog document.
     document.sourceContext!.model_admission = true;
-    assert.equal(entry.loadDocument().sourceContext!.model_admission, false);
+    assert.equal((entry.loadDocument() as LpbfSourceDocument).sourceContext!.model_admission, false);
   }
 });
 
@@ -44,7 +45,7 @@ test('property catalog rejects replaced bytes even when a local manifest claims 
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-property-source-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const original = in625GeorgiaTechPropertyCatalogEntry();
-  const document = original.loadDocument();
+  const document = original.loadDocument() as LpbfSourceDocument;
   for (const artifact of document.artifacts) copyFileSync(path.join(original.sourceRoot, artifact.relativePath), path.join(root, artifact.relativePath));
   const entry = in625GeorgiaTechPropertyCatalogEntry(root);
   assert.doesNotThrow(() => entry.loadDocument());
@@ -110,7 +111,7 @@ test('real property sources round-trip through client, HTTP API, revision store 
 
 test('property source UI shows property provenance and missing ranges without camera or optical claims', () => {
   for (const entry of entries()) {
-    const markup = renderToStaticMarkup(React.createElement(SourceConditions, { document: entry.loadDocument(), preview: true }));
+    const markup = renderToStaticMarkup(React.createElement(SourceConditions, { document: entry.loadDocument() as LpbfSourceDocument, preview: true }));
     assert.match(markup, /Thermophysical property evidence/);
     assert.match(markup, /unverified candidate for material admission/);
     assert.doesNotMatch(markup, /Raw camera signal|Published optical measurements|Beam diameter convention/);

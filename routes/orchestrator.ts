@@ -2,8 +2,12 @@ import { Router, type Request, type Response } from "express";
 import { generateGpt6Response } from "../server/openaiService.ts";
 import { airgapDenyPayload, isAirgappedFromEnv } from "../server/airgap.ts";
 import { APPROVED_SOURCE_HOSTS, collectApprovedSource } from "../server/approvedSourceCollector.ts";
+import { isOwnKey } from "../server/security.ts";
 
 export const orchestratorRouter = Router();
+const MAX_SOURCE_URL_CHARS = 2048;
+const MAX_PLAN_FIELD_CHARS = 4000;
+// Evaluated once at import time; the server/airgap.ts guards read process.env on every call, so changing AIRGAPPED at run time only affects the guards (restart to refresh this route flag).
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
 function approvedSourceForUrl(rawUrl: string): keyof typeof APPROVED_SOURCE_HOSTS | null {
@@ -29,7 +33,9 @@ orchestratorRouter.post("/api/orchestrator/collect-source", async (req: Request,
   if (AIRGAPPED) return res.status(503).json({ error: "Source collection is disabled in air-gapped mode." });
   const sourceId = req.body?.sourceId;
   const url = typeof req.body?.url === "string" ? req.body.url.trim() : "";
-  if (!(sourceId in APPROVED_SOURCE_HOSTS) || !url) return res.status(400).json({ error: "An approved sourceId and HTTPS URL are required." });
+  if (!isOwnKey(APPROVED_SOURCE_HOSTS, sourceId) || !url || url.length > MAX_SOURCE_URL_CHARS) {
+    return res.status(400).json({ error: "An approved sourceId and HTTPS URL are required." });
+  }
   try {
     const metadata = await collectApprovedSource(sourceId as keyof typeof APPROVED_SOURCE_HOSTS, url);
     return res.status(201).json({ data: metadata, nextStep: "quality-check" });
@@ -45,6 +51,9 @@ orchestratorRouter.post("/api/orchestrator/dataset-plan", async (req: Request, r
   const constraints = typeof req.body?.constraints === "string" ? req.body.constraints.trim() : "";
   const availableData = typeof req.body?.availableData === "string" ? req.body.availableData.trim() : "";
   if (!objective) return res.status(400).json({ error: "Dataset objective is required." });
+  if (objective.length > MAX_PLAN_FIELD_CHARS || constraints.length > MAX_PLAN_FIELD_CHARS || availableData.length > MAX_PLAN_FIELD_CHARS) {
+    return res.status(400).json({ error: `objective, constraints and availableData must each be at most ${MAX_PLAN_FIELD_CHARS} characters.` });
+  }
 
   try {
     const context = `OBJECTIVE:\n${objective}\n\nCONSTRAINTS:\n${constraints || "Not specified"}\n\nAVAILABLE DATA:\n${availableData || "Not specified"}`;

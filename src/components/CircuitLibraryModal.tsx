@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useEscapeToClose } from "./AccessibleModal";
 import {
   BookOpen,
   Search,
@@ -65,11 +66,16 @@ export function CircuitLibraryModal({
     });
   }, [selectedCategory, searchQuery]);
 
+  useEscapeToClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Circuit model library"
         className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >

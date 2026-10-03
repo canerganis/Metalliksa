@@ -44,8 +44,6 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { MICROGRAPH_SAMPLES } from "../data/micrographSamples";
 import { MicrographSample } from "../types";
 
@@ -1114,7 +1112,12 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
   };
 
   // Export ASTM Metallurgical Inspection Report as PDF
-  const handleExportPdfReport = () => {
+  const handleExportPdfReport = async () => {
+    try {
+    const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
 
     // Header banner
@@ -1231,6 +1234,10 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
     doc.text("Laboratory Stamp & Verification Seal", 120, signY + 5);
 
     doc.save(`SEM_Phase_Report_${sampleName.replace(/\s+/g, "_")}.pdf`);
+    } catch (err: any) {
+      console.error("SEM PDF export failed:", err);
+      setAiError(`PDF export failed: ${err?.message || "could not load the PDF library."}`);
+    }
   };
 
   return (

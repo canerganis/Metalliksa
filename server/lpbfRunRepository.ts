@@ -244,18 +244,18 @@ export class LpbfRunRepository {
   }
   getProxyCampaign(campaignId: string): ProxyCampaignRecord | null {
     if (!/^[a-f0-9]{32}$/.test(campaignId)) throw new Error('Invalid campaign id');
-    if (this.db.prepare('PRAGMA user_version').get()!.user_version < 2) return null;
+    if (Number(this.db.prepare('PRAGMA user_version').get()!.user_version) < 2) return null;
     const row = this.db.prepare('SELECT * FROM lpbf_proxy_campaigns WHERE campaign_id=?').get(campaignId);
     return row ? decodeProxyCampaign(row) : null;
   }
   *allProxyCampaigns(): Generator<ProxyCampaignRecord> {
-    if (this.db.prepare('PRAGMA user_version').get()!.user_version < 2) return;
+    if (Number(this.db.prepare('PRAGMA user_version').get()!.user_version) < 2) return;
     for (const row of this.db.prepare('SELECT * FROM lpbf_proxy_campaigns ORDER BY campaign_id').iterate()) yield decodeProxyCampaign(row);
   }
   saveProxyCampaign(raw: unknown): ProxyCampaignRecord {
     if (this.backingUp) throw new Error('Run backup in progress');
     const document = validateProxyCampaignDocument(raw), json = JSON.stringify(document);
-    if (this.db.prepare('PRAGMA user_version').get()!.user_version < 2) throw new Error('Campaign storage requires writable v2 migration');
+    if (Number(this.db.prepare('PRAGMA user_version').get()!.user_version) < 2) throw new Error('Campaign storage requires writable v2 migration');
     this.db.exec('BEGIN IMMEDIATE');
     try {
       if (this.getProxyCampaign(document.campaignId)) throw new Error('Campaign identity conflict; immutable record already exists');

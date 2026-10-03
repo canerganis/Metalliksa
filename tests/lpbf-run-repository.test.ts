@@ -188,7 +188,7 @@ test('saved proxy campaigns list in creation order and reject broken archived re
   assert.equal(listed[0].documentSha256, sha(JSON.stringify(campaign)));
 
   const db = new DatabaseSync(filename);
-  const changed = JSON.parse(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').get()!.document_json);
+  const changed = JSON.parse(String(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').get()!.document_json));
   changed.tracks[0].runIdentity.runDocumentSha256 = 'f'.repeat(64);
   const documentJson = JSON.stringify(changed);
   db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=?').run(documentJson, sha(documentJson));

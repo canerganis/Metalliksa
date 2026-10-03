@@ -1,0 +1,64 @@
+name: CI
+
+# DRAFT / UNVERIFIED: this workflow has never run on GitHub.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc # node:sqlite tests need Node >= 22.13 without flags
+          cache: npm
+      # Several tests shell out to `python` (stdlib-only modules, plus numpy for the
+      # GPU artifact cross-language test), so the CPU baseline pins are installed.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r python/requirements-lpbf.in
+      - run: npm ci
+      - run: npm run lint
+      - name: Unit tests (exclusions listed in scripts/ci-unit-tests.txt)
+        shell: bash
+        run: |
+          set -euo pipefail
+          excluded="$(grep -v '^#' scripts/ci-unit-tests.txt | grep -v '^$' || true)"
+          files="$(ls tests/*.test.ts tests/*.test.tsx | { grep -vxF "$excluded" || true; })"
+          echo "Running $(echo "$files" | wc -l) test files"
+          node_modules/.bin/tsx --test $files
+      - run: npm run build
+
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # CPU baseline pins only. Never install python/requirements.txt (pulls torch).
+      - run: pip install -r python/requirements-lpbf.in
+      - name: Meltpool solver tests
+        run: npm run test:meltpool
+        # These npm scripts only call python, so node_modules is not needed.
+      - name: LPBF engineering tests (non-blocking until proven green on Linux)
+        run: npm run test:lpbf:engineering
+        continue-on-error: true

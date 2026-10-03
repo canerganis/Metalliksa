@@ -3,11 +3,14 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from io import BytesIO
+import zipfile
 from unittest.mock import patch
 
 import numpy as np
 
 import lpbf_peak
+import lpbf_nist_proxy_sections
 from lpbf_peak import (midtrack_bare_plate_section,
                        interpolated_midtrack_bare_plate_section,
                        rectangular_corridor_section_samples,
@@ -24,6 +27,172 @@ CASE = {"mode": "standard", "backend": "reference", "surfaceMode": "bare-plate",
 
 
 class BarePlate(unittest.TestCase):
+    def _proxy_section_fixture(self, mutate=None, extra_member=False):
+        mesh = .001
+        axis_x = -.005 + np.arange(11, dtype=np.float64) * mesh
+        axis_y = np.arange(-.004, .0041, mesh, dtype=np.float64)
+        z = np.arange(-.004, .0001, mesh, dtype=np.float64)
+        requests = rectangular_corridor_section_samples(axis_x, -.005, .01)
+        fields = {}
+        for index in sorted({i for request in requests for i in request["sourcePlaneIndices"]}):
+            field = np.full((len(axis_y), len(z)), 300., dtype=np.float64)
+            field[(np.abs(axis_y) <= .001)[:, None] & ((z >= -.003) & (z <= -.001))[None, :]] = 1800.
+            fields[index] = field
+        observations = rectangular_corridor_section_observations(axis_y, z, fields, requests, mesh, 1600.)
+        self.assertEqual([row["status"] for row in observations], ["thermal-proxy", "thermal-proxy"])
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "rectangular-corridor-section-fields.npz"
+            lpbf_peak.write_rectangular_corridor_section_field_artifact(
+                path, axis_x, axis_y, z, observations, fields, mesh, 1600., 17)
+            with np.load(path, allow_pickle=False) as source:
+                arrays = {name: source[name].copy() for name in source.files}
+        if mutate:
+            mutate(arrays)
+        if extra_member:
+            arrays["unexpected"] = np.asarray([1], dtype=np.int64)
+        buffer = BytesIO()
+        np.savez_compressed(buffer, **arrays)
+        result = {"settings": {"trackLength_um": 10000},
+                  "material": {"liquidus_K": 1600.},
+                  "discretization": {"mesh_m": mesh, "steps": 17},
+                  "scanPath": [{"start": [-.005, 0]}],
+                  "barePlateSectionObservations": observations}
+        return buffer.getvalue(), result, observations
+
+    def test_proxy_section_artifact_rederives_exact_and_interpolated_sections(self):
+        artifact, result, observations = self._proxy_section_fixture()
+        validated = lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(artifact, result)
+        self.assertEqual(validated["status"], "validated")
+        self.assertEqual([row["interpolationOperator"] for row in validated["sections"]],
+                         ["linear-interpolation-between-accepted-peak-temperature-planes-v1",
+                          "exact-cell-center"])
+        for actual, expected in zip(validated["sections"], observations):
+            self.assertEqual(actual["sampleCells"], expected["sampleCells"])
+            self.assertAlmostEqual(actual["width_um"], expected["width_um"], delta=1e-9)
+            self.assertAlmostEqual(actual["depth_um"], expected["depth_um"], delta=1e-9)
+
+    def test_proxy_section_artifact_rejects_summary_and_plane_tampering(self):
+        artifact, result, _ = self._proxy_section_fixture()
+        for field in ("width_um", "depth_um"):
+            altered = {**result, "barePlateSectionObservations": [dict(row) for row in result["barePlateSectionObservations"]]}
+            altered["barePlateSectionObservations"][0][field] += 1.
+            with self.subTest(field=field), self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError,
+                                                                   rf"single-line-x-4p9mm {field} is not reproducible"):
+                lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(artifact, altered)
+        altered = {**result, "barePlateSectionObservations": [dict(row) for row in result["barePlateSectionObservations"]]}
+        altered["barePlateSectionObservations"][0]["sampleCells"] += 1
+        with self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError,
+                                    "result.json section single-line-x-4p9mm status or sampleCells is not reproducible"):
+            lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(artifact, altered)
+        changed, _, _ = self._proxy_section_fixture(lambda arrays: arrays["temperature_planes_K"].__setitem__((0, 2, 1), 1801.))
+        with self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError,
+                                    "single-line-x-4p9mm width_um is not reproducible"):
+            lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(changed, result)
+
+    def test_proxy_section_artifact_binds_npz_execution_identity_fields(self):
+        artifact, result, _ = self._proxy_section_fixture()
+        cases = [
+            (lambda arrays: arrays["mesh_m"].__setitem__((), .002), result,
+             "NPZ Y axis is not increasing at the declared mesh"),
+            (lambda arrays: arrays["scan_start_x_m"].__setitem__((), -.004), result,
+             "NPZ mesh, liquidus, accepted steps, or scan start differs from execution records"),
+            (lambda arrays: arrays["section_record_id"].__setitem__(0, "unbound"), result,
+             "NPZ section IDs, distances, X coordinates, indices, or interpolation differs from execution"),
+            (lambda arrays: arrays["section_interpolation_operator"].__setitem__(0, "other"), result,
+             "NPZ section IDs, distances, X coordinates, indices, or interpolation differs from execution"),
+            (lambda arrays: arrays["section_distance_mm"].__setitem__(0, 4.8), result,
+             "NPZ section IDs, distances, X coordinates, indices, or interpolation differs from execution"),
+            (lambda arrays: arrays["plane_indices"].__setitem__(0, arrays["plane_indices"][0] + 1), result,
+             "NPZ source-plane indices must be sorted and unique"),
+            (None, {**result, "barePlateSectionObservations": [dict(row) for row in result["barePlateSectionObservations"]]},
+             "result.json section single-line-x-4p9mm has inconsistent status"),
+        ]
+        cases[-1][1]["barePlateSectionObservations"][0]["status"] = "unavailable"
+        for index, (mutate, execution, reason) in enumerate(cases):
+            payload = artifact if mutate is None else self._proxy_section_fixture(mutate)[0]
+            with self.subTest(case=index), self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError, reason):
+                lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(payload, execution)
+
+    def test_proxy_section_artifact_rejects_compressed_budget_duplicate_and_streaming_overrun(self):
+        artifact, result, _ = self._proxy_section_fixture()
+        with self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError, "compressed NPZ byte budget"):
+            lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(
+                b"x" * (lpbf_nist_proxy_sections._MAX_COMPRESSED_BYTES + 1), result)
+
+        duplicate = BytesIO()
+        with zipfile.ZipFile(BytesIO(artifact), "r") as source, zipfile.ZipFile(duplicate, "w", zipfile.ZIP_DEFLATED) as output:
+            for member in source.infolist():
+                output.writestr(member.filename, source.read(member.filename))
+            output.writestr("axis_y_m.npy", source.read("axis_y_m.npy"))
+        with self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError, "member set is missing, duplicated"):
+            lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(duplicate.getvalue(), result)
+
+        class OversizedStream:
+            def __init__(self):
+                self.remaining = 65 * 1024 * 1024
+            def __enter__(self): return self
+            def __exit__(self, *_args): return False
+            def read(self, size):
+                count = min(size, self.remaining)
+                self.remaining -= count
+                return b"x" * count
+
+        real_open = zipfile.ZipFile.open
+        def understated_open(archive, member, mode="r", pwd=None, *, force_zip64=False):
+            info = archive.getinfo(member) if isinstance(member, str) else member
+            if info.filename == "axis_y_m.npy" and mode == "r":
+                return OversizedStream()
+            return real_open(archive, member, mode, pwd, force_zip64=force_zip64)
+        with patch.object(zipfile.ZipFile, "open", understated_open):
+            with self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError, "decompressed byte budget"):
+                lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(artifact, result)
+
+    def test_proxy_section_artifact_rejects_bad_npz_schema_and_execution_binding(self):
+        artifact, result, _ = self._proxy_section_fixture()
+        cases = [
+            (b"not a zip", result),
+            (self._proxy_section_fixture(extra_member=True)[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays.__setitem__("section_record_id", np.asarray([object(), object()], dtype=object)))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["axis_y_m"].__setitem__(1, arrays["axis_y_m"][1] + .00001))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["section_interpolation_fraction"].__setitem__(0, 1.5))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["section_source_plane_indices"].__setitem__((0, 1), arrays["section_source_plane_indices"][0, 0]))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays.__setitem__("temperature_planes_K", arrays["temperature_planes_K"].astype(np.float32)))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["temperature_planes_K"].__setitem__((0, 0, 0), np.nan))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["liquidus_K"].__setitem__((), np.nan))[0], result),
+            (self._proxy_section_fixture(lambda arrays: arrays["accepted_step_count"].__setitem__((), 0))[0], result),
+            (artifact, {**result, "discretization": {**result["discretization"], "steps": 18}}),
+            (artifact, {**result, "material": {"liquidus_K": 1500.}}),
+        ]
+        expected_reasons = [
+            "NPZ ZIP structure or compressed data is corrupt",
+            "NPZ member set is missing, duplicated, or unexpected",
+            "NPZ arrays cannot be loaded without pickle",
+            "NPZ Y axis is not increasing at the declared mesh",
+            "NPZ section IDs, distances, X coordinates, indices, or interpolation differs from execution",
+            "NPZ section IDs, distances, X coordinates, indices, or interpolation differs from execution",
+            "temperature_planes_K has an invalid shape or dtype",
+            "temperature_planes_K contains non-finite values",
+            "NPZ liquidus or accepted-step count is invalid",
+            "NPZ liquidus or accepted-step count is invalid",
+            "NPZ mesh, liquidus, accepted steps, or scan start differs from execution records",
+            "NPZ mesh, liquidus, accepted steps, or scan start differs from execution records",
+        ]
+        for index, ((payload, execution), reason) in enumerate(zip(cases, expected_reasons)):
+            with self.subTest(case=index), self.assertRaisesRegex(lpbf_nist_proxy_sections.SectionArtifactError, reason):
+                lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(payload, execution)
+
+    def test_proxy_section_artifact_checks_decompression_budget_before_numpy_load(self):
+        artifact, result, _ = self._proxy_section_fixture()
+        bomb = BytesIO()
+        with zipfile.ZipFile(BytesIO(artifact), "r") as source, zipfile.ZipFile(bomb, "w", zipfile.ZIP_DEFLATED) as output:
+            for member in source.infolist():
+                data = source.read(member.filename)
+                if member.filename == "axis_y_m.npy":
+                    data = b"x" * (65 * 1024 * 1024)
+                output.writestr(member.filename, data)
+        with self.assertRaises(lpbf_nist_proxy_sections.SectionArtifactError):
+            lpbf_nist_proxy_sections.rederive_rectangular_corridor_sections(bomb.getvalue(), result)
+
     def test_midpoint_optical_operator_uses_widest_and_deepest_extent(self):
         axis = np.array([-1.5, -.5, .5, 1.5])
         z = np.array([-2.5, -1.5, -.5])

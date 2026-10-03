@@ -628,12 +628,12 @@ export function AerospaceAuditReportGenerator() {
   };
 
   // PDF Export Trigger
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExportingPdf(true);
     setExportSuccessMsg(null);
     try {
       const payload = getPayload();
-      const doc = generateAerospaceCoCPDF(payload);
+      const doc = await generateAerospaceCoCPDF(payload);
       doc.save(`${certificateId}_screening_audit.pdf`);
       setExportSuccessMsg(`Exported screening PDF (not a certificate): ${certificateId}_screening_audit.pdf`);
     } catch (err: any) {

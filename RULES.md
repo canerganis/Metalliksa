@@ -21,7 +21,7 @@
 
 ## 3. Süreklilik ve teslim
 
-- Aktif devam noktası üst proje ../STATUS.md dosyasıdır.
+- Ürün devam noktası Metalliksa-1/STATUS.md dosyasıdır; workspace ve araç notları ../STATUS.md içindedir.
 - Durum notunu yalnız kilometre taşında veya işe devam etmek için gerektiğinde güncelle; her ara işlemi kaydetme.
 - Ani kesinti kayıt yazmayı engellerse sonraki başlangıçta repo durumundan devam notunu tamamla.
 - sonkayıtlar/LOG.md tarihsel kayıttır; her araç çağrısı veya küçük işlem için ikinci bir uzun kayıt zorunlu değildir.

@@ -188,7 +188,7 @@ test('GPU pilot requires usable implementation and runtime provenance', () => {
 test('GPU pilot client uses the existing job API and preserves explicit CUDA errors', async () => {
   const original = globalThis.fetch;
   const input = { jobType: 'gpu-thermal-pilot', backend: 'cuda:0', mode: 'standard',
-    surfaceMode: 'powder-layer', study: 'none', tracks: 1, layers: 1,
+    surfaceMode: 'powder-layer', powderGridPolicy: 'layer-conforming', study: 'none', tracks: 1, layers: 1,
     material: 'Inconel 718', power_W: 60, speed_mm_s: 1200,
     beamDiameter_um: 80, preheat_C: 25, layer_um: 80, hatch_um: 100 } as const;
   try {
