@@ -5,10 +5,13 @@ This directory contains the maintained product and engineering documentation. Th
 ## Start here
 
 - [Project README](../README.md) — setup, commands, and the current product scope.
+- [Product overview](PRODUCT_OVERVIEW.md) — product goal, user and customer hypotheses, current scope, and validation needs.
 - [Research workstation](RESEARCH_WORKSTATION.md) — workspace structure, shared state, research registry, and evidence boundaries.
+- [Scientific research vision](SCIENTIFIC_RESEARCH_VISION.md) — candidate research directions for discriminating LPBF physics hypotheses, discovering model discrepancy, and proposing measurements.
 - [LPBF engineering](LPBF_ENGINEERING.md) — thermal model contract, execution modes, verification, and known limitations.
 - [UQ evidence](UQ_EVIDENCE.md) — uncertainty-quantification scope and what the worksheets do not establish.
-- [Module evidence inventory](MODULE_EVIDENCE_INVENTORY.md) — current workspace registry and evidence limits.
+- [Module evidence inventory](MODULE_EVIDENCE_INVENTORY.md) — dated software evidence snapshot; runtime registry and current proof are authoritative for live status.
+- [HANGAR BİGG application draft](HANGAR_BIGG_BASVURU_TASLAGI.md) — internal venture-application draft; customer, market, budget, and program claims still require validation.
 
 ## Governing project documents
 
@@ -37,3 +40,4 @@ These files live at the repository root because they apply across the whole appl
 3. `PROOF.md` and `sonkayıtlar/LOG.md` are append/prepend records respectively; do not rewrite their history to make it look cleaner.
 4. Keep generated source snapshots under `graft/`; do not link to them as user-facing documentation.
 5. When a document describes a limitation, keep the limitation visible until the corresponding implementation and evidence exist.
+6. Update a canonical document before creating another one for the same purpose. Keep dated protocols, proofs and handoffs only when they preserve reproducibility or an active continuation; do not present them as current product scope.

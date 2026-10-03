@@ -25,9 +25,9 @@ npm run dev
 ```
 
 Optional AI-backed features, including the copilot, micrograph vision and dataset planner, require `OPENAI_API_KEY` on the server. The application interface is in English.
-
 ## Documentation and checks
 
+- [Product overview](docs/PRODUCT_OVERVIEW.md) — goal, intended users, current maturity and evidence limits.
 - [Documentation map](docs/README.md)
 - [Workstation architecture and workflows](docs/RESEARCH_WORKSTATION.md)
 - [LPBF model scope and limitations](docs/LPBF_ENGINEERING.md)

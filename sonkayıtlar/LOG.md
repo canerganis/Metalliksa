@@ -1,3 +1,12 @@
+## 2026-09-23 — Bilimsel araştırma vizyonu kaydı
+- Görev: Kullanıcının Metalliksa için istediği yaratıcı bilimsel araştırma fikirlerini kalıcılaştır.
+- Tamamlanan: Rakip LPBF fizik hipotezlerini ayıran deney tasarımı, model hatasından fizik keşfi, mikroyapıdan prosese ters tasarım, makine/toz partileri arasında aktarım ve literatür uyuşmazlığından ölçüm önerisi fikirleri kaynaklı araştırma belgesine yazıldı. İlk aday soru IN718 eriyik havuzu genişlik/derinlik/soğuma ölçümlerinin absorptivite belirsizliği ile model biçimi hatasını ayırmasıdır.
+- Dosyalar: docs/SCIENTIFIC_RESEARCH_VISION.md, docs/README.md, bu kayıt.
+- Doğrulama: Kaynak ve kapsam sınırı belge içinde belirtildi; dokümantasyon ve bağlantı kontrolü yapıldı. Kod, çözücü ve deney doğrulaması çalıştırılmadı; bilimsel sonuç iddia edilmiyor.
+- Sonuç: Beyin fırtınası kaydedildi; yürürlükteki uygulama yol haritası değiştirilmedi.
+- Sıradaki adım: Yeni araştırma işi başlarken literatür özgünlük taraması ve veri/ölçüm uygulanabilirliğini kontrol et.
+- Ajan: Codex (GPT-6).
+
 ## 2026-09-21 — Comprehensive simulation and digital twin master plan
 - Task: Prepare a comprehensive plan before development; user clarified no Superpowers dependency is required.
 - Done / Last completed action: Created a Turkish master plan with architecture, local storage/migration, data provenance, open benchmark strategy, shared physics, alloy capability gates, machine scenarios, numerical/experimental acceptance, ten phases, effort estimates, risks and first-release checklist. Self-reviewed proposed versus existing paths and skill-independent planning scope.

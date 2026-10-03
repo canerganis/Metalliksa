@@ -1,5 +1,7 @@
 # Metalliksa research engineering workstation
 
+Metalliksa's product goal and current validation boundary are summarized in the [product overview](PRODUCT_OVERVIEW.md). This document describes the implemented application structure and workflows; it is not a claim that every workspace or model is production-ready.
+
 ## Product structure
 
 The application starts in **LPBF Engineering** on a new browser profile. Returning sessions restore the last module. **Materials Intelligence** contains the existing database, alloy design, CALPHAD, TTT/CCT, thermal cycle, characterization, corrosion and mechanical tools. **Evidence & Qualification** contains Research Hub, measured evidence, Digital Twin, coupon/UQ screening and export. Specialist LPBF labs remain available from the LPBF workspace.

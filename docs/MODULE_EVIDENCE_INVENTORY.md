@@ -1,6 +1,6 @@
 # Module evidence inventory
 
-Snapshot: 2026-09-20, with targeted Phase 0 corrections on 2026-09-21. This is a bounded software evidence inventory, not a scientific validation report. Fresh execution evidence and unresolved defects are recorded in `docs/DIGITAL_TWIN_PHASE0_AUDIT_2026-09-21.md`; unchanged rows retain their earlier inspection limits.
+**Historical snapshot:** 2026-09-20, with targeted Phase 0 corrections on 2026-09-21. This is a bounded software evidence inventory, not a current workspace registry or scientific validation report. Fresh execution evidence and unresolved defects for that snapshot are recorded in `docs/DIGITAL_TWIN_PHASE0_AUDIT_2026-09-21.md`; unchanged rows retain their earlier inspection limits. Use `src/data/workspaces.ts`, the live application and current `PROOF.md` entries for present-day status.
 
 ## Scope and reading rules
 
