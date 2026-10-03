@@ -1,27 +1,51 @@
-import re
-import subprocess
 import unittest
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import lpbf_worker
 import lpbf_worker_rpc
 
-BASE_COMMIT = "01eb3f0"
+# The 29 method names served by the original if/elif chain in lpbf_worker.py (frozen literal).
+ORIGINAL_METHOD_NAMES = (
+    "capabilities",
+    "estimate",
+    "submit",
+    "submit-repeat",
+    "artifact",
+    "capture",
+    "archive-capture",
+    "get",
+    "cancel",
+    "solidification-microstructure",
+    "thermomechanical-distortion",
+    "industrial-fatigue",
+    "experimental-validation",
+    "modulus-fno",
+    "toolpath-kinematics",
+    "fatigue-fracture",
+    "toolpath-thermal-map",
+    "stl-voxelize",
+    "adaptive-feedforward",
+    "multilaser-plume",
+    "thermal-accumulation",
+    "powder-dem-compaction",
+    "optical-tomography",
+    "support-optimization",
+    "bayesian-optimizer",
+    "transient-enthalpy-fdm",
+    "transient-3d-gpu",
+    "keyhole-raytracing",
+    "purge-unverified-artifacts",
+)
 
 
 def original_method_names():
-    repo = Path(__file__).resolve().parents[1]
-    source = subprocess.run(
-        ["git", "show", f"{BASE_COMMIT}:python/lpbf_worker.py"],
-        cwd=repo, capture_output=True, text=True, check=True).stdout
-    return re.findall(r'(?:if|elif) method == "([^"]+)"', source)
+    return list(ORIGINAL_METHOD_NAMES)
 
 
 class WorkerDispatchTest(unittest.TestCase):
     def test_original_method_list_is_complete(self):
         names = original_method_names()
-        self.assertGreaterEqual(len(names), 28)
+        self.assertEqual(len(names), 29)
         self.assertEqual(len(names), len(set(names)))
 
     def test_every_original_method_has_a_handler(self):
@@ -55,6 +79,12 @@ class WorkerDispatchTest(unittest.TestCase):
         with self.assertRaises(ValueError) as caught:
             lpbf_worker_rpc.dispatch({"id": 1, "method": "no-such-method"}, MagicMock(), lambda q: None)
         self.assertEqual(str(caught.exception), "Unknown method")
+
+    def test_non_string_method_matches_original_unknown_method(self):
+        for method in ([], {}, None, 0, ["submit"], {"a": 1}):
+            with self.assertRaises(ValueError) as caught:
+                lpbf_worker_rpc.dispatch({"id": 1, "method": method}, MagicMock(), lambda q: None)
+            self.assertEqual(str(caught.exception), "Unknown method", repr(method))
 
     def test_missing_method_key_error_matches_original(self):
         with self.assertRaises(KeyError) as caught:

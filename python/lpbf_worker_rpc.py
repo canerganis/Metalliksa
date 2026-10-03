@@ -471,6 +471,8 @@ def method_names():
 def dispatch(request, queue, capabilities_handler):
     """Resolve request["method"] and return its data; unknown methods raise ValueError."""
     method = request["method"]
+    if not isinstance(method, str):
+        raise ValueError("Unknown method")
     if method == "capabilities":
         return capabilities_handler(queue)
     if method == "estimate":
