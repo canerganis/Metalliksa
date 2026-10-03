@@ -1,7 +1,7 @@
 # Unit test files excluded from CI and the Docker verify target.
 # One path per line, relative to the repo root. Lines starting with # are comments.
 # Everything else matched by tests/*.test.ts and tests/*.test.tsx (the same glob as
-# `npm run test:unit`) runs. Analysis of 95a9e43: 84 files, 1 excluded.
+# `npm run test:unit`) runs. Current draft: 94 files, 1 excluded (93 run).
 #
 # Reason: starts the real python/lpbf_worker.py and relies on POSIX process-tree reaping
 # of an execution child plus a grandchild. The worker's import closure (beyond numpy,

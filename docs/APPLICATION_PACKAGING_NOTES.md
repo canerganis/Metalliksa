@@ -1,6 +1,6 @@
 # Application packaging and CI notes
 
-Status: DRAFT, written against commit 95a9e43. **Nothing described here was executed.** No workflow ran on GitHub, Docker was not run, the Dockerfile and compose file were not built or started, and the test suite was not run on Linux. The only checks performed were static: the YAML files parse and each referenced path was checked with `git ls-files`.
+Status: DRAFT, written against commit 95a9e43. The local Windows dry-run at the current CI draft is recorded in [CI_DRYRUN_REPORT.md](CI_DRYRUN_REPORT.md). No workflow ran on GitHub, Docker was not run, and no test suite was run on Linux. The Windows run does not establish Linux or GitHub Actions behavior.
 
 ## Files
 
@@ -11,7 +11,7 @@ Status: DRAFT, written against commit 95a9e43. **Nothing described here was exec
 
 ## Test exclusions (read from source on 95a9e43)
 
-84 test files match the glob. One is excluded:
+94 test files match the glob. One is excluded (93 files run):
 
 - `tests/lpbf-worker-delete-integration.test.ts`: starts the real `python/lpbf_worker.py` and relies on process-tree reaping of an execution child and grandchild. Its Python import closure beyond numpy, scipy and pydantic and its Linux behaviour are unverified.
 
@@ -26,7 +26,7 @@ Files that mention Python, WSL, sqlite, GPU or external data and stay in, with t
 - `module-inventory.test.ts`: reads `docs/MODULE_EVIDENCE_INVENTORY.md`, which is tracked (confirmed with `git ls-files`).
 - Tests that read `data/benchmark/*` (nist-amb2022-03, nist-amb2022-03-optical, nist-mds2-2923-in718/official, in625-bareplate-screening): the files they read are tracked.
 
-The first Linux run may still reveal platform-dependent tests that cannot be found by reading the source, for example the symlink tests in `lpbf-artifact-store.test.ts` and the Vite/HMR tests.
+The local Windows dry-run found no evidence to add exclusions. The first Linux run may still reveal platform-dependent tests that cannot be found by reading the source, for example the symlink tests in `lpbf-artifact-store.test.ts` and the Vite/HMR tests.
 
 ## Blocking prerequisite: Linux Python lock
 
