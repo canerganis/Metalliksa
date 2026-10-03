@@ -1,3 +1,4 @@
+import { useEscapeToClose } from "./AccessibleModal";
 import { useInputBoundTask } from "../hooks/useInputBoundTask";
 import { requestPythonAnalysis } from "../services/pythonAnalysis";
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
@@ -614,6 +615,7 @@ export function EquivalentCircuitBuilder() {
   // Modals & Libraries
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isCNLSModalOpen, setIsCNLSModalOpen] = useState(false);
+  useEscapeToClose(isCNLSModalOpen, () => setIsCNLSModalOpen(false));
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Mode Selection: "designer" vs "preset-library" vs "fitter" vs "synthetic-stress"
@@ -2025,7 +2027,7 @@ export function EquivalentCircuitBuilder() {
       {/* CNLS Full Fitting Studio Modal */}
       {isCNLSModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto p-6 space-y-4">
+          <div role="dialog" aria-modal="true" aria-label="CNLS fitting studio" className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-[#162032] pb-4">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-emerald-400" />
