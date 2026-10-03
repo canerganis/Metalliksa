@@ -51,6 +51,23 @@ export function buildLoginUrl(host: string, port: number, code: string): string 
   return `http://${shown}:${port}/login?code=${encodeURIComponent(code)}`;
 }
 
+/** Startup console lines for the login mode. Token mode never prints the token or a URL containing it. */
+export function buildLoginBannerLines(cfg: BindConfig, port: number): string[] {
+  if (cfg.accessCode) {
+    return [
+      "Login required. Open this one-time link in your browser and press Sign in (valid until used or restart):",
+      buildLoginUrl(cfg.host, port, cfg.accessCode),
+    ];
+  }
+  if (cfg.token) {
+    const loginUrl = buildLoginUrl(cfg.host, port, "").replace(/\?code=$/, "");
+    return [
+      `METALLIKSA_TOKEN is set: API clients send it as 'Authorization: Bearer <token>'; browsers sign in at ${loginUrl} by entering it in the form. It is never accepted in a URL.`,
+    ];
+  }
+  return [];
+}
+
 // ---------------------------------------------------------------------------
 // Request id
 // ---------------------------------------------------------------------------
@@ -129,23 +146,40 @@ function authMethod(req: Request, token: string | null, auth?: LoginAuth | null)
   return null;
 }
 
-/** Same-origin check for cookie-authenticated mutating requests (CSRF defence). Missing Origin is rejected. */
+/**
+ * True when the direct peer is a trusted proxy according to Express's compiled "trust proxy fn"
+ * (so a subnet, loopback or hop-count setting only honours forwarded headers from trusted peers).
+ */
+function peerIsTrustedProxy(req: Request): boolean {
+  const fn = (req as any).app?.get?.("trust proxy fn");
+  const addr = (req as any).socket?.remoteAddress;
+  if (typeof fn !== "function" || !addr) return false;
+  try {
+    return Boolean(fn(addr, 0));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Same-origin check for cookie-authenticated mutating requests (CSRF defence). Compares scheme, host
+ * and port of the Origin header against the effective request origin. Missing Origin is rejected.
+ */
 export function isSameOrigin(req: Request): boolean {
   const origin = req.headers.origin;
   let host: unknown = req.headers.host;
-  let proto: string | null = null;
-  // Forwarded headers are honoured only when the operator enabled "trust proxy".
-  const trusted = Boolean((req as any).app?.get?.("trust proxy"));
-  if (trusted) {
+  let proto = (req as any).socket?.encrypted ? "https" : "http";
+  if (peerIsTrustedProxy(req)) {
     const fwdHost = firstHeaderValue(req.headers["x-forwarded-host"]);
     if (fwdHost) host = fwdHost;
-    proto = firstHeaderValue(req.headers["x-forwarded-proto"])?.toLowerCase() ?? null;
+    const fwdProto = firstHeaderValue(req.headers["x-forwarded-proto"])?.toLowerCase();
+    if (fwdProto === "http" || fwdProto === "https") proto = fwdProto;
   }
   if (typeof origin !== "string" || !origin || typeof host !== "string" || !host) return false;
   try {
     const o = new URL(origin);
-    if (proto && o.protocol.replace(/:$/, "") !== proto) return false;
-    return o.host.toLowerCase() === host.toLowerCase();
+    const effective = new URL(`${proto}://${host}`);
+    return o.protocol === effective.protocol && o.host.toLowerCase() === effective.host.toLowerCase();
   } catch {
     return false;
   }
@@ -193,6 +227,8 @@ export interface LoginAuthOptions {
   maxSessions?: number;
   loginLimit?: number;
   loginWindowMs?: number;
+  /** Hard cap on tracked source addresses for the login limiter. */
+  maxAttemptKeys?: number;
   now?: () => number;
 }
 
@@ -203,6 +239,7 @@ export class LoginAuth {
   private readonly maxSessions: number;
   private readonly loginLimit: number;
   private readonly loginWindowMs: number;
+  private readonly maxAttemptKeys: number;
   private readonly now: () => number;
   private readonly sessions = new Map<string, number>();
   private readonly attempts = new Map<string, { count: number; resetAt: number }>();
@@ -214,6 +251,7 @@ export class LoginAuth {
     this.maxSessions = opts.maxSessions ?? 1000;
     this.loginLimit = opts.loginLimit ?? 10;
     this.loginWindowMs = opts.loginWindowMs ?? 60_000;
+    this.maxAttemptKeys = opts.maxAttemptKeys ?? 5000;
     this.now = opts.now ?? Date.now;
   }
 
@@ -273,14 +311,25 @@ export class LoginAuth {
     return this.isValidSession(readCookie(req.headers.cookie, SESSION_COOKIE));
   }
 
-  /** Fixed-window limiter for /login attempts. Returns true when the attempt is allowed. */
+  /**
+   * Fixed-window limiter for /login attempts. Returns true when the attempt is allowed. Buckets are kept
+   * in window-start order (Map insertion order), so expired ones sit at the front and cleanup is bounded;
+   * the map never exceeds maxAttemptKeys (the oldest bucket is evicted when full).
+   */
   allowLoginAttempt(ip: string): boolean {
     const t = this.now();
-    if (this.attempts.size > 10_000) {
-      for (const [k, b] of this.attempts) if (b.resetAt <= t) this.attempts.delete(k);
-    }
     let b = this.attempts.get(ip);
     if (!b || b.resetAt <= t) {
+      this.attempts.delete(ip);
+      for (const [k, old] of this.attempts) {
+        if (old.resetAt > t) break;
+        this.attempts.delete(k);
+      }
+      while (this.attempts.size >= this.maxAttemptKeys) {
+        const oldest = this.attempts.keys().next().value;
+        if (oldest === undefined) break;
+        this.attempts.delete(oldest);
+      }
       b = { count: 0, resetAt: t + this.loginWindowMs };
       this.attempts.set(ip, b);
     }
@@ -308,10 +357,21 @@ function sessionCookie(req: Request, value: string, maxAgeSeconds: number): stri
   return `${SESSION_COOKIE}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAgeSeconds}${secure}`;
 }
 
+function loginHeaders(res: Response, contentType: string) {
+  res.setHeader("Content-Type", contentType);
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Referrer-Policy", "no-referrer");
+}
+
 function sendPlain(res: Response, status: number, body: string) {
   res.statusCode = status;
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store");
+  loginHeaders(res, "text/plain; charset=utf-8");
+  (res as any).end(body);
+}
+
+function sendHtml(res: Response, status: number, body: string) {
+  res.statusCode = status;
+  loginHeaders(res, "text/html; charset=utf-8");
   (res as any).end(body);
 }
 
@@ -319,12 +379,27 @@ function escapeHtml(v: string): string {
   return v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
+const PAGE_HEAD =
+  '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<meta name="referrer" content="no-referrer"><title>Sign in</title></head><body><main><h1>Sign in</h1>';
+
+/** One-time link interstitial: carries the auto code only in a hidden POST field. */
 function loginPage(code: string): string {
   return (
-    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-    "<title>Sign in</title></head><body>" +
+    PAGE_HEAD +
     '<form method="post" action="/login"><input type="hidden" name="code" value="' + escapeHtml(code) + '">' +
-    '<button type="submit">Sign in</button></form></body></html>'
+    '<button type="submit">Sign in</button></form></main></body></html>'
+  );
+}
+
+/** Manual sign-in form. Never echoes a submitted code. */
+function loginFormPage(error?: string): string {
+  return (
+    PAGE_HEAD +
+    (error ? '<p role="alert">' + escapeHtml(error) + "</p>" : "") +
+    '<form method="post" action="/login"><label for="code">Access code or token</label> ' +
+    '<input id="code" name="code" type="password" autocomplete="off" required> ' +
+    '<button type="submit">Sign in</button></form></main></body></html>'
   );
 }
 
@@ -333,45 +408,58 @@ function loginIp(req: Request): string {
 }
 
 /**
- * Register GET /login, POST /login and POST /logout. Express matches paths case-insensitively.
- * GET /login?code= has no side effect: for the auto-generated code it returns a tiny page with a POST
- * form, so link previews and prefetchers cannot burn the one-time code. The static METALLIKSA_TOKEN
- * is accepted only by POST /login (form or JSON body), never in a URL.
+ * Register GET/HEAD /login, POST /login and POST /logout. Express matches paths case-insensitively.
+ * GET /login without a code shows a sign-in form. GET /login?code= has no side effect: for the
+ * auto-generated code it returns a tiny page with a POST form, so link previews and prefetchers cannot
+ * burn the one-time code. HEAD never consumes anything. The static METALLIKSA_TOKEN is accepted only by
+ * POST /login (form or JSON body), never in a URL. Every /login response is no-store / no-referrer.
  */
 export function installLogin(app: Express, auth: LoginAuth) {
+  // Registered before GET so Express 4 does not dispatch HEAD to the GET handler.
+  app.head("/login", (_req: Request, res: Response) => {
+    res.statusCode = 200;
+    loginHeaders(res, "text/html; charset=utf-8");
+    (res as any).end();
+  });
+
   app.get("/login", (req: Request, res: Response) => {
-    if (!auth.allowLoginAttempt(loginIp(req))) {
-      res.setHeader("Retry-After", "60");
-      return sendPlain(res, 429, "Too many login attempts. Try again later.");
-    }
     let code: string | null = null;
     try {
       code = new URL(req.originalUrl || req.url || "", "http://localhost").searchParams.get("code");
     } catch {
       code = null;
     }
-    // Only the auto code is honoured in a URL; the static token never is.
-    if (auth.checkCode(code) !== "auto") return sendPlain(res, 401, "Login required");
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "no-store");
-    (res as any).end(loginPage(code!));
+    // Plain visits (no code) are free; only code guesses count against the limiter.
+    if (code) {
+      if (!auth.allowLoginAttempt(loginIp(req))) {
+        res.setHeader("Retry-After", "60");
+        return sendPlain(res, 429, "Too many login attempts. Try again later.");
+      }
+      // Only the auto code is honoured in a URL; the static token never is.
+      if (auth.checkCode(code) === "auto") return sendHtml(res, 200, loginPage(code));
+    }
+    return sendHtml(res, 200, loginFormPage());
   });
 
   app.post("/login", express.urlencoded({ extended: false, limit: "4kb" }), express.json({ limit: "4kb" }), (req: Request, res: Response) => {
+    // Browsers always send Origin on cross-site form posts; reject when present and not same-origin.
+    if (req.headers.origin !== undefined && !isSameOrigin(req)) {
+      return sendPlain(res, 403, "Cross-origin request rejected.");
+    }
     if (!auth.allowLoginAttempt(loginIp(req))) {
       res.setHeader("Retry-After", "60");
       return sendPlain(res, 429, "Too many login attempts. Try again later.");
     }
+    const json = /^application\/json/i.test(String(req.headers["content-type"] || ""));
     const raw = (req as any).body?.code;
     const code = typeof raw === "string" ? raw : null;
     const kind = auth.checkCode(code);
-    if (!kind) return sendPlain(res, 401, "Login required");
+    if (!kind) return json ? sendPlain(res, 401, "Login required") : sendHtml(res, 401, loginFormPage("Login required: the code was not accepted."));
     auth.consume(kind);
     const id = auth.createSession();
     res.setHeader("Set-Cookie", sessionCookie(req, id, auth.ttlSeconds));
     res.setHeader("Cache-Control", "no-store");
-    const json = /^application\/json/i.test(String(req.headers["content-type"] || ""));
+    res.setHeader("Referrer-Policy", "no-referrer");
     if (json) {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json; charset=utf-8");

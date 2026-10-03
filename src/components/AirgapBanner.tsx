@@ -16,7 +16,7 @@ const FALLBACK: RuntimeConfig = {
 let cached: RuntimeConfig | null = null;
 let accessRequired = false;
 const accessListeners = new Set<(v: boolean) => void>();
-const nativeFetch: typeof fetch | null = typeof window !== "undefined" && window.fetch ? window.fetch.bind(window) : null;
+let nativeFetch: typeof fetch | null = null;
 
 function setAccessRequired(v: boolean) {
   if (accessRequired === v) return;
@@ -47,14 +47,29 @@ function onApiUnauthorized() {
   });
 }
 
-if (typeof window !== "undefined" && nativeFetch) {
+/** True for same-origin /api/ requests other than /api/runtime-config (the only ones that trigger a re-check). */
+export function isWatchedApiRequest(input: unknown, origin: string): boolean {
+  try {
+    const raw = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+    const u = new URL(raw, origin);
+    if (u.origin !== origin) return false;
+    const p = u.pathname.toLowerCase();
+    return p.startsWith("/api/") && p !== "/api/runtime-config";
+  } catch {
+    return false;
+  }
+}
+
+let installed = false;
+/** Wrap window.fetch so a 401 from a same-origin /api call re-checks access. Call once from the app entry. */
+export function installApiUnauthorizedWatcher(): void {
+  if (installed || typeof window === "undefined" || !window.fetch) return;
+  installed = true;
+  const original = window.fetch.bind(window);
+  nativeFetch = original;
   window.fetch = async (...args: Parameters<typeof fetch>) => {
-    const res = await nativeFetch(...args);
-    if (res.status === 401) {
-      const input = args[0];
-      const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : (input as Request).url;
-      if (/^(https?:\/\/[^/]+)?\/api\//i.test(url) && !/\/api\/runtime-config/i.test(url)) onApiUnauthorized();
-    }
+    const res = await original(...args);
+    if (res.status === 401 && isWatchedApiRequest(args[0], window.location.origin)) onApiUnauthorized();
     return res;
   };
 }
@@ -87,7 +102,7 @@ export const AirgapBanner: React.FC = () => {
   if (required) {
     return (
       <div role="alert" className="border-b border-red-500/40 bg-red-500/10 text-red-100 px-3 py-2 text-xs font-mono">
-        Sign-in required: open the one-time login link printed in the server console, or, if METALLIKSA_TOKEN is set, sign in by POSTing it to /login.
+        Sign-in required: <a href="/login" className="underline">open the sign-in page</a>, or use the one-time login link printed in the server console.
       </div>
     );
   }

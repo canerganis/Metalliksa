@@ -58,7 +58,7 @@ test("securityHeaders sets headers without CSP", () => {
   run(securityHeaders, mockReq(), res);
   assert.equal(res.headers["x-content-type-options"], "nosniff");
   assert.equal(res.headers["x-frame-options"], "DENY");
-  assert.ok(res.headers["referrer-policy"]);
+  assert.equal(res.headers["referrer-policy"], "no-referrer");
   assert.equal(res.headers["content-security-policy"], undefined);
 });
 

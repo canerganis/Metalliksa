@@ -3,7 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer, type Server } from "node:http";
 import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
-import { LoginAuth, applySecurity, buildLoginUrl, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
+import { LoginAuth, applySecurity, buildLoginBannerLines, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
@@ -147,12 +147,7 @@ async function startServer() {
     if (!bindConfig.loopback) {
       console.warn(`[MetalliX-Server] Network exposure: host ${bindConfig.host} is not loopback. Prefer HTTPS (reverse proxy) for non-local use.`);
     }
-    if (bindConfig.accessCode) {
-      console.log("[MetalliX-Server] Login required. Open this one-time link in your browser and press Sign in (valid until used or restart):");
-      console.log(`[MetalliX-Server] ${buildLoginUrl(bindConfig.host, PORT, bindConfig.accessCode)}`);
-    } else if (bindConfig.token) {
-      console.log("[MetalliX-Server] METALLIKSA_TOKEN is set: API clients send it as 'Authorization: Bearer <token>'; browsers sign in by POSTing it to /login (form field or JSON 'code'). It is never accepted in a URL.");
-    }
+    for (const line of buildLoginBannerLines(bindConfig, PORT)) console.log(`[MetalliX-Server] ${line}`);
     if (AIRGAPPED) {
       console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");
     }

@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import express from "express";
 import {
   LoginAuth,
+  buildLoginBannerLines,
   SESSION_COOKIE,
   accessLog,
   applySecurity,
@@ -47,6 +48,7 @@ function loginHandlers(auth: LoginAuth) {
   const routes: Record<string, any> = {};
   const fakeApp: any = {
     get(path: string, h: any) { routes[`GET ${path}`] = h; },
+    head(path: string, h: any) { routes[`HEAD ${path}`] = h; },
     // POST /login registers body parsers before the handler; the handler is always last.
     post(path: string, ...hs: any[]) { routes[`POST ${path}`] = hs[hs.length - 1]; },
   };
@@ -115,12 +117,15 @@ test("POST /login adds Secure on https and accepts METALLIKSA_TOKEN repeatedly",
   assert.equal(login(auth, "s3cret").statusCode, 303);
 });
 
-test("POST /login with a wrong or missing code returns a plain 401 without hints", () => {
+test("POST /login with a wrong or missing code returns 401 with the form again and no echo or hints", () => {
   const auth = new LoginAuth({ accessCode: "AUTOCODE" });
   for (const code of ["nope", "", null]) {
     const res = login(auth, code);
     assert.equal(res.statusCode, 401);
-    assert.equal(res.ended, "Login required");
+    assert.match(res.headers["content-type"], /text\/html/);
+    assert.match(res.ended, /Login required/);
+    assert.match(res.ended, /type="password"/);
+    assert.ok(!res.ended.includes("nope") && !res.ended.includes("AUTOCODE"));
     assert.equal(res.headers["set-cookie"], undefined);
   }
 });
@@ -128,7 +133,7 @@ test("POST /login with a wrong or missing code returns a plain 401 without hints
 test("/login (GET and POST) is rate limited per IP", () => {
   const auth = new LoginAuth({ accessCode: "AUTOCODE" });
   for (let i = 0; i < 5; i++) assert.equal(login(auth, "bad").statusCode, 401);
-  for (let i = 0; i < 5; i++) assert.equal(getLogin(auth, "bad").statusCode, 401);
+  for (let i = 0; i < 5; i++) assert.equal(getLogin(auth, "bad").statusCode, 200, "a wrong code in a URL only re-shows the form");
   const blocked = login(auth, "AUTOCODE");
   assert.equal(blocked.statusCode, 429);
   assert.equal(blocked.headers["set-cookie"], undefined);
@@ -265,7 +270,7 @@ test("real HTTP flow: login, cookie access, CSRF rejection, logout", async () =>
   try {
     assert.equal((await request(port, "GET", "/")).status, 200);
     assert.equal((await request(port, "GET", "/api/ping")).status, 401);
-    assert.equal((await request(port, "GET", "/login?code=wrong")).status, 401);
+    assert.equal((await request(port, "GET", "/login?code=wrong")).status, 200);
 
     // GET (and HEAD) only show the interstitial: the one-time code is not consumed.
     const page = await request(port, "GET", "/login?code=REALCODE");
@@ -279,6 +284,8 @@ test("real HTTP flow: login, cookie access, CSRF rejection, logout", async () =>
 
     const form = { "content-type": "application/x-www-form-urlencoded" };
     assert.equal((await request(port, "POST", "/login", form, "code=wrong")).status, 401);
+    // A cross-origin form post is rejected before the code is even checked.
+    assert.equal((await request(port, "POST", "/login", { ...form, origin: "http://evil.example" }, "code=REALCODE")).status, 403);
     const ok = await request(port, "POST", "/login", form, "code=REALCODE");
     assert.equal(ok.status, 303);
     assert.equal(ok.headers.location, "/");
@@ -293,7 +300,8 @@ test("real HTTP flow: login, cookie access, CSRF rejection, logout", async () =>
     assert.equal((await request(port, "POST", "/api/ping", { cookie, origin: "http://evil.example" })).status, 403);
     assert.equal((await request(port, "POST", "/api/ping", { cookie, origin })).status, 200);
     // The one-time code cannot be replayed, by GET or POST.
-    assert.equal((await request(port, "GET", "/login?code=REALCODE")).status, 401);
+    const replay = await request(port, "GET", "/login?code=REALCODE");
+    assert.ok(!replay.body.includes("REALCODE"), "a spent code is not echoed");
     assert.equal((await request(port, "POST", "/login", form, "code=REALCODE")).status, 401);
 
     assert.equal((await request(port, "POST", "/logout", { cookie, origin })).status, 200);
@@ -324,7 +332,9 @@ test("GET /login serves an interstitial for the auto code and never consumes it"
 test("the static token is never accepted in a URL but works via POST (form or JSON)", () => {
   const auth = new LoginAuth({ token: "s3cret" });
   const get = getLogin(auth, "s3cret");
-  assert.equal(get.statusCode, 401);
+  assert.equal(get.statusCode, 200);
+  assert.ok(!get.ended.includes("s3cret"), "the token is never echoed into the page");
+  assert.ok(!/type="hidden"/.test(get.ended));
   assert.equal(get.headers["set-cookie"], undefined);
   const form = login(auth, "s3cret");
   assert.equal(form.statusCode, 303);
@@ -370,12 +380,14 @@ test("session eviction drops expired sessions before live ones", () => {
   assert.equal(auth.isValidSession(s5), true);
 });
 
-test("same hostname with a different port is rejected; scheme is not compared without a proxy", () => {
-  const req = (origin: string) => mockReq({ method: "POST", headers: { host: "app.local:3000", origin } });
+test("same hostname with a different port or scheme is rejected without a proxy", () => {
+  const req = (origin: string, socket: Record<string, unknown> = { remoteAddress: "10.0.0.9" }) =>
+    mockReq({ method: "POST", app: express(), socket, headers: { host: "app.local:3000", origin } });
   assert.equal(isSameOrigin(req("http://app.local:3000")), true);
   assert.equal(isSameOrigin(req("http://app.local:4000")), false);
   assert.equal(isSameOrigin(req("http://app.local")), false);
-  assert.equal(isSameOrigin(req("https://app.local:3000")), true, "Host-only mode ignores the scheme");
+  assert.equal(isSameOrigin(req("https://app.local:3000")), false, "plain-http socket: https Origin is foreign");
+  assert.equal(isSameOrigin(req("https://app.local:3000", { remoteAddress: "10.0.0.9", encrypted: true })), true, "direct TLS");
 });
 
 test("PUT, PATCH and DELETE with a cookie and a foreign Origin are rejected; HEAD and OPTIONS need no Origin", () => {
@@ -406,23 +418,36 @@ test("resolveTrustProxy accepts true, hop counts and subnet strings; unset is of
   assert.equal(r("loopback, 10.0.0.0/8"), "loopback, 10.0.0.0/8");
 });
 
-test("isSameOrigin honours X-Forwarded-Host and -Proto only when trust proxy is on", () => {
-  const trusted = { get: (k: string) => (k === "trust proxy" ? true : undefined) };
-  const untrusted = { get: () => false };
-  const req = (app: unknown, headers: Record<string, string>) => mockReq({ method: "POST", app, headers: { host: "127.0.0.1:3000", ...headers } });
-  const fwd = { "x-forwarded-host": "app.example.com, internal", "x-forwarded-proto": "https" };
+function proxyApp(value: boolean | number | string) {
+  const app = express();
+  app.set("trust proxy", value);
+  return app;
+}
 
-  assert.equal(isSameOrigin(req(trusted, { ...fwd, origin: "https://app.example.com" })), true);
-  assert.equal(isSameOrigin(req(untrusted, { ...fwd, origin: "https://app.example.com" })), false, "ignored when trust proxy is off");
-  // Scheme is compared when X-Forwarded-Proto is present.
-  assert.equal(isSameOrigin(req(trusted, { ...fwd, origin: "http://app.example.com" })), false);
-  // Without X-Forwarded-Proto the scheme is not compared; without X-Forwarded-Host the Host header is used.
-  assert.equal(isSameOrigin(req(trusted, { "x-forwarded-host": "app.example.com", origin: "http://app.example.com" })), true);
-  assert.equal(isSameOrigin(req(trusted, { origin: "http://127.0.0.1:3000" })), true);
-  // Still fails closed: foreign or missing Origin, wrong forwarded host.
-  assert.equal(isSameOrigin(req(trusted, { ...fwd, origin: "https://evil.example" })), false);
-  assert.equal(isSameOrigin(req(trusted, { ...fwd })), false);
-  assert.equal(isSameOrigin(req(trusted, { ...fwd, origin: "https://127.0.0.1:3000" })), false, "Host is superseded by X-Forwarded-Host");
+test("isSameOrigin honours X-Forwarded-Host and -Proto only from trusted peers", () => {
+  const req = (app: unknown, headers: Record<string, string>, remoteAddress = "10.1.2.3") =>
+    mockReq({ method: "POST", app, socket: { remoteAddress }, headers: { host: "127.0.0.1:3000", ...headers } });
+  const fwd = { "x-forwarded-host": "app.example.com, internal", "x-forwarded-proto": "https" };
+  const good = { ...fwd, origin: "https://app.example.com" };
+
+  assert.equal(isSameOrigin(req(proxyApp(true), good)), true);
+  assert.equal(isSameOrigin(req(express(), good)), false, "ignored when trust proxy is off");
+  // Subnet / loopback / hop-count values only trust matching peers.
+  assert.equal(isSameOrigin(req(proxyApp("10.0.0.0/8"), good, "10.9.9.9")), true);
+  assert.equal(isSameOrigin(req(proxyApp("10.0.0.0/8"), good, "203.0.113.7")), false, "untrusted peer cannot forge the host");
+  assert.equal(isSameOrigin(req(proxyApp("loopback"), good, "127.0.0.1")), true);
+  assert.equal(isSameOrigin(req(proxyApp("loopback"), good, "198.51.100.4")), false);
+  assert.equal(isSameOrigin(req(proxyApp(1), good, "198.51.100.4")), true, "hop count trusts the nearest hop");
+  // Scheme is compared; without X-Forwarded-Proto the socket scheme (http) applies.
+  assert.equal(isSameOrigin(req(proxyApp(true), { ...fwd, origin: "http://app.example.com" })), false);
+  assert.equal(isSameOrigin(req(proxyApp(true), { "x-forwarded-host": "app.example.com", origin: "http://app.example.com" })), true);
+  assert.equal(isSameOrigin(req(proxyApp(true), { "x-forwarded-host": "app.example.com", origin: "https://app.example.com" })), false);
+  assert.equal(isSameOrigin(req(proxyApp(true), { origin: "http://127.0.0.1:3000" })), true);
+  // Still fails closed.
+  assert.equal(isSameOrigin(req(proxyApp(true), { ...fwd, origin: "https://evil.example" })), false);
+  assert.equal(isSameOrigin(req(proxyApp(true), { ...fwd })), false);
+  assert.equal(isSameOrigin(req(proxyApp(true), { ...fwd, origin: "https://127.0.0.1:3000" })), false, "Host is superseded by X-Forwarded-Host");
+  assert.equal(isSameOrigin(mockReq({ method: "POST", headers: { host: "h", origin: "http://h" } })), true, "no app/socket falls back to Host and http");
 });
 
 async function withServer(app: express.Express, fn: (port: number) => Promise<void>) {
@@ -463,7 +488,9 @@ test("real HTTP: Bearer and session cookie both authenticate; Bearer writes need
     assert.equal((await request(port, "PUT", "/api/ping", { ...bearer, origin: "http://evil.example" })).status, 200);
 
     // The token in a URL does not log in; in a JSON body it does.
-    assert.equal((await request(port, "GET", "/login?code=s3cret")).status, 401);
+    const urlTry = await request(port, "GET", "/login?code=s3cret");
+    assert.equal(urlTry.headers["set-cookie"], undefined);
+    assert.ok(!urlTry.body.includes("s3cret"));
     const res = await request(port, "POST", "/login", { "content-type": "application/json" }, JSON.stringify({ code: "s3cret" }));
     assert.equal(res.status, 200);
     const cookie = String(res.headers["set-cookie"]).split(";")[0];
@@ -502,4 +529,167 @@ test("real HTTP behind a TLS proxy: Secure cookie and forwarded-host same-origin
     const fwd = { cookie, "x-forwarded-proto": "https", "x-forwarded-host": "app.example.com", origin: "https://app.example.com" };
     assert.equal((await request(port, "PUT", "/api/ping", fwd)).status, 403, "forwarded headers ignored by default");
   });
+});
+
+// ---------------------------------------------------------------------------
+// Second review round
+// ---------------------------------------------------------------------------
+test("GET /login without a code serves an accessible sign-in form with status 200 and no secrets", () => {
+  const auth = new LoginAuth({ token: "s3cret" });
+  const res = getLogin(auth, null);
+  assert.equal(res.statusCode, 200);
+  assert.match(res.headers["content-type"], /text\/html/);
+  assert.match(res.ended, /<html lang="en">/);
+  assert.match(res.ended, /<title>Sign in<\/title>/);
+  assert.match(res.ended, /<label for="code">/);
+  assert.match(res.ended, /<input id="code" name="code" type="password" autocomplete="off"/);
+  assert.match(res.ended, /<form method="post" action="\/login">/);
+  assert.match(res.ended, />Sign in<\/button>/);
+  assert.equal(res.headers["set-cookie"], undefined);
+});
+
+test("every /login response is no-store and no-referrer (success, failure, throttled, GET, HEAD)", () => {
+  const auth = new LoginAuth({ token: "s3cret", loginLimit: 3 });
+  const check = (res: any, label: string) => {
+    assert.equal(res.headers["cache-control"], "no-store", label);
+    assert.equal(res.headers["referrer-policy"], "no-referrer", label);
+  };
+  check(login(auth, "s3cret"), "success form");
+  check(login(auth, "s3cret", { headers: { "content-type": "application/json" }, ip: "5.5.5.5" }), "success json");
+  check(login(auth, "bad"), "failure form");
+  check(login(auth, "bad", { headers: { "content-type": "application/json" } }), "failure json");
+  const throttled = login(auth, "bad");
+  assert.equal(throttled.statusCode, 429);
+  check(throttled, "throttled");
+  check(getLogin(auth, null), "get form");
+  check(getLogin(auth, "x", { ip: "6.6.6.6" }), "get with code");
+  check(login(auth, "s3cret", { headers: { origin: "http://evil.example", host: "h" }, ip: "7.7.7.7" }), "foreign origin");
+  const head = mockRes();
+  loginHandlers(auth)["HEAD /login"](mockReq({ method: "HEAD", originalUrl: "/login", url: "/login" }), head);
+  check(head, "head");
+});
+
+test("POST /login rejects a present foreign Origin with 403 and accepts same-origin or absent Origin", () => {
+  const auth = new LoginAuth({ token: "s3cret" });
+  const withOrigin = (origin: string) => login(auth, "s3cret", { headers: { host: "app.local:3000", origin } });
+  assert.equal(withOrigin("http://evil.example").statusCode, 403);
+  assert.equal(withOrigin("null").statusCode, 403);
+  assert.equal(withOrigin("http://app.local:3000").statusCode, 303);
+  assert.equal(login(auth, "s3cret").statusCode, 303, "non-browser clients without Origin still work");
+  assert.equal(withOrigin("http://evil.example").headers["set-cookie"], undefined);
+});
+
+test("login attempt window resets after loginWindowMs", () => {
+  let t = 0;
+  const auth = new LoginAuth({ loginLimit: 2, loginWindowMs: 1000, now: () => t });
+  assert.ok(auth.allowLoginAttempt("a") && auth.allowLoginAttempt("a"));
+  assert.equal(auth.allowLoginAttempt("a"), false);
+  t = 1000;
+  assert.equal(auth.allowLoginAttempt("a"), true);
+});
+
+test("login attempt map is hard-capped; expired buckets go first, then the oldest", () => {
+  let t = 0;
+  const auth = new LoginAuth({ maxAttemptKeys: 50, loginWindowMs: 1000, now: () => t });
+  const size = () => (auth as any).attempts.size;
+  for (let i = 0; i < 500; i++) {
+    auth.allowLoginAttempt(`ip-${i}`);
+    assert.ok(size() <= 50);
+  }
+  assert.equal(size(), 50);
+  assert.equal((auth as any).attempts.has("ip-0"), false, "oldest evicted");
+  assert.equal((auth as any).attempts.has("ip-499"), true);
+  t = 5000; // all expired: the next insert clears them in one bounded sweep
+  auth.allowLoginAttempt("fresh");
+  assert.equal(size(), 1);
+});
+
+test("HEAD /login never consumes the one-time code or creates a session; HEAD then GET then POST still works", async () => {
+  const app = express();
+  const auth = new LoginAuth({ accessCode: "ONCE" });
+  applySecurity(app, null, { log: () => {}, auth });
+  await withServer(app, async (port) => {
+    const head = await request(port, "HEAD", "/login?code=ONCE");
+    assert.equal(head.status, 200);
+    assert.equal(head.headers["set-cookie"], undefined);
+    assert.equal(head.headers["cache-control"], "no-store");
+    assert.equal(head.headers["referrer-policy"], "no-referrer");
+    assert.equal(auth.checkCode("ONCE"), "auto");
+    assert.equal((auth as any).sessions.size, 0);
+    const get = await request(port, "GET", "/login?code=ONCE");
+    assert.match(get.body, /name="code" value="ONCE"/);
+    const form = { "content-type": "application/x-www-form-urlencoded" };
+    assert.equal((await request(port, "POST", "/login", form, "code=ONCE")).status, 303);
+    assert.equal(auth.checkCode("ONCE"), null);
+  });
+});
+
+test("real HTTP wiring as in server.ts: static token via resolveBindConfig, form POST, no URL login", async () => {
+  const cfg = resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0", METALLIKSA_TOKEN: "static-tok" });
+  const auth = new LoginAuth({ token: cfg.token, accessCode: cfg.accessCode });
+  const app = express();
+  applySecurity(app, cfg.token, { log: () => {}, auth });
+  app.get("/api/ping", (_req, res) => res.json({ ok: true }));
+  await withServer(app, async (port) => {
+    const form = { "content-type": "application/x-www-form-urlencoded" };
+    const page = await request(port, "GET", "/login");
+    assert.equal(page.status, 200);
+    assert.match(page.body, /type="password"/);
+    assert.equal((await request(port, "POST", "/login", form, "code=wrong")).status, 401);
+    const ok = await request(port, "POST", "/login", form, "code=static-tok");
+    assert.equal(ok.status, 303);
+    assert.equal((await request(port, "GET", "/api/ping", { cookie: String(ok.headers["set-cookie"]).split(";")[0] })).status, 200);
+    assert.equal((await request(port, "GET", "/api/ping", { authorization: "Bearer static-tok" })).status, 200);
+  });
+});
+
+test("Secure cookie follows X-Forwarded-Proto only from trusted peers (real headers over loopback)", async () => {
+  const build = (trust: boolean | string) => {
+    const app = express();
+    app.set("trust proxy", trust);
+    applySecurity(app, null, { log: () => {}, auth: new LoginAuth({ token: "t" }) });
+    return app;
+  };
+  const form = { "content-type": "application/x-www-form-urlencoded", "x-forwarded-proto": "https" };
+  for (const [trust, secure] of [["loopback", true], ["10.0.0.0/8", false], [false, false]] as const) {
+    await withServer(build(trust), async (port) => {
+      const res = await request(port, "POST", "/login", form, "code=t");
+      assert.equal(res.status, 303);
+      assert.equal(/; Secure/.test(String(res.headers["set-cookie"])), secure, `trust=${String(trust)}`);
+    });
+  }
+});
+
+test("cookie-authenticated POST/PUT/PATCH/DELETE vs missing, foreign and valid Origin over HTTP; HEAD/OPTIONS/GET need none", async () => {
+  const app = express();
+  const auth = new LoginAuth({ accessCode: "C" });
+  applySecurity(app, null, { log: () => {}, auth });
+  app.all("/api/ping", (_req, res) => res.json({ ok: true }));
+  await withServer(app, async (port) => {
+    const id = auth.createSession();
+    const cookie = `${SESSION_COOKIE}=${id}`;
+    const own = `http://127.0.0.1:${port}`;
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      assert.equal((await request(port, method, "/api/ping", { cookie })).status, 403, `${method} missing Origin`);
+      assert.equal((await request(port, method, "/api/ping", { cookie, origin: "http://evil.example" })).status, 403, `${method} foreign`);
+      assert.equal((await request(port, method, "/api/ping", { cookie, origin: "null" })).status, 403, `${method} null`);
+      assert.equal((await request(port, method, "/api/ping", { cookie, origin: own })).status, 200, `${method} valid`);
+    }
+    for (const method of ["GET", "HEAD", "OPTIONS"]) {
+      assert.equal((await request(port, method, "/api/ping", { cookie })).status, 200, method);
+    }
+  });
+});
+
+test("startup banner: token mode never prints the token or a URL containing it; auto mode prints the one-time URL", () => {
+  const tokenCfg = resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0", METALLIKSA_TOKEN: "TOPSECRETTOKEN" });
+  const tokenLines = buildLoginBannerLines(tokenCfg, 3000).join(" ");
+  assert.ok(!tokenLines.includes("TOPSECRETTOKEN"));
+  assert.ok(!/code=/.test(tokenLines));
+  assert.match(tokenLines, /http:\/\/localhost:3000\/login(?!\?)/);
+
+  const autoCfg = resolveBindConfig({ METALLIKSA_HOST: "0.0.0.0" });
+  const autoLines = buildLoginBannerLines(autoCfg, 3000);
+  assert.ok(autoLines.includes(buildLoginUrl("0.0.0.0", 3000, autoCfg.accessCode!)));
+  assert.deepEqual(buildLoginBannerLines(resolveBindConfig({}), 3000), []);
 });
