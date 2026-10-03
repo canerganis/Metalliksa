@@ -52,7 +52,7 @@
       "advertised_bytes": 38300000000,
       "evidence_kind": "official-public-pdr-page-observation",
       "new_payload_bytes_verified": false,
-      "note": "PDR version 1.1, revised 2025-12-11; AMB2025-06/07 IN718 calibration includes single-track melt-pool cross-sections. Small 20241010_AMB_SL_1_mask.tif (29.2 kB) direct download timed out in browser after 30 s; no payload retained."
+      "note": "PDR version 1.1, revised 2025-12-11; AMB2025-06/07 IN718 calibration includes single-track melt-pool cross-sections. Small 20241010_AMB_SL_1_mask.tif (29.2 kB) timed out with zero bytes in browser after 30 s and in a redirected direct HTTPS request after 60 s; no payload retained. Official challenge PDF Table 5 observations are transcribed separately and are not raw payload."
     },
     {
       "dataset_id": "mds2-4103",

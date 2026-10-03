@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "nist-3707-table5-finite-length-locality-20um-v1",
+  "inputs": {
+    "mode": "standard",
+    "backend": "reference",
+    "study": "none",
+    "material": "Inconel 718",
+    "surfaceMode": "bare-plate",
+    "barePlateGeometry": "rectangular-corridor",
+    "power_W": 285.0,
+    "speed_mm_s": 960.0,
+    "beamDiameter_um": 72.0,
+    "trackLength_um": 8000.0,
+    "corridorWidth_um": 432.0,
+    "mesh_um": 20.0,
+    "maxDt_s": 1e-06,
+    "sourcePenetration_um": 80.0,
+    "absorptivity": 0.35,
+    "preheat_C": 80.0,
+    "cooling_s": 0.0,
+    "dwell_s": 0.0,
+    "tracks": 1,
+    "layers": 1,
+    "scanAngle_deg": 0.0,
+    "timeout_s": 600.0
+  },
+  "limits": {
+    "maximumCells": 200000,
+    "maximumSteps": 75000,
+    "maximumCellSteps": 1359600000,
+    "maximumRssBytes": 536870912,
+    "maximumWallTime_s": 600.0,
+    "maximumReportBytes": 2000000
+  },
+  "validationStatus": "unvalidated",
+  "experimentalValidation": false,
+  "operatorMismatch": true,
+  "fittingOrTuning": false,
+  "tableFile": "data/benchmark/nist-access-review-2026-10-02/mds2-3707-single-track-table5.json",
+  "output": "docs/LPBF_NIST_3707_TABLE5_PROXY_2026-10-02.json",
+  "tableSha256": "3a8c2145e7e067a966b32fcda41ffd964deae5a23fc5899ea3fa164bb7c8601e",
+  "implementationSha256": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+  "scope": "Finite-length locality approximation using 1004 and 1604 um tracks at common effective 20 um mesh. This is not equivalent to the published approximately 8 mm track. No fitted parameters, coarse fallback, or experimental validation.",
+  "assumptions": {
+    "absorptivity": {
+      "value": 0.35,
+      "basis": "Explicit nominal model assumption, not measured NIST absorptivity; not fitted."
+    },
+    "sourcePenetration_um": {
+      "value": 80.0,
+      "basis": "Explicit nominal volumetric deposition assumption, not an optical or measured NIST penetration depth; not fitted."
+    },
+    "preheat_C": {
+      "value": 80.0,
+      "basis": "Application nominal default, explicit model assumption. Table 5 does not state preheat/ambient temperature. Table 6 pad 22 C is not applied to Table 5."
+    },
+    "beamMapping": "Published 2D Gaussian regression diameter 72 um is mapped to ideal Gaussian 1/e2 diameter; actual measured profile is unavailable.",
+    "plateAndBoundaries": "Model depth about 320 um vs published plate 3170 um; fixed preheat base and insulated sides. Full plate/support geometry is not represented.",
+    "operator": "Single nearest-midpoint accepted-max liquidus thermal contour vs six etched/solidified SAM-segmented measurements from three tracks. Bead, area, and surface deformation are not reproduced.",
+    "numerics": "Two finite-length locality cases, common 20 um effective dx and exact centre cell to roundoff. mesh_um request is nextafter(20,+infinity) to avoid an extra cell from floating ceil. No mesh/time convergence or 8 mm equivalence.",
+    "locality": "Compare central accepted-max liquidus W/D for two truncated tracks with source crossing at each track midpoint. Start distances are several sqrt(4*alpha_max*full_run_time) lengths, using model table diffusivity. This rationale is not a truncation-error bound; transverse, bottom, source-history and etched-operator mismatches persist.",
+    "localLengthThreshold": "Both absolute W/D differences must be at most one effective mesh h; otherwise inconclusive. Passing this sensitivity criterion establishes no equivalence to 8 mm NIST geometry."
+  },
+  "caseOverrides": [
+    {
+      "trackLength_um": 1004.0,
+      "mesh_um": 20.000000000000004
+    },
+    {
+      "trackLength_um": 1604.0,
+      "mesh_um": 20.000000000000004
+    }
+  ],
+  "priorFullLengthReportSha256": "895cad9ff8c9b0579e93d04332c904546f36cd1fc5ea39f5ff5fa69f75267bee"
+}

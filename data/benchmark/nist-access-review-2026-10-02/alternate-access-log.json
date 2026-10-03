@@ -28,5 +28,14 @@
     "bytes_received": 0,
     "interface": "Codex browser download event",
     "error": "Timed out waiting for download; the NIST PDR page exposed the direct file link and advertised size 29.2 kB, but no payload was transferred."
+  },
+  {
+    "dataset": "mds2-3707",
+    "url": "https://data.nist.gov/od/ds/ark:/88434/mds2-3707/MeltPoolCrossSection/20241010_AMB_SL_1_mask.tif",
+    "timeout_seconds": 60,
+    "status": "timeout",
+    "bytes_received": 0,
+    "interface": "curl.exe direct HTTPS GET with redirect following and checksum-ready local file target",
+    "error": "Timed out after 60.01463 seconds with HTTP 000 and zero payload bytes. No temporary file remained."
   }
 ]

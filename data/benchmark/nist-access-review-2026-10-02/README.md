@@ -24,6 +24,8 @@ The NIST metadata contain no `accessURL`, S3 origin or alternate payload mirror.
 
 - Additional public record checked: [mds2-3707](https://data.nist.gov/od/id/mds2-3707), version 1.1 (revised 2025-12-11), 51 files and 38.30 GB advertised. It contains AMB2025-06/07 IN718 calibration inputs and single-track melt-pool cross-sections. This is potentially useful for calibration after matching process conditions and defining the image observation operator; it is not an independent holdout.
 - The 29.2 kB `20241010_AMB_SL_1_mask.tif` direct link timed out after 30 seconds with zero bytes. No payload was retained; see `alternate-access-log.json` and `manifest.json`.
+- A second retrieval through `curl.exe` with redirects enabled and a 60-second limit also ended at HTTP 000 with zero bytes; no temporary file remained. This rules out a browser-only download issue but still points to an unavailable NIST distribution route from this host.
+- The official NIST challenge-description PDF is separately accessible and publishes Table 5's six single-track image-segmentation observations and process metadata. Their transcription is `mds2-3707-single-track-table5.json`; it is a published-PDF transcription, not a PDR payload. Image-segmentation means are W=137.4 µm, depth=124.9 µm, area=12,946 µm²; NIST reports no uncertainty budget for those segmentation results. The conditions (285 W, 960 mm/s, Gaussian diameter 72 ± 3.5 µm, approximately 8 mm track, middle cross-section) are a useful calibration candidate, but the etched/solidified boundary is not yet proven equivalent to the solver's liquidus operator.
 
 - Sandbox requests fail at the configured loopback proxy. Approved network reads
   obtained HTTP 200 for `/rmm/records/mds2-2715` and all four `?format=nerdm` URLs.
@@ -60,7 +62,7 @@ coefficients and emissivity must be reviewed before conversion.
 
 ## Next useful acquisition
 
-0. Retry the `mds2-3707` readme and selected mask/cross-section components through a responsive NIST distribution route; inspect calibration inputs and the image measurement definition before fitting solver parameters.
+0. Retry the `mds2-3707` readme and selected small cross-section mask through a responsive NIST distribution route; meanwhile define and preflight a single fixed-parameter calibration proxy using the accessible Table 5 observations before any parameter fit.
 
 1. 2715 `2715_README.txt`, `AMB2022_HDF5_Temperature_v1.m`, TAM/SCR scripts.
 2. 4103 `4103_ReadMe.txt`, `SampleIParameters.csv`, small measured width/depth,
