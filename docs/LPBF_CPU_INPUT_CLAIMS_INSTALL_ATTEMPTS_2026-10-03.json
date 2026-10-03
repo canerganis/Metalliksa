@@ -1,0 +1,178 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-03",
+  "candidate": {
+    "commit": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+    "tracked_source_file_count": 1579,
+    "manifest_file_sha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+    "manifest_original_snapshot_root": ".runtime/v1-input-claims-20261003"
+  },
+  "source_guards": {
+    "offline": {
+      "before": "PASS",
+      "after": "PASS",
+      "files": 1579,
+      "mismatches": 0,
+      "before_record": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/offline-source-before.json",
+      "after_record": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/offline-source-after.json"
+    },
+    "online": {
+      "snapshot_root": ".runtime/v1-input-claims-online-20261003",
+      "before": "PASS",
+      "after": "PASS",
+      "files": 1579,
+      "mismatches": 0,
+      "extras": 0,
+      "manifest_mapping_same_as_original": true,
+      "snapshot_check": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/online-snapshot-check.json",
+      "after_record": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/online-source-after-install.json"
+    }
+  },
+  "attempts": [
+    {
+      "id": "offline-1",
+      "command": "npm ci --offline --no-audit --no-fund",
+      "exit_code": 1,
+      "duration_seconds": 141.0748332,
+      "status": "UNAVAILABLE",
+      "error_code": "ENOTCACHED",
+      "detail": "Offline npm cache lacked registry.npmjs.org/yallist; cleanup emitted EPERM warnings.",
+      "network_retry": false,
+      "node_modules_after": false,
+      "dist_after": false,
+      "raw_log": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/offline-npm-ci.log",
+      "runtime_record": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/offline-runtime.json"
+    },
+    {
+      "id": "network-assisted-2",
+      "command": "npm ci --offline=false --no-audit --no-fund",
+      "start_utc": "2026-10-03T09:38:38.2199445Z",
+      "end_utc": "2026-10-03T09:40:07.7911855Z",
+      "exit_code": 1,
+      "duration_seconds": 89.571241,
+      "status": "UNAVAILABLE",
+      "error_code": "ECONNREFUSED",
+      "detail": "Fetch of zustand-5.0.15.tgz from registry.npmjs.org failed via configured proxy endpoint 127.0.0.1:9; npm emitted EPERM cleanup warnings.",
+      "environment_NPM_CONFIG_OFFLINE": "true",
+      "explicit_cli_override": "--offline=false",
+      "node_modules_after": "partial tree observed and retained",
+      "network_retry": false,
+      "raw_log": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/online-npm-ci.log",
+      "runtime_record": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/online-runtime.json"
+    }
+  ],
+  "candidate_validation": {
+    "lint": "NOT RUN",
+    "unit": "NOT RUN",
+    "build": "NOT RUN",
+    "reason": "Both historical dependency installation attempts exited 1; lint, unit, and build were not run within these two attempts.",
+    "scope": "Within these two historical attempts only; a separate native-environment reproduction is tracked separately."
+  },
+  "npm_policy": {
+    "repository_npmrc_present": false,
+    "packageManager_field": null,
+    "scripts": {
+      "lint": "tsc --noEmit",
+      "test:unit": "tsx --test tests/*.test.ts tests/*.test.tsx",
+      "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs"
+    },
+    "install_policy_changed": false
+  },
+  "limitations": [
+    "These are two historical install failures, not a result for any separate native-environment reproduction.",
+    "Install outcomes are not candidate acceptance.",
+    "Partial online node_modules is retained and not treated as a usable install.",
+    "No lint, unit suite, or build ran within these two attempts."
+  ],
+  "support_inventory": {
+    "file": "LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/SHA256SUMS.json",
+    "inventory_sha256": "89025ff3b6db9489b3c4e03f39b22b41c1f65a3dd36ac6e94d21a5e44f4fecf7",
+    "entries": 14,
+    "hashes": [
+      {
+        "path": "candidate-source-manifest.json",
+        "bytes": 191594,
+        "sha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\source-manifest.json"
+      },
+      {
+        "path": "offline-source-before.json",
+        "bytes": 193306,
+        "sha256": "34542b3ba3390bf65eec9c8950e7067f9680e929e4eb1e55a48dfe7fcbe135b4",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-source-before.json"
+      },
+      {
+        "path": "offline-source-after.json",
+        "bytes": 193366,
+        "sha256": "0d7d3b695f746e0feba534a99d93f0a1652f63e659d6692e64b9d0ae3efa52ee",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-source-after.json"
+      },
+      {
+        "path": "offline-install-summary.json",
+        "bytes": 1901,
+        "sha256": "354c9b2f62688e18e16687a834bae718f7c7aa72de3a7af6e910f374c47971b9",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-run-summary.json"
+      },
+      {
+        "path": "offline-runtime.json",
+        "bytes": 739,
+        "sha256": "71dac57fd54dfb757faafa68545ae8e892d5c987301c8345d38c5dfc3a88bfb0",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp\\clean-runtime.json"
+      },
+      {
+        "path": "offline-npm-ci.json",
+        "bytes": 662,
+        "sha256": "f1653cd4fbb0b54777451cc5ff0bbd41c056115b94ace24a7ce8913c65c69e61",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp\\clean-npm-ci.json"
+      },
+      {
+        "path": "offline-npm-ci.log",
+        "bytes": 4546,
+        "sha256": "99224dd931da9625947c537f2b2664b1030f4e2ef2a52e5f16afd6a9d4840b4f",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp\\clean-npm-ci.log"
+      },
+      {
+        "path": "offline-guard-note.txt",
+        "bytes": 1112,
+        "sha256": "b83432797ffe33dc76ae2090518bea77ae058a9651735fb9ed8c9c705e983db5",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-source-guard-note.txt"
+      },
+      {
+        "path": "online-snapshot-check.json",
+        "bytes": 422,
+        "sha256": "c8425419df2609bf95e017594f8010e81c63bf742cdf3b3f5f1b1047a75152a3",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-snapshot-check.json"
+      },
+      {
+        "path": "online-source-after-install.json",
+        "bytes": 422,
+        "sha256": "70c051db8befaffee208f52d8e502f0358f8c61ebcccd249ef29121d5eff3c8d",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-source-after-install.json"
+      },
+      {
+        "path": "online-runtime.json",
+        "bytes": 631,
+        "sha256": "3bdb3e6cdf0c1832408156f3a7bde316b9d683ff4910aa8fbbd500af7a8ffd38",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-runtime.json"
+      },
+      {
+        "path": "online-npm-ci.json",
+        "bytes": 302,
+        "sha256": "ff2601feb03c7cd492d77f90f075911fc030d023e1bfcc360e7e89f26c57278d",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-npm-ci.json"
+      },
+      {
+        "path": "online-npm-ci.log",
+        "bytes": 3399,
+        "sha256": "1994a2cd57589fd36f06fe1ab76c6ed864db9ab3dbd3f3d1c5ceccbea6b2835c",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-temp\\online-npm-ci.log"
+      },
+      {
+        "path": "candidate-package.json",
+        "bytes": 2038,
+        "sha256": "a4f81bf918d3eb91367b8d8e28b55d8a5553e4d079cc729ce3f7b735ed2a9fa2",
+        "source": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\package.json"
+      }
+    ]
+  }
+}

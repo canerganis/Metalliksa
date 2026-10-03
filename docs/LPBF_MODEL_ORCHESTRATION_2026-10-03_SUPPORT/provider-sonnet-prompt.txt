@@ -1,0 +1,19 @@
+Metalliksa LPBF research workstation için sınırlı bağımsız inceleme yapıyoruz.
+Doğrulanmış özet: Arayüzün 22 işlem koşulunu 7'ye kırpan ölçüm gönderimi düzeltildi;
+backend zaten eksik vektörü reddediyordu, başarılı sahte kalibrasyon gözlenmedi.
+Manual veya koşulsuz ölçüm unverified kalır ve calibration factor verilmez; bozuk JSON,
+bilinmeyen alanlar, boolean/string sayılar ve kısmi vektörler reddedilir.
+Kaynak entegrasyonu etiketi adaptive GL v2/legacy GL2 kayıt kimliğine bağlıdır.
+Aynı commit arşivinde 1579 kaynak hash'i değişmeden 27 sınırlı CPU testi geçti;
+4 manufactured/diffusion testi bu 27'nin içindedir, ayrı tanı koşusunda da geçti.
+Coupled dx/dt diffusion RMS 5.656e-4,1.421e-4,3.556e-5 K; order 1.993/1.998.
+Bu sentetik operatör kanıtıdır. Gerçek LPBF mesh/time inconclusive, NIST unavailable,
+deneysel validity unvalidated. Tam Node clean install/type/unit/build henüz kapanmadı.
+Önceki adayın gerçek archive/restore/crash kanıtı yeni commit'in canlı UI kabulü değildir.
+Yeni fizik fazı V1 kabulüne kadar donduruldu. Önceki tarayıcı erişimi kullanıcı tarafından
+reddedildi; yeniden izin gelmeden gerçek UI çalıştırılamaz.
+Yalnız bu özetten akıl yürüt; repo/dosya/komut/web araçları kullanma, veri değiştirme.
+Eksik repo yeteneği, yeni materyal değeri, deneysel ölçüm veya test başarısı uydurma.
+Varsayımları gerçeklerden ayır. Türkçe, en çok 500 kelime cevap ver.
+
+Görev: Ölçüm gönderimi düzeltmesinin gerçek UI/klavye kabulü için en etkili adversarial senaryoları seç. Manual, conditionless JSON, tam22 alan, malformed, bilinmeyen alan, strict numeric type, değişen input/stale/cancel/reload ayrı olsun. Kaynakta olmayan yeni kontrol veya API varsayma. Dört completed run ve ayrı cancel üst sınırı içinde test sırasını ve her adımın somut beklenen kullanıcı davranışını öner.

@@ -81,3 +81,14 @@
 /docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.json -text
 /docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/* -text
 /docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/*.log -whitespace
+
+# Preserve native reproduction and provider consultation evidence bytes.
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/*.log -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03_SUPPORT/*.log -whitespace
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/*.log -whitespace

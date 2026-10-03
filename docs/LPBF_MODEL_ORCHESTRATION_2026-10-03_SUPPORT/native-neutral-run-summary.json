@@ -1,0 +1,64 @@
+{
+  "status": "PASS",
+  "result": "PASS",
+  "pass": true,
+  "all3CommandsExit0": true,
+  "allGuardsMatched": true,
+  "reusedExistingInstalledDependencyTree": true,
+  "noNewNpmInstall": true,
+  "installedDependencyTree": "reused existing installed dependency tree, no new npm install in this sequence",
+  "installationEvidence": "recorded separately",
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+  "neutralTemp": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-native-neutral-0kiizzyn",
+  "records": [
+    {
+      "stage": "lint",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 21.37450140004512,
+      "rawLogSha256": "7a9f755a382a4ee111eda93f908328d996638dd4b13e8b1230e68c9a2f4525e2",
+      "log": "native-neutral-lint.log",
+      "exitRecord": "native-neutral-lint-exit.json",
+      "preGuard": "native-neutral-lint-pre-guard.json",
+      "postGuard": "native-neutral-lint-post-guard.json"
+    },
+    {
+      "stage": "test:unit",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "run",
+        "test:unit"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 49.25539619999472,
+      "rawLogSha256": "f79e3ed09c944bbadae9ce2e4b5727aaecf01cd00e7acdc55652bb7416510657",
+      "log": "native-neutral-test-unit.log",
+      "exitRecord": "native-neutral-test-unit-exit.json",
+      "preGuard": "native-neutral-test-unit-pre-guard.json",
+      "postGuard": "native-neutral-test-unit-post-guard.json"
+    },
+    {
+      "stage": "build",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 128.6449262999813,
+      "rawLogSha256": "5b9dea5ea5c0ebde1b3061ec9dd69467a7329ec4c4dcb90457f1a08179c69c4c",
+      "log": "native-neutral-build.log",
+      "exitRecord": "native-neutral-build-exit.json",
+      "preGuard": "native-neutral-build-pre-guard.json",
+      "postGuard": "native-neutral-build-post-guard.json"
+    }
+  ],
+  "timestamp": "2026-10-03T10:33:51.343955+00:00"
+}

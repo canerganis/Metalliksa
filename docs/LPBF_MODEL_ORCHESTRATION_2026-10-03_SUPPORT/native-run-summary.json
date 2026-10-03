@@ -1,0 +1,74 @@
+{
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+  "commands": [
+    {
+      "stage": "python-smoke",
+      "command": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-B",
+        "-c",
+        "import sys,numpy,pydantic; assert sys.version_info[:2]==(3,12); print(sys.executable); print(sys.version); print('NumPy',numpy.__version__,'pydantic',pydantic.__version__)"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 1.5790000000270084,
+      "logSha256": "5c7bf7a5eecc39c3760e941cf828edd8ea884232407e787b6e7284a38638d0e7"
+    },
+    {
+      "stage": "pip-check",
+      "command": [
+        "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "-B",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 2.077999999979511,
+      "logSha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    {
+      "stage": "npm-ci",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "ci",
+        "--offline=false",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 135.03100000001723,
+      "logSha256": "e185991a859e14890168bedffd960f876f326b42c5952122bb8f0ae887be85c2"
+    },
+    {
+      "stage": "lint",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "elapsed_s": 23.14100000000326,
+      "logSha256": "7a9f755a382a4ee111eda93f908328d996638dd4b13e8b1230e68c9a2f4525e2"
+    },
+    {
+      "stage": "unit",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+        "run",
+        "test:unit"
+      ],
+      "exitCode": 1,
+      "elapsed_s": 55.15700000000652,
+      "logSha256": "5caef4b59d5577de8edd75c4dac4ba3ba2004c60f32f4c321654d2276c29bb60"
+    }
+  ],
+  "sourceManifestSha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+  "originalManifestRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003",
+  "sameSourceMappingInNewRoot": true,
+  "expectedStages": 6,
+  "status": "FAIL"
+}

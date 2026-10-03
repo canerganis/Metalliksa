@@ -1,0 +1,91 @@
+# Gerçek UI/klavye kabul planı
+
+Bu plan yalnızca verdiğiniz özete dayanır. Hiçbir araç, repo veya tarayıcı kullanılmadı.
+
+## Önkoşullar ve sınırlar
+
+- **Gerçek UI çalıştırılamaz.** Tarayıcı erişimi reddedildi. Yeniden açık izin gelmeden hiçbir adım yürütülmez.
+- **Varsayım:** UI'da en az bir manual giriş yolu, bir JSON giriş alanı, bir gönder/iptal akışı ve bir tam işlem koşulu seti var. Bunların adlarını bilmiyorum, uydurmuyorum.
+- **Bütçe:** 4 completed run + ayrı cancel üst sınırı. Rejected submit'ler completed run sayılmaz. Ancak "backend'e hiç gitmedi" kanıtı yoksa onları da ayrı gözlem olarak kaydedin.
+- **Kabul ölçütü:** UI 22 koşulun tamamını gönderir, 7'ye kırpmaz. Eksik vektör reddedilir. Başarılı sahte kalibrasyon oluşmaz.
+- **Her adımda kaydedin:** gönderilen koşul sayısı (varsa ağ/log kaynağından), kullanıcıya görünen durum ve calibration factor gösterilip gösterilmediği.
+
+## Önerilen sıra
+
+Ucuz ve yıkıcı olmayan negatifler önce gelir. Pahalı completed run'lar sona kalır. Dört completed run'ın dağılımı şöyle olur:
+
+- Run 1: tam22 JSON.
+- Run 2: manual.
+- Run 3: conditionless JSON.
+- Run 4: değişen input / stale.
+
+### 1. Malformed JSON (rejected, run harcamaz)
+
+- **Eylem:** Klavyeyle bozuk JSON yapıştırın, örneğin kapanmayan `{`. Ardından Enter veya Tab+Enter ile gönderin.
+- **Beklenen:** Anlaşılır ayrıştırma hatası görünür. Sonuç, kalibrasyon veya factor yoktur. Odak hata mesajına ya da alana döner. Önceki geçerli sonuç varsa silinmez, ama yeni sonuç gibi de etiketlenmez.
+
+### 2. Bilinmeyen alan (rejected)
+
+- **Eylem:** Geçerli yapıya tanımsız bir anahtar ekleyin.
+- **Beklenen:** Reddedilir, alan adı görünür ve sessizce yok sayılmaz. Calibration factor yoktur.
+
+### 3. Strict numeric type (rejected)
+
+- **Eylem:** Ayrı ayrı iki deneme yapın. Birinde sayı yerine `true`, diğerinde `"1.5"` gibi string kullanın.
+- **Beklenen:** İkisi de reddedilir. Sessiz sayı dönüşümü yoktur. Hata hangi alanın tipinin yanlış olduğunu gösterir.
+
+### 4. Kısmi vektör (rejected, kırpma regresyonu)
+
+- **Eylem:** 7 koşul gönderin ve 22 gerektiğini doğrulayın.
+- **Beklenen:** Reddedilir. Backend'in eksik vektörü reddettiği zaten bilinir. Burada UI'ın 7'yi 22'ye tamamlayıp ya da tersine kırpıp başarılı göstermediğine bakılır.
+
+### 5. Run 1: tam22 JSON (completed)
+
+- **Eylem:** 22 koşulun tamamı doğru tiplerle gönderilir.
+- **Beklenen:** Gönderim 22 alanla gider. Sonuç tamamlanır. Durum etiketi, kalibrasyon sonucunun doğrulanmış mı yoksa unverified mı olduğunu yanlış beyan etmez. Elde olmayan bir fiziksel doğrulama iddiası görünmez.
+
+### 6. Run 2: manual (completed)
+
+- **Eylem:** Manual girişle tamamlayın.
+- **Beklenen:** Sonuç **unverified** etiketlenir. Calibration factor verilmez. Başarılı kalibrasyon dili kullanılmaz.
+
+### 7. Run 3: conditionless JSON (completed)
+
+- **Eylem:** İşlem koşulu içermeyen JSON gönderin.
+- **Beklenen:** Unverified kalır, calibration factor yoktur. Koşulsuz giriş "tam doğrulanmış" gibi sunulmaz. Eğer reddedilirse, bu run harcanmış sayılmaz. Reddin nedeni açık görünmeli.
+
+### 8. Run 4: değişen input / stale (completed)
+
+- **Eylem:** Önce tam22 ile gönderimi başlatın. Çalışırken bir input değerini değiştirin.
+- **Beklenen:** Sonuç, gönderilen girdiyle eşleşir veya "stale" diye işaretlenir. Yeni değerle karışık bir sonuç kabul edilmez. İkinci gönderim yeni girdiyi tam 22 alanla taşır.
+- **Not:** Bu adım UI'ın gerçekten bu davranışı destekleyip desteklemediğine bağlıdır. Destek yoksa yeni kontrol varsaymayın. Bunu "gözlenemedi" diye kaydedin.
+
+### 9. Ayrı cancel (üst sınır dışı)
+
+- **Eylem:** Çalışan bir gönderimi klavyeyle iptal edin.
+- **Beklenen:** İptal edilen iş sahte başarıyla sonuçlanmaz. Gönder düğmesi yeniden kullanılabilir olur. Gecikmiş yanıt gelirse yeni durumu ezmez. Calibration factor yoktur.
+
+### 10. Reload (Run 1 sonrası, run harcamaz)
+
+- **Eylem:** Reload edin.
+- **Beklenen:** Önceki durum olduğundan fazla "doğrulanmış" gösterilmez. Yarım kalmış gönderim sahte tamamlanmış olarak görünmez.
+
+## Kabul dışı kalanlar
+
+Bu sonuçlar şunları kanıtlamaz:
+
+- Gerçek LPBF fiziği.
+- NIST doğrulaması.
+- Deneysel validity.
+- Tam Node clean install/type/unit/build kapanışı.
+- Önceki adayın archive/restore/crash kanıtının yeni commit'e geçişi.
+
+Sentetik diffusion sonuçları (RMS ve order değerleri) UI kabulüne dahil değildir.
+
+## Açık sorular
+
+1. Tarayıcı izni verilecek mi?
+2. Manual ve conditionless için UI'da hangi kontroller var?
+3. Stale veya değişen input davranışı kaynakta tanımlı mı?
+
+Bu cevaplar gelmeden yürütme başlamaz.

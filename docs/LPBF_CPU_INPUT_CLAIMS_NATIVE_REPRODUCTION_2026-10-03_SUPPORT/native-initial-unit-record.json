@@ -1,0 +1,12 @@
+{
+  "stage": "unit",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+    "run",
+    "test:unit"
+  ],
+  "exitCode": 1,
+  "elapsed_s": 55.15700000000652,
+  "logSha256": "5caef4b59d5577de8edd75c4dac4ba3ba2004c60f32f4c321654d2276c29bb60"
+}

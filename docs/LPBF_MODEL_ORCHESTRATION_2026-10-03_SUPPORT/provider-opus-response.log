@@ -1,0 +1,53 @@
+**Not:** Talimatına uyarak repo, dosya, komut ve web araçlarını kullanmadım, plan dosyası da oluşturmadım. Aşağıdaki değerlendirme yalnızca verdiğin özete dayanıyor.
+
+## Sonuç
+"V1 research-release tamamlandı" iddiası **desteklenmiyor**. Backend tarafındaki kanıt güçlü, ama derleme kanıtı ve yeni commit'in canlı kabul kanıtı yok.
+
+## Kanıtların birbirinin yerini tutamadığı yerler
+- **Kaynak hash'leri (1579):** İncelenen kodun hangisi olduğunu sabitler. Kodun derlendiğini ya da doğru davrandığını göstermez.
+- **27 dar CPU testi:** Backend doğrulamasını ve sentetik operatörü kanıtlar. Node bağımlılık çözümünü, tip kontrolünü, frontend birim testlerini ve build'i kapsamaz.
+- **Temiz install/type/unit/build:** Paketin kurulup derlendiğini kanıtlar. Gerçek iş akışının çalıştığını ve verinin kalıcı saklandığını kanıtlamaz.
+- **configure→run→archive→export→restore→reload:** Normal akışın uçtan uca çalıştığını kanıtlar. Hata ve kurtarma davranışını kanıtlamaz.
+- **Önceki adayın archive/restore/crash kanıtı:** Yeni commit'e taşınamaz. Düzeltme tam da ölçüm gönderen arayüz kodunda yapıldı.
+- **Sentetik yakınsama (order ≈2):** Gerçek LPBF mesh/zaman yakınsaması yerine geçmez. O sonuç hâlâ belirsiz.
+
+## Tamamlanmayı engelleyen 5 eksik ve kabul kanıtları
+1. **Temiz Node install/type/unit/build yapılmadı**
+   - Kabul kanıtı: Aynı commit ve aynı hash listesiyle lockfile'dan temiz kurulum (`npm ci` vb.) logu.
+   - Tip hatası sıfır olmalı, birim test özeti ve build çıktısı hash'iyle birlikte kaydedilmeli.
+2. **Yeni commit'te canlı uçtan uca akış denenmedi**
+   - Kabul kanıtı: configure→run→archive→export→restore→reload kaydı.
+   - Kayıtta arşiv kimliği, export dosya hash'i ve restore sonrası 22 koşulun birebir eşitliği görünmeli.
+   - Tarayıcıya yeniden izin vermen ya da akışı senin yürütüp kaydetmen gerekiyor.
+3. **22 koşullu gönderim arayüzde gözlenmedi**
+   - Kabul kanıtı: Canlı arayüzde yakalanmış ağ isteği 22 alan taşımalı ve backend kabul etmeli.
+   - Kısmi vektör için arayüzde açık bir ret mesajı görünmeli.
+   - Manuel ölçüm "unverified" kalmalı; export'ta calibration factor bulunmamalı.
+4. **Yeni commit'te kritik hata ve kurtarma denenmedi**
+   - Kabul kanıtı: Çalışma sırasında backend süreci öldürülmeli, ardından yeniden başlatılmalı.
+   - Arşiv bozulmamalı, yarım kalmış bir kalibrasyon başarılı gibi kaydedilmemeli, hata kullanıcıya gösterilmeli.
+5. **Kapsam ve geçerlilik sınırları belgelenmedi ve etiketlenmedi**
+   - Kabul kanıtı: Sürüm notunda "yalnız sentetik operatör kanıtı; LPBF mesh/time inconclusive; NIST unavailable; experimental unvalidated" yazmalı.
+   - Aynı durum export metadata'sında ve arayüzde görünür olmalı.
+   - Bütün kanıtlar tek commit'e bağlı bir dosyada toplanmalı.
+
+## NIST ve deneysel doğrulama otomatik engel mi?
+**Hayır, otomatik engel değil.** Bunun şartı, V1'in fiziksel olarak doğrulanmış bir öngörü modeli değil, bir araştırma yazılımı olarak tanımlanması. Ayrım şöyle:
+- **Yazılım tamlığı (V1 kapsamında):** Derleme, iş akışı, kalıcılık, kurtarma ve doğru etiketleme. Bunlar sürüm için zorunlu.
+- **Fiziksel geçerlilik (V1 kapsamı dışında):** NIST ve deneysel doğrulama. Fizik fazının dondurulmuş olması da bu ayrımla tutarlı.
+- **Engele dönüştüğü durumlar:**
+  - Sürüm iddiası öngörü doğruluğu ya da doğrulanmış kalibrasyon içeriyorsa.
+  - Arayüz veya export "unvalidated/unverified" durumunu gizliyorsa ya da kaybediyorsa (eksik 5).
+
+## Gerçekler ve varsayımlar
+- **Gerçek (özete göre):**
+  - Arayüz düzeltmesi yapıldı ve backend eksik vektörü zaten reddediyordu.
+  - Aynı commit'te 27 test geçti, hash'ler değişmedi.
+  - Sentetik RMS ve order değerleri ölçüldü.
+  - Node doğrulaması ve canlı arayüz kabulü açık.
+- **Varsayım:**
+  - V1 kapsamı deneysel doğrulamayı dışarıda bırakıyor. Bunu senin teyit etmen gerekiyor.
+  - Arayüz düzeltmesinin canlı arayüzde değil, kod ve test düzeyinde doğrulandığını varsaydım. Özet bunu belirtmiyor.
+  - Hata ve kurtarma senaryolarının V1 kabul kriterlerine dahil olduğunu varsaydım.
+
+Eksik 2, 3 ve 4 için tarayıcıya yeniden izin vermen ya da akışı kendin yürütüp kaydını paylaşman gerekiyor.

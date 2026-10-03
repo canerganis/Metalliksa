@@ -1,0 +1,12 @@
+{
+  "revision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003",
+  "manifestSha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+  "expectedFiles": 1579,
+  "observedFiles": 1579,
+  "mismatchCount": 0,
+  "mismatches": {},
+  "extraCount": 0,
+  "extras": [],
+  "status": "PASS"
+}

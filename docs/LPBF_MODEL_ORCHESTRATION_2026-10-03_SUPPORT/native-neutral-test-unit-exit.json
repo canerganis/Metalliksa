@@ -1,0 +1,17 @@
+{
+  "stage": "test:unit",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+    "run",
+    "test:unit"
+  ],
+  "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+  "pid": 34836,
+  "exitCode": 0,
+  "elapsed_s": 49.25539619999472,
+  "raw_log_sha256": "f79e3ed09c944bbadae9ce2e4b5727aaecf01cd00e7acdc55652bb7416510657",
+  "rawLogSha256": "f79e3ed09c944bbadae9ce2e4b5727aaecf01cd00e7acdc55652bb7416510657",
+  "logPath": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\native-neutral-test-unit.log",
+  "timestamp": "2026-10-03T10:31:40.279598+00:00"
+}

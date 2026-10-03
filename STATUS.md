@@ -2,6 +2,16 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Güncel devam — orkestra ve ec3a5fc temiz Node/build kabulü (2026-10-03)
+
+- **Gerçek orkestrasyon:** Sol 6.1 zor karar/kaynak ve Flash kod denetimini; Luna sayısal, kurulum ve kayıt incelemelerini yürüttü. Antigravity skill üzerinden üç paralel danışma Gemini 3.1 Pro High, Claude Sonnet 5.5 Medium ve Opus 5.5 High gerçek yanıt üretti. Gemini 3.8 Flash High ilk print-timeout sonrasında aynı görüşmede doğrulama betiğini teslim etti; Sol GO sonrası byte-identical betik çalıştı. Model seçimi CLI envanter/argümanlarıyla kayıtlıdır, sunucu model attestation yok. Model önerileri kaynakla kontrol edildi; tek başlarına test kanıtı sayılmaz.
+- **Aynı kod adayı:** `ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce`, temiz commit arşivinden 1.579 kaynak; yeni sayısal kayıt commit'i `dfd181e`. Güncel native kurulum 850 locked npm paketi ile PASS (135.031 s); script politikası ve ağ kontrol ayarları değiştirilmedi. İki eski kurulum başarısızlığı ve ilk native suite **370 PASS / 1 FAIL / 1 SKIP** ayrı ham kayıt olarak korunur.
+- **Bulgu / düzeltme:** İlk suite'in tek watcher hatası test harness TEMP/TMP kökünün `.tmp-lpbf...` ignore eşleşmesine girmesiydi. Değişmemiş test nötr Windows temp kökünde PASS verdi ve generated dosya dışlamalarını yine denetledi. Uygulama/test kaynağı, timeout veya eşikler değiştirilmedi.
+- **Yeni tam Node sırası:** Nötr child TEMP/TMP ile type/lint PASS (21.375 s), tam unit **371 PASS / 0 FAIL / 1 SKIP** (372 test, suite 48.558 s), production build PASS (128.645 s süreç). Skip isteğe bağlı CMU ham payload yokluğu; install-script ve büyük chunk uyarıları korunur. Her üç komutun öncesi/sonrası 1.579 kaynak hash'i eşit; bu sırada npm yeniden kurulmadı. Mevcut locked Python venv tekrar kullanıldı; fresh Python kurulum iddiası yok.
+- **Kayıt / sıradaki:** `docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03.md`, başarısız kurulumların ayrı kaydı ve `docs/LPBF_MODEL_ORCHESTRATION_2026-10-03.md` hashli destek envanterlerini içerir. Yalnız görev kayıtları yerel commit edilir; push yok. Yeni adayın gerçek UI manual/JSON → stale/cancel/reload/keyboard, arşiv restore ve owner-only recovery kabulü hâlâ açık; önceki tarayıcı izin reddi nedeniyle yeniden açık erişim gerekir. Fiziksel mesh/time inconclusive, NIST unavailable, deneysel unvalidated; **tam V1 ve geliştirme hedefi devam ediyor**.
+
+### Önceki kayıt — sayısal kabul ve kurulum devamı
+
 ## Güncel devam — ec3a5fc sayısal kabul ve temiz kurulum devamı (2026-10-03)
 
 - **Kod / kayıt:** Son kod commit'i `ec3a5fc`; yeni sayısal kanıt `docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.md/.json` ve byte-exact support envanterinde. Sol 6.1 kurulum devam kararını, Luna bağımsız commit-blob/hash kontrolünü, root aynı adayda CPU/tanı entegrasyonunu yürüttü. Bu belge commit'i kaynak adayını yeniden etiketlemez; push yok.

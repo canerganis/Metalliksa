@@ -1,0 +1,12 @@
+{
+  "requestedModel": "gemini-3.8-flash-high",
+  "mode": "plan",
+  "sourceFilesPassed": false,
+  "cwd": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-flash-code-osu2fqdn",
+  "exitCode": 0,
+  "elapsed_s": 125.23399999999674,
+  "prompt": "provider-flash-prompt.txt",
+  "response": "provider-flash-response.log",
+  "responseSha256": "a534ee5682fb348186a27ac72d10b7f94bd46f96323a028430c26c8dc956f65a",
+  "task": "implement scratch verification runner; no application edits"
+}

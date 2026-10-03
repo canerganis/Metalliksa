@@ -1,0 +1,7 @@
+{
+  "command": "npm ci --offline=false --no-audit --no-fund",
+  "exitCode": 1,
+  "log": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\online-temp\\online-npm-ci.log",
+  "endUtc": "2026-10-03T09:40:07.7911855Z",
+  "nodeModulesExists": true
+}

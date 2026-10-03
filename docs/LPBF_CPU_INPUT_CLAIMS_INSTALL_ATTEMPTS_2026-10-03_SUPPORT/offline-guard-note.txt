@@ -1,0 +1,5 @@
+Source-guard record note
+
+Pre-install: all 1,579 file hashes matched the root-created candidate manifest and revision ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce. Post-install-attempt: all 1,579 hashes still matched the manifest and pre-install inventory, zero mismatches. The first post-attempt recording wrapper used a manifest path from the prior scratch directory; its hash pass completed but JSON recording failed. The guard was immediately rerun with the correct manifest path and saved as `clean-source-after.json`. No files were restored or changed to conceal a mismatch.
+
+The initial preflight typo `node.cmd` was not present on PATH and stopped before package install. Corrected preflight used explicit `C:\Program Files\nodejs\node.exe` and `npm.cmd`; it recorded Node 24.20.0, npm 11.19.0 and locked Python 3.12.10 / NumPy 2.2.6 / pydantic 2.13.5. The only pipeline command executed was `npm ci --offline --no-audit --no-fund`; it exited 1 after 141.075 s with ENOTCACHED for `yallist` and npm EPERM cleanup warnings. No network fetch/retry or cleanup was attempted. Lint, unit, and build did not run.

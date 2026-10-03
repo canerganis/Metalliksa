@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "label": "gemini",
+      "requestedModel": "gemini-3.1-pro-high",
+      "cwd": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-gemini-review-gqc3riis",
+      "pid": 29812,
+      "prompt": "provider-gemini-prompt.txt",
+      "response": "provider-gemini-response.log",
+      "sourceFilesShared": false,
+      "skipPermissions": false,
+      "mode": "plan",
+      "exitCode": 0,
+      "elapsed_s": 69.81300000002375,
+      "responseSha256": "364c862727ec2feee94293033a691c6e29da5cc39681504fae5b671cbb9206f4",
+      "responseBytes": 2931
+    },
+    {
+      "label": "sonnet",
+      "requestedModel": "claude-sonnet-5-5-medium",
+      "cwd": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-sonnet-review-j3cf33p5",
+      "pid": 35604,
+      "prompt": "provider-sonnet-prompt.txt",
+      "response": "provider-sonnet-response.log",
+      "sourceFilesShared": false,
+      "skipPermissions": false,
+      "mode": "plan",
+      "exitCode": 0,
+      "elapsed_s": 69.81200000003446,
+      "responseSha256": "e192aacf97a0771236bafffd62628a9eb8e8753db6243ac10d99ef6a0b0f4a94",
+      "responseBytes": 4863
+    },
+    {
+      "label": "opus",
+      "requestedModel": "claude-opus-5-5-high",
+      "cwd": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-opus-review-n9_r1a2v",
+      "pid": 2784,
+      "prompt": "provider-opus-prompt.txt",
+      "response": "provider-opus-response.log",
+      "sourceFilesShared": false,
+      "skipPermissions": false,
+      "mode": "plan",
+      "exitCode": 0,
+      "elapsed_s": 76.78100000001723,
+      "responseSha256": "b03c8a4d82e11f6f8de505bb15c2333c7af9b9a9920378cd97c72e76b1f7027e",
+      "responseBytes": 4502
+    }
+  ],
+  "responsesNeedSourceAudit": true
+}

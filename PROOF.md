@@ -1,3 +1,10 @@
+## 2026-10-03 — ec3a5fc native Node/build ve gerçek model orkestrasyonu
+
+- **Aday / kanıt:** Aynı `ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce` kodunun 1.579 dosyalı commit arşivi; [native yeniden üretim](docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03.md), [eski kurulum denemeleri](docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03.md) ve [orkestrasyon kaydı](docs/LPBF_MODEL_ORCHESTRATION_2026-10-03.md) ayrı hashli ham kanıtlardır. 850 locked npm paketi native ortamda kuruldu; install-script politikası/ağ kontrolleri değişmedi. Mevcut locked Python venv kullanıldı, fresh venv değildir.
+- **Yazılım sonucu:** İlk native unit 370 PASS / 1 FAIL / 1 SKIP, ardından build çalışmadı. Tek watcher hatası private TEMP ancestor ignore eşleşmesiyle yeniden üretildi. Nötr TEMP/TMP ile kaynak/test/timeout değiştirmeden yeni type/lint PASS → tam unit **371 PASS / 0 FAIL / 1 SKIP** → build PASS; her aşamada 1.579 before/after kaynak hash'i eşit. Skip isteğe bağlı CMU payload, büyük chunk uyarısı korunur. Bu devamda yeni npm install yok; önceki başarısız sonuçlar yeniden etiketlenmedi.
+- **Gerçek iş bölümü:** Üç paralel Gemini Pro/Sonnet/Opus yanıtı ve Flash High doğrulama kodu alındı. Sol kodu/kaynak iddialarını denetledi; root Flash'ın byte-identical helper'ini çalıştırdı, Luna kayıtları doğruladı. CLI seçimi kayıtlı, server-side model attestation yok; model önerileri test veya bilimsel kanıt değildir.
+- **Açık kapılar:** Aynı adayda gerçek UI/klavye, stale/cancel/reload, portable restore ve owner-only recovery birleşik kabulü henüz yok. Fiziksel yakınsama inconclusive, NIST unavailable, deneysel unvalidated; full V1/production-ready hükmü verilmez.
+
 ## 2026-10-03 — ec3a5fc adayında ayrı CPU sayısal kabul
 
 - **Aday / kaynak:** `ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce`; commit arşivinden çıkarılan 1.579 kaynak dosyası. [Sayısal kayıt](docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.md) komutları, ham logları, gözlem harness'ini ve before/after SHA envanterlerini saklar. Bağımsız Luna incelemesi dosya hashlerini commit blob'larıyla da eşleştirdi; kirli paylaşılan checkout'ın tamamının clean olduğu iddia edilmez.

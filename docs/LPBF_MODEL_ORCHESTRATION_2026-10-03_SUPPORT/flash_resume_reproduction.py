@@ -1,0 +1,298 @@
+import os
+import sys
+import json
+import time
+import hashlib
+import tempfile
+import subprocess
+from pathlib import Path
+from datetime import datetime, timezone
+
+
+def write_exclusive_json(target_path: Path, data: dict) -> None:
+    serialized = json.dumps(data, indent=2) + "\n"
+    payload = serialized.replace("\r\n", "\n").encode("utf-8")
+    with open(target_path, "xb") as f:
+        f.write(payload)
+
+
+def compute_file_sha256(file_path: Path) -> str:
+    hasher = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        while chunk := f.read(65536):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def evaluate_guard(
+    stage: str,
+    phase: str,
+    manifest: dict,
+    snapshot_dir: Path,
+    output_dir: Path,
+) -> dict:
+    stage_slug = stage.replace(":", "-")
+    guard_path = output_dir / f"native-neutral-{stage_slug}-{phase}-guard.json"
+
+    target_revision = manifest["revision"]
+    target_mapping = manifest["sha256"]
+
+    current_hashes: dict[str, str] = {}
+    mismatches: dict[str, dict] = {}
+
+    for rel_str, expected_hash in target_mapping.items():
+        file_path = snapshot_dir / Path(rel_str)
+        if not file_path.is_file():
+            mismatches[rel_str] = {
+                "expected": expected_hash,
+                "actual": None,
+                "error": "file_not_found",
+            }
+        else:
+            actual_hash = compute_file_sha256(file_path)
+            current_hashes[rel_str] = actual_hash
+            if actual_hash != expected_hash:
+                mismatches[rel_str] = {
+                    "expected": expected_hash,
+                    "actual": actual_hash,
+                    "error": "hash_mismatch",
+                }
+
+    guard_record = {
+        "stage": stage,
+        "phase": phase,
+        "actualSnapshotPath": str(snapshot_dir.resolve()),
+        "snapshot": str(snapshot_dir.resolve()),
+        "revision": target_revision,
+        "count": len(current_hashes),
+        "expectedCount": len(target_mapping),
+        "mismatches": mismatches,
+        "hashes": current_hashes,
+        "status": "PASS" if not mismatches else "FAIL",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    write_exclusive_json(guard_path, guard_record)
+
+    if mismatches:
+        raise RuntimeError(
+            f"Source manifest guard mismatch at stage '{stage}' ({phase}): "
+            f"{len(mismatches)} mismatches recorded in {guard_path.name}"
+        )
+
+    return guard_record
+
+
+def main() -> int:
+    task_dir = Path(__file__).resolve().parent
+    root_dir = Path(__file__).resolve().parents[1]
+    snapshot_dir = root_dir / ".runtime" / "v1-input-claims-native-20261003"
+    manifest_path = task_dir / "source-manifest.json"
+
+    node_bin = Path("C:/Program Files/nodejs/node.exe")
+    npm_cli = Path("C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js")
+    locked_python = root_dir / ".runtime" / "lpbf-win-py312" / "Scripts" / "python.exe"
+
+    if not snapshot_dir.is_dir():
+        raise FileNotFoundError(f"Snapshot directory not found: {snapshot_dir}")
+    if not node_bin.is_file():
+        raise FileNotFoundError(f"Node executable not found: {node_bin}")
+    if not npm_cli.is_file():
+        raise FileNotFoundError(f"npm CLI script not found: {npm_cli}")
+    if not locked_python.is_file():
+        raise FileNotFoundError(f"Locked Python executable not found: {locked_python}")
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Source manifest not found: {manifest_path}")
+
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)
+
+    expected_rev = "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce"
+    expected_count = 1579
+
+    actual_rev = manifest_data.get("revision")
+    if actual_rev != expected_rev:
+        raise ValueError(
+            f"Manifest revision mismatch: expected '{expected_rev}', got '{actual_rev}'"
+        )
+
+    actual_count = manifest_data.get("fileCount")
+    if actual_count != expected_count:
+        raise ValueError(
+            f"Manifest fileCount mismatch: expected {expected_count}, got {actual_count}"
+        )
+
+    source_mapping = manifest_data.get("sha256")
+    if not isinstance(source_mapping, dict) or len(source_mapping) != expected_count:
+        raise ValueError(
+            f"Manifest sha256 mapping length mismatch: expected {expected_count}, got {len(source_mapping) if isinstance(source_mapping, dict) else 'invalid'}"
+        )
+
+    prohibited_vars = [
+        "CODEX_SANDBOX_NETWORK_DISABLED",
+        "NPM_CONFIG_OFFLINE",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "NPM_CONFIG_PROXY",
+        "NPM_CONFIG_HTTPS_PROXY",
+    ]
+    found_prohibited = [v for v in prohibited_vars if v in os.environ]
+    if found_prohibited:
+        raise RuntimeError(
+            f"Prohibited environment variable(s) present: {found_prohibited}. "
+            "Per security control, these must be absent and cannot be unset."
+        )
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if not local_app_data:
+        raise RuntimeError("Missing required environment variable: LOCALAPPDATA")
+
+    temp_parent = Path(local_app_data) / "Temp"
+    temp_parent.mkdir(parents=True, exist_ok=True)
+
+    neutral_temp = Path(
+        tempfile.mkdtemp(prefix="metalliksa-native-neutral-", dir=temp_parent)
+    ).resolve()
+
+    for part in neutral_temp.parts:
+        if part == ".runtime" or part.startswith(".tmp-lpbf"):
+            raise RuntimeError(
+                f"Prohibited ancestor component '{part}' detected in neutral temp path: {neutral_temp}"
+            )
+
+    child_env = os.environ.copy()
+    child_env["TEMP"] = str(neutral_temp)
+    child_env["TMP"] = str(neutral_temp)
+    child_env["METALLIX_PYTHON"] = str(locked_python.resolve())
+    child_env["PYTHONDONTWRITEBYTECODE"] = "1"
+
+    stages = [
+        ("lint", ["run", "lint"]),
+        ("test:unit", ["run", "test:unit"]),
+        ("build", ["run", "build"]),
+    ]
+
+    records = []
+    all_guards_matched = True
+    summary_path = task_dir / "native-neutral-run-summary.json"
+
+    try:
+        for stage, args in stages:
+            stage_slug = stage.replace(":", "-")
+            cmd = [str(node_bin), str(npm_cli)] + args
+
+            pre_guard = evaluate_guard(stage, "pre", manifest_data, snapshot_dir, task_dir)
+            if pre_guard["mismatches"]:
+                all_guards_matched = False
+
+            log_file_path = task_dir / f"native-neutral-{stage_slug}.log"
+            with open(log_file_path, "xb") as log_file:
+                start_time = time.perf_counter()
+                proc = subprocess.Popen(
+                    cmd,
+                    cwd=str(snapshot_dir),
+                    env=child_env,
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                )
+                print(f"Stage: {stage} PID: {proc.pid}", flush=True)
+                exit_code = proc.wait()
+                elapsed_s = time.perf_counter() - start_time
+
+            raw_log_bytes = log_file_path.read_bytes()
+            log_sha256 = hashlib.sha256(raw_log_bytes).hexdigest()
+
+            exit_record = {
+                "stage": stage,
+                "command": cmd,
+                "cwd": str(snapshot_dir.resolve()),
+                "pid": proc.pid,
+                "exitCode": exit_code,
+                "elapsed_s": elapsed_s,
+                "raw_log_sha256": log_sha256,
+                "rawLogSha256": log_sha256,
+                "logPath": str(log_file_path.resolve()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            exit_record_path = task_dir / f"native-neutral-{stage_slug}-exit.json"
+            write_exclusive_json(exit_record_path, exit_record)
+
+            post_guard = evaluate_guard(stage, "post", manifest_data, snapshot_dir, task_dir)
+            if post_guard["mismatches"]:
+                all_guards_matched = False
+
+            stage_summary = {
+                "stage": stage,
+                "command": cmd,
+                "exitCode": exit_code,
+                "elapsed_s": elapsed_s,
+                "rawLogSha256": log_sha256,
+                "log": str(log_file_path.name),
+                "exitRecord": str(exit_record_path.name),
+                "preGuard": f"native-neutral-{stage_slug}-pre-guard.json",
+                "postGuard": f"native-neutral-{stage_slug}-post-guard.json",
+            }
+            records.append(stage_summary)
+
+            if exit_code != 0:
+                print(
+                    f"Stage '{stage}' failed with exit code {exit_code}. Stopping further stages.",
+                    flush=True,
+                )
+                break
+
+        is_pass = (
+            len(records) == len(stages)
+            and all(r["exitCode"] == 0 for r in records)
+            and all_guards_matched
+        )
+
+        summary_data = {
+            "status": "PASS" if is_pass else "FAIL",
+            "result": "PASS" if is_pass else "FAIL",
+            "pass": is_pass,
+            "all3CommandsExit0": (
+                len(records) == len(stages) and all(r["exitCode"] == 0 for r in records)
+            ),
+            "allGuardsMatched": all_guards_matched,
+            "reusedExistingInstalledDependencyTree": True,
+            "noNewNpmInstall": True,
+            "installedDependencyTree": "reused existing installed dependency tree, no new npm install in this sequence",
+            "installationEvidence": "recorded separately",
+            "snapshot": str(snapshot_dir.resolve()),
+            "neutralTemp": str(neutral_temp),
+            "records": records,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        write_exclusive_json(summary_path, summary_data)
+
+        return 0 if is_pass else 1
+
+    except Exception as exc:
+        if not summary_path.exists():
+            fail_summary = {
+                "status": "FAIL",
+                "result": "FAIL",
+                "pass": False,
+                "all3CommandsExit0": False,
+                "allGuardsMatched": False,
+                "reusedExistingInstalledDependencyTree": True,
+                "noNewNpmInstall": True,
+                "installedDependencyTree": "reused existing installed dependency tree, no new npm install in this sequence",
+                "installationEvidence": "recorded separately",
+                "snapshot": str(snapshot_dir.resolve()),
+                "neutralTemp": str(neutral_temp) if "neutral_temp" in locals() else None,
+                "records": records,
+                "error": str(exc),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            try:
+                write_exclusive_json(summary_path, fail_summary)
+            except Exception:
+                pass
+        raise
+
+
+if __name__ == "__main__":
+    sys.exit(main())

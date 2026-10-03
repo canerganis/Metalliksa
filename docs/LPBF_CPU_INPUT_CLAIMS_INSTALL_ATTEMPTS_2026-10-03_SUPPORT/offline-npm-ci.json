@@ -1,0 +1,10 @@
+{
+  "command": "npm ci --offline --no-audit --no-fund",
+  "exitCode": 1,
+  "durationSeconds": 141.0748332,
+  "log": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp\\clean-npm-ci.log",
+  "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+  "PYTHONDONTWRITEBYTECODE": "1",
+  "TEMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp",
+  "TMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp"
+}
