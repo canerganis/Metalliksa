@@ -148,6 +148,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     sources: [exactLink] });
 
   const proxyRunIds = ['4', '5', '6'].map(value => value.repeat(32));
+  const sameWrongDiameterRunIds = ['a1', 'b1', 'c1'].map(value => value.repeat(16));
   const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0', 'c0'].map(value => value.repeat(16)));
   const sectionFailureIds = ['2a', '2b', '2c', '2d', '2e', '2f', '30', '31'].map(value => value.repeat(16));
   const proxyResultJson = new Map<string, string>();
@@ -220,6 +221,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       sources: [exactLink] });
   }
   for (const runId of proxyRunIds) await saveProxyRun(runId);
+  for (const runId of sameWrongDiameterRunIds) await saveProxyRun(runId, 'wrong-diameter');
   const corruptions = ['wrong-diameter', 'distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
   for (let index = 0; index < malformedProxyRunIds.length; index++) await saveProxyRun(malformedProxyRunIds[index], corruptions[index]);
   const sectionCorruptions = ['missing-descriptor', 'mismatched-descriptor', 'missing-manifest',
@@ -252,11 +254,28 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
     return { status: response.status, body: await response.json() };
   }
-  async function postCampaignPreview(runIds: string[]) {
+  async function postCampaignPreview(runIds: string[], caseNumber = '0') {
     const response = await fetch(`${endpoint}/proxy-campaigns/preview`, { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber: '0' }) });
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber }) });
     return { status: response.status, body: await response.json() };
   }
+
+  const wrongDiameterHashes = sameWrongDiameterRunIds.map(id =>
+    JSON.parse(proxyResultJson.get(id)!).coreContract.inputSha256);
+  assert.equal(new Set(wrongDiameterHashes).size, 1, 'distinct runs share the same recomputed wrong-diameter input hash');
+  const wrongDiameterPreview = await postCampaignPreview(sameWrongDiameterRunIds);
+  assert.equal(wrongDiameterPreview.status, 200);
+  assert.equal(wrongDiameterPreview.body.campaign, null);
+  assert.deepEqual(wrongDiameterPreview.body.validation.reasons, [
+    `Archived run ${sameWrongDiameterRunIds[0]} is not a matching, core-bound IN718 bare-plate thermal track for Table 4 case 0.`,
+  ]);
+
+  const unsupportedCasePreview = await postCampaignPreview(proxyRunIds, '1.1');
+  assert.equal(unsupportedCasePreview.status, 200);
+  assert.equal(unsupportedCasePreview.body.campaign, null);
+  assert.deepEqual(unsupportedCasePreview.body.validation.reasons, [
+    'Proxy campaign v2 currently supports Table 4 case 0 only; other cases are unavailable.',
+  ]);
 
   const proxyPreview = await postCampaignPreview(proxyRunIds);
   assert.equal(proxyPreview.status, 200);
@@ -266,6 +285,15 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(proxyPreview.body.campaign.claimBoundary.experimentalValidation, false);
   assert.equal(proxyPreview.body.campaign.tracks.length, 3);
   assert.equal(proxyPreview.body.campaign.schemaVersion, 2);
+  const expectedV2CampaignId = sha(JSON.stringify({ schemaVersion: 2, runIds: proxyRunIds, caseNumber: '0',
+    revision: proxyPreview.body.campaign.sourceBinding.revision,
+    doc: proxyPreview.body.campaign.sourceBinding.documentSha256 })).slice(0, 32);
+  const v1FormulaCampaignId = sha(JSON.stringify({ schemaVersion: 1, runIds: proxyRunIds, caseNumber: '0',
+    revision: proxyPreview.body.campaign.sourceBinding.revision,
+    doc: proxyPreview.body.campaign.sourceBinding.documentSha256 })).slice(0, 32);
+  assert.equal(proxyPreview.body.campaign.campaignId, expectedV2CampaignId);
+  assert.notEqual(proxyPreview.body.campaign.campaignId, v1FormulaCampaignId,
+    'v2 campaign ID is derived from the v2 formula, not the legacy v1 formula');
   assert.deepEqual(proxyPreview.body.campaign.beamInputDeclaration, {
     status: 'published-source-declared', definition: 'D4sigma', value_um: tableCase.beamDiameterD4sigma_um,
     mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false,
@@ -355,6 +383,11 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds, caseNumber: '0',
       beamInputDeclaration: proxyPreview.body.campaign.beamInputDeclaration }) });
   assert.equal(forgedDeclaration.status, 400);
+  const forgedCreateDeclaration = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds, caseNumber: '0',
+      previewSha256: proxyPreview.body.previewSha256,
+      beamInputDeclaration: { ...proxyPreview.body.campaign.beamInputDeclaration, value_um: 999 } }) });
+  assert.equal(forgedCreateDeclaration.status, 400);
 
   const valid = await post(boundId, { caseNumber: '0' });
   assert.equal(valid.status, 200);

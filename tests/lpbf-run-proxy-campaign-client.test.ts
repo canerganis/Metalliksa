@@ -86,18 +86,21 @@ test('proxy campaign client accepts v2 declared input while preserving legacy v1
   t.mock.restoreAll();
 });
 
-test('proxy campaign client rejects forged or mismatched v2 declarations', async t => {
+test('proxy campaign client rejects isolated v2 declaration, root, and replicate mutations', async t => {
   const valid = v2CampaignDocument();
-  const invalids = [
-    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, value_um: 68 } },
-    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, sourceBinding: { ...valid.sourceBinding, revision: 5 } } },
-    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, status: 'measured' } },
-    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, measuredProfileMatched: true } },
-    { ...valid, beamInputDeclaration: { ...valid.beamInputDeclaration, forged: true } },
+  const invalids: [string, (campaign: any) => void][] = [
+    ['wrong definition', campaign => { campaign.beamInputDeclaration.definition = 'FWHM'; }],
+    ['wrong mappingStatus', campaign => { campaign.beamInputDeclaration.mappingStatus = 'measured'; }],
+    ['missing declaration', campaign => { delete campaign.beamInputDeclaration; }],
+    ['unknown root key', campaign => { campaign.unexpected = true; }],
+    ['wrong replicateSemantics', campaign => { campaign.samplingPlan.replicateSemantics = 'independent-computational-runs-only'; }],
+    ['wrong replicateKind', campaign => { campaign.tracks[0].replicateKind = 'independent-computational-run'; }],
   ];
-  for (const campaign of invalids) {
+  for (const [label, mutate] of invalids) {
+    const campaign = structuredClone(valid);
+    mutate(campaign);
     t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ campaign, validation, previewSha256 })));
-    await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i);
+    await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i, label);
     t.mock.restoreAll();
   }
 });

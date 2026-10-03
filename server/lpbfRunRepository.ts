@@ -27,9 +27,11 @@ const NIST_TABLE4_ARTIFACT_SHA256 = 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c
 const NIST_TABLE4_ARTIFACT_SIZE = 4321;
 const digest = (text: string) => createHash('sha256').update(text).digest('hex');
 const hash = (value: unknown) => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
-function keys(value: any, fields: string[]) {
+function keys(value: any, fields: string[], optional: string[] = []) {
   if (!value || typeof value !== 'object' || Array.isArray(value)
-    || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value, key))) throw new Error('Invalid run fields');
+    || Object.keys(value).length < fields.length || Object.keys(value).length > fields.length + optional.length
+    || fields.some(key => !Object.hasOwn(value, key))
+    || Object.keys(value).some(key => !fields.includes(key) && !optional.includes(key))) throw new Error('Invalid run fields');
 }
 function finite(value: unknown, depth = 0): void {
   if (depth > 48) throw new Error('Run JSON too deeply nested');
@@ -180,6 +182,9 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
     || ![1, 2].includes(document.schemaVersion) || document.kind !== 'lpbf-nist-amb2022-03-proxy-campaign'
     || typeof document.campaignId !== 'string' || !/^[a-f0-9]{32}$/.test(document.campaignId)
     || !Array.isArray(document.tracks) || document.tracks.length !== 3) throw new Error('Invalid proxy campaign document');
+  if (document.schemaVersion === 1 && Object.hasOwn(document, 'beamInputDeclaration')) {
+    throw new Error('Invalid v1 proxy campaign: beamInputDeclaration is v2-only');
+  }
   if (document.schemaVersion === 2) {
     try {
       keys(document, ['schemaVersion', 'kind', 'campaignId', 'benchmark', 'caseNumber', 'sourceBinding',
@@ -198,30 +203,107 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
     const declaration = document.beamInputDeclaration;
     try {
       keys(declaration, ['status', 'definition', 'value_um', 'mappingStatus', 'measuredProfileMatched', 'sourceBinding']);
-      keys(document.sourceBinding, ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber']);
-    } catch { throw new Error('Invalid v2 proxy campaign beam input declaration'); }
+      keys(document.sourceBinding, ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber'], ['experimentalTrackIds']);
+    } catch { throw new Error('Invalid v2 proxy campaign source binding or beam input declaration fields'); }
+    const sourceBinding = document.sourceBinding;
     if (declaration.status !== 'published-source-declared' || declaration.definition !== 'D4sigma'
       || typeof declaration.value_um !== 'number' || !Number.isFinite(declaration.value_um) || declaration.value_um <= 0
       || declaration.mappingStatus !== 'conditional-ideal-Gaussian' || declaration.measuredProfileMatched !== false
       || !isDeepStrictEqual(declaration.sourceBinding, document.sourceBinding)
       || document.benchmark !== 'AMB2022-03-TMPG' || document.caseNumber !== '0'
-      || document.sourceBinding.caseNumber !== document.caseNumber
-      || document.sourceBinding.datasetId !== NIST_TABLE4_DATASET_ID
-      || document.sourceBinding.artifactPath !== NIST_TABLE4_ARTIFACT_PATH
-      || document.sourceBinding.artifactSha256 !== NIST_TABLE4_ARTIFACT_SHA256
-      || document.sourceBinding.artifactSizeBytes !== NIST_TABLE4_ARTIFACT_SIZE
+      || sourceBinding.caseNumber !== document.caseNumber
+      || sourceBinding.datasetId !== NIST_TABLE4_DATASET_ID
+      || sourceBinding.artifactPath !== NIST_TABLE4_ARTIFACT_PATH
+      || sourceBinding.artifactSha256 !== NIST_TABLE4_ARTIFACT_SHA256
+      || sourceBinding.artifactSizeBytes !== NIST_TABLE4_ARTIFACT_SIZE
       || declaration.value_um !== 67
-      || !Number.isSafeInteger(document.sourceBinding.revision) || document.sourceBinding.revision < 1
-      || !hash(document.sourceBinding.documentSha256) || !hash(document.sourceBinding.artifactSha256)
-      || !Number.isSafeInteger(document.sourceBinding.artifactSizeBytes) || document.sourceBinding.artifactSizeBytes <= 0) {
+      || !Number.isSafeInteger(sourceBinding.revision) || sourceBinding.revision < 1
+      || !hash(sourceBinding.documentSha256) || !hash(sourceBinding.artifactSha256)
+      || !Number.isSafeInteger(sourceBinding.artifactSizeBytes) || sourceBinding.artifactSizeBytes <= 0
+      || (Object.hasOwn(sourceBinding, 'experimentalTrackIds')
+        && (!Array.isArray(sourceBinding.experimentalTrackIds)
+          || sourceBinding.experimentalTrackIds.some((value: unknown) => typeof value !== 'string' || !value.trim())))) {
       throw new Error('Invalid v2 proxy campaign beam input declaration');
     }
     const expectedId = digest(JSON.stringify({ schemaVersion: 2, runIds: document.tracks.map((track: any) => track.runIdentity.runId),
       caseNumber: document.caseNumber, revision: document.sourceBinding.revision, doc: document.sourceBinding.documentSha256 })).slice(0, 32);
     if (document.campaignId !== expectedId) throw new Error('Invalid v2 proxy campaign identity');
-    if (document.samplingPlan?.replicateSemantics !== 'reproducibility-evidence-not-independent-replicates'
-      || document.tracks.some((track: any) => track.replicateKind !== 'reproducibility-execution')) {
-      throw new Error('Invalid v2 proxy campaign reproducibility semantics');
+    const schemaError = (message: string): never => { throw new Error(`Invalid v2 proxy campaign ${message}`); };
+    try {
+      keys(document.claimBoundary, ['resultKind', 'validationStatus', 'experimentalValidation', 'opticalOperatorMatched']);
+    } catch { schemaError('claim boundary fields'); }
+    if (document.claimBoundary.resultKind !== 'thermal-proxy-screening'
+      || document.claimBoundary.validationStatus !== 'unvalidated'
+      || document.claimBoundary.experimentalValidation !== false
+      || document.claimBoundary.opticalOperatorMatched !== false) schemaError('claim boundary or evidence flags');
+    try { keys(document.samplingPlan, ['coordinateFrame', 'scanDirection', 'sectionPositions_mm',
+      'expectedTrackCount', 'expectedObservationCount', 'replicateSemantics']); }
+    catch { schemaError('sampling plan fields'); }
+    if (document.samplingPlan.coordinateFrame !== 'scan-start-relative' || document.samplingPlan.scanDirection !== '+X'
+      || !Array.isArray(document.samplingPlan.sectionPositions_mm)
+      || !isDeepStrictEqual(document.samplingPlan.sectionPositions_mm, [4.9, 6.0])
+      || document.samplingPlan.expectedTrackCount !== 3 || document.samplingPlan.expectedObservationCount !== 6
+      || document.samplingPlan.replicateSemantics !== 'reproducibility-evidence-not-independent-replicates') {
+      schemaError('sampling plan values or reproducibility semantics');
+    }
+    for (const [trackIndex, track] of document.tracks.entries()) {
+      try { keys(track, ['simulatedTrackId', 'experimentalTrackId', 'replicateKind', 'runIdentity', 'observations']); }
+      catch { schemaError(`track ${trackIndex} fields`); }
+      if (typeof track.simulatedTrackId !== 'string' || !track.simulatedTrackId.trim()
+        || track.experimentalTrackId !== null || track.replicateKind !== 'reproducibility-execution') {
+        schemaError(`track ${trackIndex} identity or reproducibility kind`);
+      }
+      const identity = track.runIdentity;
+      try { keys(identity, ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'materialSha256',
+        'materialId', 'materialRevisionSha256', 'coreContract']); }
+      catch { schemaError(`track ${trackIndex} run identity fields`); }
+      if (track.simulatedTrackId !== `sim-${identity.runId}`) schemaError(`track ${trackIndex} simulated track binding`);
+      try { keys(identity.resultArtifact, ['path', 'sha256', 'size_bytes']); }
+      catch { schemaError(`track ${trackIndex} result artifact fields`); }
+      if (identity.resultArtifact.path !== 'capture/result.json' || !hash(identity.resultArtifact.sha256)
+        || !Number.isSafeInteger(identity.resultArtifact.size_bytes) || identity.resultArtifact.size_bytes <= 0
+        || !hash(identity.inputSha256) || !hash(identity.materialSha256)
+        || typeof identity.materialId !== 'string' || !identity.materialId.trim()
+        || !hash(identity.materialRevisionSha256)) schemaError(`track ${trackIndex} run identity values`);
+      try { keys(identity.coreContract, ['schemaVersion', 'modelId', 'solverId', 'actualBackend']); }
+      catch { schemaError(`track ${trackIndex} core contract fields`); }
+      if (identity.coreContract.schemaVersion !== 1 || typeof identity.coreContract.modelId !== 'string'
+        || !identity.coreContract.modelId.trim() || typeof identity.coreContract.solverId !== 'string'
+        || !identity.coreContract.solverId.trim() || typeof identity.coreContract.actualBackend !== 'string'
+        || !identity.coreContract.actualBackend.trim()) schemaError(`track ${trackIndex} core contract values`);
+      if (!Array.isArray(track.observations) || track.observations.length !== 2) schemaError(`track ${trackIndex} observations missing or incomplete`);
+      for (const [observationIndex, observation] of track.observations.entries()) {
+        try { keys(observation, ['sectionId', 'coordinateFrame', 'scanDirection', 'distanceFromScanStart_mm', 'surfaceZ_m',
+          'status', 'geometry', 'operator', 'provenance']); }
+        catch { schemaError(`track ${trackIndex} observation ${observationIndex} fields`); }
+        if (observation.sectionId !== ['x-4p9mm', 'x-6p0mm'][observationIndex]
+          || observation.coordinateFrame !== 'scan-start-relative' || observation.scanDirection !== '+X'
+          || observation.distanceFromScanStart_mm !== [4.9, 6.0][observationIndex]
+          || observation.surfaceZ_m !== 0 || observation.status !== 'thermal-proxy') {
+          schemaError(`track ${trackIndex} observation ${observationIndex} values`);
+        }
+        try { keys(observation.geometry, ['width_um', 'depth_um']); }
+        catch { schemaError(`track ${trackIndex} observation ${observationIndex} geometry fields`); }
+        if (typeof observation.geometry.width_um !== 'number' || !Number.isFinite(observation.geometry.width_um)
+          || observation.geometry.width_um <= 0 || typeof observation.geometry.depth_um !== 'number'
+          || !Number.isFinite(observation.geometry.depth_um) || observation.geometry.depth_um <= 0) {
+          schemaError(`track ${trackIndex} observation ${observationIndex} geometry values`);
+        }
+        try { keys(observation.operator, ['sectionOperatorId', 'interpolationOperatorId', 'contourOperatorId', 'evidenceClass']); }
+        catch { schemaError(`track ${trackIndex} observation ${observationIndex} operator fields`); }
+        if (observation.operator.sectionOperatorId !== 'bare-plate-corridor-accepted-peak-x-linear-section-v1'
+          || !['exact-cell-center', 'linear-interpolation-between-accepted-peak-temperature-planes-v1'].includes(observation.operator.interpolationOperatorId)
+          || observation.operator.contourOperatorId !== 'linear-liquidus-crossings-between-cell-centers-v1'
+          || observation.operator.evidenceClass !== 'thermal-proxy-only') schemaError(`track ${trackIndex} observation ${observationIndex} operator values`);
+        try { keys(observation.provenance, ['sourceBinding', 'runIdentity']); }
+        catch { schemaError(`track ${trackIndex} observation ${observationIndex} provenance fields`); }
+        if (!isDeepStrictEqual(observation.provenance.sourceBinding, sourceBinding)
+          || !isDeepStrictEqual(observation.provenance.runIdentity, identity)) schemaError(`track ${trackIndex} observation ${observationIndex} provenance binding`);
+      }
+    }
+    if (document.samplingPlan.expectedTrackCount !== document.tracks.length
+      || document.samplingPlan.expectedObservationCount !== document.tracks.reduce((total: number, track: any) => total + track.observations.length, 0)) {
+      schemaError('sampling plan observation counts');
     }
   }
   return document;

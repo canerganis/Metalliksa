@@ -703,7 +703,7 @@ export function NistProxyCampaign({ runs }: { runs: RunArchiveList }) {
 
   return <section aria-label="NIST proxy campaign" className="space-y-3 rounded-xl border border-slate-700 p-4 text-sm">
     <div><h4 className="font-medium">NIST AMB2022-03 · six-section thermal proxy campaign</h4>
-      <p className="mt-1 text-xs text-amber-200">Proxy screening only · unvalidated. This flow records six simulated section observations from three archived runs. Published nominal diameter adopted as a declared Gaussian model input. It does not calculate optical residuals or claim experimental validation.</p></div>
+      <p className="mt-1 text-xs text-amber-200">Proxy screening only · unvalidated · reproducibility evidence only. This flow records six simulated section observations from three archived runs. Published nominal diameter adopted as a declared Gaussian model input with conditional ideal-Gaussian mapping. It does not calculate optical residuals or claim experimental validation.</p></div>
     {candidates.length < 3 ? <p className="text-slate-300">Three archived transient-thermal runs are required. Available: {candidates.length}.</p>
       : <>
         {currentRunIds.map((runId, index) => <label key={index} className="block">Archived thermal run {index + 1}
@@ -739,7 +739,9 @@ export function NistProxyCampaign({ runs }: { runs: RunArchiveList }) {
       <h5 className="font-medium">Saved proxy campaigns · unvalidated</h5>
       {savedCampaigns.map(record => <details key={record.campaignId} className="rounded-lg border border-slate-700 p-3">
         <summary className="cursor-pointer">Case {record.document.caseNumber} · {record.createdAt} · {record.campaignId.slice(0, 8)}…</summary>
-        <p className="mt-2 text-xs text-slate-300">Thermal proxy screening only · no experimental validation · no optical residuals · SHA-256 {record.documentSha256}</p>
+        <p className="mt-2 text-xs text-slate-300">{record.document.schemaVersion === 2
+          ? 'Reproducibility evidence only · conditional ideal-Gaussian mapping · no experimental validation · no optical residuals'
+          : 'Thermal proxy screening only · no experimental validation · no optical residuals'} · SHA-256 {record.documentSha256}</p>
         <ul className="mt-2 space-y-1">{record.document.tracks.flatMap(track => track.observations.map(observation =>
           <li key={`${track.simulatedTrackId}:${observation.sectionId}`}>{track.runIdentity.runId.slice(0, 8)}… · {observation.distanceFromScanStart_mm} mm · simulated width {observation.geometry.width_um.toFixed(2)} µm · depth {observation.geometry.depth_um.toFixed(2)} µm</li>))}</ul>
       </details>)}
@@ -754,6 +756,7 @@ function ProxyCampaignSummary({ result }: { result: NistProxyCampaignPreview }) 
   </div>;
   return <div className="space-y-2" aria-live="polite">
     <p className="font-medium">Six thermal-proxy observations · proxy screening only · unvalidated</p>
+    {result.campaign.schemaVersion === 2 && <p className="text-xs text-slate-300">Reproducibility evidence only · conditional ideal-Gaussian mapping.</p>}
     <p>Case {result.campaign.caseNumber}; exact archived Table 4 revision {result.campaign.sourceBinding.revision}.</p>
     <p className="text-xs text-slate-300">Experimental validation: no · numerical convergence: not evaluated · comparison residuals: not calculated.</p>
     <ul className="space-y-1 text-slate-200">{result.campaign.tracks.flatMap(track => track.observations.map(observation =>

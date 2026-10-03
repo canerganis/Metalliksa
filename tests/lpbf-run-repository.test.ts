@@ -13,6 +13,38 @@ import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+function v2Campaign(runs: Array<{ runId: string; documentSha256: string }>, sourceBinding: any) {
+  const runIds = runs.map(run => run.runId);
+  const runIdentity = (runId: string) => ({ runId, runDocumentSha256: runs.find(run => run.runId === runId)!.documentSha256,
+    resultArtifact: { path: 'capture/result.json', sha256: sha(`result-${runId}`), size_bytes: 100 },
+    inputSha256: sha(`input-${runId}`), materialSha256: sha(`material-${runId}`), materialId: 'in718',
+    materialRevisionSha256: sha(`revision-${runId}`),
+    coreContract: { schemaVersion: 1, modelId: 'thermal-v1', solverId: 'solver-v1', actualBackend: 'cpu' } });
+  const tracks = runIds.map(runId => {
+    const identity = runIdentity(runId);
+    const observations = [4.9, 6.0].map((distance, index) => ({ sectionId: ['x-4p9mm', 'x-6p0mm'][index],
+      coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: distance,
+      surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100, depth_um: 80 },
+      operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+        interpolationOperatorId: index ? 'exact-cell-center' : 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+        contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
+      provenance: { sourceBinding: structuredClone(sourceBinding), runIdentity: structuredClone(identity) } }));
+    return { simulatedTrackId: `sim-${runId}`, experimentalTrackId: null, replicateKind: 'reproducibility-execution',
+      runIdentity: identity, observations };
+  });
+  const campaign = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
+    campaignId: '', caseNumber: '0', sourceBinding: structuredClone(sourceBinding),
+    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
+      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: structuredClone(sourceBinding) },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
+      experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: [4.9, 6.0],
+      expectedTrackCount: 3, expectedObservationCount: 6,
+      replicateSemantics: 'reproducibility-evidence-not-independent-replicates' }, tracks };
+  campaign.campaignId = sha(JSON.stringify({ schemaVersion: 2, runIds, caseNumber: '0',
+    revision: sourceBinding.revision, doc: sourceBinding.documentSha256 })).slice(0, 32);
+  return campaign;
+}
 function capture(runKind?: 'analytical-screening' | 'build-screening' | 'transient-thermal') {
   const result: any = { schemaVersion: 1, requestedMode: 'screening', effectiveMode: 'screening',
     fallbackReason: null, validationStatus: 'unvalidated', productionReady: false, confidence: 'low',
@@ -185,16 +217,7 @@ test('saved proxy campaigns list in creation order and reject broken archived re
     campaignId: 'e'.repeat(32), sourceBinding,
     tracks: runs.map(run => ({ runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
   repository.saveProxyCampaign(campaign);
-  const v2 = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
-    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: runs.map(run => run.document.runId), caseNumber: '0',
-      revision: 1, doc: v2SourceBinding.documentSha256 })).slice(0, 32), caseNumber: '0', sourceBinding: v2SourceBinding,
-    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
-      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: v2SourceBinding },
-    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
-      experimentalValidation: false, opticalOperatorMatched: false },
-    samplingPlan: { replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
-    tracks: runs.map(run => ({ replicateKind: 'reproducibility-execution',
-      runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
+  const v2 = v2Campaign(runs.map(run => ({ runId: run.document.runId, documentSha256: run.documentSha256 })), v2SourceBinding);
   repository.saveProxyCampaign(v2);
   for (const mutate of [
     (doc: any) => { doc.beamInputDeclaration.value_um = 72; },
@@ -202,10 +225,30 @@ test('saved proxy campaigns list in creation order and reject broken archived re
     (doc: any) => { doc.beamInputDeclaration.status = 'measured'; },
     (doc: any) => { doc.beamInputDeclaration.measuredProfileMatched = true; },
     (doc: any) => { doc.beamInputDeclaration.clientNote = 'forged'; },
+    (doc: any) => { doc.beamInputDeclaration.definition = 'FWHM'; },
+    (doc: any) => { doc.beamInputDeclaration.mappingStatus = 'measured-profile-matched'; },
+    (doc: any) => { delete doc.beamInputDeclaration; },
+    (doc: any) => { doc.clientNote = 'forged'; },
+    (doc: any) => { doc.claimBoundary.experimentalValidation = true; },
+    (doc: any) => { doc.claimBoundary.validationStatus = 'validated'; },
+    (doc: any) => { doc.samplingPlan.replicateSemantics = 'independent-experimental-replicates'; },
+    (doc: any) => { doc.tracks[0].replicateKind = 'independent-computational-run'; },
+    (doc: any) => { delete doc.tracks[0].observations; },
+    (doc: any) => { doc.tracks[0].observations[0].geometry.clientNote = 'forged'; },
   ]) {
     const invalid = structuredClone(v2); mutate(invalid);
     assert.throws(() => repository.saveProxyCampaign(invalid), /v2 proxy campaign/i);
   }
+  const independentBinding = structuredClone(v2);
+  assert.notEqual(independentBinding.sourceBinding, independentBinding.beamInputDeclaration.sourceBinding);
+  independentBinding.beamInputDeclaration.sourceBinding.documentSha256 = sha('other');
+  assert.throws(() => repository.saveProxyCampaign(independentBinding), /source binding|beam input declaration/i);
+  const wrongIdentity = structuredClone(v2); wrongIdentity.campaignId = 'a'.repeat(32);
+  assert.throws(() => repository.saveProxyCampaign(wrongIdentity), /v2 proxy campaign identity/i);
+  const wrongLegacyIdentity = structuredClone(v2);
+  wrongLegacyIdentity.campaignId = sha(JSON.stringify({ runIds: runs.map(run => run.document.runId), caseNumber: '0' })).slice(0, 32);
+  assert.throws(() => repository.saveProxyCampaign(wrongLegacyIdentity), /v2 proxy campaign identity/i);
+  assert.throws(() => repository.saveProxyCampaign({ ...campaign, beamInputDeclaration: {} }), /beamInputDeclaration is v2-only/i);
   repository.close();
 
   const service = new LpbfNistProxyCampaignService(runRoot, path.join(root, 'sources'));

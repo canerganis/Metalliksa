@@ -100,8 +100,7 @@ function references(root: string) {
           const revision = sources.revision(binding.datasetId, binding.revision);
           const sourceArtifact = revision?.document.artifacts.find(item => item.relativePath === binding.artifactPath);
           if (!revision || revision.documentSha256 !== binding.documentSha256 || !sourceArtifact
-            || sourceArtifact.sha256 !== binding.artifactSha256 || sourceArtifact.byteSize !== binding.artifactSizeBytes
-            || !sourceArtifacts.has(binding.artifactSha256)) {
+            || sourceArtifact.sha256 !== binding.artifactSha256 || sourceArtifact.byteSize !== binding.artifactSizeBytes) {
             throw new Error('Campaign Table 4 source artifact binding mismatch');
           }
         }

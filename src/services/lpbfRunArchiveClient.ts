@@ -42,29 +42,44 @@ export interface VerifiedRunBundle extends ExportedRunBundle { verified: true }
 export interface RestoredRunBundle extends VerifiedRunBundle { restoreId: string }
 export interface ImportedRunBundle extends VerifiedRunBundle { importId: string }
 
-export interface NistProxyCampaign {
-  schemaVersion: 1 | 2;
+interface NistProxyCampaignShared {
   kind: 'lpbf-nist-amb2022-03-proxy-campaign';
   campaignId: string;
   benchmark: 'AMB2022-03-TMPG';
   caseNumber: NistOpticalCaseNumber;
   sourceBinding: NistProxyCampaignSourceBinding;
-  beamInputDeclaration?: NistProxyBeamInputDeclaration;
   claimBoundary: { resultKind: 'thermal-proxy-screening'; validationStatus: 'unvalidated'; experimentalValidation: false; opticalOperatorMatched: false };
-  samplingPlan: { coordinateFrame: 'scan-start-relative'; scanDirection: '+X'; sectionPositions_mm: [4.9, 6.0]; expectedTrackCount: 3; expectedObservationCount: 6;
-    replicateSemantics: 'independent-computational-runs-only' | 'reproducibility-evidence-not-independent-replicates' };
-  tracks: {
+}
+
+interface NistProxySamplingPlan<ReplicateSemantics extends string> {
+  coordinateFrame: 'scan-start-relative';
+  scanDirection: '+X';
+  sectionPositions_mm: [4.9, 6.0];
+  expectedTrackCount: 3;
+  expectedObservationCount: 6;
+  replicateSemantics: ReplicateSemantics;
+}
+
+interface NistProxyTrack<ReplicateKind extends string> {
     simulatedTrackId: string;
     experimentalTrackId: null;
-    replicateKind: 'independent-computational-run' | 'reproducibility-execution';
+    replicateKind: ReplicateKind;
     runIdentity: NistProxyRunIdentity;
     observations: { sectionId: 'x-4p9mm' | 'x-6p0mm'; coordinateFrame: 'scan-start-relative'; scanDirection: '+X';
       distanceFromScanStart_mm: 4.9 | 6.0; surfaceZ_m: 0; status: 'thermal-proxy';
       geometry: { width_um: number; depth_um: number };
       operator: { sectionOperatorId: string; interpolationOperatorId: string; contourOperatorId: string; evidenceClass: 'thermal-proxy-only' };
       provenance: { sourceBinding: NistProxyCampaign['sourceBinding']; runIdentity: NistProxyRunIdentity } }[];
-  }[];
 }
+
+export type NistProxyCampaign = NistProxyCampaignShared & (
+  { schemaVersion: 1; beamInputDeclaration?: never;
+    samplingPlan: NistProxySamplingPlan<'independent-computational-runs-only'>;
+    tracks: NistProxyTrack<'independent-computational-run'>[] }
+  | { schemaVersion: 2; beamInputDeclaration: NistProxyBeamInputDeclaration;
+    samplingPlan: NistProxySamplingPlan<'reproducibility-evidence-not-independent-replicates'>;
+    tracks: NistProxyTrack<'reproducibility-execution'>[] }
+);
 
 export interface NistProxyRunIdentity {
   runId: string;

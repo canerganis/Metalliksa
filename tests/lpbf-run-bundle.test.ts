@@ -4,13 +4,46 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
+import { DatabaseSync } from 'node:sqlite';
 import { LpbfRunRepository } from '../server/lpbfRunRepository';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { LpbfArtifactStore } from '../server/lpbfArtifactStore';
 import { importRun } from '../server/lpbfRunImport';
 import { backupRunBundle, restoreRunBundle, verifyRunBundle } from '../server/lpbfRunBundle';
+import { createRunBundleTar } from '../server/lpbfRunBundleTar';
+import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+function bundleV2Campaign(runRecords: any[], sourceBinding: any) {
+  const tracks = runRecords.map(record => {
+    const runIdentity = { runId: record.document.runId, runDocumentSha256: record.documentSha256,
+      resultArtifact: { path: 'capture/result.json', sha256: sha(`result-${record.document.runId}`), size_bytes: 100 },
+      inputSha256: sha(`input-${record.document.runId}`), materialSha256: sha(`material-${record.document.runId}`),
+      materialId: 'in718', materialRevisionSha256: sha(`revision-${record.document.runId}`),
+      coreContract: { schemaVersion: 1, modelId: 'thermal-v1', solverId: 'solver-v1', actualBackend: 'cpu' } };
+    const observations = [4.9, 6.0].map((distance, index) => ({ sectionId: ['x-4p9mm', 'x-6p0mm'][index],
+      coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: distance,
+      surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100, depth_um: 80 },
+      operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+        interpolationOperatorId: index ? 'exact-cell-center' : 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+        contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
+      provenance: { sourceBinding: structuredClone(sourceBinding), runIdentity: structuredClone(runIdentity) } }));
+    return { simulatedTrackId: `sim-${record.document.runId}`, experimentalTrackId: null,
+      replicateKind: 'reproducibility-execution', runIdentity, observations };
+  });
+  const campaign = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
+    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: runRecords.map(run => run.document.runId), caseNumber: '0',
+      revision: sourceBinding.revision, doc: sourceBinding.documentSha256 })).slice(0, 32), caseNumber: '0',
+    sourceBinding: structuredClone(sourceBinding), beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma',
+      value_um: 67, mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false,
+      sourceBinding: structuredClone(sourceBinding) },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
+      experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: [4.9, 6.0],
+      expectedTrackCount: 3, expectedObservationCount: 6,
+      replicateSemantics: 'reproducibility-evidence-not-independent-replicates' }, tracks };
+  return campaign;
+}
 async function fixture(t: TestContext) {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-run-bundle-'));
   const runs = new LpbfRunRepository(path.join(root, 'runs.sqlite'));
@@ -45,6 +78,51 @@ async function fixture(t: TestContext) {
   const bundle = path.join(root, 'bundle');
   const backup = () => backupRunBundle(runs, runStore, sources, sourceStore, bundle);
   return { root, runs, sources, runStore, sourceStore, record, sourceRef, bundle, backup };
+}
+
+async function addV2Campaign(f: Awaited<ReturnType<typeof fixture>>) {
+  const table4Bytes = readFileSync('data/benchmark/nist-amb2022-03-optical/table4-aggregate-v2.json');
+  const table4Artifact = { relativePath: 'table4-aggregate-v2.json',
+    sha256: createHash('sha256').update(table4Bytes).digest('hex'), byteSize: table4Bytes.length,
+    sourceUrl: 'https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10' };
+  const input = path.join(f.root, 'table4-input'); mkdirSync(input);
+  writeFileSync(path.join(input, table4Artifact.relativePath), table4Bytes);
+  await f.sourceStore.putFile(input, table4Artifact.relativePath, table4Artifact);
+  const table4Source = { schemaVersion: 1, datasetId: 'nist-amb2022-03-optical-table4-local-v1', materialId: 'in718',
+    processScope: 'bare-plate', source: { url: 'https://doi.org/10.18434/mds2-2718', citation: 'NIST AMB2022-03',
+      version: 'Table 4 transcription', terms: null, termsMissingReason: 'Unknown' }, artifacts: [table4Artifact], sourceContext: null };
+  const revision = f.sources.save(table4Source, 0);
+  const table4Link = { datasetId: table4Source.datasetId, revision: revision.revision, documentSha256: revision.documentSha256 };
+  const runRecords = [];
+  for (const id of ['b'.repeat(32), 'c'.repeat(32), 'd'.repeat(32)]) {
+    const document = structuredClone(f.record.document);
+    document.runId = document.capture.jobId = id;
+    document.sources.push(table4Link);
+    runRecords.push(f.runs.save(document));
+  }
+  const binding = { ...table4Link, artifactPath: table4Artifact.relativePath, artifactSha256: table4Artifact.sha256,
+    artifactSizeBytes: table4Artifact.byteSize, caseNumber: '0' };
+  const campaign = bundleV2Campaign(runRecords, binding);
+  f.runs.saveProxyCampaign(campaign);
+  return campaign;
+}
+
+function mutateBundledV2Campaign(bundle: string, mutate: (document: any) => void) {
+  const db = new DatabaseSync(path.join(bundle, 'runs.sqlite'));
+  const row = db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').all()
+    .find(item => JSON.parse(String(item.document_json)).schemaVersion === 2)!;
+  const document = JSON.parse(String(row.document_json)); mutate(document);
+  document.campaignId = sha(JSON.stringify({ schemaVersion: 2,
+    runIds: document.tracks.map((track: any) => track.runIdentity.runId), caseNumber: document.caseNumber,
+    revision: document.sourceBinding.revision, doc: document.sourceBinding.documentSha256 })).slice(0, 32);
+  const documentJson = JSON.stringify(document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET campaign_id=?, document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(document.campaignId, documentJson, sha(documentJson), JSON.parse(String(row.document_json)).campaignId);
+  db.close();
+  const manifestPath = path.join(bundle, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(bundle, 'runs.sqlite'));
+  manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 }
 
 test('full bundle independently restores exact run and historical source revision with all bytes', async t => {
@@ -104,17 +182,7 @@ test('bundle snapshots and restores immutable six-proxy campaign run references'
   f.runs.saveProxyCampaign(campaign);
   const v2Binding = { ...table4Link, artifactPath: table4Artifact.relativePath, artifactSha256: table4Artifact.sha256,
     artifactSizeBytes: table4Artifact.byteSize, caseNumber: '0' };
-  const v2 = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign',
-    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: runRecords.map(record => record.document.runId), caseNumber: '0',
-      revision: 1, doc: v2Binding.documentSha256 })).slice(0, 32), benchmark: 'AMB2022-03-TMPG', caseNumber: '0',
-    sourceBinding: v2Binding,
-    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
-      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: v2Binding },
-    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
-      experimentalValidation: false, opticalOperatorMatched: false },
-    samplingPlan: { replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
-    tracks: runRecords.map(record => ({ replicateKind: 'reproducibility-execution',
-      runIdentity: { runId: record.document.runId, runDocumentSha256: record.documentSha256 } })) };
+  const v2 = bundleV2Campaign(runRecords, v2Binding);
   f.runs.saveProxyCampaign(v2);
   const manifest = await f.backup();
   assert.equal(manifest.schemaVersion, 2);
@@ -144,6 +212,77 @@ test('bundle snapshots and restores immutable six-proxy campaign run references'
   invalid.campaignId = '8'.repeat(32);
   invalid.tracks[0].runIdentity.runDocumentSha256 = sha('mixed provenance');
   assert.throws(() => f.runs.saveProxyCampaign(invalid), /run reference mismatch/i);
+});
+
+test('recomputed v2 campaign and bundle hashes cannot conceal forged claims or incomplete nested data', async t => {
+  const cases: Array<[string, (document: any) => void]> = [
+    ['true evidence flags', document => { document.claimBoundary.experimentalValidation = true; }],
+    ['validated label', document => { document.claimBoundary.validationStatus = 'validated'; }],
+    ['missing observations', document => { delete document.tracks[0].observations; }],
+    ['extra nested field', document => { document.tracks[0].observations[0].geometry.clientNote = 'forged'; }],
+  ];
+  for (const [label, mutate] of cases) {
+    const f = await fixture(t);
+    await addV2Campaign(f);
+    await f.backup();
+    const db = new DatabaseSync(path.join(f.bundle, 'runs.sqlite'));
+    const row = db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').all()
+      .find(item => JSON.parse(String(item.document_json)).schemaVersion === 2)!;
+    const document = JSON.parse(String(row.document_json)); mutate(document);
+    const documentJson = JSON.stringify(document);
+    db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
+      .run(documentJson, sha(documentJson), document.campaignId);
+    db.close();
+    const manifestPath = path.join(f.bundle, 'bundle.json');
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const metadata = readFileSync(path.join(f.bundle, 'runs.sqlite'));
+    manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    await assert.rejects(verifyRunBundle(f.bundle), /proxy campaign|metadata integrity/i, label);
+    const destination = path.join(f.root, 'rejected-restore');
+    await assert.rejects(restoreRunBundle(f.bundle, destination), /proxy campaign|metadata integrity/i, label);
+    assert.equal(existsSync(destination), false, label);
+  }
+
+  const f = await fixture(t);
+  await addV2Campaign(f); await f.backup();
+  const db = new DatabaseSync(path.join(f.bundle, 'runs.sqlite'));
+  const row = db.prepare('SELECT document_json FROM lpbf_proxy_campaigns').all()
+    .find(item => JSON.parse(String(item.document_json)).schemaVersion === 2)!;
+  const document = JSON.parse(String(row.document_json)); document.claimBoundary.opticalOperatorMatched = true;
+  const documentJson = JSON.stringify(document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(documentJson, sha(documentJson), document.campaignId);
+  db.close();
+  const manifestPath = path.join(f.bundle, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(f.bundle, 'runs.sqlite'));
+  manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  const service = new LpbfRunBundleService(path.join(f.root, 'live-runs'), path.join(f.root, 'live-sources'), path.join(f.root, 'imports'));
+  await assert.rejects(service.importPortable(await createRunBundleTar(f.bundle)), /portable run bundle integrity verification failed/i);
+});
+
+test('v2 campaign restore rejects missing Table 4 revisions and mismatched artifacts', async t => {
+  const cases: Array<[string, RegExp, (document: any) => void]> = [
+    ['missing revision', /source artifact binding mismatch/i, document => {
+      document.sourceBinding.revision = 99;
+      document.beamInputDeclaration.sourceBinding.revision = 99;
+      for (const track of document.tracks) for (const observation of track.observations) observation.provenance.sourceBinding.revision = 99;
+    }],
+    ['mismatched artifact', /proxy campaign metadata integrity/i, document => {
+      document.sourceBinding.artifactSha256 = sha('missing table4 artifact');
+      document.beamInputDeclaration.sourceBinding.artifactSha256 = document.sourceBinding.artifactSha256;
+      for (const track of document.tracks) for (const observation of track.observations)
+        observation.provenance.sourceBinding.artifactSha256 = document.sourceBinding.artifactSha256;
+    }],
+  ];
+  for (const [label, expected, mutate] of cases) {
+    const f = await fixture(t); await addV2Campaign(f); await f.backup();
+    mutateBundledV2Campaign(f.bundle, mutate);
+    const destination = path.join(f.root, 'rejected-restore');
+    await assert.rejects(restoreRunBundle(f.bundle, destination), expected, label);
+    assert.equal(existsSync(destination), false, label);
+  }
 });
 
 test('missing or corrupted run/source objects prevent restore before destination creation', async t => {

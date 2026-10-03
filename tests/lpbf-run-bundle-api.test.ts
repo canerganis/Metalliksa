@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -12,8 +13,55 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { importRun } from '../server/lpbfRunImport';
 import { LpbfRunRepository } from '../server/lpbfRunRepository';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
+import { createRunBundleTar } from '../server/lpbfRunBundleTar';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+
+async function addV2Campaign(f: any) {
+  const bytes = readFileSync('data/benchmark/nist-amb2022-03-optical/table4-aggregate-v2.json');
+  const artifact = { relativePath: 'table4-aggregate-v2.json', sha256: createHash('sha256').update(bytes).digest('hex'),
+    byteSize: bytes.length, sourceUrl: 'https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10' };
+  const input = path.join(f.root, 'table4-input'); mkdirSync(input); writeFileSync(path.join(input, artifact.relativePath), bytes);
+  await f.sourceStore.putFile(input, artifact.relativePath, artifact);
+  const source = { schemaVersion: 1, datasetId: 'nist-amb2022-03-optical-table4-local-v1', materialId: 'in718', processScope: 'bare-plate',
+    source: { url: 'https://doi.org/10.18434/mds2-2718', citation: 'NIST AMB2022-03', version: 'Table 4 transcription',
+      terms: null, termsMissingReason: 'Unknown' }, artifacts: [artifact], sourceContext: null };
+  const revision = f.sources.save(source, 0);
+  const sourceLink = { datasetId: source.datasetId, revision: revision.revision, documentSha256: revision.documentSha256 };
+  const records = [];
+  for (const id of ['b'.repeat(32), 'c'.repeat(32), 'd'.repeat(32)]) {
+    const document = structuredClone(f.record.document); document.runId = document.capture.jobId = id; document.sources.push(sourceLink);
+    records.push(f.runs.save(document));
+  }
+  const binding = { ...sourceLink, artifactPath: artifact.relativePath, artifactSha256: artifact.sha256,
+    artifactSizeBytes: artifact.byteSize, caseNumber: '0' };
+  const tracks = records.map(record => {
+    const runIdentity = { runId: record.document.runId, runDocumentSha256: record.documentSha256,
+      resultArtifact: { path: 'capture/result.json', sha256: sha(`result-${record.document.runId}`), size_bytes: 100 },
+      inputSha256: sha(`input-${record.document.runId}`), materialSha256: sha(`material-${record.document.runId}`),
+      materialId: 'in718', materialRevisionSha256: sha(`material-revision-${record.document.runId}`),
+      coreContract: { schemaVersion: 1, modelId: 'thermal-v1', solverId: 'solver-v1', actualBackend: 'cpu' } };
+    const observations = [4.9, 6.0].map((distance, index) => ({ sectionId: ['x-4p9mm', 'x-6p0mm'][index],
+      coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: distance,
+      surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100, depth_um: 80 },
+      operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+        interpolationOperatorId: index ? 'exact-cell-center' : 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+        contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
+      provenance: { sourceBinding: structuredClone(binding), runIdentity: structuredClone(runIdentity) } }));
+    return { simulatedTrackId: `sim-${record.document.runId}`, experimentalTrackId: null,
+      replicateKind: 'reproducibility-execution', runIdentity, observations };
+  });
+  const campaign = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
+    campaignId: sha(JSON.stringify({ schemaVersion: 2, runIds: records.map(record => record.document.runId), caseNumber: '0',
+      revision: binding.revision, doc: binding.documentSha256 })).slice(0, 32), caseNumber: '0', sourceBinding: binding,
+    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
+      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: structuredClone(binding) },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated', experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: [4.9, 6.0],
+      expectedTrackCount: 3, expectedObservationCount: 6,
+      replicateSemantics: 'reproducibility-evidence-not-independent-replicates' }, tracks };
+  f.runs.saveProxyCampaign(campaign);
+}
 
 async function fixture(t: TestContext) {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-run-bundle-api-'));
@@ -149,6 +197,32 @@ test('portable tar round-trip verifies, restores in isolation, and exposes resto
   assert.match(comparison.reasons.join(' '), /analytical screening/i);
   assert.deepEqual(readFileSync(path.join(f.runRoot, 'runs.sqlite')), beforeRuns);
   assert.deepEqual(readFileSync(path.join(f.sourceRoot, 'metadata.sqlite')), beforeSources);
+});
+
+test('portable HTTP import rejects a recomputed bundle carrying forged v2 evidence flags', async t => {
+  const f = await fixture(t); await addV2Campaign(f);
+  const exported = await f.bundles.export();
+  const bundlePath = path.join(f.bundleRoot, 'exports', exported.bundleId);
+  const db = new DatabaseSync(path.join(bundlePath, 'runs.sqlite'));
+  const row = db.prepare('SELECT campaign_id, document_json FROM lpbf_proxy_campaigns').all()
+    .map(value => ({ ...value, document: JSON.parse(String(value.document_json)) }))
+    .find(value => value.document.schemaVersion === 2)!;
+  row.document.claimBoundary.opticalOperatorMatched = true;
+  const documentJson = JSON.stringify(row.document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(documentJson, sha(documentJson), row.campaign_id);
+  db.close();
+  const manifestPath = path.join(bundlePath, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(bundlePath, 'runs.sqlite'));
+  manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  const chunks: Buffer[] = [];
+  for await (const chunk of await createRunBundleTar(bundlePath)) chunks.push(Buffer.from(chunk));
+  const response = await fetch(`${f.endpoint}/import`, { method: 'POST',
+    headers: { 'Content-Type': 'application/x-tar' }, body: Buffer.concat(chunks) });
+  assert.equal(response.status, 409);
+  assert.match((await response.json()).error, /integrity verification failed/i);
+  assert.deepEqual(readdirSync(path.join(f.bundleRoot, 'imports')), []);
 });
 
 test('HTTP rejects corrupted bundles before restore and accepts no filesystem path', async t => {

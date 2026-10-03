@@ -155,6 +155,61 @@ class TestNistProxyCampaign(unittest.TestCase):
         self.assertIsNone(report["comparisonResiduals"])
         self.assertIs(report["experimentalValidation"], False)
 
+    def test_v2_rejects_wrong_beam_definition(self):
+        campaign = _campaign_v2()
+        campaign["beamInputDeclaration"]["definition"] = "FWHM"
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("definition must be D4sigma" in reason for reason in report["reasons"]))
+
+    def test_v2_rejects_wrong_beam_mapping_status(self):
+        campaign = _campaign_v2()
+        campaign["beamInputDeclaration"]["mappingStatus"] = "measured-profile"
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("mappingStatus must be conditional-ideal-Gaussian" in reason
+                            for reason in report["reasons"]))
+
+    def test_v1_rejects_wrong_replicate_semantics(self):
+        campaign = _campaign()
+        campaign["samplingPlan"]["replicateSemantics"] = "reproducibility-evidence-not-independent-replicates"
+        report = validate_proxy_campaign(campaign, _source_binding())
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("replicateSemantics must be independent-computational-runs-only" in reason
+                            for reason in report["reasons"]))
+
+    def test_v2_rejects_v1_replicate_semantics(self):
+        campaign = _campaign_v2()
+        campaign["samplingPlan"]["replicateSemantics"] = "independent-computational-runs-only"
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("replicateSemantics must be reproducibility-evidence-not-independent-replicates"
+                            in reason for reason in report["reasons"]))
+
+    def test_v1_rejects_v2_replicate_kind(self):
+        campaign = _campaign()
+        campaign["tracks"][0]["replicateKind"] = "reproducibility-execution"
+        report = validate_proxy_campaign(campaign, _source_binding())
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("replicateKind must be independent-computational-run" in reason
+                            for reason in report["reasons"]))
+
+    def test_v2_rejects_v1_replicate_kind(self):
+        campaign = _campaign_v2()
+        campaign["tracks"][0]["replicateKind"] = "independent-computational-run"
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("replicateKind must be reproducibility-execution" in reason
+                            for reason in report["reasons"]))
+
+    def test_campaign_root_rejects_unknown_fields(self):
+        campaign = _campaign_v2()
+        campaign["unreviewedEvidence"] = {"experimentalValidation": True}
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("campaign has unsupported fields: unreviewedEvidence" in reason
+                            for reason in report["reasons"]))
+
     def test_v2_rejects_untrusted_or_forged_declaration(self):
         mutations = (
             ("value_um", 68.0, "trusted Table 4 D4sigma"),

@@ -21,6 +21,32 @@ import { canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIden
 
 const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 
+async function waitForWorkerCapabilities(deadline: number) {
+  let lastStartingError: unknown;
+  while (Date.now() < deadline) {
+    let deadlineTimer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const remaining = deadline - Date.now();
+      return await Promise.race([
+        lpbfWorker.request('capabilities'),
+        new Promise<never>((_resolve, reject) => {
+          deadlineTimer = setTimeout(() => reject(new Error('LPBF worker readiness warm-up deadline exceeded.')), remaining);
+        }),
+      ]);
+    } catch (error) {
+      if (!error || typeof error !== 'object'
+        || (error as { code?: unknown }).code !== 'LPBF_WORKER_STARTING') throw error;
+      lastStartingError = error;
+      const delay = Math.min(250, deadline - Date.now());
+      if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
+    } finally {
+      if (deadlineTimer) clearTimeout(deadlineTimer);
+    }
+  }
+  throw lastStartingError instanceof Error ? lastStartingError
+    : new Error('LPBF worker did not become ready within the 90-second warm-up deadline.');
+}
+
 async function jsonRequest(base: string, suffix: string, method: 'GET' | 'POST' = 'GET', body?: unknown) {
   const response = await fetch(`${base}${suffix}`, {
     method,
@@ -79,6 +105,7 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
 
   // Freeze the V1 CPU user-path reference. It is a workflow replay, not a
   // numerical-convergence oracle and does not reproduce NIST Table 4.
+  await waitForWorkerCapabilities(Date.now() + 90_000);
   const submission = await lpbfWorker.request('submit', {
     mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60,
     speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,

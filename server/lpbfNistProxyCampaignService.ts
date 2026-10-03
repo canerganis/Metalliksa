@@ -232,6 +232,11 @@ export class LpbfNistProxyCampaignService {
       || new Set(runIds).size !== 3 || typeof caseNumber !== 'string') {
       throw new LpbfRunArchiveError(400, 'Provide exactly three distinct archived run IDs and a Table 4 case number.');
     }
+    if (caseNumber !== '0') {
+      return { campaign: null, validation: unavailable([
+        'Proxy campaign v2 currently supports Table 4 case 0 only; other cases are unavailable.',
+      ]) };
+    }
     let runs: LpbfRunRepository | null = null, sources: LpbfSourceRepository | null = null;
     try {
       artifactDirectory(this.runRoot);
