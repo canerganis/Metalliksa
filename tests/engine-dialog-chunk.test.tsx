@@ -30,5 +30,6 @@ test("engine dialog chunk failure: alert with Retry (fresh lazy import) and Clos
   assert.match(fallback, /Engine availability details could not be loaded\./);
   assert.match(fallback, /<button onClick=\{retryDialog\}[^>]*>Retry<\/button>/);
   assert.match(fallback, /<button onClick=\{closeDialog\}[^>]*>Close<\/button>/);
+  assert.match(fallback, /<button onClick=\{\(\) => window\.location\.reload\(\)\}[^>]*>Reload application<\/button>/, "Chrome keeps a failed module fetch, so a reload is offered too");
   assert.doesNotMatch(fallback, /inset-0/, "a non-modal alert, not a second overlay");
 });

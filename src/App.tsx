@@ -91,6 +91,8 @@ export default function App() {
   const [dialogLoad, setDialogLoad] = useState(0);
   const EngineStatusDialog = useMemo(loadEngineStatusDialog, [dialogLoad]);
   // Chunk failure: Retry remounts the boundary with a fresh lazy import; Close also resets it so the next open retries.
+  // Chrome keeps a failed module fetch for the page's lifetime (browser-checked: Retry did not refetch), so the
+  // alert also offers a reload, as ModuleBoundary does.
   const retryDialog = () => setDialogLoad(n => n + 1);
   const closeDialog = () => { setShowStatus(false); retryDialog(); };
   const specimen = useMaterialSpecimenStore(s => s.activeSpecimen);
@@ -216,7 +218,7 @@ export default function App() {
       </main>
     </div>
     <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
-    {showStatus && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
+    {showStatus && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
   </div></>;
 }
 
