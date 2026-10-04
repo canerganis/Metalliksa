@@ -11,18 +11,12 @@ import { test } from "node:test";
  */
 const EXCLUSIONS: Record<string, string> = {
   // EIS / battery deletion-candidate cluster (.orchestra/DELETION-MANIFEST.md): will be removed, not worth labelling.
-  "src/components/AdvancedBatteryPhysicsStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/BatteryEISDegradationStudio.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/CircuitLibraryModal.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/CNLSFittingStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/EISLabDataUploader.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/EISUploadInsightsStudio.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/EquivalentCircuitBuilder.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/PresetCircuitLibraryPanel.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/PythonBatteryCorrosionUploadStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/StochasticUQMMPDSStudio.tsx": "deletion candidate (EIS/battery cluster)",
   "src/components/SyntheticNoiseStressStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/TransportKineticsLab.tsx": "deletion candidate (EIS/battery cluster)",
   // Thin wrappers: the <input>/<select> is a pass-through element; every call site is wrapped by <label>.
   "src/components/OpticalTomographyLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
   "src/components/PowderDEMCompactionLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
@@ -82,21 +76,15 @@ const PINNED_GUARDED = [
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
 const PINNED_EXCLUDED = [
-  "src/components/AdvancedBatteryPhysicsStudio.tsx",
-  "src/components/BatteryEISDegradationStudio.tsx",
   "src/components/CNLSFittingStudio.tsx",
   "src/components/CircuitLibraryModal.tsx",
-  "src/components/EISLabDataUploader.tsx",
   "src/components/EISUploadInsightsStudio.tsx",
   "src/components/EquivalentCircuitBuilder.tsx",
   "src/components/OpticalTomographyLab.tsx",
   "src/components/PowderDEMCompactionLab.tsx",
   "src/components/PresetCircuitLibraryPanel.tsx",
-  "src/components/PythonBatteryCorrosionUploadStudio.tsx",
-  "src/components/StochasticUQMMPDSStudio.tsx",
   "src/components/SyntheticNoiseStressStudio.tsx",
   "src/components/TransientEnthalpy3DGPULab.tsx",
-  "src/components/TransportKineticsLab.tsx",
 ];
 
 const MAX_LABEL_LENGTH = 80;
