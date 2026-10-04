@@ -75,6 +75,9 @@ jobs:
           test_physical_constants test_alloy_registry test_input_validation
           test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
           test_lpbf_worker_validation_error
+          test_module_contract test_module_warm_parity test_allowlist_ceilings
+      - name: Allowlist ceilings change only with a 'Ceiling-Review:' commit trailer
+        run: python scripts/check_ceiling_review.py "${{ github.event.pull_request.base.sha || github.event.before }}"
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
         run: npm run test:lpbf:engineering
         continue-on-error: true

@@ -3,6 +3,7 @@ import type { ActiveSpecimenState } from "../store/useMaterialSpecimenStore";
 import { engineeringSignature, type LpbfEngineeringState } from "../store/useLpbfEngineeringStore";
 import type { LpbfBuildContext } from "../store/useLpbfWorkflowStore";
 import type { PythonLpbfBuildJobResult } from "../services/pythonComputationService";
+import { isResultStale } from "./lpbfResultStaleness";
 
 export function sharedSimulationInput(specimen: ActiveSpecimenState) {
   const process = specimen.lpbf;
@@ -12,7 +13,7 @@ export function sharedSimulationInput(specimen: ActiveSpecimenState) {
 export function createLpbfQualificationReport(specimen: ActiveSpecimenState, context: LpbfBuildContext, engineering: LpbfEngineeringState, buildJob: PythonLpbfBuildJobResult | null, researchEvidence: unknown[] = []) {
   const result = engineering.job?.status === "completed" ? engineering.job.result : undefined;
   const currentSignature = engineeringSignature(sharedSimulationInput(specimen), engineering, specimen.lpbf.scanStrategy);
-  const stale = !!result && engineering.resultSignature !== currentSignature;
+  const stale = isResultStale(engineering.resultSignature, currentSignature, !!result);
   const gaps = [
     ...(!context.buildId.trim() ? ["Build identity is missing."] : []),
     ...(!context.machine.trim() ? ["Machine identity is missing."] : []),
