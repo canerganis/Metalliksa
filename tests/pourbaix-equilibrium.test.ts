@@ -24,6 +24,7 @@ import {
 } from "../src/utils/pourbaixThermodynamics";
 import { DynamicPourbaixStudio } from "../src/components/DynamicPourbaixStudio";
 import { EXPERIMENTAL_POURBAIX_PRESETS } from "../src/utils/experimentalPourbaixOverlay";
+import { pourbaixRequestSignature } from "../src/utils/pourbaixRequest";
 
 const text = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
@@ -109,7 +110,7 @@ test("the domains of an element tile the box exactly (convex polygons, area sum 
   const box = POURBAIX_DATA.box;
   const boxArea = (box.pH_max - box.pH_min) * (box.E_max_V_SHE - box.E_min_V_SHE);
   for (const el of availablePourbaixElements()) {
-    for (const logA of [-8, -6, -3, 0]) {
+    for (const logA of [-6, -3, -1, 0]) {
       const domains = computeDomains(speciesCoefficients(el, logA));
       const total = domains.reduce((s, d) => s + polygonArea(d.polygon), 0);
       assert.ok(Math.abs(total - boxArea) < 1e-6, `${el}@${logA}: ${total} vs ${boxArea}`);
@@ -256,7 +257,7 @@ test("Cr, Ti and Mo are unavailable with the engine's reason; Fe, Ni, Cu, Zn, Mg
     assert.throws(() => speciesCoefficients(el, -6), /No verified/);
   }
   assert.match(pourbaixUnavailableReason("Ti")!, /mutually inconsistent/);
-  assert.match(pourbaixUnavailableReason("Cr")!, /Blocked until WP-Cr/);
+  assert.match(pourbaixUnavailableReason("Cr")!, /^No verified Cr-H2O data in this tool/);
   assert.equal(pourbaixUnavailableReason("Mo"), "No sourced Mo-H2O data.");
   for (const el of ["Fe", "Al"]) assert.equal(pourbaixUnavailableReason(el), null, el);
   assert.ok(pourbaixUnavailableReason("Xx"), "an element absent from the table is unavailable, not Fe");
@@ -311,7 +312,7 @@ test("default studio (pure Fe): relabelled title, subtitle, tabs, fixed 25 C tem
   const html = render();
   const t = plain(html);
   assert.match(t, /Pourbaix E–pH Studio \(25 °C\)/);
-  assert.match(t, /Single-element M–H₂O equilibrium by minimum Gibbs energy \(25 °C, dissolved activity 10ⁿ, γ = 1\); overlays measured E–pH points\./);
+  assert.match(t, /Single-element M–H₂O equilibrium by minimum Gibbs energy \(25 °C, dissolved activity 10ⁿ, γ = 1\); overlays illustrative preset E–pH points \(not measured data\) and points you add\./);
   for (const label of ["2D Pourbaix E-pH Diagram", "Equilibrium boundaries (25 °C)", "Element selector (no alloy equilibrium)"]) assert.ok(t.includes(label), label);
   assert.match(t, /Fe–H₂O \( ?Pure Iron \/ Carbon Steel \(Fe\) ?\) • E-pH Pourbaix Diagram/);
   assert.match(html, /aria-label="Temperature \(25 °C data only\)"[^>]*disabled/);
@@ -355,4 +356,91 @@ test("Corrosion lab tab and the Python service comment use the new wording", () 
   assert.ok(text("src/components/CorrosionEngineeringLab.tsx").includes("<span>Pourbaix E–pH (25 °C)</span>"));
   assert.ok(!text("src/components/CorrosionEngineeringLab.tsx").includes("Dynamic Pourbaix (E-pH-T-Salinity)</span>"));
   assert.match(text("src/services/pythonComputationService.ts").split("\n").slice(0, 6).join("\n"), /single-element Pourbaix E–pH at 25 °C/);
+});
+
+// ---------------------------------------------------------------------------------------------
+// Fix round (REVIEW-pbx-sci / REVIEW-pbx-code)
+// ---------------------------------------------------------------------------------------------
+
+test("S2: the activity range is limited to 1e-6 .. 1 in the generated JSON, the Python engine text and the UI options", () => {
+  const json = JSON.parse(text("src/generated/pourbaixSpecies25C.json")) as { activity: { log10Range: number[] } };
+  assert.deepEqual(json.activity.log10Range, [-6, 0]);
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  const options = [...studio.matchAll(/<option value=\{(1e-\d+|1\.0)\}>/g)].map((m) => Math.log10(Number(m[1])));
+  assert.ok(options.length >= 3);
+  for (const o of options) assert.ok(o >= json.activity.log10Range[0] && o <= json.activity.log10Range[1], `option 10^${o} outside the engine range`);
+  assert.ok(!studio.includes("1e-8"), "the refused 1e-8 option is gone");
+  assert.match(plain(render()), /Mononuclear hydrolysis species \(MOH⁺, M\(OH\)₂\(aq\)\) are not in the species table for any element/);
+});
+
+test("S4: the studio no longer calls preset points measured; the preset note is shown and the presets say illustrative", () => {
+  const t = plain(render());
+  assert.ok(!/overlays measured/.test(t));
+  assert.ok(t.includes("Preset points are illustrative scenarios, not measured data: no source is cited."));
+  for (const p of EXPERIMENTAL_POURBAIX_PRESETS) assert.match(p.description, /^Illustrative scenario, not measured data/, p.id);
+});
+
+test("S5: preset descriptions make no passivity, immunity, resistance or synergy claim; compositions are nominal and reach every available element", () => {
+  const banned = /immunity|resistance|passivity|synergy|protective|self-healing|superb|outstanding|spontaneous|benchmark|caustic|strong/i;
+  for (const a of ALLOY_PRESETS) {
+    assert.ok(!banned.test(a.description), `${a.id}: ${a.description}`);
+    assert.ok(!banned.test(a.recommendedApplication), a.id);
+    const sum = Object.values(a.composition).reduce((s, v) => s + v, 0);
+    assert.ok(sum >= 99 && sum <= 100.5, `${a.id}: composition sums to ${sum}`);
+  }
+  const reachable = new Set(ALLOY_PRESETS.flatMap((a) => Object.keys(a.composition)));
+  for (const el of availablePourbaixElements()) assert.ok(reachable.has(el), `${el} cannot be reached from any preset`);
+  const al7075 = ALLOY_PRESETS.find((a) => a.id === "al-7075-t6")!;
+  assert.ok(al7075.composition.Zn > 5 && al7075.composition.Mg > 2, "7075 carries its Zn and Mg");
+  for (const id of ["pure-zn", "pure-mg", "pure-cu", "pure-al"]) assert.ok(ALLOY_PRESETS.some((a) => a.id === id), id);
+  // AlCoCrFeNi is equiatomic: wt% from the atomic masses
+  const hea = ALLOY_PRESETS.find((a) => a.id === "al-co-cr-fe-ni-hea")!;
+  const mass: Record<string, number> = { Al: 26.98, Co: 58.93, Cr: 52.0, Fe: 55.85, Ni: 58.69 };
+  const total = Object.values(mass).reduce((s, v) => s + v, 0);
+  assert.deepEqual(Object.keys(hea.composition).sort(), Object.keys(mass).sort());
+  for (const el of Object.keys(mass)) near(hea.composition[el], (100 * mass[el]) / total, 0.05, `HEA ${el} wt%`);
+  // the Zn and Mg presets render a map, not a reason panel
+  for (const id of ["pure-zn", "pure-mg", "pure-cu"]) assert.match(render({ initialAlloyId: id }), /<canvas/, id);
+});
+
+test("C4/C7: solver echoes are never merged into the points, so the request signature cannot change by itself; unavailable elements send no request", () => {
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  const dispatch = studio.slice(studio.indexOf("async function dispatchPythonSolver"), studio.indexOf("return dispatchPythonSolver();"));
+  assert.ok(dispatch.length > 200);
+  assert.ok(!/setExperimentalPoints|\.\.\.p, \.\.\.analyzed|experimentalOverlay/.test(dispatch), "the solver callback must not touch the points");
+  assert.equal(studio.split("setExperimentalPoints(").length - 1, 1, "only 'capture probe as point' writes points");
+  assert.ok(!/potential_V_SHE \?\?/.test(studio) && !/riskLevel/.test(studio), "points are classified by the port, not by solver echoes");
+  assert.match(dispatch, /if \(pourbaixUnavailableReason\(primaryElement\) !== null\) \{/);
+  // what the loop looked like: a mojibake echo of `notes` changes the signature (cp1254 reads UTF-8 bytes as other text)
+  const base = { primaryElement: "Fe", temperature_C: 25, ionActivity: 1e-6, chlorideActivity: 0.54 };
+  const pts = (notes: string) => [{ id: "a", name: "a", pH: 7, potential_V: 0, refElectrode: "SHE" as const, notes }];
+  assert.notEqual(
+    pourbaixRequestSignature({ ...base, experimentalPoints: pts("Fe²⁺") }),
+    pourbaixRequestSignature({ ...base, experimentalPoints: pts(Buffer.from("Fe²⁺", "utf8").toString("latin1")) }),
+  );
+});
+
+test("C5: the canvas is redrawn whenever it is mounted again (tab switch, element with data)", () => {
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  assert.match(studio, /const canvasMounted = activeTab === "diagram" && unavailableReason === null;/);
+  assert.match(studio, /useEffect\(\(\) => \{\s*if \(canvasMounted\) renderPourbaixCanvas\(\);\s*\}, \[renderPourbaixCanvas, canvasMounted\]\);/);
+});
+
+test("NIT: accessible canvas label, no '+ 0.0000·pH', no internal process words in reasons, one Ti message", () => {
+  const html = render();
+  assert.match(html, /<canvas[^>]*role="img"[^>]*aria-label="Fe–H₂O E–pH map at 25 °C, dissolved activity 10\^-6; probe at pH 7\.00, 0\.200 V SHE: Fe₂O₃/);
+  assert.ok(text("src/components/DynamicPourbaixStudio.tsx").includes("independent of pH"));
+  assert.ok(!/0\.0000·pH/.test(text("src/components/DynamicPourbaixStudio.tsx")));
+  for (const el of ["Cr", "Ti", "Mo"]) assert.ok(!/WP-|Blocked until/.test(pourbaixUnavailableReason(el)!), el);
+  assert.match(pourbaixUnavailableReason("Cr")!, /no verified Cr-H2O data in this tool/i);
+  const ti = plain(render({ initialAlloyId: "ti-6al-4v" }));
+  assert.equal(ti.split(pourbaixUnavailableReason("Ti")!).length - 1, 1, "the Ti reason is shown once");
+  assert.ok(!ti.includes("Test Points Overlaid"), "no 'test points overlaid' badge without a map");
+});
+
+test("preset points of another element are labelled as reclassified; unavailable maps show no point readout", () => {
+  const ni = plain(render({ initialAlloyId: "inconel-718" }));
+  assert.match(ni, /The points of the preset (?:"|&quot;)Carbon Steel \(AISI 1018\).*?(?:"|&quot;) belong to Fe; they are only reclassified here in the Ni–H₂O map\./);
+  assert.ok(!/belong to Fe; they are only reclassified/.test(plain(render())), "no notice on the Fe map");
+  assert.ok(!/Selected test point/.test(plain(render({ initialAlloyId: "ti-6al-4v" }))));
 });

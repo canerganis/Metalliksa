@@ -690,7 +690,7 @@ export function CorrosionEngineeringLab() {
       )}
 
       {/* ======================================================== */}
-      {/* 5. DYNAMIC POURBAIX (E-pH-T-SALINITY) PHASE GENERATOR   */}
+      {/* 5. POURBAIX E-pH (25 °C, SINGLE ELEMENT) STUDIO          */}
       {/* ======================================================== */}
       {activeTab === "pourbaix" && (
         <div className="pt-2">

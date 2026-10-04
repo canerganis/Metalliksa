@@ -173,14 +173,13 @@ export const CATEGORY_STYLE: Record<StabilityCategory, { color: string; alpha: n
   "Transpassive": { color: "#a855f7", alpha: 0.30, legend: "Transpassive: high-valence oxyanion stable" },
 };
 
-/** Display text for the engine's riskLevel strings (kept unchanged in the API); no rate or protectiveness claim. */
-export const RISK_LEVEL_DISPLAY: Record<string, string> = {
-  "Immune": "Metal stable (immunity domain)",
-  "Stable Passivity": `Solid oxide/hydroxide stable: ${PASSIVATION_NOTE}`,
-  "Severe Corrosion": "Cation stable (acid corrosion domain)",
-  "High Risk": "Oxyanion stable (alkaline or transpassive domain)",
-  "Caution": "Caution",
-  "Pitting Hazard": "Pitting hazard",
+/** Display text per category for a classified point (derived from the port's category, never from a solver echo). */
+export const CATEGORY_DISPLAY: Record<StabilityCategory, string> = {
+  "Immunity": "Metal stable (immunity domain)",
+  "Corrosion (acid)": "Cation stable (acid corrosion domain)",
+  "Corrosion (alkaline)": "Oxyanion stable (alkaline corrosion domain)",
+  "Passivation (thermodynamic, film-forming)": "Solid oxide/hydroxide stable (thermodynamic domain only)",
+  "Transpassive": "High-valence oxyanion stable (transpassive domain)",
 };
 
 // ---------------------------------------------------------------------------
@@ -189,86 +188,121 @@ export const RISK_LEVEL_DISPLAY: Record<string, string> = {
 
 export const DEFAULT_ALLOY_ID = "pure-fe";
 
+const NO_ALLOY_EQUILIBRIUM = "The studio maps one constituent element at a time and computes no equilibrium of the alloy.";
+const APPLICATION_NOT_COMPUTED = "Composition preset for the single-element M–H₂O map.";
+
 export const ALLOY_PRESETS: AlloyPreset[] = [
   {
     id: "inconel-718",
     name: "Inconel 718 (UNS N07718)",
     category: "Nickel Superalloy",
-    description: "Precipitation-hardened Ni-Cr superalloy for aerospace turbine disks, rocket nozzles, and sour gas wells. Superb resistance to hot corrosion.",
-    composition: { Ni: 53.0, Cr: 19.0, Fe: 18.0, Mo: 3.0, Al: 0.5, Ti: 0.9 },
-    recommendedApplication: "Aerospace turbine engines, cryogenic rocket fuel injectors, subsea wellheads.",
+    description: `Ni-Cr-Fe superalloy, nominal composition in wt%. ${NO_ALLOY_EQUILIBRIUM}`,
+    composition: { Ni: 53.0, Cr: 19.0, Fe: 18.0, Nb: 5.1, Mo: 3.0, Al: 0.5, Ti: 0.9 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "ti-6al-4v",
     name: "Ti-6Al-4V (Grade 5)",
     category: "Titanium Alloy",
-    description: "Alpha-beta titanium alloy with outstanding specific strength and spontaneous self-healing TiO2 ceramic passivity across marine and acid environments.",
-    composition: { Ti: 90.0, Al: 6.0, V: 4.0, Fe: 0.25 },
-    recommendedApplication: "Aerospace airframes, orthopedic implants, offshore seawater piping.",
+    description: `Alpha-beta titanium alloy, nominal composition in wt%. ${NO_ALLOY_EQUILIBRIUM}`,
+    composition: { Ti: 89.75, Al: 6.0, V: 4.0, Fe: 0.25 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "al-co-cr-fe-ni-hea",
-    name: "AlCoCrFeNi High-Entropy Alloy",
+    name: "AlCoCrFeNi High-Entropy Alloy (equiatomic)",
     category: "High-Entropy Alloy (HEA)",
-    description: "Equiatomic/near-equiatomic multi-principal element alloy exhibiting cocktail passivation synergy with multi-oxide protective barriers.",
-    composition: { Fe: 25.0, Cr: 25.0, Ni: 25.0, Al: 15.0, Mo: 10.0 },
-    recommendedApplication: "Nuclear reactor core structures, extreme marine turbines, chemical processing valves.",
+    description: `Equiatomic AlCoCrFeNi; the wt% follow from the atomic masses (Al 10.69, Co 23.34, Cr 20.60, Fe 22.12, Ni 23.25). ${NO_ALLOY_EQUILIBRIUM}`,
+    composition: { Al: 10.69, Co: 23.34, Cr: 20.6, Fe: 22.12, Ni: 23.25 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "ss-316l",
     name: "Stainless Steel 316L (UNS S31603)",
     category: "Stainless Steel",
-    description: "Austenitic Mo-bearing stainless steel with enhanced chloride pitting resistance and low carbon to prevent grain boundary sensitization.",
-    composition: { Fe: 68.0, Cr: 17.0, Ni: 12.0, Mo: 2.5, Mn: 2.0 },
-    recommendedApplication: "Marine hardware, pharmaceutical vessels, food processing equipment.",
+    description: `Austenitic Mo-bearing stainless steel, nominal composition in wt%. ${NO_ALLOY_EQUILIBRIUM}`,
+    composition: { Fe: 66.5, Cr: 17.0, Ni: 12.0, Mo: 2.5, Mn: 2.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "duplex-2507",
     name: "Super Duplex 2507 (UNS S32750)",
     category: "Stainless Steel",
-    description: "50/50 Ferrite-Austenite dual phase super duplex with high Cr and Mo for extreme resistance to chloride stress corrosion cracking.",
+    description: `Ferritic-austenitic duplex stainless steel, nominal composition in wt%. ${NO_ALLOY_EQUILIBRIUM}`,
     composition: { Fe: 63.0, Cr: 25.0, Ni: 7.0, Mo: 4.0, Cu: 0.5 },
-    recommendedApplication: "Offshore oil & gas separators, desalination plants, subsea flowlines.",
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "al-7075-t6",
-    name: "Aluminum 7075-T6 (Aerospace)",
+    name: "Aluminum 7075-T6",
     category: "Aluminum Alloy",
-    description: "Ultra-high strength Zn-Mg-Cu precipitation-hardened aluminum alloy. Sensitive to intergranular corrosion and stress corrosion cracking in chlorides.",
-    composition: { Al: 90.0, Cu: 1.6, Fe: 0.5, Cr: 0.2 },
-    recommendedApplication: "Aircraft wing spars, military armor plates, high-stress structural fittings.",
+    description: `Al-Zn-Mg-Cu alloy, nominal composition in wt% (balance Al). ${NO_ALLOY_EQUILIBRIUM} Zn and Mg can be selected in the element selector.`,
+    composition: { Al: 89.57, Zn: 5.6, Mg: 2.5, Cu: 1.6, Fe: 0.5, Cr: 0.23 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "pure-fe",
     name: "Pure Iron / Carbon Steel (Fe)",
     category: "Pure Metal",
-    description: "Elemental iron baseline for classic Pourbaix E-pH analysis.",
+    description: "Elemental iron: the Fe–H₂O map.",
     composition: { Fe: 100.0 },
-    recommendedApplication: "Structural steel baseline, water pipe cathodics.",
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "pure-ti",
     name: "Pure Titanium (Grade 2 CP)",
     category: "Pure Metal",
-    description: "Commercially pure titanium with high ductility and full seawater immunity.",
+    description: "Elemental titanium. The engine has no verified Ti–H₂O data, so no map is drawn.",
     composition: { Ti: 100.0 },
-    recommendedApplication: "Chemical heat exchangers, seawater desalination tubing.",
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "pure-ni",
     name: "Pure Nickel 200 (Ni)",
     category: "Pure Metal",
-    description: "Unalloyed wrought nickel for strong resistance to caustic alkalis.",
+    description: "Elemental nickel: the Ni–H₂O map.",
     composition: { Ni: 100.0 },
-    recommendedApplication: "Caustic evaporator tubes, alkali storage tanks.",
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {
     id: "pure-cr",
     name: "Pure Chromium (Cr)",
     category: "Pure Metal",
-    description: "Elemental chromium establishing the benchmark chromia passivation envelope.",
+    description: "Elemental chromium. The engine has no verified Cr–H₂O data, so no map is drawn.",
     composition: { Cr: 100.0 },
-    recommendedApplication: "Electroplated barrier coatings, superalloy alloying baseline.",
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
+  },
+  {
+    id: "pure-al",
+    name: "Pure Aluminum (Al)",
+    category: "Pure Metal",
+    description: "Elemental aluminium: the Al–H₂O map (gibbsite as the solid phase).",
+    composition: { Al: 100.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
+  },
+  {
+    id: "pure-cu",
+    name: "Pure Copper (Cu)",
+    category: "Pure Metal",
+    description: "Elemental copper: the Cu–H₂O map.",
+    composition: { Cu: 100.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
+  },
+  {
+    id: "pure-zn",
+    name: "Pure Zinc (Zn)",
+    category: "Pure Metal",
+    description: "Elemental zinc: the Zn–H₂O map (amphoteric).",
+    composition: { Zn: 100.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
+  },
+  {
+    id: "pure-mg",
+    name: "Pure Magnesium (Mg)",
+    category: "Pure Metal",
+    description: "Elemental magnesium: the Mg–H₂O map.",
+    composition: { Mg: 100.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
 ];
 

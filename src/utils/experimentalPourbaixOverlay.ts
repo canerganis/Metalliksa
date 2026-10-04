@@ -1,7 +1,8 @@
 /**
- * Experimental E-pH Test Data Presets, Parser & Mechanism Diagnostics
- * Provides curated experimental corrosion datasets, tabular CSV/TSV parsing,
- * and reference electrode transformation utilities.
+ * E-pH test-point presets, parser and reference electrode transformation utilities.
+ * The presets are ILLUSTRATIVE scenarios: they cite no dataset, publication or laboratory record, so
+ * they are not measured data (AGENTS.md: measured, literature, computed and synthetic data are kept
+ * apart). Tabular CSV/TSV points a user loads are the only measured data the studio can show.
  */
 
 import { ExperimentalEpHEntry, ExperimentalEpHTrajectoryPreset, ReferenceElectrode } from "../types/pourbaix";
@@ -15,12 +16,15 @@ export const REF_OFFSETS_VS_SHE: { [k in ReferenceElectrode]: number } = {
   MMS: 0.640,
 };
 
+/** Shown wherever preset points are drawn or listed. */
+export const PRESET_POINTS_NOTE = "Preset points are illustrative scenarios, not measured data: no source is cited.";
+
 export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = [
   {
     id: "fe_marine_crevice",
     name: "Carbon Steel (AISI 1018) — Seawater Occluded Crevice & Under-Deposit Corrosion",
     element: "Fe",
-    description: "In-situ micro-electrode monitoring of carbon steel undergoing local acidification under marine fouling and subsequent impressed current cathodic protection (ICCP).",
+    description: "Illustrative scenario, not measured data (no source is cited): In-situ micro-electrode monitoring of carbon steel undergoing local acidification under marine fouling and subsequent impressed current cathodic protection (ICCP).",
     environmentSummary: "3.5 wt% NaCl Aerated Seawater (T = 25°C, [Cl⁻] = 19,000 ppm)",
     points: [
       {
@@ -73,7 +77,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "ss316l_pitting_hydrolysis",
     name: "Stainless Steel 316L — In-Situ Pit Acidification & Transpassive Scan",
     element: "Cr",
-    description: "Micro-capillary chemical profiling inside single artificial pitting cell in 1M NaCl + potentiodynamic anodic polarizations.",
+    description: "Illustrative scenario, not measured data (no source is cited): Micro-capillary chemical profiling inside single artificial pitting cell in 1M NaCl + potentiodynamic anodic polarizations.",
     environmentSummary: "1.0 M NaCl (35,500 ppm Cl⁻), Aerated Acid/Neutral, Ambient 25°C",
     points: [
       {
@@ -126,7 +130,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "al7075_exco_saline",
     name: "Aluminum AA7075-T651 — Atmospheric Salt Fog & Exfoliation Acidification",
     element: "Al",
-    description: "ASTM G34 EXCO testing titration monitoring intergranular attack, pit nucleation, and alkaline caustic rinsing.",
+    description: "Illustrative scenario, not measured data (no source is cited): ASTM G34 EXCO testing titration monitoring intergranular attack, pit nucleation, and alkaline caustic rinsing.",
     environmentSummary: "EXCO Solution (4.0 M NaCl + 0.5 M KNO₃ + 0.1 M HNO₃), T = 25°C",
     points: [
       {
@@ -179,7 +183,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "ti_biomed_saline",
     name: "Titanium Ti-6Al-4V — Orthopedic Implant in Simulated Body Fluid (SBF)",
     element: "Ti",
-    description: "Electrochemical testing of surgical implant subjected to peri-implant inflammation and oxidative burst (H₂O₂).",
+    description: "Illustrative scenario, not measured data (no source is cited): Electrochemical testing of surgical implant subjected to peri-implant inflammation and oxidative burst (H₂O₂).",
     environmentSummary: "Simulated Body Fluid (pH 7.4, 0.9% NaCl, 37°C physiological)",
     points: [
       {
@@ -221,7 +225,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "cu_potable_water",
     name: "Copper Plumbing Pipe — Potable Water Pitting & Blue Water Syndrome",
     element: "Cu",
-    description: "Examination of cold potable water pipe pitting caused by high dissolved oxygen and sulfate/chloride ratio.",
+    description: "Illustrative scenario, not measured data (no source is cited): Examination of cold potable water pipe pitting caused by high dissolved oxygen and sulfate/chloride ratio.",
     environmentSummary: "Municipal Drinking Water (pH 6.8 - 8.5, Aerated, 45 ppm Cl⁻)",
     points: [
       {

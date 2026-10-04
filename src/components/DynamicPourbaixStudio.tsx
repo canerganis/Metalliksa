@@ -15,17 +15,14 @@ import {
 } from "lucide-react";
 import {
   ALLOY_PRESETS,
+  CATEGORY_DISPLAY,
   CATEGORY_STYLE,
   DEFAULT_ALLOY_ID,
   NERNST_SLOPE_25C,
   PASSIVATION_NOTE,
   POURBAIX_DATA,
-  RISK_LEVEL_DISPLAY,
   classifyPourbaixPoint,
-  clipPolygon,
   computeDomains,
-  polygonArea,
-  polygonCentroid,
   pourbaixUnavailableReason,
   primaryElementOf,
   speciesCoefficients,
@@ -40,8 +37,10 @@ import {
 } from "../types/pourbaix";
 import {
   EXPERIMENTAL_POURBAIX_PRESETS,
+  PRESET_POINTS_NOTE,
   REF_OFFSETS_VS_SHE,
 } from "../utils/experimentalPourbaixOverlay";
+import { drawPourbaixScene } from "../utils/pourbaixCanvas";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbaixRequest";
@@ -49,13 +48,6 @@ import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbai
 /** The engine data is 25 °C only (python/pourbaix_solver.py raises TEMPERATURE_UNSUPPORTED otherwise). */
 const SUPPORTED_TEMPERATURE_C = POURBAIX_DATA.temperature_C;
 const BOX = POURBAIX_DATA.box;
-const ZONE_LABEL: Record<StabilityCategory, string> = {
-  "Immunity": "IMMUNITY",
-  "Corrosion (acid)": "ACID CORROSION",
-  "Corrosion (alkaline)": "ALKALINE CORROSION",
-  "Passivation (thermodynamic, film-forming)": "PASSIVATION (THERMODYNAMIC)",
-  "Transpassive": "TRANSPASSIVE",
-};
 const PASSIVATION: StabilityCategory = "Passivation (thermodynamic, film-forming)";
 
 /** Accessible solver-failure line; shows the existing error text only. */
@@ -148,6 +140,17 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     [coeffs, probePH, probePotential_SHE]
   );
 
+  // Every test point classified in the CURRENT map by the same port (never by a solver echo, so it cannot be
+  // stale and cannot describe another element's map).
+  const pointStates = useMemo(
+    () =>
+      experimentalPoints.map((pt) => {
+        const she = pt.potential_V + (REF_OFFSETS_VS_SHE[pt.refElectrode] ?? 0);
+        return { pt, she, state: coeffs ? classifyPourbaixPoint(coeffs, pt.pH, she) : null };
+      }),
+    [experimentalPoints, coeffs]
+  );
+
   // Each constituent element evaluated alone at the probe point (no alloy equilibrium, no composite verdict)
   const elementStates = useMemo(() => {
     const states: { [el: string]: ReturnType<typeof classifyPourbaixPoint> | null } = {};
@@ -172,6 +175,13 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   const pourbaixInputSignature = pourbaixRequestSignature({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints });
   useDebouncedLatestTask(pourbaixInputSignature, async (_signature, signal): Promise<boolean> => {
     async function dispatchPythonSolver(): Promise<boolean> {
+      // No verified data: the panel already states the engine's reason; a request would only repeat it as an alert.
+      if (pourbaixUnavailableReason(primaryElement) !== null) {
+        setPythonPourbaixData(null);
+        setPythonSolveError(null);
+        setIsPythonSolving(false);
+        return true;
+      }
       try {
         setIsPythonSolving(true);
         setPythonSolveError(null);
@@ -180,21 +190,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
           buildPourbaixRequest({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints }), signal);
 
         if (!signal.aborted && result.success) {
+          // The result is shown only for the element and activity it was solved for (pythonFresh). Solver
+          // diagnostics are NEVER merged back into the user's points: echoed text would change the request
+          // signature and trigger another solve (an endless request loop), and a result of another element
+          // would label the points of the current map. Point states come from the port (pointStates).
           setPythonPourbaixData(result);
-
-          // Update experimental points with enriched mechanism identification from Python
-          if (result.experimentalOverlay?.points && result.experimentalOverlay.points.length > 0) {
-            setExperimentalPoints((prev) => {
-              const resultMap = new Map(result.experimentalOverlay!.points.map((p) => [p.id, p]));
-              return prev.map((p) => {
-                const analyzed = resultMap.get(p.id);
-                if (analyzed) {
-                  return { ...p, ...analyzed };
-                }
-                return p;
-              });
-            });
-          }
           return true;
         }
         return false;
@@ -222,308 +222,28 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Coordinate transforms
-    const { minPH, maxPH, minE, maxE } = viewBounds;
-    const phToX = (ph: number) => ((ph - minPH) / (maxPH - minPH)) * width;
-    const eToY = (e_she: number) => {
-      const e_disp = e_she - refOffset;
-      return height - ((e_disp - minE) / (maxE - minE)) * height;
-    };
-
-    // 1. Clear background
-    ctx.fillStyle = "#050b14";
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Exact domain polygons (each species domain is a convex polygon; no per-pixel rule)
-    for (const d of domains) {
-      const style = CATEGORY_STYLE[d.category];
-      ctx.beginPath();
-      d.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
-      ctx.closePath();
-      ctx.globalAlpha = style.alpha;
-      ctx.fillStyle = style.color;
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1.0;
-
-    // 3. Grid Lines & Axis
-    ctx.strokeStyle = "#162235";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-
-    for (let ph = Math.ceil(minPH); ph <= maxPH; ph += 2) {
-      const x = phToX(ph);
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-
-      // Label
-      ctx.fillStyle = "#64748b";
-      ctx.font = "10px monospace";
-      ctx.fillText(`pH ${ph}`, x + 4, height - 8);
-    }
-
-    for (let e = Math.ceil(minE * 2) / 2; e <= maxE; e += 0.5) {
-      const y = height - ((e - minE) / (maxE - minE)) * height;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-
-      // Label
-      ctx.fillStyle = "#64748b";
-      ctx.font = "10px monospace";
-      ctx.fillText(`${e > 0 ? "+" : ""}${e.toFixed(1)}V`, 8, y - 4);
-    }
-    ctx.setLineDash([]);
-
-    // 3b. Domain outlines (the exact boundaries)
-    ctx.strokeStyle = "rgba(226, 232, 240, 0.55)";
-    ctx.lineWidth = 1;
-    for (const d of domains) {
-      ctx.beginPath();
-      d.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    // 4. Water Stability Lines (Dashed Line a: HER, Line b: OER)
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 2.0;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(phToX(minPH), eToY(waterLines.herLine.e_at_ph0 + waterLines.herLine.slope * minPH));
-    ctx.lineTo(phToX(maxPH), eToY(waterLines.herLine.e_at_ph0 + waterLines.herLine.slope * maxPH));
-    ctx.stroke();
-
-    ctx.strokeStyle = "#f43f5e";
-    ctx.beginPath();
-    ctx.moveTo(phToX(minPH), eToY(waterLines.oerLine.e_at_ph0 + waterLines.oerLine.slope * minPH));
-    ctx.lineTo(phToX(maxPH), eToY(waterLines.oerLine.e_at_ph0 + waterLines.oerLine.slope * maxPH));
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Water stability line annotations
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText(
-      `(a) H₂/H⁺: E = -${nernstSlope.toFixed(3)}·pH`,
-      phToX(2) + 6,
-      eToY(waterLines.herLine.e_at_ph0 + waterLines.herLine.slope * 2) - 6
-    );
-
-    ctx.fillStyle = "#f43f5e";
-    ctx.fillText(
-      `(b) O₂/H₂O: E = ${waterLines.oerLine.e_at_ph0.toFixed(2)} - ${nernstSlope.toFixed(3)}·pH`,
-      phToX(2) + 6,
-      eToY(waterLines.oerLine.e_at_ph0 + waterLines.oerLine.slope * 2) - 6
-    );
-
-    // 5. Zone labels at the centroid of each (view-clipped) domain polygon
-    const pxPerPhE = (width / (maxPH - minPH)) * (height / (maxE - minE));
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (const d of domains) {
-      let poly = d.polygon;
-      poly = clipPolygon(poly, -1, 0, minPH); // pH >= minPH
-      poly = clipPolygon(poly, 1, 0, -maxPH); // pH <= maxPH
-      poly = clipPolygon(poly, 0, -1, minE + refOffset); // E >= view minimum (SHE)
-      poly = clipPolygon(poly, 0, 1, -(maxE + refOffset)); // E <= view maximum (SHE)
-      if (poly.length < 3 || polygonArea(poly) * pxPerPhE < 3000) continue;
-      const [cph, ce] = polygonCentroid(poly);
-      const style = CATEGORY_STYLE[d.category];
-      const sp = coeffs?.find((s) => s.id === d.speciesId);
-      ctx.fillStyle = style.color;
-      ctx.font = "bold 12px monospace";
-      ctx.fillText(`${d.formula}${sp?.phase === "s" ? " (s)" : ""}`, phToX(cph), eToY(ce) - 7);
-      ctx.font = "9px monospace";
-      ctx.fillText(ZONE_LABEL[d.category], phToX(cph), eToY(ce) + 7);
-    }
-    ctx.textAlign = "start";
-    ctx.textBaseline = "alphabetic";
-
-    // -------------------------------------------------------------
-    // 6. EXPERIMENTAL TEST DATA OVERLAY & TRAJECTORY SPLINE
-    // -------------------------------------------------------------
-    if (showExperimentalOverlay && experimentalPoints.length > 0) {
-      const coords = experimentalPoints.map((pt) => {
-        const she =
-          pt.potential_V_SHE ??
-          pt.potential_V + (REF_OFFSETS_VS_SHE[pt.refElectrode] || 0);
-        return {
-          id: pt.id,
-          name: pt.name,
-          stageName: pt.stageName,
-          riskLevel: pt.riskLevel,
-          mechanismTitle: pt.mechanismTitle,
-          x: phToX(pt.pH),
-          y: eToY(she),
-          pH: pt.pH,
-          she,
-          inputPot: pt.potential_V,
-          ref: pt.refElectrode,
-        };
-      });
-
-      // Draw Trajectory Connecting Path with Direction Arrows
-      if (showTrajectoryPath && coords.length > 1) {
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([6, 3]);
-        ctx.beginPath();
-        ctx.moveTo(coords[0].x, coords[0].y);
-        for (let i = 1; i < coords.length; i++) {
-          ctx.lineTo(coords[i].x, coords[i].y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Arrowheads along trajectory
-        for (let i = 0; i < coords.length - 1; i++) {
-          const from = coords[i];
-          const to = coords[i + 1];
-          const midX = (from.x + to.x) / 2;
-          const midY = (from.y + to.y) / 2;
-          const angle = Math.atan2(to.y - from.y, to.x - from.x);
-
-          ctx.save();
-          ctx.translate(midX, midY);
-          ctx.rotate(angle);
-          ctx.fillStyle = "#38bdf8";
-          ctx.beginPath();
-          ctx.moveTo(6, 0);
-          ctx.lineTo(-4, -4);
-          ctx.lineTo(-4, 4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-
-      // Draw Individual Measured Point Scatter Bubbles
-      coords.forEach((pt, idx) => {
-        const isSelected = pt.id === selectedPointId;
-
-        let markerColor = "#38bdf8";
-        if (pt.riskLevel === "Stable Passivity") markerColor = "#10b981";
-        else if (pt.riskLevel === "Pitting Hazard") markerColor = "#e11d48";
-        else if (pt.riskLevel === "Severe Corrosion") markerColor = "#f87171";
-        else if (pt.riskLevel === "Caution") markerColor = "#f59e0b";
-        else if (pt.riskLevel === "High Risk") markerColor = "#c084fc";
-
-        // Outer glow halo if selected
-        if (isSelected) {
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 16, 0, Math.PI * 2);
-          ctx.fillStyle = `${markerColor}30`;
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 22, 0, Math.PI * 2);
-          ctx.strokeStyle = markerColor;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([3, 3]);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-
-        // Main Bubble
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, isSelected ? 10 : 8, 0, Math.PI * 2);
-        ctx.fillStyle = markerColor;
-        ctx.fill();
-        ctx.lineWidth = isSelected ? 3 : 2;
-        ctx.strokeStyle = "#ffffff";
-        ctx.stroke();
-
-        // Point Index Number inside circle
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 9px monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`${idx + 1}`, pt.x, pt.y);
-        ctx.textAlign = "start";
-        ctx.textBaseline = "alphabetic";
-
-        // Point Labels
-        if (showPointLabels) {
-          ctx.fillStyle = "#ffffff";
-          ctx.font = isSelected ? "bold 11px monospace" : "10px monospace";
-          const labelText = pt.stageName || pt.name || `Pt #${idx + 1}`;
-          const lx = pt.x + 12;
-          const ly = pt.y - 8;
-
-          // Text pill background
-          const textWidth = ctx.measureText(labelText).width;
-          ctx.fillStyle = "rgba(10, 16, 28, 0.85)";
-          ctx.strokeStyle = markerColor;
-          ctx.lineWidth = 1;
-          ctx.fillRect(lx - 4, ly - 11, textWidth + 8, 15);
-          ctx.strokeRect(lx - 4, ly - 11, textWidth + 8, 15);
-
-          ctx.fillStyle = "#f8fafc";
-          ctx.fillText(labelText, lx, ly);
-        }
-      });
-    }
-
-    // 7. Crosshair Probe Marker
-    const probeX = phToX(probePH);
-    const probeY = eToY(probePotential_SHE);
-    const probeColor = probedState ? CATEGORY_STYLE[probedState.category].color : "#94a3b8";
-
-    // Crosshair lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 2]);
-    ctx.beginPath();
-    ctx.moveTo(probeX, 0);
-    ctx.lineTo(probeX, height);
-    ctx.moveTo(0, probeY);
-    ctx.lineTo(width, probeY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Probe Circle
-    ctx.beginPath();
-    ctx.arc(probeX, probeY, 7, 0, Math.PI * 2);
-    ctx.fillStyle = probeColor;
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = "#ffffff";
-    ctx.stroke();
-
-    // Probe readout box near point
-    const boxW = 270;
-    ctx.fillStyle = "#0c1524";
-    ctx.strokeStyle = probeColor;
-    ctx.lineWidth = 1.5;
-    const boxX = Math.min(width - boxW - 10, Math.max(10, probeX + 12));
-    const boxY = Math.min(height - 60, Math.max(20, probeY - 45));
-    ctx.fillRect(boxX, boxY, boxW, 50);
-    ctx.strokeRect(boxX, boxY, boxW, 50);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 10px monospace";
-    ctx.fillText(
-      `pH: ${probePH.toFixed(2)} | E: ${(probePotential_SHE - refOffset).toFixed(3)}V`,
-      boxX + 6,
-      boxY + 16
-    );
-    ctx.fillStyle = probeColor;
-    ctx.fillText(probedState ? probedState.category : "No verified data", boxX + 6, boxY + 30);
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "9px monospace";
-    ctx.fillText(
-      `${probedState ? probedState.formula + " | " : ""}${temperature_C}°C data only | a(M) = 10^${log10Activity}`,
-      boxX + 6,
-      boxY + 42
-    );
+    drawPourbaixScene(ctx, {
+      width: canvas.width,
+      height: canvas.height,
+      viewBounds,
+      refOffset,
+      domains,
+      coeffs,
+      waterLines,
+      nernstSlope,
+      temperature_C,
+      log10Activity,
+      probePH,
+      probePotential_SHE,
+      probedState,
+      showExperimentalOverlay,
+      showTrajectoryPath,
+      showPointLabels,
+      selectedPointId,
+      points: pointStates.map(({ pt, she, state }) => ({
+        id: pt.id, name: pt.name, stageName: pt.stageName, pH: pt.pH, she, category: state ? state.category : null,
+      })),
+    });
   }, [
     viewBounds,
     refOffset,
@@ -537,16 +257,18 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     probePotential_SHE,
     probedState,
     showExperimentalOverlay,
-    experimentalPoints,
+    pointStates,
     selectedPointId,
     showTrajectoryPath,
     showPointLabels,
   ]);
 
-  // Redraw canvas on dependencies change
+  // Redraw on dependency changes AND whenever the canvas is (re)mounted: it is unmounted with the diagram tab
+  // and with an element that has no verified data, and a fresh canvas is blank until drawn.
+  const canvasMounted = activeTab === "diagram" && unavailableReason === null;
   useEffect(() => {
-    renderPourbaixCanvas();
-  }, [renderPourbaixCanvas]);
+    if (canvasMounted) renderPourbaixCanvas();
+  }, [renderPourbaixCanvas, canvasMounted]);
 
   // Handle canvas mouse move / click
   const handleCanvasInteraction = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -569,10 +291,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
         return canvas.height - ((ed - minE) / (maxE - minE)) * canvas.height;
       };
 
-      for (const pt of experimentalPoints) {
-        const she =
-          pt.potential_V_SHE ??
-          pt.potential_V + (REF_OFFSETS_VS_SHE[pt.refElectrode] || 0);
+      for (const { pt, she } of pointStates) {
         const px = phToX(pt.pH);
         const py = eToY(she);
         const dist = Math.hypot(x - px, y - py);
@@ -609,7 +328,13 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     setActiveTab("diagram");
   };
 
-  const selectedPoint = experimentalPoints.find((p) => p.id === selectedPointId) ?? null;
+  const selectedPointState = pointStates.find(({ pt }) => pt.id === selectedPointId) ?? null;
+  // Preset points belong to the preset's element; in another element's map they are only reclassified.
+  const presetPointIds = useMemo(() => new Set(initialPreset.points.map((p) => p.id)), [initialPreset]);
+  const reclassifiedPresetPoints =
+    unavailableReason === null &&
+    selectedElement !== initialPreset.element &&
+    experimentalPoints.some((p) => presetPointIds.has(p.id));
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12 font-sans">
@@ -631,7 +356,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
             </h1>
             <p className="text-slate-300 text-sm leading-relaxed">
               Single-element M–H₂O equilibrium by minimum Gibbs energy (25 °C, dissolved activity 10ⁿ, γ = 1); overlays
-              measured E–pH points.
+              illustrative preset E–pH points (not measured data) and points you add.
             </p>
           </div>
 
@@ -827,11 +552,14 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                     onChange={(e) => setIonActivity(parseFloat(e.target.value))}
                     className="w-full bg-[#060b13] border border-[#1a263c] rounded px-2 py-1.5 text-xs text-slate-200 font-mono"
                   >
-                    <option value={1e-8}>10⁻⁸ M (Traces)</option>
                     <option value={1e-6}>10⁻⁶ M (corrosion convention)</option>
                     <option value={1e-3}>10⁻³ M (Millimolar)</option>
                     <option value={1.0}>1.0 M (Concentrated)</option>
                   </select>
+                  <p className="text-[10px] text-slate-500 font-mono mt-1">
+                    Mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq)) are not in the species table for any element, so
+                    10⁻⁶ M is the lowest activity offered; the engine refuses lower values.
+                  </p>
                 </div>
               </div>
             </div>
@@ -919,7 +647,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     {selectedElement}–H₂O ({currentAlloy.name}) • E-pH Pourbaix Diagram
-                    {experimentalPoints.length > 0 && showExperimentalOverlay && (
+                    {unavailableReason === null && experimentalPoints.length > 0 && showExperimentalOverlay && (
                       <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40">
                         {experimentalPoints.length} Test Points Overlaid
                       </span>
@@ -1007,6 +735,8 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 <div className="relative w-full aspect-[16/10] bg-[#050b14] rounded-xl overflow-hidden border border-[#162032] cursor-crosshair">
                   <canvas
                     ref={canvasRef}
+                    role="img"
+                    aria-label={`${selectedElement}–H₂O E–pH map at 25 °C, dissolved activity 10^${log10Activity}; probe at pH ${probePH.toFixed(2)}, ${(probePotential_SHE - refOffset).toFixed(3)} V ${refElectrode}${probedState ? `: ${probedState.formula}, ${probedState.category}` : ""}`}
                     width={960}
                     height={600}
                     className="w-full h-full object-contain"
@@ -1022,12 +752,20 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 </div>
               )}
 
-              {unavailableReason === null && selectedPoint && (
+              {unavailableReason === null && selectedPointState?.state && (
                 <p className="text-[11px] font-mono text-slate-300">
-                  <span className="text-slate-500">Selected test point:</span> {selectedPoint.stageName || selectedPoint.name}
-                  {selectedPoint.regime ? ` — ${selectedPoint.regime}` : ""}
-                  {selectedPoint.dominantSpecies ? ` (${selectedPoint.dominantSpecies})` : ""}
-                  {selectedPoint.riskLevel ? ` — ${RISK_LEVEL_DISPLAY[selectedPoint.riskLevel] ?? selectedPoint.riskLevel}` : ""}
+                  <span className="text-slate-500">Selected test point:</span> {selectedPointState.pt.stageName || selectedPointState.pt.name}
+                  {` — ${selectedPointState.state.category}${selectedPointState.state.isInsideWaterStability ? "" : " — outside water stability (metastable)"}`}
+                  {` (${selectedPointState.state.formula})`}
+                  {` — ${CATEGORY_DISPLAY[selectedPointState.state.category]}`}
+                </p>
+              )}
+              {unavailableReason === null && experimentalPoints.length > 0 && showExperimentalOverlay && (
+                <p className="text-[10px] font-mono text-slate-500">
+                  {PRESET_POINTS_NOTE}
+                  {reclassifiedPresetPoints
+                    ? ` The points of the preset "${initialPreset.name}" belong to ${initialPreset.element}; they are only reclassified here in the ${selectedElement}–H₂O map.`
+                    : ""}
                 </p>
               )}
 
@@ -1150,7 +888,9 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   ? ""
                   : line.type === "vertical"
                     ? `pH = ${line.pH.toFixed(3)}`
-                    : `E = ${line.E_V_SHE_at_pH0.toFixed(4)} ${line.slope_V_per_pH < 0 ? "−" : "+"} ${Math.abs(line.slope_V_per_pH).toFixed(4)}·pH V (SHE)`;
+                    : Math.abs(line.slope_V_per_pH) < 5e-5
+                      ? `E = ${line.E_V_SHE_at_pH0.toFixed(4)} V (SHE), independent of pH`
+                      : `E = ${line.E_V_SHE_at_pH0.toFixed(4)} ${line.slope_V_per_pH < 0 ? "−" : "+"} ${Math.abs(line.slope_V_per_pH).toFixed(4)}·pH V (SHE)`;
                 return (
                   <div key={b.id} className="p-3 rounded-lg bg-[#0c1424] border border-[#1a263c] space-y-1.5 text-xs">
                     <div className="text-slate-200 font-bold text-[13px]">{b.name}</div>
