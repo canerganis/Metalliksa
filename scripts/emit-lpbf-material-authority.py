@@ -41,7 +41,7 @@ def in625_unreconciled_values():
     row = SECONDARY_THERMOPHYSICAL_DB[IN625_THERMAL_NAME]
     return [
         {"quantity": "latent heat of fusion", "unit": "J/kg", "values": [
-            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path (this row)",
+            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path",
              "value": row["latent_heat_fusion_J_kg"]},
             {"module": "python/in625_thermal_material.py LATENT_HEAT_J_KG", "use": "Sabau et al. 2020 fusion-enthalpy screening",
              "value": in625.LATENT_HEAT_J_KG},
@@ -49,12 +49,12 @@ def in625_unreconciled_values():
              "value": in625.IN625_LATENT_HEAT_FUSION_MILLS_J_KG},
         ]},
         {"quantity": "boiling point", "unit": "C", "values": [
-            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path (this row)", "value": row["boiling_C"]},
+            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path", "value": row["boiling_C"]},
             {"module": "python/in625_thermal_material.py IN625_BOILING_K", "use": "transient material spec (K - 273.15)",
              "value": round(in625.IN625_BOILING_K - 273.15, 2)},
         ]},
         {"quantity": "IR absorptivity", "unit": "", "values": [
-            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path (this row)", "value": row["absorptivity_IR"]},
+            {"module": IN625_SOURCE, "use": "Rosenthal / build-job path", "value": row["absorptivity_IR"]},
             {"module": "python/in625_thermal_material.py IN625_ABSORPTIVITY_IR", "use": "transient material spec",
              "value": in625.IN625_ABSORPTIVITY_IR},
         ]},
@@ -64,12 +64,25 @@ def in625_unreconciled_values():
 def in625_note(conflicts):
     parts = []
     for item in conflicts:
-        values = " vs ".join(f"{v['value']:g}" for v in item["values"])
-        parts.append(f"{item['quantity']} {values} {item['unit']}".rstrip())
+        # Group the paths by value so equal values read as one agreeing group and the differing
+        # value stays visible; every label and symbol comes from the listed entries themselves.
+        groups = []
+        for entry in item["values"]:
+            label = f"{entry['use']} [{entry['module'].split()[-1]}]"
+            for group in groups:
+                if group[0] == entry["value"]:
+                    group[1].append(label)
+                    break
+            else:
+                groups.append((entry["value"], [label]))
+        unit = f" {item['unit']}" if item["unit"] else ""
+        rendered = " vs ".join(f"{value:g}{unit} in {' and '.join(labels)}" for value, labels in groups)
+        parts.append(f"{item['quantity']}: {rendered}")
     return (
         "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are "
         f"{IN625_SOURCE}['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in "
-        "python/in625_thermal_material.py (Sabau et al. 2020 screening; transient spec) and they are not reconciled: "
+        "python/in625_thermal_material.py (Sabau et al. 2020 screening snapshot; Mills-based transient specification) "
+        "and the paths that differ are not reconciled (paths holding the same value are grouped): "
         + "; ".join(parts) + ". The material registry catalog does not offer this row as a material."
     )
 

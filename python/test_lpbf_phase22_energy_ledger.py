@@ -4,6 +4,7 @@ import numpy as np
 import warp as wp
 
 from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
+from phase22_legacy_test_material import LEGACY_SOLVER_TEST_MATERIAL
 
 
 class Phase22EnergyLedger(unittest.TestCase):
@@ -23,6 +24,7 @@ class Phase22EnergyLedger(unittest.TestCase):
             T_preheat_K=initial_temperature,
             include_diagnostic_fields=True,
             include_energy_ledger=True,
+            **LEGACY_SOLVER_TEST_MATERIAL,
         )
 
         ledger = result["energy_ledger"]

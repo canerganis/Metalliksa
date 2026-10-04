@@ -143,32 +143,6 @@ export function celsiusToKelvin(celsius: number): number {
   return Number((celsius + 273.15).toFixed(2));
 }
 
-/** Inputs for the Phase 22 transient 3D GPU RPC (solid/liquid rows of the authority). */
-export interface TransientGpuMaterialInputs {
-  readonly rho: number;
-  readonly L_f: number;
-  readonly T_solidus: number;
-  readonly T_liquidus: number;
-  readonly cp_solid: number;
-  readonly cp_liquid: number;
-  readonly k_solid: number;
-  readonly k_liquid: number;
-}
-
-export function transientGpuMaterialInputs(alloyId: AuthorityAlloyId): TransientGpuMaterialInputs {
-  const t = authorityAlloy(alloyId).thermal;
-  return {
-    rho: t.density_kg_m3,
-    L_f: t.latent_heat_fusion_J_kg,
-    T_solidus: celsiusToKelvin(t.solidus_C),
-    T_liquidus: celsiusToKelvin(t.liquidus_C),
-    cp_solid: t.specific_heat_J_kgK,
-    cp_liquid: t.specific_heat_liquid_J_kgK,
-    k_solid: t.thermal_conductivity_W_mK,
-    k_liquid: t.thermal_conductivity_liquid_W_mK,
-  };
-}
-
 /** Inputs for the solidification-microstructure screening RPC (solid k, liquidus, IR absorptivity). */
 export interface SolidificationMaterialInputs {
   readonly k_WmK: number;

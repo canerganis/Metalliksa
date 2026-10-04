@@ -29,7 +29,7 @@ def main():
     assert_true(0.1 <= pdas <= 15.0, f"Hunt–Lu PDAS should be LPBF µm-scale, got {pdas}")
     assert_true(abs(pdas - hunt_lu_pdas_um(G, R)) < 0.2, "PDAS matches Hunt–Lu helper")
     assert_true(kin["phaseTransformation"]["alloyClass"] == "IN718", "IN718 phase note")
-    assert_true(gk["modelId"] == "goldak-total-power-v2", "Goldak total-power normalization")
+    assert_true(gk["modelId"] == "goldak-half-space-v3", "Goldak half-space power normalization")
 
     slow = calculate_meltpool_physics(
         "Inconel 718", 285, 400, 67, 23.5, 40, 110, heat_source="goldak"

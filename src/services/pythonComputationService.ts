@@ -1,10 +1,11 @@
 /**
  * MetalliX Python HPC Subsystem & Proxy Client Service
  * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, elastic-constant homogenisation, PHACOMP,
- * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, Pourbaix E-pH)
+ * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, single-element Pourbaix E–pH at 25 °C)
  * to the backend Python 3.10 runtime with automatic fallback to client TypeScript engines.
  */
 
+import type { MeltPoolExtentStatus } from "../utils/meltPoolExtentStatus";
 import {
   MultiComponentAlloyComposition,
   MultiComponentSolveResult,
@@ -402,6 +403,9 @@ export interface PythonMarangoniPoreResult {
     peakTemp_C: number;
     liquidusTemp_C: number;
     solidusTemp_C: number;
+    /** Optional here: no Python producer fills this legacy block; see PythonLPBFResult for the contract. */
+    extentStatus?: MeltPoolExtentStatus;
+    extentNote?: string | null;
   };
   porosityPrediction: {
     relativeDensity_pct: number;
@@ -1032,14 +1036,8 @@ class PythonComputationService {
     power_W: number;
     T_preheat_K: number;
     toolpath?: { t: number[]; x: number[]; y: number[]; p: number[] };
-    rho?: number;
-    L_f?: number;
-    T_solidus?: number;
-    T_liquidus?: number;
-    cp_solid?: number;
-    cp_liquid?: number;
-    k_solid?: number;
-    k_liquid?: number;
+    /** Material identity only; Python resolves every property from four_alloy_materials. */
+    alloyId: string;
   }): Promise<any> {
     const res = await fetch("/api/python/transient-3d-gpu", {
       method: "POST",
@@ -1779,12 +1777,15 @@ export interface PythonSTLSlicerResult {
   };
 }
 
-export type PythonLpbfGateStatus = "pass" | "warn" | "fail";
+export type PythonLpbfGateStatus = "pass" | "warn" | "fail" | "unavailable";
 
 export interface PythonLpbfScreeningGate {
   id: string;
   status: PythonLpbfGateStatus;
-  measured: number;
+  /** null when the gate is unavailable (melt-pool geometry not resolved). */
+  measured: number | null;
+  /** Set when status is "unavailable". */
+  reason?: string;
   required: number | null;
   unit: string;
   note: string;
@@ -1799,7 +1800,7 @@ export interface PythonLpbfSuggestedPatch {
 }
 
 export interface PythonLpbfBuildJobVerdict {
-  verdict: "printable" | "risky" | "do-not-print";
+  verdict: "printable" | "risky" | "do-not-print" | "inconclusive";
   headline: string;
   reasons: string[];
   lofGeometry: {
@@ -1817,6 +1818,13 @@ export interface PythonLpbfBuildJobVerdict {
   gates?: PythonLpbfScreeningGate[];
   dominantGate?: string;
   suggestedPatch?: PythonLpbfSuggestedPatch | null;
+  /** false when meltPoolGeometry.extentStatus !== "computed": geometry gates are unavailable, verdict is inconclusive. */
+  geometryResolved?: boolean;
+  extentStatus?: string;
+  extentNote?: string | null;
+  verdictReason?: string | null;
+  unavailableGates?: string[];
+  geometryIndependentFailGates?: string[];
   uq?: {
     P_printable: number;
     normalizedEnthalpy: { mean: number; std: number; unit: string };
@@ -1832,7 +1840,7 @@ export interface PythonLpbfUqBlock {
   bands: Record<string, number>;
   calibration: string;
   P_printable: number;
-  counts: { printable: number; risky: number; do_not_print: number };
+  counts: { printable: number; risky: number; do_not_print: number; inconclusive?: number };
   normalizedEnthalpy: { mean: number; std: number; unit: string };
   sobolProxy: Record<string, number>;
   screeningSensitivity?: Record<string, number>;
@@ -1855,9 +1863,18 @@ export interface PythonLpbfAmbenchBlock {
     caseId: string;
     nist: { length_um: number; width_um: number; depth_um: number };
     predicted: { length_um: number; width_um: number; depth_um: number };
-    mape_pct: { length: number | null; width: number | null; depth: number | null; mean: number | null };
+    /** null when status is "not-computed" (heuristic / floored / box-limited extent). */
+    mape_pct: { length: number | null; width: number | null; depth: number | null; mean: number | null } | null;
+    status?: "computed" | "not-computed";
+    extentStatus?: string;
+    extentNote?: string | null;
+    predictedIsHeuristic?: boolean;
   }>;
+  /** Mean over computed cases only; null when none. */
   overallMeanMape_pct: number | null;
+  computedCases?: number;
+  notComputedCases?: number;
+  overallNote?: string;
   alloyCoverage?: { status: string; note: string };
   fourAlloyCoverage?: Record<string, { status: string; note: string }>;
 }
@@ -2001,6 +2018,9 @@ export interface PythonLPBFResult {
     depthToWidthRatio_D_over_W: number;
     keyholeVaporCavityDepth_um: number;
     regime: string;
+    /** Only "computed" is a closed, unfloored liquidus isotherm (python/lpbf_thermal_solver.py). */
+    extentStatus: MeltPoolExtentStatus;
+    extentNote: string | null;
     goldakParameters: {
       semiAxis_af_front_um: number;
       semiAxis_ar_rear_um: number;

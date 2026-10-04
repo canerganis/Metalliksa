@@ -33,7 +33,7 @@ opt-in (--slow or --case). Everything else runs in about one minute.
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_parity_check.py --list
     python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...] [--expect-unpinned]
-        [--expect-drift CASE[,CASE...]]
+        [--expect-drift CASE[:KEY_GLOB][,...]]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
 
 --expect-drift (corrected-physics bump), entries CASE or CASE:KEY_GLOB (fnmatch on the
@@ -45,9 +45,15 @@ observation key), comma-separated or repeated:
   that matches no drifted observation, or a case that is not selected, fails (stale).
 - Identity digests (*materialRevisionSha256*, *materialSha256*, *inputSha256*) fail in
   every case unless an entry names that exact key.
-- The reference transient cases g1/g2/g4 are refused as whole cases (CASE:KEY_GLOB only),
-  and their numerics (metrics, thermalHistory, energyBalance, field*, artifacts, NPZ,
-  fixture equality) fail whatever the allowlist.
+- The reference transient cases g1/g2/g4 are refused as whole cases and refuse every
+  glob: only exact CASE:KEY entries (no * ? [ characters) are accepted for them. Their
+  numerics (metrics, thermalHistory, energyBalance, field*, artifacts, NPZ, fixture equality,
+  peakInterpolatedMeltPool, midTrack*, massBalance, numericalDiagnostics, phaseAudit,
+  settings, discretization, scanPath) fail whatever the allowlist.
+- Honesty observations (validationStatus, productionReady, coreContract.solverId, confidence,
+  effectiveMode, experimentalValidation, experimentalComparison, unresolvedPhysics,
+  opticalOperatorMatched, each with or without .key., and the G9 observation
+  in625.validateScreeningAdmission) never drift in ANY case, whatever the allowlist.
 - With --allow-environment-mismatch a drift run ends DIAGNOSTIC (exit 3), never PASS.
 
 --record refuses to overwrite an existing golden without --force, and refuses to
@@ -531,7 +537,7 @@ EVAPORATION_CASES = {
 
 def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str,
                               substitute_latent_heat_vap: Optional[float] = None):
-    """Run with the evaporation inversion wrapped: record the L_v it receives, change nothing
+    """Run with the boiling-cap inversion wrapped: record the L_v it receives, change nothing
     (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe).
 
     The wrapper knows today's call shape (L_v as 5th positional or latent_heat_vap_j_kg
@@ -540,7 +546,7 @@ def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str
     must update this wrapper in the same branch."""
     import lpbf_evaporation_marangoni as evaporation
     calls: List[Tuple[Any, Any]] = []
-    original = evaporation.invert_enthalpy_with_evaporation
+    original = evaporation.invert_enthalpy_with_boiling_cap
     keyword = "latent_heat_vap_j_kg"
 
     def recording(*args, **kwargs):
@@ -565,11 +571,11 @@ def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str
         calls.append((used, fraction))
         return result
 
-    evaporation.invert_enthalpy_with_evaporation = recording
+    evaporation.invert_enthalpy_with_boiling_cap = recording
     try:
         _, observations = ctx.run_case(raw, artifacts=True, prefix=prefix)
     finally:
-        evaporation.invert_enthalpy_with_evaporation = original
+        evaporation.invert_enthalpy_with_boiling_cap = original
     return observations, calls
 
 
@@ -635,6 +641,12 @@ IN625_MELTPOOL_PAYLOAD = dict(material_name="Inconel 625", laser_power_W=200.0, 
 IN625_LATENT_HEAT_CANDIDATES = (227000.0, 260000.0, 290000.0)
 
 
+def _meltpool_geometry_um(value: Dict[str, Any]) -> List[Any]:
+    """[width, depth, length, keyhole vapour cavity depth] in um of a calculate_meltpool_physics result."""
+    geometry = value["meltPoolGeometry"]
+    return [geometry[key] for key in ("width_um", "depth_um", "length_um", "keyholeVaporCavityDepth_um")]
+
+
 def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
     """Which IN625 fusion latent heat each path uses today (value level)."""
     import importlib.util
@@ -653,6 +665,9 @@ def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
         remember_raw("meltpool.in625", plain)
     if status == "ok":
         observations["meltpool.in625.materialEvidence"] = plain.get("materialEvidence")
+        # Small companion of the digest above (its raw value exceeds RAW_VALUE_LIMIT), so a
+        # drift report carries raw before/after melt-pool dimensions (review pb-r2 S2).
+        observe_value(observations, "meltpool.in625.geometry_um", lambda: _meltpool_geometry_um(plain))
     # prop_overrides merge onto the resolved table: the result is bit-equal to the plain run
     # exactly for the latent heat the path already uses, and differs for the others.
     for value in IN625_LATENT_HEAT_CANDIDATES:
@@ -842,6 +857,9 @@ def case_g8_observers(ctx: CaseContext) -> Dict[str, Any]:
     # Plain run of the same case: observers must not change the result.
     _, plain = ctx.run_case(OBSERVER_CASE, prefix="plain")
     observations["plain.canonicalSha256"] = plain["plain.canonicalSha256"]
+    # The plain run's analytical-comparison digest (its raw value is small, so remember_raw
+    # keeps it): the one block that moves under the corrected-physics bump (review pb-r2 S2).
+    observations["plain.key.analyticalComparison"] = plain["plain.key.analyticalComparison"]
     observations.update(_observer_rejections())
     return observations
 
@@ -1042,9 +1060,16 @@ def case_g11_build_job_meltpool(ctx: CaseContext) -> Dict[str, Any]:
             observations[f"meltpool.{index}.typedSha256"] = typed_sha256(value)
             observations[f"meltpool.{index}.canonicalSha256"] = canonical_json_sha256(value)
             remember_raw(f"meltpool.{index}.typedSha256", value)
+            # Small companions of the digests above (the full value exceeds RAW_VALUE_LIMIT),
+            # so a drift report carries raw before/after values (review pb-r2 S2).
+            observe_value(observations, f"meltpool.{index}.geometry_um", lambda value=value: _meltpool_geometry_um(value))
+            observe_value(observations, f"meltpool.{index}.peakTemperature_C",
+                          lambda value=value: value["hydrodynamicsAndRecoil"]["peakTemperature_C"])
         else:
             observations[f"meltpool.{index}"] = {"error": value}
     observe_value(observations, "thermalSolver.THERMOPHYSICAL_DB", lambda: THERMOPHYSICAL_DB)
+    observe_value(observations, "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg",
+                  lambda: THERMOPHYSICAL_DB["Inconel 625"]["latent_heat_fusion_J_kg"])
     observe_value(observations, "thermalSolver.classify_enthalpy_regime",
                   lambda: [classify_enthalpy_regime(x) for x in (0.0, 14.99, 15.0, 29.99, 30.0, 80.0)])
     return observations
@@ -1475,7 +1500,24 @@ IDENTITY_PATTERNS = ("*materialRevisionSha256*", "*materialSha256*", "*inputSha2
 REFERENCE_NUMERICS_PATTERNS = (
     "*.key.metrics", "*.key.thermalHistory", "*.key.energyBalance", "*.key.field*",
     "*.key.artifacts", "artifact.*", "artifacts.*", "npz.*", "*.artifact.*", "*.artifacts*",
-    "*.npz.*", "fixture.*")
+    "*.npz.*", "fixture.*",
+    "*.key.peakInterpolatedMeltPool", "*.key.midTrack*", "*.key.massBalance",
+    "*.key.numericalDiagnostics", "*.key.phaseAudit", "*.key.settings", "*.key.discretization",
+    "*.key.scanPath")
+# Honesty observations: a change fails in EVERY case (not only the reference cases), whatever
+# the allowlist. The bare names cover observation keys without a prefix.
+HONESTY_PATTERNS = (
+    "*.validationStatus", "*.key.validationStatus", "*.productionReady", "*.key.productionReady",
+    "*.coreContract.solverId", "*.key.confidence", "*.confidence", "*.effectiveMode",
+    "validationStatus", "productionReady", "confidence", "effectiveMode",
+    # Review rr2 S2: the evidence-honesty flags and the G9 IN625 screening admission verdict.
+    "*.experimentalValidation", "*.key.experimentalValidation",
+    "*.experimentalComparison", "*.key.experimentalComparison",
+    "*.unresolvedPhysics", "*.key.unresolvedPhysics",
+    "*.opticalOperatorMatched", "*.key.opticalOperatorMatched",
+    "in625.validateScreeningAdmission",
+    "experimentalValidation", "experimentalComparison", "unresolvedPhysics", "opticalOperatorMatched")
+GLOB_CHARACTERS = "*?["
 
 
 class DriftEntry:
@@ -1506,6 +1548,10 @@ def parse_expect_drift(values: Optional[List[str]]) -> List[DriftEntry]:
             if not separator and case_id in REFERENCE_CASES:
                 raise SystemExit(f"--expect-drift: {case_id} is a reference transient case; name the "
                                  f"observations that may drift ({case_id}:KEY_GLOB), never the whole case")
+            if separator and case_id in REFERENCE_CASES and any(c in pattern for c in GLOB_CHARACTERS):
+                raise SystemExit(f"--expect-drift: {item!r} contains a glob character ({GLOB_CHARACTERS}); "
+                                 f"{case_id} is a reference transient case, so only exact observation keys "
+                                 f"({case_id}:EXACT.KEY) may be named")
             if all(e.text != item for e in entries):
                 entries.append(DriftEntry(case_id, pattern if separator else None))
     return entries
@@ -1514,6 +1560,8 @@ def parse_expect_drift(values: Optional[List[str]]) -> List[DriftEntry]:
 def _protected_reason(case_id: str, key: str, entries: List[DriftEntry]) -> Optional[str]:
     if case_id in REFERENCE_CASES and any(fnmatch.fnmatchcase(key, p) for p in REFERENCE_NUMERICS_PATTERNS):
         return "reference-case numerics never drift under --expect-drift"
+    if any(fnmatch.fnmatchcase(key, p) for p in HONESTY_PATTERNS):
+        return "honesty observation never drifts under --expect-drift"
     if any(fnmatch.fnmatchcase(key, p) for p in IDENTITY_PATTERNS) and not any(e.pattern == key for e in entries):
         return "identity observation: allowed only by an entry naming this exact key"
     return None

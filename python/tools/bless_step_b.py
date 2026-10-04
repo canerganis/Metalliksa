@@ -14,7 +14,7 @@ solver into ``python/golden/phase6a/<solver>/step_b/<case>.json``:
 - the drift against the d33b6f5 golden must pass capture_phase6a_golden.step_b_violations
   (numeric rows only, plus changed pythonCode strings; |rel| bounded per solver; rows
   listed in EXPECTED_DOCUMENTED_VALUE_CHANGES are instead checked exactly against the
-  fresh output), otherwise nothing is written;
+  fresh output and, for pourbaix, the d33b6f5 golden and tools/pourbaix_oracle.py), otherwise nothing is written;
 - a case whose stdout equals the d33b6f5 golden gets no step_b file (a stale one
   is removed);
 - otherwise the file records the stdout, the exit code, the provenance block, the
@@ -71,7 +71,7 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
                              f"not a value drift, refusing to bless.\n{fresh['stderr']}")
         drift.append((f"{solver}/{case}", drift_report.diff(previous["stdout"], fresh["stdout"])))
         vs_base = drift_report.diff(base["stdout"], fresh["stdout"])
-        violations = (golden.step_b_violations(solver, vs_base, fresh["stdout"], payload)
+        violations = (golden.step_b_violations(solver, vs_base, fresh["stdout"], payload, base["stdout"])
                       + golden.step_b_document_violations(solver, fresh["stdout"]))
         if violations:
             raise SystemExit(f"{solver}/{case}: drift is not an allowed value change; refusing to "

@@ -31,6 +31,7 @@ import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAll
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildGoldakCaeCard } from "../utils/goldakCaeCard";
+import { MeltPoolExtentNotice } from "./MeltPoolExtentNotice";
 import { mapPhaseTemperaturesC, thermalMapHeaderSource } from "../utils/meltPoolMapAuthority";
 
 interface Props {
@@ -1130,6 +1131,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                     <strong className="text-sm text-amber-300">{pyResult.meltPoolGeometry.depth_um} μm</strong>
                   </div>
                 </div>
+                <MeltPoolExtentNotice geometry={pyResult.meltPoolGeometry} />
 
                 <div className="space-y-1.5 text-[11px] text-slate-300">
                   <div className="flex justify-between py-0.5 border-b border-slate-800/60">
