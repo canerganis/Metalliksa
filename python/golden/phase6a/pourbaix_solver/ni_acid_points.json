@@ -2,6 +2,7 @@
  "baseRevision": "d33b6f5",
  "case": "ni_acid_points",
  "exitCode": 0,
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
  "input": {
   "chloride_ppm": 600,
   "element": "Ni",
@@ -27,6 +28,10 @@
  "invocation": "python -B pourbaix_solver.py < input (cwd python/)",
  "schema": "phase6a-golden-1",
  "solver": "pourbaix_solver",
+ "solverFile": "python/pourbaix_solver.py",
+ "solverSha256": "47a9535efc946ad478272e3b84665f8eb3a798eb5a4b144ccf3df52a7c47ee9b",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
  "stdout": {
   "analyticalBoundaries": [
    {

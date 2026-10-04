@@ -2,6 +2,7 @@
  "baseRevision": "d33b6f5",
  "case": "solve_unknown_alloy_full_overrides",
  "exitCode": 0,
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
  "input": {
   "activationEnergyJ_mol": 33000.0,
   "allowableLossMm": 2.0,
@@ -20,6 +21,10 @@
  "invocation": "python -B tafel_corrosion_rate_solver.py < input (cwd python/)",
  "schema": "phase6a-golden-1",
  "solver": "tafel_corrosion_rate_solver",
+ "solverFile": "python/tafel_corrosion_rate_solver.py",
+ "solverSha256": "43a45856fb5967398d8a78cf9539a5670209f054347a0c8f88bb3dfa2fc5a4af",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
  "stdout": {
   "allowableLossMm": 2.0,
   "alloyId": "duplex2205",

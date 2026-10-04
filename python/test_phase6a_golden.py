@@ -12,6 +12,7 @@ record of the old behaviour and the test asserts the new validation envelope.
 
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -94,6 +95,78 @@ class GoldenRegressionTest(unittest.TestCase):
                 self._check("pourbaix_solver", case)
 
 
+def _git_available() -> bool:
+    try:
+        golden.solver_bytes("pourbaix_solver", golden.BASE_REVISION)
+        return True
+    except Exception:
+        return False
+
+
+@unittest.skipUnless(_git_available(), f"git or revision {golden.BASE_REVISION} unavailable")
+class GoldenBindingTest(unittest.TestCase):
+    """Golden files are bound to the immutable solver blobs they were captured from."""
+
+    def _blob_sha(self, solver):
+        return golden.normalised_sha256(golden.solver_bytes(solver, golden.BASE_REVISION))
+
+    def test_every_golden_records_the_base_blob_sha256(self):
+        for solver, case in golden.iter_golden_cases():
+            doc = golden.load_golden(solver, case)
+            self.assertEqual(doc["solverSha256"], self._blob_sha(solver), f"{solver}/{case}")
+            self.assertEqual(doc["solverFile"], f"python/{solver}.py")
+            self.assertIn(doc["solverSource"], {f"git:{golden.BASE_REVISION}", "worktree"})
+        for solver in golden._TABLE_TARGETS:
+            path = golden.GOLDEN_DIR / solver / golden.SOURCE_TABLES_FILE
+            doc = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(doc["solverSha256"], self._blob_sha(solver), solver)
+
+    def test_normalised_sha256_ignores_only_crlf(self):
+        self.assertEqual(golden.normalised_sha256(b"a\r\nb\n"), golden.normalised_sha256(b"a\nb\n"))
+        self.assertNotEqual(golden.normalised_sha256(b"a\nb\n"), golden.normalised_sha256(b"a\nc\n"))
+
+    def _in_temp_golden_dir(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        original = golden.GOLDEN_DIR
+        golden.GOLDEN_DIR = Path(tmp.name)
+        self.addCleanup(setattr, golden, "GOLDEN_DIR", original)
+        return Path(tmp.name)
+
+    def test_force_capture_of_changed_solver_is_refused(self):
+        # The migrated working-tree solvers differ from the d33b6f5 blobs.
+        tmp = self._in_temp_golden_dir()
+        for solver in golden.CASES:
+            self.assertNotEqual(golden.normalised_sha256(golden.solver_bytes(solver)), self._blob_sha(solver))
+            case = next(iter(golden.CASES[solver]))
+            with self.assertRaises(golden.CaptureRefused):
+                golden.capture(solver, case, force=True)
+        with self.assertRaises(golden.CaptureRefused):
+            golden.capture_source_tables(force=True)
+        self.assertEqual(list(tmp.rglob("*.json")), [])
+
+    def test_capture_from_base_blob_reproduces_committed_golden(self):
+        committed = {(s, c): golden.load_golden(s, c) for s, c in golden.iter_golden_cases()}
+        tmp = self._in_temp_golden_dir()
+        for solver, case in golden.iter_golden_cases():
+            golden.capture(solver, case, force=True, from_revision=golden.BASE_REVISION)
+            fresh = json.loads((tmp / solver / f"{case}.json").read_text(encoding="utf-8"))
+            old = committed[(solver, case)]
+            self.assertEqual(fresh["exitCode"], old["exitCode"], f"{solver}/{case}")
+            self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(old["stdout"]), f"{solver}/{case}")
+            self.assertEqual(fresh["solverSha256"], old["solverSha256"])
+        golden.capture_source_tables(force=True, from_revision=golden.BASE_REVISION)
+        for solver in golden._TABLE_TARGETS:
+            fresh = json.loads((tmp / solver / golden.SOURCE_TABLES_FILE).read_text(encoding="utf-8"))
+            old = json.loads((HERE / "golden" / "phase6a" / solver / golden.SOURCE_TABLES_FILE).read_text(encoding="utf-8"))
+            self.assertEqual(golden.canonical(fresh["values"]), golden.canonical(old["values"]), solver)
+
+    def test_from_revision_other_than_base_is_refused(self):
+        self._in_temp_golden_dir()
+        with self.assertRaises(golden.CaptureRefused):
+            golden.capture("pourbaix_solver", "cu_nochloride", force=True, from_revision="HEAD")
+
+
 class ProvenanceTest(unittest.TestCase):
     """Provenance is stripped from the bit-exact comparison, so pin it here."""
 
@@ -152,6 +225,13 @@ class DriftReportTest(unittest.TestCase):
         rows = {r["key"]: r["kind"] for r in drift_report.diff(
             {"a": 1, "b": "s", "l": [1, 2]}, {"b": "t", "c": 3, "l": [1]})}
         self.assertEqual(rows, {"a": "removed", "b": "changed", "c": "added", "l[1]": "removed"})
+
+    def test_empty_containers_are_kept(self):
+        rows = {r["key"]: r["kind"] for r in drift_report.diff({"a": {}, "b": []}, {"c": {}})}
+        self.assertEqual(rows, {"a": "removed", "b": "removed", "c": "added"})
+        self.assertEqual(drift_report.diff({"a": {}}, {"a": {}}), [])
+        rows = drift_report.diff({"a": {}}, {"a": {"x": 1}})
+        self.assertEqual({r["key"] for r in rows}, {"a", "a.x"})
 
     def test_zero_old_value_has_no_relative_delta(self):
         rows = drift_report.diff({"x": 0.0}, {"x": 1e-9})

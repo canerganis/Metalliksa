@@ -35,6 +35,9 @@ def _is_number(x: Any) -> bool:
 
 def flatten(value: Any, prefix: str = "") -> Iterator[Tuple[str, Any]]:
     if isinstance(value, dict):
+        if not value:
+            # Keep empty dicts as leaves so {} -> missing (or missing -> {}) is reported.
+            yield prefix, value
         for k in sorted(value):
             yield from flatten(value[k], f"{prefix}.{k}" if prefix else str(k))
     elif isinstance(value, list):

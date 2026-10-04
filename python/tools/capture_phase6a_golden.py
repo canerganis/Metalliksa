@@ -16,18 +16,25 @@ change (design step (b)) must attach the drift report (tools/drift_report.py) to
 the commit body.
 
 Usage (from python/):
-    python -B tools/capture_phase6a_golden.py [--force] [--solver NAME]
+    python -B tools/capture_phase6a_golden.py [--force] [--solver NAME] [--from-revision REV]
+
+Binding: every golden records the sha256 (CRLF->LF normalised, i.e. git blob form)
+of the solver that produced it plus git HEAD. A capture labelled d33b6f5 is refused
+unless the solver bytes it runs equal the d33b6f5 blob; after the migration use
+--from-revision d33b6f5, which runs the immutable blob from a temp dir.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 PYTHON_DIR = Path(__file__).resolve().parent.parent
 GOLDEN_DIR = PYTHON_DIR / "golden" / "phase6a"
@@ -149,11 +156,51 @@ def canonical(value: Any) -> str:
     return json.dumps(value, sort_keys=True, ensure_ascii=False, allow_nan=True)
 
 
-def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout: float = 180.0) -> Dict[str, Any]:
-    """Run ``<solver>.py`` like the app's ad-hoc spawn; return exit code and parsed stdout."""
+class CaptureRefused(RuntimeError):
+    """Raised when a capture would label output with a revision it did not come from."""
+
+
+def _git(*args: str) -> bytes:
+    return subprocess.run(["git", "-C", str(PYTHON_DIR), *args], capture_output=True, check=True).stdout
+
+
+def normalised_sha256(data: bytes) -> str:
+    """sha256 of the bytes with CRLF folded to LF, i.e. of the git blob form.
+
+    The working tree uses core.autocrlf (CRLF on disk, LF in git), so raw working
+    bytes never equal the blob; the normalised digest is equal exactly when the
+    content is identical to the committed blob.
+    """
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def solver_bytes(solver: str, revision: Optional[str] = None) -> bytes:
+    if revision is None:
+        return (PYTHON_DIR / f"{solver}.py").read_bytes()
+    return _git("show", f"{revision}:python/{solver}.py")
+
+
+def git_head() -> Optional[str]:
+    try:
+        return _git("rev-parse", "HEAD").decode().strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout: float = 180.0,
+               script: Optional[Path] = None) -> Dict[str, Any]:
+    """Run ``<solver>.py`` like the app's ad-hoc spawn; return exit code and parsed stdout.
+
+    ``script`` runs another copy of the solver (e.g. a git blob extracted to a temp
+    dir) with the same cwd, and python/ on PYTHONPATH for its local imports.
+    """
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    target = f"{solver}.py"
+    if script is not None:
+        target = str(script)
+        env["PYTHONPATH"] = str(PYTHON_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     proc = subprocess.run(
-        [python, "-B", f"{solver}.py"], input=json.dumps(payload).encode("utf-8"),
+        [python, "-B", target], input=json.dumps(payload).encode("utf-8"),
         capture_output=True, timeout=timeout, env=env, cwd=str(PYTHON_DIR),
     )
     stdout = proc.stdout.decode("utf-8")
@@ -184,63 +231,106 @@ def iter_golden_cases():
             yield solver, case
 
 
-def capture(solver: str, case: str, force: bool) -> str:
+def _write(path: Path, doc: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(doc, fh, indent=1, sort_keys=True, ensure_ascii=False)
+        fh.write("\n")
+
+
+def _binding(solver: str, label: str, from_revision: Optional[str]) -> Tuple[Dict[str, Any], bytes]:
+    """Return the immutable-source metadata for a capture labelled ``label``.
+
+    Refuses (CaptureRefused) unless the solver bytes that will run are identical to
+    the ``label`` blob, so a re-capture can never relabel other code as ``label``.
+    """
+    source = solver_bytes(solver, from_revision)
+    digest = normalised_sha256(source)
+    try:
+        label_digest = normalised_sha256(solver_bytes(solver, label))
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise CaptureRefused(f"{solver}: cannot read python/{solver}.py at {label!r} from git ({exc})")
+    if digest != label_digest:
+        where = f"git {from_revision}" if from_revision else "the working tree"
+        raise CaptureRefused(
+            f"{solver}: the solver in {where} (sha256 {digest[:12]}) is not the {label} blob "
+            f"(sha256 {label_digest[:12]}); refusing to label its output as {label}. "
+            f"Use --from-revision {label} to capture from the immutable blob.")
+    meta = {
+        "baseRevision": label,
+        "solverFile": f"python/{solver}.py",
+        "solverSha256": digest,
+        "solverSha256Normalization": "CRLF->LF (git blob form)",
+        "solverSource": f"git:{from_revision}" if from_revision else "worktree",
+        "gitHead": git_head(),
+    }
+    return meta, source
+
+
+def capture(solver: str, case: str, force: bool, label: str = BASE_REVISION,
+            from_revision: Optional[str] = None) -> str:
     path = golden_path(solver, case)
     if path.exists() and not force:
         return f"skip {solver}/{case} (exists; use --force to re-bless)"
+    meta, source = _binding(solver, label, from_revision)
     payload = CASES[solver][case]
-    result = run_solver(solver, payload)
-    doc = {
+    with tempfile.TemporaryDirectory() as tmp:
+        script = None
+        if from_revision is not None:
+            script = Path(tmp) / f"{solver}.py"
+            script.write_bytes(source)
+        result = run_solver(solver, payload, script=script)
+    doc = dict(meta)
+    doc.update({
         "schema": GOLDEN_SCHEMA,
         "solver": solver,
         "case": case,
-        "baseRevision": BASE_REVISION,
         "invocation": f"python -B {solver}.py < input (cwd python/)",
         "volatileKeysStripped": sorted(VOLATILE_KEYS),
         "input": payload,
         "exitCode": result["exitCode"],
         "stdout": result["stdout"],
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8", newline="\n") as fh:
-        json.dump(doc, fh, indent=1, sort_keys=True, ensure_ascii=False)
-        fh.write("\n")
-    return f"wrote {solver}/{case} exit={result['exitCode']}"
+    })
+    _write(path, doc)
+    return f"wrote {solver}/{case} exit={result['exitCode']} sha256={meta['solverSha256'][:12]}"
 
 
 SOURCE_TABLES_FILE = "_source_tables.json"
+_TABLE_TARGETS = {
+    "tafel_corrosion_rate_solver": ("ALLOY_LIBRARY", lambda t: t),
+    "pourbaix_solver": ("POURBAIX_ELEMENT_SYSTEMS", lambda t: {
+        el: {"atomicMass": d["atomicMass"], "standardE0_V": d["standardE0_V"], "name": d["name"]}
+        for el, d in t.items()}),
+}
 
 
-def capture_source_tables(force: bool) -> List[str]:
-    """Snapshot the solver-local tables at BASE_REVISION (before migration).
+def capture_source_tables(force: bool, label: str = BASE_REVISION,
+                          from_revision: Optional[str] = None) -> List[str]:
+    """Snapshot the solver-local tables of the ``label`` blob (before migration).
 
     The structural migration removes these tables from the solvers; the snapshot
     lets the tests keep proving that the registry/constants values are the old ones.
+    The module source is executed from the bound bytes (not imported), so it is
+    the same code the metadata names.
     """
-    sys.path.insert(0, str(PYTHON_DIR))
     out: List[str] = []
-    targets = {
-        "tafel_corrosion_rate_solver": ("ALLOY_LIBRARY", lambda t: t),
-        "pourbaix_solver": ("POURBAIX_ELEMENT_SYSTEMS", lambda t: {
-            el: {"atomicMass": d["atomicMass"], "standardE0_V": d["standardE0_V"], "name": d["name"]}
-            for el, d in t.items()}),
-    }
-    for solver, (attr, project) in targets.items():
+    if str(PYTHON_DIR) not in sys.path:
+        sys.path.insert(0, str(PYTHON_DIR))
+    for solver, (attr, project) in _TABLE_TARGETS.items():
         path = GOLDEN_DIR / solver / SOURCE_TABLES_FILE
         if path.exists() and not force:
             out.append(f"skip {solver}/{SOURCE_TABLES_FILE} (exists)")
             continue
-        module = __import__(solver)
-        table = getattr(module, attr, None)
+        meta, source = _binding(solver, label, from_revision)
+        namespace: Dict[str, Any] = {"__name__": f"_phase6a_snapshot_{solver}"}
+        exec(compile(source, f"{solver}.py@{label}", "exec"), namespace)
+        table = namespace.get(attr)
         if table is None:
             out.append(f"skip {solver}/{SOURCE_TABLES_FILE} ({attr} missing)")
             continue
-        doc = {"schema": GOLDEN_SCHEMA, "solver": solver, "baseRevision": BASE_REVISION,
-               "table": attr, "values": project(table)}
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf-8", newline="\n") as fh:
-            json.dump(doc, fh, indent=1, sort_keys=True, ensure_ascii=False)
-            fh.write("\n")
+        doc = dict(meta)
+        doc.update({"schema": GOLDEN_SCHEMA, "solver": solver, "table": attr, "values": project(table)})
+        _write(path, doc)
         out.append(f"wrote {solver}/{SOURCE_TABLES_FILE}")
     return out
 
@@ -249,14 +339,21 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--force", action="store_true", help="overwrite existing golden files")
     parser.add_argument("--solver", choices=sorted(CASES), help="capture one solver only")
+    parser.add_argument("--from-revision", metavar="REV",
+                        help=f"run the solver blob from git REV instead of the working tree "
+                             f"(it must equal the {BASE_REVISION} blob)")
     args = parser.parse_args(argv)
-    for solver, case in iter_golden_cases():
-        if args.solver and solver != args.solver:
-            continue
-        print(capture(solver, case, args.force))
-    if not args.solver:
-        for line in capture_source_tables(args.force):
-            print(line)
+    try:
+        for solver, case in iter_golden_cases():
+            if args.solver and solver != args.solver:
+                continue
+            print(capture(solver, case, args.force, from_revision=args.from_revision))
+        if not args.solver:
+            for line in capture_source_tables(args.force, from_revision=args.from_revision):
+                print(line)
+    except CaptureRefused as exc:
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 2
     return 0
 
 
