@@ -22,6 +22,9 @@ from alloy_data_calphad_battery_icme import provenance as _domain_data_provenanc
 # 8.31446/96485.33.
 R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 F_FARADAY = physical_constants.FARADAY.value  # C/mol, exact
+# ASTM G102 K1 = 1e-6 * (s/yr = 365.25 * 86400) * 10 / F = 0.0032707148 mm*g/(uA*cm*yr),
+# derived from the exact F (fix round item 6; was the printed 3.27e-3 / 0.00327).
+ASTM_G102_K1_MM_G_UA_CM_YR = (1e-6 * 31557600.0 * 10.0) / F_FARADAY
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # ==========================================
@@ -773,7 +776,7 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     r_p_ohm_cm2 = b_val / max(1e-12, i_corr_a_cm2)
     
     # Faraday's Law Corrosion Penetration Rate (ASTM G102)
-    # CR (mm/year) = 3.27e-3 * (i_corr_uA_cm2 * EW) / density_g_cm3
+    # CR (mm/year) = K1 * (i_corr_uA_cm2 * EW) / density_g_cm3, K1 = 0.0032707148 (exact F)
     # Approximating EW and density for standard alloys
     ew = 27.9 # g/eq (steel approx)
     density = 7.87 # g/cm3
@@ -784,7 +787,7 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     elif "ni" in metal_id.lower():
         ew = 29.35; density = 8.90
         
-    cr_mm_per_year = (3.27e-3 * i0_corr_ua_cm2 * ew) / density
+    cr_mm_per_year = (ASTM_G102_K1_MM_G_UA_CM_YR * i0_corr_ua_cm2 * ew) / density
     cr_mpy = cr_mm_per_year * 39.37 # mils per year
     
     # Pitting Potential Breakdown Margin
@@ -1931,7 +1934,7 @@ def analyze_uploaded_eis_dataset(frequencies, z_real, z_imag, application_domain
         # Carbon steel reference: EW = 27.92, rho = 7.87 g/cm3
         ew_ref = 27.92
         rho_ref = 7.87
-        cr_mm_year = (0.00327 * i_corr_uA_cm2 * ew_ref) / rho_ref
+        cr_mm_year = (ASTM_G102_K1_MM_G_UA_CM_YR * i_corr_uA_cm2 * ew_ref) / rho_ref
         cr_mpy = cr_mm_year * 39.37
         
         corrosion_state = "PASSIVE / EXCELLENT" if cr_mm_year < 0.02 else ("MODERATE CORROSION" if cr_mm_year < 0.15 else "SEVERE UNSTABLE CORROSION")

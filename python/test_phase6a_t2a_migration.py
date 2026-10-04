@@ -125,7 +125,6 @@ class BaseBlobTest(unittest.TestCase):
         "battery_corrosion_eis_solver": [
             {"action": "bernardi_thermal", "cellFormat": "4680-tabless", "nominalCapAh": 22.0,
              "cRate": 2.0, "coolingType": "bottom_cold_plate", "tempAmbientC": 30.0},
-            {"action": "corrosion_kinetics", "metalId": "al-7075", "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66},
             {"action": "lli_lam_deconvolution", "chemistryId": "nmc811", "initialCapAh": 5.0, "degradedCapAh": 4.2},
             {"action": "drt", "frequencies": cases._EIS_F, "zReal": cases._EIS_ZR, "zImag": cases._EIS_ZI},
             {"action": "p2d_continuum", "chemistryId": "lfp", "cRate": 0.5, "tempC": 45.0, "soc": 0.2},
@@ -141,6 +140,11 @@ class BaseBlobTest(unittest.TestCase):
     # (icme: exact R and CIAAW weights). The check keeps the output structure and exit
     # code identical and bounds the numeric drift; the full rows are in the commit body.
     VALUE_STEP_DRIFT = {
+        # Fix round item 6: the ASTM G102 K1 of the battery corrosion path is derived from
+        # the exact F (0.00327 -> 0.0032707148, +2.19e-4).
+        "battery_corrosion_eis_solver": [
+            {"action": "corrosion_kinetics", "metalId": "al-7075", "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66},
+        ],
         "icme_multiscale_pipeline_solver": [
             {"baseMetal": "Fe", "composition_wt": {"C": 0.2, "Cr": 12.0, "Mo": 1.0, "V": 0.3, "W": 0.5},
              "grainSize_um": 12.0, "coolingRate_C_s": 50.0, "componentType": "pressure_bulkhead"},
