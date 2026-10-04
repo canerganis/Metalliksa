@@ -87,6 +87,7 @@ jobs:
           test_physical_constants test_alloy_registry test_input_validation
           test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
           test_lpbf_worker_validation_error
+          test_lpbf_material_authority_json
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_contract_keyhole_raytracing test_contract_uq_lab
           test_contract_ttt_cct_kinetics test_contract_icme_motor test_contract_murakami_fatigue
