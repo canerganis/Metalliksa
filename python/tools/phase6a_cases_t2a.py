@@ -157,24 +157,66 @@ EXPECTED_SUCCESS_FLAG_CHANGES = {
 # isEmpirical false). Four exact matches, nothing is accepted by tolerance; a case is
 # never re-blessed into step_b (step_b_excluded_cases). Not checked when pycalphad is
 # importable: that run takes the real path, which these goldens do not cover.
-# Every case resolves to COST 507: it is the narrowest installed assessment that
-# contains all requested elements (Al-Ni Dupin is binary, Cr-Ti-V lacks Al/Fe/Ni).
-_UNAVAILABLE_PYCALPHAD_MISSING = {
+# Resolution after the fix round (database scope): IN718 (Ni base) has no database that is
+# assessed for Ni base and contains all its elements (COST 507 is a light-alloy database and is
+# refused for Ni/Fe/Co base); 316L (Fe base) has no assessed database at all; Ti-6Al-4V and
+# AlSi10Mg go to COST 507 (Ti / Al base) and are only unavailable for the missing pycalphad.
+_COST507_SUITABILITY = ("Light-metal alloys with an Al, Mg or Ti base. Ni-, Fe- and Co-base alloys are "
+                        "outside its assessed scope and are refused.")
+_UNAVAILABLE_COMMON = {
     "success": False,
     "status": "unavailable",
-    "unavailableKind": "pycalphad-not-installed",
-    "reason": "pycalphad not installed",
-    "reasons": ["pycalphad not installed"],
     "engine": "pycalphad-open-tdb",
     "pycalphadAvailable": False,
     "pycalphadVersion": None,
+}
+_UNAVAILABLE_PYCALPHAD_MISSING = {
+    **_UNAVAILABLE_COMMON,
+    "unavailableKind": "pycalphad-not-installed",
+    "reason": "pycalphad not installed",
+    "reasons": ["pycalphad not installed"],
     "databaseId": "cost507",
     "databaseUsed": "COST 507 Comprehensive Light Alloys Database",
     "databaseStatus": "assessment",
+    "databaseSuitability": _COST507_SUITABILITY,
 }
+_IN718_REASON = ("no usable thermodynamic database contains all requested elements (Al, Cr, Fe, Mo, Nb, Ni, Ti); "
+                 "the closest, 'Al-Ni Dupin 2001 Benchmark (NIST/SGTE)', lacks Cr, Fe, Mo, Nb, Ti. "
+                 "Test-fixture databases are never used")
+_316L_REASON = ("no usable thermodynamic database is assessed for Fe-base alloys (assessed base elements by "
+                "database: cost507: AL, MG, TI; alni_dupin_2001: AL, NI; crtiv_ghosh: TI, CR, V); "
+                "databases are never substituted")
 EXPECTED_UNAVAILABLE_CHANGES = {
-    ("calphad_solver", case): dict(_UNAVAILABLE_PYCALPHAD_MISSING)
-    for case in ("in718_wt_pct", "ti64_at_pct", "ss316l_fixed_grid", "alsi10mg_case_variants_zero_unknown")
+    ("calphad_solver", "in718_wt_pct"): {
+        **_UNAVAILABLE_COMMON,
+        "unavailableKind": "no-database-covers-elements",
+        "reason": _IN718_REASON,
+        "reasons": [_IN718_REASON, "pycalphad not installed"],
+        "baseElement": "Ni",
+        "missingElements": ["Cr", "Fe", "Mo", "Nb", "Ti"],
+        "databaseId": "alni_dupin_2001",
+        "databaseUsed": "Al-Ni Dupin 2001 Benchmark (NIST/SGTE)",
+        "databaseStatus": "assessment",
+        "databasesConsidered": [
+            {"databaseId": "alni_dupin_2001", "status": "assessment", "missingElements": ["Cr", "Fe", "Mo", "Nb", "Ti"]},
+            {"databaseId": "crtiv_ghosh", "status": "assessment", "notAssessedForBase": "Ni"},
+            {"databaseId": "cost507", "status": "assessment", "notAssessedForBase": "Ni"},
+        ],
+    },
+    ("calphad_solver", "ti64_at_pct"): {**_UNAVAILABLE_PYCALPHAD_MISSING, "baseElement": "Ti"},
+    ("calphad_solver", "ss316l_fixed_grid"): {
+        **_UNAVAILABLE_COMMON,
+        "unavailableKind": "database-not-assessed-for-base",
+        "reason": _316L_REASON,
+        "reasons": [_316L_REASON, "pycalphad not installed"],
+        "baseElement": "Fe",
+        "databasesConsidered": [
+            {"databaseId": "alni_dupin_2001", "status": "assessment", "notAssessedForBase": "Fe"},
+            {"databaseId": "crtiv_ghosh", "status": "assessment", "notAssessedForBase": "Fe"},
+            {"databaseId": "cost507", "status": "assessment", "notAssessedForBase": "Fe"},
+        ],
+    },
+    ("calphad_solver", "alsi10mg_case_variants_zero_unknown"): {**_UNAVAILABLE_PYCALPHAD_MISSING, "baseElement": "Al"},
 }
 
 

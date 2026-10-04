@@ -93,8 +93,14 @@ class GoldenRegressionTest(unittest.TestCase):
             for absent in ("equilibriumProfile", "criticalTemperatures", "isEmpirical", "multiElementScheil",
                            "solutePartitioning", "phacompAnalysis"):
                 self.assertNotIn(absent, out)
+            # the request echo is pinned exactly too (not only its keys)
+            payload = cases.CASES[solver][case]
+            self.assertEqual(out["alloyName"], payload["name"])
+            self.assertEqual(out["temperatureRangeC"], [payload["tMin"], payload["tMax"]])
+            self.assertEqual(out["temperatureStepC"], payload["tStep"])
             self.assertEqual(out["nominalComposition"], doc["stdout"]["nominalComposition"])
             self.assertEqual(out["atomicFractions"], doc["stdout"]["atomicFractions"])
+            self.assertEqual(out["requestedElements"], list(out["atomicFractions"]))
             self.assertEqual(set(out), set(expected_unavailable) | {
                 "alloyName", "nominalComposition", "atomicFractions", "requestedElements",
                 "temperatureRangeC", "temperatureStepC"})
@@ -369,8 +375,9 @@ class CalphadElementTest(unittest.TestCase):
         self.assertEqual(out["status"], "unavailable")
         self.assertNotIn("errorKind", out)
         self.assertNotIn("equilibriumProfile", out)
-        self.assertEqual(out["unavailableKind"], "no-database-covers-elements")  # COST 507 has no Co
-        self.assertEqual(out["missingElements"], ["Co"])
+        # WC-Co is C-base by atom fraction: no usable database is assessed for it (and none has W, C, Co)
+        self.assertEqual(out["unavailableKind"], "database-not-assessed-for-base")
+        self.assertEqual(out["baseElement"], "C")
 
     @unittest.skipIf(calphad_solver.PYCALPHAD_AVAILABLE, "pycalphad is importable: the real path runs here; this checks the no-pycalphad envelope")
     def test_p_s_sn_pb_be_specimens_are_normalised_then_answered_explicitly(self):

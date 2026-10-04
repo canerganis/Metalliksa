@@ -23,6 +23,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+import numpy as np
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -59,6 +63,12 @@ def compute(elements, **kw):
     return cs.compute_multi_component_equilibrium("t", dict(elements), **kw)
 
 
+def resolve(elements, preferred=None):
+    """resolve_database the way compute_multi_component_equilibrium calls it (base element included)."""
+    _, at = cs.normalize_composition(dict(elements))
+    return cs.resolve_database(list(at), preferred, None, cs.base_element(at))
+
+
 def assert_no_numbers(test, out):
     for absent in ("equilibriumProfile", "criticalTemperatures", "isEmpirical", "multiElementScheil",
                    "solutePartitioning", "phacompAnalysis", "thermodynamicStabilityIndex"):
@@ -68,7 +78,7 @@ def assert_no_numbers(test, out):
 class TestNoSilentFallback(unittest.TestCase):
     def test_without_pycalphad_the_answer_is_unavailable_with_the_exact_reason(self):
         with pycalphad_forced(False):
-            out = compute(IN718)
+            out = compute(TI64)  # a light alloy with a suitable database: pycalphad is the only gap
         self.assertIs(out["success"], False)
         self.assertEqual(out["status"], "unavailable")
         self.assertEqual(out["reason"], "pycalphad not installed")
@@ -166,16 +176,28 @@ class TestFixtureDatabasesRefused(unittest.TestCase):
             Path(tmp, "fx.tdb").write_text(
                 "$ FOR TESTING PURPOSES ONLY -- NOT FOR RESEARCH\n ELEMENT AL FCC_A1 26.98 0 0 !\n"
                 " ELEMENT NI FCC_A1 58.69 0 0 !\n", encoding="utf-8")
-            entry = {"id": "fx", "fileName": "fx.tdb", "name": "Fx", "elements": ["AL", "NI"],
-                     "status": "assessment", "usable": True, "suitability": "", "statusReason": None}
+            Path(tmp, "ok.tdb").write_text(" ELEMENT AL FCC_A1 26.98 0 0 !\n ELEMENT NI FCC_A1 58.69 0 0 !\n",
+                                           encoding="utf-8")
+            fx = {"id": "fx", "fileName": "fx.tdb", "name": "Fx", "elements": ["AL", "NI"],
+                  "status": "assessment", "usable": True, "suitability": "", "statusReason": None,
+                  "assessedBaseElements": ["NI", "AL"]}
+            ok = dict(fx, id="ok", fileName="ok.tdb", name="Ok")
             old_dir, old_cat = cs.DATABASES_DIR, cs.OPEN_TDB_CATALOG
-            cs.DATABASES_DIR, cs.OPEN_TDB_CATALOG = tmp, [entry]
+            cs.DATABASES_DIR = tmp
             try:
-                for preferred in (None, "fx"):
-                    with self.subTest(preferred=preferred):
-                        res = cs.resolve_database(["Ni", "Al"], preferred)
-                        self.assertFalse(res["ok"])
-                        self.assertEqual(res["kind"], "database-test-fixture")
+                cs.OPEN_TDB_CATALOG = [fx]
+                res = cs.resolve_database(["Ni", "Al"], "fx", None, "Ni")  # asked for by id: refused
+                self.assertFalse(res["ok"])
+                self.assertEqual(res["kind"], "database-test-fixture")
+                # auto mode skips the file (recorded), it does not abort the selection ...
+                res = cs.resolve_database(["Ni", "Al"], None, None, "Ni")
+                self.assertFalse(res["ok"])
+                self.assertEqual(res["extra"]["databasesConsidered"][0]["status"], "test-fixture-skipped")
+                # ... so a later, genuine database is still found
+                cs.OPEN_TDB_CATALOG = [fx, ok]
+                res = cs.resolve_database(["Ni", "Al"], None, None, "Ni")
+                self.assertTrue(res["ok"])
+                self.assertEqual(res["id"], "ok")
             finally:
                 cs.DATABASES_DIR, cs.OPEN_TDB_CATALOG = old_dir, old_cat
 
@@ -197,12 +219,11 @@ class TestFixtureDatabasesRefused(unittest.TestCase):
         for elements in (IN718, {"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5, "Mn": 2.0}, {"Fe": 70.0, "Cr": 18.0, "Ni": 12.0},
                          {"Ni": 70.0, "Al": 10.0, "Cr": 10.0, "Co": 10.0}, {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}):
             with self.subTest(elements=elements):
-                res = cs.resolve_database(list(elements))
+                res = resolve(elements)
                 if res["ok"]:
                     self.assertIn(res["id"], ASSESSMENT_IDS)
                 else:
                     self.assertNotIn(res["extra"].get("databaseId"), FIXTURE_IDS)
-        self.assertEqual(cs.resolve_database(list(IN718))["id"], "cost507")
 
     def test_binary_ni_al_uses_the_dupin_assessment(self):
         res = cs.resolve_database(["Ni", "Al"])
@@ -230,7 +251,8 @@ class TestMissingElementsRefused(unittest.TestCase):
         self.assertEqual(out["unavailableKind"], "pycalphad-not-installed")
 
     def test_no_database_covers_lists_the_missing_elements(self):
-        for elements, missing in (({"W": 88.0, "C": 6.0, "Co": 6.0}, ["Co"]), ({"Fe": 90.0, "P": 5.0, "S": 5.0}, ["P", "S"])):
+        # Ti base: COST 507 is in scope but has no Co; Al base: nothing has P and S.
+        for elements, missing in (({"Ti": 80.0, "Al": 10.0, "Co": 10.0}, ["Co"]), ({"Al": 90.0, "P": 5.0, "S": 5.0}, ["P", "S"])):
             with self.subTest(elements=elements):
                 out = compute(elements)
                 self.assertEqual(out["unavailableKind"], "no-database-covers-elements")
@@ -276,35 +298,73 @@ def _pt(t, *phases):
 class TestCriticalTemperatureFlags(unittest.TestCase):
     """derive_critical_temperatures is a pure function of the profile (no pycalphad needed)."""
 
-    def derive(self, profile, l12=None, beta=None, sigma=None, phacomp_sigma=None):
-        return cs.derive_critical_temperatures(profile, l12, beta, sigma, phacomp_sigma)
+    def derive(self, profile, l12=None, beta=None, sigma=None, phacomp_sigma=None, **kw):
+        return cs.derive_critical_temperatures(profile, l12, beta, sigma, phacomp_sigma, **kw)
 
-    def test_solidus_at_the_grid_minimum_is_unavailable(self):
-        # Audit: solidus 600 (the lowest grid T) in all three runs. Solid at 600 and a liquid at the
-        # top, but no trace-liquid grid point: nothing brackets the solidus.
+    def test_solid_at_the_grid_minimum_is_never_reported_as_the_solidus(self):
+        # Audit: solidus 600 (the lowest grid T) in all three runs. Solid at 600, liquid at the
+        # top: the solidus is the bracket 1400-1450, not the grid minimum.
         profile = [_pt(600, ("FCC_A1", 1.0)), _pt(1000, ("FCC_A1", 1.0)), _pt(1400, ("FCC_A1", 1.0)),
                    _pt(1450, ("LIQUID", 1.0))]
         values, status = self.derive(profile)
-        self.assertIsNone(values["solidusC"])
-        self.assertIsNone(values["freezingRangeC"])
-        self.assertEqual(status["solidusC"]["status"], "unavailable")
-        self.assertIn("grid bound", status["solidusC"]["reason"])
-        self.assertEqual(values["liquidusC"], 1450.0)  # an observed grid point, above the grid minimum
+        self.assertEqual(values["solidusC"], 1425.0)
+        self.assertEqual(status["solidusC"]["status"], "bracketed-by-grid")
+        self.assertEqual(status["solidusC"]["bracketC"], [1400.0, 1450.0])
+        self.assertEqual(values["liquidusC"], 1425.0)
 
-    def test_a_trace_liquid_point_inside_the_grid_gives_a_solidus(self):
-        profile = [_pt(600, ("FCC_A1", 1.0)), _pt(1300, ("FCC_A1", 0.995), ("LIQUID", 0.005)),
-                   _pt(1350, ("FCC_A1", 0.5), ("LIQUID", 0.5)), _pt(1400, ("LIQUID", 1.0))]
-        values, status = self.derive(profile)
-        self.assertEqual(values["solidusC"], 1300.0)
-        self.assertEqual(values["liquidusC"], 1400.0)
-        self.assertEqual(values["freezingRangeC"], 100.0)
-        self.assertEqual(status["solidusC"]["status"], "computed-grid-resolution")
-
-    def test_trace_liquid_only_at_the_grid_minimum_is_not_a_solidus(self):
+    def test_liquid_present_at_the_grid_minimum_gives_no_solidus(self):
         profile = [_pt(600, ("FCC_A1", 0.995), ("LIQUID", 0.005)), _pt(900, ("LIQUID", 1.0))]
         values, status = self.derive(profile)
         self.assertIsNone(values["solidusC"])
+        self.assertEqual(status["solidusC"]["status"], "unavailable")
         self.assertIn("lowest grid temperature", status["solidusC"]["reason"])
+
+    def test_no_liquid_anywhere_gives_no_solidus_and_no_liquidus(self):
+        values, status = self.derive([_pt(t, ("FCC_A1", 1.0)) for t in (600, 900, 1200, 1450)])
+        self.assertIsNone(values["solidusC"])
+        self.assertIsNone(values["liquidusC"])
+        self.assertIn("above the grid", status["solidusC"]["reason"])
+
+    def test_the_bracket_is_refined_by_multi_section_to_the_tolerance(self):
+        # Synthetic liquid fraction: 0 below 1300.3, linear to 1 at 1337.7 (solidus 1300.3, liquidus 1337.7).
+        def true_liquid(t):
+            return min(1.0, max(0.0, (t - 1300.3) / (1337.7 - 1300.3)))
+
+        def refine(temps):
+            return [true_liquid(t) for t in temps]
+
+        grid = [_pt(t, *([("LIQUID", round(true_liquid(t), 4))] if true_liquid(t) > 0.001 else []),
+                    *([("FCC_A1", round(1 - true_liquid(t), 4))] if true_liquid(t) < 0.999 else []))
+                for t in (1250, 1275, 1300, 1325, 1350, 1375)]
+        values, status = self.derive(grid, refine=refine, tolerance_c=0.5)
+        self.assertEqual(status["solidusC"]["status"], "bisected")
+        self.assertAlmostEqual(values["solidusC"], 1300.3, delta=0.5)
+        self.assertAlmostEqual(values["liquidusC"], 1337.7, delta=0.5)
+        lo, hi = status["solidusC"]["bracketC"]
+        self.assertLessEqual(lo, 1300.3 + 0.5)
+        self.assertGreaterEqual(hi, 1300.3 - 0.5)
+        self.assertLessEqual(hi - lo, 0.5)
+        self.assertEqual(status["solidusC"]["gridBracketC"], [1300.0, 1325.0])
+        self.assertLessEqual(status["solidusC"]["refinementRounds"], 3)
+        self.assertAlmostEqual(values["freezingRangeC"], 37.4, delta=1.0)
+
+    def test_a_refinement_point_that_does_not_converge_leaves_the_grid_bracket(self):
+        profile = [_pt(1250, ("FCC_A1", 1.0)), _pt(1350, ("LIQUID", 1.0))]
+        values, status = self.derive(profile, refine=lambda temps: [None] * len(temps))
+        self.assertEqual(status["solidusC"]["status"], "bracketed-by-grid")
+        self.assertEqual(status["solidusC"]["bracketC"], [1250.0, 1350.0])
+        self.assertEqual(values["solidusC"], 1300.0)
+
+    def test_not_converged_grid_points_are_ignored_and_flagged(self):
+        profile = [_pt(1250, ("FCC_A1", 1.0)),
+                   {"temperatureC": 1275.0, "status": "not-converged", "phases": []},  # would read as "no liquid"
+                   _pt(1300, ("LIQUID", 1.0))]
+        values, status = self.derive(profile)
+        self.assertEqual(status["solidusC"]["gridBracketC"], [1250.0, 1300.0])
+        self.assertIn("did not converge", status["solidusC"]["warning"])
+        values, status = self.derive([{"temperatureC": 1250.0, "status": "not-converged", "phases": []}])
+        self.assertIsNone(values["liquidusC"])
+        self.assertEqual(status["liquidusC"]["reason"], "no grid point converged")
 
     def test_liquidus_is_never_a_fabricated_default(self):
         # Audit: "liquidus 1500" was t_max - 50 when no liquid appeared. Now: unavailable.
@@ -343,18 +403,193 @@ class TestCriticalTemperatureFlags(unittest.TestCase):
         self.assertEqual(values["tcpSigmaRiskTemperatureC"], 850.0)
 
 
+class TestDatabaseScope(unittest.TestCase):
+    """Science review B1: IN718 was routed to the light-alloy database COST 507 and answered
+    success true with FCC + 30-96 % BCC_B2 and no liquid below 1425 C."""
+
+    def test_catalogue_declares_machine_readable_scope(self):
+        scope = {e["id"]: e["assessedBaseElements"] for e in cs.OPEN_TDB_CATALOG}
+        self.assertEqual(scope["cost507"], ["AL", "MG", "TI"])
+        self.assertEqual(scope["alni_dupin_2001"], ["AL", "NI"])
+        for fixture in FIXTURE_IDS:
+            self.assertEqual(scope[fixture], [])
+        for entry in cs.OPEN_TDB_CATALOG:
+            if entry["status"] == "assessment":
+                self.assertTrue(entry["assessedBaseElements"], entry["id"])
+
+    def test_in718_is_never_routed_to_cost_507(self):
+        for pyc in (False, True):
+            with self.subTest(pycalphad=pyc), pycalphad_forced(pyc):
+                out = compute(IN718)
+                self.assertIs(out["success"], False)
+                self.assertEqual(out["baseElement"], "Ni")
+                self.assertNotEqual(out["databaseId"], "cost507")
+                self.assertEqual(out["unavailableKind"], "no-database-covers-elements")
+                assert_no_numbers(self, out)
+                considered = {c["databaseId"]: c for c in out["databasesConsidered"]}
+                self.assertEqual(considered["cost507"]["notAssessedForBase"], "Ni")
+
+    def test_explicit_cost_507_for_a_ni_base_alloy_is_refused_with_the_reason(self):
+        out = compute(IN718, database_id="cost507")
+        self.assertEqual(out["unavailableKind"], "database-not-assessed-for-base")
+        self.assertIn("database 'cost507' is not assessed for Ni-base alloys", out["reason"])
+        self.assertEqual(out["assessedBaseElements"], ["AL", "MG", "TI"])
+        self.assertIn("Ni-, Fe- and Co-base alloys", out["databaseSuitability"])
+        assert_no_numbers(self, out)
+
+    def test_fe_and_co_base_alloys_have_no_database(self):
+        for elements in ({"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5, "Mn": 2.0},
+                         {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}):
+            with self.subTest(elements=elements):
+                out = compute(elements)
+                self.assertEqual(out["unavailableKind"], "database-not-assessed-for-base")
+                self.assertIn("databases are never substituted", out["reason"])
+                self.assertNotIn("databaseId", out)
+
+    def test_light_alloys_still_resolve_to_cost_507(self):
+        for elements in (TI64, {"Al": 88.5, "Si": 10.0, "Mg": 0.5, "Fe": 1.0}, {"Mg": 92.0, "Al": 3.0, "Zn": 1.0}):
+            with self.subTest(elements=elements):
+                res = resolve(elements)
+                self.assertTrue(res["ok"], res)
+                self.assertEqual(res["id"], "cost507")
+        with pycalphad_forced(False):
+            out = compute(TI64)
+        self.assertIn("Al, Mg or Ti base", out["databaseSuitability"])  # shown by the UI
+
+    def test_the_solver_result_carries_the_suitability_text(self):
+        res = resolve({"Ni": 90.0, "Al": 10.0})
+        self.assertEqual(res["id"], "alni_dupin_2001")
+        self.assertEqual(res["suitability"], "Binary Al-Ni only")
+
+
+def _fake_equilibrium(nan_rows, n_comp=3):
+    """Stand-in for pycalphad's equilibrium(): finite everywhere except the given rows."""
+    class Arr:
+        def __init__(self, values):
+            self.values = np.asarray(values)
+            self.shape = self.values.shape
+
+    def fake(dbf, comps, phases, conditions):
+        temps = list(conditions["T"])
+        n = len(temps)
+        gm = np.full(n, -50000.0)
+        mu = np.full((n, n_comp), -60000.0)
+        nps = np.full((n, 3), np.nan)
+        nps[:, 0] = 1.0
+        names = np.array([["HCP_A3", "", ""]] * n, dtype=object)
+        for r in nan_rows:
+            gm[r] = np.nan
+            mu[r] = np.nan
+            nps[r] = np.nan
+            names[r] = ""
+        return SimpleNamespace(T=Arr(temps), component=Arr(["TI", "AL", "V"]), GM=Arr(gm), MU=Arr(mu),
+                               NP=Arr(nps), Phase=Arr(names))
+    return fake
+
+
+class TestNonConvergedEquilibrium(unittest.TestCase):
+    """Code review B1, on the lock: pycalphad returns NaN for a point that did not converge; the
+    solver must never put NaN in the JSON or report such a point as a state."""
+
+    def run_with(self, nan_rows):
+        fake_dbf = SimpleNamespace(elements=["TI", "AL", "V", "VA"], phases={"HCP_A3": 1})
+        fake_v = SimpleNamespace(P="P", T="T", X=lambda c: "X_" + str(c))
+        patches = (mock.patch.object(cs, "PYCALPHAD_AVAILABLE", True),
+                   mock.patch.object(cs, "np", np, create=True),
+                   mock.patch.object(cs, "v", fake_v, create=True),
+                   mock.patch.object(cs, "equilibrium", _fake_equilibrium(nan_rows), create=True),
+                   mock.patch.object(cs, "load_pycalphad_database", lambda *a, **k: fake_dbf),
+                   mock.patch.dict(sys.modules, {"pycalphad": None}))  # no Workspace: plain equilibrium path
+        with contextlib.ExitStack() as stack:
+            for p in patches:
+                stack.enter_context(p)
+            return compute(TI64, t_min_c=500.0, t_max_c=1450.0, t_step_c=25.0)
+
+    def test_all_points_non_finite_is_unavailable(self):
+        out = self.run_with(range(39))
+        self.assertIs(out["success"], False)
+        self.assertEqual(out["status"], "unavailable")
+        self.assertEqual(out["unavailableKind"], "pycalphad-equilibrium-failed")
+        self.assertEqual(out["reason"], "pycalphad equilibrium failed (non-finite results)")
+        self.assertEqual((out["nonConvergedPoints"], out["gridPoints"]), (39, 39))
+        assert_no_numbers(self, out)
+        json.dumps(out, allow_nan=False)
+
+    def test_more_than_half_non_finite_is_unavailable(self):
+        out = self.run_with(range(20))
+        self.assertEqual(out["unavailableKind"], "pycalphad-equilibrium-failed")
+        self.assertEqual(out["nonConvergedPoints"], 20)
+
+    def test_a_few_non_finite_points_are_null_with_a_status_and_the_rest_survives(self):
+        out = self.run_with([5, 6, 30])
+        self.assertIs(out["success"], True)
+        profile = out["equilibriumProfile"]
+        self.assertEqual(len(profile), 39)
+        failed = [p for p in profile if p["status"] == "not-converged"]
+        self.assertEqual(len(failed), 3)
+        for p in failed:
+            self.assertEqual(p["phases"], [])
+            for key in ("totalGibbsEnergy_kJ_mol", "chemicalPotentials_J_mol", "thermodynamicActivities"):
+                self.assertIsNone(p[key])
+        self.assertEqual(out["nonConvergedPoints"], [p["temperatureC"] for p in failed])
+        good = [p for p in profile if p["status"] == "converged"]
+        self.assertEqual(len(good), 36)
+        self.assertTrue(all(p["totalGibbsEnergy_kJ_mol"] == -50.0 for p in good))
+        json.dumps(out, allow_nan=False)  # no NaN anywhere
+        # a failed point is not read as "no liquid": the liquidus/solidus reasons are about the converged grid
+        self.assertEqual(out["criticalTemperatureStatus"]["solidusC"]["status"], "unavailable")
+
+    def test_serialisation_backstop_never_emits_nan(self):
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            text = cs.serialize_result({"success": True, "alloyName": "x", "value": bad, "provenance": {"a": 1}})
+            doc = json.loads(text, parse_constant=lambda c: self.fail(f"non-JSON constant {c}"))
+            self.assertIs(doc["success"], False)
+            self.assertEqual(doc["unavailableKind"], "non-finite-result")
+            self.assertEqual(doc["reason"], "pycalphad equilibrium failed (non-finite results)")
+        self.assertEqual(json.loads(cs.serialize_result({"success": True, "v": 1.5}))["v"], 1.5)
+
+
+class TestPhacompScope(unittest.TestCase):
+    """Science review S3: AlSi10Mg and Ti-6Al-4V reported "High" TCP risk and an 850 C sigma temperature."""
+
+    def phacomp(self, elements, unit="wt_pct"):
+        return cs.calculate_phacomp(cs.normalize_composition(dict(elements), unit)[1])
+
+    def test_only_ni_base_alloys_get_a_phacomp_screening(self):
+        for elements in ({"Al": 88.5, "Si": 10.0, "Mg": 0.5, "Fe": 1.0}, TI64,
+                         {"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5}):
+            with self.subTest(elements=elements):
+                p = self.phacomp(elements)
+                self.assertEqual(p["status"], "unavailable")
+                self.assertIn("Ni-base superalloys only", p["reason"])
+                for key in ("n_v_bar", "m_d_bar", "tcpEmbrittlementRisk", "tcpSigmaRiskTemperatureC",
+                            "thermodynamicStabilityIndex"):
+                    self.assertIsNone(p[key], key)
+
+    def test_ni_base_uses_the_tabulated_values_and_nothing_invented(self):
+        p = self.phacomp({"Ni": 80.0, "Cr": 20.0})
+        self.assertEqual(p["status"], "screening-tabulated-values")
+        self.assertIn(p["tcpEmbrittlementRisk"], ("Low", "Moderate", "High"))
+        p = self.phacomp({"Ni": 90.0, "Cu": 10.0})  # Cu has no tabulated Nv/Md: no default of 1.0
+        self.assertEqual(p["status"], "unavailable")
+        self.assertIn("Cu", p["reason"])
+
+
 @unittest.skipUnless(cs.PYCALPHAD_AVAILABLE,
                      "pycalphad is not installed in this interpreter (the locked CI environment): the real "
                      "equilibrium path is exercised with .runtime/scientific-win-py312-cu128 only")
 class TestRealPath(unittest.TestCase):
     def test_ni_al_dupin_runs_the_real_path_and_flags_the_audit_defects(self):
-        out = compute({"Ni": 90.0, "Al": 10.0}, unit="at_pct", t_min_c=600.0, t_max_c=1700.0, t_step_c=50.0)
+        out = compute({"Ni": 90.0, "Al": 10.0}, unit="at_pct", t_min_c=600.0, t_max_c=1700.0, t_step_c=20.0)
         self.assertIs(out["success"], True)
         self.assertIs(out["isEmpirical"], False)
         self.assertEqual(out["databaseId"], "alni_dupin_2001")
         self.assertEqual(out["databaseStatus"], "assessment")
         crit = out["criticalTemperatures"]
-        self.assertIsNone(crit["solidusC"])
+        # independent pycalphad bisection (review oracle): solidus 1444.7, liquidus 1446.8
+        self.assertAlmostEqual(crit["solidusC"], 1444.7, delta=0.5)
+        self.assertAlmostEqual(crit["liquidusC"], 1446.8, delta=0.5)
+        self.assertEqual(out["criticalTemperatureStatus"]["solidusC"]["status"], "bisected")
         self.assertIsNone(crit["gammaPrimeSolvusC"])
         self.assertEqual(out["criticalTemperatureStatus"]["gammaPrimeSolvusC"]["status"], "unavailable")
         self.assertEqual(out["multiElementScheilStatus"], "screening-curve-not-thermodynamic")
@@ -382,6 +617,51 @@ class TestRealPath(unittest.TestCase):
             path = os.path.join(cs.DATABASES_DIR, entry["fileName"])
             real = {str(e).upper() for e in Database(path).elements} - {"VA", "/-"}
             self.assertEqual(cs.tdb_file_elements(path), real, entry["id"])
+
+
+    def test_alsi10mg_bracket_is_refined_and_confirmed_by_independent_equilibria(self):
+        from pycalphad import Database, equilibrium, variables as v
+        elements = {"Al": 88.5, "Si": 10.0, "Mg": 0.5, "Fe": 1.0}
+        out = compute(elements, t_min_c=400.0, t_max_c=750.0, t_step_c=10.0)
+        self.assertIs(out["success"], True)
+        status = out["criticalTemperatureStatus"]
+        self.assertEqual(status["solidusC"]["status"], "bisected")
+        self.assertEqual(status["liquidusC"]["status"], "bisected")
+        self.assertLess(out["criticalTemperatures"]["solidusC"], out["criticalTemperatures"]["liquidusC"])
+        db = Database(os.path.join(cs.DATABASES_DIR, "COST507.tdb"))
+        _, at = cs.normalize_composition(elements)
+        comps = [k.upper() for k in at] + ["VA"]
+
+        def liquid_at(t_c):
+            cond = {v.P: 101325, v.T: t_c + 273.15}
+            for k in at:
+                if k != "Al":
+                    cond[v.X(k.upper())] = at[k]
+            eq = equilibrium(db, comps, list(db.phases.keys()), cond)
+            return sum(float(n) for p, n in zip(eq.Phase.values.ravel(), eq.NP.values.ravel())
+                       if p == "LIQUID" and float(n) > 0.001)
+
+        lo, hi = status["solidusC"]["bracketC"]
+        self.assertEqual(liquid_at(lo), 0.0)
+        self.assertGreater(liquid_at(hi), 0.001)
+        lo, hi = status["liquidusC"]["bracketC"]
+        self.assertLess(liquid_at(lo), 0.999)
+        self.assertGreaterEqual(liquid_at(hi), 0.999)
+        # the grid bracket alone was 10 degC wide
+        self.assertLessEqual(status["solidusC"]["toleranceC"], 0.5)
+
+    def test_ti_6al_4v_preset_with_oxygen_is_unavailable_never_nan(self):
+        # Code-review B1: the Studio's Ti-6Al-4V preset (Ti, Al, V, Fe, O) on COST 507 returned 39/39 NaN
+        # grid points with success true and invalid JSON.
+        preset = {"Ti": 89.6, "Al": 6.2, "V": 4.0, "Fe": 0.15, "O": 0.05}
+        out = compute(preset, t_min_c=500.0, t_max_c=1450.0, t_step_c=25.0)
+        self.assertIs(out["success"], False)
+        self.assertEqual(out["status"], "unavailable")
+        self.assertEqual(out["unavailableKind"], "pycalphad-equilibrium-failed")
+        self.assertEqual(out["reason"], "pycalphad equilibrium failed (non-finite results)")
+        self.assertEqual(out["nonConvergedPoints"], out["gridPoints"])
+        json.dumps(out, allow_nan=False)  # raises on NaN / Infinity
+
 
 
 if __name__ == "__main__":
