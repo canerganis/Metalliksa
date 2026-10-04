@@ -104,6 +104,24 @@ def _match_vertices(engine_pts, oracle_pts) -> Optional[str]:
     return None
 
 
+def _convex_simple(poly) -> bool:
+    """Vertices in order form a simple convex polygon: all turns the same way and one full revolution."""
+    n = len(poly)
+    if n < 3:
+        return False
+    signs = []
+    total = 0.0
+    for i in range(n):
+        ax, ay = poly[i]
+        bx, by = poly[(i + 1) % n]
+        cx, cy = poly[(i + 2) % n]
+        cross = (bx - ax) * (cy - by) - (by - ay) * (cx - bx)
+        if abs(cross) > 1e-12:
+            signs.append(cross > 0)
+        total += math.atan2(cross, (bx - ax) * (cx - bx) + (by - ay) * (cy - by))
+    return len(set(signs)) == 1 and abs(abs(total) - 2 * math.pi) < 1e-6
+
+
 def _terms(side: str):
     out = []
     for term in side.split(" + "):
@@ -200,6 +218,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
     # ---- speciesTable -------------------------------------------------------------------
     p = problems["speciesTable"]
     st = new_stdout.get("speciesTable")
+    engine_rows = table.species_rows(element)
     rows: List[Dict[str, Any]] = []
     if not isinstance(st, dict) or not isinstance(st.get("species"), list):
         p.append("speciesTable.species missing")
@@ -217,9 +236,16 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
                 p.append(f"{name}.dfG_kJ_mol: {row.get('dfG_kJ_mol')!r} != oracle {g!r}")
             if row.get("verification") not in ("V1", "V2"):
                 p.append(f"{name}.verification {row.get('verification')!r} is not a verified level")
-            for key in ("formula", "source", "evidence"):
+            # formula, source, verification level and evidence are provenance text: they must equal the engine's
+            # species table exactly (a forged level, rename or evidence text is not a documented value change)
+            engine_row = engine_rows[names.index(name)] if len(engine_rows) == len(names) else {}
+            for key in ("formula", "source", "verification", "evidence", "category"):
                 if not isinstance(row.get(key), str) or not row[key]:
                     p.append(f"{name}.{key} is empty")
+                elif not _exact(row.get(key), engine_row.get(key)):
+                    p.append(f"{name}.{key} differs from the engine's species table: {row.get(key)!r}")
+            if set(row) != set(engine_row):
+                p.append(f"{name}: keys {sorted(row)} != the engine's {sorted(engine_row)}")
         if not _close(st.get("waterDfG_kJ_mol"), data["H2O"], DFG_TOL_KJ):
             p.append(f"waterDfG_kJ_mol {st.get('waterDfG_kJ_mol')!r} != oracle {data['H2O']!r}")
         set_id, _, set_note = table.ELEMENT_SET[element]
@@ -246,6 +272,11 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             p.append(f"withheldSpecies {got!r} != oracle withheld {want_ids!r}")
         elif any(w.get("verification") != want_level[w["id"]] or not w.get("reason") for w in got):
             p.append("a withheld species is not recorded with its verification level (V3 rejected/unverified, V2 excluded) and a reason")
+        else:
+            engine_withheld = [{"id": r[0], "verification": r[10], "reason": r[11]}
+                               for r in table.WITHHELD_SPECIES.get(element, ())]
+            if got != engine_withheld:
+                p.append("withheldSpecies rows (id, level, reason text) differ from the engine's table")
     id_of = {name: rows[i].get("id") for i, name in enumerate(names) if i < len(rows)}
     formula_of = {name: rows[i].get("formula") for i, name in enumerate(names) if i < len(rows)}
     name_of_id = {v: k for k, v in id_of.items()}
@@ -303,6 +334,8 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
                 bad = _match_vertices(got, _dedupe(poly))
                 if bad:
                     p.append(f"{d['speciesId']}: {bad}")
+                elif not _convex_simple(got):
+                    p.append(f"{d['speciesId']}: polygon is not a simple convex polygon (vertex order)")
 
     # ---- analyticalBoundaries -----------------------------------------------------------
     p = problems["analyticalBoundaries"]
@@ -335,6 +368,10 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             bad = _equation_problem(b.get("equation"), ra, rb)
             if bad:
                 p.append(f"{tag}: {bad}")
+            engine_by_id = {s.id: s for s in eng._coefficients(element, log_a)}
+            want_equation = eng._equation(engine_by_id[id_of[a_name]], engine_by_id[id_of[b_name]])
+            if b.get("equation") != want_equation:
+                p.append(f"{tag}.equation {b.get('equation')!r} != the engine's reaction text {want_equation!r}")
             line = b.get("line")
             ol = oracle.boundary(element, a_name, b_name, log_a)
             if ol[0] == "pH":
@@ -390,6 +427,17 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
     want_lb = [{"pH": float(i), "E_V_SHE": round(oracle.water_lines(float(i))[1], 4)} for i in range(16)]
     if line_b != want_lb:
         p.append("line_b_oxygen_OER differs from the oracle's water line b")
+    line_a = w.get("line_a_hydrogen_HER")
+    want_la = [{"pH": float(i), "E_V_SHE": round(oracle.water_lines(float(i))[0], 4)} for i in range(16)]
+    if line_a != want_la:
+        p.append("line_a_hydrogen_HER differs from the oracle's water line a")
+    want_her = f"E = 0.000 - {k_slope:.4f}·pH (Line a: 2H⁺ + 2e⁻ ⇌ H₂)"
+    if w.get("equation_HER") != want_her:
+        p.append(f"equation_HER {w.get('equation_HER')!r} != {want_her!r}")
+    if not _exact(w.get("nernstSlope"), round(k_slope, 5)):
+        p.append(f"nernstSlope {w.get('nernstSlope')!r} != {round(k_slope, 5)!r}")
+    if set(w) != {"nernstSlope", "e0_OER", "line_a_hydrogen_HER", "line_b_oxygen_OER", "equation_HER", "equation_OER"}:
+        p.append(f"waterStabilityLines keys {sorted(w)}")
 
     # ---- experimentalOverlay ----------------------------------------------------------
     p = problems["experimentalOverlay"]
@@ -438,6 +486,11 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             for key, val in want.items():
                 if key not in pt or not _exact(pt[key], val):
                     p.append(f"point {i} ({pt.get('id')}).{key}: {pt.get(key)!r} != {val!r}")
+            # the user's own input fields are the golden's, bit for bit (no drift of a measured potential)
+            for key in ("id", "name", "pH", "potential_Input_V", "refElectrode", "currentDensity_uA_cm2",
+                        "timeHours", "stageName", "notes"):
+                if key not in pt or not _exact(pt[key], old.get(key)):
+                    p.append(f"point {i} ({pt.get('id')}).{key}: {pt.get(key)!r} != the golden's {old.get(key)!r}")
             if set(pt) != set(want) | {"id", "name", "pH", "potential_Input_V", "refElectrode",
                                        "currentDensity_uA_cm2", "timeHours", "stageName", "notes"}:
                 p.append(f"point {i}: keys {sorted(pt)}")
@@ -475,11 +528,17 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
     prm = new_stdout.get("parameters", {})
     ref_cat = name_of_id.get(table.REFERENCE_CATION[element])
     e0 = oracle.boundary(element, names[0], ref_cat, 0.0) if ref_cat else None
+    k_nernst = oracle.LN10 * oracle.R * oracle.T / oracle.F
     want_p = {"temperature_C": 25.0, "requestedTemperature_C": float(requested_t), "pittingPotential_V_SHE": None,
-              "pittingRisk": _PITTING_RISK, "standardE0_V": round(e0[1], 4) if e0 and e0[0] == "E" else None}
+              "pittingRisk": _PITTING_RISK, "standardE0_V": round(e0[1], 4) if e0 and e0[0] == "E" else None,
+              "nernstSlope_V_pH": round(k_nernst, 5), "ionActivity_log10": float(log_a),
+              "chlorideConcentration_ppm": float(chloride_ppm),
+              "chloride_Molar": round(max(chloride_ppm, 0.0) * 1e-3 / _CHLORIDE_MOLAR_MASS, 5)}
     for key, val in want_p.items():
         if key not in prm or not _exact(prm[key], val):
             p.append(f"parameters.{key}: {prm.get(key)!r} != {val!r}")
+    if set(prm) != set(want_p):
+        p.append(f"parameters keys {sorted(prm)} != {sorted(want_p)}")
     p = problems["temperatureStatus"]
     want_t = {"status": "supported-25C-only", "temperature_C": 25.0, "supported_C": [25.0], "toleranceC": 0.5,
               "note": _TEMPERATURE_NOTE}
@@ -495,7 +554,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
                    "box": {"pH_min": oracle.BOX[0], "pH_max": oracle.BOX[1],
                            "E_min_V_SHE": oracle.BOX[2], "E_max_V_SHE": oracle.BOX[3]},
                    "gasConstantR_J_molK": pc.GAS_CONSTANT_R.value, "faraday_C_mol": pc.FARADAY.value,
-                   "engine": "pourbaix-gibbs-25c-v4", "dissolvedActivityRange_log10": [-8.0, 0.0]})
+                   "engine": "pourbaix-gibbs-25c-v4", "dissolvedActivityRange_log10": [-6.0, 0.0]})
     if model != want_m:
         p.append(f"model block differs from the engine text/constants: {sorted(set(model or {}) ^ set(want_m))}")
     if isinstance(model, dict):
@@ -609,6 +668,9 @@ DOCUMENTED_KEYS = (
     'speciesTable.species[].z',
     'speciesTable.waterDfG_kJ_mol',
     'speciesTable.withheldSpecies',
+    'speciesTable.withheldSpecies[].id',
+    'speciesTable.withheldSpecies[].reason',
+    'speciesTable.withheldSpecies[].verification',
     'stabilityFieldGrid[].category',
     'stabilityFieldGrid[].color',
     'stabilityFieldGrid[].dominantSpecies',

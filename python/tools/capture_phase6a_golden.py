@@ -297,6 +297,11 @@ STEP_B_TAFEL_EW_AMPLIFICATION = 3.0
 
 
 def step_b_max_rel(solver: str, rows: List[Dict[str, Any]]) -> float:
+    if solver == "pourbaix_solver":
+        # Every numeric Pourbaix drift row is a documented change verified exactly (pourbaix_golden_check);
+        # there is no generic percentage bound that an undocumented number (Nernst slope, water line, a
+        # measured input potential) could hide under.
+        return 0.0
     if solver == "tafel_corrosion_rate_solver":
         ew = [r for r in rows if r["key"] == "equivalentWeight" and r.get("rel") is not None]
         if ew:

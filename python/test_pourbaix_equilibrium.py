@@ -8,6 +8,8 @@ check is at least 1 mV from a boundary (an exact tie would be broken by table or
 """
 
 import json
+import math
+import os
 import subprocess
 import sys
 import unittest
@@ -498,6 +500,31 @@ class ArgminPolygonConsistencyTest(unittest.TestCase):
         self.assertNotIn("Ni2O3", {r["id"] for r in table.species_rows("Ni")})
 
 
+class BoundaryCompletenessTest(unittest.TestCase):
+    """analyticalBoundaries is exactly the set of shared polygon edges of the oracle, for every element."""
+
+    def test_boundary_pairs_and_ends_equal_the_oracle_edges(self):
+        import pourbaix_golden_check as check
+        for el in ELEMENTS:
+            for log_a in (-6.0, -4.0, -3.0, 0.0):
+                with self.subTest(element=el, log_a=log_a):
+                    result = solver.solve_pourbaix_diagram(el, 25.0, log_a, 0.0, [])
+                    ids = {s["id"]: s["id"] for s in result["speciesTable"]["species"]}
+                    got = {(b["speciesAId"], b["speciesBId"]): [(q["pH"], q["E_V_SHE"]) for q in b["points"]]
+                           for b in result["analyticalBoundaries"]}
+                    want = check._oracle_boundaries(el, log_a)
+                    self.assertEqual(sorted(got), sorted(want))
+                    self.assertTrue(set(sum(map(list, got), [])) <= set(ids))
+                    for pair, pts in got.items():
+                        ends = want[pair]
+                        straight = all(abs(pts[0][i] - ends[0][i]) <= 1e-4 and abs(pts[1][i] - ends[1][i]) <= 1e-4 for i in (0, 1))
+                        swapped = all(abs(pts[0][i] - ends[1][i]) <= 1e-4 and abs(pts[1][i] - ends[0][i]) <= 1e-4 for i in (0, 1))
+                        self.assertTrue(straight or swapped, (pair, pts, ends))
+                    # no boundary is shorter than 1e-6 and every domain edge appears (P8 mutant: short ones dropped)
+                    for pair, ends in want.items():
+                        self.assertGreater(math.hypot(ends[0][0] - ends[1][0], ends[0][1] - ends[1][1]), 1e-9)
+
+
 class CategoryTest(unittest.TestCase):
     def test_role_to_category(self):
         for el in ELEMENTS:
@@ -582,10 +609,74 @@ class ValidationTest(unittest.TestCase):
         self.assertEqual(ok["experimentalOverlay"]["points"][0]["potential_V_SHE"], 0.1)  # default SHE
 
     def test_activity_range(self):
-        for bad in (-8.5, 0.5, 3):
+        # S2 (review pbx-sci): the hydrolysis species are omitted for every element, so the activity is
+        # limited to 1e-6 .. 1 (MgOH+ takes about 5 % of the window at 1e-8)
+        for bad in (-8.5, -8.0, -7.0, -6.01, 0.5, 3):
             self._raises("OUT_OF_RANGE", "ionActivity_log10", "Fe", 25.0, bad, 0.0, [])
-        for good in (-8.0, 0.0):
+        for good in (-6.0, -3.0, 0.0):
             self.assertTrue(solver.solve_pourbaix_diagram("Fe", 25.0, good, 0.0, [])["success"])
+        self.assertEqual(table.ACTIVITY_LOG10_RANGE, (-6.0, 0.0))
+
+    def test_hydrolysis_omission_is_stated_in_the_model_block_for_every_element(self):
+        for el in ELEMENTS:
+            model = solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])["model"]
+            text = " ".join(model["excludedSpecies"])
+            self.assertIn("mononuclear hydrolysis species", text, el)
+            self.assertIn("omitted", text, el)
+            self.assertEqual(model["dissolvedActivityRange_log10"], [-6.0, 0.0], el)
+
+    def test_bad_point_inputs_are_validation_errors_not_classifications(self):
+        # S3 (review pbx-sci): NaN pH was classified Immunity, inf E Immunity, pH 30 accepted, missing pH/E
+        # defaulted to 7 / 0 V.
+        nan, inf = float("nan"), float("inf")
+        cases = [
+            ({"ph": nan, "potential_V": 0.0}, "NON_FINITE", "experimentalPoints[0].pH"),
+            ({"ph": 7.0, "potential_V": inf}, "NON_FINITE", "experimentalPoints[0].potential_V"),
+            ({"ph": 7.0, "potential_V": -inf}, "NON_FINITE", "experimentalPoints[0].potential_V"),
+            ({"ph": "nan", "potential_V": 0.0}, "NON_FINITE", "experimentalPoints[0].pH"),
+            ({"ph": "7", "potential_V": 0.0}, "NON_FINITE", "experimentalPoints[0].pH"),
+            ({"ph": True, "potential_V": 0.0}, "NON_FINITE", "experimentalPoints[0].pH"),
+            ({"ph": 30.0, "potential_V": 0.0}, "OUT_OF_RANGE", "experimentalPoints[0].pH"),
+            ({"ph": -2.5, "potential_V": 0.0}, "OUT_OF_RANGE", "experimentalPoints[0].pH"),
+            ({"ph": 7.0, "potential_V": 3.0}, "OUT_OF_RANGE", "experimentalPoints[0].potential_V_SHE"),
+            ({"ph": 7.0, "potential_V": -3.4, "refElectrode": "CSE"}, "OUT_OF_RANGE",
+             "experimentalPoints[0].potential_V_SHE"),   # -3.4 + 0.316 V SHE is below the box
+            ({"potential_V": 0.0}, "MISSING_PROPERTY", "experimentalPoints[0].pH"),
+            ({"ph": 7.0}, "MISSING_PROPERTY", "experimentalPoints[0].potential_V"),
+            ({}, "MISSING_PROPERTY", "experimentalPoints[0].pH"),
+            ("not an object", "MISSING_PROPERTY", "experimentalPoints[0]"),
+        ]
+        for point, code, field in cases:
+            with self.subTest(point=repr(point)):
+                err = self._raises(code, field, "Fe", 25.0, -6.0, 0.0, [point])
+                self.assertEqual(err.field, field)
+        # the second point is the bad one: the index is reported
+        self._raises("OUT_OF_RANGE", "experimentalPoints[1].pH", "Fe", 25.0, -6.0, 0.0,
+                     [{"ph": 7.0, "potential_V": 0.0}, {"ph": 17.0, "potential_V": 0.0}])
+        # box edges are accepted
+        for ph, e in ((-2.0, -3.0), (16.0, 2.5)):
+            res = solver.solve_pourbaix_diagram("Fe", 25.0, -6.0, 0.0, [{"ph": ph, "potential_V": e}])
+            self.assertEqual(len(res["experimentalOverlay"]["points"]), 1)
+        # the direct entry point refuses too
+        for ph, e in ((float("nan"), 0.0), (7.0, float("inf")), (30.0, 0.0)):
+            with self.assertRaises(solver.ValidationError):
+                solver.evaluate_point_mechanism("Fe", ph, e)
+
+    def test_cli_rejects_nan_tokens_in_points_and_reads_stdin_as_utf8(self):
+        raw = '{"element": "Fe", "experimentalPoints": [{"ph": NaN, "potential_V": 0.1}]}'
+        proc = subprocess.run([sys.executable, "-B", str(HERE / "pourbaix_solver.py")], input=raw.encode("utf-8"),
+                              capture_output=True)
+        out = json.loads(proc.stdout.decode("ascii"))
+        self.assertEqual((proc.returncode, out["error"]["code"]), (2, "NON_FINITE"))
+        # C7 (review pbx-code): stdin is decoded as UTF-8 whatever the locale code page is, so echoed
+        # notes survive; run with UTF-8 mode off to reproduce a cp1254 / cp1252 locale
+        notes = "Fe²⁺ → Fe₂O₃ · çğıöşü"
+        payload = {"element": "Fe", "experimentalPoints": [{"ph": 7.0, "potential_V": 0.1, "notes": notes}]}
+        env = dict(os.environ, PYTHONUTF8="0", PYTHONIOENCODING="cp1254")
+        proc = subprocess.run([sys.executable, "-B", str(HERE / "pourbaix_solver.py")],
+                              input=json.dumps(payload, ensure_ascii=False).encode("utf-8"), capture_output=True, env=env)
+        self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace"))
+        self.assertEqual(json.loads(proc.stdout.decode("ascii"))["experimentalOverlay"]["points"][0]["notes"], notes)
 
     def test_cli_exit_codes_and_envelopes(self):
         code, out = _run_cli({"element": "Al", "temperature_C": 60})

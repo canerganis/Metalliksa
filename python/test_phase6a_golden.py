@@ -12,6 +12,7 @@ record of the old behaviour and the test asserts the new validation envelope.
 
 import copy
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -424,6 +425,58 @@ class StepBGoldenTest(unittest.TestCase):
         def undocumented_numeric(doc):
             doc["parameters"]["nernstSlope_V_pH"] *= 1.2
 
+        # REVIEW-pbx-code SHOULD-FIX 2/3: forged provenance and drift under the old 1 % bound
+        def self_intersecting_polygon(doc):
+            d = next(d for d in doc["domains"] if len(d["polygon"]) >= 4)
+            d["polygon"][1], d["polygon"][2] = d["polygon"][2], d["polygon"][1]
+
+        def consistent_species_rename(doc):
+            formula = doc["speciesTable"]["species"][4]["formula"]
+            renamed = json.loads(json.dumps(doc, ensure_ascii=False).replace(formula, formula + "·film"))
+            doc.clear()
+            doc.update(renamed)
+
+        def level_upgrade(doc):
+            row = next(r for r in doc["speciesTable"]["species"] if r["verification"] == "V2")
+            row["verification"] = "V1"
+
+        def forged_evidence(doc):
+            doc["speciesTable"]["species"][1]["evidence"] = "exact NIST value, fully protective"
+
+        def forged_source(doc):
+            doc["speciesTable"]["species"][1]["source"] = "Z"
+
+        def scaled_equation(doc):
+            b = doc["analyticalBoundaries"][1]
+            left, right = b["equation"].split(" ⇌ ")
+            def double(side):
+                out = []
+                for t in side.split(" + "):
+                    m = re.fullmatch(r"(\d*)(.+)", t)
+                    out.append(str(2 * int(m.group(1) or 1)) + m.group(2))
+                return " + ".join(out)
+            b["equation"] = double(left) + " ⇌ " + double(right)
+
+        def water_padded_equation(doc):
+            b = doc["analyticalBoundaries"][1]
+            left, right = b["equation"].split(" ⇌ ")
+            b["equation"] = left + " + 7H₂O ⇌ " + right + " + 7H₂O"
+
+        def nernst_slope_half_percent(doc):
+            doc["parameters"]["nernstSlope_V_pH"] *= 1.005
+
+        def her_line_drift(doc):
+            doc["waterStabilityLines"]["line_a_hydrogen_HER"][5]["E_V_SHE"] *= 1.009
+
+        def her_equation_text(doc):
+            doc["waterStabilityLines"]["equation_HER"] += " "
+
+        def measured_potential_drift(doc):
+            doc["experimentalOverlay"]["points"][0]["potential_Input_V"] *= 1.008
+
+        def withheld_text(doc):
+            doc["speciesTable"]["withheldSpecies"].append({"id": "Xx", "verification": "V3", "reason": "x"})
+
         mutants = [
             ("wrong species in a grid cell", grid_species, "stabilityFieldGrid"),
             ("wrong category in a grid cell", grid_category, "stabilityFieldGrid"),
@@ -450,6 +503,18 @@ class StepBGoldenTest(unittest.TestCase):
             ("undocumented top-level key", key_top_level, "not a value drift"),
             ("undocumented changed key", undocumented_change, "not a value drift"),
             ("undocumented numeric change (20 %)", undocumented_numeric, "|rel|"),
+            ("self-intersecting polygon (two vertices swapped)", self_intersecting_polygon, "domains"),
+            ("consistent species-formula rename", consistent_species_rename, "speciesTable"),
+            ("verification level V2 -> V1", level_upgrade, "speciesTable"),
+            ("forged evidence text", forged_evidence, "speciesTable"),
+            ("forged source id", forged_source, "speciesTable"),
+            ("equation scaled by 2", scaled_equation, "analyticalBoundaries"),
+            ("equation padded with water on both sides", water_padded_equation, "analyticalBoundaries"),
+            ("Nernst slope +0.5 % (under the old 1 % bound)", nernst_slope_half_percent, "|rel|"),
+            ("HER line +0.9 % (under the old 1 % bound)", her_line_drift, "|rel|"),
+            ("HER equation text", her_equation_text, "waterStabilityLines"),
+            ("measured input potential +0.8 % (under the old 1 % bound)", measured_potential_drift, "|rel|"),
+            ("withheld species appended", withheld_text, "speciesTable"),
         ]
         for name, mutate, expect in mutants:
             for case in self.POURBAIX_CASES:
@@ -459,6 +524,23 @@ class StepBGoldenTest(unittest.TestCase):
                     violations = self._pb_violations(old, new)
                     self.assertTrue(violations, "mutant accepted")
                     self.assertTrue(any(expect in v for v in violations), (expect, violations[:3]))
+
+    def test_pourbaix_has_no_generic_percentage_bound(self):
+        # every numeric Pourbaix drift row is a documented change or a violation: bound 0
+        self.assertEqual(golden.step_b_max_rel(self.POURBAIX, [{"key": "x", "rel": 0.001}]), 0.0)
+        self.assertEqual(golden.step_b_max_rel("kinetics_ttt_cct_solver", []), golden.STEP_B_DEFAULT_MAX_REL)
+        row = {"key": "parameters.nernstSlope_V_pH", "kind": "numeric", "old": 0.05916, "new": 0.05917,
+               "abs": 1e-5, "rel": 1.7e-4}
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, [row]))
+
+    def test_pourbaix_polygon_order_check(self):
+        import pourbaix_golden_check as check
+        square = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+        self.assertTrue(check._convex_simple(square))
+        self.assertTrue(check._convex_simple(list(reversed(square))))
+        self.assertFalse(check._convex_simple([square[0], square[2], square[1], square[3]]))  # bow tie
+        self.assertFalse(check._convex_simple(square[:2]))
+        self.assertFalse(check._convex_simple([(0.0, 0.0), (2.0, 0.0), (1.0, 0.5), (2.0, 2.0), (0.0, 2.0)]))  # concave
 
     def test_pourbaix_guard_tolerance_is_only_the_boundary_coordinate_bound(self):
         # 1e-4 V is the spec's bound for boundary coordinates; a shift inside it is accepted,
@@ -510,7 +592,7 @@ class StepBGoldenTest(unittest.TestCase):
                   {"ph": 13.0, "potential_V": -1.2, "refElectrode": "MMS"},
                   {"ph": 9.0, "potential_V": 1.9, "refElectrode": "Ag/AgCl (3M KCl)"}]
         # Al joined the served set with WP-Al (OBIGT TS01 + gibbsite): the guard must hold for it too.
-        for element, log_a in (("Ni", -6.0), ("Zn", -4.0), ("Mg", -6.0), ("Fe", -3.0), ("Cu", -8.0),
+        for element, log_a in (("Ni", -6.0), ("Zn", -4.0), ("Mg", -6.0), ("Fe", -3.0), ("Cu", -4.0),
                                ("Al", -6.0), ("Al", -3.0), ("Al", 0.0)):
             with self.subTest(element=element, log_a=log_a):
                 doc = json.loads(json.dumps(
@@ -547,9 +629,18 @@ class StepBGoldenTest(unittest.TestCase):
         def mutate_point(doc):
             doc["experimentalOverlay"]["points"][0]["dominantSpeciesId"] = "Al3+"
 
+        def mutate_level(doc):
+            species(doc, "Al(OH)4-")["verification"] = "V1"
+
+        def mutate_evidence(doc):
+            species(doc, "Al(OH)3")["evidence"] += " (exact)"
+
+        def mutate_withheld_reason(doc):
+            doc["speciesTable"]["withheldSpecies"][0]["reason"] = "unverified"
+
         self.assertEqual({k: v for k, v in check.document_problems(base, base).items() if v}, {})
         for mutate in (mutate_dfg, mutate_charge, mutate_withheld_level, mutate_withheld_dropped,
-                       mutate_domain, mutate_point):
+                       mutate_domain, mutate_point, mutate_level, mutate_evidence, mutate_withheld_reason):
             with self.subTest(mutant=mutate.__name__):
                 doc = copy.deepcopy(base)
                 mutate(doc)
