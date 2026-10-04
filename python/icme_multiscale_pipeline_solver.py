@@ -22,7 +22,6 @@ import physical_constants
 from alloy_data_calphad_battery_icme import (
     ICME_DEFAULT_ALLOY_ID,
     ICME_JOHNSON_COOK_T_MELT_C,
-    LEGACY_R_8_314,
     UnsupportedElementError,
     icme_atomic_weight,
     icme_base_metal,
@@ -30,10 +29,10 @@ from alloy_data_calphad_battery_icme import (
 )
 from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
 
-# Phase 6a structural step (a): constants and tables come from physical_constants /
-# alloy_data_calphad_battery_icme / alloy_registry with their pre-migration values
-# (R = 8.314, legacy rounded atomic weights), so the output stays bit-identical.
-# Exact R and CIAAW atomic weights are the value step (b).
+# Constants and tables come from physical_constants / alloy_data_calphad_battery_icme /
+# alloy_registry. Phase 6a value step (b): R is the exact SI 2019 product N_A*k (was
+# 8.314) and the atomic weights are CIAAW 2021 abridged values (were rounded copies).
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 
@@ -152,8 +151,9 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     base_G = element_G_GPa.get(base_metal, 76.0)
 
     # Convert wt% to atomic fraction x_i & calculate Labusch-Fleischer solute misfit.
-    # Legacy rounded atomic weights (alloy_data_calphad_battery_icme.ICME_ATOMIC_WEIGHTS);
-    # an element outside that table used a silent 55.0 g/mol and is now refused.
+    # CIAAW 2021 atomic weights of the 16 ICME elements (alloy_data_calphad_battery_icme
+    # .icme_atomic_weight); an element outside that set used a silent 55.0 g/mol before
+    # the migration and is now refused.
     moles = {}
     for el, wt in comp_wt.items():
         if wt > 0:
@@ -235,7 +235,7 @@ def solve_multiscale_pipeline(params: dict) -> dict:
 
     # LSW Precipitation Kinetics & Orowan / Particle Shearing
     Q_diff_kJ_mol = 275.0 if base_metal == "Ni" else 130.0 if base_metal == "Al" else 240.0
-    R_gas = LEGACY_R_8_314.value  # 8.314 (pre-migration value)
+    R_gas = R_GAS  # exact (was 8.314)
     T_aging_K = aging_temp_C + ZERO_CELSIUS_K
     k_LSW = 1.2e14 * math.exp(-(Q_diff_kJ_mol * 1000.0) / (R_gas * T_aging_K))
     mean_precip_radius_nm = max(1.5, math.pow(k_LSW * aging_time_h + 3.0, 1.0 / 3.0))
@@ -534,10 +534,11 @@ def main():
         result["provenance"] = {
             "registryVersion": alloy_registry.REGISTRY_VERSION,
             "constantsVersion": physical_constants.CONSTANTS_VERSION,
-            "gasConstantR_J_molK": LEGACY_R_8_314.value,
+            "gasConstantR_J_molK": R_GAS,
+            "atomicWeightsSource": physical_constants.CIAAW_SOURCE,
             **_domain_data_provenance(),
-            "constantsNote": "Rounded R = 8.314 and legacy rounded atomic weights (pre-migration "
-                             "values); exact SI R and CIAAW weights are pending the Phase 6a value step.",
+            "constantsNote": "Exact SI 2019 R = N_A*k and CIAAW 2021 abridged atomic weights "
+                             "(Phase 6a value step); they replaced R = 8.314 and rounded weights.",
         }
         print(json.dumps(result, indent=2))
     except ValidationError as e:

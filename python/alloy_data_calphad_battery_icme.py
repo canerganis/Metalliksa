@@ -24,7 +24,7 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Dict, Mapping, Tuple
 
-from physical_constants import LEGACY_GAS_CONSTANT_R_4SF, Constant
+from physical_constants import LEGACY_GAS_CONSTANT_R_4SF, Constant, atomic_weight
 
 DATA_VERSION = "alloy-data-calphad-battery-icme-1"
 BASE_REVISION = "7f3f803"
@@ -50,10 +50,9 @@ LEGACY_F_96485_33 = Constant(96485.33, "C/mol", f"{_CODATA} F, rounded to 2 deci
 
 # Where each truncated constant is used (solver file, function) -> (R, F) names.
 # "TRUNCATED_*" refers to physical_constants; None means the site uses no F.
-# Design step (b) removed the calphad and battery_corrosion_eis_solver sites (exact SI R/F).
-LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({
-    ("icme_multiscale_pipeline_solver.py", "solve_multiscale_pipeline"): ("LEGACY_R_8_314", None),
-})
+# Design step (b) removed the calphad, battery_corrosion_eis_solver and
+# icme_multiscale_pipeline_solver sites (exact SI R/F); no site is left.
+LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({})
 
 # --------------------------------------------------------------------------- calphad
 # Design step (b): calphad_solver takes every atomic weight from
@@ -65,17 +64,15 @@ LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingPro
 # --------------------------------------------------------------------------- icme
 DOMAIN_ICME = "icme"
 _ICME_REF = f"icme_multiscale_pipeline_solver.py @{BASE_REVISION}"
-ICME_ATOMIC_WEIGHTS_NOTE = (
-    "Legacy rounded atomic weight copied from the solver (no edition stated); differs from the "
-    "CIAAW 2021 abridged value by up to 0.005 g/mol. Step (b) replaces it with "
-    "physical_constants.atomic_weight()."
+# The 16 elements the solver has Scale-0 data for (the keys of its pre-migration
+# atomic_weights table, icme_multiscale_pipeline_solver.py:118-122 @BASE_REVISION, in
+# that order). Design step (b): their weights are the CIAAW 2021 abridged values from
+# physical_constants; the legacy rounded copies (58.69, 55.85, 52.00, ... up to
+# 0.005 g/mol off) were removed. They stay snapshotted in
+# golden/phase6a/icme_multiscale_pipeline_solver/_source_tables.json.
+ICME_ELEMENTS: Tuple[str, ...] = (
+    "Ni", "Fe", "Cr", "Mo", "Nb", "Ti", "Al", "C", "Si", "Mn", "V", "W", "Co", "Cu", "Mg", "Zn",
 )
-# icme_multiscale_pipeline_solver.py:118-122 atomic_weights (g/mol), unchanged.
-ICME_ATOMIC_WEIGHTS: Mapping[str, float] = MappingProxyType({
-    "Ni": 58.69, "Fe": 55.85, "Cr": 52.00, "Mo": 95.95, "Nb": 92.91,
-    "Ti": 47.87, "Al": 26.98, "C": 12.01, "Si": 28.09, "Mn": 54.94,
-    "V": 50.94, "W": 183.84, "Co": 58.93, "Cu": 63.55, "Mg": 24.31, "Zn": 65.38,
-})
 
 # Base metals with a Scale-0 data branch in the solver (Ni, Fe, Ti; everything else
 # fell into the Al branch before the migration).
@@ -133,9 +130,10 @@ class UnsupportedElementError(KeyError):
 
 
 def icme_atomic_weight(element: object) -> float:
-    if not isinstance(element, str) or element not in ICME_ATOMIC_WEIGHTS:
-        raise UnsupportedElementError(element, "icme atomic-weight", tuple(ICME_ATOMIC_WEIGHTS))
-    return ICME_ATOMIC_WEIGHTS[element]
+    """CIAAW 2021 abridged weight of one of the 16 ICME elements; others are refused."""
+    if not isinstance(element, str) or element not in ICME_ELEMENTS:
+        raise UnsupportedElementError(element, "icme atomic-weight", ICME_ELEMENTS)
+    return atomic_weight(element)
 
 
 def icme_base_metal(base: object) -> str:

@@ -127,6 +127,11 @@ class BaseBlobTest(unittest.TestCase):
             {"elements": {"Al": 50.0, "Ni": 50.0}, "unit": "at_pct", "tMin": 900.0, "tMax": 1700.0, "tStep": 50.0},
             {"elements": {"Cu": 70.0, "Zn": 30.0}, "tMin": 700.0, "tMax": 1100.0, "tStep": 25.0},
         ],
+    }
+    # Design step (b) value change: these payloads drift on purpose against the base blob
+    # (icme: exact R and CIAAW weights). The check keeps the output structure and exit
+    # code identical and bounds the numeric drift; the full rows are in the commit body.
+    VALUE_STEP_DRIFT = {
         "icme_multiscale_pipeline_solver": [
             {"baseMetal": "Fe", "composition_wt": {"C": 0.2, "Cr": 12.0, "Mo": 1.0, "V": 0.3, "W": 0.5},
              "grainSize_um": 12.0, "coolingRate_C_s": 50.0, "componentType": "pressure_bulkhead"},
@@ -135,6 +140,8 @@ class BaseBlobTest(unittest.TestCase):
              "agingTemp_C": 850, "agingTime_h": 24, "serviceTemp_C": 650},
         ],
     }
+    # Largest |relative| drift seen on the payloads above is 2.7e-3 (last printed digit).
+    VALUE_STEP_MAX_REL = 1e-2
 
     def _base(self, solver, payload):
         with tempfile.TemporaryDirectory() as tmp:
@@ -158,6 +165,20 @@ class BaseBlobTest(unittest.TestCase):
                     self.assertEqual(new["exitCode"], old["exitCode"], new["stderr"])
                     rows = drift_report.diff(old["stdout"], new["stdout"])
                     self.assertEqual(rows, [], drift_report.render(solver, rows, 10))
+
+    def test_value_step_payloads_drift_only_numerically_and_boundedly(self):
+        for solver, payloads in self.VALUE_STEP_DRIFT.items():
+            for payload in payloads:
+                with self.subTest(solver=solver, payload=payload):
+                    old = self._base(solver, payload)
+                    new = golden.run_solver(solver, payload)
+                    self.assertEqual(new["exitCode"], old["exitCode"], new["stderr"])
+                    rows = drift_report.diff(old["stdout"], new["stdout"])
+                    self.assertTrue(rows)  # the value change is visible here
+                    self.assertEqual({r["kind"] for r in rows}, {"numeric"},
+                                     drift_report.render(solver, rows, 10))
+                    worst = max(abs(r["rel"]) for r in rows if r["rel"] is not None)
+                    self.assertLessEqual(worst, self.VALUE_STEP_MAX_REL)
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
@@ -377,7 +398,10 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("icme_multiscale_pipeline_solver", {})
         prov = fresh["provenance"]["provenance"]
-        self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
+        # Design step (b): exact R and CIAAW weights.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["atomicWeightsSource"], pc.CIAAW_SOURCE)
+        self.assertEqual(icme.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("battery_corrosion_eis_solver", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
         prov = fresh["provenance"]["provenance"]

@@ -106,16 +106,21 @@ class CalphadElementsTest(unittest.TestCase):
 
 
 class IcmeDataTest(unittest.TestCase):
-    def test_atomic_weights_equal_the_pre_migration_table(self):
+    def test_element_set_equals_the_pre_migration_table_keys(self):
         old = _snapshot("icme_multiscale_pipeline_solver")["atomic_weights"]
-        self.assertEqual(json.dumps(dict(data.ICME_ATOMIC_WEIGHTS), sort_keys=True), json.dumps(old, sort_keys=True))
+        self.assertEqual(sorted(data.ICME_ELEMENTS), sorted(old))
+        self.assertEqual(len(set(data.ICME_ELEMENTS)), 16)
+        self.assertFalse(hasattr(data, "ICME_ATOMIC_WEIGHTS"))
 
-    def test_legacy_weights_are_within_0_005_of_ciaaw(self):
-        for el, value in data.ICME_ATOMIC_WEIGHTS.items():
-            self.assertLessEqual(abs(value - pc.atomic_weight(el)), 0.0051, el)
+    def test_weights_are_ciaaw_and_within_0_005_of_the_legacy_copies(self):
+        # Design step (b): CIAAW 2021 abridged values replace the rounded copies.
+        old = _snapshot("icme_multiscale_pipeline_solver")["atomic_weights"]
+        for el in data.ICME_ELEMENTS:
+            self.assertEqual(data.icme_atomic_weight(el), pc.atomic_weight(el), el)
+            self.assertLessEqual(abs(old[el] - pc.atomic_weight(el)), 0.0051, el)
 
     def test_lookups_raise_instead_of_falling_back(self):
-        self.assertEqual(data.icme_atomic_weight("Ni"), 58.69)
+        self.assertEqual(data.icme_atomic_weight("Ni"), 58.693)
         for bad in ("Zr", "Xx", "cr", "", None):
             with self.assertRaises(data.UnsupportedElementError):
                 data.icme_atomic_weight(bad)
