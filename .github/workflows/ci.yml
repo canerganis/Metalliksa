@@ -51,6 +51,10 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the Phase 6a old-blob tests read d33b6f5 / 7f3f803 with
+          # `git show`, and with CI set they fail (not skip) when a revision is missing.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -59,6 +63,18 @@ jobs:
       - name: Meltpool solver tests
         run: npm run test:meltpool
         # These npm scripts only call python, so node_modules is not needed.
+      - name: Phase 6a materials tests (golden, migrations, registry, constants)
+        working-directory: python
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: >-
+          python -B -m unittest
+          test_phase6a_golden test_phase6a_migration
+          test_phase6a_t2a_migration test_phase6a_t2b_golden test_phase6a_t2b_migration
+          test_phase6a_leaf_modules test_phase6a_test_support
+          test_physical_constants test_alloy_registry test_input_validation
+          test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
+          test_lpbf_worker_validation_error
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
         run: npm run test:lpbf:engineering
         continue-on-error: true

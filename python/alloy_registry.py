@@ -449,6 +449,9 @@ _IDENTITIES: Dict[str, Dict[str, Any]] = {
     },
     "alsi10mg": {
         "display": ("AlSi10Mg",), "base": "Al",
+        # "(AMS 4215)" / "ams4215": UI-label compatibility only (StochasticUQMMPDSStudio);
+        # SAE AMS 4215 is a casting spec, not AlSi10Mg LPBF. No AMS equivalence is
+        # claimed; see alloy_data_kinetics_uq_fatigue.EXTRA_ALIASES["alsi10mg"].
         "aliases": ("AlSi10Mg Additive (AMS 4215)", "alsi10mg_ams4215", "AlSi10Mg Additive Alloy"),
     },
     "in718": {
@@ -493,6 +496,14 @@ _IDENTITIES: Dict[str, Dict[str, Any]] = {
         "aliases": ("AZ31B Magnesium Alloy",),
     },
 }
+
+# ---- BEGIN phase6a-t2b block: kinetics / stochastic UQ / fatigue domain data ----
+# UI names harvested for tranche 2b (alloy_data_kinetics_uq_fatigue.EXTRA_ALIASES).
+import alloy_data_kinetics_uq_fatigue as _t2b_data  # noqa: E402  (leaf, stdlib only)
+
+for _t2b_id, _t2b_names in _t2b_data.EXTRA_ALIASES.items():
+    _IDENTITIES[_t2b_id]["aliases"] = tuple(_IDENTITIES[_t2b_id]["aliases"]) + tuple(_t2b_names)
+# ---- END phase6a-t2b block ----
 
 
 def normalise_name(name: object) -> Optional[str]:
@@ -594,6 +605,25 @@ def build_alias_index(records: Mapping[str, AlloyRecord]) -> Tuple[Dict[str, str
             exact[key] = aid
             compact.setdefault(_compact(key), set()).add(aid)
     return exact, {k: frozenset(v) for k, v in compact.items()}
+
+
+# ---- BEGIN Phase 6a tranche 2a domain data (calphad / battery EIS / icme) ----
+# Leaf module (stdlib + physical_constants). Adds its alloy-keyed tables (domain
+# "icme") on top of the copied domains above; values are tagged "estimated".
+import alloy_data_calphad_battery_icme as _t2a_data  # noqa: E402
+
+DOMAIN_ICME = _t2a_data.DOMAIN_ICME
+_t2a_base_copied_domains = _copied_domains
+
+
+def _copied_domains(aid: str) -> Dict[str, Mapping[str, ValueRecord]]:  # noqa: F811
+    out = _t2a_base_copied_domains(aid)
+    for domain, (table, units, ref) in _t2a_data.REGISTRY_DOMAIN_TABLES.items():
+        if aid in table:
+            out[domain] = _domain_table(table[aid], units, ref, f"{REGISTRY_VERSION}:{domain}",
+                                        _t2a_data.REGISTRY_NOTE)
+    return out
+# ---- END Phase 6a tranche 2a ----
 
 
 REGISTRY: Mapping[str, AlloyRecord] = MappingProxyType(build_records())

@@ -1,0 +1,2988 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "alsi10mg_case_variants_zero_unknown",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "elements": {
+   "Fe": 1.0,
+   "SI": 10.0,
+   "Xx": 0,
+   "al": 88.5,
+   "mg": 0.5
+  },
+  "name": "AlSi10Mg",
+  "tMax": 750.0,
+  "tMin": 400.0,
+  "tStep": 20.0,
+  "unit": "wt_pct"
+ },
+ "invocation": "python -B calphad_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "calphad_solver",
+ "solverFile": "python/calphad_solver.py",
+ "solverSha256": "d54acda6ad93212367de84fd759d1e5df992730f0d47d26189de363683fd8a24",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "adaptiveGrid": true,
+  "adaptiveTelemetry": {
+   "boundaryToleranceC": 0.15,
+   "coarseStepsCount": 19,
+   "equivalentUniformSteps": 701,
+   "isAdaptive": true,
+   "minRefineStepC": 0.5,
+   "refinedStepsCount": 48,
+   "speedupFactor": 10.5,
+   "totalEvaluations": 67,
+   "transitionZones": [
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      520.0,
+      540.0
+     ]
+    },
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      540.0,
+      560.0
+     ]
+    },
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      560.0,
+      580.0
+     ]
+    }
+   ]
+  },
+  "alloyName": "AlSi10Mg",
+  "atomicFractions": {
+   "Al": 0.8926275616069691,
+   "Fe": 0.00487322949816795,
+   "Mg": 0.005598549708397226,
+   "Si": 0.09690065918646579
+  },
+  "criticalTemperatures": {
+   "betaTransusC": null,
+   "carbidePrecipitationC": null,
+   "deltaSolvusC": null,
+   "freezingRangeC": 55.0,
+   "gammaDoublePrimeSolvusC": null,
+   "gammaPrimeSolvusC": null,
+   "liquidusC": 580.0,
+   "solidusC": 525.0,
+   "tcpSigmaRiskTemperatureC": 850.0
+  },
+  "databaseUsed": "COST 507 Comprehensive Light Alloys Database",
+  "engine": "subregular-adaptive-minimizer",
+  "equilibriumProfile": [
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -906.2,
+     "Fe": -32304.1,
+     "Mg": -31525.7,
+     "Si": -15338.0
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 400.0,
+    "temperatureK": 673.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.141
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -933.1,
+     "Fe": -33263.9,
+     "Mg": -32462.4,
+     "Si": -15793.8
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 420.0,
+    "temperatureK": 693.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.205
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -960.0,
+     "Fe": -34223.7,
+     "Mg": -33399.0,
+     "Si": -16249.5
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 440.0,
+    "temperatureK": 713.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.268
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -986.9,
+     "Fe": -35183.5,
+     "Mg": -34335.7,
+     "Si": -16705.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 460.0,
+    "temperatureK": 733.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.332
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1013.8,
+     "Fe": -36143.3,
+     "Mg": -35272.4,
+     "Si": -17160.9
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 480.0,
+    "temperatureK": 753.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.395
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1040.8,
+     "Fe": -37103.1,
+     "Mg": -36209.0,
+     "Si": -17616.6
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 500.0,
+    "temperatureK": 773.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.459
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1067.7,
+     "Fe": -38062.8,
+     "Mg": -37145.7,
+     "Si": -18072.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 520.0,
+    "temperatureK": 793.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.523
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1071.1,
+     "Fe": -38182.8,
+     "Mg": -37262.8,
+     "Si": -18129.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 522.5,
+    "temperatureK": 795.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.531
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1072.2,
+     "Fe": -38223.6,
+     "Mg": -37302.6,
+     "Si": -18148.6
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 523.35,
+    "temperatureK": 796.5,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.533
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1073.5,
+     "Fe": -38271.6,
+     "Mg": -37349.4,
+     "Si": -18171.4
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 524.35,
+    "temperatureK": 797.5,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.537
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1074.2,
+     "Fe": -38295.6,
+     "Mg": -37372.8,
+     "Si": -18182.8
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 524.85,
+    "temperatureK": 798.0,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.538
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1074.4,
+     "Fe": -38302.8,
+     "Mg": -37379.8,
+     "Si": -18186.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.0,
+    "temperatureK": 798.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.539
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1074.6,
+     "Fe": -38310.0,
+     "Mg": -37386.9,
+     "Si": -18189.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.15,
+    "temperatureK": 798.3,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.539
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1074.8,
+     "Fe": -38317.7,
+     "Mg": -37394.4,
+     "Si": -18193.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.31,
+    "temperatureK": 798.46,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.54
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1074.9,
+     "Fe": -38319.6,
+     "Mg": -37396.2,
+     "Si": -18194.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0011,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9989,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.35,
+    "temperatureK": 798.5,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.54
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1075.0,
+     "Fe": -38324.9,
+     "Mg": -37401.4,
+     "Si": -18196.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0016,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9984,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.46,
+    "temperatureK": 798.61,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.54
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1075.2,
+     "Fe": -38329.2,
+     "Mg": -37405.6,
+     "Si": -18198.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.002,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.998,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.55,
+    "temperatureK": 798.7,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.54
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1075.3,
+     "Fe": -38332.5,
+     "Mg": -37408.9,
+     "Si": -18200.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0023,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9977,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.62,
+    "temperatureK": 798.77,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.541
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1075.6,
+     "Fe": -38343.6,
+     "Mg": -37419.7,
+     "Si": -18205.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0036,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9964,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 525.85,
+    "temperatureK": 799.0,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.541
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1076.1,
+     "Fe": -38362.8,
+     "Mg": -37438.4,
+     "Si": -18214.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.006,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.994,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 526.25,
+    "temperatureK": 799.4,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.543
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1076.2,
+     "Fe": -38367.6,
+     "Mg": -37443.1,
+     "Si": -18217.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0067,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9933,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 526.35,
+    "temperatureK": 799.5,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.543
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1077.6,
+     "Fe": -38415.6,
+     "Mg": -37489.9,
+     "Si": -18239.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0142,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9858,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 527.35,
+    "temperatureK": 800.5,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.546
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1077.8,
+     "Fe": -38422.8,
+     "Mg": -37496.9,
+     "Si": -18243.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0154,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9846,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 527.5,
+    "temperatureK": 800.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.547
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1081.2,
+     "Fe": -38542.7,
+     "Mg": -37614.0,
+     "Si": -18300.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0393,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9607,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 530.0,
+    "temperatureK": 803.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.554
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1084.5,
+     "Fe": -38662.7,
+     "Mg": -37731.1,
+     "Si": -18357.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0679,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9321,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 532.5,
+    "temperatureK": 805.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.562
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1087.9,
+     "Fe": -38782.7,
+     "Mg": -37848.2,
+     "Si": -18414.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1001,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8999,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 535.0,
+    "temperatureK": 808.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.57
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1091.2,
+     "Fe": -38902.7,
+     "Mg": -37965.3,
+     "Si": -18471.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1353,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8647,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 537.5,
+    "temperatureK": 810.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.578
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1094.6,
+     "Fe": -39022.6,
+     "Mg": -38082.3,
+     "Si": -18528.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1731,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8269,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 540.0,
+    "temperatureK": 813.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.586
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1094.7,
+     "Fe": -39026.5,
+     "Mg": -38086.1,
+     "Si": -18529.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1743,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8257,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 540.08,
+    "temperatureK": 813.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.587
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1094.8,
+     "Fe": -39029.8,
+     "Mg": -38089.4,
+     "Si": -18531.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1754,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8246,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 540.15,
+    "temperatureK": 813.3,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.587
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1095.0,
+     "Fe": -39036.1,
+     "Mg": -38095.5,
+     "Si": -18534.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1775,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8225,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 540.28,
+    "temperatureK": 813.43,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.587
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1095.4,
+     "Fe": -39050.5,
+     "Mg": -38109.5,
+     "Si": -18541.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1822,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8178,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 540.58,
+    "temperatureK": 813.73,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.588
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1096.1,
+     "Fe": -39074.5,
+     "Mg": -38132.9,
+     "Si": -18552.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1901,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8099,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 541.08,
+    "temperatureK": 814.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.59
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1096.3,
+     "Fe": -39082.6,
+     "Mg": -38140.9,
+     "Si": -18556.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1928,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8072,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 541.25,
+    "temperatureK": 814.4,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.59
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1097.4,
+     "Fe": -39122.4,
+     "Mg": -38179.8,
+     "Si": -18575.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2062,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7938,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 542.08,
+    "temperatureK": 815.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.593
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1098.0,
+     "Fe": -39142.6,
+     "Mg": -38199.4,
+     "Si": -18585.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2131,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7869,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 542.5,
+    "temperatureK": 815.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.594
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1101.3,
+     "Fe": -39262.6,
+     "Mg": -38316.5,
+     "Si": -18641.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2552,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7448,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 545.0,
+    "temperatureK": 818.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.602
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1104.7,
+     "Fe": -39382.6,
+     "Mg": -38433.6,
+     "Si": -18698.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2992,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7008,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 547.5,
+    "temperatureK": 820.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.61
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1108.1,
+     "Fe": -39502.5,
+     "Mg": -38550.7,
+     "Si": -18755.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.3449,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.6551,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 550.0,
+    "temperatureK": 823.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.618
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1111.4,
+     "Fe": -39622.5,
+     "Mg": -38667.8,
+     "Si": -18812.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.3923,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.6077,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 552.5,
+    "temperatureK": 825.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.626
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1114.8,
+     "Fe": -39742.5,
+     "Mg": -38784.8,
+     "Si": -18869.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.4412,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.5588,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 555.0,
+    "temperatureK": 828.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.634
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1118.2,
+     "Fe": -39862.4,
+     "Mg": -38901.9,
+     "Si": -18926.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.4915,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.5085,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 557.5,
+    "temperatureK": 830.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.642
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1121.5,
+     "Fe": -39982.4,
+     "Mg": -39019.0,
+     "Si": -18983.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5433,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4567,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 560.0,
+    "temperatureK": 833.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.65
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1121.6,
+     "Fe": -39986.3,
+     "Mg": -39022.8,
+     "Si": -18985.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5449,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4551,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 560.08,
+    "temperatureK": 833.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.65
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1121.7,
+     "Fe": -39989.6,
+     "Mg": -39026.0,
+     "Si": -18987.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5464,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4536,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 560.15,
+    "temperatureK": 833.3,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.65
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1121.9,
+     "Fe": -39995.9,
+     "Mg": -39032.1,
+     "Si": -18990.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5491,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4509,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 560.28,
+    "temperatureK": 833.43,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.651
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1122.3,
+     "Fe": -40010.3,
+     "Mg": -39046.2,
+     "Si": -18996.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5554,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4446,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 560.58,
+    "temperatureK": 833.73,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.652
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1123.0,
+     "Fe": -40034.2,
+     "Mg": -39069.6,
+     "Si": -19008.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.566,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.434,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 561.08,
+    "temperatureK": 834.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.653
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1123.2,
+     "Fe": -40042.4,
+     "Mg": -39077.5,
+     "Si": -19012.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5696,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4304,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 561.25,
+    "temperatureK": 834.4,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.654
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1124.3,
+     "Fe": -40082.2,
+     "Mg": -39116.4,
+     "Si": -19031.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5873,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4127,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 562.08,
+    "temperatureK": 835.23,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.657
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1124.9,
+     "Fe": -40102.4,
+     "Mg": -39136.1,
+     "Si": -19040.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5963,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4037,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 562.5,
+    "temperatureK": 835.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.658
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1128.3,
+     "Fe": -40222.4,
+     "Mg": -39253.2,
+     "Si": -19097.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6506,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3494,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 565.0,
+    "temperatureK": 838.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.666
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1131.6,
+     "Fe": -40342.3,
+     "Mg": -39370.3,
+     "Si": -19154.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.706,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.294,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 567.5,
+    "temperatureK": 840.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.674
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1135.0,
+     "Fe": -40462.3,
+     "Mg": -39487.3,
+     "Si": -19211.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.7627,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.2373,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 570.0,
+    "temperatureK": 843.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.682
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1138.4,
+     "Fe": -40582.3,
+     "Mg": -39604.4,
+     "Si": -19268.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.8204,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.1796,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 572.5,
+    "temperatureK": 845.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.69
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1141.7,
+     "Fe": -40702.3,
+     "Mg": -39721.5,
+     "Si": -19325.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.8793,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.1207,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 575.0,
+    "temperatureK": 848.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.698
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1145.1,
+     "Fe": -40822.2,
+     "Mg": -39838.6,
+     "Si": -19382.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.9391,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.0609,
+      "isPrimary": true,
+      "majorElements": [
+       "Al"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 577.5,
+    "temperatureK": 850.65,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.706
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1148.5,
+     "Fe": -40942.2,
+     "Mg": -39955.7,
+     "Si": -19439.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 580.0,
+    "temperatureK": 853.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.714
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1175.4,
+     "Fe": -41902.0,
+     "Mg": -40892.3,
+     "Si": -19895.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 600.0,
+    "temperatureK": 873.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.777
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1202.3,
+     "Fe": -42861.8,
+     "Mg": -41829.0,
+     "Si": -20350.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 620.0,
+    "temperatureK": 893.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.841
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1229.2,
+     "Fe": -43821.6,
+     "Mg": -42765.7,
+     "Si": -20806.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 640.0,
+    "temperatureK": 913.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.904
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1256.2,
+     "Fe": -44781.4,
+     "Mg": -43702.3,
+     "Si": -21262.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 660.0,
+    "temperatureK": 933.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -2.968
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1283.1,
+     "Fe": -45741.2,
+     "Mg": -44639.0,
+     "Si": -21718.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 680.0,
+    "temperatureK": 953.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -3.032
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1310.0,
+     "Fe": -46700.9,
+     "Mg": -45575.6,
+     "Si": -22173.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 700.0,
+    "temperatureK": 973.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -3.095
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1336.9,
+     "Fe": -47660.7,
+     "Mg": -46512.3,
+     "Si": -22629.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 720.0,
+    "temperatureK": 993.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -3.159
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1363.8,
+     "Fe": -48620.5,
+     "Mg": -47449.0,
+     "Si": -23085.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 740.0,
+    "temperatureK": 1013.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -3.222
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -1377.3,
+     "Fe": -49100.4,
+     "Mg": -47917.3,
+     "Si": -23313.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe",
+       "Si",
+       "Al"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 750.0,
+    "temperatureK": 1023.15,
+    "thermodynamicActivities": {
+     "Al": 0.85052,
+     "Fe": 0.00311,
+     "Mg": 0.00358,
+     "Si": 0.06454
+    },
+    "totalGibbsEnergy_kJ_mol": -3.254
+   }
+  ],
+  "isEmpirical": false,
+  "iterations": 67,
+  "multiElementScheil": [
+   {
+    "fractionSolid": 0.0,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.0,
+     "Mg": 0.5,
+     "Si": 10.0
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.95,
+     "Mg": 0.45,
+     "Si": 9.0
+    },
+    "temperatureC": 580.0
+   },
+   {
+    "fractionSolid": 0.048,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.0,
+     "Mg": 0.5,
+     "Si": 10.05
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.95,
+     "Mg": 0.45,
+     "Si": 9.04
+    },
+    "temperatureC": 579.2
+   },
+   {
+    "fractionSolid": 0.096,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.01,
+     "Mg": 0.51,
+     "Si": 10.1
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.95,
+     "Mg": 0.45,
+     "Si": 9.09
+    },
+    "temperatureC": 578.4
+   },
+   {
+    "fractionSolid": 0.144,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.01,
+     "Mg": 0.51,
+     "Si": 10.16
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.96,
+     "Mg": 0.46,
+     "Si": 9.14
+    },
+    "temperatureC": 577.6
+   },
+   {
+    "fractionSolid": 0.192,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.01,
+     "Mg": 0.51,
+     "Si": 10.22
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.96,
+     "Mg": 0.46,
+     "Si": 9.19
+    },
+    "temperatureC": 576.6
+   },
+   {
+    "fractionSolid": 0.24,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.01,
+     "Mg": 0.51,
+     "Si": 10.28
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.96,
+     "Mg": 0.46,
+     "Si": 9.25
+    },
+    "temperatureC": 575.6
+   },
+   {
+    "fractionSolid": 0.288,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.02,
+     "Mg": 0.52,
+     "Si": 10.35
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.97,
+     "Mg": 0.47,
+     "Si": 9.31
+    },
+    "temperatureC": 574.5
+   },
+   {
+    "fractionSolid": 0.336,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.02,
+     "Mg": 0.52,
+     "Si": 10.42
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.97,
+     "Mg": 0.47,
+     "Si": 9.38
+    },
+    "temperatureC": 573.3
+   },
+   {
+    "fractionSolid": 0.384,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.02,
+     "Mg": 0.52,
+     "Si": 10.5
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.97,
+     "Mg": 0.47,
+     "Si": 9.45
+    },
+    "temperatureC": 572.0
+   },
+   {
+    "fractionSolid": 0.432,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.03,
+     "Mg": 0.53,
+     "Si": 10.58
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.98,
+     "Mg": 0.48,
+     "Si": 9.52
+    },
+    "temperatureC": 570.6
+   },
+   {
+    "fractionSolid": 0.48,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.03,
+     "Mg": 0.53,
+     "Si": 10.68
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.98,
+     "Mg": 0.48,
+     "Si": 9.61
+    },
+    "temperatureC": 568.9
+   },
+   {
+    "fractionSolid": 0.528,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.04,
+     "Mg": 0.54,
+     "Si": 10.78
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.99,
+     "Mg": 0.49,
+     "Si": 9.7
+    },
+    "temperatureC": 567.1
+   },
+   {
+    "fractionSolid": 0.576,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.04,
+     "Mg": 0.54,
+     "Si": 10.9
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 0.99,
+     "Mg": 0.49,
+     "Si": 9.81
+    },
+    "temperatureC": 565.1
+   },
+   {
+    "fractionSolid": 0.624,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.05,
+     "Mg": 0.55,
+     "Si": 11.03
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.0,
+     "Mg": 0.5,
+     "Si": 9.92
+    },
+    "temperatureC": 562.7
+   },
+   {
+    "fractionSolid": 0.672,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.06,
+     "Mg": 0.56,
+     "Si": 11.18
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.0,
+     "Mg": 0.5,
+     "Si": 10.06
+    },
+    "temperatureC": 559.9
+   },
+   {
+    "fractionSolid": 0.72,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.07,
+     "Mg": 0.57,
+     "Si": 11.36
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.01,
+     "Mg": 0.51,
+     "Si": 10.22
+    },
+    "temperatureC": 556.4
+   },
+   {
+    "fractionSolid": 0.768,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.08,
+     "Mg": 0.58,
+     "Si": 11.57
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.02,
+     "Mg": 0.52,
+     "Si": 10.42
+    },
+    "temperatureC": 552.2
+   },
+   {
+    "fractionSolid": 0.816,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.09,
+     "Mg": 0.59,
+     "Si": 11.84
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.03,
+     "Mg": 0.53,
+     "Si": 10.66
+    },
+    "temperatureC": 546.6
+   },
+   {
+    "fractionSolid": 0.864,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.1,
+     "Mg": 0.61,
+     "Si": 12.21
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.05,
+     "Mg": 0.55,
+     "Si": 10.99
+    },
+    "temperatureC": 538.8
+   },
+   {
+    "fractionSolid": 0.912,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.13,
+     "Mg": 0.64,
+     "Si": 12.75
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.07,
+     "Mg": 0.57,
+     "Si": 11.48
+    },
+    "temperatureC": 526.4
+   },
+   {
+    "fractionSolid": 0.96,
+    "liquidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.17,
+     "Mg": 0.69,
+     "Si": 13.8
+    },
+    "solidCompositions": {
+     "Al": 88.5,
+     "Fe": 1.12,
+     "Mg": 0.62,
+     "Si": 12.42
+    },
+    "temperatureC": 499.5
+   }
+  ],
+  "nominalComposition": {
+   "Al": 88.5,
+   "Fe": 1.0,
+   "Mg": 0.5,
+   "Si": 10.0
+  },
+  "phacompAnalysis": {
+   "m_d_bar": 1.8905,
+   "n_v_bar": 7.6952,
+   "tcpEmbrittlementRisk": "High",
+   "tcpSigmaRiskTemperatureC": 850.0,
+   "thermodynamicStabilityIndex": 0.0
+  },
+  "pycalphadVersion": "No module named 'pycalphad'",
+  "solutePartitioning": [
+   {
+    "element": "Fe",
+    "isSegregating": false,
+    "nominalWeightPct": 1.0,
+    "partitionCoefficient_k": 0.95,
+    "soluteRole": "Oxidation & Matrix Strengthener"
+   },
+   {
+    "element": "Si",
+    "isSegregating": false,
+    "nominalWeightPct": 10.0,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   },
+   {
+    "element": "Al",
+    "isSegregating": false,
+    "nominalWeightPct": 88.5,
+    "partitionCoefficient_k": 1.0,
+    "soluteRole": "Matrix Base"
+   },
+   {
+    "element": "Mg",
+    "isSegregating": false,
+    "nominalWeightPct": 0.5,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   }
+  ],
+  "success": true,
+  "tcpEmbrittlementRisk": "High",
+  "temperatureRangeC": [
+   400.0,
+   750.0
+  ],
+  "temperatureStepC": 20.0,
+  "thermodynamicModel": "Adaptive Multi-Component Redlich-Kister Sub-regular Gibbs Minimizer",
+  "thermodynamicStabilityIndex": 0.0
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

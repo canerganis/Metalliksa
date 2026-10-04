@@ -21,6 +21,7 @@ sys.path.insert(0, str(HERE / "tools"))
 
 import capture_phase6a_golden as golden  # noqa: E402
 import drift_report  # noqa: E402
+from phase6a_test_support import require_git_revision  # noqa: E402
 
 # (solver, case) -> expected validation error code (exit 2, errorKind "validation").
 # Both were silent defaults before the Phase 6a structural migration:
@@ -30,6 +31,9 @@ EXPECTED_BEHAVIOUR_CHANGES = {
     ("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"): "UNKNOWN_ALLOY",
     ("pourbaix_solver", "edge_unknown_element_badvals"): "UNKNOWN_ELEMENT",
 }
+# ---- BEGIN phase6a-t2b block: kinetics / fatigue unknown alloy (was AISI 4140 / Ti-6Al-4V) ----
+EXPECTED_BEHAVIOUR_CHANGES.update(golden._t2b_cases.EXPECTED_BEHAVIOUR_CHANGES)
+# ---- END phase6a-t2b block ----
 
 
 class GoldenFilesTest(unittest.TestCase):
@@ -43,6 +47,11 @@ class GoldenFilesTest(unittest.TestCase):
             self.assertEqual(doc["case"], case)
             self.assertEqual(doc["baseRevision"], golden.BASE_REVISION)
             self.assertEqual(golden.canonical(doc["input"]), golden.canonical(golden.CASES[solver][case]))
+            # N2: the stored input is exactly the key-sorted payload (same text, same
+            # order), so the regression re-run sends what the sorted payload says.
+            self.assertEqual(json.dumps(doc["input"], ensure_ascii=False),
+                             json.dumps(golden.CASES[solver][case], sort_keys=True, ensure_ascii=False),
+                             f"{solver}/{case}")
 
     def test_case_counts(self):
         for solver, cases in golden.CASES.items():
@@ -63,7 +72,11 @@ class GoldenRegressionTest(unittest.TestCase):
 
     def _check(self, solver: str, case: str):
         doc = golden.load_golden(solver, case)
-        fresh = golden.run_solver(solver, doc["input"])
+        # Run the CASES payload, not doc["input"]: golden files store the input with
+        # sorted keys, and key order is significant for some solvers (stochastic UQ maps
+        # composition elements to Sobol dimensions in insertion order).
+        # GoldenFilesTest asserts both are canonically equal.
+        fresh = golden.run_solver(solver, golden.CASES[solver][case])
         expected_code = EXPECTED_BEHAVIOUR_CHANGES.get((solver, case))
         if expected_code is not None:
             self.assertEqual(fresh["exitCode"], 2, fresh["stderr"])
@@ -77,7 +90,9 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertEqual(set(out), {"success", "error", "errorKind"})
             # The old golden is still the pre-migration record of the silent default.
             self.assertEqual(doc["exitCode"], 0)
-            self.assertIs(doc["stdout"].get("success"), True)
+            # (the fatigue driver output has no "success" key; it must not be an error)
+            self.assertIsNot(doc["stdout"].get("success"), False)
+            self.assertNotIn("error", doc["stdout"])
             return
         self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
         rows = drift_report.diff(doc["stdout"], fresh["stdout"])
@@ -103,7 +118,7 @@ def _git_available() -> bool:
         return False
 
 
-@unittest.skipUnless(_git_available(), f"git or revision {golden.BASE_REVISION} unavailable")
+@require_git_revision(_git_available(), f"git or revision {golden.BASE_REVISION} unavailable")
 class GoldenBindingTest(unittest.TestCase):
     """Golden files are bound to the immutable solver blobs they were captured from."""
 

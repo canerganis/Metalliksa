@@ -58,6 +58,15 @@ ATOMIC_WEIGHT_NOTE = (
 # CODATA printed truncations used by tafel/pourbaix/calphad today (not exact).
 TRUNCATED_GAS_CONSTANT_R = 8.314462618
 TRUNCATED_FARADAY = 96485.33212
+# ---- BEGIN phase6a-t2b block: legacy R of kinetics / stochastic UQ ----
+# 8.314 J/(mol*K) is the 4-significant-figure R hard-coded in kinetics_ttt_cct_solver
+# (:108, :306-307), stochastic_uq_mmpds_solver (:297), battery_corrosion_eis_solver
+# (:160, :621) and icme_multiscale_pipeline_solver (:202) at 7f3f803. Single authority:
+# alloy_data_calphad_battery_icme.LEGACY_R_8_314 wraps this value. Not exact:
+# (8.314 - GAS_CONSTANT_R) / GAS_CONSTANT_R is about -5.56e-5. Used only until
+# design step (b) switches those solvers to GAS_CONSTANT_R.
+LEGACY_GAS_CONSTANT_R_4SF = 8.314
+# ---- END phase6a-t2b block ----
 
 
 def _check_metadata(source_type: str, validity: object) -> None:

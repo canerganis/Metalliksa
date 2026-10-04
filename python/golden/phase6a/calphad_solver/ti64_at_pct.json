@@ -1,0 +1,4052 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "ti64_at_pct",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "elements": {
+   "Al": 10.2,
+   "Ti": 86.0,
+   "V": 3.8
+  },
+  "name": "Ti-6Al-4V (at%)",
+  "tMax": 1750.0,
+  "tMin": 600.0,
+  "tStep": 30.0,
+  "unit": "at_pct"
+ },
+ "invocation": "python -B calphad_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "calphad_solver",
+ "solverFile": "python/calphad_solver.py",
+ "solverSha256": "d54acda6ad93212367de84fd759d1e5df992730f0d47d26189de363683fd8a24",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "adaptiveGrid": true,
+  "adaptiveTelemetry": {
+   "boundaryToleranceC": 0.15,
+   "coarseStepsCount": 40,
+   "equivalentUniformSteps": 2301,
+   "isAdaptive": true,
+   "minRefineStepC": 0.5,
+   "refinedStepsCount": 69,
+   "speedupFactor": 21.1,
+   "totalEvaluations": 109,
+   "transitionZones": [
+    {
+     "description": "Phase Dissolution / Solvus Boundary (HCP_A3)",
+     "intervalC": [
+      900.0,
+      930.0
+     ]
+    },
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      1590.0,
+      1620.0
+     ]
+    },
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      1620.0,
+      1650.0
+     ]
+    },
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      1650.0,
+      1680.0
+     ]
+    }
+   ]
+  },
+  "alloyName": "Ti-6Al-4V (at%)",
+  "atomicFractions": {
+   "Al": 0.102,
+   "Ti": 0.86,
+   "V": 0.038
+  },
+  "criticalTemperatures": {
+   "betaTransusC": 905.7,
+   "carbidePrecipitationC": null,
+   "deltaSolvusC": null,
+   "freezingRangeC": 45.0,
+   "gammaDoublePrimeSolvusC": null,
+   "gammaPrimeSolvusC": null,
+   "liquidusC": 1664.2,
+   "solidusC": 1619.2,
+   "tcpSigmaRiskTemperatureC": 850.0
+  },
+  "databaseUsed": "COST 507 Comprehensive Light Alloys Database",
+  "engine": "subregular-adaptive-minimizer",
+  "equilibriumProfile": [
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -19506.2,
+     "Ti": -1552.3,
+     "V": -26883.4
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.7748,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.2252,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 600.0,
+    "temperatureK": 873.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -4.85
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -20176.4,
+     "Ti": -1605.6,
+     "V": -27807.1
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.7494,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.2506,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 630.0,
+    "temperatureK": 903.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -4.971
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -20846.6,
+     "Ti": -1659.0,
+     "V": -28730.8
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.7203,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.2797,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 660.0,
+    "temperatureK": 933.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.093
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -21516.8,
+     "Ti": -1712.3,
+     "V": -29654.5
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.6871,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.3129,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 690.0,
+    "temperatureK": 963.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.214
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -22187.0,
+     "Ti": -1765.6,
+     "V": -30578.1
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.649,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.351,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 720.0,
+    "temperatureK": 993.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.336
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -22857.2,
+     "Ti": -1819.0,
+     "V": -31501.8
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.6048,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.3952,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 750.0,
+    "temperatureK": 1023.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.457
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -23527.4,
+     "Ti": -1872.3,
+     "V": -32425.5
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.553,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.447,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 780.0,
+    "temperatureK": 1053.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.579
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -24197.6,
+     "Ti": -1925.6,
+     "V": -33349.1
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.4909,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.5091,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 810.0,
+    "temperatureK": 1083.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.7
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -24867.8,
+     "Ti": -1979.0,
+     "V": -34272.8
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.4137,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.5863,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 840.0,
+    "temperatureK": 1113.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.821
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -25538.0,
+     "Ti": -2032.3,
+     "V": -35196.5
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.3102,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.6898,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 870.0,
+    "temperatureK": 1143.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -5.943
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26208.2,
+     "Ti": -2085.7,
+     "V": -36120.2
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.126,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.874,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 900.0,
+    "temperatureK": 1173.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.064
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26290.4,
+     "Ti": -2092.2,
+     "V": -36233.5
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0752,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9248,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 903.68,
+    "temperatureK": 1176.83,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.079
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26291.9,
+     "Ti": -2092.3,
+     "V": -36235.6
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0739,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9261,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 903.75,
+    "temperatureK": 1176.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.079
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26312.7,
+     "Ti": -2094.0,
+     "V": -36264.2
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0534,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9466,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 904.68,
+    "temperatureK": 1177.83,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.083
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26323.9,
+     "Ti": -2094.9,
+     "V": -36279.6
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0382,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9618,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 905.18,
+    "temperatureK": 1178.33,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.085
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26330.6,
+     "Ti": -2095.4,
+     "V": -36288.9
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0248,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9752,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 905.48,
+    "temperatureK": 1178.63,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.086
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26333.7,
+     "Ti": -2095.6,
+     "V": -36293.2
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.015,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.985,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 905.62,
+    "temperatureK": 1178.77,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.087
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26335.0,
+     "Ti": -2095.8,
+     "V": -36295.0
+    },
+    "phases": [
+     {
+      "color": "#6366f1",
+      "fraction": 0.0075,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti",
+       "Al"
+      ],
+      "phaseId": "HCP_A3",
+      "phaseName": "α-Phase (HCP)"
+     },
+     {
+      "color": "#10b981",
+      "fraction": 0.9925,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Ti",
+       "V",
+       "Mo"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Phase (BCC)"
+     }
+    ],
+    "temperatureC": 905.68,
+    "temperatureK": 1178.83,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.087
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26336.4,
+     "Ti": -2095.9,
+     "V": -36296.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 905.74,
+    "temperatureK": 1178.89,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.088
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26339.1,
+     "Ti": -2096.1,
+     "V": -36300.6
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 905.86,
+    "temperatureK": 1179.01,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.088
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26344.2,
+     "Ti": -2096.5,
+     "V": -36307.7
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 906.09,
+    "temperatureK": 1179.24,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.089
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26346.2,
+     "Ti": -2096.6,
+     "V": -36310.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 906.18,
+    "temperatureK": 1179.33,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.089
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26354.7,
+     "Ti": -2097.3,
+     "V": -36322.1
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 906.56,
+    "temperatureK": 1179.71,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.091
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26357.4,
+     "Ti": -2097.5,
+     "V": -36325.8
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 906.68,
+    "temperatureK": 1179.83,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.091
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26375.7,
+     "Ti": -2099.0,
+     "V": -36351.1
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 907.5,
+    "temperatureK": 1180.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.095
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26379.7,
+     "Ti": -2099.3,
+     "V": -36356.6
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 907.68,
+    "temperatureK": 1180.83,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.095
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26459.5,
+     "Ti": -2105.7,
+     "V": -36466.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 911.25,
+    "temperatureK": 1184.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.11
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26543.3,
+     "Ti": -2112.3,
+     "V": -36582.0
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 915.0,
+    "temperatureK": 1188.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.125
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26627.0,
+     "Ti": -2119.0,
+     "V": -36697.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 918.75,
+    "temperatureK": 1191.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.14
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26710.8,
+     "Ti": -2125.7,
+     "V": -36812.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 922.5,
+    "temperatureK": 1195.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.155
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26794.6,
+     "Ti": -2132.3,
+     "V": -36928.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 926.25,
+    "temperatureK": 1199.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.171
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -26878.4,
+     "Ti": -2139.0,
+     "V": -37043.8
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 930.0,
+    "temperatureK": 1203.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.186
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -27548.6,
+     "Ti": -2192.3,
+     "V": -37967.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 960.0,
+    "temperatureK": 1233.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.307
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -28218.8,
+     "Ti": -2245.7,
+     "V": -38891.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 990.0,
+    "temperatureK": 1263.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.429
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -28889.0,
+     "Ti": -2299.0,
+     "V": -39814.8
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1020.0,
+    "temperatureK": 1293.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.55
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -29559.1,
+     "Ti": -2352.3,
+     "V": -40738.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1050.0,
+    "temperatureK": 1323.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.671
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -30229.3,
+     "Ti": -2405.7,
+     "V": -41662.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1080.0,
+    "temperatureK": 1353.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.793
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -30899.5,
+     "Ti": -2459.0,
+     "V": -42585.8
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1110.0,
+    "temperatureK": 1383.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -6.914
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -31569.7,
+     "Ti": -2512.3,
+     "V": -43509.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1140.0,
+    "temperatureK": 1413.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.036
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -32239.9,
+     "Ti": -2565.7,
+     "V": -44433.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1170.0,
+    "temperatureK": 1443.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.157
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -32910.1,
+     "Ti": -2619.0,
+     "V": -45356.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1200.0,
+    "temperatureK": 1473.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.279
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -33580.3,
+     "Ti": -2672.3,
+     "V": -46280.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1230.0,
+    "temperatureK": 1503.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.4
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -34250.5,
+     "Ti": -2725.7,
+     "V": -47204.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1260.0,
+    "temperatureK": 1533.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.521
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -34920.7,
+     "Ti": -2779.0,
+     "V": -48127.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1290.0,
+    "temperatureK": 1563.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.643
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -35590.9,
+     "Ti": -2832.3,
+     "V": -49051.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1320.0,
+    "temperatureK": 1593.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.764
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -36261.1,
+     "Ti": -2885.7,
+     "V": -49975.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1350.0,
+    "temperatureK": 1623.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -7.886
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -36931.3,
+     "Ti": -2939.0,
+     "V": -50898.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1380.0,
+    "temperatureK": 1653.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.007
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -37601.5,
+     "Ti": -2992.3,
+     "V": -51822.6
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1410.0,
+    "temperatureK": 1683.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.129
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -38271.7,
+     "Ti": -3045.7,
+     "V": -52746.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1440.0,
+    "temperatureK": 1713.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.25
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -38941.9,
+     "Ti": -3099.0,
+     "V": -53669.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1470.0,
+    "temperatureK": 1743.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.371
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -39612.1,
+     "Ti": -3152.3,
+     "V": -54593.6
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1500.0,
+    "temperatureK": 1773.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.493
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -40282.3,
+     "Ti": -3205.7,
+     "V": -55517.2
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1530.0,
+    "temperatureK": 1803.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.614
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -40952.5,
+     "Ti": -3259.0,
+     "V": -56440.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1560.0,
+    "temperatureK": 1833.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.736
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -41622.7,
+     "Ti": -3312.3,
+     "V": -57364.6
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1590.0,
+    "temperatureK": 1863.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.857
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -41706.5,
+     "Ti": -3319.0,
+     "V": -57480.0
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1593.75,
+    "temperatureK": 1866.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.872
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -41790.3,
+     "Ti": -3325.7,
+     "V": -57595.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1597.5,
+    "temperatureK": 1870.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.887
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -41874.1,
+     "Ti": -3332.4,
+     "V": -57711.0
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1601.25,
+    "temperatureK": 1874.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.903
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -41957.8,
+     "Ti": -3339.0,
+     "V": -57826.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1605.0,
+    "temperatureK": 1878.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.918
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42041.6,
+     "Ti": -3345.7,
+     "V": -57941.9
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1608.75,
+    "temperatureK": 1881.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.933
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42125.4,
+     "Ti": -3352.4,
+     "V": -58057.3
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1612.5,
+    "temperatureK": 1885.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.948
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42209.2,
+     "Ti": -3359.0,
+     "V": -58172.8
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1616.25,
+    "temperatureK": 1889.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.963
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42236.4,
+     "Ti": -3361.2,
+     "V": -58210.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1617.47,
+    "temperatureK": 1890.62,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.968
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42250.9,
+     "Ti": -3362.3,
+     "V": -58230.4
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1618.12,
+    "temperatureK": 1891.27,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.971
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42258.8,
+     "Ti": -3363.0,
+     "V": -58241.1
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1618.47,
+    "temperatureK": 1891.62,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.972
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42269.9,
+     "Ti": -3363.9,
+     "V": -58256.5
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1618.97,
+    "temperatureK": 1892.12,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.974
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42271.9,
+     "Ti": -3364.0,
+     "V": -58259.3
+    },
+    "phases": [
+     {
+      "color": "#10b981",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.06,
+    "temperatureK": 1892.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.975
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42276.6,
+     "Ti": -3364.4,
+     "V": -58265.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.27,
+    "temperatureK": 1892.42,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.976
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42279.8,
+     "Ti": -3364.6,
+     "V": -58270.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.41,
+    "temperatureK": 1892.56,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.976
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42281.1,
+     "Ti": -3364.7,
+     "V": -58271.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.47,
+    "temperatureK": 1892.62,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.976
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42282.4,
+     "Ti": -3364.8,
+     "V": -58273.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0013,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9987,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.53,
+    "temperatureK": 1892.68,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.977
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42285.6,
+     "Ti": -3365.1,
+     "V": -58278.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0021,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9979,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.67,
+    "temperatureK": 1892.82,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.977
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42292.3,
+     "Ti": -3365.6,
+     "V": -58287.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0041,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9959,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1619.97,
+    "temperatureK": 1893.12,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.978
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42294.3,
+     "Ti": -3365.8,
+     "V": -58290.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0048,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9952,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.06,
+    "temperatureK": 1893.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.979
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42295.6,
+     "Ti": -3365.9,
+     "V": -58291.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0052,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9948,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.12,
+    "temperatureK": 1893.27,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.979
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42298.3,
+     "Ti": -3366.1,
+     "V": -58295.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0062,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9938,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.24,
+    "temperatureK": 1893.39,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.98
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42303.4,
+     "Ti": -3366.5,
+     "V": -58302.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0081,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9919,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.47,
+    "temperatureK": 1893.62,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.98
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42305.5,
+     "Ti": -3366.7,
+     "V": -58305.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0089,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9911,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.56,
+    "temperatureK": 1893.71,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.981
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42313.9,
+     "Ti": -3367.4,
+     "V": -58317.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0124,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9876,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1620.94,
+    "temperatureK": 1894.09,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.982
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42316.6,
+     "Ti": -3367.6,
+     "V": -58320.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0136,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9864,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1621.06,
+    "temperatureK": 1894.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.983
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42334.9,
+     "Ti": -3369.0,
+     "V": -58346.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0222,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9778,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1621.88,
+    "temperatureK": 1895.03,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.986
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42339.0,
+     "Ti": -3369.3,
+     "V": -58351.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0242,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9758,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1622.06,
+    "temperatureK": 1895.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.987
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42376.7,
+     "Ti": -3372.4,
+     "V": -58403.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0453,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9547,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1623.75,
+    "temperatureK": 1896.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -8.994
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42460.5,
+     "Ti": -3379.0,
+     "V": -58519.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1021,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8979,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1627.5,
+    "temperatureK": 1900.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.009
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42544.3,
+     "Ti": -3385.7,
+     "V": -58634.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.1688,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.8312,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1631.25,
+    "temperatureK": 1904.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.024
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42628.0,
+     "Ti": -3392.4,
+     "V": -58750.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2434,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7566,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1635.0,
+    "temperatureK": 1908.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.039
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42711.8,
+     "Ti": -3399.0,
+     "V": -58865.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.3245,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.6755,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1638.75,
+    "temperatureK": 1911.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.054
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42795.6,
+     "Ti": -3405.7,
+     "V": -58981.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.4112,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.5888,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1642.5,
+    "temperatureK": 1915.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.07
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42879.4,
+     "Ti": -3412.4,
+     "V": -59096.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.503,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.497,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1646.25,
+    "temperatureK": 1919.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.085
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42963.1,
+     "Ti": -3419.0,
+     "V": -59211.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.5994,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.4006,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.0,
+    "temperatureK": 1923.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.1
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42964.5,
+     "Ti": -3419.1,
+     "V": -59213.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.601,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.399,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.06,
+    "temperatureK": 1923.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.1
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42965.8,
+     "Ti": -3419.2,
+     "V": -59215.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6025,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3975,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.12,
+    "temperatureK": 1923.27,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.1
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42968.5,
+     "Ti": -3419.4,
+     "V": -59219.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6057,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3943,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.24,
+    "temperatureK": 1923.39,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.101
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42973.6,
+     "Ti": -3419.9,
+     "V": -59226.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6118,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3882,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.47,
+    "temperatureK": 1923.62,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.102
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42975.7,
+     "Ti": -3420.0,
+     "V": -59229.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6141,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3859,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.56,
+    "temperatureK": 1923.71,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.102
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42984.1,
+     "Ti": -3420.7,
+     "V": -59240.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6242,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3758,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1650.94,
+    "temperatureK": 1924.09,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.104
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -42986.8,
+     "Ti": -3420.9,
+     "V": -59244.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6274,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3726,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1651.06,
+    "temperatureK": 1924.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.104
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43005.1,
+     "Ti": -3422.4,
+     "V": -59269.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6493,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3507,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1651.88,
+    "temperatureK": 1925.03,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.108
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43009.2,
+     "Ti": -3422.7,
+     "V": -59275.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6541,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3459,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1652.06,
+    "temperatureK": 1925.21,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.108
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43046.9,
+     "Ti": -3425.7,
+     "V": -59327.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.7,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1653.75,
+    "temperatureK": 1926.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.115
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43130.7,
+     "Ti": -3432.4,
+     "V": -59442.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.8044,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.1956,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1657.5,
+    "temperatureK": 1930.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.13
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43214.5,
+     "Ti": -3439.0,
+     "V": -59558.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.9125,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.0875,
+      "isPrimary": true,
+      "majorElements": [
+       "Ti"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "β-Matrix (BCC)"
+     }
+    ],
+    "temperatureC": 1661.25,
+    "temperatureK": 1934.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.146
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43298.2,
+     "Ti": -3445.7,
+     "V": -59673.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1665.0,
+    "temperatureK": 1938.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.161
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43382.0,
+     "Ti": -3452.4,
+     "V": -59789.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1668.75,
+    "temperatureK": 1941.9,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.176
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43465.8,
+     "Ti": -3459.0,
+     "V": -59904.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1672.5,
+    "temperatureK": 1945.65,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.191
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43549.6,
+     "Ti": -3465.7,
+     "V": -60020.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1676.25,
+    "temperatureK": 1949.4,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.206
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -43633.3,
+     "Ti": -3472.4,
+     "V": -60135.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1680.0,
+    "temperatureK": 1953.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.221
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -44303.5,
+     "Ti": -3525.7,
+     "V": -61059.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1710.0,
+    "temperatureK": 1983.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.343
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -44973.7,
+     "Ti": -3579.0,
+     "V": -61982.9
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1740.0,
+    "temperatureK": 2013.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.464
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Al": -45197.1,
+     "Ti": -3596.8,
+     "V": -62290.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Al",
+       "Ti",
+       "V"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1750.0,
+    "temperatureK": 2023.15,
+    "thermodynamicActivities": {
+     "Al": 0.06809,
+     "Ti": 0.80749,
+     "V": 0.02465
+    },
+    "totalGibbsEnergy_kJ_mol": -9.505
+   }
+  ],
+  "isEmpirical": false,
+  "iterations": 109,
+  "multiElementScheil": [
+   {
+    "fractionSolid": 0.0,
+    "liquidCompositions": {
+     "Al": 6.0,
+     "Ti": 89.78,
+     "V": 4.22
+    },
+    "solidCompositions": {
+     "Al": 5.52,
+     "Ti": 89.78,
+     "V": 3.8
+    },
+    "temperatureC": 1664.2
+   },
+   {
+    "fractionSolid": 0.048,
+    "liquidCompositions": {
+     "Al": 6.02,
+     "Ti": 89.78,
+     "V": 4.24
+    },
+    "solidCompositions": {
+     "Al": 5.54,
+     "Ti": 89.78,
+     "V": 3.82
+    },
+    "temperatureC": 1663.6
+   },
+   {
+    "fractionSolid": 0.096,
+    "liquidCompositions": {
+     "Al": 6.05,
+     "Ti": 89.78,
+     "V": 4.26
+    },
+    "solidCompositions": {
+     "Al": 5.56,
+     "Ti": 89.78,
+     "V": 3.84
+    },
+    "temperatureC": 1662.9
+   },
+   {
+    "fractionSolid": 0.144,
+    "liquidCompositions": {
+     "Al": 6.08,
+     "Ti": 89.78,
+     "V": 4.29
+    },
+    "solidCompositions": {
+     "Al": 5.59,
+     "Ti": 89.78,
+     "V": 3.86
+    },
+    "temperatureC": 1662.2
+   },
+   {
+    "fractionSolid": 0.192,
+    "liquidCompositions": {
+     "Al": 6.1,
+     "Ti": 89.78,
+     "V": 4.31
+    },
+    "solidCompositions": {
+     "Al": 5.61,
+     "Ti": 89.78,
+     "V": 3.88
+    },
+    "temperatureC": 1661.4
+   },
+   {
+    "fractionSolid": 0.24,
+    "liquidCompositions": {
+     "Al": 6.13,
+     "Ti": 89.78,
+     "V": 4.34
+    },
+    "solidCompositions": {
+     "Al": 5.64,
+     "Ti": 89.78,
+     "V": 3.9
+    },
+    "temperatureC": 1660.6
+   },
+   {
+    "fractionSolid": 0.288,
+    "liquidCompositions": {
+     "Al": 6.17,
+     "Ti": 89.78,
+     "V": 4.37
+    },
+    "solidCompositions": {
+     "Al": 5.67,
+     "Ti": 89.78,
+     "V": 3.93
+    },
+    "temperatureC": 1659.7
+   },
+   {
+    "fractionSolid": 0.336,
+    "liquidCompositions": {
+     "Al": 6.2,
+     "Ti": 89.78,
+     "V": 4.4
+    },
+    "solidCompositions": {
+     "Al": 5.7,
+     "Ti": 89.78,
+     "V": 3.96
+    },
+    "temperatureC": 1658.7
+   },
+   {
+    "fractionSolid": 0.384,
+    "liquidCompositions": {
+     "Al": 6.24,
+     "Ti": 89.78,
+     "V": 4.43
+    },
+    "solidCompositions": {
+     "Al": 5.74,
+     "Ti": 89.78,
+     "V": 3.99
+    },
+    "temperatureC": 1657.7
+   },
+   {
+    "fractionSolid": 0.432,
+    "liquidCompositions": {
+     "Al": 6.28,
+     "Ti": 89.78,
+     "V": 4.47
+    },
+    "solidCompositions": {
+     "Al": 5.78,
+     "Ti": 89.78,
+     "V": 4.02
+    },
+    "temperatureC": 1656.5
+   },
+   {
+    "fractionSolid": 0.48,
+    "liquidCompositions": {
+     "Al": 6.32,
+     "Ti": 89.78,
+     "V": 4.51
+    },
+    "solidCompositions": {
+     "Al": 5.82,
+     "Ti": 89.78,
+     "V": 4.05
+    },
+    "temperatureC": 1655.2
+   },
+   {
+    "fractionSolid": 0.528,
+    "liquidCompositions": {
+     "Al": 6.37,
+     "Ti": 89.78,
+     "V": 4.55
+    },
+    "solidCompositions": {
+     "Al": 5.86,
+     "Ti": 89.78,
+     "V": 4.09
+    },
+    "temperatureC": 1653.7
+   },
+   {
+    "fractionSolid": 0.576,
+    "liquidCompositions": {
+     "Al": 6.43,
+     "Ti": 89.78,
+     "V": 4.6
+    },
+    "solidCompositions": {
+     "Al": 5.91,
+     "Ti": 89.78,
+     "V": 4.14
+    },
+    "temperatureC": 1652.0
+   },
+   {
+    "fractionSolid": 0.624,
+    "liquidCompositions": {
+     "Al": 6.49,
+     "Ti": 89.78,
+     "V": 4.65
+    },
+    "solidCompositions": {
+     "Al": 5.97,
+     "Ti": 89.78,
+     "V": 4.19
+    },
+    "temperatureC": 1650.0
+   },
+   {
+    "fractionSolid": 0.672,
+    "liquidCompositions": {
+     "Al": 6.56,
+     "Ti": 89.78,
+     "V": 4.72
+    },
+    "solidCompositions": {
+     "Al": 6.03,
+     "Ti": 89.78,
+     "V": 4.25
+    },
+    "temperatureC": 1647.7
+   },
+   {
+    "fractionSolid": 0.72,
+    "liquidCompositions": {
+     "Al": 6.64,
+     "Ti": 89.78,
+     "V": 4.79
+    },
+    "solidCompositions": {
+     "Al": 6.11,
+     "Ti": 89.78,
+     "V": 4.31
+    },
+    "temperatureC": 1644.9
+   },
+   {
+    "fractionSolid": 0.768,
+    "liquidCompositions": {
+     "Al": 6.74,
+     "Ti": 89.78,
+     "V": 4.88
+    },
+    "solidCompositions": {
+     "Al": 6.2,
+     "Ti": 89.78,
+     "V": 4.4
+    },
+    "temperatureC": 1641.5
+   },
+   {
+    "fractionSolid": 0.816,
+    "liquidCompositions": {
+     "Al": 6.87,
+     "Ti": 89.78,
+     "V": 5.0
+    },
+    "solidCompositions": {
+     "Al": 6.32,
+     "Ti": 89.78,
+     "V": 4.5
+    },
+    "temperatureC": 1636.9
+   },
+   {
+    "fractionSolid": 0.864,
+    "liquidCompositions": {
+     "Al": 7.04,
+     "Ti": 89.78,
+     "V": 5.15
+    },
+    "solidCompositions": {
+     "Al": 6.48,
+     "Ti": 89.78,
+     "V": 4.64
+    },
+    "temperatureC": 1630.5
+   },
+   {
+    "fractionSolid": 0.912,
+    "liquidCompositions": {
+     "Al": 7.29,
+     "Ti": 89.78,
+     "V": 5.38
+    },
+    "solidCompositions": {
+     "Al": 6.7,
+     "Ti": 89.78,
+     "V": 4.84
+    },
+    "temperatureC": 1620.3
+   },
+   {
+    "fractionSolid": 0.96,
+    "liquidCompositions": {
+     "Al": 7.76,
+     "Ti": 89.78,
+     "V": 5.82
+    },
+    "solidCompositions": {
+     "Al": 7.14,
+     "Ti": 89.78,
+     "V": 5.24
+    },
+    "temperatureC": 1598.4
+   }
+  ],
+  "nominalComposition": {
+   "Al": 6.002070067375328,
+   "Ti": 89.77623993590032,
+   "V": 4.221689996724357
+  },
+  "phacompAnalysis": {
+   "m_d_bar": 2.218,
+   "n_v_bar": 6.724,
+   "tcpEmbrittlementRisk": "High",
+   "tcpSigmaRiskTemperatureC": 850.0,
+   "thermodynamicStabilityIndex": 0.0
+  },
+  "pycalphadVersion": "No module named 'pycalphad'",
+  "solutePartitioning": [
+   {
+    "element": "Al",
+    "isSegregating": false,
+    "nominalWeightPct": 6.0,
+    "partitionCoefficient_k": 0.92,
+    "soluteRole": "γ' Precipitate Former"
+   },
+   {
+    "element": "Ti",
+    "isSegregating": false,
+    "nominalWeightPct": 89.78,
+    "partitionCoefficient_k": 1.0,
+    "soluteRole": "Matrix Base"
+   },
+   {
+    "element": "V",
+    "isSegregating": false,
+    "nominalWeightPct": 4.22,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   }
+  ],
+  "success": true,
+  "tcpEmbrittlementRisk": "High",
+  "temperatureRangeC": [
+   600.0,
+   1750.0
+  ],
+  "temperatureStepC": 30.0,
+  "thermodynamicModel": "Adaptive Multi-Component Redlich-Kister Sub-regular Gibbs Minimizer",
+  "thermodynamicStabilityIndex": 0.0
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

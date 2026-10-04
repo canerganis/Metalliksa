@@ -23,7 +23,12 @@ Standard Alloy Fatigue Properties Database (calibrated from literature):
 from __future__ import annotations
 import math
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Tuple
+from types import MappingProxyType
+from typing import List, Dict, Any, Mapping, Optional, Tuple
+
+import alloy_data_kinetics_uq_fatigue as _fatigue_data
+import alloy_registry
+import input_validation
 
 
 @dataclass
@@ -37,35 +42,33 @@ class AlloyFatigueConstants:
     paris_m: float                      # Paris exponent m
 
 
-ALLOY_FATIGUE_DATABASE: Dict[str, AlloyFatigueConstants] = {
-    "Ti-6Al-4V": AlloyFatigueConstants(
-        name="Ti-6Al-4V", hardness_HV=340.0, smooth_fatigue_limit_MPa=510.0,
-        threshold_stress_intensity_MPa_m=3.2, fracture_toughness_K_IC=55.0,
-        paris_C=1.8e-11, paris_m=3.3
-    ),
-    "316L SS": AlloyFatigueConstants(
-        name="316L SS", hardness_HV=215.0, smooth_fatigue_limit_MPa=240.0,
-        threshold_stress_intensity_MPa_m=4.8, fracture_toughness_K_IC=85.0,
-        paris_C=3.5e-12, paris_m=3.1
-    ),
-    "Inconel 718": AlloyFatigueConstants(
-        name="Inconel 718", hardness_HV=440.0, smooth_fatigue_limit_MPa=620.0,
-        threshold_stress_intensity_MPa_m=4.2, fracture_toughness_K_IC=70.0,
-        paris_C=1.2e-11, paris_m=3.4
-    ),
-    "AlSi10Mg": AlloyFatigueConstants(
-        name="AlSi10Mg", hardness_HV=115.0, smooth_fatigue_limit_MPa=150.0,
-        threshold_stress_intensity_MPa_m=1.8, fracture_toughness_K_IC=32.0,
-        paris_C=2.1e-10, paris_m=3.8
-    ),
-}
+def fatigue_constants(alloy_name: str) -> AlloyFatigueConstants:
+    """Registry-backed constants (domain "fatigue_fracture") for ``alloy_name``.
+
+    Phase 6a structural migration (design step (a)): the values are the former
+    local table, now held by alloy_registry; ``name`` is the legacy table key.
+    Raises input_validation.ValidationError (UNKNOWN_ALLOY) for a name without
+    fatigue data; before the migration such names silently used Ti-6Al-4V.
+    """
+    record = input_validation.require_known_alloy(
+        alloy_name, alloy_registry.DOMAIN_FATIGUE_FRACTURE, field="alloyName")
+    values = {key: record.value(key, alloy_registry.DOMAIN_FATIGUE_FRACTURE)
+              for key in _fatigue_data.FATIGUE_KEYS}
+    return AlloyFatigueConstants(name=_fatigue_data.FATIGUE_LEGACY_NAMES[record.id], **values)
+
+
+# Read-only view keyed by the legacy names (same keys, order and values as before).
+ALLOY_FATIGUE_DATABASE: Mapping[str, AlloyFatigueConstants] = MappingProxyType({
+    legacy: fatigue_constants(legacy) for legacy in _fatigue_data.FATIGUE_LEGACY_NAMES.values()
+})
 
 
 class MurakamiFatigueEngine:
     """Calculates defect-tolerant fatigue endurance limits and crack propagation lifetimes."""
 
     def __init__(self, alloy_name: str = "Ti-6Al-4V", custom_alloy: Optional[AlloyFatigueConstants] = None):
-        self.alloy = custom_alloy or ALLOY_FATIGUE_DATABASE.get(alloy_name, ALLOY_FATIGUE_DATABASE["Ti-6Al-4V"])
+        # A dataclass instance is always truthy, so this equals the old `custom_alloy or ...`.
+        self.alloy = custom_alloy if custom_alloy is not None else fatigue_constants(alloy_name)
 
     def el_haddad_intrinsic_crack_length_um(self) -> float:
         """Calculates El-Haddad intrinsic crack size a0 (in micrometers)."""

@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""
+Domain data for the Phase 6a tranche-2a solvers: calphad_solver,
+battery_corrosion_eis_solver and icme_multiscale_pipeline_solver.
+
+Structural step (a) only. Every number here is a copy of the value the solver used
+at BASE_REVISION, including rounded/truncated constants and legacy rounded atomic
+weights, so the solver output stays bit-identical. The value step (b) swaps them
+for the exact physical_constants records; see the drift preview in the tranche-2a
+handoff.
+
+Provenance honesty (RULES.md section 2): no value below carries a per-value
+citation in its solver, so the solver-local values are tagged ``estimated``. The
+truncated R/F printings are tagged ``literature`` like physical_constants does for
+CODATA values, with ``exact=False`` and a note naming the truncation.
+
+Leaf module: standard library + physical_constants only, no numpy/scipy at import.
+alloy_registry imports it (one delimited block); no manifest file may import it
+until the planned implementation-fingerprint bump.
+"""
+
+from __future__ import annotations
+
+from types import MappingProxyType
+from typing import Dict, Mapping, Tuple
+
+from physical_constants import LEGACY_GAS_CONSTANT_R_4SF, Constant
+
+DATA_VERSION = "alloy-data-calphad-battery-icme-1"
+BASE_REVISION = "7f3f803"
+
+# --------------------------------------------------------------------------- legacy constants
+# Rounded/truncated printings of R and F found in the solvers at BASE_REVISION. The
+# 8.314462618 / 96485.33212 truncations already exist as
+# physical_constants.TRUNCATED_GAS_CONSTANT_R / TRUNCATED_FARADAY and are not repeated.
+_CODATA = "NIST CODATA 2018"
+_TRUNC_NOTE = ("Rounded printing of the CODATA value kept for bit-identical output in Phase 6a "
+               "step (a); not exact. Replaced by the exact SI product in step (b).")
+
+# The value itself lives in physical_constants (single authority, shared with the
+# kinetics and stochastic UQ solvers); this record only adds unit/source metadata.
+LEGACY_R_8_314 = Constant(LEGACY_GAS_CONSTANT_R_4SF, "J/(mol*K)", f"{_CODATA} R, rounded to 3 decimals",
+                          False, note=_TRUNC_NOTE)
+LEGACY_R_8_31446 = Constant(8.31446, "J/(mol*K)", f"{_CODATA} R, rounded to 5 decimals", False,
+                            note=_TRUNC_NOTE)
+LEGACY_F_96485_332 = Constant(96485.332, "C/mol", f"{_CODATA} F, rounded to 3 decimals", False,
+                              note=_TRUNC_NOTE)
+LEGACY_F_96485_33 = Constant(96485.33, "C/mol", f"{_CODATA} F, rounded to 2 decimals", False,
+                             note=_TRUNC_NOTE)
+
+# Where each truncated constant is used (solver file, function) -> (R, F) names.
+# "TRUNCATED_*" refers to physical_constants; None means the site uses no F.
+LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({
+    ("calphad_solver.py", "module GAS_CONSTANT_R"): ("TRUNCATED_GAS_CONSTANT_R", None),
+    ("battery_corrosion_eis_solver.py", "simulate_p2d_continuum_profiles"):
+        ("LEGACY_R_8_314", "LEGACY_F_96485_332"),
+    ("battery_corrosion_eis_solver.py", "simulate_battery_degradation_and_eis"):
+        ("LEGACY_R_8_314", None),
+    ("battery_corrosion_eis_solver.py", "simulate_nernst_planck_poisson_transport"):
+        ("TRUNCATED_GAS_CONSTANT_R", "TRUNCATED_FARADAY"),
+    ("battery_corrosion_eis_solver.py", "analyze_uploaded_eis_dataset"):
+        ("LEGACY_R_8_31446", "LEGACY_F_96485_33"),
+    ("icme_multiscale_pipeline_solver.py", "solve_multiscale_pipeline"): ("LEGACY_R_8_314", None),
+})
+
+# --------------------------------------------------------------------------- calphad
+# Element set of calphad_solver.ATOMIC_WEIGHTS at BASE_REVISION (calphad_solver.py:59-64).
+# Its values equal physical_constants.STANDARD_ATOMIC_WEIGHTS (CIAAW 2021 abridged)
+# for every one of these symbols, so the solver reads them from there. Elements
+# outside this set (including P, S, Sn, Pb, Be and Sc, which UI specimens send at
+# positive amounts) keep the LEGACY silent fallback below in step (a), so the
+# output stays bit-identical; see CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL.
+CALPHAD_ELEMENTS: Tuple[str, ...] = (
+    "H", "B", "C", "N", "O", "Mg", "Al", "Si", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu",
+    "Zn", "Y", "Zr", "Nb", "Mo", "Ru", "Hf", "Ta", "W", "Re", "Pt", "Au",
+)
+
+# LEGACY FALLBACK, scheduled for removal at design step (b): calphad_solver.py:196-201
+# @7f3f803 weighted every element outside CALPHAD_ELEMENTS with 50.0 g/mol. It is not
+# an atomic weight of anything. Refusing these elements in step (a) made 14 of 34 UI
+# specimens (P/S steels, Sn/Pb/Be alloys) silently lose the Python engine, because
+# the UI treats any non-2xx as a cue for its client solver. Step (b) replaces it with
+# real CIAAW weights (physical_constants) and refuses only truly unknown symbols.
+CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL = 50.0
+CALPHAD_LEGACY_FALLBACK_NOTE = (
+    "LEGACY FALLBACK: elements outside the CALPHAD element set are weighted with 50.0 g/mol "
+    "(pre-migration behaviour, not a real atomic weight); scheduled for removal at Phase 6a "
+    "design step (b) together with real CIAAW weights."
+)
+
+# --------------------------------------------------------------------------- icme
+DOMAIN_ICME = "icme"
+_ICME_REF = f"icme_multiscale_pipeline_solver.py @{BASE_REVISION}"
+ICME_ATOMIC_WEIGHTS_NOTE = (
+    "Legacy rounded atomic weight copied from the solver (no edition stated); differs from the "
+    "CIAAW 2021 abridged value by up to 0.005 g/mol. Step (b) replaces it with "
+    "physical_constants.atomic_weight()."
+)
+# icme_multiscale_pipeline_solver.py:118-122 atomic_weights (g/mol), unchanged.
+ICME_ATOMIC_WEIGHTS: Mapping[str, float] = MappingProxyType({
+    "Ni": 58.69, "Fe": 55.85, "Cr": 52.00, "Mo": 95.95, "Nb": 92.91,
+    "Ti": 47.87, "Al": 26.98, "C": 12.01, "Si": 28.09, "Mn": 54.94,
+    "V": 50.94, "W": 183.84, "Co": 58.93, "Cu": 63.55, "Mg": 24.31, "Zn": 65.38,
+})
+
+# Base metals with a Scale-0 data branch in the solver (Ni, Fe, Ti; everything else
+# fell into the Al branch before the migration).
+ICME_BASE_METALS: Tuple[str, ...] = ("Ni", "Fe", "Ti", "Al")
+
+ICME_T_MELT_NOTE = (
+    "Johnson-Cook T_melt screening value per base metal, copied from the solver; no citation. "
+    "Ni 1350 and Fe 1450 degC are below the pure-metal melting points (1455 / 1538 degC) and "
+    "look like alloy values; Ti 1650 vs 1668 degC; Al 660 degC is pure Al."
+)
+# icme_multiscale_pipeline_solver.py:292 t_melt_C chain, per base metal (degC).
+ICME_JOHNSON_COOK_T_MELT_C: Mapping[str, float] = MappingProxyType({
+    "Ni": 1350.0, "Fe": 1450.0, "Ti": 1650.0, "Al": 660.0,
+})
+
+# Alloy-keyed icme data, wired into alloy_registry as domain "icme".
+# icme_multiscale_pipeline_solver.py:28-30: default solute composition when the
+# payload has no composition_wt (Inconel 718 solutes; Ni is the balance).
+ICME_UNITS: Mapping[str, str] = MappingProxyType({"default_solute_composition_wt": "wt%"})
+ICME_ALLOY_TABLES: Mapping[str, Mapping[str, object]] = MappingProxyType({
+    "in718": MappingProxyType({
+        "default_solute_composition_wt": MappingProxyType({
+            "Cr": 19.0, "Fe": 18.0, "Nb": 5.1, "Mo": 3.0, "Ti": 0.9, "Al": 0.5, "C": 0.05,
+            "Si": 0.2, "Mn": 0.2,
+        }),
+    }),
+})
+ICME_DEFAULT_ALLOY_ID = "in718"
+
+# --------------------------------------------------------------------------- registry wiring
+REGISTRY_NOTE = "Solver-local screening value copied unchanged; no per-value citation in source."
+# domain -> (alloy-keyed table, units, source_ref); consumed by alloy_registry's
+# tranche-2a block.
+REGISTRY_DOMAIN_TABLES: Mapping[str, Tuple[Mapping[str, Mapping[str, object]], Mapping[str, str], str]] = (
+    MappingProxyType({
+        DOMAIN_ICME: (ICME_ALLOY_TABLES, ICME_UNITS, f"{_ICME_REF} :28-30 default composition_wt"),
+    })
+)
+
+
+class UnsupportedElementError(KeyError):
+    """An element (or base metal) the solver has no data for. No fallback is used."""
+
+    def __init__(self, element: object, domain: str, supported: Tuple[str, ...]):
+        self.element = element
+        self.domain = domain
+        self.supported = tuple(supported)
+        super().__init__(
+            f"No {domain} data for element {element!r}; supported: {', '.join(self.supported)} "
+            f"(no fallback value is used)."
+        )
+
+    def __str__(self) -> str:
+        return str(self.args[0])
+
+
+def icme_atomic_weight(element: object) -> float:
+    if not isinstance(element, str) or element not in ICME_ATOMIC_WEIGHTS:
+        raise UnsupportedElementError(element, "icme atomic-weight", tuple(ICME_ATOMIC_WEIGHTS))
+    return ICME_ATOMIC_WEIGHTS[element]
+
+
+def icme_base_metal(base: object) -> str:
+    if not isinstance(base, str) or base not in ICME_BASE_METALS:
+        raise UnsupportedElementError(base, "icme base-metal", ICME_BASE_METALS)
+    return base
+
+
+def provenance() -> Dict[str, str]:
+    return {"domainDataVersion": DATA_VERSION, "domainDataBaseRevision": BASE_REVISION}

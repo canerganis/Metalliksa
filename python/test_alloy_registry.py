@@ -116,10 +116,15 @@ class CopiedTableDriftTest(unittest.TestCase):
     """Registry copies must equal the live solver tables until each solver migrates."""
 
     def test_kinetics_table(self):
-        import kinetics_ttt_cct_solver as kin
-        self.assertEqual(set(reg._KINETICS_SOURCE_NAME.values()), set(kin.ALLOY_KINETICS_DB))
+        # phase6a-t2b: kinetics_ttt_cct_solver no longer holds ALLOY_KINETICS_DB;
+        # compare with the snapshot of that table taken at the base revision.
+        import json
+        from pathlib import Path
+        snapshot = Path(__file__).parent / "golden" / "phase6a" / "kinetics_ttt_cct_solver" / "_source_tables.json"
+        kinetics_db = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
+        self.assertEqual(set(reg._KINETICS_SOURCE_NAME.values()), set(kinetics_db))
         for aid, src_name in reg._KINETICS_SOURCE_NAME.items():
-            src = kin.ALLOY_KINETICS_DB[src_name]
+            src = kinetics_db[src_name]
             table = reg.REGISTRY[aid].domains[reg.DOMAIN_KINETICS]
             for key, rec in table.items():
                 self.assertEqual(dict(rec.value) if key == "composition_wt" else rec.value,
@@ -128,13 +133,18 @@ class CopiedTableDriftTest(unittest.TestCase):
             self.assertEqual(set(table), numeric, aid)
 
     def test_fatigue_fracture_table(self):
-        import lpbf_fatigue_fracture as ff
-        self.assertEqual(set(reg._FATIGUE_FRACTURE_SOURCE_NAME.values()), set(ff.ALLOY_FATIGUE_DATABASE))
+        # phase6a-t2b: lpbf_fatigue_fracture.ALLOY_FATIGUE_DATABASE is now a view built
+        # from the registry; compare with the base-revision snapshot instead.
+        import json
+        from pathlib import Path
+        snapshot = Path(__file__).parent / "golden" / "phase6a" / "lpbf_fatigue_fracture" / "_source_tables.json"
+        fatigue_db = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
+        self.assertEqual(set(reg._FATIGUE_FRACTURE_SOURCE_NAME.values()), set(fatigue_db))
         for aid, src_name in reg._FATIGUE_FRACTURE_SOURCE_NAME.items():
-            src = ff.ALLOY_FATIGUE_DATABASE[src_name]
+            src = fatigue_db[src_name]
             table = reg.REGISTRY[aid].domains[reg.DOMAIN_FATIGUE_FRACTURE]
             for key, rec in table.items():
-                self.assertEqual(rec.value, getattr(src, key), f"{aid}.{key}")
+                self.assertEqual(rec.value, src[key], f"{aid}.{key}")
 
     def test_fatigue_screening_table(self):
         import murakami_fatigue_screening as ms

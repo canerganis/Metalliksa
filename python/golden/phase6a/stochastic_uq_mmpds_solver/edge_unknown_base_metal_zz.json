@@ -1,0 +1,1411 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "edge_unknown_base_metal_zz",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "alloyName": "Unobtainium",
+  "baseMetal": "Zz",
+  "composition_tolerances": {
+   "Cu": 0.2,
+   "Zr": 0.1
+  },
+  "composition_wt": {
+   "Cu": 2.0,
+   "Zr": 1.0
+  },
+  "mcSamples": 500,
+  "samplingMethod": "sobol_qmc",
+  "scramble": true,
+  "seed": 42
+ },
+ "invocation": "python -B stochastic_uq_mmpds_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "stochastic_uq_mmpds_solver",
+ "solverFile": "python/stochastic_uq_mmpds_solver.py",
+ "solverSha256": "66abe5e38e7930e8172b4bb70a81b81991554e3d960fd0acc590e6cfb3b96772",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "aerospaceReliability": {
+   "aBasisConforming": false,
+   "bBasisConforming": false,
+   "cpkConforming": false,
+   "criticalFlawMedian_mm": 4.1,
+   "criticalFlaw_P10_mm": 3.8,
+   "hasoferLindBetaIndex": -4.66,
+   "qualificationStatus": "Screening only; qualification not assessed",
+   "yieldFailureProbability_Pf": 1.0
+  },
+  "alloyMetadata": {
+   "alloyName": "Unobtainium",
+   "baseMetal": "Zz",
+   "specMinElongation_pct": 12.0,
+   "specMinUTS_MPa": 1350.0,
+   "specMinYield_MPa": 1100.0,
+   "standardSpec": "AMS 5662 / AMS 5664"
+  },
+  "engine": "MetalliX Stochastic UQ & Quasi-Monte Carlo Sobol MMPDS-01 Solver",
+  "inputUncertainties": {
+   "agingTemp_nominal": 720.0,
+   "agingTemp_stdDev": 7.5,
+   "agingTime_nominal": 8.0,
+   "agingTime_stdDev": 0.25,
+   "compositionTolerances": {
+    "Cu": 0.2,
+    "Zr": 0.1
+   },
+   "coolingRate_cov": 0.25,
+   "coolingRate_nominal": 150000.0,
+   "serviceStress_cov": 0.08,
+   "serviceStress_nominal": 720.0
+  },
+  "sampleSizeN": 500,
+  "samplingMetadata": {
+   "centeredL2Discrepancy": 0.055924,
+   "diagnosticsLimitations": "Centered L2 discrepancy compares the first 150 points with one seeded pseudo-random set; it is not an estimator error, variance reduction, effective sample size or measured speedup. The local Sobol implementation skips the origin and allows arbitrary sample counts; balanced-net guarantees are not claimed.",
+   "discrepancyReductionPct": 0.0,
+   "discrepancySampleSize": 150,
+   "effectiveSampleSize": null,
+   "pseudoDiscrepancyBenchmark": 0,
+   "qmcAccelerationFactor": null,
+   "samplingDescription": "Local Sobol sequence with optional random digital shift.",
+   "samplingMethod": "sobol_qmc",
+   "scrambled": true,
+   "sobolDimensions": 7,
+   "theoreticalConvergenceRate": "Not estimated for this run",
+   "varianceReductionRatio": null
+  },
+  "sensitivityMetadata": {
+   "baseSampleSize": 150,
+   "evaluationCount": 1050,
+   "independentInputs": true,
+   "indicesNormalized": false,
+   "limitations": "Finite-sample model estimates without confidence intervals. Values are not clipped or normalized and may fall outside [0, 1]. All supplied composition factors and cooling/aging distributions are included; service stress and flaw size do not enter yield strength.",
+   "method": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze",
+   "output": "yieldStrength_Rp02",
+   "status": "estimated"
+  },
+  "sobolSensitivityAnalysis": [
+   {
+    "description": "Assumed cooling-rate distribution",
+    "interactionIndex": 0.032,
+    "parameter": "dT/dt (Cooling Rate)",
+    "sobolFirstOrderIndex": 0.938,
+    "sobolTotalOrderIndex": 0.97,
+    "varianceContributionPct": 93.8
+   },
+   {
+    "description": "Supplied composition tolerance",
+    "interactionIndex": -0.002,
+    "parameter": "Zr (Composition)",
+    "sobolFirstOrderIndex": 0.002,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.2
+   },
+   {
+    "description": "Assumed furnace temperature scatter",
+    "interactionIndex": 0.0,
+    "parameter": "T_age (Aging Temp)",
+    "sobolFirstOrderIndex": 0.0,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.0
+   },
+   {
+    "description": "Assumed hold duration scatter",
+    "interactionIndex": 0.0,
+    "parameter": "t_age (Aging Time)",
+    "sobolFirstOrderIndex": 0.0,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.0
+   },
+   {
+    "description": "Supplied composition tolerance",
+    "interactionIndex": 0.002,
+    "parameter": "Cu (Composition)",
+    "sobolFirstOrderIndex": -0.002,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": -0.2
+   }
+  ],
+  "stochasticProperties": {
+   "criticalFlawSize_ac": {
+    "P01": 3.0,
+    "P10": 3.8,
+    "P90": 4.5,
+    "P99": 6.2,
+    "aBasisAllowable": 2.8,
+    "aBasisConfidenceInterval95": null,
+    "allowableStandardError_A": null,
+    "allowableStandardError_B": null,
+    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
+    "bBasisAllowable": 3.4,
+    "bBasisConfidenceInterval95": null,
+    "ci95Lower_P2_5": 3.1,
+    "ci95Upper_P97_5": 5.8,
+    "conformancePct": 100.0,
+    "covPct": 13.57,
+    "cpk": 1.87,
+    "histogram": [
+     {
+      "binCenter": 2.7,
+      "binEnd": 2.8,
+      "binStart": 2.7,
+      "count": 3,
+      "cumulativePct": 0.6,
+      "empiricalPdf": 0.031983,
+      "fittedNormalPdf": 0.027603
+     },
+     {
+      "binCenter": 2.9,
+      "binEnd": 3.0,
+      "binStart": 2.8,
+      "count": 5,
+      "cumulativePct": 1.6,
+      "empiricalPdf": 0.053305,
+      "fittedNormalPdf": 0.060392
+     },
+     {
+      "binCenter": 3.1,
+      "binEnd": 3.2,
+      "binStart": 3.0,
+      "count": 14,
+      "cumulativePct": 4.4,
+      "empiricalPdf": 0.149255,
+      "fittedNormalPdf": 0.118563
+     },
+     {
+      "binCenter": 3.3,
+      "binEnd": 3.4,
+      "binStart": 3.2,
+      "count": 17,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.181238,
+      "fittedNormalPdf": 0.208856
+     },
+     {
+      "binCenter": 3.5,
+      "binEnd": 3.6,
+      "binStart": 3.4,
+      "count": 1,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.010661,
+      "fittedNormalPdf": 0.330127
+     },
+     {
+      "binCenter": 3.7,
+      "binEnd": 3.8,
+      "binStart": 3.6,
+      "count": 8,
+      "cumulativePct": 9.6,
+      "empiricalPdf": 0.085288,
+      "fittedNormalPdf": 0.468219
+     },
+     {
+      "binCenter": 3.9,
+      "binEnd": 4.0,
+      "binStart": 3.8,
+      "count": 38,
+      "cumulativePct": 17.2,
+      "empiricalPdf": 0.405119,
+      "fittedNormalPdf": 0.595869
+     },
+     {
+      "binCenter": 4.1,
+      "binEnd": 4.2,
+      "binStart": 4.0,
+      "count": 167,
+      "cumulativePct": 50.6,
+      "empiricalPdf": 1.780394,
+      "fittedNormalPdf": 0.680435
+     },
+     {
+      "binCenter": 4.3,
+      "binEnd": 4.3,
+      "binStart": 4.2,
+      "count": 168,
+      "cumulativePct": 84.2,
+      "empiricalPdf": 1.791055,
+      "fittedNormalPdf": 0.697198
+     },
+     {
+      "binCenter": 4.4,
+      "binEnd": 4.5,
+      "binStart": 4.3,
+      "count": 31,
+      "cumulativePct": 90.4,
+      "empiricalPdf": 0.330492,
+      "fittedNormalPdf": 0.641002
+     },
+     {
+      "binCenter": 4.6,
+      "binEnd": 4.7,
+      "binStart": 4.5,
+      "count": 8,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.085288,
+      "fittedNormalPdf": 0.528807
+     },
+     {
+      "binCenter": 4.8,
+      "binEnd": 4.9,
+      "binStart": 4.7,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.391443
+     },
+     {
+      "binCenter": 5.0,
+      "binEnd": 5.1,
+      "binStart": 4.9,
+      "count": 2,
+      "cumulativePct": 92.4,
+      "empiricalPdf": 0.021322,
+      "fittedNormalPdf": 0.26
+     },
+     {
+      "binCenter": 5.2,
+      "binEnd": 5.3,
+      "binStart": 5.1,
+      "count": 1,
+      "cumulativePct": 92.6,
+      "empiricalPdf": 0.010661,
+      "fittedNormalPdf": 0.154958
+     },
+     {
+      "binCenter": 5.4,
+      "binEnd": 5.5,
+      "binStart": 5.3,
+      "count": 9,
+      "cumulativePct": 94.4,
+      "empiricalPdf": 0.095949,
+      "fittedNormalPdf": 0.082868
+     },
+     {
+      "binCenter": 5.6,
+      "binEnd": 5.7,
+      "binStart": 5.5,
+      "count": 9,
+      "cumulativePct": 96.2,
+      "empiricalPdf": 0.095949,
+      "fittedNormalPdf": 0.039764
+     },
+     {
+      "binCenter": 5.8,
+      "binEnd": 5.8,
+      "binStart": 5.7,
+      "count": 6,
+      "cumulativePct": 97.4,
+      "empiricalPdf": 0.063966,
+      "fittedNormalPdf": 0.017121
+     },
+     {
+      "binCenter": 5.9,
+      "binEnd": 6.0,
+      "binStart": 5.8,
+      "count": 3,
+      "cumulativePct": 98.0,
+      "empiricalPdf": 0.031983,
+      "fittedNormalPdf": 0.006615
+     },
+     {
+      "binCenter": 6.1,
+      "binEnd": 6.2,
+      "binStart": 6.0,
+      "count": 4,
+      "cumulativePct": 98.8,
+      "empiricalPdf": 0.042644,
+      "fittedNormalPdf": 0.002293
+     },
+     {
+      "binCenter": 6.3,
+      "binEnd": 6.4,
+      "binStart": 6.2,
+      "count": 3,
+      "cumulativePct": 99.4,
+      "empiricalPdf": 0.031983,
+      "fittedNormalPdf": 0.000713
+     },
+     {
+      "binCenter": 6.5,
+      "binEnd": 6.6,
+      "binStart": 6.4,
+      "count": 1,
+      "cumulativePct": 99.6,
+      "empiricalPdf": 0.010661,
+      "fittedNormalPdf": 0.000199
+     },
+     {
+      "binCenter": 6.7,
+      "binEnd": 6.8,
+      "binStart": 6.6,
+      "count": 0,
+      "cumulativePct": 99.6,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 5e-05
+     },
+     {
+      "binCenter": 6.9,
+      "binEnd": 7.0,
+      "binStart": 6.8,
+      "count": 1,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.010661,
+      "fittedNormalPdf": 1.1e-05
+     },
+     {
+      "binCenter": 7.1,
+      "binEnd": 7.2,
+      "binStart": 7.0,
+      "count": 0,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 2e-06
+     },
+     {
+      "binCenter": 7.3,
+      "binEnd": 7.3,
+      "binStart": 7.2,
+      "count": 1,
+      "cumulativePct": 100.0,
+      "empiricalPdf": 0.010661,
+      "fittedNormalPdf": 0.0
+     }
+    ],
+    "kurtosis": 5.656,
+    "max": 7.3,
+    "mean": 4.2,
+    "median_P50": 4.1,
+    "min": 2.7,
+    "mmpds_kA": 2.475,
+    "mmpds_kB": 1.385,
+    "skewness": 1.548,
+    "stdDev": 0.57
+   },
+   "elongationPct": {
+    "P01": 32.5,
+    "P10": 33.9,
+    "P90": 34.3,
+    "P99": 35.6,
+    "aBasisAllowable": 32.8,
+    "aBasisConfidenceInterval95": null,
+    "allowableStandardError_A": null,
+    "allowableStandardError_B": null,
+    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
+    "bBasisAllowable": 33.4,
+    "bBasisConfidenceInterval95": null,
+    "ci95Lower_P2_5": 32.8,
+    "ci95Upper_P97_5": 35.4,
+    "conformancePct": 100.0,
+    "covPct": 1.53,
+    "cpk": 14.11,
+    "histogram": [
+     {
+      "binCenter": 32.0,
+      "binEnd": 32.1,
+      "binStart": 31.9,
+      "count": 1,
+      "cumulativePct": 0.2,
+      "empiricalPdf": 0.011982,
+      "fittedNormalPdf": 0.000207
+     },
+     {
+      "binCenter": 32.2,
+      "binEnd": 32.2,
+      "binStart": 32.1,
+      "count": 1,
+      "cumulativePct": 0.4,
+      "empiricalPdf": 0.011982,
+      "fittedNormalPdf": 0.00072
+     },
+     {
+      "binCenter": 32.3,
+      "binEnd": 32.4,
+      "binStart": 32.2,
+      "count": 1,
+      "cumulativePct": 0.6,
+      "empiricalPdf": 0.011982,
+      "fittedNormalPdf": 0.002254
+     },
+     {
+      "binCenter": 32.5,
+      "binEnd": 32.6,
+      "binStart": 32.4,
+      "count": 3,
+      "cumulativePct": 1.2,
+      "empiricalPdf": 0.035946,
+      "fittedNormalPdf": 0.006375
+     },
+     {
+      "binCenter": 32.7,
+      "binEnd": 32.7,
+      "binStart": 32.6,
+      "count": 5,
+      "cumulativePct": 2.2,
+      "empiricalPdf": 0.05991,
+      "fittedNormalPdf": 0.01628
+     },
+     {
+      "binCenter": 32.8,
+      "binEnd": 32.9,
+      "binStart": 32.7,
+      "count": 8,
+      "cumulativePct": 3.8,
+      "empiricalPdf": 0.095855,
+      "fittedNormalPdf": 0.037537
+     },
+     {
+      "binCenter": 33.0,
+      "binEnd": 33.1,
+      "binStart": 32.9,
+      "count": 14,
+      "cumulativePct": 6.6,
+      "empiricalPdf": 0.167747,
+      "fittedNormalPdf": 0.078151
+     },
+     {
+      "binCenter": 33.2,
+      "binEnd": 33.2,
+      "binStart": 33.1,
+      "count": 7,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.083873,
+      "fittedNormalPdf": 0.146914
+     },
+     {
+      "binCenter": 33.3,
+      "binEnd": 33.4,
+      "binStart": 33.2,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.249374
+     },
+     {
+      "binCenter": 33.5,
+      "binEnd": 33.6,
+      "binStart": 33.4,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.382207
+     },
+     {
+      "binCenter": 33.7,
+      "binEnd": 33.7,
+      "binStart": 33.6,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.528939
+     },
+     {
+      "binCenter": 33.8,
+      "binEnd": 33.9,
+      "binStart": 33.7,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.660954
+     },
+     {
+      "binCenter": 34.0,
+      "binEnd": 34.1,
+      "binStart": 33.9,
+      "count": 196,
+      "cumulativePct": 47.2,
+      "empiricalPdf": 2.348456,
+      "fittedNormalPdf": 0.745754
+     },
+     {
+      "binCenter": 34.2,
+      "binEnd": 34.2,
+      "binStart": 34.1,
+      "count": 127,
+      "cumulativePct": 72.6,
+      "empiricalPdf": 1.521704,
+      "fittedNormalPdf": 0.759765
+     },
+     {
+      "binCenter": 34.3,
+      "binEnd": 34.4,
+      "binStart": 34.2,
+      "count": 98,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 1.174228,
+      "fittedNormalPdf": 0.698911
+     },
+     {
+      "binCenter": 34.5,
+      "binEnd": 34.6,
+      "binStart": 34.4,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.580528
+     },
+     {
+      "binCenter": 34.7,
+      "binEnd": 34.7,
+      "binStart": 34.6,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.435396
+     },
+     {
+      "binCenter": 34.8,
+      "binEnd": 34.9,
+      "binStart": 34.7,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.294852
+     },
+     {
+      "binCenter": 35.0,
+      "binEnd": 35.1,
+      "binStart": 34.9,
+      "count": 2,
+      "cumulativePct": 92.6,
+      "empiricalPdf": 0.023964,
+      "fittedNormalPdf": 0.180295
+     },
+     {
+      "binCenter": 35.2,
+      "binEnd": 35.2,
+      "binStart": 35.1,
+      "count": 14,
+      "cumulativePct": 95.4,
+      "empiricalPdf": 0.167747,
+      "fittedNormalPdf": 0.099545
+     },
+     {
+      "binCenter": 35.3,
+      "binEnd": 35.4,
+      "binStart": 35.2,
+      "count": 11,
+      "cumulativePct": 97.6,
+      "empiricalPdf": 0.131801,
+      "fittedNormalPdf": 0.049627
+     },
+     {
+      "binCenter": 35.5,
+      "binEnd": 35.6,
+      "binStart": 35.4,
+      "count": 5,
+      "cumulativePct": 98.6,
+      "empiricalPdf": 0.05991,
+      "fittedNormalPdf": 0.022339
+     },
+     {
+      "binCenter": 35.7,
+      "binEnd": 35.7,
+      "binStart": 35.6,
+      "count": 4,
+      "cumulativePct": 99.4,
+      "empiricalPdf": 0.047928,
+      "fittedNormalPdf": 0.00908
+     },
+     {
+      "binCenter": 35.8,
+      "binEnd": 35.9,
+      "binStart": 35.7,
+      "count": 1,
+      "cumulativePct": 99.6,
+      "empiricalPdf": 0.011982,
+      "fittedNormalPdf": 0.003332
+     },
+     {
+      "binCenter": 36.0,
+      "binEnd": 36.1,
+      "binStart": 35.9,
+      "count": 2,
+      "cumulativePct": 100.0,
+      "empiricalPdf": 0.023964,
+      "fittedNormalPdf": 0.001104
+     }
+    ],
+    "kurtosis": 3.865,
+    "max": 36.1,
+    "mean": 34.1,
+    "median_P50": 34.1,
+    "min": 31.9,
+    "mmpds_kA": 2.475,
+    "mmpds_kB": 1.385,
+    "skewness": -0.108,
+    "stdDev": 0.52
+   },
+   "fractureToughness_K1c": {
+    "P01": 88.4,
+    "P10": 91.6,
+    "P90": 92.5,
+    "P99": 95.5,
+    "aBasisAllowable": 89.1,
+    "aBasisConfidenceInterval95": null,
+    "allowableStandardError_A": null,
+    "allowableStandardError_B": null,
+    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
+    "bBasisAllowable": 90.4,
+    "bBasisConfidenceInterval95": null,
+    "ci95Lower_P2_5": 89.0,
+    "ci95Upper_P97_5": 95.0,
+    "conformancePct": 100.0,
+    "covPct": 1.29,
+    "cpk": 8.98,
+    "histogram": [
+     {
+      "binCenter": 87.3,
+      "binEnd": 87.4,
+      "binStart": 87.1,
+      "count": 1,
+      "cumulativePct": 0.2,
+      "empiricalPdf": 0.005263,
+      "fittedNormalPdf": 0.0001
+     },
+     {
+      "binCenter": 87.6,
+      "binEnd": 87.8,
+      "binStart": 87.4,
+      "count": 1,
+      "cumulativePct": 0.4,
+      "empiricalPdf": 0.005263,
+      "fittedNormalPdf": 0.000345
+     },
+     {
+      "binCenter": 88.0,
+      "binEnd": 88.2,
+      "binStart": 87.8,
+      "count": 1,
+      "cumulativePct": 0.6,
+      "empiricalPdf": 0.005263,
+      "fittedNormalPdf": 0.001073
+     },
+     {
+      "binCenter": 88.4,
+      "binEnd": 88.6,
+      "binStart": 88.2,
+      "count": 3,
+      "cumulativePct": 1.2,
+      "empiricalPdf": 0.01579,
+      "fittedNormalPdf": 0.00301
+     },
+     {
+      "binCenter": 88.8,
+      "binEnd": 89.0,
+      "binStart": 88.6,
+      "count": 5,
+      "cumulativePct": 2.2,
+      "empiricalPdf": 0.026317,
+      "fittedNormalPdf": 0.007626
+     },
+     {
+      "binCenter": 89.2,
+      "binEnd": 89.3,
+      "binStart": 89.0,
+      "count": 9,
+      "cumulativePct": 4.0,
+      "empiricalPdf": 0.047371,
+      "fittedNormalPdf": 0.017446
+     },
+     {
+      "binCenter": 89.5,
+      "binEnd": 89.7,
+      "binStart": 89.3,
+      "count": 14,
+      "cumulativePct": 6.8,
+      "empiricalPdf": 0.073689,
+      "fittedNormalPdf": 0.03604
+     },
+     {
+      "binCenter": 89.9,
+      "binEnd": 90.1,
+      "binStart": 89.7,
+      "count": 6,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.031581,
+      "fittedNormalPdf": 0.067233
+     },
+     {
+      "binCenter": 90.3,
+      "binEnd": 90.5,
+      "binStart": 90.1,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.113262
+     },
+     {
+      "binCenter": 90.7,
+      "binEnd": 90.9,
+      "binStart": 90.5,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.172301
+     },
+     {
+      "binCenter": 91.0,
+      "binEnd": 91.2,
+      "binStart": 90.9,
+      "count": 0,
+      "cumulativePct": 8.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.236699
+     },
+     {
+      "binCenter": 91.4,
+      "binEnd": 91.6,
+      "binStart": 91.2,
+      "count": 6,
+      "cumulativePct": 9.2,
+      "empiricalPdf": 0.031581,
+      "fittedNormalPdf": 0.293634
+     },
+     {
+      "binCenter": 91.8,
+      "binEnd": 92.0,
+      "binStart": 91.6,
+      "count": 198,
+      "cumulativePct": 48.8,
+      "empiricalPdf": 1.042171,
+      "fittedNormalPdf": 0.328942
+     },
+     {
+      "binCenter": 92.2,
+      "binEnd": 92.4,
+      "binStart": 92.0,
+      "count": 134,
+      "cumulativePct": 75.6,
+      "empiricalPdf": 0.705307,
+      "fittedNormalPdf": 0.332764
+     },
+     {
+      "binCenter": 92.6,
+      "binEnd": 92.8,
+      "binStart": 92.4,
+      "count": 83,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.436869,
+      "fittedNormalPdf": 0.303987
+     },
+     {
+      "binCenter": 92.9,
+      "binEnd": 93.1,
+      "binStart": 92.8,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.250771
+     },
+     {
+      "binCenter": 93.3,
+      "binEnd": 93.5,
+      "binStart": 93.1,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.186811
+     },
+     {
+      "binCenter": 93.7,
+      "binEnd": 93.9,
+      "binStart": 93.5,
+      "count": 0,
+      "cumulativePct": 92.2,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.12567
+     },
+     {
+      "binCenter": 94.1,
+      "binEnd": 94.3,
+      "binStart": 93.9,
+      "count": 4,
+      "cumulativePct": 93.0,
+      "empiricalPdf": 0.021054,
+      "fittedNormalPdf": 0.076342
+     },
+     {
+      "binCenter": 94.5,
+      "binEnd": 94.7,
+      "binStart": 94.3,
+      "count": 12,
+      "cumulativePct": 95.4,
+      "empiricalPdf": 0.063162,
+      "fittedNormalPdf": 0.041879
+     },
+     {
+      "binCenter": 94.8,
+      "binEnd": 95.0,
+      "binStart": 94.7,
+      "count": 11,
+      "cumulativePct": 97.6,
+      "empiricalPdf": 0.057898,
+      "fittedNormalPdf": 0.020746
+     },
+     {
+      "binCenter": 95.2,
+      "binEnd": 95.4,
+      "binStart": 95.0,
+      "count": 5,
+      "cumulativePct": 98.6,
+      "empiricalPdf": 0.026317,
+      "fittedNormalPdf": 0.00928
+     },
+     {
+      "binCenter": 95.6,
+      "binEnd": 95.8,
+      "binStart": 95.4,
+      "count": 4,
+      "cumulativePct": 99.4,
+      "empiricalPdf": 0.021054,
+      "fittedNormalPdf": 0.003749
+     },
+     {
+      "binCenter": 96.0,
+      "binEnd": 96.2,
+      "binStart": 95.8,
+      "count": 1,
+      "cumulativePct": 99.6,
+      "empiricalPdf": 0.005263,
+      "fittedNormalPdf": 0.001368
+     },
+     {
+      "binCenter": 96.4,
+      "binEnd": 96.6,
+      "binStart": 96.2,
+      "count": 2,
+      "cumulativePct": 100.0,
+      "empiricalPdf": 0.010527,
+      "fittedNormalPdf": 0.000451
+     }
+    ],
+    "kurtosis": 3.86,
+    "max": 96.6,
+    "mean": 92.0,
+    "median_P50": 92.0,
+    "min": 87.1,
+    "mmpds_kA": 2.475,
+    "mmpds_kB": 1.385,
+    "skewness": -0.082,
+    "stdDev": 1.19
+   },
+   "ultimateTensileStrength_UTS": {
+    "P01": 676.8,
+    "P10": 703.8,
+    "P90": 711.2,
+    "P99": 739.9,
+    "aBasisAllowable": 681.6,
+    "aBasisConfidenceInterval95": null,
+    "allowableStandardError_A": null,
+    "allowableStandardError_B": null,
+    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
+    "bBasisAllowable": 693.1,
+    "bBasisConfidenceInterval95": null,
+    "ci95Lower_P2_5": 682.2,
+    "ci95Upper_P97_5": 734.6,
+    "conformancePct": 0.0,
+    "covPct": 1.49,
+    "cpk": -20.29,
+    "histogram": [
+     {
+      "binCenter": 671.4,
+      "binEnd": 673.1,
+      "binStart": 669.7,
+      "count": 2,
+      "cumulativePct": 0.4,
+      "empiricalPdf": 0.00118,
+      "fittedNormalPdf": 0.000101
+     },
+     {
+      "binCenter": 674.8,
+      "binEnd": 676.4,
+      "binStart": 673.1,
+      "count": 2,
+      "cumulativePct": 0.8,
+      "empiricalPdf": 0.00118,
+      "fittedNormalPdf": 0.000291
+     },
+     {
+      "binCenter": 678.1,
+      "binEnd": 679.8,
+      "binStart": 676.4,
+      "count": 4,
+      "cumulativePct": 1.6,
+      "empiricalPdf": 0.00236,
+      "fittedNormalPdf": 0.000753
+     },
+     {
+      "binCenter": 681.5,
+      "binEnd": 683.2,
+      "binStart": 679.8,
+      "count": 7,
+      "cumulativePct": 3.0,
+      "empiricalPdf": 0.004131,
+      "fittedNormalPdf": 0.001757
+     },
+     {
+      "binCenter": 684.9,
+      "binEnd": 686.6,
+      "binStart": 683.2,
+      "count": 13,
+      "cumulativePct": 5.6,
+      "empiricalPdf": 0.007672,
+      "fittedNormalPdf": 0.003698
+     },
+     {
+      "binCenter": 688.3,
+      "binEnd": 690.0,
+      "binStart": 686.6,
+      "count": 11,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.006491,
+      "fittedNormalPdf": 0.007019
+     },
+     {
+      "binCenter": 691.7,
+      "binEnd": 693.4,
+      "binStart": 690.0,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.012019
+     },
+     {
+      "binCenter": 695.1,
+      "binEnd": 696.8,
+      "binStart": 693.4,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.018563
+     },
+     {
+      "binCenter": 698.5,
+      "binEnd": 700.2,
+      "binStart": 696.8,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.02586
+     },
+     {
+      "binCenter": 701.9,
+      "binEnd": 703.6,
+      "binStart": 700.2,
+      "count": 6,
+      "cumulativePct": 9.0,
+      "empiricalPdf": 0.003541,
+      "fittedNormalPdf": 0.032493
+     },
+     {
+      "binCenter": 705.3,
+      "binEnd": 707.0,
+      "binStart": 703.6,
+      "count": 196,
+      "cumulativePct": 48.2,
+      "empiricalPdf": 0.115664,
+      "fittedNormalPdf": 0.036827
+     },
+     {
+      "binCenter": 708.6,
+      "binEnd": 710.3,
+      "binStart": 707.0,
+      "count": 135,
+      "cumulativePct": 75.2,
+      "empiricalPdf": 0.079666,
+      "fittedNormalPdf": 0.037647
+     },
+     {
+      "binCenter": 712.0,
+      "binEnd": 713.7,
+      "binStart": 710.3,
+      "count": 84,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.04957,
+      "fittedNormalPdf": 0.034714
+     },
+     {
+      "binCenter": 715.4,
+      "binEnd": 717.1,
+      "binStart": 713.7,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.028872
+     },
+     {
+      "binCenter": 718.8,
+      "binEnd": 720.5,
+      "binStart": 717.1,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.021659
+     },
+     {
+      "binCenter": 722.2,
+      "binEnd": 723.9,
+      "binStart": 720.5,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.014656
+     },
+     {
+      "binCenter": 725.6,
+      "binEnd": 727.3,
+      "binStart": 723.9,
+      "count": 2,
+      "cumulativePct": 92.4,
+      "empiricalPdf": 0.00118,
+      "fittedNormalPdf": 0.008945
+     },
+     {
+      "binCenter": 729.0,
+      "binEnd": 730.7,
+      "binStart": 727.3,
+      "count": 13,
+      "cumulativePct": 95.0,
+      "empiricalPdf": 0.007672,
+      "fittedNormalPdf": 0.004924
+     },
+     {
+      "binCenter": 732.4,
+      "binEnd": 734.1,
+      "binStart": 730.7,
+      "count": 10,
+      "cumulativePct": 97.0,
+      "empiricalPdf": 0.005901,
+      "fittedNormalPdf": 0.002445
+     },
+     {
+      "binCenter": 735.8,
+      "binEnd": 737.5,
+      "binStart": 734.1,
+      "count": 6,
+      "cumulativePct": 98.2,
+      "empiricalPdf": 0.003541,
+      "fittedNormalPdf": 0.001095
+     },
+     {
+      "binCenter": 739.1,
+      "binEnd": 740.8,
+      "binStart": 737.5,
+      "count": 4,
+      "cumulativePct": 99.0,
+      "empiricalPdf": 0.00236,
+      "fittedNormalPdf": 0.000442
+     },
+     {
+      "binCenter": 742.5,
+      "binEnd": 744.2,
+      "binStart": 740.8,
+      "count": 2,
+      "cumulativePct": 99.4,
+      "empiricalPdf": 0.00118,
+      "fittedNormalPdf": 0.000161
+     },
+     {
+      "binCenter": 745.9,
+      "binEnd": 747.6,
+      "binStart": 744.2,
+      "count": 2,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.00118,
+      "fittedNormalPdf": 5.3e-05
+     },
+     {
+      "binCenter": 749.3,
+      "binEnd": 751.0,
+      "binStart": 747.6,
+      "count": 0,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 1.6e-05
+     },
+     {
+      "binCenter": 752.7,
+      "binEnd": 754.4,
+      "binStart": 751.0,
+      "count": 1,
+      "cumulativePct": 100.0,
+      "empiricalPdf": 0.00059,
+      "fittedNormalPdf": 4e-06
+     }
+    ],
+    "kurtosis": 3.963,
+    "max": 754.4,
+    "mean": 707.7,
+    "median_P50": 707.5,
+    "min": 669.7,
+    "mmpds_kA": 2.475,
+    "mmpds_kB": 1.385,
+    "skewness": 0.336,
+    "stdDev": 10.55
+   },
+   "yieldStrength_Rp02": {
+    "P01": 394.3,
+    "P10": 412.0,
+    "P90": 416.9,
+    "P99": 436.0,
+    "aBasisAllowable": 397.3,
+    "aBasisConfidenceInterval95": null,
+    "allowableStandardError_A": null,
+    "allowableStandardError_B": null,
+    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
+    "bBasisAllowable": 404.9,
+    "bBasisConfidenceInterval95": null,
+    "ci95Lower_P2_5": 397.8,
+    "ci95Upper_P97_5": 432.5,
+    "conformancePct": 0.0,
+    "covPct": 1.69,
+    "cpk": -32.68,
+    "histogram": [
+     {
+      "binCenter": 390.8,
+      "binEnd": 391.9,
+      "binStart": 389.6,
+      "count": 2,
+      "cumulativePct": 0.4,
+      "empiricalPdf": 0.00178,
+      "fittedNormalPdf": 0.000169
+     },
+     {
+      "binCenter": 393.0,
+      "binEnd": 394.1,
+      "binStart": 391.9,
+      "count": 2,
+      "cumulativePct": 0.8,
+      "empiricalPdf": 0.00178,
+      "fittedNormalPdf": 0.000481
+     },
+     {
+      "binCenter": 395.3,
+      "binEnd": 396.4,
+      "binStart": 394.1,
+      "count": 5,
+      "cumulativePct": 1.8,
+      "empiricalPdf": 0.004449,
+      "fittedNormalPdf": 0.001234
+     },
+     {
+      "binCenter": 397.5,
+      "binEnd": 398.6,
+      "binStart": 396.4,
+      "count": 6,
+      "cumulativePct": 3.0,
+      "empiricalPdf": 0.005339,
+      "fittedNormalPdf": 0.002855
+     },
+     {
+      "binCenter": 399.8,
+      "binEnd": 400.9,
+      "binStart": 398.6,
+      "count": 13,
+      "cumulativePct": 5.6,
+      "empiricalPdf": 0.011567,
+      "fittedNormalPdf": 0.005956
+     },
+     {
+      "binCenter": 402.0,
+      "binEnd": 403.1,
+      "binStart": 400.9,
+      "count": 11,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.009788,
+      "fittedNormalPdf": 0.011205
+     },
+     {
+      "binCenter": 404.2,
+      "binEnd": 405.4,
+      "binStart": 403.1,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.019008
+     },
+     {
+      "binCenter": 406.5,
+      "binEnd": 407.6,
+      "binStart": 405.4,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.029078
+     },
+     {
+      "binCenter": 408.7,
+      "binEnd": 409.9,
+      "binStart": 407.6,
+      "count": 0,
+      "cumulativePct": 7.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.040114
+     },
+     {
+      "binCenter": 411.0,
+      "binEnd": 412.1,
+      "binStart": 409.9,
+      "count": 29,
+      "cumulativePct": 13.6,
+      "empiricalPdf": 0.025804,
+      "fittedNormalPdf": 0.049901
+     },
+     {
+      "binCenter": 413.2,
+      "binEnd": 414.4,
+      "binStart": 412.1,
+      "count": 181,
+      "cumulativePct": 49.8,
+      "empiricalPdf": 0.161054,
+      "fittedNormalPdf": 0.055979
+     },
+     {
+      "binCenter": 415.5,
+      "binEnd": 416.6,
+      "binStart": 414.4,
+      "count": 151,
+      "cumulativePct": 80.0,
+      "empiricalPdf": 0.13436,
+      "fittedNormalPdf": 0.056629
+     },
+     {
+      "binCenter": 417.7,
+      "binEnd": 418.9,
+      "binStart": 416.6,
+      "count": 60,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.053388,
+      "fittedNormalPdf": 0.051659
+     },
+     {
+      "binCenter": 420.0,
+      "binEnd": 421.1,
+      "binStart": 418.9,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.042496
+     },
+     {
+      "binCenter": 422.2,
+      "binEnd": 423.4,
+      "binStart": 421.1,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.031524
+     },
+     {
+      "binCenter": 424.5,
+      "binEnd": 425.6,
+      "binStart": 423.4,
+      "count": 0,
+      "cumulativePct": 92.0,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 0.021088
+     },
+     {
+      "binCenter": 426.7,
+      "binEnd": 427.8,
+      "binStart": 425.6,
+      "count": 2,
+      "cumulativePct": 92.4,
+      "empiricalPdf": 0.00178,
+      "fittedNormalPdf": 0.012721
+     },
+     {
+      "binCenter": 429.0,
+      "binEnd": 430.1,
+      "binStart": 427.8,
+      "count": 14,
+      "cumulativePct": 95.2,
+      "empiricalPdf": 0.012457,
+      "fittedNormalPdf": 0.00692
+     },
+     {
+      "binCenter": 431.2,
+      "binEnd": 432.3,
+      "binStart": 430.1,
+      "count": 10,
+      "cumulativePct": 97.2,
+      "empiricalPdf": 0.008898,
+      "fittedNormalPdf": 0.003395
+     },
+     {
+      "binCenter": 433.5,
+      "binEnd": 434.6,
+      "binStart": 432.3,
+      "count": 6,
+      "cumulativePct": 98.4,
+      "empiricalPdf": 0.005339,
+      "fittedNormalPdf": 0.001502
+     },
+     {
+      "binCenter": 435.7,
+      "binEnd": 436.8,
+      "binStart": 434.6,
+      "count": 3,
+      "cumulativePct": 99.0,
+      "empiricalPdf": 0.002669,
+      "fittedNormalPdf": 0.000599
+     },
+     {
+      "binCenter": 438.0,
+      "binEnd": 439.1,
+      "binStart": 436.8,
+      "count": 2,
+      "cumulativePct": 99.4,
+      "empiricalPdf": 0.00178,
+      "fittedNormalPdf": 0.000215
+     },
+     {
+      "binCenter": 440.2,
+      "binEnd": 441.3,
+      "binStart": 439.1,
+      "count": 2,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.00178,
+      "fittedNormalPdf": 7e-05
+     },
+     {
+      "binCenter": 442.5,
+      "binEnd": 443.6,
+      "binStart": 441.3,
+      "count": 0,
+      "cumulativePct": 99.8,
+      "empiricalPdf": 0.0,
+      "fittedNormalPdf": 2e-05
+     },
+     {
+      "binCenter": 444.7,
+      "binEnd": 445.8,
+      "binStart": 443.6,
+      "count": 1,
+      "cumulativePct": 100.0,
+      "empiricalPdf": 0.00089,
+      "fittedNormalPdf": 5e-06
+     }
+    ],
+    "kurtosis": 3.989,
+    "max": 445.8,
+    "mean": 414.6,
+    "median_P50": 414.5,
+    "min": 389.6,
+    "mmpds_kA": 2.475,
+    "mmpds_kB": 1.385,
+    "skewness": 0.375,
+    "stdDev": 6.99
+   }
+  },
+  "success": true
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

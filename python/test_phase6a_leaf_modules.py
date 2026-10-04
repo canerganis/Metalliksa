@@ -16,13 +16,18 @@ from pathlib import Path
 from lpbf_simulation import IMPLEMENTATION_SOURCE_FILES
 
 HERE = Path(__file__).parent
-LEAF_MODULES = ("physical_constants", "alloy_registry", "input_validation")
+LEAF_MODULES = ("physical_constants", "alloy_registry", "input_validation",
+                "alloy_data_kinetics_uq_fatigue")  # phase6a-t2b domain data
 # Local modules each leaf may import (everything else must be standard library).
 ALLOWED_LOCAL_IMPORTS = {
     "physical_constants": set(),
-    "alloy_registry": {"four_alloy_materials"},
+    "alloy_registry": {"four_alloy_materials",
+                       "alloy_data_kinetics_uq_fatigue"},  # phase6a-t2b block
+    "alloy_data_kinetics_uq_fatigue": set(),  # phase6a-t2b
     "input_validation": {"alloy_registry", "physical_constants"},
 }
+# Phase 6a tranche 2a domain-data leaf (its own guard: test_alloy_data_calphad_battery_icme).
+ALLOWED_LOCAL_IMPORTS["alloy_registry"].add("alloy_data_calphad_battery_icme")
 
 
 def _imported_modules(path: Path):
