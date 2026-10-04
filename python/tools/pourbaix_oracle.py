@@ -3,8 +3,8 @@
 
 Adapted from the SPEC-pourbaix-opus.md author's scratch oracle. It shares NO code with
 ``pourbaix_solver`` or ``pourbaix_species_25c``: it carries its own copy of the species
-numbers (atlas values as cal/mol, NBS/CRC values as kJ/mol, so a transcription slip in the
-engine's table shows up as a mismatch), its own constants (CODATA 2018 printed values,
+numbers (atlas and CHNOSZ OBIGT values as cal/mol, NBS/CRC/Robie values as kJ/mol, so a
+transcription slip in the engine's table shows up as a mismatch), its own constants (CODATA 2018 printed values,
 not physical_constants) and its own argmin/polygon code.
 
 Dominance is the minimum Gibbs energy per metal atom at 25 C and fixed activities,
@@ -15,7 +15,7 @@ Dominance is the minimum Gibbs energy per metal atom at 25 C and fixed activitie
 ``dominant`` is the brute-force check: it evaluates EVERY species at the point and takes the
 minimum, so no species can have a lower g than the answer by construction.
 
-Usage:  python tools/pourbaix_oracle.py [Fe|Ni|Cu|Zn|Mg ...]    # prints the domain areas
+Usage:  python tools/pourbaix_oracle.py [Fe|Ni|Cu|Zn|Mg|Al ...]    # prints the domain areas
 """
 
 import math
@@ -36,6 +36,9 @@ def atlas(cal):
 # name: (x, o, h, z, dfG kJ/mol, phase, role, category source)
 _FE_H2O_KJ = atlas(-56690)
 _FEO4 = atlas(-2530) + 4 * _FE_H2O_KJ + 3 * F * 2.20 / 1000.0  # Latimer E0 = 2.20 V
+# Al: CHNOSZ OBIGT rows (cal/mol: Al+3 and Al(OH)4- from Tagirov & Schott 2001; H2O is the
+# SUPCRT92 value -56687 cal) and gibbsite from Robie, Hemingway & Fisher 1978 (J/mol).
+_AL_H2O_KJ = -56687 * CAL / 1000.0
 
 # Species used by the engine (verified rows only).
 DATA = {
@@ -76,6 +79,25 @@ DATA = {
         "Mg2+": (1, 0, 0, 2, -454.8, "aq", "cation"),
         "Mg(OH)2": (1, 2, 2, 0, -833.51, "s", "oxide"),
     }},
+    "Al": {"H2O": _AL_H2O_KJ, "sp": {
+        "Al": (1, 0, 0, 0, 0.0, "s", "metal"),
+        "Al3+": (1, 0, 0, 3, -116510 * CAL / 1000.0, "aq", "cation"),
+        "Al(OH)3": (1, 3, 3, 0, -1154889 / 1000.0, "s", "oxide"),
+        "Al(OH)4-": (1, 4, 4, -1, -312087 * CAL / 1000.0, "aq", "anion_low"),
+    }},
+}
+
+# Al species deliberately NOT in the engine (same OBIGT set and water as DATA["Al"]), kept so the
+# effect of the exclusion can be measured: metastable solids (boehmite, Hemingway, Robie & Apps
+# 1991; corundum from the CODATA 1989 key values dfH -1675.7 kJ/mol, S 50.92 J/mol/K) and the
+# mononuclear hydrolysis species of Tagirov & Schott 2001 (all roles as they would be used).
+AL_EXCLUDED = {
+    "AlO(OH)": (1, 2, 1, 0, -918400 / 1000.0, "s", "oxide"),
+    "Al2O3": (2, 3, 0, 0, -1675.7 - T * (50.92 - 2 * 28.30 - 1.5 * 205.152) / 1000.0, "s", "oxide"),
+}
+AL_HYDROLYSIS_OMITTED = {
+    "AlOH2+": (1, 1, 1, 2, -166425 * CAL / 1000.0, "aq", "cation"),
+    "Al(OH)2+": (1, 2, 2, 1, -214987 * CAL / 1000.0, "aq", "cation"),
 }
 
 # Rows withheld from the engine (unverified V3). Kept so the effect of withholding can be measured.
@@ -105,9 +127,14 @@ def dataset(element, include_withheld=False):
 def coeffs(element, log_a=-6.0, include_withheld=False):
     """species -> (c0 [J], cpH [J/pH], cE [J/V]) of g per metal atom (table order kept)."""
     d = dataset(element, include_withheld)
-    h2o = d["H2O"] * 1000.0
+    return coeffs_of(d["sp"], d["H2O"], log_a)
+
+
+def coeffs_of(species, h2o_kj, log_a=-6.0):
+    """Same as ``coeffs`` for an explicit species dict {name: (x, o, h, z, dfG kJ, phase, role)}."""
+    h2o = h2o_kj * 1000.0
     out = {}
-    for name, (x, o, h, z, g, phase, role) in d["sp"].items():
+    for name, (x, o, h, z, g, phase, role) in species.items():
         ln_a = 0.0 if phase == "s" else log_a * LN10
         m = (2 * o - h) / x
         n = (z + 2 * o - h) / x

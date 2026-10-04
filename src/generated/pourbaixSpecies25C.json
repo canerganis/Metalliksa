@@ -281,9 +281,12 @@
     },
     "Al": {
       "name": "Aluminum (Al-H₂O Amphoteric System)",
-      "available": false,
-      "reason": "Atlas rows AlO2- and Al2O3.3H2O (V3) could not be confirmed against open sources: both lie 5-12 kJ/mol outside every open value found (hydrolysis boundary Al3+/hydroxide pH 3.9 here vs 4.6 from gibbsite data, aluminate 8.6 vs 9.1). No Al-H2O map is served until a single verified source set is adopted.",
-      "withheldSpecies": [
+      "available": true,
+      "sourceSet": "O",
+      "sourceSetNote": "CHNOSZ OBIGT set: Al3+ and Al(OH)4- (Tagirov & Schott 2001) with gibbsite (Robie, Hemingway & Fisher 1978) and SUPCRT92 water. The solid is gibbsite; boehmite and corundum are listed under withheldSpecies (metastable/excluded). The mononuclear hydrolysis species AlOH2+, Al(OH)2+ and Al(OH)3(aq) (TS01) are omitted as for the other elements: they have no domain for log a >= -7.16; at log a = -8 AlOH2+ would take pH 4.96-5.38 from Al3+ and gibbsite",
+      "waterDfG_kJ_mol": -237.178408,
+      "referenceCation": "Al3+",
+      "species": [
         {
           "id": "Al",
           "formula": "Al",
@@ -307,16 +310,48 @@
           "h": 0,
           "z": 3,
           "phase": "aq",
-          "dfG_kJ_mol": -481.16,
+          "dfG_kJ_mol": -487.47784,
           "role": "cation",
-          "source": "A",
+          "source": "O",
           "verification": "V2",
-          "evidence": "E0(Al3+/Al) table -1.6623 V vs -1.662 V; OpenStax -485 kJ/mol (delta +3.8)",
+          "evidence": "OBIGT Al+3 (TS01) -116510 cal. E0(Al3+/Al) -1.6841 V: NBS -485.0 kJ/mol (OpenStax App. G) gives -1.6756 V (delta -8.6 mV, -2.5 kJ/mol); CODATA 1989 key values (dfH -538.4 +/- 1.5, S -325 +/- 10) give -491.5 +/- 3.3 kJ/mol = -1.6980 V (delta +14 mV, 1.2 sigma); the CRC/Wikipedia -1.662 V is the older Latimer/atlas value (-115000 cal) and lies 22 mV above: documented exception like Mg2+/Mg",
           "category": "Corrosion (acid)"
         },
         {
-          "id": "AlO2-",
-          "formula": "AlO₂⁻",
+          "id": "Al(OH)3",
+          "formula": "Al(OH)₃ (gibbsite)",
+          "x": 1,
+          "o": 3,
+          "h": 3,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -1154.889,
+          "role": "oxide",
+          "source": "O",
+          "verification": "V2",
+          "evidence": "OBIGT gibbsite (Robie, Hemingway & Fisher 1978) -1154889 J. Gibbsite + 3H+ = Al3+ + 3H2O: set log K 7.730; LLNL thermo.com.V8.R6 (PHREEQC llnl.dat) 7.756 (0.15 kJ/mol); Nordstrom et al. 1990 (PHREEQC phreeqc.dat/wateq4f.dat) 8.11 (2.2 kJ/mol). Hydrargillite is the old name of gibbsite; the atlas hydrargillite value is 5.3 kJ/mol per Al more negative and is not used",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "Al(OH)4-",
+          "formula": "Al(OH)₄⁻",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -1305.7720080000001,
+          "role": "anion_low",
+          "source": "O",
+          "verification": "V2",
+          "evidence": "OBIGT Al(OH)4- (TS01) -312087 cal (aluminate; AlO2- + 2H2O, the engine counts the water). Al3+ + 4H2O = Al(OH)4- + 4H+: set log K -22.849; llnl.dat -22.883 (0.2 kJ/mol), phreeqc.dat -22.7 (0.85 kJ/mol). E0(Al(OH)4-/Al, alkaline) -2.338 V vs -2.33 V (Wikipedia data page, 'H2AlO3-' notation, CRC): 8 mV",
+          "category": "Corrosion (alkaline)"
+        }
+      ],
+      "withheldSpecies": [
+        {
+          "id": "AlO2-(atlas)",
+          "formula": "AlO₂⁻ (atlas)",
           "x": 1,
           "o": 2,
           "h": 0,
@@ -326,12 +361,12 @@
           "role": "anion_low",
           "source": "A",
           "verification": "V3",
-          "evidence": "NOT CONFIRMED: CHNOSZ OBIGT (TS01) Al(OH)4- -312087 cal gives AlO2- = -831.3 kJ/mol; the Wikipedia E0 of H2AlO3-/Al (-2.33 V) implies -831.0; PourPy -827.5: table is 8-12 kJ/mol more negative (30 mV)",
+          "evidence": "REJECTED atlas row (atlas set, H2O -237.19): CHNOSZ OBIGT (TS01) Al(OH)4- -312087 cal gives AlO2- = -831.3 kJ/mol; the Wikipedia E0 of H2AlO3-/Al (-2.33 V) implies -831.0; PourPy -827.5: the atlas value is 8-12 kJ/mol more negative (30 mV). Replaced by Al(OH)4- (set O)",
           "category": "Corrosion (alkaline)"
         },
         {
-          "id": "Al2O3.3H2O",
-          "formula": "Al₂O₃·3H₂O (hydrargillite)",
+          "id": "Al2O3.3H2O(atlas)",
+          "formula": "Al₂O₃·3H₂O (hydrargillite, atlas)",
           "x": 2,
           "o": 6,
           "h": 6,
@@ -341,7 +376,37 @@
           "role": "oxide",
           "source": "A",
           "verification": "V3",
-          "evidence": "NOT CONFIRMED: gibbsite -1154.9 kJ per Al (NBS/Robie, CHNOSZ RHF78.3) vs table -1160.2 per Al; the Al3+/hydroxide boundary is 9 kJ off (log K -5.69 table vs -7.3 to -7.7), i.e. pH 3.9 vs 4.6",
+          "evidence": "REJECTED atlas row (atlas set, H2O -237.19): -1160.2 kJ/mol per Al vs gibbsite -1154.9 (Robie, Hemingway & Fisher 1978); with it the Al3+/hydroxide boundary is pH 3.90 instead of 4.58 at a = 1e-6. Replaced by Al(OH)3 gibbsite (set O)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "AlO(OH)",
+          "formula": "AlO(OH) (boehmite)",
+          "x": 1,
+          "o": 2,
+          "h": 1,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -918.4,
+          "role": "oxide",
+          "source": "O",
+          "verification": "V2",
+          "evidence": "EXCLUDED (metastable by convention): OBIGT boehmite (Hemingway, Robie & Apps 1991) -918400 J; AlOOH + 3H+ = Al3+ + 2H2O set log K 7.609 vs llnl.dat 7.564. Boehmite + H2O lies 0.69 kJ/mol below gibbsite in this set, but the sign differs between open databases (llnl.dat boehmite 1.1 kJ/mol lower; wateq4f.dat and minteq.v4.dat gibbsite 2.7 and 1.6 kJ/mol lower). The 25 C map uses gibbsite, the Al(OH)3 phase of the conventional diagram; with boehmite the Al3+/solid boundary moves to pH 4.54 and the solid/Al(OH)4- boundary to pH 9.24 at a = 1e-6 (same categories)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "Al2O3",
+          "formula": "Al₂O₃ (corundum)",
+          "x": 2,
+          "o": 3,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -1582.2574048000001,
+          "role": "oxide",
+          "source": "O",
+          "verification": "V2",
+          "evidence": "EXCLUDED (metastable): dfG from the CODATA 1989 key values (dfH -1675.7 kJ/mol, S 50.92; Al 28.30, O2 205.152 J/mol/K) = -1582.26 kJ/mol (OpenStax App. G -1582). Per Al it lies 8.0 kJ/mol above gibbsite + water, so it never has a domain",
           "category": "Passivation (thermodynamic, film-forming)"
         }
       ]

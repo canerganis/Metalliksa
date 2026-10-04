@@ -22,8 +22,9 @@ import pourbaix_species_25c as table  # noqa: E402
 
 K = 0.0591597  # ln10 RT/F at 298.15 K (V)
 INTERCEPT, SLOPE, VERTICAL, TRIPLE_E = 0.001, 0.0005, 0.01, 0.002
-ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg")
-UNAVAILABLE = ("Al", "Cr", "Ti", "Mo")
+ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg", "Al")
+UNAVAILABLE = ("Cr", "Ti", "Mo")
+KJ_PER_LOG_K = 0.0591597 * 96.48533212  # ln10 RT at 298.15 K in kJ/mol (5.708)
 
 
 def _run_cli(payload):
@@ -143,8 +144,8 @@ class OtherElementPinsTest(unittest.TestCase):
         self.assertEqual(solver.evaluate_point_mechanism("Mg", 7.0, -2.8)["dominantSpeciesId"], "Mg")
 
     def test_withheld_al_rows_reproduce_the_spec_pins(self):
-        # Al is unavailable (V3 rows not confirmed). The withheld atlas numbers still reproduce the
-        # spec's Al pins, so a re-enabled Al row set can be checked against them.
+        # The rejected atlas Al rows (AlO2-, hydrargillite; V3) still reproduce the spec's Al pins, so the
+        # drift to the adopted set O (AluminiumSetOTest) is measured against the spec's own numbers.
         a = oracle.WITHHELD["Al"]["sp"]
         coeffs = {}
         for name, (x, o, h, z, g, phase, role) in a.items():
@@ -161,6 +162,132 @@ class OtherElementPinsTest(unittest.TestCase):
         self.assertAlmostEqual(line("Al2O3.3H2O", "AlO2-")[0], 8.587, delta=VERTICAL)
         self.assertAlmostEqual(line("Al", "Al2O3.3H2O")[0], -1.5500, delta=INTERCEPT)
         self.assertAlmostEqual(line("Al", "AlO2-")[0], -1.3806, delta=INTERCEPT)
+        # the table keeps the same rejected values (V3) under withheldSpecies, never in the engine
+        withheld = {r[0]: r for r in table.WITHHELD_SPECIES["Al"]}
+        self.assertAlmostEqual(withheld["AlO2-(atlas)"][7], a["AlO2-"][4], delta=1e-9)
+        self.assertAlmostEqual(withheld["Al2O3.3H2O(atlas)"][7], a["Al2O3.3H2O"][4], delta=1e-9)
+        self.assertEqual((withheld["AlO2-(atlas)"][10], withheld["Al2O3.3H2O(atlas)"][10]), ("V3", "V3"))
+
+
+class AluminiumSetOTest(unittest.TestCase):
+    """Al from ONE set (O: CHNOSZ OBIGT, Tagirov & Schott 2001 + gibbsite Robie et al. 1978, SUPCRT92 water).
+
+    Pins come from the independent oracle (tools/pourbaix_oracle.py DATA["Al"]); the cross-checks use
+    published numbers that do not come from that set (PHREEQC llnl.dat / phreeqc.dat, OpenStax/NBS,
+    CODATA 1989 key values, the CRC E0 on the Wikipedia data page).
+    """
+
+    def test_lines_at_1e_minus_6(self):
+        _sloped(self, "Al", "Al", "Al3+", -1.8024, 0.0)
+        _vertical(self, "Al", "Al3+", "Al(OH)3", 4.577)
+        _vertical(self, "Al", "Al(OH)3", "Al(OH)4-", 9.118)
+        _sloped(self, "Al", "Al", "Al(OH)3", -1.5317, -0.0592)
+        _sloped(self, "Al", "Al", "Al(OH)4-", -1.3519, -0.0789)
+
+    def test_lines_at_unit_activity(self):
+        _sloped(self, "Al", "Al", "Al3+", -1.6841, 0.0, log_a=0.0)
+        _vertical(self, "Al", "Al3+", "Al(OH)3", 2.577, log_a=0.0)
+        _vertical(self, "Al", "Al(OH)3", "Al(OH)4-", 15.118, log_a=0.0)
+        _sloped(self, "Al", "Al", "Al(OH)4-", -1.2335, -0.0789, log_a=0.0)
+
+    def test_triple_points_and_domains(self):
+        result = solver.solve_pourbaix_diagram("Al", 25.0, -6.0, 0.0, [])
+        ends = {b["id"]: [(p["pH"], p["E_V_SHE"]) for p in b["points"]] for b in result["analyticalBoundaries"]}
+        self.assertEqual(set(ends), {"Al__Al3+", "Al__Al(OH)3", "Al__Al(OH)4-", "Al3+__Al(OH)3", "Al(OH)3__Al(OH)4-"})
+        for ident, ph, e in (("Al__Al3+", 4.577, -1.8024), ("Al3+__Al(OH)3", 4.577, -1.8024),
+                             ("Al__Al(OH)3", 4.577, -1.8024), ("Al__Al(OH)3", 9.118, -2.0711),
+                             ("Al(OH)3__Al(OH)4-", 9.118, -2.0711), ("Al__Al(OH)4-", 9.118, -2.0711)):
+            self.assertTrue(any(abs(p - ph) <= VERTICAL and abs(v - e) <= TRIPLE_E for p, v in ends[ident]),
+                            (ident, ends[ident]))
+        # inside the water window at pH 7 the stable phase is gibbsite (passivation), pH 2 Al3+, pH 11 Al(OH)4-
+        for ph, e, sid, cat in ((7.0, -0.2, "Al(OH)3", "Passivation (thermodynamic, film-forming)"),
+                                (2.0, 0.0, "Al3+", "Corrosion (acid)"), (11.0, -0.3, "Al(OH)4-", "Corrosion (alkaline)"),
+                                (7.0, -2.2, "Al", "Immunity")):
+            r = solver.evaluate_point_mechanism("Al", ph, e)
+            self.assertEqual((r["dominantSpeciesId"], r["category"]), (sid, cat), (ph, e))
+            self.assertEqual(oracle.dominant("Al", ph, e), sid)
+
+    def test_unit_activity_e0_against_published_values(self):
+        e0 = solver.boundary_line("Al", "Al", "Al3+", 0.0)["E_V_SHE_at_pH0"]
+        # NBS (Wagman 1982) Al3+ -485.0 kJ/mol as printed in OpenStax Chemistry 2e App. G: -1.6756 V
+        self.assertAlmostEqual(e0, -485.0e3 / (3 * 96485.33212), delta=0.010)
+        # CODATA 1989 key values (dfH -538.4 +/- 1.5 kJ/mol, S -325 +/- 10 J/mol/K; Al 28.30, H2 130.680):
+        # dfG -491.5 +/- 3.3 kJ/mol, E0 -1.6980 +/- 0.0115 V; the set lies within 1.5 sigma
+        dfg_codata = -538.4 + 298.15 * (325 - 1.5 * 130.680 + 28.30) / 1000.0
+        self.assertAlmostEqual(dfg_codata, -491.51, delta=0.01)
+        self.assertAlmostEqual(e0, dfg_codata * 1e3 / (3 * 96485.33212), delta=1.5 * 0.0115)
+        # CRC/Wikipedia -1.662 V is the Latimer/atlas value (-115000 cal): documented 22 mV exception
+        self.assertAlmostEqual(e0, -1.662, delta=0.025)
+        self.assertGreater(abs(e0 - (-1.662)), 0.010)
+        # alkaline Al(OH)4-/Al ("H2AlO3- + H2O + 3e- = Al + 4OH-", CRC on the Wikipedia data page): -2.33 V
+        line = solver.boundary_line("Al", "Al", "Al(OH)4-", 0.0)
+        self.assertAlmostEqual(line["E_V_SHE_at_pH0"] + 14.0 * line["slope_V_per_pH"], -2.33, delta=0.010)
+
+    def test_reaction_constants_against_open_databases(self):
+        # 2.5 kJ/mol = V2 tolerance (0.44 log units). Values read from the PHREEQC databases (USGS).
+        rows = {r["id"]: r["dfG_kJ_mol"] for r in table.species_rows("Al")}
+        w = table.water_dfg_kj_mol("Al")
+        log_ks0 = -(rows["Al3+"] + 3 * w - rows["Al(OH)3"]) / KJ_PER_LOG_K      # gibbsite + 3H+ = Al3+ + 3H2O
+        log_b4 = -(rows["Al(OH)4-"] - rows["Al3+"] - 4 * w) / KJ_PER_LOG_K     # Al3+ + 4H2O = Al(OH)4- + 4H+
+        self.assertAlmostEqual(log_ks0, 7.730, delta=0.002)
+        self.assertAlmostEqual(log_b4, -22.849, delta=0.002)
+        tol = 2.5 / KJ_PER_LOG_K
+        for published in (7.756, 8.11):          # llnl.dat (thermo.com.V8.R6), phreeqc.dat/wateq4f.dat
+            self.assertAlmostEqual(log_ks0, published, delta=tol)
+        for published in (-22.8833, -22.7):      # llnl.dat (as AlO2-), phreeqc.dat/wateq4f.dat
+            self.assertAlmostEqual(log_b4, published, delta=tol)
+        # the boundaries follow from them: pH = (log Ks0 - log a)/3 and pH = -(log Ks0 + log b4) - log a
+        # (1e-4: KJ_PER_LOG_K uses the rounded 0.0591597 V)
+        self.assertAlmostEqual(solver.boundary_line("Al", "Al3+", "Al(OH)3", -6.0)["pH"], (log_ks0 + 6) / 3, delta=1e-4)
+        self.assertAlmostEqual(solver.boundary_line("Al", "Al(OH)3", "Al(OH)4-", -6.0)["pH"],
+                               -(log_ks0 + log_b4) - 6, delta=1e-4)
+        self.assertAlmostEqual(w, -56687 * 4.184 / 1000, delta=1e-9)
+
+    def _with_extra(self, extra):
+        sp = dict(oracle.DATA["Al"]["sp"])
+        sp.update(extra)
+        return sp
+
+    def _boundaries(self, sp, log_a=-6.0):
+        c = oracle.coeffs_of(sp, oracle.DATA["Al"]["H2O"], log_a)
+
+        def line(p, q):
+            d0, dp, de = (c[p][i] - c[q][i] for i in range(3))
+            return -d0 / dp if abs(de) < 1e-9 else (-d0 / de, -dp / de)
+        return line
+
+    def test_excluded_solids_boehmite_and_corundum(self):
+        # corundum never wins (8.0 kJ/mol per Al above gibbsite + water); boehmite would replace gibbsite
+        # (0.69 kJ/mol lower in this set) and shift the solid boundaries to pH 4.54 / 9.24: same categories.
+        corundum = self._with_extra({"Al2O3": oracle.AL_EXCLUDED["Al2O3"]})
+        boehmite = self._with_extra({"AlO(OH)": oracle.AL_EXCLUDED["AlO(OH)"]})
+        line = self._boundaries(boehmite)
+        self.assertAlmostEqual(line("Al3+", "AlO(OH)"), 4.537, delta=VERTICAL)
+        self.assertAlmostEqual(line("AlO(OH)", "Al(OH)4-"), 9.239, delta=VERTICAL)
+        for ph, e in _grid(ph_step=0.5, e_step=0.05):
+            gc = oracle.coeffs_of(corundum, oracle.DATA["Al"]["H2O"])
+            g = {k: v[0] + v[1] * ph + v[2] * e for k, v in gc.items()}
+            self.assertGreater(g["Al2O3"], g["Al(OH)3"] + 7.9e3)
+        table_rows = {r[0]: r for r in table.WITHHELD_SPECIES["Al"]}
+        self.assertAlmostEqual(table_rows["AlO(OH)"][7], oracle.AL_EXCLUDED["AlO(OH)"][4], delta=1e-9)
+        self.assertAlmostEqual(table_rows["Al2O3"][7], oracle.AL_EXCLUDED["Al2O3"][4], delta=1e-6)
+        self.assertAlmostEqual(table_rows["Al2O3"][7], -1582.26, delta=0.01)
+        self.assertNotIn("AlO(OH)", {r["id"] for r in table.species_rows("Al")})
+        self.assertNotIn("Al2O3", {r["id"] for r in table.species_rows("Al")})
+
+    def test_omitted_hydrolysis_species_have_no_domain_at_default_activities(self):
+        # AlOH2+ / Al(OH)2+ (TS01, same set) have no domain for log a >= -7.16; at log a = -8 AlOH2+
+        # takes pH 4.96-5.38 (recorded in sourceSetNote).
+        sp = self._with_extra(oracle.AL_HYDROLYSIS_OMITTED)
+        for log_a in (-7.0, -6.0, -3.0, 0.0):
+            c = oracle.coeffs_of(sp, oracle.DATA["Al"]["H2O"], log_a)
+            for ph, e in _grid(ph_step=0.05, e_step=0.05):
+                g = {k: v[0] + v[1] * ph + v[2] * e for k, v in c.items()}
+                self.assertNotIn(min(g, key=g.get), oracle.AL_HYDROLYSIS_OMITTED, (log_a, ph, e))
+        line = self._boundaries(sp, -8.0)
+        self.assertAlmostEqual(line("Al3+", "AlOH2+"), 4.964, delta=VERTICAL)
+        self.assertAlmostEqual(line("AlOH2+", "Al(OH)3"), 5.383, delta=VERTICAL)
+        self.assertIn("-7.16", table.ELEMENT_SET["Al"][2])
 
 
 class StandardPotentialCrossCheckTest(unittest.TestCase):
@@ -359,7 +486,8 @@ class ValidationTest(unittest.TestCase):
             self.assertEqual(err.detail["supported"], [25.0])
         for t in (24.5, 25.0, 25.5):
             self.assertEqual(solver.solve_pourbaix_diagram("Fe", t, -6.0, 0.0, [])["parameters"]["temperature_C"], 25.0)
-        self._raises("TEMPERATURE_UNSUPPORTED", "temperature_C", "Al", 60, -4, 200, [])  # before the Al data check
+        self._raises("TEMPERATURE_UNSUPPORTED", "temperature_C", "Al", 60, -4, 200, [])  # Al data is 25 C only too
+        self._raises("TEMPERATURE_UNSUPPORTED", "temperature_C", "Ti", 60, -6, 0, [])  # before the data check
         self._raises("TEMPERATURE_UNSUPPORTED", "temperature_C", "Ni", 80, -5, 600, [])
 
     def test_unavailable_elements_raise_data_unavailable(self):
