@@ -1,0 +1,141 @@
+/*
+ * Boot sequence and telemetry strip (Phase 9, DESIGN-9 sections 3-4).
+ * Colors come only from src/styles/tokens.css and the src/index.css base palette;
+ * tests/boot-telemetry-a11y.test.ts checks every color pair used here.
+ * Motion decorates rows that already show their text; it never hides or delays a label.
+ */
+
+.mk-boot-overlay {
+  background: var(--mk-bg);
+  transition: opacity var(--mk-dur-base) var(--mk-ease-out);
+}
+.mk-boot-overlay.is-leaving { opacity: 0; }
+/* Opaque placeholder while the lazy boot chunk loads (no text: nothing has been checked yet). */
+.mk-boot-cover { position: fixed; inset: 0; z-index: 50; background: var(--mk-bg); }
+/* Visually hidden, still read by screen readers (persistent boot announcer). */
+.mk-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.mk-boot-panel {
+  width: 100%;
+  max-width: 40rem;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--mk-space-5);
+  border: 1px solid var(--mk-border-strong);
+  border-radius: 12px;
+  background: var(--mk-surface-raised);
+  box-shadow: var(--mk-elev-3);
+  color: var(--mk-text-soft);
+  font-family: var(--mk-font-sans);
+}
+
+.mk-boot-kicker {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  letter-spacing: var(--mk-tracking-caps);
+  text-transform: uppercase;
+  color: var(--mk-ice);
+}
+.mk-boot-title { margin-top: var(--mk-space-1); font-size: var(--mk-fs-lg); font-weight: 600; line-height: 1.18; color: var(--mk-text-strong); }
+.mk-boot-count {
+  margin-top: var(--mk-space-1);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-text-subtle);
+}
+
+.mk-boot-trace { position: relative; height: 1px; margin: var(--mk-space-4) 0 var(--mk-space-2); overflow: hidden; background-image: linear-gradient(var(--mk-line-subtle), var(--mk-line-subtle)); }
+.mk-boot[data-animate="true"][data-phase="running"] .mk-boot-trace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background-image: linear-gradient(90deg, transparent, var(--mk-amber), transparent);
+  animation: mkBootTrace 1.4s var(--mk-ease-inout) infinite;
+}
+
+.mk-boot-rows { display: grid; margin: 0; padding: 0; list-style: none; }
+.mk-boot-row {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  column-gap: var(--mk-space-3);
+  align-items: center;
+  padding: var(--mk-space-2) 0;
+  border-bottom: 1px solid var(--mk-line-subtle);
+  font-size: var(--mk-fs-sm);
+}
+.mk-boot-label { color: var(--mk-text-strong); }
+.mk-boot-state { font-family: var(--mk-font-mono); font-size: var(--mk-fs-xs); text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-subtle); }
+.mk-boot-detail { grid-column: 2 / -1; margin-top: 2px; font-size: var(--mk-fs-xs); color: var(--mk-text-soft); overflow-wrap: anywhere; }
+.mk-boot-icon { width: 1rem; font-family: var(--mk-font-mono); font-weight: 700; text-align: center; color: var(--mk-text-subtle); }
+
+[data-state="ok"] > .mk-boot-state, [data-state="ok"] > .mk-boot-icon { color: var(--mk-signal-ok); }
+[data-state="limited"] > .mk-boot-state, [data-state="limited"] > .mk-boot-icon { color: var(--mk-signal-warn); }
+[data-state="unavailable"] > .mk-boot-state, [data-state="unavailable"] > .mk-boot-icon,
+[data-state="timed-out"] > .mk-boot-state, [data-state="timed-out"] > .mk-boot-icon,
+[data-state="blocked"] > .mk-boot-state, [data-state="blocked"] > .mk-boot-icon { color: var(--mk-signal-fail); }
+[data-state="running"] > .mk-boot-state, [data-state="running"] > .mk-boot-icon { color: var(--mk-ice); }
+
+.mk-boot[data-animate="true"] .mk-boot-row:not([data-state="pending"]) { animation: mkBootRowIn var(--mk-dur-slow) var(--mk-ease-out); }
+.mk-boot[data-animate="true"] [data-state="running"] > .mk-boot-icon { animation: mkBootPulse 0.9s var(--mk-ease-inout) infinite alternate; }
+
+.mk-boot-stop { margin-top: var(--mk-space-4); font-size: var(--mk-fs-sm); color: var(--mk-text-soft); }
+.mk-boot a { color: var(--mk-ice); text-decoration: underline; text-underline-offset: 2px; }
+
+.mk-boot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mk-space-3); margin-top: var(--mk-space-4); }
+.mk-boot-skip {
+  padding: var(--mk-space-2) var(--mk-space-4);
+  border: 1px solid var(--mk-border-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mk-ice);
+  font-size: var(--mk-fs-sm);
+}
+.mk-boot-hint { font-size: var(--mk-fs-xs); color: var(--mk-text-dim); }
+
+.mk-boot a:focus-visible,
+.mk-boot-skip:focus-visible {
+  outline: var(--mk-focus-width) solid var(--mk-focus-color);
+  outline-offset: var(--mk-focus-offset);
+  box-shadow: var(--mk-focus-halo);
+}
+
+.mk-boot-hero { margin-top: var(--mk-space-4); }
+.mk-boot-hero canvas { display: block; width: 100%; height: 140px; border: 1px solid var(--mk-line-subtle); border-radius: 8px; }
+.mk-boot-hero figcaption {
+  margin-top: var(--mk-space-1);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  letter-spacing: var(--mk-tracking-caps);
+  text-transform: uppercase;
+  color: var(--mk-evidence-unvalidated);
+}
+
+@keyframes mkBootTrace { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+@keyframes mkBootRowIn { from { transform: translateY(4px); } to { transform: none; } }
+@keyframes mkBootPulse { from { opacity: 1; } to { opacity: 0.45; } }
+
+/* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
+ * In-flow footer at the end of the shell, deliberately NOT sticky: module modals are not portalled
+ * (fixed inset-0 z-50 inside the shell's z-index:1 children), so a sticky strip would paint over
+ * their bottom action buttons. */
+.mk-telemetry {
+  padding: var(--mk-space-2) var(--mk-space-4);
+  border-top: 1px solid var(--mk-border);
+  background: var(--mk-glass-bg);
+  backdrop-filter: blur(var(--mk-glass-blur));
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+/* index.css gives every shell child z-index 1; the strip comes later in the DOM, so at equal z it would
+ * still paint over modals opened inside the main row. z-index 0 keeps it below them. */
+.mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { z-index: 0; }
+.mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-5); }
+.mk-telemetry dl > div { display: flex; gap: var(--mk-space-2); }
+.mk-telemetry dt { text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-dim); }
+.mk-telemetry dd { color: var(--mk-text-soft); }
+.mk-telemetry dd[data-tone="ok"] { color: var(--mk-signal-ok); }
+.mk-telemetry dd[data-tone="warn"] { color: var(--mk-signal-warn); }
+.mk-telemetry dd[data-tone="fail"] { color: var(--mk-signal-fail); }

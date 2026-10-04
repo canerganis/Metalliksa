@@ -43,6 +43,8 @@ export interface PythonEngineStatus {
   warm?: boolean;
   channel?: string;
   ipcDaemon?: PersistentIPCDiagnostics;
+  /** Server-side qualifier sent instead of a per-subsystem map (currently "unverified"). */
+  subsystemStatus?: string;
   subsystems?: {
     calphad_solver?: { available: boolean; description?: string };
     dft_property_calculator?: { available: boolean; description?: string };
@@ -606,6 +608,9 @@ export interface ExperimentalValidationResult {
 class PythonComputationService {
   private statusCache: PythonEngineStatus | null = null;
   private lastCheckTime = 0;
+  private statusInflight: Promise<PythonEngineStatus> | null = null;
+  private statusSeq = 0;
+  private statusAppliedSeq = 0;
 
   async runLpbfBayesianOptimization(data: any): Promise<PythonBayesianOptimizationResult> {
     const res = await fetch("/api/python/lpbf-bayesian-optimize", {
@@ -914,7 +919,18 @@ class PythonComputationService {
     if (!forceRefresh && this.statusCache && now - this.lastCheckTime < 15000) {
       return this.statusCache;
     }
+    // Non-forced callers share one in-flight request (app shell and boot check start together).
+    if (!forceRefresh && this.statusInflight) return this.statusInflight;
+    const request = this.requestEngineStatus(now).finally(() => {
+      if (this.statusInflight === request) this.statusInflight = null;
+    });
+    this.statusInflight = request;
+    return request;
+  }
 
+  private async requestEngineStatus(now: number): Promise<PythonEngineStatus> {
+    const seq = ++this.statusSeq;
+    let result: PythonEngineStatus;
     try {
       const res = await fetch("/api/python/status", {
         method: "GET",
@@ -926,7 +942,7 @@ class PythonComputationService {
       }
 
       const data = await res.json();
-      this.statusCache = {
+      result = {
         online: data.success === true || data.status === "online" || data.status === "ready",
         status: data.status || "online",
         pythonVersion: data.pythonVersion ?? undefined,
@@ -936,18 +952,21 @@ class PythonComputationService {
         channel: data.channel ?? undefined,
         ipcDaemon: data.ipcDaemon,
         subsystems: data.subsystems,
+        subsystemStatus: typeof data.subsystemStatus === "string" ? data.subsystemStatus : undefined,
       };
-      this.lastCheckTime = now;
-      return this.statusCache;
     } catch (err: any) {
-      this.statusCache = {
+      result = {
         online: false,
         status: "client_fallback",
         durationMs: 0,
       };
-      this.lastCheckTime = now;
-      return this.statusCache;
     }
+    // An older request that finishes after a newer (e.g. forced) one must not overwrite its answer.
+    if (seq < this.statusAppliedSeq && this.statusCache) return this.statusCache;
+    this.statusAppliedSeq = seq;
+    this.statusCache = result;
+    this.lastCheckTime = now;
+    return result;
   }
 
   /**
