@@ -72,21 +72,19 @@ Background work: none; resources: fetch.
 
 ## Source references
 
-- `python/stochastic_uq_mmpds_solver.py:336-372`
-- `python/stochastic_uq_mmpds_solver.py:389-398`
-- `python/stochastic_uq_mmpds_solver.py:584-587`
-- `python/stochastic_uq_mmpds_solver.py:638-706`
-- `python/stochastic_uq_mmpds_solver.py:720-742`
-- `python/alloy_data_kinetics_uq_fatigue.py:166-193`
-- `python/alloy_data_kinetics_uq_fatigue.py:206-223`
-- `routes/physics.ts:11`
-- `routes/physics.ts:120-122`
-- `src/components/UQLab.tsx:90-94`
-- `src/components/UQLab.tsx:155-175`
-- `src/components/UQLab.tsx:529-585`
-- `src/components/uqLabData.ts:155`
-- `src/services/pythonComputationService.ts:1579-1614`
-- `docs/MODULE_EVIDENCE_INVENTORY.md:77`
+- `python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq`
+- `python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled`
+- `python/stochastic_uq_mmpds_solver.py::provenance`
+- `python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE`
+- `python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants`
+- `python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL`
+- `routes/physics.ts::handlePythonDispatch`
+- `routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py`
+- `src/components/UQLab.tsx::UQLab`
+- `src/components/UQLab.tsx::runQMCSolver`
+- `src/components/uqLabData.ts::computeMMPDSEmpiricalStats`
+- `src/services/pythonComputationService.ts::calculateStochasticUQMMPDS`
+- `docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons`
 
 ## Tests
 

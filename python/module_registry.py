@@ -422,20 +422,20 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; "
                       "the contract records the authority's ranges.",
                       "Aborting the HTTP request discards a stale response but does not cancel the worker "
-                      "computation (src/components/KeyholeRaytracingLab.tsx:56-57).",
+                      "computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).",
                       "No validity domain is declared: the module states no source-backed applicability range "
                       "(prescribed cavity, empirical absorption).",
                   ),
+                  # Content-anchored: symbols, or line ranges that must still contain the quoted text.
                   sources=(
-                      "python/lpbf_keyhole_raytracing.py:1-5",
-                      "python/lpbf_keyhole_raytracing.py:60-90",
-                      "python/lpbf_keyhole_raytracing.py:137-160",
-                      "python/lpbf_worker_rpc.py:408-412",
-                      "routes/lpbfSimulation.ts:44",
-                      "server/lpbfWorkerBridge.ts:58",
-                      "src/components/KeyholeRaytracingLab.tsx:26-59",
-                      "src/components/KeyholeRaytracingLab.tsx:116-127",
-                      "docs/MODULE_EVIDENCE_INVENTORY.md:40",
+                      "python/lpbf_keyhole_raytracing.py:1-5#Seeded optics on a prescribed cavity",
+                      "python/lpbf_keyhole_raytracing.py::_number",
+                      "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
+                      "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
+                      "routes/lpbfSimulation.ts:44#/api/python/lpbf-keyhole-raytracing",
+                      "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+                      "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing",
                   ))
 
 
@@ -465,22 +465,22 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "No validity domain is declared: no source-backed applicability range exists for the "
                       "strengthening model or the input distributions.",
                   ),
+                  # Content-anchored: symbols, or line ranges that must still contain the quoted text.
+                  # pythonComputationService.ts is anchored by symbol because other lanes delete lines there.
                   sources=(
-                      "python/stochastic_uq_mmpds_solver.py:336-372",
-                      "python/stochastic_uq_mmpds_solver.py:389-398",
-                      "python/stochastic_uq_mmpds_solver.py:584-587",
-                      "python/stochastic_uq_mmpds_solver.py:638-706",
-                      "python/stochastic_uq_mmpds_solver.py:720-742",
-                      "python/alloy_data_kinetics_uq_fatigue.py:166-193",
-                      "python/alloy_data_kinetics_uq_fatigue.py:206-223",
-                      "routes/physics.ts:11",
-                      "routes/physics.ts:120-122",
-                      "src/components/UQLab.tsx:90-94",
-                      "src/components/UQLab.tsx:155-175",
-                      "src/components/UQLab.tsx:529-585",
-                      "src/components/uqLabData.ts:155",
-                      "src/services/pythonComputationService.ts:1579-1614",
-                      "docs/MODULE_EVIDENCE_INVENTORY.md:77",
+                      "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
+                      "python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled",
+                      "python/stochastic_uq_mmpds_solver.py::provenance",
+                      "python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE",
+                      "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
+                      "python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL",
+                      "routes/physics.ts::handlePythonDispatch",
+                      "routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py",
+                      "src/components/UQLab.tsx::UQLab",
+                      "src/components/UQLab.tsx::runQMCSolver",
+                      "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
+                      "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons",
                   ))
 
 
@@ -545,8 +545,51 @@ def legacy_contract(row: Dict[str, str]) -> ModuleContract:
     )
 
 
-_LINE_REF = re.compile(r"^(?P<path>[^:]+?)(?::(?P<start>\d+)(?:-(?P<end>\d+))?)?$")
-_SYMBOL_REF = re.compile(r"^(?P<path>[^:]+)::(?P<symbol>[A-Za-z_][\w.]*)$")
+# path | path:start[-end]#expected text | path::Symbol | path::Class.method
+_LINE_REF = re.compile(r"^(?P<path>[^:#]+?)(?::(?P<start>\d+)(?:-(?P<end>\d+))?(?:#(?P<expect>.+))?)?$")
+_SYMBOL_REF = re.compile(r"^(?P<path>[^:#]+)::(?P<symbol>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)$")
+
+
+def _python_symbol_problem(text: str, symbol: str) -> str:
+    """'' when ``symbol`` (top-level name or Class.method) is defined in the Python source."""
+    import ast
+    body = ast.parse(text).body
+
+    def defined(nodes, name):
+        for node in nodes:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name:
+                return node
+            if isinstance(node, ast.Assign) and any(getattr(t, "id", None) == name for t in node.targets):
+                return node
+            if isinstance(node, ast.AnnAssign) and getattr(node.target, "id", None) == name:
+                return node
+        return None
+
+    owner, _, member = symbol.partition(".")
+    node = defined(body, owner)
+    if node is None:
+        return f"{owner} is not defined at module level"
+    if member:
+        if not isinstance(node, ast.ClassDef):
+            return f"{owner} is not a class"
+        if not isinstance(defined(node.body, member), (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return f"class {owner} has no method {member}"
+    return ""
+
+
+def _ts_symbol_problem(text: str, symbol: str) -> str:
+    """'' when ``symbol`` is declared in TS/TSX source: a function, class, const/let, or a
+    class/object method at the start of a line (call sites such as ``obj.name(`` never match)."""
+    owner, _, member = symbol.partition(".")
+    name = member or owner
+    declaration = re.compile(
+        rf"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\s*\*?\s*|class\s+|const\s+|let\s+|var\s+)?"
+        rf"{re.escape(name)}\s*[(<=:]", re.MULTILINE)
+    if not declaration.search(text):
+        return f"{name} is not declared"
+    if member and not re.search(rf"^\s*(?:export\s+)?(?:class|const|let|var)\s+{re.escape(owner)}\b", text, re.MULTILINE):
+        return f"{owner} is not declared"
+    return ""
 
 
 def contract_refs(contract: ModuleContract) -> List[str]:
@@ -563,9 +606,13 @@ def contract_refs(contract: ModuleContract) -> List[str]:
 def ref_problem(ref: str, root: Path = REPO_ROOT, generated: frozenset = frozenset()) -> str:
     """Why ``ref`` does not resolve in the repository, or '' when it does.
 
-    Forms: ``path``, ``path:line``, ``path:start-end`` (lines must exist) and
-    ``path::Class.method`` (the last name must be defined in the file). Paths in
-    ``generated`` are emitter outputs; their presence is checked by ``stale_outputs``.
+    Forms:
+    - ``path``: the file exists.
+    - ``path::Symbol`` / ``path::Class.method``: content anchor. Python is checked with the
+      AST (the class must contain the method); TS/TSX by a declaration at line start.
+    - ``path:start-end#expected text``: the lines exist and still contain the expected
+      text, so a ref whose lines shift fails. A line ref without ``#expected`` is rejected.
+    Paths in ``generated`` are emitter outputs; ``stale_outputs`` checks their presence.
     """
     symbol = _SYMBOL_REF.match(ref)
     match = symbol or _LINE_REF.match(ref)
@@ -579,16 +626,25 @@ def ref_problem(ref: str, root: Path = REPO_ROOT, generated: frozenset = frozens
         return f"{ref}: {rel} does not exist"
     text = path.read_text(encoding="utf-8")
     if symbol:
-        name = symbol.group("symbol").split(".")[-1]
-        if not re.search(rf"^\s*(?:async\s+)?(?:def|class)\s+{re.escape(name)}\b", text, re.MULTILINE):
-            return f"{ref}: {name} is not defined in {rel}"
-        return ""
+        name = symbol.group("symbol")
+        if rel.endswith(".py"):
+            problem = _python_symbol_problem(text, name)
+        elif rel.endswith((".ts", ".tsx")):
+            problem = _ts_symbol_problem(text, name)
+        else:
+            problem = "symbol anchors apply only to .py/.ts/.tsx files"
+        return f"{ref}: {problem} in {rel}" if problem else ""
     if match.group("start"):
+        expect = match.group("expect")
+        if not expect:
+            return f"{ref}: a line reference needs '#<expected text>' so shifted lines are detected"
         start = int(match.group("start"))
         end = int(match.group("end") or start)
-        lines = len(text.splitlines())
-        if not 1 <= start <= end <= lines:
-            return f"{ref}: lines {start}-{end} outside {rel} ({lines} lines)"
+        lines = text.splitlines()
+        if not 1 <= start <= end <= len(lines):
+            return f"{ref}: lines {start}-{end} outside {rel} ({len(lines)} lines)"
+        if expect not in "\n".join(lines[start - 1:end]):
+            return f"{ref}: {rel}:{start}-{end} no longer contains {expect!r}"
     return ""
 
 

@@ -1677,19 +1677,18 @@
       "migrationState": "contracted",
       "legacyNotes": [
         "The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter 40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; the contract records the authority's ranges.",
-        "Aborting the HTTP request discards a stale response but does not cancel the worker computation (src/components/KeyholeRaytracingLab.tsx:56-57).",
+        "Aborting the HTTP request discards a stale response but does not cancel the worker computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).",
         "No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption)."
       ],
       "sourceRefs": [
-        "python/lpbf_keyhole_raytracing.py:1-5",
-        "python/lpbf_keyhole_raytracing.py:60-90",
-        "python/lpbf_keyhole_raytracing.py:137-160",
-        "python/lpbf_worker_rpc.py:408-412",
-        "routes/lpbfSimulation.ts:44",
-        "server/lpbfWorkerBridge.ts:58",
-        "src/components/KeyholeRaytracingLab.tsx:26-59",
-        "src/components/KeyholeRaytracingLab.tsx:116-127",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:40"
+        "python/lpbf_keyhole_raytracing.py:1-5#Seeded optics on a prescribed cavity",
+        "python/lpbf_keyhole_raytracing.py::_number",
+        "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
+        "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
+        "routes/lpbfSimulation.ts:44#/api/python/lpbf-keyhole-raytracing",
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing"
       ],
       "seedDerived": [
         "label",
@@ -3091,21 +3090,19 @@
         "No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions."
       ],
       "sourceRefs": [
-        "python/stochastic_uq_mmpds_solver.py:336-372",
-        "python/stochastic_uq_mmpds_solver.py:389-398",
-        "python/stochastic_uq_mmpds_solver.py:584-587",
-        "python/stochastic_uq_mmpds_solver.py:638-706",
-        "python/stochastic_uq_mmpds_solver.py:720-742",
-        "python/alloy_data_kinetics_uq_fatigue.py:166-193",
-        "python/alloy_data_kinetics_uq_fatigue.py:206-223",
-        "routes/physics.ts:11",
-        "routes/physics.ts:120-122",
-        "src/components/UQLab.tsx:90-94",
-        "src/components/UQLab.tsx:155-175",
-        "src/components/UQLab.tsx:529-585",
-        "src/components/uqLabData.ts:155",
-        "src/services/pythonComputationService.ts:1579-1614",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:77"
+        "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
+        "python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled",
+        "python/stochastic_uq_mmpds_solver.py::provenance",
+        "python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE",
+        "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
+        "python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL",
+        "routes/physics.ts::handlePythonDispatch",
+        "routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py",
+        "src/components/UQLab.tsx::UQLab",
+        "src/components/UQLab.tsx::runQMCSolver",
+        "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
+        "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons"
       ],
       "seedDerived": [
         "label",

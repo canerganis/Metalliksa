@@ -590,13 +590,46 @@ class ContractedRegistryTests(unittest.TestCase):
 
     def test_ref_forms(self):
         self.assertEqual(mr.ref_problem("python/module_registry.py"), "")
-        self.assertEqual(mr.ref_problem("python/module_registry.py:1-2"), "")
-        self.assertIn("outside", mr.ref_problem("python/module_registry.py:2-1"))
         self.assertIn("does not exist", mr.ref_problem("/etc/passwd"))
-        self.assertEqual(mr.ref_problem("python/module_registry.py::build_registry"), "")
-        self.assertIn("not defined", mr.ref_problem("python/module_registry.py::nowhere"))
         generated = frozenset({"docs/modules/not-yet.md"})
         self.assertEqual(mr.ref_problem("docs/modules/not-yet.md", generated=generated), "")
+        # Line references must carry the text they expect, so shifted lines fail.
+        self.assertIn("needs '#", mr.ref_problem("python/module_registry.py:1-2"))
+        self.assertEqual(mr.ref_problem('python/module_registry.py:1-2#"""Module registry'), "")
+        self.assertIn("no longer contains", mr.ref_problem("python/module_registry.py:3-4#Module registry"))
+        self.assertIn("outside", mr.ref_problem("python/module_registry.py:2-1#x"))
+        # Python symbols via the AST; Class.method needs the method inside that class.
+        self.assertEqual(mr.ref_problem("python/module_registry.py::build_registry"), "")
+        self.assertEqual(mr.ref_problem("python/module_registry.py::CORE_CONTRACT_KEYS"), "")
+        self.assertIn("not defined", mr.ref_problem("python/module_registry.py::nowhere"))
+        oracle = "python/test_keyhole_contract.py::KeyholeContract.test_flat_surface_absorbs_normal_incidence_fraction"
+        self.assertEqual(mr.ref_problem(oracle), "")
+        self.assertIn("has no method", mr.ref_problem("python/test_keyhole_contract.py::KeyholeContract.run_casex"))
+        self.assertIn("not a class", mr.ref_problem("python/module_contract.py::within_ceiling.x"))
+        # A method of another class does not satisfy Class.method.
+        self.assertIn("has no method", mr.ref_problem("python/module_contract.py::Oracle.input_problems"))
+        # TS/TSX declarations; a call site is not a declaration.
+        self.assertEqual(mr.ref_problem("src/services/pythonComputationService.ts::calculateStochasticUQMMPDS"), "")
+        self.assertIn("not declared", mr.ref_problem("src/components/UQLab.tsx::calculateStochasticUQMMPDS"))
+
+    def test_symbol_refs_survive_line_deletions_elsewhere(self):
+        # orch/dead-surface deletes these line ranges of pythonComputationService.ts; the uq-lab
+        # reference is anchored on the symbol, so it must still resolve afterwards.
+        import tempfile
+        rel = "src/services/pythonComputationService.ts"
+        lines = (REPO_ROOT / rel).read_text(encoding="utf-8").splitlines(keepends=True)
+        removed = set()
+        for start, end in ((207, 236), (1276, 1356), (1819, 1876)):
+            removed.update(range(start, end + 1))
+        kept = "".join(line for number, line in enumerate(lines, 1) if number not in removed)
+        ref = next(r for r in mr.build_registry() if r.id == "uq-lab").source_refs
+        ref = next(r for r in ref if r.startswith(rel))
+        with tempfile.TemporaryDirectory() as root:
+            target = Path(root) / rel
+            target.parent.mkdir(parents=True)
+            target.write_text(kept, encoding="utf-8")
+            self.assertEqual(mr.ref_problem(ref, root=Path(root)), "")
+            self.assertIn("::", ref)
 
 
 if __name__ == "__main__":

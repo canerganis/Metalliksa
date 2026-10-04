@@ -60,20 +60,19 @@ Background work: none; resources: raf, three, fetch.
 ## Recorded notes
 
 - The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter 40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; the contract records the authority's ranges.
-- Aborting the HTTP request discards a stale response but does not cancel the worker computation (src/components/KeyholeRaytracingLab.tsx:56-57).
+- Aborting the HTTP request discards a stale response but does not cancel the worker computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).
 - No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption).
 
 ## Source references
 
-- `python/lpbf_keyhole_raytracing.py:1-5`
-- `python/lpbf_keyhole_raytracing.py:60-90`
-- `python/lpbf_keyhole_raytracing.py:137-160`
-- `python/lpbf_worker_rpc.py:408-412`
-- `routes/lpbfSimulation.ts:44`
-- `server/lpbfWorkerBridge.ts:58`
-- `src/components/KeyholeRaytracingLab.tsx:26-59`
-- `src/components/KeyholeRaytracingLab.tsx:116-127`
-- `docs/MODULE_EVIDENCE_INVENTORY.md:40`
+- `python/lpbf_keyhole_raytracing.py:1-5#Seeded optics on a prescribed cavity`
+- `python/lpbf_keyhole_raytracing.py::_number`
+- `python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing`
+- `python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing`
+- `routes/lpbfSimulation.ts:44#/api/python/lpbf-keyhole-raytracing`
+- `server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000`
+- `src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab`
+- `docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing`
 
 ## Tests
 
