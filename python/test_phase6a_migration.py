@@ -93,11 +93,15 @@ class TafelPresetTest(unittest.TestCase):
                 preset = tafel.corrosion_preset(ui_id)
                 self.assertEqual(float(density), preset["density_g_cm3"])
                 self.assertEqual(float(ew), preset["ew"])
-        # The client fallbacks default to the 316L preset values, not their own copies.
-        self.assertIn("dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight", text)
-        self.assertIn("dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density", text)
+        # Engine-fix lane (defect 6a): the client fallbacks no longer default to the 316L preset; a missing
+        # equivalent weight / density makes the rate unavailable (tests/tafel-unavailable.test.tsx).
+        self.assertNotIn("COMMON_ALLOYS[0].equivalentWeight", text.split("export function tryAutoFitTafel", 1)[1])
+        self.assertNotIn("COMMON_ALLOYS[0].density", text.split("export function tryAutoFitTafel", 1)[1])
         service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
-        self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
+        fallback = service.split("export function fallbackClientTafelCorrosionRate", 1)[1].split("\nexport ", 1)[0]
+        self.assertNotIn("24.8205", fallback)
+        self.assertNotIn("7.98", fallback)
+        self.assertNotIn("|| 1.25", fallback)
 
     def test_custom_composition_without_ew_data_is_refused_not_27(self):
         # Fix round item 5: no silent 27.0 g/equivalent when no counted element is known.
