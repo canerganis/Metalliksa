@@ -88,6 +88,10 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           absorptivity: alloyProps.absorptivity,
         },
       });
+      if (res.status === 'unavailable') {
+        setError(`Unavailable — ${res.reason ?? 'no solidification data'}`);
+        return;
+      }
       setResult(res);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Computation failed. Check the service and try again.');

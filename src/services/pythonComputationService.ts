@@ -515,6 +515,9 @@ export interface PythonBayesianOptimizationResult {
 
 // Phase 8: Solidification Microstructure Lab result type
 export interface SolidificationMicrostructureResult {
+  // "unavailable" (no CFD solidification data) carries null numerics; callers must check status first.
+  status?: 'available' | 'unavailable';
+  reason?: string;
   source: string;
   G_K_m: number;
   maxG_K_m: number;

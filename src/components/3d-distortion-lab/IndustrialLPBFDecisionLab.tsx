@@ -636,13 +636,19 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 <Layers className="w-4 h-4 text-teal-400" />
                 <h3 className="text-xs font-bold text-white">Solidification Microstructure</h3>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Metric label="PDAS (µm)" value={job.microstructure.PDAS_um?.toFixed(2) ?? "—"} hint="Hunt-Lu 1996" />
-                <Metric label="SDAS (µm)" value={job.microstructure.SDAS_um?.toFixed(2) ?? "—"} hint="Kirkwood 1985" />
-                <Metric label="Morphology" value={job.microstructure.morphology ?? "—"} hint={`G/R = ${(job.microstructure.G_K_m / Math.max(1e-9, job.microstructure.R_m_s)).toExponential(1)}`} />
-                <Metric label="Cooling Rate" value={job.microstructure.coolingRate_K_s?.toExponential(1) ?? "—"} hint="K/s" />
-              </div>
-              <p className="text-[9px] text-slate-500 mt-1">{job.microstructure.disclaimer}</p>
+              {job.microstructure.status === "unavailable" ? (
+                <p className="text-[11px] text-slate-400">Unavailable — {job.microstructure.reason}</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Metric label="PDAS (µm)" value={job.microstructure.PDAS_um?.toFixed(2) ?? "—"} hint={job.microstructure.source} />
+                    <Metric label="SDAS (µm)" value={job.microstructure.SDAS_um?.toFixed(2) ?? "—"} hint={job.microstructure.source} />
+                    <Metric label="Morphology" value={job.microstructure.morphology ?? "—"} hint={`G/R = ${(job.microstructure.G_K_m / Math.max(1e-9, job.microstructure.R_m_s)).toExponential(1)}`} />
+                    <Metric label="Cooling Rate" value={job.microstructure.coolingRate_K_s?.toExponential(1) ?? "—"} hint="K/s" />
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-1">{job.microstructure.disclaimer}</p>
+                </>
+              )}
             </div>
           )}
           <BuildJobKineticsPanel kinetics={job?.kinetics} />
