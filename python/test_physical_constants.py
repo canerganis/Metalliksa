@@ -1,4 +1,5 @@
 import ast
+import json
 import unittest
 from decimal import Decimal
 from pathlib import Path
@@ -75,9 +76,12 @@ class ExactConstantsTest(unittest.TestCase):
         self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.TRUNCATED_FARADAY)
         calphad = (HERE / "calphad_solver.py").read_text(encoding="utf-8")
         self.assertIn("GAS_CONSTANT_R = 8.314462618 ", calphad)
-        pourbaix = Path(pourbaix_solver.__file__).read_text(encoding="utf-8")
-        self.assertRegex(pourbaix, r"r_gas = 8\.314462618\s")
-        self.assertRegex(pourbaix, r"f_faraday = 96485\.33212\s")
+        # pourbaix_solver (Phase 6a structural migration) takes R/F from this module,
+        # still as the truncated values.
+        self.assertEqual(pourbaix_solver.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
+        self.assertEqual(pourbaix_solver.F_FARADAY, pc.TRUNCATED_FARADAY)
+        self.assertEqual(pourbaix_solver.calculate_nernst_slope(25.0),
+                         (2.302585093 * 8.314462618 * 298.15) / 96485.33212)
 
     def test_constant_metadata_fields(self):
         for c in (pc.AVOGADRO, pc.BOLTZMANN, pc.ELEMENTARY_CHARGE, pc.GAS_CONSTANT_R,
@@ -169,10 +173,22 @@ class AtomicWeightTest(unittest.TestCase):
             self.assertEqual(pc.atomic_weight(el), value, el)
 
     def test_tafel_table_values_match_registry(self):
-        import tafel_corrosion_rate_solver as tafel
-        for alloy_id, preset in tafel.ALLOY_LIBRARY.items():
+        # Snapshot of tafel ALLOY_LIBRARY at the pre-migration base revision.
+        snapshot = HERE / "golden" / "phase6a" / "tafel_corrosion_rate_solver" / "_source_tables.json"
+        library = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
+        self.assertEqual(len(library), 9)
+        for alloy_id, preset in library.items():
             for el, value in preset["atomic_weights"].items():
                 self.assertEqual(pc.atomic_weight(el), value, f"{alloy_id}:{el}")
+
+    def test_pourbaix_atomic_masses_match_registry(self):
+        import pourbaix_solver
+        snapshot = HERE / "golden" / "phase6a" / "pourbaix_solver" / "_source_tables.json"
+        old = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
+        self.assertEqual(set(old), set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS))
+        for el, entry in old.items():
+            self.assertEqual(pc.atomic_weight(el), entry["atomicMass"], el)
+            self.assertEqual(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS[el]["atomicMass"], entry["atomicMass"], el)
 
 
 if __name__ == "__main__":

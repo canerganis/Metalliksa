@@ -1,0 +1,229 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "solve_316l_default_fields",
+ "exitCode": 0,
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
+ "input": {
+  "allowableLossMm": 1.5,
+  "alloyId": "steel-316l",
+  "betaA": 0.12,
+  "betaC": 0.1,
+  "eCorr_V": -0.35,
+  "iCorr_uA_cm2": 1.25,
+  "initialThicknessMm": 5.0,
+  "specimenAreaCm2": 1.0,
+  "temperatureC": 25.0
+ },
+ "invocation": "python -B tafel_corrosion_rate_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "tafel_corrosion_rate_solver",
+ "solverFile": "python/tafel_corrosion_rate_solver.py",
+ "solverSha256": "43a45856fb5967398d8a78cf9539a5670209f054347a0c8f88bb3dfa2fc5a4af",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
+ "stdout": {
+  "allowableLossMm": 1.5,
+  "alloyId": "steel-316l",
+  "alloyName": "AISI 316L Stainless Steel",
+  "betaA": 0.12,
+  "betaC": 0.1,
+  "corrosionRateMmYr": 0.01316,
+  "corrosionRateMpy": 0.518,
+  "corrosionRateNmHr": 1.501,
+  "corrosionRateUmYr": 13.16,
+  "density_g_cm3": 7.98,
+  "eCorr_V": -0.35,
+  "equivalentWeight": 25.68,
+  "iCorr_uA_cm2": 1.25,
+  "initialThicknessMm": 5.0,
+  "isPythonEngine": true,
+  "massLoss_g_m2_day": 0.2874,
+  "massLoss_kg_m2_yr": 0.105,
+  "massLoss_mdd": 2.874,
+  "pythonCode": "# =========================================================================\n# ASTM G102 & G59 Automated Annual Corrosion Rate Calculation\n# Grounded in Faraday's Law & Stern-Geary Potentiodynamic Polarization\n# =========================================================================\nimport math\n\n# Inputs determined from Tafel Fit\ni_corr_uA_cm2 = 1.25  # Extrapolated corrosion current density\ne_corr_V = -0.35          # Corrosion potential\nbeta_a = 0.12            # Anodic Tafel slope (V/decade)\nbeta_c = 0.1            # Cathodic Tafel slope (V/decade)\n\n# Substrate properties (AISI 316L Stainless Steel)\nequivalent_weight = 25.68     # EW (g/equivalent)\ndensity_g_cm3 = 7.98        # Density rho (g/cm^3)\n\n# 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)\nB = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))\ni_corr_A_cm2 = i_corr_uA_cm2 * 1e-6\nRp = B / i_corr_A_cm2  # Ohm * cm^2\n\n# 2. Faraday Penetration Rate (ASTM G102)\n# Formula: CR (mm/yr) = 0.00327 * (i_corr * EW) / density\nK1 = 0.00327072  # mm * g / (uA * cm * year)\ncr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3\ncr_mpy = cr_mm_yr * 39.3701  # mils per year\n\nprint(f\"Stern-Geary B: {B:.4f} V\")\nprint(f\"Polarization Resistance Rp: {Rp:.1f} Ohm*cm^2\")\nprint(f\"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year ({cr_mpy:.3f} mpy)\")\n",
+  "rp_apparent_ohm": 18951.03,
+  "rp_ohm_cm2": 18951.0,
+  "rulPittingYears": 32.57,
+  "rulUniformYears": 114.01,
+  "severity": {
+   "code": "OUTSTANDING",
+   "color": "emerald",
+   "description": "Negligible corrosion degradation. Suitable for long-life aerospace, biomedical, and precision critical parts without corrosion allowance.",
+   "level": "Outstanding",
+   "recommendation": "Standard surface passivating inspection; corrosion allowance can be 0.00 mm."
+  },
+  "specimenAreaCm2": 1.0,
+  "standards": [
+   "ASTM G102-89(2015)",
+   "ASTM G59-97(2020)",
+   "NACE SP0169",
+   "ISO 8044"
+  ],
+  "sternGearyB_V": 0.02369,
+  "success": true,
+  "temperatureC": 25.0,
+  "temperatureSensitivity": [
+   {
+    "arrheniusFactor": 0.395,
+    "corrosionRateMmYr": 0.0052,
+    "corrosionRateMpy": 0.2,
+    "iCorr_uA_cm2": 0.4941,
+    "tempC": 5,
+    "tempK": 278.15
+   },
+   {
+    "arrheniusFactor": 0.639,
+    "corrosionRateMmYr": 0.0084,
+    "corrosionRateMpy": 0.33,
+    "iCorr_uA_cm2": 0.7986,
+    "tempC": 15,
+    "tempK": 288.15
+   },
+   {
+    "arrheniusFactor": 1.0,
+    "corrosionRateMmYr": 0.0132,
+    "corrosionRateMpy": 0.52,
+    "iCorr_uA_cm2": 1.25,
+    "tempC": 25,
+    "tempK": 298.15
+   },
+   {
+    "arrheniusFactor": 1.52,
+    "corrosionRateMmYr": 0.02,
+    "corrosionRateMpy": 0.79,
+    "iCorr_uA_cm2": 1.9004,
+    "tempC": 35,
+    "tempK": 308.15
+   },
+   {
+    "arrheniusFactor": 2.251,
+    "corrosionRateMmYr": 0.0296,
+    "corrosionRateMpy": 1.17,
+    "iCorr_uA_cm2": 2.8141,
+    "tempC": 45,
+    "tempK": 318.15
+   },
+   {
+    "arrheniusFactor": 3.255,
+    "corrosionRateMmYr": 0.0428,
+    "corrosionRateMpy": 1.69,
+    "iCorr_uA_cm2": 4.0685,
+    "tempC": 55,
+    "tempK": 328.15
+   },
+   {
+    "arrheniusFactor": 4.604,
+    "corrosionRateMmYr": 0.0606,
+    "corrosionRateMpy": 2.38,
+    "iCorr_uA_cm2": 5.7553,
+    "tempC": 65,
+    "tempK": 338.15
+   },
+   {
+    "arrheniusFactor": 6.385,
+    "corrosionRateMmYr": 0.084,
+    "corrosionRateMpy": 3.31,
+    "iCorr_uA_cm2": 7.9808,
+    "tempC": 75,
+    "tempK": 348.15
+   },
+   {
+    "arrheniusFactor": 8.693,
+    "corrosionRateMmYr": 0.1144,
+    "corrosionRateMpy": 4.5,
+    "iCorr_uA_cm2": 10.8667,
+    "tempC": 85,
+    "tempK": 358.15
+   }
+  ],
+  "timelineProjections": [
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.046,
+    "lossUniformMm": 0.0132,
+    "remainingPittingMm": 4.954,
+    "remainingWallMm": 4.987,
+    "wallLossPct": 0.26,
+    "year": 1
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.0921,
+    "lossUniformMm": 0.0263,
+    "remainingPittingMm": 4.908,
+    "remainingWallMm": 4.974,
+    "wallLossPct": 0.53,
+    "year": 2
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.1381,
+    "lossUniformMm": 0.0395,
+    "remainingPittingMm": 4.862,
+    "remainingWallMm": 4.961,
+    "wallLossPct": 0.79,
+    "year": 3
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.2302,
+    "lossUniformMm": 0.0658,
+    "remainingPittingMm": 4.77,
+    "remainingWallMm": 4.934,
+    "wallLossPct": 1.32,
+    "year": 5
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.3223,
+    "lossUniformMm": 0.0921,
+    "remainingPittingMm": 4.678,
+    "remainingWallMm": 4.908,
+    "wallLossPct": 1.84,
+    "year": 7
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.4605,
+    "lossUniformMm": 0.1316,
+    "remainingPittingMm": 4.54,
+    "remainingWallMm": 4.868,
+    "wallLossPct": 2.63,
+    "year": 10
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.6907,
+    "lossUniformMm": 0.1973,
+    "remainingPittingMm": 4.309,
+    "remainingWallMm": 4.803,
+    "wallLossPct": 3.95,
+    "year": 15
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 0.921,
+    "lossUniformMm": 0.2631,
+    "remainingPittingMm": 4.079,
+    "remainingWallMm": 4.737,
+    "wallLossPct": 5.26,
+    "year": 20
+   },
+   {
+    "exceedsAllowance": false,
+    "lossPittingMm": 1.1512,
+    "lossUniformMm": 0.3289,
+    "remainingPittingMm": 3.849,
+    "remainingWallMm": 4.671,
+    "wallLossPct": 6.58,
+    "year": 25
+   }
+  ]
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { runPythonScript } from "../server/processOrchestrator.ts";
+import { pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
 
 export const characterizationRouter = Router();
 
@@ -19,7 +20,7 @@ const UPLOAD_FIELDS = [
 
 async function handlePythonDispatch(scriptPath: string, payload: any, res: Response) {
   try {
-    const pyRes = await runPythonScript(scriptPath, payload);
+    const pyRes = await characterizationDeps.runPythonScript(scriptPath, payload);
     if (!pyRes.stdout && pyRes.stderr) {
       console.warn(`[Python stderr: ${scriptPath}]`, pyRes.stderr);
     }
@@ -29,7 +30,7 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
     } catch {
       parsed = { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
     }
-    return res.json(parsed);
+    return res.status(pythonDispatchStatus(parsed)).json(parsed);
   } catch (err: any) {
     console.error(`[Python error: ${scriptPath}]`, err);
     return res.status(500).json({
