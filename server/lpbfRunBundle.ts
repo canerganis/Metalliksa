@@ -12,6 +12,8 @@ import { LpbfSourceRepository } from './lpbfSourceRepository';
 import { backupSourceBundle, verifySourceBundle } from './lpbfSourceBundle';
 import { storeGpuPilotArtifactResolver } from './lpbfGpuPilotArtifacts';
 import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
+import { isDeepStrictEqual } from 'node:util';
+import { deriveProxyCampaignRunBinding, validateArchivedProxySections } from './lpbfProxyCampaignBinding';
 
 export interface RunBundleManifest {
   schemaVersion: 1 | 2;
@@ -155,6 +157,26 @@ async function verifyContents(root: string, manifest: RunBundleManifest, complet
     || (manifest.schemaVersion === 1 && refs.campaignCount !== 0)) throw new Error('Run bundle metadata counts mismatch');
   const store = new LpbfArtifactStore(path.join(root, 'artifacts'), { readOnly: true });
   for (const ref of refs.artifacts.values()) await store.verify(ref);
+  const runs = new LpbfRunRepository(path.join(root, 'runs.sqlite'), { readOnly: true });
+  try {
+    for (const campaign of runs.allProxyCampaigns()) {
+      if (campaign.document.schemaVersion !== 2) continue;
+      for (const track of campaign.document.tracks) {
+        const run = runs.get(track.runIdentity.runId);
+        const derived = run && deriveProxyCampaignRunBinding(run, campaign.document.sourceBinding);
+        if (!run || !derived || !isDeepStrictEqual(track.runIdentity, derived.runIdentity)) {
+          throw new Error('Campaign archived run provenance binding mismatch');
+        }
+        if (!isDeepStrictEqual(track.observations, derived.observations)) {
+          throw new Error('Campaign captured section geometry or observations binding mismatch');
+        }
+        const result = JSON.parse(run.document.capture.resultJson);
+        if (await validateArchivedProxySections(result, store)) {
+          throw new Error('Campaign captured section artifact verification failed');
+        }
+      }
+    }
+  } finally { runs.close(); }
   const resolver = storeGpuPilotArtifactResolver(store);
   for (const item of refs.gpuResults) await verifyGpuPilotArchive(item.result, item.runId, resolver);
   verifyInventory(root, refs, completed);

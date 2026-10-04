@@ -17,7 +17,8 @@ function v2Campaign(runs: Array<{ runId: string; documentSha256: string }>, sour
   const runIds = runs.map(run => run.runId);
   const runIdentity = (runId: string) => ({ runId, runDocumentSha256: runs.find(run => run.runId === runId)!.documentSha256,
     resultArtifact: { path: 'capture/result.json', sha256: sha(`result-${runId}`), size_bytes: 100 },
-    inputSha256: sha(`input-${runId}`), materialSha256: sha(`material-${runId}`), materialId: 'in718',
+    inputSha256: sha(`input-${runId}`), executedSettings: { beamDiameter_um: 67 },
+    materialSha256: sha(`material-${runId}`), materialId: 'in718',
     materialRevisionSha256: sha(`revision-${runId}`),
     coreContract: { schemaVersion: 1, modelId: 'thermal-v1', solverId: 'solver-v1', actualBackend: 'cpu' } });
   const tracks = runIds.map(runId => {
@@ -218,7 +219,8 @@ test('saved proxy campaigns list in creation order and reject broken archived re
     tracks: runs.map(run => ({ runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
   repository.saveProxyCampaign(campaign);
   const v2 = v2Campaign(runs.map(run => ({ runId: run.document.runId, documentSha256: run.documentSha256 })), v2SourceBinding);
-  repository.saveProxyCampaign(v2);
+  assert.throws(() => repository.saveProxyCampaign(v2), /provenance or section binding/i,
+    'v2 campaign save rejects fabricated identities that do not match captured run evidence');
   for (const mutate of [
     (doc: any) => { doc.beamInputDeclaration.value_um = 72; },
     (doc: any) => { doc.beamInputDeclaration.sourceBinding.documentSha256 = sha('other'); },
@@ -227,6 +229,8 @@ test('saved proxy campaigns list in creation order and reject broken archived re
     (doc: any) => { doc.beamInputDeclaration.clientNote = 'forged'; },
     (doc: any) => { doc.beamInputDeclaration.definition = 'FWHM'; },
     (doc: any) => { doc.beamInputDeclaration.mappingStatus = 'measured-profile-matched'; },
+    (doc: any) => { doc.sourceBinding.experimentalTrackIds = ['track-a']; },
+    (doc: any) => { doc.sourceBinding.experimentalTrackIds = ['track-a', 'track-a']; },
     (doc: any) => { delete doc.beamInputDeclaration; },
     (doc: any) => { doc.clientNote = 'forged'; },
     (doc: any) => { doc.claimBoundary.experimentalValidation = true; },
@@ -253,10 +257,9 @@ test('saved proxy campaigns list in creation order and reject broken archived re
 
   const service = new LpbfNistProxyCampaignService(runRoot, path.join(root, 'sources'));
   const listed = await service.list();
-  assert.equal(listed.length, 2);
-  assert.deepEqual(new Set(listed.map(item => item.campaignId)), new Set([campaign.campaignId, v2.campaignId]));
+  assert.equal(listed.length, 1);
+  assert.deepEqual(new Set(listed.map(item => item.campaignId)), new Set([campaign.campaignId]));
   assert.equal(listed.find(item => item.campaignId === campaign.campaignId)!.documentSha256, sha(JSON.stringify(campaign)));
-  assert.equal(listed.find(item => item.campaignId === v2.campaignId)!.documentSha256, sha(JSON.stringify(v2)));
 
   const db = new DatabaseSync(filename);
   const changed = JSON.parse(String(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns WHERE campaign_id=?').get(campaign.campaignId)!.document_json));

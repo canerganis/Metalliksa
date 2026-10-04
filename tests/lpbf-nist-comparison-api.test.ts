@@ -369,6 +369,38 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(rereadMismatch.campaign, null);
   assert.match(rereadMismatch.validation.reasons.join(' '), /changed or failed SHA-256 verification after store verification/i);
 
+  const table4Binding = proxyPreview.body.campaign.sourceBinding;
+  const sourceArtifactSha = table4Binding.artifactSha256;
+  const originalSourceVerify = LpbfArtifactStore.prototype.verify;
+  let sourceArtifactPath = '';
+  let originalTable4Bytes: Buffer | null = null;
+  let table4Verifications = 0;
+  LpbfArtifactStore.prototype.verify = async function(ref) {
+    const verified = await originalSourceVerify.call(this, ref);
+    if (ref.sha256 === sourceArtifactSha && ++table4Verifications === 1) {
+      sourceArtifactPath = verified.path;
+      const capturedBytes = readFileSync(verified.path);
+      originalTable4Bytes = capturedBytes;
+      const originalText = capturedBytes.toString('utf8');
+      const changedText = originalText.replace(': ', ':\t');
+      assert.notEqual(changedText, originalText, 'fixture must contain JSON whitespace to mutate');
+      assert.equal(Buffer.byteLength(changedText), capturedBytes.length, 'Table 4 mutation must preserve byte size');
+      assert.deepEqual(JSON.parse(changedText), JSON.parse(originalText), 'case-0 settings and all Table 4 values stay unchanged');
+      writeFileSync(verified.path, Buffer.from(changedText, 'utf8'));
+    }
+    return verified;
+  };
+  let table4RereadMismatch;
+  try {
+    table4RereadMismatch = await new LpbfNistProxyCampaignService(runRoot, sourceRoot).preview(proxyRunIds, '0');
+  } finally {
+    LpbfArtifactStore.prototype.verify = originalSourceVerify;
+    if (originalTable4Bytes && sourceArtifactPath) writeFileSync(sourceArtifactPath, originalTable4Bytes);
+  }
+  assert.equal(table4Verifications, 1, 'test must mutate the source artifact only after its successful store verification');
+  assert.equal(table4RereadMismatch.campaign, null);
+  assert.match(table4RereadMismatch.validation.reasons.join(' '), /Table 4 source artifact bytes failed exact SHA-256 verification/i);
+
   const createProxy = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds,
       caseNumber: '0', previewSha256: proxyPreview.body.previewSha256 }) });

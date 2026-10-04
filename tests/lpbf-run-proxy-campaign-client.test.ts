@@ -7,17 +7,17 @@ const signal = new AbortController().signal;
 const previewSha256 = 'd'.repeat(64);
 
 function campaignDocument() {
-  const sourceBinding = { datasetId: 'nist-amb2022-03-optical-table4-local-v1', revision: 4,
+  const sourceBinding = () => ({ datasetId: 'nist-amb2022-03-optical-table4-local-v1', revision: 4,
     documentSha256: 'f'.repeat(64), artifactPath: 'table4-aggregate-v2.json',
     artifactSha256: 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da',
-    artifactSizeBytes: 4321, caseNumber: '0' };
+    artifactSizeBytes: 4321, caseNumber: '0' });
   const identity = (runId: string, index: number) => ({ runId, runDocumentSha256: String(index + 1).repeat(64),
     resultArtifact: { path: 'capture/result.json', sha256: '8'.repeat(64), size_bytes: 2048 },
     inputSha256: '7'.repeat(64), materialSha256: '6'.repeat(64), materialId: 'in718',
     materialRevisionSha256: '5'.repeat(64), coreContract: { schemaVersion: 1, modelId: 'stationary-enthalpy-conduction-v1',
       solverId: 'enthalpy-fv-6', actualBackend: 'numpy-reference' } });
   return { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign', campaignId: 'e'.repeat(32),
-    benchmark: 'AMB2022-03-TMPG', caseNumber: '0', sourceBinding,
+    benchmark: 'AMB2022-03-TMPG', caseNumber: '0', sourceBinding: sourceBinding(),
     claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
       experimentalValidation: false, opticalOperatorMatched: false },
     samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: [4.9, 6],
@@ -29,23 +29,30 @@ function campaignDocument() {
         { sectionId: 'x-4p9mm', coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: 4.9,
           surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100 + index, depth_um: 50 + index },
           operator: { sectionOperatorId: 'section-v1', interpolationOperatorId: 'linear-v1', contourOperatorId: 'crossing-v1', evidenceClass: 'thermal-proxy-only' },
-          provenance: { sourceBinding, runIdentity: identity(runId, index) } },
+          provenance: { sourceBinding: sourceBinding(), runIdentity: identity(runId, index) } },
         { sectionId: 'x-6p0mm', coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: 6,
           surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 101 + index, depth_um: 51 + index },
           operator: { sectionOperatorId: 'section-v1', interpolationOperatorId: 'linear-v1', contourOperatorId: 'crossing-v1', evidenceClass: 'thermal-proxy-only' },
-          provenance: { sourceBinding, runIdentity: identity(runId, index) } },
+          provenance: { sourceBinding: sourceBinding(), runIdentity: identity(runId, index) } },
       ] })),
   };
 }
 
 function v2CampaignDocument() {
   const legacy = campaignDocument();
-  const sourceBinding = legacy.sourceBinding;
+  const sourceBinding = { ...legacy.sourceBinding };
   return { ...legacy, schemaVersion: 2, beamInputDeclaration: { status: 'published-source-declared',
     definition: 'D4sigma', value_um: 67, mappingStatus: 'conditional-ideal-Gaussian',
     measuredProfileMatched: false, sourceBinding },
   samplingPlan: { ...legacy.samplingPlan, replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
-  tracks: legacy.tracks.map(track => ({ ...track, replicateKind: 'reproducibility-execution' })) };
+  tracks: legacy.tracks.map(track => {
+    const runIdentity = { ...track.runIdentity, executedSettings: { beamDiameter_um: 67, laserPower_W: 200 } };
+    return { ...track, replicateKind: 'reproducibility-execution', runIdentity,
+      observations: track.observations.map(observation => ({ ...observation,
+        provenance: { sourceBinding: { ...observation.provenance.sourceBinding }, runIdentity: { ...runIdentity,
+          coreContract: { ...runIdentity.coreContract }, resultArtifact: { ...runIdentity.resultArtifact },
+          executedSettings: { ...runIdentity.executedSettings } } } })) };
+  }) };
 }
 
 const validation = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
@@ -86,15 +93,31 @@ test('proxy campaign client accepts v2 declared input while preserving legacy v1
   t.mock.restoreAll();
 });
 
-test('proxy campaign client rejects isolated v2 declaration, root, and replicate mutations', async t => {
+test('proxy campaign client rejects each isolated v2 declaration, root, and replicate mutation', async t => {
   const valid = v2CampaignDocument();
   const invalids: [string, (campaign: any) => void][] = [
     ['wrong definition', campaign => { campaign.beamInputDeclaration.definition = 'FWHM'; }],
+    ['wrong declared value', campaign => { campaign.beamInputDeclaration.value_um = 68; }],
     ['wrong mappingStatus', campaign => { campaign.beamInputDeclaration.mappingStatus = 'measured'; }],
+    ['wrong declaration status', campaign => { campaign.beamInputDeclaration.status = 'measured-source'; }],
+    ['measured profile claim', campaign => { campaign.beamInputDeclaration.measuredProfileMatched = true; }],
+    ['declaration source mismatch', campaign => { campaign.beamInputDeclaration.sourceBinding.documentSha256 = 'a'.repeat(64); }],
+    ['extra declaration key', campaign => { campaign.beamInputDeclaration.unexpected = true; }],
     ['missing declaration', campaign => { delete campaign.beamInputDeclaration; }],
     ['unknown root key', campaign => { campaign.unexpected = true; }],
+    ['optional experimental IDs are prohibited', campaign => { campaign.sourceBinding.experimentalTrackIds = ['track-1']; }],
+    ['provenance source mismatch', campaign => { campaign.tracks[0].observations[0].provenance.sourceBinding.revision++; }],
     ['wrong replicateSemantics', campaign => { campaign.samplingPlan.replicateSemantics = 'independent-computational-runs-only'; }],
     ['wrong replicateKind', campaign => { campaign.tracks[0].replicateKind = 'independent-computational-run'; }],
+    ['observations must be an array', campaign => { campaign.tracks[0].observations = ''; }],
+    ['unexpected observation key', campaign => { campaign.tracks[0].observations[0].unexpected = true; }],
+    ['observation provenance run identity mismatch', campaign => {
+      campaign.tracks[0].observations[0].provenance.runIdentity.runId = runIds[1];
+    }],
+    ['invalid nested result artifact path', campaign => { campaign.tracks[0].runIdentity.resultArtifact.path = 'other.json'; }],
+    ['invalid nested core contract key', campaign => { campaign.tracks[0].runIdentity.coreContract.unexpected = true; }],
+    ['invalid v2 executed settings', campaign => { delete campaign.tracks[0].runIdentity.executedSettings.beamDiameter_um; }],
+    ['invalid v2 executed settings provenance', campaign => { campaign.tracks[0].observations[0].provenance.runIdentity.executedSettings.beamDiameter_um = 68; }],
   ];
   for (const [label, mutate] of invalids) {
     const campaign = structuredClone(valid);
@@ -103,6 +126,17 @@ test('proxy campaign client rejects isolated v2 declaration, root, and replicate
     await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i, label);
     t.mock.restoreAll();
   }
+});
+
+test('proxy campaign client explicitly requires observations to be an array', async t => {
+  const campaign = v2CampaignDocument();
+  const track = campaign.tracks[0];
+  const validObservations = track.observations;
+  track.observations = {
+    *[Symbol.iterator]() { yield* validObservations; },
+  } as unknown as typeof track.observations;
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ campaign, validation, previewSha256 }) } as Response));
+  await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i);
 });
 
 test('proxy campaign client rejects residuals, validation claims, and untrusted measurements', async t => {

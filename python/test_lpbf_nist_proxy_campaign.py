@@ -127,6 +127,13 @@ def _campaign_v2():
     campaign["samplingPlan"]["replicateSemantics"] = "reproducibility-evidence-not-independent-replicates"
     for track in campaign["tracks"]:
         track["replicateKind"] = "reproducibility-execution"
+        track["runIdentity"]["executedSettings"] = {
+            "surfaceMode": "bare-plate", "tracks": 1, "layers": 1,
+            "trackLength_um": 10000, "scanAngle_deg": 0,
+            "power_W": 200, "speed_mm_s": 800, "beamDiameter_um": 67,
+        }
+        for observation in track["observations"]:
+            observation["provenance"]["runIdentity"] = copy.deepcopy(track["runIdentity"])
     return campaign
 
 
@@ -169,6 +176,25 @@ class TestNistProxyCampaign(unittest.TestCase):
         self.assertEqual(report["status"], "unavailable")
         self.assertTrue(any("mappingStatus must be conditional-ideal-Gaussian" in reason
                             for reason in report["reasons"]))
+
+    def test_v2_run_identity_requires_captured_settings_and_trusted_beam(self):
+        campaign = _campaign_v2()
+        track = campaign["tracks"][0]
+        track["runIdentity"]["executedSettings"]["beamDiameter_um"] = 68
+        for observation in track["observations"]:
+            observation["provenance"]["runIdentity"] = copy.deepcopy(track["runIdentity"])
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("executedSettings.beamDiameter_um must match" in reason for reason in report["reasons"]))
+
+        campaign = _campaign_v2()
+        track = campaign["tracks"][0]
+        del track["runIdentity"]["executedSettings"]
+        for observation in track["observations"]:
+            observation["provenance"]["runIdentity"] = copy.deepcopy(track["runIdentity"])
+        report = validate_proxy_campaign(campaign, _source_binding(), 67.0)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("missing required fields: executedSettings" in reason for reason in report["reasons"]))
 
     def test_v1_rejects_wrong_replicate_semantics(self):
         campaign = _campaign()
@@ -352,12 +378,26 @@ class TestNistProxyCampaign(unittest.TestCase):
         source["experimentalTrackIds"] = ["track-1"]
         campaign = _campaign()
         campaign["sourceBinding"]["experimentalTrackIds"] = ["track-1"]
+        report = validate_proxy_campaign(campaign, source)
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("unsupported fields: experimentalTrackIds" in reason for reason in report["reasons"]))
+
+    def test_experimental_track_ids_list_must_be_unique_and_source_provided(self):
+        campaign = _campaign()
+        campaign["sourceBinding"]["experimentalTrackIds"] = ["track-1", "track-1"]
         for track in campaign["tracks"]:
             for observation in track["observations"]:
-                observation["provenance"]["sourceBinding"]["experimentalTrackIds"] = ["track-1"]
-        campaign["tracks"][0]["experimentalTrackId"] = "track-1"
-        report = validate_proxy_campaign(campaign, source)
-        self.assertEqual(report["status"], "proxy-screening-only")
+                observation["provenance"]["sourceBinding"]["experimentalTrackIds"] = ["track-1", "track-1"]
+        report = validate_proxy_campaign(campaign, _source_binding())
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("unsupported fields: experimentalTrackIds" in reason for reason in report["reasons"]))
+
+
+        campaign = _campaign()
+        campaign["tracks"][0]["experimentalTrackId"] = "invented-track"
+        report = validate_proxy_campaign(campaign, _source_binding())
+        self.assertEqual(report["status"], "unavailable")
+        self.assertTrue(any("not supplied by the trusted source revision" in reason for reason in report["reasons"]))
 
     def test_a_trusted_source_binding_is_required(self):
         report = validate_proxy_campaign(_campaign())

@@ -16,6 +16,18 @@ function overlaps(a: string, b: string): boolean {
   return !relative || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
 }
 
+function safeBundleError(error: unknown, action: 'verify' | 'restore' | 'import'): string {
+  const message = error instanceof Error ? error.message : '';
+  if (/Campaign Table 4 source artifact binding mismatch/.test(message)) return 'Run bundle campaign source binding verification failed.';
+  if (/Campaign archived run provenance binding mismatch/.test(message)) return 'Run bundle campaign execution provenance verification failed.';
+  if (/Campaign captured section geometry or observations binding mismatch|Campaign captured section artifact verification failed/.test(message)) {
+    return 'Run bundle campaign section evidence verification failed.';
+  }
+  if (/Proxy campaign metadata integrity failed/.test(message)) return 'Run bundle campaign metadata verification failed.';
+  if (action === 'import') return 'Portable run bundle integrity verification failed.';
+  return action === 'restore' ? 'Run bundle restore integrity verification failed.' : 'Run bundle integrity verification failed.';
+}
+
 /** Bundles and restored copies remain server-local and separate from live stores. */
 export class LpbfRunBundleService {
   private readonly runRoot: string;
@@ -84,15 +96,15 @@ export class LpbfRunBundleService {
     try {
       const manifest = await verifyRunBundle(target);
       return { bundleId, storage: 'server-local-directory' as const, verified: true, manifest };
-    } catch {
-      throw new LpbfRunArchiveError(409, 'Run bundle integrity verification failed.');
+    } catch (error) {
+      throw new LpbfRunArchiveError(409, safeBundleError(error, 'verify'));
     }
   }
 
   async download(bundleId: string): Promise<Readable> {
     const source = this.exported(bundleId);
     try { await verifyRunBundle(source); }
-    catch { throw new LpbfRunArchiveError(409, 'Run bundle integrity verification failed.'); }
+    catch (error) { throw new LpbfRunArchiveError(409, safeBundleError(error, 'verify')); }
     return createRunBundleTar(source);
   }
 
@@ -113,7 +125,7 @@ export class LpbfRunBundleService {
         await rm(destination, { recursive: true, force: true });
       }
       if (error instanceof LpbfRunArchiveError) throw error;
-      throw new LpbfRunArchiveError(409, 'Portable run bundle integrity verification failed.');
+      throw new LpbfRunArchiveError(409, safeBundleError(error, 'import'));
     }
   }
 
@@ -124,7 +136,7 @@ export class LpbfRunBundleService {
 
   private async restoreFrom(source: string) {
     try { await verifyRunBundle(source); }
-    catch { throw new LpbfRunArchiveError(409, 'Run bundle restore or integrity verification failed.'); }
+    catch (error) { throw new LpbfRunArchiveError(409, safeBundleError(error, 'restore')); }
     const restoreId = this.id(this.newId());
     const destination = path.join(this.directory('restores', true), restoreId);
     if (existsSync(destination)) throw new LpbfRunArchiveError(409, 'Restore ID already exists.');
@@ -132,8 +144,8 @@ export class LpbfRunBundleService {
       await restoreRunBundle(source, destination);
       const manifest = await verifyRunBundle(destination);
       return { bundleId: path.basename(source), restoreId, storage: 'server-local-directory' as const, verified: true as const, manifest };
-    } catch {
-      throw new LpbfRunArchiveError(409, 'Run bundle restore or integrity verification failed.');
+    } catch (error) {
+      throw new LpbfRunArchiveError(409, safeBundleError(error, 'restore'));
     }
   }
 

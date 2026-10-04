@@ -9,6 +9,7 @@ import { artifactRelativePath } from './lpbfArtifactStore';
 import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
 import { strictJsonEqual } from './lpbfBoundJson';
 import { validateGpuPilotArchiveMetadata } from './lpbfGpuRunArchive';
+import { deriveProxyCampaignRunBinding } from './lpbfProxyCampaignBinding';
 
 export interface RunCapture {
   schemaVersion: 1; jobId: string; resultJson: string; inputJson: string; materialJson: string;
@@ -203,7 +204,7 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
     const declaration = document.beamInputDeclaration;
     try {
       keys(declaration, ['status', 'definition', 'value_um', 'mappingStatus', 'measuredProfileMatched', 'sourceBinding']);
-      keys(document.sourceBinding, ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber'], ['experimentalTrackIds']);
+      keys(document.sourceBinding, ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber']);
     } catch { throw new Error('Invalid v2 proxy campaign source binding or beam input declaration fields'); }
     const sourceBinding = document.sourceBinding;
     if (declaration.status !== 'published-source-declared' || declaration.definition !== 'D4sigma'
@@ -220,9 +221,7 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
       || !Number.isSafeInteger(sourceBinding.revision) || sourceBinding.revision < 1
       || !hash(sourceBinding.documentSha256) || !hash(sourceBinding.artifactSha256)
       || !Number.isSafeInteger(sourceBinding.artifactSizeBytes) || sourceBinding.artifactSizeBytes <= 0
-      || (Object.hasOwn(sourceBinding, 'experimentalTrackIds')
-        && (!Array.isArray(sourceBinding.experimentalTrackIds)
-          || sourceBinding.experimentalTrackIds.some((value: unknown) => typeof value !== 'string' || !value.trim())))) {
+      || Object.hasOwn(sourceBinding, 'experimentalTrackIds')) {
       throw new Error('Invalid v2 proxy campaign beam input declaration');
     }
     const expectedId = digest(JSON.stringify({ schemaVersion: 2, runIds: document.tracks.map((track: any) => track.runIdentity.runId),
@@ -254,7 +253,7 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
         schemaError(`track ${trackIndex} identity or reproducibility kind`);
       }
       const identity = track.runIdentity;
-      try { keys(identity, ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'materialSha256',
+      try { keys(identity, ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'executedSettings', 'materialSha256',
         'materialId', 'materialRevisionSha256', 'coreContract']); }
       catch { schemaError(`track ${trackIndex} run identity fields`); }
       if (track.simulatedTrackId !== `sim-${identity.runId}`) schemaError(`track ${trackIndex} simulated track binding`);
@@ -262,7 +261,9 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
       catch { schemaError(`track ${trackIndex} result artifact fields`); }
       if (identity.resultArtifact.path !== 'capture/result.json' || !hash(identity.resultArtifact.sha256)
         || !Number.isSafeInteger(identity.resultArtifact.size_bytes) || identity.resultArtifact.size_bytes <= 0
-        || !hash(identity.inputSha256) || !hash(identity.materialSha256)
+        || !hash(identity.inputSha256) || !identity.executedSettings || typeof identity.executedSettings !== 'object'
+        || Array.isArray(identity.executedSettings) || !Number.isFinite(identity.executedSettings.beamDiameter_um)
+        || identity.executedSettings.beamDiameter_um <= 0 || !hash(identity.materialSha256)
         || typeof identity.materialId !== 'string' || !identity.materialId.trim()
         || !hash(identity.materialRevisionSha256)) schemaError(`track ${trackIndex} run identity values`);
       try { keys(identity.coreContract, ['schemaVersion', 'modelId', 'solverId', 'actualBackend']); }
@@ -385,6 +386,13 @@ export class LpbfRunRepository {
         const identity = track.runIdentity;
         const run = this.get(identity.runId);
         if (!run || run.documentSha256 !== identity.runDocumentSha256) throw new Error('Campaign archived run reference mismatch');
+        if (document.schemaVersion === 2) {
+          const derived = deriveProxyCampaignRunBinding(run, document.sourceBinding);
+          if (!derived || !isDeepStrictEqual(identity, derived.runIdentity)
+            || !isDeepStrictEqual(track.observations, derived.observations)) {
+            throw new Error('Campaign archived run provenance or section binding mismatch');
+          }
+        }
       }
       const createdAt = new Date().toISOString(), documentSha256 = digest(json);
       this.db.prepare('INSERT INTO lpbf_proxy_campaigns VALUES (?, ?, ?, ?)').run(document.campaignId, json, documentSha256, createdAt);

@@ -60,16 +60,16 @@ interface NistProxySamplingPlan<ReplicateSemantics extends string> {
   replicateSemantics: ReplicateSemantics;
 }
 
-interface NistProxyTrack<ReplicateKind extends string> {
+interface NistProxyTrack<ReplicateKind extends string, Identity extends NistProxyRunIdentity = NistProxyRunIdentity> {
     simulatedTrackId: string;
     experimentalTrackId: null;
     replicateKind: ReplicateKind;
-    runIdentity: NistProxyRunIdentity;
+    runIdentity: Identity;
     observations: { sectionId: 'x-4p9mm' | 'x-6p0mm'; coordinateFrame: 'scan-start-relative'; scanDirection: '+X';
       distanceFromScanStart_mm: 4.9 | 6.0; surfaceZ_m: 0; status: 'thermal-proxy';
       geometry: { width_um: number; depth_um: number };
       operator: { sectionOperatorId: string; interpolationOperatorId: string; contourOperatorId: string; evidenceClass: 'thermal-proxy-only' };
-      provenance: { sourceBinding: NistProxyCampaign['sourceBinding']; runIdentity: NistProxyRunIdentity } }[];
+      provenance: { sourceBinding: NistProxyCampaign['sourceBinding']; runIdentity: Identity } }[];
 }
 
 export type NistProxyCampaign = NistProxyCampaignShared & (
@@ -78,7 +78,7 @@ export type NistProxyCampaign = NistProxyCampaignShared & (
     tracks: NistProxyTrack<'independent-computational-run'>[] }
   | { schemaVersion: 2; beamInputDeclaration: NistProxyBeamInputDeclaration;
     samplingPlan: NistProxySamplingPlan<'reproducibility-evidence-not-independent-replicates'>;
-    tracks: NistProxyTrack<'reproducibility-execution'>[] }
+    tracks: NistProxyTrack<'reproducibility-execution', NistProxyRunIdentityV2>[] }
 );
 
 export interface NistProxyRunIdentity {
@@ -90,6 +90,10 @@ export interface NistProxyRunIdentity {
   materialId: string;
   materialRevisionSha256: string;
   coreContract: { schemaVersion: number; modelId: string; solverId: string; actualBackend: string };
+}
+
+export interface NistProxyRunIdentityV2 extends NistProxyRunIdentity {
+  executedSettings: Record<string, unknown> & { beamDiameter_um: number };
 }
 
 export interface NistProxyCampaignValidation {
@@ -393,8 +397,12 @@ export async function importRun(jobId: string, sources: RunSourceLink[], signal:
 const campaignId = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
 const exactKeys = (value: Record<string, unknown>, expected: string) => Object.keys(value).sort().join(',') === expected;
 
-function proxyRunIdentity(value: unknown, expectedRunId: string): value is NistProxyRunIdentity {
-  return object(value) && exactKeys(value, 'coreContract,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId')
+function proxyRunIdentity(value: unknown, expectedRunId: string, schemaVersion: 1 | 2,
+  expectedCase: NistOpticalCaseNumber): value is NistProxyRunIdentity | NistProxyRunIdentityV2 {
+  const expectedKeys = schemaVersion === 2
+    ? 'coreContract,executedSettings,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId'
+    : 'coreContract,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId';
+  return object(value) && exactKeys(value, expectedKeys)
     && value.runId === expectedRunId && sha(value.runDocumentSha256) && sha(value.inputSha256)
     && sha(value.materialSha256) && sha(value.materialRevisionSha256) && typeof value.materialId === 'string'
     && object(value.resultArtifact) && exactKeys(value.resultArtifact, 'path,sha256,size_bytes')
@@ -402,7 +410,10 @@ function proxyRunIdentity(value: unknown, expectedRunId: string): value is NistP
     && Number.isSafeInteger(value.resultArtifact.size_bytes) && (value.resultArtifact.size_bytes as number) >= 0
     && object(value.coreContract) && exactKeys(value.coreContract, 'actualBackend,modelId,schemaVersion,solverId')
     && Number.isSafeInteger(value.coreContract.schemaVersion) && typeof value.coreContract.modelId === 'string'
-    && typeof value.coreContract.solverId === 'string' && typeof value.coreContract.actualBackend === 'string';
+    && typeof value.coreContract.solverId === 'string' && typeof value.coreContract.actualBackend === 'string'
+    && (schemaVersion === 1 || (object(value.executedSettings) && finite(value.executedSettings.beamDiameter_um)
+      && value.executedSettings.beamDiameter_um === MELT_POOL_LITERATURE_CASES.find(
+        item => item.id === `nist-amb2022-03-${expectedCase}`)?.beamDiameter_um));
 }
 
 function proxyCampaignValidation(value: unknown): asserts value is NistProxyCampaignValidation {
@@ -460,7 +471,7 @@ function proxyCampaign(value: unknown, expectedRunIds: string[], expectedCase: N
     if (!object(track) || !exactKeys(track, 'experimentalTrackId,observations,replicateKind,runIdentity,simulatedTrackId')
       || track.simulatedTrackId !== `sim-${expectedRunIds[index]}` || track.experimentalTrackId !== null
       || track.replicateKind !== (value.schemaVersion === 1 ? 'independent-computational-run' : 'reproducibility-execution')
-      || !proxyRunIdentity(track.runIdentity, expectedRunIds[index])
+      || !proxyRunIdentity(track.runIdentity, expectedRunIds[index], value.schemaVersion as 1 | 2, expectedCase)
       || seen.has(track.runIdentity.runId) || !Array.isArray(track.observations) || track.observations.length !== 2) throw invalid();
     seen.add(track.runIdentity.runId);
     const sections = new Set<string>();

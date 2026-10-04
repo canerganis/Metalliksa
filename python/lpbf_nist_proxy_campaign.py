@@ -39,6 +39,18 @@ def _is_record(value):
     return isinstance(value, dict)
 
 
+def _is_json_safe(value):
+    if value is None or type(value) in (bool, int, str):
+        return True
+    if type(value) is float:
+        return math.isfinite(value)
+    if isinstance(value, list):
+        return all(_is_json_safe(item) for item in value)
+    if _is_record(value):
+        return all(isinstance(key, str) and _is_json_safe(item) for key, item in value.items())
+    return False
+
+
 def _safe_relative_path(value):
     if not isinstance(value, str) or not value or "\x00" in value:
         return False
@@ -68,8 +80,7 @@ _SOURCE_FIELDS = {
 
 
 def _validate_source_binding(binding, expected, label, reasons):
-    optional = {"experimentalTrackIds"}
-    if not _check_keys(binding, _SOURCE_FIELDS, optional, label, reasons):
+    if not _check_keys(binding, _SOURCE_FIELDS, set(), label, reasons):
         return
     if binding.get("datasetId") != SOURCE_DATASET_ID:
         reasons.append(f"{label}.datasetId is not the registered AMB2022-03 Table 4 transcription.")
@@ -86,39 +97,27 @@ def _validate_source_binding(binding, expected, label, reasons):
     if not isinstance(binding.get("caseNumber"), str) or not binding["caseNumber"].strip():
         reasons.append(f"{label}.caseNumber must identify one published Table 4 case.")
 
-    if "experimentalTrackIds" in binding:
-        ids = binding["experimentalTrackIds"]
-        if (not isinstance(ids, list) or any(not isinstance(item, str) or not item.strip() for item in ids)
-                or len(ids) != len(set(ids))):
-            reasons.append(f"{label}.experimentalTrackIds must be a unique list of source-provided identifiers.")
-
     if expected is None:
         reasons.append("A trusted expected source revision is required.")
     elif not _is_record(expected):
         reasons.append("Trusted expected source revision must be an object.")
-    elif _check_keys(expected, _SOURCE_FIELDS, optional,
+    elif _check_keys(expected, _SOURCE_FIELDS, set(),
                      "Trusted expected source revision", reasons):
-        trusted_ids = expected.get("experimentalTrackIds", [])
-        if (not isinstance(trusted_ids, list)
-                or any(not isinstance(item, str) or not item.strip() for item in trusted_ids)
-                or len(trusted_ids) != len(set(trusted_ids))):
-            reasons.append("Trusted expected source revision.experimentalTrackIds must be a unique list of source-provided identifiers.")
         for key in _SOURCE_FIELDS:
             if binding.get(key) != expected.get(key):
                 reasons.append(f"{label}.{key} does not match the trusted source revision.")
-        declared_ids = binding.get("experimentalTrackIds", [])
-        if declared_ids != trusted_ids:
-            reasons.append(f"{label}.experimentalTrackIds do not match trusted source-provided identifiers.")
 
 
 _RUN_FIELDS = {
     "runId", "runDocumentSha256", "resultArtifact", "inputSha256",
     "materialSha256", "materialId", "materialRevisionSha256", "coreContract",
 }
+_RUN_FIELDS_V2 = _RUN_FIELDS | {"executedSettings"}
 
 
-def _validate_run_identity(run, label, reasons):
-    if not _check_keys(run, _RUN_FIELDS, set(), label, reasons):
+def _validate_run_identity(run, label, reasons, schema_version=SCHEMA_VERSION, expected_beam_diameter_um=None):
+    fields = _RUN_FIELDS_V2 if schema_version == CAMPAIGN_SCHEMA_VERSION else _RUN_FIELDS
+    if not _check_keys(run, fields, set(), label, reasons):
         return
     if not isinstance(run.get("runId"), str) or RUN_ID.fullmatch(run["runId"]) is None:
         reasons.append(f"{label}.runId must be a 32-character archived run ID.")
@@ -127,6 +126,13 @@ def _validate_run_identity(run, label, reasons):
             reasons.append(f"{label}.{key} must be a lowercase SHA-256.")
     if run.get("materialId") != "in718":
         reasons.append(f"{label}.materialId must resolve to IN718.")
+    if schema_version == CAMPAIGN_SCHEMA_VERSION:
+        settings = run.get("executedSettings")
+        if not _is_record(settings) or not _is_json_safe(settings):
+            reasons.append(f"{label}.executedSettings must be a JSON-safe captured settings object.")
+        elif (not _is_number(settings.get("beamDiameter_um"))
+              or settings["beamDiameter_um"] != expected_beam_diameter_um):
+            reasons.append(f"{label}.executedSettings.beamDiameter_um must match the trusted Table 4 case.")
 
     artifact = run.get("resultArtifact")
     if _check_keys(artifact, {"path", "sha256", "size_bytes"}, set(), f"{label}.resultArtifact", reasons):
@@ -148,7 +154,8 @@ def _validate_run_identity(run, label, reasons):
                 reasons.append(f"{label}.coreContract.{key} must be a nonempty string.")
 
 
-def _validate_observation(observation, track, section_index, campaign_source, expected_source, label, reasons):
+def _validate_observation(observation, track, section_index, campaign_source, expected_source, label, reasons,
+                          schema_version=SCHEMA_VERSION, expected_beam_diameter_um=None):
     fields = {
         "sectionId", "coordinateFrame", "scanDirection", "distanceFromScanStart_mm",
         "surfaceZ_m", "status", "geometry", "operator", "provenance",
@@ -196,7 +203,8 @@ def _validate_observation(observation, track, section_index, campaign_source, ex
                                  f"{label}.provenance.sourceBinding", reasons)
         if provenance.get("sourceBinding") != campaign_source:
             reasons.append(f"{label}.provenance.sourceBinding differs from the campaign source binding.")
-        _validate_run_identity(provenance.get("runIdentity"), f"{label}.provenance.runIdentity", reasons)
+        _validate_run_identity(provenance.get("runIdentity"), f"{label}.provenance.runIdentity", reasons,
+                               schema_version, expected_beam_diameter_um)
         if provenance.get("runIdentity") != track.get("runIdentity"):
             reasons.append(f"{label}.provenance.runIdentity differs from its simulated track run.")
 
@@ -327,7 +335,8 @@ def validate_proxy_campaign(campaign, expected_source_binding=None, expected_bea
                 if track.get("replicateKind") != expected_replicate_kind:
                     reasons.append(f"{label}.replicateKind must be {expected_replicate_kind}.")
 
-                _validate_run_identity(track.get("runIdentity"), f"{label}.runIdentity", reasons)
+                _validate_run_identity(track.get("runIdentity"), f"{label}.runIdentity", reasons,
+                                       schema_version, expected_beam_diameter_um)
                 run = track.get("runIdentity")
                 if _is_record(run) and isinstance(run.get("runId"), str):
                     if run["runId"] in run_ids:
@@ -352,7 +361,8 @@ def validate_proxy_campaign(campaign, expected_source_binding=None, expected_bea
                         reasons.append(f"{label}.observations contains an unsupported section.")
                         continue
                     _validate_observation(observation, track, section_index, source,
-                                          expected_source_binding, f"{label}.observations[{section_index}]", reasons)
+                                          expected_source_binding, f"{label}.observations[{section_index}]", reasons,
+                                          schema_version, expected_beam_diameter_um)
                 if seen_sections != set(SECTION_IDS):
                     reasons.append(f"{label}.observations must contain each required section exactly once.")
 
