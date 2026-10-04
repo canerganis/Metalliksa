@@ -3,8 +3,74 @@ import { PythonReadiness } from "./pythonStatus.ts";
 import os from "os";
 import net from "net";
 import http from "http";
+import crypto from "crypto";
 import { spawn, ChildProcess } from "child_process";
 import { getHostPython, loadPythonEnvironment } from "./pythonRuntime.ts";
+
+// =========================================================================
+// IPC security helpers (python/persistent_ipc_service.py enforces the other side)
+// =========================================================================
+
+/** Fresh per-spawn shared secret (64 hex chars); passed to the daemon via env, never argv. */
+export function generateIpcToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+export function isLoopbackHost(host: string): boolean {
+  const h = host.trim().toLowerCase().replace(/^\[|\]$/g, "");
+  if (h === "localhost" || h === "::1" || h === "0:0:0:0:0:0:0:1") return true;
+  return net.isIPv4(h) && h.split(".")[0] === "127";
+}
+
+/**
+ * The daemon binds loopback unless METALLIX_IPC_ALLOW_REMOTE=1. A non-loopback
+ * METALLIX_IPC_HOST without that override is replaced by 127.0.0.1 (loud warning).
+ */
+export function resolveIpcHost(
+  env: Record<string, string | undefined>,
+  warn: (message: string) => void = console.warn
+): string {
+  const requested = (env.METALLIX_IPC_HOST || "127.0.0.1").trim();
+  if (isLoopbackHost(requested)) return requested;
+  if (env.METALLIX_IPC_ALLOW_REMOTE === "1") {
+    warn(`[Python-Supervisor] WARNING: IPC daemon bound to NON-LOOPBACK host ${requested} (METALLIX_IPC_ALLOW_REMOTE=1); token-protected only.`);
+    return requested;
+  }
+  warn(`[Python-Supervisor] WARNING: ignoring non-loopback METALLIX_IPC_HOST=${requested}; binding 127.0.0.1 (set METALLIX_IPC_ALLOW_REMOTE=1 to override).`);
+  return "127.0.0.1";
+}
+
+/** Spawn spec for the daemon: the token travels only in the child's environment. */
+export function buildIpcSpawnSpec(
+  python: { cmd: string; prefix: string[] },
+  scriptPath: string,
+  baseEnv: NodeJS.ProcessEnv,
+  ipc: { socketPath: string; port: number; host: string; token: string }
+): { cmd: string; args: string[]; env: NodeJS.ProcessEnv } {
+  return {
+    cmd: python.cmd,
+    args: [...python.prefix, scriptPath],
+    env: {
+      ...baseEnv,
+      METALLIX_IPC_SOCK: ipc.socketPath,
+      METALLIX_IPC_PORT: String(ipc.port),
+      METALLIX_IPC_HOST: ipc.host,
+      METALLIX_IPC_TOKEN: ipc.token,
+    },
+  };
+}
+
+export function ipcAuthorizationHeader(token: string): string {
+  return `Bearer ${token}`;
+}
+
+/** Only the fixed `python/<module>.py` form used by routes/*.ts is dispatched. */
+const SCRIPT_REF = /^python\/[A-Za-z_][A-Za-z0-9_]*\.py$/;
+export function assertDispatchableScript(scriptRelativePath: string): void {
+  if (typeof scriptRelativePath !== "string" || !SCRIPT_REF.test(scriptRelativePath)) {
+    throw new Error(`Refusing to dispatch Python script path ${JSON.stringify(scriptRelativePath)}; expected python/<module>.py`);
+  }
+}
 
 // Python Execution Result Interface
 export interface PythonExecResult {
@@ -56,6 +122,8 @@ export class PersistentPythonIPCSupervisor {
   private totalDurationMs: number = 0;
   private readiness = new PythonReadiness();
   private lastError: string | null = null;
+  // Regenerated on every spawn; never logged or put on the command line.
+  private ipcToken: string = generateIpcToken();
 
   constructor() {
     loadPythonEnvironment();
@@ -65,7 +133,7 @@ export class PersistentPythonIPCSupervisor {
         ? path.join(os.tmpdir(), "metallix_python_ipc.sock")
         : "/tmp/metallix_python_ipc.sock");
     this.httpPort = parseInt(process.env.METALLIX_IPC_PORT || "5055", 10);
-    this.httpHost = process.env.METALLIX_IPC_HOST || "127.0.0.1";
+    this.httpHost = resolveIpcHost(process.env);
 
     this.startWorker();
     this.registerCleanupHooks();
@@ -79,15 +147,16 @@ export class PersistentPythonIPCSupervisor {
     console.log("[Python-Supervisor] Launching persistent Python IPC microservice daemon...");
     const scriptPath = path.join(process.cwd(), "python", "persistent_ipc_service.py");
 
-    const python = getHostPython();
-    this.child = spawn(python.cmd, [...python.prefix, scriptPath], {
+    this.ipcToken = generateIpcToken();
+    const spec = buildIpcSpawnSpec(getHostPython(), scriptPath, process.env, {
+      socketPath: this.socketPath,
+      port: this.httpPort,
+      host: this.httpHost,
+      token: this.ipcToken,
+    });
+    this.child = spawn(spec.cmd, spec.args, {
       windowsHide: true,
-      env: {
-        ...process.env,
-        METALLIX_IPC_SOCK: this.socketPath,
-        METALLIX_IPC_PORT: String(this.httpPort),
-        METALLIX_IPC_HOST: this.httpHost,
-      },
+      env: spec.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -177,6 +246,7 @@ export class PersistentPythonIPCSupervisor {
       socket.on("connect", () => {
         const req = {
           action: "execute",
+          token: this.ipcToken,
           script,
           payload,
           args,
@@ -194,6 +264,11 @@ export class PersistentPythonIPCSupervisor {
           const line = buffer.substring(0, buffer.indexOf("\n")).trim();
           try {
             const parsed = JSON.parse(line);
+            if (parsed?.status === 401 || parsed?.code === "UNAUTHORIZED") {
+              // e.g. a daemon from another server instance owns this socket path
+              reject(new Error("UNIX socket IPC rejected the token (401)"));
+              return;
+            }
             const durationMs = Date.now() - startTime;
             resolve({
               stdout: parsed.stdout ?? "",
@@ -238,6 +313,7 @@ export class PersistentPythonIPCSupervisor {
           headers: {
             "Content-Type": "application/json",
             "Content-Length": Buffer.byteLength(reqPayload),
+            Authorization: ipcAuthorizationHeader(this.ipcToken),
           },
           timeout: timeoutMs,
         },
@@ -245,6 +321,14 @@ export class PersistentPythonIPCSupervisor {
           let body = "";
           res.on("data", (chunk) => (body += chunk));
           res.on("end", () => {
+            if (res.statusCode !== 200) {
+              // 401: another instance's daemon owns the port; 4xx: refused request.
+              // The caller falls back to an ad-hoc spawn.
+              let code = "";
+              try { code = String(JSON.parse(body)?.code ?? ""); } catch { /* non-JSON error body */ }
+              reject(new Error(`HTTP microservice refused the request (HTTP ${res.statusCode}${code ? ` ${code}` : ""})`));
+              return;
+            }
             try {
               const parsed = JSON.parse(body);
               const durationMs = Date.now() - startTime;
@@ -340,6 +424,7 @@ export class PersistentPythonIPCSupervisor {
     args: string[] = [],
     timeoutMs: number = 15000
   ): Promise<PythonExecResult> {
+    assertDispatchableScript(scriptRelativePath);
     const t0 = Date.now();
 
     const skipUnix = process.platform === "win32";
