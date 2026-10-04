@@ -378,13 +378,22 @@ class StartupConfigTest(unittest.TestCase):
         module_strings = [v for v in vars(ipc).values() if isinstance(v, str) and len(v) >= 32]
         self.assertNotIn(TOKEN, module_strings)
 
-    def test_pool_workers_start_from_a_fresh_interpreter(self):
-        self.assertIn(ipc._pool_mp_context().get_start_method(), ("spawn", "forkserver"))
-        if os.name != "nt" and "forkserver" in __import__("multiprocessing").get_all_start_methods():
-            self.assertEqual(ipc._pool_mp_context().get_start_method(), "forkserver")
-        with mock.patch.object(ipc.multiprocessing, "parent_process", return_value=object()):
-            self.assertTrue(ipc._is_pool_worker_process())
+    def test_pool_start_method_is_a_fresh_interpreter(self):
+        ctx = ipc._pool_mp_context()
+        if os.name == "nt":
+            self.assertEqual(ctx.get_start_method(), "spawn")
+        elif "forkserver" in __import__("multiprocessing").get_all_start_methods():
+            self.assertEqual(ctx.get_start_method(), "forkserver")
+
+    def test_worker_guard_recognises_the_main_script_reimport(self):
+        # The real proof is ServiceIntegrationTest (exactly one warm-up per daemon); this pins the
+        # two conditions under which parent_process() is still None during the re-import.
         self.assertFalse(ipc._is_pool_worker_process())
+        with mock.patch.object(ipc, "__name__", "__mp_main__"):
+            self.assertTrue(ipc._is_pool_worker_process())
+        proc = __import__("multiprocessing").current_process()
+        with mock.patch.object(proc, "_inheriting", True, create=True):
+            self.assertTrue(ipc._is_pool_worker_process())
 
 
 class ExclusiveBindTest(unittest.TestCase):
@@ -824,6 +833,7 @@ class ServiceIntegrationTest(unittest.TestCase):
         self.assertIsInstance(self.port, int)
         self.assertGreater(self.port, 0)
         self.assertEqual(self.ready["http"], f"http://127.0.0.1:{self.port}")
+        self.assertEqual(self.ready["workersStarted"], 2)  # pool started before readiness
         self.assertNotIn(TOKEN, json.dumps(self.ready))
         if os.name != "nt":
             self.assertTrue(self.ready["unixSocketActive"])
@@ -832,7 +842,7 @@ class ServiceIntegrationTest(unittest.TestCase):
         else:
             self.assertFalse(self.ready["unixSocketActive"])
 
-    def test_attacks_fail_and_legit_request_succeeds(self):
+    def test_attacks_fail_legit_request_succeeds_and_warm_up_ran_once(self):
         rel = os.path.relpath(self.outside / "pwn.py", REPO).replace(os.sep, "/")
         for name, method, path, headers, body, expected in _attack_matrix(self.port, "python/../" + rel):
             status, parsed, meta, _ = _raw_request(self.port, method, path, headers, body)
@@ -848,6 +858,9 @@ class ServiceIntegrationTest(unittest.TestCase):
         self.assertEqual(parsed["concurrency"], "process_pool")
         self.assertTrue(json.loads(parsed["stdout"])["success"])
         self.assertFalse(self.marker.exists())
+        # The module warm-up runs once in the daemon, never again in a pool worker or forkserver.
+        time.sleep(0.5)
+        self.assertEqual(sum("Warming up" in line for line in self.err_lines), 1, "".join(self.err_lines)[-3000:])
 
 
 class ServiceStartupTest(unittest.TestCase):

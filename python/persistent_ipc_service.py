@@ -478,11 +478,30 @@ def _worker_run_script(full_path: str, input_str: str, args: list) -> Dict[str, 
     }
 
 
+def _worker_noop(delay: float) -> int:
+    """Pre-warm task: makes the pool start (and initialise) its worker processes."""
+    time.sleep(delay)
+    return os.getpid()
+
+
+_MP_CONTEXT = None
+
+
 def _pool_mp_context():
-    """Workers start from a fresh interpreter (forkserver where available, else spawn) instead of
-    a fork of this process, so they never inherit this process's memory."""
-    methods = multiprocessing.get_all_start_methods()
-    return multiprocessing.get_context("forkserver" if os.name != "nt" and "forkserver" in methods else "spawn")
+    """Workers start from a fresh interpreter instead of a fork of this process (whose memory holds
+    the token). POSIX: forkserver, preloaded with this script (guarded, no registry) and the warm
+    modules, so every worker shares those imports copy-on-write; the forkserver itself is started
+    from the already-scrubbed environment. Windows: spawn (each worker imports in _worker_init)."""
+    global _MP_CONTEXT
+    if _MP_CONTEXT is None:
+        if os.name != "nt" and "forkserver" in multiprocessing.get_all_start_methods():
+            ctx = multiprocessing.get_context("forkserver")
+            preload = (["__main__"] if __name__ == "__main__" else []) + list(WARM_MODULE_NAMES)
+            ctx.set_forkserver_preload(preload)
+            _MP_CONTEXT = ctx
+        else:
+            _MP_CONTEXT = multiprocessing.get_context("spawn")
+    return _MP_CONTEXT
 
 
 class ConcurrentModuleRegistry:
@@ -704,6 +723,17 @@ class ConcurrentModuleRegistry:
             "moduleImportTimesMs": self.import_times,
         }
 
+    def prewarm_pool(self, timeout_s: float = 300.0) -> int:
+        """Starts every worker before the service announces readiness; returns the worker count."""
+        if self.pool is None:
+            return 0
+        try:
+            futures = [self.pool.submit(_worker_noop, 0.2) for _ in range(self.num_workers)]
+            return len({f.result(timeout=timeout_s) for f in futures})
+        except Exception as e:
+            sys.stderr.write(f"[PersistentIPC] Worker pre-warm failed: {e}\n")
+            return 0
+
     def shutdown(self):
         """Closes the worker pool cleanly."""
         if self.pool:
@@ -714,13 +744,21 @@ class ConcurrentModuleRegistry:
 
 
 def _is_pool_worker_process() -> bool:
-    """spawn/forkserver pool workers re-import this module (as __mp_main__ when it is the main
-    script); they must not build a second registry (warm-up plus a nested pool)."""
-    return multiprocessing.parent_process() is not None
+    """True inside a pool worker or the forkserver, where this module is re-imported.
+
+    While a spawn/forkserver child re-imports the main script (as ``__mp_main__``),
+    ``multiprocessing.parent_process()`` is still None, so the module name and the
+    ``_inheriting`` flag are what identify that import; parent_process() covers the later
+    by-name import when a worker unpickles ``_worker_init``.
+    """
+    return (__name__ == "__mp_main__"
+            or bool(getattr(multiprocessing.current_process(), "_inheriting", False))
+            or multiprocessing.parent_process() is not None)
 
 
 # Global registry. Built at import for library use (tests, tools); when this file runs as the
-# service it is built in run_services after the startup checks, so a refused launch never warms up.
+# service it is built in run_services after the startup checks, so a refused launch never warms
+# up; pool workers never build one (the warm-up runs exactly once per daemon).
 registry: Optional[ConcurrentModuleRegistry] = (
     None if (__name__ == "__main__" or _is_pool_worker_process()) else ConcurrentModuleRegistry(SCRIPT_DIR))
 WarmModuleRegistry = ConcurrentModuleRegistry
@@ -1163,9 +1201,11 @@ def run_services():
                 raise SystemExit(f"[PersistentIPC] Refusing to start: no IPC channel could be opened ({e}).")
     del token
 
-    # 3. Warm-up and worker pool only once the channels are ours.
+    # 3. Warm-up and worker pool only once the channels are ours; workers are started and warmed
+    #    before the ready message, so the first request does not pay for them.
     if registry is None:
         registry = ConcurrentModuleRegistry(SCRIPT_DIR)
+    workers_ready = registry.prewarm_pool()
     if ipc_server:
         ipc_server.reg = registry
         ipc_server.serve()
@@ -1205,6 +1245,7 @@ def run_services():
         "unixSocketActive": ipc_server is not None,
         "httpActive": httpd is not None,
         "workers": registry.num_workers,
+        "workersStarted": workers_ready,
         "concurrency": "ProcessPoolExecutor",
     }
     sys.stdout.write(json.dumps(ready_msg) + "\n")
