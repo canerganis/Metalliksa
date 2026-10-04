@@ -1,5 +1,5 @@
 {
-  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review.",
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA.",
   "paths": [
     "src/components/Field.tsx"
   ]

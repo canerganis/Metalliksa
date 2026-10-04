@@ -1,5 +1,5 @@
 {
-  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation).",
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation). Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA.",
   "unbound": [
     "DELETE /api/python/battery-corrosion-upload/:id?",
     "GET /api/calphad/databases",
