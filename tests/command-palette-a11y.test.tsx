@@ -88,7 +88,11 @@ test('palette source: AccessibleModal for trap/Escape/restore, registry list, sh
   assert.match(source, /import \{ MODULES, WORKSPACES, type ModuleId \} from '\.\.\/data\/workspaces';/);
   assert.match(source, /<EvidenceBadge moduleId=\{entry\.id\} \/>/);
   for (const module of MODULES) assert.ok(!source.includes(`'${module.id}'`) && !source.includes(`"${module.id}"`), `hard-coded ${module.id}`);
-  assert.match(source, /onNavigate\(id\);/);
+  // Wiring of the tested seam (behaviour: tests/command-palette.test.ts, Enter/click/IME with recorded effects).
+  assert.match(source, /navigate: onNavigate,/);
+  assert.match(source, /onClick=\{\(\) => commitPaletteChoice\(results, index, effects\)\}/);
+  assert.match(source, /if \(isComposingKey\(key\)\) return;[^\n]*\n[\s\S]*?if \(handlePaletteInputKey\(key, results, current, effects\)\) event\.preventDefault\(\);/);
+  assert.match(source, /isComposing: event\.nativeEvent\.isComposing, keyCode: event\.keyCode/);
   assert.doesNotMatch(source, /location\.hash|history\.|metallix-navigate-tab/, 'no second routing path');
   const claim = /\b(validated|ready|certified|qualified)\b/i;
   const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:"'`])\/\/.*$/gm, '$1');

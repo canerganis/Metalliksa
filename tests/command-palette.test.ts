@@ -5,7 +5,8 @@ import { resolve } from 'node:path';
 import { MODULES, WORKSPACES } from '../src/data/workspaces';
 import { LISTED_CONTRACTS } from '../src/modules/registry';
 import {
-  FUZZY_SCORE_CAP, normalizeForSearch, paletteKeyAction, rankPaletteEntries, scorePaletteEntry, subsequenceScore, type PaletteEntry,
+  FUZZY_SCORE_CAP, commitPaletteChoice, handlePaletteInputKey, isComposingKey, normalizeForSearch, paletteChoice, paletteKeyAction,
+  rankPaletteEntries, scorePaletteEntry, subsequenceScore, type PaletteEffects, type PaletteEntry,
 } from '../src/utils/commandPalette';
 import { isPaletteShortcut, paletteShortcutLabel } from '../src/hooks/useCommandPaletteShortcut';
 
@@ -156,4 +157,78 @@ test('shortcut: Ctrl+K or Cmd+K only; the hint follows the platform', () => {
   assert.equal(paletteShortcutLabel('iPhone'), '⌘K');
   assert.equal(paletteShortcutLabel('Win32'), 'Ctrl K');
   assert.equal(paletteShortcutLabel(''), 'Ctrl K');
+});
+
+// The Enter/click seam: CommandPalette passes { navigate: onNavigate (App's navigate), close, setActive }
+// to these functions, so a palette that stops navigating, opens the wrong result or opens on an empty
+// list fails here.
+type Call = readonly [string, ...unknown[]];
+function recorder(onSetActive?: (index: number) => void) {
+  const calls: Call[] = [];
+  const effects: PaletteEffects = {
+    navigate: id => { calls.push(['navigate', id]); },
+    close: () => { calls.push(['close']); },
+    setActive: index => { calls.push(['setActive', index]); onSetActive?.(index); },
+  };
+  return { calls, effects };
+}
+const key = (k: string, extra: Partial<{ altKey: boolean; ctrlKey: boolean; metaKey: boolean; isComposing: boolean; keyCode: number }> = {}) =>
+  ({ key: k, altKey: false, ctrlKey: false, metaKey: false, ...extra });
+
+test('paletteChoice: the result at the given index, null for an empty list or an index outside it', () => {
+  const results = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  assert.equal(paletteChoice(results, 2), 'c', 'the selected option, not the first');
+  assert.equal(paletteChoice(results, 0), 'a');
+  assert.equal(paletteChoice([], 0), null);
+  assert.equal(paletteChoice(results, -1), null);
+  assert.equal(paletteChoice(results, 3), null);
+  assert.equal(paletteChoice(results, 1.5), null);
+});
+
+test('commitPaletteChoice navigates to the chosen module, then closes; an empty list is a no-op', () => {
+  const results = rankPaletteEntries(ENTRIES, 'thermal');
+  const { calls, effects } = recorder();
+  assert.equal(commitPaletteChoice(results, 1, effects), results[1].id);
+  assert.deepEqual(calls, [['navigate', results[1].id], ['close']], 'navigate exactly once with the chosen id, before closing');
+  const empty = recorder();
+  assert.equal(commitPaletteChoice([], 0, empty.effects), null);
+  assert.deepEqual(empty.calls, [], 'nothing navigates and the palette stays open');
+});
+
+test('keyboard: Enter opens the active (moved-to) result, not the first one', () => {
+  const results = ENTRIES;
+  let current = 0;
+  const { calls, effects } = recorder(index => { current = index; });
+  for (const k of ['ArrowDown', 'ArrowDown']) assert.equal(handlePaletteInputKey(key(k), results, current, effects), true);
+  assert.equal(current, 2);
+  assert.equal(handlePaletteInputKey(key('Enter'), results, current, effects), true);
+  assert.deepEqual(calls, [['setActive', 1], ['setActive', 2], ['navigate', results[2].id], ['close']]);
+  const end = recorder(index => { current = index; });
+  handlePaletteInputKey(key('End'), results, current, end.effects);
+  handlePaletteInputKey(key('Enter'), results, current, end.effects);
+  assert.deepEqual(end.calls.at(-2), ['navigate', results.at(-1)!.id]);
+});
+
+test('keyboard: Enter with no results, other keys and modified arrows do nothing', () => {
+  const { calls, effects } = recorder();
+  assert.equal(handlePaletteInputKey(key('Enter'), [], -1, effects), false);
+  assert.equal(handlePaletteInputKey(key('a'), ENTRIES, 0, effects), false);
+  assert.equal(handlePaletteInputKey(key('ArrowDown', { altKey: true }), ENTRIES, 0, effects), false);
+  assert.equal(handlePaletteInputKey(key('Escape'), ENTRIES, 0, effects), false, 'Escape belongs to AccessibleModal');
+  assert.deepEqual(calls, []);
+});
+
+test('IME: keys of a composition (isComposing or keyCode 229) neither navigate nor move nor prevent the default', () => {
+  const { calls, effects } = recorder();
+  for (const extra of [{ isComposing: true }, { keyCode: 229 }, { isComposing: true, keyCode: 229 }]) {
+    assert.ok(isComposingKey(extra));
+    for (const k of ['Enter', 'ArrowDown', 'ArrowUp', 'Home', 'End']) {
+      assert.equal(paletteKeyAction(key(k, extra), 3, 1), null, `${k} ${JSON.stringify(extra)}`);
+      assert.equal(handlePaletteInputKey(key(k, extra), ENTRIES, 1, effects), false, 'false = no preventDefault');
+    }
+  }
+  assert.deepEqual(calls, []);
+  assert.ok(!isComposingKey({ isComposing: false, keyCode: 13 }));
+  assert.equal(handlePaletteInputKey(key('Enter', { isComposing: false, keyCode: 13 }), ENTRIES, 1, effects), true, 'after composition Enter chooses');
+  assert.deepEqual(calls, [['navigate', ENTRIES[1].id], ['close']]);
 });

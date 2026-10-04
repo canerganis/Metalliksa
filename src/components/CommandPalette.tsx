@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import { AccessibleModal } from './AccessibleModal';
 import { EvidenceBadge } from './sdk/EvidenceBadge';
 import { MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
-import { paletteKeyAction, rankPaletteEntries } from '../utils/commandPalette';
+import { commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects } from '../utils/commandPalette';
 import { isPaletteShortcut } from '../hooks/useCommandPaletteShortcut';
 
 // Command palette (Phase 9 shell, DESIGN-9 section 3). Lazy chunk opened from the header button or
@@ -29,24 +29,32 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
   const current = results.length ? Math.min(active, results.length - 1) : -1;
   const activeEntry = current >= 0 ? results[current] : undefined;
 
-  function choose(id: string) {
-    onNavigate(id);
-    onClose();
-    // AccessibleModal returns focus to the opener. When the opener sat in the module view that was just
-    // hidden, focus would fall to <body>; move it to the main region instead.
-    requestAnimationFrame(() => {
-      if (!document.activeElement || document.activeElement === document.body) document.getElementById('main-content')?.focus();
-    });
-  }
+  // What Enter and click do is decided in src/utils/commandPalette.ts (tested there with these effects):
+  // navigate is the shell's navigate() (the sidebar's path), then the palette closes.
+  const effects: PaletteEffects = {
+    navigate: onNavigate,
+    close: () => {
+      onClose();
+      // AccessibleModal returns focus to the opener. When the opener sat in the module view that was just
+      // hidden, focus would fall to <body>; move it to the main region instead.
+      requestAnimationFrame(() => {
+        if (!document.activeElement || document.activeElement === document.body) document.getElementById('main-content')?.focus();
+      });
+    },
+    setActive: index => {
+      setActive(index);
+      document.getElementById(optionId(results[index].id))?.scrollIntoView?.({ block: 'nearest' });
+    },
+  };
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    const key = {
+      key: event.key, altKey: event.altKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey,
+      isComposing: event.nativeEvent.isComposing, keyCode: event.keyCode,
+    };
+    if (isComposingKey(key)) return; // the IME owns Enter and the arrows while composing
     if (isPaletteShortcut(event)) { event.preventDefault(); return; } // already open: keep focus here
-    const action = paletteKeyAction(event, results.length, current);
-    if (!action) return;
-    event.preventDefault();
-    if (action.type === 'choose') { choose(results[action.index].id); return; }
-    setActive(action.index);
-    document.getElementById(optionId(results[action.index].id))?.scrollIntoView?.({ block: 'nearest' });
+    if (handlePaletteInputKey(key, results, current, effects)) event.preventDefault();
   }
 
   return (
@@ -73,7 +81,7 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
             aria-labelledby={`${optionId(entry.id)}-name`} aria-describedby={`${optionId(entry.id)}-meta`}
             className="mk-palette-option" data-active={index === current ? 'true' : undefined}
             onMouseDown={event => event.preventDefault()} onMouseMove={() => { if (index !== current) setActive(index); }}
-            onClick={() => choose(entry.id)}>
+            onClick={() => commitPaletteChoice(results, index, effects)}>
             <span className="mk-palette-option-main">
               <span id={`${optionId(entry.id)}-name`} className="mk-palette-option-label">{entry.label}</span>
               <span className="mk-palette-option-workspace">{entry.workspaceLabel}{entry.id === activeTab ? ' · current' : ''}</span>

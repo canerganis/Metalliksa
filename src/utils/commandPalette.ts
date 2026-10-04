@@ -1,5 +1,5 @@
 /**
- * Pure filtering and ranking for the command palette (Phase 9 shell, DESIGN-9 section 3).
+ * Pure filtering, ranking and choice logic for the command palette (Phase 9 shell, DESIGN-9 section 3).
  *
  * The palette lists the navigation modules derived from the module registry (MODULES in
  * src/data/workspaces.ts); this file only orders them for a query and never adds, drops or relabels
@@ -117,6 +117,15 @@ export interface PaletteKey {
   readonly altKey: boolean;
   readonly ctrlKey: boolean;
   readonly metaKey: boolean;
+  /** KeyboardEvent.isComposing (IME composition in progress). */
+  readonly isComposing?: boolean;
+  /** 229 is reported for keys an IME is processing (older browsers do not set isComposing). */
+  readonly keyCode?: number;
+}
+
+/** True while an IME is composing: the key belongs to the composition, not to the palette. */
+export function isComposingKey(event: Pick<PaletteKey, 'isComposing' | 'keyCode'>): boolean {
+  return event.isComposing === true || event.keyCode === 229;
 }
 
 export type PaletteKeyAction = { readonly type: 'move'; readonly index: number } | { readonly type: 'choose'; readonly index: number } | null;
@@ -124,11 +133,42 @@ export type PaletteKeyAction = { readonly type: 'move'; readonly index: number }
 /**
  * Combobox key handling over `count` results with `current` active (-1 when none): Arrow Up/Down wrap,
  * Home/End jump to the ends (rovingIndex, the sidebar's rule), Enter chooses the active result.
- * Other keys (and modified arrows) are left to the text field.
+ * Keys of an IME composition, other keys and modified arrows are left to the text field.
  */
 export function paletteKeyAction(event: PaletteKey, count: number, current: number): PaletteKeyAction {
+  if (isComposingKey(event)) return null;
   if (event.key === 'Enter') return current >= 0 && current < count ? { type: 'choose', index: current } : null;
   if (event.altKey || event.ctrlKey || event.metaKey) return null;
   const index = rovingIndex(count, current, event.key);
   return index === null ? null : { type: 'move', index };
+}
+
+/** The module a choice opens: the result at `index` (the active option on Enter, the clicked option on click), or null. */
+export function paletteChoice(results: readonly { readonly id: string }[], index: number): string | null {
+  return Number.isInteger(index) && index >= 0 && index < results.length ? results[index].id : null;
+}
+
+export interface PaletteEffects {
+  /** The shell's navigate(): the same function the sidebar calls. */
+  readonly navigate: (id: string) => void;
+  readonly close: () => void;
+  readonly setActive: (index: number) => void;
+}
+
+/** Opens the chosen module and closes the palette; nothing happens (returns null) when there is no such result. */
+export function commitPaletteChoice(results: readonly { readonly id: string }[], index: number, effects: Pick<PaletteEffects, 'navigate' | 'close'>): string | null {
+  const id = paletteChoice(results, index);
+  if (id === null) return null;
+  effects.navigate(id);
+  effects.close();
+  return id;
+}
+
+/** Keydown on the palette field. Returns true when the event was handled (the caller prevents the default). */
+export function handlePaletteInputKey(event: PaletteKey, results: readonly { readonly id: string }[], current: number, effects: PaletteEffects): boolean {
+  const action = paletteKeyAction(event, results.length, current);
+  if (!action) return false;
+  if (action.type === 'choose') commitPaletteChoice(results, action.index, effects);
+  else effects.setActive(action.index);
+  return true;
 }
