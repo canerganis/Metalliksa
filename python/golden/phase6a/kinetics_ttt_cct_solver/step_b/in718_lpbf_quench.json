@@ -307,7 +307,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "327499eb234753e79147365fc6bd277f490a2b31",
+ "gitHead": "7b9c2f0abbfcd01c275a634359ec7969da625869",
  "input": {
   "agingTemp_C": 720.0,
   "agingTime_h": 8.0,
@@ -326,7 +326,7 @@
    "domainDataVersion": "alloy-data-kinetics-uq-fatigue-1",
    "gasConstantR_J_molK": 8.31446261815324,
    "registryAlloyId": "in718",
-   "registryVersion": "alloy-registry-1"
+   "registryVersion": "alloy-registry-2"
   }
  },
  "schema": "phase6a-step-b-golden-1",

@@ -134,16 +134,14 @@ def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weigh
     f_i = mass fraction of element i
     n_i = valence (oxidation state)
     W_i = atomic weight in g/mol
+
+    Phase 6a design step (b): the formula lives in alloy_registry.astm_g102_equivalent_weight,
+    which also computes every preset "ew", so a preset alloyId and the same composition sent
+    as customComposition give the same EW. 27.0 when nothing contributes is the
+    pre-existing customComposition fallback (unchanged; a preset never reaches it).
     """
-    denom = 0.0
-    for el, mass_frac in composition.items():
-        if el in valencies and el in atomic_weights:
-            n = valencies[el]
-            w = atomic_weights[el]
-            denom += (mass_frac * n) / w
-    if denom <= 1e-12:
-        return 27.0
-    return round(1.0 / denom, 4)
+    ew = alloy_registry.astm_g102_equivalent_weight(composition, valencies, atomic_weights)
+    return 27.0 if ew is None else ew
 
 def classify_corrosion_severity(cr_mm_yr: float) -> dict:
     """

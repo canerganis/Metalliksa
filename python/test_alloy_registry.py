@@ -4,6 +4,7 @@ from unittest import mock
 
 import alloy_registry as reg
 import four_alloy_materials as fam
+import physical_constants as pc
 
 # Strings the UI sends today (src/ at 01eb3f0), mapped to the expected registry id.
 UI_ALIASES = {
@@ -163,9 +164,36 @@ class CopiedTableDriftTest(unittest.TestCase):
         for aid, src_name in reg._CORROSION_SOURCE_NAME.items():
             src = library[src_name]
             table = reg.REGISTRY[aid].domains[reg.DOMAIN_CORROSION]
+            self.assertEqual(set(table), set(src) - {"name", "atomic_weights"}, aid)
             for key, rec in table.items():
+                if key == "ew":
+                    # Design step (b): computed; the stored value is kept as a record only.
+                    self.assertEqual(reg.CORROSION_STORED_EW_BEFORE_STEP_B[aid], src["ew"], aid)
+                    continue
                 value = dict(rec.value) if key in ("composition", "valencies") else rec.value
                 self.assertEqual(value, src[key], f"{aid}.{key}")
+
+    def test_corrosion_ew_is_computed_with_the_astm_g102_formula(self):
+        # Design step (b): EW = 1 / sum(f_i n_i / W_i), CIAAW weights, 4 decimals; the
+        # stored solver values disagreed with it (e.g. in718 26.45 vs 24.7436).
+        expected = {"ss316l": 24.8205, "ss304": 25.1088, "steel1018": 27.0668, "ti6al4v": 11.8715,
+                    "al7075": 9.6007, "al6061": 9.0919, "cu_c110": 31.8048, "in718": 24.7436,
+                    "az31b": 12.101}
+        stored = {"ss316l": 25.68, "ss304": 25.12, "steel1018": 27.92, "ti6al4v": 11.97,
+                  "al7075": 9.15, "al6061": 9.02, "cu_c110": 31.77, "in718": 26.45, "az31b": 12.28}
+        self.assertEqual(dict(reg.CORROSION_STORED_EW_BEFORE_STEP_B), stored)
+        for aid, ew in expected.items():
+            with self.subTest(aid=aid):
+                rec = reg.REGISTRY[aid].get("ew", reg.DOMAIN_CORROSION)
+                self.assertEqual(rec.value, ew)
+                self.assertEqual(rec.source_type, "computed")
+                self.assertEqual(rec.unit, "g/equivalent")
+                self.assertIn("CIAAW", rec.source_ref)
+                comp = reg.REGISTRY[aid].value("composition", reg.DOMAIN_CORROSION)
+                val = reg.REGISTRY[aid].value("valencies", reg.DOMAIN_CORROSION)
+                denom = sum(f * val[el] / pc.atomic_weight(el) for el, f in comp.items())
+                self.assertEqual(rec.value, round(1.0 / denom, 4))
+        self.assertIsNone(reg.astm_g102_equivalent_weight({"Xx": 1.0}, {}, {}))
 
 
 class MetadataTest(unittest.TestCase):

@@ -51,7 +51,29 @@ class TafelPresetTest(unittest.TestCase):
             with self.subTest(alloy=tafel_id):
                 new = tafel.corrosion_preset(tafel_id)
                 new.pop("registry_id")
+                # Design step (b): "ew" is computed from the preset's own composition
+                # (see test_preset_ew_equals_the_custom_composition_path); the rest is unchanged.
+                self.assertEqual(new.pop("ew"), tafel.calculate_equivalent_weight(
+                    old["composition"], old["valencies"], old["atomic_weights"]))
+                old = {k: v for k, v in old.items() if k != "ew"}
                 self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
+
+    def test_preset_ew_equals_the_custom_composition_path(self):
+        # Design step (b): one source. A preset alloyId, and the same alloyId with its own
+        # composition sent as customComposition, give the same EW and the same output.
+        library = _snapshot("tafel_corrosion_rate_solver")
+        for tafel_id in library:
+            with self.subTest(alloy=tafel_id):
+                preset = tafel.corrosion_preset(tafel_id)
+                by_id = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId=tafel_id))
+                by_comp = tafel.solve_tafel_corrosion_rate(
+                    dict(SOLVE_BASE, alloyId=tafel_id, customComposition=preset["composition"]))
+                self.assertEqual(by_id["equivalentWeight"], preset["ew"])
+                self.assertEqual(by_comp["equivalentWeight"], preset["ew"])
+                for doc in (by_id, by_comp):
+                    for key in ("durationMs", "timestamp"):
+                        doc.pop(key)
+                self.assertEqual(json.dumps(by_id, sort_keys=True), json.dumps(by_comp, sort_keys=True))
 
     def test_ui_ids_now_resolve_to_their_own_preset(self):
         # TafelPolarizationLab sends src/utils/tafelParser.ts COMMON_ALLOYS ids; before
@@ -112,7 +134,9 @@ class TafelPresetTest(unittest.TestCase):
                      "ti64_ams4928", "TI6AL4V"):
             with self.subTest(accepted=name):
                 preset = tafel.corrosion_preset(name.lower())
-                self.assertEqual(preset["ew"], library["ti-6al-4v"]["ew"])
+                self.assertEqual(preset["composition"], library["ti-6al-4v"]["composition"])
+                self.assertEqual(preset["density_g_cm3"], library["ti-6al-4v"]["density_g_cm3"])
+                self.assertEqual(preset["ew"], 11.8715)  # computed (design step (b)); stored was 11.97
         for name in ("Ti-6Al-4V ELI", "ti-6al-4v eli", "Ti-6Al-4V ELI Grade 23", "Ti6Al4V ELI"):
             with self.subTest(rejected=name):
                 with self.assertRaises(iv.ValidationError) as ctx:

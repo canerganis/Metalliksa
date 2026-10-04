@@ -19,7 +19,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "663e18fbd0db1ada34bd3d6ec46e5cc3e7dfcc20",
+ "gitHead": "7b9c2f0abbfcd01c275a634359ec7969da625869",
  "input": {
   "agingTemp_C": 550,
   "agingTime_h": 4,
@@ -43,9 +43,9 @@
    "constantsNote": "Exact SI 2019 R = N_A*k and CIAAW 2021 abridged atomic weights (Phase 6a value step); they replaced R = 8.314 and rounded weights.",
    "constantsVersion": "physical-constants-1",
    "domainDataBaseRevision": "7f3f803",
-   "domainDataVersion": "alloy-data-calphad-battery-icme-1",
+   "domainDataVersion": "alloy-data-calphad-battery-icme-2",
    "gasConstantR_J_molK": 8.31446261815324,
-   "registryVersion": "alloy-registry-1"
+   "registryVersion": "alloy-registry-2"
   }
  },
  "schema": "phase6a-step-b-golden-1",

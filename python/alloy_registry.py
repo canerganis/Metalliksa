@@ -30,8 +30,16 @@ refused consistently: a bare grade does not say which variant is meant (304 is n
 304L; 7075 says nothing about temper). Callers must send a prefixed name such as
 "AISI 4140", "steel-304" or "al-7075". No string the UI sends is a bare grade.
 
-Leaf module: standard library + four_alloy_materials (hashlib/json) only; no
-numpy/scipy at import. It must NOT be imported by any manifest file until the
+Corrosion equivalent weights (Phase 6a design step (b)): the corrosion ``ew`` is
+not a stored number any more. It is computed from the record's own composition and
+valencies and the CIAAW 2021 atomic weights with astm_g102_equivalent_weight(), the
+same function tafel_corrosion_rate_solver uses for a caller's customComposition, so
+both input paths give the same EW. The stored solver values it replaced did not
+match that formula (e.g. inconel-718 26.45 vs 24.7436); they are kept only as a
+record in CORROSION_STORED_EW_BEFORE_STEP_B.
+
+Leaf module: standard library + four_alloy_materials (hashlib/json) +
+physical_constants only; no numpy/scipy at import. It must NOT be imported by any manifest file until the
 planned implementation-fingerprint bump.
 """
 
@@ -43,8 +51,11 @@ from types import MappingProxyType
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 import four_alloy_materials as _fam
+import physical_constants as _pc
 
-REGISTRY_VERSION = "alloy-registry-1"
+# -2: Phase 6a design step (b): corrosion "ew" is computed (ASTM G102 from composition,
+# valencies and CIAAW 2021 weights) instead of the stored solver values.
+REGISTRY_VERSION = "alloy-registry-2"
 SOURCE_TYPES = frozenset({"measured", "literature", "estimated", "computed", "synthetic"})
 BASE_REVISION = "01eb3f0"
 FOUR_ALLOY_MODEL_VERSION = (
@@ -392,43 +403,93 @@ _CORROSION_SOURCE_NAME = {
     "cu_c110": "cu-c110", "in718": "inconel-718", "az31b": "az31b",
 }
 _CORROSION = {
-    "ss316l": {"density_g_cm3": 7.98, "ew": 25.68,
+    "ss316l": {"density_g_cm3": 7.98,
                "composition": {"Fe": 0.655, "Cr": 0.170, "Ni": 0.120, "Mo": 0.025, "Mn": 0.020, "Si": 0.010},
                "valencies": {"Fe": 2, "Cr": 3, "Ni": 2, "Mo": 3, "Mn": 2, "Si": 4},
                "activation_energy_j_mol": 32000.0, "standard_e0_v": -0.08},
-    "ss304": {"density_g_cm3": 7.93, "ew": 25.12,
+    "ss304": {"density_g_cm3": 7.93,
               "composition": {"Fe": 0.700, "Cr": 0.190, "Ni": 0.090, "Mn": 0.020},
               "valencies": {"Fe": 2, "Cr": 3, "Ni": 2, "Mn": 2},
               "activation_energy_j_mol": 34000.0, "standard_e0_v": -0.15},
-    "steel1018": {"density_g_cm3": 7.87, "ew": 27.92,
+    "steel1018": {"density_g_cm3": 7.87,
                   "composition": {"Fe": 0.985, "Mn": 0.008, "C": 0.002, "Si": 0.005},
                   "valencies": {"Fe": 2, "Mn": 2, "C": 4, "Si": 4},
                   "activation_energy_j_mol": 42000.0, "standard_e0_v": -0.44},
-    "ti6al4v": {"density_g_cm3": 4.43, "ew": 11.97,
+    "ti6al4v": {"density_g_cm3": 4.43,
                 "composition": {"Ti": 0.900, "Al": 0.060, "V": 0.040},
                 "valencies": {"Ti": 4, "Al": 3, "V": 3},
                 "activation_energy_j_mol": 28000.0, "standard_e0_v": 0.12},
-    "al7075": {"density_g_cm3": 2.81, "ew": 9.15,
+    "al7075": {"density_g_cm3": 2.81,
                "composition": {"Al": 0.895, "Zn": 0.056, "Mg": 0.025, "Cu": 0.016, "Cr": 0.004, "Fe": 0.004},
                "valencies": {"Al": 3, "Zn": 2, "Mg": 2, "Cu": 2, "Cr": 3, "Fe": 2},
                "activation_energy_j_mol": 36000.0, "standard_e0_v": -0.73},
-    "al6061": {"density_g_cm3": 2.70, "ew": 9.02,
+    "al6061": {"density_g_cm3": 2.70,
                "composition": {"Al": 0.970, "Mg": 0.010, "Si": 0.006, "Cu": 0.003, "Cr": 0.002, "Fe": 0.007},
                "valencies": {"Al": 3, "Mg": 2, "Si": 4, "Cu": 2, "Cr": 3, "Fe": 2},
                "activation_energy_j_mol": 35000.0, "standard_e0_v": -0.70},
-    "cu_c110": {"density_g_cm3": 8.94, "ew": 31.77,
+    "cu_c110": {"density_g_cm3": 8.94,
                 "composition": {"Cu": 0.999},
                 "valencies": {"Cu": 2},
                 "activation_energy_j_mol": 30000.0, "standard_e0_v": 0.05},
-    "in718": {"density_g_cm3": 8.19, "ew": 26.45,
+    "in718": {"density_g_cm3": 8.19,
               "composition": {"Ni": 0.525, "Cr": 0.190, "Fe": 0.185, "Nb": 0.050, "Mo": 0.030, "Ti": 0.009, "Al": 0.005},
               "valencies": {"Ni": 2, "Cr": 3, "Fe": 2, "Nb": 5, "Mo": 3, "Ti": 4, "Al": 3},
               "activation_energy_j_mol": 38000.0, "standard_e0_v": 0.15},
-    "az31b": {"density_g_cm3": 1.77, "ew": 12.28,
+    "az31b": {"density_g_cm3": 1.77,
               "composition": {"Mg": 0.960, "Al": 0.030, "Zn": 0.010},
               "valencies": {"Mg": 2, "Al": 3, "Zn": 2},
               "activation_energy_j_mol": 29000.0, "standard_e0_v": -1.65},
 }
+
+# The equivalent weights tafel_corrosion_rate_solver.py:26-117 ALLOY_LIBRARY stored at
+# BASE_REVISION (g/equivalent). NOT USED: design step (b) replaced them with the
+# computed corrosion "ew" (astm_g102_equivalent_weight); kept as the record of what
+# changed (see the value-commit drift table).
+CORROSION_STORED_EW_BEFORE_STEP_B: Mapping[str, float] = MappingProxyType({
+    "ss316l": 25.68,
+    "ss304": 25.12,
+    "steel1018": 27.92,
+    "ti6al4v": 11.97,
+    "al7075": 9.15,
+    "al6061": 9.02,
+    "cu_c110": 31.77,
+    "in718": 26.45,
+    "az31b": 12.28,
+})
+CORROSION_EW_NOTE = (
+    "Computed: ASTM G102 EW = 1 / sum(f_i * n_i / W_i) over the record's composition "
+    "(mass fractions) and valencies with CIAAW 2021 abridged atomic weights, rounded to "
+    "4 decimals; the same function the tafel customComposition path uses."
+)
+
+
+def astm_g102_equivalent_weight(composition: Mapping[str, float], valencies: Mapping[str, float],
+                                atomic_weights: Mapping[str, float]) -> Optional[float]:
+    """ASTM G102 equivalent weight, EW = (sum_i f_i * n_i / W_i)^-1, rounded to 4 decimals.
+
+    f_i: mass fraction, n_i: valence, W_i: atomic weight (g/mol). Elements without a
+    valence or an atomic weight do not contribute. Returns None when nothing
+    contributes (the caller decides what that means; no fallback value here).
+    """
+    denom = 0.0
+    for el, mass_frac in composition.items():
+        if el in valencies and el in atomic_weights:
+            denom += (mass_frac * valencies[el]) / atomic_weights[el]
+    if denom <= 1e-12:
+        return None
+    return round(1.0 / denom, 4)
+
+
+def _corrosion_ew_record(raw: Mapping[str, Any], model_version: str) -> "ValueRecord":
+    composition = raw["composition"]
+    weights = {el: _pc.atomic_weight(el) for el in composition}
+    ew = astm_g102_equivalent_weight(composition, raw["valencies"], weights)
+    if ew is None:
+        raise RegistryIntegrityError("corrosion record without a computable equivalent weight")
+    return ValueRecord(value=ew, unit=_CORROSION_UNITS["ew"], source_type="computed",
+                       source_ref=f"{_CORROSION_REF} composition/valencies + {_pc.CIAAW_SOURCE}",
+                       validity=None, model_version=model_version, note=CORROSION_EW_NOTE)
+
 
 # --------------------------------------------------------------------------- identities and aliases
 # Aliases beyond four_alloy_materials._ALIAS, harvested from the strings the UI sends
@@ -557,6 +618,11 @@ def _copied_domains(aid: str) -> Dict[str, Mapping[str, ValueRecord]]:
                 table[aid], units, ref, f"{REGISTRY_VERSION}:{domain}",
                 "Solver-local screening value copied unchanged; no per-value citation in source.",
                 key_notes=key_notes)
+            if domain == DOMAIN_CORROSION:
+                # Design step (b): the equivalent weight is computed, not copied.
+                merged = dict(out[domain])
+                merged["ew"] = _corrosion_ew_record(table[aid], f"{REGISTRY_VERSION}:{domain}")
+                out[domain] = MappingProxyType(merged)
     return out
 
 
