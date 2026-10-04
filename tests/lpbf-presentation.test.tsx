@@ -68,7 +68,7 @@ assert.match(render({ ...job, status: 'failed', result: undefined,
   partialArtifacts: { status: 'inventory-unavailable' } }), /Partial output inventory unavailable; no integrity claim/);
 assert.doesNotMatch(render(job), /partial files retained|Partial output inventory unavailable/);
 assert.match(renderToStaticMarkup(<ConvergencePanel study={undefined}/>),/Not run/);
-assert.match(renderToStaticMarkup(<ConvergencePanel study={undefined}/>),/The boiling validity stop and the peak cell temperature depend on mesh_um; a verdict at one mesh is not converged evidence\./);
+assert.match(renderToStaticMarkup(<ConvergencePanel study={undefined}/>),/The boiling validity stop and the peak cell temperature depend on the mesh spacing \(µm\); a verdict at one mesh is not converged evidence\./);
 const audit=renderToStaticMarkup(<ConvergencePanel study={{kind:"mesh",spacings:[4e-5,2e-5,1e-5],results:[{width_um:100,depth_um:40},{width_um:110,depth_um:42},{width_um:112,depth_um:43}],checks:{width_um:{status:"inconclusive",reason:"Fixture",observedOrder:2,fineGCI_pct:3}}}}/>);
 for(const label of ["Coarse","Medium","Fine","inconclusive","observed order 2","fine GCI 3"]) assert.ok(audit.includes(label));
 const alignedStudy=renderToStaticMarkup(<ConvergencePanel study={{kind:"mesh",status:"complete",protocol:"layer-aligned-three-grid-cpu-reference-v1",requestedBackend:"auto",executionBackend:"reference",cellsPerLayer:[1,2,3],spacings:[4e-5,2e-5,1.333e-5],results:[{width_um:100,depth_um:40},{width_um:110,depth_um:42},{width_um:112,depth_um:43}]}}/>);
