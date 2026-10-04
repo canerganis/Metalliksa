@@ -1,5 +1,5 @@
 import { canonicalLpbfMaterialName } from "../../utils/lpbfMaterialIdentity";
-import { Badge, ResultHeader, ThermalHistory, ConvergencePanel, MeasurementPanel, surface, number } from "./LpbfResultPresentation";
+import { Badge, ResultHeader, StaleResultBanner, ThermalHistory, ConvergencePanel, MeasurementPanel, surface, number } from "./LpbfResultPresentation";
 import { LpbfPhysicsDiagnostics } from "./LpbfPhysicsDiagnostics";
 import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
 import React, { useEffect, useRef, useState } from "react";
@@ -643,6 +643,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     </div>
     {(mode==="standard"||mode==="calibration")&&<p className="text-xs text-slate-400" role="status">{estimateError||(estimate?`Preflight: ${fmt(estimate.cells)} cells · ${fmt(estimate.spacing_m*1e6)} µm · ~${fmt(estimate.minimumEstimatedSteps)} estimated steps · ~${fmt(estimate.workingMemoryEstimate_MB)} MB working arrays · ${estimate.runs} solve(s). ${estimate.exceedsCellBudget?"Cell budget exceeded.":estimate.exceedsStepBudget?"Requested timestep exceeds the 250,000-step budget. Increase timestep or shorten the process history.":estimate.runtimeEstimate}`:"Estimating resources…")}</p>}
     {r&&<>
+      {resultSignature!==signature&&<StaleResultBanner className="rounded-xl"/>}
       {r.fallbackReason&&<p className="text-sm text-amber-200">{r.fallbackReason}</p>}
       <section aria-label="Melt pool geometry" className="space-y-4"><div className="flex flex-wrap justify-between gap-2"><h4 className="font-medium">Melt pool geometry</h4><Badge tone="neutral">{r.fieldSeries?"Resolved thermal cells":"Analytical screening geometry"}</Badge></div><p className="text-xs text-slate-400">{r.confidenceReason} Free-surface unresolved · Keyhole unresolved · Stress not solved.</p>
       {r.fieldSeries && <ResolvedThermalViewer jobId={job.id} result={r} onTimeChange={setFieldTime}/>}
@@ -659,7 +660,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
         {r.discretization&&<p>Mesh: {fmt(r.discretization.cells)} cells · uniform {fmt(r.discretization.mesh_m*1e6)} µm · {fmt(r.discretization.steps)} steps · minimum Δt {fmt(r.discretization.minimumDt_s)} s. Local refinement unresolved.</p>}
         {r.massBalance&&<p className="text-sm">Mass (kg): initial {fmt(r.massBalance.initial_kg)} + deposited {fmt(r.massBalance.deposited_kg)} = final {fmt(r.massBalance.final_kg)}. {r.massBalance.scope}</p>}
         {r.phaseAudit&&<p className="text-sm">Phase partition: liquid {fmt(r.phaseAudit.liquidVolume_m3)} m³ · solid {fmt(r.phaseAudit.solidVolume_m3)} m³. {r.phaseAudit.scope}</p>}
-        {Object.entries<SimulationResult["analyticalComparison"][string]>(r.analyticalComparison).map(([name,g])=><p key={name}>{name} screening: L {fmt(g.length_um)} / W {fmt(g.width_um)} / D {fmt(g.depth_um)} µm</p>)}
+        {Object.entries<NonNullable<SimulationResult["analyticalComparison"]>[string]>(r.analyticalComparison ?? {}).map(([name,g])=><p key={name}>{name} screening: L {fmt(g.length_um)} / W {fmt(g.width_um)} / D {fmt(g.depth_um)} µm</p>)}
         <p className="text-slate-400 my-3">{r.material.source}</p><ul className="list-disc pl-5 text-sm text-slate-400 space-y-1">{r.assumptions.map(a=><li key={a}>{a}</li>)}</ul>
         {r.provenance&&<div className="mt-4 border-t border-slate-700/50 pt-2 text-xs text-slate-400"><p className="font-medium text-slate-300">Run Provenance</p><p>Input Hash: <span className="font-mono">{r.provenance.inputHash}</span></p><p>Implementation Fingerprint: <span className="font-mono">{r.provenance.implementationHash}</span></p>{r.provenance.solverBinaryHash&&<p>Engine Version: <span className="font-mono">{r.provenance.solverBinaryHash}</span></p>}</div>}
       </details>

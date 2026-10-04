@@ -43,6 +43,27 @@ export class LpbfRunArchiveError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
+/**
+ * Worker RPC rejections that are client errors, keyed by the exact worker / bridge message
+ * (python/lpbf_worker.py JobQueue.get and capture, server/lpbfWorkerBridge.ts captureForArchive).
+ * Anything else stays a generic 503 in the route so no worker detail or path reaches the client.
+ */
+const CAPTURE_CLIENT_ERRORS: Readonly<Record<string, [number, string]>> = {
+  'Only completed jobs can be captured': [409, 'Only completed jobs can be archived.'],
+  'Job not found': [404, 'Job not found.'],
+  'Invalid job id': [400, 'Invalid job id.'],
+};
+
+/** Capture a worker job for archiving; a cancelled, failed, running or unknown job is a 4xx, not a 503. */
+async function captureCompletedJob(jobId: string) {
+  try { return await lpbfWorker.captureForArchive(jobId); }
+  catch (error) {
+    const mapped = error instanceof Error ? CAPTURE_CLIENT_ERRORS[error.message] : undefined;
+    if (mapped) throw new LpbfRunArchiveError(mapped[0], mapped[1]);
+    throw error;
+  }
+}
+
 export class LpbfRunArchiveService {
   private busy = false;
   constructor(
@@ -173,7 +194,7 @@ export class LpbfRunArchiveService {
       if (!sourceRepo) throw new LpbfRunArchiveError(400, 'Source repository not initialized.');
       try {
         const links = await this.resolveSources(sourceRepo, sources);
-        const { capture, root } = await lpbfWorker.captureForArchive(jobId);
+        const { capture, root } = await captureCompletedJob(jobId);
         const previewResult = await dryRunRunImport(capture, links, sourceRepo, root);
         const quota = this.checkQuota(previewResult.byteSize);
         return { ...previewResult, quota, sourceBindingStatus: 'exact-revision-bound' as const };
@@ -187,7 +208,7 @@ export class LpbfRunArchiveService {
       if (!sourceRepo) throw new LpbfRunArchiveError(400, 'Source repository not initialized.');
       try {
         const links = await this.resolveSources(sourceRepo, sources);
-        const { capture, root } = await lpbfWorker.captureForArchive(jobId);
+        const { capture, root } = await captureCompletedJob(jobId);
         // Dry run first to get size for quota check
         const previewResult = await dryRunRunImport(capture, links, sourceRepo, root);
         this.checkQuota(previewResult.byteSize);

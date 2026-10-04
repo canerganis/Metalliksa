@@ -77,12 +77,12 @@ export interface SimulationResult {
     interTrackLackOfFusion: boolean; midpointPenetrationDepth_um?: number; interLayerPenetrationDepth_um?: number;
     interLayerRemeltRatio?: number; globalRemeltRatio: number; totalMeltVolume_um3: number; totalRemeltVolume_um3: number;
     status: string; note: string;
-  };
+  } | null; // null only for bare-plate runs (enforced by parseSimulationJob)
   geometricDefectScreen?: {
     modelId: string; scope: string; status: string; limitations: string[];
     lackOfFusion: { status: string; ellipseIndex: number | null; signedMargin: number | null;
       overlapDepth_um: number | null; maximumHatch_um: number | null; riskScreened: boolean | null; reason: string | null };
-  };
+  } | null; // null only for bare-plate runs (enforced by parseSimulationJob)
   schemaVersion: 1; requestedMode: SimulationMode; effectiveMode: SimulationMode;
   requestedBackend?: SimulationInput["backend"];
   solver: { id: string; version: string; openfoam: string | null };
@@ -90,7 +90,8 @@ export interface SimulationResult {
   productionReady: false; label: string; fallbackReason: string | null;
   metrics: { width_um: number; depth_um: number; length_um: number; [key: string]: unknown };
   material: { name: string; quality: string; source: string; temperatureCoverage_K?: number[]; sourceValidityRange_K?: number[]; liquidus_K?: number; solidus_K?: number; table?: number[][]; uncertaintyNote?: string };
-  analyticalComparison: Record<string, { width_um: number; depth_um: number; length_um: number }>;
+  /** null only when settings.surfaceMode is "bare-plate" (enforced by parseSimulationJob). */
+  analyticalComparison: Record<string, { width_um: number; depth_um: number; length_um: number }> | null;
   assumptions: string[]; regime: string; mainRisk: string; recommendation: string; riskScope: string;
   thermalHistory?: { time_s: number; peak_K: number }[];
   energyBalance?: { input_J: number; losses_J: number; stored_J: number; relativeError: number };
@@ -217,6 +218,12 @@ function finiteTree(value: unknown): boolean {
   if (Array.isArray(value)) return value.every(finiteTree);
   return !object(value) || Object.values(value).every(finiteTree);
 }
+// python/lpbf_simulation.py emits analyticalComparison, fieldOverlapDiagnostics and
+// geometricDefectScreen as null exactly for bare-plate runs (no powder-layer screening or
+// inter-track overlap tracker exists). null is accepted for those fields only in that case.
+function barePlateNull(result: Record<string, unknown>, value: unknown): boolean {
+  return value === null && object(result.settings) && result.settings.surfaceMode === "bare-plate";
+}
 function dimensions(value: unknown): boolean {
   return object(value) && ["width_um", "depth_um", "length_um"].every(k => typeof value[k] === "number" && Number.isFinite(value[k]) && (value[k] as number) >= 0);
 }
@@ -259,7 +266,9 @@ export function parseSimulationJob(value: unknown): SimulationJob {
       || !["name", "quality", "source"].every(k => typeof (r.material as Record<string, unknown>)[k] === "string")
       || !["label", "regime", "mainRisk", "recommendation", "riskScope"].every(k => typeof r[k] === "string")
       || !Array.isArray(r.assumptions) || !r.assumptions.every(a => typeof a === "string")
-      || !object(r.analyticalComparison) || !Object.values(r.analyticalComparison).every(dimensions)) throw new Error("Invalid LPBF result contract");
+      || !(object(r.analyticalComparison)
+        ? Object.values(r.analyticalComparison).every(dimensions)
+        : barePlateNull(r, r.analyticalComparison))) throw new Error("Invalid LPBF result contract");
     checkCoreContract(r);
     if (r.thermalHistory !== undefined && (!Array.isArray(r.thermalHistory) || !r.thermalHistory.every((h, index, history) => object(h) && typeof h.time_s === "number" && h.time_s >= 0 && typeof h.peak_K === "number" && h.peak_K > 0
       && (index === 0 || h.time_s > history[index - 1].time_s)))) throw new Error("Invalid thermal history");
@@ -313,7 +322,7 @@ export function parseSimulationJob(value: unknown): SimulationJob {
           || typeof d.peakMeltTime_s === "number" && d.peakMeltTime_s > 0 && Number.isSafeInteger(d.peakMeltStep)
             && Number(d.peakMeltStep) > 0 && Number(d.peakMeltStep) <= Number(d.meltPoolObservedSteps)))) throw new Error("Invalid melt pool extraction diagnostics");
     }
-    if (r.fieldOverlapDiagnostics !== undefined) {
+    if (r.fieldOverlapDiagnostics !== undefined && !barePlateNull(r, r.fieldOverlapDiagnostics)) {
       const d = r.fieldOverlapDiagnostics;
       if (!object(d) || d.modelId !== "field-inter-track-overlap-v1" || typeof d.scope !== "string"
         || !Number.isSafeInteger(d.tracks) || Number(d.tracks) < 1 || !Number.isSafeInteger(d.layers) || Number(d.layers) < 1
@@ -325,7 +334,7 @@ export function parseSimulationJob(value: unknown): SimulationJob {
         || typeof d.totalRemeltVolume_um3 !== "number" || d.totalRemeltVolume_um3 < 0
         || typeof d.status !== "string" || typeof d.note !== "string") throw new Error("Invalid field overlap diagnostics");
     }
-    if (r.geometricDefectScreen !== undefined) {
+    if (r.geometricDefectScreen !== undefined && !barePlateNull(r, r.geometricDefectScreen)) {
       const d = r.geometricDefectScreen;
       const loss = object(d) ? d.lackOfFusion : undefined;
       if (!object(d) || d.modelId !== "elliptic-overlap-screening-v1" || typeof d.scope !== "string" || typeof d.status !== "string"

@@ -381,10 +381,33 @@ function sessionCookie(req: Request, value: string, maxAgeSeconds: number): stri
   return `${SESSION_COOKIE}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAgeSeconds}${secure}`;
 }
 
+/**
+ * Referrer policy for /login and /logout. Not "no-referrer": under that policy browsers serialise the
+ * Origin of a same-origin form POST as the literal "null", so the sign-in form could never pass the
+ * Origin check (Phase 2 defect D1). "strict-origin" still makes browsers send the real Origin but never the
+ * path or query, so the one-time code in the URL cannot leak through Referer (same-site or off-site).
+ */
+export const LOGIN_REFERRER_POLICY = "strict-origin";
+
+/**
+ * Browser proof for an "Origin: null" request: Sec-Fetch-Site is a forbidden header that only the
+ * browser can set, so "null" plus Sec-Fetch-Site "same-origin" is a same-origin navigation whose Origin
+ * was hidden by a referrer policy. Non-browser clients sending "null" without it are not trusted.
+ */
+export function isNullOriginSameOriginFetch(req: Request): boolean {
+  return req.headers.origin === "null" && firstHeaderValue(req.headers["sec-fetch-site"])?.toLowerCase() === "same-origin";
+}
+
+/** Sec-Fetch-Site values a browser sets for a request initiated by another origin's page. */
+function isCrossSiteFetch(req: Request): boolean {
+  const site = firstHeaderValue(req.headers["sec-fetch-site"])?.toLowerCase();
+  return site === "cross-site" || site === "same-site";
+}
+
 function loginHeaders(res: Response, contentType: string) {
   res.setHeader("Content-Type", contentType);
   res.setHeader("Cache-Control", "no-store");
-  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Referrer-Policy", LOGIN_REFERRER_POLICY);
 }
 
 function sendPlain(res: Response, status: number, body: string) {
@@ -405,7 +428,7 @@ function escapeHtml(v: string): string {
 
 const PAGE_HEAD =
   '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-  '<meta name="referrer" content="no-referrer"><title>Sign in</title></head><body><main><h1>Sign in</h1>';
+  '<meta name="referrer" content="' + LOGIN_REFERRER_POLICY + '"><title>Sign in</title></head><body><main><h1>Sign in</h1>';
 
 /** One-time link interstitial: carries the auto code only in a hidden POST field. */
 function loginPage(code: string): string {
@@ -436,13 +459,14 @@ function loginIp(req: Request): string {
  * GET /login without a code shows a sign-in form. GET /login?code= has no side effect: for the
  * auto-generated code it returns a tiny page with a POST form, so link previews and prefetchers cannot
  * burn the one-time code. HEAD never consumes anything. The static METALLIKSA_TOKEN is accepted only by
- * POST /login (form or JSON body), never in a URL. Every /login response is no-store / no-referrer.
+ * POST /login (form or JSON body), never in a URL. Every /login response is no-store and carries
+ * LOGIN_REFERRER_POLICY.
  */
 export function installLogin(app: Express, auth: LoginAuth) {
   // Runs before body parsing so parser failures (400/413) also carry the privacy headers.
   app.use(["/login", "/logout"], (_req: Request, res: Response, next: NextFunction) => {
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader("Referrer-Policy", LOGIN_REFERRER_POLICY);
     next();
   });
 
@@ -473,8 +497,10 @@ export function installLogin(app: Express, auth: LoginAuth) {
   });
 
   app.post("/login", express.urlencoded({ extended: false, limit: "4kb" }), express.json({ limit: "4kb" }), (req: Request, res: Response) => {
-    // Browsers always send Origin on cross-site form posts; reject when present and not same-origin.
-    if (req.headers.origin !== undefined && !isSameOrigin(req)) {
+    // Browsers always send Origin on cross-site form posts; reject when present and not same-origin
+    // (a browser-proven same-origin "null" Origin is accepted), and whenever the browser itself
+    // reports a cross-site or same-site initiator. Non-browser clients without Origin still work.
+    if ((req.headers.origin !== undefined && !isSameOrigin(req) && !isNullOriginSameOriginFetch(req)) || isCrossSiteFetch(req)) {
       const hint = crossOriginHint(req);
       return sendPlain(res, 403, "Cross-origin request rejected." + (hint ? " " + hint : ""));
     }
@@ -491,7 +517,7 @@ export function installLogin(app: Express, auth: LoginAuth) {
     const id = auth.createSession();
     res.setHeader("Set-Cookie", sessionCookie(req, id, auth.ttlSeconds));
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader("Referrer-Policy", LOGIN_REFERRER_POLICY);
     if (json) {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -504,8 +530,9 @@ export function installLogin(app: Express, auth: LoginAuth) {
   });
 
   app.post("/logout", (req: Request, res: Response) => {
-    // A cookie-authenticated mutating request must be same-origin.
-    if (!isSameOrigin(req)) {
+    // A cookie-authenticated mutating request must be same-origin (or a browser-proven same-origin
+    // "null" Origin); a missing Origin is still rejected.
+    if ((!isSameOrigin(req) && !isNullOriginSameOriginFetch(req)) || isCrossSiteFetch(req)) {
       const hint = crossOriginHint(req);
       return res.status(403).json({ error: "Cross-origin request rejected.", code: "CROSS_ORIGIN", ...(hint ? { hint } : {}) });
     }
