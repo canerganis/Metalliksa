@@ -237,7 +237,12 @@ class StochasticTest(unittest.TestCase):
     def test_request_defaults_equal_the_base_blob_with_the_legacy_norm_ppf(self):
         # The norm_ppf sign fix (audit D1) is the only change to the sampled output: with the
         # base blob's quantile function put back, the migrated solver reproduces d33b6f5 bit for bit.
-        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf):
+        def legacy_ppf_array(p):
+            # the solver draws through the vectorised quantile; the legacy one is scalar-only
+            p = uq.np.asarray(p, dtype=float)
+            return uq.np.array([OLD_UQ.norm_ppf(x) for x in p.ravel()]).reshape(p.shape)
+
+        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf),                 mock.patch.object(uq, "norm_ppf_array", legacy_ppf_array):
             new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
         self.assertEqual(json.dumps(new), json.dumps(old))
