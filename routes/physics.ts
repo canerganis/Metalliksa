@@ -28,7 +28,7 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
     } catch {
       parsed = { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
     }
-    return res.status(pythonDispatchStatus(parsed, pyRes.exitCode)).json(parsed);
+    return res.status(pythonDispatchStatus(parsed)).json(parsed);
   } catch (err: any) {
     console.error(`[Python error: ${scriptPath}]`, err);
     return res.status(500).json({

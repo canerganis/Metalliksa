@@ -29,23 +29,17 @@ const ENVELOPE = {
   errorKind: "validation",
 };
 
-test("pythonDispatchStatus maps validation to 422, failures to 500, success to 200", () => {
-  assert.equal(pythonDispatchStatus(ENVELOPE, 2), 422);
-  // The envelope decides even if a runner did not report the exit code.
-  assert.equal(pythonDispatchStatus(ENVELOPE, undefined), 422);
-  assert.equal(pythonDispatchStatus({ success: false, error: "boom", errorKind: "internal" }, 1), 500);
-  assert.equal(pythonDispatchStatus({ success: true, value: 1 }, 1), 500);
-  assert.equal(pythonDispatchStatus({ success: true }, null), 500);
-  assert.equal(pythonDispatchStatus({ error: "Empty stdin payload" }, 0), 500);
-  assert.equal(pythonDispatchStatus({ error: "no exit code reported" }, undefined), 500);
-  assert.equal(pythonDispatchStatus({ success: true, value: 1 }, 0), 200);
-  assert.equal(pythonDispatchStatus({ success: true, error: null }, 0), 200);
-  assert.equal(pythonDispatchStatus({ success: true, error: "partial warning" }, 0), 200);
-  assert.equal(pythonDispatchStatus({ success: false }, 0), 200);
-  assert.equal(pythonDispatchStatus({ rawOutput: "not json" }, 0), 200);
-  assert.equal(pythonDispatchStatus({ success: false }, undefined), 200);
-  assert.equal(pythonDispatchStatus(null, 0), 200);
-  assert.equal(pythonDispatchStatus([1, 2], 0), 200);
+test("pythonDispatchStatus maps only the validation envelope to 422; everything else stays 200", () => {
+  assert.equal(pythonDispatchStatus(ENVELOPE), 422);
+  // Pre-Phase-6a behaviour is kept for every non-validation outcome (frontends read the body).
+  assert.equal(pythonDispatchStatus({ success: false, error: "boom", errorKind: "internal" }), 200);
+  assert.equal(pythonDispatchStatus({ error: "Empty stdin payload" }), 200);
+  assert.equal(pythonDispatchStatus({ success: true, value: 1 }), 200);
+  assert.equal(pythonDispatchStatus({ success: false }), 200);
+  assert.equal(pythonDispatchStatus({ rawOutput: "not json" }), 200);
+  assert.equal(pythonDispatchStatus({ errorKind: "Validation" }), 200);
+  assert.equal(pythonDispatchStatus(null), 200);
+  assert.equal(pythonDispatchStatus([1, 2]), 200);
 });
 
 interface Harness {
@@ -115,20 +109,26 @@ test("validation envelope (exit 2) is relayed as HTTP 422 by both route handlers
   });
 });
 
-test("internal errors (exit 1) and top-level error payloads become HTTP 500", async () => {
+test("internal errors (exit 1) and top-level error payloads keep HTTP 200 and their body", async () => {
   const internal = { success: false, error: "Insufficient data points", isPythonEngine: true, durationMs: 0, errorKind: "internal" };
   await withRunners({ stdout: JSON.stringify(internal), exitCode: 1 }, async (h) => {
     for (const [route] of ROUTES) {
       const r = await post(h, route, {});
-      assert.equal(r.status, 500, route);
+      assert.equal(r.status, 200, route);
       assert.deepEqual(r.json, internal, route);
     }
   });
-  await withRunners({ stdout: JSON.stringify({ error: "Empty stdin payload" }), exitCode: 0 }, async (h) => {
+  await withRunners({ stdout: JSON.stringify({ error: "Empty stdin payload" }), exitCode: 1 }, async (h) => {
     for (const [route] of ROUTES) {
       const r = await post(h, route, {});
-      assert.equal(r.status, 500, route);
-      assert.equal(r.json.error, "Empty stdin payload");
+      assert.equal(r.status, 200, route);
+      assert.deepEqual(r.json, { error: "Empty stdin payload" });
+    }
+  });
+  // A signalled process (exit null) with valid JSON also keeps 200.
+  await withRunners({ stdout: JSON.stringify({ success: true }), exitCode: null }, async (h) => {
+    for (const [route] of ROUTES) {
+      assert.equal((await post(h, route, {})).status, 200, route);
     }
   });
 });
