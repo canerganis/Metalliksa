@@ -51,7 +51,7 @@
   animation: mkBootTrace 1.4s var(--mk-ease-inout) infinite;
 }
 
-.mk-boot-rows { display: grid; }
+.mk-boot-rows { display: grid; margin: 0; padding: 0; list-style: none; }
 .mk-boot-row {
   display: grid;
   grid-template-columns: 1rem minmax(0, 1fr) auto;
@@ -64,7 +64,7 @@
 .mk-boot-label { color: var(--mk-text-strong); }
 .mk-boot-state { font-family: var(--mk-font-mono); font-size: var(--mk-fs-xs); text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-subtle); }
 .mk-boot-detail { grid-column: 2 / -1; margin-top: 2px; font-size: var(--mk-fs-xs); color: var(--mk-text-soft); overflow-wrap: anywhere; }
-.mk-boot-icon { width: 1rem; height: 1rem; color: var(--mk-text-subtle); }
+.mk-boot-icon { width: 1rem; font-family: var(--mk-font-mono); font-weight: 700; text-align: center; color: var(--mk-text-subtle); }
 
 [data-state="ok"] > .mk-boot-state, [data-state="ok"] > .mk-boot-icon { color: var(--mk-signal-ok); }
 [data-state="limited"] > .mk-boot-state, [data-state="limited"] > .mk-boot-icon { color: var(--mk-signal-warn); }

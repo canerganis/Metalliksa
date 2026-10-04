@@ -118,9 +118,12 @@ test("new boot and telemetry components use no literal or palette colors and no 
   }
 });
 
-test("boot rows are role=status text, the overlay reuses AccessibleModal, the hero stays lazy", () => {
+test("boot rows are a plain list with one live k/N region, the overlay reuses AccessibleModal, the hero stays lazy", () => {
   const boot = read("src/components/BootSequence.tsx");
-  assert.match(boot, /role="status" className="mk-boot-row"/);
+  assert.equal((boot.match(/aria-live=/g) ?? []).length, 1, "exactly one live region");
+  assert.match(boot, /<p id="boot-count" className="mk-boot-count" role="status" aria-live="polite">/);
+  assert.match(boot, /<li key=\{row\.id\} className="mk-boot-row"/);
+  assert.doesNotMatch(boot, /<li[^>]*role=/, "list items keep listitem semantics");
   assert.match(boot, /<AccessibleModal[\s\S]*labelledBy="boot-title"/);
   assert.ok(!boot.includes("fixed inset-0"), "use AccessibleModal, not a hand-made overlay");
   assert.match(boot, /lazy\(\(\) => import\("\.\/BootHero"\)\)/);

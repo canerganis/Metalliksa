@@ -65,6 +65,31 @@ export const BOOT_SKIP_STORAGE_KEY = "metalliksa.boot.skipAnimation";
 
 const TIMED_OUT = Symbol("timed-out");
 
+export const BOOT_STATE_TEXT: Record<BootStepState, string> = {
+  pending: "Waiting",
+  running: "Checking",
+  ok: "OK",
+  limited: "Limited",
+  unavailable: "Unavailable",
+  "timed-out": "Timed out",
+  blocked: "Blocked",
+  "not-run": "Not run",
+};
+
+const ISSUE_STATES: readonly BootStepState[] = ["limited", "unavailable", "timed-out", "blocked"];
+
+/** Text for the single aria-live region: progress k/N, every problem by name, and the final result. */
+export function bootSummary(snap: BootSnapshot): string {
+  if (snap.phase === "stopped") {
+    const row = snap.rows.find((r) => r.state === "blocked");
+    return `Start-up stopped at ${row?.label ?? "a check"}: ${row?.detail ?? "blocked"}`;
+  }
+  const issues = snap.rows.filter((r) => ISSUE_STATES.includes(r.state)).map((r) => `${r.label} ${BOOT_STATE_TEXT[r.state].toLowerCase()}`);
+  const done = snap.phase !== "running";
+  const head = done ? `Start-up checks finished ${snap.finished}/${snap.total}` : `${snap.finished}/${snap.total} checks finished`;
+  return issues.length ? `${head} · needs attention: ${issues.join(", ")}` : done ? `${head} · no problems reported` : head;
+}
+
 function errorText(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "check failed";
 }
@@ -74,7 +99,8 @@ export function createBootController(options: BootOptions): BootController {
   const exitDelayMs = options.exitDelayMs ?? BOOT_EXIT_DELAY_MS;
   const listeners = new Set<() => void>();
   let snapshot: BootSnapshot = {
-    rows: options.steps.map((s) => ({ id: s.id, label: s.label, state: "pending", detail: "Waiting" })),
+    // Details stay empty until a check answers; the state word alone says "Waiting"/"Checking".
+    rows: options.steps.map((s) => ({ id: s.id, label: s.label, state: "pending", detail: "" })),
     phase: "running",
     finished: 0,
     total: options.steps.length,
@@ -112,7 +138,7 @@ export function createBootController(options: BootOptions): BootController {
     const steps = options.steps;
     for (let i = 0; i < steps.length; i += 1) {
       if (disposed) return;
-      setRows(i, i + 1, { state: "running", detail: "Checking" });
+      setRows(i, i + 1, { state: "running", detail: "" });
       const result = await runWithTimeout(steps[i]);
       if (disposed) return;
       if (result === TIMED_OUT) {

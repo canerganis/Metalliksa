@@ -9,6 +9,7 @@ import { fetchRuntimeConfig, runtimeConfigProbe, useAccessRequired, type Runtime
 import { useBootSnapshot } from "./BootSequence";
 import { subsystemCount } from "../services/bootSteps";
 import type { PythonEngineStatus } from "../services/pythonComputationService";
+import type { BootStepState } from "../utils/bootSequence";
 
 type Tone = "ok" | "warn" | "fail" | "neutral";
 export interface TelemetryCell {
@@ -24,7 +25,21 @@ export interface TelemetryInputs {
   engine: PythonEngineStatus | null;
   engineChecking: boolean;
   moduleCount: number;
-  boot: { finished: number; total: number; timedOut: string[] };
+  boot: { finished: number; total: number; stopped: boolean; rows: ReadonlyArray<{ label: string; state: BootStepState }> };
+}
+
+/** Start-up checks cell: k/N plus every step that did not pass, or "stopped" after a sign-in stop. */
+function bootCell(boot: TelemetryInputs["boot"]): TelemetryCell {
+  const named = (state: BootStepState) => boot.rows.filter((r) => r.state === state).map((r) => r.label);
+  if (boot.stopped) return { label: "Start-up checks", value: `stopped at ${named("blocked").join(", ") || "a check"}`, tone: "fail" };
+  const groups: Array<[string, string[]]> = [
+    ["unavailable", named("unavailable")],
+    ["timed out", named("timed-out")],
+    ["limited", named("limited")],
+  ];
+  const parts = [`${boot.finished}/${boot.total}`, ...groups.filter(([, n]) => n.length).map(([word, n]) => `${word}: ${n.join(", ")}`)];
+  const tone = groups[0][1].length || groups[1][1].length ? "fail" : groups[2][1].length ? "warn" : "neutral";
+  return { label: "Start-up checks", value: parts.join(" · "), tone };
 }
 
 /** Pure mapping from source values to cells; tested without a DOM. */
@@ -70,11 +85,7 @@ export function telemetryCells(input: TelemetryInputs): TelemetryCell[] {
       value: input.moduleCount > 0 ? `${input.moduleCount} registered` : "unavailable",
       tone: input.moduleCount > 0 ? "neutral" : "fail",
     },
-    {
-      label: "Start-up checks",
-      value: `${input.boot.finished}/${input.boot.total}${input.boot.timedOut.length ? ` · timed out: ${input.boot.timedOut.join(", ")}` : ""}`,
-      tone: input.boot.timedOut.length ? "fail" : "neutral",
-    },
+    bootCell(input.boot),
   ];
   return cells;
 }
@@ -102,7 +113,7 @@ export function TelemetryStrip({ engine, engineChecking, moduleCount }: { engine
     engine,
     engineChecking,
     moduleCount,
-    boot: { finished: boot.finished, total: boot.total, timedOut: boot.rows.filter((r) => r.state === "timed-out").map((r) => r.label) },
+    boot: { finished: boot.finished, total: boot.total, stopped: boot.phase === "stopped", rows: boot.rows },
   });
   return (
     <footer className="mk-telemetry" aria-label="System telemetry">

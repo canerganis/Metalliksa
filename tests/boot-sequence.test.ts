@@ -3,9 +3,12 @@ import { test } from "node:test";
 import {
   BOOT_EXIT_DELAY_MS,
   BOOT_STEP_TIMEOUT_MS,
+  bootSummary,
   createBootController,
   type BootOutcome,
+  type BootSnapshot,
   type BootStep,
+  type BootStepState,
 } from "../src/utils/bootSequence";
 import { buildBootSteps, describeEngine, type BootStepDeps } from "../src/services/bootSteps";
 import { telemetryCells, type TelemetryInputs } from "../src/components/TelemetryStrip";
@@ -237,8 +240,9 @@ const baseInputs: TelemetryInputs = {
   engine: { online: true, status: "online", pythonVersion: "3.12.10", subsystems: { calphad_solver: { available: true }, pourbaix_solver: { available: false } } },
   engineChecking: false,
   moduleCount: 37,
-  boot: { finished: 5, total: 5, timedOut: [] },
+  boot: { finished: 5, total: 5, stopped: false, rows: [] },
 };
+const bootRows = (...pairs: Array<[string, BootStepState]>) => pairs.map(([label, state]) => ({ label, state }));
 const cellMap = (input: TelemetryInputs) => Object.fromEntries(telemetryCells(input).map((c) => [c.label, `${c.value}|${c.tone}`]));
 
 test("telemetry cells show source values", () => {
@@ -253,7 +257,13 @@ test("telemetry cells show source values", () => {
 });
 
 test("telemetry cells read 'unavailable' with no data and never show placeholder numbers", () => {
-  const cells = cellMap({ ...baseInputs, config: null, engine: { online: false, status: "client_fallback" }, moduleCount: 0, boot: { finished: 5, total: 5, timedOut: ["Python engine"] } });
+  const cells = cellMap({
+    ...baseInputs,
+    config: null,
+    engine: { online: false, status: "client_fallback" },
+    moduleCount: 0,
+    boot: { finished: 5, total: 5, stopped: false, rows: bootRows(["Runtime configuration", "ok"], ["Python engine", "timed-out"]) },
+  });
   assert.equal(cells["Air-gap"], "unavailable|fail");
   assert.equal(cells.Access, "unavailable|fail");
   assert.equal(cells.Engine, "unavailable|fail");
@@ -268,4 +278,41 @@ test("telemetry cells read 'unavailable' with no data and never show placeholder
   // The live server sends subsystemStatus "unverified" and no subsystems map: never invent a count.
   assert.equal(cellMap({ ...baseInputs, engine: { online: true, status: "online", pythonVersion: "3.12.10" } }).Subsystems, "not reported|warn");
   assert.equal(cellMap({ ...baseInputs, config: { airgapped: true, blockedServices: ["x", "y"], allowedLocal: [] } })["Air-gap"], "ON · 2 cut|warn");
+});
+
+test("start-up checks cell names stopped, unavailable, timed-out and limited steps with a non-neutral tone", () => {
+  const boot = (stopped: boolean, ...pairs: Array<[string, BootStepState]>) =>
+    cellMap({ ...baseInputs, boot: { finished: pairs.length, total: 5, stopped, rows: bootRows(...pairs) } })["Start-up checks"];
+  assert.equal(boot(true, ["Runtime configuration", "limited"], ["Access", "blocked"], ["Air-gap", "not-run"]), "stopped at Access|fail");
+  assert.equal(boot(false, ["Air-gap", "unavailable"], ["Python engine", "timed-out"]), "2/5 · unavailable: Air-gap · timed out: Python engine|fail");
+  assert.equal(boot(false, ["Runtime configuration", "limited"]), "1/5 · limited: Runtime configuration|warn");
+  assert.equal(boot(false, ["Runtime configuration", "ok"]), "1/5|neutral");
+});
+
+test("engine cell on the first frame (no status yet, request about to start) reads checking, not unavailable", () => {
+  // App passes engineChecking = checking || (status === null && statusError === null).
+  assert.equal(cellMap({ ...baseInputs, engine: null, engineChecking: true }).Engine, "checking|neutral");
+});
+
+test("live summary: progress, problems by name, final result and the sign-in stop", () => {
+  const rows = (...states: BootStepState[]) => states.map((state, i) => ({ id: `s${i}`, label: `Step ${i + 1}`, state, detail: state === "blocked" ? "Sign-in required" : "" }));
+  const snap = (phase: BootSnapshot["phase"], ...states: BootStepState[]): BootSnapshot => ({
+    rows: rows(...states),
+    phase,
+    finished: states.filter((s) => !["pending", "running", "not-run"].includes(s)).length,
+    total: states.length,
+    animate: false,
+    dismissed: false,
+  });
+  assert.equal(bootSummary(snap("running", "ok", "running", "pending")), "1/3 checks finished");
+  assert.equal(bootSummary(snap("running", "ok", "timed-out", "running")), "2/3 checks finished · needs attention: Step 2 timed out");
+  assert.equal(bootSummary(snap("complete", "ok", "ok", "ok")), "Start-up checks finished 3/3 · no problems reported");
+  assert.equal(bootSummary(snap("done", "limited", "ok", "unavailable")), "Start-up checks finished 3/3 · needs attention: Step 1 limited, Step 3 unavailable");
+  assert.equal(bootSummary(snap("stopped", "ok", "blocked", "not-run")), "Start-up stopped at Step 2: Sign-in required");
+});
+
+test("rows start without a detail so the state word is not repeated ('Waiting Waiting')", () => {
+  const c = createBootController({ steps: [step("a", ok())] });
+  assert.equal(c.getSnapshot().rows[0].state, "pending");
+  assert.equal(c.getSnapshot().rows[0].detail, "");
 });
