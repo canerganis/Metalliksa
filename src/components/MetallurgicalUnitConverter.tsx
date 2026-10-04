@@ -21,6 +21,8 @@ import {
   convertStress,
   interpretStressMpa,
   interpretHardness,
+  HARDNESS_INTERPRETATION_NOTE,
+  HARDNESS_INTERPRETATION_UNAVAILABLE,
   TempUnit,
   convertTemperature,
   METALLURGICAL_MELTING_PRESETS,
@@ -37,6 +39,7 @@ import {
   convertCorrosionRate,
   convertDensity,
   computeDualUnitReport,
+  reportHardnessLine,
   ReportHardnessScale,
 } from "../utils/metallurgicalConversions";
 import {
@@ -49,8 +52,8 @@ import {
   UNAVAILABLE_TEXT,
   convertHardness,
   hardnessInputForScale,
-  hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
+import { SPECIMEN_HARDNESS_NOT_LOADED_NOTE } from "../utils/hardnessStrengthEstimate";
 import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
@@ -110,8 +113,8 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     [hardnessInput, hardnessScale, hardnessClass]
   );
   const hardnessInterpretation = useMemo(
-    () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV)),
-    [hardnessState.HV]
+    () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV, hardnessClass)),
+    [hardnessState.HV, hardnessClass]
   );
 
   // -------------------------------------------------------------
@@ -190,7 +193,10 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [reportHardnessValue, setReportHardnessValue] = useState<number>(34);
   const [reportHardnessScale, setReportHardnessScale] = useState<ReportHardnessScale>("HRC");
   const [reportHardnessClass, setReportHardnessClass] = useState<HardnessMaterialClass>("titanium-alloy");
-  const [reportHardnessFromSpecimen, setReportHardnessFromSpecimen] = useState<boolean>(false);
+  const [reportHardnessSyncNote, setReportHardnessSyncNote] = useState<string | null>(null);
+  // false after "Load Active Specimen": the specimen's name/YS/UTS are loaded but it has no measured hardness, so the
+  // placeholder hardness must not be reported under the specimen's name.
+  const [reportHardnessEntered, setReportHardnessEntered] = useState<boolean>(true);
   const [reportCvnJ, setReportCvnJ] = useState<number>(42);
   const [reportTestTempC, setReportTestTempC] = useState<number>(23);
 
@@ -218,20 +224,10 @@ export const MetallurgicalUnitConverter: React.FC = () => {
       if (activeMaterialSpecimen.uts_25C_MPa > 0) {
         setReportUtsMpa(activeMaterialSpecimen.uts_25C_MPa);
       }
-      if (activeMaterialSpecimen.hardness_HV > 0) {
-        const specimenClass = hardnessMaterialClassOf({
-          baseMetal: activeMaterialSpecimen.metadata?.baseMetal,
-          crystalSystem: activeMaterialSpecimen.xrd?.crystalSystem,
-        });
-        setHardnessInput(activeMaterialSpecimen.hardness_HV);
-        setHardnessScale("HV");
-        setHardnessClass(specimenClass);
-        // The report keeps the specimen's own HV as the primary value (no conversion to HRC).
-        setReportHardnessValue(activeMaterialSpecimen.hardness_HV);
-        setReportHardnessScale("HV");
-        setReportHardnessClass(specimenClass);
-        setReportHardnessFromSpecimen(true);
-      }
+      // The hardness inputs take measured values. The specimen record's HV is a yield-strength estimate or
+      // unavailable (never measured): the hardness tab is left unchanged and the report hardness is blanked.
+      setReportHardnessSyncNote(SPECIMEN_HARDNESS_NOT_LOADED_NOTE);
+      setReportHardnessEntered(false);
       if (activeMaterialSpecimen.name) {
         setReportAlloyName(activeMaterialSpecimen.name);
       }
@@ -242,7 +238,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     const text = `=== METALLURGICAL TEST REPORT SUMMARY (${reportAlloyName}) ===
 Yield Strength (Rp0.2): ${reportYieldMpa} MPa [${reportCalculated.yieldKsi} ksi]
 Tensile Strength (Rm): ${reportUtsMpa} MPa [${reportCalculated.utsKsi} ksi]
-Hardness: ${reportCalculated.hardnessText}
+Hardness: ${reportHardnessLine(reportHardnessEntered, reportCalculated.hardnessText, reportHardnessSyncNote)}
 Charpy V-Notch Impact: ${reportCvnJ} J [${reportCalculated.cvnFtLbf} ft-lbf]
 Test Condition: ${reportTestTempC} °C [${reportCalculated.tempF} °F / ${reportCalculated.tempK} K]
 Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
@@ -728,7 +724,8 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   Condition &amp; Machinability Assessment
                 </span>
                 <span className="text-xs font-mono text-sky-400 font-semibold">
-                  {hardnessInterpretation?.condition ?? "Unavailable (no HV)"}
+                  {hardnessInterpretation?.condition ??
+                    (hardnessClass !== "non-austenitic-steel" ? HARDNESS_INTERPRETATION_UNAVAILABLE : "Unavailable (no HV)")}
                 </span>
               </div>
 
@@ -747,6 +744,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </div>
               </div>
 
+              <div className="text-[10px] text-slate-500 font-mono">{HARDNESS_INTERPRETATION_NOTE}</div>
               <div className="text-[10px] text-slate-500 font-mono">
                 {hardnessState.validRangeNote}
               </div>
@@ -1443,10 +1441,12 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     <div className="flex items-center gap-1.5">
                       <input aria-label="Indentation Hardness (measured value)"
                         type="number"
-                        value={reportHardnessValue}
+                        value={reportHardnessEntered ? reportHardnessValue : ""}
+                        placeholder="not entered"
                         onChange={(e) => {
                           setReportHardnessValue(parseFloat(e.target.value) || 0);
-                          setReportHardnessFromSpecimen(false);
+                          setReportHardnessEntered(e.target.value !== "");
+                          if (e.target.value !== "") setReportHardnessSyncNote(null);
                         }}
                         className="w-24 px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-sky-400 font-bold text-right"
                       />
@@ -1455,7 +1455,6 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                         value={reportHardnessScale}
                         onChange={(e) => {
                           setReportHardnessScale(e.target.value as ReportHardnessScale);
-                          setReportHardnessFromSpecimen(false);
                         }}
                         className="px-1.5 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-slate-300"
                       >
@@ -1480,13 +1479,15 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     </select>
                     <span className="block text-[10px] font-normal text-slate-500 mt-1">
                       Measured value (primary).
-                      {reportHardnessFromSpecimen ? " Taken from the active specimen record; check that it is a measured value." : ""}
+                      {reportHardnessSyncNote ? ` ${reportHardnessSyncNote}` : ""}
                     </span>
                   </td>
                   <td className="py-3 px-3 bg-indigo-950/10 text-indigo-300">
-                    {reportCalculated.hardnessConverted === null ? (
+                    {!reportHardnessEntered ? (
+                      <span className="text-slate-500">(Converted: Unavailable, no measured hardness entered)</span>
+                    ) : reportCalculated.hardnessConverted === null ? (
                       <span className="text-slate-500">
-                        (Converted: Unavailable{reportHardnessClass === "non-austenitic-steel" ? ", outside the verified table range" : ", no verified conversion table for this alloy class"})
+                        (Converted: Unavailable{reportHardnessClass === "non-austenitic-steel" ? ", outside the verified table range" : ", no conversion table for this alloy class is implemented in this tool"})
                       </span>
                     ) : (
                       <span className="font-bold">
