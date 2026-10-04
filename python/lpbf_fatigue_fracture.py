@@ -29,6 +29,7 @@ from typing import List, Dict, Any, Mapping, Optional, Tuple
 import alloy_data_kinetics_uq_fatigue as _fatigue_data
 import alloy_registry
 import input_validation
+import murakami_constants
 
 
 @dataclass
@@ -77,14 +78,24 @@ class MurakamiFatigueEngine:
         return a0_m * 1e6  # Convert meters to µm
 
     def murakami_geometric_constant(self, location: str) -> float:
-        """Murakami C factor for surface, sub-surface, or internal defect."""
-        loc = location.lower()
-        if "surface" in loc and "sub" not in loc:
-            return 1.43
-        elif "sub" in loc:
-            return 1.41
-        else:
-            return 1.56
+        """Murakami C factor for surface (1.43), sub-surface (1.41) or internal (1.56) defect.
+
+        Shared with murakami_fatigue_screening via murakami_constants; an unknown
+        location raises input_validation.ValidationError instead of defaulting.
+        """
+        return murakami_constants.murakami_geometric_constant(location)
+
+    @staticmethod
+    def _require_stress_ratio(stress_ratio_R: float) -> float:
+        """Finite R < 1. R = 1 (static load) has no stress range and divides by zero in
+        sigma_max = delta_sigma / (1 - R); it is rejected, not clamped."""
+        r = input_validation.require_finite("stressRatio_R", stress_ratio_R)
+        if r >= 1.0:
+            raise input_validation.ValidationError(
+                input_validation.OUT_OF_RANGE, "stressRatio_R",
+                "must be < 1 (R = sigma_min / sigma_max; R = 1 is a static load)",
+                {"value": r, "hi": 1.0, "hiInclusive": False})
+        return r
 
     def calculate_fatigue_limit(
         self,
@@ -99,6 +110,8 @@ class MurakamiFatigueEngine:
           3. Stress ratio R correction (Murakami-Nisitani power law)
         """
         c_geom = self.murakami_geometric_constant(location)
+        sqrt_area_um = input_validation.require_positive("sqrtArea_um", sqrt_area_um)
+        stress_ratio_R = self._require_stress_ratio(stress_ratio_R)
         hv = self.alloy.hardness_HV
         sigma_e0 = self.alloy.smooth_fatigue_limit_MPa
         a0_um = self.el_haddad_intrinsic_crack_length_um()
@@ -106,7 +119,7 @@ class MurakamiFatigueEngine:
         # Pure Murakami formula (valid for medium-to-large defects)
         # sigma_w = c * (HV + 120) / (sqrt_area)^(1/6)
         area_safe = max(sqrt_area_um, 1e-4)
-        murakami_raw = c_geom * (hv + 120.0) / (area_safe ** (1.0 / 6.0))
+        murakami_raw = murakami_constants.murakami_sqrt_area_limit_MPa(area_safe, hv, location)
 
         # Kitagawa-Takahashi / El-Haddad bounded limit:
         # Scale by geometric location factor ratio (surface vs internal)
@@ -167,6 +180,11 @@ class MurakamiFatigueEngine:
         Integrates Paris-Erdogan law da/dN = C * (Delta_K)^m
         Delta_K = Y * Delta_sigma * sqrt(pi * a)
         """
+        initial_defect_sqrt_area_um = input_validation.require_positive(
+            "sqrtArea_um", initial_defect_sqrt_area_um)
+        cyclic_stress_amplitude_MPa = input_validation.require_positive(
+            "stressAmplitude_MPa", cyclic_stress_amplitude_MPa)
+        stress_ratio_R = self._require_stress_ratio(stress_ratio_R)
         # Initial crack half-length in meters: a0 = initial_defect / 2
         a = (initial_defect_sqrt_area_um / 2.0) * 1e-6
         delta_sigma = cyclic_stress_amplitude_MPa * 2.0  # Peak-to-peak stress range
