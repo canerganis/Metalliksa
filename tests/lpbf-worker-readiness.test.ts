@@ -41,8 +41,13 @@ function fixture(options: {
   let markReady: () => void;
   const ready = new Promise<void>(resolve => { markReady = resolve; });
   const bridge = new LpbfWorkerBridge({
+    // Default budgets bound a cold Node start plus its handshake; no test relies on them firing (tests that
+    // exercise a deadline pass their own). The request default was 2000 ms, below the 3000 ms startup bound, and a
+    // cold first test peaked at 1861 ms under stress (40 concurrent copies plus 24 CPU-spin threads). 5000 ms
+    // keeps it above the startup bound, so a slow start reports the bounded startup failure instead of the
+    // caller deadline, with ~2.7x margin over that peak and inside each test's 10 s timeout.
     startupTimeoutMs: options.startupTimeoutMs ?? 3000,
-    requestTimeoutMs: options.requestTimeoutMs ?? 2000,
+    requestTimeoutMs: options.requestTimeoutMs ?? 5000,
     command: fallback => {
       const command = options.command?.(fallback, commands.length) ?? { cmd: 'native-python', mode: 'normal' };
       return { cmd: command.cmd, args: [String(options.delayMs ?? 20), command.mode ?? 'normal'] };
