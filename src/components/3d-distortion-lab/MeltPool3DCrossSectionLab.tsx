@@ -1267,7 +1267,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 leading-relaxed">
-                Published isolated single-track W/D with DOI (NIST AMB2022-03 Table 4, Guo 2024 Table 3). AlSi10Mg is an honest gap. Solver-echo sweeps are not benchmarks. Goldak/ET depth uses Fabbro with Fresnel A; Marangoni does not refit W/D.
+                Published isolated single-track W/D with DOI (NIST AMB2022-03 Table 4, Guo 2024 Table 3). AlSi10Mg is an honest gap. Solver-echo sweeps are not benchmarks. Goldak/ET depth uses Fabbro with the tabulated flat-plate absorptivity; Marangoni does not refit W/D.
               </p>
               {MELT_POOL_LITERATURE_CASES.map((c) => {
                 const loadable = isLoadableLiteratureCase(c);
