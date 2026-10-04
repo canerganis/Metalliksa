@@ -1,7 +1,7 @@
 import React from "react";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ResultHeader, ConvergencePanel, MeasurementPanel, ThermalHistory } from "../src/components/3d-distortion-lab/LpbfResultPresentation";
+import { ResultHeader, ConvergencePanel, MeasurementPanel, ThermalHistory, StaleResultBanner, jobContextLabel } from "../src/components/3d-distortion-lab/LpbfResultPresentation";
 import { SimulationJob, SimulationResult } from "../src/services/lpbfSimulationService";
 
 const result: SimulationResult = {
@@ -15,7 +15,40 @@ const render = (j?: SimulationJob, stale = false) => renderToStaticMarkup(<Resul
 assert.match(render(job), /321/);
 assert.match(render(job), /Experimental validation pending/);
 assert.match(render({...job, cacheHit:true}), /Cached · completed/);
-assert.match(render(job,true), /inputs have changed/);
+// Phase 2 D4: a result computed for earlier inputs must not look current.
+{
+  const fresh = render(job);
+  assert.doesNotMatch(fresh, /Stale/);
+  assert.doesNotMatch(fresh, /opacity-50/);
+  assert.match(fresh, />completed</);
+  for (const staleJob of [job, { ...job, cacheHit: true }]) {
+    const html = render(staleJob, true);
+    // Prominent banner at the top of the result panel, before any result value.
+    const banner = html.indexOf("Stale: inputs changed since this result");
+    assert.ok(banner >= 0, "stale banner rendered");
+    assert.ok(banner < html.indexOf("321"), "banner precedes the old values");
+    assert.ok(banner < html.indexOf("Stale simulation result"), "banner is at the top of the panel");
+    assert.match(html, /data-stale-result="true"/);
+    // The status chip is downgraded: no plain or cached "completed" chip remains.
+    assert.match(html, />Stale · inputs changed</);
+    assert.doesNotMatch(html, />completed<|Cached · completed/);
+    assert.match(html, /Completed for earlier inputs · 100% reported/);
+    assert.match(html, /Stale simulation result/);
+    // Old numbers are de-emphasised.
+    for (const value of ["321", "123", "45"]) assert.match(html, new RegExp(`<dd class="[^"]*opacity-50[^"]*">${value} `), value);
+    assert.match(html, /<p class="mt-2 text-sm leading-6 opacity-50">Reduce hatch spacing/);
+    // Evidence and limitation labels stay at full emphasis.
+    for (const label of [">Experimental validation pending<", ">Calibration incomplete<", "Goldak · analytical liquidus extent", "Regime · conduction assumption", "Confidence</dt><dd class=\"mt-1.5 break-words text-sm\">low · model evidence limited"]) assert.ok(html.includes(label), label);
+    assert.doesNotMatch(html, /opacity-50[^"]*">(Experimental validation pending|Calibration incomplete|Goldak)/);
+  }
+  // A non-completed job never shows the stale banner (there is no result to mark).
+  assert.doesNotMatch(render({ ...job, status: "failed", progress: .5 }, true), /Stale: inputs changed/);
+  assert.match(renderToStaticMarkup(<StaleResultBanner/>), /role="status"/);
+  assert.equal(jobContextLabel(undefined, null), "not submitted");
+  assert.equal(jobContextLabel(job, true), "aaaaaaaa · completed");
+  assert.equal(jobContextLabel(job, false), "aaaaaaaa · stale · inputs changed");
+  assert.equal(jobContextLabel({ ...job, status: "cancelled" }, null), "aaaaaaaa · cancelled");
+}
 for (const status of ["queued", "running", "failed", "cancelled", "timed_out"] as const) {
   // Even if an upstream caller supplies stale result data, terminal failures cannot render it.
   const html=render({...job,status,progress:.42});

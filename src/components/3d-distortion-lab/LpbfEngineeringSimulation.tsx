@@ -1,5 +1,5 @@
 import { canonicalLpbfMaterialName } from "../../utils/lpbfMaterialIdentity";
-import { Badge, ResultHeader, ThermalHistory, ConvergencePanel, MeasurementPanel, surface, number } from "./LpbfResultPresentation";
+import { Badge, ResultHeader, StaleResultBanner, ThermalHistory, ConvergencePanel, MeasurementPanel, surface, number } from "./LpbfResultPresentation";
 import { LpbfPhysicsDiagnostics } from "./LpbfPhysicsDiagnostics";
 import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
 import React, { useEffect, useRef, useState } from "react";
@@ -643,6 +643,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     </div>
     {(mode==="standard"||mode==="calibration")&&<p className="text-xs text-slate-400" role="status">{estimateError||(estimate?`Preflight: ${fmt(estimate.cells)} cells · ${fmt(estimate.spacing_m*1e6)} µm · ~${fmt(estimate.minimumEstimatedSteps)} estimated steps · ~${fmt(estimate.workingMemoryEstimate_MB)} MB working arrays · ${estimate.runs} solve(s). ${estimate.exceedsCellBudget?"Cell budget exceeded.":estimate.exceedsStepBudget?"Requested timestep exceeds the 250,000-step budget. Increase timestep or shorten the process history.":estimate.runtimeEstimate}`:"Estimating resources…")}</p>}
     {r&&<>
+      {resultSignature!==signature&&<StaleResultBanner className="rounded-xl"/>}
       {r.fallbackReason&&<p className="text-sm text-amber-200">{r.fallbackReason}</p>}
       <section aria-label="Melt pool geometry" className="space-y-4"><div className="flex flex-wrap justify-between gap-2"><h4 className="font-medium">Melt pool geometry</h4><Badge tone="neutral">{r.fieldSeries?"Resolved thermal cells":"Analytical screening geometry"}</Badge></div><p className="text-xs text-slate-400">{r.confidenceReason} Free-surface unresolved · Keyhole unresolved · Stress not solved.</p>
       {r.fieldSeries && <ResolvedThermalViewer jobId={job.id} result={r} onTimeChange={setFieldTime}/>}
