@@ -2,6 +2,7 @@
  * Metallurgical Unit Conversion & Physical Property Interpretation Engine
  * Compliant with ASTM E140, ISO 18265, ASTM E112, and standard aerospace metallurgy standards.
  */
+import { convertSteelHardness } from "./hardnessConversion";
 
 // ==========================================
 // 1. STRESS & PRESSURE CONVERSIONS
@@ -104,103 +105,10 @@ export function interpretStressMpa(mpa: number): StressInterpretation {
 }
 
 // ==========================================
-// 2. HARDNESS CONVERSIONS (ASTM E140 / ISO 18265)
+// 2. HARDNESS
 // ==========================================
-export type HardnessScale = "HRC" | "HV" | "HRB" | "HBW" | "HK" | "HLD";
-
-export interface FullHardnessState {
-  HRC?: number;
-  HV: number;
-  HRB?: number;
-  HBW: number;
-  HK: number;
-  HLD: number;
-  tensileRm_MPa: number;
-  tensileRm_ksi: number;
-  validRangeNote: string;
-}
-
-export function convertMetallurgicalHardness(
-  value: number,
-  fromScale: HardnessScale
-): FullHardnessState {
-  let vickers = 300;
-
-  switch (fromScale) {
-    case "HV":
-      vickers = Math.max(40, Math.min(2000, value));
-      break;
-    case "HRC": {
-      const hrc = Math.max(15, Math.min(72, value));
-      // ASTM E140 non-linear polynomial fit for steel
-      vickers = 142.8 + 8.94 * hrc + 0.134 * hrc * hrc;
-      break;
-    }
-    case "HRB": {
-      const hrb = Math.max(30, Math.min(105, value));
-      vickers = 24.5 + 1.25 * hrb + 0.007 * hrb * hrb;
-      break;
-    }
-    case "HBW": {
-      const hbw = Math.max(60, Math.min(750, value));
-      vickers = 1.05 * hbw - 5;
-      break;
-    }
-    case "HK": {
-      vickers = Math.max(40, Math.min(2000, value)) / 1.03;
-      break;
-    }
-    case "HLD": {
-      // Leeb D conversion approximation: HLD ~ 500 + 4.5 * HRC
-      const eqHrc = (value - 500) / 4.5;
-      const clampedHrc = Math.max(15, Math.min(68, eqHrc));
-      vickers = 142.8 + 8.94 * clampedHrc + 0.134 * clampedHrc * clampedHrc;
-      break;
-    }
-  }
-
-  // Derive all scales from Vickers (HV)
-  let hrc: number | undefined;
-  if (vickers >= 230) {
-    const rawHrc = -20.6 + 0.098 * vickers - 0.000045 * vickers * vickers;
-    hrc = Number(Math.max(18, Math.min(70, rawHrc)).toFixed(1));
-  }
-
-  let hrb: number | undefined;
-  if (vickers <= 325) {
-    const rawHrb = -18.2 + 0.82 * vickers - 0.0014 * vickers * vickers;
-    hrb = Number(Math.max(25, Math.min(102, rawHrb)).toFixed(1));
-  }
-
-  const hbw = Math.round(Math.max(50, Math.min(700, vickers / 1.05)));
-  const hk = Math.round(vickers * 1.03);
-  const hld = Math.round(
-    hrc ? 500 + 4.5 * hrc : Math.min(890, Math.max(350, 200 + 1.6 * vickers))
-  );
-
-  // Tensile strength Rm estimate (ASTM E140 table for carbon and low-alloy steels)
-  const rm_mpa = Math.round(vickers * 3.25);
-  const rm_ksi = Number((rm_mpa * 0.1450377).toFixed(1));
-
-  let note = "ASTM E140 & ISO 18265 calibrated correlation";
-  if (fromScale === "HRC" && (value < 20 || value > 68)) {
-    note = "Notice: Value outside ASTM E140 certified HRC range (20 - 68 HRC). Diamond indenter geometry may diverge.";
-  } else if (fromScale === "HRB" && (value < 40 || value > 100)) {
-    note = "Notice: Value outside standard HRB ball indenter range (40 - 100 HRB).";
-  }
-
-  return {
-    HRC: hrc,
-    HV: Math.round(vickers),
-    HRB: hrb,
-    HBW: hbw,
-    HK: hk,
-    HLD: hld,
-    tensileRm_MPa: rm_mpa,
-    tensileRm_ksi: rm_ksi,
-    validRangeNote: note,
-  };
-}
+// Scale conversion lives in ./hardnessConversion (convertSteelHardness: ASTM E140 / ISO 18265 table interpolation,
+// shared with Pocket Calculators). Only the qualitative HV band description remains here.
 
 export interface HardnessInterpretation {
   condition: string;
@@ -649,8 +557,9 @@ export interface DualUnitReportInputs {
 export interface DualUnitReport {
   yieldKsi: number;
   utsKsi: number;
-  hv: number;
-  hbw: number;
+  /** Approximate HV / HBW converted from the HRC input (ASTM E140 Table 1); null outside the tabulated range. */
+  hv: number | null;
+  hbw: number | null;
   cvnFtLbf: number;
   tempF: number;
   tempK: number;
@@ -660,7 +569,7 @@ export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitRep
   const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, hardnessHrc: reportHardnessHrc, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
   const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
   const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
-  const hState = convertMetallurgicalHardness(reportHardnessHrc, "HRC");
+  const hState = convertSteelHardness(reportHardnessHrc, "HRC");
   const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
   const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
   const tempK = Number((reportTestTempC + 273.15).toFixed(1));

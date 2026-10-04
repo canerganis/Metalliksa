@@ -17,13 +17,12 @@ import {
 import {
   convertStress,
   interpretStressMpa,
-  convertMetallurgicalHardness,
   interpretHardness,
   convertTemperature,
   StressUnit,
-  HardnessScale,
   TempUnit,
 } from "../utils/metallurgicalConversions";
+import { HARDNESS_CONVERSION_DISCLAIMER, convertSteelHardness } from "../utils/hardnessConversion";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
@@ -95,29 +94,31 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
   const hardnessConversions = useMemo(() => {
     if (hardnessInputScale === "HRC") {
-      return convertMetallurgicalHardness(hardnessValHrc, "HRC");
+      return convertSteelHardness(hardnessValHrc, "HRC");
     } else {
-      return convertMetallurgicalHardness(hardnessValHv, "HV");
+      return convertSteelHardness(hardnessValHv, "HV");
     }
   }, [hardnessInputScale, hardnessValHrc, hardnessValHv]);
 
   const hardnessInterpretation = useMemo(
-    () => interpretHardness(hardnessConversions.HV),
+    () => (hardnessConversions.HV === null ? null : interpretHardness(hardnessConversions.HV)),
     [hardnessConversions.HV]
   );
 
   const handleHrcChange = (val: number) => {
     setHardnessInputScale("HRC");
     setHardnessValHrc(val);
-    const converted = convertMetallurgicalHardness(val, "HRC");
-    setHardnessValHv(converted.HV);
+    const converted = convertSteelHardness(val, "HRC");
+    if (converted.HV !== null) {
+      setHardnessValHv(converted.HV);
+    }
   };
 
   const handleHvChange = (val: number) => {
     setHardnessInputScale("HV");
     setHardnessValHv(val);
-    const converted = convertMetallurgicalHardness(val, "HV");
-    if (converted.HRC !== undefined) {
+    const converted = convertSteelHardness(val, "HV");
+    if (converted.HRC !== null) {
       setHardnessValHrc(converted.HRC);
     }
   };
@@ -562,7 +563,9 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
                     <div className="text-right">
                       <span className="text-[10px] font-mono font-bold text-emerald-400">
-                        Rm: {hardnessConversions.tensileRm_MPa} MPa
+                        {hardnessConversions.tensileRm_MPa === null
+                          ? "Rm: N/A"
+                          : `Rm ≈ ${hardnessConversions.tensileRm_MPa} MPa`}
                       </span>
                     </div>
                   </div>
@@ -583,10 +586,10 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           id="input-hardness-hrc"
                           type="number"
                           inputMode="decimal"
-                          min={15}
-                          max={70}
-                          value={hardnessConversions.HRC ?? ""}
-                          placeholder={hardnessConversions.HRC === undefined ? "<20 HRC" : ""}
+                          min={20}
+                          max={68}
+                          value={hardnessInputScale === "HRC" ? hardnessValHrc : hardnessConversions.HRC ?? ""}
+                          placeholder={hardnessConversions.HRC === null ? "N/A" : ""}
                           onChange={(e) => handleHrcChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2.5 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-sm text-emerald-400 focus:outline-none focus:border-emerald-400"
                         />
@@ -618,14 +621,15 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           id="input-hardness-hv"
                           type="number"
                           inputMode="decimal"
-                          min={90}
-                          max={1100}
-                          value={hardnessConversions.HV}
+                          min={80}
+                          max={940}
+                          value={hardnessInputScale === "HV" ? hardnessValHv : hardnessConversions.HV ?? ""}
+                          placeholder={hardnessConversions.HV === null ? "N/A" : ""}
                           onChange={(e) => handleHvChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2.5 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-sm text-cyan-400 focus:outline-none focus:border-cyan-400"
                         />
                         <button
-                          onClick={() => handleCopy(hardnessConversions.HV, "quick-hv")}
+                          onClick={() => handleCopy(hardnessConversions.HV ?? "N/A", "quick-hv")}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-300"
                           title="Copy HV"
                         >
@@ -643,10 +647,10 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                   <div className="mt-2.5">
                     <input aria-label="Vickers (HV) slider"
                       type="range"
-                      min={120}
-                      max={950}
+                      min={100}
+                      max={940}
                       step={5}
-                      value={hardnessConversions.HV}
+                      value={hardnessConversions.HV ?? hardnessValHv}
                       onChange={(e) => handleHvChange(parseFloat(e.target.value) || 0)}
                       className="w-full accent-emerald-400 bg-[#090e18] h-1.5 rounded cursor-pointer"
                     />
@@ -656,7 +660,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                   <div className="grid grid-cols-3 gap-1.5 mt-2.5 p-2 bg-[#090e18] rounded-lg border border-[#162032] text-center font-mono">
                     <div>
                       <div className="text-[9px] text-slate-500">Brinell HBW</div>
-                      <div className="text-xs font-bold text-slate-200">{hardnessConversions.HBW}</div>
+                      <div className="text-xs font-bold text-slate-200">{hardnessConversions.HBW ?? "N/A"}</div>
                     </div>
                     <div>
                       <div className="text-[9px] text-slate-500">Rockwell B</div>
@@ -667,10 +671,11 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                     <div>
                       <div className="text-[9px] text-slate-500">Tensile Rm</div>
                       <div className="text-xs font-bold text-emerald-300">
-                        {hardnessConversions.tensileRm_ksi} ksi
+                        {hardnessConversions.tensileRm_ksi === null ? "N/A" : `≈ ${hardnessConversions.tensileRm_ksi} ksi`}
                       </div>
                     </div>
                   </div>
+                  <p className="text-[9px] text-slate-500 mt-1.5 leading-snug">{HARDNESS_CONVERSION_DISCLAIMER}</p>
                 </div>
 
                 {/* Filterable Alloy Hardness Presets */}

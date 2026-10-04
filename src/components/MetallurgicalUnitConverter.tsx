@@ -20,8 +20,6 @@ import {
   StressUnit,
   convertStress,
   interpretStressMpa,
-  HardnessScale,
-  convertMetallurgicalHardness,
   interpretHardness,
   TempUnit,
   convertTemperature,
@@ -40,6 +38,12 @@ import {
   convertDensity,
   computeDualUnitReport,
 } from "../utils/metallurgicalConversions";
+import {
+  HardnessScale,
+  HARDNESS_VERIFIED_RANGES,
+  TENSILE_ESTIMATE_NOTE,
+  convertSteelHardness,
+} from "../utils/hardnessConversion";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
@@ -68,6 +72,9 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+  // Converted hardness values are table estimates; null means outside the verified table range.
+  const hardnessValue = (v: number | null) =>
+    v === null ? <span className="text-slate-600 text-sm">Unavailable</span> : v;
 
   // -------------------------------------------------------------
   // 1. STRESS / STRENGTH STATE
@@ -89,11 +96,11 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [hardnessInput, setHardnessInput] = useState<number>(32);
   const [hardnessScale, setHardnessScale] = useState<HardnessScale>("HRC");
   const hardnessState = useMemo(
-    () => convertMetallurgicalHardness(hardnessInput, hardnessScale),
+    () => convertSteelHardness(hardnessInput, hardnessScale),
     [hardnessInput, hardnessScale]
   );
   const hardnessInterpretation = useMemo(
-    () => interpretHardness(hardnessState.HV),
+    () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV)),
     [hardnessState.HV]
   );
 
@@ -197,8 +204,8 @@ export const MetallurgicalUnitConverter: React.FC = () => {
       if (activeMaterialSpecimen.hardness_HV > 0) {
         setHardnessInput(activeMaterialSpecimen.hardness_HV);
         setHardnessScale("HV");
-        const converted = convertMetallurgicalHardness(activeMaterialSpecimen.hardness_HV, "HV");
-        if (converted.HRC) {
+        const converted = convertSteelHardness(activeMaterialSpecimen.hardness_HV, "HV");
+        if (converted.HRC !== null) {
           setReportHardnessHrc(converted.HRC);
         }
       }
@@ -212,7 +219,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     const text = `=== METALLURGICAL TEST REPORT SUMMARY (${reportAlloyName}) ===
 Yield Strength (Rp0.2): ${reportYieldMpa} MPa [${reportCalculated.yieldKsi} ksi]
 Tensile Strength (Rm): ${reportUtsMpa} MPa [${reportCalculated.utsKsi} ksi]
-Hardness: ${reportHardnessHrc} HRC [${reportCalculated.hv} HV / ${reportCalculated.hbw} HBW]
+Hardness: ${reportHardnessHrc} HRC [approx. ${reportCalculated.hv ?? "n/a"} HV / ${reportCalculated.hbw ?? "n/a"} HBW, converted per ASTM E140 tables, not measured]
 Charpy V-Notch Impact: ${reportCvnJ} J [${reportCalculated.cvnFtLbf} ft-lbf]
 Test Condition: ${reportTestTempC} °C [${reportCalculated.tempF} °F / ${reportCalculated.tempK} K]
 Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
@@ -490,13 +497,14 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono text-sky-400 uppercase tracking-widest font-semibold">
-                  ASTM E140 / ISO 18265 Non-Linear Regression
+                  ASTM E140 / ISO 18265 Table Interpolation
                 </span>
                 <StandardInfoIcon category="hardness" align="left" />
               </div>
               <h4 className="text-sm font-bold text-white mt-0.5">Select Scale &amp; Test Value</h4>
               <p className="text-xs text-slate-400 mt-0.5">
-                Accurate conversion between Rockwell C/B, Vickers, Brinell, Knoop, and Leeb D.
+                Approximate conversion for non-austenitic steels between Rockwell C/B, Vickers, Brinell and Knoop; not a
+                substitute for direct testing. Leeb D is not converted.
               </p>
             </div>
 
@@ -507,10 +515,10 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   key={s}
                   onClick={() => {
                     setHardnessScale(s);
-                    if (s === "HRC" && (hardnessInput > 70 || hardnessInput < 15)) setHardnessInput(35);
-                    if (s === "HRB" && (hardnessInput > 105 || hardnessInput < 30)) setHardnessInput(85);
+                    if (s === "HRC" && (hardnessInput > 68 || hardnessInput < 20)) setHardnessInput(35);
+                    if (s === "HRB" && (hardnessInput > 100 || hardnessInput < 55)) setHardnessInput(85);
                     if (s === "HV" && hardnessInput < 100) setHardnessInput(350);
-                    if (s === "HBW" && hardnessInput < 80) setHardnessInput(320);
+                    if (s === "HBW" && (hardnessInput > 634 || hardnessInput < 226)) setHardnessInput(320);
                   }}
                   className={`py-1.5 text-xs font-mono font-bold rounded-lg border transition ${
                     hardnessScale === s
@@ -538,8 +546,8 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
 
               <input aria-label={`Value in ${hardnessScale} slider`}
                 type="range"
-                min={hardnessScale === "HRC" ? 18 : hardnessScale === "HRB" ? 35 : hardnessScale === "HBW" ? 80 : 80}
-                max={hardnessScale === "HRC" ? 68 : hardnessScale === "HRB" ? 100 : hardnessScale === "HBW" ? 650 : 1200}
+                min={HARDNESS_VERIFIED_RANGES[hardnessScale]?.min ?? 80}
+                max={HARDNESS_VERIFIED_RANGES[hardnessScale]?.max ?? 1200}
                 step={hardnessScale === "HRC" || hardnessScale === "HRB" ? 0.5 : 5}
                 value={hardnessInput}
                 onChange={(e) => setHardnessInput(parseFloat(e.target.value) || 0)}
@@ -587,11 +595,11 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="p-3 rounded-xl bg-sky-950/20 border border-sky-500/40 shadow-sm relative group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Vickers (HV / DPH)</span>
-                  <button onClick={() => handleCopy(hardnessState.HV, "h-hv")} className="text-slate-500 hover:text-sky-300">
+                  <button onClick={() => handleCopy(hardnessState.HV ?? "N/A", "h-hv")} className="text-slate-500 hover:text-sky-300">
                     {copiedId === "h-hv" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <div className="text-2xl font-black font-mono text-sky-300 mt-1">{hardnessState.HV}</div>
+                <div className="text-2xl font-black font-mono text-sky-300 mt-1">{hardnessValue(hardnessState.HV)}</div>
                 <div className="text-[10px] text-slate-500">Universal standard diamond pyramid</div>
               </div>
 
@@ -604,7 +612,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </button>
                 </div>
                 <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
-                  {hardnessState.HRC !== undefined ? `${hardnessState.HRC}` : <span className="text-slate-600 text-sm">Below Range</span>}
+                  {hardnessValue(hardnessState.HRC)}
                 </div>
                 <div className="text-[10px] text-slate-500">150 kgf Brale diamond cone</div>
               </div>
@@ -618,7 +626,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </button>
                 </div>
                 <div className="text-2xl font-black font-mono text-amber-400 mt-1">
-                  {hardnessState.HRB !== undefined ? `${hardnessState.HRB}` : <span className="text-slate-600 text-sm">Above Range</span>}
+                  {hardnessValue(hardnessState.HRB)}
                 </div>
                 <div className="text-[10px] text-slate-500">100 kgf 1/16" steel ball indenter</div>
               </div>
@@ -626,22 +634,22 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               {/* Brinell */}
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-xs text-slate-400 font-mono">Brinell (HBW 10/3000)</span>
-                <div className="text-xl font-black font-mono text-cyan-400 mt-1">{hardnessState.HBW}</div>
+                <div className="text-xl font-black font-mono text-cyan-400 mt-1">{hardnessValue(hardnessState.HBW)}</div>
                 <div className="text-[10px] text-slate-500">10mm tungsten carbide ball</div>
               </div>
 
               {/* Knoop */}
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-xs text-slate-400 font-mono">Knoop (HK)</span>
-                <div className="text-xl font-black font-mono text-indigo-300 mt-1">{hardnessState.HK}</div>
+                <div className="text-xl font-black font-mono text-indigo-300 mt-1">{hardnessValue(hardnessState.HK)}</div>
                 <div className="text-[10px] text-slate-500">Thin foils &amp; case depths</div>
               </div>
 
               {/* Leeb D */}
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-xs text-slate-400 font-mono">Leeb Rebound (HLD)</span>
-                <div className="text-xl font-black font-mono text-violet-400 mt-1">{hardnessState.HLD}</div>
-                <div className="text-[10px] text-slate-500">Portable field tester standard</div>
+                <div className="text-xl font-black font-mono text-violet-400 mt-1">{hardnessValue(hardnessState.HLD)}</div>
+                <div className="text-[10px] text-slate-500">No verified conversion table</div>
               </div>
             </div>
 
@@ -649,15 +657,21 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-[#090e18] to-sky-950/40 border border-emerald-500/30 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider block">
-                  ASTM E140 Estimated Tensile Strength (Rm)
+                  ISO 18265 Estimated Tensile Strength (Rm)
                 </span>
                 <div className="flex items-baseline gap-3 mt-0.5">
-                  <span className="text-xl font-black font-mono text-white">{hardnessState.tensileRm_MPa} MPa</span>
-                  <span className="text-sm font-mono text-emerald-300">({hardnessState.tensileRm_ksi} ksi)</span>
+                  {hardnessState.tensileRm_MPa === null ? (
+                    <span className="text-sm font-mono text-slate-500">Unavailable ({hardnessState.unavailable.Rm})</span>
+                  ) : (
+                    <>
+                      <span className="text-xl font-black font-mono text-white">≈ {hardnessState.tensileRm_MPa} MPa</span>
+                      <span className="text-sm font-mono text-emerald-300">({hardnessState.tensileRm_ksi} ksi)</span>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="text-right text-[10px] text-slate-400 font-mono max-w-xs">
-                Rm ≈ 3.25 × HV (valid for unhardened &amp; tempered structural steels)
+                {TENSILE_ESTIMATE_NOTE}
               </div>
             </div>
 
@@ -668,7 +682,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   Condition &amp; Machinability Assessment
                 </span>
                 <span className="text-xs font-mono text-sky-400 font-semibold">
-                  {hardnessInterpretation.condition}
+                  {hardnessInterpretation?.condition ?? "Unavailable (no HV)"}
                 </span>
               </div>
 
@@ -677,13 +691,13 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
                     Machining Behavior:
                   </span>
-                  <span className="text-slate-300">{hardnessInterpretation.machinability}</span>
+                  <span className="text-slate-300">{hardnessInterpretation?.machinability ?? "-"}</span>
                 </div>
                 <div className="p-3 bg-[#0c1322] rounded-lg border border-[#162032]">
                   <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
                     Wear &amp; Fatigue Life:
                   </span>
-                  <span className="text-slate-300">{hardnessInterpretation.wearResistance}</span>
+                  <span className="text-slate-300">{hardnessInterpretation?.wearResistance ?? "-"}</span>
                 </div>
               </div>
 
@@ -1379,7 +1393,8 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     Indentation Hardness
                   </td>
                   <td className="py-3 px-3 bg-sky-950/10 font-bold text-sky-300">
-                    {reportCalculated.hv} HV / {reportCalculated.hbw} HBW
+                    ≈ {reportCalculated.hv ?? "n/a"} HV / {reportCalculated.hbw ?? "n/a"} HBW
+                    <span className="block text-[10px] font-normal text-slate-500">converted (ASTM E140), not measured</span>
                   </td>
                   <td className="py-3 px-3 bg-indigo-950/10">
                     <div className="flex items-center gap-1.5">
