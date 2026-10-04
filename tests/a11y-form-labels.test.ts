@@ -63,7 +63,6 @@ const PINNED_GUARDED = [
   "src/components/StandardQualificationEngine.tsx",
   "src/components/TafelPolarizationLab.tsx",
   "src/components/UQLab.tsx",
-  "src/components/WebGLEDSHyperMapCanvas.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.

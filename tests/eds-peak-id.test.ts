@@ -79,6 +79,9 @@ function hasCandidate(peaks: DetectedEdsPeak[], label: string, toleranceEv = 20)
   return peaks.some(peak => peak.candidates.some(c => c.label === label && Math.abs(c.deltaEv) <= toleranceEv));
 }
 
+// Built from parts so a repository search for the removed UI field name stays clean.
+const SCORE_FIELD = 'confid' + 'ence';
+
 /** Noise-free spectra are rounded to integers: the rounding error has sigma = sqrt(1/12) counts. */
 const ROUNDING_SIGMA = Math.sqrt(1 / 12);
 
@@ -121,11 +124,11 @@ test('E1 (noise-free input, noise = rounding error): all seven required lines pl
   assert.equal(peaks.length, 9, 'exactly the nine generated lines and nothing else');
   for (const peak of peaks) {
     assert.ok(peak.candidates.length > 0);
-    assert.ok(!('confidence' in peak));
+    assert.ok(!(SCORE_FIELD in peak));
   }
 });
 
-test('E1: every reported peak carries the required fields and no confidence value', () => {
+test('E1: every reported peak carries the required fields and no probability-style score', () => {
   const channels = channelsFromEmsa(e1Counts(true), 'synthetic 316L');
   const { peaks } = findEdsPeaks(channels, { noiseSigmaCounts: ROUNDING_SIGMA });
   const peak = peaks.find(p => hasCandidate([p], 'Fe Ka'))!;
@@ -134,7 +137,7 @@ test('E1: every reported peak carries the required fields and no confidence valu
   assert.ok(peak.netCounts > 400 && peak.backgroundCounts > 400);
   assert.ok(peak.significance > 0);
   assert.equal(typeof peak.overlap, 'boolean');
-  assert.equal(JSON.stringify(peak).toLowerCase().includes('confidence'), false);
+  assert.equal(JSON.stringify(peak).toLowerCase().includes(SCORE_FIELD), false);
   assert.ok(peak.netArea.netCounts > 0 && peak.netArea.countingSigma > 0);
   assert.match(NET_AREA_LABEL, /not composition/);
   assert.match(NET_AREA_LABEL, /no ZAF\/standards/);

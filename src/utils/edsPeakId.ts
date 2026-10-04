@@ -2,7 +2,7 @@
 //
 // Pure functions, no React. Everything here is a spectrum-processing aid: it lists
 // which tabulated X-ray lines lie close to a detected maximum. It does NOT identify
-// elements with a probability or a confidence, and it does NOT quantify composition
+// elements with a probability or a score, and it does NOT quantify composition
 // (no ZAF/PhiRhoZ correction, no standards, no k-ratios).
 
 import {
@@ -294,7 +294,7 @@ export function listPeakCandidates(
       parts.push(`Lines of ${elements.size} elements lie within +/-${windowEv.toFixed(0)} eV of this peak (${candidates.map(c => c.label).join(", ")}); the peak alone cannot separate them.`);
     }
     if (overlapPartners.length > 0) {
-      parts.push(`Known overlapping lines within ${(partnerEv).toFixed(0)} eV of a candidate: ${overlapPartners.map(p => `${p.label} (${p.deltaEv >= 0 ? "+" : ""}${p.deltaEv.toFixed(0)} eV from the peak)`).join(", ")}.`);
+      parts.push(`Known overlapping lines within ${(partnerEv).toFixed(0)} eV of a candidate: ${overlapPartners.map(p => `${p.label} (${Math.abs(p.deltaEv).toFixed(0)} eV ${p.deltaEv < 0 ? "above" : "below"} the peak)`).join(", ")}.`);
     }
     if (groupNames.size > 0) parts.push(`Known overlap group: ${[...groupNames].join("; ")}.`);
     parts.push("Check a second line of each element before accepting one.");
