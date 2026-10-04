@@ -20,6 +20,24 @@ with C = 1.43 for a defect on the surface, 1.41 for a defect in contact with the
 surface (sub-surface, "touching" the surface) and 1.56 for a defect in the interior.
 Checked on the web against secondary literature quoting the book (2026-10-04); the
 primary book was not available.
+
+Sub-surface defects: virtual area
+---------------------------------
+For a defect touching the surface the constant 1.41 expects the VIRTUAL area: the
+outline of the defect plus the ligament that joins it to the free surface
+(Y. Murakami, "Effects of small defects and nonmetallic inclusions on the fatigue
+strength of metals", JSME Int. J. Ser. I 32(2) (1989) 167-180, open PDF on J-STAGE,
+pp. 173-174). Entering the defect's own (smaller) area is non-conservative: if the
+virtual area were twice the defect area, the limit computed from the defect's
+own area would be too high by the factor 2^(1/12) = 1.059, i.e. the correct value
+is about 5.6 % lower (2^(-1/12) = 0.944). This module does
+not compute a virtual area; callers must supply the sqrt(area) they intend.
+
+1.41 versus 1.40
+----------------
+The 1989 paper gives C = 1.40 for sub-surface inclusions; the later sources (the
+2002 book and the 1994 paper) give 1.41. 1.41 is kept, as in the original
+lpbf_fatigue_fracture.py; the difference is 0.7 %.
 """
 
 from __future__ import annotations

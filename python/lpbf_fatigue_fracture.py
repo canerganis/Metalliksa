@@ -118,12 +118,12 @@ class MurakamiFatigueEngine:
 
         # Pure Murakami formula (valid for medium-to-large defects)
         # sigma_w = c * (HV + 120) / (sqrt_area)^(1/6)
-        area_safe = max(sqrt_area_um, 1e-4)
+        area_safe = sqrt_area_um  # validated finite and > 0 above
         murakami_raw = murakami_constants.murakami_sqrt_area_limit_MPa(area_safe, hv, location)
 
         # Kitagawa-Takahashi / El-Haddad bounded limit:
         # Scale by geometric location factor ratio (surface vs internal)
-        geom_ratio = c_geom / 1.56
+        geom_ratio = c_geom / murakami_constants.C_INTERNAL
         el_haddad_limit = sigma_e0 * math.sqrt(a0_um / (area_safe + a0_um)) * geom_ratio
 
         # Reconciled limit: Cannot exceed smooth fatigue limit sigma_e0

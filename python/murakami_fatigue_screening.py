@@ -11,6 +11,7 @@ import math
 import re
 from typing import Any, Dict, List, Optional
 
+import input_validation
 import murakami_constants
 
 # Screening defaults when HV not supplied (literature-typical as-built / STA ranges).
@@ -28,7 +29,12 @@ PASTE_HINT = (
 
 
 def parse_defect_sqrt_areas_text(text: Optional[str]) -> List[float]:
-    """Parse pasted CSV / whitespace / line-separated √area (µm). Empty → []."""
+    """Parse pasted CSV / whitespace / line-separated √area (µm). Empty → [].
+
+    Non-numeric tokens and non-positive numbers are skipped; "inf" / "nan" tokens
+    are rejected with input_validation.ValidationError (NON_FINITE) instead of being
+    kept (inf) or silently dropped (nan) and poisoning the Gumbel fit.
+    """
     if not text or not str(text).strip():
         return []
     parts = re.split(r"[\s,;|/]+", str(text).strip())
@@ -40,6 +46,10 @@ def parse_defect_sqrt_areas_text(text: Optional[str]) -> List[float]:
             v = float(p)
         except ValueError:
             continue
+        if not math.isfinite(v):
+            raise input_validation.ValidationError(
+                input_validation.NON_FINITE, "defectSqrtAreasPaste",
+                f"defect size {p!r} is not a finite number", {"token": p})
         if v > 0:
             out.append(v)
     return out

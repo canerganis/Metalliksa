@@ -66,6 +66,13 @@ class ScreeningEngineTest(unittest.TestCase):
         with self.assertRaises(iv.ValidationError):
             ms.evaluate_murakami_block([-3.0], hardness_HV=HV)
 
+    def test_paste_rejects_inf_and_nan_tokens(self):
+        self.assertEqual(ms.parse_defect_sqrt_areas_text("40, 55; -3 0 abc"), [40.0, 55.0])
+        for text in ("40 inf 50", "40, nan", "-inf 40", "Infinity"):
+            with self.assertRaises(iv.ValidationError, msg=text) as ctx:
+                ms.parse_defect_sqrt_areas_text(text)
+            self.assertEqual(ctx.exception.code, iv.NON_FINITE)
+
     def test_build_job_request_rejects_nonpositive_defects_and_hardness(self):
         LpbfBuildJobRequest.model_validate({"defectSqrtAreas_um": [10.0, 40.0], "hardness_HV": 380})
         for bad in ({"defectSqrtAreas_um": [10.0, 0.0]}, {"defectSqrtAreas_um": [-1.0]},
