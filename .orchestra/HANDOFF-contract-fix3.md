@@ -50,6 +50,16 @@ The Table 4 test changes JSON whitespace after successful artifact-store verific
 
 Coverage includes a no-op rehashed positive control; distinct forged validation, optical-operator, and experimental-validation flags; forged identity/settings/geometry; direct verify/restore and portable import; HTTP verify/restore/import; exact bundle-source artifact binding; and the unchanged V1 restore path.
 
+### Integrator hygiene checks
+
+| Exact command | HEAD | Exit and result |
+|---|---|---|
+| `git diff --check -- server/lpbfRunRepository.ts server/lpbfRunBundle.ts server/lpbfRunBundleService.ts server/lpbfNistProxyCampaignService.ts server/lpbfProxyCampaignBinding.ts src/services/lpbfRunArchiveClient.ts python/lpbf_nist_proxy_campaign.py python/test_lpbf_nist_proxy_campaign.py tests/lpbf-run-repository.test.ts tests/lpbf-run-bundle.test.ts tests/lpbf-run-bundle-api.test.ts tests/lpbf-nist-comparison-api.test.ts tests/lpbf-run-proxy-campaign-client.test.ts` | `67d4a4acb6c4e09c0b25700281538e6ad3a10e81` | 0; no whitespace errors |
+| `git diff --cached --check` (before implementation commit 1) | `67d4a4acb6c4e09c0b25700281538e6ad3a10e81` | 0; no output |
+| `git diff --cached --check` (before implementation commit 2) | `5a1dffde07ef729367005a9f8d02d1876be64ab1` | 0; no output |
+| `git diff --check -- .orchestra/HANDOFF-contract-fix3.md` | `01eb3f0` (outer workspace repo) | 0; no output |
+| `git diff --cached --check` (handoff commit) | `01eb3f0` (outer workspace repo) | 0; no output |
+
 ### Post-commit acceptance
 
 The following ran after the final implementation commit, with the exact SHA recorded at each command start:
