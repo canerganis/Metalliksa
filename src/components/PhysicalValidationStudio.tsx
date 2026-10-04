@@ -137,7 +137,7 @@ export const PhysicalValidationStudio: React.FC<PhysicalValidationStudioProps> =
           ],
         },
       };
-  const validation = usePythonAnalysis("/api/python/cnls-fit", payload, decodeValidation);
+  const validation = usePythonAnalysis("/api/python/cnls-fit", payload, decodeValidation, { debounceMs: 250 });
   const isComputing = validation.pending;
   const pythonLatencyMs = validation.elapsedMs;
   const linKKReport = validation.result?.linKK ?? null;

@@ -80,7 +80,6 @@ export const MicrographLab: React.FC = () => {
 
   // AI Diagnosis & Loading States
   const [isDiagnosing, setIsDiagnosing] = useState<boolean>(false);
-  const [analysisStep, setAnalysisStep] = useState<number>(0);
   const [diagnosisResult, setDiagnosisResult] = useState<string | null>(null);
   const [summaryTableData, setSummaryTableData] =
     useState<MetallurgicalSummaryData | null>(null);
@@ -89,26 +88,6 @@ export const MicrographLab: React.FC = () => {
     "table"
   );
   const [copied, setCopied] = useState<boolean>(false);
-
-  // Multi-step loading messages
-  const LOADING_STEPS = [
-    {
-      title: "Decoding Micrograph Pixel Matrix",
-      desc: "Calibrating scale bar, optical contrast & pixel intensity distribution...",
-    },
-    {
-      title: "Scanning Phase & Grain Boundaries",
-      desc: "Measuring ASTM E112 mean linear intercepts and grain size number (G)...",
-    },
-    {
-      title: "Quantifying Defects & Precipitates",
-      desc: "Evaluating ASTM E2109 pore roundness, inclusions & secondary phases...",
-    },
-    {
-      title: "Synthesizing Metallurgical Diagnostic",
-      desc: "Verifying standard grade conformance & mechanical property correlations...",
-    },
-  ];
 
   // Switch sample handler
   const handleSelectSample = (sample: MicrographSample) => {
@@ -191,18 +170,12 @@ export const MicrographLab: React.FC = () => {
     setSampleHistory(selectedSample.condition);
   };
 
-  // Trigger AI diagnosis with simulated stepped progress
+  // Trigger AI diagnosis (indeterminate progress)
   const handleRunDiagnosis = async () => {
     setIsDiagnosing(true);
-    setAnalysisStep(0);
     setErrorMessage(null);
     setDiagnosisResult(null);
     setSummaryTableData(null);
-
-    // Step animation timer
-    const stepInterval = setInterval(() => {
-      setAnalysisStep((prev) => (prev < 3 ? prev + 1 : prev));
-    }, 1100);
 
     const imageToSend = customImage || selectedSample.imageUrl;
 
@@ -247,7 +220,6 @@ export const MicrographLab: React.FC = () => {
       console.error(err);
       setErrorMessage(err.message || "Failed to analyze micrograph.");
     } finally {
-      clearInterval(stepInterval);
       setIsDiagnosing(false);
     }
   };
@@ -961,55 +933,18 @@ ${diagnosisResult || ""}`
                   {/* MULTI-STAGE LOADING STATE */}
                   {isDiagnosing ? (
                     <div className="py-6 px-3 space-y-4">
-                      {/* Step Tracker */}
-                      <div className="space-y-3">
-                        {LOADING_STEPS.map((step, idx) => (
-                          <div
-                            key={idx}
-                            className={`p-2.5 rounded-lg border transition-all ${
-                              idx === analysisStep
-                                ? "bg-sky-500/10 border-sky-400/50 shadow-[0_0_10px_rgba(56,189,248,0.2)]"
-                                : idx < analysisStep
-                                ? "bg-emerald-500/5 border-emerald-500/30 opacity-80"
-                                : "bg-[#050810] border-[#162032] opacity-40"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {idx < analysisStep ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                                ) : idx === analysisStep ? (
-                                  <div className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <div className="w-3.5 h-3.5 rounded-full border border-slate-600 flex items-center justify-center text-[9px] font-mono text-slate-500">
-                                    {idx + 1}
-                                  </div>
-                                )}
-                                <span
-                                  className={`text-xs font-mono font-bold ${
-                                    idx === analysisStep
-                                      ? "text-sky-300"
-                                      : idx < analysisStep
-                                      ? "text-emerald-300"
-                                      : "text-slate-400"
-                                  }`}
-                                >
-                                  {step.title}
-                                </span>
-                              </div>
-                              {idx === analysisStep && (
-                                <span className="text-[10px] font-mono text-sky-400 animate-pulse font-bold">
-                                  Processing
-                                </span>
-                              )}
-                            </div>
-                            {idx === analysisStep && (
-                              <p className="text-[11px] text-slate-400 mt-1 pl-5 font-sans">
-                                {step.desc}
-                              </p>
-                            )}
+                      {/* Indeterminate state: the server reports no progress, so none is shown. */}
+                      <div role="status" className="p-2.5 rounded-lg border bg-sky-500/10 border-sky-400/50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs font-mono font-bold text-sky-300">Running micrograph diagnosis</span>
                           </div>
-                        ))}
+                          <span className="text-[10px] font-mono text-sky-400 font-bold">Running</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 pl-5 font-sans">
+                          Waiting for the server response. Progress is not reported.
+                        </p>
                       </div>
 
                       {/* Shimmer Skeleton preview */}

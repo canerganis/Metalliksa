@@ -1476,8 +1476,9 @@ class PythonComputationService {
     ionActivity_log10?: number;
     chloride_ppm?: number;
     experimentalPoints?: ExperimentalEpHEntry[];
-  }): Promise<PythonPourbaixResult> {
+  }, signal?: AbortSignal): Promise<PythonPourbaixResult> {
     const res = await fetch("/api/python/pourbaix-diagram", {
+      signal,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1597,8 +1598,9 @@ class PythonComputationService {
     laserWavelength?: "IR_1064nm" | "Green_515nm" | "Blue_450nm";
     heatSource?: "rosenthal" | "eagar-tsai" | "goldak";
     sulfur_ppm?: number;
-  }): Promise<PythonLPBFResult> {
+  }, signal?: AbortSignal): Promise<PythonLPBFResult> {
     const res = await fetch("/api/python/lpbf-thermal-solver", {
+      signal,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
