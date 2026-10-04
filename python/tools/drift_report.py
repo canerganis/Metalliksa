@@ -78,11 +78,12 @@ def diff(old: Any, new: Any) -> List[Dict[str, Any]]:
     return rows
 
 
-def _fmt(x: Any) -> str:
+def _fmt(x: Any, exact: bool = False) -> str:
     if x is None:
         return "-"
     if isinstance(x, float):
-        return f"{x:.6g}"
+        # old/new values are printed exactly (repr round-trips); deltas to 3 figures.
+        return repr(x) if exact else f"{x:.3g}"
     text = json.dumps(x, ensure_ascii=False) if not isinstance(x, str) else x
     return text if len(text) <= 48 else text[:45] + "..."
 
@@ -99,7 +100,7 @@ def render(title: str, rows: List[Dict[str, Any]], limit: Optional[int] = None) 
     lines.append("| key | old | new | abs | rel | kind |")
     lines.append("|---|---|---|---|---|---|")
     for r in rows[:limit] if limit else rows:
-        lines.append(f"| {r['key']} | {_fmt(r['old'])} | {_fmt(r['new'])} | "
+        lines.append(f"| {r['key']} | {_fmt(r['old'], True)} | {_fmt(r['new'], True)} | "
                      f"{_fmt(r.get('abs'))} | {_fmt(r.get('rel'))} | {r['kind']} |")
     if limit and len(rows) > limit:
         lines.append(f"| ... {len(rows) - limit} more | | | | | |")

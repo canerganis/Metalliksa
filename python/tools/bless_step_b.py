@@ -28,6 +28,7 @@ Usage (from python/):
 from __future__ import annotations
 
 import argparse
+import difflib
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -104,6 +105,12 @@ def main(argv=None) -> int:
     drift, log = bless(args.solver, args.dry_run)
     for title, rows in drift:
         print(drift_report.render(title, rows))
+        # Changed strings (e.g. a generated code snippet) are shown as a line diff.
+        for row in rows:
+            if row["kind"] == "changed" and isinstance(row["old"], str) and isinstance(row["new"], str):
+                lines = difflib.unified_diff(row["old"].splitlines(), row["new"].splitlines(),
+                                             f"old {row['key']}", f"new {row['key']}", n=0, lineterm="")
+                print("\n".join(["```diff", *lines, "```"]))
         print()
     for line in log:
         print(line)
