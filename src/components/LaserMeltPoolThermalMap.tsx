@@ -776,7 +776,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           {/* Material */}
           <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400">Alloy Material</label>
-            <select
+            <select aria-label="Alloy Material"
               value={selectedMaterial}
               onChange={(e) => setSelectedMaterial(e.target.value)}
               className="w-full bg-[#080d1a] text-slate-200 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono focus:border-sky-500 outline-none"
@@ -798,7 +798,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               <span className="text-slate-400">Power (P)</span>
               <span className="text-rose-400 font-bold">{laserPower_W} W</span>
             </div>
-            <input
+            <input aria-label="Power (P)"
               type="range"
               min={60}
               max={600}
@@ -815,7 +815,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               <span className="text-slate-400">Speed (v)</span>
               <span className="text-emerald-400 font-bold">{scanSpeed_mms} mm/s</span>
             </div>
-            <input
+            <input aria-label="Speed (v)"
               type="range"
               min={200}
               max={2500}
@@ -832,7 +832,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               <span className="text-slate-400">Beam Dia. (d)</span>
               <span className="text-sky-400 font-bold">{beamDiameter_um} μm</span>
             </div>
-            <input
+            <input aria-label="Beam Dia. (d)"
               type="range"
               min={40}
               max={150}
@@ -849,7 +849,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               <span className="text-slate-400">Layer (t)</span>
               <span className="text-amber-400 font-bold">{layerThickness_um} μm</span>
             </div>
-            <input
+            <input aria-label="Layer (t)"
               type="range"
               min={20}
               max={80}
@@ -866,7 +866,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               <span className="text-slate-400">Hatch (h)</span>
               <span className="text-purple-400 font-bold">{hatchSpacing_um} μm</span>
             </div>
-            <input
+            <input aria-label="Hatch (h)"
               type="range"
               min={50}
               max={180}
@@ -880,7 +880,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           {/* Laser Wavelength */}
           <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400">Laser Wavelength</label>
-            <select
+            <select aria-label="Laser Wavelength"
               value={laserWavelength}
               onChange={(e) => setLaserWavelength(e.target.value as any)}
               className="w-full bg-[#080d1a] text-slate-200 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono focus:border-sky-500 outline-none"

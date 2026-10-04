@@ -495,7 +495,7 @@ print("Multi-track simulation complete. Residual peak baseline computed.")
             <span className="text-[10px] text-slate-400">Editable Python 3.10 Buffer</span>
           </div>
 
-          <textarea
+          <textarea aria-label="Python script editor"
             value={scriptCode}
             onChange={(e) => setScriptCode(e.target.value)}
             spellCheck={false}

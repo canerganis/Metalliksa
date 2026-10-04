@@ -224,7 +224,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
             {job?.murakami?.pasteHint ||
               "Paste √area values in µm: CSV / whitespace / one per line. Example: 40, 55, 62, 48, 70. No sizes invented when empty."}
           </p>
-          <textarea
+          <textarea aria-label="Murakami √area paste (optional)"
             value={murakamiInput.defectSqrtAreasPaste}
             onChange={(e) => setMurakamiInput({ defectSqrtAreasPaste: e.target.value })}
             rows={3}

@@ -507,7 +507,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Laser Power (P)</span>
               <strong className="text-amber-400">{params.laserPower_W} W</strong>
             </div>
-            <input
+            <input aria-label="Laser Power (P)"
               type="range"
               min="100"
               max="500"
@@ -530,7 +530,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Scan Speed (v)</span>
               <strong className="text-sky-400">{params.scanSpeed_mms} mm/s</strong>
             </div>
-            <input
+            <input aria-label="Scan Speed (v)"
               type="range"
               min="400"
               max="2200"
@@ -553,7 +553,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Hatch Spacing (h)</span>
               <strong className="text-emerald-400">{params.hatchSpacing_um} μm</strong>
             </div>
-            <input
+            <input aria-label="Hatch Spacing (h)"
               type="range"
               min="50"
               max="160"
@@ -576,7 +576,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Layer Thickness (t)</span>
               <strong className="text-purple-400">{params.layerThickness_um} μm</strong>
             </div>
-            <input
+            <input aria-label="Layer Thickness (t)"
               type="range"
               min="20"
               max="80"
@@ -599,7 +599,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Beam Diameter (d)</span>
               <strong className="text-cyan-400">{params.beamDiameter_um} μm</strong>
             </div>
-            <input
+            <input aria-label="Beam Diameter (d)"
               type="range"
               min="40"
               max="140"
@@ -622,7 +622,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               <span className="text-slate-300">Build Plate Preheat (T₀)</span>
               <strong className="text-rose-400">{params.preheatTemp_C} °C</strong>
             </div>
-            <input
+            <input aria-label="Build Plate Preheat (T₀)"
               type="range"
               min="25"
               max="400"
@@ -1153,7 +1153,7 @@ export const LPBFAdditivePhysicsSuite: React.FC<Props> = ({ candidate, targets }
               Powder Rheology &amp; Flowability
             </span>
             {/* Gas Atomization selector */}
-            <select
+            <select aria-label="Gas atomization selector"
               value={params.atomizationGas}
               onChange={(e) =>
                 setParams((p) => ({
