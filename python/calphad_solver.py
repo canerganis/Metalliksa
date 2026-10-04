@@ -191,6 +191,15 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     for el, val in elements.items():
         if val is None or float(val) <= 0:
             continue
+        if isinstance(el, str) and el.strip() == "RE":
+            # "RE" is the usual label for a rare-earth (mischmetal) addition, e.g. WE43;
+            # read as an element symbol it would silently become rhenium. Refuse it.
+            raise ValidationError(
+                UNKNOWN_ELEMENT, "elements.RE",
+                "'RE' is ambiguous: it usually means rare earths (a mixture), not rhenium. "
+                "Send 'Re' for rhenium, or the individual rare-earth elements with their amounts.",
+                {"element": "'RE'", "reason": "ambiguous-rare-earth-label"},
+            )
         # Title case element symbols: 'ni' -> 'Ni'
         el_symbol = el.strip().capitalize()
         if len(el.strip()) > 1 and el.strip()[1].islower():

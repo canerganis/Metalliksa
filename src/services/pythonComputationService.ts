@@ -1037,6 +1037,7 @@ class PythonComputationService {
     minRefineStep = 0.5
   ): Promise<PythonCalphadSolveResult> {
     if (usePython) {
+      let validation: PythonValidationError | null = null;
       try {
         const res = await fetch("/api/python/calphad-minimize", {
           method: "POST",
@@ -1066,10 +1067,15 @@ class PythonComputationService {
               computeTimeMs: data.computeTimeMs || 12,
             };
           }
+        } else {
+          validation = await validationErrorFromResponse(res, "CALPHAD");
         }
       } catch (err) {
         console.warn("Python CALPHAD proxy call failed, falling back to TypeScript engine:", err);
       }
+      // Invalid input (e.g. an unknown element symbol): surface it; the caller decides
+      // whether to show the client solver instead. Network errors and 5xx still fall back.
+      if (validation) throw validation;
     }
 
     // Client-side TypeScript Fallback

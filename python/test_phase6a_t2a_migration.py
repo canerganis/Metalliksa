@@ -281,7 +281,7 @@ class CalphadElementTest(unittest.TestCase):
                     self.assertEqual(ctx.exception.field, field)
                     self.assertEqual(ctx.exception.detail["reason"], "no-standard-atomic-weight")
 
-    def test_ui_specimen_compositions_normalise_except_the_wc_compound(self):
+    def test_ui_specimen_compositions_normalise_except_the_re_label(self):
         compositions = _ui_specimen_compositions()
         self.assertEqual(len(compositions), 33)
         refused = []
@@ -297,10 +297,27 @@ class CalphadElementTest(unittest.TestCase):
                     # a pre-existing reading of the rare-earth label, see the handoff).
                     self.assertEqual(len(wt), len([v for v in comp.values() if v > 0]))
                     self.assertAlmostEqual(sum(at.values()), 1.0, places=12)
-        # Design step (b) behaviour change: "WC" (tungsten carbide, a compound) is not an
-        # element symbol. Before, it was normalised to "Wc" and weighted with 50.0 g/mol;
-        # now the wc-co specimen gets UNKNOWN_ELEMENT (both units).
-        self.assertEqual(refused, [({"WC": 94.0, "Co": 6.0}, "elements.Wc")] * 2)
+        # Fix round: the wc-co specimen is written as W/C/Co (WC decomposed) and normalises;
+        # the WE43 "RE" (rare earths) label is refused instead of being read as rhenium.
+        self.assertEqual(refused, [({"Mg": 92.5, "Y": 4.0, "RE": 3.3, "Zr": 0.45}, "elements.RE")] * 2)
+        self.assertIn({"W": 88.235, "C": 5.765, "Co": 6.0}, compositions)
+
+    def test_re_label_is_refused_but_rhenium_is_accepted(self):
+        with self.assertRaises(iv.ValidationError) as ctx:
+            calphad_solver.normalize_composition({"Mg": 92.5, "RE": 3.3})
+        self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
+        self.assertEqual(ctx.exception.field, "elements.RE")
+        self.assertEqual(ctx.exception.detail["reason"], "ambiguous-rare-earth-label")
+        self.assertIn("rare earths", str(ctx.exception))
+        wt, _ = calphad_solver.normalize_composition({"Ni": 94.0, "Re": 6.0})
+        self.assertEqual(set(wt), {"Ni", "Re"})
+
+    def test_wc_co_specimen_gets_a_normal_python_result(self):
+        code, out = _run("calphad_solver.py", {"name": "wc-co", "elements": {"W": 88.235, "C": 5.765, "Co": 6.0},
+                                               "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
+        self.assertEqual(code, 0, out)
+        self.assertIs(out["success"], True)
+        self.assertTrue(out["equilibriumProfile"])
 
     def test_p_s_sn_pb_be_specimens_get_a_normal_python_result(self):
         # The 14 UI specimens that hit the 50.0 g/mol stand-in before design step (b)

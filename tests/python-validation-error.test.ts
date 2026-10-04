@@ -165,3 +165,36 @@ test("executePythonTafelFit still falls back to the local fit for 5xx and networ
   res = await executePythonTafelFit(DATASET, { alloyId: "steel-316l" });
   assert.equal(res.isPythonEngine, false);
 });
+
+const CALPHAD_ENVELOPE = {
+  success: false,
+  error: {
+    code: "UNKNOWN_ELEMENT",
+    field: "elements.RE",
+    message: "'RE' is ambiguous: it usually means rare earths (a mixture), not rhenium.",
+    detail: { reason: "ambiguous-rare-earth-label" },
+  },
+  errorKind: "validation",
+};
+const WE43 = { name: "WE43", elements: { Mg: 92.5, Y: 4.0, RE: 3.3, Zr: 0.45 }, unit: "wt_pct" } as any;
+const NI_AL = { name: "Ni-Al", elements: { Ni: 80, Al: 10, Cr: 10 }, unit: "wt_pct" } as any;
+
+test("solveCalphadEquilibrium throws the envelope message on 422 instead of the client solver", async () => {
+  stubFetch(422, CALPHAD_ENVELOPE);
+  await assert.rejects(pythonComputationService.solveCalphadEquilibrium(WE43, 500, 1450, 25, true), (err: unknown) => {
+    assert.ok(isPythonValidationError(err));
+    assert.match((err as Error).message, /^CALPHAD: 'RE' is ambiguous/);
+    assert.equal((err as PythonValidationError).field, "elements.RE");
+    return true;
+  });
+});
+
+test("solveCalphadEquilibrium still falls back to the client solver for 5xx and network errors", async () => {
+  stubFetch(500, { error: "boom" });
+  let res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
+  assert.equal(res.isPythonEngine, false);
+  assert.equal(res.engine, "MetalliX-Client-TS-Solver");
+  stubNetworkError();
+  res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
+  assert.equal(res.isPythonEngine, false);
+});
