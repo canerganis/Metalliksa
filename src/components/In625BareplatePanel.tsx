@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LpbfJobArchiver } from './LpbfRunArchivePanel';
+import { useVisiblePolling } from '../hooks/useVisiblePolling';
 import {
   in625BareplateApi, type In625BareplateConfig, type In625BareplateInput,
   fetchIn625BareplateTemperatureField, type In625BareplateJob, type In625BareplateResult,
@@ -136,28 +137,25 @@ export function In625BareplatePanel() {
     return () => { live = false; };
   }, []);
 
-  useEffect(() => {
-    if (!job || !active) return;
-    let live = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
-      try {
-        const next = await in625BareplateApi.get(job.id);
-        if (!live) return;
-        setJob(next); setError('');
-        if (next.status === 'completed' && next.result) {
-          const key = next.result.settings.backend === 'cpu' ? 'cpu' : 'cuda';
-          setRuns(previous => ({ ...previous, [key]: { id: next.id, result: next.result! } }));
-        } else if (next.status === 'queued' || next.status === 'running') timer = setTimeout(poll, 1500);
-      } catch (e) {
-        if (!live) return;
-        setError(e instanceof Error ? e.message : 'IN625 bare-plate job polling failed');
-        timer = setTimeout(poll, 3000);
+  // Paused while the module is hidden; becoming visible again polls at once to catch up.
+  useVisiblePolling(async (isLive) => {
+    if (!job) return null;
+    try {
+      const next = await in625BareplateApi.get(job.id);
+      if (!isLive()) return null;
+      setJob(next); setError('');
+      if (next.status === 'completed' && next.result) {
+        const key = next.result.settings.backend === 'cpu' ? 'cpu' : 'cuda';
+        setRuns(previous => ({ ...previous, [key]: { id: next.id, result: next.result! } }));
+        return null;
       }
-    };
-    timer = setTimeout(poll, 1500);
-    return () => { live = false; clearTimeout(timer); };
-  }, [job?.id, job?.status]);
+      return next.status === 'queued' || next.status === 'running' ? 1500 : null;
+    } catch (e) {
+      if (!isLive()) return null;
+      setError(e instanceof Error ? e.message : 'IN625 bare-plate job polling failed');
+      return 3000;
+    }
+  }, !!job && active, `${job?.id}:${job?.status}`);
 
   const submit = async (backend: In625BareplateInput['backend']) => {
     if (submitting || active || !valid || (backend !== 'cpu' && !validDevice)) return;

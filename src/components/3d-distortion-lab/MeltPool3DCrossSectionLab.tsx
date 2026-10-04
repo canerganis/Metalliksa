@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { LpbfEngineeringSimulation } from "./LpbfEngineeringSimulation";
 import * as THREE from "three";
+import { useVisibleAnimationFrame } from "../../hooks/useVisibleAnimationFrame";
 import {
   Flame,
   Activity,
@@ -111,7 +112,9 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsGroupRef = useRef<THREE.Group | null>(null);
   const contentGroupRef = useRef<THREE.Group | null>(null);
-  const animationFrameId = useRef<number | null>(null);
+  // Per-frame render callback owned by the scene effect; driven only while the workspace is visible.
+  const renderFrameRef = useRef<(() => void) | null>(null);
+  useVisibleAnimationFrame(() => renderFrameRef.current?.());
   const autoRotateRef = useRef(autoRotate);
   autoRotateRef.current = autoRotate;
 
@@ -328,16 +331,16 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
     domElement.addEventListener("wheel", handleWheel, { passive: false });
 
     const animate = () => {
-      animationFrameId.current = requestAnimationFrame(animate);
       if (autoRotateRef.current && controlsGroupRef.current) {
         controlsGroupRef.current.rotation.y += 0.006;
       }
       renderer.render(scene, camera);
     };
+    renderFrameRef.current = animate;
     animate();
 
     return () => {
-      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      renderFrameRef.current = null;
       resizeObserver.disconnect();
       domElement.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);

@@ -4,6 +4,7 @@ import {
   SPECTROMETER_VERTEX_SHADER,
   SPECTROMETER_FRAGMENT_SHADER,
 } from "../render/webglShaderEngine";
+import { useVisibleAnimationFrame } from "../hooks/useVisibleAnimationFrame";
 import { Zap, Maximize2, RotateCcw, Crosshair, Sparkles } from "lucide-react";
 
 export interface SpectrumDataPoint {
@@ -256,15 +257,7 @@ export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = (
   }, [pan, zoom, lineColor, fillColor, enableGlow]);
 
   // Request Animation Frame on Pan/Zoom change
-  useEffect(() => {
-    let animId: number;
-    const loop = () => {
-      renderFrame();
-      animId = requestAnimationFrame(loop);
-    };
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
-  }, [renderFrame]);
+  useVisibleAnimationFrame(renderFrame);
 
   // Mouse Interaction: Pan & Zoom
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
