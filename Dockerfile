@@ -64,10 +64,15 @@ FROM base AS prod-deps
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Runtime image (default target). Runs as a non-root user.
-# Every path the server or the Python worker writes is either redirected to /data via
-# environment variables or is a WORKDIR-relative default that is created and chowned
-# below, so the defaults also work when the variables are unset.
+# Runtime image (default target). Runs as a non-root user (uid 10001).
+# Code trees (dist, node_modules, python, data, assets, docs/sources/in625, .lpbf-surrogates) are root-owned
+# and read-only for that user. It can write only to:
+#  - /data (the volume): every root below is redirected there by environment variables;
+#  - the WORKDIR-relative default data directories, created and chowned below so the server also works
+#    when those variables are unset;
+#  - /app/data/collected-sources (server/approvedSourceCollector.ts writes there, relative to the cwd);
+#  - /tmp: Python temporary directories (tempfile) and the IPC socket (/tmp/metallix_python_ipc.sock).
+# PYTHONDONTWRITEBYTECODE=1 (base stage) keeps Python from writing __pycache__ into python/.
 FROM base AS runtime
 # METALLIKSA_HOST=0.0.0.0: the server binds 127.0.0.1 by default (server/security.ts resolveBindConfig), which a
 # published port cannot reach. A non-loopback bind turns the login flow ON (the intended secure default): without
@@ -84,28 +89,29 @@ ENV NODE_ENV=production \
     METALLIKSA_LPBF_BUNDLE_ROOT=/data/lpbf-run-bundles \
     METALLIKSA_JOB_ROOT=/data/lpbf-jobs \
     RESEARCH_REGISTRY_DIR=/data/research-registry
-RUN useradd --system --uid 10001 --home-dir /app metalliksa \
- && mkdir -p /data \
-      /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs \
-      /app/.research-registry /app/.runtime /app/.lpbf-surrogates \
- && chown -R metalliksa /data /app
 COPY --from=py-deps /opt/venv /opt/venv
-COPY --from=prod-deps --chown=metalliksa /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 # dist comes from the verify stage so an image is only produced from a verified build.
-COPY --from=verify --chown=metalliksa /app/dist ./dist
-COPY --chown=metalliksa package.json ./
-# python/ is owned by the app user: python/tmp* scratch directories and relative writes
-# made with the worker's cwd are created there at run time.
-COPY --chown=metalliksa python ./python
-COPY --chown=metalliksa data ./data
-COPY --chown=metalliksa assets ./assets
+COPY --from=verify /app/dist ./dist
+COPY package.json ./
+COPY python ./python
+COPY data ./data
+COPY assets ./assets
 # docs/sources/in625 is read at run time (server/lpbfPropertySourceCatalog.ts resolves it
 # against the working directory; lpbfSourceArchiveService archives from it).
-COPY --chown=metalliksa docs/sources/in625 ./docs/sources/in625
+COPY docs/sources/in625 ./docs/sources/in625
 # Tracked surrogate models. Only python/phase9_surrogate.py (offline scripts/tests, not called by
 # the server) uses .lpbf-surrogates; it imports sklearn/joblib, which the lpbf lock does not
 # provide, so this copy is inert unless scikit-learn is added to the image.
-COPY --chown=metalliksa .lpbf-surrogates ./.lpbf-surrogates
+COPY .lpbf-surrogates ./.lpbf-surrogates
+RUN useradd --system --uid 10001 --no-create-home --home-dir /app metalliksa \
+ && chmod -R go-w /app \
+ && mkdir -p /data/lpbf-sources /data/lpbf-runs /data/lpbf-run-bundles /data/lpbf-jobs /data/research-registry \
+      /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs /app/.research-registry /app/.runtime \
+      /app/data/collected-sources \
+ && chown -R metalliksa /data \
+      /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs /app/.research-registry /app/.runtime \
+      /app/data/collected-sources
 USER metalliksa
 VOLUME ["/data"]
 EXPOSE 3000
