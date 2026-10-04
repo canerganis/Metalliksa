@@ -121,4 +121,19 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
         r"cctContinuousCoolingMap\[\d+\]\.predictedHardness_HV_status":
             "new status key next to predictedHardness_HV (converted / unavailable reason)",
     },
+    # norm_ppf sign fix (audit D1): every normal input of the UQ run was drawn with sigma 0.776
+    # instead of 1, so the sampled statistics, the Sobol-Saltelli indices and the two
+    # reliability numbers that depend on them move. The rows are not bounded numerically; the
+    # whole re-blessed document must equal a fresh run of the PINNED pre-fix solver blob
+    # (f41e316, bound by sha256) with scipy.special.ndtri as the inverse normal, so a later
+    # solver edit cannot match its own oracle (capture_phase6a_golden.documented_change_violation).
+    "stochastic_uq_mmpds_solver": {
+        r"stochasticProperties\..+":
+            "statistics of the sampled model outputs (normal inputs drawn with the corrected norm_ppf)",
+        r"sobolSensitivityAnalysis\[\d+\]\..+":
+            "Sobol-Saltelli rows (values, and the parameter order that follows from the sort)",
+        r"aerospaceReliability\.(yieldFailureProbability_Pf|hasoferLindBetaIndex|aBasisConforming|"
+        r"bBasisConforming|cpkConforming|criticalFlawMedian_mm|criticalFlaw_P10_mm)":
+            "reliability numbers derived from the sampled outputs",
+    },
 }

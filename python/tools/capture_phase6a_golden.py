@@ -284,8 +284,8 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # changes values: every drift row against the d33b6f5 golden must be numeric, except
 # changed strings under the keys below (generated code snippets that print a value).
 # Exception, listed per row pattern: phase6a_t2b_golden_cases.EXPECTED_DOCUMENTED_VALUE_CHANGES
-# (kinetics predictedHardness_HV -> ASTM E140), each row verified exactly by
-# documented_change_violation; it does not widen the bound for any other row.
+# (kinetics predictedHardness_HV -> ASTM E140; UQ norm_ppf sign fix), each row verified
+# exactly by documented_change_violation; it does not widen the bound for any other row.
 STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
 STEP_B_DEFAULT_MAX_REL = 1e-2
 # tafel: the drift follows the equivalent-weight change (EW rel r): rates and losses
@@ -315,8 +315,88 @@ def _is_documented_change_row(solver: str, key: str) -> bool:
 _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
 
 
+_UQ_ORACLE_CACHE: Dict[str, Any] = {}
+# The oracle solver is the PINNED pre-fix blob (the last solver with the norm_ppf sign error),
+# never the working-tree solver: a later edit of stochastic_uq_mmpds_solver.py must not be able to
+# match its own "oracle". The blob is bound by git revision AND content digest.
+UQ_ORACLE_REVISION = "f41e316"
+UQ_ORACLE_SHA256 = "2b28829be3f974f81f547b62f4c0abd59bb32c42fcf0cfbf838e64d0f99061ce"
+
+
+def _uq_pinned_solver_module() -> types.ModuleType:
+    """The pre-fix solver blob executed as a throwaway module (imports resolve against python/)."""
+    if "module" not in _UQ_ORACLE_CACHE:
+        solver = "stochastic_uq_mmpds_solver"
+        try:
+            source = solver_bytes(solver, UQ_ORACLE_REVISION)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise RuntimeError(f"cannot read python/{solver}.py at {UQ_ORACLE_REVISION} from git ({exc})")
+        if normalised_sha256(source) != UQ_ORACLE_SHA256:
+            raise RuntimeError(f"python/{solver}.py at {UQ_ORACLE_REVISION} does not match the pinned sha256")
+        if str(PYTHON_DIR) not in sys.path:
+            sys.path.insert(0, str(PYTHON_DIR))
+        module = types.ModuleType(f"_uq_oracle_{solver}")
+        sys.modules[module.__name__] = module
+        try:
+            exec(compile(source, f"{solver}.py@{UQ_ORACLE_REVISION}", "exec"), module.__dict__)
+        finally:
+            sys.modules.pop(module.__name__, None)
+        _UQ_ORACLE_CACHE["module"] = module
+    return _UQ_ORACLE_CACHE["module"]
+
+
+def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Stdout (volatile keys stripped) of the PINNED pre-fix UQ solver with scipy.special.ndtri
+    substituted for its broken norm_ppf.
+
+    The payload keeps its key order: composition elements map to Sobol dimensions in insertion
+    order. ndtri is the independent oracle; everything else is the f41e316 code, so any change of
+    the solver other than the inverse normal is not covered by the documented change.
+    """
+    cache_key = json.dumps(payload)
+    if cache_key not in _UQ_ORACLE_CACHE:
+        import copy
+        from scipy.special import ndtri
+        module = _uq_pinned_solver_module()
+
+        def oracle(p: float) -> float:
+            if p <= 0.0:
+                return -8.0
+            if p >= 1.0:
+                return 8.0
+            return float(ndtri(p))
+
+        original = module.norm_ppf
+        module.norm_ppf = oracle
+        try:
+            result = module.solve_stochastic_uq(copy.deepcopy(payload))
+        finally:
+            module.norm_ppf = original
+        _UQ_ORACLE_CACHE[cache_key] = strip_volatile(json.loads(json.dumps(result)))
+    return _UQ_ORACLE_CACHE[cache_key]
+
+
+def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, Any]],
+                          payload: Optional[Dict[str, Any]]) -> Optional[str]:
+    """None when the row belongs to the norm_ppf sign fix and the whole new document is the oracle run."""
+    key = row["key"]
+    if new_stdout is None or payload is None:
+        return f"{key}: documented change needs the re-blessed document and the case payload to be verified"
+    if row["kind"] not in ("numeric", "changed"):
+        return f"{key}: {row['kind']} row is not a value change of the sampler fix"
+    try:
+        expected = _uq_scipy_oracle_stdout(payload)
+    except (ImportError, RuntimeError) as exc:
+        return f"{key}: UQ oracle unavailable ({exc})"
+    if canonical(new_stdout) != canonical(expected):
+        return (f"{key}: re-blessed document differs from the pinned {UQ_ORACLE_REVISION} solver run with "
+                "scipy.special.ndtri as inverse normal")
+    return None
+
+
 def documented_change_violation(solver: str, row: Dict[str, Any],
-                                new_stdout: Optional[Dict[str, Any]]) -> Optional[str]:
+                                new_stdout: Optional[Dict[str, Any]],
+                                payload: Optional[Dict[str, Any]] = None) -> Optional[str]:
     """None when ``row`` is exactly the documented change (EXPECTED_DOCUMENTED_VALUE_CHANGES).
 
     kinetics_ttt_cct_solver predictedHardness_HV: the old value must be the old formula
@@ -324,8 +404,16 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     ASTM E140 Table 1 value (hardness_conversion_e140) when the alloy type is a steel, or
     null with the matching status otherwise. The status key may only be added, with the
     status that belongs to that HV. Nothing is accepted by tolerance.
+
+    stochastic_uq_mmpds_solver (norm_ppf sign fix): a row matching the listed patterns is
+    accepted only if the complete re-blessed stdout equals a fresh run, for the
+    case ``payload``, of the PINNED pre-fix solver blob (UQ_ORACLE_REVISION) with
+    scipy.special.ndtri as the inverse normal (_uq_sampler_violation); the working-tree solver
+    is never used as its own oracle.
     """
     key = row["key"]
+    if solver == "stochastic_uq_mmpds_solver":
+        return _uq_sampler_violation(row, new_stdout, payload)
     if solver != "kinetics_ttt_cct_solver" or not _KINETICS_HV_ROW.fullmatch(key):
         return f"{key}: no documented-change check for this row"
     if new_stdout is None:
@@ -362,18 +450,20 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
 
 
 def step_b_violations(solver: str, rows: List[Dict[str, Any]],
-                      new_stdout: Optional[Dict[str, Any]] = None) -> List[str]:
+                      new_stdout: Optional[Dict[str, Any]] = None,
+                      payload: Optional[Dict[str, Any]] = None) -> List[str]:
     """Rows a step_b re-bless must not contain (empty list = acceptable drift).
 
-    ``new_stdout`` is the re-blessed stdout; it is needed only to verify rows listed in
-    EXPECTED_DOCUMENTED_VALUE_CHANGES (without it those rows are violations).
+    ``new_stdout`` is the re-blessed stdout (and ``payload`` the CASES payload, key order
+    included); they are needed only to verify rows listed in EXPECTED_DOCUMENTED_VALUE_CHANGES
+    (without them those rows are violations).
     """
     bound = step_b_max_rel(solver, rows)
     out = []
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
         if _is_documented_change_row(solver, r["key"]):
-            problem = documented_change_violation(solver, r, new_stdout)
+            problem = documented_change_violation(solver, r, new_stdout, payload)
             if problem:
                 out.append(problem)
         elif r["kind"] == "numeric":

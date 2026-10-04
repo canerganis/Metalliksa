@@ -47,7 +47,9 @@ class T2bGoldenRegressionTest(unittest.TestCase):
 
 
 class ProofBaselineTest(unittest.TestCase):
-    """PROOF.md:1044 Seed42/N500 QMC baseline (same numbers as test_stochastic_uq_evidence)."""
+    """PROOF.md:1044 Seed42/N500 QMC baseline as recorded at d33b6f5 (with the norm_ppf sign
+    error: normal draws had sigma 0.776), and the current expectation after the fix (same
+    numbers as test_stochastic_uq_evidence)."""
 
     def test_seed42_n500_yield_baseline(self):
         doc = golden.load_golden("stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni")
@@ -55,6 +57,12 @@ class ProofBaselineTest(unittest.TestCase):
         self.assertEqual(tuple(stats[k] for k in ("mean", "stdDev", "aBasisAllowable", "bBasisAllowable")),
                          (3467.7, 32.54, 3387.2, 3422.6))
         self.assertEqual(doc["stdout"]["sampleSizeN"], 500)
+
+    def test_seed42_n500_yield_expectation_after_the_norm_ppf_fix(self):
+        doc = golden.load_expected("stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni")
+        stats = doc["stdout"]["stochasticProperties"]["yieldStrength_Rp02"]
+        self.assertEqual(tuple(stats[k] for k in ("mean", "stdDev", "aBasisAllowable", "bBasisAllowable")),
+                         (3467.8, 41.37, 3365.4, 3410.5))
 
 
 if __name__ == "__main__":

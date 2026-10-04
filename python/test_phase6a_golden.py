@@ -216,7 +216,8 @@ class StepBGoldenTest(unittest.TestCase):
             solver, case = path.parent.parent.name, path.stem
             with self.subTest(file=f"{solver}/{case}"):
                 doc = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"]), [])
+                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"],
+                                                          golden.CASES[solver][case]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -276,6 +277,83 @@ class StepBGoldenTest(unittest.TestCase):
                                                  steel(18.0, rng)))
         big = {"key": "x", "kind": "numeric", "old": 1.0, "new": 1.02, "abs": 0.02, "rel": 0.02}
         self.assertTrue(golden.step_b_violations(solver, [big], steel(42.0, conv)))
+
+    def test_documented_uq_sampler_change_is_checked_against_the_scipy_oracle(self):
+        # EXPECTED_DOCUMENTED_VALUE_CHANGES: stochastic UQ norm_ppf sign fix. The drift rows are
+        # not bounded; the whole new document must equal the solver run with scipy's ndtri.
+        import copy
+        solver, case = "stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni"
+        payload = golden.CASES[solver][case]
+        oracle = golden._uq_scipy_oracle_stdout(payload)
+        base = golden.load_golden(solver, case)["stdout"]
+        rows = drift_report.diff(base, oracle)
+        self.assertTrue(rows)
+        self.assertEqual(golden.step_b_violations(solver, rows, oracle, payload), [])
+        # not the oracle: a perturbed document, the pre-fix (sigma 0.776) document itself
+        perturbed = copy.deepcopy(oracle)
+        perturbed["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"] += 0.01
+        self.assertTrue(golden.step_b_violations(solver, rows, perturbed, payload))
+        self.assertTrue(golden.step_b_violations(solver, rows, base, payload))
+        # no document or no payload cannot be verified
+        self.assertTrue(golden.step_b_violations(solver, rows, oracle))
+        self.assertTrue(golden.step_b_violations(solver, rows, None, payload))
+        # rows outside the listed patterns keep the numeric bound, and structural rows are refused
+        other = {"key": "samplingMetadata.centeredL2Discrepancy", "kind": "numeric", "old": 1.0, "new": 1.5,
+                 "abs": 0.5, "rel": 0.5}
+        self.assertTrue(golden.step_b_violations(solver, [other], oracle, payload))
+        added = {"key": "stochasticProperties.yieldStrength_Rp02.newKey", "kind": "added", "old": None, "new": 1.0}
+        self.assertTrue(golden.step_b_violations(solver, [added], oracle, payload))
+        # the exception does not leak to another solver
+        self.assertTrue(golden.step_b_violations("kinetics_ttt_cct_solver", rows[:1], oracle, payload))
+
+    def test_uq_oracle_is_the_pinned_prefix_blob_not_the_working_tree_solver(self):
+        # Review fxa B1: the oracle must not be able to match a later solver edit.
+        import stochastic_uq_mmpds_solver as current
+        pinned = golden._uq_pinned_solver_module()
+        self.assertIsNot(pinned, current)
+        self.assertAlmostEqual(pinned.norm_ppf(0.10), -0.0675829, places=6)   # the sign error is still in the oracle blob
+        self.assertAlmostEqual(current.norm_ppf(0.10), -1.2815515655, places=9)
+        self.assertEqual(golden.normalised_sha256(golden.solver_bytes(
+            "stochastic_uq_mmpds_solver", golden.UQ_ORACLE_REVISION)), golden.UQ_ORACLE_SHA256)
+        # the oracle run must not leave the substitute behind
+        golden._uq_scipy_oracle_stdout(golden.CASES["stochastic_uq_mmpds_solver"]["seed42_n500_defaults_ni"])
+        self.assertAlmostEqual(pinned.norm_ppf(0.10), -0.0675829, places=6)
+
+    def test_uq_guard_rejects_other_solver_changes_hidden_in_the_listed_rows(self):
+        # Review fxa B1 mutants: documents that differ from the pinned-solver oracle by anything
+        # other than the inverse normal must be refused, in-pattern rows included.
+        import copy
+        solver, case = "stochastic_uq_mmpds_solver", "preset_steel4340_ams6414"   # baseMetal Fe
+        payload = golden.CASES[solver][case]
+        oracle = golden._uq_scipy_oracle_stdout(payload)
+        base = golden.load_golden(solver, case)["stdout"]
+        self.assertEqual(golden.step_b_violations(solver, drift_report.diff(base, oracle), oracle, payload), [])
+
+        def scale_yield(doc):  # a 5 % yield change only for baseMetal Fe
+            stats = doc["stochasticProperties"]["yieldStrength_Rp02"]
+            for key, value in stats.items():
+                if isinstance(value, float):
+                    stats[key] = value * 1.05
+
+        def cpk(doc):  # Cpk 3.0 -> 3.3 sigma
+            stats = doc["stochasticProperties"]["yieldStrength_Rp02"]
+            stats["cpk"] = round(stats["cpk"] / 1.1, 2)
+
+        def sobol_label(doc):
+            doc["sobolSensitivityAnalysis"][0]["parameter"] = "renamed (Chemistry)"
+
+        def extra_key(doc):
+            doc["stochasticProperties"]["yieldStrength_Rp02"]["extraKey"] = 1.0
+
+        def out_of_pattern(doc):  # 2 % on a row outside the three patterns
+            doc["samplingMetadata"]["centeredL2Discrepancy"] *= 1.02
+
+        for name, mutate in (("fe-only yield x1.05", scale_yield), ("cpk", cpk), ("sobol label", sobol_label),
+                             ("extra key", extra_key), ("out-of-pattern x1.02", out_of_pattern)):
+            mutant = copy.deepcopy(oracle)
+            mutate(mutant)
+            rows = drift_report.diff(base, mutant)
+            self.assertTrue(golden.step_b_violations(solver, rows, mutant, payload), name)
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).

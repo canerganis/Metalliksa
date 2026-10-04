@@ -2131,6 +2131,8 @@ export interface PythonStochasticUQResult {
     status: string;
     limitations: string;
   };
+  /** Added by the solver script (python/stochastic_uq_mmpds_solver.py provenance()); only modelStatus is read. */
+  provenance?: { modelStatus?: string };
   sobolSensitivityAnalysis: {
     parameter: string;
     description: string;

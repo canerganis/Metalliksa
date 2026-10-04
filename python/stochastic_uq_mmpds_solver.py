@@ -13,6 +13,7 @@ import json
 import math
 import time
 import random
+from statistics import NormalDist
 
 import alloy_data_kinetics_uq_fatigue as _uq_data
 import alloy_registry
@@ -24,30 +25,33 @@ import physical_constants
 R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
 
+_STD_NORMAL = NormalDist()
+
 def norm_cdf(x: float) -> float:
     """Standard normal cumulative distribution function."""
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
 def norm_ppf(p: float) -> float:
-    """Standard normal quantile function (Winitzki approximation)."""
+    """Standard normal quantile function (inverse CDF; stdlib statistics.NormalDist, ~1e-15).
+
+    Replaces the earlier Beasley-Springer-Moro style rational approximation, whose central
+    denominator had a sign error (p = 0.10 gave -0.068 instead of -1.2816, non-monotone, and
+    transformed Sobol draws had sigma 0.776) and whose tail polynomial was truncated (0.09
+    error at p = 1e-6). Out-of-range p is clamped to +/-8 as before.
+
+    Accuracy: max abs error < 1e-14 against scipy.special.ndtri over p in (1e-6, 1 - 1e-6)
+    (test_stochastic_uq_evidence.NormalQuantileTests).
+
+    The +/-8 clamp is not monotone with inv_cdf below p = 6.2e-16 (and above 1 - 1.1e-16),
+    where |z| > 8 (inv_cdf(1e-20) = -9.26 < inv_cdf(0) -> -8). The solver cannot reach that
+    range: Sobol points lie in [1.16e-10, 1 - 1.16e-10] (|z| <= 6.34) and the reliability index
+    argument is pre-clamped to [1e-6, 1 - 1e-6].
+    """
     if p <= 0.0:
         return -8.0
     if p >= 1.0:
         return 8.0
-    if p == 0.5:
-        return 0.0
-    
-    # Rational approximation for central & tails
-    q = p - 0.5
-    if abs(q) <= 0.42:
-        r = q * q
-        return q * (((-25.44106049637 * r + 41.39119773534) * r - 18.61500062529) * r + 2.50662823884) / \
-               ((((3.13082909833 * r - 21.06224101826) * r + 23.08336743743) * r + 8.47351093090) * r + 1.0)
-    
-    r = p if q < 0 else 1.0 - p
-    r = math.log(-math.log(r))
-    val = 0.33747548227 + r * (0.9761648890 + r * (0.16079797149 + r * (0.02319043813 + r * (0.00386386929 + r * 0.00039514041))))
-    return -val if q < 0 else val
+    return _STD_NORMAL.inv_cdf(p)
 
 def compute_mmpds_k_factors(n: int):
     """
@@ -713,6 +717,12 @@ def provenance() -> dict:
         "gasConstantR_J_molK": R_GAS,
         "constantsNote": "Exact SI 2019 R = N_A*k (Phase 6a value step); it replaced the "
                          "4-significant-figure R = 8.314.",
+        "modelStatus": "Illustrative, not calibrated: the strength model in solve_single_realization is "
+                       "a toy superposition that is not fitted or validated against measured properties "
+                       "(the default Inconel 718 case predicts a yield strength of about 3.5 GPa). "
+                       "In the default case the precipitate radius is held at its 0.8 nm floor, so the aging "
+                       "inputs have no effect on the output. Treat all strength statistics, A/B-style bounds, Cpk, "
+                       "Pf and Sobol indices as screening of this model only, not as material allowables.",
     }
     out.update(_uq_data.provenance())
     return out
