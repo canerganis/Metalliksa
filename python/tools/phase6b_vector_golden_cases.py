@@ -201,9 +201,11 @@ _DFT = {
     # faa6684 Jacobi loop returned 0.0 (unstable); LAPACK eigvalsh returns rounding
     # noise (+1.5e-13 on the capture machine), which must still be "not positive".
     # The tetragonal branch has no Born checks of its own, so the eigenvalue decides.
+    # c66 = 60 is the faa6684 default for a missing c66 (= c44): the elasticity honesty lane (v4.1) no
+    # longer fills missing constants, so the input now states it; the faa6684 output is unchanged.
     "tetragonal_c11_eq_c12_marginal": {
         "formula": "Custom Marginal", "crystal_system": "Tetragonal", "density": 6.0, "nsites": 2,
-        "molar_mass": 60.0, "custom_c_ij": {"c11": 210.0, "c12": 210.0, "c13": 80.0, "c33": 220.0, "c44": 60.0},
+        "molar_mass": 60.0, "custom_c_ij": {"c11": 210.0, "c12": 210.0, "c13": 80.0, "c33": 220.0, "c44": 60.0, "c66": 60.0},
     },
     # Silent defaults today: substring benchmark match, unknown crystal system, clamps.
     "edge_unknown_negative": {

@@ -21,7 +21,7 @@ def get_system_status():
             },
             "dft_property_calculator": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "dft_property_calculator.py")),
-                "description": "Ab-initio DFT elastic stiffness tensor C_ij, Voigt-Reuss-Hill, Debye temp & anisotropy solver"
+                "description": "Continuum elasticity of supplied single-crystal C_ij (not DFT): Voigt-Reuss-Hill, Born stability, per-atom Anderson Debye temperature & anisotropy"
             },
             "cnls_fitting_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "cnls_fitting_solver.py")),
