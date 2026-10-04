@@ -77,6 +77,34 @@ test("WSL remains first and never resolves host Python", () => {
   assert.deepEqual(command, { cmd: "wsl.exe", args: ["-d", "Research Linux", "--", "python3", "-u", "/mnt/c/project space/python/lpbf_worker.py"] });
 });
 
+test("a configured job root is forwarded to the WSL worker through WSLENV without mutating the input env", () => {
+  const env = { METALLIKSA_JOB_ROOT: "D:/lpbf jobs/run", WSLENV: "USERPROFILE/p:METALLIKSA_JOB_ROOT/u:TERM", PATH: "C:\\bin" };
+  const before = { ...env };
+  const command = lpbfWorkerCommand({ platform: "win32", file: "C:\\project\\python\\lpbf_worker.py", localFallback: false, env,
+    hostPython: () => { throw new Error("must not probe host"); } });
+  assert.equal(command.cmd, "wsl.exe");
+  assert.deepEqual(command.env, { ...env, METALLIKSA_JOB_ROOT: "D:\\lpbf jobs\\run",
+    WSLENV: "USERPROFILE/p:TERM:METALLIKSA_JOB_ROOT/p" });
+  assert.deepEqual(env, before, "the caller's environment (process.env in the bridge) is not mutated");
+
+  const unset = lpbfWorkerCommand({ platform: "win32", file: "C:/w.py", localFallback: false, env: {},
+    hostPython: () => { throw new Error("must not probe host"); } });
+  assert.equal("env" in unset, false, "without a configured root the bridge keeps its own environment");
+  const noPrior = lpbfWorkerCommand({ platform: "win32", file: "C:/w.py", localFallback: false,
+    env: { METALLIKSA_JOB_ROOT: "C:\\jobs" }, hostPython: () => { throw new Error("must not probe host"); } });
+  assert.equal(noPrior.env?.WSLENV, "METALLIKSA_JOB_ROOT/p");
+
+  for (const root of ["\\\\server\\share\\jobs", "\\\\wsl$\\Ubuntu-22.04\\home\\jobs", "\\\\?\\UNC\\server\\share", "/home/user/jobs", "\\jobs"]) {
+    assert.throws(() => lpbfWorkerCommand({ platform: "win32", file: "C:/w.py", localFallback: false,
+      env: { METALLIKSA_JOB_ROOT: root }, hostPython: () => { throw new Error("must not probe host"); } }),
+    /METALLIKSA_JOB_ROOT must be a drive-letter path/, root);
+  }
+  // Host interpreters read the variable directly; the host command keeps the bridge's environment.
+  const host = lpbfWorkerCommand({ platform: "win32", file: "C:/w.py", localFallback: true,
+    env: { METALLIKSA_JOB_ROOT: "\\\\server\\share\\jobs" }, hostPython: () => ({ cmd: "py", prefix: ["-3"] }) });
+  assert.deepEqual(host, { cmd: "py", args: ["-3", "-u", "C:/w.py"] });
+});
+
 test("explicit host Python also controls the first LPBF worker launch", () => {
   const python = { cmd: 'C:/scientific env/python.exe', prefix: [] };
   const command = lpbfWorkerCommand({ platform: 'win32', file: 'C:/project/python/lpbf_worker.py',

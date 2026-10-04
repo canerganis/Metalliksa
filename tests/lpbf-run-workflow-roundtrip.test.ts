@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { once } from 'node:events';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import express from 'express';
@@ -18,34 +17,9 @@ import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
 import { canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
-
-async function waitForWorkerCapabilities(deadline: number) {
-  let lastStartingError: unknown;
-  while (Date.now() < deadline) {
-    let deadlineTimer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const remaining = deadline - Date.now();
-      return await Promise.race([
-        lpbfWorker.request('capabilities'),
-        new Promise<never>((_resolve, reject) => {
-          deadlineTimer = setTimeout(() => reject(new Error('LPBF worker readiness warm-up deadline exceeded.')), remaining);
-        }),
-      ]);
-    } catch (error) {
-      if (!error || typeof error !== 'object'
-        || (error as { code?: unknown }).code !== 'LPBF_WORKER_STARTING') throw error;
-      lastStartingError = error;
-      const delay = Math.min(250, deadline - Date.now());
-      if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
-    } finally {
-      if (deadlineTimer) clearTimeout(deadlineTimer);
-    }
-  }
-  throw lastStartingError instanceof Error ? lastStartingError
-    : new Error('LPBF worker did not become ready within the 90-second warm-up deadline.');
-}
 
 async function jsonRequest(base: string, suffix: string, method: 'GET' | 'POST' = 'GET', body?: unknown) {
   const response = await fetch(`${base}${suffix}`, {
@@ -61,24 +35,18 @@ async function jsonRequest(base: string, suffix: string, method: 'GET' | 'POST' 
 
 test('LPBF source select, CPU compute, unvalidated compare, export and restore preserve identities and bytes', async t => {
   const root = mkdtempSync(path.join(process.cwd(), '.tmp-lpbf-workflow-roundtrip-'));
-  const prior = {
-    jobRoot: process.env.METALLIKSA_JOB_ROOT,
-  };
   const sourceRoot = path.join(root, 'sources');
   const runRoot = path.join(root, 'runs');
   const bundleRoot = path.join(root, 'bundles');
   let server: Server | undefined;
-  process.env.METALLIKSA_JOB_ROOT = path.join(root, 'jobs');
-  t.after(async () => {
-    const workerProcess = (lpbfWorker as unknown as { process?: NodeJS.EventEmitter & { kill(): boolean } }).process;
-    const workerExit = workerProcess ? once(workerProcess, 'exit') : undefined;
-    lpbfWorker.close();
-    if (workerExit) await Promise.race([workerExit, new Promise(resolve => setTimeout(resolve, 3000))]);
-    if (prior.jobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
-    else process.env.METALLIKSA_JOB_ROOT = prior.jobRoot;
-    if (server) await new Promise<void>(resolve => server!.close(() => resolve()));
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-  });
+  const restoreJobRoot = isolateWorkerJobRoot(path.join(root, 'jobs'));
+  // Every step runs even if an earlier one fails, so a stuck worker is a loud failure, not a leaked env or root.
+  t.after(() => runCleanupSteps([
+    stopRealWorker,
+    restoreJobRoot,
+    () => server && new Promise<void>(resolve => server!.close(() => resolve())),
+    () => removeWorkerTestRoot(root),
+  ]));
 
   const opticalSource = nistOpticalTable4CatalogEntry();
   const sources = new LpbfSourceArchiveService(sourceRoot, [opticalSource]);
@@ -105,7 +73,7 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
 
   // Freeze the V1 CPU user-path reference. It is a workflow replay, not a
   // numerical-convergence oracle and does not reproduce NIST Table 4.
-  await waitForWorkerCapabilities(Date.now() + 90_000);
+  await waitForRealWorker(Date.now() + 90_000);
   const submission = await lpbfWorker.request('submit', {
     mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60,
     speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,

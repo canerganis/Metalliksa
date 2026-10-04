@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, open, link, unlink, readdir, readFile, stat } from 'node:fs/promises';
+import { mkdir, open, link, unlink, readdir, readFile, stat, type FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { parseResearchSnapshot } from '../src/utils/researchRegistry';
@@ -20,6 +20,8 @@ const emptySnapshot = (): ResearchSnapshot => ({ schemaVersion: 1, briefs: [], s
 const MAX_FILE_BYTES = 10 * 1024 * 1024 + 1024;
 const revisionName = (revision: number) => `revision-${String(revision).padStart(12, '0')}.json`;
 const isCode = (error: unknown, code: string) => (error as NodeJS.ErrnoException)?.code === code;
+/** Bound for retrying a transiently denied lock unlink on Windows (see release()). */
+const LOCK_RELEASE_RETRY_MS = 1000;
 
 /** One local, unauthenticated registry. Committed revision files are never rewritten.
  * All instances must use this same directory on a filesystem supporting atomic hard links.
@@ -32,12 +34,23 @@ export class ResearchEvidenceRegistry {
     await mkdir(this.directory, { recursive: true });
     const lockPath = path.join(this.directory, '.write-lock');
     const deadline = Date.now() + this.lockTimeoutMs;
-    let lock: Awaited<ReturnType<typeof open>>;
+    let lock: FileHandle;
+    let sawContention = false;
     while (true) {
       try { lock = await open(lockPath, 'wx', 0o600); break; }
       catch (error) {
-        if (!isCode(error, 'EEXIST')) throw error;
-        if (Date.now() >= deadline) throw new ResearchRegistryError(503, 'Research registry is busy or requires lock recovery. Retry; no data was replaced.');
+        // Windows: an exclusive create racing another holder's release (its unlink has set the delete
+        // disposition but not yet closed the handle) fails with EPERM (STATUS_DELETE_PENDING), not EEXIST.
+        // That is contention: retry it within the same deadline. A persistent EPERM with no other holder ever
+        // seen is a real permission failure and is rethrown unchanged once the deadline passes; after EEXIST
+        // contention the deadline is reported as busy, like a lock that stayed held.
+        const releasing = process.platform === 'win32' && isCode(error, 'EPERM');
+        if (!isCode(error, 'EEXIST') && !releasing) throw error;
+        if (isCode(error, 'EEXIST')) sawContention = true;
+        if (Date.now() >= deadline) {
+          if (releasing && !sawContention) throw error;
+          throw new ResearchRegistryError(503, 'Research registry is busy or requires lock recovery. Retry; no data was replaced.');
+        }
         await delay(25);
       }
     }
@@ -46,8 +59,29 @@ export class ResearchEvidenceRegistry {
       await lock.sync();
       return await operation();
     } finally {
-      await lock.close();
-      await unlink(lockPath);
+      await this.release(lock, lockPath);
+    }
+  }
+
+  /** Release never throws: by the time it runs a save may already be committed (its revision file is
+   * linked), and reporting that save as failed would invite a duplicate retry. A failed close still unlinks.
+   * On Windows an antivirus or indexer handle can briefly deny the unlink (EPERM/EBUSY/EACCES); it is retried
+   * for up to LOCK_RELEASE_RETRY_MS. If the lock still cannot be removed it is logged and left in place: later
+   * requests then answer 503 "busy or requires lock recovery" until an operator removes .write-lock, the same
+   * documented path as a crash-left lock. Nothing is reset or overwritten. */
+  private async release(lock: FileHandle, lockPath: string): Promise<void> {
+    try { await lock.close(); }
+    catch (error) { console.error('[ResearchRegistry] Closing the write lock failed; removing it anyway:', error); }
+    const deadline = Date.now() + LOCK_RELEASE_RETRY_MS;
+    while (true) {
+      try { await unlink(lockPath); return; }
+      catch (error) {
+        if (isCode(error, 'ENOENT')) return;
+        const transient = process.platform === 'win32' && ['EPERM', 'EBUSY', 'EACCES'].some(code => isCode(error, code));
+        if (transient && Date.now() < deadline) { await delay(25); continue; }
+        console.error('[ResearchRegistry] The write lock could not be removed; requests will report the registry as busy until an operator removes .write-lock:', error);
+        return;
+      }
     }
   }
 
