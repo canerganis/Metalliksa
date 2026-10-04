@@ -99,6 +99,31 @@ class TafelPresetTest(unittest.TestCase):
         service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
         self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
 
+    def test_custom_composition_without_ew_data_is_refused_not_27(self):
+        # Fix round item 5: no silent 27.0 g/equivalent when no counted element is known.
+        for comp, field in (({"Xx": 0.9, "Yy": 0.1}, "customComposition.Xx"),
+                            ({"Fe": 0.5, "Cr": 0.5}, "customComposition.Cr"),  # 1018 preset has no Cr
+                            ({"Fe": 0.0}, "customComposition")):
+            with self.subTest(comp=comp):
+                with self.assertRaises(iv.ValidationError) as ctx:
+                    tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId="steel-1018", customComposition=comp))
+                self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
+                self.assertEqual(ctx.exception.field, field)
+                self.assertEqual(ctx.exception.detail["reason"], "no-equivalent-weight-data")
+        # Below-1 % unknown traces are not counted, so they do not block the solve.
+        out = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId="steel-1018",
+                                                    customComposition={"Fe": 0.995, "Xx": 0.005}))
+        self.assertEqual(out["equivalentWeight"], 27.9225)
+        # Caller-supplied valences/weights make an element usable.
+        out = tafel.solve_tafel_corrosion_rate(dict(
+            SOLVE_BASE, alloyId="steel-1018", customComposition={"Fe": 0.5, "Cr": 0.5},
+            customValencies={"Fe": 2, "Cr": 3}, customAtomicWeights={"Fe": 55.845, "Cr": 51.996}))
+        self.assertEqual(out["equivalentWeight"], round(1 / (0.5 * 2 / 55.845 + 0.5 * 3 / 51.996), 4))
+        code, out = _run("tafel_corrosion_rate_solver.py", dict(SOLVE_BASE, alloyId="steel-1018",
+                                                                 customComposition={"Xx": 1.0}))
+        self.assertEqual(code, 2)
+        self.assertEqual(out["error"]["code"], "UNKNOWN_ELEMENT")
+
     def test_ui_preset_tables_read_common_alloys(self):
         # Fix round item 2: PythonAnnualCorrosionRateModule and TafelPolarizationLab take
         # density/EW from COMMON_ALLOYS (the registry mirror), not from their own copies.

@@ -16,7 +16,7 @@ import time
 
 import alloy_registry
 import physical_constants
-from input_validation import UNKNOWN_ALLOY, ValidationError, require_known_alloy, validation_envelope
+from input_validation import UNKNOWN_ALLOY, UNKNOWN_ELEMENT, ValidationError, require_known_alloy, validation_envelope
 
 # Physical & Electrochemical Constants
 # Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
@@ -138,11 +138,28 @@ def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weigh
 
     Phase 6a design step (b): the formula lives in alloy_registry.astm_g102_equivalent_weight,
     which also computes every preset "ew", so a preset alloyId and the same composition sent
-    as customComposition give the same EW. 27.0 when nothing contributes is the
-    pre-existing customComposition fallback (unchanged; a preset never reaches it).
+    as customComposition give the same EW. A counted element (>= 1 % by mass) without a
+    valence or an atomic weight, or a composition with no counted element, raises
+    ValidationError(UNKNOWN_ELEMENT); the former silent 27.0 g/equivalent fallback is gone.
     """
+    counted = alloy_registry.astm_g102_counted_elements(composition)
+    missing = [el for el in counted if el not in valencies or el not in atomic_weights]
+    if missing or not counted:
+        field = f"customComposition.{missing[0]}" if missing else "customComposition"
+        raise ValidationError(
+            UNKNOWN_ELEMENT, field,
+            ("customComposition element(s) " + ", ".join(repr(el) for el in missing) +
+             " (>= 1 % by mass) have no valence or atomic weight; send customValencies and "
+             "customAtomicWeights for them." if missing else
+             "customComposition has no element with a positive amount; the equivalent weight "
+             "cannot be computed."),
+            {"missing": missing, "counted": counted, "reason": "no-equivalent-weight-data"},
+        )
     ew = alloy_registry.astm_g102_equivalent_weight(composition, valencies, atomic_weights)
-    return 27.0 if ew is None else ew
+    if ew is None:  # unreachable after the checks above; kept explicit, never a default
+        raise ValidationError(UNKNOWN_ELEMENT, "customComposition", "equivalent weight not computable",
+                              {"reason": "no-equivalent-weight-data"})
+    return ew
 
 def classify_corrosion_severity(cr_mm_yr: float) -> dict:
     """

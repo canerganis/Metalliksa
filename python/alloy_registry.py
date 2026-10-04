@@ -480,6 +480,15 @@ CORROSION_EW_NOTE = (
 )
 
 
+def astm_g102_counted_elements(composition: Mapping[str, float]) -> List[str]:
+    """Elements the ASTM G102 practice counts: present at >= 1 % of the listed total mass."""
+    positive = {el: float(f) for el, f in composition.items() if float(f) > 0.0}
+    total = sum(positive.values())
+    if total <= 0.0:
+        return []
+    return [el for el, f in positive.items() if f / total >= ASTM_G102_MIN_MASS_FRACTION]
+
+
 def astm_g102_equivalent_weight(composition: Mapping[str, float], valencies: Mapping[str, float],
                                 atomic_weights: Mapping[str, float]) -> Optional[float]:
     """ASTM G102 equivalent weight, EW = (sum_i f_i * n_i / W_i)^-1, rounded to 4 decimals.
