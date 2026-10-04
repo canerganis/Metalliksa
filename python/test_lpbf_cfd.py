@@ -23,12 +23,14 @@ from lpbf_cfd import (
     CFD_SOLVER_ID,
     MARANGONI_MODEL_ID,
     RECOIL_MODEL_ID,
+    setup_cfd_multiphysics_case,
+)
+from lpbf_cfd_cases import (
     knight_analytical_recoil_pressure,
     read_foam_scalar_field,
     read_foam_vector_field,
     run_cfd_simulation,
     setup_darcy_damping_case,
-    setup_cfd_multiphysics_case,
     setup_droplet_case,
     setup_marangoni_case,
     setup_recoil_case,
@@ -463,59 +465,7 @@ class TestLpbfCfdPhase4(unittest.TestCase):
           - Stored energy = sum(rho * cp * (T - T_init) * V).
           - Temperatures along the laser path should be significantly elevated.
         """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
-        with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
-            lx = 100e-6
-            ly = 50e-6
-            nx = 20
-            ny = 10
-            laser_power = 200.0
-            dt = 5e-7
-            end_time = 2e-6
-            t_start = 0.0
-            t_end = 2e-6
-            
-            setup_laser_case(
-                td, lx=lx, ly=ly, nx=nx, ny=ny,
-                laser_power=laser_power, laser_radius=20e-6,
-                dt=dt, end_time=end_time,
-                t_start=t_start, t_end=t_end,
-                p_start=(20e-6, 25e-6, 0.0), p_end=(80e-6, 25e-6, 0.0)
-            )
-            res = run_cfd_simulation(td)
-            
-            diag = res.get("diagnostics", {})
-            
-            self.assertEqual(
-                diag.get("laserModel"), "moving-gaussian-surface-flux-v1",
-                f"Expected laserModel=moving-gaussian-surface-flux-v1, got {diag.get('laserModel')}"
-            )
-
-
-class TestLpbfCfdPhase4(unittest.TestCase):
-    """Phase 4 verification: Moving Interface Laser Heating."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.cap = verify_cfd_capability()
-        if not cls.cap.get("available", False):
-            raise unittest.SkipTest(
-                f"metalliksaMeltPoolFoam / OpenFOAM 14 not available: {cls.cap.get('error', 'unknown error')}"
-            )
-
-    def test_09_moving_laser_surface_heating(self):
-        """Verify moving Gaussian heat source on the interface.
-        
-        Oracle:
-          - A laser beam (power 200W, radius 20um) moves from x=20um to x=80um.
-          - Heating applied at metal-gas interface.
-          - Energy conservation: total input energy = integral(Q) dt = P * (t_end - t_start).
-          - Stored energy = sum(rho * cp * (T - T_init) * V).
-          - Temperatures along the laser path should be significantly elevated.
-        """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
+        from lpbf_cfd_cases import setup_laser_case
         with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
             lx = 100e-6
             ly = 50e-6

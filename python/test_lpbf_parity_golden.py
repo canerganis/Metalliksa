@@ -14,6 +14,7 @@ import importlib.util
 import json
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,6 +26,8 @@ parity = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(parity)
 
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
+# Main before the single planned bump (design 5c stage B); the bump record's "from" side.
+PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 
 
@@ -259,16 +262,32 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(raised.exception.name, "lpbf_missing_dependency_for_test")
 
     def test_bump_record_refuses_same_hash_and_foreign_goldens(self):
+        # After the bump (B6) the worktree is the "to" side and PRE_BUMP_REVISION the "from"
+        # side; the goldens stay recorded at PRE_BUMP_FINGERPRINT, so skeleton mode (which
+        # treats the worktree as "from") must now refuse.
         spec = importlib.util.spec_from_file_location("lpbf_bump_record", HERE / "tools" / "lpbf_bump_record.py")
         bump = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bump)
-        skeleton = bump.build_record(None, False, False)
-        self.assertEqual(skeleton["fromHash"], PRE_BUMP_FINGERPRINT)
-        self.assertEqual(skeleton["from"]["manifestCount"], 37)
-        self.assertIsNone(skeleton["toHash"])
-        with self.assertRaisesRegex(SystemExit, "toHash equals fromHash"):
-            bump.build_record("HEAD", False, False)
-        dry = bump.build_record("HEAD", False, False, allow_same_hash=True)
+        try:
+            before = bump.revision_side(PRE_BUMP_REVISION)
+        except subprocess.CalledProcessError:
+            self.skipTest(f"pre-bump revision {PRE_BUMP_REVISION[:12]} is not in this clone")
+        self.assertEqual(before["implementationHash"], PRE_BUMP_FINGERPRINT)
+        self.assertEqual(before["manifestCount"], 37)
+        with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
+            bump.build_record(None, False, False)
+        record = bump.build_record(PRE_BUMP_REVISION, False, False)
+        self.assertEqual(record["fromHash"], PRE_BUMP_FINGERPRINT)
+        self.assertEqual(record["toHash"], parity.pinned_fingerprint())
+        self.assertTrue(record["pinMatchesToHash"])
+        self.assertTrue(record["versionUnchanged"])
+        self.assertEqual(record["to"]["manifestCount"], 36)
+        self.assertEqual(record["manifestDiff"]["added"], [])
+        self.assertEqual(record["manifestDiff"]["removed"], ["lpbf_cfd.py"])
+        with patch.object(bump, "worktree_side", return_value=before):
+            with self.assertRaisesRegex(SystemExit, "toHash equals fromHash"):
+                bump.build_record(PRE_BUMP_REVISION, False, False)
+            dry = bump.build_record(PRE_BUMP_REVISION, False, False, allow_same_hash=True)
         self.assertTrue(dry["dryRunSameHash"])
         directory = self._mutated_golden_dir("npz_determinism", lambda observations: None)
         target = directory / "npz_determinism.json"
@@ -277,7 +296,7 @@ class ParityHarnessTests(unittest.TestCase):
         target.write_text(json.dumps(golden), encoding="utf-8")
         with patch.object(bump, "GOLDEN_DIR", directory):
             with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
-                bump.build_record(None, False, False)
+                bump.build_record(PRE_BUMP_REVISION, False, False)
 
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):

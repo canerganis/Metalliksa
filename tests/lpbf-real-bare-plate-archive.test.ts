@@ -11,8 +11,8 @@
 //   rectangular-corridor-section-fields.npz artifact (4998 bytes).
 //
 // The Python producer (python/lpbf_simulation.py) emits null for exactly three keys on every
-// bare-plate run (bare = surfaceMode == "bare-plate"): analyticalComparison (line 880),
-// fieldOverlapDiagnostics (lines 524/769) and geometricDefectScreen (line 1091). The consumer
+// bare-plate run (bare = surfaceMode == "bare-plate"): analyticalComparison (line 889),
+// fieldOverlapDiagnostics (lines 529/778) and geometricDefectScreen (line 1084). The consumer
 // accepts those nulls only when settings.surfaceMode is exactly "bare-plate".
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';

@@ -17,8 +17,10 @@ from lpbf_simulation import (
 )
 
 # Local modules that no manifest file may import even if they were manifested:
-# design 5c B1 moves the test-only CFD case writers to lpbf_cfd_cases (non-manifest).
-FORBIDDEN_MANIFEST_IMPORTS = frozenset({"lpbf_cfd_cases"})
+# design 5c B1 moves the test-only CFD case writers to lpbf_cfd_cases (non-manifest);
+# B1' removes the unreachable openfoam-cfd branch from run() and drops lpbf_cfd.py from
+# the manifest, so the experimental CFD layer must not be wired back in silently.
+FORBIDDEN_MANIFEST_IMPORTS = frozenset({"lpbf_cfd_cases", "lpbf_cfd"})
 
 
 def _imported_names(tree):

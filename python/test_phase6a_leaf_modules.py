@@ -47,8 +47,9 @@ class LeafModuleGuardTest(unittest.TestCase):
         for name in LEAF_MODULES:
             self.assertNotIn(name, stems)
 
-    def test_manifest_has_37_entries(self):
-        self.assertEqual(len(IMPLEMENTATION_SOURCE_FILES), 37)
+    def test_manifest_has_36_entries(self):
+        # 37 before design 5c B1' dropped lpbf_cfd.py (unreachable openfoam-cfd branch).
+        self.assertEqual(len(IMPLEMENTATION_SOURCE_FILES), 36)
 
     def test_no_manifest_file_imports_a_leaf_module(self):
         for relative in IMPLEMENTATION_SOURCE_FILES:

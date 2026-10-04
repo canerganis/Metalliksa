@@ -274,15 +274,3 @@ def scan_segments(p):
                                  layer=layer,track=track,island=island))
             time += duration+p["dwell_s"]
     return segments, time+p["cooling_s"]
-
-
-def evaluate_material_properties(m, T):
-    """
-    Evaluates temperature-dependent material properties at temperature T (K).
-    Returns density, thermal conductivity, specific heat, and dynamic viscosity.
-    """
-    rho = float(property_at(m, T, 1))
-    k = float(property_at(m, T, 2))
-    cp = float(property_at(m, T, 3))
-    mu = float(property_at(m, T, 4))
-    return rho, k, cp, mu
