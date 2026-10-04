@@ -1,0 +1,160 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "npz_determinism",
+ "group": "NPZ",
+ "description": "np.savez_compressed bytes are time-independent (fixture arrays, 2.1 s apart)",
+ "slow": false,
+ "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "81bc1d9c85536d3821d02ff2df9cf636c1165cac",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "executable": "python.exe"
+ },
+ "recordedRuns_s": [
+  2.1,
+  2.1
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "npz.resaveTwiceEqual": true,
+  "npz.resaveEqualsFixtureBytes": true,
+  "npz.resaveSha256": "1aa6571e6b0450f861d062d808322c14916003e6cbf24cdd7f8c600e6d1ec9fa",
+  "npz.fixtureSha256": "1aa6571e6b0450f861d062d808322c14916003e6cbf24cdd7f8c600e6d1ec9fa",
+  "npz.fixture.arrayNames": [
+   "schema_version",
+   "scan_start_x_m",
+   "section_x_m",
+   "section_distance_mm",
+   "temperature_planes_K",
+   "plane_indices",
+   "plane_x_m",
+   "axis_y_m",
+   "z_m",
+   "mesh_m",
+   "liquidus_K",
+   "accepted_step_count",
+   "section_source_plane_indices",
+   "section_interpolation_fraction",
+   "section_interpolation_operator",
+   "section_record_id"
+  ],
+  "npz.fixture.array.schema_version": [
+   "<i8",
+   [
+    1
+   ],
+   "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8"
+  ],
+  "npz.fixture.array.scan_start_x_m": [
+   "<f8",
+   [
+    1
+   ],
+   "a4fc996346017e2dbe1529824341fd50ae687fae757c841ed93af78c7d93a71a"
+  ],
+  "npz.fixture.array.section_x_m": [
+   "<f8",
+   [
+    2
+   ],
+   "58ebfe6ef962d760f61a6bbea897f3476710347f4b367b1d50e603f5d733e262"
+  ],
+  "npz.fixture.array.section_distance_mm": [
+   "<f8",
+   [
+    2
+   ],
+   "32b09838fc4a3218843019102e0764f6a97a5c5e4e157826081fc24ee3603143"
+  ],
+  "npz.fixture.array.temperature_planes_K": [
+   "<f8",
+   [
+    4,
+    11,
+    8
+   ],
+   "7e8a842447746db2c1408d065888c0eb1ae154604bb889624afbff1f658d65c5"
+  ],
+  "npz.fixture.array.plane_indices": [
+   "<i8",
+   [
+    4
+   ],
+   "c41a74cd8faee4531fb56ef502557c2992ef50b8492e959180af6caa0fe946a1"
+  ],
+  "npz.fixture.array.plane_x_m": [
+   "<f8",
+   [
+    4
+   ],
+   "bac808f08d12b5444e6c3d69dadeee4c8c76aaec4422e2bb4b64997e582ff2a3"
+  ],
+  "npz.fixture.array.axis_y_m": [
+   "<f8",
+   [
+    11
+   ],
+   "85714b6c08a6bd590f1be070f6868d94ae5af45726653c2f23747a829b65edae"
+  ],
+  "npz.fixture.array.z_m": [
+   "<f8",
+   [
+    8
+   ],
+   "76a138a3bf5f0b7aef8a031910784ad9b2347267da369bf691c978d1c407e56f"
+  ],
+  "npz.fixture.array.mesh_m": [
+   "<f8",
+   [
+    1
+   ],
+   "3628a07234da6195456dd45450a34554f35da34a7cd772dcf087dea3bb65f15b"
+  ],
+  "npz.fixture.array.liquidus_K": [
+   "<f8",
+   [
+    1
+   ],
+   "f0a65d349834fe8be8a8eb1da1e85b0bba5946305e067a5d129a143214621dee"
+  ],
+  "npz.fixture.array.accepted_step_count": [
+   "<i8",
+   [
+    1
+   ],
+   "1e7458be60543ec6f7556920bdff20e0d22341b2016610817e9c4ee000318f9d"
+  ],
+  "npz.fixture.array.section_source_plane_indices": [
+   "<i8",
+   [
+    2,
+    2
+   ],
+   "c41a74cd8faee4531fb56ef502557c2992ef50b8492e959180af6caa0fe946a1"
+  ],
+  "npz.fixture.array.section_interpolation_fraction": [
+   "<f8",
+   [
+    2
+   ],
+   "03e4732f21ba935fa819d1613add577ea120a2adb87ed7acc624d589b124def7"
+  ],
+  "npz.fixture.array.section_interpolation_operator": [
+   "<U64",
+   [
+    2
+   ],
+   "12879ac02f82c246568812bc4231f6c2c84ed2a498bd1c07e19eb50f4a1046ba"
+  ],
+  "npz.fixture.array.section_record_id": [
+   "<U19",
+   [
+    2
+   ],
+   "f3ec976fb4fb66f881dbdb8432d1a4f98b6e52e90494e8f7f6aa0ac25798c2c5"
+  ]
+ }
+}
