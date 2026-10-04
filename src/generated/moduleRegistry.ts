@@ -713,8 +713,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "toolpath-studio",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
@@ -740,9 +740,180 @@ export const MODULE_REGISTRY = {
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "format",
+              "label": "Toolpath format",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "toolpath-format",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "gcode",
+              "required": false,
+              "enum": [
+                "gcode",
+                "cli"
+              ],
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+            },
+            {
+              "key": "defaultPower_W",
+              "label": "Default laser power",
+              "valueType": "number",
+              "unit": "W",
+              "displayUnits": [],
+              "quantityKind": "power",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 250.0,
+              "required": false,
+              "enum": [],
+              "note": "Used for vectors without an explicit power word. Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "defaultSpeed_mms",
+              "label": "Default scan speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1000.0,
+              "required": false,
+              "enum": [],
+              "note": "Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "skywritingEnabled",
+              "label": "Skywriting",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted to the scanner profile."
+            },
+            {
+              "key": "accelMax_mms2",
+              "label": "Maximum mirror acceleration",
+              "valueType": "number",
+              "unit": "mm/s^2",
+              "displayUnits": [],
+              "quantityKind": "acceleration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 40000.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "jumpSpeed_mms",
+              "label": "Jump speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 3000.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "laserOnDelay_us",
+              "label": "Laser-on delay",
+              "valueType": "number",
+              "unit": "µs",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 100.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "laserOffDelay_us",
+              "label": "Laser-off delay",
+              "valueType": "number",
+              "unit": "µs",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 120.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine."
+            },
+            {
+              "key": "markDelay_us",
+              "label": "Mark delay",
+              "valueType": "number",
+              "unit": "µs",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 200.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; no bound is enforced."
+            },
+            {
+              "key": "jumpDelay_us",
+              "label": "Jump delay",
+              "valueType": "number",
+              "unit": "µs",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 350.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted; no bound is enforced."
+            }
+          ],
+          "undeclaredInput": [
+            "content"
+          ],
+          "output": {
+            "fields": [
+              "total_segments",
+              "total_build_time_s",
+              "total_laser_on_time_s",
+              "duty_cycle_pct",
+              "total_energy_input_J",
+              "total_mark_distance_mm",
+              "total_jump_distance_mm",
+              "hotspot_count",
+              "hotspots",
+              "skywriting_mitigation_active"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -757,22 +928,41 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_toolpath_studio.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/toolpath-studio.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.",
+        "No validity domain is declared: no source-backed applicability range is established for the scanner parameters."
+      ],
+      "sourceRefs": [
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "python/lpbf_worker_rpc.py::dispatch",
+        "python/lpbf_worker_rpc.py::_rpc_toolpath_kinematics",
+        "python/lpbf_toolpath_kinematics.py::ScannerProfile",
+        "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
+        "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
+        "routes/lpbfSimulation.ts:34#/api/python/lpbf-toolpath-kinematics",
+        "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
+        "src/services/pythonComputationService.ts::simulateToolpathKinematics",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -920,8 +1110,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "murakami-fatigue",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
@@ -947,9 +1137,104 @@ export const MODULE_REGISTRY = {
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "alloyName",
+              "label": "Alloy",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "alloy",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "Ti-6Al-4V",
+              "required": false,
+              "enum": [
+                "Ti-6Al-4V",
+                "316L SS",
+                "Inconel 718",
+                "AlSi10Mg"
+              ],
+              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers."
+            },
+            {
+              "key": "sqrtArea_um",
+              "label": "Defect size (sqrt area)",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 45.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced. A negative value fails in the Paris integration (math domain error)."
+            },
+            {
+              "key": "location",
+              "label": "Defect location",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "defect-location",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "internal",
+              "required": false,
+              "enum": [
+                "surface",
+                "sub-surface",
+                "internal"
+              ],
+              "note": "The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts any text; the contract accepts the view's three values."
+            },
+            {
+              "key": "stressRatio_R",
+              "label": "Stress ratio R",
+              "valueType": "number",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "stress-ratio",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": -1.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative maximum stress. State at main f41e316; another lane may fix the R = 1 crash later."
+            },
+            {
+              "key": "stressAmplitude_MPa",
+              "label": "Cyclic stress amplitude",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "stress",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 220.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError)."
+            }
+          ],
+          "undeclaredInput": [
+            "type"
+          ],
+          "output": {
+            "fields": [
+              "fatigue_limit",
+              "kitagawa_takahashi_curve",
+              "paris_crack_growth"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -964,22 +1249,44 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key (paris_crack_growth.status is the integration outcome 'non_propagating', 'fractured' or 'runout', not an evidence status). Murakami, El-Haddad and Paris expressions with per-alloy constants from alloy_registry (fatigue_fracture domain); no oracle compares the result with an independent reference. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_murakami_fatigue.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/murakami-fatigue.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
+        "No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.",
+        "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError); the arithmetic failures noted on the fields reach it as HTTP 400."
+      ],
+      "sourceRefs": [
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "python/lpbf_worker_rpc.py::dispatch",
+        "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",
+        "python/lpbf_fatigue_fracture.py::fatigue_constants",
+        "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
+        "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
+        "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
+        "routes/lpbfSimulation.ts:35#/api/python/lpbf-fatigue-fracture",
+        "routes/lpbfSimulation.ts::workerError",
+        "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
+        "src/services/pythonComputationService.ts::computeMurakamiFatigue",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` / Fatigue & Fracture Lab"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -989,8 +1296,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "defect-twin",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Spatial Defect Twin",
       "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
@@ -1016,9 +1323,43 @@ export const MODULE_REGISTRY = {
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "resolution",
+              "label": "Grid divisions per axis",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 32,
+              "required": false,
+              "enum": [],
+              "note": "Converted with int(); no bound is enforced (0 divides by zero)."
+            }
+          ],
+          "undeclaredInput": [
+            "stlContent",
+            "defects"
+          ],
+          "output": {
+            "fields": [
+              "num_triangles",
+              "bounds",
+              "grid_resolution",
+              "voxel_size_mm",
+              "part_volume_mm3",
+              "total_defects_count",
+              "total_pore_volume_mm3",
+              "relative_density_pct",
+              "defects",
+              "sample_surface_voxels"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1033,22 +1374,44 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with the summed sphere volumes of the defects supplied in the request; the defects are inputs, not detections. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_defect_twin.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/defect-twin.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
+        "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct 100; with the 8 synthesized defects the view always sends it reports about 94.95 against that fictitious volume (observed in Phase 7 wave 2).",
+        "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed 8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count proxy, orders of magnitude below the enclosed volume.",
+        "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
+        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
+        "No validity domain is declared: no source-backed applicability range is established."
+      ],
+      "sourceRefs": [
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "python/lpbf_worker_rpc.py::dispatch",
+        "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
+        "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
+        "python/stl_voxelizer.py::STLVoxelizer.voxelize",
+        "routes/lpbfSimulation.ts:36#/api/python/lpbf-stl-voxelize",
+        "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
+        "src/services/pythonComputationService.ts::voxelizeSTLDefects",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -1058,8 +1421,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "adaptive-mitigation",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Defect Mitigation",
       "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
@@ -1085,9 +1448,132 @@ export const MODULE_REGISTRY = {
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "format",
+              "label": "Toolpath format",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "toolpath-format",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "gcode",
+              "required": false,
+              "enum": [
+                "gcode",
+                "cli"
+              ],
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+            },
+            {
+              "key": "defaultPower_W",
+              "label": "Default laser power",
+              "valueType": "number",
+              "unit": "W",
+              "displayUnits": [],
+              "quantityKind": "power",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 280.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "defaultSpeed_mms",
+              "label": "Default scan speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "apply67DegRotation",
+              "label": "Apply 67° interlayer rotation",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": false,
+              "enum": [],
+              "note": "The authority coerces with bool(); the contract accepts only booleans."
+            },
+            {
+              "key": "layerIndex",
+              "label": "Layer index",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 1,
+              "required": false,
+              "enum": [],
+              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0."
+            },
+            {
+              "key": "accelMax_mms2",
+              "label": "Maximum mirror acceleration",
+              "valueType": "number",
+              "unit": "mm/s^2",
+              "displayUnits": [],
+              "quantityKind": "acceleration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 40000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "jumpSpeed_mms",
+              "label": "Jump speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 3000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            }
+          ],
+          "undeclaredInput": [
+            "content"
+          ],
+          "output": {
+            "fields": [
+              "total_segments",
+              "mitigated_hotspots_count",
+              "overall_energy_reduction_pct",
+              "rotation_angle_deg",
+              "total_mitigated_energy_J",
+              "mitigated_gcode",
+              "sample_segments"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1102,22 +1588,42 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. Feed-forward power scaling P_nom * min(1, v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect reduction is measured. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_adaptive_mitigation.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/adaptive-mitigation.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.",
+        "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
+        "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
+        "No validity domain is declared: no source-backed applicability range is established."
+      ],
+      "sourceRefs": [
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "python/lpbf_worker_rpc.py::dispatch",
+        "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
+        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
+        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
+        "routes/lpbfSimulation.ts:37#/api/python/lpbf-adaptive-feedforward",
+        "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
+        "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -1334,8 +1840,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "optical-tomography",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Optical Tomography",
       "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
@@ -1361,9 +1867,155 @@ export const MODULE_REGISTRY = {
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
+          "input": [
+            {
+              "key": "res_x",
+              "label": "Sensor pixels (x)",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 64,
+              "required": false,
+              "enum": [],
+              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop runs res_x * res_y times with no limit below the 20000 ms worker timeout."
+            },
+            {
+              "key": "res_y",
+              "label": "Sensor pixels (y)",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 64,
+              "required": false,
+              "enum": [],
+              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."
+            },
+            {
+              "key": "fov_um",
+              "label": "Field of view",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "emissivity",
+              "label": "Emissivity",
+              "valueType": "number",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "emissivity",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.35,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "laserPower_W",
+              "label": "Laser power",
+              "valueType": "number",
+              "unit": "W",
+              "displayUnits": [],
+              "quantityKind": "power",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 280.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "scanSpeed_mms",
+              "label": "Scan speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "material_k",
+              "label": "Thermal conductivity",
+              "valueType": "number",
+              "unit": "W/(m*K)",
+              "displayUnits": [],
+              "quantityKind": "thermal-conductivity",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 15.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "material_alpha",
+              "label": "Thermal diffusivity",
+              "valueType": "number",
+              "unit": "m^2/s",
+              "displayUnits": [],
+              "quantityKind": "thermal-diffusivity",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 5e-06,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."
+            },
+            {
+              "key": "T0_K",
+              "label": "Ambient temperature",
+              "valueType": "number",
+              "unit": "K",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 300.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            }
+          ],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "resolution",
+              "fov_um",
+              "max_expected_intensity",
+              "pixels_1d",
+              "pixels_noise_sigma"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1378,22 +2030,41 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; the noise value is the square root of that signal. No sensor calibration or measured frame is involved. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_optical_tomography.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/optical-tomography.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.",
+        "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD (noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, not a temperature-domain noise bound.",
+        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
+        "No validity domain is declared: no source-backed applicability range is established."
+      ],
+      "sourceRefs": [
+        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+        "python/lpbf_worker_rpc.py::dispatch",
+        "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
+        "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
+        "routes/lpbfSimulation.ts:40#/api/python/lpbf-optical-tomography",
+        "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
+        "src/services/pythonComputationService.ts::simulateOpticalTomography",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2010,8 +2681,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "ttt-cct-kinetics",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "TTT / CCT",
       "description": "Transformation kinetics depend on supplied material parameters.",
@@ -2037,9 +2708,124 @@ export const MODULE_REGISTRY = {
             "warm": true,
             "exceptionReason": null
           },
-          "input": [],
+          "input": [
+            {
+              "key": "alloy",
+              "label": "Alloy",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "alloy",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "AISI 4140",
+              "required": false,
+              "enum": [
+                "AISI 4140",
+                "AISI 4340",
+                "AISI D2",
+                "Inconel 718",
+                "Ti-6Al-4V",
+                "Al 7075"
+              ],
+              "note": "The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers."
+            },
+            {
+              "key": "coolingRate_C_s",
+              "label": "Selected cooling rate",
+              "valueType": "number",
+              "unit": "K/s",
+              "displayUnits": [],
+              "quantityKind": "cooling-rate",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 10.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced."
+            },
+            {
+              "key": "grainSize_um",
+              "label": "Prior austenite grain size",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 25.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
+            },
+            {
+              "key": "austTemp_C",
+              "label": "Austenitisation temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 860.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted by the entry point; no bound is enforced."
+            },
+            {
+              "key": "agingTemp_C",
+              "label": "Aging temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 720.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted by the entry point; no bound is enforced."
+            },
+            {
+              "key": "agingTime_h",
+              "label": "Aging time",
+              "valueType": "number",
+              "unit": "h",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 8.0,
+              "required": false,
+              "enum": [],
+              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."
+            }
+          ],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "success",
+              "engine",
+              "computeTimeMs",
+              "alloy",
+              "alloyMetadata",
+              "inputParameters",
+              "criticalTransformationTemperatures",
+              "tttIsothermalCurves",
+              "cctContinuousCoolingMap",
+              "lswPrecipitateCoarsening",
+              "calphadVsKineticsGap",
+              "provenance"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2054,22 +2840,46 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key (cctContinuousCoolingMap[].predictedHardness_HV_status is a hardness-conversion applicability flag, not an evidence status). Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_ttt_cct_kinetics.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/ttt-cct-kinetics.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); no CALPHAD calculation runs in this operation.",
+        "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output.",
+        "The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs.",
+        "No validity domain is declared: no source-backed applicability range is established for the kinetic constants.",
+        "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
+      ],
+      "sourceRefs": [
+        "python/kinetics_ttt_cct_solver.py::solve_phase_transformation_kinetics",
+        "python/kinetics_ttt_cct_solver.py::calculate_jmak_isothermal_kinetics",
+        "python/kinetics_ttt_cct_solver.py::resolve_kinetics_alloy",
+        "python/kinetics_ttt_cct_solver.py::provenance",
+        "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
+        "python/input_validation.py::require_known_alloy",
+        "routes/physics.ts::handlePythonDispatch",
+        "routes/physics.ts:111#python/kinetics_ttt_cct_solver.py",
+        "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+        "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
+        "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` / TTT / CCT"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2339,8 +3149,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "icme-motor",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "ICME Multi-Scale Studio",
       "description": "Coupled microstructure and property estimates with CALPHAD thermodynamics.",
@@ -2366,9 +3176,145 @@ export const MODULE_REGISTRY = {
             "warm": true,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "baseMetal",
+              "label": "Base metal",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "element",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "Ni",
+              "required": false,
+              "enum": [
+                "Ni",
+                "Fe",
+                "Ti",
+                "Al"
+              ],
+              "note": "Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."
+            },
+            {
+              "key": "coolingRate_C_s",
+              "label": "Cooling rate",
+              "valueType": "number",
+              "unit": "K/s",
+              "displayUnits": [],
+              "quantityKind": "cooling-rate",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 150000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."
+            },
+            {
+              "key": "agingTemp_C",
+              "label": "Aging temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 720.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "agingTime_h",
+              "label": "Aging time",
+              "valueType": "number",
+              "unit": "h",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 8.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced."
+            },
+            {
+              "key": "strainRate_s_inv",
+              "label": "Reference strain rate",
+              "valueType": "number",
+              "unit": "1/s",
+              "displayUnits": [],
+              "quantityKind": "strain-rate",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.001,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); written into the exported material cards only. No bound is enforced."
+            },
+            {
+              "key": "serviceTemp_C",
+              "label": "Service temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 25.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC)."
+            },
+            {
+              "key": "componentType",
+              "label": "Component",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "component-catalog",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "turbine_blade_root",
+              "required": false,
+              "enum": [
+                "turbine_blade_root",
+                "pressure_bulkhead",
+                "lpbf_bracket"
+              ],
+              "note": "The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys."
+            }
+          ],
+          "undeclaredInput": [
+            "alloyName",
+            "crystalSystem",
+            "composition_wt",
+            "grainSize_um"
+          ],
+          "output": {
+            "fields": [
+              "success",
+              "engine",
+              "computeTimeMs",
+              "inputParameters",
+              "scale0_dftAtomistic",
+              "scale1_calphadSoluteMisfit",
+              "scale2_microstructureKinetics",
+              "scale3_continuumPlasticity",
+              "scale4_macroComponentFEA",
+              "caeExportCards",
+              "provenance"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2383,22 +3329,44 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. scale4_macroComponentFEA.structuralVerdict is fixed text chosen by comparing the estimated yield strength with a catalog safety factor; it is not an evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_icme_motor.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/icme-motor.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "alloyName is a free-text label written into the output and the material cards; crystalSystem is echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, so they are recorded as undeclaredInput.",
+        "Recorded wording gap (not changed here): when the yield-based safety factor passes, scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.",
+        "Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX Multi-Scale ICME Calibrated Card', although no calibration against data is performed.",
+        "No validity domain is declared: no source-backed applicability range is established for the coupled estimates.",
+        "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
+      ],
+      "sourceRefs": [
+        "python/icme_multiscale_pipeline_solver.py::solve_multiscale_pipeline",
+        "python/icme_multiscale_pipeline_solver.py::main",
+        "python/icme_multiscale_pipeline_solver.py::_unknown_element",
+        "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
+        "routes/physics.ts::handlePythonDispatch",
+        "routes/physics.ts:116#python/icme_multiscale_pipeline_solver.py",
+        "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+        "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
+        "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` / ICME Modeling"
+      ],
       "seedDerived": [
         "label",
         "description",
