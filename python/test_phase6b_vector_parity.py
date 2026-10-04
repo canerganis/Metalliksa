@@ -75,6 +75,42 @@ DFT_NO_BASIS_REASON = ("Debye temperature and minimum thermal conductivity unava
                        "supplied; there is no default molar mass")
 DFT_UNSTABLE_REASON = ("the stiffness tensor is not mechanically stable (Born criteria / positive definiteness): "
                        "acoustic velocities and the Debye temperature are not defined")
+DFT_SCIENTIFIC_MODEL = "Crystal-Symmetry-Governed Voigt-Reuss-Hill Homogenization & Born Mechanical Stability"
+# the complete unavailable result (computeTimeMs, the only volatile key, is stripped by the golden runner)
+DFT_UNAVAILABLE_EXACT = {
+    "default_empty_fe3c": {
+        "success": False, "status": "unavailable", "unavailableCode": "NO_ELASTIC_CONSTANTS",
+        "reason": ("no exact library entry for this formula, no custom_c_ij, and no K_VRH/G_VRH: there are no elastic "
+                   "constants to work from (nothing is guessed from a similar formula or a default)"),
+        "engine": DFT_V41, "scientificModel": DFT_SCIENTIFIC_MODEL, "label": DFT_LABEL, "isDft": False,
+        "materialInfo": {"formula": None, "crystal_system": None}},
+    "edge_unknown_negative": {
+        "success": False, "status": "unavailable", "unavailableCode": "UNSUPPORTED_CRYSTAL_SYSTEM",
+        "reason": ("crystal system 'Klingon' is not supported (cubic, hexagonal, trigonal, tetragonal, orthorhombic, "
+                   "isotropic); no isotropic stand-in is substituted"),
+        "engine": DFT_V41, "scientificModel": DFT_SCIENTIFIC_MODEL, "label": DFT_LABEL, "isDft": False,
+        "materialInfo": {"formula": "Unobtainium-X", "crystal_system": "Klingon"}},
+}
+# exact texts of the added ni3al Debye-basis and source-note rows
+DFT_NI3AL_SOURCE_NOTES = (
+    "Built-in elastic-constants library entry (a lookup table, not a DFT calculation): Ni3Al (\u03b3' Precipitate) "
+    "(L1_2 ordered superalloy strengthener; high Zener anisotropy A_Z ~ 3.3.); reference status: "
+    "experimental-single-crystal; reference: Kayser & Stassis, Phys. Status Solidi A 64, 335 (1981), room temperature, "
+    "as quoted in Luan et al., Crystals 8, 307 (2018), Table 2")
+DFT_BASIS_SOURCE = "composition (formula parsed; CIAAW 2021 atomic weights, physical_constants)"
+DFT_BASIS_REFERENCE = ("Anderson, J. Phys. Chem. Solids 24 (1963) 909: theta_D = (h/k_B) [3 n N_A rho / (4 pi M)]^(1/3) v_m, "
+                       "n atoms per formula unit, M formula-unit molar mass")
+DFT_BASIS_IGNORED = {"molar_mass": "composition-derived formula-unit mass is used",
+                     "nsites": "cell site count is not the atoms per formula unit; not used"}
+# faa6684 acoustic values of the unstable cases (the rows that become null)
+DFT_UNSTABLE_OLD_ACOUSTIC = {
+    "singular_custom_cij_fallback": {"debyeTemperature_K": 391.3, "gruneisenParameter_gamma": 1.67,
+                                     "longitudinalSoundVelocity_m_s": 4891.4, "meanSoundVelocity_m_s": 2997.2,
+                                     "minimumThermalConductivity_W_mK": 0.995, "transverseSoundVelocity_m_s": 2688.8},
+    "tetragonal_c11_eq_c12_marginal": {"debyeTemperature_K": 531.2, "gruneisenParameter_gamma": 1.56,
+                                       "longitudinalSoundVelocity_m_s": 5725.4, "meanSoundVelocity_m_s": 3612.9,
+                                       "minimumThermalConductivity_W_mK": 1.513, "transverseSoundVelocity_m_s": 3249.6},
+}
 DFT_DEFAULT_ECHOES = {"materialInfo.band_gap": 0.0, "materialInfo.energy_above_hull": 0.0,
                       "materialInfo.formation_energy_per_atom": -0.45, "materialInfo.is_metal": True,
                       "materialInfo.is_stable": True, "materialInfo.space_group": "Pnma"}
@@ -203,16 +239,17 @@ def _dft_rules(case):
         basis = r"acousticAndThermalProperties\.debyeBasis\."
         rules += [
             ("sourceNotes", "changed", r"sourceNotes", lambda x: x.startswith("Authentic DFT Benchmark: Ni3Al"),
-             lambda x: x.startswith("Built-in elastic-constants library entry (a lookup table, not a DFT calculation): "
-                                    "Ni3Al") and "reference status: experimental-single-crystal; reference: Kayser & Stassis"
-             in x),
+             _eq(DFT_NI3AL_SOURCE_NOTES)),
             ("basis.n", "added", basis + "atomsPerFormulaUnit", _is_none, _eq(4.0)),
             ("basis.M", "added", basis + "formulaUnitMolarMass_g_mol", _is_none, _approx(203.061, 1e-6)),
             ("basis.mean", "added", basis + "meanAtomicMass_g_mol", _is_none, _approx(50.7653, 1e-6)),
             ("basis.density", "added", basis + "atomNumberDensity_per_m3", _is_none, _approx(8.802e28, 1e-3)),
-            ("basis.text", "added", basis + "(source|reference)", _is_none, lambda x: isinstance(x, str) and x != ""),
-            ("basis.ignored", "added", basis + r"ignoredInputs\.(molar_mass|nsites)", _is_none,
-             lambda x: isinstance(x, str) and x != ""),
+            ("basis.source", "added", basis + "source", _is_none, _eq(DFT_BASIS_SOURCE)),
+            ("basis.reference", "added", basis + "reference", _is_none, _eq(DFT_BASIS_REFERENCE)),
+            ("basis.ignored.molar_mass", "added", basis + r"ignoredInputs\.molar_mass", _is_none,
+             _eq(DFT_BASIS_IGNORED["molar_mass"])),
+            ("basis.ignored.nsites", "added", basis + r"ignoredInputs\.nsites", _is_none,
+             _eq(DFT_BASIS_IGNORED["nsites"])),
         ]
     labels = ("[100]", "[110]", "[111]", "[001]", "[210]", "[311]")
     if case in ("ni3al_cubic_benchmark", "hexagonal_custom_cij"):
@@ -230,10 +267,8 @@ def _dft_rules(case):
                    _is_none),
                   ("zener", "changed", r"mechanicalIntegrityIndices\.zenerAnisotropyFactor_AZ", _eq(1.334), _is_none)]
     if unstable:
-        for field in ("debyeTemperature_K", "gruneisenParameter_gamma", "longitudinalSoundVelocity_m_s",
-                      "meanSoundVelocity_m_s", "minimumThermalConductivity_W_mK", "transverseSoundVelocity_m_s"):
-            rules.append((field, "changed", rf"acousticAndThermalProperties\.{field}",
-                          lambda x: isinstance(x, float), _is_none))
+        for field, old in DFT_UNSTABLE_OLD_ACOUSTIC[case].items():
+            rules.append((field, "changed", rf"acousticAndThermalProperties\.{field}", _eq(old), _is_none))
         rules.append(("directional.removed", "removed",
                       r"directionalYoungsModuli\[\d\]\.(direction|hkl\[\d\]|ratioToAverage|youngsModulusGPa)",
                       _anything, _is_none))
@@ -455,11 +490,8 @@ class GoldenParityTest(unittest.TestCase):
                 self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
                 self.assertEqual(fresh["stderr"], "")
                 if solver == "dft_property_calculator" and case in DFT_UNAVAILABLE_CHANGES:
-                    out = fresh["stdout"]
-                    self.assertEqual((out["success"], out["status"], out["unavailableCode"], out["isDft"]),
-                                     (False, "unavailable", DFT_UNAVAILABLE_CHANGES[case], False))
-                    self.assertNotIn("elasticStiffnessMatrix_Cij_GPa", out)
-                    self.assertNotIn("acousticAndThermalProperties", out)
+                    self.assertEqual(fresh["stdout"], DFT_UNAVAILABLE_EXACT[case])  # every key and text, exactly
+                    self.assertEqual(DFT_UNAVAILABLE_EXACT[case]["unavailableCode"], DFT_UNAVAILABLE_CHANGES[case])
                     continue
                 if solver == "dft_property_calculator":
                     rows = tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True)

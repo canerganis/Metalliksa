@@ -155,7 +155,8 @@ export interface PythonDFTResult {
   /** unverified | cited-secondary-compilation | supplied-by-caller */
   referenceStatus?: string;
   sourceNotes?: string;
-  computeTimeMs: number;
+  /** Engine-measured milliseconds; null when none was reported (no invented 0). */
+  computeTimeMs: number | null;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   materialInfo: {
@@ -247,7 +248,7 @@ export interface PythonDFTUnavailable {
   engine: string;
   label?: string;
   isDft?: false;
-  computeTimeMs: number;
+  computeTimeMs: number | null;
   isPythonEngine: boolean;
 }
 
@@ -1159,7 +1160,7 @@ class PythonComputationService {
       reason,
       engine: "MetalliX-Continuum-Elasticity-Homogenizer",
       isDft: false,
-      computeTimeMs: 0,
+      computeTimeMs: null,
       isPythonEngine: false,
     });
     if (!usePython) {
@@ -1178,7 +1179,7 @@ class PythonComputationService {
             ...data,
             success: false,
             isPythonEngine: true,
-            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : 0,
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
           };
         }
         if (data && data.success && data.elasticStiffnessMatrix_Cij_GPa) {
@@ -1187,7 +1188,7 @@ class PythonComputationService {
             status: "available",
             isPythonEngine: true,
             engine: data.engine || "MetalliX-Continuum-Elasticity-Homogenizer",
-            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : 0,
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
           };
         }
         const detail = data && typeof data.error === "string" ? `: ${data.error}` : "";

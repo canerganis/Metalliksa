@@ -23,12 +23,25 @@ export function directionLabel(direction: DirectionalModuli[number]): string {
   return direction.label ?? direction.direction;
 }
 
-/** One line saying what the numbers are: the engine's label plus where the constants came from. */
+/**
+ * Measured compute time of the engine, or null when none was reported (an unreachable engine has no time;
+ * 0 ms is never invented).
+ */
+export function computeTimeText(outcome: { computeTimeMs?: number | null } | null | undefined): string | null {
+  const ms = outcome?.computeTimeMs;
+  return typeof ms === "number" && Number.isFinite(ms) ? `${ms} ms` : null;
+}
+
+/**
+ * One line saying what the numbers are: the engine's label plus where the constants came from. The reference
+ * status is appended only when sourceNotes (library entries) does not already state it.
+ */
 export function provenanceLine(result: Pick<PythonDFTResult, "label" | "sourceNotes" | "referenceStatus">): string {
+  const statusText = result.referenceStatus ? `reference status: ${result.referenceStatus}` : undefined;
   const parts = [
     result.label ?? "Continuum elasticity (not a DFT calculation)",
     result.sourceNotes,
-    result.referenceStatus ? `reference status: ${result.referenceStatus}` : undefined,
+    statusText && !(result.sourceNotes ?? "").includes(statusText) ? statusText : undefined,
   ];
   return parts.filter((part): part is string => typeof part === "string" && part.length > 0).join(" | ");
 }

@@ -495,5 +495,22 @@ class DirectionalFrameTest(unittest.TestCase):
         self.assertIsNotNone(cubic["mechanicalIntegrityIndices"]["zenerAnisotropyFactor_AZ"])
 
 
+class RenderFixtureTest(unittest.TestCase):
+    """tests/fixtures/elasticity-results.json (rendered by tests/elasticity-explorer-labels.test.tsx) is real
+    module output: this fails when the module and the fixture drift apart."""
+
+    def test_fixture_equals_the_module_output(self):
+        import json
+        import pathlib
+        path = pathlib.Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "elasticity-results.json"
+        fixture = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(set(fixture), {"libraryNi3Al", "hexCustomNoComposition", "unstableCubic", "unavailableAl2O3"})
+        for name, item in fixture.items():
+            with self.subTest(fixture=name):
+                fresh = json.loads(json.dumps(run(item["payload"])))
+                fresh.pop("computeTimeMs")
+                self.assertEqual(fresh, item["result"])
+
+
 if __name__ == "__main__":
     unittest.main()
