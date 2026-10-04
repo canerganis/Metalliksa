@@ -106,12 +106,12 @@ export const ToolpathThermalMapLab: React.FC = () => {
           
           <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
             <label className="block text-xs text-slate-400 mb-1">Hatch (µm): {hatch}</label>
-            <input aria-label="Hatch" type="range" min="50" max="200" value={hatch} onChange={(e) => setHatch(Number(e.target.value))} className="w-full" />
+            <input aria-label="Hatch (µm)" type="range" min="50" max="200" value={hatch} onChange={(e) => setHatch(Number(e.target.value))} className="w-full" />
           </div>
 
           <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
             <label className="block text-xs text-slate-400 mb-1">Angle (Degrees): {angle}</label>
-            <input aria-label="Angle" type="range" min="0" max="180" value={angle} onChange={(e) => setAngle(Number(e.target.value))} className="w-full" />
+            <input aria-label="Angle (Degrees)" type="range" min="0" max="180" value={angle} onChange={(e) => setAngle(Number(e.target.value))} className="w-full" />
           </div>
         </div>
 
