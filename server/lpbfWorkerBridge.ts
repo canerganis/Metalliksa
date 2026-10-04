@@ -18,6 +18,27 @@ export class LpbfWorkerUnavailableError extends Error {
   }
 }
 
+/** Phase 6a validation envelope relayed by the worker RPC (rpc_error_response in
+ * python/lpbf_worker.py); routes map it to HTTP 422 with the envelope as the body. */
+export interface PythonValidationEnvelope {
+  success: false;
+  error: { code: string; field: string; message: string; detail: Record<string, unknown> };
+  errorKind: "validation";
+}
+
+export class LpbfWorkerValidationError extends Error {
+  constructor(public readonly envelope: PythonValidationEnvelope) {
+    super(envelope.error.message);
+  }
+}
+
+function validationEnvelope(reply: Record<string, unknown>): PythonValidationEnvelope | null {
+  const env = reply.validation as Record<string, unknown> | undefined;
+  if (reply.errorKind !== "validation" || !env || env.errorKind !== "validation") return null;
+  const error = env.error as Record<string, unknown> | undefined;
+  return error && typeof error.message === "string" ? env as unknown as PythonValidationEnvelope : null;
+}
+
 /** One worker owns the queue. Readiness outlives callers with shorter HTTP budgets. */
 export class LpbfWorkerBridge {
   private process?: ChildProcessWithoutNullStreams;
@@ -118,7 +139,10 @@ export class LpbfWorkerBridge {
         const wait = this.pending.get(reply.id);
         if (!wait || wait.child !== child) return;
         clearTimeout(wait.timer); this.pending.delete(reply.id);
-        if (reply.error) wait.reject(new Error(reply.error)); else wait.resolve(reply.data);
+        if (reply.error) {
+          const envelope = validationEnvelope(reply);
+          wait.reject(envelope ? new LpbfWorkerValidationError(envelope) : new Error(reply.error));
+        } else wait.resolve(reply.data);
       } catch { stdoutNoise.push(line.slice(0, 500)); if (stdoutNoise.length > 20) stdoutNoise.shift(); }
     });
     child.stderr.on("data", data => { stderr = (stderr + data.toString()).slice(-4000); });

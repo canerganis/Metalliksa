@@ -1256,9 +1256,22 @@ def main():
             data = lpbf_worker_rpc.dispatch(request, queue, _capabilities_response)
             response = dict(id=request["id"], data=data)
         except Exception as e:
-            response = dict(id=request.get("id"), error=str(e))
+            response = rpc_error_response(request, e)
         print(json.dumps(response, allow_nan=False), flush=True)
     queue.close()
+
+
+def rpc_error_response(request, error):
+    """RPC error reply. A Phase 6a input_validation.ValidationError (e.g. the fatigue
+    UNKNOWN_ALLOY) also carries the stdout-style envelope, which the Node bridge maps to
+    HTTP 422 like the other migrated solvers. input_validation is looked up in
+    sys.modules: such an error can only exist once that module is loaded, so this adds
+    no import to the worker."""
+    response = dict(id=request.get("id") if isinstance(request, dict) else None, error=str(error))
+    validation = sys.modules.get("input_validation")
+    if validation is not None and isinstance(error, validation.ValidationError):
+        response.update(errorKind="validation", validation=validation.validation_envelope(error))
+    return response
 
 
 if __name__ == "__main__":
