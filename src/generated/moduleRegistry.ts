@@ -441,7 +441,7 @@ export const MODULE_REGISTRY = {
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "lpbf",
       "label": "Microstructure Lab",
-      "description": "In-situ G/R solidification front tracking with Hunt-Lu PDAS, Kirkwood SDAS and dendrite morphology prediction.",
+      "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
       "next": "thermomechanical-distortion",
       "maturity": "Research",
       "navigation": "listed",

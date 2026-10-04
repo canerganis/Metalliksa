@@ -4,6 +4,12 @@ lpbf_solidification_microstructure.py  — Phase 8
 Python-side solidification microstructure helpers for LPBF.
 
 Provides:
+  compute_screening_field_microstructure(params)
+    → RPC route "solidification-microstructure" when no CFD result is supplied.
+      Runs lpbf_thermal_solver.calculate_meltpool_physics for the named material
+      and projects thermal["solidificationKinetics"] (the same numbers the Build
+      Job projects). Missing/unknown inputs give status "unavailable": no
+      defaults, no surrogate alloy.
   compute_solidification_microstructure(params, material, cfd_result)
     → RPC route "solidification-microstructure". Uses the CFD
       solidificationMicrostructure sub-dict (meanG_K_m, meanR_m_s, ...) when
@@ -197,6 +203,122 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
         "SDAS_um": None,
         "morphology": None,
     }
+
+
+SCREENING_FIELD_SCOPE = (
+    "Rosenthal (or selected) screening-field G/R from python/lpbf_thermal_solver; "
+    "same numbers the Build Job projects; not in-situ tracking; not validated"
+)
+
+# (payload key, calculate_meltpool_physics argument) in call order.
+_SCREENING_INPUTS = (
+    ("power_W", "laser_power_W"),
+    ("speed_mm_s", "scan_speed_mm_s"),
+    ("beamDiameter_um", "beam_diameter_um"),
+    ("preheat_C", "preheat_temp_C"),
+    ("layerThickness_um", "layer_thickness_um"),
+    ("hatch_um", "hatch_spacing_um"),
+)
+
+
+def _unavailable_screening(reason: str, heat_source: Any = None) -> Dict[str, Any]:
+    return {
+        "status": "unavailable",
+        "reason": reason,
+        "source": "none",
+        "heatSourceModel": heat_source if isinstance(heat_source, str) else None,
+        "G_K_m": None,
+        "R_m_s": None,
+        "coolingRate_K_s": None,
+        "PDAS_um": None,
+        "SDAS_um": None,
+        "morphology": None,
+        "doi": None,
+        "disclaimer": _MICROSTRUCTURE_DISCLAIMER_SCREENING,
+        "scope": SCREENING_FIELD_SCOPE,
+    }
+
+
+_MICROSTRUCTURE_DISCLAIMER_SCREENING = (
+    "Screening conduction-field G/R with Hunt G/R morphology bands, Hunt-Lu PDAS and Kirkwood SDAS. "
+    "Not in-situ front tracking, not calibrated, not experimentally validated."
+)
+
+
+def compute_screening_field_microstructure(params: Any) -> Dict[str, Any]:
+    """
+    Screening-field solidification microstructure for the Microstructure Lab.
+
+    params: materialName (THERMOPHYSICAL_DB / four-alloy thermal name, e.g.
+    "Inconel 718"), power_W, speed_mm_s, beamDiameter_um, preheat_C,
+    layerThickness_um, hatch_um and optional heatSource ("rosenthal" when
+    absent; "eagar-tsai" or "goldak"). Every input is required (no defaults).
+
+    The numbers are thermal["solidificationKinetics"] from
+    lpbf_thermal_solver.calculate_meltpool_physics, projected by
+    project_build_job_microstructure (status "available" for the liquidus field
+    map, "screening-fallback" for the tail-length heuristic). Nothing is
+    estimated here. Missing or unusable inputs return status "unavailable" with
+    a reason instead of raising.
+    """
+    if not isinstance(params, dict):
+        return _unavailable_screening("params object missing")
+    material_name = params.get("materialName")
+    heat_source = params.get("heatSource", "rosenthal")
+    if heat_source is None:
+        heat_source = "rosenthal"
+    if not isinstance(material_name, str) or not material_name.strip():
+        return _unavailable_screening("materialName missing: no default or surrogate alloy is used", heat_source)
+    values: Dict[str, float] = {}
+    for key, _ in _SCREENING_INPUTS:
+        value = params.get(key)
+        if not _finite_number(value):
+            return _unavailable_screening(f"{key} missing or not a finite number: no default is used", heat_source)
+        values[key] = float(value)
+
+    from lpbf_thermal_solver import calculate_meltpool_physics
+
+    try:
+        thermal = calculate_meltpool_physics(
+            material_name,
+            values["power_W"],
+            values["speed_mm_s"],
+            values["beamDiameter_um"],
+            values["preheat_C"],
+            values["layerThickness_um"],
+            values["hatch_um"],
+            heat_source=heat_source,
+        )
+    except ValueError as exc:
+        return _unavailable_screening(str(exc), heat_source)
+
+    from solidification_front import (
+        G_OVER_R_COLUMNAR as _FRONT_COLUMNAR,
+        G_OVER_R_CELLULAR as _FRONT_CELLULAR,
+        G_OVER_R_PLANAR as _FRONT_PLANAR,
+    )
+
+    block = project_build_job_microstructure(thermal)
+    process = thermal.get("processParameters") if isinstance(thermal.get("processParameters"), dict) else {}
+    block.update({
+        "heatSourceModel": thermal.get("heatSourceModel"),
+        "materialName": thermal.get("material", material_name),
+        "inputs": {key: values[key] for key, _ in _SCREENING_INPUTS},
+        "absorptivity": {
+            "effective": process.get("effectiveAbsorptivity"),
+            "conduction": process.get("conductionAbsorptivity"),
+        },
+        # Hunt G/R bands (K s / m^2) read from solidification_front, the module that classifies morphology.
+        "morphologyBands_G_over_R": {
+            "planar": _FRONT_PLANAR,
+            "cellular": _FRONT_CELLULAR,
+            "columnar": _FRONT_COLUMNAR,
+        },
+        "scope": SCREENING_FIELD_SCOPE,
+    })
+    if "materialEvidence" in thermal:
+        block["materialEvidence"] = thermal["materialEvidence"]
+    return block
 
 
 def compute_solidification_microstructure(
