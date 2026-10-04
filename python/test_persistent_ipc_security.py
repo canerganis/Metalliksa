@@ -396,6 +396,60 @@ class StartupConfigTest(unittest.TestCase):
             self.assertTrue(ipc._is_pool_worker_process())
 
 
+class PoolTimeoutTest(unittest.TestCase):
+    def test_timed_out_running_job_is_killed_when_alone(self):
+        reg = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
+        try:
+            self.assertEqual(reg.prewarm_pool(), 1)
+            old_procs = list(reg.pool._processes.values())
+            future = reg.pool.submit(ipc._worker_noop, 60)
+            time.sleep(1.0)  # running, not cancellable
+            with reg.stats_lock:
+                reg.active_jobs = 1
+            self.assertEqual(reg._abandon(future), "worker terminated and pool recycled")
+            for proc in old_procs:
+                proc.join(15)
+                self.assertFalse(proc.is_alive())
+            self.assertIsNotNone(reg.pool)
+            self.assertIsInstance(reg.pool.submit(ipc._worker_noop, 0).result(timeout=120), int)
+        finally:
+            reg.shutdown()
+
+    def test_abandon_cancels_pending_and_leaves_shared_pool_alone(self):
+        reg = object.__new__(ipc.ConcurrentModuleRegistry)
+        reg.stats_lock = threading.Lock()
+        pending = mock.Mock()
+        pending.cancel.return_value = True
+        self.assertEqual(reg._abandon(pending), "job cancelled before it started")
+        running = mock.Mock()
+        running.cancel.return_value = False
+        reg.active_jobs = 3
+        reg._terminate_workers = mock.Mock()
+        self.assertEqual(reg._abandon(running), "job left running: 2 other job(s) share the pool")
+        reg._terminate_workers.assert_not_called()
+
+    def test_worker_death_mid_job_is_not_rerun(self):
+        reg = object.__new__(ipc.ConcurrentModuleRegistry)
+        reg.script_dir = str(HERE)
+        reg.stats_lock = threading.Lock()
+        reg.fallback_lock = threading.Lock()
+        reg.request_count = 0
+        reg.active_jobs = 0
+        reg.total_duration_ms = 0.0
+        reg.compiled_code = {}
+        future = mock.Mock()
+        future.result.side_effect = ipc.BrokenProcessPool("worker died")
+        reg.pool = mock.Mock()
+        reg.pool.submit.return_value = future
+        reg._init_pool = mock.Mock()
+        with mock.patch.object(ipc, "_worker_run_script") as in_process:
+            res = reg.execute_script("python/pourbaix_solver.py", {"element": "Fe"})
+        self.assertEqual(res["exitCode"], 1)
+        self.assertIn("not re-run", res["stderr"])
+        self.assertEqual(reg.pool.submit.call_count, 1)
+        in_process.assert_not_called()
+
+
 class ExclusiveBindTest(unittest.TestCase):
     def test_second_process_cannot_bind_the_daemon_port(self):
         httpd = ipc.make_http_server("127.0.0.1", 0, TOKEN, _StubRegistry())

@@ -192,6 +192,77 @@ test("startup scrubs an inherited METALLIX_IPC_TOKEN; the daemon gets its own to
   assert.ok(!child.spawnargs.some((a: string) => a.includes(token)));
 });
 
+/** A supervisor without a daemon, whose channels and ad-hoc spawn are controlled by the test. */
+function harness(opts: { unix?: () => Promise<any>; http?: () => Promise<any>; port?: number | null; socket?: string | null }) {
+  const sup = Object.create(PersistentPythonIPCSupervisor.prototype) as any;
+  const calls: string[] = [];
+  Object.assign(sup, { requestsHandled: 0, totalDurationMs: 0, ipcToken: generateIpcToken(), httpHost: "127.0.0.1" });
+  sup.unixTarget = () => (opts.socket === undefined ? "/x/ipc.sock" : opts.socket);
+  sup.httpTarget = () => (opts.port === undefined ? 1 : opts.port);
+  sup.executeViaUnixSocket = async () => { calls.push("unix"); return opts.unix ? opts.unix() : Promise.reject(new IpcChannelError("no unix", false)); };
+  if (opts.http) sup.executeViaHttp = async (...a: any[]) => { calls.push("http"); return opts.http!.call(sup, ...a); };
+  sup.executeViaAdHocSpawn = async () => { calls.push("adhoc"); return { stdout: "adhoc", stderr: "", exitCode: 0, durationMs: 1, channel: "ad_hoc_fallback" }; };
+  return { sup, calls };
+}
+
+test("a request that may have run is never retried on another channel or spawned again", async () => {
+  // Sent on the UNIX socket, then timeout/reset: no HTTP attempt, no ad-hoc spawn.
+  let h = harness({ unix: () => Promise.reject(new IpcChannelError("UNIX socket IPC got no reply", "unknown")),
+    http: async () => ({ stdout: "http" }) });
+  await assert.rejects(h.sup.execute("python/pourbaix_solver.py", {}), /may already have run, so it was not retried/);
+  assert.deepEqual(h.calls, ["unix"]);
+  // Certainly not executed (connect failure / pre-execution refusal): next channel, then ad hoc.
+  h = harness({ unix: () => Promise.reject(new IpcChannelError("ECONNREFUSED", false)),
+    http: () => Promise.reject(new IpcChannelError("refused before running it (status 401)", false)) });
+  assert.equal((await h.sup.execute("python/pourbaix_solver.py", {})).channel, "ad_hoc_fallback");
+  assert.deepEqual(h.calls, ["unix", "http", "adhoc"]);
+  // Any non-IpcChannelError (unexpected) is also treated as possibly executed.
+  h = harness({ socket: null, http: () => Promise.reject(new Error("boom")) });
+  await assert.rejects(h.sup.execute("python/pourbaix_solver.py", {}), /not retried/);
+  assert.deepEqual(h.calls, ["http"]);
+});
+
+test("HTTP client: hang after send is 'unknown' (no retry); refused connection and unsigned replies are 'not executed'", async () => {
+  let hits = 0;
+  let mode: "hang" | "forge" | "huge" = "hang";
+  const sockets = new Set<any>();
+  const fake = http.createServer((req, res) => {
+    hits++;
+    req.resume();
+    if (mode === "forge") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ stdout: '{"success": true, "FORGED": true}', exitCode: 0 }));
+    } else if (mode === "huge") {
+      res.writeHead(200, { "Content-Type": "application/json", "Content-Length": String(MAX_IPC_RESPONSE_BYTES + 10) });
+      res.write("x");
+    } // "hang": never answer
+  });
+  fake.on("connection", (s) => { sockets.add(s); s.on("close", () => sockets.delete(s)); });
+  await new Promise<void>((resolve) => fake.listen(0, "127.0.0.1", () => resolve()));
+  const port = (fake.address() as AddressInfo).port;
+  try {
+    const { sup, calls } = harness({ socket: null, port });
+    sup.executeViaHttp = PersistentPythonIPCSupervisor.prototype["executeViaHttp" as keyof typeof PersistentPythonIPCSupervisor.prototype];
+    // Daemon-side timeoutMs 200 -> client waits 200 ms + grace, then gives up without retrying.
+    await assert.rejects(sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 200), /may already have run/);
+    assert.equal(hits, 1);
+    assert.deepEqual(calls, []); // executeViaHttp is the real method (not recorded); no ad-hoc spawn
+    mode = "forge";
+    const r = await sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 2000);
+    assert.equal(r.channel, "ad_hoc_fallback"); // unsigned reply: not ours, not executed -> fall back
+    assert.ok(!r.stdout.includes("FORGED"));
+    mode = "huge";
+    await assert.rejects(sup.execute("python/pourbaix_solver.py", {}, [], 2000), /may already have run.*too large/);
+  } finally {
+    for (const s of sockets) s.destroy();
+    await new Promise<void>((resolve) => fake.close(() => resolve()));
+  }
+  const { sup: closed, calls } = harness({ socket: null, port });
+  closed.executeViaHttp = PersistentPythonIPCSupervisor.prototype["executeViaHttp" as keyof typeof PersistentPythonIPCSupervisor.prototype];
+  assert.equal((await closed.execute("python/pourbaix_solver.py", {}, [], 2000)).channel, "ad_hoc_fallback"); // ECONNREFUSED
+  assert.deepEqual(calls, ["adhoc"]);
+});
+
 test("HTTP client signs the head, never sends the token, and sends the exact signed body", async () => {
   const seen: { headers: http.IncomingHttpHeaders; body: Buffer }[] = [];
   const fake = http.createServer((req, res) => {

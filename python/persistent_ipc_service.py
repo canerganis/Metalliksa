@@ -612,9 +612,17 @@ class ConcurrentModuleRegistry:
 
         try:
             # 1. Primary execution via ProcessPoolExecutor
+            future = None
             if self.pool is not None:
                 try:
                     future = self.pool.submit(_worker_run_script, full_path, input_str, args)
+                except (BrokenProcessPool, RuntimeError):
+                    # Not submitted, so not executed: recycle and use the in-process path below.
+                    sys.stderr.write("[PersistentIPC] Worker pool unusable at submit; recycling...\n")
+                    self._init_pool()
+                    future = None
+            if future is not None:
+                try:
                     res = future.result(timeout=timeout_sec)
                     duration_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
                     with self.stats_lock:
@@ -629,18 +637,27 @@ class ConcurrentModuleRegistry:
                         "concurrency": "process_pool",
                     }
                 except TimeoutError:
+                    outcome = self._abandon(future)
                     return {
                         "stdout": "",
-                        "stderr": f"Execution timed out after {timeout_ms}ms",
+                        "stderr": f"Execution timed out after {timeout_ms}ms ({outcome})",
                         "exitCode": 124,
                         "durationMs": round((time.perf_counter() - start_time) * 1000.0, 2),
                         "warm": True,
                         "concurrency": "process_pool",
                     }
                 except BrokenProcessPool:
-                    sys.stderr.write("[PersistentIPC] BrokenProcessPool detected! Recycling pool...\n")
+                    # The worker died while this job may have been running: never re-run it here.
+                    sys.stderr.write("[PersistentIPC] Worker died during execution; recycling pool...\n")
                     self._init_pool()
-                    # Fall through to in-process execution fallback
+                    return {
+                        "stdout": "",
+                        "stderr": "Worker process died during execution; the request was not re-run.",
+                        "exitCode": 1,
+                        "durationMs": round((time.perf_counter() - start_time) * 1000.0, 2),
+                        "warm": True,
+                        "concurrency": "process_pool",
+                    }
 
             # 2. Resilient In-Process Fallback if pool is recovering
             with self.fallback_lock:
@@ -723,6 +740,35 @@ class ConcurrentModuleRegistry:
             "moduleImportTimesMs": self.import_times,
         }
 
+    def _terminate_workers(self):
+        """Stops the pool and kills its worker processes (a running job cannot be cancelled)."""
+        pool, self.pool = self.pool, None
+        if pool is None:
+            return
+        procs = list((getattr(pool, "_processes", None) or {}).values())
+        try:
+            pool.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
+        for proc in procs:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+
+    def _abandon(self, future) -> str:
+        """After a timeout: cancel the job if it has not started; otherwise kill and recycle the
+        workers when no other job is in flight, else leave it running (reported, not hidden)."""
+        if future.cancel():
+            return "job cancelled before it started"
+        with self.stats_lock:
+            others = self.active_jobs - 1
+        if others <= 0:
+            self._terminate_workers()
+            self._init_pool()
+            return "worker terminated and pool recycled"
+        return f"job left running: {others} other job(s) share the pool"
+
     def prewarm_pool(self, timeout_s: float = 300.0) -> int:
         """Starts every worker before the service announces readiness; returns the worker count."""
         if self.pool is None:
@@ -735,12 +781,8 @@ class ConcurrentModuleRegistry:
             return 0
 
     def shutdown(self):
-        """Closes the worker pool cleanly."""
-        if self.pool:
-            try:
-                self.pool.shutdown(wait=False, cancel_futures=True)
-            except Exception:
-                pass
+        """Closes the worker pool and terminates its processes (no orphaned workers)."""
+        self._terminate_workers()
 
 
 def _is_pool_worker_process() -> bool:

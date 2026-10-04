@@ -19,6 +19,8 @@ const HEX64 = /^[0-9a-f]{64}$/;
 /** Largest reply accepted from the daemon (solver stdout is JSON; the daemon caps requests at 64 MiB). */
 export const MAX_IPC_RESPONSE_BYTES = 64 * 1024 * 1024;
 const MAX_UNIX_HEAD_BYTES = 4096;
+/** Extra time over the solver timeout for the daemon's own timeout reply to arrive. */
+const IPC_REPLY_GRACE_MS = 5000;
 
 /** Fresh per-spawn shared secret (64 hex chars); passed to the daemon via env, never argv. */
 export function generateIpcToken(): string {
@@ -402,8 +404,8 @@ export class PersistentPythonIPCSupervisor {
         reject(new IpcChannelError(message, sent ? "unknown" : false));
       };
 
-      const timer = setTimeout(() => fail(`UNIX socket IPC got no reply within ${timeoutMs}ms`),
-        timeoutMs);
+      const timer = setTimeout(() => fail(`UNIX socket IPC got no reply within ${timeoutMs + IPC_REPLY_GRACE_MS}ms`),
+        timeoutMs + IPC_REPLY_GRACE_MS);
 
       socket.on("connect", () => {
         socket.write(frame.data, (err) => { if (!err) sent = true; });
@@ -473,7 +475,7 @@ export class PersistentPythonIPCSupervisor {
             "X-Metallix-Body-Sha256": auth.digest,
             "X-Metallix-Mac": auth.mac,
           },
-          timeout: timeoutMs,
+          timeout: timeoutMs + IPC_REPLY_GRACE_MS,
         },
         (res) => {
           const declared = Number(res.headers["content-length"] ?? NaN);
@@ -501,7 +503,7 @@ export class PersistentPythonIPCSupervisor {
       );
 
       req.on("finish", () => { sent = true; });
-      req.on("timeout", () => fail(`HTTP microservice got no reply within ${timeoutMs}ms`));
+      req.on("timeout", () => fail(`HTTP microservice got no reply within ${timeoutMs + IPC_REPLY_GRACE_MS}ms`));
       req.on("error", (err) => fail(`HTTP microservice error: ${err.message}`));
       req.end(body);
     });
@@ -566,7 +568,9 @@ export class PersistentPythonIPCSupervisor {
 
   /**
    * Primary unified execution dispatcher. Only channels announced by this server's own daemon
-   * are used; any channel failure falls back to the next channel, then to an ad-hoc spawn.
+   * are used. A request is tried on the next channel (or spawned ad hoc) only when the previous
+   * attempt certainly did not run it (IpcChannelError.executed === false); once a request may
+   * have run, the error is returned instead of running it a second time.
    */
   public async execute(
     scriptRelativePath: string,
@@ -578,28 +582,32 @@ export class PersistentPythonIPCSupervisor {
     const t0 = Date.now();
     const failures: string[] = [];
 
-    const socketPath = this.unixTarget();
-    if (socketPath) {
+    const attempt = async (run: () => Promise<PythonExecResult>): Promise<PythonExecResult | null> => {
       try {
-        const result = await this.executeViaUnixSocket(socketPath, scriptRelativePath, inputJson, args, timeoutMs);
+        const result = await run();
         this.recordSuccess(Date.now() - t0);
         return result;
       } catch (err: any) {
-        failures.push(err?.message || String(err));
+        if (err instanceof IpcChannelError && err.executed === false) {
+          failures.push(err.message);
+          return null;
+        }
+        throw new Error(`Python IPC request may already have run, so it was not retried: ${err?.message || err}`);
       }
+    };
+
+    const socketPath = this.unixTarget();
+    if (socketPath) {
+      const result = await attempt(() => this.executeViaUnixSocket(socketPath, scriptRelativePath, inputJson, args, timeoutMs));
+      if (result) return result;
     } else {
       failures.push("no UNIX socket announced by this server's daemon");
     }
 
     const port = this.httpTarget();
     if (port) {
-      try {
-        const httpResult = await this.executeViaHttp(port, scriptRelativePath, inputJson, args, timeoutMs);
-        this.recordSuccess(Date.now() - t0);
-        return httpResult;
-      } catch (err: any) {
-        failures.push(err?.message || String(err));
-      }
+      const result = await attempt(() => this.executeViaHttp(port, scriptRelativePath, inputJson, args, timeoutMs));
+      if (result) return result;
     } else {
       failures.push("no HTTP listener announced by this server's daemon");
     }
