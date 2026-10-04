@@ -3269,6 +3269,9 @@ export const MODULE_REGISTRY = {
         "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
         "src/components/MicrographLab.tsx::MicrographLab",
         "src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription",
+        "src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio",
+        "src/services/micrographMeasureService.ts::measureMicrograph",
+        "src/utils/micrographInput.ts::buildMeasureRequest",
         "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis"
       ],
       "seedDerived": [

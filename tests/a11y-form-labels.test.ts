@@ -55,7 +55,8 @@ const PINNED_GUARDED = [
   "src/components/MetallurgicalQuickConversionsGrid.tsx",
   "src/components/MetallurgyCopilot.tsx",
   "src/components/MicroAlloySandbox.tsx",
-  "src/components/MicrographLab.tsx",
+  "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab
+  "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MurakamiFatigueLab.tsx",
   "src/components/PhaseDiagramViewer.tsx",
   "src/components/PhaseKineticsTTTCCTStudio.tsx",
