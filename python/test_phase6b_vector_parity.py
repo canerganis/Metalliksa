@@ -74,12 +74,32 @@ def as_stdout(result):
     return golden.strip_volatile(json.loads(json.dumps(result)))
 
 
-def tolerance_violations(old, new, rel_tol=REL_TOL):
-    """Rows of drift_report.diff that break the "tolerance" rule (empty == parity)."""
+def _display_unit(value):
+    """10**-d when ``value`` was evidently rounded for display (repr has d <= 6
+    fractional digits, no exponent), else None."""
+    text = repr(value)
+    if "e" in text or "E" in text or "." not in text:
+        return None
+    digits = len(text.split(".")[1])
+    return 10.0 ** -digits if digits <= 6 else None
+
+
+def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
+    """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
+
+    display_unit=True (only for spawn runs compared with the committed goldens,
+    which CI repeats on other platforms/BLAS builds): a leaf that was rounded for
+    display (round(x, d) with d <= 6) may also differ by one unit in its last
+    decimal, the size of a rounding flip caused by ulp-level differences. The
+    in-process kernel comparisons (old blob vs new on the same machine) never
+    use this allowance."""
     bad = []
     for row in drift_report.diff(old, new):
         if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
             if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
+                continue
+            unit = _display_unit(row["old"]) if display_unit else None
+            if unit is not None and abs(row["abs"]) <= unit * (1 + 1e-9):
                 continue
         bad.append(row)
     return bad
@@ -163,7 +183,11 @@ class GoldenBindingTest(unittest.TestCase):
             fresh = json.loads((tmp / solver / f"{case}.json").read_text(encoding="utf-8"))
             old = committed[(solver, case)]
             self.assertEqual(fresh["exitCode"], old["exitCode"], f"{solver}/{case}")
-            self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(old["stdout"]), f"{solver}/{case}")
+            # Tolerance, not bytes: the old cnls blob also uses NumPy complex arithmetic, so
+            # a recapture on another platform/BLAS can differ at ulp level (CI: Linux,
+            # Python 3.11/3.12). Same rule as GoldenParityTest.
+            rows = tolerance_violations(old["stdout"], fresh["stdout"], display_unit=True)
+            self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
 
     def test_changed_working_tree_solver_is_refused(self):
         tmp = self._in_temp_dir()
@@ -193,6 +217,11 @@ class ToleranceRuleTest(unittest.TestCase):
         self.assertEqual(len(tolerance_violations({"a": True}, {"a": False})), 1)
         self.assertEqual(len(tolerance_violations({"a": [1.0]}, {"a": [1.0, 2.0]})), 1)
         self.assertEqual(len(tolerance_violations({"a": 1.0}, {"b": 1.0})), 2)
+        # display-unit allowance: only with display_unit=True, only for rounded leaves
+        self.assertEqual(len(tolerance_violations({"a": 12.34}, {"a": 12.35})), 1)
+        self.assertEqual(tolerance_violations({"a": 12.34}, {"a": 12.35}, display_unit=True), [])
+        self.assertEqual(len(tolerance_violations({"a": 12.34}, {"a": 12.36}, display_unit=True)), 1)
+        self.assertEqual(len(tolerance_violations({"a": 0.1234567891}, {"a": 0.1234567901}, display_unit=True)), 1)
 
 
 class GoldenParityTest(unittest.TestCase):
@@ -217,7 +246,7 @@ class GoldenParityTest(unittest.TestCase):
                 if mode == "minimiser":
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
                     continue
-                rows = (tolerance_violations(doc["stdout"], fresh["stdout"]) if mode == "tolerance"
+                rows = (tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True) if mode == "tolerance"
                         else drift_report.diff(doc["stdout"], fresh["stdout"]))
                 self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
 
