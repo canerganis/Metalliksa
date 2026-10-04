@@ -125,6 +125,9 @@
   font-size: var(--mk-fs-2xs);
   font-variant-numeric: tabular-nums;
 }
+/* index.css gives every shell child z-index 1; the strip comes later in the DOM, so at equal z it would
+ * still paint over modals opened inside the main row. z-index 0 keeps it below them. */
+.mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { z-index: 0; }
 .mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-5); }
 .mk-telemetry dl > div { display: flex; gap: var(--mk-space-2); }
 .mk-telemetry dt { text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-dim); }
