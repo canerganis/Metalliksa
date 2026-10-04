@@ -56,3 +56,10 @@ test('debounce delay may be a getter read at schedule time', t => {
   t.mock.timers.tick(299); assert.equal(calls.length, 0);
   t.mock.timers.tick(1); assert.deepEqual(calls, ['a']);
 });
+
+test('Pourbaix request body never echoes solver-derived point fields back to the solver', () => {
+  const enriched = { ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], potential_V_SHE: 0.34, regime: 'x', riskLevel: 'Caution' as const, color: '#fff', stageName: 'S', notes: 'n' }] };
+  const body = buildPourbaixRequest(enriched);
+  assert.deepEqual(body.experimentalPoints, [{ id: 'p1', name: 'P', pH: 7, potential_V: 0.1, refElectrode: 'SHE', stageName: 'S', notes: 'n' }]);
+  assert.equal(JSON.stringify(buildPourbaixRequest(pour)), JSON.stringify(buildPourbaixRequest({ ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], potential_V_SHE: 0.34, regime: 'y' }] })));
+});
