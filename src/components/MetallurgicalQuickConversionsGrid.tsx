@@ -22,7 +22,13 @@ import {
   StressUnit,
   TempUnit,
 } from "../utils/metallurgicalConversions";
-import { HARDNESS_CONVERSION_DISCLAIMER, convertSteelHardness } from "../utils/hardnessConversion";
+import {
+  HARDNESS_CONVERSION_DISCLAIMER,
+  HARDNESS_MATERIAL_CLASSES,
+  HardnessMaterialClass,
+  convertHardness,
+  hardnessMaterialClassOf,
+} from "../utils/hardnessConversion";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
@@ -91,47 +97,55 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
   const [hardnessInputScale, setHardnessInputScale] = useState<"HRC" | "HV">("HRC");
   const [hardnessValHrc, setHardnessValHrc] = useState<number>(34);
   const [hardnessValHv, setHardnessValHv] = useState<number>(336);
+  // Conversion tables exist only for non-austenitic steels; other classes keep the measured value only.
+  const [hardnessClass, setHardnessClass] = useState<HardnessMaterialClass>("non-austenitic-steel");
 
   const hardnessConversions = useMemo(() => {
     if (hardnessInputScale === "HRC") {
-      return convertSteelHardness(hardnessValHrc, "HRC");
+      return convertHardness(hardnessValHrc, "HRC", hardnessClass);
     } else {
-      return convertSteelHardness(hardnessValHv, "HV");
+      return convertHardness(hardnessValHv, "HV", hardnessClass);
     }
-  }, [hardnessInputScale, hardnessValHrc, hardnessValHv]);
+  }, [hardnessInputScale, hardnessValHrc, hardnessValHv, hardnessClass]);
 
   const hardnessInterpretation = useMemo(
     () => (hardnessConversions.HV === null ? null : interpretHardness(hardnessConversions.HV)),
     [hardnessConversions.HV]
   );
 
-  const handleHrcChange = (val: number) => {
+  const handleHrcChange = (val: number, cls: HardnessMaterialClass = hardnessClass) => {
     setHardnessInputScale("HRC");
     setHardnessValHrc(val);
-    const converted = convertSteelHardness(val, "HRC");
+    const converted = convertHardness(val, "HRC", cls);
     if (converted.HV !== null) {
       setHardnessValHv(converted.HV);
     }
   };
 
-  const handleHvChange = (val: number) => {
+  const handleHvChange = (val: number, cls: HardnessMaterialClass = hardnessClass) => {
     setHardnessInputScale("HV");
     setHardnessValHv(val);
-    const converted = convertSteelHardness(val, "HV");
+    const converted = convertHardness(val, "HV", cls);
     if (converted.HRC !== null) {
       setHardnessValHrc(converted.HRC);
     }
   };
 
-  const hardnessPresets = [
-    { name: "316L Annealed", hrc: 15, hv: 155, desc: "~80 HRB dead soft" },
-    { name: "Ti-6Al-4V Annealed", hrc: 34, hv: 336, desc: "Grade 5 airframe" },
-    { name: "Inconel 718 Aged", hrc: 44, hv: 434, desc: "203 ksi tensile" },
-    { name: "4140 Q&T (320 HBW)", hrc: 35, hv: 345, desc: "Tough structural" },
-    { name: "52100 Bearing Steel", hrc: 60, hv: 700, desc: "Martensitic race" },
-    { name: "M2 High-Speed Tool", hrc: 64, hv: 800, desc: "Cutting edge" },
-    { name: "Nitrided Surface Case", hrc: 68, hv: 950, desc: "Extreme wear layer" },
+  // Example measured inputs (value in the scale it is usually measured in). Only the non-austenitic steels are
+  // converted; the other alloy classes show the measured value only.
+  const hardnessPresets: Array<{ name: string; scale: "HRC" | "HV"; value: number; cls: HardnessMaterialClass; desc: string }> = [
+    { name: "316L Annealed", scale: "HV", value: 155, cls: "austenitic-steel", desc: "Austenitic: measured HV only" },
+    { name: "Ti-6Al-4V Annealed", scale: "HRC", value: 34, cls: "titanium-alloy", desc: "Titanium: measured HRC only" },
+    { name: "Inconel 718 Aged", scale: "HRC", value: 44, cls: "nickel-alloy", desc: "Nickel alloy: measured HRC only" },
+    { name: "4140 Q&T", scale: "HRC", value: 35, cls: "non-austenitic-steel", desc: "Tough structural" },
+    { name: "52100 Bearing Steel", scale: "HRC", value: 60, cls: "non-austenitic-steel", desc: "Martensitic race" },
+    { name: "M2 High-Speed Tool", scale: "HRC", value: 64, cls: "non-austenitic-steel", desc: "Cutting edge" },
   ];
+  const applyHardnessPreset = (p: (typeof hardnessPresets)[number]) => {
+    setHardnessClass(p.cls);
+    if (p.scale === "HRC") handleHrcChange(p.value, p.cls);
+    else handleHvChange(p.value, p.cls);
+  };
 
   // --------------------------------------------------------------------------
   // 3. TEMPERATURE CONVERSION (Celsius / Kelvin / Rankine)
@@ -213,7 +227,12 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
       handleMpaChange(activeMaterialSpecimen.yieldStrength_25C_MPa);
     }
     if (activeMaterialSpecimen.hardness_HV > 0) {
-      handleHvChange(activeMaterialSpecimen.hardness_HV);
+      const specimenClass = hardnessMaterialClassOf({
+        baseMetal: activeMaterialSpecimen.metadata?.baseMetal,
+        crystalSystem: activeMaterialSpecimen.xrd?.crystalSystem,
+      });
+      setHardnessClass(specimenClass);
+      handleHvChange(activeMaterialSpecimen.hardness_HV, specimenClass);
     }
     handleTempCChange(25);
   };
@@ -570,6 +589,23 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                     </div>
                   </div>
 
+                  {/* Alloy class: only non-austenitic steels are converted */}
+                  <div className="flex justify-between items-center gap-2 mt-3 text-[11px] font-mono text-slate-300">
+                    <span>Alloy class</span>
+                    <select
+                      aria-label="Alloy class"
+                      value={hardnessClass}
+                      onChange={(e) => setHardnessClass(e.target.value as HardnessMaterialClass)}
+                      className="px-2 py-1 bg-[#090e18] border border-[#1e2d46] rounded-lg text-[10px] text-emerald-300 focus:outline-none focus:border-emerald-400"
+                    >
+                      {HARDNESS_MATERIAL_CLASSES.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Dual Searchable Interactive Input Fields */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {/* HRC Input */}
@@ -675,7 +711,9 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                       </div>
                     </div>
                   </div>
-                  <p className="text-[9px] text-slate-500 mt-1.5 leading-snug">{HARDNESS_CONVERSION_DISCLAIMER}</p>
+                  <p className="text-[9px] text-slate-500 mt-1.5 leading-snug">
+                    {hardnessClass === "non-austenitic-steel" ? HARDNESS_CONVERSION_DISCLAIMER : hardnessConversions.validRangeNote}
+                  </p>
                 </div>
 
                 {/* Filterable Alloy Hardness Presets */}
@@ -694,15 +732,17 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                       .map((p, idx) => (
                         <button
                           key={idx}
-                          onClick={() => handleHvChange(p.hv)}
+                          onClick={() => applyHardnessPreset(p)}
                           className={`px-2 py-1 rounded text-[10px] font-mono border transition ${
-                            hardnessConversions.HV === p.hv
+                            hardnessInputScale === p.scale &&
+                            (p.scale === "HRC" ? hardnessValHrc : hardnessValHv) === p.value &&
+                            hardnessClass === p.cls
                               ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/60"
                               : "bg-[#090e18] hover:bg-slate-800 text-slate-400 hover:text-slate-200 border-[#162032]"
                           }`}
-                          title={`${p.name}: ${p.hrc} HRC / ${p.hv} HV - ${p.desc}`}
+                          title={`${p.name}: ${p.value} ${p.scale} (measured) - ${p.desc}`}
                         >
-                          {p.name.split(" ")[0]} ({p.hv} HV)
+                          {p.name.split(" ")[0]} ({p.value} {p.scale})
                         </button>
                       ))}
                   </div>

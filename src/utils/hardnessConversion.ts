@@ -219,3 +219,81 @@ export function convertSteelHardness(value: number, fromScale: HardnessScale): S
   if (inputNote) out.validRangeNote = `${inputNote} ${HARDNESS_CONVERSION_DISCLAIMER}`;
   return out;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Alloy class gate. The tables above are for non-austenitic steels only; for any other class only the measured value is
+// returned and every converted field is unavailable.
+// ---------------------------------------------------------------------------------------------------------------------
+export type HardnessMaterialClass =
+  | "non-austenitic-steel"
+  | "austenitic-steel"
+  | "titanium-alloy"
+  | "nickel-alloy"
+  | "aluminium-alloy"
+  | "hardmetal"
+  | "other";
+
+export const HARDNESS_MATERIAL_CLASSES: ReadonlyArray<{ id: HardnessMaterialClass; label: string }> = [
+  { id: "non-austenitic-steel", label: "Non-austenitic steel (carbon, alloy, tool)" },
+  { id: "austenitic-steel", label: "Austenitic stainless steel" },
+  { id: "titanium-alloy", label: "Titanium alloy" },
+  { id: "nickel-alloy", label: "Nickel alloy" },
+  { id: "aluminium-alloy", label: "Aluminium alloy" },
+  { id: "hardmetal", label: "Hardmetal / carbide (e.g. WC-Co)" },
+  { id: "other", label: "Other / unknown alloy" },
+];
+
+export const NO_TABLE_FOR_CLASS = "Unavailable: no verified conversion table for this alloy class";
+
+export const hardnessMaterialClassLabel = (c: HardnessMaterialClass) =>
+  HARDNESS_MATERIAL_CLASSES.find((m) => m.id === c)?.label ?? c;
+
+/**
+ * Convert a measured hardness value for the given alloy class. Only "non-austenitic-steel" is converted (ASTM E140 /
+ * ISO 18265 tables); for every other class the measured value is echoed and all converted fields are unavailable.
+ */
+export function convertHardness(
+  value: number,
+  fromScale: HardnessScale,
+  materialClass: HardnessMaterialClass
+): SteelHardnessConversion {
+  if (materialClass === "non-austenitic-steel") return convertSteelHardness(value, fromScale);
+  const out: SteelHardnessConversion = {
+    inputScale: fromScale,
+    inputValue: value,
+    HV: null,
+    HRC: null,
+    HRB: null,
+    HBW: null,
+    HK: null,
+    HLD: null,
+    tensileRm_MPa: null,
+    tensileRm_ksi: null,
+    unavailable: {},
+    validRangeNote: `${NO_TABLE_FOR_CLASS} (${hardnessMaterialClassLabel(materialClass)}). Only the measured ${fromScale} value is shown.`,
+  };
+  if (Number.isFinite(value)) out[fromScale] = round(value, DECIMALS[fromScale]);
+  for (const f of ["HV", "HRC", "HRB", "HBW", "HK", "HLD", "Rm"] as const) {
+    if (f !== fromScale) out.unavailable[f] = NO_TABLE_FOR_CLASS;
+  }
+  return out;
+}
+
+/**
+ * Alloy class of a material record: Fe-base with an FCC (austenitic) structure is austenitic steel, other Fe-base is
+ * treated as non-austenitic steel; Ti, Ni, Al map to their classes; everything else is "other" (not converted).
+ */
+export function hardnessMaterialClassOf(spec: { baseMetal?: string; crystalSystem?: string }): HardnessMaterialClass {
+  switch (spec.baseMetal) {
+    case "Fe":
+      return spec.crystalSystem === "FCC" ? "austenitic-steel" : "non-austenitic-steel";
+    case "Ti":
+      return "titanium-alloy";
+    case "Ni":
+      return "nickel-alloy";
+    case "Al":
+      return "aluminium-alloy";
+    default:
+      return "other";
+  }
+}

@@ -3,7 +3,10 @@ import test from "node:test";
 import {
   HARDNESS_CONVERSION_DISCLAIMER,
   HARDNESS_VERIFIED_RANGES,
+  NO_TABLE_FOR_CLASS,
+  convertHardness,
   convertSteelHardness as convert,
+  hardnessMaterialClassOf,
 } from "../src/utils/hardnessConversion";
 import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
 
@@ -188,4 +191,29 @@ test("the hardness info pop-over describes the table interpolation, not the remo
   assert.match(info.validRange!, /HRC 20-68 \(HV 238-940\)/);
   assert.match(info.validRange!, /Rm: HV 80-650/);
   assert.match(info.criticalNotes!, /not a substitute for direct testing/);
+});
+
+test("alloy class gate: only non-austenitic steel is converted; other classes keep the measured value only", () => {
+  assert.deepEqual(convertHardness(40, "HRC", "non-austenitic-steel"), convert(40, "HRC"));
+  for (const cls of ["austenitic-steel", "titanium-alloy", "nickel-alloy", "aluminium-alloy", "hardmetal", "other"] as const) {
+    const r = convertHardness(34, "HRC", cls);
+    assert.equal(r.HRC, 34, cls); // measured value stays primary
+    for (const k of ["HV", "HRB", "HBW", "HK", "HLD", "tensileRm_MPa", "tensileRm_ksi"] as const) assert.equal(r[k], null, `${cls} ${k}`);
+    assert.equal(r.unavailable.HV, NO_TABLE_FOR_CLASS);
+    assert.equal(r.unavailable.Rm, NO_TABLE_FOR_CLASS);
+    assert.match(r.validRangeNote, /^Unavailable: no verified conversion table for this alloy class \(.+\)\. Only the measured HRC value is shown\.$/);
+  }
+  assert.equal(convertHardness(80, "HRB", "austenitic-steel").HV, null); // 316L preset
+  assert.equal(convertHardness(1550, "HV", "hardmetal").HV, 1550);
+});
+
+test("alloy class of a material record", () => {
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Fe", crystalSystem: "BCC" }), "non-austenitic-steel");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Fe", crystalSystem: "Tetragonal" }), "non-austenitic-steel");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Fe", crystalSystem: "FCC" }), "austenitic-steel");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Ti", crystalSystem: "HCP" }), "titanium-alloy");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Ni", crystalSystem: "FCC" }), "nickel-alloy");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Al" }), "aluminium-alloy");
+  assert.equal(hardnessMaterialClassOf({ baseMetal: "Co" }), "other");
+  assert.equal(hardnessMaterialClassOf({}), "other");
 });

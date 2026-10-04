@@ -39,10 +39,13 @@ import {
   computeDualUnitReport,
 } from "../utils/metallurgicalConversions";
 import {
+  HardnessMaterialClass,
   HardnessScale,
+  HARDNESS_MATERIAL_CLASSES,
   HARDNESS_VERIFIED_RANGES,
   TENSILE_ESTIMATE_NOTE,
-  convertSteelHardness,
+  convertHardness,
+  hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
@@ -95,9 +98,11 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   // -------------------------------------------------------------
   const [hardnessInput, setHardnessInput] = useState<number>(32);
   const [hardnessScale, setHardnessScale] = useState<HardnessScale>("HRC");
+  // Conversion tables exist only for non-austenitic steels; other classes keep the measured value only.
+  const [hardnessClass, setHardnessClass] = useState<HardnessMaterialClass>("non-austenitic-steel");
   const hardnessState = useMemo(
-    () => convertSteelHardness(hardnessInput, hardnessScale),
-    [hardnessInput, hardnessScale]
+    () => convertHardness(hardnessInput, hardnessScale, hardnessClass),
+    [hardnessInput, hardnessScale, hardnessClass]
   );
   const hardnessInterpretation = useMemo(
     () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV)),
@@ -202,9 +207,14 @@ export const MetallurgicalUnitConverter: React.FC = () => {
         setReportUtsMpa(activeMaterialSpecimen.uts_25C_MPa);
       }
       if (activeMaterialSpecimen.hardness_HV > 0) {
+        const specimenClass = hardnessMaterialClassOf({
+          baseMetal: activeMaterialSpecimen.metadata?.baseMetal,
+          crystalSystem: activeMaterialSpecimen.xrd?.crystalSystem,
+        });
         setHardnessInput(activeMaterialSpecimen.hardness_HV);
         setHardnessScale("HV");
-        const converted = convertSteelHardness(activeMaterialSpecimen.hardness_HV, "HV");
+        setHardnessClass(specimenClass);
+        const converted = convertHardness(activeMaterialSpecimen.hardness_HV, "HV", specimenClass);
         if (converted.HRC !== null) {
           setReportHardnessHrc(converted.HRC);
         }
@@ -531,6 +541,23 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               ))}
             </div>
 
+            {/* Alloy class: only non-austenitic steels are converted */}
+            <div className="flex justify-between items-center gap-2 text-xs text-slate-300 font-medium">
+              <span>Alloy class</span>
+              <select
+                aria-label="Alloy class"
+                value={hardnessClass}
+                onChange={(e) => setHardnessClass(e.target.value as HardnessMaterialClass)}
+                className="px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded-lg font-mono text-[11px] text-sky-300 focus:outline-none focus:border-sky-400"
+              >
+                {HARDNESS_MATERIAL_CLASSES.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Magnitude Input */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs text-slate-300 font-medium">
@@ -562,18 +589,21 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
-                  { name: "316L Annealed", val: 80, scale: "HRB" as HardnessScale, sub: "Austenitic (~150 HV)" },
-                  { name: "Ti-6Al-4V Annealed", val: 34, scale: "HRC" as HardnessScale, sub: "336 HV, 138 ksi" },
-                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as HardnessScale, sub: "434 HV, 203 ksi" },
-                  { name: "52100 Bearing Steel", val: 60, scale: "HRC" as HardnessScale, sub: "700 HV hardened" },
-                  { name: "M2 High Speed Tool", val: 64, scale: "HRC" as HardnessScale, sub: "800 HV cold die" },
-                  { name: "Nitrided Case Layer", val: 950, scale: "HV" as HardnessScale, sub: "~68 HRC surface" },
+                  // Example measured inputs. Only the non-austenitic steels are converted; the other alloy classes
+                  // show the measured value only (no verified conversion table).
+                  { name: "316L Annealed", val: 80, scale: "HRB" as HardnessScale, cls: "austenitic-steel" as HardnessMaterialClass, sub: "Austenitic: measured HRB only" },
+                  { name: "Ti-6Al-4V Annealed", val: 34, scale: "HRC" as HardnessScale, cls: "titanium-alloy" as HardnessMaterialClass, sub: "Titanium: measured HRC only" },
+                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as HardnessScale, cls: "nickel-alloy" as HardnessMaterialClass, sub: "Nickel alloy: measured HRC only" },
+                  { name: "52100 Bearing Steel", val: 60, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Through-hardened steel" },
+                  { name: "M2 High Speed Tool", val: 64, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Hardened tool steel" },
+                  { name: "4140 Q&T", val: 35, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Quenched & tempered steel" },
                 ].map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setHardnessScale(p.scale);
                       setHardnessInput(p.val);
+                      setHardnessClass(p.cls);
                     }}
                     className="p-2 text-left bg-[#0c1322] hover:bg-slate-800/80 border border-[#162032] hover:border-sky-400/50 rounded-lg transition"
                   >
@@ -590,6 +620,10 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
 
           {/* Hardness Output Grid */}
           <div className="lg:col-span-7 space-y-4">
+            <div className="text-[11px] font-mono text-slate-300">
+              Measured: <span className="font-bold text-white">{hardnessInput} {hardnessScale}</span>
+              <span className="text-slate-500"> - other scales are table estimates (converted), not measurements.</span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {/* Vickers */}
               <div className="p-3 rounded-xl bg-sky-950/20 border border-sky-500/40 shadow-sm relative group">

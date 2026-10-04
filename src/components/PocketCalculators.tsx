@@ -34,9 +34,11 @@ import {
 } from "../utils/metallurgyCalculations";
 import {
   HARDNESS_CONVERSION_DISCLAIMER,
+  HARDNESS_MATERIAL_CLASSES,
   HARDNESS_VERIFIED_RANGES,
+  HardnessMaterialClass,
   TENSILE_ESTIMATE_NOTE,
-  convertSteelHardness,
+  convertHardness,
 } from "../utils/hardnessConversion";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { MetallurgicalUnitConverter } from "./MetallurgicalUnitConverter";
@@ -61,9 +63,11 @@ export const PocketCalculators: React.FC = () => {
   // 1. Hardness State
   const [hardnessVal, setHardnessVal] = useState<number>(30);
   const [hardnessScale, setHardnessScale] = useState<"HRC" | "HV" | "HRB" | "HBW">("HRC");
+  // Conversion tables exist only for non-austenitic steels; other classes keep the measured value only.
+  const [hardnessClass, setHardnessClass] = useState<HardnessMaterialClass>("non-austenitic-steel");
   const hardnessResult = useMemo(
-    () => convertSteelHardness(hardnessVal, hardnessScale),
-    [hardnessVal, hardnessScale]
+    () => convertHardness(hardnessVal, hardnessScale, hardnessClass),
+    [hardnessVal, hardnessScale, hardnessClass]
   );
 
   // 2. Weldability & CE State
@@ -325,6 +329,23 @@ export const PocketCalculators: React.FC = () => {
               ))}
             </div>
 
+            {/* Alloy class: only non-austenitic steels are converted */}
+            <div className="flex justify-between items-center gap-2 text-xs text-slate-300 font-medium">
+              <span>Alloy class</span>
+              <select
+                aria-label="Alloy class"
+                value={hardnessClass}
+                onChange={(e) => setHardnessClass(e.target.value as HardnessMaterialClass)}
+                className="px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded font-mono text-[11px] text-sky-300 focus:outline-none focus:border-sky-400"
+              >
+                {HARDNESS_MATERIAL_CLASSES.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Slider and Number Input */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs text-slate-300 font-medium">
@@ -354,18 +375,20 @@ export const PocketCalculators: React.FC = () => {
               <span className="text-[10px] text-slate-400 font-mono tracking-wider block mb-2 uppercase">Aerospace & Metallurgy Presets:</span>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
-                  { name: "Annealed Ti-6Al-4V", val: 34, scale: "HRC" as const },
-                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as const },
-                  { name: "Austenitic 316L", val: 80, scale: "HRB" as const },
-                  { name: "AerMet 100 Ultra-High", val: 55, scale: "HRC" as const },
-                  { name: "Nitrided Bearing Case", val: 880, scale: "HV" as const },
-                  { name: "Tungsten Carbide WC", val: 1550, scale: "HV" as const },
+                  // Example measured inputs; only the non-austenitic steels are converted.
+                  { name: "Annealed Ti-6Al-4V", val: 34, scale: "HRC" as const, cls: "titanium-alloy" as HardnessMaterialClass },
+                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as const, cls: "nickel-alloy" as HardnessMaterialClass },
+                  { name: "Austenitic 316L", val: 80, scale: "HRB" as const, cls: "austenitic-steel" as HardnessMaterialClass },
+                  { name: "AerMet 100 Ultra-High", val: 55, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
+                  { name: "4140 Q&T", val: 35, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
+                  { name: "52100 Bearing Steel", val: 60, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
                 ].map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setHardnessScale(p.scale);
                       setHardnessVal(p.val);
+                      setHardnessClass(p.cls);
                     }}
                     className="p-2 text-left bg-[#0c1322] border border-[#162032] hover:border-sky-400/40 rounded transition text-slate-300 hover:text-sky-300"
                   >
@@ -381,6 +404,13 @@ export const PocketCalculators: React.FC = () => {
 
           {/* Results Display */}
           <div className="lg:col-span-7 space-y-3">
+            <div className="text-[11px] font-mono text-slate-300">
+              Measured: <span className="font-bold text-white">{hardnessVal} {hardnessScale}</span>
+              <span className="text-slate-500"> - other scales are table estimates (converted), not measurements.</span>
+            </div>
+            {hardnessClass !== "non-austenitic-steel" && (
+              <div className="text-[11px] font-mono text-amber-300">{hardnessResult.validRangeNote}</div>
+            )}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Vickers (HV)</span>
