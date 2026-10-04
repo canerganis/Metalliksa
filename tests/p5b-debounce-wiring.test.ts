@@ -18,7 +18,7 @@ test('slicer, thermal map, Pourbaix and corrosion EIS use the debounced latest-t
   }
   assert.match(src('src/components/3d-distortion-lab/BasicSTLSlicerLab.tsx'), /AbortSignal\.any\(\[signal/);
   assert.match(src('src/components/LaserMeltPoolThermalMap.tsx'), /solveLPBFThermalPhysics\([\s\S]*?\}, signal\)/);
-  assert.match(src('src/components/DynamicPourbaixStudio.tsx'), /\}, signal\);/);
+  assert.match(src('src/components/DynamicPourbaixStudio.tsx'), /experimentalPoints \}\), signal\);/);
 });
 
 test('thermal map does not re-solve when the parent re-renders with a new inline callback', () => {

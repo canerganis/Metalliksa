@@ -1,5 +1,6 @@
 import { useWorkspaceVisible } from '../WorkspaceVisibility';
 import { useDebouncedLatestTask } from "../../hooks/useDebouncedLatestTask";
+import { buildSlicerPayload, slicerRequestSignature } from "../../utils/slicerRequest";
 import { inferSlicerPreset } from "../../utils/lpbfIndustrialDecision";
 import { canonicalLpbfMaterialName, isSupportedSlicerMaterial } from "../../utils/lpbfMaterialIdentity";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -321,7 +322,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
         customTriangles = extracted.triangles.length > 0 ? extracted.triangles : null;
       }
 
-      const payload = {
+      const payload = buildSlicerPayload({
         preset: selectedPreset,
         material: selectedMaterial,
         laserPower_W,
@@ -333,7 +334,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
         customTriangles,
         cadAssetName: uploadedFileName || "",
         triangleCountNative: liveMesh?.nativeTriangleCount,
-      };
+      });
 
       const res = await fetch("/api/python/stl-slicer-build-time", {
         signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(25000)]) : AbortSignal.timeout(25000),
@@ -371,11 +372,13 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     recoatTimePerLayer_s,
     hatchStrategy,
     customGeometry,
+    uploadedFileName,
+    liveMesh?.nativeTriangleCount,
   ]);
 
   // Debounce process edits; a superseded response cannot overwrite the current geometry/process.
   // The solve is skipped while hidden, aborted when superseded/hidden, and not repeated for an unchanged input.
-  const slicerInputSignature = JSON.stringify([selectedPreset, selectedMaterial, laserPower_W, scanSpeed_mms, layerThickness_um, hatchSpacing_um, recoatTimePerLayer_s, hatchStrategy, customGeometry?.uuid ?? null]);
+  const slicerInputSignature = slicerRequestSignature({ preset: selectedPreset, material: selectedMaterial, laserPower_W, scanSpeed_mms, layerThickness_um, hatchSpacing_um, recoatTimePerLayer_s, hatchStrategy, cadAssetName: uploadedFileName || "", triangleCountNative: liveMesh?.nativeTriangleCount, geometryId: customGeometry?.uuid ?? null });
   useEffect(() => {
     setPythonExecutionData(null);
     pythonRequestSeq.current += 1;
