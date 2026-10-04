@@ -6,7 +6,6 @@ import { solveInverseAlloyCandidates, type InverseDesignTargets } from '../src/u
 import '../src/index.css';
 import { verifyInputBoundTask } from './input-bound-task-browser';
 const EDS = lazy(() => import('../src/components/EDSSpectrumLab').then(m => ({ default: m.EDSSpectrumLab })));
-const GroundTruth = lazy(() => import('../src/components/3d-distortion-lab/LPBFGroundTruthDataLab').then(m => ({ default: m.LPBFGroundTruthDataLab })));
 const Circuit = lazy(() => import('../src/components/EquivalentCircuitBuilder').then(m => ({ default: m.EquivalentCircuitBuilder })));
 const Noise = lazy(async () => {
   const [{SyntheticNoiseStressStudio}, {STANDARD_CIRCUIT_PRESETS}] = await Promise.all([
@@ -80,7 +79,7 @@ function Harness() {
   const [navigation, setNavigation] = useState('');
   return <main className="min-h-screen bg-slate-950 text-white p-5">
     <h1>Component contract tests — synthetic inputs, no experimental evidence</h1>
-    <nav className="flex gap-5 my-4">{['heat', 'eds', 'ground', 'circuit', 'fitting', 'noise', 'inverse'].map(id =>
+    <nav className="flex gap-5 my-4">{['heat', 'eds', 'circuit', 'fitting', 'noise', 'inverse'].map(id =>
       <button key={id} onClick={() => setTab(id)}>{id}</button>)}</nav>
     <output aria-label="Transfer result">{composition ? JSON.stringify(composition) : navigation}</output>
     <label className="block mb-3">CNLS test transport <select className="bg-slate-800" defaultValue="real" onChange={e => { transport = e.target.value; }}>
@@ -96,7 +95,6 @@ function Harness() {
     <Suspense fallback={<p>Loading component</p>}>
       {tab === 'heat' && <HeatTreatmentAgingSimulator candidate={candidate} targets={targets} />}
       {tab === 'eds' && <EDS onSendToAlloyBuilder={setComposition} />}
-      {tab === 'ground' && <GroundTruth />}
       {tab === 'circuit' && <Circuit />}
       {tab === 'fitting' && <Fitting />}
       {tab === 'noise' && <Noise />}
