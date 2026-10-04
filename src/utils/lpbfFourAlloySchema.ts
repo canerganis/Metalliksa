@@ -7,59 +7,58 @@ import {
   MASTER_LPBF_REFERENCE_DATASETS,
   loadUserLPBFRecords,
 } from "../data/lpbfReferenceDatasets";
+import { authorityPvWindow, type AuthorityAlloyId } from "../data/lpbfMaterialAuthority";
+
+export interface LiteraturePvWindow {
+  powerMin_W: number;
+  powerMax_W: number;
+  speedMin_mm_s: number;
+  speedMax_mm_s: number;
+  notes: string;
+  sources: string[];
+}
+
+/**
+ * TS-local, not authority: the Python material authority has no IN625 P–v box
+ * (python/four_alloy_materials.py LITERATURE_PV_WINDOWS covers the four locked alloys only).
+ */
+const IN625_PV_WINDOW_TS_LOCAL: LiteraturePvWindow = {
+  powerMin_W: 150,
+  powerMax_W: 350,
+  speedMin_mm_s: 600,
+  speedMax_mm_s: 1200,
+  notes: "Typical AM-Bench IN625 parameter window; analogous to IN718 but slightly more power tolerance.",
+  sources: ["NIST AMB2018-01"],
+};
+
+/** P–v numbers from the Python authority (src/generated/lpbfMaterialAuthority.json); notes and sources stay here. */
+function authorityBox(alloyId: AuthorityAlloyId, notes: string, sources: string[]): LiteraturePvWindow {
+  return { ...authorityPvWindow(alloyId), notes, sources };
+}
 
 /** Published P–v boxes (machine-class typical), intersected with dense coupons in the library. */
-export const LITERATURE_PV_WINDOWS: Record<
-  LPBFAlloyId,
-  {
-    powerMin_W: number;
-    powerMax_W: number;
-    speedMin_mm_s: number;
-    speedMax_mm_s: number;
-    notes: string;
-    sources: string[];
-  }
-> = {
-  ti6al4v: {
-    powerMin_W: 150,
-    powerMax_W: 280,
-    speedMin_mm_s: 700,
-    speedMax_mm_s: 1200,
-    notes: "30 µm EOS-class conduction; Gong LoF at low P / high v; Kasperovich keyhole at high P / low v.",
-    sources: ["10.1016/j.actamat.2010.02.008", "10.1016/j.addma.2014.08.002", "10.1016/j.jmatprotec.2015.01.025"],
-  },
-  ss316l: {
-    powerMin_W: 150,
-    powerMax_W: 230,
-    speedMin_mm_s: 600,
-    speedMax_mm_s: 1000,
-    notes: "Renishaw / Concept Laser 30 µm; Cherry LoF ~100 W / 1100 mm/s; Kurzynowski keyhole ~240 W / 420 mm/s.",
-    sources: ["10.1007/s00170-014-6721-3", "10.1016/j.jmatprotec.2017.05.042", "10.1016/j.msea.2018.01.103"],
-  },
-  alsi10mg: {
-    powerMin_W: 280,
-    powerMax_W: 380,
-    speedMin_mm_s: 900,
-    speedMax_mm_s: 1400,
-    notes: "High-k Al needs high P; 150–200 °C preheat typical; Aboulkhair balling at 200 W / 1800 mm/s.",
-    sources: ["10.1016/j.matdes.2014.09.044", "10.1108/13552541211218112", "10.1016/j.actamat.2016.03.044"],
-  },
-  in718: {
-    powerMin_W: 120,
-    powerMax_W: 300,
-    speedMin_mm_s: 550,
-    speedMax_mm_s: 1000,
-    notes: "Jia dense ~130 W / 600 mm/s; EOS-class ~285 W / 960 mm/s / 40 µm; LoF at 90 W / 1200 mm/s.",
-    sources: ["10.1016/j.jallcom.2013.09.171", "10.1016/j.msea.2015.05.035", "10.1016/j.matlet.2015.10.136"],
-  },
-  in625: {
-    powerMin_W: 150,
-    powerMax_W: 350,
-    speedMin_mm_s: 600,
-    speedMax_mm_s: 1200,
-    notes: "Typical AM-Bench IN625 parameter window; analogous to IN718 but slightly more power tolerance.",
-    sources: ["NIST AMB2018-01"],
-  }
+export const LITERATURE_PV_WINDOWS: Record<LPBFAlloyId, LiteraturePvWindow> = {
+  ti6al4v: authorityBox(
+    "ti6al4v",
+    "30 µm EOS-class conduction; Gong LoF at low P / high v; Kasperovich keyhole at high P / low v.",
+    ["10.1016/j.actamat.2010.02.008", "10.1016/j.addma.2014.08.002", "10.1016/j.jmatprotec.2015.01.025"],
+  ),
+  ss316l: authorityBox(
+    "ss316l",
+    "Renishaw / Concept Laser 30 µm; Cherry LoF ~100 W / 1100 mm/s; Kurzynowski keyhole ~240 W / 420 mm/s.",
+    ["10.1007/s00170-014-6721-3", "10.1016/j.jmatprotec.2017.05.042", "10.1016/j.msea.2018.01.103"],
+  ),
+  alsi10mg: authorityBox(
+    "alsi10mg",
+    "High-k Al needs high P; 150–200 °C preheat typical; Aboulkhair balling at 200 W / 1800 mm/s.",
+    ["10.1016/j.matdes.2014.09.044", "10.1108/13552541211218112", "10.1016/j.actamat.2016.03.044"],
+  ),
+  in718: authorityBox(
+    "in718",
+    "Jia dense ~130 W / 600 mm/s; EOS-class ~285 W / 960 mm/s / 40 µm; LoF at 90 W / 1200 mm/s.",
+    ["10.1016/j.jallcom.2013.09.171", "10.1016/j.msea.2015.05.035", "10.1016/j.matlet.2015.10.136"],
+  ),
+  in625: IN625_PV_WINDOW_TS_LOCAL,
 };
 
 export function alloyRecords(alloyId: LPBFAlloyId): TraceableLPBFRecord[] {
