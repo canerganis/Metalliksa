@@ -420,6 +420,11 @@ def main():
     assert ti["modelId"] == "rosenthal-screening-v1"
     from lpbf_job_cache import BUILD_JOB_SOLVER_REVISION
     assert ti["solverRevision"] == BUILD_JOB_SOLVER_REVISION
+    assert BUILD_JOB_SOLVER_REVISION not in (
+        "lpbf-build-job-core-peak-field-v2",
+        "lpbf-build-job-kinetics-same-alloy-v3",
+        "lpbf-build-job-kinetics-steel-only-v4",
+    ), BUILD_JOB_SOLVER_REVISION
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default
