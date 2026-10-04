@@ -39,6 +39,78 @@ def run_job(payload, *, clear_cache=False):
     return solve_lpbf_build_job(body)
 
 
+def check_build_job_kinetics(ti):
+    import math
+
+    from kinetics_ttt_cct_solver import solve_phase_transformation_kinetics
+    from lpbf_build_job_solver import BUILD_JOB_KINETICS_ALLOY, build_cooling_rate_cct_row, build_job_kinetics
+
+    assert BUILD_JOB_KINETICS_ALLOY == {"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}
+    kin = ti["kinetics"]
+    rate = ti["thermal"]["solidificationKinetics"]["coolingRate_K_s"]
+    assert kin["status"] == "available" and kin["success"] is True
+    assert kin["alloy"] == "Ti-6Al-4V" and kin["alloyId"] == "ti6al4v"
+    assert kin["buildCoolingRate_C_s"] == float(rate)
+    assert kin["inputParameters"]["selectedCoolingRate_C_s"] == float(rate)
+    assert kin["coolingRateSource"] == "thermal.solidificationKinetics.coolingRate_K_s"
+    # The solver output itself is unchanged; only build-job metadata keys are added.
+    reference = solve_phase_transformation_kinetics(alloy_name="Ti-6Al-4V", cooling_rate_c_s=float(rate))
+    added = {"status", "alloyId", "buildCoolingRate_C_s", "coolingRateSource", "buildCoolingRateCctRow"}
+    assert set(kin) == set(reference) | added
+    for key in set(reference) - {"computeTimeMs"}:
+        assert kin[key] == reference[key], key
+    # The build cooling rate (~1e6 K/s) is above the 0.05-2000 C/s CCT map: no row is extrapolated.
+    sel = kin["buildCoolingRateCctRow"]
+    assert rate > 2000.0, rate
+    assert sel["status"] == "unavailable" and sel["rowIndex"] is None and sel["rowCoolingRate_C_s"] is None
+    assert sel["mapRange_C_s"] == [0.05, 2000.0]
+    assert "above the CCT map range 0.05-2000 C/s" in sel["reason"], sel["reason"]
+
+    cct = kin["cctContinuousCoolingMap"]
+    inside = build_cooling_rate_cct_row(cct, 30.0)  # log10 nearest: 25 (|0.079|) beats 50 (|0.222|)
+    assert inside["status"] == "selected" and inside["rowCoolingRate_C_s"] == 25.0
+    assert cct[inside["rowIndex"]]["coolingRate_C_s"] == 25.0 and inside["reason"] is None
+    assert build_cooling_rate_cct_row(cct, 0.3)["rowCoolingRate_C_s"] == 0.2
+    assert build_cooling_rate_cct_row(cct, 72.0)["rowCoolingRate_C_s"] == 100.0  # log scale; linear-nearest is 50
+    assert build_cooling_rate_cct_row(cct, 2000.0)["rowCoolingRate_C_s"] == 2000.0
+    assert build_cooling_rate_cct_row(cct, 0.01)["status"] == "unavailable"
+    assert "below" in build_cooling_rate_cct_row(cct, 0.01)["reason"]
+    assert build_cooling_rate_cct_row(cct, None)["status"] == "unavailable"
+    assert build_cooling_rate_cct_row(None, 30.0)["status"] == "unavailable"
+
+    # No finite positive cooling rate: unavailable, never the former 1e5 K/s default.
+    for thermal in ({}, {"solidificationKinetics": {}},
+                    {"solidificationKinetics": {"coolingRate_K_s": float("nan")}},
+                    {"solidificationKinetics": {"coolingRate_K_s": 0.0}}):
+        missing = build_job_kinetics("in718", thermal)
+        assert missing["status"] == "unavailable" and missing["calphadVsKineticsGap"] is None
+        assert "no finite positive cooling rate" in missing["reason"]
+    good = build_job_kinetics("in718", {"solidificationKinetics": {"coolingRate_K_s": 30.0}})
+    assert good["alloy"] == "Inconel 718" and good["buildCoolingRateCctRow"]["rowCoolingRate_C_s"] == 25.0
+    assert math.isclose(good["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]["coolingRate_C_s"], 30.0)
+
+    for alloy_id, name, power, speed in (("ss316l", "316L Stainless Steel", 200, 800),
+                                         ("alsi10mg", "AlSi10Mg", 330, 1100)):
+        job = run_job({"alloyId": alloy_id, "laserPower_W": power, "scanSpeed_mm_s": speed,
+                       "beamDiameter_um": 80, "layerThickness_um": 30, "hatchSpacing_um": 100,
+                       "bypassCache": True})
+        assert job["success"]
+        k = job["kinetics"]
+        assert k == {
+            "success": False,
+            "status": "unavailable",
+            "reason": f"no kinetics model for {name}",
+            "alloyId": alloy_id,
+            "alloy": None,
+            "buildCoolingRate_C_s": float(job["thermal"]["solidificationKinetics"]["coolingRate_K_s"]),
+            "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
+            "cctContinuousCoolingMap": None,
+            "calphadVsKineticsGap": None,
+            "buildCoolingRateCctRow": None,
+        }, k
+        assert "AISI 4140" not in json.dumps(k)
+
+
 def main():
     from lpbf_job_cache import clear_cache
     from murakami_fatigue_screening import parse_defect_sqrt_areas_text
@@ -110,6 +182,10 @@ def main():
     }
     assert len(ti["buildJobIdentity"]["sha256"]) == 64
     assert "gates" in ti["verdict"] and len(ti["verdict"]["gates"]) >= 7
+
+    # Kinetics: only the alloy's own kinetics model, never a substituted alloy (formerly every
+    # alloy other than IN718/Ti-6Al-4V silently got AISI 4140 kinetics).
+    check_build_job_kinetics(ti)
 
     # Same-alloy aliases are accepted but normalized before solver invocation.
     from unittest.mock import patch

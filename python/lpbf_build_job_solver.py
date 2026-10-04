@@ -7,6 +7,7 @@ Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eaga
 """
 
 import json
+import math
 import sys
 import time
 
@@ -59,6 +60,82 @@ _LOF_HT = {
 }
 
 DEFAULT_PROCESS_SEED = 42
+
+# Build-job alloy id -> phase-transformation kinetics model (kinetics_ttt_cct_solver,
+# alloy_registry DOMAIN_KINETICS) of the SAME alloy. The kinetics registry has no model for
+# 316L (austenitic stainless) or AlSi10Mg (Al-Si-Mg); AISI 4140 and Al 7075 are different
+# alloys, so those build jobs carry an explicit unavailable kinetics block, never a
+# substituted alloy's result.
+BUILD_JOB_KINETICS_ALLOY = {"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}
+BUILD_JOB_KINETICS_COOLING_RATE_SOURCE = "thermal.solidificationKinetics.coolingRate_K_s"
+
+
+def _build_cooling_rate(thermal):
+    """The build's reported cooling rate (K/s, numerically equal to C/s), or None."""
+    raw = (thermal.get("solidificationKinetics") or {}).get("coolingRate_K_s")
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+        return None
+    rate = float(raw)
+    return rate if math.isfinite(rate) and rate > 0.0 else None
+
+
+def build_cooling_rate_cct_row(cct_map, rate):
+    """Select the CCT map row nearest (log10) to the build cooling rate; never extrapolate.
+
+    A build rate outside the tabulated CCT cooling rates gives status "unavailable" with the
+    range in the reason, so a slow-cooling row is not reported for a much faster LPBF cool.
+    """
+    rates = [row.get("coolingRate_C_s") for row in (cct_map or [])]
+    usable = [(i, float(r)) for i, r in enumerate(rates)
+              if isinstance(r, (int, float)) and not isinstance(r, bool) and math.isfinite(r) and r > 0.0]
+    out = {
+        "selection": "nearest-log10-cooling-rate-within-map-range",
+        "buildCoolingRate_C_s": rate,
+        "mapRange_C_s": [min(r for _, r in usable), max(r for _, r in usable)] if usable else None,
+        "rowIndex": None,
+        "rowCoolingRate_C_s": None,
+    }
+    if rate is None or not usable:
+        out.update(status="unavailable", reason="no build cooling rate or no CCT map rows to select from")
+        return out
+    lo, hi = out["mapRange_C_s"]
+    if rate < lo or rate > hi:
+        out.update(status="unavailable",
+                   reason=f"build cooling rate {rate:.3g} C/s is {'above' if rate > hi else 'below'} the "
+                          f"CCT map range {lo:g}-{hi:g} C/s; no row is extrapolated")
+        return out
+    index, row_rate = min(usable, key=lambda item: abs(math.log10(item[1]) - math.log10(rate)))
+    out.update(status="selected", reason=None, rowIndex=index, rowCoolingRate_C_s=row_rate)
+    return out
+
+
+def build_job_kinetics(alloy_id, thermal):
+    """Kinetics block for a build job; unavailable (with reason) instead of a substitute alloy."""
+    rate = _build_cooling_rate(thermal)
+    kinetics_alloy = BUILD_JOB_KINETICS_ALLOY.get(alloy_id)
+    if kinetics_alloy is None or rate is None:
+        alloy_name = ALLOY_MATERIALS[alloy_id]["thermal"] if alloy_id in ALLOY_MATERIALS else str(alloy_id)
+        reason = (f"no kinetics model for {alloy_name}" if kinetics_alloy is None
+                  else "the build thermal result reports no finite positive cooling rate")
+        return {
+            "success": False,
+            "status": "unavailable",
+            "reason": reason,
+            "alloyId": alloy_id,
+            "alloy": None,
+            "buildCoolingRate_C_s": rate,
+            "coolingRateSource": BUILD_JOB_KINETICS_COOLING_RATE_SOURCE,
+            "cctContinuousCoolingMap": None,
+            "calphadVsKineticsGap": None,
+            "buildCoolingRateCctRow": None,
+        }
+    block = solve_phase_transformation_kinetics(alloy_name=kinetics_alloy, cooling_rate_c_s=rate)
+    block["status"] = "available"
+    block["alloyId"] = alloy_id
+    block["buildCoolingRate_C_s"] = rate
+    block["coolingRateSource"] = BUILD_JOB_KINETICS_COOLING_RATE_SOURCE
+    block["buildCoolingRateCctRow"] = build_cooling_rate_cct_row(block.get("cctContinuousCoolingMap"), rate)
+    return block
 
 
 def _gate(gid, status, measured, required, unit, note):
@@ -637,10 +714,7 @@ def solve_lpbf_build_job(data):
         "slicer": slicer,
         "kinematics": calculate_scanner_kinematics(speed, max(50.0, float(stripe_width_mm * 1000.0))),
         "microstructure": compute_solidification_microstructure(data, data.get("material", {}), None),
-        "kinetics": solve_phase_transformation_kinetics(
-            alloy_name={"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}.get(alloy_id, "AISI 4140"),
-            cooling_rate_c_s=thermal.get("solidificationKinetics", {}).get("coolingRate_K_s", 1e5)
-        ),
+        "kinetics": build_job_kinetics(alloy_id, thermal),
         "porosity": aggregate_part_porosity(
             uq_block.pop("defectSamples", []) if uq_block else [thermal.get("geometricDefectScreen", {})]
         ),
