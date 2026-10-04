@@ -215,12 +215,68 @@ export function buildTrustProxyWarning(cfg: BindConfig, trustProxy: boolean | nu
   );
 }
 
+// ---------------------------------------------------------------------------
+// Request-target canonicalisation for security decisions
+// ---------------------------------------------------------------------------
+// Node passes the raw request target through as req.url. Express routes on parseurl(req).pathname, which
+// also accepts absolute-form targets ("GET http://host/api/x HTTP/1.1") and matches case-insensitively, so a
+// security check on the raw string can disagree with the router. Only origin-form targets ("/...") are
+// served (rejectNonOriginForm), and the auth and rate-limit decisions protect a path when either its raw
+// lower-cased form or its canonical form (percent-decoded, slashes collapsed, dot segments removed)
+// starts with /api. The only exemption, /api/health, is matched on the raw form so a normalised alias
+// can never unlock another route.
+
+/** Raw pathname, lower-cased (no decoding). Null for a target that is not origin-form. */
+export function rawRequestPath(rawUrl: string): string | null {
+  if (!rawUrl.startsWith("/")) return null;
+  return rawUrl.split(/[?#]/)[0].toLowerCase();
+}
+
+/** Canonical pathname, lower-cased. Null for a non-origin-form target or invalid percent-encoding. */
+export function canonicalRequestPath(rawUrl: string): string | null {
+  const raw = rawRequestPath(rawUrl);
+  if (raw === null) return null;
+  let p: string;
+  try { p = decodeURIComponent(raw); } catch { return null; }
+  const out: string[] = [];
+  for (const seg of p.replace(/\\/g, "/").split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") out.pop();
+    else out.push(seg);
+  }
+  const body = "/" + out.join("/");
+  return (body !== "/" && /[/\\]$/.test(p) ? body + "/" : body).toLowerCase();
+}
+
+function startsWithApi(p: string): boolean {
+  // "/api", "/api/...", "/api;x/...", "/api.json"...: anything that is not a longer word such as "/apix".
+  return p.startsWith("/api") && !/^[a-z0-9_-]/.test(p.slice(4));
+}
+
+/** True when the target must be authenticated (login mode) and rate limited as an API call. */
+export function isProtectedApiTarget(rawUrl: string): boolean {
+  const raw = rawRequestPath(rawUrl);
+  if (raw === null) return true;
+  if (raw === "/api/health") return false;
+  const canonical = canonicalRequestPath(rawUrl);
+  return startsWithApi(raw) || canonical === null || startsWithApi(canonical);
+}
+
+/** Reject absolute-form, authority-form and asterisk-form request targets with 400. */
+export function rejectNonOriginForm(req: Request, res: Response, next: NextFunction) {
+  if (typeof req.url === "string" && req.url.startsWith("/")) return next();
+  return res.status(400).json({ error: "Bad request target.", code: "BAD_REQUEST_TARGET", requestId: getRequestId(req) });
+}
+
 export function tokenAuth(token: string | null, auth?: LoginAuth | null) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!token && !auth) return next();
-    const p = (req.originalUrl || req.url || "").split("?")[0].toLowerCase();
+    const target = req.originalUrl || req.url || "";
+    if (canonicalRequestPath(target) === null) {
+      return res.status(400).json({ error: "Bad request target.", code: "BAD_REQUEST_TARGET", requestId: getRequestId(req) });
+    }
     // Only API routes are protected; the SPA shell, /login and /api/health stay reachable.
-    if (!p.startsWith("/api/") || p === "/api/health") return next();
+    if (!isProtectedApiTarget(target)) return next();
     const method = authMethod(req, token, auth);
     if (method === "bearer") return next();
     if (method === "session") {
@@ -562,9 +618,10 @@ export function rateLimit(opts: RateLimitOptions = {}) {
   const buckets = new Map<string, { count: number; resetAt: number }>();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const p = (req.originalUrl || req.url || "").split("?")[0].toLowerCase();
-    if (!p.startsWith("/api/")) return next();
-    const ai = AI_ROUTE_PATTERN.test(p);
+    const target = req.originalUrl || req.url || "";
+    if (!isProtectedApiTarget(target) && rawRequestPath(target) !== "/api/health") return next();
+    const raw = rawRequestPath(target) ?? "";
+    const ai = AI_ROUTE_PATTERN.test(raw) || AI_ROUTE_PATTERN.test(canonicalRequestPath(target) ?? "");
     const limit = ai ? aiLimit : generalLimit;
     const key = `${ai ? "ai" : "gen"}:${req.ip || req.socket?.remoteAddress || "unknown"}`;
     const t = now();
@@ -631,6 +688,7 @@ export function applySecurity(
   app.use(requestId);
   app.use(accessLog(opts.log));
   app.use(securityHeaders);
+  app.use(rejectNonOriginForm);
   app.use(rateLimit(opts.rate));
   if (opts.auth) installLogin(app, opts.auth);
   app.use(tokenAuth(token, opts.auth));
