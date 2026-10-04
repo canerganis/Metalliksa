@@ -540,13 +540,6 @@ Provide an evidence-gap review:
                     <Flame className="w-3.5 h-3.5" />
                     <span>Heat Treatment</span>
                   </button>
-                  <button
-                    onClick={() => onNavigateToModule?.("qualification")}
-                    className="p-2 rounded-lg bg-slate-950/70 hover:bg-emerald-950/30 border border-slate-800 hover:border-emerald-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-emerald-300"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Qualification Screening</span>
-                  </button>
                 </div>
               </div>
             </div>

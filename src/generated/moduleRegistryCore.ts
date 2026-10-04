@@ -607,7 +607,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "evidence",
       "label": "Uncertainty & Coupons",
       "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
-      "next": "qualification",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -616,58 +616,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "UQLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "qualification",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "ASTM / MMPDS Screening",
-      "description": "Protocol screening and coupon statistics; no automatic standards certification.",
-      "next": "aerospace-pdf-audit",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/StandardQualificationEngine.tsx",
-        "export": "StandardQualificationEngine"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "aerospace-pdf-audit",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "Audit Templates",
-      "description": "Demonstration report templates; no airworthiness or NADCAP approval.",
-      "next": "traceability",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AerospaceAuditReportGenerator.tsx",
-        "export": "AerospaceAuditReportGenerator"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

@@ -46,7 +46,6 @@ const MetallurgyCopilot = lazy(() => import("./components/MetallurgyCopilot").th
 const CorrosionEngineeringLab = lazy(() => import("./components/CorrosionEngineeringLab").then(m => ({ default: m.CorrosionEngineeringLab })));
 const MaterialsProjectExplorer = lazy(() => import("./components/MaterialsProjectExplorer").then(m => ({ default: m.MaterialsProjectExplorer })));
 const ICMEMultiScalePipelineStudio = lazy(() => import("./components/ICMEMultiScalePipelineStudio").then(m => ({ default: m.ICMEMultiScalePipelineStudio })));
-const StandardQualificationEngine = lazy(() => import("./components/StandardQualificationEngine").then(m => ({ default: m.StandardQualificationEngine })));
 const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineeringWorkspace").then(m => ({ default: m.LpbfEngineeringWorkspace })));
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
@@ -56,7 +55,6 @@ const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 
-const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
 const EDSSpectrumLab = lazy(() => import("./components/EDSSpectrumLab").then(m => ({ default: m.EDSSpectrumLab })));
@@ -164,10 +162,8 @@ export default function App() {
       case 'uq-lab': return <UQLab onNavigate={navigate} />;
       case 'digital-twin': return <DigitalTwinHub onNavigateToModule={navigate} />;
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
-      case 'aerospace-pdf-audit': return <AerospaceAuditReportGenerator />;
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'icme-motor': return <ICMEMultiScalePipelineStudio />;
-      case 'qualification': return <StandardQualificationEngine />;
       case 'materials-project': return <MaterialsProjectExplorer />;
       case 'calculators': return <PocketCalculators />;
       case 'eds-lab': return <EDSSpectrumLab />;

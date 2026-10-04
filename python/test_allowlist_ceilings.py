@@ -226,7 +226,6 @@ CEILING_SNAPSHOT = {
             "POST /api/lpbf/sources/:datasetId/verify",
             "POST /api/metallurgy/analyze-sem",
             "POST /api/metallurgy/detect-sem-legend",
-            "POST /api/metallurgy/qualify-aerospace",
             "POST /api/orchestrator/collect-source",
             "POST /api/python/ipc-warmup",
             "POST /api/python/xrd-deconvolve",
@@ -249,7 +248,6 @@ CEILING_SNAPSHOT = {
             "GET /api/orchestrator/approved-sources",
             "POST /api/metallurgy/analyze-sem",
             "POST /api/metallurgy/detect-sem-legend",
-            "POST /api/metallurgy/qualify-aerospace",
         ],
     },
     "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": {

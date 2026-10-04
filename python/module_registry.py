@@ -152,8 +152,6 @@ _AI_CONSULT = _op("ai-consult", "POST", "/api/consult", _NODE)
 _EVIDENCE_READS_ONLY = ("EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and "
                         "useLpbfEngineeringStore; it dispatches no server request (build jobs are "
                         "submitted from 3d-distortion-lab), so no operation is bound.")
-_CANNED_QUALIFY = ("POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) "
-                   "without calling any authority; not bound as an operation.")
 
 LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "3d-distortion-lab": (
@@ -214,12 +212,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     ),
     "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
-    "qualification": (
-        _local("coupon-statistics", "protocol screening and coupon statistics are computed in the browser."),
-    ),
-    "aerospace-pdf-audit": (
-        _local("report-template", "demonstration report templates are assembled in the browser."),
-    ),
     "traceability": (),
     "copilot": (_op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),),
     "ai-orchestrator": (_op("dataset-plan", "POST", "/api/orchestrator/dataset-plan", _NODE),),
@@ -230,8 +222,6 @@ LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
         "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant "
         "values without calling any authority; not bound as operations.",
     ),
-    "qualification": (_CANNED_QUALIFY,),
-    "aerospace-pdf-audit": (_CANNED_QUALIFY,),
     "materials-project": (
         "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts "
         "MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference "

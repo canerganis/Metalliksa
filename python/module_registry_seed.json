@@ -215,29 +215,9 @@
     "label": "Uncertainty & Coupons",
     "scope": "Research",
     "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
-    "next": "qualification",
+    "next": "traceability",
     "viewComponent": "src/components/UQLab.tsx",
     "viewExport": "UQLab"
-  },
-  {
-    "id": "qualification",
-    "workspace": "evidence",
-    "label": "ASTM / MMPDS Screening",
-    "scope": "Research",
-    "description": "Protocol screening and coupon statistics; no automatic standards certification.",
-    "next": "aerospace-pdf-audit",
-    "viewComponent": "src/components/StandardQualificationEngine.tsx",
-    "viewExport": "StandardQualificationEngine"
-  },
-  {
-    "id": "aerospace-pdf-audit",
-    "workspace": "evidence",
-    "label": "Audit Templates",
-    "scope": "Preview",
-    "description": "Demonstration report templates; no airworthiness or NADCAP approval.",
-    "next": "traceability",
-    "viewComponent": "src/components/AerospaceAuditReportGenerator.tsx",
-    "viewExport": "AerospaceAuditReportGenerator"
   },
   {
     "id": "traceability",

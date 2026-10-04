@@ -31,8 +31,6 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'experimental-data': lazy(() => import('../components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace }))),
   'digital-twin': lazy(() => import('../components/DigitalTwinHub').then(m => ({ default: m.DigitalTwinHub }))),
   'uq-lab': lazy(() => import('../components/UQLab').then(m => ({ default: m.UQLab }))),
-  'qualification': lazy(() => import('../components/StandardQualificationEngine').then(m => ({ default: m.StandardQualificationEngine }))),
-  'aerospace-pdf-audit': lazy(() => import('../components/AerospaceAuditReportGenerator').then(m => ({ default: m.AerospaceAuditReportGenerator }))),
   'traceability': lazy(() => import('../components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace }))),
   'copilot': lazy(() => import('../components/MetallurgyCopilot').then(m => ({ default: m.MetallurgyCopilot }))),
   'ai-orchestrator': lazy(() => import('../components/AIOrchestratorPanel').then(m => ({ default: m.AIOrchestratorPanel }))),

@@ -125,27 +125,6 @@ copilotRouter.post("/api/metallurgy/analyze-sem", async (req: Request, res: Resp
   }
 });
 
-// Aerospace Qualification
-copilotRouter.post("/api/metallurgy/qualify-aerospace", async (req: Request, res: Response) => {
-  if (denyIfAirgapped(res, "Cloud aerospace qualification assistant")) return;
-  try {
-    const { material, specStandard, testResults } = req.body;
-    return res.json({
-      qualified: true,
-      complianceStandard: specStandard || "AMS 7000 / ASTM F3055",
-      safetyMarginPct: 18.5,
-      findings: [
-        "Tensile yield strength exceeds minimum specification (Rp0.2 > 980 MPa)",
-        "Elongation at fracture meets ductility threshold (A5 > 12%)",
-        "Porosity meets ASTM E155 Class 1 requirements (<0.1% volume fraction)",
-      ],
-      recommendations: "Proceed to hot isostatic pressing (HIP) and two-stage aging cycle.",
-    });
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message || "Qualification analysis failed" });
-  }
-});
-
 // Materials Project Search & Query Service
 const MATERIALS_PROJECT_VERIFIED_DATA: any[] = [
   {
