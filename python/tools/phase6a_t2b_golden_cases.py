@@ -107,3 +107,18 @@ EXPECTED_BEHAVIOUR_CHANGES = {
     ("kinetics_ttt_cct_solver", "edge_unknown_alloy"): "UNKNOWN_ALLOY",
     ("lpbf_fatigue_fracture", "edge_unknown_alloy"): "UNKNOWN_ALLOY",
 }
+
+# Documented value changes that a step_b re-bless may record although they are not
+# bounded numeric drift: solver -> {drift-row key pattern: description}. Each listed row
+# is checked exactly by capture_phase6a_golden.documented_change_violation against the
+# re-blessed document (never by a looser bound); any other row keeps the default guard.
+EXPECTED_DOCUMENTED_VALUE_CHANGES = {
+    "kinetics_ttt_cct_solver": {
+        r"cctContinuousCoolingMap\[\d+\]\.predictedHardness_HV":
+            "HV = round(10.5 * HRC + 40) (unsourced) -> ASTM E140 Table 1 interpolation for the "
+            "non-austenitic steels (AISI 4140/4340/D2) in HRC 20-68; null for other alloy "
+            "classes and outside HRC 20-68",
+        r"cctContinuousCoolingMap\[\d+\]\.predictedHardness_HV_status":
+            "new status key next to predictedHardness_HV (converted / unavailable reason)",
+    },
+}

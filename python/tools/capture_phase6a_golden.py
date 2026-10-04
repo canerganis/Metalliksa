@@ -31,6 +31,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -282,6 +283,9 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # Guard on what a step_b re-bless may record (fix round item 7). Design step (b) only
 # changes values: every drift row against the d33b6f5 golden must be numeric, except
 # changed strings under the keys below (generated code snippets that print a value).
+# Exception, listed per row pattern: phase6a_t2b_golden_cases.EXPECTED_DOCUMENTED_VALUE_CHANGES
+# (kinetics predictedHardness_HV -> ASTM E140), each row verified exactly by
+# documented_change_violation; it does not widen the bound for any other row.
 STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
 STEP_B_DEFAULT_MAX_REL = 1e-2
 # tafel: the drift follows the equivalent-weight change (EW rel r): rates and losses
@@ -299,13 +303,80 @@ def step_b_max_rel(solver: str, rows: List[Dict[str, Any]]) -> float:
     return STEP_B_DEFAULT_MAX_REL
 
 
-def step_b_violations(solver: str, rows: List[Dict[str, Any]]) -> List[str]:
-    """Rows a step_b re-bless must not contain (empty list = acceptable drift)."""
+def _documented_change_patterns(solver: str) -> Dict[str, str]:
+    cases = globals().get("_t2b_cases")
+    return dict(getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).get(solver, {}))
+
+
+def _is_documented_change_row(solver: str, key: str) -> bool:
+    return any(re.fullmatch(p, key) for p in _documented_change_patterns(solver))
+
+
+_KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
+
+
+def documented_change_violation(solver: str, row: Dict[str, Any],
+                                new_stdout: Optional[Dict[str, Any]]) -> Optional[str]:
+    """None when ``row`` is exactly the documented change (EXPECTED_DOCUMENTED_VALUE_CHANGES).
+
+    kinetics_ttt_cct_solver predictedHardness_HV: the old value must be the old formula
+    round(10.5 * HRC + 40) of the row's (unchanged) HRC, and the new value must be the
+    ASTM E140 Table 1 value (hardness_conversion_e140) when the alloy type is a steel, or
+    null with the matching status otherwise. The status key may only be added, with the
+    status that belongs to that HV. Nothing is accepted by tolerance.
+    """
+    key = row["key"]
+    if solver != "kinetics_ttt_cct_solver" or not _KINETICS_HV_ROW.fullmatch(key):
+        return f"{key}: no documented-change check for this row"
+    if new_stdout is None:
+        return f"{key}: documented change needs the re-blessed document to be verified"
+    if str(PYTHON_DIR) not in sys.path:
+        sys.path.insert(0, str(PYTHON_DIR))
+    import hardness_conversion_e140 as e140  # noqa: E402 (python/ module)
+    match = _KINETICS_HV_ROW.fullmatch(key)
+    try:
+        entry = new_stdout["cctContinuousCoolingMap"][int(match.group(1))]
+        hrc = entry["predictedHardness_HRC"]
+        alloy_type = new_stdout["alloyMetadata"]["type"]
+    except (KeyError, IndexError, TypeError):
+        return f"{key}: re-blessed document lacks the row, its HRC or the alloy type"
+    # Classified from the registry descriptor "type", independently of the solver's id set.
+    if "Steel" in alloy_type:
+        expected_hv, expected_status = e140.hrc_to_hv_non_austenitic_steel(hrc)
+    else:
+        expected_hv, expected_status = None, e140.STATUS_UNAVAILABLE_ALLOY_CLASS
+    if match.group(2):  # the status key
+        if row["kind"] != "added" or row["new"] != expected_status:
+            return f"{key}: expected an added status {expected_status!r}, got {row['kind']} {row['new']!r}"
+        return None
+    if row["kind"] not in ("numeric", "changed"):
+        return f"{key}: {row['kind']} row is not the documented HV change"
+    old_formula = round(hrc * 10.5 + 40.0, 0)
+    if type(row["old"]) is not float or row["old"] != old_formula:
+        return f"{key}: old {row['old']!r} is not round(10.5 * {hrc} + 40) = {old_formula!r}"
+    if type(row["new"]) is not type(expected_hv) or row["new"] != expected_hv:
+        return f"{key}: new {row['new']!r} is not the E140 value {expected_hv!r} ({expected_status})"
+    if entry.get("predictedHardness_HV_status") != expected_status:
+        return f"{key}: status {entry.get('predictedHardness_HV_status')!r} != {expected_status!r}"
+    return None
+
+
+def step_b_violations(solver: str, rows: List[Dict[str, Any]],
+                      new_stdout: Optional[Dict[str, Any]] = None) -> List[str]:
+    """Rows a step_b re-bless must not contain (empty list = acceptable drift).
+
+    ``new_stdout`` is the re-blessed stdout; it is needed only to verify rows listed in
+    EXPECTED_DOCUMENTED_VALUE_CHANGES (without it those rows are violations).
+    """
     bound = step_b_max_rel(solver, rows)
     out = []
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
-        if r["kind"] == "numeric":
+        if _is_documented_change_row(solver, r["key"]):
+            problem = documented_change_violation(solver, r, new_stdout)
+            if problem:
+                out.append(problem)
+        elif r["kind"] == "numeric":
             if r.get("rel") is not None and abs(r["rel"]) > bound:
                 out.append(f"{r['key']}: |rel| {abs(r['rel']):.3g} > {bound:.3g}")
         elif not (r["kind"] == "changed" and leaf in STEP_B_ALLOWED_STRING_KEYS
