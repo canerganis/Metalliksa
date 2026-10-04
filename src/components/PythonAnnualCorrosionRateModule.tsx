@@ -27,6 +27,7 @@ import {
   TafelDataset,
 } from "../types/tafel";
 import { calculatePythonTafelCorrosionRate } from "../services/pythonComputationService";
+import { isPythonValidationError } from "../utils/pythonValidationError";
 
 interface Props {
   tafelFit?: TafelFitResult | null;
@@ -66,6 +67,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
   // Python Calculation State
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<TafelPythonCorrosionRateResult | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "timeline" | "temperature" | "pythonCode">("summary");
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
 
@@ -130,7 +132,13 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
     try {
       const res = await calculatePythonTafelCorrosionRate(inputPayload);
       setResult(res);
+      setValidationError(null);
     } catch (err) {
+      if (isPythonValidationError(err)) {
+        // Rejected input: do not keep showing a result computed for other inputs.
+        setResult(null);
+        setValidationError(err.message);
+      }
       console.error("Failed to calculate annual corrosion rate in Python:", err);
     } finally {
       setLoading(false);
@@ -227,6 +235,12 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 
       {/* Main Container Layout */}
       <div className="p-5 space-y-6">
+        {validationError && (
+          <div role="alert" className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
         {/* Source Icorr Banner */}
         <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
