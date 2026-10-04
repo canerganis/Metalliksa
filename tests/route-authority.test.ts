@@ -233,12 +233,21 @@ test('mutation: falsy error values, res.write and catch fallbacks do not hide li
     "router.post('/api/catch-error', async (req, res) => { try { res.json(await runPythonScript('x', {})); } catch (e) { res.status(500).json({ error: String(e), v: 1 }); } });",
     "router.post('/api/catch-retry', async (req, res) => { try { res.json(await runPythonScript('x', {})); } catch { res.json({ v: 1, out: await runPythonScript('y', {}) }); } });",
     "router.post('/api/authority-in-catch-only', async (req, res) => { try { JSON.parse(req.body); } catch { await runPythonScript('x', {}); } res.json({ v: 1 }); });",
+    "router.post('/api/authority-in-rejection-only', (req, res) => { Promise.resolve().catch(() => runPythonScript('x', {})); res.json({ v: 1 }); });",
+    "router.post('/api/missing-result', async (req, res) => { const out = await runPythonScript('x', {}).catch(() => null); if (!out) return res.json({ margin: 18.5 }); res.json(out); });",
+    "router.post('/api/missing-result-null', async (req, res) => { const out = await runPythonScript('x', {}); if (out == null) { res.json({ margin: 18.5 }); return; } res.json(out); });",
+    "router.post('/api/missing-result-else', async (req, res) => { let out; try { out = await runPythonScript('x', {}); } catch {} if (out) res.json(out); else res.json({ margin: 18.5 }); });",
+    "router.post('/api/missing-result-ternary', async (req, res) => { const out = await runPythonScript('x', {}); return out !== undefined ? res.json(out) : res.json({ margin: 18.5 }); });",
+    "router.post('/api/missing-result-error', async (req, res) => { const out = await runPythonScript('x', {}).catch(() => null); if (!out) return res.status(502).json({ error: 'python failed' }); res.json({ ...out, cached: false }); });",
+    "router.post('/api/present-result', async (req, res) => { const out = await runPythonScript('x', {}); if (!out.ok) return res.status(400).json({ error: out.message }); res.json({ v: 1, out }); });",
   ].join('\n');
   assert.deepEqual(cannedOf(sample), {
     'POST /api/error-false': true, 'POST /api/error-empty': true, 'POST /api/error-zero': true, 'POST /api/error-const': true,
     'POST /api/error-message': false, 'POST /api/write': true, 'POST /api/catch-fallback': true,
     'POST /api/promise-fallback': true, 'POST /api/then-fallback': true, 'POST /api/catch-error': false,
-    'POST /api/catch-retry': false, 'POST /api/authority-in-catch-only': false,
+    'POST /api/catch-retry': false, 'POST /api/authority-in-catch-only': true, 'POST /api/authority-in-rejection-only': true,
+    'POST /api/missing-result': true, 'POST /api/missing-result-null': true, 'POST /api/missing-result-else': true,
+    'POST /api/missing-result-ternary': true, 'POST /api/missing-result-error': false, 'POST /api/present-result': false,
   });
 });
 
@@ -284,6 +293,27 @@ test('mutation: invoker, options/head and relative sub-router registrations are 
   assert.equal(found.find(handler => handler.key === 'GET /api/mounted/relative')!.line, 7);
   const unresolvedLines = found.filter(handler => handler.key.startsWith('UNRESOLVED')).map(handler => handler.line).sort((x, y) => x - y);
   assert.deepEqual(unresolvedLines, [9, 10, 11]);
+});
+
+test('regression: factory-built and nested sub-router mounts fail visibly as unclassified', () => {
+  const sample = [
+    "function makeRouter() { const r = Router(); r.post('/canned', (req, res) => res.json({ v: 1 })); return r; }",
+    "app.use('/api/factory-call', makeRouter());",
+    "const built = makeRouter(); app.use('/api/factory-var', built);",
+    "const outer = Router(); const inner = Router(); inner.post('/deep', (req, res) => res.json({ v: 1 }));",
+    "outer.use('/inner', inner);",
+    "app.use('/api/nested', outer);",
+  ].join('\n');
+  const found = routeHandlers('routes/factory.ts', sample);
+  assert.deepEqual(Object.fromEntries(found.map(handler => [handler.key, handler.unclassified])), {
+    'USE /api/factory-call (routes/factory.ts#1)': true, 'USE /api/factory-var (routes/factory.ts#1)': true,
+    'USE /api/nested (routes/factory.ts#1)': true, 'USE /api/nested/inner (routes/factory.ts#1)': true,
+  });
+  // The routes inside cannot be followed statically, so none of the mounts passes unallowlisted.
+  assert.deepEqual(allowlistDecision([...handlers, ...found], serverHandlers, operationRoutes, allowlist, ceiling).unclassified, [
+    'USE /api/factory-call (routes/factory.ts#1)', 'USE /api/factory-var (routes/factory.ts#1)',
+    'USE /api/nested (routes/factory.ts#1)', 'USE /api/nested/inner (routes/factory.ts#1)',
+  ]);
 });
 
 test('mutation: an imported sub-router mounted under /api is reported under the joined path', () => {

@@ -37,9 +37,13 @@ function isLiteralClaim(node: ts.Expression): boolean {
 // declared object), lexical/module constants, constants and helper functions imported from other
 // repository modules (named, default and namespace imports), methods of constant helper objects
 // (`H.make()`), ternaries and ??/||/&&, Object.assign, JSON.stringify, `X.field` / `X[0]` /
-// `X.filter(...)` reads of constant values, and nesting. A response inside a catch block (or a
-// promise .catch / .then rejection callback) is covered only by an authority call inside that
-// same fallback, so a successful-path authority call does not excuse a canned fallback.
+// `X.filter(...)` reads of constant values, and nesting. Fallbacks are a catch block, a promise
+// .catch / .then rejection callback, and the branch taken when an authority result is missing
+// (`if (!out)`, `out == null`, the else of `if (out)`, `out ? ... : <here>`). A response is
+// covered only by an authority call in the same innermost fallback (or by one outside every
+// fallback when the response is outside every fallback): a successful-path authority call does
+// not excuse a canned fallback, and an authority call inside a fallback does not excuse a canned
+// response outside it.
 
 // Authorities recognised by import origin. A local object or function with the same name does
 // not count.
@@ -442,17 +446,59 @@ export function isCanned(handlerNodes: readonly ts.Node[], ctx: FileContext): bo
   };
   handlerNodes.forEach(visit);
   const roots = new Set(handlerNodes);
-  // Innermost fallback (catch block or rejection callback) around a node, within the handler.
+  const inside = (node: ts.Node, region: ts.Node) => { for (let current: ts.Node | undefined = node; current; current = current.parent) if (current === region) return true; return false; };
+  // Variables holding an authority result: `const out = await run()...` or `out = await run()`.
+  const authorityValued = new Set<string>();
+  for (const [name, initializer] of locals) if (authorities.some(call => inside(call, initializer))) authorityValued.add(name);
+  const findAssignments = (node: ts.Node) => {
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isIdentifier(node.left)
+      && authorities.some(call => inside(call, node.right))) authorityValued.add(node.left.text);
+    ts.forEachChild(node, findAssignments);
+  };
+  handlerNodes.forEach(findAssignments);
+  const subject = (expression: ts.Expression) => { const root = chainRoot(unwrap(expression)); return ts.isIdentifier(root) && authorityValued.has(root.text); };
+  const isNullish = (expression: ts.Expression) => { const value = unwrap(expression); return value.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(value) && value.text === 'undefined'); };
+  /** `!out`, `out == null`, `out === undefined`: the authority result is missing. */
+  const testsMissing = (condition: ts.Expression): boolean => {
+    const value = unwrap(condition);
+    if (ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.ExclamationToken) return subject(value.operand);
+    if (ts.isBinaryExpression(value) && [ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.EqualsEqualsEqualsToken].includes(value.operatorToken.kind)) {
+      return (isNullish(value.right) && subject(value.left)) || (isNullish(value.left) && subject(value.right));
+    }
+    return false;
+  };
+  /** `out`, `out != null`, `out !== undefined`: the authority result is present. */
+  const testsPresent = (condition: ts.Expression): boolean => {
+    const value = unwrap(condition);
+    if (ts.isBinaryExpression(value) && [ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(value.operatorToken.kind)) {
+      return (isNullish(value.right) && subject(value.left)) || (isNullish(value.left) && subject(value.right));
+    }
+    return !ts.isBinaryExpression(value) && !ts.isPrefixUnaryExpression(value) && subject(value);
+  };
+  /** The branch taken when an authority result is missing: `if (!out) <here>` / `if (out) ... else <here>` / `out ? x : <here>`. */
+  const isMissingResultBranch = (node: ts.Node): boolean => {
+    const parent = node.parent;
+    if (ts.isIfStatement(parent)) {
+      return (parent.thenStatement === node && testsMissing(parent.expression)) || (parent.elseStatement === node && testsPresent(parent.expression));
+    }
+    if (ts.isConditionalExpression(parent)) {
+      return (parent.whenTrue === node && testsMissing(parent.condition)) || (parent.whenFalse === node && testsPresent(parent.condition));
+    }
+    return false;
+  };
+  // Innermost fallback around a node within the handler: a catch block, a promise rejection
+  // callback, or the branch taken when an authority result is missing.
   const fallbackOf = (node: ts.Node): ts.Node | undefined => {
-    for (let current = node.parent; current && !roots.has(current); current = current.parent) {
-      if (ts.isCatchClause(current) || isRejectionCallback(current)) return current;
+    for (let current: ts.Node | undefined = node; current && !roots.has(current); current = current.parent) {
+      if (ts.isCatchClause(current) || isRejectionCallback(current) || isMissingResultBranch(current)) return current;
     }
     return undefined;
   };
-  const inside = (node: ts.Node, region: ts.Node) => { for (let current: ts.Node | undefined = node; current; current = current.parent) if (current === region) return true; return false; };
+  // A response is covered only by an authority call in the same innermost fallback (or, for a
+  // response outside every fallback, by an authority call that is also outside every fallback).
   const covered = (at: ts.Node) => {
     const fallback = fallbackOf(at);
-    return fallback ? authorities.some(call => inside(call, fallback)) : authorities.length > 0;
+    return authorities.some(call => fallbackOf(call) === fallback);
   };
   return responses.some(response => !covered(response.at) && hasLiteralClaim(response.value, ctx, locals));
 }
