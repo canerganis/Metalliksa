@@ -444,3 +444,21 @@ test("preset points of another element are labelled as reclassified; unavailable
   assert.ok(!/belong to Fe; they are only reclassified/.test(plain(render())), "no notice on the Fe map");
   assert.ok(!/Selected test point/.test(plain(render({ initialAlloyId: "ti-6al-4v" }))));
 });
+
+test("second re-review: every tab has a render branch, preset point labels are neutral, the error is tied to its element, the ad-hoc stdout is decoded as a stream, Zn is named in the UI note", () => {
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  const ids = [...studio.matchAll(/id: "([a-z-]+)",\s+label:|\{ id: "([a-z-]+)", label:/g)].map((m) => m[1] ?? m[2]);
+  assert.deepEqual(ids.sort(), ["alloy-formulator", "diagram", "experimental-overlay", "reactions"]);
+  for (const id of ids) assert.ok(studio.includes(`activeTab === "${id}" &&`), `tab ${id} has no render branch`);
+  assert.ok(!studio.includes("Open Mechanism Matrix") && !studio.includes("Overlay & Mechanisms"));
+  for (const p of EXPERIMENTAL_POURBAIX_PRESETS) {
+    for (const pt of p.points) {
+      assert.match(pt.stageName ?? "", /^Point \d+ \(illustrative\)$/, pt.id);
+      assert.equal(pt.notes, "Illustrative scenario point; no measurement.", pt.id);
+    }
+  }
+  assert.match(studio, /solveErrorState && solveErrorState\.element === selectedElement/);
+  assert.match(text("server/processOrchestrator.ts"), /pyProcess\.stdout\.setEncoding\("utf8"\);\s*pyProcess\.stderr\.setEncoding\("utf8"\);/);
+  assert.match(plain(render()), /Zn is constant-dependent \(with the wateq4f \/ Baes & Mesmer Zn\(OH\)₂\(aq\) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays\)/);
+  assert.match(plain(render({ initialSolveError: "boom" })), /boom/);
+});

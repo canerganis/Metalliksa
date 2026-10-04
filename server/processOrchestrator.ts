@@ -561,6 +561,9 @@ export class PersistentPythonIPCSupervisor {
       });
       let stdout = "";
       let stderr = "";
+      // Decode as a stream: a multi-byte character split across two chunks must not become U+FFFD.
+      pyProcess.stdout.setEncoding("utf8");
+      pyProcess.stderr.setEncoding("utf8");
 
       const timer = setTimeout(() => {
         pyProcess.kill("SIGKILL");

@@ -65,10 +65,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   // The loaded experimental preset names the element its points belong to; the default alloy (pure Fe) agrees with it.
   const initialPreset = EXPERIMENTAL_POURBAIX_PRESETS[0];
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>(initialAlloyId);
-  const [selectedElement, setSelectedElement] = useState<string>(() => {
-    const alloy = ALLOY_PRESETS.find((a) => a.id === initialAlloyId);
-    return initialAlloyId === DEFAULT_ALLOY_ID ? initialPreset.element : alloy ? primaryElementOf(alloy.composition) : initialPreset.element;
-  });
+  const initialElementForError =
+    initialAlloyId === DEFAULT_ALLOY_ID
+      ? initialPreset.element
+      : (() => { const a = ALLOY_PRESETS.find((p) => p.id === initialAlloyId); return a ? primaryElementOf(a.composition) : initialPreset.element; })();
+  const [selectedElement, setSelectedElement] = useState<string>(initialElementForError);
 
   // Environmental Parameters (temperature is fixed: 25 °C data only)
   const temperature_C = SUPPORTED_TEMPERATURE_C;
@@ -97,7 +98,13 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   // Python Backend Computation State (boundary table and point diagnostics; the map itself is the TS port of the same engine)
   const [pythonPourbaixData, setPythonPourbaixData] = useState<PythonPourbaixResult | null>(null);
   const [isPythonSolving, setIsPythonSolving] = useState<boolean>(false);
-  const [pythonSolveError, setPythonSolveError] = useState<string | null>(initialSolveError);
+  // The error belongs to the element it was raised for: after an element switch it is not shown next to another map.
+  const [solveErrorState, setSolveErrorState] = useState<{ message: string; element: string } | null>(
+    initialSolveError === null ? null : { message: initialSolveError, element: initialElementForError }
+  );
+  const setPythonSolveError = (message: string | null, element: string = primaryElement) =>
+    setSolveErrorState(message === null ? null : { message, element });
+  const pythonSolveError = solveErrorState && solveErrorState.element === selectedElement ? solveErrorState.message : null;
 
   // Interactive Crosshair Probe
   const [probePH, setProbePH] = useState<number>(7.0);
@@ -201,7 +208,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
       } catch (err: any) {
         if (!signal.aborted) {
           setPythonPourbaixData(null);
-          setPythonSolveError(err.message || "Failed to reach Python Pourbaix solver.");
+          setPythonSolveError(err.message || "Failed to reach Python Pourbaix solver.", primaryElement);
         }
         return false;
       } finally {
@@ -385,7 +392,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
             { id: "diagram", label: "2D Pourbaix E-pH Diagram", icon: Compass },
             {
               id: "experimental-overlay",
-              label: `Experimental E-pH Overlay & Mechanisms (${experimentalPoints.length})`,
+              label: `Test points (${experimentalPoints.length})`,
               icon: Target,
             },
             { id: "reactions", label: "Equilibrium boundaries (25 °C)", icon: Binary },
@@ -558,7 +565,9 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   </select>
                   <p className="text-[10px] text-slate-500 font-mono mt-1">
                     Mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq)) are not in the species table for any element, so
-                    10⁻⁶ M is the lowest activity offered; the engine refuses lower values.
+                    10⁻⁶ M is the lowest activity offered; the engine refuses lower values. At 10⁻⁶ M they change at most
+                    about 0.6 % of the cells for Fe, Ni, Cu, Mg and Al; Zn is constant-dependent (with the wateq4f / Baes &amp;
+                    Mesmer Zn(OH)₂(aq) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays).
                   </p>
                 </div>
               </div>
@@ -726,7 +735,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   className="text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1"
                 >
                   <Target className="w-3.5 h-3.5" />
-                  Open Mechanism Matrix →
+                  Open test-point table →
                 </button>
               </div>
 
@@ -847,8 +856,41 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
       )}
 
       {/* =========================================================================
-          VIEW 2: DEDICATED EXPERIMENTAL E-pH OVERLAY & CORROSION MECHANISMS
+          VIEW 2: TEST POINTS classified in the current map (illustrative presets and points you added)
          ========================================================================= */}
+      {activeTab === "experimental-overlay" && (
+        <div className="bg-[#090e18] rounded-2xl border border-[#162032] p-6 space-y-4 font-mono">
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <Target className="w-5 h-5 text-amber-400" />
+            Test points in the {selectedElement}–H₂O map (25 °C, a(M) = 10^{log10Activity})
+          </h3>
+          <p className="text-xs text-slate-400">{PRESET_POINTS_NOTE} Classification is the thermodynamic domain of the point; it says nothing about rates.</p>
+          {unavailableReason !== null ? (
+            <p role="status" className="text-xs text-amber-300">No verified {selectedElement}–H₂O data: {unavailableReason}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="text-slate-500">
+                  <tr><th className="py-1 pr-3">#</th><th className="pr-3">Point</th><th className="pr-3">pH</th><th className="pr-3">E ({refElectrode})</th><th className="pr-3">E (vs SHE)</th><th className="pr-3">Species</th><th>Category</th></tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {pointStates.map(({ pt, she, state }, idx) => (
+                    <tr key={pt.id} className="border-t border-[#162032]">
+                      <td className="py-1 pr-3">{idx + 1}</td>
+                      <td className="pr-3">{pt.stageName || pt.name}</td>
+                      <td className="pr-3">{pt.pH.toFixed(2)}</td>
+                      <td className="pr-3">{(she - refOffset).toFixed(3)} V</td>
+                      <td className="pr-3">{she.toFixed(3)} V</td>
+                      <td className="pr-3">{state ? state.formula : "n/a"}</td>
+                      <td>{state ? `${state.category}${state.isInsideWaterStability ? "" : " — outside water stability (metastable)"}` : "n/a"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
 
       {/* =========================================================================

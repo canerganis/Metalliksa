@@ -35,8 +35,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 12.4,
         timeHours: 1.0,
-        stageName: "Initial Passivation / Magnetite Nucleation",
-        notes: "Freely corroding specimen forming dark green-rust / mixed oxide."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p2",
@@ -46,8 +46,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 24.8,
         timeHours: 48.0,
-        stageName: "Oxygen Depletion Under Deposit",
-        notes: "Dissolved oxygen diffusion blocked under slime layer; potential shifts negative."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p3",
@@ -57,8 +57,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 185.0,
         timeHours: 120.0,
-        stageName: "Active Crevice Dissolution",
-        notes: "Fe²⁺ hydrolysis (Fe²⁺ + 2H₂O → Fe(OH)₂ + 2H⁺) drives severe local acidification and rapid active dissolution."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p4",
@@ -68,8 +68,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "CSE",
         currentDensity_uA_cm2: 0.08,
         timeHours: 144.0,
-        stageName: "Full Cathodic Immunity",
-        notes: "Cathodic protection depressed potential below -0.85V vs CSE immunity criterion. Metal loss arrested."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -88,8 +88,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.15,
         timeHours: 2.0,
-        stageName: "Stable Cr₂O₃ Passive Film",
-        notes: "Low passive current density; nano-metric chromia barrier active."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p2",
@@ -99,8 +99,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 8.2,
         timeHours: 6.0,
-        stageName: "Metastable Pitting Events",
-        notes: "Chloride adsorption displaces oxygen; transient current transients observed."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p3",
@@ -110,8 +110,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 4500.0,
         timeHours: 12.0,
-        stageName: "Autocatalytic Stable Pit Growth",
-        notes: "Cr³⁺ hydrolysis drives internal pit pH to 1.8 with 4.5 mA/cm² dissolution rate."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p4",
@@ -121,8 +121,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 820.0,
         timeHours: 14.0,
-        stageName: "Transpassive CrO₄²⁻ Formation",
-        notes: "Oxidation of insoluble Cr(III) oxide to soluble hexavalent chromate (CrO₄²⁻)."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -141,8 +141,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 0.8,
         timeHours: 0.5,
-        stageName: "Native Al₂O₃·3H₂O Barrier",
-        notes: "Passivated surface in ambient air."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p2",
@@ -152,8 +152,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 320.0,
         timeHours: 4.0,
-        stageName: "Severe Acid Intergranular Attack",
-        notes: "Acidic dissolution of anodic η-phase (MgZn₂) precipitate along grain boundaries."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p3",
@@ -163,8 +163,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 850.0,
         timeHours: 24.0,
-        stageName: "Autocatalytic Exfoliation Blistering",
-        notes: "Hydrogen gas generation and voluminous Al(OH)₃ wedge grains apart."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p4",
@@ -174,8 +174,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 1200.0,
         timeHours: 25.0,
-        stageName: "Amphoteric Aluminate Dissolution",
-        notes: "Alkaline attack converting aluminum into soluble AlO₂⁻ aluminate."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -194,8 +194,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.02,
         timeHours: 24.0,
-        stageName: "Ultra-Stable TiO₂ Passivation",
-        notes: "Zero detectable metal ion release; complete biocompatibility."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ti_p2",
@@ -205,8 +205,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.18,
         timeHours: 72.0,
-        stageName: "Oxidative Potential Elevation",
-        notes: "Inflammatory cytokines and peroxide elevate OCP without breaking TiO₂ barrier."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ti_p3",
@@ -216,8 +216,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 4.5,
         timeHours: 120.0,
-        stageName: "Acid Fluoride Stressing",
-        notes: "Still within passive TiO₂ stability zone, slight current elevation."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -236,8 +236,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 45.0,
         timeHours: 12.0,
-        stageName: "Active Cu²⁺ Dissolution (Blue Water)",
-        notes: "Aerated acidic water dissolves copper into blue Cu²⁺ ions."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "cu_p2",
@@ -247,8 +247,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 0.4,
         timeHours: 720.0,
-        stageName: "Cu₂O / Malachite Protective Patina",
-        notes: "Alkaline buffering precipitates protective reddish-brown Cu₂O layer."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   }
