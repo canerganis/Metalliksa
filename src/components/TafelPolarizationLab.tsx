@@ -61,9 +61,11 @@ import { D3TafelPolarizationChart } from "./D3TafelPolarizationChart";
 import { executePythonTafelFit } from "../utils/tafelPythonService";
 import { isPythonValidationError } from "../utils/pythonValidationError";
 import {
+  digitalTwinElectrochemistry,
   fmtTafelNumber,
   fmtTafelQuantity,
   fmtTafelR2,
+  tafelIntersectionAnchors,
   tafelUnavailableReason,
   UNAVAILABLE_TEXT,
 } from "../utils/tafelDisplay";
@@ -228,7 +230,7 @@ function TafelPolarizationLabWithData({
         const bCmv = manualBetaC || baseFit.betaC_mV_dec;
         const bA = bAmv ? bAmv / 1000 : null;
         const bC = bCmv ? bCmv / 1000 : null;
-        const bStern = bA !== null && bC !== null ? (bA * bC) / (2.302585 * (bA + bC)) : null;
+        const bStern = bA !== null && bC !== null ? (bA * bC) / (Math.LN10 * (bA + bC)) : null;
         const rp = bStern !== null && baseFit.iCorr_uA_cm2 !== null ? bStern / (baseFit.iCorr_uA_cm2 * 1e-6) : null;
         return {
           ...baseFit,
@@ -329,8 +331,7 @@ function TafelPolarizationLabWithData({
 
   // Anchors of the manual tuning controls and of the branch column. When the Evans intersection is unavailable they
   // fall back to the measured current valley (a measured value, labelled "Raw Valley"), never to an assumed one.
-  const eCorrAnchor = fitResult.eCorr ?? fitResult.rawEcorrValley;
-  const logIcorrAnchor = fitResult.logIcorr ?? Math.log10(Math.max(1e-9, fitResult.rawIcorrValley));
+  const { eCorrRef: eCorrAnchor, logIcorrRef: logIcorrAnchor } = tafelIntersectionAnchors(fitResult);
   const effectiveUnavailableReason = tafelUnavailableReason(effectiveFitResult);
 
   // Handle benchmark change
@@ -490,23 +491,7 @@ function TafelPolarizationLabWithData({
   const handleSyncToDigitalTwin = () => {
     if (dtContext?.syncWithModuleData) {
       dtContext.syncWithModuleData("TafelPolarizationLab", {
-        electrochemistry: {
-          corrosionRateMpy: fitResult.corrosionRateMpy,
-          openCircuitPotentialEcorrV: fitResult.eCorr,
-          polarizationResistanceRpOhmCm2: fitResult.rp_ohm_cm2,
-          pittingPotentialEpitV: fitResult.pittingPotentialEpit_V || undefined,
-          eisImpedanceModuleOhm: fitResult.rp_ohm_cm2,
-          passivationQuality:
-            fitResult.severity === null
-              ? "Unresolved"
-              : fitResult.severity === "Immune / Highly Resistant"
-              ? "Immune"
-              : fitResult.severity === "Passivated / Good"
-              ? "Passive Stable"
-              : fitResult.severity === "Moderate (Caution)"
-              ? "Susceptible to Pitting"
-              : "Active Dissolution",
-        },
+        electrochemistry: digitalTwinElectrochemistry(fitResult),
       });
       setSavedToDtNotification(true);
       setTimeout(() => setSavedToDtNotification(false), 2500);
@@ -1215,6 +1200,12 @@ function TafelPolarizationLabWithData({
                   Unavailable values are not replaced by assumed slopes, R² or currents. Adjust the fit windows or
                   enter a known E_corr / i_corr with the manual tuning.
                 </p>
+              </div>
+            )}
+
+            {effectiveFitResult.intersectionNote && (
+              <div role="status" className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs font-mono">
+                E_corr substituted: {effectiveFitResult.intersectionNote}.
               </div>
             )}
 

@@ -49,6 +49,12 @@ export interface TafelDataset {
 export interface TafelFitResult {
   fitStatus?: "ok" | "unavailable";
   unavailableReason?: string;
+  /**
+   * Set when the Evans intersection was unusable (parallel branches, or more than 0.25 V from the measured valley) and
+   * the measured current valley was used as E_corr instead; `intersectionNote` says why. Absent for a normal fit.
+   */
+  intersectionStatus?: "substituted-measured-valley";
+  intersectionNote?: string;
   /** Per-item reasons: anodicBranch / cathodicBranch / iCorr_uA_cm2 / substrate. */
   unavailable?: Partial<Record<"anodicBranch" | "cathodicBranch" | "iCorr_uA_cm2" | "substrate", string>>;
 
@@ -195,10 +201,10 @@ export interface TafelPythonCorrosionRateResult {
   rp_apparent_ohm: number | null;
 
   // Substrate Metadata
-  alloyId: string;
-  alloyName: string;
-  density_g_cm3: number;
-  equivalentWeight: number;
+  alloyId: string | null;
+  alloyName: string | null;
+  density_g_cm3: number | null;
+  equivalentWeight: number | null;
   iCorr_uA_cm2: number | null;
   eCorr_V: number | null;
   betaA: number | null;

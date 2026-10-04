@@ -31,7 +31,15 @@ ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 # alloy_registry (domain "corrosion"); atomic weights come from
 # physical_constants.STANDARD_ATOMIC_WEIGHTS. Only the display labels this solver
 # has always reported stay here, keyed by registry id.
-DEFAULT_ALLOY_ID = "steel-316l"
+# Stern-Geary B = beta_a * beta_c / (ln(10) * (beta_a + beta_c)): the exact natural log of 10, not the
+# printed 2.302585 / 2.303.
+LN10 = math.log(10.0)
+# 1 mil = 0.001 in = 0.0254 mm exactly, so mpy = mm/yr * 1000 / 25.4 (was 39.37 / 39.3701 / 39.37007874).
+MILS_PER_MM = 1000.0 / 25.4
+# Rounding of the reported values is by decimals, kept from the Phase 6a goldens: corrosionRateMmYr 5,
+# corrosionRateMpy 3, corrosionRateUmYr 2, corrosionRateNmHr 3 (fit result and temperature table: mm/yr 4,
+# mpy 2). Rates below ~1e-3 mm/yr therefore carry few significant digits (9e-5 mm/yr prints one);
+# the unrounded value is not exposed. This is a display precision, not an accuracy claim.
 _CORROSION_DISPLAY_NAME = {
     "ss316l": "AISI 316L Stainless Steel",
     "ss304": "AISI 304 Stainless Steel",
@@ -112,11 +120,11 @@ class _LazyPreset:
         return None if self._preset is None else self._preset["registry_id"]
 
 
-def _provenance(preset: "_LazyPreset") -> dict:
+def _provenance(preset) -> dict:
     return {
         "registryVersion": alloy_registry.REGISTRY_VERSION,
         "constantsVersion": physical_constants.CONSTANTS_VERSION,
-        "registryAlloyId": preset.registry_id,
+        "registryAlloyId": None if preset is None else preset.registry_id,
         "gasConstantR_J_molK": R_GAS,
         "faraday_C_mol": FARADAY_C_PER_MOL,
         "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e (Phase 6a value step); "
@@ -231,6 +239,62 @@ def _supplied_positive(raw, label: str):
     return value, None
 
 
+def _substrate_value(raw, label: str, preset, preset_key: str):
+    """(value, None) or (None, reason) for a substrate property (density, EW, activation energy).
+
+    A supplied value must be a finite number > 0 (no falsy-``or`` fallback to the preset); an absent
+    one comes from the registry preset of the alloyId the caller sent; with neither it is unavailable.
+    There is no default alloy: a request without alloyId and without the value is not guessed as 316L.
+    """
+    if raw is not None:
+        return _supplied_positive(raw, label)
+    if preset is None:
+        return None, f"{label} was not supplied and no alloyId was sent"
+    return preset[preset_key], None
+
+
+def _resolve_substrate(data: dict, alloy_id, need_activation_energy: bool = False):
+    """Resolve the substrate of a request: (preset or None, substrate dict, reasons dict).
+
+    Never substitutes an alloy: ``alloy_id`` is None when the caller sent none. The equivalent weight
+    comes from customComposition (valences from customValencies, or from the sent alloyId's preset;
+    atomic weights from customAtomicWeights, the preset, or the CIAAW table), else equivalentWeight,
+    else the preset. A request that gives neither alloy nor the values gets reasons, not numbers.
+    """
+    preset = _LazyPreset(alloy_id) if alloy_id else None
+    reasons = {}
+    alloy_name = data.get("alloyName") or (preset["name"] if preset is not None else None)
+    density, density_reason = _substrate_value(data.get("density_g_cm3"), "density_g_cm3", preset, "density_g_cm3")
+    ew, ew_reason = None, None
+    custom_comp = data.get("customComposition")
+    if custom_comp and isinstance(custom_comp, dict):
+        valencies = data.get("customValencies") or (preset.get("valencies", {}) if preset is not None else {})
+        if data.get("customAtomicWeights"):
+            atomic_weights = data["customAtomicWeights"]
+        elif preset is not None:
+            atomic_weights = preset.get("atomic_weights", {})
+        else:
+            atomic_weights = {el: physical_constants.atomic_weight(el) for el in custom_comp
+                              if physical_constants.is_known_element(el)}
+        derived_ew = calculate_equivalent_weight(custom_comp, valencies, atomic_weights)
+        if derived_ew > 0:
+            ew = derived_ew
+        else:
+            ew_reason = "equivalentWeight derived from customComposition is not > 0"
+    else:
+        ew, ew_reason = _substrate_value(data.get("equivalentWeight"), "equivalentWeight", preset, "ew")
+    ea, ea_reason = (None, None)
+    if need_activation_energy:
+        ea, ea_reason = _substrate_value(data.get("activationEnergyJ_mol"), "activationEnergyJ_mol", preset,
+                                         "activation_energy_j_mol")
+    problems = [r for r in (density_reason, ew_reason) if r]
+    if problems:
+        reasons["substrate"] = "; ".join(problems)
+    if ea_reason:
+        reasons["activationEnergyJ_mol"] = ea_reason
+    return preset, {"alloy_name": alloy_name, "density": density, "ew": ew, "ea": ea}, reasons
+
+
 UNAVAILABLE_STATUS = "unavailable"
 PARTIAL_STATUS = "partial"
 UNAVAILABLE_NOTE = (
@@ -264,27 +328,22 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     allowable_loss_mm = float(data.get("allowableLossMm") or data.get("corrosionAllowanceMm") or 1.5)
     temp_c = float(data.get("temperatureC") or data.get("tempC") or 25.0)
 
-    # 2. Material Substrate Lookup or Custom
-    alloy_id = str(data.get("alloyId") or data.get("materialId") or DEFAULT_ALLOY_ID).lower()
-    preset = _LazyPreset(alloy_id)
-
-    alloy_name = data.get("alloyName") or preset["name"]
-    density = float(data.get("density_g_cm3") or preset["density_g_cm3"])
-    ew = float(data.get("equivalentWeight") or preset["ew"])
-    ea_j_mol = float(data.get("activationEnergyJ_mol") or preset.get("activation_energy_j_mol", 32000.0))
-
-    # If custom alloy composition provided, re-derive exact EW
-    custom_comp = data.get("customComposition")
-    if custom_comp and isinstance(custom_comp, dict):
-        valencies = data.get("customValencies") or preset.get("valencies", {})
-        atomic_weights = data.get("customAtomicWeights") or preset.get("atomic_weights", {})
-        derived_ew = calculate_equivalent_weight(custom_comp, valencies, atomic_weights)
-        if derived_ew > 0:
-            ew = derived_ew
+    # 2. Material Substrate: the alloyId the caller sent (never a default alloy), or the supplied
+    # density / equivalentWeight / customComposition; otherwise unavailable with the reason.
+    alloy_id_raw = data.get("alloyId") or data.get("materialId")
+    alloy_id = str(alloy_id_raw).lower() if alloy_id_raw else None
+    preset, substrate, substrate_reasons = _resolve_substrate(data, alloy_id, need_activation_energy=True)
+    alloy_name = substrate["alloy_name"]
+    density = substrate["density"]
+    ew = substrate["ew"]
+    ea_j_mol = substrate["ea"]
+    activation_reason = substrate_reasons.pop("activationEnergyJ_mol", None)
 
     # Ensure physical positive bounds
-    density = max(0.1, abs(density))
-    ew = max(1.0, abs(ew))
+    if density is not None:
+        density = max(0.1, abs(density))
+    if ew is not None:
+        ew = max(1.0, abs(ew))
     specimen_area_cm2 = max(1e-4, abs(specimen_area_cm2))
 
     unavailable = {}
@@ -295,8 +354,24 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     if beta_c_reason:
         unavailable["betaC"] = beta_c_reason
 
-    if i_corr_ua_cm2 is None:
-        # No corrosion current density: nothing below can be computed. Report it, never invent it.
+    # Stern-Geary (ASTM G59) needs both Tafel slopes and i_corr; it does not need the substrate
+    stern_ok = beta_a is not None and beta_c is not None
+    stern_geary_b = rp_ohm_cm2 = rp_apparent_ohm = None
+    if i_corr_ua_cm2 is not None:
+        i_corr_ua_cm2 = max(1e-9, i_corr_ua_cm2)
+        if stern_ok:
+            beta_a = max(0.005, beta_a)
+            beta_c = max(0.005, beta_c)
+            # B = (beta_a * beta_c) / [ln(10) * (beta_a + beta_c)]; R_p = B / i_corr, i_corr in A/cm2
+            stern_geary_b = (beta_a * beta_c) / (LN10 * (beta_a + beta_c))
+            rp_ohm_cm2 = stern_geary_b / (i_corr_ua_cm2 * 1e-6)
+            rp_apparent_ohm = rp_ohm_cm2 / specimen_area_cm2
+
+    if i_corr_ua_cm2 is None or substrate_reasons:
+        # No corrosion current density or no substrate: the Faraday rate cannot be computed.
+        # Report it, never invent it.
+        unavailable.update(substrate_reasons)
+        reason_text = "; ".join(unavailable[k] for k in ("iCorr_uA_cm2", "substrate") if k in unavailable)
         duration_ms = round((time.perf_counter() - start_time) * 1000.0, 3)
         return {
             "success": True,
@@ -307,8 +382,9 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
 
             "status": UNAVAILABLE_STATUS,
-            "unavailableReason": (f"Corrosion rate unavailable: {i_corr_reason}. Supply a measured or fitted "
-                                  "corrosion current density; no default value is used."),
+            "unavailableReason": (f"Corrosion rate unavailable: {reason_text}. Supply a measured or fitted "
+                                  "corrosion current density and the substrate (alloyId, or density_g_cm3 with "
+                                  "equivalentWeight / customComposition); no default value is used."),
             "unavailable": unavailable,
             "unavailableNote": UNAVAILABLE_NOTE,
 
@@ -320,15 +396,15 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "massLoss_mdd": None,
             "massLoss_kg_m2_yr": None,
 
-            "sternGearyB_V": None,
-            "rp_ohm_cm2": None,
-            "rp_apparent_ohm": None,
+            "sternGearyB_V": None if stern_geary_b is None else round(stern_geary_b, 5),
+            "rp_ohm_cm2": None if rp_ohm_cm2 is None else round(rp_ohm_cm2, 1),
+            "rp_apparent_ohm": None if rp_apparent_ohm is None else round(rp_apparent_ohm, 2),
 
             "alloyId": alloy_id,
             "alloyName": alloy_name,
             "density_g_cm3": density,
             "equivalentWeight": ew,
-            "iCorr_uA_cm2": None,
+            "iCorr_uA_cm2": i_corr_ua_cm2,
             "eCorr_V": e_corr_v,
             "betaA": beta_a,
             "betaC": beta_c,
@@ -346,29 +422,14 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "provenance": _provenance(preset),
         }
 
-    i_corr_ua_cm2 = max(1e-9, i_corr_ua_cm2)
-    stern_ok = beta_a is not None and beta_c is not None
-    if stern_ok:
-        beta_a = max(0.005, beta_a)
-        beta_c = max(0.005, beta_c)
-
-    # 3. Stern-Geary Kinetics (ASTM G59); needs both Tafel slopes
-    # B = (beta_a * beta_c) / [2.302585 * (beta_a + beta_c)]
-    # Polarization Resistance R_p = B / i_corr, i_corr in A/cm2 = i_corr_ua_cm2 * 1e-6
-    if stern_ok:
-        stern_geary_b = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))
-        i_corr_a_cm2 = i_corr_ua_cm2 * 1e-6
-        rp_ohm_cm2 = stern_geary_b / i_corr_a_cm2
-        rp_apparent_ohm = rp_ohm_cm2 / specimen_area_cm2
-    else:
-        stern_geary_b = rp_ohm_cm2 = rp_apparent_ohm = None
+    # 3. Stern-Geary Kinetics: computed above (needs both Tafel slopes and i_corr)
 
     # 4. Faraday's Law Corrosion Rates (ASTM G102)
     # CR (mm/year) = [K1 * i_corr (uA/cm2) * EW] / density (g/cm3)
     # K1 = (1e-6 * 31557600 * 10) / F = 0.0032707148 mm*g/(uA*cm*year) with the exact F
     exact_k1 = (1e-6 * SECONDS_PER_YEAR * 10.0) / FARADAY_C_PER_MOL
     cr_mm_yr = (exact_k1 * i_corr_ua_cm2 * ew) / density
-    cr_mpy = cr_mm_yr * 39.37007874  # mils per year
+    cr_mpy = cr_mm_yr * MILS_PER_MM  # mils per year
     cr_um_yr = cr_mm_yr * 1000.0     # micrometers per year
     cr_nm_hr = (cr_mm_yr * 1e6) / (365.25 * 24.0)
 
@@ -413,7 +474,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     # 6. Temperature Sensitivity (Arrhenius Model from 5°C to 85°C)
     t_ref_k = temp_c + ZERO_CELSIUS_K
     temp_sensitivity = []
-    for t_test_c in range(5, 90, 10):
+    for t_test_c in (range(5, 90, 10) if ea_j_mol is not None else ()):
         t_test_k = t_test_c + ZERO_CELSIUS_K
         # Arrhenius: i_corr(T) = i_corr_ref * exp( (-Ea / R) * (1/T - 1/T_ref) )
         exponent = (-ea_j_mol / R_GAS) * (1.0 / t_test_k - 1.0 / t_ref_k)
@@ -428,7 +489,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "arrheniusFactor": round(factor, 3),
             "iCorr_uA_cm2": round(i_test_ua, 4),
             "corrosionRateMmYr": round(cr_test_mm_yr, 4),
-            "corrosionRateMpy": round(cr_test_mm_yr * 39.37, 2)
+            "corrosionRateMpy": round(cr_test_mm_yr * MILS_PER_MM, 2)
         })
 
     # 7. Severity Rating & Recommendations
@@ -454,7 +515,7 @@ equivalent_weight = {ew}     # EW (g/equivalent)
 density_g_cm3 = {density}        # Density rho (g/cm^3)
 
 # 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)
-B = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))
+B = (beta_a * beta_c) / (math.log(10.0) * (beta_a + beta_c))
 i_corr_A_cm2 = i_corr_uA_cm2 * 1e-6
 Rp = B / i_corr_A_cm2  # Ohm * cm^2
 
@@ -463,7 +524,7 @@ Rp = B / i_corr_A_cm2  # Ohm * cm^2
 F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
 K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
 cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
-cr_mpy = cr_mm_yr * 39.3701  # mils per year
+cr_mpy = cr_mm_yr * {MILS_PER_MM!r}  # mils per year (1 mil = 0.0254 mm)
 
 print(f"Stern-Geary B: {{B:.4f}} V")
 print(f"Polarization Resistance Rp: {{Rp:.1f}} Ohm*cm^2")
@@ -488,7 +549,7 @@ density_g_cm3 = {density}        # Density rho (g/cm^3)
 F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
 K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
 cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
-cr_mpy = cr_mm_yr * 39.3701  # mils per year
+cr_mpy = cr_mm_yr * {MILS_PER_MM!r}  # mils per year (1 mil = 0.0254 mm)
 
 print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
 """
@@ -548,10 +609,17 @@ print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
         # Phase 6a provenance (registry / constants versions)
         "provenance": _provenance(preset),
     }
-    if not stern_ok:
+    if activation_reason:
+        unavailable["activationEnergyJ_mol"] = activation_reason
+    if not stern_ok or activation_reason:
+        parts = []
+        if not stern_ok:
+            parts.append("Stern-Geary B and polarization resistance unavailable: "
+                         + "; ".join(unavailable[k] for k in ("betaA", "betaC") if k in unavailable) + ".")
+        if activation_reason:
+            parts.append("Temperature sensitivity unavailable: " + activation_reason + ".")
         result["status"] = PARTIAL_STATUS
-        result["unavailableReason"] = ("Stern-Geary B and polarization resistance unavailable: "
-                                       + "; ".join(unavailable.values()) + ".")
+        result["unavailableReason"] = " ".join(parts)
         result["unavailable"] = unavailable
         result["unavailableNote"] = UNAVAILABLE_NOTE
     return result
@@ -717,9 +785,12 @@ def fit_tafel_curve(data: dict) -> dict:
         anod_fit = None
     both_branches = cath_fit is not None and anod_fit is not None
 
-    # Intersect (Evans construction): needs both branches
+    # Intersect (Evans construction): needs both branches. When the intersection is unusable (parallel
+    # branches, or more than 0.25 V from the measured valley) the measured valley is used as E_corr; this
+    # substitution is REPORTED (intersectionStatus / intersectionNote), never silent.
     extrapolated_ecorr = None
     extrapolated_log_icorr = None
+    intersection_note = None
     if both_branches:
         denom = anod_fit["m"] - cath_fit["m"]
         extrapolated_ecorr = raw_ecorr
@@ -727,6 +798,15 @@ def fit_tafel_curve(data: dict) -> dict:
             e_inter = (cath_fit["b"] - anod_fit["b"]) / denom
             if abs(e_inter - raw_ecorr) <= 0.25:
                 extrapolated_ecorr = e_inter
+            else:
+                intersection_note = (
+                    f"the Evans intersection of the fitted branches is at {e_inter:.3f} V, "
+                    f"{abs(e_inter - raw_ecorr):.3f} V from the measured current valley (limit 0.25 V); the measured "
+                    f"valley {raw_ecorr:.4f} V is used as E_corr and i_corr is read from the anodic line there")
+        else:
+            intersection_note = (
+                "the fitted branches are parallel, so they do not intersect; the measured current valley "
+                f"{raw_ecorr:.4f} V is used as E_corr and i_corr is read from the anodic line there")
 
         extrapolated_log_icorr = anod_fit["m"] * extrapolated_ecorr + anod_fit["b"]
 
@@ -743,25 +823,31 @@ def fit_tafel_curve(data: dict) -> dict:
     beta_a_mv_dec = None if beta_a_v_dec is None else beta_a_v_dec * 1000.0
     beta_c_mv_dec = None if beta_c_v_dec is None else beta_c_v_dec * 1000.0
 
-    # Substrate & Annual Corrosion Rate
-    alloy_id = str(data.get("alloyId") or data.get("materialId") or DEFAULT_ALLOY_ID).lower()
-    preset = _LazyPreset(alloy_id)
-    alloy_name = data.get("alloyName") or preset["name"]
-    density = float(data.get("density_g_cm3") or preset["density_g_cm3"])
-    ew = float(data.get("equivalentWeight") or preset["ew"])
+    # Substrate & Annual Corrosion Rate: the alloyId the caller sent (never a default alloy), or the supplied
+    # density / equivalentWeight / customComposition; otherwise the rate is unavailable with the reason.
+    alloy_id_raw = data.get("alloyId") or data.get("materialId")
+    alloy_id = str(alloy_id_raw).lower() if alloy_id_raw else None
+    preset, substrate, substrate_reasons = _resolve_substrate(data, alloy_id)
+    alloy_name = substrate["alloy_name"]
+    density = substrate["density"]
+    ew = substrate["ew"]
+    substrate_known = not substrate_reasons
+    if substrate_known:
+        density = max(0.1, abs(density))
+        ew = max(1.0, abs(ew))
 
     # Stern-Geary needs both slopes and i_corr; Faraday needs only i_corr
     stern_b = rp_ohm_cm2 = None
     if both_branches and extrapolated_icorr_uA is not None:
-        stern_b = (beta_a_v_dec * beta_c_v_dec) / (2.302585 * (beta_a_v_dec + beta_c_v_dec))
+        stern_b = (beta_a_v_dec * beta_c_v_dec) / (LN10 * (beta_a_v_dec + beta_c_v_dec))
         i_corr_a_cm2 = extrapolated_icorr_uA * 1e-6
         rp_ohm_cm2 = stern_b / i_corr_a_cm2
 
     cr_mm_yr = cr_mpy = cr_um_yr = mass_loss_g_m2_day = severity = None
-    if extrapolated_icorr_uA is not None:
+    if extrapolated_icorr_uA is not None and substrate_known:
         exact_k1 = (1e-6 * SECONDS_PER_YEAR * 10.0) / FARADAY_C_PER_MOL
         cr_mm_yr = (exact_k1 * extrapolated_icorr_uA * ew) / density
-        cr_mpy = cr_mm_yr * 39.3701
+        cr_mpy = cr_mm_yr * MILS_PER_MM
         cr_um_yr = cr_mm_yr * 1000.0
 
         exact_k2 = (1e-6 * 86400.0 * 1e4) / FARADAY_C_PER_MOL
@@ -848,7 +934,11 @@ def fit_tafel_curve(data: dict) -> dict:
         "maxScanE": round(max_scan_e, 4),
         "provenance": _provenance(preset),
     }
-    if not both_branches:
+    if intersection_note and not (data.get("manualEcorrOverride") is not None
+                                  and data.get("manualIcorrOverride") is not None):
+        result["intersectionStatus"] = "substituted-measured-valley"
+        result["intersectionNote"] = intersection_note
+    if not both_branches or (extrapolated_icorr_uA is not None and not substrate_known):
         reasons = {}
         if anod_reason:
             reasons["anodicBranch"] = anod_reason
@@ -857,6 +947,8 @@ def fit_tafel_curve(data: dict) -> dict:
         if extrapolated_icorr_uA is None:
             reasons["iCorr_uA_cm2"] = ("the Evans intersection needs both Tafel branches; no corrosion "
                                        "current density is invented (supply manualIcorrOverride to use a known value)")
+        if extrapolated_icorr_uA is not None and not substrate_known:
+            reasons["substrate"] = substrate_reasons["substrate"]
         result["fitStatus"] = UNAVAILABLE_STATUS
         result["unavailableReason"] = "; ".join(reasons.values())
         result["unavailable"] = reasons

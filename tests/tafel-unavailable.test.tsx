@@ -327,3 +327,119 @@ test("the lab shows Unavailable results and the reason for a cathodic-only scan 
     TAFEL_BENCHMARK_DATASETS.length = 0;
   }
 });
+
+// ---- review fix round: Digital Twin payload, drawing anchors, exact constants, reported substitution ----------------
+
+import { readFileSync } from "node:fs";
+import { MILS_PER_MM, digitalTwinElectrochemistry, tafelIntersectionAnchors } from "../src/utils/tafelDisplay";
+
+test("Digital Twin sync sends null values and 'Unresolved' for an unavailable fit (never 'Active Dissolution')", () => {
+  const dataset = bvDataset(CATHODIC_ONLY);
+  const payload = digitalTwinElectrochemistry(tryAutoFitTafel(dataset));
+  assert.equal(payload.passivationQuality, "Unresolved");
+  assert.equal(payload.corrosionRateMpy, null);
+  assert.equal(payload.openCircuitPotentialEcorrV, null);
+  assert.equal(payload.polarizationResistanceRpOhmCm2, null);
+  assert.equal(payload.eisImpedanceModuleOhm, null);
+  const complete = digitalTwinElectrochemistry(tryAutoFitTafel(bvDataset(FULL)));
+  assert.equal(typeof complete.corrosionRateMpy, "number");
+  assert.equal(typeof complete.openCircuitPotentialEcorrV, "number");
+  const fit = (severity: TafelFitResult["severity"]) =>
+    digitalTwinElectrochemistry({ ...tryAutoFitTafel(bvDataset(FULL)), severity }).passivationQuality;
+  assert.equal(fit("Immune / Highly Resistant"), "Immune");
+  assert.equal(fit("Passivated / Good"), "Passive Stable");
+  assert.equal(fit("Moderate (Caution)"), "Susceptible to Pitting");
+  assert.equal(fit("Severe Rapid Corrosion"), "Active Dissolution");
+  assert.equal(fit(null), "Unresolved");
+});
+
+test("chart anchors: an unavailable intersection is not drawn and the scales anchor on the measured valley", () => {
+  const unavailable = tryAutoFitTafel(bvDataset(CATHODIC_ONLY));
+  const a = tafelIntersectionAnchors(unavailable);
+  assert.equal(a.intersectionKnown, false);
+  assert.equal(a.eCorrRef, unavailable.rawEcorrValley);
+  assert.ok(Math.abs(a.logIcorrRef - Math.log10(unavailable.rawIcorrValley)) < 1e-12);
+  const complete = tryAutoFitTafel(bvDataset(FULL));
+  const b = tafelIntersectionAnchors(complete);
+  assert.equal(b.intersectionKnown, true);
+  assert.equal(b.eCorrRef, complete.eCorr);
+  assert.equal(b.logIcorrRef, complete.logIcorr);
+  // a known manual E_corr without i_corr is still not an intersection
+  assert.equal(tafelIntersectionAnchors({ ...unavailable, eCorr: -0.3, logIcorr: null }).intersectionKnown, false);
+});
+
+test("the D3 chart and the lab use the tested helpers (the drawing branches are not copies of them)", () => {
+  const d3 = readFileSync(new URL("../src/components/D3TafelPolarizationChart.tsx", import.meta.url), "utf8");
+  assert.match(d3, /const \{ intersectionKnown, eCorrRef, logIcorrRef \} = tafelIntersectionAnchors\(fitResult\)/);
+  assert.match(d3, /if \(intersectionKnown\) \{/);
+  assert.match(d3, /showDomainShading && intersectionKnown/);
+  const lab = readFileSync(new URL("../src/components/TafelPolarizationLab.tsx", import.meta.url), "utf8");
+  assert.match(lab, /electrochemistry: digitalTwinElectrochemistry\(fitResult\)/);
+});
+
+test("Stern-Geary B uses ln(10) and mpy the exact mil (not 2.302585 / 39.37 / 39.3701)", () => {
+  assert.equal(MILS_PER_MM, 1000 / 25.4);
+  // A large known i_corr gives a rate of several mm/yr, so the printed rounding is below 1e-6 relative.
+  const fit = tryAutoFitTafel(bvDataset(FULL), undefined, undefined, -0.3, 600);
+  assert.ok(Math.abs(fit.corrosionRateMpy! / fit.corrosionRateMmYr! / MILS_PER_MM - 1) < 2e-6);
+  const full = tryAutoFitTafel(bvDataset(FULL));
+  const ba = full.betaA_V_dec!;
+  const bc = full.betaC_V_dec!;
+  assert.ok(Math.abs(full.sternGearyB_V! - (ba * bc) / (Math.LN10 * (ba + bc))) < 6e-5); // B printed to 4 decimals
+  const res = fallbackClientTafelCorrosionRate({
+    iCorr_uA_cm2: 600, betaA: 0.1, betaC: 0.12, density_g_cm3: 8, equivalentWeight: 25.68, alloyId: "x",
+  });
+  assert.ok(Math.abs(res.corrosionRateMpy! / res.corrosionRateMmYr! / MILS_PER_MM - 1) < 2e-6);
+  assert.equal(res.sternGearyB_V, +((0.1 * 0.12) / (Math.LN10 * 0.22)).toFixed(5));
+});
+
+test("a far Evans intersection is reported as a substitution by the measured valley, not substituted silently", () => {
+  const offsets: Array<[number, number]> = [[-0.30, 0.1]];
+  for (let k = 0; k < 10; k++) {
+    const e = -0.52 + 0.02 * k;
+    offsets.push([e, Math.pow(10, 9.0 - 8.0 * (e + 0.34))]);
+  }
+  for (let k = 0; k < 9; k++) {
+    const e = -0.25 + 0.02 * k;
+    offsets.push([e, Math.pow(10, 0.08 + 10.0 * (e + 0.26))]);
+  }
+  const dataset = bvDataset([]);
+  dataset.points = offsets.map(([potential, density], index) => ({
+    index, potential, currentRaw: density * 1e-6, currentUnit: "A" as const,
+    currentDensity_uA_cm2: density, logCurrentDensity: Math.log10(density), signedCurrentDensity_uA_cm2: density,
+  }));
+  const fit = tryAutoFitTafel(dataset);
+  assert.equal(fit.eCorr, -0.3); // the measured valley, as before
+  assert.equal(fit.intersectionStatus, "substituted-measured-valley");
+  assert.match(fit.intersectionNote!, /from the measured current valley \(limit 0\.15 V\)/);
+  assert.equal(fit.fitStatus, undefined); // both branches were fitted
+  // manual E_corr and i_corr both given: nothing was substituted any more
+  const manual = tryAutoFitTafel(dataset, undefined, undefined, -0.31, 2.0);
+  assert.equal(manual.intersectionStatus, undefined);
+  // a normal scan has no note
+  assert.equal(tryAutoFitTafel(bvDataset(FULL)).intersectionStatus, undefined);
+});
+
+test("executePythonTafelFit carries the engine's intersection note", async () => {
+  stubJson({
+    success: true, eCorr: -0.3, iCorr_uA_cm2: 2, logIcorr: 0.301, betaA_V_dec: 0.06, betaA_mV_dec: 60,
+    betaC_V_dec: 0.12, betaC_mV_dec: 120, sternGearyB_V: 0.0173, rp_ohm_cm2: 8650, corrosionRateMmYr: 0.0214,
+    corrosionRateMpy: 0.84, massLoss_g_m2_day: 0.45, rawEcorrValley: -0.3, rawIcorrValley: 0.1,
+    cathodicRange: [-0.5, -0.34], anodicRange: [-0.26, -0.1], tangentLines: [],
+    intersectionStatus: "substituted-measured-valley", intersectionNote: "the Evans intersection is far away",
+  });
+  const fit = await executePythonTafelFit(bvDataset(FULL));
+  assert.equal(fit.intersectionStatus, "substituted-measured-valley");
+  assert.equal(fit.intersectionNote, "the Evans intersection is far away");
+});
+
+test("the Tafel fit request no longer sends a default 316L alloyId", async () => {
+  let body: any = null;
+  globalThis.fetch = (async (_url: string, init: any) => {
+    body = JSON.parse(init.body);
+    return new Response("{}", { status: 500 });
+  }) as any;
+  await executePythonTafelFit(bvDataset(FULL));
+  assert.equal(body.alloyId, undefined);
+  assert.equal(body.equivalentWeight, 25.68);
+});

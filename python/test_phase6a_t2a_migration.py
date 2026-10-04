@@ -194,33 +194,59 @@ class BaseBlobTest(unittest.TestCase):
                     self.assertLessEqual(worst, self.VALUE_STEP_MAX_REL)
 
     def test_corrosion_kinetics_documented_equivalent_weight_change(self):
-        """Engine-fix lane defect 6b: the one documented, exactly checked change for corrosion_kinetics.
+        """Engine-fix lane (defects 6b + review S3/NIT): the one documented, exactly checked change.
 
-        Base blob: EW 9.0 g/eq and 2.81 g/cm3 for any id containing "al" (substring match).
-        Now: the registry record "al7075" (computed ASTM G102 EW 9.5583, 2.81 g/cm3). Only the
-        corrosion rate (mm/yr, mpy) may change numerically and only the four alloy keys may be
-        added; K1 (exact F) and the Stern-Geary / Rp / pitting / coating outputs are unchanged.
+        Base blob: EW 9.0 g/eq and 2.81 g/cm3 for any id containing "al" (substring match), mpy factor
+        39.37, Stern-Geary 2.303 instead of ln(10). Now: the registry record "al7075" (computed ASTM G102
+        EW 9.5583, 2.81 g/cm3), 1000/25.4 mils per mm, ln(10); rates rounded to 6 significant digits. The
+        payload carries betaA/betaC explicitly (the old defaults 0.12 / 0.11 no longer exist). Every changed
+        value is pinned; nothing else may differ and the added keys are the four alloy keys.
         """
-        payload = {"action": "corrosion_kinetics", "metalId": "al-7075", "i0Corr_uA": 1.85,
+        import math
+        import re
+        ba, bc, i0 = 0.12, 0.11, 1.85
+        payload = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": ba, "betaC": bc, "i0Corr_uA": i0,
                    "ePit": -0.68, "e0": -1.66}
         old = self._base("battery_corrosion_eis_solver", payload)
         new = golden.run_solver("battery_corrosion_eis_solver", payload)
         self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
         rows = drift_report.diff(old["stdout"], new["stdout"])
         by_key = {r["key"]: r for r in rows}
-        self.assertEqual(set(by_key), {
-            "corrosionRate_mm_yr", "corrosionRate_mpy", "alloyId",
-            "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"},
-            drift_report.render("battery_corrosion_eis_solver", rows, 20))
-        for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3",
-                    "equivalentWeightNote"):
+        nyquist = re.compile(r"coatingNyquist\[\d+\]\.spectrum\[\d+\]\.(zReal|minusZImag)")
+        fixed = {"corrosionRate_mm_yr", "corrosionRate_mpy", "polarizationResistance_Rp_Ohm_cm2", "alloyId",
+                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"}
+        self.assertEqual({k for k in by_key if not nyquist.fullmatch(k)}, fixed,
+                         drift_report.render("battery_corrosion_eis_solver", rows, 20))
+        for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"):
             self.assertEqual(by_key[key]["kind"], "added", key)
         k1 = (1e-6 * 31557600.0 * 10.0) / pc.FARADAY.value
-        self.assertEqual(old["stdout"]["corrosionRate_mm_yr"], round(k1 * 1.85 * 9.0 / 2.81, 5))
-        self.assertEqual(new["stdout"]["corrosionRate_mm_yr"], round(k1 * 1.85 * 9.5583 / 2.81, 5))
+
+        def sig6(x):
+            return round(x, 5 - int(math.floor(math.log10(abs(x)))))
+
+        # base blob: K1 0.00327 (printed), 9.0 / 2.81, 39.37, B with 2.303 (+1e-12), Rp rounded to 1 decimal
+        cr_old = 0.00327 * i0 * 9.0 / 2.81
+        self.assertEqual(old["stdout"]["corrosionRate_mm_yr"], round(cr_old, 5))
+        self.assertEqual(old["stdout"]["corrosionRate_mpy"], round(cr_old * 39.37, 4))
+        b_old = ba * bc / (2.303 * (ba + bc) + 1e-12)
+        self.assertEqual(old["stdout"]["polarizationResistance_Rp_Ohm_cm2"], round(b_old / (i0 * 1e-6), 1))
+        # new: registry EW, exact mils per mm and ln(10); 6 significant digits
+        cr_new = k1 * i0 * 9.5583 / 2.81
+        self.assertEqual(new["stdout"]["corrosionRate_mm_yr"], sig6(cr_new))
+        self.assertEqual(new["stdout"]["corrosionRate_mpy"], sig6(cr_new * 1000.0 / 25.4))
+        b_new = ba * bc / (math.log(10.0) * (ba + bc))
+        self.assertEqual(new["stdout"]["sternGeary_B_V"], round(b_new, 4))
+        self.assertEqual(new["stdout"]["polarizationResistance_Rp_Ohm_cm2"], round(b_new / (i0 * 1e-6), 1))
         self.assertEqual(new["stdout"]["alloyId"], "al7075")
         self.assertEqual(new["stdout"]["equivalentWeight_g_eq"], 9.5583)
         self.assertEqual(new["stdout"]["density_g_cm3"], 2.81)
+        self.assertEqual(
+            new["stdout"]["equivalentWeightNote"],
+            "ASTM G102 EW computed in alloy_registry (corrosion domain) from the alloy composition: "
+            "elements >= 1 wt % counted, mass fractions renormalised, in-house valences (no per-value citation).")
+        # the Nyquist rows only follow the 1.8e-4 change of B (Rp)
+        worst = max(abs(r["rel"]) for k, r in by_key.items() if nyquist.fullmatch(k) and r["rel"] is not None)
+        self.assertLess(worst, 5e-4)
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [

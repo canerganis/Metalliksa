@@ -15,7 +15,13 @@ import {
   Maximize2,
 } from "lucide-react";
 import { TafelDataset, TafelFitResult } from "../types/tafel";
-import { fmtTafelNumber, fmtTafelQuantity, tafelUnavailableReason, UNAVAILABLE_TEXT } from "../utils/tafelDisplay";
+import {
+  fmtTafelNumber,
+  fmtTafelQuantity,
+  tafelIntersectionAnchors,
+  tafelUnavailableReason,
+  UNAVAILABLE_TEXT,
+} from "../utils/tafelDisplay";
 
 export interface D3TafelPolarizationChartProps {
   dataset: TafelDataset;
@@ -142,9 +148,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     // E_corr / log(i_corr) are null when the Evans intersection is unavailable (a Tafel branch could not be fitted).
     // The scales then anchor on the measured current valley, and the intersection markers, zone shading and the
     // callout are not drawn: no intersection value is invented.
-    const intersectionKnown = fitResult.eCorr !== null && fitResult.logIcorr !== null;
-    const eCorrRef = fitResult.eCorr ?? fitResult.rawEcorrValley;
-    const logIcorrRef = fitResult.logIcorr ?? Math.log10(Math.max(1e-9, fitResult.rawIcorrValley));
+    const { intersectionKnown, eCorrRef, logIcorrRef } = tafelIntersectionAnchors(fitResult);
 
     // Ensure Ecorr and Icorr fit within domain with margin
     const eMin = Math.min(potentialExtent[0] ?? -1.0, eCorrRef - 0.25);

@@ -39,7 +39,7 @@ export async function executePythonTafelFit(
       logCurrentDensity: p.logCurrentDensity,
     })),
     electrodeAreaCm2: dataset.metadata.electrodeAreaCm2 || 1.0,
-    alloyId: options.alloyId || "steel-316l",
+    alloyId: options.alloyId,
     alloyName: dataset.metadata.alloyName,
     density_g_cm3: dataset.metadata.density_g_cm3,
     equivalentWeight: dataset.metadata.equivalentWeight,
@@ -131,6 +131,12 @@ export async function executePythonTafelFit(
       isPythonEngine: true,
       pythonVersion: data.pythonVersion || "3.10.x",
       durationMs: data.durationMs || 0,
+      ...(data.intersectionStatus === "substituted-measured-valley"
+        ? {
+            intersectionStatus: "substituted-measured-valley" as const,
+            intersectionNote: typeof data.intersectionNote === "string" ? data.intersectionNote : undefined,
+          }
+        : {}),
       ...(data.fitStatus === "unavailable"
         ? {
             fitStatus: "unavailable" as const,

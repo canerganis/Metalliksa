@@ -18,6 +18,7 @@ import {
 } from "../types/tafel";
 import { createSeededRandom } from "../utils/seededRandom";
 import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
+import { MILS_PER_MM } from "../utils/tafelDisplay";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 
 export interface PersistentIPCDiagnostics {
@@ -2692,7 +2693,7 @@ export function fallbackClientTafelCorrosionRate(
   let rp_ohm_cm2: number | null = null;
   let rp_apparent_ohm: number | null = null;
   if (betaA !== null && betaC !== null) {
-    sternGearyB = (betaA * betaC) / (2.302585 * (betaA + betaC));
+    sternGearyB = (betaA * betaC) / (Math.LN10 * (betaA + betaC));
     rp_ohm_cm2 = sternGearyB / (iCorr_uA_cm2 * 1e-6);
     rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
   }
@@ -2701,7 +2702,7 @@ export function fallbackClientTafelCorrosionRate(
   // Same K1/K2 as python/tafel_corrosion_rate_solver.py, from the exact F.
   const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
   const cr_mm_yr = (exactK1 * iCorr_uA_cm2 * ew) / density;
-  const cr_mpy = cr_mm_yr * 39.37007874;
+  const cr_mpy = cr_mm_yr * MILS_PER_MM;
   const cr_um_yr = cr_mm_yr * 1000.0;
   const cr_nm_hr = (cr_mm_yr * 1e6) / (365.25 * 24.0);
 
@@ -2748,7 +2749,7 @@ export function fallbackClientTafelCorrosionRate(
       arrheniusFactor: +factor.toFixed(3),
       iCorr_uA_cm2: +iT.toFixed(4),
       corrosionRateMmYr: +crT.toFixed(4),
-      corrosionRateMpy: +(crT * 39.37).toFixed(2),
+      corrosionRateMpy: +(crT * MILS_PER_MM).toFixed(2),
     };
   });
 

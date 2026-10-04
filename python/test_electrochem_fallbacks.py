@@ -280,7 +280,7 @@ class CorrosionEISEquivalentWeightTest(unittest.TestCase):
         self.assertAlmostEqual(self.run_kinetics("az31b")["equivalentWeight_g_eq"], ew, delta=2e-3)
 
     def test_unknown_or_partial_ids_are_refused_with_a_validation_error(self):
-        for bad in ("unknown-alloy", "Inconel", "steel", "mg-az31b", "", "xyz"):
+        for bad in ("unknown-alloy", "Inconel", "steel", "mg-az31b", "xyz"):
             with self.subTest(metal_id=bad):
                 with self.assertRaises(iv.ValidationError) as ctx:
                     self.run_kinetics(bad)
@@ -323,6 +323,216 @@ class CorrosionEISEquivalentWeightTest(unittest.TestCase):
     def test_source_has_no_substring_alloy_match_left(self):
         source = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
         for pattern in ('"al" in metal_id', '"ti" in metal_id', '"ni" in metal_id', "ew = 27.9"):
+            self.assertNotIn(pattern, source)
+
+
+class TafelSubstrateNotGuessedTest(unittest.TestCase):
+    """Review S4: no default 316L; a substrate is the sent alloyId or the supplied density/EW/composition."""
+
+    FULL = {"iCorr_uA_cm2": 2.0, "betaA": 0.1, "betaC": 0.12}
+
+    def test_solve_without_alloy_or_substrate_is_unavailable(self):
+        out = tafel.solve_tafel_corrosion_rate(dict(self.FULL))
+        self.assertEqual(out["status"], "unavailable")
+        self.assertIsNone(out["alloyId"])
+        self.assertIsNone(out["density_g_cm3"])
+        self.assertIsNone(out["equivalentWeight"])
+        self.assertIsNone(out["corrosionRateMmYr"])
+        self.assertIn("no alloyId was sent", out["unavailable"]["substrate"])
+        # Stern-Geary does not need the substrate and is still reported
+        b = 0.1 * 0.12 / (math.log(10.0) * (0.1 + 0.12))
+        self.assertEqual(out["sternGearyB_V"], round(b, 5))
+        self.assertEqual(out["rp_ohm_cm2"], round(b / 2.0e-6, 1))
+        self.assertNotIn("316", json.dumps(out["alloyName"]))
+
+    def test_supplied_density_and_ew_are_a_substrate_without_alloy(self):
+        out = tafel.solve_tafel_corrosion_rate(dict(self.FULL, density_g_cm3=7.8, equivalentWeight=25.4,
+                                                    activationEnergyJ_mol=33000.0))
+        self.assertNotIn("status", out)
+        self.assertEqual(out["equivalentWeight"], 25.4)
+        self.assertAlmostEqual(out["corrosionRateMmYr"] / faraday_rate_mm_yr(2.0, 25.4, 7.8), 1.0, delta=1e-3)
+        self.assertEqual(len(out["temperatureSensitivity"]), 9)
+        self.assertIsNone(out["provenance"]["registryAlloyId"])
+
+    def test_no_activation_energy_without_alloy_leaves_only_the_temperature_table_unavailable(self):
+        out = tafel.solve_tafel_corrosion_rate(dict(self.FULL, density_g_cm3=7.8, equivalentWeight=25.4))
+        self.assertEqual(out["status"], "partial")
+        self.assertEqual(set(out["unavailable"]), {"activationEnergyJ_mol"})
+        self.assertEqual(out["temperatureSensitivity"], [])
+        self.assertIsNotNone(out["corrosionRateMmYr"])
+        self.assertIsNotNone(out["rp_ohm_cm2"])
+
+    def test_zero_density_or_ew_is_invalid_not_replaced_by_the_preset(self):
+        for key in ("density_g_cm3", "equivalentWeight"):
+            with self.subTest(key=key):
+                out = tafel.solve_tafel_corrosion_rate(dict(self.FULL, alloyId="steel-316l", **{key: 0}))
+                self.assertEqual(out["status"], "unavailable")
+                self.assertIn(key, out["unavailable"]["substrate"])
+                self.assertIsNone(out["corrosionRateMmYr"])
+
+    def test_custom_composition_without_alloy_needs_its_own_valences(self):
+        comp = {"Fe": 0.7, "Cr": 0.3}
+        with self.assertRaises(iv.ValidationError) as ctx:
+            tafel.solve_tafel_corrosion_rate(dict(self.FULL, density_g_cm3=7.8, customComposition=comp))
+        self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)  # not the 316L valences
+        out = tafel.solve_tafel_corrosion_rate(dict(self.FULL, density_g_cm3=7.8, customComposition=comp,
+                                                    customValencies={"Fe": 2, "Cr": 3},
+                                                    activationEnergyJ_mol=30000.0))
+        ew = 1.0 / (0.7 * 2 / 55.845 + 0.3 * 3 / 51.9961)
+        self.assertAlmostEqual(out["equivalentWeight"], ew, delta=2e-3)
+
+    def test_fit_without_alloy_has_i_corr_but_no_rate(self):
+        out = tafel.fit_tafel_curve({"action": "fit_curve", "points": butler_volmer(E_CORR, I_CORR, BETA_A, BETA_C, FULL_OFFSETS)})
+        self.assertEqual(out["fitStatus"], "unavailable")
+        self.assertEqual(set(out["unavailable"]), {"substrate"})
+        self.assertIsNotNone(out["iCorr_uA_cm2"])
+        self.assertIsNotNone(out["rp_ohm_cm2"])
+        for key in ("corrosionRateMmYr", "corrosionRateMpy", "corrosionRateUmYr", "massLoss_g_m2_day", "severity",
+                    "density_g_cm3", "equivalentWeight", "alloyId"):
+            self.assertIsNone(out[key], key)
+        out = tafel.fit_tafel_curve({"action": "fit_curve", "density_g_cm3": 8.0, "equivalentWeight": 25.68,
+                                     "points": butler_volmer(E_CORR, I_CORR, BETA_A, BETA_C, FULL_OFFSETS)})
+        self.assertNotIn("fitStatus", out)
+        self.assertIsNotNone(out["corrosionRateMmYr"])
+
+    def test_the_default_alloy_constant_is_gone(self):
+        self.assertFalse(hasattr(tafel, "DEFAULT_ALLOY_ID"))
+
+
+class TafelIntersectionSubstitutionReportedTest(unittest.TestCase):
+    """Review S6: a far-away Evans intersection used to be replaced by the measured valley silently."""
+
+    @staticmethod
+    def far_intersection_points():
+        pts = [{"potential": -0.30, "currentDensity_uA_cm2": 0.1}]
+        for k in range(10):  # cathodic window [-0.52, -0.34]: log i = 9 - 8 (E + 0.34)
+            e = -0.52 + 0.02 * k
+            pts.append({"potential": round(e, 4), "currentDensity_uA_cm2": 10 ** (9.0 - 8.0 * (e + 0.34))})
+        for k in range(9):  # anodic window [-0.25, -0.08]: log i = 0.08 + 10 (E + 0.26)
+            e = -0.25 + 0.02 * k
+            pts.append({"potential": round(e, 4), "currentDensity_uA_cm2": 10 ** (0.08 + 10.0 * (e + 0.26))})
+        return pts
+
+    def test_substitution_is_reported_with_status_and_reason(self):
+        out = tafel.fit_tafel_curve({"action": "fit_curve", "alloyId": "steel-316l",
+                                     "points": self.far_intersection_points()})
+        self.assertEqual(out["eCorr"], -0.3)  # the measured valley, as before
+        self.assertEqual(out["intersectionStatus"], "substituted-measured-valley")
+        self.assertIn("from the measured current valley (limit 0.25 V)", out["intersectionNote"])
+        self.assertIn("-0.3000 V is used as E_corr", out["intersectionNote"])
+        self.assertNotIn("fitStatus", out)  # both branches were fitted: the numbers exist, the note qualifies them
+
+    def test_a_normal_intersection_has_no_note(self):
+        out = fit(FULL_OFFSETS)
+        self.assertNotIn("intersectionStatus", out)
+        self.assertNotIn("intersectionNote", out)
+
+    def test_both_manual_overrides_make_the_note_moot(self):
+        out = tafel.fit_tafel_curve({"action": "fit_curve", "alloyId": "steel-316l", "manualEcorrOverride": -0.31,
+                                     "manualIcorrOverride": 2.0, "points": self.far_intersection_points()})
+        self.assertNotIn("intersectionStatus", out)
+
+
+class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
+    """Review S5: no invented defaults for metalId, betaA, betaC, i0Corr_uA, ePit, e0."""
+
+    ALL = dict(metal_id="az31b", beta_a=0.12, beta_c=0.10, i0_corr_ua_cm2=6.5, e_pit_v=-1.42, e0_v=-2.37)
+
+    def run_kinetics(self, **over):
+        args = dict(self.ALL)
+        args.update(over)
+        return battery.simulate_corrosion_eis_and_kinetics(
+            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"], 60)
+
+    def test_complete_input_has_no_status(self):
+        out = self.run_kinetics()
+        self.assertNotIn("status", out)
+        self.assertNotIn("unavailable", out)
+        self.assertEqual(len(out["coatingNyquist"]), 3)
+
+    def test_nothing_supplied_is_unavailable_with_every_reason(self):
+        out = battery.simulate_corrosion_eis_and_kinetics(None, None, None, None, None, None)
+        self.assertEqual(out["status"], "unavailable")
+        self.assertEqual(set(out["unavailable"]), {"metalId", "betaA", "betaC", "i0Corr_uA", "ePit", "e0"})
+        for key in ("sternGeary_B_V", "polarizationResistance_Rp_Ohm_cm2", "corrosionRate_mm_yr", "corrosionRate_mpy",
+                    "deltaE_pit_V", "pittingAssessment", "alloyId", "equivalentWeight_g_eq", "density_g_cm3"):
+            self.assertIsNone(out[key], key)
+        self.assertEqual(out["coatingNyquist"], [])
+        # the water-uptake timeline depends on the exposure only, not on any electrochemical input
+        self.assertTrue(out["coatingTimeline"])
+        json.dumps(out, allow_nan=False)
+
+    def test_each_missing_input_only_removes_what_needs_it(self):
+        out = self.run_kinetics(beta_a=None)
+        self.assertEqual(out["status"], "partial")
+        self.assertEqual(set(out["unavailable"]), {"betaA"})
+        self.assertIsNone(out["sternGeary_B_V"])
+        self.assertIsNone(out["polarizationResistance_Rp_Ohm_cm2"])
+        self.assertEqual(out["coatingNyquist"], [])
+        self.assertIsNotNone(out["corrosionRate_mm_yr"])
+        self.assertIsNotNone(out["deltaE_pit_V"])
+        out = self.run_kinetics(i0_corr_ua_cm2=None)
+        self.assertEqual(set(out["unavailable"]), {"i0Corr_uA"})
+        self.assertIsNone(out["corrosionRate_mm_yr"])
+        self.assertIsNone(out["polarizationResistance_Rp_Ohm_cm2"])
+        self.assertIsNotNone(out["deltaE_pit_V"])
+        out = self.run_kinetics(e_pit_v=None)
+        self.assertEqual(set(out["unavailable"]), {"ePit"})
+        self.assertIsNone(out["deltaE_pit_V"])
+        self.assertIsNone(out["pittingAssessment"])
+        self.assertIsNotNone(out["corrosionRate_mm_yr"])
+        out = self.run_kinetics(metal_id=None)
+        self.assertEqual(set(out["unavailable"]), {"metalId"})
+        self.assertIsNone(out["corrosionRate_mm_yr"])
+        self.assertIsNone(out["equivalentWeight_g_eq"])
+        self.assertIsNotNone(out["polarizationResistance_Rp_Ohm_cm2"])
+
+    def test_invalid_values_are_unavailable_not_defaulted(self):
+        for over in ({"beta_c": 0}, {"beta_c": -0.1}, {"i0_corr_ua_cm2": 0}, {"i0_corr_ua_cm2": "x"},
+                     {"e0_v": float("nan")}, {"e_pit_v": True}):
+            with self.subTest(over=over):
+                out = self.run_kinetics(**over)
+                self.assertIn(out["status"], ("partial", "unavailable"))
+                self.assertEqual(len(out["unavailable"]), 1)
+
+    def test_a_potential_of_zero_volts_is_a_valid_input(self):
+        out = self.run_kinetics(e0_v=0.0)
+        self.assertNotIn("status", out)
+        self.assertEqual(out["deltaE_pit_V"], round(-1.42, 3))
+
+    def test_stern_geary_uses_ln10_and_mpy_the_exact_mil(self):
+        out = self.run_kinetics()
+        b = 0.12 * 0.10 / (math.log(10.0) * 0.22)
+        self.assertEqual(out["sternGeary_B_V"], round(b, 4))
+        self.assertEqual(out["polarizationResistance_Rp_Ohm_cm2"], round(b / 6.5e-6, 1))
+        # 1 mil = 0.0254 mm: mpy = mm/yr * 1000 / 25.4 (the old 39.37 was 1.9e-4 low)
+        ratio = out["corrosionRate_mpy"] / out["corrosionRate_mm_yr"]
+        self.assertAlmostEqual(ratio / (1000.0 / 25.4), 1.0, delta=1e-5)
+
+    def test_rates_keep_six_significant_digits(self):
+        # Ti-6Al-4V at i0 = 0.01: the old fixed 5 decimals printed 9e-05 (one significant figure)
+        out = self.run_kinetics(metal_id="ti-6al-4v", i0_corr_ua_cm2=0.01)
+        rate = out["corrosionRate_mm_yr"]
+        self.assertEqual(rate, float(f"{rate:.5e}"))  # 6 significant digits
+        self.assertNotEqual(rate, round(rate, 5))
+        self.assertAlmostEqual(out["corrosionRate_mm_yr"] / faraday_rate_mm_yr(0.01, 11.8715, 4.43), 1.0, delta=1e-4)
+
+    def test_cli_partial_result_is_a_success_envelope(self):
+        code, out = run_script("battery_corrosion_eis_solver.py", {"action": "corrosion_kinetics", "metalId": "az31b"})
+        self.assertEqual(code, 0)
+        self.assertTrue(out["success"])
+        self.assertEqual(out["status"], "unavailable")  # nothing but the substrate was sent
+        self.assertEqual(set(out["unavailable"]), {"betaA", "betaC", "i0Corr_uA", "ePit", "e0"})
+        code, out = run_script("battery_corrosion_eis_solver.py", {"action": "corrosion_kinetics"})
+        self.assertEqual(code, 0)
+        self.assertEqual(out["status"], "unavailable")
+        self.assertIn("metalId was not supplied", out["unavailableReason"])
+
+    def test_source_has_no_invented_default_left(self):
+        source = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
+        for pattern in ('data.get("metalId", "steel-316l")', 'data.get("betaA", 0.12)', 'data.get("betaC", 0.11)',
+                        'data.get("i0Corr_uA", 0.18)', 'data.get("ePit", 0.42)', 'data.get("e0", 0.08)',
+                        "2.303 *", "* 39.37 "):
             self.assertNotIn(pattern, source)
 
 

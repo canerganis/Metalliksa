@@ -186,12 +186,17 @@ class TafelPresetTest(unittest.TestCase):
             customAtomicWeights={"Fe": 55.845, "Cr": 51.996}))
         self.assertTrue(out["success"])
 
-    def test_missing_alloy_id_still_defaults_to_316l(self):
-        # A documented default for an absent field is not a silent substitution.
+    def test_missing_alloy_id_is_no_longer_defaulted_to_316l(self):
+        # Engine-fix lane (review S4): a request without alloyId and without density / equivalentWeight
+        # does not get the 316L substrate; the rate is unavailable with the reason. (This test used to pin
+        # the 316L default as "documented"; that default was a silent alloy substitution.)
         out = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE))
-        self.assertEqual(out["alloyId"], "steel-316l")
-        self.assertEqual(out["alloyName"], "AISI 316L Stainless Steel")
-        self.assertEqual(out["provenance"]["registryAlloyId"], "ss316l")
+        self.assertEqual(out["status"], "unavailable")
+        self.assertIsNone(out["alloyId"])
+        self.assertIsNone(out["alloyName"])
+        self.assertIsNone(out["corrosionRateMmYr"])
+        self.assertIn("no alloyId was sent", out["unavailable"]["substrate"])
+        self.assertIsNone(out["provenance"]["registryAlloyId"])
 
     def test_bare_grade_and_alloy_without_corrosion_data_are_refused(self):
         for name, reason in (("304", "bare-grade"), ("alsi10mg", "no-domain-data"),

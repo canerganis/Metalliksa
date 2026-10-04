@@ -2,6 +2,7 @@ import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect } from "react";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { isPythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
+import { UNAVAILABLE_TEXT } from "../utils/tafelDisplay";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -245,15 +246,21 @@ export function CorrosionEISKineticsStudio() {
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-[9px] text-slate-400 block">Polarization Resistance (R_p)</span>
                 <span className="text-base font-bold text-amber-400 font-mono">
-                  {simResult.polarizationResistance_Rp_Ohm_cm2?.toLocaleString()} Ω·cm²
+                  {simResult.polarizationResistance_Rp_Ohm_cm2 == null
+                    ? UNAVAILABLE_TEXT
+                    : `${simResult.polarizationResistance_Rp_Ohm_cm2.toLocaleString()} Ω·cm²`}
                 </span>
                 <span className="text-[9px] text-slate-500 block">ASTM G59</span>
               </div>
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-[9px] text-slate-400 block">Penetration Rate (CR)</span>
-                <span className="text-base font-bold text-rose-400 font-mono">{simResult.corrosionRate_mm_yr} mm/yr</span>
-                <span className="text-[9px] text-slate-500 block">({simResult.corrosionRate_mpy} mpy)</span>
-                {simResult.equivalentWeight_g_eq !== undefined && (
+                <span className="text-base font-bold text-rose-400 font-mono">
+                  {simResult.corrosionRate_mm_yr == null ? UNAVAILABLE_TEXT : `${simResult.corrosionRate_mm_yr} mm/yr`}
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  ({simResult.corrosionRate_mpy == null ? UNAVAILABLE_TEXT : `${simResult.corrosionRate_mpy} mpy`})
+                </span>
+                {simResult.equivalentWeight_g_eq != null && (
                   <span className="text-[9px] text-slate-500 block" title={simResult.equivalentWeightNote}>
                     EW {simResult.equivalentWeight_g_eq} g/eq, ρ {simResult.density_g_cm3} g/cm³ ({simResult.alloyId})
                   </span>
@@ -262,11 +269,19 @@ export function CorrosionEISKineticsStudio() {
             </div>
           )}
 
+          {simResult?.unavailableReason && (
+            <div role="status" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs font-mono">
+              {simResult.unavailableReason}
+            </div>
+          )}
+
           {/* Pitting Susceptibility Alert */}
           {simResult && (
             <div
               className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
-                simResult.deltaE_pit_V < 0.15
+                simResult.deltaE_pit_V == null
+                  ? "bg-slate-500/10 border-slate-500/30 text-slate-300"
+                  : simResult.deltaE_pit_V < 0.15
                   ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
                   : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
               }`}
@@ -274,10 +289,10 @@ export function CorrosionEISKineticsStudio() {
               <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold block uppercase text-[10px]">
-                  Pitting Margin: ΔE_pit = {simResult.deltaE_pit_V} V
+                  Pitting Margin: ΔE_pit = {simResult.deltaE_pit_V == null ? UNAVAILABLE_TEXT : `${simResult.deltaE_pit_V} V`}
                 </span>
                 <p className="text-[11px] opacity-90 mt-0.5">
-                  Assessment: <strong>{simResult.pittingAssessment}</strong>
+                  Assessment: <strong>{simResult.pittingAssessment ?? UNAVAILABLE_TEXT}</strong>
                 </p>
               </div>
             </div>

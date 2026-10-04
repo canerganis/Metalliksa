@@ -6,7 +6,7 @@ import {
   TafelRawPoint,
   ReferenceElectrodeType,
 } from "../types/tafel";
-import { fmtTafelNumber, fmtTafelQuantity, tafelUnavailableReason } from "./tafelDisplay";
+import { MILS_PER_MM, fmtTafelNumber, fmtTafelQuantity, tafelUnavailableReason } from "./tafelDisplay";
 import { FARADAY_CONSTANT } from "./physicalConstants";
 
 export const REFERENCE_ELECTRODES: Record<ReferenceElectrodeType, { name: string; offsetVsSHE: number }> = {
@@ -535,6 +535,9 @@ export function tryAutoFitTafel(
   // m_c * E + b_c = m_a * E + b_a => E_intersect = (b_c - b_a) / (m_a - m_c)
   let extrapolatedEcorr: number | null = null;
   let extrapolatedLogIcorr: number | null = null;
+  // An unusable intersection (parallel branches, or more than 0.15 V from the measured valley) falls back to the
+  // measured valley as E_corr; that substitution is reported (intersectionStatus / intersectionNote), never silent.
+  let intersectionNote: string | null = null;
 
   if (cathFit && anodFit) {
     extrapolatedEcorr = rawEcorr;
@@ -544,7 +547,16 @@ export function tryAutoFitTafel(
       // Keep within reasonable range of the raw minimum
       if (Math.abs(eInter - rawEcorr) <= 0.15) {
         extrapolatedEcorr = eInter;
+      } else {
+        intersectionNote =
+          `the Evans intersection of the fitted branches is at ${eInter.toFixed(3)} V, ` +
+          `${Math.abs(eInter - rawEcorr).toFixed(3)} V from the measured current valley (limit 0.15 V); the measured ` +
+          `valley ${rawEcorr.toFixed(4)} V is used as E_corr and i_corr is read from the anodic line there`;
       }
+    } else {
+      intersectionNote =
+        `the fitted branches are parallel, so they do not intersect; the measured current valley ` +
+        `${rawEcorr.toFixed(4)} V is used as E_corr and i_corr is read from the anodic line there`;
     }
     extrapolatedLogIcorr = anodFit.m * extrapolatedEcorr + anodFit.b;
   }
@@ -568,12 +580,12 @@ export function tryAutoFitTafel(
   const betaC_mV_dec = betaC_V_dec === null ? null : betaC_V_dec * 1000;
 
   // 5. Stern-Geary Polarization Resistance (ASTM G59): needs both slopes and i_corr
-  // B = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))
+  // B = (beta_a * beta_c) / (ln(10) * (beta_a + beta_c))
   // i_corr in A/cm2 = extrapolatedIcorr_uA_cm2 * 1e-6
   let sternGearyB_V: number | null = null;
   let rp_ohm_cm2: number | null = null;
   if (betaA_V_dec !== null && betaC_V_dec !== null && extrapolatedIcorr_uA_cm2 !== null) {
-    sternGearyB_V = (betaA_V_dec * betaC_V_dec) / (2.302585 * (betaA_V_dec + betaC_V_dec));
+    sternGearyB_V = (betaA_V_dec * betaC_V_dec) / (Math.LN10 * (betaA_V_dec + betaC_V_dec));
     rp_ohm_cm2 = sternGearyB_V / (extrapolatedIcorr_uA_cm2 * 1e-6);
   }
 
@@ -592,7 +604,7 @@ export function tryAutoFitTafel(
   if (extrapolatedIcorr_uA_cm2 !== null && substrateKnown) {
     const K1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
     cr_mm_yr = (K1 * extrapolatedIcorr_uA_cm2 * EW) / density;
-    cr_mpy = cr_mm_yr * 39.3701; // mils per year
+    cr_mpy = cr_mm_yr * MILS_PER_MM; // mils per year (1 mil = 0.0254 mm exactly)
     // Mass loss: g / (m² · day); i_corr in A/m² = (i_corr in A/cm²) * 10^4
     massLoss_g_m2_day = (extrapolatedIcorr_uA_cm2 * 1e-6 * 10000 * EW * 86400) / FARADAY_CONSTANT;
   }
@@ -727,6 +739,10 @@ export function tryAutoFitTafel(
   if (extrapolatedIcorr_uA_cm2 !== null && !substrateKnown) {
     reasons.substrate =
       "the dataset has no equivalent weight / density, so the Faraday rate is unavailable (no alloy is substituted)";
+  }
+  if (intersectionNote && !(typeof manualEcorrOverride === "number" && typeof manualIcorrOverride === "number")) {
+    result.intersectionStatus = "substituted-measured-valley";
+    result.intersectionNote = intersectionNote;
   }
   if (Object.keys(reasons).length > 0) {
     result.fitStatus = "unavailable";
