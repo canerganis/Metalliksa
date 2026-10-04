@@ -58,7 +58,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     }, 350);
   };
 
-  const hardnessText = pipelineHardnessText(payload.hardnessHV, payload.hardnessHVSource);
+  const hardnessText = pipelineHardnessText(payload.hardnessHV, payload.hardnessHVSource, payload.hardness);
 
   const targets = [
     {
@@ -101,12 +101,12 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       color: "text-emerald-400",
       borderColor: "border-emerald-500/30 hover:border-emerald-400/70",
       bgColor: "bg-emerald-500/10",
-      badge: "ASTM E140 / Tabor",
-      description: `Transfers Vickers hardness (${hardnessText}), elastic modulus E = ${payload.youngsModulus} GPa, and Hollomon parameters (n = ${payload.hardnessProfile.workHardeningExponent_n}, K = ${payload.hardnessProfile.strengthCoefficient_K_MPa} MPa) to simulate complete tensile σ-ε curves.`,
+      badge: "Screening estimates",
+      description: `Transfers Vickers hardness: ${hardnessText}; elastic modulus E = ${payload.youngsModulus} GPa, and Hollomon parameters (n = ${payload.hardnessProfile.workHardeningExponent_n}, K = ${payload.hardnessProfile.strengthCoefficient_K_MPa} MPa) to simulate complete tensile σ-ε curves.`,
+      // The per-class Tabor constraint factor in the profile is an unsourced app default, so it is not highlighted.
       highlights: [
         `Hardness: ${hardnessText}`,
         `E: ${payload.youngsModulus} GPa`,
-        `Tabor c = ${payload.hardnessProfile.taborConstraintFactor_c}`,
       ],
     },
     {

@@ -340,8 +340,9 @@ export function deriveProperties(
   } else if (baseMetal === "Fe") {
     category = "Steels & Irons";
     // Si defaults to 0: a Si-free composition gave NaN here and skipped the austenitic branch below.
-    const crEq = cr + mo * 1.5 + (composition["Si"] || 0) * 1.5 +(composition["Nb"] || 0) * 0.5;
-    const niEq = composition["Ni"] || 0 + c * 30 + (composition["N"] || 0) * 30 + (composition["Mn"] || 0) * 0.5;
+    const crEq = cr + mo * 1.5 + (composition["Si"] || 0) * 1.5 + (composition["Nb"] || 0) * 0.5;
+    // Parenthesised: `Ni || 0 + ...` counted only Ni whenever Ni was present (C, N, Mn were dropped).
+    const niEq = (composition["Ni"] || 0) + c * 30 + (composition["N"] || 0) * 30 + (composition["Mn"] || 0) * 0.5;
 
     liquidus_C = Math.round(1538 - (c * 65 + cr * 2.5 + niEq * 2));
     solidus_C = Math.round(liquidus_C - (30 + c * 80 + cr * 3));
@@ -381,7 +382,8 @@ export function deriveProperties(
   } else if (baseMetal === "Al") {
     category = "Aluminum Alloys";
     standardDesignation = "AlSi10Mg / EN AC-43000";
-    liquidus_C = Math.round(660 - (si * 6.5 + mg * 4.5 + composition["Cu"] * 3));
+    // Absent Cu counts as 0 wt% (a Cu-free alloy such as AlSi10Mg gave NaN).
+    liquidus_C = Math.round(660 - (si * 6.5 + mg * 4.5 + (composition["Cu"] || 0) * 3));
     solidus_C = 570;
     solvus_C = 510;
     yieldStrength_25C_MPa = Math.round(240 + si * 8 + mg * 35);
@@ -477,23 +479,15 @@ export function deriveProperties(
   };
 }
 
-const AT_PCT_HARDNESS_UNAVAILABLE = {
-  hv: null,
-  status: "unavailable" as const,
-  note: "Unavailable: atomic-percent composition; the weight-percent hardness estimate is not evaluated",
-};
-
 /** Recompute the hardness fields of a stored specimen (used for persisted records and atomic-percent edits). */
 export function withHardnessEstimate(specimen: MaterialSpecimen): MaterialSpecimen {
-  const e =
-    specimen.unit === "at_pct"
-      ? AT_PCT_HARDNESS_UNAVAILABLE
-      : estimateSpecimenHardnessHV({
-          baseMetal: specimen.metadata?.baseMetal,
-          crystalSystem: specimen.xrd?.crystalSystem,
-          composition: specimen.composition,
-          yieldStrength_MPa: specimen.yieldStrength_25C_MPa,
-        });
+  const e = estimateSpecimenHardnessHV({
+    baseMetal: specimen.metadata?.baseMetal,
+    crystalSystem: specimen.xrd?.crystalSystem,
+    composition: specimen.composition,
+    unit: specimen.unit,
+    yieldStrength_MPa: specimen.yieldStrength_25C_MPa,
+  });
   return { ...specimen, hardness_HV: e.hv, hardnessHVStatus: e.status, hardnessHVNote: e.note };
 }
 
@@ -501,13 +495,36 @@ export function withHardnessEstimate(specimen: MaterialSpecimen): MaterialSpecim
 export function migrateMaterialStoreState(persisted: unknown, version: number): unknown {
   if (version >= 1 || !persisted || typeof persisted !== "object") return persisted;
   const state = persisted as Record<string, unknown>;
+  // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable ("no yield strength" or the
+  // class reason) instead of keeping its stale HV. Non-objects pass through.
   const fix = (s: unknown) =>
-    s && typeof s === "object" && "yieldStrength_25C_MPa" in (s as object) ? withHardnessEstimate(s as MaterialSpecimen) : s;
+    s && typeof s === "object" && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object))
+      ? withHardnessEstimate(s as MaterialSpecimen)
+      : s;
   return {
     ...state,
     ...(state.activeMaterialSpecimen ? { activeMaterialSpecimen: fix(state.activeMaterialSpecimen) } : {}),
     ...(state.activeSpecimen ? { activeSpecimen: fix(state.activeSpecimen) } : {}),
     ...(Array.isArray(state.savedSpecimens) ? { savedSpecimens: state.savedSpecimens.map(fix) } : {}),
+  };
+}
+
+/**
+ * Persisted data over the initial state. activeSpecimen always mirrors activeMaterialSpecimen (an old blob may lack
+ * one of them); actions always come from the current state.
+ */
+export function mergeMaterialStoreState(persisted: unknown, current: MaterialStore): MaterialStore {
+  if (!persisted || typeof persisted !== "object") return current;
+  const p = persisted as Partial<MaterialStore>;
+  const asSpecimen = (s: unknown) => (s && typeof s === "object" ? (s as MaterialSpecimen) : undefined);
+  const active = asSpecimen(p.activeMaterialSpecimen) ?? asSpecimen(p.activeSpecimen) ?? current.activeMaterialSpecimen;
+  return {
+    ...current,
+    activeMaterialSpecimen: active,
+    activeSpecimen: active,
+    savedSpecimens: Array.isArray(p.savedSpecimens)
+      ? p.savedSpecimens.filter((s): s is MaterialSpecimen => !!s && typeof s === "object")
+      : current.savedSpecimens,
   };
 }
 
@@ -690,9 +707,10 @@ export const useMaterialStore = create<MaterialStore>()(
   persist(
     (set, get) => ({
       activeMaterialSpecimen: INITIAL_MATERIAL_SPECIMEN,
-      get activeSpecimen() {
-        return get().activeMaterialSpecimen;
-      },
+      // Plain field kept in sync by every setter. A getter here (`get activeSpecimen() { return get()... }`) threw
+      // while zustand spread the initial state during first hydration, so persisted state (saved specimens) was
+      // discarded and the version migration never ran.
+      activeSpecimen: INITIAL_MATERIAL_SPECIMEN,
       savedSpecimens: [INITIAL_MATERIAL_SPECIMEN],
 
       updateComposition: (newComposition, customName, metadataPatch, sourceTab = "Alloy Formulator (Tab 1)") => {
@@ -972,6 +990,7 @@ export const useMaterialStore = create<MaterialStore>()(
       name: "metallix-material-specimen-store",
       version: 1,
       migrate: (persisted, version) => migrateMaterialStoreState(persisted, version) as MaterialStore,
+      merge: (persisted, current) => mergeMaterialStoreState(persisted, current),
     }
   )
 );

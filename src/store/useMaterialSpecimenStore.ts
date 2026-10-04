@@ -381,7 +381,8 @@ export function deriveSpecimenProperties(
     elongation_pct = 40;
     youngsModulus_GPa = 195;
 
-    crystalSystem = cr > 12 && (composition["Ni"] || 0) > 8 ? "FCC" : "BCC";
+    // Ni >= 8 (was > 8): nominal AISI 304 (Cr 18, Ni 8) was classed BCC.
+    crystalSystem = cr > 12 && (composition["Ni"] || 0) >= 8 ? "FCC" : "BCC";
     spaceGroup = crystalSystem === "FCC" ? "Fm-3m (225)" : "Im-3m (229)";
     latticeA_A = crystalSystem === "FCC" ? 3.590 : 2.866;
     targetPhases = crystalSystem === "FCC" ? ["austenite-fcc", "delta-ferrite"] : ["ferrite-bcc", "cementite-fe3c"];
@@ -602,7 +603,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
           const hardnessEstimate = estimateSpecimenHardnessHV({
             baseMetal: nextSpecimen.baseMetal,
             crystalSystem: nextSpecimen.xrd?.crystalSystem,
-            composition: nextSpecimen.unit === "at_pct" ? undefined : nextSpecimen.composition,
+            composition: nextSpecimen.composition,
+            unit: nextSpecimen.unit,
             yieldStrength_MPa: nextSpecimen.yieldStrength_25C_MPa,
           });
           const pipelinePayload: PipelineMaterialPayload = {

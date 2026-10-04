@@ -447,9 +447,20 @@ export function deriveKineticProfile(
 
 export type HardnessHVSource = "reported" | "converted-astm-e140" | "estimate-from-yield" | "estimate-predicted" | "unavailable";
 
-/** Display text of a payload HV with its basis: estimates and conversions are never shown as plain measured values. */
-export function pipelineHardnessText(hv: number | null | undefined, source: HardnessHVSource | undefined): string {
-  if (hv === null || hv === undefined) return "Unavailable";
+/**
+ * Display text of a payload HV with its basis: estimates and conversions are never shown as plain measured values.
+ * When HV is unavailable but the record carries a reported hardness (e.g. "40 - 45 HRC"), that value is shown.
+ */
+export function pipelineHardnessText(
+  hv: number | null | undefined,
+  source: HardnessHVSource | undefined,
+  reportedHardness?: string
+): string {
+  if (hv === null || hv === undefined) {
+    const reported = reportedHardness?.trim();
+    // Our own generated strings ("Unavailable: ...", "≈ n HV: estimate ...") are not reported values.
+    return reported && !/^(unavailable|≈)/i.test(reported) ? `HV unavailable (reported: ${reported})` : "HV unavailable";
+  }
   if (source === "converted-astm-e140") return `${hv} HV (converted, ASTM E140)`;
   if (source === "estimate-from-yield" || source === "estimate-predicted") return `${hv} HV (estimate, not measured)`;
   if (source === "reported") return `${hv} HV (reported)`;
@@ -477,8 +488,8 @@ export function deriveHardnessProfile(
   microstructure?: string,
   /** true when hardnessStr itself is a prediction (e.g. a synthesized candidate), not a reported value */
   hardnessStrIsEstimate = false,
-  /** wt% C; the steel yield-strength relation needs a hypoeutectoid steel (C < 0.76 wt%) */
-  carbonWtPct?: number
+  /** wt% composition; the steel yield-strength relation needs a hypoeutectoid carbon or low-alloy steel */
+  composition?: Record<string, number>
 ): { hardnessProfile: HardnessAlloyPreset; hardnessHV: number | null; hardnessHVSource: HardnessHVSource; hardnessHRC?: number } {
   let hv: number | null = null;
   let hvSource: HardnessHVSource = "unavailable";
@@ -524,7 +535,7 @@ export function deriveHardnessProfile(
     // old fallback HV ~ YS/3 + 35 (YS/3 + 30 for candidates) had no source.
     const est = estimateSteelHvFromYield(yieldStrength, {
       materialClass: steel ? "non-austenitic-steel" : hardnessMaterialClassOf({ baseMetal, crystalSystem: baseMetal === "Fe" ? "FCC" : undefined }),
-      carbonWtPct,
+      composition,
     });
     if (est.hv !== null) {
       hv = est.hv;
@@ -671,7 +682,7 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
     mat.hardness,
     mat.microstructure,
     false,
-    normComp.C
+    normComp
   );
   const xrdProfile = deriveXRDProfile(mat.name, baseMetal, normComp);
 
@@ -744,7 +755,7 @@ export function createPipelinePayloadFromCandidate(
     // An FCC/austenitic matrix excludes the non-austenitic steel relation.
     candidate.matrixPhase === "FCC" || candidate.matrixPhase === "Austenitic" ? "austenitic (FCC) matrix" : candidate.matrixPhase,
     true,
-    comp.C
+    comp
   );
   const xrdProfile = deriveXRDProfile(name, baseMetal, comp);
 
