@@ -23,12 +23,14 @@ from lpbf_cfd import (
     CFD_SOLVER_ID,
     MARANGONI_MODEL_ID,
     RECOIL_MODEL_ID,
+    setup_cfd_multiphysics_case,
+)
+from lpbf_cfd_cases import (
     knight_analytical_recoil_pressure,
     read_foam_scalar_field,
     read_foam_vector_field,
     run_cfd_simulation,
     setup_darcy_damping_case,
-    setup_cfd_multiphysics_case,
     setup_droplet_case,
     setup_marangoni_case,
     setup_recoil_case,
@@ -463,8 +465,7 @@ class TestLpbfCfdPhase4(unittest.TestCase):
           - Stored energy = sum(rho * cp * (T - T_init) * V).
           - Temperatures along the laser path should be significantly elevated.
         """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
+        from lpbf_cfd_cases import setup_laser_case
         with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
             lx = 100e-6
             ly = 50e-6
@@ -514,8 +515,7 @@ class TestLpbfCfdPhase4(unittest.TestCase):
           - Stored energy = sum(rho * cp * (T - T_init) * V).
           - Temperatures along the laser path should be significantly elevated.
         """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
+        from lpbf_cfd_cases import setup_laser_case
         with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
             lx = 100e-6
             ly = 50e-6
