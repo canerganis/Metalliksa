@@ -372,7 +372,10 @@ def inherent_strain_props(name):
 
 
 def evaluate_literature_pv(alloy_id, power_W, speed_mm_s):
-    aid = resolve_alloy_id(alloy_id) or "in718"
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None:
+        # D8: no silent IN718 fallback for an unknown alloy identity.
+        raise ValueError(f"Unsupported LPBF alloy identity: {alloy_id!r}")
     box = LITERATURE_PV_WINDOWS[aid]
     inside = (
         box["powerMin_W"] <= power_W <= box["powerMax_W"]

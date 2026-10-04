@@ -34,6 +34,8 @@ test("TS and Python build-job solver revisions are the same string", () => {
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-core-peak-field-v2");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-kinetics-same-alloy-v3");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-kinetics-steel-only-v4");
+  assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-microstructure-projection-v5");
+  assert.equal(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-extent-status-v6");
 });
 
 test("316L and AlSi10Mg: one Unavailable tile with the reason, no numbers, no substituted alloy", () => {

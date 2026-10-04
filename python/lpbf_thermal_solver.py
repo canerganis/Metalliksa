@@ -23,6 +23,7 @@ import numpy as np
 from eagar_tsai_solver import EagarTsaiField, MODEL_ID as EAGAR_TSAI_MODEL_ID
 from fabbro_keyhole import MODEL_ID as FABBRO_MODEL_ID, fabbro_keyhole_depth_m
 from four_alloy_materials import four_alloy_thermophysical_db, thermal_props
+from in625_thermal_material import LATENT_HEAT_J_KG as IN625_LATENT_HEAT_J_KG
 from goldak_solver import GoldakField, MODEL_ID as GOLDAK_MODEL_ID, seed_goldak_axes
 from solidification_front import MODEL_ID as SOLIDIFICATION_MODEL_ID, evaluate_solidification
 from marangoni_screening import MODEL_ID as MARANGONI_MODEL_ID, marangoni_screening
@@ -42,7 +43,11 @@ SECONDARY_THERMOPHYSICAL_DB = {
         "thermal_conductivity_liquid_W_mK": 30.0,
         "specific_heat_J_kgK": 410.0,
         "specific_heat_liquid_J_kgK": 750.0,
-        "latent_heat_fusion_J_kg": 260000.0,
+        # D5: the Rosenthal / build-job path and the Sabau screening snapshot share 290 kJ/kg
+        # (Sabau et al. 2020, cited in in625_thermal_material); the former 260 kJ/kg literal disagreed.
+        # The Mills-based transient specification (in625_thermal_material.transientSpecification)
+        # keeps its own 227 kJ/kg and is NOT changed here.
+        "latent_heat_fusion_J_kg": IN625_LATENT_HEAT_J_KG,
         "latent_heat_vap_J_kg": 6300000.0,
         "absorptivity_IR": 0.38,
         "absorptivity_Green": 0.58,
@@ -213,10 +218,16 @@ def _normalize_heat_source(heat_source: str | None) -> str:
     key = heat_source.strip().lower().replace("_", "-")
     if key in ("rosenthal", "rosenthal-screening", "rosenthal-screening-v1"):
         return "rosenthal"
-    if key in ("eagar-tsai", "eagar-tsai-v1", "et", "eager-tsai"):
+    if key in ("eagar-tsai", "eagar-tsai-v2", "et", "eager-tsai"):
         return "eagar-tsai"
-    if key in ("goldak", "goldak-v1", "goldak-double-ellipsoid"):
+    if key in ("goldak", "goldak-double-ellipsoid", "goldak-half-space-v3"):
         return "goldak"
+    if key in ("eagar-tsai-v1", "goldak-v1", "goldak-total-power-v2"):
+        # Retired kernel ids are never run silently as the corrected kernel.
+        current = "eagar-tsai-v2" if key.startswith("eagar") else "goldak-half-space-v3"
+        raise ValueError(f"Retired LPBF heat-source id {heat_source!r}: its kernel was replaced by the "
+                         f"corrected {current!r} (planned corrected-physics bump); request {current!r} or the "
+                         f"unversioned name explicitly")
     raise ValueError(f"Unsupported LPBF heat source: {heat_source!r}")
 
 
@@ -398,17 +409,45 @@ def calculate_meltpool_physics(
     t_peak_C = float(T_field(0.0, 0.0, 0.0))
     # No artificial 3900 °C display ceiling — report the field peak (may exceed boiling).
 
-    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai)
-    x_front = _binary_extent(lambda x: T_field(x, 0.0, 0.0) >= T_liq, 0.0, search_len)
-    x_rear = _binary_extent(lambda s: T_field(-s, 0.0, 0.0) >= T_liq, 0.0, search_len * 1.4)
+    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
+    # seed, not a cap: when the isotherm is still liquid at the box edge the box is doubled (up to
+    # 8x); if it is still at the edge after that the status says so instead of calling it computed.
+    extent_flags = []
+
+    def _extent_with_growth(pred, hi, label):
+        bound = hi
+        for _ in range(3):
+            value = _binary_extent(pred, 0.0, bound)
+            if value < bound:
+                return value
+            bound *= 2.0
+        value = _binary_extent(pred, 0.0, bound)
+        if value >= bound:
+            extent_flags.append(label)
+        return value
+
+    x_front = _extent_with_growth(lambda x: T_field(x, 0.0, 0.0) >= T_liq, search_len, "front-search-limit")
+    x_rear = _extent_with_growth(lambda s: T_field(-s, 0.0, 0.0) >= T_liq, search_len * 1.4, "rear-search-limit")
     half_w = 0.0
     for x_probe in (-x_rear * 0.35, -x_rear * 0.15, -x_rear * 0.05, 0.0, x_front * 0.35):
-        half_w = max(half_w, _binary_extent(lambda y: T_field(x_probe, y, 0.0) >= T_liq, 0.0, search_half_w))
+        half_w = max(half_w, _extent_with_growth(lambda y, x_probe=x_probe: T_field(x_probe, y, 0.0) >= T_liq,
+                                                 search_half_w, "width-search-limit"))
     d_iso = 0.0
     for x_probe in (-x_rear * 0.25, -x_rear * 0.1, -x_rear * 0.04, 0.0):
-        d_iso = max(d_iso, _binary_extent(lambda z: T_field(x_probe, 0.0, z) >= T_liq, 0.0, search_depth))
+        d_iso = max(d_iso, _extent_with_growth(lambda z, x_probe=x_probe: T_field(x_probe, 0.0, z) >= T_liq,
+                                               search_depth, "depth-search-limit"))
 
+    # The conduction field did not produce a resolvable liquidus extent (no melt or a pool below the
+    # search resolution): the width/depth below are a HEURISTIC substitute, reported as such in
+    # meltPoolGeometry.extentStatus, never presented as a computed isotherm.
+    extent_status = "computed"
+    extent_note = None
     if half_w < 8e-6 or d_iso < 3e-6:
+        extent_status = "heuristic-width-fallback"
+        extent_note = ("The conduction field has no resolvable liquidus extent at these inputs (half-width "
+                       f"{half_w*1e6:.1f} um, depth {d_iso*1e6:.1f} um before substitution); width/depth/length are "
+                       "the screening heuristic sqrt(w_analytical^2 + (0.65 d_beam)^2) and its depth ratio, not a "
+                       "computed isotherm. Treat this geometry as not resolved.")
         w_fb = math.sqrt(max(1e-12, w_analytical ** 2 + (0.65 * d_beam) ** 2))
         half_w = max(half_w, w_fb / 2.0)
         d_iso = max(d_iso, half_w * (0.38 + 0.10 * min(1.0, normalized_enthalpy / ENTHALPY_TRANSITION)))
@@ -417,6 +456,16 @@ def calculate_meltpool_physics(
         if x_rear < 1e-6:
             x_rear = max(w_fb, half_w * 2.2)
 
+    if extent_status == "computed" and 2.0 * half_w < d_beam * 0.55:
+        extent_status = "width-floor-applied"
+        extent_note = (f"The computed liquidus half-width ({half_w*1e6:.1f} um) is below the screening width floor "
+                       f"0.55 x beam diameter ({0.55*d_beam*1e6:.1f} um); the reported width is the floor, not the "
+                       "computed isotherm. Treat the width as not resolved.")
+    if extent_status == "computed" and extent_flags:
+        extent_status = "search-box-limited"
+        extent_note = ("The liquidus isotherm was still liquid at the edge of the (8x-grown) search box for: "
+                       + ", ".join(sorted(set(extent_flags)))
+                       + "; the reported extent is a lower bound, not a converged isotherm length.")
     w_melt_m = max(2.0 * half_w, d_beam * 0.55)
     d_iso = max(d_iso, 4e-6)
     # Uncapped Rosenthal length (no Peclet fake ceiling). Floor only for numerical sanity.
@@ -760,6 +809,8 @@ def calculate_meltpool_physics(
             "depthToWidthRatio_D_over_W": round(d_melt_um / max(1.0, w_melt_um), 2),
             "keyholeVaporCavityDepth_um": round(keyhole_depth_um, 1),
             "regime": regime,
+            "extentStatus": extent_status,
+            "extentNote": extent_note,
             "goldakParameters": {
                 "semiAxis_af_front_um": round(goldak_af_um, 1),
                 "semiAxis_ar_rear_um": round(goldak_ar_um, 1),

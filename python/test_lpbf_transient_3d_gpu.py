@@ -29,6 +29,7 @@ from lpbf_transient_3d_gpu import (
     validate_projected_momentum_cfl_kernel,
     velocity_advection_forces_kernel,
 )
+from phase22_legacy_test_material import LEGACY_SOLVER_TEST_MATERIAL
 
 
 @wp.kernel
@@ -325,7 +326,7 @@ class Transient3DPhysicsContracts(unittest.TestCase):
                     )
                     solver.device = device
                     with self.assertRaisesRegex(RuntimeError, "Phase 22 validity error.*z=2\\*dz"):
-                        solver.solve_toolpath(toolpath, T_preheat_K=2000.0)
+                        solver.solve_toolpath(toolpath, T_preheat_K=2000.0, **LEGACY_SOLVER_TEST_MATERIAL)
         finally:
             wp.config.use_precompiled_headers = previous_pch_setting
         self.assertEqual(wp.config.use_precompiled_headers, previous_pch_setting)
@@ -702,7 +703,7 @@ class Transient3DPhysicsContracts(unittest.TestCase):
 
     def test_zero_duration_single_point_toolpath_does_not_heat(self):
         solver = TransientEnthalpy3DGPU(nx=4, ny=4, nz=4, dx=1e-5, dy=1e-5, dz=1e-5)
-        result = solver.solve_toolpath({"t": [0.0], "x": [0.0], "y": [0.0], "p": [300.0]})
+        result = solver.solve_toolpath({"t": [0.0], "x": [0.0], "y": [0.0], "p": [300.0]}, **LEGACY_SOLVER_TEST_MATERIAL)
         self.assertEqual(result["steps"], 0)
         self.assertEqual(result["max_temperature_K"], 300.0)
         self.assertEqual(result["pressure_projection_status"], "not_run")
@@ -713,7 +714,7 @@ class Transient3DPhysicsContracts(unittest.TestCase):
         solver.device = "cpu"
         result = solver.solve_toolpath(
             {"t": [0.0, 1e-9], "x": [1e-5, 1e-5], "y": [1e-5, 1e-5], "p": [0.0, 0.0]},
-            T_preheat_K=2000.0,
+            T_preheat_K=2000.0, **LEGACY_SOLVER_TEST_MATERIAL,
         )
         self.assertEqual(result["pressure_projection_solver"], "preconditioned_conjugate_gradient")
         self.assertIn(result["pressure_projection_status"], ("converged", "not_converged", "numerical_failure"))
@@ -729,7 +730,7 @@ class Transient3DPhysicsContracts(unittest.TestCase):
         result = solver.solve_toolpath(
             {"t": [0.0, 1e-7], "x": [1e-5, 1e-5], "y": [1e-5, 1e-5], "p": [0.0, 0.0]},
             T_preheat_K=3600.0,
-            include_energy_ledger=True,
+            include_energy_ledger=True, **LEGACY_SOLVER_TEST_MATERIAL,
         )
         self.assertGreater(result["keyhole_depth_um"], 0.0)
         self.assertIn(result["pressure_projection_status"],
