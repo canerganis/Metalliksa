@@ -390,10 +390,10 @@ Provide an in-depth engineering assessment:
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-extrabold text-white font-mono tracking-wide uppercase">
-                Materials Project DFT & Crystallography Explorer
+                Materials Project Sample Catalogue & Elasticity
               </h2>
               <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono border border-sky-500/40">
-                Live Next-Gen API
+                Bundled sample catalogue (offline)
               </span>
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -411,7 +411,7 @@ Provide an in-depth engineering assessment:
           className="flex items-center gap-2 w-full md:w-auto"
         >
           <div className="relative flex-1 md:w-64">
-            <input aria-label="Search Materials Project by formula or material ID"
+            <input aria-label="Search the bundled sample catalogue by formula or material ID"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -426,7 +426,7 @@ Provide an in-depth engineering assessment:
             className="px-4 py-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-mono font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-[0_0_12px_rgba(14,165,233,0.3)] shrink-0"
           >
             {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-            <span>Fetch DFT</span>
+            <span>Search catalogue</span>
           </button>
         </form>
       </div>

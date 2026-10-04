@@ -106,7 +106,7 @@ The listed Node routes dispatch through `server/processOrchestrator.ts` and `ser
 
 Modules: `3d-distortion-lab`, `keyhole-raytracing`.
 
-CPU build/thermal paths use the Windows/Python3.12 lock described in `docs/LPBF_CPU_REPRODUCTION.md`. Historical checks there apply only to their stated scope. Explicit `METALLIX_PYTHON` now controls the LPBF worker as well as host services; without it Windows remains WSL-first through `server/lpbfWorkerBridge.ts`. Industrial fatigue additionally needs a trained surrogate artifact on the selected interpreter; the toolpath map needs Shapely and NumPy. These are operation-specific requirements, not verified availability. OpenFOAM requires the configured distribution and compiled worker in `python/lpbf_openfoam.py`. Keyhole requires Warp on the selected interpreter and uses explicit CPU or CUDA 0. The legacy transient-GPU lab is separate from the bounded CUDA thermal pilot in LPBF Engineering. Native CPU success is not WSL readiness or scientific validation.
+CPU build/thermal paths use the Windows/Python3.12 lock described in `docs/LPBF_CPU_REPRODUCTION.md`. Historical checks there apply only to their stated scope. Explicit `METALLIX_PYTHON` now controls the LPBF worker as well as host services; without it Windows remains WSL-first through `server/lpbfWorkerBridge.ts`. (The industrial-fatigue surrogate, the Shapely/NumPy toolpath thermal map and the legacy transient-GPU lab were deleted on 2026-10-04.) OpenFOAM requires the configured distribution and compiled worker in `python/lpbf_openfoam.py`. Keyhole requires Warp on the selected interpreter and uses explicit CPU or CUDA 0. Native CPU success is not WSL readiness or scientific validation.
 
 ### External AI dataset planning (removed)
 
