@@ -170,7 +170,7 @@
       "source": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
       "registryCatalogQuality": "missing",
       "registryCatalogNote": "Bounded fusion-enthalpy literature-model screening only; full transient solver unavailable.",
-      "note": "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in python/in625_thermal_material.py (Sabau et al. 2020 screening; transient spec) and they are not reconciled: latent heat of fusion 260000 vs 290000 vs 227000 J/kg; boiling point 2880 vs 2900 C; IR absorptivity 0.38 vs 0.4. The material registry catalog does not offer this row as a material.",
+      "note": "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in python/in625_thermal_material.py (Sabau et al. 2020 screening; transient spec) and they are not reconciled: latent heat of fusion 290000 vs 290000 vs 227000 J/kg; boiling point 2880 vs 2900 C; IR absorptivity 0.38 vs 0.4. The material registry catalog does not offer this row as a material.",
       "unreconciledPythonValues": [
         {
           "quantity": "latent heat of fusion",
@@ -179,7 +179,7 @@
             {
               "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
               "use": "Rosenthal / build-job path (this row)",
-              "value": 260000.0
+              "value": 290000.0
             },
             {
               "module": "python/in625_thermal_material.py LATENT_HEAT_J_KG",
@@ -238,7 +238,7 @@
         "thermal_conductivity_liquid_W_mK": 30.0,
         "specific_heat_J_kgK": 410.0,
         "specific_heat_liquid_J_kgK": 750.0,
-        "latent_heat_fusion_J_kg": 260000.0,
+        "latent_heat_fusion_J_kg": 290000.0,
         "latent_heat_vap_J_kg": 6300000.0,
         "absorptivity_IR": 0.38,
         "absorptivity_Green": 0.58,

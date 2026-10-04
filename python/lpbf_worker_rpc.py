@@ -1,7 +1,8 @@
 """RPC dispatch table for the LPBF worker (method name -> handler)."""
 import base64
 
-from four_alloy_materials import resolve_alloy_id, thermal_props, THERMAL_NAME
+from four_alloy_materials import resolve_alloy_id, thermal_props, THERMAL_NAME, canonical_material_source
+from physical_constants import GAS_CONSTANT_R
 from lpbf_evidence import resource_estimate
 from lpbf_simulation import validate
 from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
@@ -361,11 +362,56 @@ def _rpc_transient_enthalpy_fdm(request):
     return data
 
 
+# Alloy data the Phase 22 solver needs. They come ONLY from four_alloy_materials;
+# a request that carries any of them is rejected rather than silently preferred.
+_TRANSIENT_3D_GPU_MATERIAL_OVERRIDE_KEYS = (
+    "rho", "L_f", "T_solidus", "T_liquidus", "Lv", "Rs", "Tv",
+    "cp_solid", "cp_liquid", "k_solid", "k_liquid",
+)
+
+
+def _transient_3d_gpu_material_from_authority(payload):
+    """Resolve payload alloy identity to (alloyId, solver material kwargs, authority digest)."""
+    if not isinstance(payload, dict):
+        raise ValueError("transient-3d-gpu requires a supported alloy identity; got a non-object payload")
+    overrides = [key for key in _TRANSIENT_3D_GPU_MATERIAL_OVERRIDE_KEYS if key in payload]
+    if overrides:
+        raise ValueError(
+            "material properties come from four_alloy_materials; remove "
+            + ", ".join(overrides) + " from the transient-3d-gpu payload and send alloyId"
+        )
+    given = [payload[key] for key in ("alloyId", "materialName") if payload.get(key) is not None]
+    resolved = {resolve_alloy_id(value) for value in given}
+    if not given or None in resolved or len(resolved) != 1:
+        raise ValueError(
+            "transient-3d-gpu requires a supported alloy identity; got "
+            f"alloyId={payload.get('alloyId')!r}, materialName={payload.get('materialName')!r}"
+        )
+    aid = resolved.pop()
+    t = thermal_props(aid)
+    material = {
+        "rho": t["density_kg_m3"],
+        "L_f": t["latent_heat_fusion_J_kg"],
+        "T_solidus": t["solidus_C"] + 273.15,
+        "T_liquidus": t["liquidus_C"] + 273.15,
+        "Lv": t["latent_heat_vap_J_kg"],
+        # Hertz-Knudsen / Clausius-Clapeyron in the kernel use the specific gas constant, J/(kg K).
+        "Rs": GAS_CONSTANT_R.value / t["M_molar_kg_mol"],
+        "Tv": t["boiling_C"] + 273.15,
+        "cp_solid": t["specific_heat_J_kgK"],
+        "cp_liquid": t["specific_heat_liquid_J_kgK"],
+        "k_solid": t["thermal_conductivity_W_mK"],
+        "k_liquid": t["thermal_conductivity_liquid_W_mK"],
+    }
+    return aid, material, canonical_material_source(aid)[1]
+
+
 def _rpc_transient_3d_gpu(request):
     # Phase 22
     from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
     payload = request["payload"]
-    
+    alloy_id, material, material_sha256 = _transient_3d_gpu_material_from_authority(payload)
+
     # Safety clamping to prevent GPU OOM
     nx = max(8, min(256, int(payload.get("nx", 64))))
     ny = max(8, min(256, int(payload.get("ny", 64))))
@@ -393,15 +439,21 @@ def _rpc_transient_3d_gpu(request):
     data = solver.solve_toolpath(
         toolpath=toolpath,
         T_preheat_K=float(payload.get("T_preheat_K", 300.0)),
-        rho=float(payload.get("rho", 4420.0)),
-        L_f=float(payload.get("L_f", 2.9e5)),
-        T_solidus=float(payload.get("T_solidus", 1878.0)),
-        T_liquidus=float(payload.get("T_liquidus", 1928.0)),
-        cp_solid=float(payload.get("cp_solid", 670.0)),
-        cp_liquid=float(payload.get("cp_liquid", 730.0)),
-        k_solid=float(payload.get("k_solid", 15.0)),
-        k_liquid=float(payload.get("k_liquid", 25.0))
+        **material,
     )
+    if isinstance(data, dict):
+        data["materialAuthority"] = {
+            "alloyId": alloy_id,
+            "authority": canonical_material_source(alloy_id)[0]["authority"],
+            "materialSha256": material_sha256,
+            "valuesUsed": dict(material),
+            "units": {
+                "rho": "kg/m3", "L_f": "J/kg", "T_solidus": "K", "T_liquidus": "K",
+                "Lv": "J/kg", "Rs": "J/(kg K) = R/M_molar", "Tv": "K",
+                "cp_solid": "J/(kg K)", "cp_liquid": "J/(kg K)",
+                "k_solid": "W/(m K)", "k_liquid": "W/(m K)",
+            },
+        }
     return data
 
 

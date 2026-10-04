@@ -114,11 +114,11 @@ class GeneratedFileTest(unittest.TestCase):
         listed = {item["quantity"]: [v["value"] for v in item["values"]] for item in entry["unreconciledPythonValues"]}
         self.assertEqual(listed["latent heat of fusion"],
                          [row["latent_heat_fusion_J_kg"], in625.LATENT_HEAT_J_KG, in625.IN625_LATENT_HEAT_FUSION_MILLS_J_KG])
-        self.assertEqual(listed["latent heat of fusion"], [260000.0, 290000.0, 227000.0])
+        self.assertEqual(listed["latent heat of fusion"], [290000.0, 290000.0, 227000.0])
         self.assertEqual(listed["boiling point"], [row["boiling_C"], round(in625.IN625_BOILING_K - 273.15, 2)])
         self.assertEqual(listed["boiling point"], [2880.0, 2900.0])
         self.assertEqual(listed["IR absorptivity"], [row["absorptivity_IR"], in625.IN625_ABSORPTIVITY_IR])
-        self.assertIn("260000 vs 290000 vs 227000 J/kg", entry["note"])
+        self.assertIn("290000 vs 290000 vs 227000 J/kg", entry["note"])
         self.assertIn("2880 vs 2900 C", entry["note"])
 
 
