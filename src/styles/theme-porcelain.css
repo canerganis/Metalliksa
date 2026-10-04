@@ -322,11 +322,23 @@ svg [stroke="#1e293b" i], svg [stroke="#334155" i], svg [stroke="#162032" i], sv
 svg [stroke="#475569" i], svg [stroke="#4b5563" i] { stroke: var(--mk-chart-axis); }
 svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], svg [stroke="#94a3b8" i] { stroke: var(--mk-chart-axis); }
 
-/* Three labs were authored as light cards (bg-white, text-slate-800) inside the old dark shell. Inside their
- * module wrappers the original Tailwind ramps are restored, so they stay light-on-light as authored. */
-[data-module="transient-3d-gpu"], [data-module="powder-compaction"], [data-module="optical-tomography"] {
+/* Light-authored islands: a solid bg-white card was always meant as a white card with Tailwind's own palette
+ * inside it, and three labs were authored entirely as light cards inside the old dark shell. Inside those
+ * the original ramps are restored, so their text and accents stay as authored (dark on white). */
+.bg-white, [data-module="transient-3d-gpu"], [data-module="powder-compaction"], [data-module="optical-tomography"] {
   --color-white: #fff;
   --color-black: #000;
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-100: oklch(93.6% 0.032 17.717);
+  --color-red-200: oklch(88.5% 0.062 18.334);
+  --color-red-300: oklch(80.8% 0.114 19.571);
+  --color-red-400: oklch(70.4% 0.191 22.216);
+  --color-red-500: oklch(63.7% 0.237 25.331);
+  --color-red-600: oklch(57.7% 0.245 27.325);
+  --color-red-700: oklch(50.5% 0.213 27.518);
+  --color-red-800: oklch(44.4% 0.177 26.899);
+  --color-red-900: oklch(39.6% 0.141 25.723);
+  --color-red-950: oklch(25.8% 0.092 26.042);
   --color-orange-50: oklch(98% 0.016 73.684);
   --color-orange-100: oklch(95.4% 0.038 75.164);
   --color-orange-200: oklch(90.1% 0.076 70.697);
@@ -338,6 +350,17 @@ svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], sv
   --color-orange-800: oklch(47% 0.157 37.304);
   --color-orange-900: oklch(40.8% 0.123 38.172);
   --color-orange-950: oklch(26.6% 0.079 36.259);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-200: oklch(92.4% 0.12 95.746);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-400: oklch(82.8% 0.189 84.429);
+  --color-amber-500: oklch(76.9% 0.188 70.08);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-amber-950: oklch(27.9% 0.077 45.635);
   --color-green-50: oklch(98.2% 0.018 155.826);
   --color-green-100: oklch(96.2% 0.044 156.743);
   --color-green-200: oklch(92.5% 0.084 155.995);
@@ -349,6 +372,39 @@ svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], sv
   --color-green-800: oklch(44.8% 0.119 151.328);
   --color-green-900: oklch(39.3% 0.095 152.535);
   --color-green-950: oklch(26.6% 0.065 152.934);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-100: oklch(95% 0.052 163.051);
+  --color-emerald-200: oklch(90.5% 0.093 164.15);
+  --color-emerald-300: oklch(84.5% 0.143 164.978);
+  --color-emerald-400: oklch(76.5% 0.177 163.223);
+  --color-emerald-500: oklch(69.6% 0.17 162.48);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-emerald-700: oklch(50.8% 0.118 165.612);
+  --color-emerald-800: oklch(43.2% 0.095 166.913);
+  --color-emerald-900: oklch(37.8% 0.077 168.94);
+  --color-emerald-950: oklch(26.2% 0.051 172.552);
+  --color-cyan-50: oklch(98.4% 0.019 200.873);
+  --color-cyan-100: oklch(95.6% 0.045 203.388);
+  --color-cyan-200: oklch(91.7% 0.08 205.041);
+  --color-cyan-300: oklch(86.5% 0.127 207.078);
+  --color-cyan-400: oklch(78.9% 0.154 211.53);
+  --color-cyan-500: oklch(71.5% 0.143 215.221);
+  --color-cyan-600: oklch(60.9% 0.126 221.723);
+  --color-cyan-700: oklch(52% 0.105 223.128);
+  --color-cyan-800: oklch(45% 0.085 224.283);
+  --color-cyan-900: oklch(39.8% 0.07 227.392);
+  --color-cyan-950: oklch(30.2% 0.056 229.695);
+  --color-sky-50: oklch(97.7% 0.013 236.62);
+  --color-sky-100: oklch(95.1% 0.026 236.824);
+  --color-sky-200: oklch(90.1% 0.058 230.902);
+  --color-sky-300: oklch(82.8% 0.111 230.318);
+  --color-sky-400: oklch(74.6% 0.16 232.661);
+  --color-sky-500: oklch(68.5% 0.169 237.323);
+  --color-sky-600: oklch(58.8% 0.158 241.966);
+  --color-sky-700: oklch(50% 0.134 242.749);
+  --color-sky-800: oklch(44.3% 0.11 240.79);
+  --color-sky-900: oklch(39.1% 0.09 240.876);
+  --color-sky-950: oklch(29.3% 0.066 243.157);
   --color-blue-50: oklch(97% 0.014 254.604);
   --color-blue-100: oklch(93.2% 0.032 255.585);
   --color-blue-200: oklch(88.2% 0.059 254.128);
@@ -360,6 +416,17 @@ svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], sv
   --color-blue-800: oklch(42.4% 0.199 265.638);
   --color-blue-900: oklch(37.9% 0.146 265.522);
   --color-blue-950: oklch(28.2% 0.091 267.935);
+  --color-indigo-50: oklch(96.2% 0.018 272.314);
+  --color-indigo-100: oklch(93% 0.034 272.788);
+  --color-indigo-200: oklch(87% 0.065 274.039);
+  --color-indigo-300: oklch(78.5% 0.115 274.713);
+  --color-indigo-400: oklch(67.3% 0.182 276.935);
+  --color-indigo-500: oklch(58.5% 0.233 277.117);
+  --color-indigo-600: oklch(51.1% 0.262 276.966);
+  --color-indigo-700: oklch(45.7% 0.24 277.023);
+  --color-indigo-800: oklch(39.8% 0.195 277.366);
+  --color-indigo-900: oklch(35.9% 0.144 278.697);
+  --color-indigo-950: oklch(25.7% 0.09 281.288);
   --color-rose-50: oklch(96.9% 0.015 12.422);
   --color-rose-100: oklch(94.1% 0.03 12.58);
   --color-rose-200: oklch(89.2% 0.058 10.001);
@@ -382,4 +449,15 @@ svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], sv
   --color-slate-800: oklch(27.9% 0.041 260.031);
   --color-slate-900: oklch(20.8% 0.042 265.755);
   --color-slate-950: oklch(12.9% 0.042 264.695);
+  --color-gray-50: oklch(98.5% 0.002 247.839);
+  --color-gray-100: oklch(96.7% 0.003 264.542);
+  --color-gray-200: oklch(92.8% 0.006 264.531);
+  --color-gray-300: oklch(87.2% 0.01 258.338);
+  --color-gray-400: oklch(70.7% 0.022 261.325);
+  --color-gray-500: oklch(55.1% 0.027 264.364);
+  --color-gray-600: oklch(44.6% 0.03 256.802);
+  --color-gray-700: oklch(37.3% 0.034 259.733);
+  --color-gray-800: oklch(27.8% 0.033 256.848);
+  --color-gray-900: oklch(21% 0.034 264.665);
+  --color-gray-950: oklch(13% 0.028 261.692);
 }

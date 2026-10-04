@@ -388,6 +388,25 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   box-shadow: 0 0 0 3px rgba(255, 91, 31, 0.16), 0 0 10px rgba(255, 91, 31, 0.7);
 }
 
+/* Hover: a light sweep crosses the entry (ornament, motion allowed only). */
+.mk-nav-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.9) 50%, transparent 70%) no-repeat;
+  background-size: 250% 100%;
+  background-position: 160% 0;
+}
+.mk-nav-home { font-family: var(--mk-font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+.is-home .mk-nav .mk-nav-item.is-active, .is-home nav .mk-nav-item.is-active { background: transparent; box-shadow: none; font-weight: 400; }
+.is-home nav .mk-nav-item.is-active::before { display: none; }
+/* Left HUD rail with tick marks along the sidebar edge (ornament). */
+@media (min-width: 64rem) {
+  .mk-sidebar { background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)), repeating-linear-gradient(180deg, rgba(17, 22, 31, 0.22) 0 1px, transparent 1px 12px); background-size: auto, 5px 100%; background-repeat: no-repeat; background-position: 0 0, right 0 top 0; }
+}
+
 /* Module masthead: kicker, a large light-weight title, and a reticle ornament on wide screens. */
 .mk-content-header {
   position: relative;
@@ -427,6 +446,37 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
     mask-image: radial-gradient(circle, #000 55%, transparent 72%);
   }
 }
+
+/* HUD corner brackets (ornament): four 14px L-marks drawn as background layers, no extra DOM. */
+.mk-hud {
+  --hud: var(--mk-border-strong);
+  background-image:
+    linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+    linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+    linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+    linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud));
+  background-repeat: no-repeat;
+  background-size: 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px;
+  background-position: 8px 8px, 8px 8px, calc(100% - 8px) 8px, calc(100% - 8px) 8px, 8px calc(100% - 8px), 8px calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) calc(100% - 8px);
+}
+
+/* Scientific context dossier (lazy panel above each module). */
+.mk-dossier {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1.4rem 1.5rem 1.5rem;
+  border: 1px solid var(--mk-border);
+  border-radius: 18px;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--mk-elev-1);
+  backdrop-filter: blur(10px);
+}
+.mk-dossier-grid { display: grid; gap: 1px; margin-top: 1.2rem; overflow: hidden; border: 1px solid var(--mk-border); border-radius: 12px; background: var(--mk-border); }
+@media (min-width: 64rem) { .mk-dossier-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.mk-dossier-cell { padding: 1rem 1.1rem; background: var(--mk-paper-2); font-size: 12.5px; line-height: 1.6; color: var(--mk-text-subtle); }
+.mk-dossier-cell h3 { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-family: var(--mk-font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mk-text-strong); }
+.mk-dossier-cell.is-limit { background: #fffaf3; }
+.mk-dossier-limit { margin-top: 0.7rem; padding-top: 0.6rem; border-top: 1px solid rgba(143, 67, 0, 0.18); color: var(--mk-amber); }
 
 /* Shared plates (shared-material drawer, module footer). */
 .mk-plate {
@@ -487,6 +537,29 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Entrances: transform only, so every label is fully visible from the first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  .mk-nav-item:hover::after { transition: background-position 700ms var(--mk-ease-out); background-position: -60% 0; }
+  .mk-content-header { animation: mkRise 560ms var(--mk-ease-out); }
+  .mk-content-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--mk-laser), transparent) no-repeat;
+    background-size: 30% 100%;
+    background-position: -40% 0;
+    animation: mkSweepOnce 1.1s var(--mk-ease-out) 120ms both;
+  }
+  #main-content > [data-module]:not([hidden]), .mk-dossier { animation: mkRise 620ms var(--mk-ease-out) 60ms backwards; }
+  .mk-scanline { animation: mkBreathe 9s ease-in-out infinite alternate; }
+}
+@keyframes mkRise { from { transform: translateY(12px); } to { transform: none; } }
+@keyframes mkSweepOnce { from { background-position: -40% 0; opacity: 1; } 85% { opacity: 1; } to { background-position: 140% 0; opacity: 0; } }
+@keyframes mkBreathe { from { opacity: 0.55; transform: scale(1); } to { opacity: 1; transform: scale(1.04); } }
 
 @keyframes mkFilament {
   0% { background-position: -30% 0; }

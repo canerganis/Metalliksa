@@ -36,6 +36,8 @@ const loadCommandPalette = () => lazy(() => import('./components/CommandPaletteC
 const APPLE = isApplePlatform(typeof navigator === 'undefined' ? '' : navigator.platform);
 const SHORTCUT_LABEL = paletteShortcutLabel(APPLE);
 const SHORTCUT_KEYS = paletteShortcutKeys(APPLE);
+// Own chunk (with its stylesheet): the start page shown without a module link or from 'Overview'.
+const Atrium = lazy(() => import('./components/Atrium').then(m => ({ default: m.Atrium })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
 const PocketCalculators = lazy(() => import("./components/PocketCalculators").then(m => ({ default: m.PocketCalculators })));
@@ -78,6 +80,10 @@ const AIOrchestratorPanel = lazy(() => import("./components/AIOrchestratorPanel"
 export type NavSubTab = ModuleId;
 export type DisciplineHubId = typeof WORKSPACES[number]['id'];
 
+// The start page: no hash, "#", "#/" or "#/home". Any other hash is a module link (unknown -> LPBF).
+const isHome = (hash: string) => /^(#\/?(home)?)?$/.test(hash);
+const startsHome = () => isHome(window.location.hash) && !/[?&]lpbf(Stage|SubTab)=/.test(window.location.search);
+
 function initialTab(): ModuleId {
   const linked = moduleFromHash(window.location.hash);
   if (linked) return linked;
@@ -91,7 +97,8 @@ function initialTab(): ModuleId {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ModuleId>(initialTab);
-  const [visited, setVisited] = useState<ModuleId[]>(() => [initialTab()]);
+  const [home, setHome] = useState(startsHome);
+  const [visited, setVisited] = useState<ModuleId[]>(() => home ? [] : [initialTab()]);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [moduleSearch, setModuleSearch] = useState('');
   const [showStatus, setShowStatus] = useState(false);
@@ -127,6 +134,7 @@ export default function App() {
 
   function activate(id: ModuleId) {
     setActiveTab(id);
+    setHome(false);
     setVisited(current => current.includes(id) ? current : [...current, id]);
     setNavigationOpen(false);
   }
@@ -134,6 +142,11 @@ export default function App() {
     if (!isModuleId(id)) return;
     activate(id);
     if (window.location.hash !== moduleHash(id)) window.location.hash = moduleHash(id);
+  }
+  function goHome() {
+    setHome(true);
+    setNavigationOpen(false);
+    if (window.location.hash !== '#/home') window.location.hash = '#/home';
   }
   async function refreshStatus(force = true) {
     setChecking(true); setStatusError(null);
@@ -143,7 +156,7 @@ export default function App() {
   }
   useEffect(() => {
     void refreshStatus(false);
-    const onHash = () => activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
+    const onHash = () => isHome(window.location.hash) ? setHome(true) : activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
     const onNavigate = (event: Event) => {
       const id = (event as CustomEvent<{ tabId?: string }>).detail?.tabId;
       if (id) navigate(id);
@@ -213,19 +226,22 @@ export default function App() {
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
-      <aside className={`${navigationOpen ? 'block' : 'hidden'} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[var(--mk-header-h)] lg:h-[calc(100vh_-_var(--mk-header-h))] overflow-y-auto`}>
+      <aside className={`${navigationOpen ? 'block' : 'hidden'}${home ? ' is-home' : ''} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[var(--mk-header-h)] lg:h-[calc(100vh_-_var(--mk-header-h))] overflow-y-auto`}>
         <div className="mb-5 flex items-center justify-between"><div><p className="mk-side-kicker">Navigation</p><p className="mt-1 text-sm text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(MODULES.length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-slate-400">Find a module</label><div className="relative mb-6"><Search className="absolute left-3 top-3 w-4 h-4 text-slate-500"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm"/></div>
+        <button type="button" onClick={goHome} aria-current={home ? 'page' : undefined} className={`mk-nav-item mk-nav-home mb-5${home ? ' is-active' : ''}`}>Overview</button>
         <ModuleNav modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
       </aside>
       <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
-        <div className="mk-content-header mb-6 border-b pb-6 pt-1"><p className="mk-kicker mb-3">{activeWorkspace.label} / Active surface</p><h2>{activeModule.label}</h2><div className="mt-3 flex flex-wrap items-center gap-2"><span title={MATURITY_BADGE_TITLE} className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span><EvidenceBadge moduleId={activeModule.id} /></div><p className="mt-4 max-w-3xl text-[15px] leading-7 text-slate-300">{activeModule.description}</p></div>
+        {home ? <Suspense fallback={<div role="status" className="mk-loading">Loading overview…</div>}><Atrium continueId={activeTab} engine={status} engineChecking={checking || (status === null && statusError === null)} shortcutLabel={SHORTCUT_LABEL} onNavigate={navigate} onSearch={openPalette} /></Suspense> : <>
+        <div key={activeTab} className="mk-content-header mb-6 border-b pb-6 pt-1"><p className="mk-kicker mb-3">{activeWorkspace.label} / Active surface</p><h2>{activeModule.label}</h2><div className="mt-3 flex flex-wrap items-center gap-2"><span title={MATURITY_BADGE_TITLE} className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span><EvidenceBadge moduleId={activeModule.id} /></div><p className="mt-4 max-w-3xl text-[15px] leading-7 text-slate-300">{activeModule.description}</p></div>
         <details className="mk-plate mb-5 px-4 py-3 text-xs">
           <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {formatExactNumber(specimen.lpbf.laserPower_W)} W / {formatExactNumber(specimen.lpbf.scanSpeed_mms)} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
         </details>
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
         {activeTab !== 'ai-orchestrator' && <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>}
-        {visited.map(id => <div key={id} hidden={id !== activeTab} data-module={id}><WorkspaceVisibility visible={id === activeTab}>
+        </>}
+        {visited.map(id => <div key={id} hidden={home || id !== activeTab} data-module={id}><WorkspaceVisibility visible={!home && id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>
             <Suspense fallback={<div role="status" className="mk-loading">Loading engineering module…</div>}>
               {(id === 'database' || id === '3d-distortion-lab') && <ResearchIntegrationPanel targetModule={id === 'database' ? 'materials-db' : 'lpbf-solver'} />}
@@ -233,7 +249,7 @@ export default function App() {
             </Suspense>
           </ModuleBoundary>
         </WorkspaceVisibility></div>)}
-        <div className="mt-8 border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-3"><p className="text-xs text-slate-500">Review inputs, source applicability and evidence before making an engineering decision.</p><button onClick={() => navigate(activeModule.next)} className="inline-flex gap-2 items-center text-sm text-sky-300 hover:text-sky-100">Next: {MODULES.find(m => m.id === activeModule.next)?.label}<ArrowRight className="h-4 w-4"/></button></div>
+        {!home && <div className="mt-8 border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-3"><p className="text-xs text-slate-500">Review inputs, source applicability and evidence before making an engineering decision.</p><button onClick={() => navigate(activeModule.next)} className="inline-flex gap-2 items-center text-sm text-sky-300 hover:text-sky-100">Next: {MODULES.find(m => m.id === activeModule.next)?.label}<ArrowRight className="h-4 w-4"/></button></div>}
       </main>
     </div>
     <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
