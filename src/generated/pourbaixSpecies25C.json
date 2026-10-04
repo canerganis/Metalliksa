@@ -161,7 +161,7 @@
       "name": "Nickel (Ni-H₂O System)",
       "available": true,
       "sourceSet": "E",
-      "sourceSetNote": "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with CODATA water; NiO2 is an estimate anchored to Ni2+ (see its row). Ni3O4 and Ni2O3 are withheld atlas rows",
+      "sourceSetNote": "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with CODATA water; Ni3O4 and Ni2O3 (atlas rows) and the NiO2 estimate are withheld",
       "waterDfG_kJ_mol": -237.14,
       "referenceCation": "Ni2+",
       "species": [
@@ -211,21 +211,6 @@
           "category": "Passivation (thermodynamic, film-forming)"
         },
         {
-          "id": "NiO2",
-          "formula": "NiO₂",
-          "x": 1,
-          "o": 2,
-          "h": 0,
-          "z": 0,
-          "phase": "s",
-          "dfG_kJ_mol": -212.65073185513432,
-          "role": "oxide",
-          "source": "E",
-          "verification": "V2",
-          "evidence": "ESTIMATE anchored to Ni2+: E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one lineage, not independent); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher nickel oxides uncertain. The domain lies above the O2 line (about 5 mV) at every pH",
-          "category": "Passivation (thermodynamic, film-forming)"
-        },
-        {
           "id": "HNiO2-",
           "formula": "HNiO₂⁻",
           "x": 1,
@@ -270,6 +255,21 @@
           "source": "A",
           "verification": "V3",
           "evidence": "no open source found for the atlas value (an E0 of 1.753 V is only reproduced by the same table); the atlas calls it uncertain; not used",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "NiO2",
+          "formula": "NiO₂",
+          "x": 1,
+          "o": 2,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -212.65073185513432,
+          "role": "oxide",
+          "source": "E",
+          "verification": "V3",
+          "evidence": "WITHHELD estimate (it was served as V2 until the second re-review): anchored to the NEA Ni2+ through E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one lineage, so the E0 check is tautological); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher nickel oxides uncertain. Its domain would lie above the O2 line, at least 38 mV above it (minimum at pH 8.5), so withholding it leaves the water-window map unchanged; above the O2 line the map shows Ni(OH)2, Ni2+ and HNiO2- instead of a NiO2 passivation domain",
           "category": "Passivation (thermodynamic, film-forming)"
         }
       ]
@@ -576,7 +576,7 @@
           "role": "oxide",
           "source": "N",
           "verification": "V2",
-          "evidence": "OpenStax App. G -320.5 kJ/mol (CHNOSZ zincite -76596 cal): table is 2.2 kJ/mol less negative; known sensitivity (Zn2+/ZnO pH 8.77 here, 8.58 with -320.5); sets not mixed",
+          "evidence": "OpenStax App. G -320.5 kJ/mol (CHNOSZ zincite -76596 cal): table is 2.2 kJ/mol less negative; known sensitivity (Zn2+/ZnO pH 8.77 here, 8.58 with -320.5); sets not mixed. The omitted Zn(OH)2(aq) is constant-dependent at the default 1e-6 M: with IUPAC 2013 (Powell & Brown, log *beta2 -17.82) ZnO + H2O = Zn(OH)2(aq) has log K -6.28 and ZnO keeps its domain (0.28 log margin); with the wateq4f / Baes & Mesmer constant (-16.9) log K is -5.36 and Zn(OH)2(aq) would replace the whole ZnO domain",
           "category": "Passivation (thermodynamic, film-forming)"
         },
         {

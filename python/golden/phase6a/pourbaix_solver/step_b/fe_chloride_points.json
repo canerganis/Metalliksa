@@ -3100,7 +3100,7 @@
   {
    "key": "model.excludedSpecies[2]",
    "kind": "added",
-   "new": "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M",
+   "new": "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above for Fe, Ni, Cu, Mg and Al, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M. Zn is constant-dependent at 10⁻⁶ M: with the IUPAC 2013 Zn(OH)₂(aq) constant ZnO keeps its domain, with the wateq4f / Baes & Mesmer constant Zn(OH)₂(aq) would replace the whole ZnO domain",
    "old": null
   },
   {
@@ -15937,7 +15937,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "c981a711748610dc309b71839f0d7af0d611413b",
+ "gitHead": "70d91ba594745c420cb8e9685dff59fc237fca5d",
  "input": {
   "chloride_ppm": 1000,
   "element": "Fe",
@@ -15987,7 +15987,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "pourbaix_solver",
  "solverFile": "python/pourbaix_solver.py",
- "solverSha256": "159f49f4379eb11a99f8eb11deceac381fe7404917f040496e05d5ed44c045b7",
+ "solverSha256": "2651a4044b65e5fbb813f09c228e66d3abe77d9a5e21a9eea15e82bb46b3320d",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -16608,7 +16608,7 @@
    "excludedSpecies": [
     "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined",
     "chloro and other complexes: the equilibrium contains no chloride species",
-    "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M"
+    "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above for Fe, Ni, Cu, Mg and Al, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M. Zn is constant-dependent at 10⁻⁶ M: with the IUPAC 2013 Zn(OH)₂(aq) constant ZnO keeps its domain, with the wateq4f / Baes & Mesmer constant Zn(OH)₂(aq) would replace the whole ZnO domain"
    ],
    "faraday_C_mol": 96485.33212331001,
    "gasConstantR_J_molK": 8.31446261815324,

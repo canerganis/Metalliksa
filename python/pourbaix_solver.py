@@ -579,8 +579,10 @@ def _model_block(log_a):
             "chloro and other complexes: the equilibrium contains no chloride species",
             "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. "
             "Checked with open-database constants they change at most about 0.6 % of the water-window cells at "
-            "10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), "
-            "which is why the dissolved activity is limited to 10⁻⁶ M to 1 M",
+            "10⁻⁶ M and above for Fe, Ni, Cu, Mg and Al, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) "
+            "up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M. Zn is "
+            "constant-dependent at 10⁻⁶ M: with the IUPAC 2013 Zn(OH)₂(aq) constant ZnO keeps its domain, with "
+            "the wateq4f / Baes & Mesmer constant Zn(OH)₂(aq) would replace the whole ZnO domain",
         ],
         "chloride": "chloride_ppm is echoed only; the equilibrium has no chloro-complexes and no sourced "
                     "generic pitting potential exists (chloridePittingBoundary.status)",

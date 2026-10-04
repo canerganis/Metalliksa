@@ -50,8 +50,10 @@ TEMPERATURE_K = physical_constants.ZERO_CELSIUS_K.value + TEMPERATURE_C
 LN10 = math.log(10.0)
 
 # Lower limit 10^-6 M: the mononuclear hydrolysis species (MOH+, M(OH)2(aq)) are not in the table for any
-# element; at 10^-6 M and above they change at most about 0.6 % of the water-window cells, at 10^-8 M
-# several % (MgOH+ about 5 %), so lower activities are refused instead of mapped without them.
+# element. At 10^-6 M and above they change at most about 0.6 % of the water-window cells for Fe, Ni, Cu, Mg
+# and Al; Zn is constant-dependent (IUPAC 2013 Zn(OH)2(aq) keeps ZnO, the wateq4f / Baes & Mesmer constant
+# would replace the whole ZnO domain, see the ZnO row). At 10^-8 M several % (MgOH+ about 5 %). Lower
+# activities are refused instead of mapped without these species.
 ACTIVITY_LOG10_RANGE = (-6.0, 0.0)
 ACTIVITY_LOG10_DEFAULT = -6.0
 BOX = {"pH_min": -2.0, "pH_max": 16.0, "E_min_V_SHE": -3.0, "E_max_V_SHE": 2.5}
@@ -130,10 +132,6 @@ _ROWS = {
          "wateq4f.dat (Nordstrom 1990) 10.8 (delta 1.3 kJ/mol). Open databases spread 10.8 to 12.7 "
          "(llnl.dat 12.75: 9.9 kJ/mol above NEA). E0(Ni(OH)2/Ni, alkaline) -0.739 V vs -0.72 V (CRC, "
          "older solubility constants): documented exception"),
-        ("NiO2", "NiO₂", 1, 2, 0, 0, "s", _NI_NIO2, "oxide", "E", "V2",
-         "ESTIMATE anchored to Ni2+: E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one "
-         "lineage, not independent); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher "
-         "nickel oxides uncertain. The domain lies above the O2 line (about 5 mV) at every pH"),
         ("HNiO2-", "HNiO₂⁻", 1, 2, 1, -1, "aq", _NI_HNIO2M, "anion_low", "E", "V2",
          "Ni(OH)2(cr) + H2O = Ni(OH)3- + H+ (Ni(OH)3- = HNiO2- + H2O): table log K 11.02 - 29.2 = -18.18 "
          "(NEA log *beta3 -29.2 +/- 1.7); llnl.dat 12.7485 - 30.9852 = -18.24 (delta 0.3 kJ/mol); "
@@ -164,7 +162,11 @@ _ROWS = {
          "OpenStax App. G -147.1 kJ/mol; E0(Zn2+/Zn) -0.7621 V vs -0.7618 V"),
         ("ZnO", "ZnO", 1, 1, 0, 0, "s", -318.30, "oxide", "N", "V2",
          "OpenStax App. G -320.5 kJ/mol (CHNOSZ zincite -76596 cal): table is 2.2 kJ/mol less "
-         "negative; known sensitivity (Zn2+/ZnO pH 8.77 here, 8.58 with -320.5); sets not mixed"),
+         "negative; known sensitivity (Zn2+/ZnO pH 8.77 here, 8.58 with -320.5); sets not mixed. The omitted "
+         "Zn(OH)2(aq) is constant-dependent at the default 1e-6 M: with IUPAC 2013 (Powell & Brown, log *beta2 "
+         "-17.82) ZnO + H2O = Zn(OH)2(aq) has log K -6.28 and ZnO keeps its domain (0.28 log margin); with the "
+         "wateq4f / Baes & Mesmer constant (-16.9) log K is -5.36 and Zn(OH)2(aq) would replace the whole ZnO "
+         "domain"),
         ("HZnO2-", "HZnO₂⁻", 1, 2, 1, -1, "aq", -457.09, "anion_low", "N", "V2",
          "ZnO + H2O = HZnO2- + H+: table log K -17.23; CHNOSZ OBIGT (AT14 HZnO2- -110156 cal, "
          "SSWS97.1 zincite -76596 cal) -16.95: delta 1.6 kJ/mol"),
@@ -204,8 +206,7 @@ _ROWS = {
 ELEMENT_SET = {
     "Fe": ("A", _FE_H2O, "Atlas set (Pourbaix 1974); FeO4 2- derived from Latimer E0 (L)"),
     "Ni": ("E", _NI_H2O, "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with "
-                         "CODATA water; NiO2 is an estimate anchored to Ni2+ (see its row). Ni3O4 and Ni2O3 are "
-                         "withheld atlas rows"),
+                         "CODATA water; Ni3O4 and Ni2O3 (atlas rows) and the NiO2 estimate are withheld"),
     "Cu": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
     "Zn": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982), ZnO see row evidence"),
     "Mg": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
@@ -238,6 +239,13 @@ WITHHELD_SPECIES = {
         ("Ni2O3", "Ni₂O₃", 2, 3, 0, 0, "s", _atlas(-112270.0), "oxide", "A", "V3",
          "no open source found for the atlas value (an E0 of 1.753 V is only reproduced by the same "
          "table); the atlas calls it uncertain; not used"),
+        ("NiO2", "NiO₂", 1, 2, 0, 0, "s", _NI_NIO2, "oxide", "E", "V3",
+         "WITHHELD estimate (it was served as V2 until the second re-review): anchored to the NEA Ni2+ through "
+         "E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one lineage, so the E0 check is "
+         "tautological); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher nickel oxides "
+         "uncertain. Its domain would lie above the O2 line, at least 38 mV above it (minimum at pH 8.5), so "
+         "withholding it leaves the water-window map unchanged; above the O2 line the map shows Ni(OH)2, Ni2+ "
+         "and HNiO2- instead of a NiO2 passivation domain"),
     ),
     "Al": (
         ("AlO2-(atlas)", "AlO₂⁻ (atlas)", 1, 2, 0, -1, "aq", _atlas(-200710.0), "anion_low", "A", "V3",

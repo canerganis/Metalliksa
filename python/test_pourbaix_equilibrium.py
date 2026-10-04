@@ -338,13 +338,39 @@ class NickelSetETest(unittest.TestCase):
         # Ni2+/Ni(OH)2 at a = 1e-6: atlas 9.09 -> NEA 8.51 (review pbx-sci S1)
         self.assertAlmostEqual(solver.boundary_line("Ni", "Ni2+", "Ni(OH)2", -6.0)["pH"], (11.02 + 6.0) / 2, delta=0.01)
 
-    def test_nio2_is_an_anchored_estimate(self):
-        row = next(r for r in table.species_rows("Ni") if r["id"] == "NiO2")
-        self.assertIn("ESTIMATE", row["evidence"])
-        self.assertAlmostEqual(solver.boundary_line("Ni", "Ni2+", "NiO2", 0.0)["E_V_SHE_at_pH0"], 1.593, delta=1e-9)
-        # it lies above the O2 line at every pH (no domain inside the water window)
-        for ph in range(-2, 17):
-            self.assertNotEqual(oracle.dominant("Ni", float(ph), 1.2288 - K * ph - 0.001), "NiO2")
+    def test_nio2_is_withheld_and_the_sentence_about_it_is_pinned(self):
+        # review pbx-rr SF-2: served as V2 although anchored to the very 1.593 V it was checked against, and the
+        # text said "about 5 mV" above the O2 line (the atlas-set figure) while it is 38 mV after the re-anchoring.
+        self.assertNotIn("NiO2", {r["id"] for r in table.species_rows("Ni")})
+        row = next(r for r in table.WITHHELD_SPECIES["Ni"] if r[0] == "NiO2")
+        self.assertEqual(row[10], "V3")
+        self.assertIn("at least 38 mV above it (minimum at pH 8.5)", row[11])
+        self.assertIn("WITHHELD estimate", row[11])
+        self.assertAlmostEqual(row[7], oracle.WITHHELD["Ni"]["NiO2"][4], delta=1e-6)
+        # the pinned figure: with NiO2 added back (alone: the other withheld rows stay out), the lowest edge of
+        # its domain above the O2 line
+        sp = dict(oracle.DATA["Ni"]["sp"])
+        sp["NiO2"] = oracle.WITHHELD["Ni"]["NiO2"]
+        c = oracle.coeffs_of(sp, oracle.DATA["Ni"]["H2O"], -6.0)
+
+        def dominant(ph, e):
+            g = {k: v[0] + v[1] * ph + v[2] * e for k, v in c.items()}
+            return min(g, key=g.get)
+
+        best = None
+        for i in range(-200, 1601, 5):
+            ph = i / 100.0
+            e_oer = 1.2288 - K * ph
+            e = e_oer
+            while dominant(ph, e) != "NiO2" and e < e_oer + 0.2:
+                e += 0.0005
+            if e < e_oer + 0.2 and (best is None or e - e_oer < best):
+                best = e - e_oer
+        self.assertAlmostEqual(best, 0.038, delta=0.002)
+        # withholding it changes no cell inside the water window
+        for ph, e in _grid(ph_lo=-2.0, ph_hi=16.0, ph_step=0.1, e_lo=-3.0, e_hi=2.5, e_step=0.01):
+            if -K * ph <= e <= 1.2288 - K * ph:
+                self.assertNotEqual(dominant(ph, e), "NiO2")
 
 
 class StandardPotentialCrossCheckTest(unittest.TestCase):
@@ -354,7 +380,6 @@ class StandardPotentialCrossCheckTest(unittest.TestCase):
             ("Fe", "Fe", "Fe3O4", -0.085, 0.010), ("Fe", "Fe3O4", "Fe2O3", 0.22, 0.010),
             ("Fe", "Fe2+", "Fe2O3", 0.728, 0.010), ("Fe", "Fe2+", "Fe3O4", 0.98, 0.010),
             ("Fe", "Fe3+", "FeO4^2-", 2.20, 0.010),
-            ("Ni", "Ni2+", "NiO2", 1.593, 0.010),
             ("Cu", "Cu", "Cu2+", 0.3419, 0.010), ("Cu", "Cu", "Cu+", 0.521, 0.010),
             ("Cu", "Cu+", "Cu2+", 0.153, 0.010), ("Zn", "Zn", "Zn2+", -0.7618, 0.010),
             ("Mg", "Mg", "Mg2+", -2.372, 0.020))
@@ -624,6 +649,26 @@ class ValidationTest(unittest.TestCase):
             self.assertIn("mononuclear hydrolysis species", text, el)
             self.assertIn("omitted", text, el)
             self.assertEqual(model["dissolvedActivityRange_log10"], [-6.0, 0.0], el)
+
+    def test_zn_is_named_as_constant_dependent_in_the_statement_and_the_zno_row(self):
+        # review pbx-rr SF-1: Zn(OH)2(aq): log K(ZnO + H2O = Zn(OH)2(aq)) = -6.28 (IUPAC 2013, ZnO survives at
+        # 1e-6 M) or -5.36 (wateq4f / Baes & Mesmer, ZnO domain gone) with the table's NBS ZnO
+        rows = {r["id"]: r for r in table.species_rows("Zn")}
+        log_ks0 = -(rows["Zn2+"]["dfG_kJ_mol"] + table.water_dfg_kj_mol("Zn") - rows["ZnO"]["dfG_kJ_mol"]) / KJ_PER_LOG_K
+        self.assertAlmostEqual(log_ks0, 11.54, delta=0.02)               # ZnO + 2H+ = Zn2+ + H2O
+        self.assertAlmostEqual(log_ks0 - 16.9, -5.36, delta=0.02)        # wateq4f / Baes & Mesmer log *beta2
+        self.assertAlmostEqual(log_ks0 - 17.82, -6.28, delta=0.02)       # IUPAC 2013
+        zn = solver.solve_pourbaix_diagram("Zn", 25.0, -6.0, 0.0, [])["model"]["excludedSpecies"][2]
+        self.assertIn("Zn is constant-dependent", zn)
+        self.assertIn("IUPAC 2013", zn)
+        self.assertIn("Baes & Mesmer", zn)
+        self.assertIn("Fe, Ni, Cu, Mg and Al", zn)
+        for text in (rows["ZnO"]["evidence"],):
+            self.assertIn("constant-dependent", text)
+            self.assertIn("-6.28", text)
+            self.assertIn("-5.36", text)
+        ui = (HERE.parent / "src" / "components" / "DynamicPourbaixStudio.tsx").read_text(encoding="utf-8")
+        self.assertIn("Zn is constant-dependent", ui)
 
     def test_bad_point_inputs_are_validation_errors_not_classifications(self):
         # S3 (review pbx-sci): NaN pH was classified Immunity, inf E Immunity, pH 30 accepted, missing pH/E
