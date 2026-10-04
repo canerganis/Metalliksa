@@ -238,15 +238,5 @@
     "next": "3d-distortion-lab",
     "viewComponent": "src/components/MetallurgyCopilot.tsx",
     "viewExport": "MetallurgyCopilot"
-  },
-  {
-    "id": "ai-orchestrator",
-    "workspace": "orchestration",
-    "label": "AI Orchestrator",
-    "scope": "Preview",
-    "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-    "next": "research-hub",
-    "viewComponent": "src/components/AIOrchestratorPanel.tsx",
-    "viewExport": "AIOrchestratorPanel"
   }
 ]

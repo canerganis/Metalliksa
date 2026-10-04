@@ -601,7 +601,7 @@ export function installLogin(app: Express, auth: LoginAuth) {
 // ---------------------------------------------------------------------------
 // Fixed-window in-memory rate limit
 // ---------------------------------------------------------------------------
-const AI_ROUTE_PATTERN = /^\/api\/(metallurgy\/(consult|diagnose-micrograph)|consult|orchestrator\/(dataset-plan|collect-source))\/?$/;
+const AI_ROUTE_PATTERN = /^\/api\/(metallurgy\/(consult|diagnose-micrograph)|consult)\/?$/;
 
 export interface RateLimitOptions {
   windowMs?: number;

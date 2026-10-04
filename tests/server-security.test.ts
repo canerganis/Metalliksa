@@ -123,7 +123,7 @@ test("errorHandler hides 5xx details and includes request id", () => {
 
 test("tokenAuth and rateLimit treat /api paths case-insensitively (Express routers do)", () => {
   const mw = tokenAuth("s3cret");
-  for (const url of ["/API/orchestrator/collect-source", "/Api/Consult", "/api/Consult/"]) {
+  for (const url of ["/API/metallurgy/consult", "/Api/Consult", "/api/Consult/"]) {
     const res = mockRes();
     assert.equal(run(mw, mockReq({ originalUrl: url }), res), false, url);
     assert.equal(res.statusCode, 401, url);

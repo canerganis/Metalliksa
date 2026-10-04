@@ -7,7 +7,7 @@ export type RunState = "unvalidated" | "inconclusive" | "unavailable" | "outside
 export type EvidenceStatus = EvidenceType | RunState;
 export type ContractMaturity = "Research" | "Preview";
 export type ContractNavigation = "listed" | "hidden";
-export type ContractWorkspace = "lpbf" | "materials" | "evidence" | "orchestration";
+export type ContractWorkspace = "lpbf" | "materials" | "evidence";
 export type OracleState = "present" | "pending";
 export type MigrationState = "legacy" | "contracted";
 
@@ -666,32 +666,6 @@ export const MODULE_REGISTRY_CORE = {
       "view": {
         "component": "src/components/MetallurgyCopilot.tsx",
         "export": "MetallurgyCopilot"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "ai-orchestrator",
-      "version": "0.0.0",
-      "workspace": "orchestration",
-      "label": "AI Orchestrator",
-      "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-      "next": "research-hub",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AIOrchestratorPanel.tsx",
-        "export": "AIOrchestratorPanel"
       },
       "migrationState": "legacy",
       "evidence": {

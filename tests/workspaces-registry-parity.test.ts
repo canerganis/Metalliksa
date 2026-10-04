@@ -12,6 +12,6 @@ const golden = JSON.parse(readFileSync(new URL('./fixtures/modules-nav-golden.js
 
 test('MODULES equals the pre-registry golden navigation list (ids, order, labels, workspace, maturity)', () => {
   const current = MODULES.map(m => ({ id: m.id, workspace: m.workspace, label: m.label, scope: m.scope, description: m.description, next: m.next }));
-  assert.equal(golden.length, 25);
+  assert.equal(golden.length, 24);
   assert.deepEqual(current, golden);
 });

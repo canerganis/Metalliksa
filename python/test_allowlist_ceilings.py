@@ -203,7 +203,6 @@ CEILING_SNAPSHOT = {
             "GET /api/lpbf/sources/:datasetId/revisions",
             "GET /api/lpbf/sources/:datasetId/revisions/:revision",
             "GET /api/materials-project/search",
-            "GET /api/orchestrator/approved-sources",
             "GET /api/python/ipc-status",
             "GET /api/python/status",
             "GET /api/research/registry/history",
@@ -226,7 +225,6 @@ CEILING_SNAPSHOT = {
             "POST /api/lpbf/sources/:datasetId/verify",
             "POST /api/metallurgy/analyze-sem",
             "POST /api/metallurgy/detect-sem-legend",
-            "POST /api/orchestrator/collect-source",
             "POST /api/python/ipc-warmup",
             "POST /api/python/xrd-deconvolve",
         ],
@@ -245,7 +243,6 @@ CEILING_SNAPSHOT = {
         "cannedBaseline": [
             "GET /api/health",
             "GET /api/materials-project/search",
-            "GET /api/orchestrator/approved-sources",
             "POST /api/metallurgy/analyze-sem",
             "POST /api/metallurgy/detect-sem-legend",
         ],

@@ -214,7 +214,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "digital-twin": (_AI_CONSULT,),
     "traceability": (),
     "copilot": (_op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),),
-    "ai-orchestrator": (_op("dataset-plan", "POST", "/api/orchestrator/dataset-plan", _NODE),),
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {

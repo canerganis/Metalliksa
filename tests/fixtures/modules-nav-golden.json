@@ -190,13 +190,5 @@
     "scope": "Preview",
     "description": "AI suggestions require source verification before use in engineering decisions.",
     "next": "3d-distortion-lab"
-  },
-  {
-    "id": "ai-orchestrator",
-    "workspace": "orchestration",
-    "label": "AI Orchestrator",
-    "scope": "Preview",
-    "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-    "next": "research-hub"
   }
 ]

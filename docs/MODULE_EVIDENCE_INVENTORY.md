@@ -84,7 +84,7 @@ Model detail and existing verification records: `docs/LPBF_ENGINEERING.md`. This
 
 | Module ID / label | Actual component | Principal implementation / API | Evidence and current maturity | Next gap |
 | --- | --- | --- | --- | --- |
-| `ai-orchestrator` / AI Orchestrator | `src/components/AIOrchestratorPanel.tsx` | `/api/orchestrator/dataset-plan` in `routes/orchestrator.ts`; external AI planning with optional approved-source collection. Separate from `python/orchestrator.py`, which now adapts the thermal solver. | **Research. G:** source wiring inspected, no external provider request executed in this audit. Missing Sol/Astra configuration and UI completion labels require review. | Per-provider status, cancellation, collection provenance and stale-plan handling; a local approval badge is not ingestion evidence. |
+| Removed 2026-10-04 | `ai-orchestrator` (AI Orchestrator) | Deleted with its view, the Node orchestrator routes, the approved-source collector and the whole AI Orchestration workspace (AUDIT-module-deletion-opus D4: no computation). | - | - |
 
 ## Runtime and environment mapping (A01 review correction)
 
@@ -108,11 +108,11 @@ Modules: `3d-distortion-lab`, `keyhole-raytracing`.
 
 CPU build/thermal paths use the Windows/Python3.12 lock described in `docs/LPBF_CPU_REPRODUCTION.md`. Historical checks there apply only to their stated scope. Explicit `METALLIX_PYTHON` now controls the LPBF worker as well as host services; without it Windows remains WSL-first through `server/lpbfWorkerBridge.ts`. Industrial fatigue additionally needs a trained surrogate artifact on the selected interpreter; the toolpath map needs Shapely and NumPy. These are operation-specific requirements, not verified availability. OpenFOAM requires the configured distribution and compiled worker in `python/lpbf_openfoam.py`. Keyhole requires Warp on the selected interpreter and uses explicit CPU or CUDA 0. The legacy transient-GPU lab is separate from the bounded CUDA thermal pilot in LPBF Engineering. Native CPU success is not WSL readiness or scientific validation.
 
-### External AI dataset planning
+### External AI dataset planning (removed)
 
-Modules: `ai-orchestrator`.
+No module since 2026-10-04: `ai-orchestrator` and its workspace were deleted.
 
-Requires the Node orchestrator route and configured external providers; `AIRGAPPED=1` rejects dataset planning. Optional approved-source collection also requires network access. Provider availability, source acquisition and scientific review were not verified by the local thermal orchestrator tests.
+The orchestrator route, provider-backed dataset planning and approved-source collection no longer exist in the application.
 
 ### Browser model artifacts and optional image provider
 

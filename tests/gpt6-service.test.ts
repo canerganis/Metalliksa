@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { generateGpt6Response } from "../server/openaiService.ts";
 import { copilotRouter } from "../routes/copilot.ts";
-import { orchestratorRouter } from "../routes/orchestrator.ts";
 
 function withApiKey(t: any) {
   const previous = process.env.OPENAI_API_KEY;
@@ -135,24 +134,4 @@ test("micrograph route rejects unsupported SVG before calling GPT-6", async t =>
   }, res);
   assert.equal(res.statusCode, 415);
   assert.equal(called, false);
-});
-
-test("dataset planner routes its five stages through GPT-6 tiers", async t => {
-  withApiKey(t);
-  const previousFetch = globalThis.fetch;
-  const models: string[] = [];
-  globalThis.fetch = (async (_input: any, init: any) => {
-    models.push(JSON.parse(init.body).model);
-    return completed(`stage ${models.length}`);
-  }) as typeof fetch;
-  t.after(() => { globalThis.fetch = previousFetch; });
-  const res = responseRecorder();
-  await postHandler(orchestratorRouter, "/api/orchestrator/dataset-plan")({
-    body: { objective: "Traceable LPBF dataset", constraints: "", availableData: "" },
-  }, res);
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(models, ["gpt-6-sol", "gpt-6-astra", "gpt-6-luna", "gpt-6-astra", "gpt-6-sol"]);
-  assert.equal(res.body.plan, "stage 5");
-  assert.equal(res.body.uploadAllowed, false);
-  assert.deepEqual(res.body.collectedSources, []);
 });

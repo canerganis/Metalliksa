@@ -31,7 +31,6 @@ const PINNED_GUARDED = [
   "src/components/PocketCalculators.tsx",
   "src/components/InverseAlloyStudio.tsx",
   "src/components/CorrosionEngineeringLab.tsx",
-  "src/components/AIOrchestratorPanel.tsx",
   "src/components/AlloyBuilder.tsx",
   "src/components/CALPHADMultiComponentStudio.tsx",
   "src/components/CALPHADThermodynamicsLab.tsx",
