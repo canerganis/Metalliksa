@@ -130,7 +130,7 @@ class SweepTest(unittest.TestCase):
                 envelope.write_document(out, dict(schema=envelope.SCHEMA, value=float("nan")))
             self.assertFalse(out.exists())
 
-    def test_resume_reuses_only_identical_input_and_matching_implementation_hash(self):
+    def test_resume_reuses_only_identical_input_and_current_implementation_hash(self):
         calls = []
 
         def runner(raw):
@@ -153,18 +153,63 @@ class SweepTest(unittest.TestCase):
             cached(40.),                                         # identical: reused
             stale_input,                                         # different input: recomputed
             cached(80., implementationHash="old-solver"),        # different hash: recomputed
-            cached(100., implementationHash=None),               # no recorded hash: reused
+            cached(100., implementationHash=None),               # no recorded hash: recomputed
         ]
         envelope.sweep(plan, DEFAULTS, document, None, runner, fingerprint="current")
-        self.assertEqual(calls, [60., 80.])
+        self.assertEqual(calls, [60., 80., 100.])
         by_power = {c["power_W"]: c for c in document["cases"]}
         self.assertEqual(by_power[80.]["implementationHash"], "current")
+        self.assertEqual(by_power[100.]["implementationHash"], "current")
 
         # Without a fingerprint only the input is compared (stub runs without provenance).
         calls.clear()
         document["cases"] = [cached(40., implementationHash="whatever")]
         envelope.sweep([("Inconel 718", 20., (40.,))], DEFAULTS, document, None, runner)
         self.assertEqual(calls, [])
+
+    def test_hashless_boiling_stop_is_recomputed_and_current_one_is_reused(self):
+        calls = []
+
+        def runner(raw):
+            calls.append(raw["power_W"])
+            return dict(status="boiling-stop", wall_s=2.)
+
+        def stop(power, **changes):
+            raw = envelope.build_raw(DEFAULTS, "Inconel 718", power, 20.)
+            record = dict(alloy="Inconel 718", mesh_um=20., power_W=power, input=raw,
+                          status="boiling-stop", wall_s=1.)
+            record.update(changes)
+            return record
+
+        document = envelope.new_document(dict(python="x"), 900.)
+        document["cases"] = [stop(40.), stop(60., implementationHash="current")]
+        envelope.sweep([("Inconel 718", 20., (40., 60.))], DEFAULTS, document, None, runner,
+                       fingerprint="current")
+        self.assertEqual(calls, [40.])  # hash-less stop recomputed; stop with the current hash reused
+        by_power = {c["power_W"]: c for c in document["cases"]}
+        self.assertEqual(by_power[40.]["implementationHash"], "current")
+        self.assertEqual(by_power[40.]["wall_s"], 2.)
+
+    def test_budget_and_error_records_are_always_retried(self):
+        for status in (envelope.NOT_RUN_BUDGET, envelope.OTHER_ERROR):
+            for fingerprint, recorded in (("current", "current"), (None, None)):
+                calls = []
+
+                def runner(raw):
+                    calls.append(raw["power_W"])
+                    return dict(status="completed", wall_s=1., implementationHash="current", **METRICS)
+
+                raw = envelope.build_raw(DEFAULTS, "Inconel 718", 40., 20.)
+                record = dict(alloy="Inconel 718", mesh_um=20., power_W=40., input=raw, status=status,
+                              wall_s=900., message="x")
+                if recorded is not None:
+                    record["implementationHash"] = recorded
+                document = envelope.new_document(dict(python="x"), 900.)
+                document["cases"] = [record]
+                envelope.sweep([("Inconel 718", 20., (40.,))], DEFAULTS, document, None, runner,
+                               fingerprint=fingerprint)
+                self.assertEqual(calls, [40.], (status, fingerprint))
+                self.assertEqual(document["cases"][0]["status"], "completed")
 
     def test_recomputed_boiling_stop_carries_the_fingerprint(self):
         document = envelope.new_document(dict(python="x"), 900.)

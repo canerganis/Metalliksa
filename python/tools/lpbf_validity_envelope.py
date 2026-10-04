@@ -18,8 +18,11 @@ Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_validity_envelope.py --quick --out <json>
     python -B tools/lpbf_validity_envelope.py --alloy "Ti-6Al-4V" --mesh 20 --powers 60 80 --out <json>
 
-The tool is resumable: the output file is rewritten after every case and cases
-already present with identical input are reused (use --rerun to recompute).
+The tool is resumable: the output file is rewritten after every case. A cached
+completed or boiling-stop case is reused only if its input is identical and it carries
+the current implementation fingerprint; records without an implementationHash,
+"not-run (budget)" and "other-error" records are never reused (use --rerun to
+recompute everything).
 Each case runs in its own spawned process so a per-case wall-time budget
 (--budget-s, default 900 s) can stop it and record "not-run (budget)".
 """
@@ -56,6 +59,7 @@ BOILING_STOP = "boiling-stop"
 OTHER_ERROR = "other-error"
 NOT_RUN_BUDGET = "not-run (budget)"
 NOT_RUN_MONOTONE = "not-run (higher power after two consecutive boiling stops)"
+REUSABLE_STATUSES = (COMPLETED, BOILING_STOP)  # budget stops and errors are always retried
 
 
 def classify_error(message: str) -> str:
@@ -239,9 +243,11 @@ def sweep(plan: Sequence[Tuple[str, float, Sequence[float]]], defaults: Dict[str
           log: Callable[[str], None] = lambda s: None, fingerprint: Optional[str] = None) -> Dict[str, Any]:
     """Run the plan, rewriting out_path after each case. Resumes from document['cases'].
 
-    A cached case is reused only if its input is equal and, when a fingerprint is given, its
-    implementationHash is absent or equal to it; otherwise it is recomputed. Cases recomputed with a
-    fingerprint carry that implementationHash (also boiling stops, which have no solver provenance)."""
+    A cached case is reused only if its status is completed or boiling-stop, its input is equal and,
+    when a fingerprint is given, its implementationHash equals it (a record without a hash is
+    recomputed). "not-run (budget)" and "other-error" records are always retried. Cases recomputed
+    with a fingerprint carry that implementationHash (also boiling stops, which have no solver
+    provenance)."""
     existing = {case_key(c["alloy"], c["mesh_um"], c["power_W"]): c for c in document.get("cases", [])}
     cases: List[Dict[str, Any]] = []
     for alloy, mesh, powers in plan:
@@ -254,8 +260,8 @@ def sweep(plan: Sequence[Tuple[str, float, Sequence[float]]], defaults: Dict[str
                 record = dict(alloy=alloy, mesh_um=float(mesh), power_W=float(power), input=raw,
                               status=NOT_RUN_MONOTONE, wall_s=0.0)
             elif (prior is not None and not rerun and prior.get("input") == raw
-                  and prior.get("status") != NOT_RUN_MONOTONE
-                  and (fingerprint is None or prior.get("implementationHash") in (None, fingerprint))):
+                  and prior.get("status") in REUSABLE_STATUSES
+                  and (fingerprint is None or prior.get("implementationHash") == fingerprint)):
                 record = prior
                 log(f"reuse {key}: {record['status']}")
             else:
