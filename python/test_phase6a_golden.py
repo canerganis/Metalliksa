@@ -30,6 +30,9 @@ EXPECTED_BEHAVIOUR_CHANGES = {
     ("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"): "UNKNOWN_ALLOY",
     ("pourbaix_solver", "edge_unknown_element_badvals"): "UNKNOWN_ELEMENT",
 }
+# ---- BEGIN phase6a-t2b block: kinetics / fatigue unknown alloy (was AISI 4140 / Ti-6Al-4V) ----
+EXPECTED_BEHAVIOUR_CHANGES.update(golden._t2b_cases.EXPECTED_BEHAVIOUR_CHANGES)
+# ---- END phase6a-t2b block ----
 
 
 class GoldenFilesTest(unittest.TestCase):
@@ -81,7 +84,9 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertEqual(set(out), {"success", "error", "errorKind"})
             # The old golden is still the pre-migration record of the silent default.
             self.assertEqual(doc["exitCode"], 0)
-            self.assertIs(doc["stdout"].get("success"), True)
+            # (the fatigue driver output has no "success" key; it must not be an error)
+            self.assertIsNot(doc["stdout"].get("success"), False)
+            self.assertNotIn("error", doc["stdout"])
             return
         self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
         rows = drift_report.diff(doc["stdout"], fresh["stdout"])

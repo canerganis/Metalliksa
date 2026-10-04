@@ -14,6 +14,15 @@ import math
 import time
 import random
 
+import alloy_data_kinetics_uq_fatigue as _uq_data
+import alloy_registry
+import physical_constants
+
+# Phase 6a structural migration (design step (a)): constants come from
+# physical_constants / alloy_data_kinetics_uq_fatigue with unchanged values.
+R_GAS = physical_constants.LEGACY_GAS_CONSTANT_R_4SF  # 8.314, exact R is step (b)
+ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
+
 def norm_cdf(x: float) -> float:
     """Standard normal cumulative distribution function."""
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
@@ -221,43 +230,17 @@ def solve_single_realization(
     flaw_size_um: float
 ) -> dict:
     """Evaluates multi-scale physics for one stochastic state draw."""
-    # 1. Base Metal Lattice & Elasticity
-    if base_metal == "Ni":
-        a0 = 3.585
-        b_nm = 0.2535
-        C11, C12, C44 = 247.0, 147.0, 125.0
-        taylor_M = 3.06
-        sigma_0 = 78.0
-        k_hp = 750.0  # MPa*sqrt(um)
-        nu = 0.31
-        G_c_kJ_m2 = 45.0  # fracture energy
-    elif base_metal == "Fe":
-        a0 = 2.866
-        b_nm = 0.2482
-        C11, C12, C44 = 237.0, 141.0, 116.0
-        taylor_M = 2.75
-        sigma_0 = 85.0
-        k_hp = 600.0
-        nu = 0.29
-        G_c_kJ_m2 = 50.0
-    elif base_metal == "Ti":
-        a0 = 2.950
-        b_nm = 0.2950
-        C11, C12, C44 = 160.0, 90.0, 46.5
-        taylor_M = 4.20
-        sigma_0 = 180.0
-        k_hp = 420.0
-        nu = 0.34
-        G_c_kJ_m2 = 38.0
-    else:  # Al
-        a0 = 4.049
-        b_nm = 0.2863
-        C11, C12, C44 = 108.0, 61.0, 28.5
-        taylor_M = 3.06
-        sigma_0 = 25.0
-        k_hp = 180.0
-        nu = 0.33
-        G_c_kJ_m2 = 18.0
+    # 1. Base Metal Lattice & Elasticity (alloy_data_kinetics_uq_fatigue; same values,
+    # same legacy fallback: a base metal other than Ni/Fe/Ti uses the Al constants)
+    lattice = _uq_data.uq_lattice_constants(base_metal)
+    a0 = lattice["a0"]
+    b_nm = lattice["b_nm"]
+    C11, C12, C44 = lattice["C11"], lattice["C12"], lattice["C44"]
+    taylor_M = lattice["taylor_M"]
+    sigma_0 = lattice["sigma_0"]
+    k_hp = lattice["k_hp"]  # MPa*sqrt(um)
+    nu = lattice["nu"]
+    G_c_kJ_m2 = lattice["G_c_kJ_m2"]  # fracture energy
 
     # VRH Elastic Moduli
     bulk_B = (C11 + 2.0 * C12) / 3.0
@@ -269,13 +252,10 @@ def solve_single_realization(
     # 2. Solid Solution Strengthening (Labusch)
     delta_sigma_ss = 0.0
     # solute potency coefficients
-    misfit_weights = {
-        "Nb": 14.5, "Mo": 8.5, "Ti": 11.2, "Al": 6.8, "Cr": 4.2,
-        "V": 7.5, "Fe": 3.8, "W": 16.2, "Ta": 18.0, "C": 280.0, "Si": 22.0, "Mg": 14.0
-    }
+    misfit_weights = _uq_data.UQ_SOLUTE_POTENCY
     for el, wt in comp.items():
         wt_val = max(0.0, wt)
-        potency = misfit_weights.get(el, 5.0)
+        potency = misfit_weights.get(el, _uq_data.UQ_DEFAULT_SOLUTE_POTENCY)
         delta_sigma_ss += potency * (wt_val ** 0.67)
 
     # 3. Solidification & Grain Size (Kurz-Fisher / Hunt)
@@ -292,9 +272,9 @@ def solve_single_realization(
 
     # 5. Precipitation Kinetics (LSW Ostwald Ripening + Orowan Looping)
     # Mean radius r_nm ~ (K_0 * exp(-Q/RT) * t)^(1/3)
-    T_K = aging_temp_C + 273.15
-    Q_diff = 265000.0  # J/mol
-    R_gas = 8.314
+    T_K = aging_temp_C + ZERO_C_K
+    Q_diff = _uq_data.UQ_PRECIPITATION_Q_J_MOL  # J/mol
+    R_gas = R_GAS
     arrhenius = math.exp(-min(45.0, Q_diff / (R_gas * max(300.0, T_K))))
     r_nm = max(0.8, 18.0 * ((arrhenius * 1e8 * max(0.1, aging_time_h)) ** 0.333))
     
@@ -355,9 +335,9 @@ def solve_single_realization(
 def solve_stochastic_uq(params: dict) -> dict:
     t0 = time.time()
 
-    alloy_name = params.get("alloyName", "Inconel 718 (Aero LPBF)")
-    base_metal = params.get("baseMetal", "Ni")
-    standard_spec = params.get("standardSpec", "AMS 5662 / AMS 5664")
+    alloy_name = params.get("alloyName", _uq_data.UQ_DEFAULT_ALLOY_NAME)
+    base_metal = params.get("baseMetal", _uq_data.UQ_DEFAULT_BASE_METAL)
+    standard_spec = params.get("standardSpec", _uq_data.UQ_DEFAULT_STANDARD_SPEC)
     
     # Sampling configuration: Sobol QMC vs Pseudo-Random MC
     sampling_method = params.get("samplingMethod", "sobol_qmc")
@@ -365,12 +345,8 @@ def solve_stochastic_uq(params: dict) -> dict:
     seed = int(params.get("seed", 42))
 
     # Nominal chemistry & tolerances (± delta wt%)
-    nominal_comp = params.get("composition_wt", {
-        "Cr": 19.0, "Fe": 18.0, "Nb": 5.1, "Mo": 3.0, "Ti": 0.9, "Al": 0.5, "C": 0.05, "Si": 0.2
-    })
-    comp_tolerances = params.get("composition_tolerances", {
-        "Cr": 1.0, "Fe": 1.0, "Nb": 0.35, "Mo": 0.3, "Ti": 0.15, "Al": 0.1, "C": 0.015, "Si": 0.08
-    })
+    nominal_comp = params.get("composition_wt", _uq_data.uq_default_composition_wt())
+    comp_tolerances = params.get("composition_tolerances", _uq_data.uq_default_composition_tolerances())
 
     # Process variables
     cooling_rate_nominal = float(params.get("coolingRate_nominal", 150000.0))
@@ -728,20 +704,32 @@ def solve_stochastic_uq(params: dict) -> dict:
         }
     }
 
+def provenance() -> dict:
+    """Constants/data versions (alloyName is a label only; it is not resolved)."""
+    out = {
+        "registryVersion": alloy_registry.REGISTRY_VERSION,
+        "constantsVersion": physical_constants.CONSTANTS_VERSION,
+        "gasConstantR_J_molK": R_GAS,
+        "constantsNote": "Legacy 4-significant-figure R (8.314); exact CODATA R is design step (b).",
+    }
+    out.update(_uq_data.provenance())
+    return out
+
 if __name__ == "__main__":
     try:
         input_data = sys.stdin.read()
         if not input_data.strip():
             params = {
-                "alloyName": "Inconel 718 (Aero LPBF)",
-                "baseMetal": "Ni",
-                "standardSpec": "AMS 5662 / AMS 5664",
+                "alloyName": _uq_data.UQ_DEFAULT_ALLOY_NAME,
+                "baseMetal": _uq_data.UQ_DEFAULT_BASE_METAL,
+                "standardSpec": _uq_data.UQ_DEFAULT_STANDARD_SPEC,
                 "mcSamples": 2000
             }
         else:
             params = json.loads(input_data)
         
         result = solve_stochastic_uq(params)
+        result["provenance"] = provenance()
         print(json.dumps(result, indent=2))
     except Exception as e:
         err_res = {
