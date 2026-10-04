@@ -48,7 +48,14 @@ PARITY_MODE = {
     "dft_property_calculator": "tolerance",
 }
 # xrd: cases with no observations never reach the minimiser and must stay bit-exact.
-XRD_BIT_EXACT_CASES = {"edge_missing_points"}
+# Deliberate behaviour changes (review fix round): goldens whose faa6684 "success"
+# is now a validation envelope -> (code, field). The empty ROI returned the guess
+# with SSE 0.0 and success true; a 6-parameter fit needs >= 7 points.
+VALIDATION_CHANGES = {("xrd_peak_deconvolution", "edge_missing_points"): ("OUT_OF_RANGE", "points")}
+# The only differences the minimiser rule tolerates besides numbers: the engine
+# string (version bump) and the additive fitDiagnostics block with exactly these keys.
+XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.0"
+XRD_DIAGNOSTIC_KEYS = {"minimiser", "start", "status", "message", "nfev", "dof", "accepted"}
 
 
 def load(solver, case):
@@ -197,10 +204,17 @@ class GoldenParityTest(unittest.TestCase):
             with self.subTest(case=case):
                 doc = load(solver, case)
                 fresh = golden.run_solver(solver, cases.CASES[solver][case])
+                if (solver, case) in VALIDATION_CHANGES:
+                    code, field = VALIDATION_CHANGES[(solver, case)]
+                    self.assertEqual((doc["exitCode"], doc["stdout"].get("success")), (0, True))
+                    self.assertEqual(fresh["exitCode"], 2, fresh["stderr"])
+                    self.assertEqual(fresh["stdout"]["errorKind"], "validation")
+                    self.assertEqual((fresh["stdout"]["error"]["code"], fresh["stdout"]["error"]["field"]), (code, field))
+                    continue
                 self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
                 self.assertEqual(fresh["stderr"], "")
                 mode = PARITY_MODE[solver]
-                if mode == "minimiser" and case not in XRD_BIT_EXACT_CASES:
+                if mode == "minimiser":
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
                     continue
                 rows = (tolerance_violations(doc["stdout"], fresh["stdout"]) if mode == "tolerance"
@@ -279,8 +293,16 @@ class XrdParityTest(unittest.TestCase):
 
     @classmethod
     def assert_minimiser_parity(cls, test, case, old, new):
-        # identical structure and non-numeric leaves; the observed profile is echoed unchanged
-        test.assertEqual(cls._structure(old), cls._structure(new))
+        # exactly two allowed non-numeric differences: engine version, additive block
+        test.assertEqual(old["engine"], XRD_ENGINE_OLD)
+        test.assertEqual(new["engine"], XRD_ENGINE_NEW)
+        test.assertEqual(set(new) - set(old), {"fitDiagnostics"})
+        test.assertEqual(set(new["fitDiagnostics"]), XRD_DIAGNOSTIC_KEYS)
+        test.assertEqual(new["fitDiagnostics"]["dof"], len(new["deconvolutionProfile"]) - 6)
+        stripped = {k: v for k, v in new.items() if k != "fitDiagnostics"}
+        stripped["engine"] = XRD_ENGINE_OLD
+        # otherwise identical structure and non-numeric leaves; profile echoed unchanged
+        test.assertEqual(cls._structure(old), cls._structure(stripped))
         for o, n in zip(old["deconvolutionProfile"], new["deconvolutionProfile"]):
             test.assertEqual((o["twoTheta"], o["rawIntensity"]), (n["twoTheta"], n["rawIntensity"]))
         # fit quality: never worse than the old coordinate search
@@ -331,7 +353,7 @@ class XrdParityTest(unittest.TestCase):
 
     def test_solution_is_a_local_minimum_and_shifts_are_explained(self):
         for case, payload in cases.CASES["xrd_peak_deconvolution"].items():
-            if case in XRD_BIT_EXACT_CASES:
+            if ("xrd_peak_deconvolution", case) in VALIDATION_CHANGES:
                 continue
             with self.subTest(case=case):
                 xrd, cap, out = self._fit(case)
@@ -424,18 +446,24 @@ class XrdParityTest(unittest.TestCase):
 
 
 class NewValidationTest(unittest.TestCase):
-    """The LAPACK/scipy kernels cannot take non-finite input that the old loops turned
-    into NaN-laden "successful" output. Those inputs are now typed validation errors
-    (input_validation NON_FINITE, exit 2); nothing else changed."""
+    """Deliberate behaviour changes, all typed validation envelopes (exit 2):
+    - NON_FINITE: non-finite inputs the old loops turned into NaN/inf-laden
+      "successful" output. Most of them would make LAPACK/scipy raise; inf xrd fwhm
+      and inf eta/m would not (the new fit would clip them, the old one clamped
+      inf fwhm and emitted non-standard JSON (Infinity) for eta=inf) and are
+      rejected anyway as one consistent "finite start" rule.
+    - OUT_OF_RANGE "points": xrd ROIs with < 7 points or a zero 2theta span
+      (underdetermined 6-parameter fit; the old code returned SSE 0.0, success true).
+    Nothing else changed."""
 
-    def _envelope(self, solver, payload, field):
+    def _envelope(self, solver, payload, field, code="NON_FINITE"):
         fresh = golden.run_solver(solver, payload)
         self.assertEqual(fresh["exitCode"], 2, fresh["stderr"])
         out = fresh["stdout"]
         self.assertEqual(set(out), {"success", "error", "errorKind"})
         self.assertIs(out["success"], False)
         self.assertEqual(out["errorKind"], "validation")
-        self.assertEqual(out["error"]["code"], "NON_FINITE")
+        self.assertEqual(out["error"]["code"], code)
         self.assertEqual(out["error"]["field"], field)
 
     def test_xrd_non_finite_start_or_observation(self):
@@ -453,6 +481,25 @@ class NewValidationTest(unittest.TestCase):
         points = [dict(p) for p in base["points"]]
         points[7]["sampleIntensity"] = float("nan")
         self._envelope("xrd_peak_deconvolution", dict(base, points=points), "points[7].sampleIntensity")
+
+    def test_xrd_underdetermined_roi_and_ka2_ratio(self):
+        base = cases.CASES["xrd_peak_deconvolution"]["pv_ka2_cu111"]
+        for count in (0, 1, 6):
+            with self.subTest(count=count):
+                self._envelope("xrd_peak_deconvolution", dict(base, points=base["points"][:count]), "points",
+                               code="OUT_OF_RANGE")
+        flat = [dict(p, twoTheta=43.3) for p in base["points"][:20]]
+        self._envelope("xrd_peak_deconvolution", dict(base, points=flat), "points", code="OUT_OF_RANGE")
+        # 7 points (dof 1) is accepted
+        fresh = golden.run_solver("xrd_peak_deconvolution", dict(base, points=base["points"][60:67]))
+        self.assertEqual(fresh["exitCode"], 0, fresh["stderr"])
+        self.assertEqual(fresh["stdout"]["fitDiagnostics"]["dof"], 1)
+        for bad in (float("nan"), float("inf")):
+            with self.subTest(ka2Ratio=bad):
+                self._envelope("xrd_peak_deconvolution", dict(base, ka2Ratio=bad), "ka2Ratio")
+        # ka2Ratio is unused (and not checked) without Ka2
+        no_ka2 = cases.CASES["xrd_peak_deconvolution"]["pv_single_no_ka2"]
+        self.assertEqual(golden.run_solver("xrd_peak_deconvolution", dict(no_ka2, ka2Ratio=float("nan")))["exitCode"], 0)
 
     def test_dft_non_finite_stiffness(self):
         custom = {"formula": "X", "crystal_system": "Cubic", "custom_c_ij": {"c11": float("nan"), "c12": 100.0, "c44": 50.0}}

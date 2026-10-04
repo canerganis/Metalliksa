@@ -163,21 +163,49 @@ def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, k
     info = {"start": label, "status": int(result.status), "message": str(result.message), "nfev": int(result.nfev)}
     return [float(v) for v in result.x], info
 
-def _require_finite_start(start, two_theta_obs, intensity_obs, profile_type):
+XRD_ENGINE = "MetalliX-Python-HPC-XRD-v4.0"  # v3.10 = faa6684 coordinate search
+FREE_PARAMETERS = 6  # center, intensity, fwhm, eta|m, background intercept, slope
+MINIMISER = "scipy.optimize.least_squares (trf, bounded; guess and data-driven starts)"
+
+
+def _validation_error(code, field, message, detail):
+    import input_validation
+    return input_validation.ValidationError(getattr(input_validation, code), field, message, detail)
+
+
+def _require_identifiable_roi(points):
+    """The six-parameter fit needs at least one residual degree of freedom and a
+    non-zero 2theta span; the former coordinate search returned the guess with
+    SSE 0.0 and success true for such ROIs (including an empty one)."""
+    count = len(points)
+    if count < FREE_PARAMETERS + 1:
+        raise _validation_error(
+            "OUT_OF_RANGE", "points",
+            f"at least {FREE_PARAMETERS + 1} points are needed to fit {FREE_PARAMETERS} parameters "
+            f"with one residual degree of freedom",
+            {"count": count, "minimum": FREE_PARAMETERS + 1, "freeParameters": FREE_PARAMETERS})
+    two_theta = [pt["twoTheta"] for pt in points]
+    if max(two_theta) <= min(two_theta):
+        raise _validation_error(
+            "OUT_OF_RANGE", "points", "the ROI needs a non-zero 2theta span",
+            {"minTwoTheta": min(two_theta), "maxTwoTheta": max(two_theta)})
+
+
+def _require_finite_start(start, two_theta_obs, intensity_obs, profile_type, ka2_ratio=None):
     """The least-squares minimiser needs a finite start and finite observations
     (the former coordinate search silently returned NaN/inf-laden "fits"). Raises
     input_validation.ValidationError (NON_FINITE); only real-number values are
     checked here, other types fail as before."""
     shape_field = "eta" if profile_type == "pseudo-voigt" else "pearsonM"
     named = [("center", start[0]), ("intensity", start[1]), ("fwhm", start[2]), (shape_field, start[3])]
+    if ka2_ratio is not None:
+        named.append(("ka2Ratio", ka2_ratio))
     named += [(f"points[{i}].twoTheta", v) for i, v in enumerate(two_theta_obs)]
     named += [(f"points[{i}].sampleIntensity", v) for i, v in enumerate(intensity_obs)]
     for field, value in named:
         if isinstance(value, (int, float)) and not isinstance(value, bool) and not math.isfinite(value):
-            import input_validation
-            raise input_validation.ValidationError(
-                input_validation.NON_FINITE, field, "must be finite for the least-squares fit",
-                {"value": repr(value)})
+            raise _validation_error("NON_FINITE", field, "must be finite for the least-squares fit",
+                                    {"value": repr(value)})
 
 
 def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
@@ -188,6 +216,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
     Deconvolves a single Bragg peak region into K_alpha1, K_alpha2, and background polynomial.
     """
     start_time = time.perf_counter()
+    _require_identifiable_roi(points)
     
     # Calculate expected K_alpha2 angle
     ka2_center = calculate_ka2_two_theta(center_guess, wavelength_ka1, wavelength_ka2) if enable_ka2 else center_guess
@@ -245,27 +274,27 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
 
     current_loss = loss_func(best_params)
 
-    # Bounded least squares from the initial guess. As in the former coordinate
-    # search, the guess is kept unless the fit lowers the sum of squares (so an
-    # empty ROI returns the guess unchanged).
-    if points:
-        two_theta_obs = [pt["twoTheta"] for pt in points]
-        intensity_obs = [pt["sampleIntensity"] for pt in points]
-        _require_finite_start(best_params, two_theta_obs, intensity_obs, profile_type)
-        # The Ka1 centre is a peak inside this ROI: bound it to the observed 2theta
-        # span (a guess outside the span is moved to its nearest edge first, so a
-        # kept guess cannot report a centre outside the data either).
-        roi = (min(two_theta_obs), max(two_theta_obs))
-        if roi[1] > roi[0] and not roi[0] <= best_params[0] <= roi[1]:
-            best_params = [min(max(best_params[0], roi[0]), roi[1])] + best_params[1:]
-            current_loss = loss_func(best_params)
-        fitted, _fit_info = _fit_profile_least_squares(
-            two_theta_obs, intensity_obs,
-            best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2,
-            center_bounds=roi if roi[1] > roi[0] else (-math.inf, math.inf))
-        fitted_loss = loss_func(fitted)
-        if fitted_loss < current_loss:
-            best_params, current_loss = fitted, fitted_loss
+    # Bounded least squares. As in the former coordinate search, the guess is kept
+    # unless the fit lowers the sum of squares (fitDiagnostics.accepted says which).
+    two_theta_obs = [pt["twoTheta"] for pt in points]
+    intensity_obs = [pt["sampleIntensity"] for pt in points]
+    _require_finite_start(best_params, two_theta_obs, intensity_obs, profile_type,
+                          ka2_ratio if enable_ka2 else None)
+    # The Ka1 centre is a peak inside this ROI: bound it to the observed 2theta span
+    # (a guess outside the span is moved to its nearest edge first, so a kept guess
+    # cannot report a centre outside the data either).
+    roi = (min(two_theta_obs), max(two_theta_obs))
+    if not roi[0] <= best_params[0] <= roi[1]:
+        best_params = [min(max(best_params[0], roi[0]), roi[1])] + best_params[1:]
+        current_loss = loss_func(best_params)
+    fitted, fit_info = _fit_profile_least_squares(
+        two_theta_obs, intensity_obs,
+        best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2,
+        center_bounds=roi)
+    fitted_loss = loss_func(fitted)
+    accepted = fitted_loss < current_loss
+    if accepted:
+        best_params, current_loss = fitted, fitted_loss
 
     # Extract deconvoluted curves
     fitted_c1, fitted_i1, fitted_w1, fitted_shape, fitted_b0, fitted_b1 = best_params
@@ -308,7 +337,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
 
     return {
         "success": True,
-        "engine": "MetalliX-Python-HPC-XRD-v3.10",
+        "engine": XRD_ENGINE,
         "computeTimeMs": compute_time_ms,
         "ka1Peak": {
             "twoTheta": round(fitted_c1, 4),
@@ -332,7 +361,18 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
             "residualSumSquares": round(current_loss, 2),
             "r_wp_pct": round(min(15.0, math.sqrt(current_loss / max(1.0, sum(p['sampleIntensity']**2 for p in points))) * 100.0), 2)
         },
-        "deconvolutionProfile": fitted_curve_profile
+        "deconvolutionProfile": fitted_curve_profile,
+        # Additive (v4.0): how the minimiser ended. status/message/nfev are scipy's
+        # for the winning start; status 0 = evaluation budget exhausted (not converged).
+        "fitDiagnostics": {
+            "minimiser": MINIMISER,
+            "start": fit_info["start"],
+            "status": fit_info["status"],
+            "message": fit_info["message"],
+            "nfev": fit_info["nfev"],
+            "dof": len(points) - FREE_PARAMETERS,
+            "accepted": accepted,
+        }
     }
 
 def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, burgers_vector_nm=0.25):
