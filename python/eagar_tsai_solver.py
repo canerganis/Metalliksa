@@ -30,13 +30,16 @@ from numpy.polynomial.legendre import leggauss
 
 MODEL_ID = "eagar-tsai-v2"
 
-# Composite Gauss–Legendre in u = √τ: panel [0, 1], then geometric panels [1, 2], [2, 4], …
-# until u_max. Resolves the near-source structure (u ≲ 1) and the far-wake pulse at
-# u_p = √(|X|/U) whose width is ≈ 1/(√2 U) in u, for every LPBF speed/spot combination.
-_GL_PANEL_N = 32
-_GL_XI, _GL_W = leggauss(_GL_PANEL_N)
-# Field validity window in the wake (laser frame, x < 0). Points farther behind the
-# source than this are not melt-pool points; the quadrature range is sized for it.
+# Composite Gauss–Legendre in u = √τ: a first panel [0, u0], geometric panels (×2) while their
+# width stays below the wake-pulse scale du = KAPPA/(√2 U), then uniform panels of width du up to
+# u_max. The far-wake pulse of a point X < 0 sits at u_p = √(|X|/U) with standard deviation
+# 1/(√2 U) in u at every distance, so uniform-in-u panels resolve it at any distance Péclet
+# number (geometric panels alone lost 0.6 % at 3 m/s near the window edge).
+_GL_GEOMETRIC_N = 16
+_GL_UNIFORM_N = 8
+_PULSE_PANEL_SIGMAS = 1.5
+# Wake window (laser frame, x < 0) the quadrature is sized for at bind time; temperature_C widens
+# it on demand, so no point is ever evaluated with a truncated quadrature (never silently zero).
 WAKE_LENGTH_M = 1.5e-3
 # exp(−E_CUT) is the truncation level of the x-Gaussian tail beyond the far-wake pulse.
 _E_CUT = 9.0
@@ -46,15 +49,22 @@ def _as_float64(value):
     return np.asarray(value, dtype=np.float64)
 
 
-def _composite_nodes(u_max: float):
-    edges = [0.0, 1.0]
-    while edges[-1] < u_max:
+def _composite_nodes(u_max: float, du: float, u0: float = 0.05):
+    xi_g, w_g = leggauss(_GL_GEOMETRIC_N)
+    xi_u, w_u = leggauss(_GL_UNIFORM_N)
+    edges = [0.0, u0]
+    while edges[-1] < du and edges[-1] * 2.0 < u_max:
         edges.append(edges[-1] * 2.0)
-    us = []
-    ws = []
+    us, ws = [], []
     for a, b in zip(edges[:-1], edges[1:]):
-        us.append(0.5 * (b - a) * (_GL_XI + 1.0) + a)
-        ws.append(_GL_W * (0.5 * (b - a)))
+        us.append(0.5 * (b - a) * (xi_g + 1.0) + a)
+        ws.append(w_g * (0.5 * (b - a)))
+    lo = edges[-1]
+    while lo < u_max:
+        hi = lo + du if lo + du < u_max else u_max
+        us.append(0.5 * (hi - lo) * (xi_u + 1.0) + lo)
+        ws.append(w_u * (0.5 * (hi - lo)))
+        lo = hi
     return np.concatenate(us), np.concatenate(ws)
 
 
@@ -78,16 +88,22 @@ class EagarTsaiField:
     def bind_speed(self, v_scan_m_s: float) -> "EagarTsaiField":
         v = max(1e-6, float(v_scan_m_s))
         self.v_star = v * self.sigma_m / (2.0 * self.alpha_th)
+        self._build(WAKE_LENGTH_M)
+        return self
+
+    def _build(self, wake_m: float) -> None:
+        """Quadrature nodes for points down to x = -wake_m behind the source."""
         U = self.v_star
-        X_wake = WAKE_LENGTH_M / self.sigma_m
+        X_wake = wake_m / self.sigma_m
         # Far-wake pulse centre u_p² = X_wake/U; its half-width in Uu² is √(2(1+u_p²)) per e-fold.
         u_p2 = X_wake / U
         u_max = max(math.sqrt(2.0 * _E_CUT) / U,
                     math.sqrt((X_wake + _E_CUT * math.sqrt(2.0 * (1.0 + u_p2)) + _E_CUT) / U)) + 1.0
-        self._u, self._w = _composite_nodes(u_max)
+        du = _PULSE_PANEL_SIGMAS / (math.sqrt(2.0) * U)
+        self._u, self._w = _composite_nodes(u_max, du)
         self._u2 = self._u * self._u
         self._den = self._u2 + 1.0
-        return self
+        self._wake_m = wake_m
 
     def temperature_C(self, x_m, y_m, z_m):
         """Scalar or numpy array temperature in °C. z ≥ 0 is depth into the solid."""
@@ -99,6 +115,10 @@ class EagarTsaiField:
         scalar = x.ndim == 0 and y.ndim == 0 and z.ndim == 0
         x, y, z = np.broadcast_arrays(np.atleast_1d(x), np.atleast_1d(y), np.atleast_1d(z))
         shape = x.shape
+        x_min = float(x.min())
+        if -x_min > self._wake_m:
+            # Adaptive wake window (never silently truncated); the window only grows.
+            self._build(1.25 * -x_min)
         X = x.reshape(-1) / self.sigma_m
         Y = y.reshape(-1) / self.sigma_m
         Z = z.reshape(-1) / self.sigma_m
