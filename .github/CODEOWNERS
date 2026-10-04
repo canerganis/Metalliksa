@@ -1,0 +1,22 @@
+# Allowlist ceilings and the guards that enforce them (Phase 7 ratchet).
+#
+# This file only takes effect when branch protection on main enables "Require review from
+# Code Owners" (and "Require a pull request before merging"). That setting lives in the GitHub
+# repository settings and cannot be enabled from the repository content: a maintainer must
+# turn it on. Until then these entries are documentation, and the CI step in
+# .github/workflows/ci.yml (which runs the base revision's scripts/check_ceiling_review.py)
+# is the only enforcement.
+#
+# python/test_allowlist_ceilings.py asserts that every ceiling file and every
+# PROTECTED_PATHS entry of scripts/check_ceiling_review.py is listed here.
+
+/.github/CODEOWNERS @0000can0000
+/.github/workflows/ci.yml @0000can0000
+/scripts/check_ceiling_review.py @0000can0000
+/python/test_allowlist_ceilings.py @0000can0000
+/tests/support/ceiling.ts @0000can0000
+/tests/support/routeScan.ts @0000can0000
+/tests/support/importGraph.ts @0000can0000
+/tests/route-authority.test.ts @0000can0000
+/tests/component-reachability.test.ts @0000can0000
+*.ceiling.json @0000can0000

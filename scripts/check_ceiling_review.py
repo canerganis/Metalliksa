@@ -8,7 +8,9 @@ trailer block (parsed by ``git interpret-trailers``; the reason needs at least f
 earlier reviewed commit does not cover a later unreviewed edit. Ceilings that are new in the
 range are governed by python/test_allowlist_ceilings.py (pinned content plus an explicit delta).
 
-Usage (CI, full history):  python scripts/check_ceiling_review.py <base-sha> [head]
+Usage (CI, full history):  git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
+(CI runs the base revision's copy so a branch cannot weaken its own check; locally
+``python scripts/check_ceiling_review.py <base-sha> [head]`` runs the working copy.)
 A missing/all-zero base (first push of a branch) falls back to HEAD^.
 """
 from __future__ import annotations
@@ -24,6 +26,7 @@ PROTECTED_PATHS = (
     "scripts/check_ceiling_review.py",
     "python/test_allowlist_ceilings.py",
     ".github/workflows/ci.yml",
+    ".github/CODEOWNERS",
     # The TypeScript ratchets: ceiling reader, route and import scanners and the tests using them.
     "tests/support/ceiling.ts",
     "tests/support/routeScan.ts",

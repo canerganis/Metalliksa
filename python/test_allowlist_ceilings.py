@@ -249,6 +249,20 @@ class PinnedCeilingTests(unittest.TestCase):
                          ["unbound: GET /api/x", "unclassified: y"])
 
 
+class GuardWiringTests(unittest.TestCase):
+    def test_ci_runs_the_base_revision_copy_of_the_checker(self):
+        workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn('git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"', workflow)
+        self.assertNotIn("run: python scripts/check_ceiling_review.py", workflow)
+
+    def test_codeowners_lists_every_guard_and_ceiling(self):
+        owners = {line.split()[0] for line in (REPO_ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8").splitlines()
+                  if line.strip() and not line.startswith("#")}
+        missing = [path for path in review.PROTECTED_PATHS if f"/{path}" not in owners]
+        self.assertEqual(missing, [])
+        self.assertIn("*.ceiling.json", owners)
+
+
 class CeilingReviewTrailerTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -311,7 +325,7 @@ class CeilingReviewTrailerTests(unittest.TestCase):
     def test_guard_files_are_protected_like_ceilings(self):
         self.assertEqual(set(review.PROTECTED_PATHS), {
             "scripts/check_ceiling_review.py", "python/test_allowlist_ceilings.py", ".github/workflows/ci.yml",
-            "tests/support/ceiling.ts", "tests/support/routeScan.ts", "tests/support/importGraph.ts",
+            ".github/CODEOWNERS", "tests/support/ceiling.ts", "tests/support/routeScan.ts", "tests/support/importGraph.ts",
             "tests/route-authority.test.ts", "tests/component-reachability.test.ts"})
         for guard in review.PROTECTED_PATHS:
             self.assertTrue((REPO_ROOT / guard).is_file(), f"protected path {guard} does not exist")
@@ -337,6 +351,17 @@ class CeilingReviewTrailerTests(unittest.TestCase):
         self._commit("other.txt", "x\n", "main moves on")
         run("merge", "-q", "--no-ff", "-m", "merge: feature", "feature")
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
+
+    def test_ci_form_runs_the_base_copy_from_stdin(self):
+        # CI: git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
+        script = (REPO_ROOT / "scripts" / "check_ceiling_review.py").read_text(encoding="utf-8")
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it")
+        run = subprocess.run([sys.executable, "-", self.base], input=script, cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+        self.assertIn("x.ceiling.json", run.stderr)
+        self._commit("x.ceiling.json", '{"paths": ["a"]}\n', "shrink\n\nCeiling-Review: maintainer approved the final list")
+        run = subprocess.run([sys.executable, "-", self.base], input=script, cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
 
     def test_trailer_parser(self):
         self.assertTrue(review.has_review_trailer("subject\n\nCeiling-Review: shrink only, nothing added"))
