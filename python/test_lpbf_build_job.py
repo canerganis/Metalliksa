@@ -212,6 +212,40 @@ def check_build_job_kinetics(ti):
         assert "AISI 4140" not in json.dumps(k) and "7075" not in json.dumps(k)
 
 
+def check_build_job_microstructure(job):
+    """Build-job microstructure is a projection of thermal.solidificationKinetics (no second G/R)."""
+    micro = job["microstructure"]
+    kin = job["thermal"]["solidificationKinetics"]
+    assert micro["status"] == "available"
+    assert micro["source"] == "thermal.solidificationKinetics"
+    assert micro["G_K_m"] == kin["thermalGradient_G_K_m"]
+    assert micro["R_m_s"] == kin["solidificationRate_R_m_s"]
+    assert micro["coolingRate_K_s"] == kin["coolingRate_K_s"]
+    assert micro["PDAS_um"] == kin["primaryDendriteArmSpacing_PDAS_um"]
+    assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
+    assert micro["morphology"] == kin["microstructureMorphology"]
+    assert micro["modelId"] == kin["modelId"]
+    assert micro["gradientSource"] == kin["gradientSource"]
+    assert micro["usedFieldMap"] == kin["usedFieldMap"]
+    assert micro["g_over_r_ratio"] == kin["g_over_r_ratio"]
+    assert micro["doi"] == kin["doi"]
+    assert micro["disclaimer"].startswith(kin["disclaimer"])
+    assert "no second estimate" in micro["disclaimer"]
+    # The removed Rosenthal default-constant block (G floor 1e4 K/m) must not reappear.
+    assert micro["G_K_m"] > 1.0e5, micro["G_K_m"]
+
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+
+    for bad in ({}, {"solidificationKinetics": None}, {"solidificationKinetics": {}},
+                {"solidificationKinetics": {**kin, "thermalGradient_G_K_m": float("nan")}},
+                {"solidificationKinetics": {**kin, "solidificationRate_R_m_s": None}}):
+        unavailable = project_build_job_microstructure(bad)
+        assert unavailable["status"] == "unavailable"
+        assert unavailable["reason"] == "thermal.solidificationKinetics missing or non-finite"
+        for key in ("G_K_m", "R_m_s", "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology"):
+            assert unavailable[key] is None, key
+
+
 def main():
     from lpbf_job_cache import clear_cache
     from murakami_fatigue_screening import parse_defect_sqrt_areas_text
@@ -354,6 +388,7 @@ def main():
     assert b["verdict"]["verdict"] == a["verdict"]["verdict"]
     assert b["cache"]["stats"]["hits"] >= 1
     assert b["materialPropertySha256"] == a["materialPropertySha256"]
+    check_build_job_microstructure(a)
 
     # The effective thermal input is frozen once per request and changes cache identity.
     from four_alloy_materials import _THERMAL

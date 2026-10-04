@@ -5,7 +5,7 @@ Tests the following components:
   1. Hunt-Lu PDAS and Kirkwood SDAS correlations (physical range).
   2. Hunt morphology criterion (G/R classification).
   3. Morphology fraction normalization (must sum to 1.0).
-  4. compute_solidification_microstructure() end-to-end with Rosenthal screening.
+  4. compute_solidification_microstructure() without CFD data returns "unavailable".
   5. compute_solidification_microstructure() with mock CFD JSON (OpenFOAM path).
   6. lpbf_cfd.cfd_multiphysics() returns solidificationMicrostructure key.
 
@@ -115,11 +115,11 @@ def test_morphology_fractions_sum_to_unity(G_Km, R_ms):
 
 
 # ---------------------------------------------------------------------------
-# Test 5 — compute_solidification_microstructure (Rosenthal screening path)
+# Test 5 — compute_solidification_microstructure (no CFD data → unavailable)
 # ---------------------------------------------------------------------------
 
-def test_solidification_microstructure_rosenthal_path():
-    """Without CFD result → analytical Rosenthal screening is used."""
+def test_solidification_microstructure_unavailable_without_cfd():
+    """Without CFD data no default-constant estimate is returned."""
     params = {
         "power_W": 285.0,
         "speed_mm_s": 960.0,
@@ -129,16 +129,20 @@ def test_solidification_microstructure_rosenthal_path():
         "k_WmK": 15.0,
         "liquidus_K": 1700.0,
     }
-    result = compute_solidification_microstructure(params, material)
+    expected_reason = (
+        "no CFD solidification data (solidificationMicrostructure.meanG_K_m); "
+        "G and R are not estimated from default constants"
+    )
+    for cfd in (None, {}, {"solidificationMicrostructure": {}}):
+        result = compute_solidification_microstructure(params, material, cfd)
 
-    assert result["source"] == "rosenthal-analytical-screening"
-    assert 1e3 <= result["G_K_m"] <= 1e10
-    assert 1e-6 <= result["R_m_s"] <= 2.0
-    assert 0.05 <= result["PDAS_um"] <= 500.0
-    assert 0.01 <= result["SDAS_um"] <= 200.0
-    assert result["morphology"] in ("columnar", "equiaxed", "mixed")
-    total = sum(result["morphologyFractions"].values())
-    assert abs(total - 1.0) < 0.01
+        assert result["status"] == "unavailable"
+        assert result["source"] == "none"
+        assert result["reason"] == expected_reason
+        for key in ("G_K_m", "maxG_K_m", "R_m_s", "maxR_m_s", "coolingRate_K_s",
+                    "PDAS_um", "SDAS_um", "morphology", "morphologyFractions"):
+            assert result[key] is None, key
+        assert "doi" in result and "disclaimer" in result
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +166,7 @@ def test_solidification_microstructure_cfd_path():
 
     result = compute_solidification_microstructure(params, material, mock_cfd_result)
 
+    assert result["status"] == "available"
     assert result["source"] == "openfoam-solidification-model-v1"
     assert abs(result["G_K_m"] - 8.5e6) < 1.0
     assert abs(result["R_m_s"] - 0.032) < 1e-9
