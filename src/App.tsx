@@ -196,7 +196,7 @@ export default function App() {
       </main>
     </div>
     {showStatus && <AccessibleModal open onClose={() => setShowStatus(false)} labelledBy="engine-title" closeOnBackdrop overlayClassName="bg-slate-950/80 p-4" panelClassName="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 p-6">
-        <div className="flex justify-between items-center"><h2 id="engine-title" className="font-semibold flex gap-2 items-center"><Cpu className="w-5 h-5 text-sky-400"/>Engine availability</h2><button autoFocus aria-label="Close engine status" onClick={() => setShowStatus(false)}><X className="w-5 h-5"/></button></div>
+        <div className="flex justify-between items-center"><h2 id="engine-title" className="font-semibold flex gap-2 items-center"><Cpu className="w-5 h-5 text-sky-400"/>Engine availability</h2><button aria-label="Close engine status" onClick={() => setShowStatus(false)}><X className="w-5 h-5"/></button></div>
         <p className="my-4 text-sm text-slate-400">Availability is reported by the backend. An installed solver does not establish a validated physical model.</p>
         {statusError && <p role="alert" className="text-sm text-amber-300">{statusError}</p>}
         <p className="text-sm mb-3">{status?.online ? `Python ${status.pythonVersion ?? 'version unavailable'} · ${status.status}` : 'Python backend unavailable. Check the local server and Python runtime.'}</p>

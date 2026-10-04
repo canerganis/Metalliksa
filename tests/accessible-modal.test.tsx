@@ -1,5 +1,7 @@
 import React from "react";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -13,6 +15,10 @@ import {
   releaseScrollLock,
   nextTrapIndex,
   registerEscapeEntry,
+  rememberFocusOnOpen,
+  takeFocusMemory,
+  shouldCloseOnBackdropClick,
+  type FocusMemory,
 } from "../src/components/AccessibleModal";
 
 test("open modal renders dialog semantics and accessible name", () => {
@@ -97,4 +103,34 @@ test("tabbable predicate filters disabled, hidden, inert, tabindex -1 and unrend
   assert.equal(isTabbableCandidate({ hasInertAncestor: true }), false);
   assert.equal(isTabbableCandidate({ tabIndex: -1 }), false);
   assert.equal(isTabbableCandidate({ notRendered: true }), false);
+});
+
+test("focus memory is captured once per open, before later focus moves (child autoFocus)", () => {
+  const memory: FocusMemory<string> = { opened: false, previous: null };
+  rememberFocusOnOpen(memory, true, "trigger");
+  // a child autoFocus moved focus; later renders/effects must not overwrite the trigger
+  rememberFocusOnOpen(memory, true, "close-button");
+  assert.equal(memory.previous, "trigger");
+  assert.equal(takeFocusMemory(memory), "trigger");
+  assert.deepEqual(memory, { opened: false, previous: null });
+  rememberFocusOnOpen(memory, false, "x");
+  assert.equal(memory.previous, null);
+  rememberFocusOnOpen(memory, true, "second-trigger");
+  assert.equal(takeFocusMemory(memory), "second-trigger");
+});
+
+test("backdrop closes only for a primary click that started and ended on the overlay", () => {
+  const ok = { pressStartedOnOverlay: true, targetIsOverlay: true, button: 0 };
+  assert.equal(shouldCloseOnBackdropClick(ok), true);
+  assert.equal(shouldCloseOnBackdropClick({ ...ok, pressStartedOnOverlay: false }), false); // drag from panel
+  assert.equal(shouldCloseOnBackdropClick({ ...ok, targetIsOverlay: false }), false);
+  assert.equal(shouldCloseOnBackdropClick({ ...ok, button: 2 }), false);
+  assert.equal(shouldCloseOnBackdropClick({ ...ok, button: 1 }), false);
+});
+
+test("closeOnBackdrop wires mousedown+click, not an immediate mousedown close", () => {
+  const src = readFileSync(resolve(process.cwd(), "src/components/AccessibleModal.tsx"), "utf8");
+  assert.match(src, /onClick=\{/);
+  assert.match(src, /pressStartedOnOverlay/);
+  assert.doesNotMatch(src, /onMouseDown=\{closeOnBackdrop \? \(event\) => \{ if \(event\.target === event\.currentTarget\) onClose/);
 });
