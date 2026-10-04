@@ -9,7 +9,6 @@
  */
 import React, { useEffect, useRef } from "react";
 import {
-  AdditiveBlending,
   Color,
   IcosahedronGeometry,
   InstancedMesh,
@@ -53,16 +52,17 @@ export default function BootHero() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     const scene = new Scene();
-    const camera = new PerspectiveCamera(30, 1, 0.1, 40);
-    camera.position.set(0, 2.6, 3.4);
-    camera.lookAt(0, 0, 0.3);
+    const camera = new PerspectiveCamera(34, 1, 0.1, 40);
+    camera.position.set(0, 0.95, 2.7);
+    camera.lookAt(0, 0, -0.5);
 
     const grainGeometry = new IcosahedronGeometry(0.045, 0);
     const grainMaterial = new MeshBasicMaterial();
     const bed = new InstancedMesh(grainGeometry, grainMaterial, N * N);
-    const base = tokenColor("--mk-text-faint");
-    const hot = tokenColor("--mk-amber");
-    const core = tokenColor("--mk-text-strong");
+    // Porcelain stage: graphite-grey grains on a light page, an incandescent spot and a warm wake.
+    const base = tokenColor("--mk-hair-2");
+    const hot = tokenColor("--mk-laser");
+    const core = tokenColor("--mk-laser-soft");
     const tint = new Float32Array(N * N);
     const heat = new Float32Array(N * N);
     const dummy = new Object3D();
@@ -73,13 +73,13 @@ export default function BootHero() {
       dummy.position.set((x - N / 2 + Math.random() * 0.4) * GAP, Math.random() * 0.02, (z - N / 2 + Math.random() * 0.4) * GAP);
       dummy.updateMatrix();
       bed.setMatrixAt(i, dummy.matrix);
-      tint[i] = 0.22 + Math.random() * 0.18;
+      tint[i] = 0.7 + Math.random() * 0.3;
       bed.setColorAt(i, color.copy(base).multiplyScalar(tint[i]));
     }
     scene.add(bed);
 
-    const spotGeometry = new IcosahedronGeometry(0.07, 1);
-    const spotMaterial = new MeshBasicMaterial({ color: core, blending: AdditiveBlending, transparent: true });
+    const spotGeometry = new IcosahedronGeometry(0.06, 1);
+    const spotMaterial = new MeshBasicMaterial({ color: hot });
     const spot = new Mesh(spotGeometry, spotMaterial);
     scene.add(spot);
 

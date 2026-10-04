@@ -306,6 +306,11 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(16, 24, 40, 0.06);
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
+.mk-status { white-space: nowrap; }
+@media (max-width: 639px) {
+  .mk-header > div { flex-wrap: wrap; row-gap: 0.5rem; }
+  .mk-brand-title { letter-spacing: 0.24em; }
+}
 .mk-status:hover {
   border-color: var(--mk-border-strong);
   background: var(--mk-surface-raised);

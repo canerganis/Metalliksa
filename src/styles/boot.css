@@ -1,59 +1,120 @@
 /*
- * Boot sequence and telemetry strip (Phase 9, DESIGN-9 sections 3-4).
+ * Boot sequence and telemetry strip (porcelain identity).
  * Colors come only from src/styles/tokens.css and the src/index.css base palette;
  * tests/boot-telemetry-a11y.test.ts checks every color pair used here.
- * Motion decorates rows that already show their text; it never hides or delays a label.
+ * Motion decorates rows that already show their text; it never hides or delays a label. The emblem
+ * and wordmark animate only when data-animate="true" (motion allowed, first start in the tab); their
+ * static state is the finished drawing.
  */
 
 .mk-boot-overlay {
   background: var(--mk-bg);
-  transition: opacity var(--mk-dur-base) var(--mk-ease-out);
+  background-image:
+    radial-gradient(60rem 36rem at 50% 12%, var(--mk-paper), transparent 72%),
+    radial-gradient(var(--mk-line-subtle) 1px, transparent 1.3px);
+  background-size: auto, 26px 26px;
+  transition: opacity var(--mk-dur-slow) var(--mk-ease-out);
 }
 .mk-boot-overlay.is-leaving { opacity: 0; }
+.mk-boot-overlay.is-leaving .mk-boot-panel { transform: scale(1.015); transition: transform var(--mk-dur-slow) var(--mk-ease-out); }
 /* Opaque placeholder while the lazy boot chunk loads (no text: nothing has been checked yet). */
 .mk-boot-cover { position: fixed; inset: 0; z-index: 50; background: var(--mk-bg); }
 /* Visually hidden, still read by screen readers (persistent boot announcer). */
 .mk-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .mk-boot-panel {
+  position: relative;
   width: 100%;
-  max-width: 40rem;
+  max-width: 34rem;
   max-height: 100%;
   overflow-y: auto;
   padding: var(--mk-space-5);
-  border: 1px solid var(--mk-border-strong);
-  border-radius: 12px;
-  background: var(--mk-surface-raised);
-  box-shadow: var(--mk-elev-3);
   color: var(--mk-text-soft);
   font-family: var(--mk-font-sans);
 }
+.mk-boot { display: flex; flex-direction: column; }
+/* HUD corner brackets framing the boot composition (ornament). */
+.mk-boot-panel {
+  background-image:
+    linear-gradient(var(--mk-border-strong), var(--mk-border-strong)), linear-gradient(var(--mk-border-strong), var(--mk-border-strong)),
+    linear-gradient(var(--mk-border-strong), var(--mk-border-strong)), linear-gradient(var(--mk-border-strong), var(--mk-border-strong)),
+    linear-gradient(var(--mk-border-strong), var(--mk-border-strong)), linear-gradient(var(--mk-border-strong), var(--mk-border-strong)),
+    linear-gradient(var(--mk-border-strong), var(--mk-border-strong)), linear-gradient(var(--mk-border-strong), var(--mk-border-strong));
+  background-repeat: no-repeat;
+  background-size: 18px 1px, 1px 18px, 18px 1px, 1px 18px, 18px 1px, 1px 18px, 18px 1px, 1px 18px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+
+/* Stage: emblem, wordmark, kicker. */
+.mk-boot-stage { position: relative; display: flex; flex-direction: column; align-items: center; margin-bottom: var(--mk-space-6); text-align: center; }
+/* Isotherm rings centred on the emblem (ornament). */
+.mk-boot-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 84px;
+  width: 1400px;
+  height: 1400px;
+  margin: -700px 0 0 -700px;
+  pointer-events: none;
+  background-image: repeating-radial-gradient(circle, transparent 0 69px, var(--mk-line-divider) 69px 70px);
+  mask-image: radial-gradient(circle, black, transparent 70%);
+}
+.mk-boot-emblem { display: block; width: 168px; height: 168px; overflow: visible; }
+.mk-boot-emblem circle, .mk-boot-emblem path, .mk-boot-emblem line { fill: none; }
+.mk-boot-emblem .e-ring { stroke: var(--mk-border-strong); stroke-width: 1; stroke-dasharray: 100; }
+.mk-boot-emblem .e-inner { stroke: var(--mk-line-neutral); stroke-width: 1; stroke-dasharray: 100; }
+.mk-boot-emblem .e-ticks { stroke: var(--mk-text-faint); stroke-width: 4; stroke-dasharray: 0.6 4.8; transform-box: view-box; transform-origin: 50% 50%; }
+.mk-boot-emblem .e-hatch { stroke: var(--mk-text-strong); stroke-width: 2.2; stroke-dasharray: 100; }
+.mk-boot-emblem .e-glyph { stroke: var(--mk-text-strong); stroke-width: 1; stroke-dasharray: 100; }
+.mk-boot-emblem .e-orbit { fill: var(--mk-laser); stroke: none; filter: drop-shadow(0 0 4px var(--mk-laser)); transform-box: view-box; transform-origin: 50% 50%; transform: rotate(38deg); }
+.mk-boot-emblem .e-beam { stroke: var(--mk-laser); stroke-width: 1.5; opacity: 0; filter: drop-shadow(0 0 3px var(--mk-laser)); }
+
+.mk-boot-word {
+  margin: var(--mk-space-5) -0.52em 0 0;
+  font-size: clamp(1.5rem, 2.6vw + 0.6rem, 2.3rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.52em;
+  color: var(--mk-text-strong);
+}
+.mk-boot-word span { display: inline-block; }
 
 .mk-boot-kicker {
+  margin-top: var(--mk-space-3);
   font-family: var(--mk-font-mono);
   font-size: var(--mk-fs-2xs);
-  letter-spacing: var(--mk-tracking-caps);
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--mk-ice);
+  color: var(--mk-text-dim);
 }
-.mk-boot-title { margin-top: var(--mk-space-1); font-size: var(--mk-fs-lg); font-weight: 600; line-height: 1.18; color: var(--mk-text-strong); }
-.mk-boot-count {
-  margin-top: var(--mk-space-1);
+
+.mk-boot-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--mk-space-1) var(--mk-space-4); }
+.mk-boot-title {
   font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1.18;
+  color: var(--mk-text-strong);
+}
+.mk-boot-count {
   font-size: var(--mk-fs-xs);
   font-variant-numeric: tabular-nums;
   color: var(--mk-text-subtle);
 }
 
-.mk-boot-trace { position: relative; height: 1px; margin: var(--mk-space-4) 0 var(--mk-space-2); overflow: hidden; background-image: linear-gradient(var(--mk-line-subtle), var(--mk-line-subtle)); }
-.mk-boot[data-animate="true"][data-phase="running"] .mk-boot-trace::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: 30%;
-  background-image: linear-gradient(90deg, transparent, var(--mk-amber), transparent);
-  animation: mkBootTrace 1.4s var(--mk-ease-inout) infinite;
-}
+/* Discrete k/N meter: one segment per check. */
+.mk-boot-trace { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: var(--mk-space-3) 0 var(--mk-space-1); }
+.mk-boot-trace > i { display: block; height: 2px; border-radius: 2px; background-image: linear-gradient(var(--mk-line-neutral), var(--mk-line-neutral)); }
+.mk-boot-trace > i[data-state="running"] { background-image: linear-gradient(90deg, var(--mk-line-neutral), var(--mk-laser), var(--mk-line-neutral)); background-size: 300% 100%; }
+.mk-boot-trace > i[data-state="ok"] { background-image: linear-gradient(var(--mk-text-strong), var(--mk-text-strong)); }
+.mk-boot-trace > i[data-state="limited"] { background-image: linear-gradient(var(--mk-signal-warn), var(--mk-signal-warn)); }
+.mk-boot-trace > i[data-state="unavailable"],
+.mk-boot-trace > i[data-state="timed-out"],
+.mk-boot-trace > i[data-state="blocked"] { background-image: linear-gradient(var(--mk-signal-fail), var(--mk-signal-fail)); }
 
 .mk-boot-rows { display: grid; margin: 0; padding: 0; list-style: none; }
 .mk-boot-row {
@@ -61,13 +122,13 @@
   grid-template-columns: 1rem minmax(0, 1fr) auto;
   column-gap: var(--mk-space-3);
   align-items: center;
-  padding: var(--mk-space-2) 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--mk-line-subtle);
   font-size: var(--mk-fs-sm);
 }
 .mk-boot-label { color: var(--mk-text-strong); }
-.mk-boot-state { font-family: var(--mk-font-mono); font-size: var(--mk-fs-xs); text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-subtle); }
-.mk-boot-detail { grid-column: 2 / -1; margin-top: 2px; font-size: var(--mk-fs-xs); color: var(--mk-text-soft); overflow-wrap: anywhere; }
+.mk-boot-state { font-family: var(--mk-font-mono); font-size: var(--mk-fs-2xs); text-transform: uppercase; letter-spacing: 0.16em; color: var(--mk-text-subtle); }
+.mk-boot-detail { grid-column: 2 / -1; margin-top: 2px; font-size: var(--mk-fs-xs); color: var(--mk-text-dim); overflow-wrap: anywhere; }
 .mk-boot-icon { width: 1rem; font-family: var(--mk-font-mono); font-weight: 700; text-align: center; color: var(--mk-text-subtle); }
 
 [data-state="ok"] > .mk-boot-state, [data-state="ok"] > .mk-boot-icon { color: var(--mk-signal-ok); }
@@ -77,22 +138,19 @@
 [data-state="blocked"] > .mk-boot-state, [data-state="blocked"] > .mk-boot-icon { color: var(--mk-signal-fail); }
 [data-state="running"] > .mk-boot-state, [data-state="running"] > .mk-boot-icon { color: var(--mk-ice); }
 
-.mk-boot[data-animate="true"] .mk-boot-row:not([data-state="pending"]) { animation: mkBootRowIn var(--mk-dur-slow) var(--mk-ease-out); }
-.mk-boot[data-animate="true"] [data-state="running"] > .mk-boot-icon { animation: mkBootPulse 0.9s var(--mk-ease-inout) infinite alternate; }
-
 .mk-boot-stop { margin-top: var(--mk-space-4); font-size: var(--mk-fs-sm); color: var(--mk-text-soft); }
 .mk-boot a { color: var(--mk-ice); text-decoration: underline; text-underline-offset: 2px; }
 
-.mk-boot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mk-space-3); margin-top: var(--mk-space-4); }
+.mk-boot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mk-space-3); margin-top: var(--mk-space-5); }
 .mk-boot-skip {
   padding: var(--mk-space-2) var(--mk-space-4);
   border: 1px solid var(--mk-border-strong);
-  border-radius: 8px;
-  background: transparent;
+  border-radius: 999px;
+  background: var(--mk-surface-raised);
   color: var(--mk-ice);
   font-size: var(--mk-fs-sm);
 }
-.mk-boot-hint { font-size: var(--mk-fs-xs); color: var(--mk-text-dim); }
+.mk-boot-hint { flex: 1 1 16rem; font-size: var(--mk-fs-xs); color: var(--mk-text-dim); }
 
 .mk-boot a:focus-visible,
 .mk-boot-skip:focus-visible {
@@ -101,27 +159,75 @@
   box-shadow: var(--mk-focus-halo);
 }
 
-.mk-boot-hero { margin-top: var(--mk-space-4); }
-.mk-boot-hero canvas { display: block; width: 100%; height: 140px; border: 1px solid var(--mk-line-subtle); border-radius: 8px; }
+/* Illustrative powder-bed band under the checklist (WebGL, lazy). */
+.mk-boot-hero { order: 2; margin: var(--mk-space-5) calc(-1 * var(--mk-space-5)) 0; }
+.mk-boot-hero canvas { display: block; width: 100%; height: 150px; mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent); }
 .mk-boot-hero figcaption {
-  margin-top: var(--mk-space-1);
+  margin: var(--mk-space-1) var(--mk-space-5) 0;
+  text-align: right;
   font-family: var(--mk-font-mono);
   font-size: var(--mk-fs-2xs);
   letter-spacing: var(--mk-tracking-caps);
   text-transform: uppercase;
   color: var(--mk-evidence-unvalidated);
 }
+.mk-boot-actions { order: 3; }
 
-@keyframes mkBootTrace { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+/* Choreography (first animated start only). */
+.mk-boot[data-animate="true"] .e-ring { animation: mkDraw 1.4s var(--mk-ease-out) both; }
+.mk-boot[data-animate="true"] .e-inner { animation: mkDraw 1.4s var(--mk-ease-out) 0.2s both; }
+.mk-boot[data-animate="true"] .e-ticks { animation: mkSpin 40s linear infinite; }
+.mk-boot[data-animate="true"] .e-orbit { animation: mkSpin 5s linear infinite; }
+.mk-boot[data-animate="true"] .e-hatch { animation: mkDraw 0.26s linear both; animation-delay: calc(0.35s + var(--i) * 60ms); }
+.mk-boot[data-animate="true"] .e-beam { animation: mkBeam 1.36s linear 0.35s both; }
+.mk-boot[data-animate="true"] .e-glyph { animation: mkDraw 0.9s var(--mk-ease-out) 1.55s both; }
+.mk-boot[data-animate="true"] .mk-boot-word span { animation: mkLetter 0.8s var(--mk-ease-out) both; animation-delay: calc(1.1s + var(--i) * 70ms); }
+.mk-boot[data-animate="true"] .mk-boot-trace > i[data-state="running"] { animation: mkBootTrace 1.2s linear infinite; }
+.mk-boot[data-animate="true"] .mk-boot-row:not([data-state="pending"]) { animation: mkBootRowIn var(--mk-dur-slow) var(--mk-ease-out); }
+.mk-boot[data-animate="true"] [data-state="running"] > .mk-boot-icon { animation: mkBootPulse 0.9s var(--mk-ease-inout) infinite alternate; }
+
+@keyframes mkDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes mkSpin { to { transform: rotate(360deg); } }
+@keyframes mkBeam {
+  0% { transform: translateY(0); opacity: 0; }
+  6% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-84px); opacity: 0; }
+}
+@keyframes mkLetter { from { opacity: 0; transform: translateY(8px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes mkBootTrace { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @keyframes mkBootRowIn { from { transform: translateY(4px); } to { transform: none; } }
 @keyframes mkBootPulse { from { opacity: 1; } to { opacity: 0.45; } }
+
+/* Wide screens: emblem on the left, checklist on the right, the powder-bed band across the bottom. */
+@media (min-width: 64rem) {
+  .mk-boot-panel { max-width: 64rem; }
+  .mk-boot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 27rem); column-gap: 4.5rem; align-items: start; }
+  .mk-boot > * { grid-column: 2; }
+  .mk-boot > .mk-boot-stage { grid-column: 1; grid-row: 1 / 6; align-self: center; margin: 0; }
+  .mk-boot-stage::before { top: 130px; }
+  .mk-boot-emblem { width: 260px; height: 260px; }
+  .mk-boot-head { grid-row: 1; }
+  .mk-boot-trace { grid-row: 2; }
+  .mk-boot-rows { grid-row: 3; }
+  .mk-boot-stop { grid-row: 4; }
+  .mk-boot-actions { grid-row: 5; }
+  .mk-boot > .mk-boot-hero { grid-column: 1 / -1; grid-row: 6; }
+}
+
+@media (max-width: 639px) {
+  .mk-boot-panel { padding: var(--mk-space-4); }
+  .mk-boot-stage { margin-bottom: var(--mk-space-5); }
+  .mk-boot-emblem { width: 128px; height: 128px; }
+  .mk-boot-hero { margin-left: calc(-1 * var(--mk-space-4)); margin-right: calc(-1 * var(--mk-space-4)); }
+}
 
 /* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
  * In-flow footer at the end of the shell, deliberately NOT sticky: module modals are not portalled
  * (fixed inset-0 z-50 inside the main row, which is positioned with z-index auto), so the strip stays
  * a plain footer below them rather than a second pinned bar over their bottom action buttons. */
 .mk-telemetry {
-  padding: var(--mk-space-2) var(--mk-space-4);
+  padding: var(--mk-space-3) var(--mk-space-5);
   border-top: 1px solid var(--mk-border);
   background: var(--mk-glass-bg);
   backdrop-filter: blur(var(--mk-glass-blur));
@@ -132,9 +238,9 @@
 /* index.css positions every shell child (no z-index since the shell fix); z-index 0 keeps the strip
  * explicitly below module modals (z-50) and the sticky header (z-40) even if a later rule adds one. */
 .mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { z-index: 0; }
-.mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-5); }
+.mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-6); }
 .mk-telemetry dl > div { display: flex; gap: var(--mk-space-2); }
-.mk-telemetry dt { text-transform: uppercase; letter-spacing: var(--mk-tracking-caps); color: var(--mk-text-dim); }
+.mk-telemetry dt { text-transform: uppercase; letter-spacing: 0.16em; color: var(--mk-text-dim); }
 .mk-telemetry dd { color: var(--mk-text-soft); }
 .mk-telemetry dd[data-tone="ok"] { color: var(--mk-signal-ok); }
 .mk-telemetry dd[data-tone="warn"] { color: var(--mk-signal-warn); }

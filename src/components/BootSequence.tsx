@@ -24,6 +24,43 @@ import {
 
 const BootHero = lazy(() => import("./BootHero"));
 
+/**
+ * Opening choreography length on a first animated start in the tab. The checks start at once and their
+ * rows and state words are on screen from the first frame; this only keeps the emblem on screen long
+ * enough to finish drawing when the checks answer faster than the intro. Never applied with reduced
+ * motion, after a skip, or on a reload in the same tab (sessionStorage flag): those close as before.
+ */
+export const BOOT_INTRO_MS = 2800;
+/** Overlay fade-out length (matches --mk-dur-slow in boot.css). */
+const BOOT_FADE_MS = 420;
+const WORDMARK = "METALLIKSA";
+// Hatch rows of the monogram (one scan vector every 4 units, bottom to top), serpentine like a stripe scan.
+const HATCH_ROWS = Array.from({ length: 21 }, (_, i) => 140 - i * 4);
+
+/** Decorative emblem: a monogram filled row by row by scan vectors, a beam, and a reticle ring. */
+function BootEmblem() {
+  return (
+    <svg className="mk-boot-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="mk-boot-glyph">
+          <path d="M58 142V58h20l22 38 22-38h20v84h-18V92l-18 32h-12L76 92v50z" />
+        </clipPath>
+      </defs>
+      <circle className="e-ring" cx="100" cy="100" r="96" pathLength="100" />
+      <circle className="e-ticks" cx="100" cy="100" r="86" />
+      <circle className="e-inner" cx="100" cy="100" r="74" pathLength="100" />
+      <g clipPath="url(#mk-boot-glyph)">
+        {HATCH_ROWS.map((y, i) => (
+          <line key={y} className="e-hatch" x1={i & 1 ? 144 : 56} x2={i & 1 ? 56 : 144} y1={y} y2={y} pathLength="100" style={{ "--i": i } as React.CSSProperties} />
+        ))}
+      </g>
+      <path className="e-glyph" d="M58 142V58h20l22 38 22-38h20v84h-18V92l-18 32h-12L76 92v50z" pathLength="100" />
+      <line className="e-beam" x1="20" x2="180" y1="140" y2="140" />
+      <circle className="e-orbit" cx="100" cy="4" r="2.4" />
+    </svg>
+  );
+}
+
 export function bootController(): BootController {
   return getBootController(() => ({
     loadConfig: () => fetchRuntimeConfig(),
@@ -67,6 +104,13 @@ export function BootSequence() {
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
   const [webgl, setWebgl] = useState(false);
+  // Intro hold (see BOOT_INTRO_MS): only on an animated start; reduced motion and repeat loads skip it.
+  const [holding, setHolding] = useState(snap.animate);
+  useEffect(() => {
+    if (!holding) return undefined;
+    const timer = window.setTimeout(() => setHolding(false), BOOT_INTRO_MS);
+    return () => window.clearTimeout(timer);
+  }, [holding]);
   const configChecked = !["pending", "running"].includes(snap.rows[0]?.state ?? "pending");
   // Hero only for a plain start (no deep link) with motion allowed, after the config check.
   const deepLink = typeof window !== "undefined" && window.location.hash.length > 1;
@@ -88,10 +132,11 @@ export function BootSequence() {
       setGone(true);
       return undefined;
     }
+    if (holding) return undefined;
     setLeaving(true);
-    const timer = window.setTimeout(() => setGone(true), 200);
+    const timer = window.setTimeout(() => setGone(true), BOOT_FADE_MS);
     return () => window.clearTimeout(timer);
-  }, [snap.phase, snap.animate]);
+  }, [snap.phase, snap.animate, holding]);
 
   const open = !gone && !snap.dismissed;
   // Shell decisions outside this chunk (the command palette never opens over the boot screen).
@@ -118,13 +163,24 @@ export function BootSequence() {
       panelClassName="mk-boot-panel"
     >
       <div className="mk-boot" data-animate={String(snap.animate)} data-phase={snap.phase}>
-        <p className="mk-boot-kicker">Metalliksa · local start-up</p>
-        <h2 id="boot-title" className="mk-boot-title">Start-up checks</h2>
-        {/* Live while checks run and on a sign-in stop; the final result is spoken by the announcer above. */}
-        <p id="boot-count" className="mk-boot-count" role="status" aria-live={bootCountLive(snap.phase)}>
-          {bootSummary(snap)}
-        </p>
-        <div className="mk-boot-trace" aria-hidden="true" />
+        <div className="mk-boot-stage">
+          <BootEmblem />
+          <p className="mk-boot-word" aria-hidden="true">
+            {[...WORDMARK].map((letter, i) => <span key={i} style={{ "--i": i } as React.CSSProperties}>{letter}</span>)}
+          </p>
+          <p className="mk-boot-kicker">Metalliksa · local start-up</p>
+        </div>
+        <div className="mk-boot-head">
+          <h2 id="boot-title" className="mk-boot-title">Start-up checks</h2>
+          {/* Live while checks run and on a sign-in stop; the final result is spoken by the announcer above. */}
+          <p id="boot-count" className="mk-boot-count" role="status" aria-live={bootCountLive(snap.phase)}>
+            {bootSummary(snap)}
+          </p>
+        </div>
+        {/* One segment per check, filled when that check has answered (a discrete k/N meter, decorative). */}
+        <div className="mk-boot-trace" aria-hidden="true">
+          {snap.rows.map((row) => <i key={row.id} data-state={row.state} />)}
+        </div>
         <ol className="mk-boot-rows" aria-label="Start-up checks">
           {snap.rows.map((row) => (
             <li key={row.id} className="mk-boot-row" data-state={row.state}>
