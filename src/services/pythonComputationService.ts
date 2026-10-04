@@ -1,7 +1,7 @@
 /**
  * MetalliX Python HPC Subsystem & Proxy Client Service
  * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, DFT tensors, PHACOMP,
- * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, Pourbaix E-pH)
+ * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, single-element Pourbaix E–pH at 25 °C)
  * to the backend Python 3.10 runtime with automatic fallback to client TypeScript engines.
  */
 
