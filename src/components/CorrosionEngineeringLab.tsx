@@ -241,7 +241,7 @@ export function CorrosionEngineeringLab() {
             }`}
           >
             <Compass className="w-3.5 h-3.5 text-sky-400" />
-            <span>Dynamic Pourbaix (E-pH-T-Salinity)</span>
+            <span>Pourbaix E–pH (25 °C)</span>
           </button>
 
           <button
