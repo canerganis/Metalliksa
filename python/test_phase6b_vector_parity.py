@@ -54,8 +54,10 @@ PARITY_MODE = {
 VALIDATION_CHANGES = {("xrd_peak_deconvolution", "edge_missing_points"): ("OUT_OF_RANGE", "points")}
 # The only differences the minimiser rule tolerates besides numbers: the engine
 # string (version bump) and the additive fitDiagnostics block with exactly these keys.
-XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.0"
-XRD_DIAGNOSTIC_KEYS = {"minimiser", "start", "status", "message", "nfev", "dof", "accepted"}
+XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.1"
+# v4.1 adds the honest goodness-of-fit reporting keys (r_wp_pct is no longer clipped at 15 %).
+XRD_DIAGNOSTIC_KEYS = {"minimiser", "start", "status", "message", "nfev", "dof", "accepted",
+                       "rWpDefinition", "rWpPoorFitThresholdPct", "poorFit"}
 
 
 def load(solver, case):

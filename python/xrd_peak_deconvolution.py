@@ -48,6 +48,26 @@ def pearson_vii_profile(two_theta, center, intensity, fwhm, m):
     denom = (1.0 + c1 * (delta / max(1e-5, fwhm)) ** 2) ** m_clamped
     return intensity / denom
 
+def pearson_vii_integrated_area(intensity, fwhm, m):
+    """Exact area of the profile pearson_vii_profile(x, c, intensity, fwhm, m) over all x.
+
+    With a = 4*(2^(1/m) - 1)/fwhm^2 the profile is intensity*(1 + a*x^2)^(-m) and
+        integral = intensity * sqrt(pi/a) * Gamma(m - 1/2) / Gamma(m)
+                 = intensity * fwhm * sqrt(pi) * Gamma(m - 1/2)
+                   / (2 * Gamma(m) * sqrt(2^(1/m) - 1)),
+    (standard integral of (1 + a x^2)^(-m); m = 1 gives the Lorentzian pi*intensity*fwhm/2,
+    m -> infinity the Gaussian intensity*fwhm*sqrt(pi/(4 ln 2))). The profile uses m
+    clamped to [0.5, 20]; the same clamp is applied here. The integral diverges for
+    m <= 1/2, so None (unavailable) is returned there, never a finite number.
+    """
+    m_eff = max(0.5, min(20.0, m))
+    if m_eff <= 0.5:
+        return None
+    log_gamma_ratio = math.lgamma(m_eff - 0.5) - math.lgamma(m_eff)
+    return (intensity * fwhm * math.sqrt(math.pi) * math.exp(log_gamma_ratio)
+            / (2.0 * math.sqrt(2.0 ** (1.0 / m_eff) - 1.0)))
+
+
 def calculate_ka2_two_theta(ka1_two_theta, wavelength_ka1=1.540598, wavelength_ka2=1.544426):
     """
     Calculates K_alpha2 Bragg peak angle from K_alpha1 angle via Bragg's Law.
@@ -163,7 +183,12 @@ def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, k
     info = {"start": label, "status": int(result.status), "message": str(result.message), "nfev": int(result.nfev)}
     return [float(v) for v in result.x], info
 
-XRD_ENGINE = "MetalliX-Python-HPC-XRD-v4.0"  # v3.10 = faa6684 coordinate search
+XRD_ENGINE = "MetalliX-Python-HPC-XRD-v4.1"  # v4.0 = scipy fit; v3.10 = faa6684 coordinate search
+# Reporting ceiling for the unweighted relative residual below. It was a silent cap on the
+# reported r_wp_pct before v4.1; it is now only a flag (fitDiagnostics.poorFit) and the
+# reported value is never clipped.
+R_WP_POOR_FIT_PCT = 15.0
+R_WP_DEFINITION = "100*sqrt(sum((y_obs - y_fit)^2) / sum(y_obs^2)); unweighted, not the Rietveld Rwp"
 FREE_PARAMETERS = 6  # center, intensity, fwhm, eta|m, background intercept, slope
 MINIMISER = "scipy.optimize.least_squares (trf, bounded; guess and data-driven starts)"
 
@@ -306,7 +331,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
     if profile_type == "pseudo-voigt":
         area_ka1 = fitted_i1 * fitted_w1 * (fitted_shape * (math.pi / 2.0) + (1.0 - fitted_shape) * math.sqrt(math.pi / (4.0 * math.log(2.0))))
     else:
-        area_ka1 = fitted_i1 * fitted_w1 * math.sqrt(math.pi) / max(0.1, fitted_shape)
+        area_ka1 = pearson_vii_integrated_area(fitted_i1, fitted_w1, fitted_shape)
 
     # Deconvoluted curve profile for charts
     fitted_curve_profile = []
@@ -334,6 +359,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         })
 
     compute_time_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+    r_wp_pct = math.sqrt(current_loss / max(1.0, sum(p['sampleIntensity'] ** 2 for p in points))) * 100.0
 
     return {
         "success": True,
@@ -344,7 +370,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
             "intensity": round(fitted_i1, 1),
             "fwhm_deg": round(fitted_w1, 4),
             "fwhm_rad": round(math.radians(fitted_w1), 6),
-            "integratedArea": round(area_ka1, 1),
+            "integratedArea": round(area_ka1, 1) if area_ka1 is not None else None,
             "shapeParameter": round(fitted_shape, 3)
         },
         "ka2Peak": {
@@ -359,7 +385,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         },
         "goodnessOfFit": {
             "residualSumSquares": round(current_loss, 2),
-            "r_wp_pct": round(min(15.0, math.sqrt(current_loss / max(1.0, sum(p['sampleIntensity']**2 for p in points))) * 100.0), 2)
+            "r_wp_pct": round(r_wp_pct, 2)
         },
         "deconvolutionProfile": fitted_curve_profile,
         # Additive (v4.0): how the minimiser ended. status/message/nfev are scipy's
@@ -372,6 +398,9 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
             "nfev": fit_info["nfev"],
             "dof": len(points) - FREE_PARAMETERS,
             "accepted": accepted,
+            "rWpDefinition": R_WP_DEFINITION,
+            "rWpPoorFitThresholdPct": R_WP_POOR_FIT_PCT,
+            "poorFit": r_wp_pct > R_WP_POOR_FIT_PCT or fit_info["status"] == 0,
         }
     }
 
@@ -436,24 +465,55 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
     slope = numerator / max(1e-12, denominator)
     intercept = y_mean - slope * x_mean
     
-    # Microstrain (epsilon) = slope
-    microstrain_epsilon = max(1e-6, slope)
-    microstrain_pct = microstrain_epsilon * 100.0
-    
-    # Crystallite Size D = (K * lambda) / intercept (in Angstroms -> nm)
-    crystallite_size_A = (shape_factor_K * wavelength_A) / max(1e-7, intercept)
-    crystallite_size_nm = max(1.0, crystallite_size_A / 10.0)
+    # Microstrain (epsilon) = slope. A slope <= 0 means the data show no resolvable strain
+    # broadening: report it as unavailable (never a clamped 1e-6).
+    if slope > 0.0:
+        microstrain_epsilon = slope
+        microstrain_pct = microstrain_epsilon * 100.0
+        microstrain_status = "resolved"
+    else:
+        microstrain_epsilon = None
+        microstrain_pct = None
+        microstrain_status = "unavailable-nonpositive-slope"
+
+    # Crystallite Size D = (K * lambda) / intercept (in Angstroms -> nm). An intercept <= 0
+    # means no resolvable size broadening (no finite size): unavailable, never clamped.
+    if intercept > 0.0:
+        crystallite_size_A = (shape_factor_K * wavelength_A) / intercept
+        crystallite_size_nm = crystallite_size_A / 10.0
+        crystallite_size_status = "resolved"
+    else:
+        crystallite_size_A = None
+        crystallite_size_nm = None
+        crystallite_size_status = "unavailable-nonpositive-intercept"
     
     # R-squared
     ss_tot = sum((y - y_mean) ** 2 for y in y_pts)
     ss_res = sum((y_pts[i] - (slope * x_pts[i] + intercept)) ** 2 for i in range(n))
     r_squared = max(0.0, min(1.0, 1.0 - (ss_res / max(1e-12, ss_tot))))
     
-    # Dislocation density rho = sqrt(3) * epsilon / (D * b)
-    b_m = burgers_vector_nm * 1e-9
-    d_m = crystallite_size_nm * 1e-9
-    dislocation_density_m2 = (math.sqrt(3.0) * microstrain_epsilon) / (d_m * b_m)
-    dislocation_density_x10_14 = dislocation_density_m2 / 1e14
+    # Dislocation density, Williamson-Smallman relation
+    #     rho = 2*sqrt(3) * <epsilon^2>^(1/2) / (D * b)
+    # (G. K. Williamson and R. E. Smallman, Phil. Mag. 1 (1956) 34-46, "Dislocation densities
+    # in some annealed and cold-worked metals from measurements on the X-ray Debye-Scherrer
+    # spectrum"; D = crystallite size, b = Burgers vector). Before v3.11 the factor was
+    # sqrt(3), i.e. half of this relation. ASSUMPTION: the Williamson-Hall slope is used
+    # for the rms strain <epsilon^2>^(1/2) without a strain-definition conversion, so rho
+    # is an order-of-magnitude screening value, not a line-profile (Warren-Averbach /
+    # CMWP) dislocation density. Needs a resolved strain and size, else unavailable.
+    if microstrain_epsilon is not None and crystallite_size_nm is not None:
+        b_m = burgers_vector_nm * 1e-9
+        d_m = crystallite_size_nm * 1e-9
+        dislocation_density_m2 = (2.0 * math.sqrt(3.0) * microstrain_epsilon) / (d_m * b_m)
+        dislocation_density_x10_14 = dislocation_density_m2 / 1e14
+        dislocation_density_status = "computed-williamson-smallman-2sqrt3"
+    else:
+        dislocation_density_m2 = None
+        dislocation_density_x10_14 = None
+        dislocation_density_status = "unavailable-needs-positive-slope-and-intercept"
+
+    def _round(value, digits):
+        return round(value, digits) if value is not None else None
 
     # Regression Line Endpoints for Plotting
     x_min = min(x_pts) * 0.8
@@ -467,14 +527,17 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
     
     return {
         "success": True,
-        "engine": "MetalliX-Python-HPC-WilliamsonHall-v3.10",
+        "engine": "MetalliX-Python-HPC-WilliamsonHall-v3.11",
         "computeTimeMs": compute_time_ms,
-        "crystalliteSize_nm": round(crystallite_size_nm, 2),
-        "crystalliteSize_A": round(crystallite_size_A, 2),
-        "microstrain_epsilon": round(microstrain_epsilon, 6),
-        "microstrain_percent": round(microstrain_pct, 4),
-        "dislocationDensity_m2": round(dislocation_density_m2, 2),
-        "dislocationDensity_x10_14_m2": round(dislocation_density_x10_14, 3),
+        "crystalliteSize_nm": _round(crystallite_size_nm, 2),
+        "crystalliteSize_A": _round(crystallite_size_A, 2),
+        "crystalliteSizeStatus": crystallite_size_status,
+        "microstrain_epsilon": _round(microstrain_epsilon, 6),
+        "microstrain_percent": _round(microstrain_pct, 4),
+        "microstrainStatus": microstrain_status,
+        "dislocationDensity_m2": _round(dislocation_density_m2, 2),
+        "dislocationDensity_x10_14_m2": _round(dislocation_density_x10_14, 3),
+        "dislocationDensityStatus": dislocation_density_status,
         "rSquared": round(r_squared, 4),
         "slope": round(slope, 6),
         "intercept": round(intercept, 6),
