@@ -10,7 +10,7 @@ export interface PourbaixRequestInputs {
 
 /** Only the user-supplied point fields go into the request; solver-derived diagnostics (potential_V_SHE, regime, ...) are never echoed back to the solver. */
 export function pourbaixPointBody(p: ExperimentalEpHEntry) {
-  const body: Partial<ExperimentalEpHEntry> = { id: p.id, name: p.name, pH: p.pH, potential_V: p.potential_V, refElectrode: p.refElectrode };
+  const body: Pick<ExperimentalEpHEntry, 'id' | 'name' | 'pH' | 'potential_V' | 'refElectrode'> & Partial<Pick<ExperimentalEpHEntry, 'currentDensity_uA_cm2' | 'timeHours' | 'stageName' | 'notes'>> = { id: p.id, name: p.name, pH: p.pH, potential_V: p.potential_V, refElectrode: p.refElectrode };
   if (p.currentDensity_uA_cm2 !== undefined) body.currentDensity_uA_cm2 = p.currentDensity_uA_cm2;
   if (p.timeHours !== undefined) body.timeHours = p.timeHours;
   if (p.stageName !== undefined) body.stageName = p.stageName;
