@@ -199,6 +199,18 @@ def parse_roi(req: Dict[str, Any], shape: Tuple[int, int]) -> Dict[str, int]:
     return roi
 
 
+# Accepted image scale: 1e-6 um/px (1 pm per pixel, below any electron microscope) to 1e4 um/px (1 cm per pixel).
+# A validation bound against overflow/underflow and typos, not a property of any instrument.
+MIN_UM_PER_PX, MAX_UM_PER_PX = 1e-6, 1e4
+
+
+def _checked_scale(um_per_px: float) -> float:
+    if not (math.isfinite(um_per_px) and MIN_UM_PER_PX <= um_per_px <= MAX_UM_PER_PX):
+        raise MeasureInputError(f"the image scale {um_per_px!r} um/px is outside the accepted range "
+                                f"[{MIN_UM_PER_PX:g}, {MAX_UM_PER_PX:g}] um/px; check the calibration")
+    return um_per_px
+
+
 def parse_calibration(req: Dict[str, Any]) -> Dict[str, Any]:
     """Scale-bar caliper (barLengthUm, barLengthPx) or a stated pixel size (umPerPx with calibrationNote)."""
     bar_um = _finite("barLengthUm", req["barLengthUm"])
@@ -216,9 +228,10 @@ def parse_calibration(req: Dict[str, Any]) -> Dict[str, Any]:
         if bar_um <= 0 or bar_px < 2:
             raise MeasureInputError("a scale-bar calibration needs barLengthUm > 0 and barLengthPx >= 2")
         return {"calibrated": True, "method": "scale-bar", "barLengthUm": bar_um, "barLengthPx": bar_px,
-                "umPerPx": bar_um / bar_px, "note": note,
+                "umPerPx": _checked_scale(bar_um / bar_px), "note": note,
                 "derivation": "umPerPx = barLengthUm / barLengthPx (caliper drawn by the user over the image scale bar)"}
     if um_per_px > 0:
+        _checked_scale(um_per_px)
         if not note or not note.strip():
             raise MeasureInputError("umPerPx needs a calibrationNote stating where the pixel size comes from")
         return {"calibrated": True, "method": "pixel-size", "umPerPx": um_per_px, "note": note,
@@ -325,44 +338,44 @@ def particles(grey: np.ndarray, key: str, cls: Dict[str, Any], min_area_px: int,
     xs, ys = xs.astype(float), ys.astype(float)
     sums = {name: np.bincount(owner, weights=wt, minlength=n_all + 1) for name, wt in
             (("x", xs), ("y", ys), ("xx", xs * xs), ("yy", ys * ys), ("xy", xs * ys))}
-    objects = ndimage.find_objects(lab)
+    # Per-component moments, vectorised (a noisy 4096 x 4096 image can hold about a million components).
+    a = areas[keep]
+    cx, cy = sums["x"][keep] / a, sums["y"][keep] / a
+    sxx = sums["xx"][keep] / a - cx * cx + 1.0 / 12.0
+    syy = sums["yy"][keep] / a - cy * cy + 1.0 / 12.0
+    sxy = sums["xy"][keep] / a - cx * cy
+    tr, det = sxx + syy, sxx * syy - sxy * sxy
+    disc = np.sqrt(np.maximum(tr * tr / 4.0 - det, 0.0))
+    aspect = np.sqrt((tr / 2.0 + disc) / np.maximum(tr / 2.0 - disc, 1e-12))
+    per = perimeter[keep]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        circ = np.where(per > 0, 4.0 * math.pi * a / np.where(per > 0, per, 1.0) ** 2, np.nan)
+    shape = np.select(
+        [(a < SHAPE_MIN_AREA_PX) | ~np.isfinite(circ), aspect >= ELONGATED_MIN_ASPECT,
+         (circ >= NEAR_CIRCULAR_MIN_CIRCULARITY) & (aspect <= NEAR_CIRCULAR_MAX_ASPECT)],
+        ["too-small-to-classify", "elongated", "near-circular"], "irregular")
+    border = np.unique(np.concatenate((lab[0, :], lab[-1, :], lab[:, 0], lab[:, -1])))
+    edge = np.isin(keep, border)
+    ecd_px_all = 2.0 * np.sqrt(a / math.pi)
+    listed = keep[:MAX_PARTICLES_LISTED]
+    objects = ndimage.find_objects(lab, max_label=int(listed[-1])) if listed.size else []
     items: List[Dict[str, Any]] = []
-    for i in keep:
-        a = areas[i]
-        cx, cy = sums["x"][i] / a, sums["y"][i] / a
-        sxx = sums["xx"][i] / a - cx * cx + 1.0 / 12.0
-        syy = sums["yy"][i] / a - cy * cy + 1.0 / 12.0
-        sxy = sums["xy"][i] / a - cx * cy
-        tr, det = sxx + syy, sxx * syy - sxy * sxy
-        disc = math.sqrt(max(tr * tr / 4.0 - det, 0.0))
-        l1, l2 = tr / 2.0 + disc, max(tr / 2.0 - disc, 1e-12)
-        aspect = math.sqrt(l1 / l2)
-        circ = float(4.0 * math.pi * a / perimeter[i] ** 2) if perimeter[i] > 0 else None
-        if a < SHAPE_MIN_AREA_PX or circ is None:
-            shape = "too-small-to-classify"
-        elif aspect >= ELONGATED_MIN_ASPECT:
-            shape = "elongated"
-        elif circ >= NEAR_CIRCULAR_MIN_CIRCULARITY and aspect <= NEAR_CIRCULAR_MAX_ASPECT:
-            shape = "near-circular"
-        else:
-            shape = "irregular"
+    for j, i in enumerate(listed):
         sl = objects[i - 1]
-        edge = sl[0].start == 0 or sl[1].start == 0 or sl[0].stop == h or sl[1].stop == w
-        ecd_px = 2.0 * math.sqrt(a / math.pi)
         items.append({
-            "id": int(i), "areaPx": int(a), "centroidX": float(cx), "centroidY": float(cy),
+            "id": int(i), "areaPx": int(a[j]), "centroidX": float(cx[j]), "centroidY": float(cy[j]),
             "bbox": [int(sl[1].start), int(sl[0].start), int(sl[1].stop), int(sl[0].stop)],
-            "ecdPx": ecd_px, "ecdUm": ecd_px * um_per_px if um_per_px else None,
-            "perimeterPx": float(perimeter[i]), "circularity": circ, "aspectRatio": aspect,
-            "shapeClass": shape, "touchesRoiEdge": bool(edge),
+            "ecdPx": float(ecd_px_all[j]), "ecdUm": float(ecd_px_all[j] * um_per_px) if um_per_px else None,
+            "perimeterPx": float(per[j]), "circularity": float(circ[j]) if np.isfinite(circ[j]) else None,
+            "aspectRatio": float(aspect[j]), "shapeClass": str(shape[j]), "touchesRoiEdge": bool(edge[j]),
         })
-    shape_counts = {name: sum(1 for p in items if p["shapeClass"] == name)
+    shape_counts = {name: int(np.count_nonzero(shape == name))
                     for name in ("near-circular", "irregular", "elongated", "too-small-to-classify")}
-    interior = [p for p in items if not p["touchesRoiEdge"]]
+    n_interior = int(np.count_nonzero(~edge))
     out: Dict[str, Any] = {
         "connectivity": 8, "minAreaPx": min_area_px,
         "componentsBelowMinArea": int(n_all - count),
-        "count": count, "countTouchingRoiEdge": count - len(interior),
+        "count": count, "countTouchingRoiEdge": count - n_interior,
         "numberPerMegapixel": count / roi_area_px * 1e6,
         "shapeClasses": shape_counts,
         "shapeClassRule": (f"too-small-to-classify: area < {SHAPE_MIN_AREA_PX} px; elongated: aspect >= "
@@ -372,9 +385,9 @@ def particles(grey: np.ndarray, key: str, cls: Dict[str, Any], min_area_px: int,
                            "4-direction Cauchy-Crofton perimeter estimate."),
         "sizeStatisticsBasis": "particles not touching the ROI edge (edge particles are truncated)",
         "particleList": items[:MAX_PARTICLES_LISTED],
-        "particleListTruncated": len(items) > MAX_PARTICLES_LISTED,
+        "particleListTruncated": count > MAX_PARTICLES_LISTED,
     }
-    ecd_px = np.array([p["ecdPx"] for p in interior], dtype=float)
+    ecd_px = ecd_px_all[~edge]
     if um_per_px:
         out["detectionLimitEcdUm"] = _quantity(2.0 * math.sqrt(min_area_px / math.pi) * um_per_px, "µm",
                                                "ECD of a component of minAreaPx pixels")
@@ -420,7 +433,13 @@ def particles(grey: np.ndarray, key: str, cls: Dict[str, Any], min_area_px: int,
 # --- grain size (E112 intercept) ------------------------------------------------
 
 def intercept_test_lines(roi_h: int, roi_w: int, per_direction: int) -> List[Dict[str, Any]]:
-    """Horizontal rows round(i H/(m+1)) and vertical columns round(i W/(m+1)), i = 1..m (ROI coordinates)."""
+    """Horizontal rows round(i H/(m+1)) and vertical columns round(i W/(m+1)), i = 1..m (ROI coordinates).
+    Rejects a line count the cropped ROI cannot hold as distinct in-range lines (no repeated observations)."""
+    for name, size in (("rows", roi_h), ("columns", roi_w)):
+        pos = [int(round(i * size / (per_direction + 1))) for i in range(1, per_direction + 1)]
+        if len(set(pos)) != len(pos) or min(pos) < 0 or max(pos) > size - 1:
+            raise MeasureInputError(f"linesPerDirection {per_direction} does not fit the {size} {name} of the region of "
+                                    "interest as distinct test lines; use fewer lines or a larger region")
     lines = []
     for i in range(1, per_direction + 1):
         lines.append({"index": len(lines), "orientation": "h", "position": int(round(i * roi_h / (per_direction + 1))),
@@ -455,34 +474,50 @@ def _e112_g(lbar_um: float) -> float:
 
 
 def intercept_statistics(lines: List[Dict[str, Any]], counts: List[float], um_per_px: Optional[float],
-                         mode: str) -> Dict[str, Any]:
-    lengths = np.array([ln["lengthPx"] for ln in lines], dtype=float)
-    p = np.array(counts, dtype=float)
+                         mode: str, excluded: Tuple[int, ...] = ()) -> Dict[str, Any]:
+    """Pooled P_L = sum(P) / sum(L) over the usable lines, l_bar = 1 / P_L, with the ratio-estimator
+    standard error se = sqrt(sum((P_i - P_L L_i)^2) / (n (n - 1))) / mean(L) (lines as clusters). The same
+    estimator gives the value and its interval, so the interval always contains the value, also for lines
+    of unequal length (rectangular ROI). Lines in ``excluded`` (lying on a boundary) are dropped from both."""
+    dropped = set(excluded)
+    use = [i for i in range(len(lines)) if i not in dropped]
+    lengths = np.array([lines[i]["lengthPx"] for i in use], dtype=float)
+    p = np.array([counts[i] for i in use], dtype=float)
     total_p, total_l = float(p.sum()), float(lengths.sum())
     out: Dict[str, Any] = {
-        "mode": mode, "lines": len(lines), "totalLengthPx": total_l, "totalIntersections": total_p,
-        "warnings": [],
+        "mode": mode, "lines": len(use), "excludedLines": list(excluded), "totalLengthPx": total_l,
+        "totalIntersections": total_p, "warnings": [],
         "countingRule": ("ASTM E112 intersection count P: one per contiguous boundary run crossed, 1/2 when a run "
-                         "touches a line end; test lines at 0 and 90 degrees; triple points are not scored 1 1/2"),
+                         "touches a line end; test lines at 0 and 90 degrees; triple points are not scored 1 1/2; a "
+                         "line lying entirely on boundary pixels is excluded from both P and L"),
     }
-    if total_p <= 0:
-        reason = "no boundary intersections on the test lines"
-        out.update(meanInterceptPx=None, meanIntercept=_unavailable(reason, "µm"),
-                   astmG=_unavailable(reason, None), relativeAccuracyPct=None)
+    if excluded:
+        out["warnings"].append(f"test line(s) {list(excluded)} lie entirely on boundary pixels and were excluded "
+                               "from P and L; consider another line count or crop")
+    unavailable = None
+    if len(use) < 2:
+        unavailable = "fewer than two usable test lines"
+    elif total_p <= 0:
+        unavailable = "no boundary intersections on the test lines"
+    if unavailable:
+        out.update(meanInterceptPx=None, meanIntercept=_unavailable(unavailable, "µm"),
+                   astmG=_unavailable(unavailable, None), relativeAccuracyPct=None)
         return out
-    pl = p / lengths  # intersections per pixel, per line
-    ci = _mean_ci(pl)
-    half = ci["halfWidth"]
-    lbar_px = total_l / total_p
+    n = len(use)
+    p_l = total_p / total_l
+    se = math.sqrt(float(np.sum((p - p_l * lengths) ** 2)) / (n * (n - 1))) / float(lengths.mean())
+    t = _t975(n)
+    half = t * se
+    lbar_px = 1.0 / p_l
     out["meanInterceptPx"] = lbar_px
-    out["perLineIntersectionsPerPx"] = {"mean": ci["mean"], "sd": ci["sd"], "n": ci["n"],
-                                        "tCritical": ci["tCritical"], "halfWidth": half}
-    ra = None if half is None else 100.0 * half / ci["mean"]
+    out["intersectionsPerPx"] = {"pooled": p_l, "standardError": se, "n": n, "tCritical": t, "halfWidth": half,
+                                 "estimator": "ratio estimator over test lines (sum P / sum L)"}
+    ra = 100.0 * half / p_l
     out["relativeAccuracyPct"] = ra
     if total_p < FEW_INTERCEPTS:
         out["warnings"].append(f"only {total_p:g} intersections counted (E112 recommends at least {FEW_INTERCEPTS} per field; "
                                "add lines or fields)")
-    if ra is not None and ra > HIGH_RELATIVE_ACCURACY_PCT:
+    if ra > HIGH_RELATIVE_ACCURACY_PCT:
         out["warnings"].append(f"relative accuracy {ra:.1f} % exceeds {HIGH_RELATIVE_ACCURACY_PCT:g} %")
     if not um_per_px:
         reason = "uncalibrated: no length or ASTM G without a scale"
@@ -490,15 +525,14 @@ def intercept_statistics(lines: List[Dict[str, Any]], counts: List[float], um_pe
         out["astmG"] = _unavailable(reason, None)
         return out
     lbar_um = lbar_px * um_per_px
-    lo_pl, hi_pl = (None, None) if half is None else (ci["mean"] - half, ci["mean"] + half)
-    lbar_hi = None if lo_pl is None or lo_pl <= 0 else um_per_px / lo_pl
-    lbar_lo = None if hi_pl is None else um_per_px / hi_pl
+    lbar_hi = None if p_l - half <= 0 else um_per_px / (p_l - half)
+    lbar_lo = um_per_px / (p_l + half)
     out["meanIntercept"] = _quantity(lbar_um, "µm", "l_bar = total line length / total intersections",
-                                     None if half is None else (lbar_lo, lbar_hi))
-    g_ci = None if half is None else (None if lbar_hi is None else _e112_g(lbar_hi), _e112_g(lbar_lo))
-    out["astmG"] = _quantity(_e112_g(lbar_um), None, "G = -6.643856 log10(l_bar / mm) - 3.288 (ASTM E112)", g_ci)
-    out["ciNote"] = ("95 % interval from the line-to-line spread of P_L (t_{0.975,n-1} s / sqrt(n)), mapped to l_bar "
-                     "and G; lines of one image are not independent fields")
+                                     (lbar_lo, lbar_hi))
+    out["astmG"] = _quantity(_e112_g(lbar_um), None, "G = -6.643856 log10(l_bar / mm) - 3.288 (ASTM E112)",
+                             (None if lbar_hi is None else _e112_g(lbar_hi), _e112_g(lbar_lo)))
+    out["ciNote"] = ("95 % interval over the test lines of this one image (ratio-estimator standard error, "
+                     "t_{0.975,n-1}), mapped to l_bar and G; lines of one image are not independent fields or specimens")
     return out
 
 
@@ -515,12 +549,10 @@ def grain_size_auto(grey: np.ndarray, boundary_max_grey: int, lines: List[Dict[s
         for pos, weight in pts:
             x, y = (pos, ln["position"]) if ln["orientation"] == "h" else (ln["position"], pos)
             points.append({"line": ln["index"], "x": float(x), "y": float(y), "weight": weight})
-    out = intercept_statistics(lines, counts, um_per_px, "automatic: boundaries darker than grains")
+    out = intercept_statistics(lines, counts, um_per_px, "automatic: boundaries darker than grains", tuple(along))
     out["boundaryMaxGrey"] = boundary_max_grey
     out["perLineIntersections"] = counts
     out["intersections"] = points
-    if along:
-        out["warnings"].append(f"test line(s) {along} lie entirely on boundary pixels and score 0")
     # Diagnostic: grain boundaries form a connected network; isolated dark features (pores, particles) do not.
     lab, n = ndimage.label(boundary, structure=_EIGHT)
     if n:
@@ -535,7 +567,7 @@ def grain_size_auto(grey: np.ndarray, boundary_max_grey: int, lines: List[Dict[s
 
 
 def grain_size_manual(counts: Any, clicks: Any, lines: List[Dict[str, Any]],
-                      um_per_px: Optional[float]) -> Dict[str, Any]:
+                      um_per_px: Optional[float], roi: Dict[str, int]) -> Dict[str, Any]:
     if not isinstance(counts, list):
         raise MeasureInputError("manualCounts must be a list with one intersection count per test line")
     if len(counts) != len(lines):
@@ -546,16 +578,35 @@ def grain_size_manual(counts: Any, clicks: Any, lines: List[Dict[str, Any]],
         if v < 0 or v * 2 != int(v * 2):
             raise MeasureInputError(f"manualCounts[{i}] must be a non-negative multiple of 0.5")
         values.append(v)
-    out = intercept_statistics(lines, values, um_per_px, "manual: intersections clicked by the user")
-    out["perLineIntersections"] = values
+    checked = None
     if clicks is not None:
         if not isinstance(clicks, list) or len(clicks) > 20000:
             raise MeasureInputError("manualClicks must be a list of at most 20000 points")
         if not all(isinstance(c, dict) for c in clicks):
             raise MeasureInputError("manualClicks entries must be objects {line, x, y, weight}")
-        out["clicks"] = [{"line": _int("manualClicks.line", c.get("line"), 0, len(lines) - 1),
-                          "x": _finite("manualClicks.x", c.get("x")), "y": _finite("manualClicks.y", c.get("y")),
-                          "weight": _finite("manualClicks.weight", c.get("weight", 1))} for c in clicks]
+        checked = [{"line": _int("manualClicks.line", c.get("line"), 0, len(lines) - 1),
+                    "x": _finite("manualClicks.x", c.get("x")), "y": _finite("manualClicks.y", c.get("y")),
+                    "weight": _finite("manualClicks.weight", c.get("weight", 1))} for c in clicks]
+        sums = [0.0] * len(lines)
+        for k, c in enumerate(checked):
+            ln = lines[c["line"]]
+            if c["weight"] not in (0.5, 1.0):
+                raise MeasureInputError(f"manualClicks[{k}].weight must be 1 or 0.5")
+            # Image coordinates: the line lies at ROI offset + position; the click must sit on it, inside the ROI.
+            if ln["orientation"] == "h":
+                across, along = c["y"] - roi["y0"], c["x"] - roi["x0"]
+            else:
+                across, along = c["x"] - roi["x0"], c["y"] - roi["y0"]
+            if abs(across - ln["position"]) > 0.5 or not 0 <= along <= ln["lengthPx"] - 1:
+                raise MeasureInputError(f"manualClicks[{k}] does not lie on test line {c['line']} of the current region "
+                                        "of interest; recount after changing the crop or line count")
+            sums[c["line"]] += c["weight"]
+        if sums != values:
+            raise MeasureInputError("manualCounts must equal the per-line sums of manualClicks weights")
+    out = intercept_statistics(lines, values, um_per_px, "manual: intersections clicked by the user")
+    out["perLineIntersections"] = values
+    if checked is not None:
+        out["clicks"] = checked
     return out
 
 
@@ -585,6 +636,9 @@ def measure(payload: Any) -> Dict[str, Any]:
 
     roi_grey = image[roi["y0"]:roi["y1"], roi["x0"]:roi["x1"]]
     h, w = roi_grey.shape
+    if classes and 2 * tiles > min(h, w):
+        raise MeasureInputError(f"tiles {tiles} x {tiles} need at least {2 * tiles} px per side of the region of interest "
+                                f"(it is {w} x {h}); use fewer tiles")
     lines = intercept_test_lines(h, w, per_direction)
     result: Dict[str, Any] = {
         "schema": SCHEMA,
@@ -619,7 +673,39 @@ def measure(payload: Any) -> Dict[str, Any]:
     if boundary_max >= 0:
         result["grainSize"] = grain_size_auto(roi_grey, boundary_max, lines, um_per_px)
     if req["manualCounts"] is not None:
-        result["grainSizeManual"] = grain_size_manual(req["manualCounts"], req["manualClicks"], lines, um_per_px)
+        result["grainSizeManual"] = grain_size_manual(req["manualCounts"], req["manualClicks"], lines, um_per_px, roi)
     elif req["manualClicks"] is not None:
         raise MeasureInputError("manualClicks needs manualCounts")
     return result
+
+
+def main() -> None:
+    import json
+    import sys
+    try:
+        raw = sys.stdin.read()
+        payload = json.loads(raw) if raw.strip() else {}
+        result = measure(payload)
+    except MeasureInputError as exc:
+        print(json.dumps({"success": False, "errorKind": "validation",
+                          "error": {"code": "INVALID_INPUT", "field": "request", "message": str(exc), "detail": {}}}))
+        sys.exit(2)
+    except (ValueError, json.JSONDecodeError) as exc:
+        print(json.dumps({"success": False, "errorKind": "validation",
+                          "error": {"code": "INVALID_INPUT", "field": "request", "message": f"invalid request: {exc}",
+                                    "detail": {}}}))
+        sys.exit(2)
+    except Exception as exc:  # pragma: no cover - reported, never hidden
+        print(json.dumps({"success": False, "errorKind": "internal", "error": f"{type(exc).__name__}: {exc}"}))
+        sys.exit(1)
+    try:
+        text = json.dumps(result, allow_nan=False)  # a non-finite number is an internal error, never published
+    except ValueError as exc:
+        print(json.dumps({"success": False, "errorKind": "internal", "error": f"non-finite result value: {exc}"}))
+        sys.exit(1)
+    sys.stdout.write(text)
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()

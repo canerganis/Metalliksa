@@ -165,9 +165,13 @@ export async function measureMicrograph(request: MicrographMeasureRequest, signa
   } catch {
     throw new Error(res.ok ? "Invalid response from the measurement service." : `Measurement failed (${res.status}).`);
   }
-  if (!res.ok) {
-    const message = (data as { error?: unknown })?.error;
-    throw new Error(typeof message === "string" ? message : `Measurement failed (${res.status}).`);
+  // 422: validation envelope {errorKind: "validation", error: {message}}; 413/500: {error: "..."}; an internal
+  // failure of the script arrives as HTTP 200 with errorKind "internal" (routes/physics.ts dispatch mapping).
+  const body = data as { error?: unknown; errorKind?: unknown; schema?: unknown };
+  const message = typeof body?.error === "string" ? body.error
+    : typeof (body?.error as { message?: unknown })?.message === "string" ? (body.error as { message: string }).message : null;
+  if (!res.ok || body?.errorKind !== undefined || body?.schema !== "micrograph-measure/1") {
+    throw new Error(message ?? `Measurement failed (${res.status}).`);
   }
   return data as MicrographMeasureResult;
 }

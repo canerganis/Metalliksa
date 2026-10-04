@@ -193,6 +193,7 @@ export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "lpbf_bayesian_optimizer",
   "lpbf_thermal_solver",
   "marangoni_pore_instability_solver",
+  "micrograph_measure",
   "part_scale_inherent_strain_solver",
   "pourbaix_solver",
   "stl_slicer_build_time_solver",

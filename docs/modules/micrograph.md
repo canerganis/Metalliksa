@@ -14,7 +14,7 @@
 
 ### `micrograph-measure`: `POST /api/python/micrograph-measure`
 
-Authority: lpbf-worker `micrograph-measure`; timeout 20000 ms; GPU none; warm false.
+Authority: python-ipc `python/micrograph_measure.py`; timeout 60000 ms; GPU none; warm false.
 
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Output fields (no status key, so the output carries no evidence status): `diagno
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: present, `python/test_micrograph_measure.py::O1SquareGrid.test_exact_intercept_and_g`
 - Oracle scope: Synthetic known-answer images only (O1-O9); no real micrograph is compared.
-- Oracle in CI: no recorded gap
+- Oracle in CI: yes (`test_micrograph_measure` is in the .github/workflows/ci.yml Python unittest list)
 - Note: Emits no evidence status: neither output carries a status key. micrograph-measure is measurement software (threshold area fraction with field-to-field CI and threshold sensitivity, connected-component particles, ASTM E112 intersection counting) checked against synthetic oracle images in python/test_micrograph_measure.py; it has no comparison with real micrographs or with manual counts by a metallographer, so the ceiling stays screening-only. Lengths, areas, densities and G are null without a user calibration. diagnose-micrograph returns language-model text: advisory, never a measurement.
 
 ## Validity domain
@@ -80,16 +80,16 @@ Background work: none; resources: fetch.
 - The view decodes PNG/JPEG/BMP/GIF/WebP in the browser; TIFF is not decoded (the view says so) and no instrument metadata (pixel size) is read from files.
 - diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider default (server/openaiService.ts), the route passes none.
 - No validity domain is declared: no real-image comparison establishes an applicability range.
+- micrograph-measure runs as a python-ipc script (IPC process pool, or an ad-hoc process when the daemon is unreachable) under a 60000 ms deadline, not in the serial LPBF worker: the worker refuses RPC lines over 1,000,000 characters (an image above about 865 x 865 px) and would hold up LPBF job calls. The route answers 413 above 24,000,000 bytes of JSON (a 4096 x 4096 image is 22.4 MB).
 
 ## Source references
 
-- `server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000`
-- `python/lpbf_worker_rpc.py::dispatch`
-- `python/lpbf_worker_rpc.py::_rpc_micrograph_measure`
+- `routes/physics.ts`
+- `server/processOrchestrator.ts::runPythonScript`
+- `python/micrograph_measure.py::main`
 - `python/micrograph_measure.py::read_request`
 - `python/micrograph_measure.py::measure`
 - `python/micrograph_measure.py::intercept_statistics`
-- `routes/lpbfSimulation.ts`
 - `routes/copilot.ts`
 - `server/openaiService.ts:39#request.timeoutMs ?? 60_000`
 - `src/components/MicrographLab.tsx::MicrographLab`

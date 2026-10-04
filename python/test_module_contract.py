@@ -541,6 +541,17 @@ class ContractedRegistryTests(unittest.TestCase):
                     self.assertIsNone(oracle.ci_note, "no gap to record")
         self.assertEqual(mr.oracle_ci_missing_packages(self.contracted["keyhole-raytracing"].tests.oracle.ref), ["warp"])
 
+    def test_a_present_oracle_without_a_ci_gap_note_is_listed_in_the_ci_workflow(self):
+        # Micrograph review S2: "no CI gap" must mean the oracle module really runs in CI, not only that its
+        # packages are in the CI lock. The generated module page derives its "Oracle in CI" line from the same check.
+        for contract in self.contracted.values():
+            oracle = contract.tests.oracle
+            if oracle.status == "present" and not oracle.ci_note:
+                with self.subTest(module=contract.id):
+                    self.assertTrue(mr.oracle_listed_in_ci(oracle.ref), mr.oracle_ci_module(oracle.ref))
+                    self.assertTrue(mr.oracle_listed_in_ci(contract.tests.schema), contract.tests.schema)
+        self.assertFalse(mr.oracle_listed_in_ci("python/test_not_a_module.py::T.t"))
+
     def test_ci_note_must_be_echoed_in_the_evidence_note(self):
         base = mr.CONTRACTED_BUILDERS["keyhole-raytracing"]
         row = next(r for r in mr.load_seed() if r["id"] == "keyhole-raytracing")

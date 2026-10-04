@@ -2911,10 +2911,10 @@ export const MODULE_REGISTRY = {
           "method": "POST",
           "route": "/api/python/micrograph-measure",
           "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "micrograph-measure",
-            "timeoutMs": 20000,
+            "kind": "python-ipc",
+            "script": "python/micrograph_measure.py",
+            "workerMethod": null,
+            "timeoutMs": 60000,
             "gpu": "none",
             "warm": false,
             "exceptionReason": null
@@ -3255,16 +3255,16 @@ export const MODULE_REGISTRY = {
         "imageData is the 8-bit greyscale image (row-major bytes, base64) with imageWidth and imageHeight (each 1-4096); labels, calibrationNote, manualCounts (one count per test line, multiples of 0.5) and manualClicks are free text or lists. The Field schema cannot describe them, so they are recorded as undeclaredInput; the authority validates them.",
         "The view decodes PNG/JPEG/BMP/GIF/WebP in the browser; TIFF is not decoded (the view says so) and no instrument metadata (pixel size) is read from files.",
         "diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider default (server/openaiService.ts), the route passes none.",
-        "No validity domain is declared: no real-image comparison establishes an applicability range."
+        "No validity domain is declared: no real-image comparison establishes an applicability range.",
+        "micrograph-measure runs as a python-ipc script (IPC process pool, or an ad-hoc process when the daemon is unreachable) under a 60000 ms deadline, not in the serial LPBF worker: the worker refuses RPC lines over 1,000,000 characters (an image above about 865 x 865 px) and would hold up LPBF job calls. The route answers 413 above 24,000,000 bytes of JSON (a 4096 x 4096 image is 22.4 MB)."
       ],
       "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_micrograph_measure",
+        "routes/physics.ts",
+        "server/processOrchestrator.ts::runPythonScript",
+        "python/micrograph_measure.py::main",
         "python/micrograph_measure.py::read_request",
         "python/micrograph_measure.py::measure",
         "python/micrograph_measure.py::intercept_statistics",
-        "routes/lpbfSimulation.ts",
         "routes/copilot.ts",
         "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
         "src/components/MicrographLab.tsx::MicrographLab",

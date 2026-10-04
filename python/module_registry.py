@@ -998,7 +998,7 @@ _MICROGRAPH_EVIDENCE_NOTE = (
 def _micrograph_contract(row: Dict[str, str]) -> ModuleContract:
     measure = Operation(
         id="micrograph-measure", method="POST", route="/api/python/micrograph-measure",
-        authority=_worker("micrograph-measure"), input=_MICROGRAPH_FIELDS, output=_MICROGRAPH_OUTPUT,
+        authority=_py("micrograph_measure", 60000, warm=False), input=_MICROGRAPH_FIELDS, output=_MICROGRAPH_OUTPUT,
         undeclared_input=_MICROGRAPH_UNDECLARED)
     describe = Operation(
         id="diagnose-micrograph", method="POST", route="/api/metallurgy/diagnose-micrograph",
@@ -1032,13 +1032,18 @@ def _micrograph_contract(row: Dict[str, str]) -> ModuleContract:
             "diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider "
             "default (server/openaiService.ts), the route passes none.",
             "No validity domain is declared: no real-image comparison establishes an applicability range.",
+            "micrograph-measure runs as a python-ipc script (IPC process pool, or an ad-hoc process when the daemon "
+            "is unreachable) under a 60000 ms deadline, not in the serial LPBF worker: the worker refuses RPC lines "
+            "over 1,000,000 characters (an image above about 865 x 865 px) and would hold up LPBF job calls. The "
+            "route answers 413 above 24,000,000 bytes of JSON (a 4096 x 4096 image is 22.4 MB).",
         ),
-        source_refs=_WORKER_SOURCES + (
-            "python/lpbf_worker_rpc.py::_rpc_micrograph_measure",
+        source_refs=(
+            "routes/physics.ts",
+            "server/processOrchestrator.ts::runPythonScript",
+            "python/micrograph_measure.py::main",
             "python/micrograph_measure.py::read_request",
             "python/micrograph_measure.py::measure",
             "python/micrograph_measure.py::intercept_statistics",
-            "routes/lpbfSimulation.ts",
             "routes/copilot.ts",
             "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
             "src/components/MicrographLab.tsx::MicrographLab",
@@ -1227,6 +1232,18 @@ def ref_problem(ref: str, root: Path = REPO_ROOT, generated: frozenset = frozens
 
 
 CI_LOCK = PYTHON_DIR / "requirements-lpbf.in"  # the CI python job installs only this
+CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+
+
+def oracle_ci_module(ref: str) -> str:
+    """unittest module name of an oracle reference (path::Class.method)."""
+    return Path(ref.split("::")[0]).stem
+
+
+def oracle_listed_in_ci(ref: str) -> bool:
+    """True when the oracle's test module is a word of the CI workflow (the python unittest lists)."""
+    text = CI_WORKFLOW.read_text(encoding="utf-8") if CI_WORKFLOW.is_file() else ""
+    return re.search(rf"(?<![\w.]){re.escape(oracle_ci_module(ref))}(?![\w.])", text) is not None
 
 
 def _top_level_imports(path: Path) -> set:
@@ -1467,7 +1484,11 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Oracle scope: {c.tests.oracle.scope}" if c.tests.oracle.scope else "- Oracle scope: none",
         f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note
         else ("- Oracle in CI: none (oracle pending)" if c.tests.oracle.status == "pending"
-              else "- Oracle in CI: no recorded gap"),
+              else (f"- Oracle in CI: yes (`{oracle_ci_module(c.tests.oracle.ref)}` is in the "
+                    f"{CI_WORKFLOW.relative_to(REPO_ROOT).as_posix()} Python unittest list)"
+                    if oracle_listed_in_ci(c.tests.oracle.ref)
+                    else f"- Oracle in CI: NOT LISTED (`{oracle_ci_module(c.tests.oracle.ref)}` is missing from "
+                         f"{CI_WORKFLOW.relative_to(REPO_ROOT).as_posix()})")),
         f"- Note: {e.note}" if e.note else "- Note: none",
         "",
         "## Validity domain",

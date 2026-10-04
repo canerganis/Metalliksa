@@ -38,12 +38,6 @@ ORIGINAL_METHOD_NAMES = (
 )
 
 
-# Methods added after the table refactor (each with its own tests).
-ADDED_METHOD_NAMES = (
-    "micrograph-measure",  # micrograph rework: python/micrograph_measure.py (test_micrograph_measure)
-)
-
-
 def original_method_names():
     return list(ORIGINAL_METHOD_NAMES)
 
@@ -58,7 +52,7 @@ class WorkerDispatchTest(unittest.TestCase):
         served = lpbf_worker_rpc.method_names()
         for name in original_method_names():
             self.assertIn(name, served, name)
-        self.assertEqual(served, set(original_method_names()) | set(ADDED_METHOD_NAMES))
+        self.assertEqual(served, set(original_method_names()))
 
     def test_table_handlers_are_callable_and_disjoint(self):
         tables = (lpbf_worker_rpc.QUEUE_HANDLERS, lpbf_worker_rpc.RESEARCH_HANDLERS)

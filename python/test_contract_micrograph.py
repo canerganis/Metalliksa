@@ -16,7 +16,7 @@ import numpy as np
 
 import micrograph_measure as mm
 from contract_test_support import (PYTHON_DIR, ContractScaffold, function_node, get_reads, run_unittest_ref,
-                                   worker_dispatch)
+                                   run_script)
 
 READ_REQUEST = function_node(PYTHON_DIR / "micrograph_measure.py", "read_request")
 REPO = PYTHON_DIR.parent
@@ -42,13 +42,18 @@ class MicrographContract(ContractScaffold, unittest.TestCase):
 
     def test_operations_and_authorities(self):
         self.assertEqual((self.measure.id, self.measure.route, self.measure.authority.kind,
-                          self.measure.authority.worker_method, self.measure.authority.timeout_ms),
-                         ("micrograph-measure", "/api/python/micrograph-measure", "lpbf-worker", "micrograph-measure", 20000))
+                          self.measure.authority.script, self.measure.authority.timeout_ms, self.measure.authority.warm),
+                         ("micrograph-measure", "/api/python/micrograph-measure", "python-ipc",
+                          "python/micrograph_measure.py", 60000, False))
         self.assertEqual((self.describe.id, self.describe.route, self.describe.authority.kind,
                           self.describe.authority.timeout_ms),
                          ("diagnose-micrograph", "/api/metallurgy/diagnose-micrograph", "node-provider", 60000))
-        route = (REPO / "routes" / "lpbfSimulation.ts").read_text(encoding="utf-8")
-        self.assertIn('["post", "/api/python/micrograph-measure", "micrograph-measure"]', route)
+        route = (REPO / "routes" / "physics.ts").read_text(encoding="utf-8")
+        self.assertIn('"/api/python/micrograph-measure"', route)
+        self.assertIn('handlePythonDispatch("python/micrograph_measure.py", req.body, res, MICROGRAPH_TIMEOUT_MS)', route)
+        self.assertIn("MICROGRAPH_TIMEOUT_MS = 60_000", route)
+        self.assertNotIn("micrograph", (REPO / "routes" / "lpbfSimulation.ts").read_text(encoding="utf-8"),
+                         "the image must not travel through the serial LPBF worker (1 MB line limit)")
         self.assertIn("request.timeoutMs ?? 60_000", (REPO / "server" / "openaiService.ts").read_text(encoding="utf-8"))
 
     def test_every_key_the_authority_reads_is_declared_with_its_literal_default(self):
@@ -90,8 +95,9 @@ class MicrographContract(ContractScaffold, unittest.TestCase):
         with self.assertRaises(mm.MeasureInputError):
             mm.measure({**base, "notAKey": 1})
 
-    def test_output_fields_match_a_real_run_through_the_worker(self):
-        result = worker_dispatch("micrograph-measure", base_request())
+    def test_output_fields_match_a_real_run_through_the_script_entry_point(self):
+        code, result = run_script("micrograph_measure.py", base_request())
+        self.assertEqual(code, 0, result)
         self.assertEqual(tuple(result), self.measure.output.fields)
         self.assertIsNone(result["grainSize"])
         self.assertIsNotNone(result["calibrationRequired"])

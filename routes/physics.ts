@@ -120,3 +120,15 @@ physicsRouter.post("/api/python/icme-multiscale-pipeline", (req: Request, res: R
 physicsRouter.post("/api/python/stochastic-uq-mmpds", (req: Request, res: Response) => {
   return handlePythonDispatch("python/stochastic_uq_mmpds_solver.py", req.body, res);
 });
+
+// Micrograph measurement (python/micrograph_measure.py). Runs in the Python IPC process pool (or an ad-hoc
+// process), not in the serial LPBF worker, so a large image neither hits the worker's 1 MB RPC line limit nor
+// holds up LPBF job calls. A 4096 x 4096 8-bit image is 22.4 MB as base64 JSON; the authority enforces 4096 px.
+export const MICROGRAPH_MAX_BODY_BYTES = 24_000_000;
+export const MICROGRAPH_TIMEOUT_MS = 60_000;
+physicsRouter.post("/api/python/micrograph-measure", (req: Request, res: Response) => {
+  if (Buffer.byteLength(JSON.stringify(req.body ?? null)) > MICROGRAPH_MAX_BODY_BYTES) {
+    return res.status(413).json({ error: "Micrograph image too large (at most 4096 x 4096 pixels, 8-bit)." });
+  }
+  return handlePythonDispatch("python/micrograph_measure.py", req.body, res, MICROGRAPH_TIMEOUT_MS);
+});
