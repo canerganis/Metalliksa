@@ -18,7 +18,8 @@ export function computeAerospaceScreeningStats({ meanYieldMpa, meanTensileMpa, s
   const cov = Math.max(1.0, scatterCvPct) / 100;
   const stdDev = meanYieldMpa * cov;
 
-  // Natrella one-sided tolerance factors (shared with StandardQualificationEngine; same expression and rounding).
+  // One-sided tolerance factors shared with StandardQualificationEngine (exact noncentral-t table for N <= 300,
+  // Natrella above; see toleranceFactors.ts).
   const { kA, kB } = screeningToleranceFactors(N);
 
   const aBasisYield = Math.max(0, Math.round(meanYieldMpa - kA * stdDev));

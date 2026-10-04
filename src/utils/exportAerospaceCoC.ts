@@ -1,5 +1,6 @@
 import type { jsPDF } from "jspdf";
 import { ENGINEERING_ESTIMATE_DISCLAIMER } from "./engineeringDisclaimer";
+import { toleranceFactorMethodLabel } from "./toleranceFactors";
 
 export interface LabMultiTestData {
   // Tabor-Cahoon Non-Destructive Tensile Test
@@ -349,7 +350,7 @@ export async function generateAerospaceCoCPDF(data: AerospaceAuditReportData): P
   doc.setTextColor(51, 65, 85);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `Statistical One-Sided Tolerance Limits (Lieberman-Resnikoff, N=${data.sampleSizeN}): k_A = ${data.mmpdsStats.kA} (99%/95%) | k_B = ${data.mmpdsStats.kB} (90%/95%)\nProcess Capability Index: Cpk = ${data.mmpdsStats.cpk} | Release Status: ${data.mmpdsStats.status} (Passable for Primary Structure)`,
+    `Statistical One-Sided Tolerance Limits (${toleranceFactorMethodLabel(data.sampleSizeN)}, N=${data.sampleSizeN}): k_A = ${data.mmpdsStats.kA} (99%/95%) | k_B = ${data.mmpdsStats.kB} (90%/95%)\nProcess Capability Index: Cpk = ${data.mmpdsStats.cpk} | Release Status: ${data.mmpdsStats.status} (Passable for Primary Structure)`,
     margin + 3,
     currentY + 4.2
   );

@@ -24,9 +24,10 @@ export function computeQualificationMmpdsStats(inputs: QualificationMmpdsInputs)
   // MMPDS One-Sided Tolerance Limit Factors:
   // A-Basis: 99% probability with 95% confidence
   // B-Basis: 90% probability with 95% confidence
-  // Classical Natrella / Lieberman-Resnikoff approximation k = (z_p + sqrt(z_p^2 - a b)) / a, shared with
-  // AerospaceAuditReportGenerator. (Until 2026-10 this screen divided only the sqrt term by a, which made
-  // k_A / k_B 2-11 % too small, i.e. optimistic allowables; see tests/utils-tolerance-factor.test.ts.)
+  // Shared with AerospaceAuditReportGenerator: exact noncentral-t factors for N <= 300, Natrella /
+  // Lieberman-Resnikoff k = (z_p + sqrt(z_p^2 - a b)) / a above (toleranceFactors.ts). (Until 2026-10 this screen
+  // divided only the sqrt term by a, which made k_A / k_B 2-11 % too small, i.e. optimistic allowables; see
+  // tests/utils-tolerance-factor.test.ts.)
   const { kA, kB } = screeningToleranceFactors(N);
 
   // A-Basis & B-Basis Yield Strength
