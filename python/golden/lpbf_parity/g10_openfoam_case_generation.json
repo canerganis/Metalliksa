@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "6dd5b73508151f0af1561387a0df509ec78a06c9",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  1.5,
-  0.4
+  5.5,
+  1.0
  ],
  "recordedTwice": true,
  "observations": {
@@ -736,6 +736,48 @@
   "openfoam.generate_case.powderMultilayer.file.thermalInput.dat": [
    1113512,
    "e4efdf9f2440b02c77b9dbb3f6bb234978b6122b58624ae260177c30280474f6"
+  ]
+ },
+ "rawValues": {
+  "cfd.knight_analytical_recoil_pressure": [
+   157.3025702482293,
+   4161.656482932042,
+   54715.5,
+   249706.1520244812
+  ],
+  "cfd.stefan_analytical_solution": [
+   {
+    "lambda": 0.3251266799937827,
+    "front_m": 5.666888719582869e-07,
+    "front_um": 0.5666888719582869,
+    "alpha_l": 7.59493670886076e-06,
+    "ste_l": 0.2777777777777778,
+    "ste_s": 0.09259259259259259
+   },
+   {
+    "lambda": 0.3251266799937827,
+    "front_m": 1.7920275600597099e-06,
+    "front_um": 1.79202756005971,
+    "alpha_l": 7.59493670886076e-06,
+    "ste_l": 0.2777777777777778,
+    "ste_s": 0.09259259259259259
+   },
+   {
+    "lambda": 0.3251266799937827,
+    "front_m": 4.0070954418465984e-06,
+    "front_um": 4.007095441846598,
+    "alpha_l": 7.59493670886076e-06,
+    "ste_l": 0.2777777777777778,
+    "ste_s": 0.09259259259259259
+   },
+   {
+    "lambda": 0.3251266799937827,
+    "front_m": 5.666888719582869e-06,
+    "front_um": 5.666888719582869,
+    "alpha_l": 7.59493670886076e-06,
+    "ste_l": 0.2777777777777778,
+    "ste_s": 0.09259259259259259
+   }
   ]
  }
 }

@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "920cb2202995147bebf3fe18f18aa4ac816de742",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -112,5 +112,6 @@
   "registry.material.Inconel 625": {
    "error": "ValueError: Inconel 625: thermophysical data missing; supply sourced properties"
   }
- }
+ },
+ "rawValues": {}
 }

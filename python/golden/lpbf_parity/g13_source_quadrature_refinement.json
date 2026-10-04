@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "6dd5b73508151f0af1561387a0df509ec78a06c9",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  0.2,
-  0.2
+  0.7,
+  0.6
  ],
  "recordedTwice": true,
  "observations": {
@@ -103,5 +103,27 @@
   ],
   "integratedSource.dt1.250e-03": "9447695d05a138cc6abcf3854311b68f0fe582a82dab3ea0db48edd0b3e3462e",
   "integratedSource.refinementReached": true
+ },
+ "rawValues": {
+  "integratedSource.dt1.000e-03.quadrature": [
+   60,
+   true
+  ],
+  "integratedSource.dt1.250e-03.quadrature": [
+   76,
+   true
+  ],
+  "integratedSource.dt1.250e-04.quadrature": [
+   20,
+   false
+  ],
+  "integratedSource.dt2.500e-04.quadrature": [
+   20,
+   true
+  ],
+  "integratedSource.dt5.000e-04.quadrature": [
+   32,
+   true
+  ]
  }
 }

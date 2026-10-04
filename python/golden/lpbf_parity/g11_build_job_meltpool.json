@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "6dd5b73508151f0af1561387a0df509ec78a06c9",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  0.7,
-  1.1
+  1.1,
+  1.0
  ],
  "recordedTwice": true,
  "observations": {
@@ -81,5 +81,15 @@
   "meltpool.2.canonicalSha256": "8240f27b71267adcd9d36a3ee474ececbaa97b5acc4c6521ab276ff862d0532c",
   "thermalSolver.THERMOPHYSICAL_DB": "8e38c5fe4082f4af20d5d22bbf35ddda5f7645d979c32f7383d3a41789a59d36",
   "thermalSolver.classify_enthalpy_regime": "cd5ef3c4b600fdcde92381596c489baff6cf68eecc1463c3d30e08ac70287298"
+ },
+ "rawValues": {
+  "thermalSolver.classify_enthalpy_regime": [
+   "Conduction Mode (Stable)",
+   "Conduction Mode (Stable)",
+   "Transition Mode",
+   "Transition Mode",
+   "Keyhole Mode (Deep Vapor Cavity)",
+   "Keyhole Mode (Deep Vapor Cavity)"
+  ]
  }
 }

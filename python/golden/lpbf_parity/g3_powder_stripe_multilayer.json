@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "6dd5b73508151f0af1561387a0df509ec78a06c9",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  5.0,
-  3.9
+  5.6,
+  5.4
  ],
  "recordedTwice": true,
  "observations": {
@@ -585,5 +585,452 @@
   ],
   "result.artifactsListedMatchDisk": true,
   "result.artifactsImplementationHashOccurrences": 0
+ },
+ "rawValues": {
+  "result.key.analyticalComparison": {
+   "rosenthal": {
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 163.33333333333348,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   },
+   "goldak": {
+    "width_um": 0.0,
+    "depth_um": 0.0,
+    "length_um": 23.333333333333105,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   }
+  },
+  "result.key.assumptions": [
+   "SI internal units; beam diameter is 1/e^2 intensity diameter.",
+   "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores.",
+   "Estimated material laws; fixed reference density conserves mass on a stationary grid.",
+   "Uniform effective powder, irreversible conductivity densification; no resolved powder particles.",
+   "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
+   "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
+   "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
+   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
+   "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
+   "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
+  ],
+  "result.key.confidence": "low",
+  "result.key.confidenceReason": "estimated material data and unresolved flow; no independent experimental validation.",
+  "result.key.coreContract": {
+   "schemaVersion": 1,
+   "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+   "actualBackend": "numpy-reference",
+   "requestedBackend": "reference",
+   "effectiveMode": "standard",
+   "solverId": "enthalpy-fv-6",
+   "inputSha256": "e806e6a5c69f894b365e5403d32cb1f550ba506ff981174055f72cd5806c5a99",
+   "materialSha256": "6a8d7bde8277b45093a26faab435e6a27167a9e3b67631a0c0b6b04f65b28ce4",
+   "units": {
+    "power": "W",
+    "speed": "mm/s",
+    "length": "um",
+    "preheat": "degC",
+    "temperature": "K",
+    "internalLength": "m",
+    "time": "s",
+    "energy": "J",
+    "beamDiameter": "1/e2-intensity"
+   },
+   "resolvedPhysics": {
+    "conduction": true,
+    "transient": true,
+    "latentHeat": true,
+    "momentum": false,
+    "freeSurface": false,
+    "evaporation": false
+   },
+   "evidenceClass": "unvalidated-model"
+  },
+  "result.key.discretization": {
+   "cells": 1960,
+   "mesh_m": 3.9999999999999996e-05,
+   "minimumDt_s": 3.365575403301794e-07,
+   "meanDt_s": 8.872180451127819e-07,
+   "steps": 1330
+  },
+  "result.key.effectiveMode": "standard",
+  "result.key.energyBalance": {
+   "input_J": 0.015199999999999905,
+   "losses_J": 4.750495216116357e-06,
+   "stored_J": 0.015195249504783797,
+   "relativeError": 5.706327223607954e-16
+  },
+  "result.key.fallbackReason": null,
+  "result.key.fieldOverlapDiagnostics": {
+   "modelId": "field-inter-track-overlap-v1",
+   "scope": "multi-track-field",
+   "tracks": 2,
+   "layers": 2,
+   "trackOverlapRatio": 0.3333333333333333,
+   "meanInterTrackOverlapRatio": 0.5952380952380952,
+   "minInterTrackOverlapRatio": 0.3333333333333333,
+   "pairwiseOverlapRatios": [
+    0.3333333333333333,
+    0.8571428571428571
+   ],
+   "interTrackGapVolume_um3": 639999.9999999998,
+   "hasInterTrackGap": true,
+   "interTrackLackOfFusion": true,
+   "midpointPenetrationDepth_um": 0.0,
+   "interLayerPenetrationDepth_um": 0.0,
+   "interLayerRemeltRatio": 0.0,
+   "globalRemeltRatio": 0.0,
+   "totalMeltVolume_um3": 1215999.9999999995,
+   "totalRemeltVolume_um3": 0.0,
+   "status": "lack-of-fusion-gap",
+   "note": "Inter-track lack of fusion gap detected between adjacent tracks."
+  },
+  "result.key.fieldPreviews": [
+   "temperature-slice.svg",
+   "phase-slice.svg"
+  ],
+  "result.key.fieldSeries": "field-series.json",
+  "result.key.geometricDefectScreen": {
+   "modelId": "elliptic-overlap-screening-v1",
+   "scope": "aggregate-multi-track",
+   "status": "unresolved",
+   "limitations": [
+    "Geometric screening only; no pore probability, porosity estimate, or certification.",
+    "Requires local single-track width and penetration depth for an aligned semi-elliptical cross-section.",
+    "Ignores local pool fluctuations, track registration, powder packing, and remelting history.",
+    "Accuracy depends on supplied geometry; Rosenthal-derived dimensions can fail this screen.",
+    "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
+   ],
+   "lackOfFusion": {
+    "status": "unresolved",
+    "ellipseIndex": null,
+    "signedMargin": null,
+    "overlapDepth_um": null,
+    "maximumHatch_um": null,
+    "riskScreened": null,
+    "reason": "Aggregate bounding dimensions do not identify local inter-track or inter-layer overlap."
+   },
+   "keyhole": {
+    "depthToWidth": null,
+    "risk": null,
+    "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation."
+   },
+   "balling": {
+    "lengthToWidth": null,
+    "risk": null,
+    "reason": "Elongation alone cannot resolve capillary breakup, wetting, or track continuity."
+   },
+   "gasPore": {
+    "risk": null,
+    "reason": "Gas inventory, transport, and pore nucleation are not resolved."
+   },
+   "porosity": {
+    "value": null,
+    "reason": "Geometry screening does not predict volumetric porosity."
+   },
+   "provenance": [
+    {
+     "title": "Harkin et al. (2023), Equation 5",
+     "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
+     "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
+    }
+   ]
+  },
+  "result.key.label": "Unvalidated transient thermal",
+  "result.key.mainRisk": "lack-of-fusion (field-resolved inter-track gap)",
+  "result.key.massBalance": {
+   "initial_kg": 8.736348796167662e-07,
+   "deposited_kg": 5.619873494610778e-08,
+   "final_kg": 9.298336145628739e-07,
+   "relativeError": 9.251847035661011e-17,
+   "scope": "Stationary reference mass accounting; no continuity, evaporation or shrinkage solved"
+  },
+  "result.key.material": {
+   "solidus_K": 1533.15,
+   "liquidus_K": 1609.15,
+   "boiling_K": 3123.15,
+   "latentHeat_J_kg": 270000.0,
+   "absorptivity": 0.38,
+   "emissivity": 0.35,
+   "dGamma_dT": -0.0004,
+   "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+   "quality": "estimated",
+   "table": [
+    [
+     273.15,
+     8190.0,
+     11.4,
+     435.0,
+     0.0055
+    ],
+    [
+     1609.15,
+     7450.0,
+     29.0,
+     730.0,
+     0.0055
+    ],
+    [
+     3123.15,
+     7450.0,
+     29.0,
+     730.0,
+     0.0055
+    ]
+   ],
+   "name": "Inconel 718",
+   "version": "lpbf-materials-1",
+   "temperatureCoverage_K": [
+    273.15,
+    3123.15
+   ],
+   "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+   "materialId": "in718",
+   "provenanceClass": "estimated-legacy",
+   "materialIdentitySchemaVersion": 1,
+   "materialAuthority": "four_alloy_materials.py",
+   "materialAuthorityRevisionSha256": "b7788a745e9fa90bf7af0b2de4516233e33726638a3a06b33268995813db5d1f",
+   "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749"
+  },
+  "result.key.metrics": {
+   "length_um": 212.26245541218188,
+   "width_um": 86.56827569141483,
+   "depth_um": 40.0,
+   "volume_um3": 383999.9999999999,
+   "crossSectionArea_um2": 6399.999999999998,
+   "peakTemperature_K": 2344.81115327468,
+   "thermalGradient_K_m": 17831618.018218637,
+   "solidificationRate_m_s": 0.10011500144783825,
+   "coolingRate_K_s": 1699998.103381341,
+   "keyholeDepth_um": null,
+   "recoilPressure_Pa": null,
+   "marangoniNumber": 868.5904050121118,
+   "pecletNumber": 12.987629444076125,
+   "aspectRatio": 0.4620630326816928,
+   "trackOverlapRatio": 0.3333333333333333,
+   "remeltingRatio": 0.0
+  },
+  "result.key.midTrackCrossSection": null,
+  "result.key.midTrackInterpolatedCrossSection": null,
+  "result.key.numericalDiagnostics": {
+   "meltPoolExtraction": "accepted-step-molten-volume-v1",
+   "peakMeltTime_s": 0.0007896634424596697,
+   "peakMeltStep": 903,
+   "meltPoolObservedSteps": 1330,
+   "peakMeltCellCount": 6,
+   "equalMaximumEndpointCount": 36,
+   "firstEqualMaximumTime_s": 0.0007896634424596697,
+   "lastEqualMaximumTime_s": 0.0008178899710957109,
+   "sampledPeakMeltVolume_um3": 383999.9999999999,
+   "peakMeltSamplingLossFraction": 0.0,
+   "overlapExtraction": "field-inter-track-overlap-v1",
+   "sourceIntegration": "cell-integrated-gaussian-adaptive-gl-v2",
+   "solidificationExtraction": "linear-liquidus-crossing-v1",
+   "stabilityLimit": "local-conductance-row-sum",
+   "minimumCapturedSourceFraction": 0.9999999999999996,
+   "maximumSourceRenormalization": 1.0000000000000004,
+   "maximumSurfaceOffset_um": 0.0,
+   "maximumTimestep_s": 1e-06,
+   "maximumEnthalpyIncrement_K": 24.944522589313184,
+   "sourceTimestepRetries": 792,
+   "acceptedTimestepDistribution": {
+    "methodId": "accepted-timestep-distribution-v1",
+    "count": 1330,
+    "total_s": 0.001179999999999993,
+    "sumSquared_s2": 1.0657613499104799e-09,
+    "mean_s": 8.872180451127766e-07,
+    "minimum_s": 3.365575403301794e-07,
+    "p50_s": 8.950037468996169e-07,
+    "p90_s": 1e-06,
+    "p99_s": 1e-06,
+    "maximum_s": 1e-06,
+    "eulerFirstOrderWeightedDt_s": 9.031875846699037e-07,
+    "requestedMaxDt_s": 1e-06,
+    "requestedMaxDtHitFraction": 0.40150375939849625,
+    "sourceLimitedStepCount": 792,
+    "sourceTimestepRetries": 792
+   }
+  },
+  "result.key.peakInterpolatedMeltPool": {
+   "status": "thermal-proxy",
+   "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+   "temporalSelection": "accepted-step-molten-volume-v1",
+   "contour": "linear liquidus crossings between neighboring active cell centers",
+   "surfaceTreatment": "No temperature extrapolation to the model surface",
+   "width_um": 55.15776110826781,
+   "depth_um": 38.270158638304636,
+   "evidenceScope": "Numerical thermal proxy; no experimental validation",
+   "sampleCells": 6,
+   "crossingCount": 20
+  },
+  "result.key.phaseAudit": {
+   "liquidVolume_m3": 3.8194853671296054e-13,
+   "solidVolume_m3": 1.2505805146328698e-10,
+   "activeVolume_m3": 1.2543999999999993e-10,
+   "minFraction": 0.0,
+   "maxFraction": 1.0,
+   "interfaceConservation": null,
+   "scope": "Enthalpy liquid fraction partition; not a metal/gas interface conservation test"
+  },
+  "result.key.productionReady": false,
+  "result.key.provenance": {
+   "inputHash": "d7b41b6117677acfffd635557eec3d5faa67dff593287d3f5d88a5c8eddac9c8",
+   "executionInputHash": "d7b41b6117677acfffd635557eec3d5faa67dff593287d3f5d88a5c8eddac9c8",
+   "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+   "materialVersion": "lpbf-materials-1",
+   "solverBinaryHash": null
+  },
+  "result.key.recommendation": "Reduce hatch spacing; simulated melt pools leave unmelted powder gap between adjacent tracks.",
+  "result.key.regime": "conduction assumption; field-resolved inter-track lack-of-fusion",
+  "result.key.requestedBackend": "reference",
+  "result.key.requestedMode": "standard",
+  "result.key.resourceEstimate": {
+   "cells": 1960,
+   "spacing_m": 3.9999999999999996e-05,
+   "shape": [
+    14,
+    14,
+    10
+   ],
+   "duration_s": 0.0011799999999999998,
+   "minimumEstimatedSteps": 1180,
+   "workingMemoryEstimate_MB": 0.392,
+   "minimumRequiredSteps": 1180,
+   "stepBudget": 250000,
+   "exceedsStepBudget": false,
+   "runs": 1,
+   "cellBudget": 600000,
+   "exceedsCellBudget": false,
+   "runtimeEstimate": "Seconds to minutes; hardware and adaptive timestep dependent",
+   "note": "Uniform orthogonal mesh; memory is approximate. Source limiting can increase steps. No calibrated wall-time estimate."
+  },
+  "result.key.retentionPolicy": "Retained locally until explicit operator deletion; no automatic expiry. Paths relative to job directory.",
+  "result.key.riskScope": "Geometric screening only; no probability, density qualification or solidification cracking assessment.",
+  "result.key.scanPath": [
+   {
+    "start_s": 0.0,
+    "end_s": 0.00024999999999999995,
+    "start": [
+     -5.323638261134688e-05,
+     -9.831524584955418e-05
+    ],
+    "end": [
+     0.00011059402624645147,
+     1.640004142065501e-05
+    ],
+    "layer": 0,
+    "track": 0,
+    "island": null
+   },
+   {
+    "start_s": 0.00026999999999999995,
+    "end_s": 0.0005199999999999998,
+    "start": [
+     -0.00011059402624645147,
+     -1.640004142065501e-05
+    ],
+    "end": [
+     5.323638261134688e-05,
+     9.831524584955418e-05
+    ],
+    "layer": 0,
+    "track": 1,
+    "island": null
+   },
+   {
+    "start_s": 0.0005399999999999999,
+    "end_s": 0.0007899999999999999,
+    "start": [
+     6.969854911846622e-05,
+     -8.741917553249259e-05
+    ],
+    "end": [
+     2.8116210954914347e-05,
+     0.00010821034461426853
+    ],
+    "layer": 1,
+    "track": 0,
+    "island": null
+   },
+   {
+    "start_s": 0.0008099999999999998,
+    "end_s": 0.0010599999999999997,
+    "start": [
+     -2.8116210954914347e-05,
+     -0.00010821034461426853
+    ],
+    "end": [
+     -6.969854911846622e-05,
+     8.741917553249259e-05
+    ],
+    "layer": 1,
+    "track": 1,
+    "island": null
+   }
+  ],
+  "result.key.schemaVersion": 1,
+  "result.key.settings": {
+   "mode": "standard",
+   "material": "Inconel 718",
+   "power_W": 40,
+   "speed_mm_s": 800.0,
+   "beamDiameter_um": 80.0,
+   "preheat_C": 80.0,
+   "layer_um": 40.0,
+   "hatch_um": 100.0,
+   "mesh_um": 40,
+   "maxDt_s": 1e-06,
+   "trackLength_um": 200,
+   "tracks": 2,
+   "layers": 2,
+   "dwell_s": 2e-05,
+   "cooling_s": 0.0001,
+   "scanAngle_deg": 35,
+   "layerRotation_deg": 67,
+   "strategy": "stripe",
+   "stripeWidth_um": 100,
+   "islandSize_um": 200.0,
+   "packingFraction": 0.55,
+   "powderConductivityRatio": 0.12,
+   "convection_W_m2K": 20.0,
+   "timeout_s": 300.0,
+   "study": "none",
+   "backend": "reference",
+   "surfaceMode": "powder-layer",
+   "sourcePenetration_um": null,
+   "barePlateGeometry": "square",
+   "evaporationModel": false,
+   "marangoniMultiplier": 2.2,
+   "opticalObserver": null,
+   "powderGridPolicy": "layer-conforming",
+   "absorptivity": 0.38,
+   "emissivity": 0.35
+  },
+  "result.key.solver": {
+   "id": "enthalpy-fv-6",
+   "version": "enthalpy-fv-6",
+   "openfoam": null
+  },
+  "result.key.unresolvedPhysics": {
+   "freeSurface": null,
+   "velocity": null,
+   "evaporationMassFlux": null,
+   "evaporationLoss": null,
+   "recoilPressure": null,
+   "keyholeDepth": null,
+   "porosityProbability": null,
+   "residualStress": null
+  },
+  "result.key.validationStatus": "unvalidated"
  }
 }
