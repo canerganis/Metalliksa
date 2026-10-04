@@ -131,7 +131,8 @@ def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weigh
     Computes ASTM G102 Equivalent Weight (EW):
     EW = ( sum_i [ (f_i * n_i) / W_i ] )^(-1)
     where:
-    f_i = mass fraction of element i
+    f_i = mass fraction of element i, counting only elements present at >= 1 % by
+          mass, renormalised over those elements (ASTM G102 practice)
     n_i = valence (oxidation state)
     W_i = atomic weight in g/mol
 

@@ -2,48 +2,32 @@
  "case": "fit_curve_synthetic_bv",
  "driftVsBase": [
   {
-   "abs": 0.00016000000000000042,
+   "abs": -9.999999999999593e-06,
    "key": "corrosionRateMmYr",
    "kind": "numeric",
-   "new": 0.02112,
+   "new": 0.02095,
    "old": 0.02096,
-   "rel": 0.0076335877862595625
+   "rel": -0.00047709923664120195
   },
   {
-   "abs": 0.007000000000000006,
-   "key": "corrosionRateMpy",
-   "kind": "numeric",
-   "new": 0.832,
-   "old": 0.825,
-   "rel": 0.008484848484848493
-  },
-  {
-   "abs": 0.16000000000000014,
+   "abs": -0.010000000000001563,
    "key": "corrosionRateUmYr",
    "kind": "numeric",
-   "new": 21.12,
+   "new": 20.95,
    "old": 20.96,
-   "rel": 0.007633587786259549
+   "rel": -0.00047709923664129595
   },
   {
-   "abs": 0.07190000000000119,
+   "abs": -0.002100000000000435,
    "key": "equivalentWeight",
    "kind": "numeric",
-   "new": 9.0919,
+   "new": 9.0179,
    "old": 9.02,
-   "rel": 0.007971175166297249
-  },
-  {
-   "abs": 0.0011999999999999789,
-   "key": "massLoss_g_m2_day",
-   "kind": "numeric",
-   "new": 0.1561,
-   "old": 0.1549,
-   "rel": 0.0077469335054872746
+   "rel": -0.00023281596452332982
   }
  ],
  "exitCode": 0,
- "gitHead": "7b9c2f0abbfcd01c275a634359ec7969da625869",
+ "gitHead": "4a89e1aeca416ad54ddaef4a96d2653d029298c0",
  "input": {
   "action": "fit_curve",
   "alloyId": "al-6061",
@@ -230,7 +214,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "d113015ece0aca129f7cfb625cb402fc1e0c4506975572b0f56844534dfa5301",
+ "solverSha256": "556fcbc1f701e42cd53a026452662a22a192ac6e1406b2f292c9776177006b43",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -252,12 +236,12 @@
    -0.37
   ],
   "cathodicSlope_dLogI_dE": -8.3972,
-  "corrosionRateMmYr": 0.02112,
-  "corrosionRateMpy": 0.832,
-  "corrosionRateUmYr": 21.12,
+  "corrosionRateMmYr": 0.02095,
+  "corrosionRateMpy": 0.825,
+  "corrosionRateUmYr": 20.95,
   "density_g_cm3": 2.7,
   "eCorr": -0.2992,
-  "equivalentWeight": 9.0919,
+  "equivalentWeight": 9.0179,
   "fittedButlerVolmer": [
    {
     "logI_model": 3.2218,
@@ -543,7 +527,7 @@
   "iCorr_uA_cm2": 1.9179,
   "isPythonEngine": true,
   "logIcorr": 0.2828,
-  "massLoss_g_m2_day": 0.1561,
+  "massLoss_g_m2_day": 0.1549,
   "maxScanE": -0.05,
   "minScanE": -0.55,
   "pointsCount": 41,

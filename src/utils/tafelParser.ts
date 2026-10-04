@@ -19,7 +19,8 @@ export interface AlloyMaterialPreset {
 }
 
 // density and equivalentWeight mirror python/alloy_registry.py (domain "corrosion"; EW is
-// computed there with ASTM G102 from composition, valencies and CIAAW 2021 atomic weights,
+// computed there with the ASTM G102 practice (elements >= 1 % by mass, renormalised) from
+// composition, in-house valences and CIAAW 2021 atomic weights,
 // Phase 6a step b). python/test_phase6a_migration.py checks every row against the registry.
 // duplex2205 has NO registry record: its numbers are unsourced UI defaults that reach the
 // Python solver only as caller-supplied metadata (an unknown alloyId without them is a 422).
@@ -27,12 +28,12 @@ export interface AlloyMaterialPreset {
 export const COMMON_ALLOYS: AlloyMaterialPreset[] = [
   { id: "ss316l", name: "AISI 316L Stainless Steel", density: 7.98, equivalentWeight: 24.8205, valency: 2.16, atomicMass: 55.47 },
   { id: "ss304", name: "AISI 304 Stainless Steel", density: 7.93, equivalentWeight: 25.1088, valency: 2.21, atomicMass: 55.51 },
-  { id: "steel1018", name: "AISI 1018 Carbon Steel", density: 7.87, equivalentWeight: 27.0668, valency: 2.00, atomicMass: 55.85 },
+  { id: "steel1018", name: "AISI 1018 Carbon Steel", density: 7.87, equivalentWeight: 27.9225, valency: 2.00, atomicMass: 55.85 },
   { id: "ti64", name: "Ti-6Al-4V Grade 5 Titanium", density: 4.43, equivalentWeight: 11.8715, valency: 4.00, atomicMass: 47.88 },
-  { id: "al7075", name: "Al 7075-T6 Aerospace Aluminum", density: 2.81, equivalentWeight: 9.6007, valency: 3.00, atomicMass: 26.98 },
-  { id: "al6061", name: "Al 6061-T6 Structural Aluminum", density: 2.70, equivalentWeight: 9.0919, valency: 3.00, atomicMass: 26.98 },
-  { id: "cu_c110", name: "C11000 Electrolytic Tough Pitch Copper", density: 8.94, equivalentWeight: 31.8048, valency: 2.00, atomicMass: 63.55 },
-  { id: "inconel718", name: "Inconel 718 Superalloy", density: 8.19, equivalentWeight: 24.7436, valency: 2.30, atomicMass: 58.23 },
+  { id: "al7075", name: "Al 7075-T6 Aerospace Aluminum", density: 2.81, equivalentWeight: 9.5583, valency: 3.00, atomicMass: 26.98 },
+  { id: "al6061", name: "Al 6061-T6 Structural Aluminum", density: 2.70, equivalentWeight: 9.0179, valency: 3.00, atomicMass: 26.98 },
+  { id: "cu_c110", name: "C11000 Electrolytic Tough Pitch Copper", density: 8.94, equivalentWeight: 31.773, valency: 2.00, atomicMass: 63.55 },
+  { id: "inconel718", name: "Inconel 718 Superalloy", density: 8.19, equivalentWeight: 25.0598, valency: 2.30, atomicMass: 58.23 },
   { id: "az31b", name: "AZ31B Magnesium Alloy", density: 1.77, equivalentWeight: 12.101, valency: 2.00, atomicMass: 24.31 },
   { id: "duplex2205", name: "2205 Duplex Stainless Steel", density: 7.80, equivalentWeight: 25.40, valency: 2.18, atomicMass: 55.37 },
 ];

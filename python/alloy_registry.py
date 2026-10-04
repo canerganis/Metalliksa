@@ -34,9 +34,12 @@ Corrosion equivalent weights (Phase 6a design step (b)): the corrosion ``ew`` is
 not a stored number any more. It is computed from the record's own composition and
 valencies and the CIAAW 2021 atomic weights with astm_g102_equivalent_weight(), the
 same function tafel_corrosion_rate_solver uses for a caller's customComposition, so
-both input paths give the same EW. The stored solver values it replaced did not
-match that formula (e.g. inconel-718 26.45 vs 24.7436); they are kept only as a
-record in CORROSION_STORED_EW_BEFORE_STEP_B.
+both input paths give the same EW. The convention is the ASTM G102 practice of
+counting only elements present at >= 1 % by mass and renormalising their fractions;
+with it the pre-migration stored values of steel-1018 (27.92), al-6061 (9.02) and
+cu-c110 (31.77) are reproduced to their printed digits and steel-304 (25.12) to
+0.04 %. The other five stored values differ (see CORROSION_STORED_EW_BEFORE_STEP_B and
+the fix-round commit); their source is not recorded, so they are kept only as a record.
 
 Leaf module: standard library + four_alloy_materials (hashlib/json) +
 physical_constants only; no numpy/scipy at import. It must NOT be imported by any manifest file until the
@@ -442,9 +445,10 @@ _CORROSION = {
 }
 
 # The equivalent weights tafel_corrosion_rate_solver.py:26-117 ALLOY_LIBRARY stored at
-# BASE_REVISION (g/equivalent). NOT USED: design step (b) replaced them with the
-# computed corrosion "ew" (astm_g102_equivalent_weight); kept as the record of what
-# changed (see the value-commit drift table).
+# BASE_REVISION (g/equivalent), source not recorded. NOT USED: design step (b) replaced
+# them with the computed corrosion "ew" (astm_g102_equivalent_weight). With the >= 1 %
+# convention, steel-1018, al-6061 and cu-c110 reproduce these to the printed digits
+# and steel-304 to 0.04 %; ss316l, ti6al4v, al7075, in718 and az31b do not.
 CORROSION_STORED_EW_BEFORE_STEP_B: Mapping[str, float] = MappingProxyType({
     "ss316l": 25.68,
     "ss304": 25.12,
@@ -456,10 +460,23 @@ CORROSION_STORED_EW_BEFORE_STEP_B: Mapping[str, float] = MappingProxyType({
     "in718": 26.45,
     "az31b": 12.28,
 })
+# ASTM G102 practice for alloy equivalent weights: only elements present at >= 1 % by
+# mass are counted, and their mass fractions are renormalised to sum to 1. The
+# threshold is applied to the fraction of the listed total, so mass fractions and wt%
+# inputs behave the same and compositions that do not sum to 1 are handled: in this
+# table al-6061 sums to 0.998, cu-c110 to 0.999 and in718 to 0.994 (the remainder is
+# unlisted), and the renormalisation removes that offset. Example: steel-1018 counts Fe
+# only (Mn 0.8 %, Si 0.5 %, C 0.2 % are below 1 %): EW = 55.845 / 2 = 27.9225.
+# The valences are an in-house convention copied from the pre-migration solver table
+# (lowest common oxidation state per element); they carry no per-value citation.
+# Threshold boundary: 316L lists Si at exactly 1.0 %, counted by ">=" (EW 24.8205);
+# a strict "> 1 %" reading would drop it (EW 25.4728).
+ASTM_G102_MIN_MASS_FRACTION = 0.01
 CORROSION_EW_NOTE = (
-    "Computed: ASTM G102 EW = 1 / sum(f_i * n_i / W_i) over the record's composition "
-    "(mass fractions) and valencies with CIAAW 2021 abridged atomic weights, rounded to "
-    "4 decimals; the same function the tafel customComposition path uses."
+    "Computed: ASTM G102 practice, EW = 1 / sum(f_i * n_i / W_i) over the elements present "
+    "at >= 1 % by mass with renormalised mass fractions, in-house valences (no per-value "
+    "citation) and CIAAW 2021 abridged atomic weights, rounded to 4 decimals; the same "
+    "function the tafel customComposition path uses."
 )
 
 
@@ -467,14 +484,22 @@ def astm_g102_equivalent_weight(composition: Mapping[str, float], valencies: Map
                                 atomic_weights: Mapping[str, float]) -> Optional[float]:
     """ASTM G102 equivalent weight, EW = (sum_i f_i * n_i / W_i)^-1, rounded to 4 decimals.
 
-    f_i: mass fraction, n_i: valence, W_i: atomic weight (g/mol). Elements without a
-    valence or an atomic weight do not contribute. Returns None when nothing
-    contributes (the caller decides what that means; no fallback value here).
+    Only elements with f_i / sum(f) >= ASTM_G102_MIN_MASS_FRACTION (1 % by mass) count;
+    their fractions are renormalised over the counted elements. n_i: valence, W_i:
+    atomic weight (g/mol). A counted element without a valence or an atomic weight
+    does not contribute. Returns None when nothing contributes (the caller decides
+    what that means; no fallback value here).
     """
-    denom = 0.0
-    for el, mass_frac in composition.items():
-        if el in valencies and el in atomic_weights:
-            denom += (mass_frac * valencies[el]) / atomic_weights[el]
+    positive = {el: float(f) for el, f in composition.items() if float(f) > 0.0}
+    total = sum(positive.values())
+    if total <= 0.0:
+        return None
+    major = {el: f for el, f in positive.items() if f / total >= ASTM_G102_MIN_MASS_FRACTION}
+    known = {el: f for el, f in major.items() if el in valencies and el in atomic_weights}
+    known_total = sum(known.values())
+    if known_total <= 0.0:
+        return None
+    denom = sum((f / known_total) * valencies[el] / atomic_weights[el] for el, f in known.items())
     if denom <= 1e-12:
         return None
     return round(1.0 / denom, 4)
