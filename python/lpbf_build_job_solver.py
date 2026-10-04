@@ -48,7 +48,8 @@ from stl_slicer_build_time_solver import solve_slicer
 from lpbf_part_porosity_aggregator import aggregate_part_porosity
 from lpbf_scanner_kinematics import calculate_scanner_kinematics
 from lpbf_solidification_microstructure import compute_solidification_microstructure
-from kinetics_ttt_cct_solver import solve_phase_transformation_kinetics
+import alloy_registry
+from kinetics_ttt_cct_solver import resolve_kinetics_alloy, solve_phase_transformation_kinetics
 
 # Hatch/layer used with literature-box mid P–v when LoF is the dominant gate.
 # Matches src/utils/lpbfDemoVectors.ts printable demos (inputs only).
@@ -68,26 +69,47 @@ DEFAULT_PROCESS_SEED = 42
 # substituted alloy's result.
 BUILD_JOB_KINETICS_ALLOY = {"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}
 BUILD_JOB_KINETICS_COOLING_RATE_SOURCE = "thermal.solidificationKinetics.coolingRate_K_s"
+# solidification_front.py clamps the front's median cooling rate to max(1.0, median) K/s when the
+# front is degenerate (median 0). A reported rate at or below this floor is that clamp, not a
+# computed build rate, wherever it was produced; the kinetics block is then unavailable.
+SOLIDIFICATION_FRONT_COOLING_RATE_FLOOR_K_S = 1.0
+DEGENERATE_FRONT_REASON = (
+    "cooling rate is the 1 K/s floor of a degenerate solidification front, not a computed build rate"
+)
 
 
-def _build_cooling_rate(thermal):
-    """The build's reported cooling rate (K/s, numerically equal to C/s), or None."""
-    raw = (thermal.get("solidificationKinetics") or {}).get("coolingRate_K_s")
-    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+def _finite_number(value):
+    """float(value) for a finite int/float (bool excluded), else None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    rate = float(raw)
-    return rate if math.isfinite(rate) and rate > 0.0 else None
+    out = float(value)
+    return out if math.isfinite(out) else None
+
+
+def format_cooling_rate(rate):
+    """Exact text for a rate in a reason: 1089047.0 -> "1089047", 2000.0000001 -> "2000.0000001"."""
+    return str(int(rate)) if float(rate).is_integer() else repr(float(rate))
+
+
+def _reported_cooling_rate(thermal):
+    """The reported cooling rate (K/s, numerically equal to °C/s) if finite, else None."""
+    return _finite_number((thermal.get("solidificationKinetics") or {}).get("coolingRate_K_s"))
 
 
 def build_cooling_rate_cct_row(cct_map, rate):
     """Select the CCT map row nearest (log10) to the build cooling rate; never extrapolate.
 
-    A build rate outside the tabulated CCT cooling rates gives status "unavailable" with the
-    range in the reason, so a slow-cooling row is not reported for a much faster LPBF cool.
+    A rate that is not a finite positive number, or lies outside the tabulated CCT cooling rates,
+    gives status "unavailable" with the reason (the exact comparison for the range case), so a
+    slow-cooling row is never reported for a much faster LPBF cool. At an exact log-midpoint tie
+    the first row in map order wins; the solver's map is ascending, so that is the slower rate.
     """
-    rates = [row.get("coolingRate_C_s") for row in (cct_map or [])]
-    usable = [(i, float(r)) for i, r in enumerate(rates)
-              if isinstance(r, (int, float)) and not isinstance(r, bool) and math.isfinite(r) and r > 0.0]
+    usable = []
+    for i, row in enumerate(cct_map or []):
+        r = _finite_number(row.get("coolingRate_C_s")) if isinstance(row, dict) else None
+        if r is not None and r > 0.0:
+            usable.append((i, r))
+    rate = _finite_number(rate)
     out = {
         "selection": "nearest-log10-cooling-rate-within-map-range",
         "buildCoolingRate_C_s": rate,
@@ -95,46 +117,94 @@ def build_cooling_rate_cct_row(cct_map, rate):
         "rowIndex": None,
         "rowCoolingRate_C_s": None,
     }
-    if rate is None or not usable:
-        out.update(status="unavailable", reason="no build cooling rate or no CCT map rows to select from")
+    if rate is None or rate <= 0.0 or not usable:
+        out.update(status="unavailable",
+                   reason="no finite positive build cooling rate or no CCT map rows to select from")
         return out
     lo, hi = out["mapRange_C_s"]
-    if rate < lo or rate > hi:
+    if rate > hi:
         out.update(status="unavailable",
-                   reason=f"build cooling rate {rate:.3g} C/s is {'above' if rate > hi else 'below'} the "
-                          f"CCT map range {lo:g}-{hi:g} C/s; no row is extrapolated")
+                   reason=f"build cooling rate {format_cooling_rate(rate)} °C/s is above the CCT map "
+                          f"maximum {format_cooling_rate(hi)} °C/s; no row is extrapolated")
+        return out
+    if rate < lo:
+        out.update(status="unavailable",
+                   reason=f"build cooling rate {format_cooling_rate(rate)} °C/s is below the CCT map "
+                          f"minimum {format_cooling_rate(lo)} °C/s; no row is extrapolated")
         return out
     index, row_rate = min(usable, key=lambda item: abs(math.log10(item[1]) - math.log10(rate)))
     out.update(status="selected", reason=None, rowIndex=index, rowCoolingRate_C_s=row_rate)
     return out
 
 
+def build_rate_martensite(registry_id, alloy_name, gap, cct_row):
+    """Martensite fraction and verdict at the build rate, or unavailable with the reason.
+
+    Withheld when the alloy's registry Ms is a non-physical placeholder (alloy_registry
+    KINETICS_PLACEHOLDERS), and when no CCT row was selected for the build rate: the same
+    steel-type model is not reported outside its tabulated range either.
+    """
+    reality = (gap or {}).get("kineticRealityAtSelectedCooling") or {}
+    out = {"status": "unavailable", "reason": None, "predictedMartensite_pct": None, "verdict": None,
+           "coolingRate_C_s": _finite_number(reality.get("coolingRate_C_s"))}
+    if (registry_id, "Ms_C") in alloy_registry.KINETICS_PLACEHOLDERS:
+        out["reason"] = (f"the kinetics registry Ms of {alloy_name} is a non-physical placeholder (the alloy "
+                         "does not form martensite on quenching); no martensite fraction or "
+                         "martensite-based verdict is reported")
+        return out
+    if (cct_row or {}).get("status") != "selected":
+        out["reason"] = (f"{(cct_row or {}).get('reason') or 'no CCT row selected'}; the steel-type "
+                         "martensite fraction and verdict are not reported at this rate either")
+        return out
+    pct = _finite_number(reality.get("predictedMartensite_pct"))
+    if pct is None:
+        out["reason"] = "the kinetics result has no finite martensite fraction"
+        return out
+    out.update(status="available", predictedMartensite_pct=pct, verdict=reality.get("verdict"))
+    return out
+
+
 def build_job_kinetics(alloy_id, thermal):
-    """Kinetics block for a build job; unavailable (with reason) instead of a substitute alloy."""
-    rate = _build_cooling_rate(thermal)
+    """Kinetics block for a build job; unavailable (with reason) instead of a substitute alloy.
+
+    ``status`` ("available" / "unavailable") is the field to trust. ``success: False`` on the
+    unavailable block only keeps the solver-envelope shape; it does not mean the build job failed.
+    """
+    reported = _reported_cooling_rate(thermal)
     kinetics_alloy = BUILD_JOB_KINETICS_ALLOY.get(alloy_id)
-    if kinetics_alloy is None or rate is None:
+    degenerate = reported is not None and reported <= SOLIDIFICATION_FRONT_COOLING_RATE_FLOOR_K_S
+    if kinetics_alloy is None or reported is None or degenerate:
         alloy_name = ALLOY_MATERIALS[alloy_id]["thermal"] if alloy_id in ALLOY_MATERIALS else str(alloy_id)
-        reason = (f"no kinetics model for {alloy_name}" if kinetics_alloy is None
-                  else "the build thermal result reports no finite positive cooling rate")
+        if kinetics_alloy is None:
+            reason = f"no kinetics model for {alloy_name}"
+        elif reported is None:
+            reason = "the build thermal result reports no finite cooling rate"
+        else:
+            reason = DEGENERATE_FRONT_REASON
         return {
-            "success": False,
+            "success": False,  # legacy envelope shape; "status" is authoritative
             "status": "unavailable",
             "reason": reason,
             "alloyId": alloy_id,
             "alloy": None,
-            "buildCoolingRate_C_s": rate,
+            "buildCoolingRate_C_s": None if degenerate else reported,
+            "reportedCoolingRate_K_s": reported,
             "coolingRateSource": BUILD_JOB_KINETICS_COOLING_RATE_SOURCE,
             "cctContinuousCoolingMap": None,
             "calphadVsKineticsGap": None,
             "buildCoolingRateCctRow": None,
+            "buildRateMartensite": None,
         }
-    block = solve_phase_transformation_kinetics(alloy_name=kinetics_alloy, cooling_rate_c_s=rate)
+    registry_id = resolve_kinetics_alloy(kinetics_alloy)[0]
+    block = solve_phase_transformation_kinetics(alloy_name=kinetics_alloy, cooling_rate_c_s=reported)
     block["status"] = "available"
     block["alloyId"] = alloy_id
-    block["buildCoolingRate_C_s"] = rate
+    block["buildCoolingRate_C_s"] = reported
+    block["reportedCoolingRate_K_s"] = reported
     block["coolingRateSource"] = BUILD_JOB_KINETICS_COOLING_RATE_SOURCE
-    block["buildCoolingRateCctRow"] = build_cooling_rate_cct_row(block.get("cctContinuousCoolingMap"), rate)
+    block["buildCoolingRateCctRow"] = build_cooling_rate_cct_row(block.get("cctContinuousCoolingMap"), reported)
+    block["buildRateMartensite"] = build_rate_martensite(
+        registry_id, kinetics_alloy, block.get("calphadVsKineticsGap"), block["buildCoolingRateCctRow"])
     return block
 
 
