@@ -15,7 +15,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 37
+LEGACY_CEILING = 35
+CONTRACTED = ("keyhole-raytracing", "uq-lab")  # Phase 7 wave 1 pilots
 
 
 def _view():
@@ -44,12 +45,13 @@ def _evidence(**overrides):
 
 
 def _contract(**overrides):
-    values = dict(id="uq-lab", version="1.0.0", owner="evidence-team", workspace="evidence",
+    values = dict(id="uq-lab", version="1.0.0", owner=mc.OWNER_UNASSIGNED, workspace="evidence",
                   label="Uncertainty", description="Sampling.", next="qualification",
                   maturity="Research", navigation="listed", view=_view(), evidence=_evidence(),
-                  tests=mc.TestRefs(schema="python/test_contract_uq_lab.py"),
+                  tests=mc.TestRefs(schema="python/test_contract_uq_lab.py", docs="docs/modules/uq-lab.md"),
                   migration_state="contracted", operations=(_operation(),),
-                  lifecycle=mc.Lifecycle(background_work="none"))
+                  lifecycle=mc.Lifecycle(background_work="none"),
+                  source_refs=("python/stochastic_uq_mmpds_solver.py",))
     values.update(overrides)
     return mc.ModuleContract(**values)
 
@@ -123,9 +125,57 @@ class FieldAndAuthorityTests(unittest.TestCase):
             _field(step=0.0)
 
     def test_enum_default_must_be_member(self):
-        self.assertEqual(_field(enum=("a", "b"), default="a").default, "a")
+        enum = dict(value_type="enum", unit=None, min=None, max=None, display_units=())
+        self.assertEqual(_field(enum=("a", "b"), default="a", **enum).default, "a")
         with self.assertRaises(mc.ContractError):
-            _field(enum=("a", "b"), default="c")
+            _field(enum=("a", "b"), default="c", **enum)
+        with self.assertRaises(mc.ContractError):
+            _field(enum=("a", "b"), default="a")  # a number field cannot carry an enum
+        with self.assertRaises(mc.ContractError):
+            _field(enum=(), default="a", **enum)
+
+    def test_value_types_and_absent_bounds(self):
+        # An unestablished bound stays None; it is never guessed.
+        open_field = _field(min=None, max=None, default=-5.0)
+        self.assertIsNone(open_field.value_problem(1e9))
+        self.assertEqual(open_field.to_dict()["min"], None)
+        with self.assertRaises(mc.ContractError):
+            _field(unit=None)
+        with self.assertRaises(mc.ContractError):
+            _field(value_type="string")
+        with self.assertRaises(mc.ContractError):
+            _field(value_type="integer", default=2.5, min=0, max=10)
+        with self.assertRaises(mc.ContractError):
+            _field(value_type="integer", default=2, min=0, max=10, step=0.5)
+        flag = dict(value_type="boolean", unit=None, min=None, max=None, display_units=())
+        self.assertTrue(_field(default=True, **flag).default)
+        with self.assertRaises(mc.ContractError):
+            _field(default=1, **flag)
+        with self.assertRaises(mc.ContractError):
+            _field(default=True, step=1, **flag)  # boolean fields carry no step
+        with self.assertRaises(mc.ContractError):
+            _field(note=" ")
+
+    def test_input_problems_rejects_without_coercing(self):
+        count = _field(key="n", value_type="integer", unit="1", quantity_kind="count", min=1, max=10,
+                       default=5, required=False, display_units=())
+        operation = mc.Operation(id="run", method="POST", route="/api/x", input=(_field(), count),
+                                 authority=mc.Authority(kind="node-provider", timeout_ms=1),
+                                 undeclared_input=("label",))
+        self.assertEqual(operation.input_problems({"power_W": 200.0, "label": "free text"}), [])
+        self.assertEqual(operation.input_problems({}), ["power_W: required"])
+        cases = {"power_W": [49.0, 401.0, float("nan"), True, "200"], "n": [0, 11, 2.5]}
+        for key, values in cases.items():
+            for value in values:
+                with self.subTest(key=key, value=value):
+                    problems = operation.input_problems({"power_W": 200.0, key: value})
+                    self.assertEqual(len(problems), 1)
+                    self.assertTrue(problems[0].startswith(key))
+        self.assertEqual(operation.input_problems({"power_W": 200.0, "extra": 1}), ["extra: not declared by the contract"])
+        self.assertEqual(operation.input_problems([]), ["payload must be an object"])
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="run", method="POST", route="/api/x", input=(_field(),),
+                         authority=mc.Authority(kind="node-provider", timeout_ms=1), undeclared_input=("power_W",))
 
     def test_authority_requirements(self):
         with self.assertRaises(mc.ContractError):
@@ -223,13 +273,17 @@ class EvidenceCeilingTests(unittest.TestCase):
         strong = _evidence(emits=("calibrated-simulation",), ceiling="calibrated-simulation")
         with self.assertRaises(mc.ContractError):
             _contract(evidence=strong)
-        present = mc.TestRefs(schema="python/test_contract_uq_lab.py",
-                              oracle=mc.Oracle(status="present", ref="python/test_uq_oracle.py"))
+        present = mc.TestRefs(schema="python/test_contract_uq_lab.py", docs="docs/modules/uq-lab.md",
+                              oracle=mc.Oracle(status="present", ref="python/test_uq_oracle.py", scope="Checks x."))
         self.assertEqual(_contract(evidence=strong, tests=present).evidence.ceiling, "calibrated-simulation")
 
     def test_present_oracle_requires_reference(self):
         with self.assertRaises(mc.ContractError):
             mc.Oracle(status="present")
+        with self.assertRaises(mc.ContractError):  # and a user-facing scope sentence
+            mc.Oracle(status="present", ref="python/x.py")
+        with self.assertRaises(mc.ContractError):
+            mc.Oracle(status="pending", scope="Checks x.")
 
 
 class ForbiddenClaimTests(unittest.TestCase):
@@ -268,10 +322,53 @@ class ForbiddenClaimTests(unittest.TestCase):
     def test_contracted_requires_reviewed_owner_and_operations(self):
         with self.assertRaises(mc.ContractError):
             _contract(owner=f"{mc.TODO_MARKER}: unassigned")
+        for person in ("Jane Doe", "jane@example.com", "evidence workspace"):
+            with self.subTest(owner=person), self.assertRaises(mc.ContractError):
+                _contract(owner=person)
+        self.assertEqual(_contract(owner="team:evidence").owner, "team:evidence")
+        with self.assertRaises(mc.ContractError):
+            _contract(seed_derived=("label", "label"))
+        with self.assertRaises(mc.ContractError):
+            _contract(seed_derived=("owner",))
         with self.assertRaises(mc.ContractError):
             _contract(operations=())
         with self.assertRaises(mc.ContractError):
             _contract(evidence=_evidence(emits=()))
+        with self.assertRaises(mc.ContractError):
+            _contract(source_refs=())
+        with self.assertRaises(mc.ContractError):
+            _contract(tests=mc.TestRefs(schema="python/test_contract_uq_lab.py"))
+
+    def test_status_like_fields_need_a_status_key_or_transport_values(self):
+        # With statusKey None, a field that reads like a status must be declared transport-only.
+        for key in ("status", "evidenceStatus", "evidence_status", "runStatus", "qualificationStatus", "evidenceLevel"):
+            with self.subTest(key=key), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("value", key), status_key=None)
+        ok = mc.OutputSchema(fields=("value", "status"), status_key=None, transport_values=(("status", ("success",)),))
+        self.assertEqual(ok.to_dict()["transportValues"], {"status": ["success"]})
+        for values in (("screening-only",), ("unvalidated",), ("qualified",), ()):
+            with self.subTest(values=values), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("value", "status"), status_key=None, transport_values=(("status", values),))
+        with self.assertRaises(mc.ContractError):  # transport key must be an output field
+            mc.OutputSchema(fields=("value",), status_key=None, transport_values=(("status", ("success",)),))
+        with self.assertRaises(mc.ContractError):  # the status key itself is not a transport field
+            mc.OutputSchema(fields=("value",), status_key="status", transport_values=(("status", ("success",)),))
+        with self.assertRaises(mc.ContractError):  # a second status-like field next to the status key
+            mc.OutputSchema(fields=("value", "runStatus"))
+        self.assertEqual(mc.OutputSchema(fields=("value", "success")).status_key, "evidenceStatus")
+
+    def test_emits_follow_the_output_status_key(self):
+        # An output without a status key emits nothing; declaring emits then is a false claim.
+        silent = mc.Operation(id="run", method="POST", route="/api/uq/run",
+                              authority=mc.Authority(kind="python-ipc", script="uq_lab.py", timeout_ms=1),
+                              output=mc.OutputSchema(fields=("samples",), status_key=None))
+        with self.assertRaises(mc.ContractError):
+            _contract(operations=(silent,))
+        with self.assertRaises(mc.ContractError):
+            _contract(operations=(silent,), evidence=_evidence(emits=()))  # needs an explanatory note
+        quiet = _contract(operations=(silent,), evidence=_evidence(emits=(), note="no status key"))
+        self.assertEqual(quiet.evidence.emits, ())
+        self.assertIsNone(silent.to_dict()["output"]["statusKey"])
 
 
 class LegacyRegistryTests(unittest.TestCase):
@@ -317,7 +414,7 @@ class LegacyRegistryTests(unittest.TestCase):
         self.assertEqual(mr.stale_outputs(), [], "run python scripts/emit-module-registry.py")
 
     def test_legacy_contracts_make_no_reviewed_claims(self):
-        for contract in self.registry:
+        for contract in (c for c in self.registry if c.migration_state == "legacy"):
             with self.subTest(module=contract.id):
                 self.assertEqual(contract.evidence.emits, ())
                 self.assertEqual(contract.evidence.ceiling, mc.PENDING_ORACLE_CEILING)
@@ -336,7 +433,8 @@ class LegacyRegistryTests(unittest.TestCase):
     def test_legacy_operations_declare_authority_only(self):
         # Slice 1 records which authority each view calls; fields, outputs, validity
         # domains and source refs stay undeclared until a module is contracted.
-        for contract in self.registry:
+        for contract in (c for c in self.registry if c.migration_state == "legacy"):
+            self.assertEqual(contract.source_refs, ())
             for operation in contract.operations:
                 with self.subTest(module=contract.id, operation=operation.id):
                     self.assertEqual(operation.input, ())
@@ -360,6 +458,193 @@ class LegacyRegistryTests(unittest.TestCase):
             with self.subTest(module=contract.id):
                 self.assertTrue(contract.operations or contract.legacy_notes,
                                 "record the authority or explain why none exists")
+
+    def test_every_contract_round_trips_through_the_generated_json(self):
+        document = json.loads((REPO_ROOT / "src" / "generated" / "moduleRegistry.json").read_text(encoding="utf-8"))
+        rebuilt = tuple(mc.contract_from_dict(entry) for entry in document["contracts"])
+        self.assertEqual(rebuilt, self.registry)
+
+
+class ContractedRegistryTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.registry = mr.build_registry()
+        cls.contracted = {c.id: c for c in cls.registry if c.migration_state == "contracted"}
+
+    def test_pilots_are_the_only_contracted_modules(self):
+        self.assertEqual(tuple(self.contracted), CONTRACTED)
+        self.assertEqual(set(mr.CONTRACTED_BUILDERS), set(CONTRACTED))
+        self.assertFalse(set(mr.LEGACY_OPERATIONS) & set(CONTRACTED))
+
+    def test_every_reference_of_every_contracted_module_exists(self):
+        generated = {mr.REPO_ROOT / mr.module_doc_path(module_id) for module_id in CONTRACTED}
+        self.assertTrue(all(path.is_file() for path in generated), "run the emitter")
+        for contract in self.contracted.values():
+            refs = mr.contract_refs(contract)
+            for ref in refs:
+                with self.subTest(module=contract.id, ref=ref):
+                    self.assertEqual(mr.ref_problem(ref), "")
+            self.assertIn(contract.tests.schema, refs)
+            self.assertIn(contract.tests.docs, refs)
+
+    def test_contracted_module_with_a_missing_ref_fails(self):
+        for missing in ("python/does_not_exist.py", "python/stochastic_uq_mmpds_solver.py:999999",
+                        "python/test_keyhole_contract.py::KeyholeContract.test_not_there", "../outside.py"):
+            def broken(row, missing=missing):
+                contract = mr.CONTRACTED_BUILDERS[row["id"]](row)
+                return dataclasses.replace(contract, source_refs=contract.source_refs + (missing,))
+            builders = dict(mr.CONTRACTED_BUILDERS, **{"uq-lab": broken})
+            with self.subTest(ref=missing), self.assertRaisesRegex(ValueError, "uq-lab: unresolved references"):
+                mr.build_registry(builders=builders)
+        # The oracle reference is checked too.
+        def bad_oracle(row):
+            contract = mr.CONTRACTED_BUILDERS[row["id"]](row)
+            oracle = dataclasses.replace(contract.tests.oracle, ref="python/nope.py::T.t")
+            tests = dataclasses.replace(contract.tests, oracle=oracle)
+            return dataclasses.replace(contract, tests=tests)
+        with self.assertRaisesRegex(ValueError, "keyhole-raytracing: unresolved references"):
+            mr.build_registry(builders=dict(mr.CONTRACTED_BUILDERS, **{"keyhole-raytracing": bad_oracle}))
+
+    def test_pilot_evidence_is_bounded(self):
+        for contract in self.contracted.values():
+            with self.subTest(module=contract.id):
+                evidence = contract.evidence
+                # Neither authority output carries an evidence status, so nothing is emitted.
+                self.assertTrue(all(op.output.status_key is None for op in contract.operations))
+                self.assertEqual(evidence.emits, ())
+                self.assertEqual(evidence.ceiling, "screening-only")
+                self.assertEqual(evidence.forbidden_claims, mc.FORBIDDEN_CLAIM_KEYS)
+                self.assertIsNone(contract.validity_domain)
+                self.assertNotIn(mc.TODO_MARKER, evidence.note)
+        keyhole = self.contracted["keyhole-raytracing"].tests.oracle
+        self.assertEqual(keyhole.status, "present")
+        self.assertTrue(keyhole.ref.startswith("python/test_keyhole_contract.py::"))
+        self.assertEqual(self.contracted["uq-lab"].tests.oracle.status, "pending")
+
+    def test_oracle_ci_gap_is_recorded_exactly_when_the_oracle_cannot_run_in_ci(self):
+        for contract in self.contracted.values():
+            oracle = contract.tests.oracle
+            if oracle.status != "present":
+                self.assertIsNone(oracle.ci_note, contract.id)
+                continue
+            missing = mr.oracle_ci_missing_packages(oracle.ref)
+            with self.subTest(module=contract.id, missing=missing):
+                if missing:
+                    self.assertTrue(oracle.ci_note, "a present oracle outside the CI lock must record the gap")
+                    self.assertIn("not run in CI", oracle.ci_note)
+                    for package in missing:
+                        self.assertIn(package.lower(), oracle.ci_note.lower())
+                    self.assertIn(oracle.ci_note, contract.evidence.note)
+                else:
+                    self.assertIsNone(oracle.ci_note, "no gap to record")
+        self.assertEqual(mr.oracle_ci_missing_packages(self.contracted["keyhole-raytracing"].tests.oracle.ref), ["warp"])
+
+    def test_ci_note_must_be_echoed_in_the_evidence_note(self):
+        base = mr.CONTRACTED_BUILDERS["keyhole-raytracing"]
+        row = next(r for r in mr.load_seed() if r["id"] == "keyhole-raytracing")
+        contract = base(row)
+        with self.assertRaisesRegex(mc.ContractError, "oracle CI gap"):
+            dataclasses.replace(contract, evidence=dataclasses.replace(contract.evidence, note="silent"))
+        with self.assertRaises(mc.ContractError):
+            mc.Oracle(status="pending", ci_note="not run")
+
+    def test_contracted_modules_claim_no_owner_and_mark_seed_text(self):
+        seed = {row["id"]: row for row in mr.load_seed()}
+        for contract in self.contracted.values():
+            with self.subTest(module=contract.id):
+                self.assertEqual(contract.owner, mc.OWNER_UNASSIGNED, "no person/team owner is claimed")
+                row = seed[contract.id]
+                original = {"label": row["label"], "description": row["description"], "next": row["next"],
+                            "maturity": row["scope"]}
+                for name in mc.SEED_TEXT_FIELDS:
+                    if name in contract.seed_derived:
+                        self.assertEqual(getattr(contract, name), original[name], f"{name} marked seed-derived")
+                    else:
+                        self.assertNotEqual(getattr(contract, name), original[name], f"{name} claimed rewritten")
+        keyhole = self.contracted["keyhole-raytracing"]
+        self.assertNotIn("description", keyhole.seed_derived)
+        self.assertNotIn("GPU-accelerated", keyhole.description)
+        self.assertIn("CPU by default, CUDA optional", keyhole.description)
+        self.assertEqual(self.contracted["uq-lab"].seed_derived, mc.SEED_TEXT_FIELDS)
+        for contract in self.registry:
+            if contract.migration_state == "legacy":
+                self.assertEqual(contract.seed_derived, mc.SEED_TEXT_FIELDS, contract.id)
+
+    def test_pilot_units_and_wording_are_consistent(self):
+        # One symbol per unit: µm (not um/micron), degC (not °C) for temperatures with an offset.
+        units = {f.unit for c in self.contracted.values() for op in c.operations for f in op.input if f.unit}
+        self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%"})
+        texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
+        texts += [n for c in self.contracted.values() for n in c.legacy_notes]
+        texts += [c.evidence.note for c in self.contracted.values()]
+        for text in texts:
+            with self.subTest(text=text[:40]):
+                self.assertNotRegex(text, r"\d\s?um\b|°C|micron")
+                self.assertNotIn("The oracle is numerical", text)
+        mc_samples = next(f for f in self.contracted["uq-lab"].operations[0].input if f.key == "mcSamples")
+        self.assertIn("declares [500, 10000]", mc_samples.note)
+        self.assertTrue(any(n.startswith("warm: true is the best case") for n in self.contracted["uq-lab"].legacy_notes))
+
+    def test_pilot_authorities_match_the_legacy_binding(self):
+        keyhole = self.contracted["keyhole-raytracing"].operations[0]
+        self.assertEqual((keyhole.method, keyhole.route, keyhole.authority.worker_method, keyhole.authority.timeout_ms),
+                         ("POST", "/api/python/lpbf-keyhole-raytracing", "keyhole-raytracing", 20000))
+        uq = self.contracted["uq-lab"].operations[0]
+        self.assertEqual((uq.method, uq.route, uq.authority.script, uq.authority.timeout_ms, uq.authority.warm),
+                         ("POST", "/api/python/stochastic-uq-mmpds", "python/stochastic_uq_mmpds_solver.py", 25000, True))
+
+    def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
+        core = mr.core_document(mr.registry_document(self.registry))
+        allowed = set(mr.CORE_CONTRACT_KEYS) | {"evidence", "tests"}
+        for entry in core["contracts"]:
+            self.assertEqual(set(entry), allowed)
+            self.assertEqual(set(entry["evidence"]), {"ceiling"})
+            self.assertEqual(set(entry["tests"]), {"oracle"})
+            self.assertEqual(set(entry["tests"]["oracle"]), {"status", "ciNote", "scope"})
+        self.assertIn(mr.GENERATED_CORE_TS, mr.rendered_outputs())
+
+    def test_ref_forms(self):
+        self.assertEqual(mr.ref_problem("python/module_registry.py"), "")
+        self.assertIn("does not exist", mr.ref_problem("/etc/passwd"))
+        generated = frozenset({"docs/modules/not-yet.md"})
+        self.assertEqual(mr.ref_problem("docs/modules/not-yet.md", generated=generated), "")
+        # Line references must carry the text they expect, so shifted lines fail.
+        self.assertIn("needs '#", mr.ref_problem("python/module_registry.py:1-2"))
+        self.assertEqual(mr.ref_problem('python/module_registry.py:1-2#"""Module registry'), "")
+        self.assertIn("no longer contains", mr.ref_problem("python/module_registry.py:3-4#Module registry"))
+        self.assertIn("outside", mr.ref_problem("python/module_registry.py:2-1#x"))
+        # Python symbols via the AST; Class.method needs the method inside that class.
+        self.assertEqual(mr.ref_problem("python/module_registry.py::build_registry"), "")
+        self.assertEqual(mr.ref_problem("python/module_registry.py::CORE_CONTRACT_KEYS"), "")
+        self.assertIn("not defined", mr.ref_problem("python/module_registry.py::nowhere"))
+        oracle = "python/test_keyhole_contract.py::KeyholeContract.test_flat_surface_absorbs_normal_incidence_fraction"
+        self.assertEqual(mr.ref_problem(oracle), "")
+        self.assertIn("has no method", mr.ref_problem("python/test_keyhole_contract.py::KeyholeContract.run_casex"))
+        self.assertIn("not a class", mr.ref_problem("python/module_contract.py::within_ceiling.x"))
+        # A method of another class does not satisfy Class.method.
+        self.assertIn("has no method", mr.ref_problem("python/module_contract.py::Oracle.input_problems"))
+        # TS/TSX declarations; a call site is not a declaration.
+        self.assertEqual(mr.ref_problem("src/services/pythonComputationService.ts::calculateStochasticUQMMPDS"), "")
+        self.assertIn("not declared", mr.ref_problem("src/components/UQLab.tsx::calculateStochasticUQMMPDS"))
+
+    def test_symbol_refs_survive_line_deletions_elsewhere(self):
+        # orch/dead-surface deletes these line ranges of pythonComputationService.ts; the uq-lab
+        # reference is anchored on the symbol, so it must still resolve afterwards.
+        import tempfile
+        rel = "src/services/pythonComputationService.ts"
+        lines = (REPO_ROOT / rel).read_text(encoding="utf-8").splitlines(keepends=True)
+        removed = set()
+        for start, end in ((207, 236), (1276, 1356), (1819, 1876)):
+            removed.update(range(start, end + 1))
+        kept = "".join(line for number, line in enumerate(lines, 1) if number not in removed)
+        ref = next(r for r in mr.build_registry() if r.id == "uq-lab").source_refs
+        ref = next(r for r in ref if r.startswith(rel))
+        with tempfile.TemporaryDirectory() as root:
+            target = Path(root) / rel
+            target.parent.mkdir(parents=True)
+            target.write_text(kept, encoding="utf-8")
+            self.assertEqual(mr.ref_problem(ref, root=Path(root)), "")
+            self.assertIn("::", ref)
 
 
 if __name__ == "__main__":

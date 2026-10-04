@@ -51,6 +51,8 @@ jobs:
           echo "Running $(echo "$files" | wc -l) test files"
           node_modules/.bin/tsx --test $files
       - run: npm run build
+      # Gzip ratchet on the built assets (scripts/bundle-budgets.json); reuses the dist/ from build.
+      - run: node scripts/check-bundle-size.mjs
 
   python:
     runs-on: ubuntu-latest
@@ -86,7 +88,8 @@ jobs:
           test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
           test_lpbf_worker_validation_error
           test_module_contract test_module_warm_parity test_allowlist_ceilings
-          test_phase6b_vector_parity
+          test_contract_keyhole_raytracing test_contract_uq_lab
+          test_phase6b_vector_parity test_stochastic_uq_evidence
       # Runs the BASE revision's copy of the checker, so a change cannot weaken the check that
       # reviews it; .github/CODEOWNERS (enforced by branch protection) covers the same paths.
       - name: Allowlist ceilings and guard files change only with a 'Ceiling-Review:' commit trailer
