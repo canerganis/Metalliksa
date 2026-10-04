@@ -1,6 +1,6 @@
 /**
  * MetalliX Python HPC Subsystem & Proxy Client Service
- * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, DFT tensors, PHACOMP,
+ * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, elastic-constant homogenisation, PHACOMP,
  * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, Pourbaix E-pH)
  * to the backend Python 3.10 runtime with automatic fallback to client TypeScript engines.
  */
@@ -119,8 +119,11 @@ export interface DFTStructureInput {
   formation_energy_per_atom?: number;
   energy_above_hull?: number;
   band_gap?: number;
+  /** Cell site count. Not used by the engine (it is not atoms per formula unit); kept for old callers. */
   nsites?: number;
+  /** Formula-unit molar mass (g/mol); used only with atoms_per_formula_unit when the formula is not a composition. */
   molar_mass?: number;
+  atoms_per_formula_unit?: number;
   custom_c_ij?: {
     c11?: number;
     c22?: number;
@@ -134,25 +137,38 @@ export interface DFTStructureInput {
   };
 }
 
+/**
+ * Result of the continuum-elasticity engine (python/dft_property_calculator.py, v4.1). The name is
+ * historical: nothing here is a DFT calculation (isDft is always false). The engine homogenises supplied
+ * or built-in single-crystal elastic constants C_ij.
+ */
 export interface PythonDFTResult {
-  success: boolean;
+  success: true;
+  status: "available";
   engine: string;
   scientificModel?: string;
+  /** What the module is: "Continuum elasticity ... (not a DFT calculation)". Show it next to results. */
+  label?: string;
+  isDft?: false;
+  /** custom-user-supplied | builtin-library-exact-match | isotropic-from-supplied-K-G */
+  constantsOrigin?: string;
+  /** unverified | cited-secondary-compilation | supplied-by-caller */
+  referenceStatus?: string;
   sourceNotes?: string;
   computeTimeMs: number;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   materialInfo: {
-    formula: string;
+    formula: string | null;
     material_id: string;
-    crystal_system: string;
-    space_group: string;
-    density: number;
-    formation_energy_per_atom: number;
-    energy_above_hull: number;
-    band_gap: number;
-    is_stable: boolean;
-    is_metal: boolean;
+    crystal_system: string | null;
+    space_group: string | null;
+    density: number | null;
+    formation_energy_per_atom: number | null;
+    energy_above_hull: number | null;
+    band_gap: number | null;
+    is_stable: boolean | null;
+    is_metal: boolean | null;
   };
   elasticStiffnessMatrix_Cij_GPa: number[][];
   elasticComplianceMatrix_Sij_1_over_GPa: number[][];
@@ -185,23 +201,60 @@ export interface PythonDFTResult {
     cauchyPressure_C12_minus_C44_GPa: number;
     ductilityVerdict: string;
     universalAnisotropyIndex_AU: number;
-    zenerAnisotropyFactor_AZ: number;
+    /** null for non-cubic crystals: the Zener ratio is defined for cubic crystals only. */
+    zenerAnisotropyFactor_AZ: number | null;
     isIsotropic: boolean;
   };
+  /** Every number is null (with `reason`) when it cannot be computed without a default or a guess. */
   acousticAndThermalProperties: {
-    longitudinalSoundVelocity_m_s: number;
-    transverseSoundVelocity_m_s: number;
-    meanSoundVelocity_m_s: number;
-    debyeTemperature_K: number;
-    gruneisenParameter_gamma: number;
-    minimumThermalConductivity_W_mK: number;
+    status?: "available" | "unavailable";
+    reason?: string | null;
+    longitudinalSoundVelocity_m_s: number | null;
+    transverseSoundVelocity_m_s: number | null;
+    meanSoundVelocity_m_s: number | null;
+    debyeTemperature_K: number | null;
+    gruneisenParameter_gamma: number | null;
+    minimumThermalConductivity_W_mK: number | null;
+    debyeBasis?: {
+      atomsPerFormulaUnit: number;
+      formulaUnitMolarMass_g_mol: number;
+      meanAtomicMass_g_mol: number;
+      atomNumberDensity_per_m3: number;
+      source: string;
+      reference: string;
+    } | null;
   };
+  /** null for a mechanically unstable tensor (see directionalYoungsModuliReason). */
   directionalYoungsModuli: {
     direction: string;
     hkl: number[];
-    youngsModulusGPa: number;
-    ratioToAverage: number;
-  }[];
+    /** "lattice": a lattice [hkl]; "cartesian": a Cartesian direction (lattice parameters are not inputs). */
+    frame?: "lattice" | "cartesian";
+    label?: string;
+    youngsModulusGPa: number | null;
+    ratioToAverage: number | null;
+  }[] | null;
+  directionalYoungsModuliStatus?: "available" | "unavailable";
+  directionalYoungsModuliReason?: string | null;
+}
+
+/** The engine has no result for this input (no default or nearest guess is substituted). */
+export interface PythonDFTUnavailable {
+  success: false;
+  status: "unavailable";
+  unavailableCode: string;
+  reason: string;
+  engine: string;
+  label?: string;
+  isDft?: false;
+  computeTimeMs: number;
+  isPythonEngine: boolean;
+}
+
+export type PythonDFTOutcome = PythonDFTResult | PythonDFTUnavailable;
+
+export function isDftUnavailable(outcome: PythonDFTOutcome): outcome is PythonDFTUnavailable {
+  return outcome.status === "unavailable";
 }
 
 export interface PythonXRDResult {
@@ -1089,161 +1142,62 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch DFT 6x6 Elastic Tensor and Ab-Initio Property Calculations to Python
+   * Dispatch the continuum-elasticity calculation (6x6 stiffness homogenisation, Born stability,
+   * per-atom Debye temperature) to Python. The route name (dft-properties) is historical: this is not a
+   * DFT calculation. When Python cannot answer there is no client-side substitute (the old fallback
+   * filled in fixed velocities, a 450 K Debye temperature and a Grueneisen constant): the result is
+   * "unavailable" with the reason.
    */
   async calculateDFTProperties(
     input: DFTStructureInput,
     usePython = true
-  ): Promise<PythonDFTResult> {
-    if (usePython) {
-      try {
-        const res = await fetch("/api/python/dft-properties", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.elasticStiffnessMatrix_Cij_GPa) {
-            return {
-              ...data,
-              isPythonEngine: true,
-              engine: data.engine || "MetalliX-Python-HPC-DFT",
-              computeTimeMs: data.computeTimeMs || 15,
-            };
-          }
-        }
-      } catch (err) {
-        console.warn("Python DFT proxy call failed, using client calculations:", err);
-      }
-    }
-
-    // Client-side fallback calculation
-    const startTime = performance.now();
-    const k = input.k_vrh || 160;
-    const g = input.g_vrh || 75;
-    const youngs = (9 * k * g) / (3 * k + g);
-    const nu = (3 * k - 2 * g) / (2 * (3 * k + g));
-    const pugh = k / Math.max(0.1, g);
-
-    const c11 = k + (4 / 3) * g;
-    const c12 = k - (2 / 3) * g;
-    const c44 = g;
-
-    const cij: number[][] = [
-      [c11, c12, c12, 0, 0, 0],
-      [c12, c11, c12, 0, 0, 0],
-      [c12, c12, c11, 0, 0, 0],
-      [0, 0, 0, c44, 0, 0],
-      [0, 0, 0, 0, c44, 0],
-      [0, 0, 0, 0, 0, c44],
-    ];
-
-    // Mathematically exact compliance matrix for isotropic/cubic:
-    // S11 = (C11 + C12) / ((C11 - C12)*(C11 + 2*C12))
-    // S12 = -C12 / ((C11 - C12)*(C11 + 2*C12))
-    // S44 = 1 / C44
-    const denom = (c11 - c12) * (c11 + 2 * c12);
-    const s11 = denom > 0 ? (c11 + c12) / denom : 1 / c11;
-    const s12 = denom > 0 ? -c12 / denom : 0;
-    const s44 = 1 / c44;
-
-    const sij: number[][] = [
-      [s11, s12, s12, 0, 0, 0],
-      [s12, s11, s12, 0, 0, 0],
-      [s12, s12, s11, 0, 0, 0],
-      [0, 0, 0, s44, 0, 0],
-      [0, 0, 0, 0, s44, 0],
-      [0, 0, 0, 0, 0, s44],
-    ];
-
-    return {
-      success: true,
-      engine: "MetalliX-Client-Symmetry-Continuum/TS",
-      scientificModel: "Isotropic Continuum Homogenization Baseline",
-      sourceNotes: "Client-side fallback using exact isotropic Hookean elasticity",
-      computeTimeMs: Math.round(performance.now() - startTime),
+  ): Promise<PythonDFTOutcome> {
+    const unavailable = (code: string, reason: string): PythonDFTUnavailable => ({
+      success: false,
+      status: "unavailable",
+      unavailableCode: code,
+      reason,
+      engine: "MetalliX-Continuum-Elasticity-Homogenizer",
+      isDft: false,
+      computeTimeMs: 0,
       isPythonEngine: false,
-      materialInfo: {
-        formula: input.formula || "Compound",
-        material_id: input.material_id || "mp-custom",
-        crystal_system: input.crystal_system || "Cubic",
-        space_group: input.space_group || "Fm-3m",
-        density: input.density || 7.85,
-        formation_energy_per_atom: input.formation_energy_per_atom || -0.45,
-        energy_above_hull: input.energy_above_hull || 0.0,
-        band_gap: input.band_gap || 0.0,
-        is_stable: (input.energy_above_hull || 0) <= 0.005,
-        is_metal: (input.band_gap || 0) < 0.05,
-      },
-      elasticStiffnessMatrix_Cij_GPa: cij,
-      elasticComplianceMatrix_Sij_1_over_GPa: sij,
-      bornStability: {
-        isMechanicallyStable: c11 - c12 > 0 && c11 + 2 * c12 > 0 && c44 > 0,
-        minimumEigenvalueGPa: Math.min(c11 - c12, c44, c11 + 2 * c12),
-        allEigenvaluesGPa: [c11 - c12, c11 - c12, c44, c44, c44, c11 + 2 * c12],
-        verdict: "Mechanically Stable (Passes Born Criteria & Positive Definite Energy)",
-        criteriaChecks: [
-          {
-            name: "Tetragonal Shear Modulus C'",
-            formula: "C11 - C12 > 0",
-            value: +(c11 - c12).toFixed(2),
-            passed: c11 - c12 > 0,
-            physicalMeaning: "Resistance to volume-conserving shear deformation",
-          },
-          {
-            name: "Bulk Hydrostatic Compression",
-            formula: "C11 + 2*C12 > 0",
-            value: +(c11 + 2 * c12).toFixed(2),
-            passed: c11 + 2 * c12 > 0,
-            physicalMeaning: "Lattice resists hydrostatic volume collapse",
-          },
-          {
-            name: "Shear Modulus C44",
-            formula: "C44 > 0",
-            value: +c44.toFixed(2),
-            passed: c44 > 0,
-            physicalMeaning: "Angular shear distortion resistance",
-          },
-        ],
-      },
-      voigtReussHillModuli: {
-        bulkModulus_K_Voigt_GPa: k,
-        bulkModulus_K_Reuss_GPa: k,
-        bulkModulus_K_VRH_GPa: k,
-        shearModulus_G_Voigt_GPa: g,
-        shearModulus_G_Reuss_GPa: g,
-        shearModulus_G_VRH_GPa: g,
-        youngsModulus_E_VRH_GPa: Math.round(youngs),
-        poissonsRatio_nu: +nu.toFixed(3),
-        pWaveModulus_GPa: Math.round(k + (4 / 3) * g),
-      },
-      mechanicalIntegrityIndices: {
-        pughRatio_B_over_G: +pugh.toFixed(3),
-        cauchyPressure_C12_minus_C44_GPa: +(c12 - c44).toFixed(2),
-        ductilityVerdict: pugh > 1.75 && nu > 0.26 ? "Ductile (Metallic Slip)" : "Brittle / Covalent",
-        universalAnisotropyIndex_AU: 0.0,
-        zenerAnisotropyFactor_AZ: 1.0,
-        isIsotropic: true,
-      },
-      acousticAndThermalProperties: {
-        longitudinalSoundVelocity_m_s: 5800,
-        transverseSoundVelocity_m_s: 3200,
-        meanSoundVelocity_m_s: 3550,
-        debyeTemperature_K: 450,
-        gruneisenParameter_gamma: 1.85,
-        minimumThermalConductivity_W_mK: 1.25,
-      },
-      directionalYoungsModuli: [
-        { direction: "[100]", hkl: [1, 0, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[110]", hkl: [1, 1, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[111]", hkl: [1, 1, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[001]", hkl: [0, 0, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[210]", hkl: [2, 1, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[311]", hkl: [3, 1, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-      ],
-    };
+    });
+    if (!usePython) {
+      return unavailable("PYTHON_NOT_REQUESTED", "The Python elasticity engine was not requested; there is no client-side substitute.");
+    }
+    try {
+      const res = await fetch("/api/python/dft-properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.status === "unavailable") {
+          return {
+            ...data,
+            success: false,
+            isPythonEngine: true,
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : 0,
+          };
+        }
+        if (data && data.success && data.elasticStiffnessMatrix_Cij_GPa) {
+          return {
+            ...data,
+            status: "available",
+            isPythonEngine: true,
+            engine: data.engine || "MetalliX-Continuum-Elasticity-Homogenizer",
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : 0,
+          };
+        }
+        const detail = data && typeof data.error === "string" ? `: ${data.error}` : "";
+        return unavailable("PYTHON_BAD_RESPONSE", `The Python elasticity engine returned no tensor${detail}.`);
+      }
+      return unavailable("PYTHON_HTTP_ERROR", `The Python elasticity engine answered HTTP ${res.status}.`);
+    } catch (err) {
+      console.warn("Python elasticity proxy call failed:", err);
+      return unavailable("PYTHON_UNREACHABLE", "The Python elasticity engine could not be reached; there is no client-side substitute.");
+    }
   }
 
   /**
