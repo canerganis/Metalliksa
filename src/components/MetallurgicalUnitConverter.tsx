@@ -49,8 +49,8 @@ import {
   UNAVAILABLE_TEXT,
   convertHardness,
   hardnessInputForScale,
-  hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
+import { SPECIMEN_HARDNESS_NOT_LOADED_NOTE } from "../utils/hardnessStrengthEstimate";
 import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
@@ -190,7 +190,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [reportHardnessValue, setReportHardnessValue] = useState<number>(34);
   const [reportHardnessScale, setReportHardnessScale] = useState<ReportHardnessScale>("HRC");
   const [reportHardnessClass, setReportHardnessClass] = useState<HardnessMaterialClass>("titanium-alloy");
-  const [reportHardnessFromSpecimen, setReportHardnessFromSpecimen] = useState<boolean>(false);
+  const [reportHardnessSyncNote, setReportHardnessSyncNote] = useState<string | null>(null);
   const [reportCvnJ, setReportCvnJ] = useState<number>(42);
   const [reportTestTempC, setReportTestTempC] = useState<number>(23);
 
@@ -218,20 +218,9 @@ export const MetallurgicalUnitConverter: React.FC = () => {
       if (activeMaterialSpecimen.uts_25C_MPa > 0) {
         setReportUtsMpa(activeMaterialSpecimen.uts_25C_MPa);
       }
-      if (activeMaterialSpecimen.hardness_HV > 0) {
-        const specimenClass = hardnessMaterialClassOf({
-          baseMetal: activeMaterialSpecimen.metadata?.baseMetal,
-          crystalSystem: activeMaterialSpecimen.xrd?.crystalSystem,
-        });
-        setHardnessInput(activeMaterialSpecimen.hardness_HV);
-        setHardnessScale("HV");
-        setHardnessClass(specimenClass);
-        // The report keeps the specimen's own HV as the primary value (no conversion to HRC).
-        setReportHardnessValue(activeMaterialSpecimen.hardness_HV);
-        setReportHardnessScale("HV");
-        setReportHardnessClass(specimenClass);
-        setReportHardnessFromSpecimen(true);
-      }
+      // The hardness inputs take measured values. The specimen record's HV is a yield-strength estimate or
+      // unavailable (never measured), so the hardness inputs are left unchanged.
+      setReportHardnessSyncNote(SPECIMEN_HARDNESS_NOT_LOADED_NOTE);
       if (activeMaterialSpecimen.name) {
         setReportAlloyName(activeMaterialSpecimen.name);
       }
@@ -1446,7 +1435,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                         value={reportHardnessValue}
                         onChange={(e) => {
                           setReportHardnessValue(parseFloat(e.target.value) || 0);
-                          setReportHardnessFromSpecimen(false);
+                          setReportHardnessSyncNote(null);
                         }}
                         className="w-24 px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-sky-400 font-bold text-right"
                       />
@@ -1455,7 +1444,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                         value={reportHardnessScale}
                         onChange={(e) => {
                           setReportHardnessScale(e.target.value as ReportHardnessScale);
-                          setReportHardnessFromSpecimen(false);
+                          setReportHardnessSyncNote(null);
                         }}
                         className="px-1.5 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-slate-300"
                       >
@@ -1480,7 +1469,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     </select>
                     <span className="block text-[10px] font-normal text-slate-500 mt-1">
                       Measured value (primary).
-                      {reportHardnessFromSpecimen ? " Taken from the active specimen record; check that it is a measured value." : ""}
+                      {reportHardnessSyncNote ? ` ${reportHardnessSyncNote}` : ""}
                     </span>
                   </td>
                   <td className="py-3 px-3 bg-indigo-950/10 text-indigo-300">

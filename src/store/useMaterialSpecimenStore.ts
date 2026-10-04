@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { materialProfileIdentity } from "../utils/materialProfileIdentity";
 import { materialCategoryForBase } from "../utils/materialCategory";
 import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/materialDataPipeline";
+import { estimateSpecimenHardnessHV } from "../utils/hardnessStrengthEstimate";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -596,6 +597,14 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
 
         // Bridge to pipeline for modules that also listen to data pipeline
         try {
+          // HV is never measured here: steel-only estimate from the composition-based yield strength (Pavlina & Van
+          // Tyne 2008) or unavailable. The old rule HV ~ YS/3.1 for every alloy had no source.
+          const hardnessEstimate = estimateSpecimenHardnessHV({
+            baseMetal: nextSpecimen.baseMetal,
+            crystalSystem: nextSpecimen.xrd?.crystalSystem,
+            composition: nextSpecimen.unit === "at_pct" ? undefined : nextSpecimen.composition,
+            yieldStrength_MPa: nextSpecimen.yieldStrength_25C_MPa,
+          });
           const pipelinePayload: PipelineMaterialPayload = {
             id: nextSpecimen.id,
             name: nextSpecimen.name,
@@ -612,10 +621,9 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             youngsModulus: nextSpecimen.youngsModulus_GPa,
             density: nextSpecimen.density_gcm3,
             elongation: nextSpecimen.elongation_pct,
-            // Unverified rule of thumb HV ~ YS/3.1 (no source): labelled as an estimate, not a measured hardness.
-            hardness: `${Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1)} HV (estimate from yield strength, not measured)`,
-            hardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
-            hardnessHVSource: "estimate-from-yield",
+            hardness: hardnessEstimate.note,
+            hardnessHV: hardnessEstimate.hv,
+            hardnessHVSource: hardnessEstimate.hv === null ? "unavailable" : "estimate-from-yield",
             poissonsRatio: 0.31,
             thermalConductivity: nextSpecimen.lpbf.thermalConductivity_k_WmK,
             kineticProfile: {
@@ -642,9 +650,9 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
                 ? nextSpecimen.category
                 : "Nickel Superalloy") as any,
               crystalStructure: nextSpecimen.xrd.crystalSystem as any,
-              // estimate (HV ~ YS/3.1, unverified), see hardnessHVSource above
-              defaultHardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
-              hardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
+              // estimate or unavailable, see hardnessHVSource above
+              defaultHardnessHV: hardnessEstimate.hv ?? undefined,
+              hardnessHV: hardnessEstimate.hv,
               measuredYield_MPa: nextSpecimen.yieldStrength_25C_MPa,
               measuredUTS_MPa: nextSpecimen.uts_25C_MPa,
               strainHardeningExponent_n: 0.15,
