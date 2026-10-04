@@ -1,8 +1,10 @@
 {
-  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation). Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA.",
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation). Reviewed addition (slice-1 fix round 2, route discovery widened to server.ts, server/** and .use/.all mounts): unbound 'GET /api/health', 'GET /api/runtime-config', 'ALL /api/*' (server.ts infrastructure) and unclassified 'USE /api/lpbf', 'USE /api/lpbf/sources', 'USE /api/lpbf/runs', 'USE /api/research/registry' (guard/parser middleware mounts). Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA.",
   "unbound": [
+    "ALL /api/*",
     "DELETE /api/python/battery-corrosion-upload/:id?",
     "GET /api/calphad/databases",
+    "GET /api/health",
     "GET /api/lpbf/runs/:runId",
     "GET /api/lpbf/runs/bundles/:bundleId/download",
     "GET /api/lpbf/runs/bundles/restores/:restoreId/runs",
@@ -18,6 +20,7 @@
     "GET /api/python/status",
     "GET /api/research/registry/history",
     "GET /api/research/registry/revisions/:revision",
+    "GET /api/runtime-config",
     "POST /api/calphad/minimize",
     "POST /api/lpbf/runs/:runId/nist-comparison",
     "POST /api/lpbf/runs/bundles/:bundleId/restore",
@@ -54,7 +57,12 @@
     "POST /api/python/part-scale-inherent-strain",
     "POST /api/python/xrd-deconvolve"
   ],
-  "unclassified": [],
+  "unclassified": [
+    "USE /api/lpbf",
+    "USE /api/lpbf/runs",
+    "USE /api/lpbf/sources",
+    "USE /api/research/registry"
+  ],
   "cannedBaseline": [
     "GET /api/materials-project/search",
     "GET /api/orchestrator/approved-sources",

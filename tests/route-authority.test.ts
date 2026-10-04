@@ -2,189 +2,37 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
 import { MODULE_CONTRACTS, type ContractOperation } from '../src/modules/registry';
+import { routeHandlers, type RouteHandler } from './support/routeScan';
 import { repoRoot } from './support/importGraph';
 import { beyondCeiling, readCeiling } from './support/ceiling';
 
 // Phase 7 slice 1, static part of the route-authority check (design 7 section 5). Every HTTP
-// handler declared in routes/*.ts must either serve a registry operation route or be listed in
-// routes/AUTHORITY_ALLOWLIST.json with a reason. Separately, a handler (routes/*.ts and server.ts)
+// handler declared in routes/**, server/** or server.ts (discovery: tests/support/routeScan.ts)
+// must either serve a registry operation route or be listed in
+// routes/AUTHORITY_ALLOWLIST.json with a reason. Separately, a handler
 // that answers with literal numbers/booleans (directly, via local or module constants, or nested)
 // without calling a recognised authority (AUTHORITY_CALLEES) is flagged as canned; today's
 // offenders sit in a ratcheted baseline. Handler shapes the parser cannot classify fail visibly
 // unless allowlisted under "unclassified". All allowlists are capped by AUTHORITY_ALLOWLIST.ceiling.json.
 // This is a heuristic; the dynamic nonce sentinel test is later work.
 
-const METHODS = new Set(['get', 'post', 'put', 'delete', 'patch']);
-const ROUTER_OBJECT = /^(app|router|\w+Router)$/;
-
-// Recognised authority dispatch: the python runners, the LPBF worker, the AI/literature providers,
-// and the injected archive/registry services. Any other call does NOT count as an authority, so a
-// handler that answers with literals and only calls helpers is canned.
-const AUTHORITY_CALLEES: readonly RegExp[] = [
-  /^(physicsDeps\.|characterizationDeps\.)?runPythonScript$/, /^handlePythonDispatch$/, /^pythonIPCSupervisor\.\w+$/,
-  /^lpbfWorker\.\w+$/, /^generateGpt6Response$/, /^fetch$/, /^collectApprovedSource$/,
-  /^(service|bundles|comparison|campaigns|registry)\.\w+$/,
-];
-
-export interface RouteHandler { key: string; file: string; line: number; canned: boolean; unclassified: boolean }
-
-function calleeText(expression: ts.Expression): string {
-  if (ts.isIdentifier(expression)) return expression.text;
-  if (ts.isPropertyAccessExpression(expression)) return `${calleeText(expression.expression)}.${expression.name.text}`;
-  if (ts.isParenthesizedExpression(expression) || ts.isNonNullExpression(expression)) return calleeText(expression.expression);
-  return '?';
-}
-
-function isLiteralClaim(node: ts.Expression): boolean {
-  return ts.isNumericLiteral(node) || node.kind === ts.SyntaxKind.TrueKeyword || node.kind === ts.SyntaxKind.FalseKeyword
-    || (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand));
-}
-
-// Request acknowledgements (`success: true`, `ok: true`) are transport status, not result values.
-const ACK_KEYS = new Set(['success', 'ok']);
-
-/** Variable initializers declared anywhere in a file (module constants such as hard-coded catalogs). */
-function fileDeclarations(source: ts.SourceFile): Map<string, ts.Expression> {
-  const declarations = new Map<string, ts.Expression>();
-  const visit = (node: ts.Node) => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && !declarations.has(node.name.text)) {
-      declarations.set(node.name.text, node.initializer);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return declarations;
-}
-
-/** Literal number/boolean claims in a response value, following local/module constants and nesting. */
-function hasLiteralClaim(node: ts.Expression, locals: Map<string, ts.Expression>, seen = new Set<string>()): boolean {
-  if (isLiteralClaim(node)) return true;
-  if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) return hasLiteralClaim(node.expression, locals, seen);
-  if (ts.isIdentifier(node)) {
-    const value = locals.get(node.text);
-    if (!value || seen.has(node.text)) return false;
-    seen.add(node.text);
-    return hasLiteralClaim(value, locals, seen);
-  }
-  if (ts.isArrayLiteralExpression(node)) return node.elements.some(element => hasLiteralClaim(element as ts.Expression, locals, seen));
-  if (ts.isObjectLiteralExpression(node)) {
-    const keys = node.properties.map(property => property.name && ts.isIdentifier(property.name) ? property.name.text : '');
-    if (keys.includes('error')) return false; // Error envelopes are not results.
-    return node.properties.some(property =>
-      (ts.isPropertyAssignment(property) && !(ts.isIdentifier(property.name) && ACK_KEYS.has(property.name.text))
-        && hasLiteralClaim(property.initializer, locals, seen))
-      || (ts.isShorthandPropertyAssignment(property) && hasLiteralClaim(property.name, locals, seen))
-      || (ts.isSpreadAssignment(property) && hasLiteralClaim(property.expression, locals, seen)));
-  }
-  return false;
-}
-
-/** True when the handler answers with literal numbers/booleans and calls no recognised authority. */
-export function isCanned(handlerNodes: readonly ts.Node[], moduleDeclarations: ReadonlyMap<string, ts.Expression> = new Map()): boolean {
-  const locals = new Map<string, ts.Expression>(moduleDeclarations);
-  const responses: ts.Expression[] = [];
-  let authorityCall = false;
-  const visit = (node: ts.Node) => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) locals.set(node.name.text, node.initializer);
-    if (ts.isCallExpression(node)) {
-      const callee = calleeText(node.expression);
-      if (AUTHORITY_CALLEES.some(pattern => pattern.test(callee))) authorityCall = true;
-      if (ts.isPropertyAccessExpression(node.expression) && ['json', 'send'].includes(node.expression.name.text)) responses.push(...node.arguments);
-    }
-    ts.forEachChild(node, visit);
-  };
-  handlerNodes.forEach(visit);
-  return !authorityCall && responses.some(response => hasLiteralClaim(response, locals));
-}
-
-/** Function bodies the classifier can analyse, or null when the handler shape is not recognised. */
-function handlerBodies(args: readonly ts.Expression[]): ts.Node[] | null {
-  const bodies: ts.Node[] = [];
-  for (const argument of args) {
-    if (ts.isArrowFunction(argument) || ts.isFunctionExpression(argument)) bodies.push(argument);
-    else if (ts.isCallExpression(argument) && argument.arguments.some(inner => ts.isArrowFunction(inner) || ts.isFunctionExpression(inner))) bodies.push(argument);
-  }
-  return bodies.length ? bodies : null;
-}
-
-function stringConstants(source: ts.SourceFile): Map<string, string> {
-  const constants = new Map<string, string>();
-  const visit = (node: ts.Node) => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isStringLiteralLike(node.initializer)) {
-      constants.set(node.name.text, node.initializer.text);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return constants;
-}
-
-function routePaths(node: ts.Expression, constants: Map<string, string>): string[] | null {
-  if (ts.isStringLiteralLike(node)) return [node.text];
-  if (ts.isIdentifier(node)) return constants.has(node.text) ? [constants.get(node.text)!] : null;
-  if (ts.isArrayLiteralExpression(node)) {
-    const parts = node.elements.map(element => routePaths(element as ts.Expression, constants));
-    return parts.every(Boolean) ? parts.flat() as string[] : null;
-  }
-  if (ts.isTemplateExpression(node)) {
-    let text = node.head.text;
-    for (const span of node.templateSpans) {
-      if (!ts.isIdentifier(span.expression) || !constants.has(span.expression.text)) return null;
-      text += constants.get(span.expression.text)! + span.literal.text;
-    }
-    return [text];
-  }
-  return null;
-}
-
-export function routeHandlers(file: string, text: string): RouteHandler[] {
-  const source = ts.createSourceFile(file, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
-  const constants = stringConstants(source);
-  const declarations = fileDeclarations(source);
-  const handlers: RouteHandler[] = [];
-  const lineOf = (node: ts.Node) => source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
-  const add = (method: string, paths: string[], node: ts.Node, bodies: readonly ts.Node[] | null) => {
-    const unclassified = bodies === null;
-    const canned = !unclassified && isCanned(bodies, declarations);
-    for (const route of paths) if (route.startsWith('/api/')) handlers.push({ key: `${method.toUpperCase()} ${route}`, file, line: lineOf(node), canned, unclassified });
-  };
-  const visit = (node: ts.Node) => {
-    // router.get('/api/x', handler) / router.post(['/a', '/b'], ...) / router.get(`${prefix}/y`, ...)
-    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && METHODS.has(node.expression.name.text)
-      && node.arguments.length >= 2 && ROUTER_OBJECT.test(calleeText(node.expression.expression))) {
-      const paths = routePaths(node.arguments[0], constants);
-      // A route whose path cannot be resolved statically is reported, never skipped.
-      if (paths) add(node.expression.name.text, paths, node, handlerBodies(node.arguments.slice(1)));
-      else handlers.push({ key: `UNRESOLVED ${file}:${lineOf(node)}`, file, line: lineOf(node), canned: false, unclassified: true });
-    }
-    // for (const [method, route, rpc] of [["get", "/api/...", "rpc"], ...]) router[method](route, handler)
-    if (ts.isForOfStatement(node)) {
-      let table: ts.Expression = node.expression;
-      while (ts.isAsExpression(table) || ts.isSatisfiesExpression(table)) table = table.expression;
-      if (ts.isArrayLiteralExpression(table)) {
-        for (const row of table.elements) {
-          if (!ts.isArrayLiteralExpression(row) || row.elements.length < 2) continue;
-          const [method, route] = row.elements;
-          if (ts.isStringLiteralLike(method) && METHODS.has(method.text) && ts.isStringLiteralLike(route)) add(method.text, [route.text], row, [node.statement]);
-        }
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return handlers;
-}
-
 interface Allowlist { unbound: Record<string, string>; cannedBaseline: Record<string, string>; unclassified: Record<string, string> }
 interface AllowlistCeiling { unbound: ReadonlySet<string>; cannedBaseline: ReadonlySet<string>; unclassified: ReadonlySet<string> }
 
 const read = (relative: string) => readFileSync(path.join(repoRoot, relative), 'utf8');
-const routeFiles = readdirSync(path.join(repoRoot, 'routes')).filter(name => /\.ts$/.test(name)).sort();
-// Binding is checked for routes/*.ts; canned/unclassified detection also covers server.ts.
-const handlers = routeFiles.flatMap(name => routeHandlers(`routes/${name}`, read(`routes/${name}`)));
-const serverHandlers = routeHandlers('server.ts', read('server.ts'));
+export function tsFiles(dir: string): string[] {
+  return readdirSync(path.join(repoRoot, dir), { withFileTypes: true }).flatMap(entry => {
+    const relative = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return tsFiles(relative);
+    return /\.ts$/.test(entry.name) && !entry.name.endsWith('.d.ts') ? [relative] : [];
+  }).sort();
+}
+// Scope: routes/** (nested included), server/** and server.ts. Binding, canned and
+// unclassified checks all apply to every scanned file.
+export const SCANNED_FILES = [...tsFiles('routes'), ...tsFiles('server'), 'server.ts'];
+const handlers = SCANNED_FILES.flatMap(file => routeHandlers(file, read(file)));
+const serverHandlers: RouteHandler[] = [];
 const allowlist = JSON.parse(read('routes/AUTHORITY_ALLOWLIST.json')) as Allowlist;
 const ceiling: AllowlistCeiling = readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline', 'unclassified');
 // Method-aware binding keys, e.g. 'DELETE /api/lpbf/jobs/:id' (same shape as RouteHandler.key).
@@ -219,7 +67,42 @@ test('the static parser finds direct, aliased, prefixed and table-driven handler
     assert.ok(keys.has(key), `parser missed ${key}`);
   }
   assert.ok(handlers.length > 60, `expected the full route surface, found ${handlers.length}`);
-  assert.deepEqual(serverHandlers.map(handler => handler.key).sort(), ['GET /api/health', 'GET /api/runtime-config']);
+  for (const key of ['GET /api/health', 'GET /api/runtime-config', 'ALL /api/*', 'USE /api/lpbf/sources']) assert.ok(keys.has(key), `parser missed ${key}`);
+  // The scope walks nested directories (tests/support proves recursion) and includes server/**.
+  assert.ok(tsFiles('tests').includes('tests/support/routeScan.ts'));
+  assert.ok(SCANNED_FILES.includes('server/security.ts') && SCANNED_FILES.includes('server.ts'));
+});
+
+test('mutation: every route-registration evasion form is discovered', () => {
+  const sample = [
+    "api.post('/api/any-receiver', (req, res) => res.json({ v: 1 }));",
+    "this.router.get('/api/this-router', (req, res) => res.json({ v: 1 }));",
+    "router['post']('/api/element-access', (req, res) => res.json({ v: 1 }));",
+    "router.route('/api/route-chain').get((req, res) => res.json({ v: 1 }));",
+    "const r = router.route('/api/route-var'); r.put((req, res) => res.json({ v: 1 }));",
+    "router.all('/api/all', (req, res) => res.json({ v: 1 }));",
+    "router.use('/api/use', (req, res) => res.json({ v: 1 }));",
+    "const ROWS = [['post', '/api/table-const']]; for (const [m, p] of ROWS) router[m](p, (req, res) => res.json({ v: 1 }));",
+    "function a() { const prefix = '/api/a'; router.get(`${prefix}/x`, (req, res) => res.json({ v: 1 })); }",
+    "function b() { const prefix = '/api/b'; router.get(`${prefix}/x`, (req, res) => res.json({ v: 1 })); }",
+    "db.prepare('SELECT 1').get(id, rev);",
+    "router.get(dynamic(), (req, res) => res.json({ v: 1 }));",
+    "router[verb]('/api/computed-method', handler);",
+    "for (const [m, p] of [[verb, '/api/table-dynamic-method']]) router[m](p, h);",
+    "const stray = [['get', '/api/stray-row']];",
+    "router.get((req, res) => res.json({ v: 1 }));",
+    "router.route(base + suffix).get(h);",
+  ].join('\n');
+  const found = routeHandlers('evasion.ts', sample);
+  const resolved = Object.fromEntries(found.filter(handler => !handler.key.startsWith('UNRESOLVED')).map(handler => [handler.key, handler.canned]));
+  assert.deepEqual(resolved, {
+    'POST /api/any-receiver': true, 'GET /api/this-router': true, 'POST /api/element-access': true,
+    'GET /api/route-chain': true, 'PUT /api/route-var': true, 'ALL /api/all': true, 'USE /api/use': true,
+    'POST /api/table-const': true, 'GET /api/a/x': true, 'GET /api/b/x': true,
+  });
+  assert.ok(found.find(handler => handler.key === 'USE /api/use')!.unclassified, 'use-mounted /api handlers must be allowlisted');
+  const unresolvedLines = found.filter(handler => handler.key.startsWith('UNRESOLVED')).map(handler => handler.line).sort((x, y) => x - y);
+  assert.deepEqual(unresolvedLines, [12, 13, 14, 15, 16, 17]);
 });
 
 test('canned-result heuristic needs a recognised authority and follows variables and nesting', () => {
@@ -242,7 +125,8 @@ test('canned-result heuristic needs a recognised authority and follows variables
   assert.deepEqual(parsed, {
     'POST /api/canned': true, 'POST /api/dispatch': false, 'POST /api/worker': false, 'POST /api/error': false,
     'POST /api/helper': true, 'POST /api/variable': true, 'POST /api/shorthand': true, 'POST /api/nested': true,
-    'POST /api/strings': false, 'POST /api/opaque': 'unclassified', 'UNRESOLVED sample.ts:12': 'unclassified',
+    'POST /api/strings': false, 'POST /api/opaque': 'unclassified',
+    'UNRESOLVED sample.ts: router.get(computePath(), (req, res) => res.json({ a: 1 }))': 'unclassified',
     'GET /api/catalog': true, 'DELETE /api/ack': false,
   });
 });

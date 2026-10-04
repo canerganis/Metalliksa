@@ -1,6 +1,9 @@
 {
   "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. Route behaviour is unchanged.",
   "unbound": {
+    "GET /api/health": "Infrastructure (server.ts): liveness and API-key presence flag.",
+    "GET /api/runtime-config": "Infrastructure (server.ts): air-gap configuration for the UI banner.",
+    "ALL /api/*": "Infrastructure (server.ts): explicit JSON 404 for unmatched /api routes.",
     "GET /api/python/status": "Infrastructure: engine availability for the App.tsx status dialog.",
     "GET /api/python/ipc-status": "Infrastructure: persistent IPC supervisor diagnostics.",
     "POST /api/python/ipc-warmup": "Infrastructure: IPC readiness probe.",
@@ -54,7 +57,12 @@
     "POST /api/python/lpbf-transient-enthalpy-fdm": "LPBF worker route; the service method has no caller in src/ (transient-3d-gpu calls the non-existent /api/python/transient-3d-gpu instead).",
     "POST /api/python/lpbf-bayesian-optimization": "LPBF worker route; the UI calls the python-ipc /api/python/lpbf-bayesian-optimize instead."
   },
-  "unclassified": {},
+  "unclassified": {
+    "USE /api/lpbf": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
+    "USE /api/lpbf/sources": "routes/lpbfSources.ts guard (read-only/origin/content-type checks) plus the body-size error handler; no result payload.",
+    "USE /api/lpbf/runs": "routes/lpbfRuns.ts no-store/guard middleware plus the body error handler; no result payload.",
+    "USE /api/research/registry": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
+  },
   "cannedBaseline": {
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
     "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",

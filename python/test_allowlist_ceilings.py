@@ -37,10 +37,12 @@ PINNED = {
 # Reviewed growth after ORIGINAL_COMMIT (slice-1 fix rounds). Nothing else may be added.
 DELIBERATE_DELTA = {
     "routes/AUTHORITY_ALLOWLIST.ceiling.json": {
-        # a82a021: new 'unclassified' section, empty (handlers the parser cannot classify).
-        "unclassified": set(),
+        # a82a021: new 'unclassified' section (handlers the parser cannot classify). Fix round 2
+        # widened discovery to .use mounts: the four guard/parser middleware mounts below.
+        "unclassified": {"USE /api/lpbf", "USE /api/lpbf/sources", "USE /api/lpbf/runs", "USE /api/research/registry"},
         # b5d6ba8: the canned Materials Project search was unbound from the registry (review item 4).
-        "unbound": {"GET /api/materials-project/search"},
+        # Fix round 2 widened discovery to server.ts: its three infrastructure handlers.
+        "unbound": {"GET /api/materials-project/search", "GET /api/health", "GET /api/runtime-config", "ALL /api/*"},
     },
 }
 IGNORED_DIRS = {"node_modules", ".git", "dist", "graft", ".runtime"}
@@ -101,7 +103,7 @@ class PinnedCeilingTests(unittest.TestCase):
         self.assertEqual(growth(original, {"newKey": {"x"}}, {}), ["new key 'newKey'"])
         # The reviewed delta for the routes ceiling allows exactly one unbound entry more.
         delta = DELIBERATE_DELTA["routes/AUTHORITY_ALLOWLIST.ceiling.json"]
-        self.assertEqual(growth({"unbound": set()}, {"unbound": {"GET /api/materials-project/search", "GET /api/x"}, "unclassified": {"y"}}, delta),
+        self.assertEqual(growth({"unbound": set()}, {"unbound": {"GET /api/materials-project/search", "GET /api/x"}, "unclassified": {"USE /api/lpbf", "y"}}, delta),
                          ["unbound: GET /api/x", "unclassified: y"])
 
 
