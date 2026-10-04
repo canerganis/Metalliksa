@@ -14,6 +14,9 @@ import {
   convertStress,
   convertTemperature,
   interpretHardness,
+  HARDNESS_INTERPRETATION_NOTE,
+  HARDNESS_INTERPRETATION_UNAVAILABLE,
+  reportHardnessLine,
   interpretStressMpa,
   type TempUnit,
 } from "../src/utils/metallurgicalConversions";
@@ -180,7 +183,7 @@ test("dual-unit report: default scratchpad (Ti-6Al-4V, 34 HRC measured) is NOT c
       utsKsi: 137.8,
       hardnessMeasured: "34 HRC",
       hardnessConverted: null, // was 602 HV / 573 HBW (polynomial), then 336 / 319 (steel table applied to titanium)
-      hardnessText: "34 HRC (converted values: Unavailable, no verified conversion table for this alloy class)",
+      hardnessText: "34 HRC (converted values: Unavailable, no conversion table for this alloy class is implemented in this tool)",
       hrc: 34,
       hv: null,
       hbw: null,
@@ -327,12 +330,43 @@ test("hardness out-of-range notices", () => {
   assert.match(convertSteelHardness(39, "HRB").validRangeNote, /outside verified range \(HRB 55-100\)/);
 });
 
-test("hardness interpretation bands", () => {
-  assert.match(interpretHardness(159).condition, /^Dead Soft/);
-  assert.match(interpretHardness(160).condition, /^Normalized/);
-  assert.match(interpretHardness(449).condition, /^Quenched & Tempered/);
-  assert.match(interpretHardness(450).condition, /^Fully Hardened/);
-  assert.match(interpretHardness(750).condition, /^Super-Hard/);
+test("hardness interpretation bands (non-austenitic steels only)", () => {
+  const steel = (hv: number) => interpretHardness(hv, "non-austenitic-steel")!.condition;
+  assert.match(steel(159), /^Dead Soft/);
+  assert.match(steel(160), /^Normalized/);
+  assert.match(steel(449), /^Quenched & Tempered/);
+  assert.match(steel(450), /^Fully Hardened/);
+  assert.match(steel(750), /^Super-Hard Nitride Case$/);
+  // The bands were applied to any HV, e.g. a measured Ni-alloy 380 HV read "Quenched & Tempered" and an
+  // aluminium 120 HV read "Dead Soft / Solution Annealed". Every non-steel class now gets no band.
+  for (const cls of ["austenitic-steel", "titanium-alloy", "nickel-alloy", "aluminium-alloy", "hardmetal", "other"] as const) {
+    assert.equal(interpretHardness(380, cls), null, cls);
+  }
+  // No non-steel examples remain in the steel bands.
+  for (const hv of [100, 200, 300, 500, 800]) {
+    const text = JSON.stringify(interpretHardness(hv, "non-austenitic-steel"));
+    assert.doesNotMatch(text, /Inconel|copper|WC-Co|Cemented Carbide/i, String(hv));
+  }
+  assert.match(HARDNESS_INTERPRETATION_NOTE, /non-austenitic steels only/);
+  assert.match(HARDNESS_INTERPRETATION_UNAVAILABLE, /^Unavailable/);
+  // Review S2 (sources in metallurgicalConversions.ts): 300M landing gear at 52-55 HRC (~545-595 HV) belongs to the
+  // 450-750 band, not 280-450; normalized 4140 (302 HB ~ 318 HV) is not a 160-280 example; >= 750 HV is CBN-turnable;
+  // "Solution Annealed" is not a non-austenitic steel condition.
+  const band = (hv: number) => JSON.stringify(interpretHardness(hv, "non-austenitic-steel"));
+  assert.match(band(570), /300M landing gear/);
+  assert.doesNotMatch(band(400), /landing gear/);
+  assert.doesNotMatch(band(200), /4140/);
+  assert.match(band(318), /normalized or Q&T 4140/);
+  assert.match(band(800), /CBN hard turning/);
+  assert.doesNotMatch(band(800), /EDM|ultrasonic|only/);
+  assert.doesNotMatch(band(100), /Solution Annealed/);
+  assert.match(steel(100), /^Dead Soft \/ Annealed$/);
+});
+
+test("report hardness line: no placeholder value after 'Load Active Specimen' (review S2 code)", () => {
+  assert.equal(reportHardnessLine(true, "34 HRC (…)", null), "34 HRC (…)");
+  assert.equal(reportHardnessLine(false, "34 HRC (…)", "Hardness not loaded from the active specimen: x"), "not entered (Hardness not loaded from the active specimen: x)");
+  assert.equal(reportHardnessLine(false, "34 HRC", null), "not entered");
 });
 
 // Former BUG (studio lane, fixed 2026-10): the polynomials HV = 142.8 + 8.94 HRC + 0.134 HRC^2 and

@@ -53,6 +53,9 @@ import {
   pixelsToMicrons,
   rgbToLuminance,
   segmentLengthPx,
+  SEM_HARDNESS_UNAVAILABLE_NOTE,
+  SEM_NO_ANALYSIS_TEXT,
+  SEM_TENSILE_BASIS_TEXT,
 } from "../utils/semAnalysis";
 import type { AutomatedCVResults, LegendDetectionData } from "../utils/semAnalysis";
 
@@ -747,9 +750,9 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
       startY: mechY + 4,
       head: [["Property", "Computed Value", "Unit / Basis"]],
       body: [
-        ["Inferred Yield Strength (Rp0.2)", `${cvResults?.estimatedYieldStrengthMpa || 1150} MPa`, "Hall-Petch Calculation (σ₀ + k_y·d⁻¹/²)"],
-        ["Inferred Tensile Strength (Rm)", `${cvResults?.estimatedTensileStrengthMpa || 1380} MPa`, "ASTM E8/E8M"],
-        ["Vickers Hardness (HV)", `${cvResults?.estimatedHardnessHv || 420} HV`, "ASTM E384"],
+        ["Inferred Yield Strength (Rp0.2)", cvResults ? `${cvResults.estimatedYieldStrengthMpa} MPa` : SEM_NO_ANALYSIS_TEXT, "Hall-Petch screening estimate (σ₀ + k_y·d⁻¹/², generic σ₀), not measured"],
+        ["Inferred Tensile Strength (Rm)", cvResults ? `${cvResults.estimatedTensileStrengthMpa} MPa` : SEM_NO_ANALYSIS_TEXT, SEM_TENSILE_BASIS_TEXT],
+        ["Vickers Hardness (HV)", cvResults?.estimatedHardnessHv != null ? `${cvResults.estimatedHardnessHv} HV` : "Unavailable", (cvResults?.estimatedHardnessNote ?? SEM_HARDNESS_UNAVAILABLE_NOTE).replace(/^Unavailable: /, "")],
         ["ASTM E562 95% Confidence Interval", `± ${cvResults?.pointCountStats.confidenceInterval95Pct || 1.1}%`, "Relative Accuracy: " + (cvResults?.pointCountStats.relativeAccuracyPct || 3.8) + "%"],
       ],
       theme: "grid",
@@ -1580,10 +1583,10 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
               <div className="p-2.5 rounded-lg bg-[#050810] border border-[#162032]">
                 <div className="text-[10px] font-mono text-slate-400 uppercase">Inferred Yield Strength</div>
                 <div className="text-lg font-mono font-bold text-emerald-400 mt-0.5">
-                  {cvResults?.estimatedYieldStrengthMpa ?? 1080} MPa
+                  {cvResults ? `${cvResults.estimatedYieldStrengthMpa} MPa` : "Unavailable"}
                 </div>
                 <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                  Hardness: ~{cvResults?.estimatedHardnessHv ?? 420} HV
+                  {cvResults?.estimatedHardnessHv != null ? `Hardness: ~${cvResults.estimatedHardnessHv} HV (estimate)` : "Hardness: Unavailable (no verified relation)"}
                 </div>
               </div>
             </div>

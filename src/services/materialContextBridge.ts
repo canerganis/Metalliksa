@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { useMaterialStore, type MaterialSpecimen } from "../store/useMaterialStore";
+import { useMaterialStore, withHardnessEstimate, type MaterialSpecimen } from "../store/useMaterialStore";
 import { useMaterialSpecimenStore, deriveSpecimenProperties, type ActiveSpecimenState, type BaseMetalType } from "../store/useMaterialSpecimenStore";
 import { subscribeToPipelineMaterial, type PipelineMaterialPayload } from "../utils/materialDataPipeline";
 import { materialProfileIdentity } from "../utils/materialProfileIdentity";
@@ -29,16 +29,18 @@ function mirrorSharedMaterial(shared:ActiveSpecimenState): void {
     }
     return;
   }
-  const mirrored:MaterialSpecimen={
+  // HV is not mirrored by the old unsourced YS/3.1 rule: withHardnessEstimate below gives the labelled steel-only
+  // estimate (Pavlina & Van Tyne 2008) or Unavailable.
+  const mirrored:MaterialSpecimen=withHardnessEstimate({
     ...previous,id:shared.id,name:shared.name,chemicalFormula:shared.chemicalFormula,composition:{...shared.composition},unit:shared.unit,
     liquidus_C:shared.liquidus_C,solidus_C:shared.solidus_C,freezingRange_C:shared.freezingRange_C,solvus_C:shared.solvus_C,stablePhases:shared.stablePhases,
     yieldStrength_25C_MPa:shared.yieldStrength_25C_MPa,uts_25C_MPa:shared.uts_25C_MPa,youngsModulus_GPa:shared.youngsModulus_GPa,elongation_pct:shared.elongation_pct,
-    hardness_HV:Math.round(shared.yieldStrength_25C_MPa/3.1),lpbf:{...shared.lpbf},xrd:{...shared.xrd},
+    hardness_HV:null,lpbf:{...shared.lpbf},xrd:{...shared.xrd},
     sourceTab:shared.sourceTab,lastModified:shared.lastModified,isCustomModified:shared.isCustomModified,
     metadata:{...previous.metadata,id:shared.id,serialNumber:"",category:normalizeMaterialCategory(shared.category,shared.baseMetal),baseMetal:shared.baseMetal,density_gcm3:shared.density_gcm3,
       standardDesignation:"Unverified shared material profile",condition:"Unspecified",manufacturingRoute:"Unspecified",
       source:shared.materialTransfer?.sourceModule||shared.sourceTab,notes:"Shared material context. Derived properties remain screening estimates; no experimental validation is implied.",lastModified:shared.lastModified},
-  };
+  });
   useMaterialStore.setState({activeMaterialSpecimen:mirrored,activeSpecimen:mirrored});
 }
 
