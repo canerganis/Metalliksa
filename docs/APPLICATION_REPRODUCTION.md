@@ -73,6 +73,8 @@ $env:METALLIX_PYTHON = 'C:/verified-environment/Scripts/python.exe'
 npm start
 ```
 
+Run `npm start` from the application root. The server resolves `python/`, `dist/` and the default data directories against the working directory (`server/pythonRoot.ts`, `server/processOrchestrator.ts`, `server.ts`).
+
 Read `/api/python/status` on the application port. Require the expected interpreter version, `online: true`, and an active transport. On Windows the Python daemon binds HTTP and skips UNIX sockets. `warmModules` records imports only; `subsystemStatus: unverified` explicitly withholds solver availability. `/api/python/ipc-warmup` reports readiness and returns 503 before the daemon is ready; it does not run solver validation.
 
 Stop only the processes launched for this check. Keep the original checkout and preview separate.
@@ -96,3 +98,18 @@ Snapshot `1fc10dd` installed 354 packages with `npm ci` in 30 seconds. Type chec
 The clean snapshot's production server ran on separate ports 3016/5058 with the seven-package CPU Python environment. HTML returned HTTP 200; `/api/python/status` reported Python 3.12.10, HTTP transport, 17 imported modules and unverified subsystem status. Its test process tree was stopped. This snapshot did not include unrelated local UI edits.
 
 The subsequent [full scientific environment record](SCIENTIFIC_ENVIRONMENT_REPRODUCTION.md) completes the separate 94-package offline installation, import/range and GPU checks. Independent review of the accumulated A02 environment evidence is recorded there and in the roadmap; clean CPU/application reproduction alone did not close those requirements.
+
+## Production start regression — 2026-10-04
+
+Builds after the proxy-campaign contract work could not start with `npm start`. Two server modules derived `python/` from `import.meta.url`. In the esbuild CJS bundle (`dist/server.cjs`), `import.meta` is empty, so `node dist/server.cjs` threw `TypeError [ERR_INVALID_ARG_TYPE]` from `fileURLToPath` before it listened. This was reproduced on Windows with the locked interpreter. The V1 browser tour had used the tsx dev server, which does not have this problem.
+
+The fix is on branch `orch/prod-start-fix`. `python/` is now resolved against the working directory. `tests/server-production-bundle.test.ts` bundles the server with the `npm run build` esbuild flags and checks that the bundle loads and answers `/api/health`.
+
+After the fix, `npm run build` and `node dist/server.cjs` were run on 127.0.0.1:3040 / 5080 with the locked interpreter and isolated data roots. These requests returned HTTP 200:
+- `/api/health`
+- `/api/lpbf/capabilities`
+- `/` (the built `index.html`)
+- a built asset
+- `/api/python/status` (Python 3.12.10, daemon online)
+
+The process tree was then stopped. This is a start-up and serving check only. It is not a scientific or browser workflow check. The container results are in [APPLICATION_PACKAGING_NOTES.md](APPLICATION_PACKAGING_NOTES.md).

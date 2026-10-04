@@ -1,7 +1,7 @@
 # Unit test files excluded from CI and the Docker verify target.
 # One path per line, relative to the repo root. Lines starting with # are comments.
 # Everything else matched by tests/*.test.ts and tests/*.test.tsx (the same glob as
-# `npm run test:unit`) runs. As of 2026-10-04: 115 files, 1 excluded (114 run).
+# `npm run test:unit`) runs. As of 2026-10-04: 116 files, 1 excluded (115 run).
 # This file must stay LF (.gitattributes): with CRLF the `grep -vxF` match fails and nothing is excluded.
 #
 # Reason: starts the real python/lpbf_worker.py and relies on POSIX process-tree reaping
