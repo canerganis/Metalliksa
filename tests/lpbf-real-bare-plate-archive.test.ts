@@ -10,20 +10,17 @@
 // - fixtures/lpbf-real-bare-plate-100W-section-fields.npz is that job's real
 //   rectangular-corridor-section-fields.npz artifact (4998 bytes).
 //
-// The Python producer (python/lpbf_simulation.py) emits null for three keys on every
-// bare-plate run: analyticalComparison (line 880), fieldOverlapDiagnostics (lines 524/769)
-// and geometricDefectScreen (line 1091). This change only accepts the analyticalComparison
-// null. The other two are still rejected by parseSimulationJob ("Invalid field overlap
-// diagnostics", "Invalid geometric defect screening"); they are a separate, unfixed
-// producer/consumer mismatch, so the unmodified real run is recorded as a todo below and the
-// passing archive test removes exactly those two keys (BARE_PLATE_UNFIXED_NULLS).
+// The Python producer (python/lpbf_simulation.py) emits null for exactly three keys on every
+// bare-plate run (bare = surfaceMode == "bare-plate"): analyticalComparison (line 880),
+// fieldOverlapDiagnostics (lines 524/769) and geometricDefectScreen (line 1091). The consumer
+// accepts those nulls only when settings.surfaceMode is exactly "bare-plate".
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test, type TestContext } from 'node:test';
+import { test } from 'node:test';
 import { parseSimulationJob } from '../src/services/lpbfSimulationService';
 import { LpbfRunRepository, validateRunDocument, type RunCapture } from '../server/lpbfRunRepository';
 import { dryRunRunImport, importRun } from '../server/lpbfRunImport';
@@ -32,77 +29,96 @@ import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const NPZ = 'rectangular-corridor-section-fields.npz';
-const BARE_PLATE_UNFIXED_NULLS = ['fieldOverlapDiagnostics', 'geometricDefectScreen'];
+const BARE_PLATE_NULLS = {
+  analyticalComparison: /Invalid LPBF result contract/,
+  fieldOverlapDiagnostics: /Invalid field overlap diagnostics/,
+  geometricDefectScreen: /Invalid geometric defect screening/,
+} as const;
 const realCapture = (): RunCapture => JSON.parse(readFileSync(path.join(fixtures, 'lpbf-real-bare-plate-100W-capture.json'), 'utf8'));
 const realResult = () => JSON.parse(realCapture().resultJson);
-/** Real result minus only the two separately tracked bare-plate nulls. */
-function realResultWithoutUnfixedNulls() {
-  const result = realResult();
-  for (const key of BARE_PLATE_UNFIXED_NULLS) { assert.equal(result[key], null); delete result[key]; }
-  return result;
-}
 const completed = (result: unknown) => ({ id: realCapture().jobId, status: 'completed', progress: 1, log: '', error: null, result });
-const notResultContract = (error: unknown) => error instanceof Error && !/Invalid LPBF result contract/.test(error.message);
 
-test('fixture is the real producer output for a bare-plate run with a null analytical comparison', () => {
+test('fixture is the real producer output for a bare-plate run', () => {
   const capture = realCapture(), result = JSON.parse(capture.resultJson);
   assert.equal(capture.jobId, '7ec9dc57c4c14a40b98a0cbfd722d21d');
   assert.equal(capture.contractStatus, 'core-v1-bound');
   assert.equal(capture.runKind, 'transient-thermal');
   assert.equal(result.settings.surfaceMode, 'bare-plate');
   assert.equal(result.settings.barePlateGeometry, 'rectangular-corridor');
-  assert.equal(result.analyticalComparison, null);
+  for (const key of Object.keys(BARE_PLATE_NULLS)) assert.equal(result[key], null, key);
   const digest = (text: string) => createHash('sha256').update(text).digest('hex');
   assert.equal(digest(capture.inputJson), result.coreContract.inputSha256);
   assert.equal(digest(capture.materialJson), result.coreContract.materialSha256);
 });
 
-test('the real bare-plate null analytical comparison passes the result contract check', () => {
-  // Unmodified real result: the result contract check passes; parsing then stops at the
-  // separately tracked fieldOverlapDiagnostics null.
-  assert.throws(() => parseSimulationJob(completed(realResult())), notResultContract);
-  const parsed = parseSimulationJob(completed(realResultWithoutUnfixedNulls()));
+test('the unmodified real bare-plate result parses', () => {
+  const parsed = parseSimulationJob(completed(realResult()));
   assert.equal(parsed.status, 'completed');
   assert.equal(parsed.result?.analyticalComparison, null);
-  assert.equal((parsed.result?.settings as unknown as Record<string, unknown> | undefined)?.surfaceMode, 'bare-plate');
+  assert.equal(parsed.result?.fieldOverlapDiagnostics, null);
+  assert.equal(parsed.result?.geometricDefectScreen, null);
 });
 
-test('a null analytical comparison is still rejected unless settings.surfaceMode is exactly bare-plate', () => {
-  for (const surfaceMode of ['powder-layer', 'Bare-Plate', 'bare-plate ', '', null, undefined]) {
-    const result = realResultWithoutUnfixedNulls();
-    if (surfaceMode === undefined) delete result.settings.surfaceMode; else result.settings.surfaceMode = surfaceMode;
-    assert.throws(() => parseSimulationJob(completed(result)), /Invalid LPBF result contract/, String(surfaceMode));
-  }
-  const noSettings = realResultWithoutUnfixedNulls(); delete noSettings.settings;
-  assert.throws(() => parseSimulationJob(completed(noSettings)), /Invalid LPBF result contract/);
-});
+for (const [key, error] of Object.entries(BARE_PLATE_NULLS)) {
+  test(`${key}: null is rejected unless settings.surfaceMode is exactly bare-plate`, () => {
+    for (const surfaceMode of ['powder-layer', 'Bare-Plate', 'bare-plate ', '', null, undefined]) {
+      const result = realResult();
+      // Give the other bare-plate-null fields valid non-null shapes so only `key` is tested.
+      if (key !== 'analyticalComparison') result.analyticalComparison = { goldak: { width_um: 1, depth_um: 1, length_um: 1 } };
+      if (key !== 'fieldOverlapDiagnostics') delete result.fieldOverlapDiagnostics;
+      if (key !== 'geometricDefectScreen') delete result.geometricDefectScreen;
+      if (surfaceMode === undefined) delete result.settings.surfaceMode; else result.settings.surfaceMode = surfaceMode;
+      assert.throws(() => parseSimulationJob(completed(result)), error, `${key} ${String(surfaceMode)}`);
+    }
+  });
+}
 
-test('malformed analytical comparisons are still rejected for bare-plate results', () => {
+test('malformed analytical comparisons are still rejected for bare-plate results (missing key included)', () => {
   const valid = { width_um: 1, depth_um: 1, length_um: 1 };
   for (const analyticalComparison of [undefined, 'null', 0, false, [], [valid], { goldak: null },
     { goldak: { ...valid, width_um: -1 } }, { goldak: { ...valid, depth_um: 'x' } }, { goldak: { width_um: 1, depth_um: 1 } }]) {
-    const result = realResultWithoutUnfixedNulls();
+    const result = realResult();
     if (analyticalComparison === undefined) delete result.analyticalComparison;
     else result.analyticalComparison = analyticalComparison;
     assert.throws(() => parseSimulationJob(completed(result)), /Invalid LPBF result contract/, JSON.stringify(analyticalComparison));
   }
-  const withMap = realResultWithoutUnfixedNulls(); withMap.analyticalComparison = { goldak: valid };
+  const withMap = realResult(); withMap.analyticalComparison = { goldak: valid };
   assert.equal(parseSimulationJob(completed(withMap)).status, 'completed');
 });
 
-async function importBarePlate(t: TestContext, mutate: (result: Record<string, unknown>) => void) {
+test('malformed field overlap diagnostics are still rejected for bare-plate results', () => {
+  for (const fieldOverlapDiagnostics of ['null', 0, false, [], {}, { modelId: 'field-inter-track-overlap-v1' }]) {
+    const result = realResult(); result.fieldOverlapDiagnostics = fieldOverlapDiagnostics;
+    assert.throws(() => parseSimulationJob(completed(result)), /Invalid field overlap diagnostics/, JSON.stringify(fieldOverlapDiagnostics));
+  }
+});
+
+test('malformed geometric defect screens are still rejected for bare-plate results', () => {
+  for (const geometricDefectScreen of ['null', 0, false, [], {}, { modelId: 'elliptic-overlap-screening-v1' }]) {
+    const result = realResult(); result.geometricDefectScreen = geometricDefectScreen;
+    assert.throws(() => parseSimulationJob(completed(result)), /Invalid geometric defect screening/, JSON.stringify(geometricDefectScreen));
+  }
+});
+
+test('the unmodified real capture passes archive document validation', () => {
+  const capture = realCapture();
+  const document = validateRunDocument({ schemaVersion: 1, runId: capture.jobId, capture, sources: [] });
+  assert.equal(document.capture.resultJson, realCapture().resultJson);
+});
+
+test('the real bare-plate capture archives through the repository import path', async t => {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-real-bare-plate-'));
   const repository = new LpbfRunRepository(path.join(root, 'runs.sqlite'));
   const sources = new LpbfSourceRepository(path.join(root, 'sources.sqlite'));
   const store = new LpbfArtifactStore(path.join(root, 'store'));
   t.after(() => { repository.close(); sources.close(); rmSync(root, { recursive: true, force: true }); });
-  // Manifest reduction: the real manifest lists ~6 MB of field frames, SVGs and peak fields
-  // that are not checked in, so it keeps just the real section-field NPZ entry (real path,
-  // size and SHA-256). The bound inputJson/materialJson bytes are the real captured bytes.
+  // Manifest reduction only: the real manifest lists ~6 MB of field frames, SVGs and peak
+  // fields that are not checked in, so the artifact list keeps just the real section-field
+  // NPZ entry (real path, size and SHA-256). Every other result key and value, including the
+  // three bare-plate nulls, and the bound inputJson/materialJson bytes are the real ones.
   const capture = realCapture(), result = JSON.parse(capture.resultJson);
   result.artifacts = result.artifacts.filter((artifact: { path: string }) => artifact.path === NPZ);
   assert.equal(result.artifacts.length, 1);
-  mutate(result);
   capture.resultJson = JSON.stringify(result);
   const job = path.join(root, 'job'); mkdirSync(job);
   copyFileSync(path.join(fixtures, 'lpbf-real-bare-plate-100W-section-fields.npz'), path.join(job, NPZ));
@@ -114,17 +130,6 @@ async function importBarePlate(t: TestContext, mutate: (result: Record<string, u
   const saved = await importRun(repository, store, capture, [], sources, job);
   assert.equal(saved.runKind, 'transient-thermal');
   assert.equal(saved.document.capture.contractStatus, 'core-v1-bound');
-  assert.equal(JSON.parse(repository.get(capture.jobId)!.document.capture.resultJson).analyticalComparison, null);
-}
-
-test('a run built from the real bare-plate capture imports through the repository import path', async t => {
-  await importBarePlate(t, result => { for (const key of BARE_PLATE_UNFIXED_NULLS) delete result[key]; });
-});
-
-test('the unmodified real bare-plate capture archives', {
-  todo: 'blocked by the separate fieldOverlapDiagnostics/geometricDefectScreen bare-plate null mismatch',
-}, async t => {
-  const capture = realCapture();
-  validateRunDocument({ schemaVersion: 1, runId: capture.jobId, capture, sources: [] });
-  await importBarePlate(t, () => {});
+  const stored = JSON.parse(repository.get(capture.jobId)!.document.capture.resultJson);
+  for (const key of Object.keys(BARE_PLATE_NULLS)) assert.equal(stored[key], null, key);
 });
