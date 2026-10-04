@@ -2,90 +2,17 @@
 """
 MetalliX Python Ingestion & Analytics Engine for Battery and Corrosion Data
 Supports:
-1. User custom Python script execution (.py, .ipynb cells, or in-browser script)
-2. Direct REST API / python requests upload for Battery Cycling, EIS, Tafel, and OCP data
-3. ASTM G102 / G59 Corrosion Rate & Polarization Resistance solver
-4. Battery Galvanostatic Charge-Discharge, Coulombic Efficiency & dQ/dV Spectrogram solver
-5. EIS Nyquist/Bode extraction & Kramers-Kronig validation
+1. Battery Cycling, EIS, Tafel and OCP dataset analysis (stdin JSON, action "upload_and_analyze")
+2. ASTM G102 / G59 Corrosion Rate & Polarization Resistance solver
+3. Battery Galvanostatic Charge-Discharge, Coulombic Efficiency & dQ/dV Spectrogram solver
+4. EIS Nyquist/Bode extraction & Kramers-Kronig validation
 """
 
 import sys
 import json
 import math
-import cmath
 import time
-import io
 import traceback
-import re
-
-# =========================================================================
-# Lightweight Shim for numpy & pandas if user code does "import numpy as np"
-# =========================================================================
-class NumpyShim:
-    pi = math.pi
-    e = math.e
-    inf = float("inf")
-    nan = float("nan")
-
-    @staticmethod
-    def array(data, dtype=None):
-        if isinstance(data, list):
-            return list(data)
-        return [data]
-
-    @staticmethod
-    def mean(data):
-        return sum(data) / max(1, len(data))
-
-    @staticmethod
-    def std(data):
-        m = NumpyShim.mean(data)
-        return math.sqrt(sum((x - m) ** 2 for x in data) / max(1, len(data)))
-
-    @staticmethod
-    def linspace(start, stop, num=50):
-        if num <= 1:
-            return [start]
-        step = (stop - start) / (num - 1)
-        return [start + i * step for i in range(num)]
-
-    @staticmethod
-    def log10(x):
-        if isinstance(x, (list, tuple)):
-            return [math.log10(max(1e-12, val)) for val in x]
-        return math.log10(max(1e-12, x))
-
-    @staticmethod
-    def exp(x):
-        if isinstance(x, (list, tuple)):
-            return [math.exp(val) for val in x]
-        return math.exp(x)
-
-    @staticmethod
-    def diff(x):
-        return [x[i] - x[i - 1] for i in range(1, len(x))]
-
-    @staticmethod
-    def abs(x):
-        if isinstance(x, (list, tuple)):
-            return [abs(val) for val in x]
-        return abs(x)
-
-class PandasShim:
-    @staticmethod
-    def DataFrame(data=None, columns=None):
-        class DF(dict):
-            def __init__(self, initial=None):
-                super().__init__(initial or {})
-            def to_dict(self, orient="list"):
-                return dict(self)
-        if isinstance(data, dict):
-            return DF(data)
-        elif isinstance(data, list) and data and isinstance(data[0], dict):
-            keys = list(data[0].keys())
-            res = {k: [row.get(k) for row in data] for k in keys}
-            return DF(res)
-        return DF({})
 
 def require_observations(minimum=2, **columns):
     """Validate uploaded columns without generating or truncating measurements."""
@@ -441,104 +368,6 @@ def analyze_ocp_data(payload):
     }
 
 # =========================================================================
-# 5. USER SCRIPT EXECUTION ENGINE
-# =========================================================================
-def execute_user_python_script(script_code, custom_data=None):
-    """
-    Executes user custom Python code with pre-imported scientific shims,
-    captures stdout/stderr, and extracts structured battery/corrosion data.
-    """
-    captured_stdout = io.StringIO()
-    captured_stderr = io.StringIO()
-
-    # Build safe execution namespace
-    exec_env = {
-        "__name__": "__main__",
-        "math": math,
-        "cmath": cmath,
-        "json": json,
-        "re": re,
-        "np": NumpyShim,
-        "numpy": NumpyShim,
-        "pd": PandasShim,
-        "pandas": PandasShim,
-        "custom_data": custom_data or {},
-        "output_payload": {},
-        "results": {},
-    }
-
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    sys.stdout = captured_stdout
-    sys.stderr = captured_stderr
-
-    start_t = time.perf_counter()
-    script_error = None
-
-    try:
-        compiled = compile(script_code, "<user_script>", "exec")
-        exec(compiled, exec_env)
-    except Exception as e:
-        script_error = traceback.format_exc()
-    finally:
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-
-    duration_ms = round((time.perf_counter() - start_t) * 1000.0, 2)
-    stdout_text = captured_stdout.getvalue()
-    stderr_text = captured_stderr.getvalue()
-
-    # Check what data was generated or passed in
-    extracted_data = exec_env.get("output_payload") or exec_env.get("results") or exec_env.get("data") or {}
-
-    # Check if script printed JSON to stdout
-    if not extracted_data and stdout_text:
-        try:
-            # Look for JSON block in stdout
-            json_match = re.search(r"(\{.*\})", stdout_text, re.DOTALL)
-            if json_match:
-                extracted_data = json.loads(json_match.group(1))
-        except:
-            pass
-
-    # If user defined variables like voltage, capacity, etc. directly in global scope
-    if not extracted_data:
-        extracted_data = {}
-        for key in ["voltage", "capacity", "cycles", "retention", "potential_V", "current_A", "frequencies", "z_real", "z_imag", "time_s"]:
-            if key in exec_env and isinstance(exec_env[key], (list, tuple)):
-                extracted_data[key] = list(exec_env[key])
-
-    # Infer domain / data type
-    data_type = extracted_data.get("dataType") or "battery_cycling"
-    if "potential_V" in extracted_data or "current_A" in extracted_data or "current_uA" in extracted_data:
-        data_type = "corrosion_tafel"
-    elif "frequencies" in extracted_data or "zReal" in extracted_data or "z_real" in extracted_data:
-        data_type = "eis_impedance"
-    elif "time_s" in extracted_data and "potential_V" in extracted_data and len(extracted_data) <= 3:
-        data_type = "ocp_transient"
-
-    # Analyze data according to type
-    if data_type == "corrosion_tafel":
-        analysis = analyze_corrosion_tafel(extracted_data)
-    elif data_type == "eis_impedance":
-        analysis = analyze_eis_data(extracted_data)
-    elif data_type == "ocp_transient":
-        analysis = analyze_ocp_data(extracted_data)
-    else:
-        analysis = analyze_battery_data(extracted_data)
-
-    return {
-        "success": script_error is None,
-        "error": script_error,
-        "stdout": stdout_text,
-        "stderr": stderr_text,
-        "durationMs": duration_ms,
-        "analysis": analysis,
-        "extractedDataKeys": list(extracted_data.keys())
-    }
-
-
-# =========================================================================
 # CLI / IPC DISPATCHER
 # =========================================================================
 if __name__ == "__main__":
@@ -548,7 +377,6 @@ if __name__ == "__main__":
             "engine": "MetalliX Python Ingestion & Analytics Engine",
             "pythonVersion": sys.version,
             "capabilities": [
-                "User Python Script Execution (.py & .ipynb)",
                 "Battery Cycling & dQ/dV Differential Capacity Spectrogram",
                 "ASTM G102 & G59 Potentiodynamic Tafel Solver",
                 "EIS Impedance Nyquist/Bode Solver",
@@ -567,12 +395,7 @@ if __name__ == "__main__":
         action = payload.get("action", "upload_and_analyze")
         start_time = time.perf_counter()
 
-        if action == "execute_python_script":
-            script_code = payload.get("scriptCode") or payload.get("script") or ""
-            custom_data = payload.get("data")
-            res = execute_user_python_script(script_code, custom_data)
-
-        elif action == "upload_and_analyze":
+        if action == "upload_and_analyze":
             data_type = payload.get("dataType") or "battery_cycling"
             # Auto detect data type if not specified
             if not payload.get("dataType") and any(k in payload for k in ("current_A", "current_mA", "current_uA", "log_i")):

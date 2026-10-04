@@ -38,9 +38,21 @@ jobs:
           set -euo pipefail
           excluded="$(grep -v '^#' scripts/ci-unit-tests.txt | grep -v '^$' || true)"
           files="$(ls tests/*.test.ts tests/*.test.tsx | { grep -vxF "$excluded" || true; })"
+          # Guard (same as the Dockerfile verify stage): every listed exclusion must be one of the unit-test glob's files and absent
+          # from the run list. A CRLF copy of the list makes the grep above exclude nothing; this re-reads the list with
+          # CRs stripped and fails instead. Here-strings, not pipes: with pipefail a grep -q that exits early could
+          # SIGPIPE its writer and turn a match into a false negative.
+          all="$(ls tests/*.test.ts tests/*.test.tsx)"
+          for ex in $(grep -v '^#' scripts/ci-unit-tests.txt | tr -d '\r' | grep -v '^$' || true); do
+            grep -qxF -- "$ex" <<<"$all" \
+              || { echo "scripts/ci-unit-tests.txt lists a file outside the unit test glob (missing or renamed): $ex" >&2; exit 1; }
+            if grep -qxF -- "$ex" <<<"$files"; then echo "scripts/ci-unit-tests.txt exclusion not applied: $ex" >&2; exit 1; fi
+          done
           echo "Running $(echo "$files" | wc -l) test files"
           node_modules/.bin/tsx --test $files
       - run: npm run build
+      # Gzip ratchet on the built assets (scripts/bundle-budgets.json); reuses the dist/ from build.
+      - run: node scripts/check-bundle-size.mjs
 
   python:
     runs-on: ubuntu-latest
@@ -76,9 +88,19 @@ jobs:
           test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
           test_lpbf_worker_validation_error
           test_module_contract test_module_warm_parity test_allowlist_ceilings
-          test_phase6b_vector_parity
-      - name: Allowlist ceilings change only with a 'Ceiling-Review:' commit trailer
-        run: python scripts/check_ceiling_review.py "${{ github.event.pull_request.base.sha || github.event.before }}"
+          test_contract_keyhole_raytracing test_contract_uq_lab
+          test_phase6b_vector_parity test_stochastic_uq_evidence
+      # Runs the BASE revision's copy of the checker, so a change cannot weaken the check that
+      # reviews it; .github/CODEOWNERS (enforced by branch protection) covers the same paths.
+      - name: Allowlist ceilings and guard files change only with a 'Ceiling-Review:' commit trailer
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE//0/}" ]; then BASE="$(git rev-parse HEAD^)"; fi
+          git cat-file -e "$BASE:scripts/check_ceiling_review.py"
+          git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
         run: npm run test:lpbf:engineering
         continue-on-error: true

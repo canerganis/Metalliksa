@@ -140,7 +140,7 @@
     "workspace": "lpbf",
     "label": "Keyhole Ray Tracing",
     "scope": "Research",
-    "description": "Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.",
+    "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
     "next": "database"
   },
   {
