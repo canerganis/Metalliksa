@@ -14,107 +14,118 @@ import json
 import math
 import time
 
+import alloy_registry
+import physical_constants
+from input_validation import UNKNOWN_ALLOY, ValidationError, require_known_alloy, validation_envelope
+
 # Physical & Electrochemical Constants
-FARADAY_C_PER_MOL = 96485.33212  # C / mol (CODATA 2018)
+# Phase 6a structural step (a): R and F come from physical_constants but keep the
+# CODATA printed truncations used before the migration (8.314462618, 96485.33212),
+# so the output stays bit-identical. The switch to the exact SI products is the
+# separate value step (b).
+FARADAY_C_PER_MOL = physical_constants.TRUNCATED_FARADAY  # C / mol
 SECONDS_PER_YEAR = 31557600.0     # 365.25 days * 86400 s/day
 ASTM_K1 = 3.27e-3                 # mm * g / (uA * cm * year)
 ASTM_K2 = 8.954e-3                # g / (m^2 * day * (uA / cm^2))
 ASTM_K_MPY = 0.129                # mils * g / (uA * cm * year) -> mpy = mm/yr * 39.3701
-R_GAS = 8.314462618               # J / (mol * K)
+R_GAS = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol * K)
+ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
-# Standard Alloy Library with Stoichiometric Equivalent Weight & Density
-ALLOY_LIBRARY = {
-    "steel-316l": {
-        "name": "AISI 316L Stainless Steel",
-        "density_g_cm3": 7.98,
-        "ew": 25.68,
-        "composition": {"Fe": 0.655, "Cr": 0.170, "Ni": 0.120, "Mo": 0.025, "Mn": 0.020, "Si": 0.010},
-        "valencies": {"Fe": 2, "Cr": 3, "Ni": 2, "Mo": 3, "Mn": 2, "Si": 4},
-        "atomic_weights": {"Fe": 55.845, "Cr": 51.996, "Ni": 58.693, "Mo": 95.95, "Mn": 54.938, "Si": 28.085},
-        "activation_energy_j_mol": 32000.0,
-        "standard_e0_v": -0.08
-    },
-    "steel-304": {
-        "name": "AISI 304 Stainless Steel",
-        "density_g_cm3": 7.93,
-        "ew": 25.12,
-        "composition": {"Fe": 0.700, "Cr": 0.190, "Ni": 0.090, "Mn": 0.020},
-        "valencies": {"Fe": 2, "Cr": 3, "Ni": 2, "Mn": 2},
-        "atomic_weights": {"Fe": 55.845, "Cr": 51.996, "Ni": 58.693, "Mn": 54.938},
-        "activation_energy_j_mol": 34000.0,
-        "standard_e0_v": -0.15
-    },
-    "steel-1018": {
-        "name": "Carbon Steel (AISI 1018)",
-        "density_g_cm3": 7.87,
-        "ew": 27.92,
-        "composition": {"Fe": 0.985, "Mn": 0.008, "C": 0.002, "Si": 0.005},
-        "valencies": {"Fe": 2, "Mn": 2, "C": 4, "Si": 4},
-        "atomic_weights": {"Fe": 55.845, "Mn": 54.938, "C": 12.011, "Si": 28.085},
-        "activation_energy_j_mol": 42000.0,
-        "standard_e0_v": -0.44
-    },
-    "ti-6al-4v": {
-        "name": "Titanium Ti-6Al-4V (Grade 5)",
-        "density_g_cm3": 4.43,
-        "ew": 11.97,
-        "composition": {"Ti": 0.900, "Al": 0.060, "V": 0.040},
-        "valencies": {"Ti": 4, "Al": 3, "V": 3},
-        "atomic_weights": {"Ti": 47.867, "Al": 26.982, "V": 50.942},
-        "activation_energy_j_mol": 28000.0,
-        "standard_e0_v": 0.12
-    },
-    "al-7075": {
-        "name": "Aerospace Aluminum 7075-T6",
-        "density_g_cm3": 2.81,
-        "ew": 9.15,
-        "composition": {"Al": 0.895, "Zn": 0.056, "Mg": 0.025, "Cu": 0.016, "Cr": 0.004, "Fe": 0.004},
-        "valencies": {"Al": 3, "Zn": 2, "Mg": 2, "Cu": 2, "Cr": 3, "Fe": 2},
-        "atomic_weights": {"Al": 26.982, "Zn": 65.38, "Mg": 24.305, "Cu": 63.546, "Cr": 51.996, "Fe": 55.845},
-        "activation_energy_j_mol": 36000.0,
-        "standard_e0_v": -0.73
-    },
-    "al-6061": {
-        "name": "Structural Aluminum 6061-T6",
-        "density_g_cm3": 2.70,
-        "ew": 9.02,
-        "composition": {"Al": 0.970, "Mg": 0.010, "Si": 0.006, "Cu": 0.003, "Cr": 0.002, "Fe": 0.007},
-        "valencies": {"Al": 3, "Mg": 2, "Si": 4, "Cu": 2, "Cr": 3, "Fe": 2},
-        "atomic_weights": {"Al": 26.982, "Mg": 24.305, "Si": 28.085, "Cu": 63.546, "Cr": 51.996, "Fe": 55.845},
-        "activation_energy_j_mol": 35000.0,
-        "standard_e0_v": -0.70
-    },
-    "cu-c110": {
-        "name": "Pure Copper (ETP C11000)",
-        "density_g_cm3": 8.94,
-        "ew": 31.77,
-        "composition": {"Cu": 0.999},
-        "valencies": {"Cu": 2},
-        "atomic_weights": {"Cu": 63.546},
-        "activation_energy_j_mol": 30000.0,
-        "standard_e0_v": 0.05
-    },
-    "inconel-718": {
-        "name": "Nickel Superalloy Inconel 718",
-        "density_g_cm3": 8.19,
-        "ew": 26.45,
-        "composition": {"Ni": 0.525, "Cr": 0.190, "Fe": 0.185, "Nb": 0.050, "Mo": 0.030, "Ti": 0.009, "Al": 0.005},
-        "valencies": {"Ni": 2, "Cr": 3, "Fe": 2, "Nb": 5, "Mo": 3, "Ti": 4, "Al": 3},
-        "atomic_weights": {"Ni": 58.693, "Cr": 51.996, "Fe": 55.845, "Nb": 92.906, "Mo": 95.95, "Ti": 47.867, "Al": 26.982},
-        "activation_energy_j_mol": 38000.0,
-        "standard_e0_v": 0.15
-    },
-    "az31b": {
-        "name": "Magnesium Alloy AZ31B",
-        "density_g_cm3": 1.77,
-        "ew": 12.28,
-        "composition": {"Mg": 0.960, "Al": 0.030, "Zn": 0.010},
-        "valencies": {"Mg": 2, "Al": 3, "Zn": 2},
-        "atomic_weights": {"Mg": 24.305, "Al": 26.982, "Zn": 65.38},
-        "activation_energy_j_mol": 29000.0,
-        "standard_e0_v": -1.65
-    }
+# Alloy data (density, EW, composition, valencies, Ea, E0) lives in
+# alloy_registry (domain "corrosion"); atomic weights come from
+# physical_constants.STANDARD_ATOMIC_WEIGHTS. Only the display labels this solver
+# has always reported stay here, keyed by registry id.
+DEFAULT_ALLOY_ID = "steel-316l"
+_CORROSION_DISPLAY_NAME = {
+    "ss316l": "AISI 316L Stainless Steel",
+    "ss304": "AISI 304 Stainless Steel",
+    "steel1018": "Carbon Steel (AISI 1018)",
+    "ti6al4v": "Titanium Ti-6Al-4V (Grade 5)",
+    "al7075": "Aerospace Aluminum 7075-T6",
+    "al6061": "Structural Aluminum 6061-T6",
+    "cu_c110": "Pure Copper (ETP C11000)",
+    "in718": "Nickel Superalloy Inconel 718",
+    "az31b": "Magnesium Alloy AZ31B",
 }
+
+
+# The registry record "ti6al4v" also carries the LPBF ELI / Grade 23 names, but the
+# only titanium corrosion preset here is Ti-6Al-4V Grade 5. Only these names (as
+# normalised by alloy_registry.normalise_name) may consume that preset; every other
+# name that resolves to "ti6al4v" (e.g. "Ti-6Al-4V ELI", "... Grade 23") is refused.
+_TI_GRADE5_PRESET_NAMES = frozenset({
+    "ti-6al-4v", "ti6al4v", "ti64", "titanium ti-6al-4v (grade 5)", "ti-6al-4v grade 5",
+    "ti-6al-4v grade 5 titanium", "ti-6al-4v grade 5 (ams 4928)", "ti-6al-4v grade 5 (aero am)",
+    "ti-6al-4v (grade 5 alpha-beta)", "ti64-ams4928",
+})
+
+
+def corrosion_preset(alloy_id: str) -> dict:
+    """Registry-backed alloy preset. Raises ValidationError(UNKNOWN_ALLOY) instead of
+    silently substituting AISI 316L for an unknown id."""
+    record = require_known_alloy(alloy_id, alloy_registry.DOMAIN_CORROSION, field="alloyId")
+    if record.id == "ti6al4v" and alloy_registry.normalise_name(alloy_id) not in _TI_GRADE5_PRESET_NAMES:
+        raise ValidationError(
+            UNKNOWN_ALLOY, "alloyId",
+            f"Alloy {alloy_id!r} is a titanium variant without a corrosion preset; the only "
+            "titanium preset is Ti-6Al-4V Grade 5 ('ti-6al-4v'). Send that id, or supply "
+            "alloyName, density_g_cm3, equivalentWeight and activationEnergyJ_mol.",
+            {"name": repr(alloy_id), "domain": alloy_registry.DOMAIN_CORROSION,
+             "reason": "variant-without-preset", "presetAlloy": "ti-6al-4v"},
+        )
+    table = record.domains[alloy_registry.DOMAIN_CORROSION]
+    composition = dict(table["composition"].value)
+    return {
+        "registry_id": record.id,
+        "name": _CORROSION_DISPLAY_NAME[record.id],
+        "density_g_cm3": table["density_g_cm3"].value,
+        "ew": table["ew"].value,
+        "composition": composition,
+        "valencies": dict(table["valencies"].value),
+        "atomic_weights": {el: physical_constants.atomic_weight(el) for el in composition},
+        "activation_energy_j_mol": table["activation_energy_j_mol"].value,
+        "standard_e0_v": table["standard_e0_v"].value,
+    }
+
+
+class _LazyPreset:
+    """Resolves the alloy only when a preset value is actually consumed.
+
+    The solver reads preset values only for fields the caller did not supply, so an
+    unknown alloyId is an error exactly where the old code would have silently used
+    the AISI 316L preset, and nowhere else.
+    """
+
+    def __init__(self, alloy_id: str):
+        self.alloy_id = alloy_id
+        self._preset = None
+
+    def _resolve(self) -> dict:
+        if self._preset is None:
+            self._preset = corrosion_preset(self.alloy_id)
+        return self._preset
+
+    def __getitem__(self, key):
+        return self._resolve()[key]
+
+    def get(self, key, default=None):
+        return self._resolve().get(key, default)
+
+    @property
+    def registry_id(self):
+        return None if self._preset is None else self._preset["registry_id"]
+
+
+def _provenance(preset: "_LazyPreset") -> dict:
+    return {
+        "registryVersion": alloy_registry.REGISTRY_VERSION,
+        "constantsVersion": physical_constants.CONSTANTS_VERSION,
+        "registryAlloyId": preset.registry_id,
+        "gasConstantR_J_molK": R_GAS,
+        "faraday_C_mol": FARADAY_C_PER_MOL,
+        "constantsNote": "CODATA printed truncations of R and F (pre-migration values); "
+                         "exact SI values are pending the Phase 6a value step.",
+    }
 
 def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weights: dict) -> float:
     """
@@ -197,8 +208,8 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     temp_c = float(data.get("temperatureC") or data.get("tempC") or 25.0)
 
     # 2. Material Substrate Lookup or Custom
-    alloy_id = str(data.get("alloyId") or data.get("materialId") or "steel-316l").lower()
-    preset = ALLOY_LIBRARY.get(alloy_id, ALLOY_LIBRARY["steel-316l"])
+    alloy_id = str(data.get("alloyId") or data.get("materialId") or DEFAULT_ALLOY_ID).lower()
+    preset = _LazyPreset(alloy_id)
 
     alloy_name = data.get("alloyName") or preset["name"]
     density = float(data.get("density_g_cm3") or preset["density_g_cm3"])
@@ -280,10 +291,10 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     rul_pitting_years = (allowable_loss_mm / (cr_mm_yr * pitting_acceleration_factor)) if cr_mm_yr > 0 else 999.0
 
     # 6. Temperature Sensitivity (Arrhenius Model from 5°C to 85°C)
-    t_ref_k = temp_c + 273.15
+    t_ref_k = temp_c + ZERO_CELSIUS_K
     temp_sensitivity = []
     for t_test_c in range(5, 90, 10):
-        t_test_k = t_test_c + 273.15
+        t_test_k = t_test_c + ZERO_CELSIUS_K
         # Arrhenius: i_corr(T) = i_corr_ref * exp( (-Ea / R) * (1/T - 1/T_ref) )
         exponent = (-ea_j_mol / R_GAS) * (1.0 / t_test_k - 1.0 / t_ref_k)
         # clamp exponent to avoid numerical overflow
@@ -386,7 +397,10 @@ print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
         "temperatureSensitivity": temp_sensitivity,
         
         # Reproducibility Snippet
-        "pythonCode": reproducible_python_code
+        "pythonCode": reproducible_python_code,
+
+        # Phase 6a provenance (registry / constants versions)
+        "provenance": _provenance(preset),
     }
 
 def linear_regression_py(x_arr, y_arr):
@@ -539,8 +553,8 @@ def fit_tafel_curve(data: dict) -> dict:
     beta_c_mv_dec = beta_c_v_dec * 1000.0
 
     # Substrate & Annual Corrosion Rate
-    alloy_id = str(data.get("alloyId") or data.get("materialId") or "steel-316l").lower()
-    preset = ALLOY_LIBRARY.get(alloy_id, ALLOY_LIBRARY["steel-316l"])
+    alloy_id = str(data.get("alloyId") or data.get("materialId") or DEFAULT_ALLOY_ID).lower()
+    preset = _LazyPreset(alloy_id)
     alloy_name = data.get("alloyName") or preset["name"]
     density = float(data.get("density_g_cm3") or preset["density_g_cm3"])
     ew = float(data.get("equivalentWeight") or preset["ew"])
@@ -632,6 +646,7 @@ def fit_tafel_curve(data: dict) -> dict:
         "pointsCount": len(norm_points),
         "minScanE": round(min_scan_e, 4),
         "maxScanE": round(max_scan_e, 4),
+        "provenance": _provenance(preset),
     }
 
 def main():
@@ -649,12 +664,17 @@ def main():
         else:
             result = solve_tafel_corrosion_rate(input_data)
         print(json.dumps(result))
+    except ValidationError as e:
+        # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+        print(json.dumps(validation_envelope(e)))
+        sys.exit(2)
     except Exception as e:
         err_res = {
             "success": False,
             "error": str(e),
             "isPythonEngine": True,
-            "durationMs": 0.0
+            "durationMs": 0.0,
+            "errorKind": "internal",
         }
         print(json.dumps(err_res))
         sys.exit(1)

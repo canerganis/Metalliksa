@@ -6,6 +6,7 @@
 
 import { TafelDataset, TafelFitResult } from "../types/tafel";
 import { autoFitTafel } from "./tafelParser";
+import { isPythonValidationError, validationErrorFromResponse } from "./pythonValidationError";
 
 export interface PythonFitOptions {
   customCathodicRange?: [number, number];
@@ -45,6 +46,8 @@ export async function executePythonTafelFit(
     });
 
     if (!res.ok) {
+      const validation = await validationErrorFromResponse(res, "Tafel fit");
+      if (validation) throw validation;
       throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
     }
 
@@ -110,6 +113,8 @@ export async function executePythonTafelFit(
 
     return fitResult;
   } catch (err) {
+    // Invalid input (e.g. unknown alloy): surface it, never substitute the client fit.
+    if (isPythonValidationError(err)) throw err;
     console.warn("Python Tafel engine call failed, running local browser fallback:", err);
     // Graceful fallback to client-side ASTM mathematical engine
     const local = autoFitTafel(

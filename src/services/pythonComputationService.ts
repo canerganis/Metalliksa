@@ -17,6 +17,7 @@ import {
   TafelPythonCorrosionRateResult,
 } from "../types/tafel";
 import { createSeededRandom } from "../utils/seededRandom";
+import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 
 export interface PersistentIPCDiagnostics {
   success: boolean;
@@ -1485,6 +1486,8 @@ class PythonComputationService {
     });
 
     if (!res.ok) {
+      const validation = await validationErrorFromResponse(res, "Pourbaix");
+      if (validation) throw validation;
       throw new Error(`Pourbaix proxy error: HTTP ${res.status}`);
     }
 
@@ -1758,6 +1761,7 @@ class PythonComputationService {
   async calculateTafelCorrosionRate(
     payload: TafelPythonCorrosionRateInput
   ): Promise<TafelPythonCorrosionRateResult> {
+    let validation: PythonValidationError | null = null;
     try {
       const res = await fetch("/api/python/tafel-corrosion-rate", {
         method: "POST",
@@ -1773,10 +1777,15 @@ class PythonComputationService {
             isPythonEngine: true,
           };
         }
+      } else {
+        validation = await validationErrorFromResponse(res, "Tafel");
       }
     } catch (err) {
       console.warn("Tafel Corrosion Rate Python proxy error, using client fallback:", err);
     }
+
+    // Invalid input (e.g. unknown alloy): never substitute the client formula.
+    if (validation) throw validation;
 
     // Client-side fallback with exact same ASTM G102 formulas
     return fallbackClientTafelCorrosionRate(payload);

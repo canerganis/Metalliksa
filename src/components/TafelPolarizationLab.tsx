@@ -59,6 +59,7 @@ import { useDigitalTwin } from "../context/DigitalTwinContext";
 import { PythonAnnualCorrosionRateModule } from "./PythonAnnualCorrosionRateModule";
 import { D3TafelPolarizationChart } from "./D3TafelPolarizationChart";
 import { executePythonTafelFit } from "../utils/tafelPythonService";
+import { isPythonValidationError } from "../utils/pythonValidationError";
 
 interface TafelPolarizationLabProps {
   onDatasetLoaded?: (dataset: TafelDataset) => void;
@@ -113,6 +114,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
   // Python Engine Integration & D3 Visualizer State
   const [pythonFitResult, setPythonFitResult] = useState<TafelFitResult | null>(null);
   const [isPythonFitting, setIsPythonFitting] = useState<boolean>(false);
+  const [pythonFitError, setPythonFitError] = useState<string | null>(null);
   const [activeChartEngine, setActiveChartEngine] = useState<"d3" | "recharts">("d3");
 
   // Sync alloy preset selection with inputs
@@ -223,7 +225,13 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
           alloyId: selectedAlloyId,
         });
         setPythonFitResult(res);
+        setPythonFitError(null);
       } catch (err) {
+        if (isPythonValidationError(err)) {
+          // Rejected input: drop the previous Python fit instead of showing it as current.
+          setPythonFitResult(null);
+          setPythonFitError(err.message);
+        }
         console.error("Failed to execute Python Tafel fitting:", err);
       } finally {
         setIsPythonFitting(false);
@@ -1116,6 +1124,13 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 </button>
               </div>
             </div>
+
+            {pythonFitError && (
+              <div role="alert" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-mono">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{pythonFitError} (showing the client-side fit instead; the Python fit was rejected)</span>
+              </div>
+            )}
 
             {/* D3.js Interactive Vector Visualizer */}
             {activeChartEngine === "d3" ? (

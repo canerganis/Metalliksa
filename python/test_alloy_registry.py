@@ -143,10 +143,15 @@ class CopiedTableDriftTest(unittest.TestCase):
             self.assertEqual(reg.REGISTRY[aid].value("hardness_HV", reg.DOMAIN_FATIGUE_SCREENING), hv)
 
     def test_corrosion_table(self):
-        import tafel_corrosion_rate_solver as tafel
-        self.assertEqual(set(reg._CORROSION_SOURCE_NAME.values()), set(tafel.ALLOY_LIBRARY))
+        # tafel_corrosion_rate_solver no longer holds ALLOY_LIBRARY (Phase 6a structural
+        # migration); compare with the snapshot of that table taken at the base revision.
+        import json
+        from pathlib import Path
+        snapshot = Path(__file__).parent / "golden" / "phase6a" / "tafel_corrosion_rate_solver" / "_source_tables.json"
+        library = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
+        self.assertEqual(set(reg._CORROSION_SOURCE_NAME.values()), set(library))
         for aid, src_name in reg._CORROSION_SOURCE_NAME.items():
-            src = tafel.ALLOY_LIBRARY[src_name]
+            src = library[src_name]
             table = reg.REGISTRY[aid].domains[reg.DOMAIN_CORROSION]
             for key, rec in table.items():
                 value = dict(rec.value) if key in ("composition", "valencies") else rec.value
