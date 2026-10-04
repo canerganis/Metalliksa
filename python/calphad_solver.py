@@ -47,7 +47,15 @@ except Exception as e:
     PYCALPHAD_AVAILABLE = False
     PYCALPHAD_VERSION = str(e)
 
-GAS_CONSTANT_R = 8.314462618  # J / (mol*K)
+import physical_constants
+from alloy_data_calphad_battery_icme import CALPHAD_ELEMENTS, provenance as _domain_data_provenance
+from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+
+# Phase 6a structural step (a): R and the Celsius offset come from physical_constants
+# but keep the CODATA printed truncation used before the migration (8.314462618), so
+# the output stays bit-identical. The switch to the exact SI product is step (b).
+GAS_CONSTANT_R = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol*K)
+ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # Directory containing open-source TDB databases
 DATABASES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databases")
@@ -55,14 +63,10 @@ DATABASES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databa
 # Global in-memory cache for loaded pycalphad Database objects
 _TDB_CACHE: Dict[str, Any] = {}
 
-# Standard atomic weights (g/mol)
-ATOMIC_WEIGHTS = {
-    "H": 1.008, "B": 10.81, "C": 12.011, "N": 14.007, "O": 15.999, "Mg": 24.305,
-    "Al": 26.982, "Si": 28.085, "Ti": 47.867, "V": 50.942, "Cr": 51.996, "Mn": 54.938,
-    "Fe": 55.845, "Co": 58.933, "Ni": 58.693, "Cu": 63.546, "Zn": 65.38, "Y": 88.906,
-    "Zr": 91.224, "Nb": 92.906, "Mo": 95.95, "Ru": 101.07, "Hf": 178.49, "Ta": 180.95,
-    "W": 183.84, "Re": 186.21, "Pt": 195.08, "Au": 196.97
-}
+# Standard atomic weights (g/mol): CIAAW 2021 abridged values from physical_constants
+# for the solver's element set (identical to the pre-migration literals). An element
+# outside this set is a validation error; there is no 50.0 g/mol fallback.
+ATOMIC_WEIGHTS = {el: physical_constants.atomic_weight(el) for el in CALPHAD_ELEMENTS}
 
 # New-PHACOMP Electron Hole Numbers (N_v) and d-orbital energy levels (Md in eV)
 PHACOMP_DATA = {
@@ -186,6 +190,16 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     if not clean:
         clean = {"Ni": 80.0, "Al": 10.0, "Cr": 10.0}
 
+    for el in clean:
+        if el not in ATOMIC_WEIGHTS:
+            # Phase 6a: no silent 50.0 g/mol substitute for an unknown element.
+            raise ValidationError(
+                UNKNOWN_ELEMENT, f"elements.{el}",
+                f"No atomic weight for element {el!r} in the CALPHAD element set; "
+                f"supported: {', '.join(ATOMIC_WEIGHTS)}.",
+                {"element": el, "supported": list(ATOMIC_WEIGHTS)},
+            )
+
     total = sum(clean.values())
     if total <= 0:
         total = 1.0
@@ -193,12 +207,12 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     if unit == "at_pct":
         at_frac = {el: val / total for el, val in clean.items()}
         # Compute wt%
-        mw_mix = sum(at_frac[el] * ATOMIC_WEIGHTS.get(el, 50.0) for el in at_frac)
-        wt_pct = {el: (at_frac[el] * ATOMIC_WEIGHTS.get(el, 50.0) / mw_mix) * 100.0 for el in at_frac}
+        mw_mix = sum(at_frac[el] * ATOMIC_WEIGHTS[el] for el in at_frac)
+        wt_pct = {el: (at_frac[el] * ATOMIC_WEIGHTS[el] / mw_mix) * 100.0 for el in at_frac}
     else:
         wt_pct = {el: (val / total) * 100.0 for el, val in clean.items()}
         # Convert wt% to moles
-        moles = {el: (pct / 100.0) / ATOMIC_WEIGHTS.get(el, 50.0) for el, pct in wt_pct.items()}
+        moles = {el: (pct / 100.0) / ATOMIC_WEIGHTS[el] for el, pct in wt_pct.items()}
         tot_moles = sum(moles.values())
         at_frac = {el: m / tot_moles for el, m in moles.items()}
 
@@ -372,8 +386,8 @@ def solve_pycalphad_equilibrium(
     phases = list(dbf.phases.keys())
 
     # Build temperature grid
-    t_start_k = max(298.15, t_min_c + 273.15)
-    t_end_k = min(3000.0, t_max_c + 273.15)
+    t_start_k = max(298.15, t_min_c + ZERO_CELSIUS_K)
+    t_end_k = min(3000.0, t_max_c + ZERO_CELSIUS_K)
     num_steps = max(5, min(80, int(round((t_end_k - t_start_k) / t_step_c)) + 1))
     temp_grid_k = [round(float(t_start_k + i * (t_end_k - t_start_k) / (num_steps - 1)), 2) for i in range(num_steps)]
 
@@ -424,7 +438,7 @@ def solve_pycalphad_equilibrium(
     }
 
     for i, t_k in enumerate(t_coords):
-        t_c = round(t_k - 273.15, 1)
+        t_c = round(t_k - ZERO_CELSIUS_K, 1)
 
         # Molar Gibbs Free Energy (J/mol)
         gm_j_mol = float(eq.GM.values[0, 0, i, 0, 0]) if len(eq.GM.shape) == 5 else float(eq.GM.values.flat[i])
@@ -887,7 +901,7 @@ def evaluate_subregular_thermodynamic_state(
     Evaluates exact thermodynamic phase constitution, Gibbs energy, activities,
     and chemical potentials at a single temperature point.
     """
-    t_k = t_c + 273.15
+    t_k = t_c + ZERO_CELSIUS_K
     t_liq_c = boundaries["liquidusC"]
     t_sol_c = boundaries["solidusC"]
     gamma_prime_solvus_c = boundaries["gammaPrimeSolvusC"]
@@ -1405,14 +1419,28 @@ def main():
             boundary_refinement=boundary_refinement,
             min_refine_step_c=min_refine_step
         )
+        # Phase 6a provenance (constants version, the R actually used, domain data)
+        result["provenance"] = {
+            "constantsVersion": physical_constants.CONSTANTS_VERSION,
+            "gasConstantR_J_molK": GAS_CONSTANT_R,
+            "atomicWeightsSource": physical_constants.CIAAW_SOURCE,
+            **_domain_data_provenance(),
+            "constantsNote": "CODATA printed truncation of R (pre-migration value); "
+                             "the exact SI value is pending the Phase 6a value step.",
+        }
         print(json.dumps(result))
 
+    except ValidationError as e:
+        # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+        print(json.dumps(validation_envelope(e)))
+        sys.exit(2)
     except Exception as e:
         sys.stderr.write(f"CALPHAD Python Error: {str(e)}\n")
         print(json.dumps({
             "success": False,
             "error": str(e),
-            "engine": "pycalphad-open-tdb"
+            "engine": "pycalphad-open-tdb",
+            "errorKind": "internal",
         }))
         sys.exit(1)
 
