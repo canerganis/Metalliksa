@@ -158,6 +158,14 @@ solvers {
 PIMPLE { nOuterCorrectors 1; nCorrectors 2; nNonOrthogonalCorrectors 0; }
 ''')
 
+    # VERIFICATION-CASE CONSTANTS, NOT ALLOY PROPERTIES (design 5c, wording only):
+    # the metal values written below (rho 4000, nu 7.5e-07, sigma/sigma0 1.52,
+    # dSigmaDT -2.6e-4, kMetal 30, cpMetal 500, latentHeat 2.86e5, latentHeatVap 7.4e6,
+    # molarMass 0.046, evapCoeff 0.82) are fixed CFD verification-case inputs. They ignore the selected
+    # material; only solidus_T, liquidus_T, Tref_sigma, boiling_T and the absorptivity come
+    # from m. This experimental CFD path is unreachable from lpbf_simulation.run() and is
+    # outside the LPBF implementation fingerprint; replacing these with registry values
+    # would be a scientific change with its own drift record, not a cleanup.
     (folder/"constant/g").write_text(foam_header("dictionary", "g", "constant") + "dimensions [0 1 -2 0 0 0 0];\nvalue (0 0 -9.81);\n")
     (folder/"constant/momentumTransport").write_text(foam_header("dictionary", "momentumTransport", "constant") + "simulationType laminar;\n")
     (folder/"constant/phaseProperties").write_text(foam_header("dictionary", "phaseProperties", "constant") + "phases (metal gas);\nsigma 1.52;\n")
