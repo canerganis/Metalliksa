@@ -609,6 +609,8 @@ class PythonComputationService {
   private statusCache: PythonEngineStatus | null = null;
   private lastCheckTime = 0;
   private statusInflight: Promise<PythonEngineStatus> | null = null;
+  private statusSeq = 0;
+  private statusAppliedSeq = 0;
 
   async runLpbfBayesianOptimization(data: any): Promise<PythonBayesianOptimizationResult> {
     const res = await fetch("/api/python/lpbf-bayesian-optimize", {
@@ -927,6 +929,8 @@ class PythonComputationService {
   }
 
   private async requestEngineStatus(now: number): Promise<PythonEngineStatus> {
+    const seq = ++this.statusSeq;
+    let result: PythonEngineStatus;
     try {
       const res = await fetch("/api/python/status", {
         method: "GET",
@@ -938,7 +942,7 @@ class PythonComputationService {
       }
 
       const data = await res.json();
-      this.statusCache = {
+      result = {
         online: data.success === true || data.status === "online" || data.status === "ready",
         status: data.status || "online",
         pythonVersion: data.pythonVersion ?? undefined,
@@ -950,17 +954,19 @@ class PythonComputationService {
         subsystems: data.subsystems,
         subsystemStatus: typeof data.subsystemStatus === "string" ? data.subsystemStatus : undefined,
       };
-      this.lastCheckTime = now;
-      return this.statusCache;
     } catch (err: any) {
-      this.statusCache = {
+      result = {
         online: false,
         status: "client_fallback",
         durationMs: 0,
       };
-      this.lastCheckTime = now;
-      return this.statusCache;
     }
+    // An older request that finishes after a newer (e.g. forced) one must not overwrite its answer.
+    if (seq < this.statusAppliedSeq && this.statusCache) return this.statusCache;
+    this.statusAppliedSeq = seq;
+    this.statusCache = result;
+    this.lastCheckTime = now;
+    return result;
   }
 
   /**
