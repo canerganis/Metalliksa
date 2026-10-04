@@ -51,7 +51,9 @@ observation key), comma-separated or repeated:
   peakInterpolatedMeltPool, midTrack*, massBalance, numericalDiagnostics, phaseAudit,
   settings, discretization, scanPath) fail whatever the allowlist.
 - Honesty observations (validationStatus, productionReady, coreContract.solverId, confidence,
-  effectiveMode, with or without .key.) never drift in ANY case, whatever the allowlist.
+  effectiveMode, experimentalValidation, experimentalComparison, unresolvedPhysics,
+  opticalOperatorMatched, each with or without .key., and the G9 observation
+  in625.validateScreeningAdmission) never drift in ANY case, whatever the allowlist.
 - With --allow-environment-mismatch a drift run ends DIAGNOSTIC (exit 3), never PASS.
 
 --record refuses to overwrite an existing golden without --force, and refuses to
@@ -1507,7 +1509,14 @@ REFERENCE_NUMERICS_PATTERNS = (
 HONESTY_PATTERNS = (
     "*.validationStatus", "*.key.validationStatus", "*.productionReady", "*.key.productionReady",
     "*.coreContract.solverId", "*.key.confidence", "*.confidence", "*.effectiveMode",
-    "validationStatus", "productionReady", "confidence", "effectiveMode")
+    "validationStatus", "productionReady", "confidence", "effectiveMode",
+    # Review rr2 S2: the evidence-honesty flags and the G9 IN625 screening admission verdict.
+    "*.experimentalValidation", "*.key.experimentalValidation",
+    "*.experimentalComparison", "*.key.experimentalComparison",
+    "*.unresolvedPhysics", "*.key.unresolvedPhysics",
+    "*.opticalOperatorMatched", "*.key.opticalOperatorMatched",
+    "in625.validateScreeningAdmission",
+    "experimentalValidation", "experimentalComparison", "unresolvedPhysics", "opticalOperatorMatched")
 GLOB_CHARACTERS = "*?["
 
 
