@@ -33,7 +33,7 @@ opt-in (--slow or --case). Everything else runs in about one minute.
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_parity_check.py --list
     python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...] [--expect-unpinned]
-        [--expect-drift CASE[,CASE...]]
+        [--expect-drift CASE[:KEY_GLOB][,...]]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
 
 --expect-drift (corrected-physics bump), entries CASE or CASE:KEY_GLOB (fnmatch on the
