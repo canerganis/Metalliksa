@@ -8,7 +8,11 @@ import {
   FUZZY_SCORE_CAP, commitPaletteChoice, handlePaletteInputKey, isComposingKey, normalizeForSearch, paletteChoice, paletteKeyAction,
   rankPaletteEntries, scorePaletteEntry, subsequenceScore, type PaletteEffects, type PaletteEntry,
 } from '../src/utils/commandPalette';
-import { isPaletteShortcut, paletteShortcutLabel } from '../src/hooks/useCommandPaletteShortcut';
+import {
+  canOpenPalette, createShortcutListener, isApplePlatform, isPaletteShortcut, paletteShortcutDecision, paletteShortcutKeys,
+  paletteShortcutLabel, visibleModalOpen, type PaletteGate,
+} from '../src/hooks/useCommandPaletteShortcut';
+import { isBootOverlayOpen, setBootOverlayOpen } from '../src/utils/bootOverlay';
 
 // Phase 9 command palette: pure ranking over the registry-derived navigation list (MODULES).
 const ENTRIES = MODULES.map(module => ({
@@ -144,21 +148,91 @@ test('keys: arrows wrap, Home/End jump, Enter chooses the active result, other k
   assert.equal(paletteKeyAction({ ...plain('ArrowDown'), altKey: true }, 3, 0), null);
 });
 
-test('shortcut: Ctrl+K or Cmd+K only; the hint follows the platform', () => {
-  const key = (k: string, mods: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean; shiftKey: boolean }> = {}) =>
-    ({ key: k, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...mods });
-  assert.ok(isPaletteShortcut(key('k', { ctrlKey: true })));
-  assert.ok(isPaletteShortcut(key('K', { metaKey: true })), 'Caps Lock');
-  assert.ok(!isPaletteShortcut(key('k')));
-  assert.ok(!isPaletteShortcut(key('k', { ctrlKey: true, shiftKey: true })));
-  assert.ok(!isPaletteShortcut(key('k', { ctrlKey: true, altKey: true })));
-  assert.ok(!isPaletteShortcut(key('j', { ctrlKey: true })));
-  assert.equal(paletteShortcutLabel('MacIntel'), '⌘K');
-  assert.equal(paletteShortcutLabel('iPhone'), '⌘K');
-  assert.equal(paletteShortcutLabel('Win32'), 'Ctrl K');
-  assert.equal(paletteShortcutLabel(''), 'Ctrl K');
+const shortcutKey = (k: string, mods: Partial<{ code: string; ctrlKey: boolean; metaKey: boolean; altKey: boolean; shiftKey: boolean; isComposing: boolean; keyCode: number }> = {}) =>
+  ({ key: k, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...mods });
+
+test('shortcut: Cmd+K on Apple platforms, Ctrl+K elsewhere; K by key or physical code; never during IME', () => {
+  const MAC = true, PC = false;
+  assert.ok(isPaletteShortcut(shortcutKey('k', { metaKey: true }), MAC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true }), MAC), 'macOS Ctrl+K stays "delete to end of line"');
+  assert.ok(isPaletteShortcut(shortcutKey('k', { ctrlKey: true }), PC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { metaKey: true }), PC), 'Windows key + K is not the palette');
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true, metaKey: true }), PC));
+  assert.ok(isPaletteShortcut(shortcutKey('K', { ctrlKey: true }), PC), 'Caps Lock');
+  assert.ok(isPaletteShortcut(shortcutKey('л', { code: 'KeyK', ctrlKey: true }), PC), 'Russian layout: physical K');
+  assert.ok(isPaletteShortcut(shortcutKey('κ', { code: 'KeyK', metaKey: true }), MAC), 'Greek layout on a Mac');
+  assert.ok(!isPaletteShortcut(shortcutKey('k'), PC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true, shiftKey: true }), PC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true, altKey: true }), PC), 'AltGr');
+  assert.ok(!isPaletteShortcut(shortcutKey('j', { ctrlKey: true, code: 'KeyJ' }), PC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true, isComposing: true }), PC));
+  assert.ok(!isPaletteShortcut(shortcutKey('k', { ctrlKey: true, keyCode: 229 }), PC));
+  for (const platform of ['MacIntel', 'iPhone', 'iPad']) assert.ok(isApplePlatform(platform), platform);
+  for (const platform of ['Win32', 'Linux x86_64', '']) assert.ok(!isApplePlatform(platform), platform);
+  assert.equal(paletteShortcutLabel(MAC), '⌘K');
+  assert.equal(paletteShortcutLabel(PC), 'Ctrl K');
+  assert.equal(paletteShortcutKeys(MAC), 'Meta+K');
+  assert.equal(paletteShortcutKeys(PC), 'Control+K');
 });
 
+const CLOSED: PaletteGate = { paletteOpen: false, engineDialogOpen: false, bootOverlayOpen: false, moduleModalOpen: false };
+
+test('gate: the palette opens only when no other modal is up or requested; when open, the shortcut is swallowed', () => {
+  assert.equal(paletteShortcutDecision(CLOSED), 'open');
+  assert.ok(canOpenPalette(CLOSED));
+  assert.equal(paletteShortcutDecision({ ...CLOSED, paletteOpen: true }), 'swallow', 'focus on the field or the Close button');
+  assert.equal(paletteShortcutDecision({ ...CLOSED, engineDialogOpen: true }), 'ignore', 'engine dialog open or its chunk still loading (no dialog in the DOM yet)');
+  assert.equal(paletteShortcutDecision({ ...CLOSED, bootOverlayOpen: true }), 'ignore', 'boot overlay or its cover');
+  assert.equal(paletteShortcutDecision({ ...CLOSED, moduleModalOpen: true }), 'ignore');
+  for (const blocked of ['paletteOpen', 'engineDialogOpen', 'bootOverlayOpen', 'moduleModalOpen'] as const) {
+    assert.ok(!canOpenPalette({ ...CLOSED, [blocked]: true }), `header button blocked by ${blocked}`);
+  }
+});
+
+test('listener: opens or swallows with preventDefault, ignores otherwise; reads the latest shell state', () => {
+  let gate: PaletteGate = CLOSED;
+  let opened = 0;
+  const listener = createShortcutListener(false, () => ({ gate: () => gate, open: () => { opened += 1; } }));
+  const press = (mods: Parameters<typeof shortcutKey>[1], defaultPrevented = false) => {
+    let prevented = false;
+    listener({ ...shortcutKey('k', mods), defaultPrevented, preventDefault: () => { prevented = true; } });
+    return prevented;
+  };
+  assert.equal(press({ ctrlKey: true }), true);
+  assert.equal(opened, 1);
+  gate = { ...CLOSED, paletteOpen: true };
+  assert.equal(press({ ctrlKey: true }), true, 'swallowed inside the open palette');
+  assert.equal(opened, 1, 'not opened twice');
+  gate = { ...CLOSED, engineDialogOpen: true };
+  assert.equal(press({ ctrlKey: true }), false, 'left to the browser');
+  assert.equal(opened, 1);
+  gate = CLOSED;
+  assert.equal(press({ ctrlKey: true }, true), false, 'a module that handled the key keeps it');
+  assert.equal(press({ metaKey: true }), false, 'not the shortcut on this platform');
+  assert.equal(press({ ctrlKey: true, isComposing: true }), false);
+  assert.equal(opened, 1);
+});
+
+test('visibleModalOpen: aria-modal dialogs inside a hidden module view do not count', () => {
+  const dialog = (hiddenAncestor: boolean) => ({ closest: (selector: string) => (selector === '[hidden]' && hiddenAncestor ? {} : null) });
+  const root = (...dialogs: ReturnType<typeof dialog>[]) => ({
+    querySelectorAll: (selector: string) => {
+      assert.equal(selector, '[role="dialog"][aria-modal="true"]');
+      return dialogs as unknown as NodeListOf<Element>;
+    },
+  });
+  assert.equal(visibleModalOpen(root()), false);
+  assert.equal(visibleModalOpen(root(dialog(true))), false, 'left open in a visited, hidden module');
+  assert.equal(visibleModalOpen(root(dialog(true), dialog(false))), true);
+});
+
+test('boot overlay flag starts set (cover shown from first paint) and follows reports', () => {
+  assert.equal(isBootOverlayOpen(), true);
+  setBootOverlayOpen(false);
+  assert.equal(isBootOverlayOpen(), false);
+  setBootOverlayOpen(true);
+  assert.equal(isBootOverlayOpen(), true);
+});
 // The Enter/click seam: CommandPalette passes { navigate: onNavigate (App's navigate), close, setActive }
 // to these functions, so a palette that stops navigating, opens the wrong result or opens on an empty
 // list fails here.

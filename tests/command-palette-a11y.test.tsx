@@ -101,8 +101,14 @@ test('palette source: AccessibleModal for trap/Escape/restore, registry list, sh
 
 test('App: visible trigger, Ctrl/Cmd+K hook, lazy chunk with the same navigate() as the sidebar', () => {
   const app = read('src/App.tsx');
-  assert.match(app, /<button type="button" aria-haspopup="dialog" aria-keyshortcuts="Control\+K Meta\+K" onClick=\{\(\) => setPaletteOpen\(true\)\}[^>]*>.*?<span className="sr-only sm:not-sr-only">Search modules<\/span><kbd aria-hidden="true"/, 'visible "Search modules" from sm up, the same accessible name on phones; the key hint is not part of the name');
-  assert.match(app, /useCommandPaletteShortcut\(\(\) => setPaletteOpen\(true\)\);/);
+  assert.match(app, /<button type="button" aria-haspopup="dialog" aria-keyshortcuts=\{SHORTCUT_KEYS\} onClick=\{openPalette\}[^>]*>.*?<span className="sr-only sm:not-sr-only">Search modules<\/span><kbd aria-hidden="true"/, 'visible "Search modules" from sm up, the same accessible name on phones; the key hint is not part of the name');
+  assert.match(app, /useCommandPaletteShortcut\(APPLE, paletteGate, \(\) => setPaletteOpen\(true\)\);/);
+  // The gate is App state, not a DOM query: engine dialog requested (also while its chunk loads), boot overlay.
+  assert.match(app, /const paletteGate = \(\): PaletteGate => \(\{ paletteOpen, engineDialogOpen: showStatus, bootOverlayOpen: isBootOverlayOpen\(\), moduleModalOpen: visibleModalOpen\(\) \}\);/);
+  assert.match(app, /const openPalette = \(\) => \{ if \(canOpenPalette\(paletteGate\(\)\)\) setPaletteOpen\(true\); \};/);
+  assert.match(app, /<button onClick=\{\(\) => \{ setPaletteOpen\(false\); setShowStatus\(true\); \}\} className="mk-status/, 'the engine dialog cancels a palette that is still loading');
+  assert.match(app, /bootChunk\.catch\(\(\) => setBootOverlayOpen\(false\)\);/, 'a failed boot chunk does not block the palette');
+  assert.match(read('src/components/BootSequence.tsx'), /const open = !gone && !snap\.dismissed;\n[^\n]*\n {2}useEffect\(\(\) => setBootOverlayOpen\(open\), \[open\]\);/);
   assert.match(app, /const loadCommandPalette = \(\) => lazy\(\(\) => import\('\.\/components\/CommandPaletteChunk'\)/);
   assert.match(app, /const CommandPalette = useMemo\(loadCommandPalette, \[paletteLoad\]\);/);
   assert.doesNotMatch(app, /^import [^;]*CommandPalette(Chunk)?['"]/m, 'never imported eagerly');
@@ -111,11 +117,14 @@ test('App: visible trigger, Ctrl/Cmd+K hook, lazy chunk with the same navigate()
   const fallback = app.match(/\{paletteOpen && <SilentBoundary key=\{paletteLoad\} fallback=\{(<div role="alert"[\s\S]*?<\/div>)\}>/)?.[1] ?? '';
   assert.match(fallback, /Module search could not be loaded\./);
   assert.match(fallback, />Retry<\/button>/);
-  assert.match(fallback, />Close<\/button>/);
+  assert.match(fallback, /<button onClick=\{\(\) => \{ setPaletteOpen\(false\); retryPalette\(\); \}\}[^>]*>Close<\/button>/, 'Close also resets the lazy component so the next open retries');
+  assert.match(fallback, /<button onClick=\{retryPalette\}[^>]*>Retry<\/button>/);
   assert.match(read('src/components/CommandPaletteChunk.ts'), /import '\.\.\/styles\/palette\.css';\s*export \{ CommandPalette \} from '\.\/CommandPalette';/);
   const hook = read('src/hooks/useCommandPaletteShortcut.ts');
-  assert.match(hook, /document\.querySelector\('\[role="dialog"\]\[aria-modal="true"\]'\)/, 'never opens over another modal');
-  assert.match(hook, /removeEventListener\('keydown', onKey\)/);
+  assert.match(hook, /const onKey = createShortcutListener\(apple, \(\) => latest\.current\);/);
+  assert.doesNotMatch(hook, /Escape/, 'Escape stays with AccessibleModal');
+  assert.doesNotMatch(hook.replace(/useLayoutEffect\(\(\) => \{\s*latest\.current = \{ gate, open \};\s*\}\);/, ''), /latest\.current =/, 'the ref is written in an effect, not during render');
+  assert.match(hook, /^ {4}window\.addEventListener\('keydown', onKey\);\n {4}return \(\) => window\.removeEventListener\('keydown', onKey\);$/m, 'listener removed on unmount (not commented out)');
 });
 
 test('phone header keeps one row with the trigger: decorative brand mark from sm up, tighter right gap', () => {

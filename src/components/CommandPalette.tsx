@@ -4,7 +4,6 @@ import { AccessibleModal } from './AccessibleModal';
 import { EvidenceBadge } from './sdk/EvidenceBadge';
 import { MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
 import { commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects } from '../utils/commandPalette';
-import { isPaletteShortcut } from '../hooks/useCommandPaletteShortcut';
 
 // Command palette (Phase 9 shell, DESIGN-9 section 3). Lazy chunk opened from the header button or
 // Ctrl/Cmd+K. Entries are the registry-derived navigation modules (MODULES); choosing one calls the
@@ -53,7 +52,6 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
       isComposing: event.nativeEvent.isComposing, keyCode: event.keyCode,
     };
     if (isComposingKey(key)) return; // the IME owns Enter and the arrows while composing
-    if (isPaletteShortcut(event)) { event.preventDefault(); return; } // already open: keep focus here
     if (handlePaletteInputKey(key, results, current, effects)) event.preventDefault();
   }
 

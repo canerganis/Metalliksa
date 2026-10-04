@@ -12,11 +12,13 @@ import { EvidenceBadge } from './components/sdk/EvidenceBadge';
 import { SilentBoundary } from './components/SilentBoundary';
 import { ModuleNav } from './components/ModuleNav';
 import { formatExactNumber } from './utils/numberFormat';
-import { paletteShortcutLabel, useCommandPaletteShortcut } from './hooks/useCommandPaletteShortcut';
+import { canOpenPalette, isApplePlatform, paletteShortcutKeys, paletteShortcutLabel, useCommandPaletteShortcut, visibleModalOpen, type PaletteGate } from './hooks/useCommandPaletteShortcut';
+import { isBootOverlayOpen, setBootOverlayOpen } from './utils/bootOverlay';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
-bootChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render (shell shows).
+// A failed chunk is handled by SilentBoundary at render (shell shows, with no boot screen to keep the palette closed).
+bootChunk.catch(() => setBootOverlayOpen(false));
 const BootSequence = lazy(() => bootChunk.then(m => ({ default: m.BootSequence })));
 // Scientific context panel (mostly explanatory text) in its own chunk, requested at module evaluation like the
 // boot chunk; it arrives while the boot overlay still covers the shell. Keeps the index chunk within budget.
@@ -31,7 +33,9 @@ const loadEngineStatusDialog = () => lazy(() => import('./components/EngineStatu
 // Own chunk: the command palette (Ctrl/Cmd+K or the header button) and its stylesheet load on first open. A factory
 // for the same reason as the engine dialog: Retry after a failed chunk needs a fresh lazy component.
 const loadCommandPalette = () => lazy(() => import('./components/CommandPaletteChunk').then(m => ({ default: m.CommandPalette })));
-const SHORTCUT_LABEL = paletteShortcutLabel(typeof navigator === 'undefined' ? '' : navigator.platform);
+const APPLE = isApplePlatform(typeof navigator === 'undefined' ? '' : navigator.platform);
+const SHORTCUT_LABEL = paletteShortcutLabel(APPLE);
+const SHORTCUT_KEYS = paletteShortcutKeys(APPLE);
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
 const PocketCalculators = lazy(() => import("./components/PocketCalculators").then(m => ({ default: m.PocketCalculators })));
@@ -100,7 +104,11 @@ export default function App() {
   const [paletteLoad, setPaletteLoad] = useState(0);
   const CommandPalette = useMemo(loadCommandPalette, [paletteLoad]);
   const retryPalette = () => setPaletteLoad(n => n + 1);
-  useCommandPaletteShortcut(() => setPaletteOpen(true));
+  // The palette opens only when no other modal is up or requested: the engine dialog (also while its chunk loads),
+  // the boot overlay, or a module's own dialog on screen.
+  const paletteGate = (): PaletteGate => ({ paletteOpen, engineDialogOpen: showStatus, bootOverlayOpen: isBootOverlayOpen(), moduleModalOpen: visibleModalOpen() });
+  const openPalette = () => { if (canOpenPalette(paletteGate())) setPaletteOpen(true); };
+  useCommandPaletteShortcut(APPLE, paletteGate, () => setPaletteOpen(true));
   // Chunk failure: Retry remounts the boundary with a fresh lazy import; Close also resets it so the next open retries.
   // Chrome keeps a failed module fetch for the page's lifetime (browser-checked: Retry did not refetch), so the
   // alert also offers a reload, as ModuleBoundary does.
@@ -201,7 +209,7 @@ export default function App() {
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden rounded-lg border border-cyan-400/30 bg-cyan-950/20 px-3 py-2 text-xs text-cyan-100">Modules</button><div className="hidden sm:contents"><div className="mk-brand-mark" aria-label="Metalliksa logo"><span className="mk-brand-crown" aria-hidden="true" /><span className="mk-brand-wing left" aria-hidden="true" /><span className="mk-brand-wing right" aria-hidden="true" /><span className="mk-brand-laser" aria-hidden="true" /><span className="mk-brand-face" aria-hidden="true"><span className="mk-brand-visor" /><span className="mk-brand-core" /></span><span className="mk-brand-orbit orbit-one" aria-hidden="true" /><span className="mk-brand-orbit orbit-two" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title text-lg font-semibold text-white">METALLIKSA</h1><p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100/80">Future materials command system</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K" onClick={() => setPaletteOpen(true)} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs text-cyan-100"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px] text-cyan-100/80">{SHORTCUT_LABEL}</kbd></button><span className="mk-hud-chip hidden sm:inline">Local control plane</span><button onClick={() => setShowStatus(true)} className="mk-status px-3 py-2 text-xs text-cyan-100"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-300 animate-pulse' : status?.online ? 'bg-emerald-300' : 'bg-amber-300'}`}/>{checking ? 'Checking…' : status?.online ? 'Engine connected' : 'Engine unavailable'}</button></div>
+        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs text-cyan-100"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px] text-cyan-100/80">{SHORTCUT_LABEL}</kbd></button><span className="mk-hud-chip hidden sm:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs text-cyan-100"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-300 animate-pulse' : status?.online ? 'bg-emerald-300' : 'bg-amber-300'}`}/>{checking ? 'Checking…' : status?.online ? 'Engine connected' : 'Engine unavailable'}</button></div>
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
