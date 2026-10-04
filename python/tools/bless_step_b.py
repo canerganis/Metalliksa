@@ -9,8 +9,11 @@ solver into ``python/golden/phase6a/<solver>/step_b/<case>.json``:
 
 - the case is run from the working tree exactly like the regression test does
   (capture_phase6a_golden.run_solver with the CASES payload);
-- cases that now give the validation envelope (exit 2) are skipped: they belong in
-  EXPECTED_BEHAVIOUR_CHANGES, not in a re-blessed golden;
+- behaviour-change cases (EXPECTED_BEHAVIOUR_CHANGES, EXPECTED_SUCCESS_FLAG_CHANGES)
+  and cases that now give the validation envelope (exit 2) are skipped;
+- the drift against the d33b6f5 golden must pass capture_phase6a_golden.step_b_violations
+  (numeric rows only, plus changed pythonCode strings; |rel| bounded per solver),
+  otherwise nothing is written;
 - a case whose stdout equals the d33b6f5 golden gets no step_b file (a stale one
   is removed);
 - otherwise the file records the stdout, the exit code, the provenance block, the
@@ -48,7 +51,12 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
     drift: List[Tuple[str, List[Dict[str, Any]]]] = []
     log: List[str] = []
     source = golden.solver_bytes(solver)
+    excluded = golden.step_b_excluded_cases()
     for case, payload in golden.CASES[solver].items():
+        if (solver, case) in excluded:
+            log.append(f"skip {solver}/{case}: behaviour change (EXPECTED_BEHAVIOUR_CHANGES / "
+                       f"EXPECTED_SUCCESS_FLAG_CHANGES), never re-blessed")
+            continue
         base = golden.load_golden(solver, case)
         previous = golden.load_expected(solver, case)
         fresh = golden.run_solver(solver, payload)
@@ -62,6 +70,10 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
                              f"not a value drift, refusing to bless.\n{fresh['stderr']}")
         drift.append((f"{solver}/{case}", drift_report.diff(previous["stdout"], fresh["stdout"])))
         vs_base = drift_report.diff(base["stdout"], fresh["stdout"])
+        violations = golden.step_b_violations(solver, vs_base)
+        if violations:
+            raise SystemExit(f"{solver}/{case}: drift is not an allowed value change; refusing to "
+                             "bless:\n  " + "\n  ".join(violations))
         if not vs_base:
             if path.exists() and not dry_run:
                 path.unlink()
@@ -78,6 +90,8 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
             "solverFile": f"python/{solver}.py",
             "solverSha256": golden.normalised_sha256(source),
             "solverSha256Normalization": "CRLF->LF (git blob form)",
+            # StepBGoldenTest requires this to equal the current working-tree solver: any
+            # later solver edit needs a re-bless (with its drift table) to stay green.
             "solverSource": "worktree",
             "gitHead": golden.git_head(),
             "invocation": f"python -B {solver}.py < input (cwd python/)",

@@ -11,7 +11,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "88412363cf5852eaf6650328673b5028eaaf198e",
+ "gitHead": "5391bdd54af980305545d5b93c5381030cc8adf1",
  "input": {
   "action": "p2d_continuum",
   "cRate": 2.5,
@@ -26,7 +26,7 @@
    "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e at every site (Phase 6a value step); they replaced the per-site printings 8.314, 8.31446, 8.314462618 / 96485.332, 96485.33, 96485.33212.",
    "constantsVersion": "physical-constants-1",
    "domainDataBaseRevision": "7f3f803",
-   "domainDataVersion": "alloy-data-calphad-battery-icme-1",
+   "domainDataVersion": "alloy-data-calphad-battery-icme-2",
    "faraday_C_mol": 96485.33212331001,
    "gasConstantR_J_molK": 8.31446261815324
   }
@@ -34,7 +34,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "battery_corrosion_eis_solver",
  "solverFile": "python/battery_corrosion_eis_solver.py",
- "solverSha256": "a111cbb1eae677bbd4ef79055086ae25e6b4e08aadab6ce19a94631f32ef5233",
+ "solverSha256": "7ff62f4fecda121d8d6cdbad40ce2a5cc4c00bb1e0dfbfa1a2ceacb648314bc5",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

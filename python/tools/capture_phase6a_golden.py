@@ -279,6 +279,54 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
     return load_golden(solver, case)
 
 
+# Guard on what a step_b re-bless may record (fix round item 7). Design step (b) only
+# changes values: every drift row against the d33b6f5 golden must be numeric, except
+# changed strings under the keys below (generated code snippets that print a value).
+STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
+STEP_B_DEFAULT_MAX_REL = 1e-2
+# tafel: the drift follows the equivalent-weight change (EW rel r): rates and losses
+# move by r, and remaining wall/pitting thickness (thickness - loss) amplifies it by
+# loss/remaining, which stays below 3 in the golden cases; plus 1e-2 for last-digit
+# rounding of small printed values. Without an EW row the default bound applies.
+STEP_B_TAFEL_EW_AMPLIFICATION = 3.0
+
+
+def step_b_max_rel(solver: str, rows: List[Dict[str, Any]]) -> float:
+    if solver == "tafel_corrosion_rate_solver":
+        ew = [r for r in rows if r["key"] == "equivalentWeight" and r.get("rel") is not None]
+        if ew:
+            return STEP_B_TAFEL_EW_AMPLIFICATION * abs(ew[0]["rel"]) + STEP_B_DEFAULT_MAX_REL
+    return STEP_B_DEFAULT_MAX_REL
+
+
+def step_b_violations(solver: str, rows: List[Dict[str, Any]]) -> List[str]:
+    """Rows a step_b re-bless must not contain (empty list = acceptable drift)."""
+    bound = step_b_max_rel(solver, rows)
+    out = []
+    for r in rows:
+        leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
+        if r["kind"] == "numeric":
+            if r.get("rel") is not None and abs(r["rel"]) > bound:
+                out.append(f"{r['key']}: |rel| {abs(r['rel']):.3g} > {bound:.3g}")
+        elif not (r["kind"] == "changed" and leaf in STEP_B_ALLOWED_STRING_KEYS
+                  and isinstance(r["old"], str) and isinstance(r["new"], str)):
+            out.append(f"{r['key']}: {r['kind']} row is not a value drift")
+    return out
+
+
+def step_b_excluded_cases() -> set:
+    """Cases that are behaviour changes, never value re-blesses."""
+    excluded = set()
+    for module in ("_t2a_cases", "_t2b_cases"):
+        cases = globals().get(module)
+        if cases is not None:
+            excluded |= set(getattr(cases, "EXPECTED_BEHAVIOUR_CHANGES", {}))
+            excluded |= set(getattr(cases, "EXPECTED_SUCCESS_FLAG_CHANGES", ()))
+    excluded |= {("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"),
+                 ("pourbaix_solver", "edge_unknown_element_badvals")}
+    return excluded
+
+
 def _write(path: Path, doc: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as fh:

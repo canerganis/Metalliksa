@@ -197,9 +197,48 @@ class StepBGoldenTest(unittest.TestCase):
             with self.subTest(file=f"{solver}/{case}"):
                 self.assertIn(solver, golden.CASES)
                 self.assertIn(case, golden.CASES[solver])
-                # A validation-envelope case is a behaviour change, never a re-bless.
+                # A behaviour change (validation envelope or success-flag flip) is never a re-bless.
                 self.assertNotIn((solver, case), EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                self.assertNotIn((solver, case), golden.step_b_excluded_cases())
+
+    def test_excluded_cases_cover_every_behaviour_change(self):
+        excluded = golden.step_b_excluded_cases()
+        for key in (set(EXPECTED_BEHAVIOUR_CHANGES) | set(golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
+                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)):
+            self.assertIn(key, excluded)
+
+    def test_recorded_drift_is_a_bounded_value_change(self):
+        # Fix round item 7: numeric rows only (changed strings only under pythonCode),
+        # |rel| <= 1e-2, tafel <= 3 * |EW rel| + 1e-2 (see step_b_max_rel).
+        for path in self._step_b_files():
+            solver, case = path.parent.parent.name, path.stem
+            with self.subTest(file=f"{solver}/{case}"):
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"]), [])
+
+    def test_guard_rejects_structural_and_large_drift(self):
+        num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
+        self.assertEqual(golden.step_b_violations("kinetics_ttt_cct_solver", [num("x", 0.009)]), [])
+        self.assertTrue(golden.step_b_violations("kinetics_ttt_cct_solver", [num("x", 0.02)]))
+        self.assertTrue(golden.step_b_violations("icme_multiscale_pipeline_solver",
+                                                 [{"key": "a", "kind": "added", "old": None, "new": 1}]))
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver",
+                                                 [{"key": "alloyName", "kind": "changed", "old": "a", "new": "b"}]))
+        self.assertEqual(golden.step_b_violations("tafel_corrosion_rate_solver",
+                                                  [{"key": "pythonCode", "kind": "changed", "old": "a", "new": "b"}]), [])
+        rows = [num("equivalentWeight", 0.03), num("remainingPittingMm", -0.09)]
+        self.assertEqual(golden.step_b_violations("tafel_corrosion_rate_solver", rows), [])
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", rows + [num("x", 0.2)]))
+
+    def test_recorded_solver_sha256_is_the_current_solver(self):
+        # A solver edit after a re-bless must come with a new re-bless (and drift table).
+        for path in self._step_b_files():
+            solver = path.parent.parent.name
+            with self.subTest(file=str(path.relative_to(golden.GOLDEN_DIR))):
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(doc["solverSha256"], golden.normalised_sha256(golden.solver_bytes(solver)))
 
     def test_step_b_metadata_and_recorded_drift(self):
         for path in self._step_b_files():
@@ -233,7 +272,7 @@ class StepBGoldenTest(unittest.TestCase):
         before = sorted(p.as_posix() for p in golden.GOLDEN_DIR.rglob("*.json"))
         drift, log = bless_step_b.bless("pourbaix_solver", dry_run=True)
         self.assertEqual([rows for _, rows in drift if rows], [])
-        self.assertTrue(any("validation envelope" in line for line in log))
+        self.assertTrue(any("behaviour change" in line for line in log))
         self.assertEqual(sorted(p.as_posix() for p in golden.GOLDEN_DIR.rglob("*.json")), before)
 
 

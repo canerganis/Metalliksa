@@ -569,7 +569,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "4a89e1aeca416ad54ddaef4a96d2653d029298c0",
+ "gitHead": "5391bdd54af980305545d5b93c5381030cc8adf1",
  "input": {
   "allowableLossMm": 3.0,
   "alloyId": "steel-1018",
@@ -602,7 +602,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "556fcbc1f701e42cd53a026452662a22a192ac6e1406b2f292c9776177006b43",
+ "solverSha256": "68ea4b5e862b33cf59ec7fd9656b84d760aab03b70311d7637431ddb520adf38",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
