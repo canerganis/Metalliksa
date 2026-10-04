@@ -632,3 +632,43 @@ export function convertDensity(
     lb_ft3: Number((g_cm3 * 62.42796).toFixed(2)),
   };
 }
+
+// ==========================================
+// 8. DUAL-UNIT TEST REPORT SCRATCHPAD (SI -> US customary + hardness)
+// ==========================================
+export interface DualUnitReportInputs {
+  yieldMpa: number;
+  utsMpa: number;
+  hardnessHrc: number;
+  cvnJ: number;
+  testTempC: number;
+}
+
+export interface DualUnitReport {
+  yieldKsi: number;
+  utsKsi: number;
+  hv: number;
+  hbw: number;
+  cvnFtLbf: number;
+  tempF: number;
+  tempK: number;
+}
+
+export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitReport {
+  const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, hardnessHrc: reportHardnessHrc, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
+  const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
+  const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
+  const hState = convertMetallurgicalHardness(reportHardnessHrc, "HRC");
+  const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
+  const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
+  const tempK = Number((reportTestTempC + 273.15).toFixed(1));
+  return {
+    yieldKsi,
+    utsKsi,
+    hv: hState.HV,
+    hbw: hState.HBW,
+    cvnFtLbf,
+    tempF,
+    tempK,
+  };
+}
