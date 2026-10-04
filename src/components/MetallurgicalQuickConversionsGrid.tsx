@@ -110,8 +110,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
   }, [hardnessInputScale, hardnessValHrc, hardnessValHv, hardnessClass]);
 
   const hardnessInterpretation = useMemo(
-    () => (hardnessConversions.HV === null ? null : interpretHardness(hardnessConversions.HV)),
-    [hardnessConversions.HV]
+    () => (hardnessConversions.HV === null ? null : interpretHardness(hardnessConversions.HV, hardnessClass)),
+    [hardnessConversions.HV, hardnessClass]
   );
 
   const handleHrcChange = (val: number, cls: HardnessMaterialClass = hardnessClass) => {

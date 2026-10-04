@@ -117,12 +117,25 @@ export interface HardnessInterpretation {
   wearResistance: string;
 }
 
-export function interpretHardness(hv: number): HardnessInterpretation {
+/**
+ * The HV bands are qualitative and written for non-austenitic steels. Only the 450 HV limit has outside support
+ * (hard turning is usually taken to start at about 45 HRC, ASTM E140: 45 HRC = 446 HV); the 160, 280 and 750 HV
+ * limits are app heuristics without a cited source.
+ */
+export const HARDNESS_INTERPRETATION_NOTE =
+  "Qualitative guide for non-austenitic steels only; band limits are approximate (only the ~450 HV / 45 HRC hard-turning limit has outside support), not from a standard.";
+
+export const HARDNESS_INTERPRETATION_UNAVAILABLE =
+  "Unavailable: the condition bands are defined for non-austenitic steels only";
+
+/** Qualitative condition for a non-austenitic steel HV; null for every other alloy class (no bands for them). */
+export function interpretHardness(hv: number, materialClass: HardnessMaterialClass): HardnessInterpretation | null {
+  if (materialClass !== "non-austenitic-steel" || !Number.isFinite(hv)) return null;
   if (hv < 160) {
     return {
       condition: "Dead Soft / Solution Annealed",
       machinability: "Gummy, prone to built-up edge; high rake angle required",
-      typicalComponent: "Gaskets, deep-drawn cans, annealed tubing, architectural copper",
+      typicalComponent: "Gaskets, deep-drawn cans, annealed tubing",
       wearResistance: "Low abrasive wear resistance; prone to galling and adhesion",
     };
   } else if (hv < 280) {
@@ -136,7 +149,7 @@ export function interpretHardness(hv: number): HardnessInterpretation {
     return {
       condition: "Quenched & Tempered (Structural Toughness)",
       machinability: "Tough cutting; coated carbide or cermet tooling recommended",
-      typicalComponent: "Aircraft landing gear, high-pressure pump shafts, Inconel turbine disks",
+      typicalComponent: "Aircraft landing gear, high-pressure pump shafts",
       wearResistance: "High toughness combined with solid impact resistance",
     };
   } else if (hv < 750) {
@@ -148,9 +161,9 @@ export function interpretHardness(hv: number): HardnessInterpretation {
     };
   } else {
     return {
-      condition: "Super-Hard Nitride Case / Cemented Carbide",
+      condition: "Super-Hard Nitride Case",
       machinability: "Diamond wheel grinding, EDM, or ultrasonic machining only",
-      typicalComponent: "Plasma nitrided cylinder liners, WC-Co cutting inserts, valve stems",
+      typicalComponent: "Plasma nitrided cylinder liners, valve stems",
       wearResistance: "Extreme sliding abrasive and erosion wear resistance",
     };
   }

@@ -21,6 +21,8 @@ import {
   convertStress,
   interpretStressMpa,
   interpretHardness,
+  HARDNESS_INTERPRETATION_NOTE,
+  HARDNESS_INTERPRETATION_UNAVAILABLE,
   TempUnit,
   convertTemperature,
   METALLURGICAL_MELTING_PRESETS,
@@ -110,8 +112,8 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     [hardnessInput, hardnessScale, hardnessClass]
   );
   const hardnessInterpretation = useMemo(
-    () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV)),
-    [hardnessState.HV]
+    () => (hardnessState.HV === null ? null : interpretHardness(hardnessState.HV, hardnessClass)),
+    [hardnessState.HV, hardnessClass]
   );
 
   // -------------------------------------------------------------
@@ -717,7 +719,8 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   Condition &amp; Machinability Assessment
                 </span>
                 <span className="text-xs font-mono text-sky-400 font-semibold">
-                  {hardnessInterpretation?.condition ?? "Unavailable (no HV)"}
+                  {hardnessInterpretation?.condition ??
+                    (hardnessClass !== "non-austenitic-steel" ? HARDNESS_INTERPRETATION_UNAVAILABLE : "Unavailable (no HV)")}
                 </span>
               </div>
 
@@ -736,6 +739,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </div>
               </div>
 
+              <div className="text-[10px] text-slate-500 font-mono">{HARDNESS_INTERPRETATION_NOTE}</div>
               <div className="text-[10px] text-slate-500 font-mono">
                 {hardnessState.validRangeNote}
               </div>

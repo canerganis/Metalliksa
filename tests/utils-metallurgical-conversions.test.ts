@@ -14,6 +14,8 @@ import {
   convertStress,
   convertTemperature,
   interpretHardness,
+  HARDNESS_INTERPRETATION_NOTE,
+  HARDNESS_INTERPRETATION_UNAVAILABLE,
   interpretStressMpa,
   type TempUnit,
 } from "../src/utils/metallurgicalConversions";
@@ -327,12 +329,25 @@ test("hardness out-of-range notices", () => {
   assert.match(convertSteelHardness(39, "HRB").validRangeNote, /outside verified range \(HRB 55-100\)/);
 });
 
-test("hardness interpretation bands", () => {
-  assert.match(interpretHardness(159).condition, /^Dead Soft/);
-  assert.match(interpretHardness(160).condition, /^Normalized/);
-  assert.match(interpretHardness(449).condition, /^Quenched & Tempered/);
-  assert.match(interpretHardness(450).condition, /^Fully Hardened/);
-  assert.match(interpretHardness(750).condition, /^Super-Hard/);
+test("hardness interpretation bands (non-austenitic steels only)", () => {
+  const steel = (hv: number) => interpretHardness(hv, "non-austenitic-steel")!.condition;
+  assert.match(steel(159), /^Dead Soft/);
+  assert.match(steel(160), /^Normalized/);
+  assert.match(steel(449), /^Quenched & Tempered/);
+  assert.match(steel(450), /^Fully Hardened/);
+  assert.match(steel(750), /^Super-Hard Nitride Case$/);
+  // The bands were applied to any HV, e.g. a measured Ni-alloy 380 HV read "Quenched & Tempered" and an
+  // aluminium 120 HV read "Dead Soft / Solution Annealed". Every non-steel class now gets no band.
+  for (const cls of ["austenitic-steel", "titanium-alloy", "nickel-alloy", "aluminium-alloy", "hardmetal", "other"] as const) {
+    assert.equal(interpretHardness(380, cls), null, cls);
+  }
+  // No non-steel examples remain in the steel bands.
+  for (const hv of [100, 200, 300, 500, 800]) {
+    const text = JSON.stringify(interpretHardness(hv, "non-austenitic-steel"));
+    assert.doesNotMatch(text, /Inconel|copper|WC-Co|Cemented Carbide/i, String(hv));
+  }
+  assert.match(HARDNESS_INTERPRETATION_NOTE, /non-austenitic steels only/);
+  assert.match(HARDNESS_INTERPRETATION_UNAVAILABLE, /^Unavailable/);
 });
 
 // Former BUG (studio lane, fixed 2026-10): the polynomials HV = 142.8 + 8.94 HRC + 0.134 HRC^2 and
