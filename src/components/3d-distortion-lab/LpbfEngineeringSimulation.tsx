@@ -10,6 +10,7 @@ import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, typ
 import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
+import { DISPLAY_LOCALE } from "../../utils/numberFormat";
 
 import { LPBF_ENGINEERING_DEFAULTS as defaults, engineeringSignature, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
 const controls = [
@@ -458,7 +459,7 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
       {active&&<button type="button" disabled={cancelling} onClick={cancel} className="rounded-lg border border-slate-500 px-4 py-2.5 text-sm disabled:opacity-40">{cancelling?"Cancelling…":"Cancel CUDA pilot"}</button>}
     </form>
     <p id="cuda-pilot-help" className="mt-2 text-xs text-slate-400">{selectedDevice
-      ? `Listed by the ${engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime · ordinal ${selectedDevice.ordinal} · ${selectedDevice.memoryBytes.toLocaleString()} bytes. Device and engine availability are refreshed before submission.`
+      ? `Listed by the ${engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime · ordinal ${selectedDevice.ordinal} · ${selectedDevice.memoryBytes.toLocaleString(DISPLAY_LOCALE)} bytes. Device and engine availability are refreshed before submission.`
       : `No ${engine === 'warp' ? 'Warp' : 'PyTorch CUDA'} runtime device is currently available. Refresh the device list or select another engine.`} The worker rechecks the exact CUDA ordinal during submission. No CPU fallback is used.</p>
     {error&&<p role="alert" className="mt-3 rounded-lg border border-red-400/40 p-3 text-sm text-red-200">{error}</p>}
     {job&&<p role="status" className="mt-3 text-sm">CUDA job {job.id} · {job.status}{job.cacheHit?" · cached":""}</p>}
