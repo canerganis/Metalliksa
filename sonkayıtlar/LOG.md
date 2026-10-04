@@ -1,3 +1,10 @@
+## 2026-10-04 — Düzeltme: NIST AMB2022-03 Goldak genişliği
+- Görev: 2026-09-12 girdisindeki "W/D ~117/124 µm" ifadesini bugünkü kodla karşılaştır.
+- Sonuç: GPU ışın izlemeli sonuç W = 102,2 µm (0,70-1,40 × 136,3 µm bandı içinde), CPU yedeği W = 81,7 µm (bandın dışında; NIST ile eşleştiği iddia edilmez); derinlik iki yolda 123,9 µm. NIST genişlik denetimi hiçbir otomatik kapının parçası değildir (GitHub python işi ve Docker verify atlar; yalnız Windows GPU makinesinde elle koşuldu). Eski girdi değiştirilmedi.
+- Dosyalar: docs/APPLICATION_PACKAGING_NOTES.md, python/test_goldak_fabbro.py, PROOF.md, STATUS.md.
+- Durum: NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+- Ajan: Claude (Sonnet 5.5).
+
 ## 2026-09-23 — Bilimsel araştırma vizyonu kaydı
 - Görev: Kullanıcının Metalliksa için istediği yaratıcı bilimsel araştırma fikirlerini kalıcılaştır.
 - Tamamlanan: Rakip LPBF fizik hipotezlerini ayıran deney tasarımı, model hatasından fizik keşfi, mikroyapıdan prosese ters tasarım, makine/toz partileri arasında aktarım ve literatür uyuşmazlığından ölçüm önerisi fikirleri kaynaklı araştırma belgesine yazıldı. İlk aday soru IN718 eriyik havuzu genişlik/derinlik/soğuma ölçümlerinin absorptivite belirsizliği ile model biçimi hatasını ayırmasıdır.
@@ -532,6 +539,7 @@ Operational log of agent jobs **whether they finished or stopped mid-task**. New
 - **Where we left off**: Melt Pool kıvam is literature-consistent on W/D/recoil/Marangoni sign. Still locked: Marangoni CFD, Goldak FEA, using Goldak/ET to re-score Build Job, G/R mapping as a dedicated Phase 3 lab.
 - **Files**: `python/marangoni_screening.py`, `python/lpbf_thermal_solver.py`, `python/fabbro_keyhole.py`, `python/test_goldak_fabbro.py`, `python/test_marangoni_screening.py`, `src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx`, `src/services/pythonComputationService.ts`, `PROOF.md`, `ROADMAP.md`, `AGENTS.md`, `sonkayıtlar/LOG.md`
 - **Tests**: `python3 python/test_goldak_fabbro.py` PASS; `python3 python/test_marangoni_screening.py` PASS; `python3 python/test_eagar_tsai.py` PASS; melt-pool / four-alloy / build-job PASS; `npx tsc --noEmit` PASS
+- **Düzeltme (2026-10-04)**: Yukarıdaki "W/D ~117/124 µm" ifadesi bugünkü kodla doğrulanmadı: GPU ışın izlemeli Goldak sonucu W = 102,2 µm, CPU yedeği W = 81,7 µm (D ≈ 124 µm doğru). NIST genişlik denetimi hiçbir otomatik kapının parçası değildir. Ayrıntı: PROOF.md en üst düzeltme girdisi, STATUS.md.
 
 ---
 
