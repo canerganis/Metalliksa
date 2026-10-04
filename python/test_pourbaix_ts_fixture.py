@@ -44,6 +44,21 @@ class TsFixtureTest(unittest.TestCase):
         self.assertEqual(got, want)
         self.assertEqual(self.data["n"], 200)
 
+    def test_aluminium_is_in_the_parity_set_with_all_four_species(self):
+        # WP-Al made Al available (OBIGT TS01 + gibbsite); the parity fixture must carry it at both activities
+        cases = {c["log10Activity"]: c for c in self.data["cases"] if c["element"] == "Al"}
+        self.assertEqual(set(cases), set(fixture.LOG_ACTIVITIES))
+        for log_a, case in cases.items():
+            self.assertEqual(case["speciesIds"], ["Al", "Al3+", "Al(OH)3", "Al(OH)4-"])
+            used = {case["speciesIds"][int(c)] for r in case["rows"] for c in decode(r) if c != "."}
+            self.assertEqual(used, set(case["speciesIds"]), log_a)  # the grid reaches all four domains
+
+    def test_unavailable_elements_are_not_in_the_fixture(self):
+        got = {c["element"] for c in self.data["cases"]}
+        for element in ("Cr", "Ti", "Mo"):
+            self.assertNotIn(element, got)
+        self.assertEqual(got, set(table.available_elements()))
+
     def test_grid_shape_and_every_species_with_area_appears(self):
         for case in self.data["cases"]:
             rows = [decode(r) for r in case["rows"]]
