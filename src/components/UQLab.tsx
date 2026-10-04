@@ -400,7 +400,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
               <Upload className="w-3.5 h-3.5 text-sky-400" />
               Upload CSV
             </button>
-            <input
+            <input aria-label="Upload CSV"
               type="file"
               ref={fileInputRef}
               onChange={handleCSVUpload}
@@ -571,7 +571,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             {/* Samples */}
             <div className="flex items-center gap-1.5 text-slate-400">
               <span>Runs:</span>
-              <select
+              <select aria-label="Runs"
                 value={mcSamples}
                 onChange={(e) => setMcSamples(parseInt(e.target.value))}
                 className="bg-slate-800 border border-slate-700 text-sky-300 rounded-lg px-2 py-1 text-xs"
@@ -1040,7 +1040,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
+                <input aria-label="Filter lots"
                   type="text"
                   placeholder="Filter Heat/Specimen..."
                   value={searchLot}
@@ -1195,7 +1195,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             <div className="space-y-3 font-mono text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">Coupon Sample Size (N):</label>
-                <input
+                <input aria-label="Coupon Sample Size (N)"
                   type="number"
                   min={10}
                   max={200}
@@ -1207,7 +1207,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
               <div>
                 <label className="block text-slate-400 mb-1">Number of Melt Lots / Heats:</label>
-                <input
+                <input aria-label="Number of Melt Lots / Heats"
                   type="number"
                   min={2}
                   max={12}

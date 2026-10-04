@@ -351,7 +351,7 @@ ${diagnosisResult || ""}`
                     : "border-[#1e2d46] hover:border-sky-500/50 bg-[#090e18] hover:bg-[#0c1424]"
                 }`}
               >
-                <input
+                <input aria-label="Upload micrograph image"
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
@@ -494,7 +494,7 @@ ${diagnosisResult || ""}`
 
                 <div className="flex items-center gap-1.5">
                   {/* High Contrast Filter Select */}
-                  <select
+                  <select aria-label="View mode"
                     value={viewMode}
                     onChange={(e) => setViewMode(e.target.value as any)}
                     className="px-2 py-1 bg-[#0c1322] border border-[#1e2d46] text-sky-300 rounded font-mono text-[11px] focus:outline-none focus:border-sky-400"
@@ -558,7 +558,7 @@ ${diagnosisResult || ""}`
                       Standard Reference Benchmark:
                     </span>
                   </div>
-                  <select
+                  <select aria-label="Standard Reference Benchmark"
                     value={splitReferenceSample.id}
                     onChange={(e) => {
                       const s = MICROGRAPH_SAMPLES.find(
@@ -758,7 +758,7 @@ ${diagnosisResult || ""}`
                       {zoomLevel.toFixed(1)}x
                     </span>
                   </div>
-                  <input
+                  <input aria-label="Magnification Zoom (x magnification)"
                     type="range"
                     min="1.0"
                     max="2.5"
@@ -773,7 +773,7 @@ ${diagnosisResult || ""}`
                     <span>Brightness</span>
                     <span className="text-sky-400 font-bold">{brightness}%</span>
                   </div>
-                  <input
+                  <input aria-label="Brightness (%)"
                     type="range"
                     min="60"
                     max="150"
@@ -788,7 +788,7 @@ ${diagnosisResult || ""}`
                     <span>Contrast / Reticle</span>
                     <span className="text-sky-400 font-bold">{contrast}%</span>
                   </div>
-                  <input
+                  <input aria-label="Contrast / Reticle (%)"
                     type="range"
                     min="60"
                     max="180"
@@ -814,7 +814,7 @@ ${diagnosisResult || ""}`
                     <label className="text-slate-400 mb-1 block">
                       Alloy Category / Name
                     </label>
-                    <input
+                    <input aria-label="Alloy Category / Name"
                       type="text"
                       value={alloyType}
                       onChange={(e) => setAlloyType(e.target.value)}
@@ -826,7 +826,7 @@ ${diagnosisResult || ""}`
                     <label className="text-slate-400 mb-1 block">
                       Etchant Reagent
                     </label>
-                    <input
+                    <input aria-label="Etchant Reagent"
                       type="text"
                       value={etchant}
                       onChange={(e) => setEtchant(e.target.value)}
@@ -838,7 +838,7 @@ ${diagnosisResult || ""}`
                     <label className="text-slate-400 mb-1 block">
                       Magnification / SEM
                     </label>
-                    <input
+                    <input aria-label="Magnification / SEM"
                       type="text"
                       value={magnification}
                       onChange={(e) => setMagnification(e.target.value)}
@@ -850,7 +850,7 @@ ${diagnosisResult || ""}`
                     <label className="text-slate-400 mb-1 block">
                       Heat Treatment State
                     </label>
-                    <input
+                    <input aria-label="Heat Treatment State"
                       type="text"
                       value={sampleHistory}
                       onChange={(e) => setSampleHistory(e.target.value)}

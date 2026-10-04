@@ -329,7 +329,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                 {/* Application Name */}
                 <div>
                   <label className="text-slate-400 block mb-1 font-medium text-[11px]">Application Target</label>
-                  <input
+                  <input aria-label="Application Target"
                     type="text"
                     value={targets.applicationName}
                     onChange={(e) => setTargets({ ...targets, applicationName: e.target.value })}
@@ -340,7 +340,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                 {/* Base Matrix System */}
                 <div>
                   <label className="text-slate-400 block mb-1 font-medium text-[11px]">Preferred Base Matrix</label>
-                  <select
+                  <select aria-label="Preferred Base Matrix"
                     value={targets.baseMatrix}
                     onChange={(e) => setTargets({ ...targets, baseMatrix: e.target.value as any })}
                     className="w-full p-2 bg-[#0c1322] border border-[#162032] rounded text-white text-xs font-mono focus:outline-none focus:border-sky-400"
@@ -361,7 +361,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>σ_y (25°C):</span>
                       <strong className="text-emerald-400">{targets.targetYieldStrength_25C} MPa</strong>
                     </div>
-                    <input
+                    <input aria-label="σ_y (25°C) (MPa)"
                       type="range"
                       min={300}
                       max={2200}
@@ -379,7 +379,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>σ_y (High Temp):</span>
                       <strong className="text-amber-400">{targets.targetYieldStrength_Elevated} MPa</strong>
                     </div>
-                    <input
+                    <input aria-label="σ_y (High Temp) (MPa)"
                       type="range"
                       min={100}
                       max={1400}
@@ -400,7 +400,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Max Service T:</span>
                       <strong className="text-sky-300">{targets.serviceTemperature_C}°C</strong>
                     </div>
-                    <input
+                    <input aria-label="Max Service T (°C)"
                       type="range"
                       min={50}
                       max={1600}
@@ -418,7 +418,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Min PREN:</span>
                       <strong className="text-cyan-400">{targets.minPREN}</strong>
                     </div>
-                    <input
+                    <input aria-label="Min PREN"
                       type="range"
                       min={0}
                       max={65}
@@ -437,7 +437,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Max Density:</span>
                       <strong className="text-white">{targets.maxDensity_gcm3} g/cm³</strong>
                     </div>
-                    <input
+                    <input aria-label="Max Density (g/cm³)"
                       type="range"
                       min={2.7}
                       max={15.0}
@@ -455,7 +455,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Max Cost ($/kg):</span>
                       <strong className="text-amber-300">${targets.maxCostUSD_kg}</strong>
                     </div>
-                    <input
+                    <input aria-label="Max Cost ($/kg)"
                       type="range"
                       min={5}
                       max={200}
@@ -472,7 +472,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                 {/* Manufacturing Route */}
                 <div>
                   <label className="text-slate-400 block mb-1 font-medium text-[11px]">Primary Manufacturing Route</label>
-                  <select
+                  <select aria-label="Primary Manufacturing Route"
                     value={targets.manufacturingRoute}
                     onChange={(e) => setTargets({ ...targets, manufacturingRoute: e.target.value as any })}
                     className="w-full p-2 bg-[#0c1322] border border-[#162032] rounded text-white text-xs font-mono focus:outline-none focus:border-sky-400"
@@ -981,7 +981,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                   {lmeMultiplier > 1 ? `+${Math.round((lmeMultiplier - 1) * 100)}%` : "Spot Benchmark"}
                 </strong>
               </div>
-              <input
+              <input aria-label="Commodity Market Price Shock"
                 type="range"
                 min={0.8}
                 max={2.5}

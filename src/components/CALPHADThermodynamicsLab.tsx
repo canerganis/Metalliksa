@@ -369,7 +369,7 @@ Provide a deep physical breakdown:
                   {temperatureC}°C ({temperatureK} K)
                 </span>
               </div>
-              <input
+              <input aria-label="Temperature (T) (°C)"
                 type="range"
                 min={Math.round(currentSystem.temperatureRangeK[0] - 273.15)}
                 max={Math.round(currentSystem.temperatureRangeK[1] - 273.15)}
@@ -397,7 +397,7 @@ Provide a deep physical breakdown:
                   {currentSystem.elementB}
                 </span>
               </div>
-              <input
+              <input aria-label={`Alloy Composition (${currentSystem.elementB}) (${currentSystem.compositionUnit === "wt_pct" ? "wt%" : "at%"})`}
                 type="range"
                 min="0.01"
                 max={currentSystem.id === "fe-c" ? "6.67" : "70.0"}

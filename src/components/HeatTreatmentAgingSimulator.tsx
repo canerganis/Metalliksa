@@ -389,7 +389,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">HIP Temperature (T_HIP)</span>
                 <strong className="text-emerald-300">{hipTemp} °C</strong>
               </div>
-              <input
+              <input aria-label="HIP Temperature (T_HIP) (°C)"
                 type="range"
                 min={Math.round(solidus_C * 0.55)}
                 max={Math.round(solidus_C * 0.92)}
@@ -403,7 +403,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
             <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
               <div>
                 <span className="text-slate-400 text-[10px] block">Isostatic Pressure (P)</span>
-                <select
+                <select aria-label="Isostatic Pressure (P)"
                   value={hipPressure}
                   onChange={(e) => setHipPressure(parseInt(e.target.value))}
                   className="w-full mt-0.5 px-2 py-1 rounded bg-[#0b1322] border border-[#1e2a44] text-xs text-white"
@@ -416,7 +416,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
               </div>
               <div>
                 <span className="text-slate-400 text-[10px] block">Dwell Time (t)</span>
-                <select
+                <select aria-label="Dwell Time (t)"
                   value={hipTime}
                   onChange={(e) => setHipTime(parseFloat(e.target.value))}
                   className="w-full mt-0.5 px-2 py-1 rounded bg-[#0b1322] border border-[#1e2a44] text-xs text-white"
@@ -446,7 +446,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                   {solTemp} °C {kinetics.incipientMeltingRisk && "⚠️ (Melting Risk!)"}
                 </strong>
               </div>
-              <input
+              <input aria-label="Solution Temperature (T_sol) (°C)"
                 type="range"
                 min={Math.round(solidus_C * 0.7)}
                 max={Math.min(liquidus_C, Math.round(solidus_C + 20))}
@@ -472,7 +472,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">Aging Temperature (T_age)</span>
                 <strong className="text-amber-300">{ageTemp} °C</strong>
               </div>
-              <input
+              <input aria-label="Aging Temperature (T_age) (°C)"
                 type="range"
                 min={Math.round(defaults.ageTemp_C * 0.7)}
                 max={Math.round(defaults.ageTemp_C * 1.35)}
@@ -488,7 +488,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">Aging Duration (t_age)</span>
                 <strong className="text-sky-300">{ageTime} Hours</strong>
               </div>
-              <input
+              <input aria-label="Aging Duration (t_age) (Hours)"
                 type="range"
                 min={1}
                 max={48}

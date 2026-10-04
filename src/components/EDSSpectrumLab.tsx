@@ -445,7 +445,7 @@ Provide:
               <Upload className="w-4 h-4 text-cyan-400" />
               <span>Import Calibrated EDS (.msa / .emsa / .csv)</span>
             </button>
-            <input
+            <input aria-label="Import Calibrated EDS (.msa / .emsa / .csv)"
               ref={fileInputRef}
               type="file"
               accept=".csv,.txt,.dat,.emsa,.msa"
@@ -606,7 +606,7 @@ Provide:
                 <Camera className="w-3.5 h-3.5" />
                 <span>Upload SEM</span>
               </button>
-              <input
+              <input aria-label="Upload SEM"
                 ref={micrographInputRef}
                 type="file"
                 accept="image/*"
@@ -877,7 +877,7 @@ Provide:
                         <span className="text-red-400 font-bold block mb-1">
                           Red (R):
                         </span>
-                        <select
+                        <select aria-label="Red (R)"
                           value={rgbChannels.red}
                           onChange={(e) =>
                             setRgbChannels((p) => ({
@@ -898,7 +898,7 @@ Provide:
                         <span className="text-emerald-400 font-bold block mb-1">
                           Green (G):
                         </span>
-                        <select
+                        <select aria-label="Green (G)"
                           value={rgbChannels.green}
                           onChange={(e) =>
                             setRgbChannels((p) => ({
@@ -919,7 +919,7 @@ Provide:
                         <span className="text-blue-400 font-bold block mb-1">
                           Blue (B):
                         </span>
-                        <select
+                        <select aria-label="Blue (B)"
                           value={rgbChannels.blue}
                           onChange={(e) =>
                             setRgbChannels((p) => ({
@@ -943,7 +943,7 @@ Provide:
                     <span className="text-[10px] text-slate-400">
                       Map Opacity: {Math.round(mapOpacity * 100)}%
                     </span>
-                    <input
+                    <input aria-label="Map Opacity" aria-valuetext={`${Math.round(mapOpacity * 100)}%`}
                       type="range"
                       min="0.1"
                       max="1.0"

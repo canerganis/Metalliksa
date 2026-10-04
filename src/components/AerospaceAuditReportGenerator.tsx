@@ -851,7 +851,7 @@ export function AerospaceAuditReportGenerator() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Document ID (Doc Ref)</label>
-                <input
+                <input aria-label="Document ID (Doc Ref)"
                   type="text"
                   value={certificateId}
                   onChange={(e) => setCertificateId(e.target.value)}
@@ -860,7 +860,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Lot / Heat Melt No</label>
-                <input
+                <input aria-label="Lot / Heat Melt No"
                   type="text"
                   value={lotHeatNumber}
                   onChange={(e) => setLotHeatNumber(e.target.value)}
@@ -869,7 +869,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Part Number</label>
-                <input
+                <input aria-label="Part Number"
                   type="text"
                   value={partNumber}
                   onChange={(e) => setPartNumber(e.target.value)}
@@ -878,7 +878,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Customer PO / Contract</label>
-                <input
+                <input aria-label="Customer PO / Contract"
                   type="text"
                   value={customerPoNumber}
                   onChange={(e) => setCustomerPoNumber(e.target.value)}
@@ -887,7 +887,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div className="col-span-2">
                 <label className="text-[10px] text-slate-400 block mb-0.5">Component / Part Description</label>
-                <input
+                <input aria-label="Component / Part Description"
                   type="text"
                   value={partName}
                   onChange={(e) => setPartName(e.target.value)}
@@ -896,7 +896,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Lead Metallurgist</label>
-                <input
+                <input aria-label="Lead Metallurgist"
                   type="text"
                   value={engineerName}
                   onChange={(e) => setEngineerName(e.target.value)}
@@ -905,7 +905,7 @@ export function AerospaceAuditReportGenerator() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">QA reviewer (placeholder)</label>
-                <input
+                <input aria-label="QA reviewer (placeholder)"
                   type="text"
                   value={qaDirectorName}
                   onChange={(e) => setQaDirectorName(e.target.value)}
@@ -932,7 +932,7 @@ export function AerospaceAuditReportGenerator() {
                   Mean Yield F_ty (0.2% Offset)
                 </label>
                 <div className="flex items-center gap-1">
-                  <input
+                  <input aria-label="Mean Yield F_ty (0.2% Offset) (MPa)"
                     type="number"
                     value={meanYieldMpa}
                     onChange={(e) => setMeanYieldMpa(Number(e.target.value))}
@@ -945,7 +945,7 @@ export function AerospaceAuditReportGenerator() {
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Mean Tensile UTS F_tu</label>
                 <div className="flex items-center gap-1">
-                  <input
+                  <input aria-label="Mean Tensile UTS F_tu (MPa)"
                     type="number"
                     value={meanTensileMpa}
                     onChange={(e) => setMeanTensileMpa(Number(e.target.value))}
@@ -958,7 +958,7 @@ export function AerospaceAuditReportGenerator() {
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Fracture Toughness K_IC</label>
                 <div className="flex items-center gap-1">
-                  <input
+                  <input aria-label="Fracture Toughness K_IC (MPa√m)"
                     type="number"
                     value={fractureToughnessMpaM}
                     onChange={(e) => setFractureToughnessMpaM(Number(e.target.value))}
@@ -970,7 +970,7 @@ export function AerospaceAuditReportGenerator() {
 
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Sample Size (N Coupons)</label>
-                <input
+                <input aria-label="Sample Size (N Coupons)"
                   type="number"
                   value={sampleSizeN}
                   onChange={(e) => setSampleSizeN(Number(e.target.value))}

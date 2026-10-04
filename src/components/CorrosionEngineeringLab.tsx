@@ -291,7 +291,7 @@ export function CorrosionEngineeringLab() {
                       {anodeMetal.e0 > 0 ? `+${anodeMetal.e0}` : anodeMetal.e0} V vs SHE
                     </span>
                   </div>
-                  <select
+                  <select aria-label="ANODE (Corroding Metal)"
                     value={anodeIdx}
                     onChange={(e) => setAnodeIdx(parseInt(e.target.value))}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-red-400"
@@ -307,7 +307,7 @@ export function CorrosionEngineeringLab() {
                   <div className="pt-2 border-t border-[#162032] flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-400">Exposed Anode Area:</span>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label="Exposed Anode Area (cm²)"
                         type="number"
                         inputMode="decimal"
                         value={anodeArea}
@@ -330,7 +330,7 @@ export function CorrosionEngineeringLab() {
                       {cathodeMetal.e0 > 0 ? `+${cathodeMetal.e0}` : cathodeMetal.e0} V vs SHE
                     </span>
                   </div>
-                  <select
+                  <select aria-label="CATHODE (Protected Metal)"
                     value={cathodeIdx}
                     onChange={(e) => setCathodeIdx(parseInt(e.target.value))}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-400"
@@ -346,7 +346,7 @@ export function CorrosionEngineeringLab() {
                   <div className="pt-2 border-t border-[#162032] flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-400">Exposed Cathode Area:</span>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label="Exposed Cathode Area (cm²)"
                         type="number"
                         inputMode="decimal"
                         value={cathodeArea}
@@ -363,7 +363,7 @@ export function CorrosionEngineeringLab() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div className="space-y-1.5">
                   <label className="text-xs font-mono text-slate-300">Electrolyte Environment:</label>
-                  <select
+                  <select aria-label="Electrolyte Environment"
                     value={electrolyte}
                     onChange={(e) => setElectrolyte(e.target.value as any)}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
@@ -381,7 +381,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Uncoupled Base Current Density:</span>
                     <span className="text-amber-400 font-bold">{currentDensity} mA/cm²</span>
                   </div>
-                  <input
+                  <input aria-label="Uncoupled Base Current Density (mA/cm²)"
                     type="range"
                     min="0.1"
                     max="10.0"
@@ -509,7 +509,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Chromium (%Cr):</span>
                     <span className="text-sky-300 font-bold">{cr.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Chromium (%Cr)"
                     type="range"
                     min="10.0"
                     max="32.0"
@@ -526,7 +526,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Molybdenum (%Mo):</span>
                     <span className="text-sky-300 font-bold">{mo.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Molybdenum (%Mo)"
                     type="range"
                     min="0.0"
                     max="10.0"
@@ -543,7 +543,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Tungsten (%W):</span>
                     <span className="text-sky-300 font-bold">{w.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Tungsten (%W)"
                     type="range"
                     min="0.0"
                     max="6.0"
@@ -560,7 +560,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Nitrogen (%N):</span>
                     <span className="text-sky-300 font-bold">{n.toFixed(2)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Nitrogen (%N)"
                     type="range"
                     min="0.0"
                     max="0.60"

@@ -329,7 +329,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0c1322] p-2.5 rounded-xl border border-[#1e2d46]">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
+              <input aria-label="Search conversions"
                 id="search-metallurgical-units"
                 type="text"
                 value={searchQuery}
@@ -470,7 +470,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
                   {/* Immediate Slider */}
                   <div className="mt-2.5">
-                    <input
+                    <input aria-label="Megapascals (MPa) slider"
                       type="range"
                       min={20}
                       max={2200}
@@ -641,7 +641,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
                   {/* Immediate Slider */}
                   <div className="mt-2.5">
-                    <input
+                    <input aria-label="Vickers (HV) slider"
                       type="range"
                       min={120}
                       max={950}
@@ -846,7 +846,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
                   {/* Immediate Slider */}
                   <div className="mt-2.5">
-                    <input
+                    <input aria-label="Celsius (°C) slider"
                       type="range"
                       min={-200}
                       max={1600}

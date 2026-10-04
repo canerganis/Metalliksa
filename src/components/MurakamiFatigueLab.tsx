@@ -56,7 +56,7 @@ export const MurakamiFatigueLab: React.FC = () => {
         <div className="w-84 p-4 border-r border-gray-700 overflow-y-auto space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Alloy System</label>
-            <select
+            <select aria-label="Alloy System"
               value={selectedAlloy}
               onChange={e => setSelectedAlloy(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-xs text-white"
