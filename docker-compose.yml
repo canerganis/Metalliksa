@@ -5,8 +5,14 @@ services:
     build:
       context: .
       target: runtime
+    # Published on host loopback only by default. To expose it on the network, use "3000:3000" (or
+    # "<host-ip>:3000:3000") and put a TLS reverse proxy in front (then set METALLIKSA_TRUST_PROXY).
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
       # Bind all container interfaces so the published port is reachable (the image default too). This turns the
       # login flow ON: open the one-time link from `docker compose logs app` (replace its port with the host port),
@@ -20,13 +26,7 @@ services:
       RESEARCH_REGISTRY_DIR: /data/research-registry
     volumes:
       - metalliksa-data:/data
-    healthcheck:
-      # /api/health is unauthenticated, so the check works in login mode (/api/python/status would answer 401).
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+    # No healthcheck override: the image's HEALTHCHECK calls the unauthenticated /api/health on $PORT.
     restart: unless-stopped
 
   # Verification run (lint, unit tests, build, CPU meltpool tests):
