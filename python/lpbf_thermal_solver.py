@@ -23,6 +23,7 @@ import numpy as np
 from eagar_tsai_solver import EagarTsaiField, MODEL_ID as EAGAR_TSAI_MODEL_ID
 from fabbro_keyhole import MODEL_ID as FABBRO_MODEL_ID, fabbro_keyhole_depth_m
 from four_alloy_materials import four_alloy_thermophysical_db, thermal_props
+from in625_thermal_material import LATENT_HEAT_J_KG as IN625_LATENT_HEAT_J_KG
 from goldak_solver import GoldakField, MODEL_ID as GOLDAK_MODEL_ID, seed_goldak_axes
 from solidification_front import MODEL_ID as SOLIDIFICATION_MODEL_ID, evaluate_solidification
 from marangoni_screening import MODEL_ID as MARANGONI_MODEL_ID, marangoni_screening
@@ -42,7 +43,9 @@ SECONDARY_THERMOPHYSICAL_DB = {
         "thermal_conductivity_liquid_W_mK": 30.0,
         "specific_heat_J_kgK": 410.0,
         "specific_heat_liquid_J_kgK": 750.0,
-        "latent_heat_fusion_J_kg": 260000.0,
+        # D5: one IN625 fusion latent heat for every path (Sabau et al. 2020, 290 kJ/kg, cited in
+        # in625_thermal_material); the former 260 kJ/kg literal disagreed with the screening path.
+        "latent_heat_fusion_J_kg": IN625_LATENT_HEAT_J_KG,
         "latent_heat_vap_J_kg": 6300000.0,
         "absorptivity_IR": 0.38,
         "absorptivity_Green": 0.58,
