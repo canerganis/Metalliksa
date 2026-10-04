@@ -14,7 +14,7 @@ const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.ur
 
 test('the badge shows exactly the contract ceiling and no stronger evidence class', () => {
   const contracted = MODULE_CONTRACTS.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['keyhole-raytracing', 'uq-lab']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'defect-twin', 'adaptive-mitigation', 'optical-tomography', 'keyhole-raytracing', 'ttt-cct-kinetics', 'icme-motor', 'uq-lab']);
   for (const contract of contracted) {
     const html = renderToStaticMarkup(<EvidenceBadge moduleId={contract.id} />);
     const ceiling = contract.evidence.ceiling;
