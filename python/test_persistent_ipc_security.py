@@ -240,6 +240,18 @@ class MutualAuthTest(unittest.TestCase):
             self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, 0, digest,
                                      ipc.NonceCache()), (401, "STALE_REQUEST"))
 
+    def test_replay_at_the_exact_edge_of_the_window_is_refused(self):
+        # First seen at t0 with ts = t0 + skew; ts stays acceptable until t0 + 2 * skew.
+        nonces = ipc.NonceCache()
+        t0 = 10 ** 12
+        ts, nonce, digest, mac = _auth_fields("GET", "/status", b"", ts=str(t0 + ipc.MAX_CLOCK_SKEW_MS))
+        ipc.verify_request(TOKEN, "GET", "/status", ts, nonce, mac, 0, digest, nonces, now_ms=t0)
+        for later in (t0 + 1, t0 + ipc.MAX_CLOCK_SKEW_MS, t0 + 2 * ipc.MAX_CLOCK_SKEW_MS):
+            self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, 0, digest,
+                                     nonces, now_ms=later), (401, "REPLAYED_REQUEST"), later - t0)
+        self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, 0, digest, nonces,
+                                 now_ms=t0 + 2 * ipc.MAX_CLOCK_SKEW_MS + 1), (401, "STALE_REQUEST"))
+
     def test_mac_compare_is_constant_time(self):
         with mock.patch.object(ipc.hmac, "compare_digest", wraps=ipc.hmac.compare_digest) as cd:
             self.assertTrue(ipc.macs_equal("a" * 64, "a" * 64))
@@ -347,30 +359,18 @@ class StartupConfigTest(unittest.TestCase):
     def test_token_required(self):
         for token in (None, "", "short", "x" * 31):
             with self.assertRaises(SystemExit) as ctx:
-                ipc.validate_startup_config("127.0.0.1", token, False)
+                ipc.validate_startup_config("127.0.0.1", token)
             self.assertIn("METALLIX_IPC_TOKEN", str(ctx.exception.code))
-        ipc.validate_startup_config("127.0.0.1", "x" * 32, False)
+        ipc.validate_startup_config("127.0.0.1", "x" * 32)
 
-    def test_wildcards_are_always_refused(self):
-        for host in ("0.0.0.0", "::", "[::]", ""):
-            for allow in (False, True):
-                with self.assertRaises(SystemExit) as ctx:
-                    ipc.validate_startup_config(host, TOKEN, allow)
-                self.assertIn("wildcard", str(ctx.exception.code))
-
-    def test_non_loopback_needs_explicit_override(self):
-        for host in ("192.168.1.10", "example.com"):
+    def test_only_loopback_hosts(self):
+        for host in ("0.0.0.0", "::", "[::]", "", "192.168.1.10", "example.com"):
             with self.assertRaises(SystemExit) as ctx:
-                ipc.validate_startup_config(host, TOKEN, False)
-            self.assertIn("METALLIX_IPC_ALLOW_REMOTE", str(ctx.exception.code))
-        err = io.StringIO()
-        with mock.patch.object(sys, "stderr", err):
-            ipc.validate_startup_config("192.168.1.10", TOKEN, True)
-        self.assertIn("WARNING", err.getvalue())
-        with self.assertRaises(SystemExit):  # the override never waives the token
-            ipc.validate_startup_config("192.168.1.10", None, True)
-        for host in ("127.0.0.1", "127.0.0.5", "localhost", "::1"):
-            ipc.validate_startup_config(host, TOKEN, False)
+                ipc.validate_startup_config(host, TOKEN)
+            self.assertIn("only loopback", str(ctx.exception.code))
+        for host in ("127.0.0.1", "127.0.0.5", "localhost", "::1", "[::1]"):
+            ipc.validate_startup_config(host, TOKEN)
+        self.assertFalse(hasattr(ipc, "ALLOW_REMOTE"))
 
     def test_token_is_neither_in_environment_nor_a_module_global(self):
         self.assertNotIn("METALLIX_IPC_TOKEN", os.environ)
@@ -696,6 +696,23 @@ class InThreadHttpTest(unittest.TestCase):
                                            _signed(self.port, "POST", "/execute", body), body)
             self.assertEqual(status, 200)
 
+    def test_ipv6_loopback(self):
+        try:
+            httpd6 = ipc.make_http_server("::1", 0, TOKEN, self.reg)
+        except OSError as exc:
+            self.skipTest(f"IPv6 loopback unavailable: {exc}")
+        port6 = httpd6.server_address[1]
+        threading.Thread(target=httpd6.serve_forever, daemon=True).start()
+        try:
+            body = json.dumps({"script": "python/pourbaix_solver.py"})
+            headers = _signed(port6, "POST", "/execute", body, host=f"[::1]:{port6}")
+            status, parsed, meta, raw = _raw_request(port6, "POST", "/execute", headers, body, host="::1")
+            self.assertEqual((status, parsed["stdout"]), (200, "stub-ran"))
+            _response_ok(self, headers, 200, meta, raw)
+        finally:
+            httpd6.shutdown()
+            httpd6.server_close()
+
 
 def _unix_send(path, request=None, token=TOKEN, ts=None, nonce=None, raw=None, body_override=None, head_override=None):
     """Sends one v2 frame (or raw bytes); returns (head dict, body bytes, nonce)."""
@@ -936,13 +953,10 @@ class ServiceStartupTest(unittest.TestCase):
     def test_refuses_without_token(self):
         self._expect_refusal({}, "METALLIX_IPC_TOKEN")
 
-    def test_refuses_wildcard_even_with_override(self):
-        self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "0.0.0.0",
-                              "METALLIX_IPC_ALLOW_REMOTE": "1"}, "wildcard")
-
-    def test_refuses_non_loopback_without_override(self):
-        self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "192.0.2.1"},
-                             "METALLIX_IPC_ALLOW_REMOTE")
+    def test_refuses_non_loopback_and_wildcard_hosts(self):
+        for host in ("0.0.0.0", "192.0.2.1"):
+            self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": host,
+                                  "METALLIX_IPC_ALLOW_REMOTE": "1"}, "only loopback")
 
     @unittest.skipIf(os.name == "nt", "UNIX socket is POSIX only")
     def test_refuses_socket_in_shared_tmp(self):
@@ -987,3 +1001,19 @@ class ServiceStartupTest(unittest.TestCase):
                 self.assertIsNone(ready["httpPort"])
                 self.assertTrue(ready["unixSocketActive"])
 
+    def test_exits_and_cleans_up_when_the_supervisor_is_gone(self):
+        proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_STDIN_WATCH": "1"}, REPO,
+                              stdin=subprocess.PIPE)
+        try:
+            ready = json.loads(_read_line(proc.stdout, 300))
+            proc.stdin.close()  # what the OS does when the Node process dies
+            proc.wait(60)
+            self.assertEqual(proc.returncode, 0)
+            if ready.get("unixSocket"):
+                self.assertFalse(os.path.exists(os.path.dirname(ready["unixSocket"])))
+        finally:
+            _kill_tree(proc)
+
+
+if __name__ == "__main__":
+    unittest.main()

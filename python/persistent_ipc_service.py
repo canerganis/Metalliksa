@@ -26,8 +26,9 @@ Security model (both channels, protocol "metallix-ipc-v2"):
    resolved with realpath and required to stay in SCRIPT_DIR.
  - The UNIX socket lives in a fresh 0700 directory (mkdtemp, under XDG_RUNTIME_DIR when set) and
    is created 0600; on POSIX a socket that cannot be created is fatal, not a silent HTTP-only mode.
- - A non-loopback METALLIX_IPC_HOST is refused unless METALLIX_IPC_ALLOW_REMOTE=1; wildcard
-   addresses (0.0.0.0, ::) are always refused.
+ - Only loopback addresses are bound (127.0.0.0/8, localhost, ::1); anything else is refused.
+ - With METALLIX_IPC_STDIN_WATCH=1 the daemon exits (and removes its socket directory) when its
+   stdin reaches EOF, i.e. when the supervising Node process is gone.
 """
 
 import sys
@@ -64,7 +65,7 @@ HTTP_PORT = int(os.environ.get("METALLIX_IPC_PORT", "0") or "0")
 HTTP_HOST = os.environ.get("METALLIX_IPC_HOST", "127.0.0.1")
 # HTTP is the only channel on Windows; on POSIX the UNIX socket is enough unless HTTP is asked for.
 HTTP_ENABLED = os.name == "nt" or os.environ.get("METALLIX_IPC_HTTP", "") == "1"
-ALLOW_REMOTE = os.environ.get("METALLIX_IPC_ALLOW_REMOTE", "") == "1"
+STDIN_WATCH = os.environ.get("METALLIX_IPC_STDIN_WATCH", "") == "1"
 MIN_TOKEN_LENGTH = 32
 
 
@@ -248,9 +249,14 @@ def macs_equal(presented: Any, expected: str) -> bool:
 
 
 class NonceCache:
-    """Remembers authenticated nonces for twice the clock window; a repeat is a replay."""
+    """Remembers authenticated nonces for longer than any timestamp stays acceptable.
 
-    def __init__(self, ttl_ms: int = 2 * MAX_CLOCK_SKEW_MS, max_entries: int = NONCE_CACHE_MAX):
+    A request is accepted while |now - ts| <= MAX_CLOCK_SKEW_MS, i.e. for at most 2 * skew after
+    it is first seen (ts at the +skew edge). Entries live 2 * skew + 1 ms and a nonce is a replay
+    while now <= expiry, so a replay at exactly first-seen + 2 * skew is still refused.
+    """
+
+    def __init__(self, ttl_ms: int = 2 * MAX_CLOCK_SKEW_MS + 1, max_entries: int = NONCE_CACHE_MAX):
         self.ttl_ms = ttl_ms
         self.max_entries = max_entries
         self._seen: Dict[str, int] = {}
@@ -259,10 +265,10 @@ class NonceCache:
     def add_if_new(self, nonce: str, now_ms: int) -> bool:
         with self._lock:
             if len(self._seen) >= self.max_entries:
-                self._seen = {n: exp for n, exp in self._seen.items() if exp > now_ms}
+                self._seen = {n: exp for n, exp in self._seen.items() if exp >= now_ms}
                 if len(self._seen) >= self.max_entries:
                     return False  # fail closed under a nonce flood
-            if nonce in self._seen and self._seen[nonce] > now_ms:
+            if nonce in self._seen and self._seen[nonce] >= now_ms:
                 return False
             self._seen[nonce] = now_ms + self.ttl_ms
             return True
@@ -325,19 +331,8 @@ def is_loopback_host(host: str) -> bool:
         return False
 
 
-def is_wildcard_host(host: str) -> bool:
-    try:
-        return ipaddress.ip_address(host.strip().strip("[]")).is_unspecified
-    except ValueError:
-        return host.strip() == ""
-
-
 def allowed_host_headers(bind_host: str, port: int) -> frozenset:
-    """Host header values accepted by the HTTP service (anything else: DNS rebinding).
-
-    With METALLIX_IPC_ALLOW_REMOTE=1 the bind host is a specific interface address (wildcards are
-    refused at startup), so remote clients must address the service by exactly that host:port.
-    """
+    """Host header values accepted by the HTTP service (anything else: DNS rebinding)."""
     hosts = {f"127.0.0.1:{port}", f"localhost:{port}", f"[::1]:{port}"}
     h = bind_host.strip().lower()
     hosts.add(f"[{h.strip('[]')}]:{port}" if ":" in h.strip("[]") else f"{h}:{port}")
@@ -370,26 +365,16 @@ def check_http_headers(headers: Any, *, allowed_hosts: Iterable[str], require_js
     return auth
 
 
-def validate_startup_config(host: str, token: Optional[str], allow_remote: bool) -> None:
-    """Refuse to serve without a usable token, on a wildcard address, or off loopback unless allowed."""
+def validate_startup_config(host: str, token: Optional[str]) -> None:
+    """Refuse to serve without a usable token or on anything but a loopback address."""
     if not token or len(token) < MIN_TOKEN_LENGTH:
         raise SystemExit(
             f"[PersistentIPC] Refusing to start: METALLIX_IPC_TOKEN must be set (>= {MIN_TOKEN_LENGTH} "
             "characters). The Node supervisor generates it; set it yourself when launching by hand.")
-    if is_wildcard_host(host):
-        raise SystemExit(
-            f"[PersistentIPC] Refusing to bind wildcard METALLIX_IPC_HOST={host!r}; bind one specific "
-            "interface address (and set METALLIX_IPC_ALLOW_REMOTE=1 if it is not loopback).")
     if not is_loopback_host(host):
-        if not allow_remote:
-            raise SystemExit(
-                f"[PersistentIPC] Refusing to bind non-loopback METALLIX_IPC_HOST={host!r}; "
-                "set METALLIX_IPC_ALLOW_REMOTE=1 to override.")
-        sys.stderr.write(
-            "[PersistentIPC] WARNING ************************************************************\n"
-            f"[PersistentIPC] WARNING: binding NON-LOOPBACK host {host!r} (METALLIX_IPC_ALLOW_REMOTE=1).\n"
-            "[PersistentIPC] WARNING: the IPC service executes Python solvers for any client holding the token.\n"
-            "[PersistentIPC] WARNING ************************************************************\n")
+        raise SystemExit(
+            f"[PersistentIPC] Refusing to bind METALLIX_IPC_HOST={host!r}: only loopback addresses "
+            "(127.0.0.1, localhost, ::1) are allowed; the IPC service has no remote clients.")
 
 # =========================================================================
 # Worker Subprocess Routines (Run in isolated multi-core processes)
@@ -1191,12 +1176,19 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         super().server_bind()
 
 
+class ThreadedHTTPServer6(ThreadedHTTPServer):
+    address_family = socket.AF_INET6
+
+
 def make_http_server(host: str, port: int, token: Optional[str],
                      reg: Optional["ConcurrentModuleRegistry"] = None) -> ThreadedHTTPServer:
-    """Builds the HTTP service with its security configuration (port 0 picks a free port)."""
-    httpd = ThreadedHTTPServer((host, port), MicroserviceHTTPHandler)
+    """Builds the HTTP service with its security configuration (port 0 picks a free port).
+    IPv6 loopback (::1) gets an AF_INET6 socket."""
+    bare = host.strip().strip("[]")
+    cls = ThreadedHTTPServer6 if ":" in bare else ThreadedHTTPServer
+    httpd = cls((bare, port), MicroserviceHTTPHandler)
     httpd.ipc_token = token
-    httpd.allowed_hosts = allowed_host_headers(host, httpd.server_address[1])
+    httpd.allowed_hosts = allowed_host_headers(bare, httpd.server_address[1])
     httpd.nonces = NonceCache()
     httpd.preauth = threading.BoundedSemaphore(PREAUTH_SLOTS)
     httpd.registry = reg
@@ -1208,11 +1200,25 @@ def _http_url(host: str, port: int) -> str:
     return f"http://[{h}]:{port}" if ":" in h else f"http://{h}:{port}"
 
 
+def _watch_stdin_eof(on_eof) -> None:
+    """Calls on_eof() when stdin reaches EOF (the supervisor that holds the pipe is gone)."""
+    def run():
+        try:
+            stream = sys.stdin.buffer if sys.stdin is not None else None
+            while stream is not None and stream.read(65536):
+                pass
+        except Exception:
+            pass
+        on_eof()
+
+    threading.Thread(target=run, daemon=True, name="metallix-ipc-stdin-watch").start()
+
+
 def run_services():
     """Checks the configuration and binds the channels before any warm-up, then serves."""
     global registry
     token = _take_ipc_token()
-    validate_startup_config(HTTP_HOST, token, ALLOW_REMOTE)
+    validate_startup_config(HTTP_HOST, token)
 
     # 1. UNIX domain socket IPC (POSIX). Failure is fatal: the supervisor must not believe in a
     #    channel that does not exist, and a silent HTTP-only fallback hides a hostile /tmp.
@@ -1260,18 +1266,24 @@ def run_services():
         sys.stderr.write(f"[PersistentIPC] HTTP microservice listening at {http_url}\n")
     registry.channels = {"unixSocket": ipc_server.sock_path if ipc_server else None, "httpMicroservice": http_url}
 
-    # Handle graceful termination signals
-    def handle_signal(sig, frame):
-        sys.stderr.write(f"\n[PersistentIPC] Received signal {sig}, shutting down cleanly...\n")
+    shutting_down = threading.Lock()
+
+    def shutdown_and_exit(reason: str, code: int = 0):
+        if not shutting_down.acquire(blocking=False):
+            return
+        sys.stderr.write(f"\n[PersistentIPC] {reason}; shutting down cleanly...\n")
         if ipc_server:
             ipc_server.stop()
         registry.shutdown()
-        if httpd:
-            threading.Thread(target=httpd.shutdown).start()
-        sys.exit(0)
+        os._exit(code)
+
+    def handle_signal(sig, frame):
+        shutdown_and_exit(f"Received signal {sig}")
 
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
+    if STDIN_WATCH:
+        _watch_stdin_eof(lambda: shutdown_and_exit("Supervisor gone (stdin closed)"))
 
     # Inform the supervisor on stdout which channels are really ours and where they are.
     ready_msg = {

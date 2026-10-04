@@ -3,7 +3,7 @@ import { PythonReadiness } from "./pythonStatus.ts";
 import net from "net";
 import http from "http";
 import crypto from "crypto";
-import { spawn, ChildProcess } from "child_process";
+import { spawn, spawnSync, ChildProcess } from "child_process";
 import { getHostPython, loadPythonEnvironment } from "./pythonRuntime.ts";
 
 // =========================================================================
@@ -139,38 +139,25 @@ export function isLoopbackHost(host: string): boolean {
   return net.isIPv4(h) && h.split(".")[0] === "127";
 }
 
-function isWildcardHost(host: string): boolean {
-  const h = host.trim().toLowerCase().replace(/^\[|\]$/g, "");
-  return h === "" || h === "0.0.0.0" || h === "::" || h === "0:0:0:0:0:0:0:0";
-}
-
 /**
- * The daemon binds loopback unless METALLIX_IPC_ALLOW_REMOTE=1 names one specific interface
- * address. A wildcard (0.0.0.0, ::) is never used, and a non-loopback host without the override
- * is replaced by 127.0.0.1 (loud warning either way).
+ * The daemon only ever binds loopback (the supervisor in this process is its only client). A
+ * non-loopback METALLIX_IPC_HOST is replaced by 127.0.0.1 with a loud warning.
  */
 export function resolveIpcHost(
   env: Record<string, string | undefined>,
   warn: (message: string) => void = console.warn
 ): string {
   const requested = (env.METALLIX_IPC_HOST || "127.0.0.1").trim();
-  if (isLoopbackHost(requested)) return requested;
-  if (isWildcardHost(requested)) {
-    warn(`[Python-Supervisor] WARNING: ignoring wildcard METALLIX_IPC_HOST=${requested}; binding 127.0.0.1 (name one interface address instead).`);
-    return "127.0.0.1";
-  }
-  if (env.METALLIX_IPC_ALLOW_REMOTE === "1") {
-    warn(`[Python-Supervisor] WARNING: IPC daemon bound to NON-LOOPBACK host ${requested} (METALLIX_IPC_ALLOW_REMOTE=1); HMAC-authenticated only.`);
-    return requested;
-  }
-  warn(`[Python-Supervisor] WARNING: ignoring non-loopback METALLIX_IPC_HOST=${requested}; binding 127.0.0.1 (set METALLIX_IPC_ALLOW_REMOTE=1 to override).`);
+  if (isLoopbackHost(requested)) return requested.replace(/^\[|\]$/g, "");
+  warn(`[Python-Supervisor] WARNING: ignoring non-loopback METALLIX_IPC_HOST=${requested}; the IPC daemon binds 127.0.0.1 (only loopback is supported).`);
   return "127.0.0.1";
 }
 
 /**
  * Spawn spec for the daemon: the token travels only in the child's environment. Port 0 (the
  * default) lets the daemon bind an ephemeral port; without a socket path the daemon creates a
- * private 0700 directory. Both actual addresses come back in its ready message.
+ * private 0700 directory. Both actual addresses come back in its ready message. The daemon
+ * watches its stdin (a pipe held by this process) and exits when this process is gone.
  */
 export function buildIpcSpawnSpec(
   python: { cmd: string; prefix: string[] },
@@ -183,17 +170,41 @@ export function buildIpcSpawnSpec(
     METALLIX_IPC_PORT: String(ipc.port),
     METALLIX_IPC_HOST: ipc.host,
     METALLIX_IPC_TOKEN: ipc.token,
+    METALLIX_IPC_STDIN_WATCH: "1",
   };
   if (ipc.socketPath) env.METALLIX_IPC_SOCK = ipc.socketPath;
   else delete env.METALLIX_IPC_SOCK;
+  delete env.METALLIX_IPC_ALLOW_REMOTE;
   return { cmd: python.cmd, args: [...python.prefix, scriptPath], env };
 }
 
-/** Only the fixed `python/<module>.py` form used by routes/*.ts is dispatched. */
-const SCRIPT_REF = /^python\/[A-Za-z_][A-Za-z0-9_]*\.py$/;
+/**
+ * Scripts that may be dispatched, mirroring ALLOWED_SCRIPT_NAMES in python/persistent_ipc_service.py
+ * (tests/persistent-ipc-auth.test.ts keeps the two lists equal). The ad-hoc fallback is held to
+ * the same list as the daemon.
+ */
+export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
+  "battery_corrosion_eis_solver",
+  "calphad_solver",
+  "dft_property_calculator",
+  "icme_multiscale_pipeline_solver",
+  "inverse_alloy_optimizer",
+  "kinetics_ttt_cct_solver",
+  "lpbf_bayesian_optimizer",
+  "lpbf_thermal_solver",
+  "marangoni_pore_instability_solver",
+  "part_scale_inherent_strain_solver",
+  "pourbaix_solver",
+  "stl_slicer_build_time_solver",
+  "stochastic_uq_mmpds_solver",
+  "tafel_corrosion_rate_solver",
+  "xrd_peak_deconvolution",
+]);
+const SCRIPT_REF = /^python\/([A-Za-z_][A-Za-z0-9_]*)\.py$/;
 export function assertDispatchableScript(scriptRelativePath: string): void {
-  if (typeof scriptRelativePath !== "string" || !SCRIPT_REF.test(scriptRelativePath)) {
-    throw new Error(`Refusing to dispatch Python script path ${JSON.stringify(scriptRelativePath)}; expected python/<module>.py`);
+  const m = typeof scriptRelativePath === "string" ? SCRIPT_REF.exec(scriptRelativePath) : null;
+  if (!m || !DISPATCHABLE_SCRIPTS.has(m[1])) {
+    throw new Error(`Refusing to dispatch Python script path ${JSON.stringify(scriptRelativePath)}; expected python/<module>.py for an allowlisted module`);
   }
 }
 
@@ -269,7 +280,8 @@ export class PersistentPythonIPCSupervisor {
 
   constructor() {
     loadPythonEnvironment();
-    // The daemon's token is generated here; an inherited or .env value must not linger.
+    // The daemon's token is generated here; an inherited or .env value must not linger
+    // (server.ts deletes it again after its own dotenv.config()).
     delete process.env.METALLIX_IPC_TOKEN;
     this.configuredSocketPath = process.env.METALLIX_IPC_SOCK || undefined;
     this.configuredPort = parsePort(process.env.METALLIX_IPC_PORT);
@@ -298,9 +310,11 @@ export class PersistentPythonIPCSupervisor {
     const child = spawn(spec.cmd, spec.args, {
       windowsHide: true,
       env: spec.env,
-      stdio: ["ignore", "pipe", "pipe"],
+      // stdin is a pipe we never write to: its EOF tells the daemon this process is gone.
+      stdio: ["pipe", "pipe", "pipe"],
     });
     this.child = child;
+    child.stdin?.on("error", () => { /* daemon gone; exit is handled below */ });
 
     // Readiness (and with it the channel addresses) is taken only from this spawn's own stdout.
     child.stdout?.on("data", (data) => {
@@ -333,7 +347,10 @@ export class PersistentPythonIPCSupervisor {
 
     child.on("exit", (code, signal) => {
       console.warn(`[Python-Supervisor] Persistent Python worker exited (code=${code}, signal=${signal})`);
-      if (child === this.child) this.handleProcessExit();
+      if (child === this.child) {
+        this.lastError = `Python IPC daemon exited (code=${code}, signal=${signal})`;
+        this.handleProcessExit();
+      }
     });
   }
 
@@ -351,14 +368,27 @@ export class PersistentPythonIPCSupervisor {
         this.isRestarting = false;
         this.startWorker();
       }, delay);
+    } else if (!this.isRestarting) {
+      console.error(`[Python-Supervisor] Python IPC daemon unavailable after ${this.restartAttempts} restart attempts; using ad-hoc spawns.`);
     }
+  }
+
+  /** True once the restart budget is spent and no daemon is running: requests use ad-hoc spawns. */
+  private get gaveUp(): boolean {
+    return !this.child && !this.isRestarting && !this.isReady && this.restartAttempts >= this.maxRestartAttempts;
   }
 
   private registerCleanupHooks() {
     const shutdown = () => {
-      if (this.child && !this.child.killed) {
+      const child = this.child;
+      if (child && !child.killed) {
         console.log("[Python-Supervisor] Terminating persistent Python microservice worker...");
-        this.child.kill("SIGTERM");
+        if (process.platform === "win32" && child.pid) {
+          // TerminateProcess would leave the daemon's pool workers running: kill the whole tree.
+          spawnSync("taskkill", ["/T", "/F", "/PID", String(child.pid)], { windowsHide: true });
+        } else {
+          child.kill("SIGTERM");
+        }
       }
     };
 
@@ -627,10 +657,11 @@ export class PersistentPythonIPCSupervisor {
     const avgDuration =
       this.requestsHandled > 0 ? (this.totalDurationMs / this.requestsHandled).toFixed(2) : "0.00";
     const httpPort = this.readiness.httpPort;
-    const host = this.httpHost.includes(":") && !this.httpHost.startsWith("[") ? `[${this.httpHost}]` : this.httpHost;
+    const host = this.httpHost.includes(":") ? `[${this.httpHost}]` : this.httpHost;
+    const gaveUp = this.gaveUp;
     return {
-      status: this.isReady ? "online" : this.isRestarting ? "restarting" : "initializing",
-      isPersistent: true,
+      status: this.isReady ? "online" : gaveUp ? "fallback_mode" : this.isRestarting ? "restarting" : "initializing",
+      isPersistent: !gaveUp,
       channels: {
         unixSocket: {
           path: this.readiness.unixSocketPath ?? this.configuredSocketPath ?? "",
@@ -647,7 +678,9 @@ export class PersistentPythonIPCSupervisor {
       warmModulesCount: this.readiness.warmModules.length,
       warmModules: [...this.readiness.warmModules],
       pythonVersion: this.readiness.pythonVersion,
-      lastError: this.lastError,
+      lastError: gaveUp
+        ? `unavailable: Python IPC daemon failed ${this.restartAttempts} restarts (${this.lastError ?? "no detail"}); using ad-hoc spawns`
+        : this.lastError,
     };
   }
 }

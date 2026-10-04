@@ -1,6 +1,8 @@
 import { after, test as baseTest } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
 import { spawnSync } from "node:child_process";
 import type { AddressInfo } from "node:net";
 
@@ -31,7 +33,7 @@ process.env.METALLIX_IPC_TOKEN = "stale-value-from-the-environment"; // must be 
 
 const orchestrator = await import("../server/processOrchestrator.ts");
 const {
-  generateIpcToken, buildIpcSpawnSpec, resolveIpcHost, isLoopbackHost, assertDispatchableScript,
+  generateIpcToken, buildIpcSpawnSpec, resolveIpcHost, isLoopbackHost, assertDispatchableScript, DISPATCHABLE_SCRIPTS,
   ipcRequestMac, ipcResponseMac, sha256Hex, signIpcRequest, verifyIpcResponse, buildUnixFrame, acceptIpcReply,
   UnixReplyParser, IpcChannelError, MAX_IPC_RESPONSE_BYTES, PersistentPythonIPCSupervisor, pythonIPCSupervisor, runPythonScript,
 } = orchestrator;
@@ -138,8 +140,8 @@ test("UNIX frames: signed head + body; reply parser is incremental and bounded",
   assert.throws(() => new UnixReplyParser().push(Buffer.from("{nope}\n")), /malformed/);
 });
 
-test("buildIpcSpawnSpec passes the token via env only; ephemeral port and private socket by default", () => {
-  const base = { PATH: "x", METALLIX_IPC_TOKEN: "stale-user-value", METALLIX_IPC_SOCK: "/tmp/old.sock" };
+test("buildIpcSpawnSpec: token via env only, stdin watch on, no remote override", () => {
+  const base = { PATH: "x", METALLIX_IPC_TOKEN: "stale-user-value", METALLIX_IPC_SOCK: "/tmp/old.sock", METALLIX_IPC_ALLOW_REMOTE: "1" };
   const token = generateIpcToken();
   const spec = buildIpcSpawnSpec({ cmd: "py", prefix: ["-3"] }, "/repo/python/persistent_ipc_service.py", base, {
     port: 0, host: "127.0.0.1", token,
@@ -148,48 +150,56 @@ test("buildIpcSpawnSpec passes the token via env only; ephemeral port and privat
   assert.ok(!spec.args.some((a) => a.includes(token)));
   assert.equal(spec.env.METALLIX_IPC_TOKEN, token);
   assert.equal(spec.env.METALLIX_IPC_PORT, "0");
+  assert.equal(spec.env.METALLIX_IPC_STDIN_WATCH, "1");
   assert.equal(spec.env.METALLIX_IPC_SOCK, undefined);
+  assert.equal(spec.env.METALLIX_IPC_ALLOW_REMOTE, undefined);
   assert.equal(base.METALLIX_IPC_TOKEN, "stale-user-value"); // caller's env untouched
   const explicit = buildIpcSpawnSpec({ cmd: "py", prefix: [] }, "s.py", base, { socketPath: "/run/me/s.sock", port: 5099, host: "::1", token });
   assert.equal(explicit.env.METALLIX_IPC_SOCK, "/run/me/s.sock");
-  assert.equal(explicit.env.METALLIX_IPC_PORT, "5099");
 });
 
-test("isLoopbackHost / resolveIpcHost: loopback by default, never a wildcard, remote only by override", () => {
+test("isLoopbackHost / resolveIpcHost: loopback only (incl. ::1), everything else becomes 127.0.0.1", () => {
   for (const h of ["127.0.0.1", "127.8.9.10", "localhost", "LOCALHOST", "::1", "[::1]"]) assert.equal(isLoopbackHost(h), true, h);
   for (const h of ["0.0.0.0", "::", "192.168.1.5", "10.0.0.1", "example.com", "127.0.0.1.nip.io", ""]) assert.equal(isLoopbackHost(h), false, h);
-
   const warnings: string[] = [];
   const warn = (m: string) => warnings.push(m);
   assert.equal(resolveIpcHost({}, warn), "127.0.0.1");
   assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "localhost" }, warn), "localhost");
+  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "[::1]" }, warn), "::1");
   assert.equal(warnings.length, 0);
-  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5" }, warn), "127.0.0.1");
-  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "0.0.0.0", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "127.0.0.1");
-  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "::", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "127.0.0.1");
-  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5", METALLIX_IPC_ALLOW_REMOTE: "true" }, warn), "127.0.0.1");
-  assert.equal(warnings.length, 4);
-  assert.match(warnings[1], /wildcard/);
-  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "192.168.1.5");
-  assert.match(warnings[4], /WARNING.*NON-LOOPBACK/);
+  for (const h of ["0.0.0.0", "::", "192.168.1.5"]) {
+    assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: h, METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "127.0.0.1", h);
+  }
+  assert.equal(warnings.length, 3);
+  assert.match(warnings[0], /WARNING.*only loopback/);
 });
 
-test("assertDispatchableScript only allows python/<module>.py", async () => {
+test("DISPATCHABLE_SCRIPTS mirrors ALLOWED_SCRIPT_NAMES in the daemon; the ad-hoc path uses the same list", async () => {
+  const src = fs.readFileSync(path.join(process.cwd(), "python", "persistent_ipc_service.py"), "utf8");
+  const block = /ALLOWED_SCRIPT_NAMES = frozenset\(\{([\s\S]*?)\}\)/.exec(src);
+  assert.ok(block, "ALLOWED_SCRIPT_NAMES block not found");
+  const pyNames = [...block![1].matchAll(/"([A-Za-z0-9_]+)"/g)].map((m) => m[1]).sort();
+  assert.ok(pyNames.length >= 15);
+  assert.deepEqual([...DISPATCHABLE_SCRIPTS].sort(), pyNames);
+
   assertDispatchableScript("python/pourbaix_solver.py");
-  for (const bad of ["python/../../x.py", "pourbaix_solver.py", "/abs/python/x.py", "python\\x.py",
-    "C:/python/x.py", "python/sub/x.py", "python/x.pyc", ""]) {
+  for (const bad of ["python/../../x.py", "pourbaix_solver.py", "/abs/python/x.py", "python\\x.py", "C:/python/x.py",
+    "python/sub/x.py", "python/x.pyc", "", "python/persistent_ipc_service.py", "python/engine_dispatcher.py", "python/os.py"]) {
     assert.throws(() => assertDispatchableScript(bad), /Refusing to dispatch/, bad);
   }
-  await assert.rejects(runPythonScript("python/../../outside/pwn.py", {}), /Refusing to dispatch/);
+  await assert.rejects(runPythonScript("python/engine_dispatcher.py", {}), /Refusing to dispatch/);
 });
 
-test("startup scrubs an inherited METALLIX_IPC_TOKEN; the daemon gets its own token in env, never argv", () => {
+test("startup scrubs an inherited METALLIX_IPC_TOKEN; the daemon gets its own token in env, never argv, and a stdin pipe", () => {
   assert.equal(process.env.METALLIX_IPC_TOKEN, undefined);
   const child = supervisor.child;
   assert.ok(child, "supervisor spawned a daemon");
   const token: string = supervisor.ipcToken;
   assert.match(token, /^[0-9a-f]{64}$/);
   assert.ok(!child.spawnargs.some((a: string) => a.includes(token)));
+  assert.ok(child.stdin, "stdin is a pipe held by the supervisor");
+  const serverSrc = fs.readFileSync(path.join(process.cwd(), "server.ts"), "utf8");
+  assert.match(serverSrc, /dotenv\.config\(\);\s*\n(?:\s*\/\/[^\n]*\n)*\s*delete process\.env\.METALLIX_IPC_TOKEN;/);
 });
 
 /** A supervisor without a daemon, whose channels and ad-hoc spawn are controlled by the test. */
@@ -305,6 +315,22 @@ test("channels are used only after this server's own daemon announced them", () 
   assert.equal(sup.httpTarget(), 61234);
 });
 
+test("after the restart budget is spent the status is fallback_mode with an 'unavailable' reason", () => {
+  const sup = Object.create(PersistentPythonIPCSupervisor.prototype) as any;
+  Object.assign(sup, {
+    child: null, isReady: false, isRestarting: false, restartAttempts: 10, maxRestartAttempts: 10, httpHost: "127.0.0.1",
+    startTime: Date.now(), requestsHandled: 0, totalDurationMs: 0, lastError: "Python IPC daemon exited (code=1, signal=null)",
+    readiness: { httpPort: null, unixSocketPath: null, warmModules: [], pythonVersion: null, unixActive: false, httpActive: false },
+  });
+  const st = sup.getStatus();
+  assert.equal(st.status, "fallback_mode");
+  assert.equal(st.isPersistent, false);
+  assert.match(st.lastError, /^unavailable: Python IPC daemon failed 10 restarts/);
+  sup.restartAttempts = 3;
+  sup.isRestarting = true;
+  assert.equal(sup.getStatus().status, "restarting");
+});
+
 async function waitFor(pred: () => boolean, timeoutMs: number): Promise<boolean> {
   const t0 = Date.now();
   while (Date.now() - t0 < timeoutMs) {
@@ -387,9 +413,10 @@ test("a squatter on a configured fixed port never receives a request or gets its
   }
   try {
     // Windows: exclusive bind fails, HTTP is the only channel, the daemon exits before warm-up
-    // POSIX: the daemon announces only its UNIX socket.
+    // (status then reports fallback_mode). POSIX: the daemon announces only its UNIX socket.
     assert.ok(await waitFor(() => sup.child === null || sup.isReady, 240000), "daemon neither exited nor became ready");
     assert.equal(sup.httpTarget(), null);
+    if (sup.child === null) assert.equal(sup.getStatus().status, "fallback_mode");
     const res = await sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 60000);
     assert.notEqual(res.channel, "http_microservice");
     assert.ok(!res.stdout.includes("FORGED_BY_SQUATTER"));
