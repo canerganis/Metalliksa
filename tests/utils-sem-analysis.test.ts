@@ -13,7 +13,8 @@ import {
 
 // Golden numbers below were first cross-checked against hand calculations (see comments) and against the UNMODIFIED
 // inline algorithm in SEMAutoAnalyzerStudio.tsx (HEAD faa6684): a differential run over 1944 synthetic images and
-// parameter sets was bit-identical before the component was wired to this module.
+// parameter sets was bit-identical before the component was wired to this module (verified once by the p8-studio-tests
+// lane; that script was not retained).
 
 type Img = { data: Uint8ClampedArray; width: number; height: number };
 
@@ -87,7 +88,10 @@ test("striped image: hand-computed Heyn intercept, grain size and stereology", (
   assert.equal(r.totalAreaUm2, 1800); // 100 * 72 * 0.5^2
   assert.equal(r.totalPorosityPct, 0);
   assert.equal(r.defectCount, 0);
-  assert.equal(r.meanPoreDiameterUm, 0.8); // no pores -> documented fallback constants
+  // PINS INVENTED HEURISTIC OUTPUT (RULES.md: no invented measurements): with zero pores detected the module reports a
+  // made-up mean pore diameter 0.8 um and max 1.5 um instead of "unavailable". Behaviour NOT changed here (listed for
+  // the lead); the honest behaviour is the todo test "no pores -> pore diameters unavailable" below.
+  assert.equal(r.meanPoreDiameterUm, 0.8);
   assert.equal(r.maxPoreDiameterUm, 1.5);
   assert.equal(r.luminanceHistogram[100], 5 * 10 * 72);
   assert.equal(r.luminanceHistogram[255], 100 * 8);
@@ -119,12 +123,17 @@ test("grain sensitivity changes the intercept detection threshold ((100 - s) * 0
   assert.equal(run(stripes, { grainSensitivity: 0 }).results.interceptCount, 72);
   // A faint 10-level stripe pattern: threshold at s=50 is 20 (not detected, floor of 4 per line applies),
   // at s=90 it is 4 (detected).
+  // PINS INVENTED HEURISTIC OUTPUT (RULES.md: no invented measurements): the Math.max(4, ..) floor adds 4 intercepts
+  // per test line that were never detected, so an undetected structure still yields a "measured" grain size.
   const faint = makeImage(100, 80, (x) => (Math.floor(x / 10) % 2 === 0 ? 100 : 110));
   assert.equal(run(faint, { grainSensitivity: 50 }).results.interceptCount, 32); // 8 lines * max(4, 0)
   assert.equal(run(faint, { grainSensitivity: 90 }).results.interceptCount, 72);
 });
 
-test("flat image: minimum of 4 intercepts per line", () => {
+// PINS INVENTED HEURISTIC OUTPUT (RULES.md: no invented measurements): a featureless image has no grain boundaries,
+// yet the Math.max(4, ..) floor reports 32 intercepts, l_bar 12.5 um and an ASTM G. Behaviour NOT changed here
+// (listed for the lead); the honest behaviour is the todo test "no boundaries -> intercept results unavailable".
+test("flat image: minimum of 4 intercepts per line (invented floor, pinned)", () => {
   const flat = makeImage(100, 80, () => 128);
   const { results: r } = run(flat);
   assert.equal(r.interceptCount, 32);
@@ -225,3 +234,30 @@ test("luminance weights are BT.601", () => {
   assert.equal(rgbToLuminance(0, 255, 0), 150); // 149.685
   assert.equal(rgbToLuminance(0, 0, 255), 29); // 29.07
 });
+
+// ---------------------------------------------------------------------------------------------------------------
+// HONEST BEHAVIOUR (todo; the SEM module is NOT changed in this lane, decision for the lead/user): when nothing is
+// detected the result must say so instead of reporting the invented fallback values pinned above.
+// ---------------------------------------------------------------------------------------------------------------
+test(
+  "no pores -> pore diameters unavailable (null), not the invented 0.8 / 1.5 um",
+  { todo: "INVENTED VALUE: meanPoreDiameterUm falls back to 0.8 and maxPoreDiameterUm to 1.5 when no pore is detected" },
+  () => {
+    const { results: r } = run(stripes);
+    assert.equal(r.defectCount, 0);
+    assert.equal(r.meanPoreDiameterUm, null);
+    assert.equal(r.maxPoreDiameterUm, null);
+  }
+);
+
+test(
+  "no boundaries -> intercept count, mean intercept and ASTM G unavailable, not the Math.max(4, ..) floor",
+  { todo: "INVENTED VALUE: Math.max(4, intersectionsInLine) adds 4 undetected intercepts per test line" },
+  () => {
+    const flat = makeImage(100, 80, () => 128);
+    const { results: r } = run(flat);
+    assert.equal(r.interceptCount, 0);
+    assert.equal(r.meanInterceptLengthUm, null);
+    assert.equal(r.astmGrainSizeNumber, null);
+  }
+);
