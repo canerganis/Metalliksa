@@ -490,8 +490,10 @@ export interface AstmGrainSizeResult {
 
 export function calculateAstmE112FromG(g: number): AstmGrainSizeResult {
   const gClamped = Math.max(-3, Math.min(16, g));
-  // Metric intercept diameter: d = 1000 / sqrt(2^(G+3)) um
-  const meanInterceptUm = 1000 / Math.sqrt(Math.pow(2, gClamped + 3));
+  // Mean lineal intercept, the exact inverse of the E112 intercept relation used by calculateAstmE112FromDiameterUm:
+  // G = -6.643856 * log10(l_mm) - 3.288  =>  l_mm = 10^(-(G + 3.288) / 6.643856)
+  // (Until 2026-10 this was 1000 / sqrt(2^(G+3)) um, a planimetric diameter, so G -> l -> G did not round-trip.)
+  const meanInterceptUm = 1000 * Math.pow(10, -(gClamped + 3.288) / 6.643856);
   const grainsPerSqInch100x = Math.pow(2, gClamped - 1);
   const grainsPerMm2 = Math.round(grainsPerSqInch100x * 15.5);
 
@@ -630,5 +632,45 @@ export function convertDensity(
     kg_m3: Number((g_cm3 * 1000).toFixed(1)),
     lb_in3: Number((g_cm3 * 0.036127292).toFixed(5)),
     lb_ft3: Number((g_cm3 * 62.42796).toFixed(2)),
+  };
+}
+
+// ==========================================
+// 8. DUAL-UNIT TEST REPORT SCRATCHPAD (SI -> US customary + hardness)
+// ==========================================
+export interface DualUnitReportInputs {
+  yieldMpa: number;
+  utsMpa: number;
+  hardnessHrc: number;
+  cvnJ: number;
+  testTempC: number;
+}
+
+export interface DualUnitReport {
+  yieldKsi: number;
+  utsKsi: number;
+  hv: number;
+  hbw: number;
+  cvnFtLbf: number;
+  tempF: number;
+  tempK: number;
+}
+
+export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitReport {
+  const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, hardnessHrc: reportHardnessHrc, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
+  const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
+  const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
+  const hState = convertMetallurgicalHardness(reportHardnessHrc, "HRC");
+  const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
+  const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
+  const tempK = Number((reportTestTempC + 273.15).toFixed(1));
+  return {
+    yieldKsi,
+    utsKsi,
+    hv: hState.HV,
+    hbw: hState.HBW,
+    cvnFtLbf,
+    tempF,
+    tempK,
   };
 }
