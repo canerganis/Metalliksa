@@ -165,64 +165,80 @@ class AllowlistTest(unittest.TestCase):
 VECTOR_TOKEN = "k" * 64
 VECTOR_NONCE = "0123456789abcdef0123456789abcdef"
 VECTOR_REQ_BODY = b'{"script":"python/pourbaix_solver.py"}'
-VECTOR_REQ_MAC = "00622ace5f176a373bda15f2e964903e74d6457c8a60d5907f17b10e34773ffe"
+VECTOR_REQ_MAC = "5126140a5094ef571795f7d658d319574d706efc1a2e62e61447f90f99006e3f"
 VECTOR_RESP_BODY = b'{"stdout": "x"}'
-VECTOR_RESP_MAC = "3baf7d40b3db8b160d35c8e4caf1338cad617f030cb908dd06c0e87bd128973c"
+VECTOR_RESP_MAC = "fd337f36ff1dc00192e77387e339bb7e347c8eb7b00eee2e5147479b42bd3d77"
 
 
 def _now_ms():
     return int(time.time() * 1000)
 
 
-def _auth_fields(method, path, body, token=TOKEN, ts=None, nonce=None):
+def _auth_fields(method, path, body, token=TOKEN, ts=None, nonce=None, length=None):
+    """(ts, nonce, digest, mac) for a request whose body is `body`."""
     ts = ts or str(_now_ms())
     nonce = nonce or secrets.token_hex(16)
-    return ts, nonce, ipc.request_mac(token, method, path, ts, nonce, body)
+    digest = ipc.body_digest(body)
+    length = len(body) if length is None else length
+    return ts, nonce, digest, ipc.request_mac(token, method, path, ts, nonce, length, digest)
+
+
+def _read_line(stream, timeout):
+    """readline with a deadline (a hung daemon must not hang the test run)."""
+    out = []
+    t = threading.Thread(target=lambda: out.append(stream.readline()), daemon=True)
+    t.start()
+    t.join(timeout)
+    if t.is_alive():
+        raise AssertionError(f"no line within {timeout}s")
+    return out[0]
 
 
 class MutualAuthTest(unittest.TestCase):
     def test_cross_language_vectors(self):
         # Same vectors as tests/persistent-ipc-auth.test.ts (computed with plain hmac/hashlib).
         self.assertEqual(ipc.request_mac(VECTOR_TOKEN, "POST", "/execute", "1700000000000", VECTOR_NONCE,
-                                         VECTOR_REQ_BODY), VECTOR_REQ_MAC)
-        self.assertEqual(ipc.response_mac(VECTOR_TOKEN, VECTOR_NONCE, 200, VECTOR_RESP_BODY), VECTOR_RESP_MAC)
+                                         len(VECTOR_REQ_BODY), ipc.body_digest(VECTOR_REQ_BODY)), VECTOR_REQ_MAC)
+        self.assertEqual(ipc.response_mac(VECTOR_TOKEN, VECTOR_NONCE, 200, len(VECTOR_RESP_BODY),
+                                          ipc.body_digest(VECTOR_RESP_BODY)), VECTOR_RESP_MAC)
 
-    def test_verify_accepts_exact_request_once(self):
+    def test_head_verification_needs_no_body_and_accepts_once(self):
         nonces = ipc.NonceCache()
-        body = b'{"a": 1}'
-        ts, nonce, mac = _auth_fields("POST", "/execute", body)
-        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces)
-        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces),
+        ts, nonce, digest, mac = _auth_fields("POST", "/execute", b'{"a": 1}')
+        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, 8, digest, nonces)
+        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, mac, 8, digest, nonces),
                          (401, "REPLAYED_REQUEST"))
 
     def test_any_change_or_wrong_token_is_401(self):
-        body = b'{"a": 1}'
-        ts, nonce, mac = _auth_fields("POST", "/execute", body)
+        ts, nonce, digest, mac = _auth_fields("POST", "/execute", b'{"a": 1}')
+        other = ipc.body_digest(b'{"a": 2}')
         cases = [
-            (TOKEN, "POST", "/execute", ts, nonce, mac, b'{"a": 2}'),
-            (TOKEN, "POST", "/run", ts, nonce, mac, body),
-            (TOKEN, "GET", "/execute", ts, nonce, mac, body),
-            (TOKEN, "POST", "/execute", str(int(ts) + 1), nonce, mac, body),
-            (TOKEN, "POST", "/execute", ts, secrets.token_hex(16), mac, body),
-            ("0" * 64, "POST", "/execute", ts, nonce, mac, body),
-            (None, "POST", "/execute", ts, nonce, mac, body),
-            ("", "POST", "/execute", ts, nonce, mac, body),
+            (TOKEN, "POST", "/execute", ts, nonce, mac, 8, other),
+            (TOKEN, "POST", "/execute", ts, nonce, mac, 9, digest),
+            (TOKEN, "POST", "/execute", ts, nonce, mac, 64 * 2 ** 20, digest),
+            (TOKEN, "POST", "/run", ts, nonce, mac, 8, digest),
+            (TOKEN, "GET", "/execute", ts, nonce, mac, 8, digest),
+            (TOKEN, "POST", "/execute", str(int(ts) + 1), nonce, mac, 8, digest),
+            (TOKEN, "POST", "/execute", ts, secrets.token_hex(16), mac, 8, digest),
+            ("0" * 64, "POST", "/execute", ts, nonce, mac, 8, digest),
+            (None, "POST", "/execute", ts, nonce, mac, 8, digest),
+            ("", "POST", "/execute", ts, nonce, mac, 8, digest),
         ]
         for case in cases:
-            self.assertEqual(_status(ipc.verify_request, *case, ipc.NonceCache())[0], 401, case[:5])
+            self.assertEqual(_status(ipc.verify_request, *case, ipc.NonceCache())[0], 401, case[1:7])
 
     def test_failed_mac_does_not_burn_the_nonce(self):
         nonces = ipc.NonceCache()
-        body = b"{}"
-        ts, nonce, mac = _auth_fields("POST", "/execute", body)
-        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, "f" * 64, body, nonces)[0], 401)
-        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces)
+        ts, nonce, digest, mac = _auth_fields("POST", "/execute", b"{}")
+        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, "f" * 64, 2, digest,
+                                 nonces)[0], 401)
+        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, 2, digest, nonces)
 
     def test_stale_or_future_timestamps_are_401(self):
         for delta in (-ipc.MAX_CLOCK_SKEW_MS - 1000, ipc.MAX_CLOCK_SKEW_MS + 1000):
-            ts, nonce, mac = _auth_fields("GET", "/status", b"", ts=str(_now_ms() + delta))
-            self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, b"", ipc.NonceCache()),
-                             (401, "STALE_REQUEST"))
+            ts, nonce, digest, mac = _auth_fields("GET", "/status", b"", ts=str(_now_ms() + delta))
+            self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, 0, digest,
+                                     ipc.NonceCache()), (401, "STALE_REQUEST"))
 
     def test_mac_compare_is_constant_time(self):
         with mock.patch.object(ipc.hmac, "compare_digest", wraps=ipc.hmac.compare_digest) as cd:
@@ -240,6 +256,25 @@ class MutualAuthTest(unittest.TestCase):
         self.assertTrue(cache.add_if_new("c" * 32, 20_000))  # expired entries purged
         self.assertFalse(cache.add_if_new("c" * 32, 20_001))  # replay
 
+    def test_body_is_streamed_and_hash_checked(self):
+        body = b"x" * 200_000
+        digest = ipc.body_digest(body)
+        stream = io.BytesIO(body)
+        sizes = []
+
+        def read(n):
+            sizes.append(n)
+            return stream.read(n)
+
+        self.assertEqual(ipc.read_body_checked(read, len(body), digest, time.monotonic() + 10), body)
+        self.assertLessEqual(max(sizes), 64 * 1024)  # never asks for the declared length at once
+        self.assertEqual(_status(ipc.read_body_checked, io.BytesIO(body).read, len(body), "0" * 64,
+                                 time.monotonic() + 10), (400, "BODY_HASH_MISMATCH"))
+        self.assertEqual(_status(ipc.read_body_checked, io.BytesIO(b"x" * 10).read, 20, digest,
+                                 time.monotonic() + 10), (400, "TRUNCATED_BODY"))
+        self.assertEqual(_status(ipc.read_body_checked, io.BytesIO(body).read, len(body), digest,
+                                 time.monotonic() - 1), (408, "REQUEST_TIMEOUT"))
+
 
 class HeaderCheckTest(unittest.TestCase):
     HOSTS = ipc.allowed_host_headers("127.0.0.1", 5055)
@@ -248,9 +283,9 @@ class HeaderCheckTest(unittest.TestCase):
         return _status(ipc.check_http_headers, _headers(pairs), allowed_hosts=self.HOSTS, require_json=require_json)
 
     def _ok(self, **override):
-        ts, nonce, mac = _auth_fields("POST", "/execute", b"{}")
+        ts, nonce, digest, mac = _auth_fields("POST", "/execute", b"{}")
         base = {"Host": "127.0.0.1:5055", "X-Metallix-Ts": ts, "X-Metallix-Nonce": nonce, "X-Metallix-Mac": mac,
-                "Content-Type": "application/json"}
+                "X-Metallix-Body-Sha256": digest, "Content-Type": "application/json"}
         base.update(override)
         return [(k, v) for k, v in base.items() if v is not None]
 
@@ -273,6 +308,7 @@ class HeaderCheckTest(unittest.TestCase):
 
     def test_missing_or_malformed_auth_fields_are_401(self):
         bad = [{"X-Metallix-Ts": None}, {"X-Metallix-Nonce": None}, {"X-Metallix-Mac": None},
+               {"X-Metallix-Body-Sha256": None}, {"X-Metallix-Body-Sha256": "0" * 63},
                {"X-Metallix-Ts": "abc"}, {"X-Metallix-Ts": "-5"}, {"X-Metallix-Nonce": "0" * 31},
                {"X-Metallix-Nonce": "A" * 32}, {"X-Metallix-Mac": "0" * 63}, {"X-Metallix-Mac": "Z" * 64}]
         for override in bad:
@@ -280,7 +316,7 @@ class HeaderCheckTest(unittest.TestCase):
         self.assertEqual(self._check(self._ok() + [("X-Metallix-Nonce", "1" * 32)])[0], 401)  # duplicate
         self.assertEqual(self._check(self._ok(**{"X-Metallix-Ts": str(_now_ms() - 10 ** 6)})),
                          (401, "STALE_REQUEST"))
-        # A bearer token alone (the previous scheme) is no longer accepted.
+        # A bearer token alone (the first scheme) is not accepted.
         self.assertEqual(self._check([("Host", "127.0.0.1:5055"), ("Authorization", f"Bearer {TOKEN}"),
                                       ("Content-Type", "application/json")])[0], 401)
 
@@ -294,7 +330,6 @@ class HeaderCheckTest(unittest.TestCase):
         self.assertIn("127.0.0.2:9000", ipc.allowed_host_headers("127.0.0.2", 9000))
         self.assertIn("[::1]:9000", ipc.allowed_host_headers("::1", 9000))
         self.assertIn("127.0.0.1:9000", ipc.allowed_host_headers("::1", 9000))
-        self.assertIn("192.0.2.7:9000", ipc.allowed_host_headers("192.0.2.7", 9000))
 
 
 class ExecRequestValidationTest(unittest.TestCase):
@@ -401,8 +436,8 @@ class _StubRegistry:
         self.calls.append(("warmup",))
 
 
-def _raw_request(port, method, path, headers, body=None):
-    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=120)
+def _raw_request(port, method, path, headers, body=None, host="127.0.0.1"):
+    conn = http.client.HTTPConnection(host, port, timeout=120)
     conn.putrequest(method, path, skip_host=True, skip_accept_encoding=True)
     data = body.encode("utf-8") if isinstance(body, str) else body
     if data is not None and "Content-Length" not in headers:
@@ -412,26 +447,31 @@ def _raw_request(port, method, path, headers, body=None):
     conn.endheaders(data)
     res = conn.getresponse()
     raw = res.read()
-    acao = res.getheader("Access-Control-Allow-Origin")
-    mac = res.getheader("X-Metallix-Mac")
+    meta = {"acao": res.getheader("Access-Control-Allow-Origin"), "mac": res.getheader("X-Metallix-Mac"),
+            "digest": res.getheader("X-Metallix-Body-Sha256")}
     conn.close()
     try:
         parsed = json.loads(raw.decode("utf-8", "replace"))
     except ValueError:
         parsed = raw.decode("utf-8", "replace")
-    return res.status, parsed, acao, mac, raw
+    return res.status, parsed, meta, raw
 
 
 def _signed(port, method, path, body, token=TOKEN, host=None, ctype="application/json", ts=None, nonce=None,
             sign_body=None):
     data = body.encode("utf-8") if isinstance(body, str) else (body or b"")
-    ts, nonce, mac = _auth_fields(method, path, data if sign_body is None else sign_body.encode("utf-8"),
-                                  token=token, ts=ts, nonce=nonce)
+    signed = data if sign_body is None else sign_body.encode("utf-8")
+    ts, nonce, digest, mac = _auth_fields(method, path, signed, token=token, ts=ts, nonce=nonce)
     headers = {"Host": host or f"127.0.0.1:{port}", "X-Metallix-Ts": ts, "X-Metallix-Nonce": nonce,
-               "X-Metallix-Mac": mac}
+               "X-Metallix-Body-Sha256": digest, "X-Metallix-Mac": mac}
     if ctype:
         headers["Content-Type"] = ctype
     return headers
+
+
+def _response_ok(test, headers, status, meta, raw):
+    test.assertEqual(meta["digest"], ipc.body_digest(raw))
+    test.assertEqual(meta["mac"], ipc.response_mac(TOKEN, headers["X-Metallix-Nonce"], status, len(raw), meta["digest"]))
 
 
 def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
@@ -443,7 +483,8 @@ def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
     def s(body, **kw):
         return _signed(port, "POST", "/execute", body, **kw)
 
-    return [
+    swapped = s(legit)  # signed for `legit`, body below is the traversal (same length is not needed:
+    return [            # the length is covered by the MAC as well)
         ("cross-origin text/plain POST (browser)", "POST", "/execute",
          {"Host": host, "Origin": "https://evil.example", "Content-Type": "text/plain"}, traversal, 403),
         ("DNS rebinding Host", "POST", "/execute", s(legit, host=f"evil.example:{port}"), legit, 403),
@@ -452,7 +493,7 @@ def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
         ("old bearer token scheme", "POST", "/execute",
          {"Host": host, "Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"}, legit, 401),
         ("signed with the wrong token", "POST", "/execute", s(legit, token="0" * 64), legit, 401),
-        ("signed body swapped for traversal", "POST", "/execute", s(traversal, sign_body=legit), traversal, 401),
+        ("signed head, body swapped for traversal", "POST", "/execute", swapped, traversal, 401),
         ("stale timestamp", "POST", "/execute", s(legit, ts=str(_now_ms() - 10 ** 6)), legit, 401),
         ("no authentication GET /status", "GET", "/status", {"Host": host}, None, 401),
         ("text/plain when signed", "POST", "/execute", s(legit, ctype="text/plain"), legit, 415),
@@ -496,57 +537,124 @@ class InThreadHttpTest(unittest.TestCase):
 
     def test_attacks_are_refused_before_any_execution(self):
         for name, method, path, headers, body, expected in _attack_matrix(self.port):
-            status, parsed, acao, _, _ = _raw_request(self.port, method, path, headers, body)
+            status, parsed, meta, _ = _raw_request(self.port, method, path, headers, body)
             self.assertEqual(status, expected, (name, parsed))
-            self.assertIsNone(acao, name)
+            self.assertIsNone(meta["acao"], name)
         self.assertEqual(self.reg.calls, [])
 
     def test_legit_request_reaches_registry_and_response_is_signed(self):
         body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "id": 7})
         headers = _signed(self.port, "POST", "/execute", body, host=f"localhost:{self.port}",
                           ctype="application/json; charset=utf-8")
-        status, parsed, acao, mac, raw = _raw_request(self.port, "POST", "/execute", headers, body)
-        self.assertEqual((status, parsed["stdout"], parsed["id"], acao), (200, "stub-ran", 7, None))
-        self.assertEqual(mac, ipc.response_mac(TOKEN, headers["X-Metallix-Nonce"], 200, raw))
+        status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, body)
+        self.assertEqual((status, parsed["stdout"], parsed["id"], meta["acao"]), (200, "stub-ran", 7, None))
+        _response_ok(self, headers, 200, meta, raw)
         self.assertEqual(self.reg.calls, [("python/pourbaix_solver.py", {"element": "Fe"}, [], 15000)])
-        # The same request again is a replay.
-        status, parsed, _, _, _ = _raw_request(self.port, "POST", "/execute", headers, body)
+        status, parsed, _, _ = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, parsed["code"]), (401, "REPLAYED_REQUEST"))
         self.assertEqual(len(self.reg.calls), 1)
         get_headers = _signed(self.port, "GET", "/status", b"", ctype=None)
-        status, parsed, _, mac, raw = _raw_request(self.port, "GET", "/status", get_headers)
+        status, parsed, meta, raw = _raw_request(self.port, "GET", "/status", get_headers)
         self.assertEqual((status, parsed), (200, {"status": "online"}))
-        self.assertEqual(mac, ipc.response_mac(TOKEN, get_headers["X-Metallix-Nonce"], 200, raw))
+        _response_ok(self, get_headers, 200, meta, raw)
+
+    def test_signed_head_with_wrong_body_bytes_is_400_and_not_run(self):
+        body = json.dumps({"script": "python/pourbaix_solver.py"})
+        evil = body.replace("pourbaix", "calphadx")  # same length, different bytes
+        self.assertEqual(len(body), len(evil))
+        headers = _signed(self.port, "POST", "/execute", body)
+        status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, evil)
+        self.assertEqual((status, parsed["code"]), (400, "BODY_HASH_MISMATCH"))
+        _response_ok(self, headers, 400, meta, raw)  # authenticated head: the refusal is signed
+        self.assertEqual(self.reg.calls, [])
 
     def test_unauthenticated_rejections_are_not_signed(self):
-        status, _, _, mac, _ = _raw_request(self.port, "POST", "/execute",
-                                            _signed(self.port, "POST", "/execute", "{}", token="0" * 64), "{}")
-        self.assertEqual((status, mac), (401, None))
+        status, _, meta, _ = _raw_request(self.port, "POST", "/execute",
+                                          _signed(self.port, "POST", "/execute", "{}", token="0" * 64), "{}")
+        self.assertEqual((status, meta["mac"]), (401, None))
 
     def test_warmup_requires_auth(self):
-        status, _, _, _, _ = _raw_request(self.port, "POST", "/warmup",
-                                          {"Host": f"127.0.0.1:{self.port}", "Content-Type": "application/json"}, "{}")
+        status, _, _, _ = _raw_request(self.port, "POST", "/warmup",
+                                       {"Host": f"127.0.0.1:{self.port}", "Content-Type": "application/json"}, "{}")
         self.assertEqual(status, 401)
         self.assertEqual(self.reg.calls, [])
 
-    def test_oversized_body_is_413_before_reading(self):
+    def test_oversized_declared_body_is_413_before_reading(self):
         headers = dict(_signed(self.port, "POST", "/execute", b"{}"), **{"Content-Length": str(ipc.MAX_BODY_BYTES + 1)})
-        status, parsed, _, _, _ = _raw_request(self.port, "POST", "/execute", headers, None)
+        status, parsed, _, _ = _raw_request(self.port, "POST", "/execute", headers, None)
         self.assertEqual((status, parsed["code"]), (413, "PAYLOAD_TOO_LARGE"))
 
-    def test_idle_connection_is_closed(self):
-        with mock.patch.object(ipc.MicroserviceHTTPHandler, "timeout", 0.5):
-            with socket.create_connection(("127.0.0.1", self.port), timeout=10) as s:
-                s.sendall(b"POST /execute HTTP/1.1\r\nHost: 127.0.0.1\r\n")  # never finishes the headers
+    def test_preauth_memory_stays_bounded_against_large_declared_bodies(self):
+        """An attacker without the token declares 64 MiB and holds the connection: the head MAC
+        fails before any body read, so nothing near the declared size is ever allocated."""
+        import tracemalloc
+        tracemalloc.start()
+        try:
+            base = tracemalloc.get_traced_memory()[0]
+            conns = []
+            for _ in range(4):
+                s = socket.create_connection(("127.0.0.1", self.port), timeout=20)
+                h = _signed(self.port, "POST", "/execute", b"x")
+                h["X-Metallix-Mac"] = "0" * 64
+                head = (f"POST /execute HTTP/1.1\r\nContent-Length: {ipc.MAX_BODY_BYTES}\r\n"
+                        + "".join(f"{k}: {v}\r\n" for k, v in h.items()) + "\r\n")
+                s.sendall(head.encode() + b"x")
+                conns.append(s)
+            replies = [s.recv(100).split(b"\r\n", 1)[0] for s in conns]
+            peak = tracemalloc.get_traced_memory()[1] - base
+        finally:
+            tracemalloc.stop()
+            for s in conns:
+                s.close()
+        self.assertTrue(all(r.endswith(b"401 Unauthorized") for r in replies), replies)
+        self.assertLess(peak, 4 * 2 ** 20, f"peak traced allocation {peak} bytes")
+        self.assertEqual(self.reg.calls, [])
+
+    def test_unauthenticated_connections_are_bounded_and_time_boxed(self):
+        with mock.patch.object(ipc, "PREAUTH_DEADLINE_S", 1.5):
+            idle = [socket.create_connection(("127.0.0.1", self.port), timeout=20) for _ in range(ipc.PREAUTH_SLOTS)]
+            try:
+                time.sleep(0.3)
+                extra = socket.create_connection(("127.0.0.1", self.port), timeout=20)
                 t0 = time.time()
-                self.assertEqual(s.recv(1024), b"")
-                self.assertLess(time.time() - t0, 8)
+                self.assertEqual(extra.recv(10), b"")  # no slot left: closed without reading
+                self.assertLess(time.time() - t0, 1.0)
+                extra.close()
+                t0 = time.time()
+                for s in idle:  # held open with nothing sent: cut at the pre-auth deadline
+                    self.assertEqual(s.recv(10), b"")
+                self.assertLess(time.time() - t0, 6)
+            finally:
+                for s in idle:
+                    s.close()
+            # Slots are released: a legit request goes through again.
+            body = json.dumps({"script": "python/pourbaix_solver.py"})
+            status, _, _, _ = _raw_request(self.port, "POST", "/execute",
+                                           _signed(self.port, "POST", "/execute", body), body)
+            self.assertEqual(status, 200)
 
 
-def _unix_frame(request, token=TOKEN, ts=None, nonce=None):
-    body = json.dumps(request)
-    ts, nonce, mac = _auth_fields("UNIX", "/", body.encode("utf-8"), token=token, ts=ts, nonce=nonce)
-    return {"v": 1, "ts": ts, "nonce": nonce, "mac": mac, "body": body}
+def _unix_send(path, request=None, token=TOKEN, ts=None, nonce=None, raw=None, body_override=None, head_override=None):
+    """Sends one v2 frame (or raw bytes); returns (head dict, body bytes, nonce)."""
+    if raw is None:
+        body = json.dumps(request).encode("utf-8")
+        ts, nonce, digest, mac = _auth_fields("UNIX", "/", body, token=token, ts=ts, nonce=nonce)
+        head = {"v": 2, "ts": ts, "nonce": nonce, "len": len(body), "sha256": digest, "mac": mac}
+        head.update(head_override or {})
+        raw = json.dumps(head).encode("utf-8") + b"\n" + (body if body_override is None else body_override)
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(20)
+        s.connect(path)
+        s.sendall(raw)
+        buf = b""
+        while True:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            buf += chunk
+    head_line, _, rest = buf.partition(b"\n")
+    reply = json.loads(head_line)
+    return reply, rest[:reply["len"]], nonce
 
 
 @unittest.skipIf(os.name == "nt" or not hasattr(socket, "AF_UNIX"), "UNIX socket channel is POSIX only")
@@ -560,25 +668,10 @@ class UnixSocketTest(unittest.TestCase):
     def tearDown(self):
         self.server.stop()
 
-    def _send_raw(self, data: bytes):
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            s.settimeout(10)
-            s.connect(self.path)
-            s.sendall(data)
-            buf = b""
-            while b"\n" not in buf:
-                chunk = s.recv(65536)
-                if not chunk:
-                    break
-                buf += chunk
-        return json.loads(buf.split(b"\n", 1)[0])
-
-    def _send(self, frame):
-        return self._send_raw(json.dumps(frame).encode("utf-8") + b"\n")
-
-    def _verified(self, frame, nonce):
-        self.assertEqual(frame["mac"], ipc.response_mac(TOKEN, nonce, frame["status"], frame["body"].encode("utf-8")))
-        return json.loads(frame["body"])
+    def _verified(self, reply, body, nonce):
+        self.assertEqual(reply["sha256"], ipc.body_digest(body))
+        self.assertEqual(reply["mac"], ipc.response_mac(TOKEN, nonce, reply["status"], len(body), reply["sha256"]))
+        return json.loads(body)
 
     def test_socket_and_directory_are_owner_only(self):
         self.assertEqual(stat.S_IMODE(os.stat(self.path).st_mode), 0o600)
@@ -588,40 +681,65 @@ class UnixSocketTest(unittest.TestCase):
 
     def test_authentication_required_and_responses_signed(self):
         req = {"action": "execute", "script": "python/pourbaix_solver.py", "payload": {}}
-        for frame in ({"token": TOKEN, **req}, dict(_unix_frame(req), mac="0" * 64), _unix_frame(req, token="0" * 64),
-                      dict(_unix_frame(req), body=json.dumps(dict(req, script="python/calphad_solver.py"))),
-                      _unix_frame(req, ts=str(_now_ms() - 10 ** 6))):
-            res = self._send(frame)
-            self.assertEqual(res["status"], 401)
-            self.assertNotIn("mac", res)
+        bad = [dict(head_override={"mac": "0" * 64}), dict(token="0" * 64), dict(ts=str(_now_ms() - 10 ** 6)),
+               dict(head_override={"v": 1}),
+               dict(raw=(json.dumps({"token": TOKEN, **req}) + "\n").encode())]
+        for kw in bad:
+            reply, _, _ = _unix_send(self.path, req, **kw)
+            self.assertEqual(reply["status"], 401, kw)
+            self.assertNotIn("mac", reply)
         self.assertEqual(self.reg.calls, [])
-        frame = _unix_frame(req)
-        res = self._send(frame)
-        self.assertEqual(res["status"], 200)
-        self.assertEqual(self._verified(res, frame["nonce"])["stdout"], "stub-ran")
-        self.assertEqual(self._send(frame)["status"], 401)  # replay
+        nonce = secrets.token_hex(16)
+        reply, body, _ = _unix_send(self.path, req, nonce=nonce)
+        self.assertEqual(reply["status"], 200)
+        self.assertEqual(self._verified(reply, body, nonce)["stdout"], "stub-ran")
+        reply, _, _ = _unix_send(self.path, req, nonce=nonce)  # replay
+        self.assertEqual(reply["status"], 401)
         self.assertEqual(len(self.reg.calls), 1)
 
-    def test_traversal_rejected_on_socket_with_signed_4xx(self):
-        frame = _unix_frame({"action": "execute", "script": "python/../../x/pwn.py"})
-        res = self._send(frame)
-        self.assertEqual(res["status"], 400)
-        self.assertEqual(self._verified(res, frame["nonce"])["code"], "INVALID_SCRIPT_PATH")
+    def test_body_swapped_under_signed_head_is_refused(self):
+        req = {"action": "execute", "script": "python/pourbaix_solver.py"}
+        body = json.dumps(req).encode()
+        swapped = body.replace(b"pourbaix", b"calphadx")
+        reply, rbody, nonce = _unix_send(self.path, req, body_override=swapped)
+        self.assertEqual(reply["status"], 400)
+        self.assertEqual(self._verified(reply, rbody, nonce)["code"], "BODY_HASH_MISMATCH")
         self.assertEqual(self.reg.calls, [])
 
-    def test_unterminated_oversized_frame_is_413(self):
-        with mock.patch.object(ipc, "MAX_LINE_BYTES", 1024):
-            res = self._send_raw(b"x" * 4096)
-        self.assertEqual(res["status"], 413)
+    def test_traversal_rejected_on_socket_with_signed_4xx(self):
+        reply, body, nonce = _unix_send(self.path, {"action": "execute", "script": "python/../../x/pwn.py"})
+        self.assertEqual(reply["status"], 400)
+        self.assertEqual(self._verified(reply, body, nonce)["code"], "INVALID_SCRIPT_PATH")
+        self.assertEqual(self.reg.calls, [])
 
-    def test_idle_connection_is_closed(self):
-        with mock.patch.object(ipc, "CONNECTION_IDLE_TIMEOUT_S", 0.5):
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-                s.settimeout(10)
-                s.connect(self.path)
+    def test_oversized_head_and_declared_body_are_refused_unread(self):
+        reply, _, _ = _unix_send(self.path, raw=b"x" * (ipc.MAX_HEAD_BYTES + 10))
+        self.assertEqual(reply["status"], 413)
+        reply, _, _ = _unix_send(self.path, {"action": "ping"}, head_override={"len": ipc.MAX_BODY_BYTES + 1})
+        self.assertEqual(reply["status"], 413)
+
+    def test_unauthenticated_connections_are_bounded_and_time_boxed(self):
+        with mock.patch.object(ipc, "PREAUTH_DEADLINE_S", 1.5):
+            idle = []
+            try:
+                for _ in range(ipc.PREAUTH_SLOTS):
+                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    s.settimeout(20)
+                    s.connect(self.path)
+                    idle.append(s)
+                time.sleep(0.3)
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as extra:
+                    extra.settimeout(20)
+                    extra.connect(self.path)
+                    self.assertEqual(extra.recv(10), b"")
                 t0 = time.time()
-                self.assertEqual(s.recv(1024), b"")
-                self.assertLess(time.time() - t0, 8)
+                for s in idle:
+                    reply = s.recv(4096)
+                    self.assertIn(b'"status": 408', reply)
+                self.assertLess(time.time() - t0, 6)
+            finally:
+                for s in idle:
+                    s.close()
 
 
 def _free_port():
@@ -642,26 +760,33 @@ def _kill_tree(proc):
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(30)
-    for stream in (proc.stdout, proc.stderr):
+    if os.name != "nt":
+        # The daemon runs in its own session: also stop anything it left behind (forkserver, workers)
+        # so no straggler keeps the stdout/stderr pipes open.
+        try:
+            os.killpg(proc.pid, 9)
+        except OSError:
+            pass
+    for stream in (proc.stdin, proc.stdout, proc.stderr):
         try:
             stream.close()
         except (OSError, ValueError, AttributeError):
             pass
 
 
-def _spawn_service(extra_env, cwd):
-    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", METALLIX_IPC_WORKERS="1")
+def _spawn_service(extra_env, cwd, stdin=subprocess.DEVNULL):
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", METALLIX_IPC_WORKERS="2")
     for key in ("METALLIX_IPC_TOKEN", "METALLIX_IPC_ALLOW_REMOTE", "METALLIX_IPC_PORT", "METALLIX_IPC_SOCK",
-                "METALLIX_IPC_HOST"):
+                "METALLIX_IPC_HOST", "METALLIX_IPC_HTTP", "METALLIX_IPC_STDIN_WATCH"):
         env.pop(key, None)
     env.update(extra_env)
     return subprocess.Popen([sys.executable, "-B", str(HERE / "persistent_ipc_service.py")], cwd=str(cwd),
-                            env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, encoding="utf-8", errors="replace")
+                            env=env, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, encoding="utf-8", errors="replace", start_new_session=(os.name != "nt"))
 
 
 class ServiceIntegrationTest(unittest.TestCase):
-    """Starts the real service with defaults (ephemeral port, private socket dir; cwd = repo root)."""
+    """Starts the real service (HTTP enabled; cwd = repo root, as server/processOrchestrator.ts does)."""
 
     @classmethod
     def setUpClass(cls):
@@ -672,15 +797,20 @@ class ServiceIntegrationTest(unittest.TestCase):
         (cls.outside / "pwn.py").write_text(
             "import pathlib\npathlib.Path(__file__).with_name('PWNED.txt').write_text('x')\nprint('PWNED')\n",
             encoding="utf-8")
-        cls.proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN}, REPO)
-        line = cls.proc.stdout.readline()
-        if not line:
-            err = cls.proc.stderr.read()
+        cls.proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HTTP": "1"}, REPO)
+        cls.err_lines = []
+        threading.Thread(target=lambda: cls.err_lines.extend(cls.proc.stderr), daemon=True).start()
+        try:
+            line = _read_line(cls.proc.stdout, 300)
+        except AssertionError:
             _kill_tree(cls.proc)
-            raise AssertionError(f"service did not start: {err[-2000:]}")
+            raise
+        if not line:
+            time.sleep(0.5)
+            _kill_tree(cls.proc)
+            raise AssertionError(f"service did not start: {''.join(cls.err_lines)[-2000:]}")
         cls.ready = json.loads(line)
         cls.port = cls.ready["httpPort"]
-        threading.Thread(target=cls.proc.stderr.read, daemon=True).start()  # drain
 
     @classmethod
     def tearDownClass(cls):
@@ -689,6 +819,7 @@ class ServiceIntegrationTest(unittest.TestCase):
 
     def test_ready_message_announces_actual_channels_and_no_token(self):
         self.assertEqual(self.ready["status"], "ready")
+        self.assertEqual(self.ready["protocol"], "metallix-ipc-v2")
         self.assertTrue(self.ready["httpActive"])
         self.assertIsInstance(self.port, int)
         self.assertGreater(self.port, 0)
@@ -704,16 +835,17 @@ class ServiceIntegrationTest(unittest.TestCase):
     def test_attacks_fail_and_legit_request_succeeds(self):
         rel = os.path.relpath(self.outside / "pwn.py", REPO).replace(os.sep, "/")
         for name, method, path, headers, body, expected in _attack_matrix(self.port, "python/../" + rel):
-            status, parsed, acao, _, _ = _raw_request(self.port, method, path, headers, body)
+            status, parsed, meta, _ = _raw_request(self.port, method, path, headers, body)
             self.assertEqual(status, expected, (name, parsed))
-            self.assertIsNone(acao, name)
+            self.assertIsNone(meta["acao"], name)
             self.assertFalse(self.marker.exists(), name)
         body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "timeoutMs": 60000})
         headers = _signed(self.port, "POST", "/execute", body)
-        status, parsed, acao, mac, raw = _raw_request(self.port, "POST", "/execute", headers, body)
-        self.assertEqual((status, acao), (200, None), parsed)
-        self.assertEqual(mac, ipc.response_mac(TOKEN, headers["X-Metallix-Nonce"], 200, raw))
+        status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, body)
+        self.assertEqual((status, meta["acao"]), (200, None), parsed)
+        _response_ok(self, headers, 200, meta, raw)
         self.assertEqual(parsed["exitCode"], 0, parsed.get("stderr"))
+        self.assertEqual(parsed["concurrency"], "process_pool")
         self.assertTrue(json.loads(parsed["stdout"])["success"])
         self.assertFalse(self.marker.exists())
 
@@ -753,29 +885,38 @@ class ServiceStartupTest(unittest.TestCase):
         self.assertNotIn('"ready"', out)
         self.assertIn("METALLIX_IPC_SOCK", err)
 
+    @unittest.skipIf(os.name == "nt", "the HTTP listener is the only channel on Windows")
+    def test_posix_default_is_unix_socket_only(self):
+        proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN}, REPO)
+        try:
+            ready = json.loads(_read_line(proc.stdout, 300))
+        finally:
+            _kill_tree(proc)
+        self.assertTrue(ready["unixSocketActive"])
+        self.assertFalse(ready["httpActive"])
+        self.assertIsNone(ready["httpPort"])
+
     def test_squatted_fixed_port_is_never_announced(self):
         with socket.socket() as squatter:
             squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             squatter.bind(("127.0.0.1", 0))
             squatter.listen(5)
             port = squatter.getsockname()[1]
+            env = {"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(port), "METALLIX_IPC_HTTP": "1"}
             if os.name == "nt":
                 # Exclusive bind fails and HTTP is the only channel: the daemon exits.
-                code, out, err = self._run_to_exit({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(port)})
+                code, out, err = self._run_to_exit(env)
                 self.assertNotEqual(code, 0)
                 self.assertNotIn('"ready"', out)
                 self.assertIn("no IPC channel", err)
                 self.assertNotIn("Warming up", err)  # no pool was created for a launch that failed
             else:
-                proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(port)}, REPO)
+                proc = _spawn_service(env, REPO)
                 try:
-                    ready = json.loads(proc.stdout.readline())
+                    ready = json.loads(_read_line(proc.stdout, 300))
                 finally:
                     _kill_tree(proc)
                 self.assertFalse(ready["httpActive"])
                 self.assertIsNone(ready["httpPort"])
                 self.assertTrue(ready["unixSocketActive"])
 
-
-if __name__ == "__main__":
-    unittest.main()

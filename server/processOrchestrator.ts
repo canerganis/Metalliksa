@@ -8,72 +8,127 @@ import { getHostPython, loadPythonEnvironment } from "./pythonRuntime.ts";
 
 // =========================================================================
 // IPC security helpers (python/persistent_ipc_service.py enforces the other side)
-// Protocol metallix-ipc-v1: the per-spawn token never travels on the wire. Each request carries
-// ts, nonce and HMAC-SHA256(token, request); each response carries HMAC-SHA256(token, nonce,
-// status, body). A listener that is not our daemon learns nothing reusable and cannot forge a
-// response we accept.
+// Protocol metallix-ipc-v2: the per-spawn token never travels on the wire. A request's MAC covers
+// method, path, ts, nonce, body length and SHA-256(body) (the daemon verifies it before reading
+// the body); each response carries HMAC(token, nonce, status, length, SHA-256(body)). A listener
+// that is not our daemon learns nothing reusable and cannot forge a response we accept.
 // =========================================================================
 
-export const IPC_PROTOCOL = "metallix-ipc-v1";
+export const IPC_PROTOCOL = "metallix-ipc-v2";
 const HEX64 = /^[0-9a-f]{64}$/;
+/** Largest reply accepted from the daemon (solver stdout is JSON; the daemon caps requests at 64 MiB). */
+export const MAX_IPC_RESPONSE_BYTES = 64 * 1024 * 1024;
+const MAX_UNIX_HEAD_BYTES = 4096;
 
 /** Fresh per-spawn shared secret (64 hex chars); passed to the daemon via env, never argv. */
 export function generateIpcToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-export function ipcRequestMac(token: string, method: string, reqPath: string, ts: string, nonce: string, body: Buffer): string {
+export function sha256Hex(body: Buffer): string {
+  return crypto.createHash("sha256").update(body).digest("hex");
+}
+
+export function ipcRequestMac(token: string, method: string, reqPath: string, ts: string, nonce: string, length: number, digest: string): string {
   return crypto.createHmac("sha256", token)
-    .update(Buffer.from(`${IPC_PROTOCOL}\nreq\n${method}\n${reqPath}\n${ts}\n${nonce}\n`, "utf8"))
-    .update(body)
+    .update(Buffer.from([IPC_PROTOCOL, "req", method, reqPath, ts, nonce, String(length), digest].join("\n"), "utf8"))
     .digest("hex");
 }
 
-export function ipcResponseMac(token: string, nonce: string, status: number, body: Buffer): string {
+export function ipcResponseMac(token: string, nonce: string, status: number, length: number, digest: string): string {
   return crypto.createHmac("sha256", token)
-    .update(Buffer.from(`${IPC_PROTOCOL}\nresp\n${nonce}\n${status}\n`, "utf8"))
-    .update(body)
+    .update(Buffer.from([IPC_PROTOCOL, "resp", nonce, String(status), String(length), digest].join("\n"), "utf8"))
     .digest("hex");
 }
 
 export function signIpcRequest(token: string, method: string, reqPath: string, body: Buffer, now: number = Date.now()) {
   const ts = String(now);
   const nonce = crypto.randomBytes(16).toString("hex");
-  return { ts, nonce, mac: ipcRequestMac(token, method, reqPath, ts, nonce, body) };
+  const digest = sha256Hex(body);
+  return { ts, nonce, digest, mac: ipcRequestMac(token, method, reqPath, ts, nonce, body.length, digest) };
 }
 
 /** Constant-time check that a response really comes from the daemon holding our token. */
-export function verifyIpcResponseMac(token: string, nonce: string, status: number, body: Buffer, mac: unknown): boolean {
-  if (typeof mac !== "string" || !HEX64.test(mac)) return false;
-  const expected = ipcResponseMac(token, nonce, status, body);
+export function verifyIpcResponse(token: string, nonce: string, status: number, body: Buffer, digest: unknown, mac: unknown): boolean {
+  if (typeof mac !== "string" || !HEX64.test(mac) || typeof digest !== "string" || !HEX64.test(digest)) return false;
+  if (sha256Hex(body) !== digest) return false;
+  const expected = ipcResponseMac(token, nonce, status, body.length, digest);
   return crypto.timingSafeEqual(Buffer.from(mac, "ascii"), Buffer.from(expected, "ascii"));
 }
 
-/** One UNIX-socket request frame (newline-terminated) and the nonce its response must echo. */
-export function buildUnixFrame(token: string, request: unknown, now: number = Date.now()): { line: string; nonce: string } {
-  const body = JSON.stringify(request);
-  const { ts, nonce, mac } = signIpcRequest(token, "UNIX", "/", Buffer.from(body, "utf8"), now);
-  return { line: JSON.stringify({ v: 1, ts, nonce, mac, body }) + "\n", nonce };
+/**
+ * A failed IPC attempt. `executed: false` means the daemon certainly did not run the request
+ * (no connection, request not fully sent, or a complete reply that is unsigned or has status
+ * >= 400: the daemon only answers >= 400 before running anything and signs every reply to an
+ * authenticated request). Only then may the call be retried on another channel or spawned
+ * ad hoc. Anything after the request was sent without such a reply (timeout, reset, truncated,
+ * oversized or undecodable signed reply) is `executed: "unknown"` and is never retried.
+ */
+export class IpcChannelError extends Error {
+  constructor(message: string, readonly executed: false | "unknown") {
+    super(message);
+    this.name = "IpcChannelError";
+  }
 }
 
-/**
- * Verifies a UNIX-socket response frame. Channel policy (same as HTTP): an unsigned or badly
- * signed frame, or any status >= 400, is a channel failure and the caller falls back.
- */
-export function parseUnixResponse(token: string, nonce: string, line: string): any {
-  let frame: any;
-  try { frame = JSON.parse(line); } catch { throw new Error("UNIX socket IPC returned a malformed frame"); }
-  const status = Number.isInteger(frame?.status) ? frame.status : NaN;
-  if (typeof frame?.body !== "string" || !Number.isFinite(status)
-    || !verifyIpcResponseMac(token, nonce, status, Buffer.from(frame.body, "utf8"), frame.mac)) {
-    throw new Error(`UNIX socket IPC response is not signed by this server's daemon${Number.isFinite(status) ? ` (status ${status})` : ""}`);
+/** One UNIX-socket request: head line + body, and the nonce its reply must be bound to. */
+export function buildUnixFrame(token: string, request: unknown, now: number = Date.now()): { data: Buffer; nonce: string } {
+  const body = Buffer.from(JSON.stringify(request), "utf8");
+  const { ts, nonce, digest, mac } = signIpcRequest(token, "UNIX", "/", body, now);
+  const head = JSON.stringify({ v: 2, ts, nonce, len: body.length, sha256: digest, mac });
+  return { data: Buffer.concat([Buffer.from(head + "\n", "utf8"), body]), nonce };
+}
+
+/** Classifies a complete reply (status, body, digest, mac) under the shared channel policy. */
+export function acceptIpcReply(token: string, nonce: string, status: number, body: Buffer, digest: unknown, mac: unknown, channel: string): any {
+  if (!verifyIpcResponse(token, nonce, status, body, digest, mac)) {
+    throw new IpcChannelError(`${channel} reply is not signed by this server's daemon (status ${status})`, false);
   }
   if (status >= 400) {
     let code = "";
-    try { code = String(JSON.parse(frame.body)?.code ?? ""); } catch { /* non-JSON error body */ }
-    throw new Error(`UNIX socket IPC refused the request (status ${status}${code ? ` ${code}` : ""})`);
+    try { code = String(JSON.parse(body.toString("utf8"))?.code ?? ""); } catch { /* non-JSON error body */ }
+    throw new IpcChannelError(`${channel} refused the request before running it (status ${status}${code ? ` ${code}` : ""})`, false);
   }
-  return JSON.parse(frame.body);
+  try {
+    return JSON.parse(body.toString("utf8"));
+  } catch (err: any) {
+    throw new IpcChannelError(`${channel} signed reply is not JSON: ${err.message}`, "unknown");
+  }
+}
+
+/** Incremental parser of a UNIX-socket reply (head line, then exactly `len` body bytes). */
+export class UnixReplyParser {
+  private chunks: Buffer[] = [];
+  private size = 0;
+  private head: { status: number; len: number; sha256: unknown; mac: unknown } | null = null;
+  private headBytes = 0;
+
+  /** Returns the complete reply, or null while more bytes are needed; throws on a bad frame. */
+  push(chunk: Buffer): { status: number; body: Buffer; sha256: unknown; mac: unknown } | null {
+    this.chunks.push(chunk);
+    this.size += chunk.length;
+    if (!this.head) {
+      const all = Buffer.concat(this.chunks);
+      const nl = all.indexOf(0x0a, Math.max(0, all.length - chunk.length));
+      if (nl < 0) {
+        if (all.length > MAX_UNIX_HEAD_BYTES) throw new IpcChannelError("UNIX socket reply head too large", "unknown");
+        this.chunks = [all];
+        return null;
+      }
+      let head: any;
+      try { head = JSON.parse(all.subarray(0, nl).toString("utf8")); } catch { head = null; }
+      if (!head || !Number.isInteger(head.status) || !Number.isInteger(head.len) || head.len < 0) {
+        throw new IpcChannelError("UNIX socket reply head is malformed", "unknown");
+      }
+      if (head.len > MAX_IPC_RESPONSE_BYTES) throw new IpcChannelError("UNIX socket reply too large", "unknown");
+      this.head = { status: head.status, len: head.len, sha256: head.sha256, mac: head.mac };
+      this.headBytes = nl + 1;
+      this.chunks = [all];
+    }
+    if (this.size - this.headBytes < this.head.len) return null;
+    const all = Buffer.concat(this.chunks);
+    return { status: this.head.status, body: all.subarray(this.headBytes, this.headBytes + this.head.len), sha256: this.head.sha256, mac: this.head.mac };
+  }
 }
 
 export function isLoopbackHost(host: string): boolean {
@@ -175,6 +230,17 @@ export interface IPCDaemonStatus {
   warmModules: string[];
   pythonVersion: string | null;
   lastError: string | null;
+}
+
+function toExecResult(parsed: any, startTime: number, channel: "unix_socket" | "http_microservice"): PythonExecResult {
+  return {
+    stdout: parsed?.stdout ?? "",
+    stderr: parsed?.stderr ?? "",
+    exitCode: parsed?.exitCode ?? 0,
+    durationMs: Date.now() - startTime,
+    warm: true,
+    channel,
+  };
 }
 
 // =========================================================================
@@ -310,7 +376,8 @@ export class PersistentPythonIPCSupervisor {
   }
 
   /**
-   * Dispatches script execution to the persistent Python daemon over UNIX domain socket
+   * Dispatches script execution to the persistent Python daemon over its UNIX domain socket.
+   * Rejects with IpcChannelError (see there for when the request may be retried).
    */
   private executeViaUnixSocket(
     socketPath: string,
@@ -322,56 +389,53 @@ export class PersistentPythonIPCSupervisor {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
       const token = this.ipcToken;
+      const frame = buildUnixFrame(token, { action: "execute", script, payload, args, timeoutMs });
+      const parser = new UnixReplyParser();
+      let sent = false;
+      let settled = false;
       const socket = net.createConnection(socketPath);
-      let buffer = "";
-      let nonce = "";
-
-      const timer = setTimeout(() => {
+      const fail = (message: string) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
         socket.destroy();
-        reject(new Error(`UNIX socket IPC timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
+        reject(new IpcChannelError(message, sent ? "unknown" : false));
+      };
+
+      const timer = setTimeout(() => fail(`UNIX socket IPC got no reply within ${timeoutMs}ms`),
+        timeoutMs);
 
       socket.on("connect", () => {
-        const frame = buildUnixFrame(token, { action: "execute", script, payload, args, timeoutMs });
-        nonce = frame.nonce;
-        socket.write(frame.line);
+        socket.write(frame.data, (err) => { if (!err) sent = true; });
       });
 
-      socket.on("data", (chunk) => {
-        buffer += chunk.toString();
-        if (buffer.includes("\n")) {
-          clearTimeout(timer);
-          socket.end();
-
-          const line = buffer.substring(0, buffer.indexOf("\n")).trim();
-          try {
-            const parsed = parseUnixResponse(token, nonce, line);
-            const durationMs = Date.now() - startTime;
-            resolve({
-              stdout: parsed.stdout ?? "",
-              stderr: parsed.stderr ?? "",
-              exitCode: parsed.exitCode ?? 0,
-              durationMs,
-              warm: true,
-              channel: "unix_socket",
-            });
-          } catch (e: any) {
-            reject(e instanceof Error ? e : new Error(String(e)));
-          }
+      socket.on("data", (chunk: Buffer) => {
+        if (settled) return;
+        let reply;
+        try {
+          reply = parser.push(chunk);
+        } catch (err: any) {
+          return fail(err.message);
+        }
+        if (!reply) return;
+        settled = true;
+        clearTimeout(timer);
+        socket.end();
+        try {
+          resolve(toExecResult(acceptIpcReply(token, frame.nonce, reply.status, reply.body, reply.sha256, reply.mac, "UNIX socket IPC"), startTime, "unix_socket"));
+        } catch (err) {
+          reject(err);
         }
       });
 
-      socket.on("error", (err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
+      socket.on("error", (err) => fail(`UNIX socket IPC error: ${err.message}`));
+      socket.on("close", () => fail("UNIX socket IPC closed before a complete reply"));
     });
   }
 
   /**
-   * HTTP loopback channel (port announced by this server's daemon). Policy, same as the UNIX
-   * socket: a response without a valid daemon signature, or any status other than 200, is a
-   * channel failure and the caller falls back to an ad-hoc spawn.
+   * HTTP loopback channel (port announced by this server's daemon). Same retry policy as the
+   * UNIX socket (IpcChannelError).
    */
   private executeViaHttp(
     port: number,
@@ -385,64 +449,61 @@ export class PersistentPythonIPCSupervisor {
       const token = this.ipcToken;
       const body = Buffer.from(JSON.stringify({ script, payload, args, timeoutMs }), "utf8");
       const auth = signIpcRequest(token, "POST", "/execute", body);
+      let sent = false;
+      let settled = false;
+      const fail = (message: string) => {
+        if (settled) return;
+        settled = true;
+        req.destroy();
+        reject(new IpcChannelError(message, sent ? "unknown" : false));
+      };
 
       const req = http.request(
         {
-          hostname: this.httpHost.replace(/^\[|\]$/g, ""),
+          hostname: this.httpHost,
           port,
           path: "/execute",
           method: "POST",
+          agent: false,
           headers: {
             "Content-Type": "application/json",
             "Content-Length": body.length,
             "X-Metallix-Ts": auth.ts,
             "X-Metallix-Nonce": auth.nonce,
+            "X-Metallix-Body-Sha256": auth.digest,
             "X-Metallix-Mac": auth.mac,
           },
           timeout: timeoutMs,
         },
         (res) => {
+          const declared = Number(res.headers["content-length"] ?? NaN);
+          if (declared > MAX_IPC_RESPONSE_BYTES) return fail("HTTP microservice reply too large");
           const chunks: Buffer[] = [];
-          res.on("data", (chunk: Buffer) => chunks.push(chunk));
+          let size = 0;
+          res.on("data", (chunk: Buffer) => {
+            size += chunk.length;
+            if (size > MAX_IPC_RESPONSE_BYTES) return fail("HTTP microservice reply too large");
+            chunks.push(chunk);
+          });
+          res.on("error", (err) => fail(`HTTP microservice reply error: ${err.message}`));
           res.on("end", () => {
-            const raw = Buffer.concat(chunks);
-            const status = res.statusCode ?? 0;
-            if (!verifyIpcResponseMac(token, auth.nonce, status, raw, res.headers["x-metallix-mac"])) {
-              reject(new Error(`HTTP microservice response is not signed by this server's daemon (HTTP ${status})`));
-              return;
-            }
-            if (status !== 200) {
-              let code = "";
-              try { code = String(JSON.parse(raw.toString("utf8"))?.code ?? ""); } catch { /* non-JSON error body */ }
-              reject(new Error(`HTTP microservice refused the request (HTTP ${status}${code ? ` ${code}` : ""})`));
-              return;
-            }
+            if (settled) return;
+            if (!res.complete) return fail("HTTP microservice reply truncated");
+            settled = true;
             try {
-              const parsed = JSON.parse(raw.toString("utf8"));
-              const durationMs = Date.now() - startTime;
-              resolve({
-                stdout: parsed.stdout ?? "",
-                stderr: parsed.stderr ?? "",
-                exitCode: parsed.exitCode ?? 0,
-                durationMs,
-                warm: true,
-                channel: "http_microservice",
-              });
-            } catch (err: any) {
-              reject(new Error(`HTTP microservice JSON parse error: ${err.message}`));
+              resolve(toExecResult(acceptIpcReply(token, auth.nonce, res.statusCode ?? 0, Buffer.concat(chunks),
+                res.headers["x-metallix-body-sha256"], res.headers["x-metallix-mac"], "HTTP microservice"), startTime, "http_microservice"));
+            } catch (err) {
+              reject(err);
             }
           });
         }
       );
 
-      req.on("timeout", () => {
-        req.destroy();
-        reject(new Error(`HTTP microservice request timed out after ${timeoutMs}ms`));
-      });
-
-      req.on("error", (err) => reject(err));
-      req.write(body);
-      req.end();
+      req.on("finish", () => { sent = true; });
+      req.on("timeout", () => fail(`HTTP microservice got no reply within ${timeoutMs}ms`));
+      req.on("error", (err) => fail(`HTTP microservice error: ${err.message}`));
+      req.end(body);
     });
   }
 
@@ -505,8 +566,7 @@ export class PersistentPythonIPCSupervisor {
 
   /**
    * Primary unified execution dispatcher. Only channels announced by this server's own daemon
-   * are used; anything else (not ready, channel inactive, refused or unsigned reply) falls back
-   * to an ad-hoc spawn.
+   * are used; any channel failure falls back to the next channel, then to an ad-hoc spawn.
    */
   public async execute(
     scriptRelativePath: string,

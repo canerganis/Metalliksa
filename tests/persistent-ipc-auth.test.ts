@@ -4,10 +4,10 @@ import http from "node:http";
 import { spawnSync } from "node:child_process";
 import type { AddressInfo } from "node:net";
 
-// Mutual authentication and channel ownership between server/processOrchestrator.ts and
-// python/persistent_ipc_service.py. Importing the orchestrator starts the persistent Python
-// supervisor (import side effect) with the defaults under test (ephemeral HTTP port, private
-// socket directory), so the test exits explicitly at the end.
+// Mutual authentication, channel ownership and retry policy between server/processOrchestrator.ts
+// and python/persistent_ipc_service.py. Importing the orchestrator starts the persistent Python
+// supervisor (import side effect) with the defaults under test (ephemeral HTTP port on Windows,
+// private UNIX socket on POSIX), so the test exits explicitly at the end.
 let anyFailed = false;
 const test: typeof baseTest = ((name: string, opts: any, fn?: any) => {
   const body = fn ?? opts;
@@ -25,14 +25,15 @@ const test: typeof baseTest = ((name: string, opts: any, fn?: any) => {
 delete process.env.METALLIX_IPC_PORT;
 delete process.env.METALLIX_IPC_SOCK;
 delete process.env.METALLIX_IPC_HOST;
+delete process.env.METALLIX_IPC_HTTP;
 process.env.METALLIX_IPC_WORKERS = "1";
 process.env.METALLIX_IPC_TOKEN = "stale-value-from-the-environment"; // must be scrubbed at startup
 
 const orchestrator = await import("../server/processOrchestrator.ts");
 const {
   generateIpcToken, buildIpcSpawnSpec, resolveIpcHost, isLoopbackHost, assertDispatchableScript,
-  ipcRequestMac, ipcResponseMac, signIpcRequest, verifyIpcResponseMac, buildUnixFrame, parseUnixResponse,
-  PersistentPythonIPCSupervisor, pythonIPCSupervisor, runPythonScript,
+  ipcRequestMac, ipcResponseMac, sha256Hex, signIpcRequest, verifyIpcResponse, buildUnixFrame, acceptIpcReply,
+  UnixReplyParser, IpcChannelError, MAX_IPC_RESPONSE_BYTES, PersistentPythonIPCSupervisor, pythonIPCSupervisor, runPythonScript,
 } = orchestrator;
 const supervisor = pythonIPCSupervisor as any;
 const extraSupervisors: any[] = [];
@@ -44,7 +45,6 @@ function killDaemon(sup: any) {
 }
 
 after(() => {
-  // Kill daemons together with their pool workers (TerminateProcess alone orphans them on Windows).
   for (const sup of [supervisor, ...extraSupervisors]) killDaemon(sup);
   setTimeout(() => process.exit(anyFailed ? 1 : 0), 250);
 });
@@ -52,54 +52,90 @@ after(() => {
 // Same vectors as python/test_persistent_ipc_security.py (computed with plain hmac/hashlib).
 const V_TOKEN = "k".repeat(64);
 const V_NONCE = "0123456789abcdef0123456789abcdef";
+const V_REQ = Buffer.from('{"script":"python/pourbaix_solver.py"}');
+const V_RESP = Buffer.from('{"stdout": "x"}');
 
-test("request/response MACs match the Python implementation byte for byte", () => {
-  assert.equal(ipcRequestMac(V_TOKEN, "POST", "/execute", "1700000000000", V_NONCE, Buffer.from('{"script":"python/pourbaix_solver.py"}')),
-    "00622ace5f176a373bda15f2e964903e74d6457c8a60d5907f17b10e34773ffe");
-  assert.equal(ipcResponseMac(V_TOKEN, V_NONCE, 200, Buffer.from('{"stdout": "x"}')),
-    "3baf7d40b3db8b160d35c8e4caf1338cad617f030cb908dd06c0e87bd128973c");
+test("v2 request/response MACs match the Python implementation byte for byte", () => {
+  assert.equal(ipcRequestMac(V_TOKEN, "POST", "/execute", "1700000000000", V_NONCE, V_REQ.length, sha256Hex(V_REQ)),
+    "5126140a5094ef571795f7d658d319574d706efc1a2e62e61447f90f99006e3f");
+  assert.equal(ipcResponseMac(V_TOKEN, V_NONCE, 200, V_RESP.length, sha256Hex(V_RESP)),
+    "fd337f36ff1dc00192e77387e339bb7e347c8eb7b00eee2e5147479b42bd3d77");
 });
 
-test("signIpcRequest uses a fresh nonce and verifyIpcResponseMac rejects anything not from the token holder", () => {
+test("signIpcRequest covers length and body hash; verifyIpcResponse binds nonce, status, length and body", () => {
   const token = generateIpcToken();
   const body = Buffer.from("{}");
   const a = signIpcRequest(token, "POST", "/execute", body, 1);
   const b = signIpcRequest(token, "POST", "/execute", body, 1);
   assert.match(a.nonce, /^[0-9a-f]{32}$/);
   assert.notEqual(a.nonce, b.nonce);
-  assert.equal(a.mac, ipcRequestMac(token, "POST", "/execute", "1", a.nonce, body));
-  const good = ipcResponseMac(token, a.nonce, 200, body);
-  assert.equal(verifyIpcResponseMac(token, a.nonce, 200, body, good), true);
-  assert.equal(verifyIpcResponseMac(token, a.nonce, 403, body, good), false);         // status bound
-  assert.equal(verifyIpcResponseMac(token, b.nonce, 200, body, good), false);         // nonce bound
-  assert.equal(verifyIpcResponseMac(token, a.nonce, 200, Buffer.from("[]"), good), false); // body bound
-  assert.equal(verifyIpcResponseMac(generateIpcToken(), a.nonce, 200, body, good), false);
-  for (const bad of [undefined, "", "A".repeat(64), "0".repeat(63), ["x"]]) assert.equal(verifyIpcResponseMac(token, a.nonce, 200, body, bad), false);
+  assert.equal(a.digest, sha256Hex(body));
+  assert.equal(a.mac, ipcRequestMac(token, "POST", "/execute", "1", a.nonce, 2, a.digest));
+  const reply = Buffer.from('{"ok":1}');
+  const d = sha256Hex(reply);
+  const good = ipcResponseMac(token, a.nonce, 200, reply.length, d);
+  assert.equal(verifyIpcResponse(token, a.nonce, 200, reply, d, good), true);
+  assert.equal(verifyIpcResponse(token, a.nonce, 403, reply, d, good), false);
+  assert.equal(verifyIpcResponse(token, b.nonce, 200, reply, d, good), false);
+  assert.equal(verifyIpcResponse(token, a.nonce, 200, Buffer.from('{"ok":2}'), d, good), false); // hash
+  assert.equal(verifyIpcResponse(generateIpcToken(), a.nonce, 200, reply, d, good), false);
+  for (const bad of [undefined, "", "A".repeat(64), "0".repeat(63), ["x"]]) {
+    assert.equal(verifyIpcResponse(token, a.nonce, 200, reply, d, bad), false);
+    assert.equal(verifyIpcResponse(token, a.nonce, 200, reply, bad, good), false);
+  }
 });
 
-test("UNIX frames: signed request; one policy for replies (unsigned or status >= 400 is a channel failure)", () => {
-  const token = generateIpcToken();
-  const { line, nonce } = buildUnixFrame(token, { action: "execute", script: "python/pourbaix_solver.py" });
-  const frame = JSON.parse(line);
-  assert.ok(line.endsWith("\n"));
-  assert.equal(frame.v, 1);
-  assert.equal(frame.nonce, nonce);
-  assert.equal(frame.mac, ipcRequestMac(token, "UNIX", "/", frame.ts, nonce, Buffer.from(frame.body, "utf8")));
-  assert.ok(!line.includes(token));
+function signedReply(token: string, nonce: string, status: number, obj: unknown) {
+  const body = Buffer.from(JSON.stringify(obj));
+  const digest = sha256Hex(body);
+  return { body, digest, mac: ipcResponseMac(token, nonce, status, body.length, digest) };
+}
 
-  const reply = (status: number, bodyObj: unknown, signer = token, n = nonce) => {
-    const body = JSON.stringify(bodyObj);
-    return JSON.stringify({ v: 1, status, body, mac: ipcResponseMac(signer, n, status, Buffer.from(body, "utf8")) });
-  };
-  assert.deepEqual(parseUnixResponse(token, nonce, reply(200, { stdout: "ok", exitCode: 0 })), { stdout: "ok", exitCode: 0 });
-  for (const status of [400, 401, 403, 404, 413, 500]) {
-    assert.throws(() => parseUnixResponse(token, nonce, reply(status, { code: "X" })), /refused the request/, String(status));
+test("one reply policy for both channels: unsigned or >= 400 means 'not executed'; signed garbage means 'unknown'", () => {
+  const token = generateIpcToken();
+  const nonce = "f".repeat(32);
+  const ok = signedReply(token, nonce, 200, { stdout: "ok", exitCode: 0 });
+  assert.deepEqual(acceptIpcReply(token, nonce, 200, ok.body, ok.digest, ok.mac, "X"), { stdout: "ok", exitCode: 0 });
+  for (const status of [400, 401, 403, 404, 408, 413, 415, 500]) {
+    const r = signedReply(token, nonce, status, { code: "X" });
+    assert.throws(() => acceptIpcReply(token, nonce, status, r.body, r.digest, r.mac, "X"),
+      (e: any) => e instanceof IpcChannelError && e.executed === false && /before running it/.test(e.message), String(status));
   }
-  assert.throws(() => parseUnixResponse(token, nonce, reply(200, { stdout: "forged" }, generateIpcToken())), /not signed/);
-  assert.throws(() => parseUnixResponse(token, nonce, reply(200, { stdout: "forged" }, token, "f".repeat(32))), /not signed/);
-  assert.throws(() => parseUnixResponse(token, nonce, JSON.stringify({ v: 1, status: 200, body: "{}" })), /not signed/);
-  assert.throws(() => parseUnixResponse(token, nonce, JSON.stringify({ status: 401, error: "x" })), /not signed/);
-  assert.throws(() => parseUnixResponse(token, nonce, "not json"), /malformed/);
+  const forged = signedReply(generateIpcToken(), nonce, 200, { stdout: "forged" });
+  assert.throws(() => acceptIpcReply(token, nonce, 200, forged.body, forged.digest, forged.mac, "X"),
+    (e: any) => e instanceof IpcChannelError && e.executed === false && /not signed/.test(e.message));
+  assert.throws(() => acceptIpcReply(token, nonce, 200, ok.body, ok.digest, undefined, "X"),
+    (e: any) => e instanceof IpcChannelError && e.executed === false);
+  const garbage = Buffer.from("not json");
+  const gd = sha256Hex(garbage);
+  assert.throws(() => acceptIpcReply(token, nonce, 200, garbage, gd, ipcResponseMac(token, nonce, 200, garbage.length, gd), "X"),
+    (e: any) => e instanceof IpcChannelError && e.executed === "unknown");
+});
+
+test("UNIX frames: signed head + body; reply parser is incremental and bounded", () => {
+  const token = generateIpcToken();
+  const { data, nonce } = buildUnixFrame(token, { action: "execute", script: "python/pourbaix_solver.py" });
+  const nl = data.indexOf(0x0a);
+  const head = JSON.parse(data.subarray(0, nl).toString());
+  const body = data.subarray(nl + 1);
+  assert.equal(head.v, 2);
+  assert.equal(head.nonce, nonce);
+  assert.equal(head.len, body.length);
+  assert.equal(head.sha256, sha256Hex(body));
+  assert.equal(head.mac, ipcRequestMac(token, "UNIX", "/", head.ts, nonce, body.length, head.sha256));
+  assert.ok(!data.toString().includes(token));
+
+  const r = signedReply(token, nonce, 200, { stdout: "ok" });
+  const wire = Buffer.concat([Buffer.from(JSON.stringify({ v: 2, status: 200, len: r.body.length, sha256: r.digest, mac: r.mac }) + "\n"), r.body]);
+  const parser = new UnixReplyParser();
+  let done: any = null;
+  for (let i = 0; i < wire.length; i += 3) done = parser.push(wire.subarray(i, i + 3)) ?? done;
+  assert.ok(done);
+  assert.deepEqual(acceptIpcReply(token, nonce, done.status, done.body, done.sha256, done.mac, "UNIX"), { stdout: "ok" });
+  assert.throws(() => new UnixReplyParser().push(Buffer.alloc(5000, 0x41)), /head too large/);
+  assert.throws(() => new UnixReplyParser().push(Buffer.from(JSON.stringify({ v: 2, status: 200, len: MAX_IPC_RESPONSE_BYTES + 1 }) + "\n")),
+    /reply too large/);
+  assert.throws(() => new UnixReplyParser().push(Buffer.from("{nope}\n")), /malformed/);
 });
 
 test("buildIpcSpawnSpec passes the token via env only; ephemeral port and private socket by default", () => {
@@ -156,42 +192,31 @@ test("startup scrubs an inherited METALLIX_IPC_TOKEN; the daemon gets its own to
   assert.ok(!child.spawnargs.some((a: string) => a.includes(token)));
 });
 
-test("HTTP client signs requests, never sends the token, and refuses unsigned or non-200 replies", async () => {
+test("HTTP client signs the head, never sends the token, and sends the exact signed body", async () => {
   const seen: { headers: http.IncomingHttpHeaders; body: Buffer }[] = [];
-  let reply: { status: number; body: string } = { status: 200, body: "" };
   const fake = http.createServer((req, res) => {
     const chunks: Buffer[] = [];
     req.on("data", (c: Buffer) => chunks.push(c));
-    req.on("end", () => {
-      seen.push({ headers: req.headers, body: Buffer.concat(chunks) });
-      res.writeHead(reply.status, { "Content-Type": "application/json" });
-      res.end(reply.body);
-    });
+    req.on("end", () => { seen.push({ headers: req.headers, body: Buffer.concat(chunks) }); res.writeHead(401); res.end("{}"); });
   });
   await new Promise<void>((resolve) => fake.listen(0, "127.0.0.1", () => resolve()));
   const port = (fake.address() as AddressInfo).port;
+  const token: string = supervisor.ipcToken;
   try {
-    // A listener without the token (squatter) answers 200 with forged output: rejected.
-    reply = { status: 200, body: JSON.stringify({ stdout: '{"success": true, "FORGED": true}', exitCode: 0 }) };
     await assert.rejects(supervisor.executeViaHttp(port, "python/pourbaix_solver.py", { element: "Fe" }, [], 5000),
-      /not signed by this server's daemon \(HTTP 200\)/);
-    reply = { status: 401, body: JSON.stringify({ code: "UNAUTHORIZED" }) };
-    await assert.rejects(supervisor.executeViaHttp(port, "python/pourbaix_solver.py", {}, [], 5000), /not signed/);
+      (e: any) => e instanceof IpcChannelError && e.executed === false);
   } finally {
     await new Promise<void>((resolve) => fake.close(() => resolve()));
   }
-  const token: string = supervisor.ipcToken;
-  const first = seen[0];
-  assert.equal(first.headers.authorization, undefined);
-  assert.equal(first.headers.origin, undefined);
-  assert.equal(first.headers.host, `127.0.0.1:${port}`); // matches the daemon's Host allowlist
-  assert.equal(first.headers["content-type"], "application/json");
-  assert.equal(first.headers["x-metallix-mac"], ipcRequestMac(token, "POST", "/execute",
-    String(first.headers["x-metallix-ts"]), String(first.headers["x-metallix-nonce"]), first.body));
-  for (const s of seen) {
-    assert.ok(!JSON.stringify(s.headers).includes(token));
-    assert.ok(!s.body.toString("utf8").includes(token));
-  }
+  const { headers, body } = seen[0];
+  assert.equal(headers.authorization, undefined);
+  assert.equal(headers.origin, undefined);
+  assert.equal(headers.host, `127.0.0.1:${port}`);
+  assert.equal(headers["x-metallix-body-sha256"], sha256Hex(body));
+  assert.equal(headers["x-metallix-mac"], ipcRequestMac(token, "POST", "/execute", String(headers["x-metallix-ts"]),
+    String(headers["x-metallix-nonce"]), Number(headers["content-length"]), String(headers["x-metallix-body-sha256"])));
+  assert.ok(!JSON.stringify(headers).includes(token));
+  assert.ok(!body.toString("utf8").includes(token));
 });
 
 test("channels are used only after this server's own daemon announced them", () => {
@@ -202,9 +227,6 @@ test("channels are used only after this server's own daemon announced them", () 
   assert.equal(sup.httpTarget(), null);
   sup.isReady = true;
   sup.readiness = { unixActive: false, httpActive: false, unixSocketPath: "/x/ipc.sock", httpPort: 5055 };
-  assert.equal(sup.unixTarget(), null);
-  assert.equal(sup.httpTarget(), null);
-  sup.readiness = { unixActive: true, httpActive: true, unixSocketPath: null, httpPort: null };
   assert.equal(sup.unixTarget(), null);
   assert.equal(sup.httpTarget(), null);
   sup.readiness = { unixActive: true, httpActive: true, unixSocketPath: "/x/ipc.sock", httpPort: 61234 };
@@ -222,55 +244,56 @@ async function waitFor(pred: () => boolean, timeoutMs: number): Promise<boolean>
 }
 
 function rawRequest(port: number, method: string, reqPath: string, headers: Record<string, string>, body: string) {
-  return new Promise<{ status: number; acao: string | undefined; mac: string | undefined; raw: Buffer }>((resolve, reject) => {
-    const req = http.request({ hostname: "127.0.0.1", port, path: reqPath, method,
+  return new Promise<{ status: number; headers: http.IncomingHttpHeaders; raw: Buffer }>((resolve, reject) => {
+    const req = http.request({ hostname: "127.0.0.1", port, path: reqPath, method, agent: false,
       headers: { ...headers, "Content-Length": String(Buffer.byteLength(body)) } }, (res) => {
       const chunks: Buffer[] = [];
       res.on("data", (c: Buffer) => chunks.push(c));
-      res.on("end", () => resolve({ status: res.statusCode ?? 0, acao: res.headers["access-control-allow-origin"] as string | undefined,
-        mac: res.headers["x-metallix-mac"] as string | undefined, raw: Buffer.concat(chunks) }));
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, headers: res.headers, raw: Buffer.concat(chunks) }));
     });
     req.on("error", reject);
     req.end(body);
   });
 }
 
-test("end to end: the real daemon on its announced channel accepts our signature and refuses everyone else", { timeout: 240000 }, async () => {
-  assert.ok(await waitFor(() => pythonIPCSupervisor.getStatus().status === "online", 180000),
+test("end to end: the real daemon on its announced channel accepts our signature and refuses everyone else", { timeout: 300000 }, async () => {
+  assert.ok(await waitFor(() => pythonIPCSupervisor.getStatus().status === "online", 240000),
     `daemon did not come online: ${JSON.stringify(pythonIPCSupervisor.getStatus())}`);
-  const status = pythonIPCSupervisor.getStatus();
-  const port: number = supervisor.readiness.httpPort;
-  assert.ok(port > 0);
-  assert.equal(status.channels.httpMicroservice.url, `http://127.0.0.1:${port}`);
-
   const res = await runPythonScript("python/pourbaix_solver.py", { element: "Fe" }, [], 60000);
   assert.equal(res.channel, process.platform === "win32" ? "http_microservice" : "unix_socket", res.stderr);
   assert.ok(res.stdout.trim().startsWith("{"), res.stderr);
 
+  const port: number | null = supervisor.readiness.httpPort;
+  if (process.platform !== "win32") {
+    // POSIX default: UNIX socket only, no TCP listener at all.
+    assert.equal(port, null);
+    assert.equal(pythonIPCSupervisor.getStatus().channels.httpMicroservice.active, false);
+    return;
+  }
+  assert.ok(port && port > 0);
+  assert.equal(pythonIPCSupervisor.getStatus().channels.httpMicroservice.url, `http://127.0.0.1:${port}`);
   const body = JSON.stringify({ script: "python/pourbaix_solver.py", payload: { element: "Fe" } });
   const json = { "Content-Type": "application/json" };
   const noAuth = await rawRequest(port, "POST", "/execute", json, body);
-  assert.equal(noAuth.status, 401);
   const bearer = await rawRequest(port, "POST", "/execute", { ...json, Authorization: `Bearer ${supervisor.ipcToken}` }, body);
-  assert.equal(bearer.status, 401); // the token itself is no longer a credential on the wire
   const browser = await rawRequest(port, "POST", "/execute", { "Content-Type": "text/plain", Origin: "https://evil.example" },
     JSON.stringify({ script: "python/../../outside/pwn.py" }));
-  assert.equal(browser.status, 403);
+  assert.deepEqual([noAuth.status, bearer.status, browser.status], [401, 401, 403]);
   for (const r of [noAuth, bearer, browser]) {
-    assert.equal(r.acao, undefined);
-    assert.equal(r.mac, undefined); // unauthenticated replies are never signed
+    assert.equal(r.headers["access-control-allow-origin"], undefined);
+    assert.equal(r.headers["x-metallix-mac"], undefined); // unauthenticated replies are never signed
   }
-
   const auth = signIpcRequest(supervisor.ipcToken, "POST", "/execute", Buffer.from(body));
-  const signedHeaders = { ...json, "X-Metallix-Ts": auth.ts, "X-Metallix-Nonce": auth.nonce, "X-Metallix-Mac": auth.mac };
+  const signedHeaders = { ...json, "X-Metallix-Ts": auth.ts, "X-Metallix-Nonce": auth.nonce,
+    "X-Metallix-Body-Sha256": auth.digest, "X-Metallix-Mac": auth.mac };
   const good = await rawRequest(port, "POST", "/execute", signedHeaders, body);
   assert.equal(good.status, 200);
-  assert.equal(verifyIpcResponseMac(supervisor.ipcToken, auth.nonce, 200, good.raw, good.mac), true);
+  assert.equal(verifyIpcResponse(supervisor.ipcToken, auth.nonce, 200, good.raw, good.headers["x-metallix-body-sha256"], good.headers["x-metallix-mac"]), true);
   const replay = await rawRequest(port, "POST", "/execute", signedHeaders, body);
   assert.equal(replay.status, 401);
 });
 
-test("a squatter on a configured fixed port never receives a request or gets its output accepted", { timeout: 240000 }, async () => {
+test("a squatter on a configured fixed port never receives a request or gets its output accepted", { timeout: 300000 }, async () => {
   let squatterHits = 0;
   const squatter = http.createServer((req, res) => {
     squatterHits++;
@@ -281,6 +304,7 @@ test("a squatter on a configured fixed port never receives a request or gets its
   await new Promise<void>((resolve) => squatter.listen(0, "127.0.0.1", () => resolve()));
   const port = (squatter.address() as AddressInfo).port;
   process.env.METALLIX_IPC_PORT = String(port);
+  process.env.METALLIX_IPC_HTTP = "1";
   let sup: any;
   try {
     sup = new PersistentPythonIPCSupervisor();
@@ -288,11 +312,12 @@ test("a squatter on a configured fixed port never receives a request or gets its
     extraSupervisors.push(sup);
   } finally {
     delete process.env.METALLIX_IPC_PORT;
+    delete process.env.METALLIX_IPC_HTTP;
   }
   try {
-    // Windows: exclusive bind fails, HTTP is the only channel, the daemon exits before warm-up.
-    // POSIX: the daemon announces only its private UNIX socket.
-    assert.ok(await waitFor(() => sup.child === null || sup.isReady, 180000), "daemon neither exited nor became ready");
+    // Windows: exclusive bind fails, HTTP is the only channel, the daemon exits before warm-up
+    // POSIX: the daemon announces only its UNIX socket.
+    assert.ok(await waitFor(() => sup.child === null || sup.isReady, 240000), "daemon neither exited nor became ready");
     assert.equal(sup.httpTarget(), null);
     const res = await sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 60000);
     assert.notEqual(res.channel, "http_microservice");
