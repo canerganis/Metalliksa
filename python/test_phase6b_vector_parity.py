@@ -294,9 +294,10 @@ class XrdParityTest(unittest.TestCase):
         captured = {}
         original = xrd._fit_profile_least_squares
 
-        def spy(*args):
+        def spy(*args, **kwargs):
             captured["args"] = args
-            captured["x"] = original(*args)
+            captured["kwargs"] = kwargs
+            captured["x"] = original(*args, **kwargs)
             return captured["x"]
 
         with patch.object(xrd, "_fit_profile_least_squares", spy):
@@ -368,6 +369,17 @@ class XrdParityTest(unittest.TestCase):
         old = load("xrd_peak_deconvolution", "pv_ka2_cu111")["stdout"]
         with self.assertRaises(AssertionError):
             self.assert_minimiser_parity(self, "pv_ka2_cu111", old, mutated)
+
+    def test_peak_centre_stays_inside_the_roi(self):
+        # Review fix: the centre was unbounded (a far guess reported 2theta 73.75 for
+        # a 42-44.6 deg ROI with success true). Guesses outside / at the edges.
+        base = cases.CASES["xrd_peak_deconvolution"]["pv_ka2_cu111"]
+        lo, hi = base["points"][0]["twoTheta"], base["points"][-1]["twoTheta"]
+        for guess in (10.0, 41.99, 44.61, 73.75):
+            with self.subTest(guess=guess):
+                out = _in_process("xrd_peak_deconvolution", dict(base, center=guess))
+                self.assertGreaterEqual(out["ka1Peak"]["twoTheta"], lo)
+                self.assertLessEqual(out["ka1Peak"]["twoTheta"], hi)
 
     def test_module_import_preloads_scipy_optimize(self):
         # The IPC daemon pre-imports the module, so its warm-up (not the first fit)

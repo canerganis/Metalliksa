@@ -77,19 +77,20 @@ def _profile_array(two_theta, center, intensity, fwhm, shape, profile_type):
 
 
 def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
-                               wavelength_ka1, wavelength_ka2):
+                               wavelength_ka1, wavelength_ka2, center_bounds=(-math.inf, math.inf)):
     """Bounded non-linear least squares (scipy trust-region reflective) for
     [center_ka1, intensity_ka1, fwhm_ka1, eta/m, bg_0, bg_1].
 
     Bounds are the former coordinate-search clamps: fwhm in [0.02, 3.0] deg,
-    eta in [0, 1] (pseudo-Voigt) or m in [0.8, 10] (Pearson-VII), intensity > 0.
+    eta in [0, 1] (pseudo-Voigt) or m in [0.8, 10] (Pearson-VII), intensity > 0;
+    plus the Ka1 centre within ``center_bounds`` (the ROI 2theta span).
     Returns the solution vector as Python floats.
     """
     two_theta = np.asarray(two_theta, dtype=np.float64)
     y_exp = np.asarray(y_exp, dtype=np.float64)
     shape_lo, shape_hi = (0.0, 1.0) if profile_type == "pseudo-voigt" else (0.8, 10.0)
-    lower = np.array([-np.inf, 0.0, 0.02, shape_lo, -np.inf, -np.inf])
-    upper = np.array([np.inf, np.inf, 3.0, shape_hi, np.inf, np.inf])
+    lower = np.array([center_bounds[0], 0.0, 0.02, shape_lo, -np.inf, -np.inf])
+    upper = np.array([center_bounds[1], np.inf, 3.0, shape_hi, np.inf, np.inf])
     start = np.clip(np.asarray(x0, dtype=np.float64), lower, upper)
     if start[1] <= 0.0:
         start[1] = 1.0  # trf needs a strictly feasible start (intensity > 0)
@@ -195,9 +196,17 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         two_theta_obs = [pt["twoTheta"] for pt in points]
         intensity_obs = [pt["sampleIntensity"] for pt in points]
         _require_finite_start(best_params, two_theta_obs, intensity_obs, profile_type)
+        # The Ka1 centre is a peak inside this ROI: bound it to the observed 2theta
+        # span (a guess outside the span is moved to its nearest edge first, so a
+        # kept guess cannot report a centre outside the data either).
+        roi = (min(two_theta_obs), max(two_theta_obs))
+        if roi[1] > roi[0] and not roi[0] <= best_params[0] <= roi[1]:
+            best_params = [min(max(best_params[0], roi[0]), roi[1])] + best_params[1:]
+            current_loss = loss_func(best_params)
         fitted = _fit_profile_least_squares(
             two_theta_obs, intensity_obs,
-            best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2)
+            best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2,
+            center_bounds=roi if roi[1] > roi[0] else (-math.inf, math.inf))
         fitted_loss = loss_func(fitted)
         if fitted_loss < current_loss:
             best_params, current_loss = fitted, fitted_loss
