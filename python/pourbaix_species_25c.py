@@ -12,6 +12,11 @@ Source sets (one primary set per element, each with its own H2O value):
      NACE/CEBELCOR 1974: mu0 in cal/mol, converted with 4.184 J/cal (H2O -56690 cal).
   N  Wagman et al., NBS tables, J. Phys. Chem. Ref. Data 11, Suppl. 2 (1982) (H2O -237.129).
   L  Latimer, Oxidation Potentials (1952): E0(FeO4 2-/Fe3+) = 2.20 V (derived row).
+  O  CHNOSZ OBIGT database (github.com/jedick/CHNOSZ, GPL-3; only the cited numbers are used):
+     Al3+ and Al(OH)4- from Tagirov & Schott, Geochim. Cosmochim. Acta 65 (2001) 3965 (cal/mol),
+     gibbsite from Robie, Hemingway & Fisher, USGS Bull. 1452 (1978) (J/mol); H2O is the SUPCRT92
+     value used with those aqueous species (-56687 cal/mol). Consistency is checked through the
+     reaction constants (gibbsite solubility, Al(OH)4- formation), not assumed.
 Verification levels (reached by this module, not by the table author):
   V1  equals an open table value within 0.5 kJ/mol (OpenStax Chemistry 2e App. G, CC BY 4.0;
       CHNOSZ OBIGT; SKI 95:73 Table 3).
@@ -62,9 +67,17 @@ def _atlas(cal_per_mol):
     return cal_per_mol * CAL_J / 1000.0
 
 
+def _obigt_cal(cal_per_mol):
+    """CHNOSZ OBIGT G (E_units cal) -> kJ/mol."""
+    return cal_per_mol * CAL_J / 1000.0
+
+
 # Derived row: FeO4 2- from Fe3+ + 4 H2O -> FeO4 2- + 8 H+ + 3 e-, E0 = 2.20 V (Latimer).
 _FE_H2O = _atlas(-56690.0)
 _FEO4_DFG = _atlas(-2530.0) + 4.0 * _FE_H2O + 3.0 * physical_constants.FARADAY.value * 2.20 / 1000.0
+
+# Al set O: SUPCRT92 water used with the Tagirov & Schott 2001 aqueous species.
+_AL_H2O = _obigt_cal(-56687.0)
 
 # (id, formula, x, o, h, z, phase, dfG_kJ_mol, role, source, level, evidence)
 # phase: "s" solid (activity 1), "aq" dissolved (activity = 10**ionActivity_log10).
@@ -142,6 +155,26 @@ _ROWS = {
         ("Mg(OH)2", "Mg(OH)₂", 1, 2, 2, 0, "s", -833.51, "oxide", "N", "V2",
          "E0(Mg(OH)2/Mg, alkaline) table -2.690 V vs -2.69 V (Wikipedia data page)"),
     ),
+    "Al": (
+        ("Al", "Al", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
+        ("Al3+", "Al³⁺", 1, 0, 0, 3, "aq", _obigt_cal(-116510.0), "cation", "O", "V2",
+         "OBIGT Al+3 (TS01) -116510 cal. E0(Al3+/Al) -1.6841 V: NBS -485.0 kJ/mol (OpenStax App. G) "
+         "gives -1.6756 V (delta -8.6 mV, -2.5 kJ/mol); CODATA 1989 key values (dfH -538.4 +/- 1.5, "
+         "S -325 +/- 10) give -491.5 +/- 3.3 kJ/mol = -1.6980 V (delta +14 mV, 1.2 sigma); the "
+         "CRC/Wikipedia -1.662 V is the older Latimer/atlas value (-115000 cal) and lies 22 mV above: "
+         "documented exception like Mg2+/Mg"),
+        ("Al(OH)3", "Al(OH)₃ (gibbsite)", 1, 3, 3, 0, "s", -1154.889, "oxide", "O", "V2",
+         "OBIGT gibbsite (Robie, Hemingway & Fisher 1978) -1154889 J. Gibbsite + 3H+ = Al3+ + 3H2O: "
+         "set log K 7.730; LLNL thermo.com.V8.R6 (PHREEQC llnl.dat) 7.756 (0.15 kJ/mol); Nordstrom "
+         "et al. 1990 (PHREEQC phreeqc.dat/wateq4f.dat) 8.11 (2.2 kJ/mol). Hydrargillite is the old "
+         "name of gibbsite; the atlas hydrargillite value is 5.3 kJ/mol per Al more negative and is "
+         "not used"),
+        ("Al(OH)4-", "Al(OH)₄⁻", 1, 4, 4, -1, "aq", _obigt_cal(-312087.0), "anion_low", "O", "V2",
+         "OBIGT Al(OH)4- (TS01) -312087 cal (aluminate; AlO2- + 2H2O, the engine counts the water). "
+         "Al3+ + 4H2O = Al(OH)4- + 4H+: set log K -22.849; llnl.dat -22.883 (0.2 kJ/mol), "
+         "phreeqc.dat -22.7 (0.85 kJ/mol). E0(Al(OH)4-/Al, alkaline) -2.338 V vs -2.33 V "
+         "(Wikipedia data page, 'H2AlO3-' notation, CRC): 8 mV"),
+    ),
 }
 
 ELEMENT_SET = {
@@ -150,10 +183,16 @@ ELEMENT_SET = {
     "Cu": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
     "Zn": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982), ZnO see row evidence"),
     "Mg": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
+    "Al": ("O", _AL_H2O, "CHNOSZ OBIGT set: Al3+ and Al(OH)4- (Tagirov & Schott 2001) with gibbsite "
+                         "(Robie, Hemingway & Fisher 1978) and SUPCRT92 water. The solid is gibbsite; "
+                         "boehmite and corundum are listed under withheldSpecies (metastable/excluded). "
+                         "The mononuclear hydrolysis species AlOH2+, Al(OH)2+ and Al(OH)3(aq) (TS01) are "
+                         "omitted as for the other elements: they have no domain for log a >= -7.16; at "
+                         "log a = -8 AlOH2+ would take pH 4.96-5.38 from Al3+ and gibbsite"),
 }
 
 # Couple used for the informational standardE0_V (unit activity, pH independent).
-REFERENCE_CATION = {"Fe": "Fe2+", "Ni": "Ni2+", "Cu": "Cu2+", "Zn": "Zn2+", "Mg": "Mg2+"}
+REFERENCE_CATION = {"Fe": "Fe2+", "Ni": "Ni2+", "Cu": "Cu2+", "Zn": "Zn2+", "Mg": "Mg2+", "Al": "Al3+"}
 
 NAMES = {
     "Fe": "Iron (Fe-H₂O System)", "Cr": "Chromium (Cr-H₂O System)", "Ni": "Nickel (Ni-H₂O System)",
@@ -174,25 +213,32 @@ WITHHELD_SPECIES = {
          "table); the atlas calls it uncertain; not used"),
     ),
     "Al": (
-        ("Al", "Al", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
-        ("Al3+", "Al³⁺", 1, 0, 0, 3, "aq", _atlas(-115000.0), "cation", "A", "V2",
-         "E0(Al3+/Al) table -1.6623 V vs -1.662 V; OpenStax -485 kJ/mol (delta +3.8)"),
-        ("AlO2-", "AlO₂⁻", 1, 2, 0, -1, "aq", _atlas(-200710.0), "anion_low", "A", "V3",
-         "NOT CONFIRMED: CHNOSZ OBIGT (TS01) Al(OH)4- -312087 cal gives AlO2- = -831.3 kJ/mol; the "
-         "Wikipedia E0 of H2AlO3-/Al (-2.33 V) implies -831.0; PourPy -827.5: table is 8-12 kJ/mol "
-         "more negative (30 mV)"),
-        ("Al2O3.3H2O", "Al₂O₃·3H₂O (hydrargillite)", 2, 6, 6, 0, "s", _atlas(-554600.0), "oxide", "A", "V3",
-         "NOT CONFIRMED: gibbsite -1154.9 kJ per Al (NBS/Robie, CHNOSZ RHF78.3) vs table "
-         "-1160.2 per Al; the Al3+/hydroxide boundary is 9 kJ off (log K -5.69 table vs -7.3 to -7.7), "
-         "i.e. pH 3.9 vs 4.6"),
+        ("AlO2-(atlas)", "AlO₂⁻ (atlas)", 1, 2, 0, -1, "aq", _atlas(-200710.0), "anion_low", "A", "V3",
+         "REJECTED atlas row (atlas set, H2O -237.19): CHNOSZ OBIGT (TS01) Al(OH)4- -312087 cal gives "
+         "AlO2- = -831.3 kJ/mol; the Wikipedia E0 of H2AlO3-/Al (-2.33 V) implies -831.0; PourPy -827.5: "
+         "the atlas value is 8-12 kJ/mol more negative (30 mV). Replaced by Al(OH)4- (set O)"),
+        ("Al2O3.3H2O(atlas)", "Al₂O₃·3H₂O (hydrargillite, atlas)", 2, 6, 6, 0, "s", _atlas(-554600.0), "oxide",
+         "A", "V3",
+         "REJECTED atlas row (atlas set, H2O -237.19): -1160.2 kJ/mol per Al vs gibbsite -1154.9 (Robie, "
+         "Hemingway & Fisher 1978); with it the Al3+/hydroxide boundary is pH 3.90 instead of 4.58 at "
+         "a = 1e-6. Replaced by Al(OH)3 gibbsite (set O)"),
+        ("AlO(OH)", "AlO(OH) (boehmite)", 1, 2, 1, 0, "s", -918.400, "oxide", "O", "V2",
+         "EXCLUDED (metastable by convention): OBIGT boehmite (Hemingway, Robie & Apps 1991) -918400 J; "
+         "AlOOH + 3H+ = Al3+ + 2H2O set log K 7.609 vs llnl.dat 7.564. Boehmite + H2O lies 0.69 kJ/mol "
+         "below gibbsite in this set, but the sign differs between open databases (llnl.dat boehmite "
+         "1.1 kJ/mol lower; wateq4f.dat and minteq.v4.dat gibbsite 2.7 and 1.6 kJ/mol lower). The 25 C "
+         "map uses gibbsite, the Al(OH)3 phase of the conventional diagram; with boehmite the "
+         "Al3+/solid boundary moves to pH 4.54 and the solid/Al(OH)4- boundary to pH 9.24 at a = 1e-6 "
+         "(same categories)"),
+        ("Al2O3", "Al₂O₃ (corundum)", 2, 3, 0, 0, "s",
+         -1675.7 - TEMPERATURE_K * (50.92 - 2 * 28.30 - 1.5 * 205.152) / 1000.0, "oxide", "O", "V2",
+         "EXCLUDED (metastable): dfG from the CODATA 1989 key values (dfH -1675.7 kJ/mol, S 50.92; Al 28.30, "
+         "O2 205.152 J/mol/K) = -1582.26 kJ/mol (OpenStax App. G -1582). Per Al it lies 8.0 kJ/mol above "
+         "gibbsite + water, so it never has a domain"),
     ),
 }
 
 UNAVAILABLE_ELEMENTS = {
-    "Al": ("Atlas rows AlO2- and Al2O3.3H2O (V3) could not be confirmed against open sources: "
-           "both lie 5-12 kJ/mol outside every open value found (hydrolysis boundary Al3+/hydroxide "
-           "pH 3.9 here vs 4.6 from gibbsite data, aluminate 8.6 vs 9.1). No Al-H2O map is served until a "
-           "single verified source set is adopted."),
     "Cr": ("Blocked until WP-Cr: alkaline Cr(III) (CrO2-/Cr(OH)4-) has no verified value; close from "
            "Ball & Nordstrom, J. Chem. Eng. Data 43 (1998) 895."),
     "Ti": ("Published aqueous Ti data are mutually inconsistent (TiO2+ -596 or -615 kJ/mol from the "
