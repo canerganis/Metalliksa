@@ -507,12 +507,52 @@ class StepBGoldenTest(unittest.TestCase):
                   {"ph": 6.5, "potential_V": 0.5, "refElectrode": "SHE"},
                   {"ph": 13.0, "potential_V": -1.2, "refElectrode": "MMS"},
                   {"ph": 9.0, "potential_V": 1.9, "refElectrode": "Ag/AgCl (3M KCl)"}]
-        for element, log_a in (("Ni", -6.0), ("Zn", -4.0), ("Mg", -6.0), ("Fe", -3.0), ("Cu", -8.0)):
+        # Al joined the served set with WP-Al (OBIGT TS01 + gibbsite): the guard must hold for it too.
+        for element, log_a in (("Ni", -6.0), ("Zn", -4.0), ("Mg", -6.0), ("Fe", -3.0), ("Cu", -8.0),
+                               ("Al", -6.0), ("Al", -3.0), ("Al", 0.0)):
             with self.subTest(element=element, log_a=log_a):
                 doc = json.loads(json.dumps(
                     pourbaix_solver.solve_pourbaix_diagram(element, 25.0, log_a, 350.0, points)))
                 problems = check.document_problems(doc, doc)
                 self.assertEqual({k: v[:2] for k, v in problems.items() if v}, {})
+
+    def test_pourbaix_guard_rejects_wrong_aluminium_data(self):
+        # Mutants on an Al document (served by the engine since WP-Al): each must be a violation.
+        import copy
+        import pourbaix_golden_check as check
+        import pourbaix_solver
+        base = json.loads(json.dumps(pourbaix_solver.solve_pourbaix_diagram(
+            "Al", 25.0, -6.0, 350.0, [{"ph": 6.5, "potential_V": -0.2, "refElectrode": "SHE"}])))
+
+        def species(doc, sid):
+            return next(r for r in doc["speciesTable"]["species"] if r["id"] == sid)
+
+        def mutate_dfg(doc):
+            species(doc, "Al(OH)3")["dfG_kJ_mol"] += 1e-3
+
+        def mutate_charge(doc):
+            species(doc, "Al(OH)4-")["z"] = -2
+
+        def mutate_withheld_level(doc):
+            doc["speciesTable"]["withheldSpecies"][2]["verification"] = "V3"  # boehmite is V2 (excluded)
+
+        def mutate_withheld_dropped(doc):
+            doc["speciesTable"]["withheldSpecies"].pop()
+
+        def mutate_domain(doc):
+            doc["domains"][1]["polygon"][0]["E_V_SHE"] += 2e-4
+
+        def mutate_point(doc):
+            doc["experimentalOverlay"]["points"][0]["dominantSpeciesId"] = "Al3+"
+
+        self.assertEqual({k: v for k, v in check.document_problems(base, base).items() if v}, {})
+        for mutate in (mutate_dfg, mutate_charge, mutate_withheld_level, mutate_withheld_dropped,
+                       mutate_domain, mutate_point):
+            with self.subTest(mutant=mutate.__name__):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                problems = check.document_problems(base, doc)
+                self.assertTrue(any(problems.values()), mutate.__name__)
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).

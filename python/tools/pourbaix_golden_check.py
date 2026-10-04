@@ -228,12 +228,24 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
         if st.get("schema") != table.SCHEMA:
             p.append(f"schema {st.get('schema')!r} != {table.SCHEMA!r}")
         withheld = oracle.WITHHELD.get(element, {})
-        want_ids = [k for k in withheld] if "sp" not in withheld else []
+        # Elements with a plain withheld dict (Ni): the keys are the ids (V3). Al (WP-Al): the rejected
+        # atlas rows that are not in the served set keep an "(atlas)" id (V3), followed by the excluded
+        # metastable phases of the same set (V2, tools/pourbaix_oracle.AL_EXCLUDED).
+        want_level = {}
+        if "sp" not in withheld:
+            want_ids = [k for k in withheld]
+            want_level = {k: "V3" for k in want_ids}
+        else:
+            want_ids = [f"{k}(atlas)" for k in withheld["sp"] if k not in data["sp"]]
+            want_level = {i: "V3" for i in want_ids}
+            if element == "Al":
+                want_ids += list(oracle.AL_EXCLUDED)
+                want_level.update({k: "V2" for k in oracle.AL_EXCLUDED})
         got = st.get("withheldSpecies")
         if not isinstance(got, list) or [w.get("id") for w in got] != want_ids:
             p.append(f"withheldSpecies {got!r} != oracle withheld {want_ids!r}")
-        elif any(w.get("verification") != "V3" or not w.get("reason") for w in got):
-            p.append("a withheld species is not recorded as V3 with a reason")
+        elif any(w.get("verification") != want_level[w["id"]] or not w.get("reason") for w in got):
+            p.append("a withheld species is not recorded with its verification level (V3 rejected/unverified, V2 excluded) and a reason")
     id_of = {name: rows[i].get("id") for i, name in enumerate(names) if i < len(rows)}
     formula_of = {name: rows[i].get("formula") for i, name in enumerate(names) if i < len(rows)}
     name_of_id = {v: k for k, v in id_of.items()}
