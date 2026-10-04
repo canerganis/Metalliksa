@@ -41,14 +41,16 @@ test("exactly one <main> landmark and one banner <header> in the source tree", (
   assert.match(app, /<header className="mk-header sticky top-0 z-40 /);
 });
 
-test("module navigation is one Tab stop with arrow keys; aria-current stays on the active module", () => {
-  assert.match(app, /<nav aria-label="Engineering workspaces" onKeyDown=\{onNavKey\}>/);
-  assert.match(app, /<p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules\.<\/p>/);
-  assert.match(app, /tabIndex: key === navStop \? 0 : -1/);
-  assert.match(app, /<button \{\.\.\.navItem\('ws:' \+ workspace\.id\)\}/, "workspace headings join the roving group");
-  assert.match(app, /<button key=\{module\.id\} \{\.\.\.navItem\(module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
-  // The Tab stop falls back to the active module, then to the first visible one, so a filter never hides the whole nav.
-  assert.match(app, /const navStop = \[navFocus, activeTab\]\.find\(shown\) \?\? filtered\[0\]\?\.id;/);
+test("module navigation is its own component (focus moves do not re-render App), wired with arrow keys", () => {
+  const nav = read("src/components/ModuleNav.tsx");
+  assert.match(app, /<ModuleNav modules=\{filtered\} activeTab=\{activeTab\} activeWorkspace=\{activeWorkspace\.id\} onNavigate=\{navigate\} \/>/);
+  assert.doesNotMatch(app, /navFocus|setNavFocus|onFocus=/, "App holds no roving focus state");
+  assert.match(nav, /<nav aria-label="Engineering workspaces" onKeyDown=\{onKey\}>/);
+  assert.match(nav, /<p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules\.<\/p>/);
+  assert.match(nav, /tabIndex: key === stop \? 0 : -1/);
+  assert.match(nav, /if \(event\.ctrlKey \|\| event\.altKey \|\| event\.metaKey\) return;/, "modifier shortcuts are left to the browser");
+  assert.match(nav, /<button \{\.\.\.item\('ws:' \+ workspace\.id\)\}/, "workspace headings join the roving group");
+  assert.match(nav, /<button key=\{module\.id\} \{\.\.\.item\(module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
 });
 
 test("rovingIndex: Up/Down wrap, Home/End jump, other keys are ignored", () => {
