@@ -6,6 +6,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { ExecutedMaterialProvenance, LpbfJobArchiver, gpuPilotEngineLabel as validatedGpuPilotEngineLabel } from "../LpbfRunArchivePanel";
 import { In625BareplatePanel } from "../In625BareplatePanel";
 import { simulationApi, gpuPilotApi, buildGpuPilotInput, type GpuPilotInput, type GpuPilotJob, type GpuPilotResult, SimulationInput, SimulationJob, SimulationMode, SimulationCapabilities, ResourceEstimate, SimulationResult } from "../../services/lpbfSimulationService";
+import { useVisiblePolling } from "../../hooks/useVisiblePolling";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 
 import { LPBF_ENGINEERING_DEFAULTS as defaults, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
@@ -378,25 +380,20 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     }
     return () => { live = false; };
   }, []);
-  useEffect(() => {
-    if (!job || !active) return;
-    let live = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
-      try {
-        const next = await gpuPilotApi.get(job.id);
-        if (!live) return;
-        setJob(next); setError("");
-        if (next.status === "queued" || next.status === "running") timer = setTimeout(poll, 1500);
-      } catch (e) {
-        if (!live) return;
-        setError(e instanceof Error ? e.message : "CUDA pilot polling failed");
-        timer = setTimeout(poll, 3000);
-      }
-    };
-    timer = setTimeout(poll, 1500);
-    return () => { live = false; clearTimeout(timer); };
-  }, [job?.id, job?.status]);
+  // Paused while the module is hidden; becoming visible again polls at once to catch up.
+  useVisiblePolling(async (isLive) => {
+    if (!job) return null;
+    try {
+      const next = await gpuPilotApi.get(job.id);
+      if (!isLive()) return null;
+      setJob(next); setError("");
+      return next.status === "queued" || next.status === "running" ? 1500 : null;
+    } catch (e) {
+      if (!isLive()) return null;
+      setError(e instanceof Error ? e.message : "CUDA pilot polling failed");
+      return 3000;
+    }
+  }, !!job && active, `${job?.id}:${job?.status}`);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting || active) return;
@@ -515,7 +512,9 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
   const [resultSignature] = useEngineeringField("resultSignature");
   const active = job?.status === "queued" || job?.status === "running";
   useEffect(()=>{setRepeatExecution(false);},[signature]);
-  useEffect(()=>{if(!active)return;setElapsed(0);const start=Date.now();const timer=setInterval(()=>setElapsed((Date.now()-start)/1000),1000);return()=>clearInterval(timer);},[active,job?.id]);
+  const elapsedStart=useRef(0);
+  useEffect(()=>{if(!active)return;setElapsed(0);elapsedStart.current=Date.now();},[active,job?.id]);
+  useVisibleInterval(()=>setElapsed((Date.now()-elapsedStart.current)/1000),active?1000:null);
   const cancel=async()=>{if(!job || cancelling)return;setCancelling(true);try{const next=await simulationApi.cancel(job.id);if(next.status!=="queued"&&next.status!=="running")cancelledJob.current=job.id;setJob(next);}catch(e){setError(e instanceof Error?e.message:"Cancellation failed");}finally{setCancelling(false);}};
   const materialEvidence=caps?.materials.find(m=>m.name===(material||input.material));
   const missingMaterial=(materialEvidence?.available===false||/Unknown alloy|thermophysical data missing/i.test(estimateError))&&!properties.trim();

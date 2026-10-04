@@ -4,6 +4,7 @@ import {
   EBSD_VORONOI_VERTEX_SHADER,
   EBSD_VORONOI_FRAGMENT_SHADER,
 } from "../render/webglShaderEngine";
+import { useVisibleAnimationFrame } from "../hooks/useVisibleAnimationFrame";
 import {
   Maximize2,
   Sliders,
@@ -149,15 +150,7 @@ export const WebGLEBSDMapCanvas: React.FC<WebGLEBSDMapCanvasProps> = ({
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }, [grainScale, elongation, activeShaderMode]);
 
-  useEffect(() => {
-    let animId: number;
-    const loop = () => {
-      renderFrame();
-      animId = requestAnimationFrame(loop);
-    };
-    animId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animId);
-  }, [renderFrame]);
+  useVisibleAnimationFrame(renderFrame);
 
   const handleModeSelect = (m: "ipf" | "schmid" | "kam" | "twin" | "band_contrast") => {
     setActiveShaderMode(m);

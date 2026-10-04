@@ -26,7 +26,8 @@ import {
   RefreshCw,
   Box,
 } from "lucide-react";
-import { CandidateAlloySolution, InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
+import { useVisibleInterval } from "../hooks/useVisibleInterval";
+import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
 
 interface Props {
@@ -174,13 +175,9 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
   }, [runPythonSolver]);
 
   // Animation Loop for Laser Motion
-  useEffect(() => {
-    if (!isSimulating) return;
-    const interval = setInterval(() => {
-      setTimeStep((prev) => (prev + 1) % 120);
-    }, 40);
-    return () => clearInterval(interval);
-  }, [isSimulating]);
+  useVisibleInterval(() => {
+    setTimeStep((prev) => (prev + 1) % 120);
+  }, isSimulating ? 40 : null);
 
   // Fallback / Live Rosenthal temperature helper for client pixel sampling
   const calculateRosenthalPoint = useCallback(
