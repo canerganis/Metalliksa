@@ -30,6 +30,7 @@ import { useVisibleInterval } from "../hooks/useVisibleInterval";
 import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
+import { buildGoldakCaeCard } from "../utils/goldakCaeCard";
 
 interface Props {
   candidate: CandidateAlloySolution;
@@ -688,34 +689,13 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
   // Export Goldak FEA Card
   const exportGoldakCard = () => {
     if (!pyResult) return;
-    const geom = pyResult.meltPoolGeometry;
-    const params = pyResult.processParameters;
-    const goldak = geom.goldakParameters;
-
-    const feaCard = `** -------------------------------------------------------------
-** METALLIX LPBF GOLDAK HEAT SOURCE CAE EXPORT CARD
-** Material: ${pyResult.material} (Base: ${pyResult.baseMetal})
-** Laser Power: ${params.laserPower_W} W | Scan Speed: ${params.scanSpeed_mm_s} mm/s
-** Beam Diameter: ${params.beamDiameter_um} um | Wavelength: ${pyResult.laserWavelength}
-** Volumetric Energy Density (VED): ${params.volumetricEnergyDensity_J_mm3} J/mm3
-** -------------------------------------------------------------
-*DFLUX, USER
-*GOLDAK_DOUBLE_ELLIPSOID
-** Parameters in meters (SI Units):
-** a_front (m), a_rear (m), b_halfwidth (m), c_depth (m), Q_Goldak=Q_total/2 (W), eta_eff
- ${(goldak.semiAxis_af_front_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_ar_rear_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_b_halfwidth_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_c_depth_um * 1e-6).toExponential(4)}, ${params.laserPower_W / 2}, ${params.effectiveAbsorptivity}
-** Solidification Kinetics:
-** G_avg: ${pyResult.solidificationKinetics.thermalGradient_G_K_m} K/m
-** R_solid: ${pyResult.solidificationKinetics.solidificationRate_R_m_s} m/s
-** Cooling Rate: ${pyResult.solidificationKinetics.coolingRate_K_s} K/s
-** Primary Spacing (PDAS): ${pyResult.solidificationKinetics.primaryDendriteArmSpacing_PDAS_um} um
-** -------------------------------------------------------------`;
+    const { text: feaCard, filename } = buildGoldakCaeCard(pyResult, "thermal-map");
 
     const blob = new Blob([feaCard], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Goldak_LPBF_${pyResult.material.replace(/\s+/g, "_")}_${params.laserPower_W}W.inp`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -741,7 +721,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  High-fidelity Goldak double-ellipsoid thermal fields, Knudsen recoil keyholing, Marangoni convection, and lack-of-fusion overlap dynamics.
+                  Analytical screening: Goldak double-ellipsoid conduction field, Knight recoil estimate at the vapour temperature, Heiple–Roper Marangoni screening and geometric lack-of-fusion overlap. Not FEA, not CFD, not validated.
                 </p>
               </div>
             </div>
@@ -1112,7 +1092,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                 <h4 className="text-xs font-bold text-white font-mono">Ergiyik Havuzu Geometrisi</h4>
               </div>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Goldak 3D
+                Goldak 3D · screening
               </span>
             </div>
 
