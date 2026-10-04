@@ -28,7 +28,9 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'This panel explains process physics only; it does not by itself prove density, strength, or certification readiness.',
   };
 
-  if (moduleId === 'phase-diagram' || moduleId === 'ttt-cct-kinetics' || moduleId) return {
+  // Only the phase-equilibrium and transformation-kinetics views get the microstructure text; a trailing
+  // `|| moduleId` used to route every other module (corrosion, EIS, databases...) here as well.
+  if (moduleId === 'phase-diagram' || moduleId === 'ttt-cct-kinetics') return {
     title: 'How thermal history changes microstructure',
     observation: `${shared} This module checks temperature-time path, phase equilibrium, or kinetic transformation behavior.`,
     mechanism: 'Phase stability follows Gibbs free-energy balance; transformation rates follow diffusion and nucleation kinetics. Fast cooling can shift behavior away from equilibrium; soak steps increase diffusion-controlled growth.',
