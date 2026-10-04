@@ -89,10 +89,12 @@ class Phase10HardnessTest(unittest.TestCase):
         self.assertEqual(lim["Hardness_Used_HV"], 210.0)
         self.assertEqual(lim["Hardness_Source"], "alloy_default")
         char = res["Defect_Simulation"]["Gumbel_Predicted_Largest_Defect_um"]
-        oracle = 1.43 * (210.0 + 120.0) / char ** (1.0 / 6.0)  # Murakami internal-defect limit
+        # Murakami internal-defect limit; C = 1.56 for an internal defect (fx-murakami shared C set,
+        # murakami_constants.C_INTERNAL; it was 1.43 before that lane).
+        oracle = 1.56 * (210.0 + 120.0) / char ** (1.0 / 6.0)
         self.assertAlmostEqual(lim["Expected_Fatigue_Limit_MPa"], oracle, delta=0.05)
         self.assertAlmostEqual(lim["Design_Limit_MPa"], 0.85 * oracle, delta=0.05)
-        generic = 1.43 * (350.0 + 120.0) / char ** (1.0 / 6.0)
+        generic = 1.56 * (350.0 + 120.0) / char ** (1.0 / 6.0)
         self.assertLess(lim["Expected_Fatigue_Limit_MPa"], 0.75 * generic)  # the old value was +42 % too high
 
     def test_alloys_without_a_table_hardness_are_unavailable(self):
