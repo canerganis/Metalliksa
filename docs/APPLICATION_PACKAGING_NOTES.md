@@ -1,6 +1,18 @@
 # Application packaging and CI notes
 
-Status: DRAFT, written against commit 95a9e43. The local Windows dry-run at the current CI draft is recorded in [CI_DRYRUN_REPORT.md](CI_DRYRUN_REPORT.md). No workflow ran on GitHub, Docker was not run, and no test suite was run on Linux. The Windows run does not establish Linux or GitHub Actions behavior.
+Status: DRAFT, written against commit 95a9e43 and updated on 2026-10-04 with the first Docker run (see "Docker verification" below). The local Windows dry-run at the current CI draft is recorded in [CI_DRYRUN_REPORT.md](CI_DRYRUN_REPORT.md). No workflow ran on GitHub. The Docker `verify` target is green in a linux/amd64 container on a Windows host; the runtime image builds but its server crashes at start. Neither establishes GitHub Actions behavior.
+
+## Docker verification (2026-10-04)
+
+Docker Desktop 4.91.0, Engine 29.8.0, BuildKit v0.33.0, linux/amd64, Windows 11 host. Branch `orch/docker-verify`. Base images `node:24-bookworm-slim` and `python:3.12-slim-bookworm` (CPython 3.12.15, Node 24.21.0).
+
+- `docker build --target verify -t metalliksa-verify:local .`: **PASS**. `npm ci`; `pip install --require-hashes -r python/requirements-lpbf-linux-py312.lock` (numpy 2.2.6, scipy 1.15.3, pydantic 2.13.5); `npm run lint`; unit tests on 114 of the 115 `tests/*.test.ts(x)` files: 717 tests, 697 pass, 0 fail, 1 skipped (`lpbf-phase4-e2e`, CMU payload absent), 19 todo; `npm run build`; `python/test_eagar_tsai.py`, `python/test_goldak_fabbro.py` (8 tests, 1 skipped, see below) and `python/test_lpbf_meltpool_accuracy.py` pass.
+- Defects found and fixed on the way: (1) a Windows checkout with `core.autocrlf=true` turned the Dockerfile heredoc into CRLF (`npm run lint\r`); `.gitattributes` now pins `Dockerfile`, `.dockerignore` and `scripts/ci-unit-tests.txt` to LF. A worktree created before that pin still had a CRLF `scripts/ci-unit-tests.txt`, which made `grep -vxF` exclude nothing: an earlier build therefore ran all 115 files (718 tests, 698 pass, 0 fail), including the excluded worker delete test, which passed once. (2) `AIRGAPPED=1` in the `verify` stage broke 12 unit tests that, like `ci.yml`, expect it unset; it is now set only in the runtime stage.
+- Goldak/Fabbro: `calculate_meltpool_physics(..., heat_source="goldak")` uses the GPU powder-bed ray tracer (`python/powder_bed_raytracer.py`, NVIDIA `warp` on `cuda:0`) for the conduction absorptivity when it is importable, otherwise prints `Warning: GPU Powder Bed Ray Tracing failed, using flat plate absorptivity.` and uses the flat-plate value. For the NIST AMB2022-03 IN718 case the ray tracer gives absorptivity 0.581 and width 102.2 um (inside 0.70-1.40 x 136.3 um); the fallback gives 0.38 and 81.7 um (about 40% below NIST). This is a GPU-path dependence, not an OS difference (forcing the fallback on the Windows GPU host also gives 81.7 um). The depth (123.9 um) is the same on both paths. The test thresholds are unchanged: the NIST width check now runs only when ray tracing was actually used and otherwise skips with "requires GPU warp ray tracing; CPU fallback underpredicts width"; a separate test forces the fallback and pins its warning, absorptivity 0.38, width 81.7 um and depth 123.9 um. The fallback is not claimed to match NIST. The GitHub `python` job (CPU pins, no warp) will take the skip.
+- `docker build -t metalliksa:local .` (runtime stage): **builds** (image about 1.55 GB, user `metalliksa` uid 10001). As that user `/data`, `/app/.lpbf-runs`, `/app/.lpbf-jobs`, `/app/.research-registry` and `/app/python` are writable, and `/opt/venv/bin/python` imports numpy, scipy and pydantic.
+- Runtime start: **FAILS**. `docker run -p 38080:3000 metalliksa:local` exits with code 1 during module load: `TypeError [ERR_INVALID_ARG_TYPE]` from `fileURLToPath(import_meta.url)` in `dist/server.cjs`. `server/lpbfNistProxyCampaignService.ts:23` and `server/lpbfProxyCampaignBinding.ts:19` use `import.meta.url`, which esbuild's `--format=cjs` output replaces with an empty object (the build already warns about it). This is a bundle defect, not a container one: `npm start` (`node dist/server.cjs`) hits the same code on any host. `/api/health` was therefore never reached. Not fixed here (application code, outside the packaging lane).
+- Also from source, not run: the server binds `127.0.0.1` unless `METALLIKSA_HOST` is set (`server/security.ts` `resolveBindConfig`), and the runtime stage does not set it, so a published port would not reach the server even after the crash is fixed; setting a non-loopback host turns on the login flow, which is a deployment decision.
+- Not proven: GitHub Actions (no workflow has run); the runtime server, healthcheck and `docker compose`; `tests/lpbf-worker-delete-integration.test.ts` as a deliberate Linux run (still excluded); `python/test_lpbf_engineering.py` (not in the container); the GPU ray-tracing NIST width check on Linux; GPU, WSL and OpenFOAM paths; arm64 or a native Linux host.
 
 ## Files
 
@@ -9,11 +21,11 @@ Status: DRAFT, written against commit 95a9e43. The local Windows dry-run at the 
 - `.nvmrc`: Node 24 (the Dockerfile uses Node 24; `node:sqlite` tests need at least Node 22.13 without flags).
 - `Dockerfile`, `.dockerignore`, `docker-compose.yml`: multi-stage draft (Node 24 + Python 3.12).
 
-## Test exclusions (read from source on 95a9e43)
+## Test exclusions (read from source on 95a9e43; counts rechecked 2026-10-04)
 
-94 test files match the glob. One is excluded (93 files run):
+115 test files match the glob (`ls tests/*.test.ts tests/*.test.tsx`). One is excluded (114 files run):
 
-- `tests/lpbf-worker-delete-integration.test.ts`: starts the real `python/lpbf_worker.py` and relies on process-tree reaping of an execution child and grandchild. Its Python import closure beyond numpy, scipy and pydantic and its Linux behaviour are unverified.
+- `tests/lpbf-worker-delete-integration.test.ts`: starts the real `python/lpbf_worker.py` and relies on process-tree reaping of an execution child and grandchild. Its Python import closure beyond numpy, scipy and pydantic and its Linux behaviour are unverified as a deliberate run (it passed once in a container only because a CRLF exclusion list failed to exclude it).
 
 Files that mention Python, WSL, sqlite, GPU or external data and stay in, with the reason:
 
@@ -28,11 +40,11 @@ Files that mention Python, WSL, sqlite, GPU or external data and stay in, with t
 
 The local Windows dry-run found no evidence to add exclusions. The first Linux run may still reveal platform-dependent tests that cannot be found by reading the source, for example the symlink tests in `lpbf-artifact-store.test.ts` and the Vite/HMR tests.
 
-## Blocking prerequisite: Linux Python lock
+## Linux Python lock
 
-`python/requirements-lpbf-win-py312.lock` is Windows-only. The Dockerfile references `python/requirements-lpbf-linux-py312.lock`, which **does not exist** and **must be generated first** on Linux x86_64 with CPython 3.12 (for example `pip-compile --generate-hashes python/requirements-lpbf.in`), reviewed, and committed. Until then `docker build` fails at the `py-deps` stage. CI does not use this lock; it installs the exact pins from `python/requirements-lpbf.in`, which was also not run.
+`python/requirements-lpbf-win-py312.lock` is Windows-only. The Dockerfile uses `python/requirements-lpbf-linux-py312.lock` (committed in cc929b3); it installed with `--require-hashes` in the 2026-10-04 Docker build. CI does not use this lock; it installs the exact pins from `python/requirements-lpbf.in`, which has not run on GitHub.
 
-## Container behaviour (UNVERIFIED)
+## Container behaviour (mostly UNVERIFIED; see "Docker verification" for what ran)
 
 - Targets: `verify` (lint, unit tests, build, three CPU meltpool Python tests) and `runtime` (default; copies `dist` from `verify`; non-root uid 10001). `python/test_lpbf_engineering.py` is not in `verify` because its Linux status is unproven; it runs only as a non-blocking CI step.
 - Writable paths for the non-root user:

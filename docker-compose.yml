@@ -1,4 +1,5 @@
-# DRAFT / UNVERIFIED: never run with Docker. Needs the Linux Python lock first.
+# DRAFT / UNVERIFIED: `docker compose` was never run. The runtime image builds, but its server crashes at start
+# (see docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification").
 services:
   app:
     build:

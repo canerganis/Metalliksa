@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
-# PARTIALLY VERIFIED (Docker Desktop 4.91.0 / Engine 29.8.0, Windows host, tree 'build(docker): do not set AIRGAPPED=1' on orch/docker-verify):
-# node-deps (npm ci), py-deps (pip --require-hashes from python/requirements-lpbf-linux-py312.lock), and in the verify stage
-# 'npm run lint', the unit tests (698 pass, 0 fail, 1 skipped, 19 todo), 'npm run build', python/test_eagar_tsai.py and
-# python/test_lpbf_meltpool_accuracy.py all succeeded.
-# `docker build --target verify` currently FAILS at python/test_goldak_fabbro.py ("Goldak NIST width 81.7"): the test needs the
-# optional GPU 'warp' ray-tracing path; without it (this CPU lock) the flat-plate fallback gives a narrower pool. Not fixed here.
-# The runtime stage has never been built or run. See docs/APPLICATION_PACKAGING_NOTES.md.
+# PARTIALLY VERIFIED on 2026-10-04 (Docker Desktop 4.91.0 / Engine 29.8.0, linux/amd64, Windows host; branch orch/docker-verify):
+# `docker build --target verify` is GREEN: npm ci, pip --require-hashes from python/requirements-lpbf-linux-py312.lock,
+# 'npm run lint', unit tests (114 of 115 files; 717 tests: 697 pass, 0 fail, 1 skipped, 19 todo), 'npm run build',
+# and the three CPU meltpool scripts. python/test_goldak_fabbro.py skips its NIST width check here (it needs the GPU warp
+# ray tracer; the CPU flat-plate fallback gives 81.7 um vs NIST 136.3 um) and pins the fallback instead.
+# The runtime image builds but the server CRASHES at start ('node dist/server.cjs': fileURLToPath(import.meta.url) is
+# undefined in the esbuild CJS bundle), so it does not serve /api/health. Not GitHub CI. See docs/APPLICATION_PACKAGING_NOTES.md.
 
 FROM node:24-bookworm-slim AS node-src
 
@@ -23,7 +23,7 @@ FROM base AS node-deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Python environment from the hash-locked Linux CPU lock (to be generated).
+# Python environment from the hash-locked Linux CPU lock.
 FROM base AS py-deps
 COPY python/requirements-lpbf-linux-py312.lock /tmp/requirements.lock
 RUN python -m venv /opt/venv \
