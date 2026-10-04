@@ -830,15 +830,21 @@ def _strip(doc):
     return {k: v for k, v in doc.items() if k != "computeTimeMs"}
 
 
-def _decimals(value):
-    text = repr(value)
-    if "e" in text or "E" in text or "." not in text:
-        return None
-    return len(text.split(".")[1])
+# Production rounding (decimals) per result field; floats of these fields may differ by one unit
+# in the last rounded digit (a different ulp in numpy exp/log/pow can flip a rounding). Every
+# other float must agree to 1e-12 relative.
+_ROUNDING = {
+    "mean": 1, "stdDev": 2, "covPct": 2, "skewness": 3, "kurtosis": 3, "min": 1, "max": 1,
+    "median_P50": 1, "P10": 1, "P90": 1, "ci95Lower_P2_5": 1, "ci95Upper_P97_5": 1, "P01": 1, "P99": 1,
+    "aBasisAllowable": 1, "bBasisAllowable": 1, "cpk": 2, "conformancePct": 2,
+    "binCenter": 1, "binStart": 1, "binEnd": 1, "empiricalPdf": 6, "fittedNormalPdf": 6, "cumulativePct": 1,
+    "sobolFirstOrderIndex": 3, "sobolTotalOrderIndex": 3, "interactionIndex": 3, "varianceContributionPct": 1,
+    "hasoferLindBetaIndex": 2, "centeredL2Discrepancy": 6, "criticalFlawMedian_mm": 1, "criticalFlaw_P10_mm": 1,
+}
 
 
 def _diffs(new, old, path="$"):
-    """Differences between two result documents; floats may differ by one unit of printed precision."""
+    """Differences between two result documents (see _ROUNDING for the float tolerance)."""
     if isinstance(old, dict):
         if not isinstance(new, dict) or set(new) != set(old):
             return [(path, "keys", sorted(set(new) ^ set(old)) if isinstance(new, dict) else new)]
@@ -856,7 +862,7 @@ def _diffs(new, old, path="$"):
     if isinstance(old, float) and isinstance(new, float):
         if new == old:
             return []
-        places = _decimals(old)
+        places = _ROUNDING.get(path.rsplit(".", 1)[-1].split("[")[0])
         tol = (1.01 * 10.0 ** -places if places is not None else 0.0) + 1e-12 * abs(old)
         return [] if abs(new - old) <= tol else [(path, new, old)]
     return [] if (new == old and type(new) is type(old)) else [(path, new, old)]
@@ -896,6 +902,59 @@ class SobolParityTests(unittest.TestCase):
         self.assertEqual(solver.compute_centered_l2_discrepancy([]), 0.0)
         self.assertEqual(solver.compute_centered_l2_discrepancy([[0.5]]),
                          LEGACY.compute_centered_l2_discrepancy([[0.5]]))
+
+
+class ComparatorTests(unittest.TestCase):
+    def test_rounded_field_mutations_beyond_one_unit_are_detected(self):
+        doc = _strip(solver.solve_stochastic_uq({"mcSamples": 500}))
+        self.assertEqual(_diffs(doc, json.loads(json.dumps(doc))), [])
+        row = doc["sobolSensitivityAnalysis"][0]
+        for key, step in (("sobolTotalOrderIndex", 0.1), ("sobolFirstOrderIndex", 0.01), ("interactionIndex", 0.01)):
+            mutant = json.loads(json.dumps(doc))
+            mutant["sobolSensitivityAnalysis"][0][key] = round(row[key] + step, 3)
+            self.assertNotEqual(_diffs(mutant, doc), [], key)
+        mutant = json.loads(json.dumps(doc))
+        mutant["sobolSensitivityAnalysis"][0]["sobolTotalOrderIndex"] = 0.0
+        mutant["sobolSensitivityAnalysis"][0]["sobolTotalOrderIndex"] = round(row["sobolTotalOrderIndex"] + 0.001, 3)
+        self.assertEqual(_diffs(mutant, doc), [])  # one unit of the 3-decimal rounding is tolerated
+        mutant = json.loads(json.dumps(doc))
+        mutant["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"] += 0.05
+        self.assertNotEqual(_diffs(mutant, doc), [])
+        zero = json.loads(json.dumps(doc))
+        zero_old = json.loads(json.dumps(doc))
+        zero_old["sobolSensitivityAnalysis"][0]["sobolTotalOrderIndex"] = 0.0
+        zero["sobolSensitivityAnalysis"][0]["sobolTotalOrderIndex"] = 0.1
+        self.assertNotEqual(_diffs(zero, zero_old), [])  # 0.0 vs 0.1 (reviewer's mutation)
+
+
+class NonFinitePopulationTests(unittest.TestCase):
+    def test_overflow_is_rejected_like_the_scalar_reference(self):
+        for payload in ({"mcSamples": 500, "coolingRate_nominal": 1e308},
+                        {"mcSamples": 500, "composition_tolerances": {"Nb": 1e308}}):
+            with self.subTest(payload=payload):
+                with self.assertRaises((OverflowError, ValueError)) as old_err:
+                    LEGACY.solve_stochastic_uq(dict(payload))
+                with self.assertRaises(type(old_err.exception)):
+                    solver.solve_stochastic_uq(dict(payload))
+
+    def test_non_finite_populations_are_rejected_instead_of_reported(self):
+        # The scalar code returned Infinity statistics for the first payload and let NaN draws
+        # reach the histogram (NaN endpoints flipped cumulativePct); both are now a controlled error.
+        for payload in ({"mcSamples": 500, "composition_wt": {"Nb": 1e308}, "composition_tolerances": {"Nb": 1e308}},
+                        {"mcSamples": 500, "coolingRate_nominal": float("nan")},
+                        {"mcSamples": 500, "agingTemp_nominal": float("inf")}):
+            with self.subTest(payload=payload):
+                with self.assertRaises(OverflowError):
+                    solver.solve_stochastic_uq(dict(payload))
+
+    def test_nan_inputs_floored_by_max_semantics_still_match_the_reference(self):
+        # max(0.0, nan) == 0.0 and max(50.0, nan) == 50.0 in the scalar code: kept by _pmax.
+        for payload in ({"mcSamples": 500, "composition_wt": {"Nb": float("nan")}},
+                        {"mcSamples": 500, "serviceStress_nominal": float("nan")}):
+            with self.subTest(payload=payload):
+                new = _strip(solver.solve_stochastic_uq(dict(payload)))
+                old = _strip(LEGACY.solve_stochastic_uq(dict(payload)))
+                self.assertEqual(json.dumps(new), json.dumps(old))
 
 
 class QuantileParityTests(unittest.TestCase):

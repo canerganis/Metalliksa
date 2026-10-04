@@ -125,6 +125,17 @@ def norm_ppf_array(p):
     out[interior] = x
     return out
 
+def _require_finite(*arrays):
+    """Reject non-finite populations the way the scalar code did (math.exp/pow raised OverflowError).
+
+    NumPy silently produces inf/nan where math.exp(1e308)-style calls raised; a population with
+    non-finite draws or outputs would otherwise be reported as a successful run with
+    Infinity/NaN statistics.
+    """
+    for arr in arrays:
+        if not np.all(np.isfinite(arr)):
+            raise OverflowError("math range error")
+
 def _pmax(a, b):
     """Elementwise Python max(a, b): b only if b > a (keeps the NaN/tie behaviour of the scalar code)."""
     return np.where(b > a, b, a)
@@ -507,6 +518,9 @@ def solve_realizations_vec(
     margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
     margin_flaw_mm = flaw_ac_mm - (flaw_size_um / 1000.0)
 
+    _require_finite(sigma_yield_MPa, sigma_uts_MPa, elongation_pct, k1c_MPa_sqrt_m, flaw_ac_mm,
+                    margin_yield_MPa, margin_flaw_mm, delta_sigma_ss, delta_sigma_hp, delta_sigma_ppt,
+                    d_grain_um, applied_stress)
     return {
         "yield_MPa": sigma_yield_MPa,
         "uts_MPa": sigma_uts_MPa,
@@ -601,12 +615,14 @@ def solve_stochastic_uq(params: dict) -> dict:
         cr = np.exp(mu_log_cr + sigma_log_cr * norm_ppf_array(U[:, E_dim]))
         t_age = _pmax(200.0, aging_temp_nominal + norm_ppf_array(U[:, E_dim + 1]) * aging_temp_std)
         time_age = _pmax(0.2, aging_time_nominal + norm_ppf_array(U[:, E_dim + 2]) * aging_time_std)
+        _require_finite(cr, t_age, time_age, *comp_draw.values())
         return comp_draw, cr, t_age, time_age
 
     comp_s, cr_s, t_age_s, time_age_s = draw_factors(qmc_points)
     # Service stress (normal) and flaw size (normal) are sampled only in the main population.
     service_stress_s = _pmax(50.0, service_stress_nominal + norm_ppf_array(qmc_points[:, E_dim + 3]) * (service_stress_nominal * service_stress_cov))
     flaw_size_s = _pmax(5.0, flaw_size_mean_um + norm_ppf_array(qmc_points[:, E_dim + 4]) * flaw_size_std_um)
+    _require_finite(service_stress_s, flaw_size_s)
 
     res = solve_realizations_vec(
         base_metal=base_metal,
@@ -632,6 +648,8 @@ def solve_stochastic_uq(params: dict) -> dict:
         # builtin sum over the (sorted) float list: same compensated summation as the scalar loop
         mean_val = sum(sorted_arr) / n
         dev = sorted_np - mean_val
+        # the scalar code raised OverflowError from float ** on overflow; do not report inf/nan statistics
+        _require_finite(dev, dev ** 2, dev ** 3, dev ** 4)
         var_val = sum((dev ** 2).tolist()) / (n - 1) if sorted_arr[0] != sorted_arr[-1] else 0.0
         std_val = math.sqrt(var_val)
         cov_pct = (std_val / mean_val * 100.0) if mean_val != 0 else 0.0
@@ -779,6 +797,7 @@ def solve_stochastic_uq(params: dict) -> dict:
     combined_y = np.concatenate([y_A, y_B])
     combined_list = combined_y.tolist()
     mean_comb = sum(combined_list) / len(combined_list)
+    _require_finite(combined_y, (combined_y - mean_comb) ** 2)
     total_var = sum(((combined_y - mean_comb) ** 2).tolist()) / len(combined_list)
     variance_available = max(combined_list) - min(combined_list) > 1e-12 * max(1.0, abs(mean_comb))
     sensitivity_indices = []
@@ -786,6 +805,7 @@ def solve_stochastic_uq(params: dict) -> dict:
         vec_AB = A_pts.copy()
         vec_AB[:, idx] = B_pts[:, idx]
         y_AB = eval_factor_matrix(vec_AB)
+        _require_finite((y_A - y_AB) ** 2, (y_B - mean_comb) * (y_AB - y_A))
         # Centered Saltelli first-order and Jansen total-order estimators.
         # Raw finite-sample estimates may be negative or exceed one.
         s_first = sum(((y_B - mean_comb) * (y_AB - y_A)).tolist()) / (M_saltelli * total_var) if variance_available else None
