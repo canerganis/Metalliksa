@@ -553,7 +553,12 @@ export class PersistentPythonIPCSupervisor {
       const scriptPath = path.join(process.cwd(), scriptRelativePath);
 
       const python = getHostPython();
-      const pyProcess = spawn(python.cmd, [...python.prefix, scriptPath, ...args], { windowsHide: true });
+      // UTF-8 mode: the JSON protocol is UTF-8 in both directions, but a Python started without it reads stdin
+      // in the locale code page (cp1254/cp1252 on Windows) and garbles non-ASCII text.
+      const pyProcess = spawn(python.cmd, [...python.prefix, scriptPath, ...args], {
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: "1" },
+      });
       let stdout = "";
       let stderr = "";
 

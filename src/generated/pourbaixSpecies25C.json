@@ -11,7 +11,7 @@
   },
   "activity": {
     "log10Range": [
-      -8.0,
+      -6.0,
       0.0
     ],
     "log10Default": -6.0,
@@ -155,7 +155,7 @@
     "Cr": {
       "name": "Chromium (Cr-H₂O System)",
       "available": false,
-      "reason": "Blocked until WP-Cr: alkaline Cr(III) (CrO2-/Cr(OH)4-) has no verified value; close from Ball & Nordstrom, J. Chem. Eng. Data 43 (1998) 895."
+      "reason": "No verified Cr-H2O data in this tool: the alkaline Cr(III) species (CrO2-/Cr(OH)4-) have no value that this project has verified yet (candidate source: Ball & Nordstrom, J. Chem. Eng. Data 43 (1998) 895)."
     },
     "Ni": {
       "name": "Nickel (Ni-H₂O System)",

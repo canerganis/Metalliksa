@@ -49,7 +49,10 @@ TEMPERATURE_C = 25.0
 TEMPERATURE_K = physical_constants.ZERO_CELSIUS_K.value + TEMPERATURE_C
 LN10 = math.log(10.0)
 
-ACTIVITY_LOG10_RANGE = (-8.0, 0.0)
+# Lower limit 10^-6 M: the mononuclear hydrolysis species (MOH+, M(OH)2(aq)) are not in the table for any
+# element; at 10^-6 M and above they change at most about 0.6 % of the water-window cells, at 10^-8 M
+# several % (MgOH+ about 5 %), so lower activities are refused instead of mapped without them.
+ACTIVITY_LOG10_RANGE = (-6.0, 0.0)
 ACTIVITY_LOG10_DEFAULT = -6.0
 BOX = {"pH_min": -2.0, "pH_max": 16.0, "E_min_V_SHE": -3.0, "E_max_V_SHE": 2.5}
 
@@ -263,8 +266,9 @@ WITHHELD_SPECIES = {
 }
 
 UNAVAILABLE_ELEMENTS = {
-    "Cr": ("Blocked until WP-Cr: alkaline Cr(III) (CrO2-/Cr(OH)4-) has no verified value; close from "
-           "Ball & Nordstrom, J. Chem. Eng. Data 43 (1998) 895."),
+    "Cr": ("No verified Cr-H2O data in this tool: the alkaline Cr(III) species (CrO2-/Cr(OH)4-) have no value "
+           "that this project has verified yet (candidate source: Ball & Nordstrom, J. Chem. Eng. Data 43 "
+           "(1998) 895)."),
     "Ti": ("Published aqueous Ti data are mutually inconsistent (TiO2+ -596 or -615 kJ/mol from the "
            "same E0 table; Ti/TiO2 -1.076 V with rutile vs -0.86 V with the atlas oxide). No verified "
            "Ti-H2O data."),

@@ -2054,7 +2054,7 @@
   {
    "key": "model.dissolvedActivityRange_log10[0]",
    "kind": "added",
-   "new": -8.0,
+   "new": -6.0,
    "old": null
   },
   {
@@ -2079,6 +2079,12 @@
    "key": "model.excludedSpecies[1]",
    "kind": "added",
    "new": "chloro and other complexes: the equilibrium contains no chloride species",
+   "old": null
+  },
+  {
+   "key": "model.excludedSpecies[2]",
+   "kind": "added",
+   "new": "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M",
    "old": null
   },
   {
@@ -14219,7 +14225,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "d9208331ab4fed451038415028da586e6301e45b",
+ "gitHead": "f77de3bddb25e589ca69caeaf22fa04db88eeaba",
  "input": {
   "chloride_ppm": 0,
   "element": "Cu",
@@ -14246,7 +14252,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "pourbaix_solver",
  "solverFile": "python/pourbaix_solver.py",
- "solverSha256": "eef964f3dc069980d52d460b3918fe7c3049bdab2eae66d76d6edfb721b455e0",
+ "solverSha256": "bedd091d7226fca2cb90bfb296385c034aeead2b447a88991d7a01b6b2eca3f3",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -14720,13 +14726,14 @@
    },
    "chloride": "chloride_ppm is echoed only; the equilibrium has no chloro-complexes and no sourced generic pitting potential exists (chloridePittingBoundary.status)",
    "dissolvedActivityRange_log10": [
-    -8.0,
+    -6.0,
     0.0
    ],
    "engine": "pourbaix-gibbs-25c-v4",
    "excludedSpecies": [
     "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined",
-    "chloro and other complexes: the equilibrium contains no chloride species"
+    "chloro and other complexes: the equilibrium contains no chloride species",
+    "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. Checked with open-database constants they change at most about 0.6 % of the water-window cells at 10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M"
    ],
    "faraday_C_mol": 96485.33212331001,
    "gasConstantR_J_molK": 8.31446261815324,

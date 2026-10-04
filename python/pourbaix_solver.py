@@ -23,7 +23,7 @@ import time
 
 import physical_constants
 import pourbaix_species_25c as species_table
-from input_validation import (NON_FINITE, OUT_OF_RANGE, UNKNOWN_ELEMENT, ValidationError,
+from input_validation import (MISSING_PROPERTY, NON_FINITE, OUT_OF_RANGE, UNKNOWN_ELEMENT, ValidationError,
                               require_finite, require_range, validation_envelope)
 
 # Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
@@ -484,12 +484,30 @@ def _classify(element, ph, e_she, log_a):
     return sp, inside, e_her, e_oer, e_imm
 
 
+def _check_point(ph, e_she, name="point"):
+    """pH and E (V vs SHE) must be finite and inside the map box; nothing is classified outside it."""
+    box = species_table.BOX
+    ph = require_range(f"{name}.pH", ph, box["pH_min"], box["pH_max"], "pH")
+    e_she = require_range(f"{name}.potential_V_SHE", e_she, box["E_min_V_SHE"], box["E_max_V_SHE"], "V vs SHE")
+    return ph, e_she
+
+
+def _point_number(pt, idx, keys, label):
+    """Required numeric input of an experimental point (no silent defaults, no strings, no NaN)."""
+    for key in keys:
+        if key in pt:
+            return require_finite(f"experimentalPoints[{idx}].{label}", pt[key])
+    raise ValidationError(MISSING_PROPERTY, f"experimentalPoints[{idx}].{label}",
+                          f"is required (one of {', '.join(keys)})", {"index": idx, "keys": list(keys)})
+
+
 def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log10=-6.0, chloride_ppm=0.0):
     """
     Thermodynamic phase at an (E, pH) point from the minimum-Gibbs-energy species table
     (25 C only). The category text is fixed per category; no rate or protectiveness claim.
     """
     _check_temperature(temperature_C)
+    ph, e_she = _check_point(ph, e_she)
     sp, inside, e_her, e_oer, e_imm = _classify(element, ph, e_she, ion_act_log10)
     text = CATEGORY_TEXTS[sp.category]
     delta_imm = None if e_imm is None else round(e_she - e_imm, 3)
@@ -559,6 +577,10 @@ def _model_block(log_a):
         "excludedSpecies": [
             "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined",
             "chloro and other complexes: the equilibrium contains no chloride species",
+            "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. "
+            "Checked with open-database constants they change at most about 0.6 % of the water-window cells at "
+            "10⁻⁶ M and above, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) up to about 14 %), "
+            "which is why the dissolved activity is limited to 10⁻⁶ M to 1 M",
         ],
         "chloride": "chloride_ppm is echoed only; the equilibrium has no chloro-complexes and no sourced "
                     "generic pitting potential exists (chloridePittingBoundary.status)",
@@ -652,15 +674,19 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
 
     if experimental_points and isinstance(experimental_points, list):
         for idx, pt in enumerate(experimental_points):
+            if not isinstance(pt, dict):
+                raise ValidationError(MISSING_PROPERTY, f"experimentalPoints[{idx}]", "must be an object",
+                                      {"index": idx, "type": type(pt).__name__})
             pt_id = pt.get("id", f"exp_pt_{idx+1}")
             pt_name = pt.get("name", f"Test Point #{idx+1}")
-            ph_val = float(pt.get("ph", pt.get("pH", 7.0)))
-            pot_input = float(pt.get("potential_V", pt.get("potential", pt.get("E_V", 0.0))))
+            ph_val = _point_number(pt, idx, ("ph", "pH"), "pH")
+            pot_input = _point_number(pt, idx, ("potential_V", "potential", "E_V"), "potential_V")
             ref_elec = pt.get("refElectrode", "SHE")
             ref_offset = _ref_offset(ref_elec)
 
             # Convert measured potential to E vs SHE
             e_she = pot_input + ref_offset
+            _check_point(ph_val, e_she, f"experimentalPoints[{idx}]")
 
             eval_res = evaluate_point_mechanism(
                 element, ph_val, e_she, SUPPORTED_TEMPERATURE_C, log_a, chloride_ppm
@@ -813,7 +839,8 @@ if __name__ == "__main__":
         sys.exit(0)
 
     try:
-        raw_input = sys.stdin.read()
+        # UTF-8 explicitly: the locale code page (cp1254 on Turkish Windows) would garble notes such as "Fe²⁺"
+        raw_input = sys.stdin.buffer.read().decode("utf-8")
         if not raw_input.strip():
             print(json.dumps({"error": "Empty stdin payload", "errorKind": "internal"}))
             sys.exit(1)
