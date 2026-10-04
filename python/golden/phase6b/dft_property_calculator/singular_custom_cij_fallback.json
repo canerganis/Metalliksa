@@ -1,0 +1,275 @@
+{
+ "baseRevision": "faa6684",
+ "case": "singular_custom_cij_fallback",
+ "exitCode": 0,
+ "gitHead": "faa668432e6ceea2342308c4886b41c38f0e6cd0",
+ "input": {
+  "crystal_system": "Cubic",
+  "custom_c_ij": {
+   "c11": 150.0,
+   "c12": 150.0,
+   "c44": 60.0
+  },
+  "density": 7.0,
+  "formula": "Custom Singular",
+  "molar_mass": 50.0,
+  "nsites": 1
+ },
+ "invocation": "python -B dft_property_calculator.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "dft_property_calculator",
+ "solverFile": "python/dft_property_calculator.py",
+ "solverSha256": "74488827c1aafc8838011fae5786d9995caa752e30875c1be82d4b55de1f9b45",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:faa6684",
+ "stdout": {
+  "acousticAndThermalProperties": {
+   "debyeTemperature_K": 391.3,
+   "gruneisenParameter_gamma": 1.67,
+   "longitudinalSoundVelocity_m_s": 4891.4,
+   "meanSoundVelocity_m_s": 2997.2,
+   "minimumThermalConductivity_W_mK": 0.995,
+   "transverseSoundVelocity_m_s": 2688.8
+  },
+  "bornStability": {
+   "allEigenvaluesGPa": [
+    0.0,
+    0.0,
+    60.0,
+    60.0,
+    60.0,
+    450.0
+   ],
+   "criteriaChecks": [
+    {
+     "formula": "C11 - C12 > 0",
+     "name": "Tetragonal Shear Modulus C'",
+     "passed": false,
+     "physicalMeaning": "Resistance to volume-conserving tetragonal shear deformation",
+     "value": 0.0
+    },
+    {
+     "formula": "C11 + 2*C12 > 0",
+     "name": "Bulk Hydrostatic Compression",
+     "passed": true,
+     "physicalMeaning": "Lattice must resist uniform hydrostatic volume collapse",
+     "value": 450.0
+    },
+    {
+     "formula": "C44 > 0",
+     "name": "Trigonal Shear Modulus C44",
+     "passed": true,
+     "physicalMeaning": "Resistance to monoclinic / trigonal angular distortion",
+     "value": 60.0
+    }
+   ],
+   "isMechanicallyStable": false,
+   "minimumEigenvalueGPa": 0.0,
+   "verdict": "Mechanically Unstable (Violates Born Lattice Stability: Risk of Soft-Mode Phase Transition / Shear Collapse)"
+  },
+  "directionalYoungsModuli": [
+   {
+    "direction": "[100]",
+    "hkl": [
+     1,
+     0,
+     0
+    ],
+    "ratioToAverage": 1.155,
+    "youngsModulusGPa": 150.0
+   },
+   {
+    "direction": "[110]",
+    "hkl": [
+     1,
+     1,
+     0
+    ],
+    "ratioToAverage": 1.026,
+    "youngsModulusGPa": 133.33
+   },
+   {
+    "direction": "[111]",
+    "hkl": [
+     1,
+     1,
+     1
+    ],
+    "ratioToAverage": 0.99,
+    "youngsModulusGPa": 128.57
+   },
+   {
+    "direction": "[001]",
+    "hkl": [
+     0,
+     0,
+     1
+    ],
+    "ratioToAverage": 1.155,
+    "youngsModulusGPa": 150.0
+   },
+   {
+    "direction": "[210]",
+    "hkl": [
+     2,
+     1,
+     0
+    ],
+    "ratioToAverage": 1.069,
+    "youngsModulusGPa": 138.89
+   },
+   {
+    "direction": "[311]",
+    "hkl": [
+     3,
+     1,
+     1
+    ],
+    "ratioToAverage": 1.071,
+    "youngsModulusGPa": 139.08
+   }
+  ],
+  "elasticComplianceMatrix_Sij_1_over_GPa": [
+   [
+    0.006667,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.006667,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.006667,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.016667,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.016667,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.016667
+   ]
+  ],
+  "elasticStiffnessMatrix_Cij_GPa": [
+   [
+    150.0,
+    150.0,
+    150.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    150.0,
+    150.0,
+    150.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    150.0,
+    150.0,
+    150.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    60.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    60.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    60.0
+   ]
+  ],
+  "engine": "MetalliX-Continuum-Elasticity-Homogenizer-v4.0",
+  "materialInfo": {
+   "band_gap": 0.0,
+   "crystal_system": "Cubic",
+   "density": 7.0,
+   "energy_above_hull": 0.0,
+   "formation_energy_per_atom": -0.45,
+   "formula": "Custom Singular",
+   "is_metal": true,
+   "is_stable": true,
+   "material_id": "mp-custom",
+   "space_group": "Pnma"
+  },
+  "mechanicalIntegrityIndices": {
+   "cauchyPressure_C12_minus_C44_GPa": 90.0,
+   "ductilityVerdict": "Ductile (Metallic dislocation slip favored; high shear compliance)",
+   "isIsotropic": true,
+   "pughRatio_B_over_G": 1.976,
+   "universalAnisotropyIndex_AU": 0.0,
+   "zenerAnisotropyFactor_AZ": 1200000.0
+  },
+  "scientificModel": "Crystal-Symmetry-Governed Voigt-Reuss-Hill Homogenization & Born Mechanical Stability",
+  "sourceNotes": "Custom User Elastic Constants",
+  "success": true,
+  "voigtReussHillModuli": {
+   "bulkModulus_K_Reuss_GPa": 50.0,
+   "bulkModulus_K_VRH_GPa": 100.0,
+   "bulkModulus_K_Voigt_GPa": 150.0,
+   "pWaveModulus_GPa": 167.48,
+   "poissonsRatio_nu": 0.283,
+   "shearModulus_G_Reuss_GPa": 65.22,
+   "shearModulus_G_VRH_GPa": 50.61,
+   "shearModulus_G_Voigt_GPa": 36.0,
+   "youngsModulus_E_VRH_GPa": 129.91
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
