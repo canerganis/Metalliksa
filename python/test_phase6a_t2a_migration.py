@@ -302,8 +302,13 @@ class PersistentIpcRelayTest(unittest.TestCase):
             str(HERE / "calphad_solver.py"), json.dumps({"elements": {"Ni": 80, "Xx": 20}}), []))
         self._assert_envelope(ipc._worker_run_script(
             str(HERE / "icme_multiscale_pipeline_solver.py"), json.dumps({"baseMetal": "Co"}), []))
-        res = ipc.registry.execute_script("python/icme_multiscale_pipeline_solver.py",
-                                          {"composition_wt": {"Zr": 1.0}}, [], 60000)
+        # Own registry: another test module may already have shut the global pool down.
+        own = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
+        try:
+            res = own.execute_script("python/icme_multiscale_pipeline_solver.py",
+                                     {"composition_wt": {"Zr": 1.0}}, [], 60000)
+        finally:
+            own.shutdown()
         self.assertEqual(res["concurrency"], "process_pool")
         self._assert_envelope(res)
 
