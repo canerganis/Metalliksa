@@ -1,0 +1,1982 @@
+{
+ "baseRevision": "faa6684",
+ "case": "randles_modulus_fit",
+ "exitCode": 0,
+ "gitHead": "faa668432e6ceea2342308c4886b41c38f0e6cd0",
+ "input": {
+  "action": "fit",
+  "maxIterations": 80,
+  "parameters": [
+   {
+    "elementId": "el-rs",
+    "field": "value",
+    "max": 1000000.0,
+    "min": 0.001,
+    "paramName": "Rs",
+    "paramType": "Resistor",
+    "unit": "Ohm",
+    "value": 5.0
+   },
+   {
+    "elementId": "el-rct",
+    "field": "value",
+    "max": 10000000.0,
+    "min": 0.001,
+    "paramName": "Rct",
+    "paramType": "Resistor",
+    "unit": "Ohm",
+    "value": 300.0
+   },
+   {
+    "elementId": "el-cdl",
+    "field": "value",
+    "max": 1.0,
+    "min": 1e-14,
+    "paramName": "Cdl",
+    "paramType": "Capacitor",
+    "unit": "F",
+    "value": 0.0001
+   }
+  ],
+  "points": [
+   {
+    "frequency": 100000.0,
+    "minusZImag": 0.1591545399,
+    "zImag": -0.1591545399,
+    "zReal": 10.0002533
+   },
+   {
+    "frequency": 74989.42093,
+    "minusZImag": 0.2126565048,
+    "zImag": -0.2126565048,
+    "zReal": 10.02028463
+   },
+   {
+    "frequency": 56234.13252,
+    "minusZImag": 0.2828750449,
+    "zImag": -0.2828750449,
+    "zReal": 9.995689776
+   },
+   {
+    "frequency": 42169.65034,
+    "minusZImag": 0.376711647,
+    "zImag": -0.376711647,
+    "zReal": 9.982905476
+   },
+   {
+    "frequency": 31622.7766,
+    "minusZImag": 0.503776727,
+    "zImag": -0.503776727,
+    "zReal": 10.01241774
+   },
+   {
+    "frequency": 23713.73706,
+    "minusZImag": 0.6721923621,
+    "zImag": -0.6721923621,
+    "zReal": 10.02048117
+   },
+   {
+    "frequency": 17782.7941,
+    "minusZImag": 0.8936696646,
+    "zImag": -0.8936696646,
+    "zReal": 9.994000796
+   },
+   {
+    "frequency": 13335.21432,
+    "minusZImag": 1.191848447,
+    "zImag": -1.191848447,
+    "zReal": 10.00186189
+   },
+   {
+    "frequency": 10000.0,
+    "minusZImag": 1.593880493,
+    "zImag": -1.593880493,
+    "zReal": 10.04255063
+   },
+   {
+    "frequency": 7498.942093,
+    "minusZImag": 2.123093,
+    "zImag": -2.123093,
+    "zReal": 10.0529946
+   },
+   {
+    "frequency": 5623.413252,
+    "minusZImag": 2.822516775,
+    "zImag": -2.822516775,
+    "zReal": 10.06065547
+   },
+   {
+    "frequency": 4216.965034,
+    "minusZImag": 3.767667013,
+    "zImag": -3.767667013,
+    "zReal": 10.13921774
+   },
+   {
+    "frequency": 3162.27766,
+    "minusZImag": 5.030243214,
+    "zImag": -5.030243214,
+    "zReal": 10.27316404
+   },
+   {
+    "frequency": 2371.373706,
+    "minusZImag": 6.679960625,
+    "zImag": -6.679960625,
+    "zReal": 10.44615338
+   },
+   {
+    "frequency": 1778.27941,
+    "minusZImag": 8.861562702,
+    "zImag": -8.861562702,
+    "zReal": 10.77366859
+   },
+   {
+    "frequency": 1333.521432,
+    "minusZImag": 11.77577042,
+    "zImag": -11.77577042,
+    "zReal": 11.41261195
+   },
+   {
+    "frequency": 1000.0,
+    "minusZImag": 15.54960631,
+    "zImag": -15.54960631,
+    "zReal": 12.49238217
+   },
+   {
+    "frequency": 749.8942093,
+    "minusZImag": 20.28506653,
+    "zImag": -20.28506653,
+    "zReal": 14.29351934
+   },
+   {
+    "frequency": 562.3413252,
+    "minusZImag": 26.16510511,
+    "zImag": -26.16510511,
+    "zReal": 17.39073207
+   },
+   {
+    "frequency": 421.6965034,
+    "minusZImag": 33.08696116,
+    "zImag": -33.08696116,
+    "zReal": 22.50301003
+   },
+   {
+    "frequency": 316.227766,
+    "minusZImag": 40.19975248,
+    "zImag": -40.19975248,
+    "zReal": 30.24280034
+   },
+   {
+    "frequency": 237.1373706,
+    "minusZImag": 46.18792888,
+    "zImag": -46.18792888,
+    "zReal": 40.98087347
+   },
+   {
+    "frequency": 177.827941,
+    "minusZImag": 49.66460083,
+    "zImag": -49.66460083,
+    "zReal": 54.44362712
+   },
+   {
+    "frequency": 133.3521432,
+    "minusZImag": 49.32490071,
+    "zImag": -49.32490071,
+    "zReal": 68.88867037
+   },
+   {
+    "frequency": 100.0,
+    "minusZImag": 45.05139061,
+    "zImag": -45.05139061,
+    "zReal": 81.70232896
+   },
+   {
+    "frequency": 74.98942093,
+    "minusZImag": 38.48055979,
+    "zImag": -38.48055979,
+    "zReal": 91.64988219
+   },
+   {
+    "frequency": 56.23413252,
+    "minusZImag": 31.42505287,
+    "zImag": -31.42505287,
+    "zReal": 98.94411976
+   },
+   {
+    "frequency": 42.16965034,
+    "minusZImag": 24.80444514,
+    "zImag": -24.80444514,
+    "zReal": 103.6347153
+   },
+   {
+    "frequency": 31.6227766,
+    "minusZImag": 19.09704242,
+    "zImag": -19.09704242,
+    "zReal": 106.1047433
+   },
+   {
+    "frequency": 23.71373706,
+    "minusZImag": 14.55221142,
+    "zImag": -14.55221142,
+    "zReal": 107.6508413
+   },
+   {
+    "frequency": 17.7827941,
+    "minusZImag": 11.05028272,
+    "zImag": -11.05028272,
+    "zReal": 108.9127737
+   },
+   {
+    "frequency": 13.33521432,
+    "minusZImag": 8.331160379,
+    "zImag": -8.331160379,
+    "zReal": 109.4448667
+   },
+   {
+    "frequency": 10.0,
+    "minusZImag": 6.247993284,
+    "zImag": -6.247993284,
+    "zReal": 109.423149
+   },
+   {
+    "frequency": 7.498942093,
+    "minusZImag": 4.697208745,
+    "zImag": -4.697208745,
+    "zReal": 109.6832521
+   },
+   {
+    "frequency": 5.623413252,
+    "minusZImag": 3.535589908,
+    "zImag": -3.535589908,
+    "zReal": 110.083946
+   },
+   {
+    "frequency": 4.216965034,
+    "minusZImag": 2.648739917,
+    "zImag": -2.648739917,
+    "zReal": 109.9714243
+   },
+   {
+    "frequency": 3.16227766,
+    "minusZImag": 1.982168694,
+    "zImag": -1.982168694,
+    "zReal": 109.7410259
+   },
+   {
+    "frequency": 2.371373706,
+    "minusZImag": 1.489850209,
+    "zImag": -1.489850209,
+    "zReal": 109.9927823
+   },
+   {
+    "frequency": 1.77827941,
+    "minusZImag": 1.119377437,
+    "zImag": -1.119377437,
+    "zReal": 110.2032226
+   },
+   {
+    "frequency": 1.333521432,
+    "minusZImag": 0.8372798967,
+    "zImag": -0.8372798967,
+    "zReal": 109.9224127
+   },
+   {
+    "frequency": 1.0,
+    "minusZImag": 0.627165402,
+    "zImag": -0.627165402,
+    "zReal": 109.7985153
+   },
+   {
+    "frequency": 0.7498942093,
+    "minusZImag": 0.4716822884,
+    "zImag": -0.4716822884,
+    "zReal": 110.1192544
+   },
+   {
+    "frequency": 0.5623413252,
+    "minusZImag": 0.3538590375,
+    "zImag": -0.3538590375,
+    "zReal": 110.1649906
+   },
+   {
+    "frequency": 0.4216965034,
+    "minusZImag": 0.2645620799,
+    "zImag": -0.2645620799,
+    "zReal": 109.8349838
+   },
+   {
+    "frequency": 0.316227766,
+    "minusZImag": 0.1984671851,
+    "zImag": -0.1984671851,
+    "zReal": 109.875707
+   },
+   {
+    "frequency": 0.2371373706,
+    "minusZImag": 0.1492632885,
+    "zImag": -0.1492632885,
+    "zReal": 110.1960202
+   },
+   {
+    "frequency": 0.177827941,
+    "minusZImag": 0.1118069351,
+    "zImag": -0.1118069351,
+    "zReal": 110.0732041
+   },
+   {
+    "frequency": 0.1333521432,
+    "minusZImag": 0.08362369164,
+    "zImag": -0.08362369164,
+    "zReal": 109.7847913
+   },
+   {
+    "frequency": 0.1,
+    "minusZImag": 0.06282160941,
+    "zImag": -0.06282160941,
+    "zReal": 109.9820703
+   }
+  ],
+  "topology": "standard_randles",
+  "weighting": "modulus"
+ },
+ "invocation": "python -B cnls_fitting_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "cnls_fitting_solver",
+ "solverFile": "python/cnls_fitting_solver.py",
+ "solverSha256": "62e93653d5e4a38da9ce90688984facd2b185385931f0927d3788fde930d9f68",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:faa6684",
+ "stdout": {
+  "astmG106": {
+   "astmStandardRecommendation": "Weighting diagnostics only. A weighting choice does not establish ASTM G106 compliance.",
+   "dynamicRangeDecades": 1.04,
+   "hfSensitivityBalancingFactor": 121.7,
+   "isAstmG106Compliant": null,
+   "maxImpedanceMagnitude_Ohm": 110.209,
+   "minImpedanceMagnitude_Ohm": 9.99,
+   "unweightedSkewWarning": null,
+   "weightingScheme": "modulus"
+  },
+  "chiSquare": 9.590651952899815e-05,
+  "converged": true,
+  "degreesOfFreedom": 95,
+  "engine": "MetalliX-Python-HPC-CNLS-v3.10",
+  "iterations": 17,
+  "kramersKronig": {
+   "assessment": "Circuit-fit residuals only; independent K-K validation unavailable",
+   "isValid": null,
+   "maxResidualPct": 0.2,
+   "meanResidualPct": 0.13,
+   "score": null
+  },
+  "parameters": [
+   {
+    "elementId": "el-rs",
+    "field": "value",
+    "fittedValue": 10.00054899111412,
+    "initialValue": 5.0,
+    "isFixed": false,
+    "paramName": "Rs",
+    "paramType": "Resistor",
+    "percentError": 0.0264202087992083,
+    "stdError": 0.00264216592451947,
+    "unit": "Ohm"
+   },
+   {
+    "elementId": "el-rct",
+    "field": "value",
+    "fittedValue": 99.99517696416011,
+    "initialValue": 300.0,
+    "isFixed": false,
+    "paramName": "Rct",
+    "paramType": "Resistor",
+    "percentError": 0.02173063785199417,
+    "stdError": 0.021729589775542332,
+    "unit": "Ohm"
+   },
+   {
+    "elementId": "el-cdl",
+    "field": "value",
+    "fittedValue": 1.0000159273147538e-05,
+    "initialValue": 0.0001,
+    "isFixed": false,
+    "paramName": "Cdl",
+    "paramType": "Capacitor",
+    "percentError": 0.038499570202534486,
+    "stdError": 3.850018339730699e-09,
+    "unit": "F"
+   }
+  ],
+  "physicalValidation": {
+   "cpeCapacitances": [],
+   "inductance": {
+    "cableArtifactMagnitude_Ohm": 0.0063,
+    "correctedPoints": [
+     {
+      "frequency": 100000.0,
+      "minusZImag": 0.16544,
+      "phaseDeg": -0.948,
+      "zImag": -0.16544,
+      "zMag": 10.00162,
+      "zReal": 10.00025
+     },
+     {
+      "frequency": 74989.42093,
+      "minusZImag": 0.21737,
+      "phaseDeg": -1.243,
+      "zImag": -0.21737,
+      "zMag": 10.02264,
+      "zReal": 10.02028
+     },
+     {
+      "frequency": 56234.13252,
+      "minusZImag": 0.28641,
+      "phaseDeg": -1.641,
+      "zImag": -0.28641,
+      "zMag": 9.99979,
+      "zReal": 9.99569
+     },
+     {
+      "frequency": 42169.65034,
+      "minusZImag": 0.37936,
+      "phaseDeg": -2.176,
+      "zImag": -0.37936,
+      "zMag": 9.99011,
+      "zReal": 9.98291
+     },
+     {
+      "frequency": 31622.7766,
+      "minusZImag": 0.50576,
+      "phaseDeg": -2.892,
+      "zImag": -0.50576,
+      "zMag": 10.02518,
+      "zReal": 10.01242
+     },
+     {
+      "frequency": 23713.73706,
+      "minusZImag": 0.67368,
+      "phaseDeg": -3.846,
+      "zImag": -0.67368,
+      "zMag": 10.0431,
+      "zReal": 10.02048
+     },
+     {
+      "frequency": 17782.7941,
+      "minusZImag": 0.89479,
+      "phaseDeg": -5.116,
+      "zImag": -0.89479,
+      "zMag": 10.03398,
+      "zReal": 9.994
+     },
+     {
+      "frequency": 13335.21432,
+      "minusZImag": 1.19269,
+      "phaseDeg": -6.8,
+      "zImag": -1.19269,
+      "zMag": 10.07272,
+      "zReal": 10.00186
+     },
+     {
+      "frequency": 10000.0,
+      "minusZImag": 1.59451,
+      "phaseDeg": -9.022,
+      "zImag": -1.59451,
+      "zMag": 10.16835,
+      "zReal": 10.04255
+     },
+     {
+      "frequency": 7498.942093,
+      "minusZImag": 2.12356,
+      "phaseDeg": -11.928,
+      "zImag": -2.12356,
+      "zMag": 10.27483,
+      "zReal": 10.05299
+     },
+     {
+      "frequency": 5623.413252,
+      "minusZImag": 2.82287,
+      "phaseDeg": -15.673,
+      "zImag": -2.82287,
+      "zMag": 10.44918,
+      "zReal": 10.06066
+     },
+     {
+      "frequency": 4216.965034,
+      "minusZImag": 3.76793,
+      "phaseDeg": -20.386,
+      "zImag": -3.76793,
+      "zMag": 10.8167,
+      "zReal": 10.13922
+     },
+     {
+      "frequency": 3162.27766,
+      "minusZImag": 5.03044,
+      "phaseDeg": -26.09,
+      "zImag": -5.03044,
+      "zMag": 11.43867,
+      "zReal": 10.27316
+     },
+     {
+      "frequency": 2371.373706,
+      "minusZImag": 6.68011,
+      "phaseDeg": -32.598,
+      "zImag": -6.68011,
+      "zMag": 12.39943,
+      "zReal": 10.44615
+     },
+     {
+      "frequency": 1778.27941,
+      "minusZImag": 8.86167,
+      "phaseDeg": -39.438,
+      "zImag": -8.86167,
+      "zMag": 13.94995,
+      "zReal": 10.77367
+     },
+     {
+      "frequency": 1333.521432,
+      "minusZImag": 11.77585,
+      "phaseDeg": -45.897,
+      "zImag": -11.77585,
+      "zMag": 16.39873,
+      "zReal": 11.41261
+     },
+     {
+      "frequency": 1000.0,
+      "minusZImag": 15.54967,
+      "phaseDeg": -51.222,
+      "zImag": -15.54967,
+      "zMag": 19.94622,
+      "zReal": 12.49238
+     },
+     {
+      "frequency": 749.8942093,
+      "minusZImag": 20.28511,
+      "phaseDeg": -54.83,
+      "zImag": -20.28511,
+      "zMag": 24.81513,
+      "zReal": 14.29352
+     },
+     {
+      "frequency": 562.3413252,
+      "minusZImag": 26.16514,
+      "phaseDeg": -56.39,
+      "zImag": -26.16514,
+      "zMag": 31.41739,
+      "zReal": 17.39073
+     },
+     {
+      "frequency": 421.6965034,
+      "minusZImag": 33.08699,
+      "phaseDeg": -55.78,
+      "zImag": -33.08699,
+      "zMag": 40.01418,
+      "zReal": 22.50301
+     },
+     {
+      "frequency": 316.227766,
+      "minusZImag": 40.19977,
+      "phaseDeg": -53.045,
+      "zImag": -40.19977,
+      "zMag": 50.30555,
+      "zReal": 30.2428
+     },
+     {
+      "frequency": 237.1373706,
+      "minusZImag": 46.18794,
+      "phaseDeg": -48.419,
+      "zImag": -46.18794,
+      "zMag": 61.74754,
+      "zReal": 40.98087
+     },
+     {
+      "frequency": 177.827941,
+      "minusZImag": 49.66461,
+      "phaseDeg": -42.372,
+      "zImag": -49.66461,
+      "zMag": 73.69316,
+      "zReal": 54.44363
+     },
+     {
+      "frequency": 133.3521432,
+      "minusZImag": 49.32491,
+      "phaseDeg": -35.603,
+      "zImag": -49.32491,
+      "zMag": 84.72659,
+      "zReal": 68.88867
+     },
+     {
+      "frequency": 100.0,
+      "minusZImag": 45.0514,
+      "phaseDeg": -28.873,
+      "zImag": -45.0514,
+      "zMag": 93.30005,
+      "zReal": 81.70233
+     },
+     {
+      "frequency": 74.98942093,
+      "minusZImag": 38.48056,
+      "phaseDeg": -22.776,
+      "zImag": -38.48056,
+      "zMag": 99.40048,
+      "zReal": 91.64988
+     },
+     {
+      "frequency": 56.23413252,
+      "minusZImag": 31.42506,
+      "phaseDeg": -17.62,
+      "zImag": -31.42506,
+      "zMag": 103.81461,
+      "zReal": 98.94412
+     },
+     {
+      "frequency": 42.16965034,
+      "minusZImag": 24.80445,
+      "phaseDeg": -13.46,
+      "zImag": -24.80445,
+      "zMag": 106.56179,
+      "zReal": 103.63472
+     },
+     {
+      "frequency": 31.6227766,
+      "minusZImag": 19.09704,
+      "phaseDeg": -10.203,
+      "zImag": -19.09704,
+      "zMag": 107.80962,
+      "zReal": 106.10474
+     },
+     {
+      "frequency": 23.71373706,
+      "minusZImag": 14.55221,
+      "phaseDeg": -7.699,
+      "zImag": -14.55221,
+      "zMag": 108.62997,
+      "zReal": 107.65084
+     },
+     {
+      "frequency": 17.7827941,
+      "minusZImag": 11.05028,
+      "phaseDeg": -5.793,
+      "zImag": -11.05028,
+      "zMag": 109.47192,
+      "zReal": 108.91277
+     },
+     {
+      "frequency": 13.33521432,
+      "minusZImag": 8.33116,
+      "phaseDeg": -4.353,
+      "zImag": -8.33116,
+      "zMag": 109.7615,
+      "zReal": 109.44487
+     },
+     {
+      "frequency": 10.0,
+      "minusZImag": 6.24799,
+      "phaseDeg": -3.268,
+      "zImag": -6.24799,
+      "zMag": 109.60138,
+      "zReal": 109.42315
+     },
+     {
+      "frequency": 7.498942093,
+      "minusZImag": 4.69721,
+      "phaseDeg": -2.452,
+      "zImag": -4.69721,
+      "zMag": 109.78379,
+      "zReal": 109.68325
+     },
+     {
+      "frequency": 5.623413252,
+      "minusZImag": 3.53559,
+      "phaseDeg": -1.84,
+      "zImag": -3.53559,
+      "zMag": 110.14071,
+      "zReal": 110.08395
+     },
+     {
+      "frequency": 4.216965034,
+      "minusZImag": 2.64874,
+      "phaseDeg": -1.38,
+      "zImag": -2.64874,
+      "zMag": 110.00332,
+      "zReal": 109.97142
+     },
+     {
+      "frequency": 3.16227766,
+      "minusZImag": 1.98217,
+      "phaseDeg": -1.035,
+      "zImag": -1.98217,
+      "zMag": 109.75893,
+      "zReal": 109.74103
+     },
+     {
+      "frequency": 2.371373706,
+      "minusZImag": 1.48985,
+      "phaseDeg": -0.776,
+      "zImag": -1.48985,
+      "zMag": 110.00287,
+      "zReal": 109.99278
+     },
+     {
+      "frequency": 1.77827941,
+      "minusZImag": 1.11938,
+      "phaseDeg": -0.582,
+      "zImag": -1.11938,
+      "zMag": 110.20891,
+      "zReal": 110.20322
+     },
+     {
+      "frequency": 1.333521432,
+      "minusZImag": 0.83728,
+      "phaseDeg": -0.436,
+      "zImag": -0.83728,
+      "zMag": 109.9256,
+      "zReal": 109.92241
+     },
+     {
+      "frequency": 1.0,
+      "minusZImag": 0.62717,
+      "phaseDeg": -0.327,
+      "zImag": -0.62717,
+      "zMag": 109.80031,
+      "zReal": 109.79852
+     },
+     {
+      "frequency": 0.7498942093,
+      "minusZImag": 0.47168,
+      "phaseDeg": -0.245,
+      "zImag": -0.47168,
+      "zMag": 110.12026,
+      "zReal": 110.11925
+     },
+     {
+      "frequency": 0.5623413252,
+      "minusZImag": 0.35386,
+      "phaseDeg": -0.184,
+      "zImag": -0.35386,
+      "zMag": 110.16556,
+      "zReal": 110.16499
+     },
+     {
+      "frequency": 0.4216965034,
+      "minusZImag": 0.26456,
+      "phaseDeg": -0.138,
+      "zImag": -0.26456,
+      "zMag": 109.8353,
+      "zReal": 109.83498
+     },
+     {
+      "frequency": 0.316227766,
+      "minusZImag": 0.19847,
+      "phaseDeg": -0.103,
+      "zImag": -0.19847,
+      "zMag": 109.87589,
+      "zReal": 109.87571
+     },
+     {
+      "frequency": 0.2371373706,
+      "minusZImag": 0.14926,
+      "phaseDeg": -0.078,
+      "zImag": -0.14926,
+      "zMag": 110.19612,
+      "zReal": 110.19602
+     },
+     {
+      "frequency": 0.177827941,
+      "minusZImag": 0.11181,
+      "phaseDeg": -0.058,
+      "zImag": -0.11181,
+      "zMag": 110.07326,
+      "zReal": 110.0732
+     },
+     {
+      "frequency": 0.1333521432,
+      "minusZImag": 0.08362,
+      "phaseDeg": -0.044,
+      "zImag": -0.08362,
+      "zMag": 109.78482,
+      "zReal": 109.78479
+     },
+     {
+      "frequency": 0.1,
+      "minusZImag": 0.06282,
+      "phaseDeg": -0.033,
+      "zImag": -0.06282,
+      "zMag": 109.98209,
+      "zReal": 109.98207
+     }
+    ],
+    "correctedPointsCount": 49,
+    "detectedInductance_H": 1e-08,
+    "detectedInductance_uH": 0.01,
+    "hasHighFreqInduction": false,
+    "originalPointsCount": 49,
+    "recommendedAction": "High-frequency inductive phase shift is minimal (< 0.1 µH). Spectrum is clean and ready for direct CNLS fitting.",
+    "zeroCrossingFreq_Hz": null
+   },
+   "linKK": {
+    "driftScore": null,
+    "flaggedFrequencies": [
+     0.1,
+     0.1334,
+     0.1778,
+     0.2371,
+     0.3162,
+     0.4217,
+     0.5623,
+     0.7499
+    ],
+    "isStationary": null,
+    "kkChiSquare": 0.018829,
+    "meanResidualPct": 11.69,
+    "muDriftMetric": 0.4371,
+    "pseudoChiSquare": 0.018829,
+    "recommendation": "This fixed-basis regularized Voigt screen is not independent K-K or ASTM certification. Time-resolved acquisition and model-selection validation are not available.",
+    "residuals": [
+     {
+      "frequency": 0.1,
+      "isOutlier": true,
+      "logFreq": -1.0,
+      "totalResidualPct": 9.729,
+      "zImagResPct": -0.088,
+      "zRealResPct": -9.729
+     },
+     {
+      "frequency": 0.1334,
+      "isOutlier": true,
+      "logFreq": -0.875,
+      "totalResidualPct": 9.921,
+      "zImagResPct": -0.117,
+      "zRealResPct": -9.92
+     },
+     {
+      "frequency": 0.1778,
+      "isOutlier": true,
+      "logFreq": -0.75,
+      "totalResidualPct": 9.623,
+      "zImagResPct": -0.152,
+      "zRealResPct": -9.621
+     },
+     {
+      "frequency": 0.2371,
+      "isOutlier": true,
+      "logFreq": -0.625,
+      "totalResidualPct": 9.485,
+      "zImagResPct": -0.196,
+      "zRealResPct": -9.483
+     },
+     {
+      "frequency": 0.3162,
+      "isOutlier": true,
+      "logFreq": -0.5,
+      "totalResidualPct": 9.78,
+      "zImagResPct": -0.251,
+      "zRealResPct": -9.776
+     },
+     {
+      "frequency": 0.4217,
+      "isOutlier": true,
+      "logFreq": -0.375,
+      "totalResidualPct": 9.786,
+      "zImagResPct": -0.313,
+      "zRealResPct": -9.781
+     },
+     {
+      "frequency": 0.5623,
+      "isOutlier": true,
+      "logFreq": -0.25,
+      "totalResidualPct": 9.41,
+      "zImagResPct": -0.381,
+      "zRealResPct": -9.402
+     },
+     {
+      "frequency": 0.7499,
+      "isOutlier": true,
+      "logFreq": -0.125,
+      "totalResidualPct": 9.397,
+      "zImagResPct": -0.455,
+      "zRealResPct": -9.386
+     },
+     {
+      "frequency": 1.0,
+      "isOutlier": true,
+      "logFreq": 0.0,
+      "totalResidualPct": 9.649,
+      "zImagResPct": -0.538,
+      "zRealResPct": -9.634
+     },
+     {
+      "frequency": 1.3335,
+      "isOutlier": true,
+      "logFreq": 0.125,
+      "totalResidualPct": 9.452,
+      "zImagResPct": -0.625,
+      "zRealResPct": -9.432
+     },
+     {
+      "frequency": 1.7783,
+      "isOutlier": true,
+      "logFreq": 0.25,
+      "totalResidualPct": 9.1,
+      "zImagResPct": -0.725,
+      "zRealResPct": -9.071
+     },
+     {
+      "frequency": 2.3714,
+      "isOutlier": true,
+      "logFreq": 0.375,
+      "totalResidualPct": 9.236,
+      "zImagResPct": -0.86,
+      "zRealResPct": -9.196
+     },
+     {
+      "frequency": 3.1623,
+      "isOutlier": true,
+      "logFreq": 0.5,
+      "totalResidualPct": 9.41,
+      "zImagResPct": -1.043,
+      "zRealResPct": -9.352
+     },
+     {
+      "frequency": 4.217,
+      "isOutlier": true,
+      "logFreq": 0.625,
+      "totalResidualPct": 9.093,
+      "zImagResPct": -1.28,
+      "zRealResPct": -9.003
+     },
+     {
+      "frequency": 5.6234,
+      "isOutlier": true,
+      "logFreq": 0.75,
+      "totalResidualPct": 8.861,
+      "zImagResPct": -1.603,
+      "zRealResPct": -8.715
+     },
+     {
+      "frequency": 7.4989,
+      "isOutlier": true,
+      "logFreq": 0.875,
+      "totalResidualPct": 9.061,
+      "zImagResPct": -2.056,
+      "zRealResPct": -8.824
+     },
+     {
+      "frequency": 10.0,
+      "isOutlier": true,
+      "logFreq": 1.0,
+      "totalResidualPct": 8.991,
+      "zImagResPct": -2.622,
+      "zRealResPct": -8.6
+     },
+     {
+      "frequency": 13.3352,
+      "isOutlier": true,
+      "logFreq": 1.125,
+      "totalResidualPct": 8.425,
+      "zImagResPct": -3.259,
+      "zRealResPct": -7.769
+     },
+     {
+      "frequency": 17.7828,
+      "isOutlier": true,
+      "logFreq": 1.25,
+      "totalResidualPct": 8.014,
+      "zImagResPct": -3.972,
+      "zRealResPct": -6.961
+     },
+     {
+      "frequency": 23.7137,
+      "isOutlier": true,
+      "logFreq": 1.375,
+      "totalResidualPct": 7.653,
+      "zImagResPct": -4.653,
+      "zRealResPct": -6.077
+     },
+     {
+      "frequency": 31.6228,
+      "isOutlier": true,
+      "logFreq": 1.5,
+      "totalResidualPct": 6.598,
+      "zImagResPct": -4.947,
+      "zRealResPct": -4.367
+     },
+     {
+      "frequency": 42.1697,
+      "isOutlier": true,
+      "logFreq": 1.625,
+      "totalResidualPct": 4.995,
+      "zImagResPct": -4.512,
+      "zRealResPct": -2.143
+     },
+     {
+      "frequency": 56.2341,
+      "isOutlier": true,
+      "logFreq": 1.75,
+      "totalResidualPct": 3.226,
+      "zImagResPct": -3.199,
+      "zRealResPct": -0.416
+     },
+     {
+      "frequency": 74.9894,
+      "isOutlier": false,
+      "logFreq": 1.875,
+      "totalResidualPct": 0.974,
+      "zImagResPct": -0.843,
+      "zRealResPct": 0.487
+     },
+     {
+      "frequency": 100.0,
+      "isOutlier": false,
+      "logFreq": 2.0,
+      "totalResidualPct": 2.439,
+      "zImagResPct": 2.429,
+      "zRealResPct": 0.227
+     },
+     {
+      "frequency": 133.3521,
+      "isOutlier": true,
+      "logFreq": 2.125,
+      "totalResidualPct": 5.929,
+      "zImagResPct": 5.49,
+      "zRealResPct": -2.24
+     },
+     {
+      "frequency": 177.8279,
+      "isOutlier": true,
+      "logFreq": 2.25,
+      "totalResidualPct": 9.811,
+      "zImagResPct": 6.758,
+      "zRealResPct": -7.111
+     },
+     {
+      "frequency": 237.1374,
+      "isOutlier": true,
+      "logFreq": 2.375,
+      "totalResidualPct": 13.98,
+      "zImagResPct": 5.525,
+      "zRealResPct": -12.842
+     },
+     {
+      "frequency": 316.2278,
+      "isOutlier": true,
+      "logFreq": 2.5,
+      "totalResidualPct": 17.837,
+      "zImagResPct": 2.0,
+      "zRealResPct": -17.724
+     },
+     {
+      "frequency": 421.6965,
+      "isOutlier": true,
+      "logFreq": 2.625,
+      "totalResidualPct": 21.381,
+      "zImagResPct": -3.337,
+      "zRealResPct": -21.119
+     },
+     {
+      "frequency": 562.3413,
+      "isOutlier": true,
+      "logFreq": 2.75,
+      "totalResidualPct": 24.597,
+      "zImagResPct": -9.28,
+      "zRealResPct": -22.779
+     },
+     {
+      "frequency": 749.8942,
+      "isOutlier": true,
+      "logFreq": 2.875,
+      "totalResidualPct": 26.622,
+      "zImagResPct": -14.06,
+      "zRealResPct": -22.607
+     },
+     {
+      "frequency": 1000.0,
+      "isOutlier": true,
+      "logFreq": 3.0,
+      "totalResidualPct": 27.374,
+      "zImagResPct": -17.117,
+      "zRealResPct": -21.363
+     },
+     {
+      "frequency": 1333.5214,
+      "isOutlier": true,
+      "logFreq": 3.125,
+      "totalResidualPct": 27.716,
+      "zImagResPct": -19.042,
+      "zRealResPct": -20.139
+     },
+     {
+      "frequency": 1778.2794,
+      "isOutlier": true,
+      "logFreq": 3.25,
+      "totalResidualPct": 27.426,
+      "zImagResPct": -19.837,
+      "zRealResPct": -18.94
+     },
+     {
+      "frequency": 2371.3737,
+      "isOutlier": true,
+      "logFreq": 3.375,
+      "totalResidualPct": 25.795,
+      "zImagResPct": -19.328,
+      "zRealResPct": -17.083
+     },
+     {
+      "frequency": 3162.2777,
+      "isOutlier": true,
+      "logFreq": 3.5,
+      "totalResidualPct": 23.442,
+      "zImagResPct": -18.161,
+      "zRealResPct": -14.824
+     },
+     {
+      "frequency": 4216.965,
+      "isOutlier": true,
+      "logFreq": 3.625,
+      "totalResidualPct": 21.088,
+      "zImagResPct": -16.778,
+      "zRealResPct": -12.775
+     },
+     {
+      "frequency": 5623.4133,
+      "isOutlier": true,
+      "logFreq": 3.75,
+      "totalResidualPct": 18.352,
+      "zImagResPct": -14.954,
+      "zRealResPct": -10.638
+     },
+     {
+      "frequency": 7498.9421,
+      "isOutlier": true,
+      "logFreq": 3.875,
+      "totalResidualPct": 15.222,
+      "zImagResPct": -12.765,
+      "zRealResPct": -8.292
+     },
+     {
+      "frequency": 10000.0,
+      "isOutlier": true,
+      "logFreq": 4.0,
+      "totalResidualPct": 12.549,
+      "zImagResPct": -10.698,
+      "zRealResPct": -6.558
+     },
+     {
+      "frequency": 13335.2143,
+      "isOutlier": true,
+      "logFreq": 4.125,
+      "totalResidualPct": 10.59,
+      "zImagResPct": -8.957,
+      "zRealResPct": -5.651
+     },
+     {
+      "frequency": 17782.7941,
+      "isOutlier": true,
+      "logFreq": 4.25,
+      "totalResidualPct": 8.865,
+      "zImagResPct": -7.479,
+      "zRealResPct": -4.759
+     },
+     {
+      "frequency": 23713.7371,
+      "isOutlier": true,
+      "logFreq": 4.375,
+      "totalResidualPct": 7.317,
+      "zImagResPct": -6.3,
+      "zRealResPct": -3.721
+     },
+     {
+      "frequency": 31622.7766,
+      "isOutlier": true,
+      "logFreq": 4.5,
+      "totalResidualPct": 6.3,
+      "zImagResPct": -5.461,
+      "zRealResPct": -3.142
+     },
+     {
+      "frequency": 42169.6503,
+      "isOutlier": true,
+      "logFreq": 4.625,
+      "totalResidualPct": 5.611,
+      "zImagResPct": -4.852,
+      "zRealResPct": -2.818
+     },
+     {
+      "frequency": 56234.1325,
+      "isOutlier": true,
+      "logFreq": 4.75,
+      "totalResidualPct": 4.811,
+      "zImagResPct": -4.35,
+      "zRealResPct": -2.054
+     },
+     {
+      "frequency": 74989.4209,
+      "isOutlier": true,
+      "logFreq": 4.875,
+      "totalResidualPct": 4.082,
+      "zImagResPct": -3.916,
+      "zRealResPct": -1.151
+     },
+     {
+      "frequency": 100000.0,
+      "isOutlier": true,
+      "logFreq": 5.0,
+      "totalResidualPct": 3.577,
+      "zImagResPct": -3.509,
+      "zRealResPct": -0.695
+     }
+    ],
+    "stationarityStatus": "Voigt residual screening only; stationarity unavailable"
+   }
+  },
+  "rSquared": 0.999993757713521,
+  "rSquaredDefinition": "1 - SSE(|Z|) / SST(|Z|); unavailable for constant observed magnitude",
+  "reducedChiSquare": 1.0095423108315595e-06,
+  "residuals": [
+   {
+    "calcMinusZImag": 0.15915200505861055,
+    "calcZReal": 10.000802297579966,
+    "expMinusZImag": 0.1591545399,
+    "expZReal": 10.0002533,
+    "frequency": 100000.0,
+    "logFreq": 5.0,
+    "resZImagPct": -0.0,
+    "resZRealPct": 0.01,
+    "totalResidualPct": 0.01,
+    "weightImag": 0.00999696,
+    "weightReal": 0.00999696,
+    "weightedDiffImag": 0.0,
+    "weightedDiffReal": -5.5e-05
+   },
+   {
+    "calcMinusZImag": 0.21223219130507995,
+    "calcZReal": 10.00099943989873,
+    "expMinusZImag": 0.2126565048,
+    "expZReal": 10.02028463,
+    "frequency": 74989.42093,
+    "logFreq": 4.8749999999812035,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.19,
+    "totalResidualPct": 0.19,
+    "weightImag": 0.00995507,
+    "weightReal": 0.00995507,
+    "weightedDiffImag": 4.2e-05,
+    "weightedDiffReal": 0.001924
+   },
+   {
+    "calcMinusZImag": 0.2830151834548293,
+    "calcZReal": 10.001350012104655,
+    "expMinusZImag": 0.2828750449,
+    "expZReal": 9.995689776,
+    "frequency": 56234.13252,
+    "logFreq": 4.750000000007454,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.06,
+    "totalResidualPct": 0.06,
+    "weightImag": 0.01000062,
+    "weightReal": 0.01000062,
+    "weightedDiffImag": -1.4e-05,
+    "weightedDiffReal": -0.000566
+   },
+   {
+    "calcMinusZImag": 0.3774044598753452,
+    "calcZReal": 10.001973421368255,
+    "expMinusZImag": 0.376711647,
+    "expZReal": 9.982905476,
+    "frequency": 42169.65034,
+    "logFreq": 4.624999999970564,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.19,
+    "totalResidualPct": 0.19,
+    "weightImag": 0.01002001,
+    "weightReal": 0.01002001,
+    "weightedDiffImag": -6.9e-05,
+    "weightedDiffReal": -0.001909
+   },
+   {
+    "calcMinusZImag": 0.5032713562712784,
+    "calcZReal": 10.003081998023623,
+    "expMinusZImag": 0.503776727,
+    "expZReal": 10.01241774,
+    "frequency": 31622.7766,
+    "logFreq": 4.499999999976875,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.09,
+    "totalResidualPct": 0.09,
+    "weightImag": 0.00995002,
+    "weightReal": 0.00995002,
+    "weightedDiffImag": 5e-05,
+    "weightedDiffReal": 0.000931
+   },
+   {
+    "calcMinusZImag": 0.6711099088377238,
+    "calcZReal": 10.005053296343434,
+    "expMinusZImag": 0.6721923621,
+    "expZReal": 10.02048117,
+    "frequency": 23713.73706,
+    "logFreq": 4.375000000061965,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.15,
+    "totalResidualPct": 0.15,
+    "weightImag": 0.00991455,
+    "weightReal": 0.00991455,
+    "weightedDiffImag": 0.000108,
+    "weightedDiffReal": 0.001536
+   },
+   {
+    "calcMinusZImag": 0.8949080734372159,
+    "calcZReal": 10.008558623562715,
+    "expMinusZImag": 0.8936696646,
+    "expZReal": 9.994000796,
+    "frequency": 17782.7941,
+    "logFreq": 4.249999999990494,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.15,
+    "totalResidualPct": 0.15,
+    "weightImag": 0.00993259,
+    "weightReal": 0.00993259,
+    "weightedDiffImag": -0.000123,
+    "weightedDiffReal": -0.001451
+   },
+   {
+    "calcMinusZImag": 1.193304704859174,
+    "calcZReal": 10.014791467701654,
+    "expMinusZImag": 1.191848447,
+    "expZReal": 10.00186189,
+    "frequency": 13335.21432,
+    "logFreq": 4.12499999994681,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.13,
+    "totalResidualPct": 0.13,
+    "weightImag": 0.00985632,
+    "weightReal": 0.00985632,
+    "weightedDiffImag": -0.000145,
+    "weightedDiffReal": -0.001284
+   },
+   {
+    "calcMinusZImag": 1.5911210205107287,
+    "calcZReal": 10.02587328673257,
+    "expMinusZImag": 1.593880493,
+    "expZReal": 10.04255063,
+    "frequency": 10000.0,
+    "logFreq": 4.0,
+    "resZImagPct": -0.03,
+    "resZRealPct": -0.16,
+    "totalResidualPct": 0.17,
+    "weightImag": 0.00967181,
+    "weightReal": 0.00967181,
+    "weightedDiffImag": 0.000271,
+    "weightedDiffReal": 0.00164
+   },
+   {
+    "calcMinusZImag": 2.121375851959462,
+    "calcZReal": 10.045573790054274,
+    "expMinusZImag": 2.123093,
+    "expZReal": 10.0529946,
+    "frequency": 7498.942093,
+    "logFreq": 3.8749999999812035,
+    "resZImagPct": -0.02,
+    "resZRealPct": -0.07,
+    "totalResidualPct": 0.07,
+    "weightImag": 0.00947237,
+    "weightReal": 0.00947237,
+    "weightedDiffImag": 0.000167,
+    "weightedDiffReal": 0.000722
+   },
+   {
+    "calcMinusZImag": 2.8279091639298457,
+    "calcZReal": 10.080587615614169,
+    "expMinusZImag": 2.822516775,
+    "expZReal": 10.06065547,
+    "frequency": 5623.413252,
+    "logFreq": 3.7500000000074536,
+    "resZImagPct": 0.05,
+    "resZRealPct": 0.19,
+    "totalResidualPct": 0.2,
+    "weightImag": 0.0091589,
+    "weightReal": 0.0091589,
+    "weightedDiffImag": -0.000516,
+    "weightedDiffReal": -0.001908
+   },
+   {
+    "calcMinusZImag": 3.7687297326911615,
+    "calcZReal": 10.142791418579794,
+    "expMinusZImag": 3.767667013,
+    "expZReal": 10.13921774,
+    "frequency": 4216.965034,
+    "logFreq": 3.624999999970564,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.03,
+    "totalResidualPct": 0.03,
+    "weightImag": 0.00854708,
+    "weightReal": 0.00854708,
+    "weightedDiffImag": -9.8e-05,
+    "weightedDiffReal": -0.00033
+   },
+   {
+    "calcMinusZImag": 5.020124106560808,
+    "calcZReal": 10.253216044186459,
+    "expMinusZImag": 5.030243214,
+    "expZReal": 10.27316404,
+    "frequency": 3162.27766,
+    "logFreq": 3.4999999999768754,
+    "resZImagPct": -0.09,
+    "resZRealPct": -0.17,
+    "totalResidualPct": 0.2,
+    "weightImag": 0.00764285,
+    "weightReal": 0.00764285,
+    "weightedDiffImag": 0.000885,
+    "weightedDiffReal": 0.001744
+   },
+   {
+    "calcMinusZImag": 6.681303965282216,
+    "calcZReal": 10.448979747285975,
+    "expMinusZImag": 6.679960625,
+    "expZReal": 10.44615338,
+    "frequency": 2371.373706,
+    "logFreq": 3.3750000000619647,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.02,
+    "totalResidualPct": 0.03,
+    "weightImag": 0.00650432,
+    "weightReal": 0.00650432,
+    "weightedDiffImag": -0.000108,
+    "weightedDiffReal": -0.000228
+   },
+   {
+    "calcMinusZImag": 8.878673575756537,
+    "calcZReal": 10.795210633842569,
+    "expMinusZImag": 8.861562702,
+    "expZReal": 10.77366859,
+    "frequency": 1778.27941,
+    "logFreq": 3.2499999999904943,
+    "resZImagPct": 0.12,
+    "resZRealPct": 0.15,
+    "totalResidualPct": 0.2,
+    "weightImag": 0.00513877,
+    "weightReal": 0.00513877,
+    "weightedDiffImag": -0.001227,
+    "weightedDiffReal": -0.001544
+   },
+   {
+    "calcMinusZImag": 11.767122015754023,
+    "calcZReal": 11.404992961959042,
+    "expMinusZImag": 11.77577042,
+    "expZReal": 11.41261195,
+    "frequency": 1333.521432,
+    "logFreq": 3.1249999999468097,
+    "resZImagPct": -0.05,
+    "resZRealPct": -0.05,
+    "totalResidualPct": 0.07,
+    "weightImag": 0.00371863,
+    "weightReal": 0.00371863,
+    "weightedDiffImag": 0.000527,
+    "weightedDiffReal": 0.000465
+   },
+   {
+    "calcMinusZImag": 15.522037612758535,
+    "calcZReal": 12.471037810248895,
+    "expMinusZImag": 15.54960631,
+    "expZReal": 12.49238217,
+    "frequency": 1000.0,
+    "logFreq": 3.0,
+    "resZImagPct": -0.14,
+    "resZRealPct": -0.11,
+    "totalResidualPct": 0.17,
+    "weightImag": 0.00251351,
+    "weightReal": 0.00251351,
+    "weightedDiffImag": 0.001382,
+    "weightedDiffReal": 0.00107
+   },
+   {
+    "calcMinusZImag": 20.30847375908005,
+    "calcZReal": 14.310888184140001,
+    "expMinusZImag": 20.28506653,
+    "expZReal": 14.29351934,
+    "frequency": 749.8942093,
+    "logFreq": 2.8749999999812035,
+    "resZImagPct": 0.09,
+    "resZRealPct": 0.07,
+    "totalResidualPct": 0.12,
+    "weightImag": 0.00162393,
+    "weightReal": 0.00162393,
+    "weightedDiffImag": -0.000943,
+    "weightedDiffReal": -0.0007
+   },
+   {
+    "calcMinusZImag": 26.202733088390115,
+    "calcZReal": 17.416737393793195,
+    "expMinusZImag": 26.16510511,
+    "expZReal": 17.39073207,
+    "frequency": 562.3413252,
+    "logFreq": 2.7500000000074536,
+    "resZImagPct": 0.12,
+    "resZRealPct": 0.08,
+    "totalResidualPct": 0.15,
+    "weightImag": 0.00101312,
+    "weightReal": 0.00101312,
+    "weightedDiffImag": -0.001198,
+    "weightedDiffReal": -0.000828
+   },
+   {
+    "calcMinusZImag": 33.035073756671515,
+    "calcZReal": 22.46891211595163,
+    "expMinusZImag": 33.08696116,
+    "expZReal": 22.50301003,
+    "frequency": 421.6965034,
+    "logFreq": 2.624999999970564,
+    "resZImagPct": -0.13,
+    "resZRealPct": -0.09,
+    "totalResidualPct": 0.16,
+    "weightImag": 0.00062456,
+    "weightReal": 0.00062456,
+    "weightedDiffImag": 0.001297,
+    "weightedDiffReal": 0.000852
+   },
+   {
+    "calcMinusZImag": 40.15609549591207,
+    "calcZReal": 30.211448356298106,
+    "expMinusZImag": 40.19975248,
+    "expZReal": 30.24280034,
+    "frequency": 316.227766,
+    "logFreq": 2.4999999999768754,
+    "resZImagPct": -0.09,
+    "resZRealPct": -0.06,
+    "totalResidualPct": 0.11,
+    "weightImag": 0.00039516,
+    "weightReal": 0.00039516,
+    "weightedDiffImag": 0.000868,
+    "weightedDiffReal": 0.000623
+   },
+   {
+    "calcMinusZImag": 46.270447869148896,
+    "calcZReal": 41.056001690453144,
+    "expMinusZImag": 46.18792888,
+    "expZReal": 40.98087347,
+    "frequency": 237.1373706,
+    "logFreq": 2.3750000000619647,
+    "resZImagPct": 0.13,
+    "resZRealPct": 0.12,
+    "totalResidualPct": 0.18,
+    "weightImag": 0.00026228,
+    "weightReal": 0.00026228,
+    "weightedDiffImag": -0.001336,
+    "weightedDiffReal": -0.001217
+   },
+   {
+    "calcMinusZImag": 49.69166816279877,
+    "calcZReal": 54.47573136519057,
+    "expMinusZImag": 49.66460083,
+    "expZReal": 54.44362712,
+    "frequency": 177.827941,
+    "logFreq": 2.2499999999904943,
+    "resZImagPct": 0.04,
+    "resZRealPct": 0.04,
+    "totalResidualPct": 0.06,
+    "weightImag": 0.00018414,
+    "weightReal": 0.00018414,
+    "weightedDiffImag": -0.000367,
+    "weightedDiffReal": -0.000436
+   },
+   {
+    "calcMinusZImag": 49.22521003256632,
+    "calcZReal": 68.7524250668911,
+    "expMinusZImag": 49.32490071,
+    "expZReal": 68.88867037,
+    "frequency": 133.3521432,
+    "logFreq": 2.1249999999468097,
+    "resZImagPct": -0.12,
+    "resZRealPct": -0.16,
+    "totalResidualPct": 0.2,
+    "weightImag": 0.0001393,
+    "weightReal": 0.0001393,
+    "weightedDiffImag": 0.001177,
+    "weightedDiffReal": 0.001608
+   },
+   {
+    "calcMinusZImag": 45.044920237748194,
+    "calcZReal": 81.69408213569568,
+    "expMinusZImag": 45.05139061,
+    "expZReal": 81.70232896,
+    "frequency": 100.0,
+    "logFreq": 2.0,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.01,
+    "totalResidualPct": 0.01,
+    "weightImag": 0.00011488,
+    "weightReal": 0.00011488,
+    "weightedDiffImag": 6.9e-05,
+    "weightedDiffReal": 8.8e-05
+   },
+   {
+    "calcMinusZImag": 38.55472014502375,
+    "calcZReal": 91.83039169061213,
+    "expMinusZImag": 38.48055979,
+    "expZReal": 91.64988219,
+    "frequency": 74.98942093,
+    "logFreq": 1.8749999999812035,
+    "resZImagPct": 0.07,
+    "resZRealPct": 0.18,
+    "totalResidualPct": 0.2,
+    "weightImag": 0.00010121,
+    "weightReal": 0.00010121,
+    "weightedDiffImag": -0.000746,
+    "weightedDiffReal": -0.001816
+   },
+   {
+    "calcMinusZImag": 31.40917947239228,
+    "calcZReal": 98.8982955563495,
+    "expMinusZImag": 31.42505287,
+    "expZReal": 98.94411976,
+    "frequency": 56.23413252,
+    "logFreq": 1.7500000000074534,
+    "resZImagPct": -0.02,
+    "resZRealPct": -0.04,
+    "totalResidualPct": 0.05,
+    "weightImag": 9.279e-05,
+    "weightReal": 9.279e-05,
+    "weightedDiffImag": 0.000153,
+    "weightedDiffReal": 0.000441
+   },
+   {
+    "calcMinusZImag": 24.755990188555685,
+    "calcZReal": 103.43659743447225,
+    "expMinusZImag": 24.80444514,
+    "expZReal": 103.6347153,
+    "frequency": 42.16965034,
+    "logFreq": 1.6249999999705638,
+    "resZImagPct": -0.05,
+    "resZRealPct": -0.19,
+    "totalResidualPct": 0.19,
+    "weightImag": 8.806e-05,
+    "weightReal": 8.806e-05,
+    "weightedDiffImag": 0.000455,
+    "weightedDiffReal": 0.001859
+   },
+   {
+    "calcMinusZImag": 19.1130713505873,
+    "calcZReal": 106.19823874549424,
+    "expMinusZImag": 19.09704242,
+    "expZReal": 106.1047433,
+    "frequency": 31.6227766,
+    "logFreq": 1.4999999999768754,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.09,
+    "totalResidualPct": 0.09,
+    "weightImag": 8.604e-05,
+    "weightReal": 8.604e-05,
+    "weightedDiffImag": -0.000149,
+    "weightedDiffReal": -0.000867
+   },
+   {
+    "calcMinusZImag": 14.575030694244475,
+    "calcZReal": 107.8241485371043,
+    "expMinusZImag": 14.55221142,
+    "expZReal": 107.6508413,
+    "frequency": 23.71373706,
+    "logFreq": 1.3750000000619647,
+    "resZImagPct": 0.02,
+    "resZRealPct": 0.16,
+    "totalResidualPct": 0.16,
+    "weightImag": 8.474e-05,
+    "weightReal": 8.474e-05,
+    "weightedDiffImag": -0.00021,
+    "weightedDiffReal": -0.001595
+   },
+   {
+    "calcMinusZImag": 11.034610180022762,
+    "calcZReal": 108.76284020168787,
+    "expMinusZImag": 11.05028272,
+    "expZReal": 108.9127737,
+    "frequency": 17.7827941,
+    "logFreq": 1.2499999999904943,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.14,
+    "totalResidualPct": 0.14,
+    "weightImag": 8.344e-05,
+    "weightReal": 8.344e-05,
+    "weightedDiffImag": 0.000143,
+    "weightedDiffReal": 0.00137
+   },
+   {
+    "calcMinusZImag": 8.319684053541312,
+    "calcZReal": 109.29866192550274,
+    "expMinusZImag": 8.331160379,
+    "expZReal": 109.4448667,
+    "frequency": 13.33521432,
+    "logFreq": 1.1249999999468094,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.13,
+    "totalResidualPct": 0.13,
+    "weightImag": 8.3e-05,
+    "weightReal": 8.3e-05,
+    "weightedDiffImag": 0.000105,
+    "weightedDiffReal": 0.001332
+   },
+   {
+    "calcMinusZImag": 6.257975405350489,
+    "calcZReal": 109.60253846594333,
+    "expMinusZImag": 6.247993284,
+    "expZReal": 109.423149,
+    "frequency": 10.0,
+    "logFreq": 1.0,
+    "resZImagPct": 0.01,
+    "resZRealPct": 0.16,
+    "totalResidualPct": 0.16,
+    "weightImag": 8.325e-05,
+    "weightReal": 8.325e-05,
+    "weightedDiffImag": -9.1e-05,
+    "weightedDiffReal": -0.001637
+   },
+   {
+    "calcMinusZImag": 4.700909323400389,
+    "calcZReal": 109.7742392245024,
+    "expMinusZImag": 4.697208745,
+    "expZReal": 109.6832521,
+    "frequency": 7.498942093,
+    "logFreq": 0.8749999999812035,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.08,
+    "totalResidualPct": 0.08,
+    "weightImag": 8.297e-05,
+    "weightReal": 8.297e-05,
+    "weightedDiffImag": -3.4e-05,
+    "weightedDiffReal": -0.000829
+   },
+   {
+    "calcMinusZImag": 3.528605319759035,
+    "calcZReal": 109.87105395619918,
+    "expMinusZImag": 3.535589908,
+    "expZReal": 110.083946,
+    "frequency": 5.623413252,
+    "logFreq": 0.7500000000074534,
+    "resZImagPct": -0.01,
+    "resZRealPct": -0.19,
+    "totalResidualPct": 0.19,
+    "weightImag": 8.243e-05,
+    "weightReal": 8.243e-05,
+    "weightedDiffImag": 6.3e-05,
+    "weightedDiffReal": 0.001933
+   },
+   {
+    "calcMinusZImag": 2.6475253557198757,
+    "calcZReal": 109.92557946168628,
+    "expMinusZImag": 2.648739917,
+    "expZReal": 109.9714243,
+    "frequency": 4.216965034,
+    "logFreq": 0.6249999999705639,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.04,
+    "totalResidualPct": 0.04,
+    "weightImag": 8.264e-05,
+    "weightReal": 8.264e-05,
+    "weightedDiffImag": 1.1e-05,
+    "weightedDiffReal": 0.000417
+   },
+   {
+    "calcMinusZImag": 1.9859736610628147,
+    "calcZReal": 109.95626756871505,
+    "expMinusZImag": 1.982168694,
+    "expZReal": 109.7410259,
+    "frequency": 3.16227766,
+    "logFreq": 0.49999999997687544,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.2,
+    "totalResidualPct": 0.2,
+    "weightImag": 8.301e-05,
+    "weightReal": 8.301e-05,
+    "weightedDiffImag": -3.5e-05,
+    "weightedDiffReal": -0.001961
+   },
+   {
+    "calcMinusZImag": 1.4895273920473286,
+    "calcZReal": 109.97353304113103,
+    "expMinusZImag": 1.489850209,
+    "expZReal": 109.9927823,
+    "frequency": 2.371373706,
+    "logFreq": 0.3750000000619646,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.02,
+    "totalResidualPct": 0.02,
+    "weightImag": 8.264e-05,
+    "weightReal": 8.264e-05,
+    "weightedDiffImag": 3e-06,
+    "weightedDiffReal": 0.000175
+   },
+   {
+    "calcMinusZImag": 1.117096473690355,
+    "calcZReal": 109.98324475018111,
+    "expMinusZImag": 1.119377437,
+    "expZReal": 110.2032226,
+    "frequency": 1.77827941,
+    "logFreq": 0.2499999999904942,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.2,
+    "totalResidualPct": 0.2,
+    "weightImag": 8.233e-05,
+    "weightReal": 8.233e-05,
+    "weightedDiffImag": 2.1e-05,
+    "weightedDiffReal": 0.001996
+   },
+   {
+    "calcMinusZImag": 0.8377499411639685,
+    "calcZReal": 109.9887068744273,
+    "expMinusZImag": 0.8372798967,
+    "expZReal": 109.9224127,
+    "frequency": 1.333521432,
+    "logFreq": 0.12499999994680945,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.06,
+    "totalResidualPct": 0.06,
+    "weightImag": 8.276e-05,
+    "weightReal": 8.276e-05,
+    "weightedDiffImag": -4e-06,
+    "weightedDiffReal": -0.000603
+   },
+   {
+    "calcMinusZImag": 0.6282431301431128,
+    "calcZReal": 109.9917787147846,
+    "expMinusZImag": 0.627165402,
+    "expZReal": 109.7985153,
+    "frequency": 1.0,
+    "logFreq": 0.0,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.18,
+    "totalResidualPct": 0.18,
+    "weightImag": 8.295e-05,
+    "weightReal": 8.295e-05,
+    "weightedDiffImag": -1e-05,
+    "weightedDiffReal": -0.00176
+   },
+   {
+    "calcMinusZImag": 0.47112402459440395,
+    "calcZReal": 109.9935062204779,
+    "expMinusZImag": 0.4716822884,
+    "expZReal": 110.1192544,
+    "frequency": 0.7498942093,
+    "logFreq": -0.12500000001879652,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.11,
+    "totalResidualPct": 0.11,
+    "weightImag": 8.246e-05,
+    "weightReal": 8.246e-05,
+    "weightedDiffImag": 5e-06,
+    "weightedDiffReal": 0.001142
+   },
+   {
+    "calcMinusZImag": 0.35329661033542087,
+    "calcZReal": 109.99447769453987,
+    "expMinusZImag": 0.3538590375,
+    "expZReal": 110.1649906,
+    "frequency": 0.5623413252,
+    "logFreq": -0.2499999999925466,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.15,
+    "totalResidualPct": 0.15,
+    "weightImag": 8.24e-05,
+    "weightReal": 8.24e-05,
+    "weightedDiffImag": 5e-06,
+    "weightedDiffReal": 0.001548
+   },
+   {
+    "calcMinusZImag": 0.26493652969504655,
+    "calcZReal": 109.99502400284376,
+    "expMinusZImag": 0.2645620799,
+    "expZReal": 109.8349838,
+    "frequency": 0.4216965034,
+    "logFreq": -0.3750000000294362,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.15,
+    "totalResidualPct": 0.15,
+    "weightImag": 8.289e-05,
+    "weightReal": 8.289e-05,
+    "weightedDiffImag": -3e-06,
+    "weightedDiffReal": -0.001457
+   },
+   {
+    "calcMinusZImag": 0.19867497985175106,
+    "calcZReal": 109.9953312172015,
+    "expMinusZImag": 0.1984671851,
+    "expZReal": 109.875707,
+    "frequency": 0.316227766,
+    "logFreq": -0.5000000000231245,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.11,
+    "totalResidualPct": 0.11,
+    "weightImag": 8.283e-05,
+    "weightReal": 8.283e-05,
+    "weightedDiffImag": -2e-06,
+    "weightedDiffReal": -0.001089
+   },
+   {
+    "calcMinusZImag": 0.1489854743597875,
+    "calcZReal": 109.9955039773597,
+    "expMinusZImag": 0.1492632885,
+    "expZReal": 110.1960202,
+    "frequency": 0.2371373706,
+    "logFreq": -0.6249999999380353,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.18,
+    "totalResidualPct": 0.18,
+    "weightImag": 8.235e-05,
+    "weightReal": 8.235e-05,
+    "weightedDiffImag": 3e-06,
+    "weightedDiffReal": 0.00182
+   },
+   {
+    "calcMinusZImag": 0.11172345302386315,
+    "calcZReal": 109.99560112779838,
+    "expMinusZImag": 0.1118069351,
+    "expZReal": 110.0732041,
+    "frequency": 0.177827941,
+    "logFreq": -0.7500000000095058,
+    "resZImagPct": -0.0,
+    "resZRealPct": -0.07,
+    "totalResidualPct": 0.07,
+    "weightImag": 8.253e-05,
+    "weightReal": 8.253e-05,
+    "weightedDiffImag": 1e-06,
+    "weightedDiffReal": 0.000705
+   },
+   {
+    "calcMinusZImag": 0.08378081623399311,
+    "calcZReal": 109.9956557595877,
+    "expMinusZImag": 0.08362369164,
+    "expZReal": 109.7847913,
+    "frequency": 0.1333521432,
+    "logFreq": -0.8750000000531906,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.19,
+    "totalResidualPct": 0.19,
+    "weightImag": 8.297e-05,
+    "weightReal": 8.297e-05,
+    "weightedDiffImag": -1e-06,
+    "weightedDiffReal": -0.001921
+   },
+   {
+    "calcMinusZImag": 0.06282676825712714,
+    "calcZReal": 109.9956864813267,
+    "expMinusZImag": 0.06282160941,
+    "expZReal": 109.9820703,
+    "frequency": 0.1,
+    "logFreq": -1.0,
+    "resZImagPct": 0.0,
+    "resZRealPct": 0.01,
+    "totalResidualPct": 0.01,
+    "weightImag": 8.267e-05,
+    "weightReal": 8.267e-05,
+    "weightedDiffImag": -0.0,
+    "weightedDiffReal": -0.000124
+   }
+  ],
+  "rmse": 0.07978322914349795,
+  "success": true,
+  "terminationReason": "relative_step_and_objective_tolerance",
+  "uncertaintyStatus": "local_linearized_residual_scaled",
+  "weighting": "modulus"
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

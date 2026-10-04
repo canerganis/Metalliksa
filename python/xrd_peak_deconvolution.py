@@ -11,6 +11,14 @@ import json
 import math
 import time
 
+import numpy as np
+from scipy.optimize import least_squares
+
+# numpy/scipy are imported at module level so the persistent IPC daemon, which
+# pre-imports this module, pays their import cost at warm-up instead of on the first
+# fit; only the ad-hoc spawn fallback pays it per call. input_validation is imported
+# only when a validation error is raised.
+
 def pseudo_voigt_profile(two_theta, center, intensity, fwhm, eta):
     """
     Computes Pseudo-Voigt intensity at 2theta:
@@ -54,6 +62,152 @@ def calculate_ka2_two_theta(ka1_two_theta, wavelength_ka1=1.540598, wavelength_k
     theta2_rad = math.asin(sin_theta2)
     return math.degrees(theta2_rad) * 2.0
 
+
+def _profile_array(two_theta, center, intensity, fwhm, shape, profile_type):
+    """Vectorised pseudo_voigt_profile / pearson_vii_profile (same formulas and clamps)."""
+    delta = two_theta - center
+    if profile_type == "pseudo-voigt":
+        u = (delta / max(1e-5, fwhm / 2.0)) ** 2
+        gauss = np.exp(np.maximum(-50.0, -math.log(2.0) * u))
+        eta = max(0.0, min(1.0, shape))
+        return intensity * (eta * (1.0 / (1.0 + u)) + (1.0 - eta) * gauss)
+    m = max(0.5, min(20.0, shape))
+    c1 = 4.0 * (2.0 ** (1.0 / m) - 1.0)
+    return intensity / (1.0 + c1 * (delta / max(1e-5, fwhm)) ** 2) ** m
+
+
+# Per-start evaluation budget: converged fits here need <= ~25 evaluations; a start
+# that stalls (status 0) is cut off and loses to the other start on SSE.
+MAX_NFEV_PER_START = 200
+
+
+def _grid_start(two_theta, y_exp, x0, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
+                wavelength_ka1, wavelength_ka2, center_bounds):
+    """Data-driven start: for every observed 2theta inside the centre bounds, with the
+    guessed fwhm/shape, intensity and linear background are linear parameters, so
+    they are solved exactly (3x3 least squares, batched); the centre with the lowest
+    sum of squares and a positive intensity wins. Returns None if none qualifies."""
+    fwhm, shape = x0[2], x0[3]
+    centres = np.unique(two_theta[(two_theta >= center_bounds[0]) & (two_theta <= center_bounds[1])])
+    if centres.size == 0:
+        return None
+    peaks = np.stack([_profile_array(two_theta, c, 1.0, fwhm, shape, profile_type) for c in centres])
+    if enable_ka2:
+        peaks = peaks + np.stack([
+            _profile_array(two_theta, calculate_ka2_two_theta(c, wavelength_ka1, wavelength_ka2), ka2_ratio,
+                           fwhm * ka2_fwhm_ratio, shape, profile_type) for c in centres])
+    t_mid = float(np.mean(two_theta))
+    tc = two_theta - t_mid  # centred 2theta keeps the 3x3 systems well conditioned
+    design = np.stack([peaks, np.ones_like(peaks), np.broadcast_to(tc, peaks.shape)], axis=2)  # (C, N, 3)
+    gram = np.einsum("cni,cnj->cij", design, design)
+    rhs = np.einsum("cni,n->ci", design, y_exp)
+    ok = np.abs(np.linalg.det(gram)) > 1e-300
+    coef = np.full((centres.size, 3), np.nan)
+    coef[ok] = np.linalg.solve(gram[ok], rhs[ok][..., None])[..., 0]
+    resid = y_exp[None, :] - np.einsum("cni,ci->cn", design, np.nan_to_num(coef))
+    sse = np.where(ok & (coef[:, 0] > 0.0), np.einsum("cn,cn->c", resid, resid), np.inf)
+    best = int(np.argmin(sse))
+    if not np.isfinite(sse[best]):
+        return None
+    intensity, b0c, b1 = coef[best]
+    return [float(centres[best]), float(intensity), fwhm, shape, float(b0c - b1 * t_mid), float(b1)]
+
+
+def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
+                               wavelength_ka1, wavelength_ka2, center_bounds=(-math.inf, math.inf)):
+    """Bounded non-linear least squares (scipy trust-region reflective) for
+    [center_ka1, intensity_ka1, fwhm_ka1, eta/m, bg_0, bg_1].
+
+    Bounds are the former coordinate-search clamps: fwhm in [0.02, 3.0] deg,
+    eta in [0, 1] (pseudo-Voigt) or m in [0.8, 10] (Pearson-VII), intensity > 0;
+    plus the Ka1 centre within ``center_bounds`` (the ROI 2theta span).
+
+    Two starts are fitted: the caller's guess and a data-driven start from
+    _grid_start (a local trf fit from a guess a few tenths of a degree off the peak
+    can stall in a zero-intensity local minimum). The lower sum of squares wins
+    (the guess on a tie). Returns (solution as Python floats, info) where info
+    holds the winning start label and scipy's status, message and nfev.
+    """
+    two_theta = np.asarray(two_theta, dtype=np.float64)
+    y_exp = np.asarray(y_exp, dtype=np.float64)
+    shape_lo, shape_hi = (0.0, 1.0) if profile_type == "pseudo-voigt" else (0.8, 10.0)
+    lower = np.array([center_bounds[0], 0.0, 0.02, shape_lo, -np.inf, -np.inf])
+    upper = np.array([center_bounds[1], np.inf, 3.0, shape_hi, np.inf, np.inf])
+
+    def feasible(x):
+        x = np.clip(np.asarray(x, dtype=np.float64), lower, upper)
+        if x[1] <= 0.0:
+            x[1] = 1.0  # trf needs a strictly feasible start (intensity > 0)
+        return x
+
+    def residuals(x):
+        c1, i1, w1, shape_p, b0, b1 = x
+        model = b0 + b1 * two_theta + _profile_array(two_theta, c1, i1, w1, shape_p, profile_type)
+        if enable_ka2:
+            c2 = calculate_ka2_two_theta(c1, wavelength_ka1, wavelength_ka2)
+            model = model + _profile_array(two_theta, c2, i1 * ka2_ratio, w1 * ka2_fwhm_ratio, shape_p, profile_type)
+        return y_exp - model
+
+    starts = [("guess", feasible(x0))]
+    grid = _grid_start(two_theta, y_exp, feasible(x0), profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
+                       wavelength_ka1, wavelength_ka2, (lower[0], upper[0]))
+    if grid is not None:
+        starts.append(("grid", feasible(grid)))
+    best = None
+    for label, start in starts:
+        result = least_squares(residuals, start, bounds=(lower, upper), method="trf", x_scale="jac",
+                               ftol=1e-12, xtol=1e-12, gtol=1e-12, max_nfev=MAX_NFEV_PER_START)
+        if best is None or result.cost < best[1].cost:
+            best = (label, result)
+    label, result = best
+    info = {"start": label, "status": int(result.status), "message": str(result.message), "nfev": int(result.nfev)}
+    return [float(v) for v in result.x], info
+
+XRD_ENGINE = "MetalliX-Python-HPC-XRD-v4.0"  # v3.10 = faa6684 coordinate search
+FREE_PARAMETERS = 6  # center, intensity, fwhm, eta|m, background intercept, slope
+MINIMISER = "scipy.optimize.least_squares (trf, bounded; guess and data-driven starts)"
+
+
+def _validation_error(code, field, message, detail):
+    import input_validation
+    return input_validation.ValidationError(getattr(input_validation, code), field, message, detail)
+
+
+def _require_identifiable_roi(points):
+    """The six-parameter fit needs at least one residual degree of freedom and a
+    non-zero 2theta span; the former coordinate search returned the guess with
+    SSE 0.0 and success true for such ROIs (including an empty one)."""
+    count = len(points)
+    if count < FREE_PARAMETERS + 1:
+        raise _validation_error(
+            "OUT_OF_RANGE", "points",
+            f"at least {FREE_PARAMETERS + 1} points are needed to fit {FREE_PARAMETERS} parameters "
+            f"with one residual degree of freedom",
+            {"count": count, "minimum": FREE_PARAMETERS + 1, "freeParameters": FREE_PARAMETERS})
+    two_theta = [pt["twoTheta"] for pt in points]
+    if max(two_theta) <= min(two_theta):
+        raise _validation_error(
+            "OUT_OF_RANGE", "points", "the ROI needs a non-zero 2theta span",
+            {"minTwoTheta": min(two_theta), "maxTwoTheta": max(two_theta)})
+
+
+def _require_finite_start(start, two_theta_obs, intensity_obs, profile_type, ka2_ratio=None):
+    """The least-squares minimiser needs a finite start and finite observations
+    (the former coordinate search silently returned NaN/inf-laden "fits"). Raises
+    input_validation.ValidationError (NON_FINITE); only real-number values are
+    checked here, other types fail as before."""
+    shape_field = "eta" if profile_type == "pseudo-voigt" else "pearsonM"
+    named = [("center", start[0]), ("intensity", start[1]), ("fwhm", start[2]), (shape_field, start[3])]
+    if ka2_ratio is not None:
+        named.append(("ka2Ratio", ka2_ratio))
+    named += [(f"points[{i}].twoTheta", v) for i, v in enumerate(two_theta_obs)]
+    named += [(f"points[{i}].sampleIntensity", v) for i, v in enumerate(intensity_obs)]
+    for field, value in named:
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and not math.isfinite(value):
+            raise _validation_error("NON_FINITE", field, "must be finite for the least-squares fit",
+                                    {"value": repr(value)})
+
+
 def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
                         profile_type="pseudo-voigt", eta=0.5, pearson_m=2.0,
                         enable_ka2=True, ka2_ratio=0.5, ka2_fwhm_ratio=1.03,
@@ -62,6 +216,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
     Deconvolves a single Bragg peak region into K_alpha1, K_alpha2, and background polynomial.
     """
     start_time = time.perf_counter()
+    _require_identifiable_roi(points)
     
     # Calculate expected K_alpha2 angle
     ka2_center = calculate_ka2_two_theta(center_guess, wavelength_ka1, wavelength_ka2) if enable_ka2 else center_guess
@@ -104,7 +259,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
                 
         return bg + y_ka1 + y_ka2
 
-    # Simple Nelder-Mead / Coordinate Search local optimizer
+    # Sum of squared residuals (the reported residualSumSquares definition)
     def loss_func(params):
         c1, i1, w1, shape_p, b0, b1 = params
         if w1 <= 0.01 or i1 <= 0:
@@ -118,35 +273,28 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         return loss
 
     current_loss = loss_func(best_params)
-    step_sizes = [0.005, max(10.0, intensity_guess * 0.05), 0.01, 0.05, 10.0, 1.0]
-    
-    for _ in range(60):
-        improved = False
-        for idx in range(len(best_params)):
-            step = step_sizes[idx]
-            for direction in [-1.0, 1.0]:
-                trial = list(best_params)
-                trial[idx] += direction * step
-                
-                # Bounds clamping
-                if idx == 2: # fwhm
-                    trial[idx] = max(0.02, min(3.0, trial[idx]))
-                elif idx == 3: # eta/m
-                    if profile_type == "pseudo-voigt":
-                        trial[idx] = max(0.0, min(1.0, trial[idx]))
-                    else:
-                        trial[idx] = max(0.8, min(10.0, trial[idx]))
-                        
-                trial_loss = loss_func(trial)
-                if trial_loss < current_loss:
-                    current_loss = trial_loss
-                    best_params = trial
-                    improved = True
-                    break
-        if not improved:
-            step_sizes = [s * 0.5 for s in step_sizes]
-            if max(step_sizes) < 1e-4:
-                break
+
+    # Bounded least squares. As in the former coordinate search, the guess is kept
+    # unless the fit lowers the sum of squares (fitDiagnostics.accepted says which).
+    two_theta_obs = [pt["twoTheta"] for pt in points]
+    intensity_obs = [pt["sampleIntensity"] for pt in points]
+    _require_finite_start(best_params, two_theta_obs, intensity_obs, profile_type,
+                          ka2_ratio if enable_ka2 else None)
+    # The Ka1 centre is a peak inside this ROI: bound it to the observed 2theta span
+    # (a guess outside the span is moved to its nearest edge first, so a kept guess
+    # cannot report a centre outside the data either).
+    roi = (min(two_theta_obs), max(two_theta_obs))
+    if not roi[0] <= best_params[0] <= roi[1]:
+        best_params = [min(max(best_params[0], roi[0]), roi[1])] + best_params[1:]
+        current_loss = loss_func(best_params)
+    fitted, fit_info = _fit_profile_least_squares(
+        two_theta_obs, intensity_obs,
+        best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2,
+        center_bounds=roi)
+    fitted_loss = loss_func(fitted)
+    accepted = fitted_loss < current_loss
+    if accepted:
+        best_params, current_loss = fitted, fitted_loss
 
     # Extract deconvoluted curves
     fitted_c1, fitted_i1, fitted_w1, fitted_shape, fitted_b0, fitted_b1 = best_params
@@ -189,7 +337,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
 
     return {
         "success": True,
-        "engine": "MetalliX-Python-HPC-XRD-v3.10",
+        "engine": XRD_ENGINE,
         "computeTimeMs": compute_time_ms,
         "ka1Peak": {
             "twoTheta": round(fitted_c1, 4),
@@ -213,7 +361,18 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
             "residualSumSquares": round(current_loss, 2),
             "r_wp_pct": round(min(15.0, math.sqrt(current_loss / max(1.0, sum(p['sampleIntensity']**2 for p in points))) * 100.0), 2)
         },
-        "deconvolutionProfile": fitted_curve_profile
+        "deconvolutionProfile": fitted_curve_profile,
+        # Additive (v4.0): how the minimiser ended. status/message/nfev are scipy's
+        # for the winning start; status 0 = evaluation budget exhausted (not converged).
+        "fitDiagnostics": {
+            "minimiser": MINIMISER,
+            "start": fit_info["start"],
+            "status": fit_info["status"],
+            "message": fit_info["message"],
+            "nfev": fit_info["nfev"],
+            "dof": len(points) - FREE_PARAMETERS,
+            "accepted": accepted,
+        }
     }
 
 def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, burgers_vector_nm=0.25):
@@ -362,6 +521,11 @@ if __name__ == "__main__":
             result = deconvolve_peak_roi(points, center, intensity, fwhm, profile_type, eta, pearson_m, enable_ka2, ka2_ratio)
             print(json.dumps(result))
     except Exception as e:
+        validation = sys.modules.get("input_validation")
+        if validation is not None and isinstance(e, validation.ValidationError):
+            # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+            print(json.dumps(validation.validation_envelope(e)))
+            sys.exit(2)
         print(json.dumps({"error": str(e)}))
         sys.exit(1)
 
