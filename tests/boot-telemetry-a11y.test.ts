@@ -9,7 +9,7 @@ import { test } from "node:test";
 const read = (p: string) => readFileSync(resolve(process.cwd(), p), "utf8");
 const TOKEN_FILES = ["src/index.css", "src/styles/tokens.css"];
 const BOOT_CSS = "src/styles/boot.css";
-const NEW_TSX = ["src/components/BootSequence.tsx", "src/components/BootHero.tsx", "src/components/TelemetryStrip.tsx"];
+const NEW_TSX = ["src/components/BootSequence.tsx", "src/components/BootHero.tsx", "src/components/TelemetryStrip.tsx", "src/components/SilentBoundary.tsx"];
 const NEW_TS = ["src/utils/bootSequence.ts", "src/services/bootSteps.ts"];
 
 // Surfaces the boot screen and strip may paint on; all are covered by the token contrast gate.
@@ -118,7 +118,7 @@ test("new boot and telemetry components use no literal or palette colors and no 
   }
 });
 
-test("boot rows are a plain list with one live k/N region, the overlay reuses AccessibleModal, the hero stays lazy", () => {
+test("boot rows are a plain list with a live k/N line and a persistent announcer, the overlay reuses AccessibleModal, the hero stays lazy", () => {
   const boot = read("src/components/BootSequence.tsx");
   assert.equal((boot.match(/aria-live=/g) ?? []).length, 2, "the overlay k/N line and the persistent announcer only");
   assert.match(boot, /<p id="boot-count" className="mk-boot-count" role="status" aria-live=\{bootCountLive\(snap\.phase\)\}>/);
@@ -136,16 +136,35 @@ test("boot rows are a plain list with one live k/N region, the overlay reuses Ac
   assert.doesNotMatch(boot, /%|percent/i, "progress is a discrete k/N count, never a percent");
 });
 
-test("boot and telemetry text never claims validation or readiness (strings in any quote style and JSX text)", () => {
+/** Lines of `source` (comments removed) that claim validation or readiness. */
+function claimHits(source: string): string[] {
   const claim = /\b(validated|ready|certified|qualified)\b/i;
-  for (const file of [...NEW_TSX, ...NEW_TS]) {
-    // Whole source minus comments: covers "..." '...' `...` literals and JSX text nodes alike.
-    const code = read(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
-    const hits = code.split(/\r?\n/).filter((line) => claim.test(line));
-    assert.deepEqual(hits, [], `${file} claims validation/readiness`);
-  }
-  // Self-check: the scan sees single-quoted strings and JSX text.
-  assert.ok(claim.test("<p>Engine ready</p>") && claim.test("'validated'"));
+  // Whole source minus comments: covers "..." '...' `...` literals and JSX text nodes alike.
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+  return code.split(/\r?\n/).filter((line) => claim.test(line)).map((line) => line.trim());
+}
+
+test("the claim scan itself: finds every quote style and JSX text, ignores comments", () => {
+  const sample = [
+    "// the engine is ready (line comment, ignored)",
+    "/* validated in a block comment, ignored */",
+    "const a = 'Engine validated';",
+    'const b = "certified";',
+    "const c = `qualified ${x}`;",
+    "return <p>Engine ready</p>;",
+    "{/* ready in a JSX comment, ignored */}",
+    'const url = "http://x"; // ready after a URL string, ignored',
+  ].join("\n");
+  assert.deepEqual(claimHits(sample), [
+    "const a = 'Engine validated';",
+    'const b = "certified";',
+    "const c = `qualified ${x}`;",
+    "return <p>Engine ready</p>;",
+  ]);
+});
+
+test("boot and telemetry text never claims validation or readiness (strings in any quote style and JSX text)", () => {
+  for (const file of [...NEW_TSX, ...NEW_TS]) assert.deepEqual(claimHits(read(file)), [], `${file} claims validation/readiness`);
 });
 
 test("hero is labelled illustrative and respects DPR, visibility and disposal budgets", () => {
