@@ -37,6 +37,7 @@ import {
   convertCorrosionRate,
   convertDensity,
   computeDualUnitReport,
+  ReportHardnessScale,
 } from "../utils/metallurgicalConversions";
 import {
   HardnessMaterialClass,
@@ -180,7 +181,12 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [reportAlloyName, setReportAlloyName] = useState<string>("Ti-6Al-4V Grade 5 (Annealed)");
   const [reportYieldMpa, setReportYieldMpa] = useState<number>(880);
   const [reportUtsMpa, setReportUtsMpa] = useState<number>(950);
-  const [reportHardnessHrc, setReportHardnessHrc] = useState<number>(34);
+  // Hardness is reported in the scale it was measured in; the steel conversion runs only for non-austenitic steels
+  // (the default Ti-6Al-4V specimen is therefore not converted).
+  const [reportHardnessValue, setReportHardnessValue] = useState<number>(34);
+  const [reportHardnessScale, setReportHardnessScale] = useState<ReportHardnessScale>("HRC");
+  const [reportHardnessClass, setReportHardnessClass] = useState<HardnessMaterialClass>("titanium-alloy");
+  const [reportHardnessFromSpecimen, setReportHardnessFromSpecimen] = useState<boolean>(false);
   const [reportCvnJ, setReportCvnJ] = useState<number>(42);
   const [reportTestTempC, setReportTestTempC] = useState<number>(23);
 
@@ -189,11 +195,13 @@ export const MetallurgicalUnitConverter: React.FC = () => {
       computeDualUnitReport({
         yieldMpa: reportYieldMpa,
         utsMpa: reportUtsMpa,
-        hardnessHrc: reportHardnessHrc,
+        hardnessValue: reportHardnessValue,
+        hardnessScale: reportHardnessScale,
+        hardnessMaterialClass: reportHardnessClass,
         cvnJ: reportCvnJ,
         testTempC: reportTestTempC,
       }),
-    [reportYieldMpa, reportUtsMpa, reportHardnessHrc, reportCvnJ, reportTestTempC]
+    [reportYieldMpa, reportUtsMpa, reportHardnessValue, reportHardnessScale, reportHardnessClass, reportCvnJ, reportTestTempC]
   );
 
   const handleSyncFromActiveSpecimen = () => {
@@ -214,10 +222,11 @@ export const MetallurgicalUnitConverter: React.FC = () => {
         setHardnessInput(activeMaterialSpecimen.hardness_HV);
         setHardnessScale("HV");
         setHardnessClass(specimenClass);
-        const converted = convertHardness(activeMaterialSpecimen.hardness_HV, "HV", specimenClass);
-        if (converted.HRC !== null) {
-          setReportHardnessHrc(converted.HRC);
-        }
+        // The report keeps the specimen's own HV as the primary value (no conversion to HRC).
+        setReportHardnessValue(activeMaterialSpecimen.hardness_HV);
+        setReportHardnessScale("HV");
+        setReportHardnessClass(specimenClass);
+        setReportHardnessFromSpecimen(true);
       }
       if (activeMaterialSpecimen.name) {
         setReportAlloyName(activeMaterialSpecimen.name);
@@ -229,7 +238,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     const text = `=== METALLURGICAL TEST REPORT SUMMARY (${reportAlloyName}) ===
 Yield Strength (Rp0.2): ${reportYieldMpa} MPa [${reportCalculated.yieldKsi} ksi]
 Tensile Strength (Rm): ${reportUtsMpa} MPa [${reportCalculated.utsKsi} ksi]
-Hardness: ${reportHardnessHrc} HRC [approx. ${reportCalculated.hv ?? "n/a"} HV / ${reportCalculated.hbw ?? "n/a"} HBW, converted per ASTM E140 tables, not measured]
+Hardness: ${reportCalculated.hardnessText}
 Charpy V-Notch Impact: ${reportCvnJ} J [${reportCalculated.cvnFtLbf} ft-lbf]
 Test Condition: ${reportTestTempC} °C [${reportCalculated.tempF} °F / ${reportCalculated.tempK} K]
 Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
@@ -1426,20 +1435,61 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   <td className="py-3 px-3 font-sans font-semibold text-slate-200">
                     Indentation Hardness
                   </td>
-                  <td className="py-3 px-3 bg-sky-950/10 font-bold text-sky-300">
-                    ≈ {reportCalculated.hv ?? "n/a"} HV / {reportCalculated.hbw ?? "n/a"} HBW
-                    <span className="block text-[10px] font-normal text-slate-500">converted (ASTM E140), not measured</span>
-                  </td>
-                  <td className="py-3 px-3 bg-indigo-950/10">
+                  <td className="py-3 px-3 bg-sky-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Indentation Hardness (HRC)"
+                      <input aria-label="Indentation Hardness (measured value)"
                         type="number"
-                        value={reportHardnessHrc}
-                        onChange={(e) => setReportHardnessHrc(parseFloat(e.target.value) || 0)}
-                        className="w-24 px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-indigo-300 font-bold text-right"
+                        value={reportHardnessValue}
+                        onChange={(e) => {
+                          setReportHardnessValue(parseFloat(e.target.value) || 0);
+                          setReportHardnessFromSpecimen(false);
+                        }}
+                        className="w-24 px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-sky-400 font-bold text-right"
                       />
-                      <span className="text-slate-400">HRC</span>
+                      <select
+                        aria-label="Indentation Hardness scale"
+                        value={reportHardnessScale}
+                        onChange={(e) => {
+                          setReportHardnessScale(e.target.value as ReportHardnessScale);
+                          setReportHardnessFromSpecimen(false);
+                        }}
+                        className="px-1.5 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-slate-300"
+                      >
+                        {(["HRC", "HV", "HBW", "HRB"] as const).map((sc) => (
+                          <option key={sc} value={sc}>
+                            {sc}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+                    <select
+                      aria-label="Indentation Hardness alloy class"
+                      value={reportHardnessClass}
+                      onChange={(e) => setReportHardnessClass(e.target.value as HardnessMaterialClass)}
+                      className="mt-1.5 px-1.5 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-[10px] text-slate-300"
+                    >
+                      {HARDNESS_MATERIAL_CLASSES.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="block text-[10px] font-normal text-slate-500 mt-1">
+                      Measured value (primary).
+                      {reportHardnessFromSpecimen ? " Taken from the active specimen record; check that it is a measured value." : ""}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 bg-indigo-950/10 text-indigo-300">
+                    {reportCalculated.hardnessConverted === null ? (
+                      <span className="text-slate-500">
+                        (Converted: Unavailable{reportHardnessClass === "non-austenitic-steel" ? ", outside the verified table range" : ", no verified conversion table for this alloy class"})
+                      </span>
+                    ) : (
+                      <span className="font-bold">
+                        ({reportCalculated.hardnessConverted})
+                        <span className="block text-[10px] font-normal text-slate-500">converted (ASTM E140), not measured</span>
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-slate-500 text-[11px]">ASTM E18 / ASTM E140</td>
                 </tr>

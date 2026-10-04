@@ -170,25 +170,46 @@ test("corrosion round trip mpy -> mm/yr -> mpy", () => {
 // Dual-unit report (extracted from MetallurgicalUnitConverter.tsx)
 // ---------------------------------------------------------------------------------------------------------------
 
-test("dual-unit report: default scratchpad inputs (HRC 34 -> ASTM E140 Table 1 row 336 HV / 319 HBW)", () => {
-  assert.deepEqual(computeDualUnitReport({ yieldMpa: 880, utsMpa: 950, hardnessHrc: 34, cvnJ: 42, testTempC: 23 }), {
-    yieldKsi: 127.6,
-    utsKsi: 137.8,
-    hv: 336, // was 602 / 573 from the removed polynomial (see the hardness section below)
-    hbw: 319,
-    cvnFtLbf: 31,
-    tempF: 73.4,
-    tempK: 296.1,
-  });
-  const cold = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessHrc: 20, cvnJ: 27, testTempC: -40 });
+const steel = { hardnessScale: "HRC" as const, hardnessMaterialClass: "non-austenitic-steel" as const };
+
+test("dual-unit report: default scratchpad (Ti-6Al-4V, 34 HRC measured) is NOT converted by the steel table", () => {
+  assert.deepEqual(
+    computeDualUnitReport({ yieldMpa: 880, utsMpa: 950, hardnessValue: 34, hardnessScale: "HRC", hardnessMaterialClass: "titanium-alloy", cvnJ: 42, testTempC: 23 }),
+    {
+      yieldKsi: 127.6,
+      utsKsi: 137.8,
+      hardnessMeasured: "34 HRC",
+      hardnessConverted: null, // was 602 HV / 573 HBW (polynomial), then 336 / 319 (steel table applied to titanium)
+      hardnessText: "34 HRC (converted values: Unavailable, no verified conversion table for this alloy class)",
+      hrc: 34,
+      hv: null,
+      hbw: null,
+      cvnFtLbf: 31,
+      tempF: 73.4,
+      tempK: 296.1,
+    }
+  );
+});
+
+test("dual-unit report: non-austenitic steel shows the measured value with the E140 conversion in parentheses", () => {
+  const r = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 34, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.deepEqual([r.hrc, r.hv, r.hbw], [34, 336, 319]); // ASTM E140 Table 1 row HRC 34
+  assert.equal(r.hardnessText, "34 HRC (≈ 336 HV / 319 HBW, converted per ASTM E140 tables, not measured)");
+  const cold = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 20, ...steel, cvnJ: 27, testTempC: -40 });
   assert.equal(cold.tempF, -40);
   assert.equal(cold.tempK, 233.1); // 233.15 is stored as 233.14999.. so toFixed(1) gives 233.1
   assert.equal(cold.cvnFtLbf, 19.9);
   assert.deepEqual([cold.hv, cold.hbw], [238, 226]); // E140 Table 1, HRC 20
-  // outside HRC 20-68 the converted hardness is unavailable instead of clamped
-  const soft = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessHrc: 15, cvnJ: 0, testTempC: 0 });
-  assert.deepEqual([soft.hv, soft.hbw], [null, null]);
-  assert.equal(computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessHrc: 62, cvnJ: 0, testTempC: 0 }).hbw, null); // HBW tabulated to HRC 59
+  // outside HRC 20-68 the converted hardness is unavailable instead of clamped, and no "n/a" pair is printed
+  const soft = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 15, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.deepEqual([soft.hv, soft.hbw, soft.hardnessConverted], [null, null, null]);
+  assert.equal(soft.hardnessText, "15 HRC (converted values: Unavailable, outside the verified table range)");
+  const hrc62 = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 62, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.equal(hrc62.hbw, null); // HBW tabulated to HRC 59
+  assert.equal(hrc62.hardnessConverted, "≈ 746 HV"); // only the available scale is listed
+  // a synced specimen HV stays primary (old code replaced it by a converted HRC)
+  const hv = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 392, hardnessScale: "HV", hardnessMaterialClass: "non-austenitic-steel", cvnJ: 0, testTempC: 0 });
+  assert.equal(hv.hardnessText, "392 HV (≈ 40 HRC / 371 HBW, converted per ASTM E140 tables, not measured)");
 });
 
 // ---------------------------------------------------------------------------------------------------------------

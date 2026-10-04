@@ -2,7 +2,7 @@
  * Metallurgical Unit Conversion & Physical Property Interpretation Engine
  * Compliant with ASTM E140, ISO 18265, ASTM E112, and standard aerospace metallurgy standards.
  */
-import { convertSteelHardness } from "./hardnessConversion";
+import { HardnessMaterialClass, NO_TABLE_FOR_CLASS, convertHardness } from "./hardnessConversion";
 
 // ==========================================
 // 1. STRESS & PRESSURE CONVERSIONS
@@ -546,10 +546,16 @@ export function convertDensity(
 // ==========================================
 // 8. DUAL-UNIT TEST REPORT SCRATCHPAD (SI -> US customary + hardness)
 // ==========================================
+export type ReportHardnessScale = "HRC" | "HV" | "HBW" | "HRB";
+
 export interface DualUnitReportInputs {
   yieldMpa: number;
   utsMpa: number;
-  hardnessHrc: number;
+  /** Measured hardness value and the scale it was measured in (reported as the primary value). */
+  hardnessValue: number;
+  hardnessScale: ReportHardnessScale;
+  /** Only "non-austenitic-steel" is converted (ASTM E140 tables); other classes report the measured value only. */
+  hardnessMaterialClass: HardnessMaterialClass;
   cvnJ: number;
   testTempC: number;
 }
@@ -557,7 +563,14 @@ export interface DualUnitReportInputs {
 export interface DualUnitReport {
   yieldKsi: number;
   utsKsi: number;
-  /** Approximate HV / HBW converted from the HRC input (ASTM E140 Table 1); null outside the tabulated range. */
+  /** Measured hardness, e.g. "34 HRC". */
+  hardnessMeasured: string;
+  /** Converted estimates of the other scales, e.g. "≈ 336 HV / 319 HBW"; null when none is available. */
+  hardnessConverted: string | null;
+  /** Measured value with the converted estimate (or the reason it is unavailable) in parentheses. */
+  hardnessText: string;
+  /** Converted values (null = unavailable); the measured scale echoes the input. */
+  hrc: number | null;
   hv: number | null;
   hbw: number | null;
   cvnFtLbf: number;
@@ -565,17 +578,34 @@ export interface DualUnitReport {
   tempK: number;
 }
 
+const REPORT_HARDNESS_ORDER: ReportHardnessScale[] = ["HRC", "HV", "HBW"];
+
 export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitReport {
-  const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, hardnessHrc: reportHardnessHrc, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
+  const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
   const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
   const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
-  const hState = convertSteelHardness(reportHardnessHrc, "HRC");
+  const hState = convertHardness(inputs.hardnessValue, inputs.hardnessScale, inputs.hardnessMaterialClass);
+  const hardnessMeasured = `${inputs.hardnessValue} ${inputs.hardnessScale}`;
+  const parts = REPORT_HARDNESS_ORDER.filter((sc) => sc !== inputs.hardnessScale)
+    .map((sc) => (hState[sc] === null ? null : `${hState[sc]} ${sc}`))
+    .filter((t): t is string => t !== null);
+  const hardnessConverted = parts.length > 0 ? `≈ ${parts.join(" / ")}` : null;
+  const reason =
+    inputs.hardnessMaterialClass === "non-austenitic-steel" ? "outside the verified table range" : NO_TABLE_FOR_CLASS.replace(/^Unavailable: /, "");
+  const hardnessText =
+    hardnessConverted === null
+      ? `${hardnessMeasured} (converted values: Unavailable, ${reason})`
+      : `${hardnessMeasured} (${hardnessConverted}, converted per ASTM E140 tables, not measured)`;
   const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
   const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
   const tempK = Number((reportTestTempC + 273.15).toFixed(1));
   return {
     yieldKsi,
     utsKsi,
+    hardnessMeasured,
+    hardnessConverted,
+    hardnessText,
+    hrc: hState.HRC,
     hv: hState.HV,
     hbw: hState.HBW,
     cvnFtLbf,
