@@ -112,7 +112,10 @@
 @keyframes mkBootRowIn { from { transform: translateY(4px); } to { transform: none; } }
 @keyframes mkBootPulse { from { opacity: 1; } to { opacity: 0.45; } }
 
-/* Telemetry strip: every cell shows a value returned by an API, or "unavailable". */
+/* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
+ * In-flow footer at the end of the shell, deliberately NOT sticky: module modals are not portalled
+ * (fixed inset-0 z-50 inside the shell's z-index:1 children), so a sticky strip would paint over
+ * their bottom action buttons. */
 .mk-telemetry {
   padding: var(--mk-space-2) var(--mk-space-4);
   border-top: 1px solid var(--mk-border);
@@ -121,13 +124,6 @@
   font-family: var(--mk-font-mono);
   font-size: var(--mk-fs-2xs);
   font-variant-numeric: tabular-nums;
-}
-/* Beats index.css ".mk-shell > *:not(...)" (position: relative; z-index: 1) so the strip stays on top. */
-.mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { z-index: 30; }
-@media (min-width: 1024px) {
-  .mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { position: sticky; bottom: 0; }
-  /* Keep the last sidebar entry scrollable above the sticky strip. */
-  .mk-sidebar { padding-bottom: var(--mk-space-7); }
 }
 .mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-5); }
 .mk-telemetry dl > div { display: flex; gap: var(--mk-space-2); }
