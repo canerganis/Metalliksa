@@ -22,7 +22,7 @@ _erf_ufunc = np.frompyfunc(math.erf, 1, 1)
 def _erf(arr):
     return np.asarray(_erf_ufunc(arr), dtype=np.float64)
 
-MODEL_ID = "goldak-total-power-v2"
+MODEL_ID = "goldak-half-space-v3"
 _GL_N = 56
 _GL_XI, _GL_W = leggauss(_GL_N)
 
@@ -37,12 +37,17 @@ def goldak_fractions(af_m: float, ar_m: float) -> tuple[float, float]:
 
 
 def goldak_q_parameter_W(total_power_W: float) -> float:
-    """Return Goldak's Q coefficient for a requested physical total power.
+    """Return Goldak's Q coefficient for the power absorbed by the body.
 
-    With the standard 6√3 prefactor and ff + fr = 2, integrating the two
-    half-ellipsoids gives 2Q. The analytic field therefore uses Q=total/2.
+    Q is the power deposited in the half-space body z >= 0 (Goldak 1984): with the
+    6√3 prefactor and ff + fr = 2, each half-ellipsoid integrates to f_i·Q/2 over
+    z >= 0, so the two together give exactly Q. Integrating the same q over all z
+    gives 2Q, but that doubling is the image source that makes z = 0 adiabatic
+    (Fachinotti Remark II): the analytic full-space field IS the half-space solution
+    for a body receiving Q. Q must therefore NOT be halved; the far field tends to
+    Rosenthal(P_absorbed). (goldak-total-power-v2 halved it: a factor-2 power error.)
     """
-    return 0.5 * float(total_power_W)
+    return float(total_power_W)
 
 
 def seed_goldak_axes(r0_m: float) -> dict:
@@ -70,8 +75,8 @@ class GoldakField:
         c_m: float,
     ):
         self.T0_C = float(T0_C)
-        # Public input is physical total source power; the conventional
-        # Goldak coefficient integrates to twice Q when ff + fr = 2.
+        # Public input is the absorbed power deposited in the half-space body;
+        # see goldak_q_parameter_W (no halving; the full-space 2Q is the image source).
         self.Q_W = goldak_q_parameter_W(Q_W)
         self.rho_cp = max(1.0, float(rho) * float(cp))
         self.alpha = max(1e-12, float(alpha_th))

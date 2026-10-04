@@ -6,11 +6,12 @@ lpbf_thermal_solver.calculate_meltpool_physics takes:
 
 - GPU path: powder_bed_raytracer (NVIDIA warp, device "cuda:0") ray-traces the
   powder bed and returns an effective conduction absorptivity (0.581 for the
-  NIST case below on an RTX 4060, warp 1.17.0), giving width 102.2 um.
+  NIST case below on an RTX 4060, warp 1.17.0), giving width 102.2 um with the
+  goldak-total-power-v2 kernel (Q = P/2); the v3 half-space kernel has not been run on a GPU host.
 - CPU fallback: when that import/launch fails the solver prints
   "Warning: GPU Powder Bed Ray Tracing failed, using flat plate absorptivity."
   and uses the material's flat-plate absorptivity (IN718 IR: 0.38), giving
-  width 81.7 um. This is the path on the CPU lock (Docker verify stage,
+  width 117.4 um (v2 kernel: 81.7 um). This is the path on the CPU lock (Docker verify stage,
   GitHub `python` job) and on any host without warp + CUDA.
 
 The NIST width band check is skipped ONLY when the ray tracer cannot run on
@@ -41,7 +42,7 @@ NIST_WIDTH_UM = 136.3
 NIST_DEPTH_UM = 139.7
 NIST_CASE = ("Inconel 718", 285, 960, 67, 23.5, 40, 110)
 FALLBACK_WARNING = "GPU Powder Bed Ray Tracing failed, using flat plate absorptivity"
-GPU_SKIP_REASON = "requires GPU warp ray tracing; CPU fallback underpredicts width"
+GPU_SKIP_REASON = "requires GPU warp ray tracing; CPU fallback uses the flat-plate absorptivity"
 
 
 def _goldak_nist(force_flat_plate=False):
@@ -118,7 +119,7 @@ class GoldakMeltPoolPathIndependentTests(unittest.TestCase):
 
     def test_nist_case_models_depth_recoil_marangoni(self):
         gk, _ = _goldak_nist()
-        self.assertEqual(gk["modelId"], "goldak-total-power-v2", "goldak model id")
+        self.assertEqual(gk["modelId"], "goldak-half-space-v3", "goldak model id")
         self.assertEqual(gk["keyholeModel"]["modelId"], "fabbro-keyhole-v1", "fabbro on goldak path")
         self.assertLess(abs(gk["keyholeModel"]["absorptivity"] - 0.38), 0.02, "Fabbro A is Fresnel, not eta_eff")
         D = gk["meltPoolGeometry"]["depth_um"]
@@ -141,7 +142,7 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
         unavailable = _gpu_raytrace_unavailable_reason()
         if unavailable is not None:
             reason = (
-                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 81.7 um vs NIST {NIST_WIDTH_UM} um; "
+                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 117.4 um vs NIST {NIST_WIDTH_UM} um; "
                 "see GoldakCpuFallbackTests)"
             )
             if os.environ.get("METALLIKSA_REQUIRE_GPU_RAYTRACE") == "1":
@@ -161,7 +162,7 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
 class GoldakCpuFallbackTests(unittest.TestCase):
     """Pins the documented flat-plate fallback (forced, so it runs on every host).
 
-    The fallback width (81.7 um) is about 40% below the NIST value (136.3 um,
+    The fallback width (117.4 um; 81.7 um with the v2 kernel) is 14% below the NIST value (136.3 um,
     ratio 0.60) and outside the 0.70-1.40 band. It is NOT claimed to match NIST;
     this test only pins what the CPU path reports and that it says so.
     """
@@ -176,7 +177,7 @@ class GoldakCpuFallbackTests(unittest.TestCase):
                                msg="fallback conduction absorptivity is the flat-plate value")
         self.assertAlmostEqual(pp["fabbroAbsorptivity"], round(flat, 3), places=9)
         W = gk["meltPoolGeometry"]["width_um"]
-        self.assertAlmostEqual(W, 81.7, delta=0.5, msg=f"flat-plate fallback width {W}")
+        self.assertAlmostEqual(W, 117.4, delta=0.5, msg=f"flat-plate fallback width {W}")
         self.assertAlmostEqual(gk["meltPoolGeometry"]["depth_um"], 123.9, delta=0.5)
 
 

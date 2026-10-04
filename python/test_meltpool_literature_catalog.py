@@ -26,7 +26,7 @@ def goldak_score(t):
         t["material"], t["laserPower_W"], t["scanSpeed_mm_s"], t["beamDiameter_um"],
         t["preheatTemp_C"], t_um, h_um, heat_source="goldak",
     )
-    assert_true(r["modelId"] == "goldak-total-power-v2", "heat source")
+    assert_true(r["modelId"] == "goldak-half-space-v3", "heat source")
     s = score_track(r["meltPoolGeometry"]["width_um"], r["meltPoolGeometry"]["depth_um"], t)
     s["pred_W"] = r["meltPoolGeometry"]["width_um"]
     s["pred_D"] = r["meltPoolGeometry"]["depth_um"]
@@ -71,17 +71,21 @@ def main():
         assert_true(guo_scores[gid]["pass"], f"{gid} {guo_scores[gid]}")
 
     n01 = guo_scores["guo-316l-n01"]
-    # Correct total-power normalization moves N01 depth inside the unchanged
-    # broad screening band. This is not an exact process match or validation.
-    assert_true(n01["pass"], f"Guo N01 outside the unchanged ×0.5–2 band {n01}")
+    # Guo N01 (260 W, 0.52 m/s) is a keyhole track (measured D 180 µm). The conduction
+    # Goldak field plus Fabbro depth does NOT reach it: this is a REPORTED FAILURE of the
+    # screening model, kept explicit on purpose (RULES: report the failing benchmark, never
+    # widen the band). The half-space kernel moved N04 and N06 into the band; N01 stays out.
+    assert_true(n01["widthInBand"], f"Guo N01 width unexpectedly outside the band {n01}")
+    assert_true(not n01["depthInBand"] and not n01["pass"],
+                f"Guo N01 depth unexpectedly inside the band; update this reported failure: {n01}")
     print(
-        "REPORT: Guo N01 inside the broad ×0.5–2 screening band, not validated "
-        f"(pred {n01['pred_D']} µm vs 180 µm, MAPE {n01['depth_mape_pct']}%) — not fitted"
+        "REPORTED FAILURE: Guo N01 keyhole depth outside the ×0.5–2 screening band "
+        f"(pred {n01['pred_D']} µm vs 180 µm, MAPE {n01['depth_mape_pct']}%) — conduction screening, not fitted"
     )
 
     ros = calculate_meltpool_physics("Inconel 718", 285, 960, 80, 80, 40, 110)
     assert_true(ros["modelId"] == "rosenthal-screening-v1", "Build Job heat source unchanged")
-    print(f"PASS: literature catalog Goldak+Fabbro ({nist_pass} NIST + Guo N04/N05/N06; N01 depth reported)")
+    print(f"PASS: literature catalog Goldak+Fabbro ({nist_pass} NIST + Guo N04/N05/N06; N01 depth is a reported failure)")
     return 0
 
 
