@@ -13,15 +13,21 @@ lpbf_thermal_solver.calculate_meltpool_physics takes:
   width 81.7 um. This is the path on the CPU lock (Docker verify stage,
   GitHub `python` job) and on any host without warp + CUDA.
 
-The NIST width band check therefore only runs when the ray-tracing path was
-actually taken; otherwise it is skipped with an explicit reason. The fallback
-behaviour is pinned separately and is NOT claimed to match NIST.
-The Fabbro keyhole depth (and the Goldak+Fabbro depth) is the same on both
-paths, so the depth checks always run.
+The NIST width band check is skipped ONLY when the ray tracer cannot run on
+this host: `import warp` fails or warp reports no CUDA device. Where warp and a
+CUDA device are present, the ray-tracing path must be taken: if the solver falls
+back to the flat plate (any ray-tracer exception), the test FAILS.
+METALLIKSA_REQUIRE_GPU_RAYTRACE=1 turns the skip into a failure (for a GPU host
+that must check the width). Under GitHub Actions a skipped width check also
+prints a `::warning::` annotation. The fallback behaviour is pinned separately
+and is NOT claimed to match NIST.
+For this NIST case the Fabbro keyhole depth (and the Goldak+Fabbro depth) is the
+same on both paths (123.9 um), so the depth checks always run.
 """
 import contextlib
 import io
 import math
+import os
 import sys
 import unittest
 from unittest import mock
@@ -49,6 +55,21 @@ def _goldak_nist(force_flat_plate=False):
         stack.enter_context(contextlib.redirect_stdout(out))
         gk = calculate_meltpool_physics(*NIST_CASE, heat_source="goldak")
     return gk, out.getvalue()
+
+
+def _gpu_raytrace_unavailable_reason():
+    """None when warp imports and reports a CUDA device; otherwise why the ray tracer cannot run here."""
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out):  # warp prints an init banner
+            import warp as wp
+            wp.init()
+            count = wp.get_cuda_device_count() if wp.is_cuda_available() else 0
+    except Exception as exc:  # ImportError, or a warp/CUDA initialisation failure
+        return f"warp is not usable ({type(exc).__name__}: {exc})"
+    if count < 1:
+        return "warp reports no CUDA device"
+    return None
 
 
 def _flat_plate_absorptivity():
@@ -101,7 +122,7 @@ class GoldakMeltPoolPathIndependentTests(unittest.TestCase):
         self.assertEqual(gk["keyholeModel"]["modelId"], "fabbro-keyhole-v1", "fabbro on goldak path")
         self.assertLess(abs(gk["keyholeModel"]["absorptivity"] - 0.38), 0.02, "Fabbro A is Fresnel, not eta_eff")
         D = gk["meltPoolGeometry"]["depth_um"]
-        # Same value (123.9 um) with and without the ray tracer.
+        # For this NIST case: the same value (123.9 um) with and without the ray tracer.
         self.assertTrue(0.70 * NIST_DEPTH_UM <= D <= 1.40 * NIST_DEPTH_UM, f"Goldak+Fabbro NIST depth {D}")
         recoil = gk["hydrodynamicsAndRecoil"]["knudsenRecoilPressure_kPa"]
         self.assertTrue(20.0 <= recoil <= 120.0, f"Knight recoil at Tv {recoil}")
@@ -117,15 +138,23 @@ class GoldakMeltPoolPathIndependentTests(unittest.TestCase):
 
 class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
     def test_nist_width_in_band_with_ray_tracing(self):
-        gk, stdout = _goldak_nist()
-        W = gk["meltPoolGeometry"]["width_um"]
-        if _used_flat_plate(gk, stdout):
+        unavailable = _gpu_raytrace_unavailable_reason()
+        if unavailable is not None:
             reason = (
-                f"{GPU_SKIP_REASON} (flat-plate width {W} um vs NIST {NIST_WIDTH_UM} um; "
+                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 81.7 um vs NIST {NIST_WIDTH_UM} um; "
                 "see GoldakCpuFallbackTests)"
             )
+            if os.environ.get("METALLIKSA_REQUIRE_GPU_RAYTRACE") == "1":
+                self.fail(f"METALLIKSA_REQUIRE_GPU_RAYTRACE=1 but {reason}")
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                print(f"::warning title=Goldak NIST width check skipped::{reason}", flush=True)
             print(f"SKIP test_nist_width_in_band_with_ray_tracing: {reason}", file=sys.stderr)
             self.skipTest(reason)
+        gk, stdout = _goldak_nist()
+        W = gk["meltPoolGeometry"]["width_um"]
+        # warp and a CUDA device are present, so a flat-plate result means the ray tracer raised.
+        self.assertFalse(_used_flat_plate(gk, stdout),
+                         f"GPU ray tracing is available but the solver fell back to the flat plate: {stdout.strip()}")
         self.assertTrue(0.70 * NIST_WIDTH_UM <= W <= 1.40 * NIST_WIDTH_UM, f"Goldak NIST width {W}")
 
 
