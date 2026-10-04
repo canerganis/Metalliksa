@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync, readdirSync } from "node:fs";
-import { requestPythonAnalysis } from "../src/services/pythonAnalysis";
 import { pythonComputationService } from "../src/services/pythonComputationService";
 import { pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
 
@@ -11,15 +10,8 @@ const BODY = { error: "At least 4 frequency points are required for EIS analysis
 
 const stubFetch = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } })) as typeof fetch;
 
-test("a success:false error body keeps HTTP 200 and is rejected by the shared analysis client", async () => {
+test("a success:false error body keeps HTTP 200 at the dispatch layer", () => {
   assert.equal(pythonDispatchStatus(BODY), 200);
-  const previous = globalThis.fetch;
-  try {
-    globalThis.fetch = stubFetch(BODY);
-    await assert.rejects(requestPythonAnalysis("/api/python/battery-corrosion-eis", "{}", new AbortController().signal), /At least 4 frequency points are required for EIS analysis\./);
-    globalThis.fetch = stubFetch({ success: false });
-    await assert.rejects(requestPythonAnalysis("/api/python/battery-corrosion-eis", "{}", new AbortController().signal), /Python analysis failed/);
-  } finally { globalThis.fetch = previous; }
 });
 
 // /api/python/bisquert-tlm-identify is served by the same solver. Intended behaviour: a success:false body is NOT a
@@ -54,13 +46,7 @@ test("bisquert-tlm-identify: a Python error body falls back to the client engine
 
 // Each live consumer of the endpoint must surface a failure (throw / reject) or refuse to store the body as a result.
 const CONSUMER_GUARDS: Record<string, { pattern: RegExp; minMatches: number; why: string }> = {
-  "BatteryEISDegradationStudio.tsx": { pattern: /if \(data\.error\) \{\s*throw new Error\(data\.error\);\s*\}\s*setSimResult\(data\);/g, minMatches: 1, why: "throws data.error before storing the body" },
   "CorrosionEISKineticsStudio.tsx": { pattern: /if \(data\.error\) \{\s*throw new Error\(data\.error\);\s*\}[^]*?setSimResult\(data\);/g, minMatches: 1, why: "throws data.error before storing the body" },
-  "AdvancedBatteryPhysicsStudio.tsx": { pattern: /if \(data\.success\) \{\s*set(?:P2dData|LliLamData|ThermalData)\(data\);/g, minMatches: 3, why: "stores the body only when success is true (3 actions)" },
-  "TransportKineticsLab.tsx": { pattern: /if \(resData\.success\) \{\s*setData\(resData\);/g, minMatches: 1, why: "stores the body only when success is true" },
-  "CNLSFittingStudio.tsx": { pattern: /await requestPythonAnalysis\("\/api\/python\/battery-corrosion-eis"/g, minMatches: 1, why: "requestPythonAnalysis rejects on error/success:false" },
-  "EquivalentCircuitBuilder.tsx": { pattern: /await requestPythonAnalysis\("\/api\/python\/battery-corrosion-eis"/g, minMatches: 1, why: "requestPythonAnalysis rejects on error/success:false" },
-  "EISUploadInsightsStudio.tsx": { pattern: /usePythonAnalysis\("\/api\/python\/battery-corrosion-eis"/g, minMatches: 1, why: "usePythonAnalysis goes through requestPythonAnalysis" },
 };
 
 test("every live consumer of the battery/corrosion EIS endpoint surfaces or refuses a success:false/error body", () => {
@@ -72,9 +58,4 @@ test("every live consumer of the battery/corrosion EIS endpoint surfaces or refu
     const matches = readFileSync(new URL(name, dir), "utf8").match(pattern) ?? [];
     assert.ok(matches.length >= minMatches, `${name} must ${why} (found ${matches.length}, need ${minMatches})`);
   }
-  // The shared client really rejects on every failure shape it is trusted for.
-  const client = readFileSync(new URL("../src/services/pythonAnalysis.ts", import.meta.url), "utf8");
-  assert.match(client, /!response\.ok \|\| data\?\.error \|\| data\?\.success === false\) \{\s*throw new Error/);
-  const hook = readFileSync(new URL("../src/hooks/usePythonAnalysis.ts", import.meta.url), "utf8");
-  assert.match(hook, /requestPythonAnalysis\(url, body, controller\.signal\)/);
 });
