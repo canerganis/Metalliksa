@@ -13,6 +13,21 @@ import math
 import cmath
 import time
 
+import physical_constants
+from alloy_data_calphad_battery_icme import (
+    LEGACY_F_96485_33,
+    LEGACY_F_96485_332,
+    LEGACY_R_8_314,
+    LEGACY_R_8_31446,
+    provenance as _domain_data_provenance,
+)
+
+# Phase 6a structural step (a): every R/F site keeps the exact number it used before
+# the migration (8.314, 8.31446, 8.314462618; 96485.332, 96485.33, 96485.33212), now
+# named in alloy_data_calphad_battery_icme / physical_constants, so the output stays
+# bit-identical. The switch to the exact SI products is the value step (b).
+ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
+
 # ==========================================
 # 1. DRT (Distribution of Relaxation Times) Engine
 # ==========================================
@@ -155,9 +170,9 @@ def simulate_p2d_continuum_profiles(chemistry_id, c_rate, temp_c, soc=0.5, custo
     if custom_params is None:
         custom_params = {}
         
-    t_k = temp_c + 273.15
-    f_const = 96485.332 # C/mol
-    r_gas = 8.314 # J/(mol*K)
+    t_k = temp_c + ZERO_CELSIUS_K
+    f_const = LEGACY_F_96485_332.value # C/mol (96485.332)
+    r_gas = LEGACY_R_8_314.value # J/(mol*K) (8.314)
     
     # Standard cell geometry (microns)
     l_neg = custom_params.get("l_neg_um", 85.0) # Anode thickness
@@ -523,8 +538,8 @@ def simulate_bernardi_thermal_multiphysics(cell_format, nominal_cap_ah, c_rate, 
     num_steps = 60
     dt = discharge_time_s / num_steps
     
-    t_core = temp_ambient_c + 273.15
-    t_surf = temp_ambient_c + 273.15
+    t_core = temp_ambient_c + ZERO_CELSIUS_K
+    t_surf = temp_ambient_c + ZERO_CELSIUS_K
     
     thermal_timeline = []
     
@@ -551,7 +566,7 @@ def simulate_bernardi_thermal_multiphysics(cell_format, nominal_cap_ah, c_rate, 
         q_dot_total = q_dot_joule + q_dot_rev + q_dot_pol
         
         # Heat dissipation to ambient: Q_out = h * A * (T_surf - T_amb)
-        q_dot_dissipated = h_cooling * area * (t_surf - (temp_ambient_c + 273.15))
+        q_dot_dissipated = h_cooling * area * (t_surf - (temp_ambient_c + ZERO_CELSIUS_K))
         
         # Internal thermal conduction resistance (core to surface)
         r_th_internal = 0.45 / (cell_spec["k_radial"] * area + 1e-6) # K/W
@@ -574,8 +589,8 @@ def simulate_bernardi_thermal_multiphysics(cell_format, nominal_cap_ah, c_rate, 
         thermal_timeline.append({
             "time_s": round(t_sec, 1),
             "soc": round(soc, 3),
-            "t_core_c": round(t_core - 273.15, 2),
-            "t_surface_c": round(t_surf - 273.15, 2),
+            "t_core_c": round(t_core - ZERO_CELSIUS_K, 2),
+            "t_surface_c": round(t_surf - ZERO_CELSIUS_K, 2),
             "delta_t_c": round(t_core - t_surf, 2),
             "q_joule_w": round(q_dot_joule, 2),
             "q_rev_w": round(q_dot_rev, 2),
@@ -617,8 +632,8 @@ def simulate_battery_degradation_and_eis(chemistry_id, initial_params, cycles, t
     Simulates multi-cycle SEI growth, transition metal dissolution, impedance rise,
     and fast-charging lithium plating risk over cycling.
     """
-    t_kelvin = temp_c + 273.15
-    r_gas = 8.314 # J/(mol*K)
+    t_kelvin = temp_c + ZERO_CELSIUS_K
+    r_gas = LEGACY_R_8_314.value # J/(mol*K) (8.314)
     
     # Baseline Parameters
     r0_base = initial_params.get("r0_ohm", 0.12)
@@ -957,9 +972,9 @@ def simulate_nernst_planck_poisson_transport(formulation_id="lipf6_ec_emc", curr
     form = ELECTROLYTE_FORMULATIONS.get(formulation_id, ELECTROLYTE_FORMULATIONS["lipf6_ec_emc"])
     
     # Constants
-    F = 96485.33212 # C/mol
-    R = 8.314462618 # J/(mol*K)
-    T = temp_c + 273.15 # Kelvin
+    F = physical_constants.TRUNCATED_FARADAY # C/mol (96485.33212)
+    R = physical_constants.TRUNCATED_GAS_CONSTANT_R # J/(mol*K) (8.314462618)
+    T = temp_c + ZERO_CELSIUS_K # Kelvin
     EPS_0 = 8.8541878128e-12 # F/m
     
     c_bulk_M = custom_c_bulk if custom_c_bulk is not None else form["c_bulk_M"]
@@ -1751,9 +1766,9 @@ def analyze_uploaded_eis_dataset(frequencies, z_real, z_imag, application_domain
     
     # 3. Exchange Current Density I_0
     # I_0 = (R * T) / (n * F * R_ct)
-    R_gas = 8.31446
-    F_const = 96485.33
-    T_kelvin = cell_temperature_c + 273.15
+    R_gas = LEGACY_R_8_31446.value  # 8.31446
+    F_const = LEGACY_F_96485_33.value  # 96485.33
+    T_kelvin = cell_temperature_c + ZERO_CELSIUS_K
     i_0_A = (R_gas * T_kelvin) / (1.0 * F_const * max(1e-6, r_ct_ohm))
     
     # 4. Low-Frequency Warburg Diffusion Analysis
@@ -2009,7 +2024,7 @@ if __name__ == "__main__":
     try:
         raw = sys.stdin.read()
         if not raw.strip():
-            print(json.dumps({"error": "Empty input payload"}))
+            print(json.dumps({"error": "Empty input payload", "errorKind": "internal"}))
             sys.exit(1)
             
         data = json.loads(raw)
@@ -2101,9 +2116,19 @@ if __name__ == "__main__":
             
         elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         res["pythonDurationMs"] = elapsed_ms
+        # Pre-existing behaviour kept in Phase 6a step (a): success is set to True even
+        # when res carries an "error" (e.g. an unknown action).
         res["success"] = True
+        if "error" not in res:
+            # Phase 6a provenance (constants version and domain-data version)
+            res["provenance"] = {
+                "constantsVersion": physical_constants.CONSTANTS_VERSION,
+                **_domain_data_provenance(),
+                "constantsNote": "Per-site rounded/truncated R and F (pre-migration values); "
+                                 "exact SI values are pending the Phase 6a value step.",
+            }
         print(json.dumps(res))
         
     except Exception as e:
-        print(json.dumps({"error": str(e), "success": False}))
+        print(json.dumps({"error": str(e), "success": False, "errorKind": "internal"}))
         sys.exit(1)
