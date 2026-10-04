@@ -29,8 +29,7 @@ import { mapActionableReasons, modelHonestyLine, toActionableHeadline } from "..
 import { heatTreatmentCohorts, orientationCohorts } from "../../utils/lpbfFourAlloySchema";
 import type { PythonLpbfScreeningGate } from "../../services/pythonComputationService";
 import { LPBF_DEMO_VECTORS } from "../../utils/lpbfDemoVectors";
-import { kineticsHardnessText } from "../../utils/kineticsHardnessDisplay";
-import { UNAVAILABLE_TEXT } from "../../utils/hardnessConversion";
+import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -56,8 +55,6 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
   const thermal = job?.thermal ?? null;
   const slicer = job?.slicer ?? null;
   const decision = job?.verdict ?? null;
-  // First CCT row of the in-process kinetics result; null HV (non-steel, or HRC outside E140 20-68) -> "Unavailable".
-  const kineticsHardness = kineticsHardnessText(job?.kinetics?.cctContinuousCoolingMap?.[0]);
   const litWindow = job?.verdict?.literatureWindow;
   const htCohorts = useMemo(() => heatTreatmentCohorts(materials.alloyId), [materials.alloyId]);
   const oriCohorts = useMemo(() => orientationCohorts(materials.alloyId), [materials.alloyId]);
@@ -648,25 +645,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               <p className="text-[9px] text-slate-500 mt-1">{job.microstructure.disclaimer}</p>
             </div>
           )}
-          {job?.kinetics && job?.kinetics.calphadVsKineticsGap && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-rose-400" />
-                <h3 className="text-xs font-bold text-white">Phase Transformation Kinetics</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Metric label="Primary Phase" value={job.kinetics.cctContinuousCoolingMap?.[0]?.primaryMicrostructure ?? "—"} hint="From CCT map" />
-                <Metric label="Martensite" value={`${job.kinetics.calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct}%`} hint="Metastable fraction" />
-                <Metric label="Hardness (HRC)" value={kineticsHardness.hrcValue} hint="Predicted at RT" />
-                <Metric
-                  label="Hardness (HV)"
-                  value={kineticsHardness.hvValue}
-                  hint={kineticsHardness.hvValue === UNAVAILABLE_TEXT ? "No verified HV conversion" : "ASTM E140 from HRC"}
-                />
-              </div>
-              <p className="text-[9px] text-slate-500 mt-1">{job.kinetics.calphadVsKineticsGap.kineticRealityAtSelectedCooling.verdict}</p>
-            </div>
-          )}
+          <BuildJobKineticsPanel kinetics={job?.kinetics} />
         </div>
       )}
 
