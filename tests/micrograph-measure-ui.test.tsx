@@ -14,11 +14,10 @@ import {
   greyFromRgba,
   manualCounts,
   runBlocker,
-  syntheticDiscs,
-  syntheticSquareGrid,
   unpackMask,
   unsupportedImageReason,
   type CalibrationInput,
+  type GreyImage,
 } from "../src/utils/micrographInput";
 
 // Micrograph rework, W3: the view decodes and assembles inputs, python/micrograph_measure.py computes. These tests
@@ -76,13 +75,26 @@ function mockResult(calibrated: boolean): MicrographMeasureResult {
   };
 }
 
+// Test-only image: 200 x 200 square grains (pitch 25 px, 2 px boundaries at 12-13, 37-38, ...) above a 40-row data bar
+// with a 100 px scale bar at row 220 (x 50-150). The view itself offers no built-in images.
+function testGrid(): GreyImage & { dataBarRows: number; scaleBar: { x1: number; x2: number; y: number; lengthUm: number } } {
+  const width = 200, height = 240, grey = new Uint8Array(width * height).fill(200);
+  for (let k = 0; k < 8; k++) {
+    const c = k * 25 + 12;
+    for (let y = 0; y < 200; y++) for (const x of [c, c + 1]) grey[y * width + x] = 40;
+    for (const y of [c, c + 1]) for (let x = 0; x < width; x++) grey[y * width + x] = 40;
+  }
+  for (let y = 200; y < height; y++) for (let x = 0; x < width; x++) grey[y * width + x] = y >= 218 && y < 222 && x >= 50 && x <= 150 ? 255 : 0;
+  return { width, height, grey, wasColour: false, dataBarRows: 40, scaleBar: { x1: 50, x2: 150, y: 220, lengthUm: 50 } };
+}
+
 const scaleBar = (segment: { x1: number; y1: number; x2: number; y2: number } | null, barValue: number): CalibrationInput =>
   ({ mode: "scale-bar", segment, barValue, barUnit: "µm" });
 
 test("the run stays blocked until an image and a calibration exist", () => {
-  const grid = syntheticSquareGrid();
+  const grid = testGrid();
   const dark = { ...DEFAULT_SETTINGS, dark: { ...DEFAULT_SETTINGS.dark, enabled: true } };
-  assert.match(runBlocker(null, scaleBar(null, NaN), dark, null)!, /Load an image/);
+  assert.match(runBlocker(null, scaleBar(null, NaN), dark, null)!, /Load a micrograph image/);
   assert.match(runBlocker(grid, scaleBar(null, 50), dark, null)!, /^Calibration required: Draw the caliper/);
   assert.match(runBlocker(grid, scaleBar({ x1: 50, y1: 220, x2: 150, y2: 220 }, NaN), dark, null)!, /^Calibration required: Enter the scale-bar length/);
   assert.match(runBlocker(grid, { mode: "pixel-size", umPerPx: 0.5, note: " " }, dark, null)!, /^Calibration required: State where/);
@@ -118,7 +130,7 @@ test("uncalibrated results render every length and G as unavailable with the rea
 });
 
 test("request assembly: calibration, crop, classes and manual counts; image bytes are the grey bytes", () => {
-  const grid = syntheticSquareGrid();
+  const grid = testGrid();
   const settings = { ...DEFAULT_SETTINGS, crop: { ...DEFAULT_SETTINGS.crop, bottom: grid.dataBarRows },
     grains: { enabled: true, boundaryMaxGrey: 120 } };
   const cal = scaleBar({ x1: grid.scaleBar.x1, y1: grid.scaleBar.y, x2: grid.scaleBar.x2, y2: grid.scaleBar.y }, 50);
@@ -141,7 +153,7 @@ test("request assembly: calibration, crop, classes and manual counts; image byte
 test("export record carries the calibration source, both SHA-256 values and no image bytes or masks", () => {
   const result = mockResult(true);
   result.classes.dark!.maskPackedBase64 = "AAAA";
-  const grid = syntheticSquareGrid();
+  const grid = testGrid();
   const request = buildMeasureRequest(grid, scaleBar({ x1: 50, y1: 220, x2: 150, y2: 220 }, 50),
     { ...DEFAULT_SETTINGS, dark: { ...DEFAULT_SETTINGS.dark, enabled: true } }, null);
   const source = { fileName: "x.png", fileSha256: "cd".repeat(32), kind: "uploaded-file" as const, convertedFromColour: false };
@@ -168,22 +180,10 @@ test("mask unpacking follows numpy packbits big bit order; grey conversion is BT
   assert.equal(g.wasColour, true);
 });
 
-test("synthetic test patterns are deterministic and state their known answer", () => {
-  const grid = syntheticSquareGrid();
-  assert.equal(grid.width, 200);
-  assert.equal(grid.height, 240);
-  assert.equal(grid.grey[22 * 200 + 12], 40);  // boundary column 12 on test row 22
-  assert.equal(grid.grey[22 * 200 + 20], 200); // grain
-  assert.match(grid.knownAnswer, /25 px/);
-  const a = syntheticDiscs(), b = syntheticDiscs();
-  assert.deepEqual(a.grey, b.grey);
-  assert.match(a.knownAnswer, /generated dark area \d+ of 120000 px/);
-});
-
 test("the module view has no invented samples, AI scan wording or property estimates", () => {
   const html = renderToStaticMarkup(<MicrographLab />);
   assert.match(html, /Micrograph Analysis/);
   assert.match(html, /Load image/);
-  assert.match(html, /Synthetic test pattern/);
+  assert.doesNotMatch(html, /Synthetic test pattern|Known answer/, "no built-in demo images (user decision 2026-10-05)");
   assert.doesNotMatch(html, /authentic|AI Scanning|Hall-Petch|cooling rate|inspection report|certif|Calibrated standard/i);
 });

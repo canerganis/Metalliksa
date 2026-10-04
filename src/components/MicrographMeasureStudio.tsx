@@ -15,8 +15,6 @@ import {
   requestSignature,
   runBlocker,
   sha256Hex,
-  syntheticDiscs,
-  syntheticSquareGrid,
   unpackMask,
   unsupportedImageReason,
   type CalibrationInput,
@@ -24,12 +22,11 @@ import {
   type ManualCounting,
   type MeasureSettings,
   type SourceProvenance,
-  type SyntheticPattern,
 } from "../utils/micrographInput";
 import { segmentLengthPx, type CaliperUnit } from "../utils/semAnalysis";
 import { MicrographMeasureResults } from "./MicrographMeasureResults";
 
-type LoadedImage = GreyImage & { key: string; source: SourceProvenance; dataUrl: string | null; knownAnswer?: string };
+type LoadedImage = GreyImage & { key: string; source: SourceProvenance; dataUrl: string };
 type Tool = "caliper" | "pipette" | "manual";
 const CALIPER_UNITS: { value: CaliperUnit; label: string }[] = [
   { value: "nm", label: "nm" }, { value: "µm", label: "µm" }, { value: "mm", label: "mm" },
@@ -118,7 +115,7 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
     setManual(null);
     setPipette(null);
     setPendingPoint(null);
-    onImageChange?.(next.dataUrl ? { dataUrl: next.dataUrl, key: next.key } : null);
+    onImageChange?.({ dataUrl: next.dataUrl, key: next.key });
   };
 
   const onFile = async (file: File | undefined) => {
@@ -138,15 +135,6 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
     } catch (err) {
       setLoadMessage(err instanceof Error ? err.message : "The image could not be loaded.");
     }
-  };
-
-  const loadPattern = (pattern: SyntheticPattern) => {
-    adopt({ ...pattern, key: `synthetic:${pattern.name}`, dataUrl: null, knownAnswer: pattern.knownAnswer,
-      source: { fileName: pattern.name, fileSha256: null, kind: "synthetic-test-pattern", convertedFromColour: false } });
-    setCalibration({ mode: "scale-bar", segment: { x1: pattern.scaleBar.x1, y1: pattern.scaleBar.y, x2: pattern.scaleBar.x2, y2: pattern.scaleBar.y },
-      barValue: pattern.scaleBar.lengthUm, barUnit: "µm" });
-    setSettings({ ...DEFAULT_SETTINGS, crop: { ...DEFAULT_SETTINGS.crop, bottom: pattern.dataBarRows } });
-    setLoadMessage(null);
   };
 
   const run = async () => {
@@ -290,15 +278,8 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
           className="px-3 py-1.5 rounded border border-[#1e2d46] bg-[#0c1322] text-xs font-mono text-slate-200 flex items-center gap-2">
           <Upload className="w-3.5 h-3.5" /> Load image (PNG, JPEG, BMP, GIF, WebP)
         </button>
-        <button type="button" onClick={() => loadPattern(syntheticSquareGrid())} className="px-2 py-1.5 rounded border border-[#1e2d46] text-xs font-mono text-slate-300">
-          Synthetic test pattern: grid
-        </button>
-        <button type="button" onClick={() => loadPattern(syntheticDiscs())} className="px-2 py-1.5 rounded border border-[#1e2d46] text-xs font-mono text-slate-300">
-          Synthetic test pattern: discs
-        </button>
         {image && <span className="text-[11px] font-mono text-slate-400">{image.source.fileName} · {image.width} x {image.height} px</span>}
         {loadMessage && <p role="alert" className="w-full text-[11px] text-amber-200">{loadMessage}</p>}
-        {image?.knownAnswer && <p className="w-full text-[11px] text-emerald-300">Synthetic test pattern, known answer. {image.knownAnswer}</p>}
       </div>
 
       {image && (

@@ -109,7 +109,7 @@ export interface ManualCounting {
 /** Why a run is not possible yet (the button stays disabled), or null. Calibration is mandatory in the view. */
 export function runBlocker(image: GreyImage | null, calibration: CalibrationInput, settings: MeasureSettings,
   manual: ManualCounting | null): string | null {
-  if (!image) return "Load an image or a synthetic test pattern first.";
+  if (!image) return "Load a micrograph image first.";
   const cal = calibrationRequestKeys(calibration);
   if ("reason" in cal) return `Calibration required: ${cal.reason}`;
   if (!settings.dark.enabled && !settings.bright.enabled && !settings.grains.enabled && !manual) {
@@ -165,9 +165,9 @@ export function unpackMask(base64: string, width: number, height: number): Uint8
 
 export interface SourceProvenance {
   fileName: string;
-  /** sha256 of the loaded file bytes, or null for an in-browser synthetic pattern. */
-  fileSha256: string | null;
-  kind: "uploaded-file" | "synthetic-test-pattern";
+  /** sha256 of the loaded file bytes. */
+  fileSha256: string;
+  kind: "uploaded-file";
   convertedFromColour: boolean;
 }
 
@@ -229,67 +229,4 @@ export function exportCsv(result: MicrographMeasureResult, source: SourceProvena
     rows.push([`${name}.relative_accuracy_pct`, gs.relativeAccuracyPct ?? "", "%", "", "", gs.warnings.join("; ")]);
   }
   return rows.map((row) => row.map(csvCell).join(",")).join("\n");
-}
-
-// --- Synthetic test patterns (known answer, generated in the browser from a fixed seed) ---------------------------
-
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-export interface SyntheticPattern extends GreyImage {
-  name: string;
-  knownAnswer: string;
-  /** Scale bar drawn into the data bar: its pixel ends and printed length. */
-  scaleBar: { x1: number; x2: number; y: number; lengthUm: number };
-  dataBarRows: number;
-}
-
-/** 8 x 8 square grains, pitch 25 px, 2 px dark boundaries, 40-row data bar with a 100 px = 50 µm bar. */
-export function syntheticSquareGrid(): SyntheticPattern {
-  const size = 200, bar = 40, width = size, height = size + bar;
-  const grey = new Uint8Array(width * height).fill(200);
-  for (let k = 0; k < 8; k++) {
-    const c = k * 25 + 12;
-    for (let y = 0; y < size; y++) for (const x of [c, c + 1]) grey[y * width + x] = 40;
-    for (const y of [c, c + 1]) for (let x = 0; x < width; x++) grey[y * width + x] = 40;
-  }
-  for (let y = size; y < height; y++) for (let x = 0; x < width; x++) grey[y * width + x] = 0;
-  for (let y = size + 18; y < size + 22; y++) for (let x = 50; x <= 150; x++) grey[y * width + x] = 255;
-  return {
-    name: "Synthetic test pattern: square grid", width, height, grey, wasColour: false, dataBarRows: bar,
-    scaleBar: { x1: 50, x2: 150, y: size + 20, lengthUm: 50 },
-    knownAnswer: "Known answer: mean intercept 25 px on every 0/90 degree test line (12.5 µm with the 50 µm / 100 px bar); " +
-      "exclude the 40-row data bar; boundaries are grey 40, grains grey 200.",
-  };
-}
-
-/** Dark discs (radius 3-10 px) on a grey-120 matrix with seeded noise, 40-row data bar with a 100 px = 20 µm bar. */
-export function syntheticDiscs(seed = 20261004): SyntheticPattern {
-  const w = 400, h = 300, bar = 40, height = h + bar, rand = mulberry32(seed);
-  const mask = new Uint8Array(w * h);
-  let filled = 0;
-  for (let n = 0; n < 60; n++) {
-    const r = 3 + 7 * rand(), cx = r + (w - 2 * r) * rand(), cy = r + (h - 2 * r) * rand();
-    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
-      if (x < 0 || y < 0 || x >= w || y >= h) continue;
-      if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r && !mask[y * w + x]) { mask[y * w + x] = 1; filled++; }
-    }
-  }
-  const grey = new Uint8Array(w * height);
-  for (let i = 0; i < w * h; i++) grey[i] = mask[i] ? 15 + Math.floor(rand() * 9) : 116 + Math.floor(rand() * 9);
-  for (let y = h + 18; y < h + 22; y++) for (let x = 150; x <= 250; x++) grey[y * w + x] = 255;
-  return {
-    name: "Synthetic test pattern: dark discs", width: w, height, grey, wasColour: false, dataBarRows: bar,
-    scaleBar: { x1: 150, x2: 250, y: h + 20, lengthUm: 20 },
-    knownAnswer: `Known answer: generated dark area ${filled} of ${w * h} px (${((100 * filled) / (w * h)).toFixed(3)} %) above ` +
-      "the 40-row data bar; discs grey 15-23, matrix grey 116-124 (any dark threshold from 23 to 115 separates them).",
-  };
 }
