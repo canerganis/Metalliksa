@@ -23,6 +23,7 @@ import {
   ModuleTargetId,
   setActivePipelineMaterial,
   dispatchNavigateToTab,
+  pipelineHardnessText,
 } from "../utils/materialDataPipeline";
 
 interface SendToModuleModalProps {
@@ -56,6 +57,8 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       setDispatchedTarget(null);
     }, 350);
   };
+
+  const hardnessText = pipelineHardnessText(payload.hardnessHV, payload.hardnessHVSource);
 
   const targets = [
     {
@@ -99,9 +102,9 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       borderColor: "border-emerald-500/30 hover:border-emerald-400/70",
       bgColor: "bg-emerald-500/10",
       badge: "ASTM E140 / Tabor",
-      description: `Transfers Vickers hardness (${payload.hardnessHV} HV), elastic modulus E = ${payload.youngsModulus} GPa, and Hollomon parameters (n = ${payload.hardnessProfile.workHardeningExponent_n}, K = ${payload.hardnessProfile.strengthCoefficient_K_MPa} MPa) to simulate complete tensile σ-ε curves.`,
+      description: `Transfers Vickers hardness (${hardnessText}), elastic modulus E = ${payload.youngsModulus} GPa, and Hollomon parameters (n = ${payload.hardnessProfile.workHardeningExponent_n}, K = ${payload.hardnessProfile.strengthCoefficient_K_MPa} MPa) to simulate complete tensile σ-ε curves.`,
       highlights: [
-        `Hardness: ${payload.hardnessHV} HV`,
+        `Hardness: ${hardnessText}`,
         `E: ${payload.youngsModulus} GPa`,
         `Tabor c = ${payload.hardnessProfile.taborConstraintFactor_c}`,
       ],
@@ -242,7 +245,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Hardness</span>
-                <span className="text-amber-400 font-bold">{payload.hardnessHV} HV</span>
+                <span className="text-amber-400 font-bold">{hardnessText}</span>
               </div>
             </div>
           </div>
