@@ -40,8 +40,12 @@ def norm_ppf(p: float) -> float:
     error at p = 1e-6). Out-of-range p is clamped to +/-8 as before.
 
     Accuracy: max abs error < 1e-14 against scipy.special.ndtri over p in (1e-6, 1 - 1e-6)
-    (test_stochastic_uq_evidence.NormalQuantileTests). The docstring length keeps the later
-    line references of module_registry.py (uq-lab) valid.
+    (test_stochastic_uq_evidence.NormalQuantileTests).
+
+    The +/-8 clamp is not monotone with inv_cdf below p = 6.2e-16 (and above 1 - 1.1e-16),
+    where |z| > 8 (inv_cdf(1e-20) = -9.26 < inv_cdf(0) -> -8). The solver cannot reach that
+    range: Sobol points lie in [1.16e-10, 1 - 1.16e-10] (|z| <= 6.34) and the reliability index
+    argument is pre-clamped to [1e-6, 1 - 1e-6].
     """
     if p <= 0.0:
         return -8.0

@@ -316,22 +316,48 @@ _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardn
 
 
 _UQ_ORACLE_CACHE: Dict[str, Any] = {}
+# The oracle solver is the PINNED pre-fix blob (the last solver with the norm_ppf sign error),
+# never the working-tree solver: a later edit of stochastic_uq_mmpds_solver.py must not be able to
+# match its own "oracle". The blob is bound by git revision AND content digest.
+UQ_ORACLE_REVISION = "f41e316"
+UQ_ORACLE_SHA256 = "2b28829be3f974f81f547b62f4c0abd59bb32c42fcf0cfbf838e64d0f99061ce"
+
+
+def _uq_pinned_solver_module() -> types.ModuleType:
+    """The pre-fix solver blob executed as a throwaway module (imports resolve against python/)."""
+    if "module" not in _UQ_ORACLE_CACHE:
+        solver = "stochastic_uq_mmpds_solver"
+        try:
+            source = solver_bytes(solver, UQ_ORACLE_REVISION)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise RuntimeError(f"cannot read python/{solver}.py at {UQ_ORACLE_REVISION} from git ({exc})")
+        if normalised_sha256(source) != UQ_ORACLE_SHA256:
+            raise RuntimeError(f"python/{solver}.py at {UQ_ORACLE_REVISION} does not match the pinned sha256")
+        if str(PYTHON_DIR) not in sys.path:
+            sys.path.insert(0, str(PYTHON_DIR))
+        module = types.ModuleType(f"_uq_oracle_{solver}")
+        sys.modules[module.__name__] = module
+        try:
+            exec(compile(source, f"{solver}.py@{UQ_ORACLE_REVISION}", "exec"), module.__dict__)
+        finally:
+            sys.modules.pop(module.__name__, None)
+        _UQ_ORACLE_CACHE["module"] = module
+    return _UQ_ORACLE_CACHE["module"]
 
 
 def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Stdout (volatile keys stripped) of the UQ solver with scipy.special.ndtri as inverse normal.
+    """Stdout (volatile keys stripped) of the PINNED pre-fix UQ solver with scipy.special.ndtri
+    substituted for its broken norm_ppf.
 
     The payload keeps its key order: composition elements map to Sobol dimensions in insertion
-    order. ndtri is the independent oracle; the solver's own norm_ppf is replaced by it.
+    order. ndtri is the independent oracle; everything else is the f41e316 code, so any change of
+    the solver other than the inverse normal is not covered by the documented change.
     """
     cache_key = json.dumps(payload)
     if cache_key not in _UQ_ORACLE_CACHE:
         import copy
-        from unittest import mock
         from scipy.special import ndtri
-        if str(PYTHON_DIR) not in sys.path:
-            sys.path.insert(0, str(PYTHON_DIR))
-        import stochastic_uq_mmpds_solver as uq  # noqa: E402 (python/ module)
+        module = _uq_pinned_solver_module()
 
         def oracle(p: float) -> float:
             if p <= 0.0:
@@ -340,8 +366,12 @@ def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
                 return 8.0
             return float(ndtri(p))
 
-        with mock.patch.object(uq, "norm_ppf", oracle):
-            result = uq.solve_stochastic_uq(copy.deepcopy(payload))
+        original = module.norm_ppf
+        module.norm_ppf = oracle
+        try:
+            result = module.solve_stochastic_uq(copy.deepcopy(payload))
+        finally:
+            module.norm_ppf = original
         _UQ_ORACLE_CACHE[cache_key] = strip_volatile(json.loads(json.dumps(result)))
     return _UQ_ORACLE_CACHE[cache_key]
 
@@ -356,10 +386,11 @@ def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, An
         return f"{key}: {row['kind']} row is not a value change of the sampler fix"
     try:
         expected = _uq_scipy_oracle_stdout(payload)
-    except ImportError as exc:
-        return f"{key}: scipy oracle unavailable ({exc})"
+    except (ImportError, RuntimeError) as exc:
+        return f"{key}: UQ oracle unavailable ({exc})"
     if canonical(new_stdout) != canonical(expected):
-        return f"{key}: re-blessed document differs from the solver run with scipy.special.ndtri as inverse normal"
+        return (f"{key}: re-blessed document differs from the pinned {UQ_ORACLE_REVISION} solver run with "
+                "scipy.special.ndtri as inverse normal")
     return None
 
 
@@ -375,8 +406,10 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     status that belongs to that HV. Nothing is accepted by tolerance.
 
     stochastic_uq_mmpds_solver (norm_ppf sign fix): a row matching the listed patterns is
-    accepted only if the complete re-blessed stdout equals a fresh run of the solver for the
-    case ``payload`` with scipy.special.ndtri as the inverse normal (_uq_sampler_violation).
+    accepted only if the complete re-blessed stdout equals a fresh run, for the
+    case ``payload``, of the PINNED pre-fix solver blob (UQ_ORACLE_REVISION) with
+    scipy.special.ndtri as the inverse normal (_uq_sampler_violation); the working-tree solver
+    is never used as its own oracle.
     """
     key = row["key"]
     if solver == "stochastic_uq_mmpds_solver":

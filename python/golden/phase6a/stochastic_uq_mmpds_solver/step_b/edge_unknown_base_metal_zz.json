@@ -5463,7 +5463,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "b425f0f0d4538593a8c76bd7df5bab9274978bf6",
+ "gitHead": "6944569e9a669d2b211f432b94ee33acb57facb4",
  "input": {
   "alloyName": "Unobtainium",
   "baseMetal": "Zz",
@@ -5496,7 +5496,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "stochastic_uq_mmpds_solver",
  "solverFile": "python/stochastic_uq_mmpds_solver.py",
- "solverSha256": "c34382cacf08571e51b5b3cd528ab638c4ae22821a0476ca4e4ebade2acb95f2",
+ "solverSha256": "5fb1cb225f0529bd02741561630e53e48b2da090033d584a0c398961f828b033",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

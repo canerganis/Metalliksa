@@ -108,8 +108,8 @@ class NormalQuantileTests(unittest.TestCase):
         self.assertEqual((solver.norm_ppf(0.0), solver.norm_ppf(1.0)), (-8.0, 8.0))
 
     def test_is_strictly_increasing(self):
-        values = [solver.norm_ppf(p) for p in sorted(self._grid())]
-        self.assertTrue(all(b >= a for a, b in zip(values, values[1:])))
+        values = [solver.norm_ppf(p) for p in sorted(set(self._grid()))]
+        self.assertTrue(all(b > a for a, b in zip(values, values[1:])))
 
     def test_inverse_of_norm_cdf(self):
         for p in (1e-6, 0.001, 0.1, 0.3, 0.5, 0.7, 0.9, 0.999, 1.0 - 1e-6):
@@ -133,7 +133,7 @@ class NormalQuantileTests(unittest.TestCase):
 
 
 class SobolConvergenceTests(unittest.TestCase):
-    """Sobol-Saltelli G-function (d=8, exact integral 1): QMC must converge and beat plain MC."""
+    """Sobol G-function (d=8, exact integral 1): the local Sobol QMC must converge and beat plain MC."""
 
     A = (0.0, 1.0, 4.5, 9.0, 99.0, 99.0, 99.0, 99.0)
 
