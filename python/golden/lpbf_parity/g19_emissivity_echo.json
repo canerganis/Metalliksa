@@ -1,0 +1,760 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g19_emissivity_echo",
+ "group": "G19",
+ "description": "Registry emissivity literal 0.35 echoed into p/m per alloy; overrides; 0.36 override rejected",
+ "slow": false,
+ "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  8.6,
+  8.3
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "registry.material.Ti-6Al-4V.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.Ti-6Al-4V.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.316L Stainless Steel.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.316L Stainless Steel.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.AlSi10Mg.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.AlSi10Mg.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.Inconel 718.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.Inconel 718.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.Inconel 625.emissivity": {
+   "error": "ValueError: Inconel 625: thermophysical data missing; supply sourced properties"
+  },
+  "validate.Inconel 625.emissivity": {
+   "error": "ValueError: Inconel 625: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.CoCrMo.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.CoCrMo.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.Scalmalloy (Al-Mg-Sc-Zr).emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.Scalmalloy (Al-Mg-Sc-Zr).emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.Hastelloy X.emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.Hastelloy X.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.Pure Copper (Cu-OF).emissivity": [
+   0.35,
+   "0x1.6666666666666p-2"
+  ],
+  "validate.Pure Copper (Cu-OF).emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "registry.material.17-4PH.emissivity": {
+   "error": "ValueError: 17-4PH: thermophysical data missing; supply sourced properties"
+  },
+  "validate.17-4PH.emissivity": {
+   "error": "ValueError: 17-4PH: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.15-5PH.emissivity": {
+   "error": "ValueError: 15-5PH: thermophysical data missing; supply sourced properties"
+  },
+  "validate.15-5PH.emissivity": {
+   "error": "ValueError: 15-5PH: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.Maraging Steel 18Ni300.emissivity": {
+   "error": "ValueError: Maraging Steel 18Ni300: thermophysical data missing; supply sourced properties"
+  },
+  "validate.Maraging Steel 18Ni300.emissivity": {
+   "error": "ValueError: Maraging Steel 18Ni300: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.AlSi7Mg.emissivity": {
+   "error": "ValueError: AlSi7Mg: thermophysical data missing; supply sourced properties"
+  },
+  "validate.AlSi7Mg.emissivity": {
+   "error": "ValueError: AlSi7Mg: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.CuCrZr.emissivity": {
+   "error": "ValueError: CuCrZr: thermophysical data missing; supply sourced properties"
+  },
+  "validate.CuCrZr.emissivity": {
+   "error": "ValueError: CuCrZr: thermophysical data missing; supply sourced properties"
+  },
+  "registry.material.Ti-5553.emissivity": {
+   "error": "ValueError: Ti-5553: thermophysical data missing; supply sourced properties"
+  },
+  "validate.Ti-5553.emissivity": {
+   "error": "ValueError: Ti-5553: thermophysical data missing; supply sourced properties"
+  },
+  "validate.override.0.35.emissivity": [
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ],
+   [
+    0.35,
+    "0x1.6666666666666p-2"
+   ]
+  ],
+  "validate.override.0.5.emissivity": [
+   [
+    0.5,
+    "0x1.0000000000000p-1"
+   ],
+   [
+    0.5,
+    "0x1.0000000000000p-1"
+   ]
+  ],
+  "validate.override.0.emissivity": [
+   0,
+   0
+  ],
+  "validate.override.1.emissivity": [
+   1,
+   1
+  ],
+  "validate.override.1.5.emissivity": {
+   "error": "ValueError: emissivity must be in [0,1]"
+  },
+  "validate.override.True.emissivity": {
+   "error": "ValueError: emissivity must be in [0,1]"
+  },
+  "implicit.canonicalSha256": "18c3dce385ce489ff5adda95e81c8eaebe791b926396c50da94ead3daa01f74e",
+  "implicit.orderedTypedSha256": "899f7f243655e59745a84173bbbadf58660da131afe97741e774b0bdd5a2d12c",
+  "implicit.topLevelKeys": [
+   "schemaVersion",
+   "requestedMode",
+   "effectiveMode",
+   "solver",
+   "settings",
+   "material",
+   "requestedBackend",
+   "confidence",
+   "validationStatus",
+   "productionReady",
+   "label",
+   "provenance",
+   "analyticalComparison",
+   "assumptions",
+   "fallbackReason",
+   "metrics",
+   "thermalHistory",
+   "fieldSeries",
+   "peakInterpolatedMeltPool",
+   "fieldOverlapDiagnostics",
+   "midTrackCrossSection",
+   "midTrackInterpolatedCrossSection",
+   "numericalDiagnostics",
+   "energyBalance",
+   "discretization",
+   "scanPath",
+   "massBalance",
+   "phaseAudit",
+   "geometricDefectScreen",
+   "regime",
+   "mainRisk",
+   "recommendation",
+   "riskScope",
+   "resourceEstimate",
+   "unresolvedPhysics",
+   "confidenceReason",
+   "coreContract"
+  ],
+  "implicit.key.schemaVersion": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+  "implicit.key.requestedMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
+  "implicit.key.effectiveMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
+  "implicit.key.solver": "379da9f17510ad5e9f42d7be64eda2f553ada427d6a389bd3552f81dbe7cd97d",
+  "implicit.key.settings": "148660d3399f8f0bf7c4370de64798031029f28e9572e6841c064e8193551972",
+  "implicit.key.material": "cb542160a40afd7f836bb67fea59242175cda887c75d1b6dfc9ae530848b92eb",
+  "implicit.key.requestedBackend": "86a3d4125c91d4621cfc34f7d2ac1f2fb7df908cae63aef232d0b9e0713171db",
+  "implicit.key.confidence": "364bb7082249ee9fbc5247ee49735c4246f271b82c2745a35107ddda0d7cabcc",
+  "implicit.key.validationStatus": "034d24b06221faeb3860b36b4069fe6436aeadc3db62a687efe73615cfb2541d",
+  "implicit.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+  "implicit.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
+  "implicit.key.provenance": "0a8c7b838e9937a93e1609afa11e31e5d9e536310738e70d5b562fb3cb0599c7",
+  "implicit.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "implicit.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "implicit.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "implicit.key.metrics": "1110333dbb63b5bacc73cb8069a0232df03c4f645bb75533cd62f9db2ee458ca",
+  "implicit.key.thermalHistory": "72c8adf371a23c9b38b8aff50b95b6c8cec3957034f1ea78611837623233f4bf",
+  "implicit.key.fieldSeries": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "implicit.key.peakInterpolatedMeltPool": "7ee97a3b097676acdb267197359f2cd7aaadb8d732772faa71c333edd989d03d",
+  "implicit.key.fieldOverlapDiagnostics": "44a535026e155ac8c74933557e65a493708923545d60488b2c9a0f3842a67207",
+  "implicit.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "implicit.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "implicit.key.numericalDiagnostics": "f4d6d2239be452980f2e81931d861387a7a56c84174fbd05dc412e779ca4b140",
+  "implicit.key.energyBalance": "0b7053160f6cc7307d4978bf606d2a911229d831847829f7d9799fe2421072ce",
+  "implicit.key.discretization": "d16bfeddeeb1ba74494e485dbb7e9c34708a157387cf801f3986235cc11ab3e7",
+  "implicit.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
+  "implicit.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
+  "implicit.key.phaseAudit": "64868d555225409644e807f2d1d94a70b9db7703e09371c0950605efbf151d7d",
+  "implicit.key.geometricDefectScreen": "a626d384128019bb5c33d77e47185d27498cd3b6b84565129d62afd9abd6c130",
+  "implicit.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
+  "implicit.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
+  "implicit.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
+  "implicit.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
+  "implicit.key.resourceEstimate": "3ba8bb7b1be206d20f7fa936f8c80d1f03c716c5e219dafddfd57cb35b5baef9",
+  "implicit.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
+  "implicit.key.confidenceReason": "906944d2c579df879c4987a7d07a4e032bf053927f6b33f8e6c954537ac1f1e0",
+  "implicit.key.coreContract": "6ae8bc50cd8620a7a0dc3214ea7e9dc93a1e19bd42aed3252410bd93ec22bc5e",
+  "implicit.coreContract.inputSha256": "734bb883c6dbd03b3f4d5cb02fe7928e8d4bc353b05364452860e9f39db78634",
+  "implicit.coreContract.materialSha256": "6a8d7bde8277b45093a26faab435e6a27167a9e3b67631a0c0b6b04f65b28ce4",
+  "implicit.coreContract.solverId": "enthalpy-fv-6",
+  "implicit.coreContract.modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+  "implicit.material.materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+  "implicit.validationStatus": "unvalidated",
+  "implicit.productionReady": false,
+  "implicit.effectiveMode": "standard",
+  "implicit.label": "Unvalidated transient thermal",
+  "implicit.confidence": "low",
+  "implicit.implementationHashOccurrencesAfterStrip": 0,
+  "explicit0.35.canonicalEqualsImplicit": true,
+  "run.override0.36": {
+   "error": "ValueError: LPBF material revision identity mismatch"
+  }
+ },
+ "rawValues": {
+  "implicit.key.analyticalComparison": {
+   "rosenthal": {
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 163.33333333333348,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   },
+   "goldak": {
+    "width_um": 0.0,
+    "depth_um": 0.0,
+    "length_um": 23.333333333333105,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   }
+  },
+  "implicit.key.assumptions": [
+   "SI internal units; beam diameter is 1/e^2 intensity diameter.",
+   "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores.",
+   "Estimated material laws; fixed reference density conserves mass on a stationary grid.",
+   "Uniform effective powder, irreversible conductivity densification; no resolved powder particles.",
+   "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
+   "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
+   "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
+   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
+   "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
+   "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
+  ],
+  "implicit.key.confidence": "low",
+  "implicit.key.confidenceReason": "estimated material data and unresolved flow; no independent experimental validation.",
+  "implicit.key.coreContract": {
+   "schemaVersion": 1,
+   "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+   "actualBackend": "numpy-reference",
+   "requestedBackend": "reference",
+   "effectiveMode": "standard",
+   "solverId": "enthalpy-fv-6",
+   "inputSha256": "734bb883c6dbd03b3f4d5cb02fe7928e8d4bc353b05364452860e9f39db78634",
+   "materialSha256": "6a8d7bde8277b45093a26faab435e6a27167a9e3b67631a0c0b6b04f65b28ce4",
+   "units": {
+    "power": "W",
+    "speed": "mm/s",
+    "length": "um",
+    "preheat": "degC",
+    "temperature": "K",
+    "internalLength": "m",
+    "time": "s",
+    "energy": "J",
+    "beamDiameter": "1/e2-intensity"
+   },
+   "resolvedPhysics": {
+    "conduction": true,
+    "transient": true,
+    "latentHeat": true,
+    "momentum": false,
+    "freeSurface": false,
+    "evaporation": false
+   },
+   "evidenceClass": "unvalidated-model"
+  },
+  "implicit.key.discretization": {
+   "cells": 1089,
+   "mesh_m": 3.9999999999999996e-05,
+   "minimumDt_s": 6.201891157732657e-07,
+   "meanDt_s": 8.599508599508598e-07,
+   "steps": 407
+  },
+  "implicit.key.effectiveMode": "standard",
+  "implicit.key.energyBalance": {
+   "input_J": 0.003799999999999999,
+   "losses_J": 5.265770070807271e-07,
+   "stored_J": 0.0037994734229929205,
+   "relativeError": 5.70632722360792e-16
+  },
+  "implicit.key.fallbackReason": null,
+  "implicit.key.fieldOverlapDiagnostics": {
+   "modelId": "field-inter-track-overlap-v1",
+   "scope": "single-track",
+   "tracks": 1,
+   "layers": 1,
+   "trackOverlapRatio": null,
+   "meanInterTrackOverlapRatio": null,
+   "minInterTrackOverlapRatio": null,
+   "interTrackGapVolume_um3": 0.0,
+   "hasInterTrackGap": false,
+   "interTrackLackOfFusion": false,
+   "interLayerPenetrationDepth_um": 0.0,
+   "interLayerRemeltRatio": 0.0,
+   "globalRemeltRatio": 0.0,
+   "totalMeltVolume_um3": 319999.9999999999,
+   "totalRemeltVolume_um3": 0.0,
+   "status": "single-track-evaluated",
+   "note": "Single track simulation; inter-track overlap requires >= 2 tracks."
+  },
+  "implicit.key.fieldSeries": null,
+  "implicit.key.geometricDefectScreen": {
+   "modelId": "elliptic-overlap-screening-v1",
+   "scope": "single-track-cross-section",
+   "status": "geometry-screened",
+   "limitations": [
+    "Geometric screening only; no pore probability, porosity estimate, or certification.",
+    "Requires local single-track width and penetration depth for an aligned semi-elliptical cross-section.",
+    "Ignores local pool fluctuations, track registration, powder packing, and remelting history.",
+    "Accuracy depends on supplied geometry; Rosenthal-derived dimensions can fail this screen.",
+    "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
+   ],
+   "lackOfFusion": {
+    "status": "lack-of-fusion-screened",
+    "ellipseIndex": 7.25,
+    "signedMargin": -6.25,
+    "overlapDepth_um": 0.0,
+    "maximumHatch_um": 0.0,
+    "riskScreened": true,
+    "reason": "Only the idealized elliptical overlap condition is evaluated."
+   },
+   "keyhole": {
+    "depthToWidth": 1.0,
+    "risk": "moderate",
+    "reason": "Aspect ratio D/W >= 1.0 indicates unstable transition regime."
+   },
+   "balling": {
+    "lengthToWidth": 2.9999999999999996,
+    "risk": "low",
+    "reason": "L/W ratio 3.00 < \u03c0 indicates stable continuous track without capillary breakup."
+   },
+   "gasPore": {
+    "risk": null,
+    "reason": "Gas inventory, transport, and pore nucleation are not resolved."
+   },
+   "porosity": {
+    "value": null,
+    "reason": "Geometry screening does not predict volumetric porosity."
+   },
+   "provenance": [
+    {
+     "title": "Harkin et al. (2023), Equation 5",
+     "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
+     "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
+    },
+    {
+     "title": "Yadroitsev et al. (2010)",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
+     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
+    },
+    {
+     "title": "King et al. (2014) & Cunningham et al. (2019)",
+     "url": "https://doi.org/10.1126/science.aav4687",
+     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+    }
+   ]
+  },
+  "implicit.key.label": "Unvalidated transient thermal",
+  "implicit.key.mainRisk": "lack-of-fusion",
+  "implicit.key.massBalance": {
+   "initial_kg": 5.393358185389219e-07,
+   "deposited_kg": 0.0,
+   "final_kg": 5.393358185389219e-07,
+   "relativeError": 0.0,
+   "scope": "Stationary reference mass accounting; no continuity, evaporation or shrinkage solved"
+  },
+  "implicit.key.material": {
+   "solidus_K": 1533.15,
+   "liquidus_K": 1609.15,
+   "boiling_K": 3123.15,
+   "latentHeat_J_kg": 270000.0,
+   "absorptivity": 0.38,
+   "emissivity": 0.35,
+   "dGamma_dT": -0.0004,
+   "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+   "quality": "estimated",
+   "table": [
+    [
+     273.15,
+     8190.0,
+     11.4,
+     435.0,
+     0.0055
+    ],
+    [
+     1609.15,
+     7450.0,
+     29.0,
+     730.0,
+     0.0055
+    ],
+    [
+     3123.15,
+     7450.0,
+     29.0,
+     730.0,
+     0.0055
+    ]
+   ],
+   "name": "Inconel 718",
+   "version": "lpbf-materials-1",
+   "temperatureCoverage_K": [
+    273.15,
+    3123.15
+   ],
+   "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+   "materialId": "in718",
+   "provenanceClass": "estimated-legacy",
+   "materialIdentitySchemaVersion": 1,
+   "materialAuthority": "four_alloy_materials.py",
+   "materialAuthorityRevisionSha256": "b7788a745e9fa90bf7af0b2de4516233e33726638a3a06b33268995813db5d1f",
+   "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749"
+  },
+  "implicit.key.metrics": {
+   "length_um": 119.99999999999999,
+   "width_um": 40.0,
+   "depth_um": 40.0,
+   "volume_um3": 191999.99999999994,
+   "crossSectionArea_um2": 1599.9999999999995,
+   "peakTemperature_K": 2119.81011401591,
+   "thermalGradient_K_m": 23724291.193568666,
+   "solidificationRate_m_s": 0.10013411650322941,
+   "coolingRate_K_s": 2339802.9034487437,
+   "keyholeDepth_um": null,
+   "recoilPressure_Pa": null,
+   "marangoniNumber": 278.59310646525665,
+   "pecletNumber": 6.001103448275862,
+   "aspectRatio": 1.0,
+   "trackOverlapRatio": null,
+   "remeltingRatio": 0.0
+  },
+  "implicit.key.midTrackCrossSection": null,
+  "implicit.key.midTrackInterpolatedCrossSection": null,
+  "implicit.key.numericalDiagnostics": {
+   "meltPoolExtraction": "accepted-step-molten-volume-v1",
+   "peakMeltTime_s": 0.0001828275933220838,
+   "peakMeltStep": 229,
+   "meltPoolObservedSteps": 407,
+   "peakMeltCellCount": 3,
+   "equalMaximumEndpointCount": 70,
+   "firstEqualMaximumTime_s": 0.0001828275933220838,
+   "lastEqualMaximumTime_s": 0.0002680000000000004,
+   "sampledPeakMeltVolume_um3": 191999.99999999994,
+   "peakMeltSamplingLossFraction": 0.0,
+   "overlapExtraction": "field-inter-track-overlap-v1",
+   "sourceIntegration": "cell-integrated-gaussian-adaptive-gl-v2",
+   "solidificationExtraction": "linear-liquidus-crossing-v1",
+   "stabilityLimit": "local-conductance-row-sum",
+   "minimumCapturedSourceFraction": 0.9999999990458968,
+   "maximumSourceRenormalization": 1.0000000009541032,
+   "maximumSurfaceOffset_um": 0.0,
+   "maximumTimestep_s": 1e-06,
+   "maximumEnthalpyIncrement_K": 24.94496252223915,
+   "sourceTimestepRetries": 264,
+   "acceptedTimestepDistribution": {
+    "methodId": "accepted-timestep-distribution-v1",
+    "count": 407,
+    "total_s": 0.00034999999999999767,
+    "sumSquared_s2": 3.0686191561443153e-10,
+    "mean_s": 8.599508599508543e-07,
+    "minimum_s": 6.201891157732657e-07,
+    "p50_s": 8.262029778863119e-07,
+    "p90_s": 1e-06,
+    "p99_s": 1e-06,
+    "maximum_s": 1e-06,
+    "eulerFirstOrderWeightedDt_s": 8.767483303269531e-07,
+    "requestedMaxDt_s": 1e-06,
+    "requestedMaxDtHitFraction": 0.3464373464373464,
+    "sourceLimitedStepCount": 264,
+    "sourceTimestepRetries": 264
+   }
+  },
+  "implicit.key.peakInterpolatedMeltPool": {
+   "status": "thermal-proxy",
+   "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+   "temporalSelection": "accepted-step-molten-volume-v1",
+   "contour": "linear liquidus crossings between neighboring active cell centers",
+   "surfaceTreatment": "No temperature extrapolation to the model surface",
+   "width_um": 37.75486570240731,
+   "depth_um": 32.91434271891392,
+   "evidenceScope": "Numerical thermal proxy; no experimental validation",
+   "sampleCells": 3,
+   "crossingCount": 11
+  },
+  "implicit.key.phaseAudit": {
+   "liquidVolume_m3": 7.665173988330205e-14,
+   "solidVolume_m3": 6.961934826011666e-11,
+   "activeVolume_m3": 6.969599999999997e-11,
+   "minFraction": 0.0,
+   "maxFraction": 0.5324914499468903,
+   "interfaceConservation": null,
+   "scope": "Enthalpy liquid fraction partition; not a metal/gas interface conservation test"
+  },
+  "implicit.key.productionReady": false,
+  "implicit.key.provenance": {
+   "inputHash": "148660d3399f8f0bf7c4370de64798031029f28e9572e6841c064e8193551972",
+   "executionInputHash": "148660d3399f8f0bf7c4370de64798031029f28e9572e6841c064e8193551972",
+   "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+   "materialVersion": "lpbf-materials-1",
+   "solverBinaryHash": null
+  },
+  "implicit.key.recommendation": "Reduce hatch/layer spacing; verify penetration experimentally.",
+  "implicit.key.regime": "keyhole-risk (screening)",
+  "implicit.key.requestedBackend": "reference",
+  "implicit.key.requestedMode": "standard",
+  "implicit.key.resourceEstimate": {
+   "cells": 1089,
+   "spacing_m": 3.9999999999999996e-05,
+   "shape": [
+    11,
+    11,
+    9
+   ],
+   "duration_s": 0.00034999999999999994,
+   "minimumEstimatedSteps": 350,
+   "workingMemoryEstimate_MB": 0.2178,
+   "minimumRequiredSteps": 350,
+   "stepBudget": 250000,
+   "exceedsStepBudget": false,
+   "runs": 1,
+   "cellBudget": 600000,
+   "exceedsCellBudget": false,
+   "runtimeEstimate": "Seconds to minutes; hardware and adaptive timestep dependent",
+   "note": "Uniform orthogonal mesh; memory is approximate. Source limiting can increase steps. No calibrated wall-time estimate."
+  },
+  "implicit.key.riskScope": "Geometric screening only; no probability, density qualification or solidification cracking assessment.",
+  "implicit.key.scanPath": [
+   {
+    "start_s": 0.0,
+    "end_s": 0.00024999999999999995,
+    "start": [
+     -9.999999999999999e-05,
+     0.0
+    ],
+    "end": [
+     9.999999999999999e-05,
+     0.0
+    ],
+    "layer": 0,
+    "track": 0,
+    "island": null
+   }
+  ],
+  "implicit.key.schemaVersion": 1,
+  "implicit.key.settings": {
+   "mode": "standard",
+   "material": "Inconel 718",
+   "power_W": 40,
+   "speed_mm_s": 800.0,
+   "beamDiameter_um": 80.0,
+   "preheat_C": 80.0,
+   "layer_um": 40.0,
+   "hatch_um": 100.0,
+   "mesh_um": 40,
+   "maxDt_s": 1e-06,
+   "trackLength_um": 200,
+   "tracks": 1,
+   "layers": 1,
+   "dwell_s": 0,
+   "cooling_s": 0.0001,
+   "scanAngle_deg": 0.0,
+   "layerRotation_deg": 67.0,
+   "strategy": "meander",
+   "stripeWidth_um": 500.0,
+   "islandSize_um": 200.0,
+   "packingFraction": 0.55,
+   "powderConductivityRatio": 0.12,
+   "convection_W_m2K": 20.0,
+   "timeout_s": 300.0,
+   "study": "none",
+   "backend": "reference",
+   "surfaceMode": "powder-layer",
+   "sourcePenetration_um": null,
+   "barePlateGeometry": "square",
+   "evaporationModel": false,
+   "marangoniMultiplier": 2.2,
+   "opticalObserver": null,
+   "powderGridPolicy": "layer-conforming",
+   "absorptivity": 0.38,
+   "emissivity": 0.35
+  },
+  "implicit.key.solver": {
+   "id": "enthalpy-fv-6",
+   "version": "enthalpy-fv-6",
+   "openfoam": null
+  },
+  "implicit.key.unresolvedPhysics": {
+   "freeSurface": null,
+   "velocity": null,
+   "evaporationMassFlux": null,
+   "evaporationLoss": null,
+   "recoilPressure": null,
+   "keyholeDepth": null,
+   "porosityProbability": null,
+   "residualStress": null
+  },
+  "implicit.key.validationStatus": "unvalidated"
+ }
+}

@@ -88,6 +88,9 @@ const TAFEL_INPUT = {
   betaA: 0.1,
   betaC: 0.12,
   alloyId: "duplex2205",
+  // Caller-supplied substrate (what the UI sends): the client fallback cannot resolve alloy presets.
+  density_g_cm3: 7.8,
+  equivalentWeight: 25.4,
   specimenAreaCm2: 1,
   initialThicknessMm: 5,
   allowableLossMm: 1.5,

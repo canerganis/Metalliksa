@@ -48,7 +48,7 @@ import {
 import { TafelDataset, TafelFitResult, ReferenceElectrodeType } from "../types/tafel";
 import {
   parseTafelFile,
-  autoFitTafel,
+  tryAutoFitTafel,
   TAFEL_BENCHMARK_DATASETS,
   COMMON_ALLOYS,
   REFERENCE_ELECTRODES,
@@ -60,6 +60,15 @@ import { PythonAnnualCorrosionRateModule } from "./PythonAnnualCorrosionRateModu
 import { D3TafelPolarizationChart } from "./D3TafelPolarizationChart";
 import { executePythonTafelFit } from "../utils/tafelPythonService";
 import { isPythonValidationError } from "../utils/pythonValidationError";
+import {
+  digitalTwinElectrochemistry,
+  fmtTafelNumber,
+  fmtTafelQuantity,
+  fmtTafelR2,
+  tafelIntersectionAnchors,
+  tafelUnavailableReason,
+  UNAVAILABLE_TEXT,
+} from "../utils/tafelDisplay";
 
 interface TafelPolarizationLabProps {
   onDatasetLoaded?: (dataset: TafelDataset) => void;
@@ -205,7 +214,7 @@ function TafelPolarizationLabWithData({
         },
       };
 
-      const baseFit = autoFitTafel(
+      const baseFit = tryAutoFitTafel(
         activeDataset,
         customCathodicRange,
         customAnodicRange,
@@ -215,19 +224,22 @@ function TafelPolarizationLabWithData({
 
       // If user manually customized betaA or betaC
       if (isManualOverride && (manualBetaA || manualBetaC)) {
-        const bA = (manualBetaA || baseFit.betaA_mV_dec) / 1000;
-        const bC = (manualBetaC || baseFit.betaC_mV_dec) / 1000;
-        const bStern = (bA * bC) / (2.302585 * (bA + bC));
-        const iCorrA = baseFit.iCorr_uA_cm2 * 1e-6;
-        const rp = bStern / iCorrA;
+        // A slope that is neither entered nor fitted stays unavailable (no assumed value); Stern-Geary B and Rp
+        // need both slopes and i_corr.
+        const bAmv = manualBetaA || baseFit.betaA_mV_dec;
+        const bCmv = manualBetaC || baseFit.betaC_mV_dec;
+        const bA = bAmv ? bAmv / 1000 : null;
+        const bC = bCmv ? bCmv / 1000 : null;
+        const bStern = bA !== null && bC !== null ? (bA * bC) / (Math.LN10 * (bA + bC)) : null;
+        const rp = bStern !== null && baseFit.iCorr_uA_cm2 !== null ? bStern / (baseFit.iCorr_uA_cm2 * 1e-6) : null;
         return {
           ...baseFit,
           betaA_V_dec: bA,
-          betaA_mV_dec: bA * 1000,
+          betaA_mV_dec: bA === null ? null : bA * 1000,
           betaC_V_dec: bC,
-          betaC_mV_dec: bC * 1000,
-          sternGearyB_V: parseFloat(bStern.toFixed(4)),
-          rp_ohm_cm2: parseFloat(rp.toFixed(1)),
+          betaC_mV_dec: bC === null ? null : bC * 1000,
+          sternGearyB_V: bStern === null ? null : parseFloat(bStern.toFixed(4)),
+          rp_ohm_cm2: rp === null ? null : parseFloat(rp.toFixed(1)),
         };
       }
 
@@ -235,7 +247,7 @@ function TafelPolarizationLabWithData({
     } catch (err) {
       console.error("Tafel fit error:", err);
       // Fall back to the dataset the lab was opened with (no fabricated benchmark exists).
-      return autoFitTafel(initialDataset);
+      return tryAutoFitTafel(initialDataset);
     }
   }, [
     dataset,
@@ -308,14 +320,19 @@ function TafelPolarizationLabWithData({
   // Update manual sliders when dataset changes
   useEffect(() => {
     if (!isManualOverride) {
-      setManualEcorr(effectiveFitResult.eCorr);
-      setManualLogIcorr(effectiveFitResult.logIcorr);
-      setManualBetaA(effectiveFitResult.betaA_mV_dec);
-      setManualBetaC(effectiveFitResult.betaC_mV_dec);
+      setManualEcorr(effectiveFitResult.eCorr ?? undefined);
+      setManualLogIcorr(effectiveFitResult.logIcorr ?? undefined);
+      setManualBetaA(effectiveFitResult.betaA_mV_dec ?? undefined);
+      setManualBetaC(effectiveFitResult.betaC_mV_dec ?? undefined);
       setCustomCathodicRange(effectiveFitResult.cathodicRange);
       setCustomAnodicRange(effectiveFitResult.anodicRange);
     }
   }, [dataset.id, effectiveFitResult.eCorr, effectiveFitResult.logIcorr]);
+
+  // Anchors of the manual tuning controls and of the branch column. When the Evans intersection is unavailable they
+  // fall back to the measured current valley (a measured value, labelled "Raw Valley"), never to an assumed one.
+  const { eCorrRef: eCorrAnchor, logIcorrRef: logIcorrAnchor } = tafelIntersectionAnchors(fitResult);
+  const effectiveUnavailableReason = tafelUnavailableReason(effectiveFitResult);
 
   // Handle benchmark change
   const handleSelectBenchmark = (benchId: string) => {
@@ -387,11 +404,11 @@ function TafelPolarizationLabWithData({
     setIsManualOverride(false);
     setCustomCathodicRange(undefined);
     setCustomAnodicRange(undefined);
-    const cleanFit = autoFitTafel(dataset);
-    setManualEcorr(cleanFit.eCorr);
-    setManualLogIcorr(cleanFit.logIcorr);
-    setManualBetaA(cleanFit.betaA_mV_dec);
-    setManualBetaC(cleanFit.betaC_mV_dec);
+    const cleanFit = tryAutoFitTafel(dataset);
+    setManualEcorr(cleanFit.eCorr ?? undefined);
+    setManualLogIcorr(cleanFit.logIcorr ?? undefined);
+    setManualBetaA(cleanFit.betaA_mV_dec ?? undefined);
+    setManualBetaC(cleanFit.betaC_mV_dec ?? undefined);
     setCustomCathodicRange(cleanFit.cathodicRange);
     setCustomAnodicRange(cleanFit.anodicRange);
   };
@@ -452,16 +469,17 @@ function TafelPolarizationLabWithData({
       `Substrate: ${dataset.metadata.alloyName}`,
       `Electrolyte: ${dataset.metadata.electrolyte}`,
       `----------------------------------------------------`,
-      `Corrosion Potential (Ecorr): ${fitResult.eCorr} V vs ${dataset.metadata.referenceElectrode} (${fitResult.eCorrSHE} V vs SHE)`,
-      `Corrosion Current Density (icorr): ${fitResult.iCorr_uA_cm2} µA/cm² (log10 = ${fitResult.logIcorr})`,
-      `Total Corrosion Current (Icorr): ${fitResult.totalCurrentIcorr_uA} µA`,
-      `Anodic Tafel Slope (Beta_a): ${fitResult.betaA_mV_dec} mV/decade (R² = ${fitResult.anodicR2})`,
-      `Cathodic Tafel Slope (Beta_c): ${fitResult.betaC_mV_dec} mV/decade (R² = ${fitResult.cathodicR2})`,
-      `Stern-Geary Constant (B): ${fitResult.sternGearyB_V} V`,
-      `Polarization Resistance (Rp): ${fitResult.rp_ohm_cm2.toLocaleString()} Ω·cm²`,
-      `Faraday Penetration Rate: ${fitResult.corrosionRateMmYr} mm/year (${fitResult.corrosionRateMpy} mpy)`,
-      `Daily Mass Loss: ${fitResult.massLoss_g_m2_day} g/(m²·day)`,
-      `Classification: ${fitResult.astmClassification}`,
+      `Corrosion Potential (Ecorr): ${fmtTafelQuantity(fitResult.eCorr, "V")} vs ${dataset.metadata.referenceElectrode} (${fmtTafelQuantity(fitResult.eCorrSHE, "V")} vs SHE)`,
+      `Corrosion Current Density (icorr): ${fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²")} (log10 = ${fmtTafelNumber(fitResult.logIcorr)})`,
+      `Total Corrosion Current (Icorr): ${fmtTafelQuantity(fitResult.totalCurrentIcorr_uA, "µA")}`,
+      `Anodic Tafel Slope (Beta_a): ${fmtTafelQuantity(fitResult.betaA_mV_dec, "mV/decade")} (${fmtTafelR2(fitResult.anodicR2)})`,
+      `Cathodic Tafel Slope (Beta_c): ${fmtTafelQuantity(fitResult.betaC_mV_dec, "mV/decade")} (${fmtTafelR2(fitResult.cathodicR2)})`,
+      `Stern-Geary Constant (B): ${fmtTafelQuantity(fitResult.sternGearyB_V, "V")}`,
+      `Polarization Resistance (Rp): ${fmtTafelQuantity(fitResult.rp_ohm_cm2, "Ω·cm²", { grouped: true })}`,
+      `Faraday Penetration Rate: ${fmtTafelQuantity(fitResult.corrosionRateMmYr, "mm/year")} (${fmtTafelQuantity(fitResult.corrosionRateMpy, "mpy")})`,
+      `Daily Mass Loss: ${fmtTafelQuantity(fitResult.massLoss_g_m2_day, "g/(m²·day)")}`,
+      `Classification: ${fitResult.astmClassification ?? UNAVAILABLE_TEXT}`,
+      ...(tafelUnavailableReason(fitResult) ? [`Unavailable: ${tafelUnavailableReason(fitResult)}`] : []),
     ].join("\n");
 
     navigator.clipboard.writeText(summary);
@@ -473,21 +491,7 @@ function TafelPolarizationLabWithData({
   const handleSyncToDigitalTwin = () => {
     if (dtContext?.syncWithModuleData) {
       dtContext.syncWithModuleData("TafelPolarizationLab", {
-        electrochemistry: {
-          corrosionRateMpy: fitResult.corrosionRateMpy,
-          openCircuitPotentialEcorrV: fitResult.eCorr,
-          polarizationResistanceRpOhmCm2: fitResult.rp_ohm_cm2,
-          pittingPotentialEpitV: fitResult.pittingPotentialEpit_V || undefined,
-          eisImpedanceModuleOhm: fitResult.rp_ohm_cm2,
-          passivationQuality:
-            fitResult.severity === "Immune / Highly Resistant"
-              ? "Immune"
-              : fitResult.severity === "Passivated / Good"
-              ? "Passive Stable"
-              : fitResult.severity === "Moderate (Caution)"
-              ? "Susceptible to Pitting"
-              : "Active Dissolution",
-        },
+        electrochemistry: digitalTwinElectrochemistry(fitResult),
       });
       setSavedToDtNotification(true);
       setTimeout(() => setSavedToDtNotification(false), 2500);
@@ -816,7 +820,7 @@ function TafelPolarizationLabWithData({
               </thead>
               <tbody className="divide-y divide-[#162032] text-slate-300">
                 {dataset.points.slice(0, 100).map((p, idx) => {
-                  const isEcorr = Math.abs(p.potential - fitResult.eCorr) < 0.005;
+                  const isEcorr = fitResult.eCorr !== null && Math.abs(p.potential - fitResult.eCorr) < 0.005;
                   return (
                     <tr
                       key={idx}
@@ -830,7 +834,7 @@ function TafelPolarizationLabWithData({
                       <td className="p-2 text-sky-300">{p.currentDensity_uA_cm2.toFixed(4)}</td>
                       <td className="p-2 text-amber-300">{p.logCurrentDensity.toFixed(3)}</td>
                       <td className="p-2">
-                        {p.potential < fitResult.eCorr ? (
+                        {p.potential < eCorrAnchor ? (
                           <span className="text-amber-400 text-[10px]">Cathodic (Reduction)</span>
                         ) : (
                           <span className="text-sky-400 text-[10px]">Anodic (Oxidation)</span>
@@ -1021,8 +1025,11 @@ function TafelPolarizationLabWithData({
                   </div>
                 </div>
                 <span className="text-[10px] text-slate-500 block">
-                  Cathodic Slope β_c: <strong className="text-amber-300">{fitResult.betaC_mV_dec} mV/dec</strong> (R² = {fitResult.cathodicR2})
+                  Cathodic Slope β_c: <strong className="text-amber-300">{fmtTafelQuantity(fitResult.betaC_mV_dec, "mV/dec")}</strong> ({fmtTafelR2(fitResult.cathodicR2)})
                 </span>
+                {fitResult.unavailable?.cathodicBranch && (
+                  <span role="status" className="text-[10px] text-rose-300 block">{fitResult.unavailable.cathodicBranch}</span>
+                )}
               </div>
 
               {/* Interactive Anodic Fit Window */}
@@ -1065,8 +1072,11 @@ function TafelPolarizationLabWithData({
                   </div>
                 </div>
                 <span className="text-[10px] text-slate-500 block">
-                  Anodic Slope β_a: <strong className="text-sky-300">{fitResult.betaA_mV_dec} mV/dec</strong> (R² = {fitResult.anodicR2})
+                  Anodic Slope β_a: <strong className="text-sky-300">{fmtTafelQuantity(fitResult.betaA_mV_dec, "mV/dec")}</strong> ({fmtTafelR2(fitResult.anodicR2)})
                 </span>
+                {fitResult.unavailable?.anodicBranch && (
+                  <span role="status" className="text-[10px] text-rose-300 block">{fitResult.unavailable.anodicBranch}</span>
+                )}
               </div>
 
               {/* Manual Micro-Tuning Inputs (Active when manual override checked) */}
@@ -1079,14 +1089,14 @@ function TafelPolarizationLabWithData({
                   <div className="space-y-1">
                     <div className="flex justify-between text-slate-300">
                       <span>E_corr Micro-Tune:</span>
-                      <span className="text-emerald-400 font-bold">{(manualEcorr ?? fitResult.eCorr).toFixed(4)} V</span>
+                      <span className="text-emerald-400 font-bold">{(manualEcorr ?? eCorrAnchor).toFixed(4)} V</span>
                     </div>
                     <input aria-label="E_corr Micro-Tune (V)"
                       type="range"
-                      min={fitResult.eCorr - 0.20}
-                      max={fitResult.eCorr + 0.20}
+                      min={eCorrAnchor - 0.20}
+                      max={eCorrAnchor + 0.20}
                       step="0.001"
-                      value={manualEcorr ?? fitResult.eCorr}
+                      value={manualEcorr ?? eCorrAnchor}
                       onChange={(e) => setManualEcorr(parseFloat(e.target.value))}
                       className="w-full accent-emerald-400 cursor-pointer"
                     />
@@ -1095,14 +1105,14 @@ function TafelPolarizationLabWithData({
                   <div className="space-y-1">
                     <div className="flex justify-between text-slate-300">
                       <span>log₁₀(i_corr) Micro-Tune:</span>
-                      <span className="text-sky-300 font-bold">{(manualLogIcorr ?? fitResult.logIcorr).toFixed(2)} log(µA/cm²)</span>
+                      <span className="text-sky-300 font-bold">{(manualLogIcorr ?? logIcorrAnchor).toFixed(2)} log(µA/cm²)</span>
                     </div>
                     <input aria-label="log₁₀(i_corr) Micro-Tune (log(µA/cm²))"
                       type="range"
                       min={-4.0}
                       max={4.0}
                       step="0.05"
-                      value={manualLogIcorr ?? fitResult.logIcorr}
+                      value={manualLogIcorr ?? logIcorrAnchor}
                       onChange={(e) => setManualLogIcorr(parseFloat(e.target.value))}
                       className="w-full accent-sky-400 cursor-pointer"
                     />
@@ -1179,6 +1189,26 @@ function TafelPolarizationLabWithData({
               </div>
             )}
 
+            {effectiveFitResult.fitStatus === "unavailable" && (
+              <div role="status" className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs font-mono space-y-1">
+                <div className="flex items-center gap-2 font-bold">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Tafel result: {UNAVAILABLE_TEXT}</span>
+                </div>
+                <p>{effectiveUnavailableReason}</p>
+                <p className="text-amber-300/80">
+                  Unavailable values are not replaced by assumed slopes, R² or currents. Adjust the fit windows or
+                  enter a known E_corr / i_corr with the manual tuning.
+                </p>
+              </div>
+            )}
+
+            {effectiveFitResult.intersectionNote && (
+              <div role="status" className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs font-mono">
+                E_corr substituted: {effectiveFitResult.intersectionNote}.
+              </div>
+            )}
+
             {/* D3.js Interactive Vector Visualizer */}
             {activeChartEngine === "d3" ? (
               <D3TafelPolarizationChart
@@ -1210,8 +1240,8 @@ function TafelPolarizationLabWithData({
                         : "Potentiodynamic Curve: Log Current Density vs Potential E (V)"}
                     </h3>
                     <span className="text-[11px] text-slate-400 font-mono">
-                      Intersection at <strong className="text-emerald-300">Ecorr = {effectiveFitResult.eCorr} V</strong> &amp;{" "}
-                      <strong className="text-sky-300">icorr = {effectiveFitResult.iCorr_uA_cm2} µA/cm²</strong>
+                      Intersection at <strong className="text-emerald-300">Ecorr = {fmtTafelQuantity(effectiveFitResult.eCorr, "V")}</strong> &amp;{" "}
+                      <strong className="text-sky-300">icorr = {fmtTafelQuantity(effectiveFitResult.iCorr_uA_cm2, "µA/cm²")}</strong>
                     </span>
                   </div>
 
@@ -1263,11 +1293,11 @@ function TafelPolarizationLabWithData({
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="text-emerald-300 font-extrabold text-sm">
-                      E_corr = {fitResult.eCorr} V vs {dataset.metadata.referenceElectrode}
+                      E_corr = {fitResult.eCorr === null ? UNAVAILABLE_TEXT : `${fitResult.eCorr} V vs ${dataset.metadata.referenceElectrode}`}
                     </span>
                     <span className="text-slate-500">•</span>
                     <span className="text-sky-300 font-extrabold text-sm">
-                      i_corr = {fitResult.iCorr_uA_cm2} µA/cm²
+                      i_corr = {fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²")}
                     </span>
                   </div>
                 </div>
@@ -1279,7 +1309,9 @@ function TafelPolarizationLabWithData({
                 </span>
                 <span
                   className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
-                    fitResult.severity === "Immune / Highly Resistant"
+                    fitResult.severity === null
+                      ? "bg-slate-500/20 text-slate-300 border-slate-500/40"
+                      : fitResult.severity === "Immune / Highly Resistant"
                       ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
                       : fitResult.severity === "Passivated / Good"
                       ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
@@ -1288,7 +1320,7 @@ function TafelPolarizationLabWithData({
                       : "bg-rose-500/20 text-rose-300 border-rose-500/40"
                   }`}
                 >
-                  {fitResult.severity}
+                  {fitResult.severity ?? UNAVAILABLE_TEXT}
                 </span>
               </div>
             </div>
@@ -1347,35 +1379,39 @@ function TafelPolarizationLabWithData({
                     />
                     <Legend wrapperStyle={{ fontSize: "11px", fontFamily: "monospace" }} />
 
-                    {/* Ecorr Horizontal Reference Line */}
-                    <ReferenceLine
-                      y={fitResult.eCorr}
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      strokeDasharray="4 4"
-                      label={{
-                        value: `E_corr = ${fitResult.eCorr} V`,
-                        position: "right",
-                        fill: "#10b981",
-                        fontSize: 10,
-                        fontFamily: "monospace",
-                      }}
-                    />
+                    {/* Ecorr Horizontal Reference Line (only when the Evans intersection is available) */}
+                    {fitResult.eCorr !== null && (
+                      <ReferenceLine
+                        y={fitResult.eCorr}
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `E_corr = ${fitResult.eCorr} V`,
+                          position: "right",
+                          fill: "#10b981",
+                          fontSize: 10,
+                          fontFamily: "monospace",
+                        }}
+                      />
+                    )}
 
-                    {/* Log(Icorr) Vertical Reference Line */}
-                    <ReferenceLine
-                      x={fitResult.logIcorr}
-                      stroke="#38bdf8"
-                      strokeWidth={2}
-                      strokeDasharray="4 4"
-                      label={{
-                        value: `i_corr = ${fitResult.iCorr_uA_cm2} µA`,
-                        position: "top",
-                        fill: "#38bdf8",
-                        fontSize: 10,
-                        fontFamily: "monospace",
-                      }}
-                    />
+                    {/* Log(Icorr) Vertical Reference Line (only when i_corr is available) */}
+                    {fitResult.logIcorr !== null && (
+                      <ReferenceLine
+                        x={fitResult.logIcorr}
+                        stroke="#38bdf8"
+                        strokeWidth={2}
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `i_corr = ${fitResult.iCorr_uA_cm2} µA`,
+                          position: "top",
+                          fill: "#38bdf8",
+                          fontSize: 10,
+                          fontFamily: "monospace",
+                        }}
+                      />
+                    )}
 
                     {/* Experimental Polarization Curve */}
                     <Line
@@ -1393,7 +1429,7 @@ function TafelPolarizationLabWithData({
                       <Line
                         type="linear"
                         dataKey="tangentAnodic"
-                        name={`Anodic Tangent (β_a=${fitResult.betaA_mV_dec} mV)`}
+                        name={`Anodic Tangent (β_a=${fmtTafelQuantity(fitResult.betaA_mV_dec, "mV")})`}
                         stroke="#38bdf8"
                         strokeWidth={2.5}
                         strokeDasharray="5 3"
@@ -1408,7 +1444,7 @@ function TafelPolarizationLabWithData({
                       <Line
                         type="linear"
                         dataKey="tangentCathodic"
-                        name={`Cathodic Tangent (β_c=${fitResult.betaC_mV_dec} mV)`}
+                        name={`Cathodic Tangent (β_c=${fmtTafelQuantity(fitResult.betaC_mV_dec, "mV")})`}
                         stroke="#f59e0b"
                         strokeWidth={2.5}
                         strokeDasharray="5 3"
@@ -1476,8 +1512,12 @@ function TafelPolarizationLabWithData({
                     />
                     <Legend wrapperStyle={{ fontSize: "11px", fontFamily: "monospace" }} />
 
-                    <ReferenceLine x={fitResult.eCorr} stroke="#10b981" strokeWidth={2} strokeDasharray="4 4" />
-                    <ReferenceLine y={fitResult.logIcorr} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" />
+                    {fitResult.eCorr !== null && (
+                      <ReferenceLine x={fitResult.eCorr} stroke="#10b981" strokeWidth={2} strokeDasharray="4 4" />
+                    )}
+                    {fitResult.logIcorr !== null && (
+                      <ReferenceLine y={fitResult.logIcorr} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" />
+                    )}
 
                     <Line
                       type="monotone"
@@ -1525,10 +1565,10 @@ function TafelPolarizationLabWithData({
                 Corrosion Potential (Ecorr)
               </span>
               <div className="text-emerald-400 font-extrabold text-base">
-                {effectiveFitResult.eCorr} V
+                {fmtTafelQuantity(effectiveFitResult.eCorr, "V")}
               </div>
               <span className="text-[10px] text-slate-500 block">
-                {effectiveFitResult.eCorrSHE} V vs SHE
+                {effectiveFitResult.eCorrSHE === null ? UNAVAILABLE_TEXT : `${effectiveFitResult.eCorrSHE} V vs SHE`}
               </span>
             </div>
 
@@ -1538,10 +1578,10 @@ function TafelPolarizationLabWithData({
                 Corrosion Current (icorr)
               </span>
               <div className="text-sky-400 font-extrabold text-base">
-                {effectiveFitResult.iCorr_uA_cm2} µA/cm²
+                {fmtTafelQuantity(effectiveFitResult.iCorr_uA_cm2, "µA/cm²")}
               </div>
               <span className="text-[10px] text-slate-500 block">
-                Total: {effectiveFitResult.totalCurrentIcorr_uA} µA
+                Total: {fmtTafelQuantity(effectiveFitResult.totalCurrentIcorr_uA, "µA")}
               </span>
             </div>
 
@@ -1551,10 +1591,10 @@ function TafelPolarizationLabWithData({
                 Polarization Res. (Rp)
               </span>
               <div className="text-purple-400 font-extrabold text-base">
-                {effectiveFitResult.rp_ohm_cm2.toLocaleString("en-US", { maximumFractionDigits: 0 })} Ω·cm²
+                {fmtTafelQuantity(effectiveFitResult.rp_ohm_cm2, "Ω·cm²", { grouped: true, digits: 0 })}
               </div>
               <span className="text-[10px] text-slate-500 block">
-                B = {effectiveFitResult.sternGearyB_V} V (ASTM G59)
+                B = {fmtTafelQuantity(effectiveFitResult.sternGearyB_V, "V")} (ASTM G59)
               </span>
             </div>
 
@@ -1564,10 +1604,10 @@ function TafelPolarizationLabWithData({
                 Corrosion Rate (CR)
               </span>
               <div className="text-amber-400 font-extrabold text-base">
-                {effectiveFitResult.corrosionRateMmYr} mm/yr
+                {fmtTafelQuantity(effectiveFitResult.corrosionRateMmYr, "mm/yr")}
               </div>
               <span className="text-[10px] text-slate-500 block">
-                {effectiveFitResult.corrosionRateMpy} mpy
+                {fmtTafelQuantity(effectiveFitResult.corrosionRateMpy, "mpy")}
               </span>
             </div>
           </div>
@@ -1580,17 +1620,17 @@ function TafelPolarizationLabWithData({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
               <div className="p-2.5 bg-[#050810] rounded border border-[#162032]">
                 <span className="text-slate-500 block text-[10px]">Anodic Slope (β_a):</span>
-                <span className="text-sky-300 font-bold">{effectiveFitResult.betaA_mV_dec} mV/dec</span>
-                <span className="text-[9px] text-slate-500 block mt-0.5">Fit R² = {effectiveFitResult.anodicR2}</span>
+                <span className="text-sky-300 font-bold">{fmtTafelQuantity(effectiveFitResult.betaA_mV_dec, "mV/dec")}</span>
+                <span className="text-[9px] text-slate-500 block mt-0.5">Fit {fmtTafelR2(effectiveFitResult.anodicR2)}</span>
               </div>
               <div className="p-2.5 bg-[#050810] rounded border border-[#162032]">
                 <span className="text-slate-500 block text-[10px]">Cathodic Slope (β_c):</span>
-                <span className="text-amber-300 font-bold">{effectiveFitResult.betaC_mV_dec} mV/dec</span>
-                <span className="text-[9px] text-slate-500 block mt-0.5">Fit R² = {effectiveFitResult.cathodicR2}</span>
+                <span className="text-amber-300 font-bold">{fmtTafelQuantity(effectiveFitResult.betaC_mV_dec, "mV/dec")}</span>
+                <span className="text-[9px] text-slate-500 block mt-0.5">Fit {fmtTafelR2(effectiveFitResult.cathodicR2)}</span>
               </div>
               <div className="p-2.5 bg-[#050810] rounded border border-[#162032]">
                 <span className="text-slate-500 block text-[10px]">Daily Mass Loss Rate:</span>
-                <span className="text-white font-bold">{effectiveFitResult.massLoss_g_m2_day} g/(m²·day)</span>
+                <span className="text-white font-bold">{fmtTafelQuantity(effectiveFitResult.massLoss_g_m2_day, "g/(m²·day)")}</span>
                 <span className="text-[9px] text-slate-500 block mt-0.5">Faraday constant F=96485 C</span>
               </div>
               <div className="p-2.5 bg-[#050810] rounded border border-[#162032]">

@@ -180,16 +180,11 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
     "modulus-fno-lab": (_worker_op("modulus-fno"),),
-    "toolpath-studio": (_worker_op("toolpath-kinematics"),),
     "toolpath-thermal-map": (_worker_op("toolpath-thermal-map"),),
     "industrial-certification": (_worker_op("industrial-fatigue"),),
-    "murakami-fatigue": (_worker_op("fatigue-fracture"),),
-    "defect-twin": (_worker_op("stl-voxelize"),),
-    "adaptive-mitigation": (_worker_op("adaptive-feedforward"),),
     "multilaser-plume": (_worker_op("multilaser-plume"),),
     "thermal-accumulation": (_worker_op("thermal-accumulation"),),
     "powder-compaction": (_worker_op("powder-dem-compaction"),),
-    "optical-tomography": (_worker_op("optical-tomography"),),
     "transient-3d-gpu": (),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
@@ -199,10 +194,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
         _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
         _AI_CONSULT,
-    ),
-    "ttt-cct-kinetics": (
-        _op("kinetics-ttt-cct", "POST", "/api/python/kinetics-ttt-cct",
-            _py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "micrograph": (
         _op("diagnose-micrograph", "POST", "/api/metallurgy/diagnose-micrograph", _NODE),
@@ -215,10 +206,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
             _py("tafel_corrosion_rate_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
         _op("battery-corrosion-eis", "POST", "/api/python/battery-corrosion-eis",
             _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
-    ),
-    "icme-motor": (
-        _op("icme-multiscale-pipeline", "POST", "/api/python/icme-multiscale-pipeline",
-            _py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "materials-project": (
         _op("dft-properties", "POST", "/api/python/dft-properties",
@@ -482,7 +469,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                   # pythonComputationService.ts is anchored by symbol because other lanes delete lines there.
                   sources=(
                       "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
-                      "python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled",
+                      "python/stochastic_uq_mmpds_solver.py::SobolSequenceGenerator",
                       "python/stochastic_uq_mmpds_solver.py::provenance",
                       "python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE",
                       "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
@@ -497,6 +484,459 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
                       "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons",
                   ))
+
+
+# --- Contracted modules (Phase 7 wave 2) --------------------------------------
+#
+# Same rules as the pilots: every key, default and output field is read from the cited
+# authority code (each scaffold checks them against the code by AST and against a real
+# run); a bound the authority does not enforce stays None. No oracle exists for any of
+# these modules, so each keeps the pending-oracle cap and emits no status. Identity text
+# (label, description, next, maturity) stays seed-derived: wording is not reviewed here.
+
+_WORKER_NO_VALIDATION = ("The worker RPC handler reads each key with a default and applies no range check "
+                         "(float()/int() conversion only where noted); the contract's types and enums are "
+                         "stricter than the authority.")
+_PENDING_CAP = ("Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are "
+                "unvalidated.")
+
+
+def _wave2(row, operation: Operation, evidence_note: str, notes, sources, resources=("fetch",)) -> ModuleContract:
+    return _pilot(row, operation=operation, reviewed={},
+                  evidence=Evidence(emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=_PILOT_FORBIDDEN,
+                                    note=evidence_note),
+                  oracle=Oracle(status="pending"),
+                  lifecycle=Lifecycle(background_work="none", resources=resources),
+                  notes=tuple(notes), sources=tuple(sources))
+
+
+def _flag(key: str, label: str, default: bool, note: str = None) -> InputField:
+    return InputField(key=key, label=label, unit=None, quantity_kind="flag", min=None, max=None, default=default,
+                      required=False, value_type="boolean", note=note)
+
+
+def _worker_contract_op(op_id: str, fields, output: OutputSchema, undeclared=()) -> Operation:
+    return Operation(id=op_id, method="POST", route=f"/api/python/lpbf-{op_id}",
+                     authority=_worker(op_id), input=tuple(fields), output=output,
+                     undeclared_input=tuple(undeclared))
+
+
+_WORKER_SOURCES = (
+    "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
+    "python/lpbf_worker_rpc.py::dispatch",
+)
+
+# ttt-cct-kinetics: keys and defaults of the data.get(...) calls in the script entry point.
+_KINETICS_ALLOYS = ("AISI 4140", "AISI 4340", "AISI D2", "Inconel 718", "Ti-6Al-4V", "Al 7075")
+_KINETICS_FIELDS = (
+    _choice("alloy", "Alloy", "alloy", _KINETICS_ALLOYS, "AISI 4140",
+            note="The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown "
+                 "or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the "
+                 "six kinetics table names the view offers."),
+    _num("coolingRate_C_s", "Selected cooling rate", "K/s", "cooling-rate", 10.0,
+         note="Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; "
+              "the CCT map uses a fixed list of rates. No bound is enforced."),
+    _num("grainSize_um", "Prior austenite grain size", _MICRO, "length", 25.0,
+         note="Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, "
+              "AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and "
+              "Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."),
+    _num("austTemp_C", "Austenitisation temperature", "degC", "temperature", 860.0,
+         note="Passed unconverted by the entry point; no bound is enforced."),
+    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
+         note="Passed unconverted by the entry point; no bound is enforced."),
+    _num("agingTime_h", "Aging time", "h", "time", 8.0,
+         note="Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."),
+)
+_KINETICS_OUTPUT = OutputSchema(
+    fields=("success", "engine", "computeTimeMs", "alloy", "alloyMetadata", "inputParameters",
+            "criticalTransformationTemperatures", "tttIsothermalCurves", "cctContinuousCoolingMap",
+            "lswPrecipitateCoarsening", "calphadVsKineticsGap", "provenance"),
+    status_key=None,
+)
+
+
+def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = Operation(
+        id="kinetics-ttt-cct", method="POST", route="/api/python/kinetics-ttt-cct",
+        authority=_py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True),
+        input=_KINETICS_FIELDS, output=_KINETICS_OUTPUT,
+    )
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key (cctContinuousCoolingMap[]."
+            "predictedHardness_HV_status is a hardness-conversion applicability flag, not an evidence status). "
+            "Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the "
+            "solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). "
+            + _PENDING_CAP),
+        notes=(
+            "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / "
+            "Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); "
+            "no CALPHAD calculation runs in this operation.",
+            "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate "
+            "band relative to the alloy's critical cooling rate, not JMAK/Scheil output.",
+            "The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting "
+            "strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion "
+            "activation energy differs.",
+            "No validity domain is declared: no source-backed applicability range is established for the "
+            "kinetic constants.",
+            "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
+            "IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per "
+            "attempt.",
+        ),
+        sources=(
+            "python/kinetics_ttt_cct_solver.py::solve_phase_transformation_kinetics",
+            "python/kinetics_ttt_cct_solver.py::calculate_jmak_isothermal_kinetics",
+            "python/kinetics_ttt_cct_solver.py::resolve_kinetics_alloy",
+            "python/kinetics_ttt_cct_solver.py::provenance",
+            "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
+            "python/input_validation.py::require_known_alloy",
+            "routes/physics.ts::handlePythonDispatch",
+            "routes/physics.ts:111#python/kinetics_ttt_cct_solver.py",
+            "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+            "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
+            "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` / TTT / CCT",
+        ))
+
+
+# icme-motor: keys and defaults of the params.get(...) calls in solve_multiscale_pipeline.
+_ICME_COMPONENTS = ("turbine_blade_root", "pressure_bulkhead", "lpbf_bracket")
+_ICME_FIELDS = (
+    _choice("baseMetal", "Base metal", "element", ("Ni", "Fe", "Ti", "Al"), "Ni",
+            note="Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."),
+    _num("coolingRate_C_s", "Cooling rate", "K/s", "cooling-rate", 150000.0,
+         note="Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."),
+    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
+         note="Converted with float(); no bound is enforced."),
+    _num("agingTime_h", "Aging time", "h", "time", 8.0, note="Converted with float(); no bound is enforced."),
+    _num("strainRate_s_inv", "Reference strain rate", "1/s", "strain-rate", 0.001,
+         note="Converted with float(); written into the exported material cards only. No bound is enforced."),
+    _num("serviceTemp_C", "Service temperature", "degC", "temperature", 25.0,
+         note="Converted with float() by the authority but not used in any computed value (the structuralVerdict "
+              "text is the same at 1000 degC)."),
+    _choice("componentType", "Component", "component-catalog", _ICME_COMPONENTS, "turbine_blade_root",
+            note="The authority silently uses turbine_blade_root for any other value; the contract accepts only "
+                 "the three catalog keys."),
+)
+_ICME_OUTPUT = OutputSchema(
+    fields=("success", "modelStatus", "modelStatusNote", "modelParts", "engine", "computeTimeMs",
+            "inputParameters", "scale0_dftAtomistic",
+            "scale1_calphadSoluteMisfit", "scale2_microstructureKinetics", "scale3_continuumPlasticity",
+            "scale4_macroComponentFEA", "caeExportCards", "provenance"),
+    status_key=None,
+    transport_values=(("modelStatus", ("illustrative",)),),
+)
+
+
+def _icme_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = Operation(
+        id="icme-multiscale-pipeline", method="POST", route="/api/python/icme-multiscale-pipeline",
+        authority=_py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True),
+        input=_ICME_FIELDS, output=_ICME_OUTPUT,
+        undeclared_input=("alloyName", "crystalSystem", "composition_wt", "grainSize_um"),
+    )
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: modelStatus is a model label (always 'illustrative'), not an evidence "
+            "status, and the output has no evidence status key. scale4_macroComponentFEA.structuralVerdict is "
+            "fixed text chosen by comparing the estimated yield strength with a catalog safety factor (a "
+            "yield-only check: no creep, fatigue or fracture check); it is not an "
+            "evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated "
+            "constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. "
+            "ultimateTensileStrength_UTS_MPa, fractureToughness_K1c_MPa_sqrt_m, criticalFlawSize_ac_mm and "
+            "plasticZoneRadius_rp_mm are null (unavailable, with a status text) because the model has no valid way "
+            "to compute them. "
+            + _PENDING_CAP),
+        notes=(
+            "alloyName is a free-text label written into the output and the material cards; crystalSystem is "
+            "echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element "
+            "without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override "
+            "with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, "
+            "so they are recorded as undeclaredInput.",
+            "Wording gap fixed in fx-icme: the verdict used to read 'STRUCTURALLY SAFE (Passed Yield & Creep "
+            "Criteria)' although no creep check exists. It is now a yield-only text ('YIELD CHECK PASSED ... no "
+            "creep, fatigue or fracture check'); serviceTemp_C is still not used and the verdict is the same at "
+            "1000 degC (no creep check exists).",
+            "Wording gap fixed in fx-icme: the exported CAE material cards were headed 'MetalliX Multi-Scale ICME "
+            "Calibrated Card'; they are now headed 'ILLUSTRATIVE Card (uncalibrated, not validated)' because no "
+            "calibration against data is performed.",
+            "Unavailable by design (fx-icme): the former UTS (equal to the yield strength by the Hollomon K choice) "
+            "and the former K_Ic (a formula with the unit MPa, not MPa*sqrt(m)) are null with status texts; the "
+            "critical flaw size and plastic zone radius that need K_Ic are null too.",
+            "No validity domain is declared: no source-backed applicability range is established for the "
+            "coupled estimates.",
+            "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
+            "IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per "
+            "attempt.",
+        ),
+        sources=(
+            "python/icme_multiscale_pipeline_solver.py::solve_multiscale_pipeline",
+            "python/icme_multiscale_pipeline_solver.py::main",
+            "python/icme_multiscale_pipeline_solver.py::_unknown_element",
+            "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
+            "routes/physics.ts::handlePythonDispatch",
+            "routes/physics.ts:116#python/icme_multiscale_pipeline_solver.py",
+            "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+            "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
+            "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` / ICME Modeling",
+        ))
+
+
+# murakami-fatigue: keys and defaults of _rpc_fatigue_fracture in python/lpbf_worker_rpc.py.
+_FATIGUE_FIELDS = (
+    _choice("alloyName", "Alloy", "alloy", ("Ti-6Al-4V", "316L SS", "Inconel 718", "AlSi10Mg"), "Ti-6Al-4V",
+            note="The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an "
+                 "unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table "
+                 "names the view offers."),
+    _num("sqrtArea_um", "Defect size (sqrt area)", _MICRO, "length", 45.0,
+         note="Converted with float(); the authority requires a finite value > 0 and rejects anything else with "
+              "input_validation NON_POSITIVE (HTTP 422)."),
+    _choice("location", "Defect location", "defect-location", ("surface", "sub-surface", "internal"), "internal",
+            note="The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and "
+                 "internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the "
+                 "contract accepts the view's three values."),
+    _num("stressRatio_R", "Stress ratio R", "1", "stress-ratio", -1.0,
+         note="Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE "
+              "(HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."),
+    _num("stressAmplitude_MPa", "Cyclic stress amplitude", "MPa", "stress", 220.0,
+         note="Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."),
+)
+
+
+def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = _worker_contract_op(
+        "fatigue-fracture", _FATIGUE_FIELDS,
+        OutputSchema(fields=("fatigue_limit", "kitagawa_takahashi_curve", "paris_crack_growth"), status_key=None),
+        undeclared=("type",))
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key (paris_crack_growth.status is the integration "
+            "outcome 'non_propagating', 'fractured' or 'runout', not an evidence status). Murakami, El-Haddad and "
+            "Paris expressions with per-alloy constants from alloy_registry (fatigue_fracture domain); no oracle "
+            "compares the result with an independent reference. " + _PENDING_CAP),
+        notes=(
+            "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
+            "No validity domain is declared: no source-backed applicability range is established for the "
+            "defect sizes or stress ratios.",
+            "UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through "
+            "LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError).",
+        ),
+        sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",
+            "python/lpbf_fatigue_fracture.py::fatigue_constants",
+            "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
+            "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
+            "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
+            "routes/lpbfSimulation.ts:35#/api/python/lpbf-fatigue-fracture",
+            "routes/lpbfSimulation.ts::workerError",
+            "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
+            "src/services/pythonComputationService.ts::computeMurakamiFatigue",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` / Fatigue & Fracture Lab",
+        ))
+
+
+# optical-tomography: keys and defaults of _rpc_optical_tomography in python/lpbf_worker_rpc.py.
+_OPTICAL_FIELDS = (
+    _num("res_x", "Sensor pixels (x)", "1", "count", 64, integer=True,
+         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop "
+              "runs res_x * res_y times with no limit below the 20000 ms worker timeout."),
+    _num("res_y", "Sensor pixels (y)", "1", "count", 64, integer=True,
+         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."),
+    _num("fov_um", "Field of view", _MICRO, "length", 1000.0, note="Converted with float(); no bound is enforced."),
+    _num("emissivity", "Emissivity", "1", "emissivity", 0.35, note="Converted with float(); no bound is enforced."),
+    _num("laserPower_W", "Laser power", "W", "power", 280.0, note="Converted with float(); no bound is enforced."),
+    _num("scanSpeed_mms", "Scan speed", "mm/s", "speed", 1000.0, note="Converted with float(); no bound is enforced."),
+    _num("material_k", "Thermal conductivity", "W/(m*K)", "thermal-conductivity", 15.0,
+         note="Converted with float(); no bound is enforced."),
+    _num("material_alpha", "Thermal diffusivity", "m^2/s", "thermal-diffusivity", 5e-6,
+         note="Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."),
+    _num("T0_K", "Ambient temperature", "K", "temperature", 300.0, note="Converted with float(); no bound is enforced."),
+)
+
+
+def _optical_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = _worker_contract_op(
+        "optical-tomography", _OPTICAL_FIELDS,
+        OutputSchema(fields=("resolution", "fov_um", "max_expected_intensity", "pixels_1d", "pixels_noise_sigma"),
+                     status_key=None))
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source "
+            "temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; "
+            "the noise value is the square root of that signal. No sensor calibration or measured frame is "
+            "involved. " + _PENDING_CAP),
+        notes=(
+            "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read "
+            "(it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are "
+            "ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in "
+            "practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in "
+            "Phase 7 wave 2; the view is not changed here.",
+            "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD "
+            "(noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, "
+            "not a temperature-domain noise bound.",
+            _WORKER_NO_VALIDATION,
+            "No validity domain is declared: no source-backed applicability range is established.",
+        ),
+        sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
+            "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
+            "routes/lpbfSimulation.ts:40#/api/python/lpbf-optical-tomography",
+            "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
+            "src/services/pythonComputationService.ts::simulateOpticalTomography",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography",
+        ))
+
+
+# toolpath-studio and adaptive-mitigation share the G-code/CLI parser (lpbf_toolpath_kinematics).
+_TOOLPATH_FORMAT = _choice("format", "Toolpath format", "toolpath-format", ("gcode", "cli"), "gcode",
+                           note="The authority lower-cases the value and parses anything other than 'cli' as G-code.")
+_CONTENT_NOTE = ("content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot "
+                 "describe free text, so it is recorded as undeclaredInput.")
+
+_TOOLPATH_FIELDS = (
+    _TOOLPATH_FORMAT,
+    _num("defaultPower_W", "Default laser power", "W", "power", 250.0,
+         note="Used for vectors without an explicit power word. Passed unconverted; no bound is enforced."),
+    _num("defaultSpeed_mms", "Default scan speed", "mm/s", "speed", 1000.0,
+         note="Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced."),
+    _flag("skywritingEnabled", "Skywriting", False, note="Passed unconverted to the scanner profile."),
+    _num("accelMax_mms2", "Maximum mirror acceleration", "mm/s^2", "acceleration", 40000.0,
+         note="Passed unconverted; no bound is enforced."),
+    _num("jumpSpeed_mms", "Jump speed", "mm/s", "speed", 3000.0, note="Passed unconverted; no bound is enforced."),
+    _num("laserOnDelay_us", "Laser-on delay", "µs", "time", 100.0, note="Passed unconverted; no bound is enforced."),
+    _num("laserOffDelay_us", "Laser-off delay", "µs", "time", 120.0,
+         note="Passed unconverted; stored in the scanner profile but not used by the kinematics engine."),
+    _num("markDelay_us", "Mark delay", "µs", "time", 200.0, note="Passed unconverted; no bound is enforced."),
+    _num("jumpDelay_us", "Jump delay", "µs", "time", 350.0, note="Passed unconverted; no bound is enforced."),
+)
+
+
+def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = _worker_contract_op(
+        "toolpath-kinematics", _TOOLPATH_FIELDS,
+        OutputSchema(fields=("total_segments", "total_build_time_s", "total_laser_on_time_s", "duty_cycle_pct",
+                             "total_energy_input_J", "total_mark_distance_mm", "total_jump_distance_mm",
+                             "hotspot_count", "hotspots", "skywriting_mitigation_active"), status_key=None),
+        undeclared=("content",))
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer "
+            "velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the "
+            "nominal P/v. No thermal field is solved and no in-situ measurement is compared. " + _PENDING_CAP),
+        notes=(
+            _CONTENT_NOTE,
+            "No validity domain is declared: no source-backed applicability range is established for the scanner "
+            "parameters.",
+        ),
+        sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_toolpath_kinematics",
+            "python/lpbf_toolpath_kinematics.py::ScannerProfile",
+            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
+            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
+            "routes/lpbfSimulation.ts:34#/api/python/lpbf-toolpath-kinematics",
+            "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
+            "src/services/pythonComputationService.ts::simulateToolpathKinematics",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics",
+        ))
+
+
+_ADAPTIVE_FIELDS = (
+    _TOOLPATH_FORMAT,
+    _num("defaultPower_W", "Default laser power", "W", "power", 280.0,
+         note="Converted with float(); no bound is enforced."),
+    _num("defaultSpeed_mms", "Default scan speed", "mm/s", "speed", 1000.0,
+         note="Converted with float(); no bound is enforced."),
+    _flag("apply67DegRotation", "Apply 67° interlayer rotation", False,
+          note="The authority coerces with bool(); the contract accepts only booleans."),
+    _num("layerIndex", "Layer index", "1", "count", 1, integer=True,
+         note="Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is "
+              "67° x layerIndex; otherwise it is 0."),
+    _num("accelMax_mms2", "Maximum mirror acceleration", "mm/s^2", "acceleration", 40000.0,
+         note="Converted with float(); no bound is enforced."),
+    _num("jumpSpeed_mms", "Jump speed", "mm/s", "speed", 3000.0, note="Converted with float(); no bound is enforced."),
+)
+
+
+def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = _worker_contract_op(
+        "adaptive-feedforward", _ADAPTIVE_FIELDS,
+        OutputSchema(fields=("total_segments", "mitigated_hotspots_count", "overall_energy_reduction_pct",
+                             "rotation_angle_deg", "total_mitigated_energy_J", "mitigated_gcode", "sample_segments"),
+                     status_key=None),
+        undeclared=("content",))
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key. Feed-forward power scaling P_nom * min(1, "
+            "v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x "
+            "layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect "
+            "reduction is measured. " + _PENDING_CAP),
+        notes=(
+            _CONTENT_NOTE,
+            "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal "
+            "speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x "
+            "nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
+            "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the "
+            "Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
+            "No validity domain is declared: no source-backed applicability range is established.",
+        ),
+        sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
+            "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
+            "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
+            "routes/lpbfSimulation.ts:37#/api/python/lpbf-adaptive-feedforward",
+            "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
+            "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation",
+        ))
+
+
+def _defect_twin_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = _worker_contract_op(
+        "stl-voxelize",
+        (_num("resolution", "Grid divisions per axis", "1", "count", 32, integer=True,
+              note="Converted with int(); no bound is enforced (0 divides by zero)."),),
+        OutputSchema(fields=("num_triangles", "bounds", "grid_resolution", "voxel_size_mm", "part_volume_mm3",
+                             "total_defects_count", "total_pore_volume_mm3", "relative_density_pct", "defects",
+                             "sample_surface_voxels"), status_key=None),
+        undeclared=("stlContent", "defects"))
+    return _wave2(
+        row, operation,
+        evidence_note=(
+            "Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) "
+            "times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with "
+            "the summed sphere volumes of the defects supplied in the request; the defects are inputs, not "
+            "detections. " + _PENDING_CAP),
+        notes=(
+            "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} "
+            "objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
+            "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero "
+            "triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct "
+            "100; with the 8 synthesized defects the view always sends it reports about 94.95 against that "
+            "fictitious volume (observed in Phase 7 wave 2).",
+            "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed "
+            "8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count "
+            "proxy, orders of magnitude below the enclosed volume.",
+            "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the "
+            "Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
+            _WORKER_NO_VALIDATION,
+            "No validity domain is declared: no source-backed applicability range is established.",
+        ),
+        sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
+            "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
+            "python/stl_voxelizer.py::STLVoxelizer.voxelize",
+            "routes/lpbfSimulation.ts:36#/api/python/lpbf-stl-voxelize",
+            "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
+            "src/services/pythonComputationService.ts::voxelizeSTLDefects",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin",
+        ))
 
 
 def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
@@ -527,6 +967,14 @@ def module_doc_path(module_id: str) -> str:
 CONTRACTED_BUILDERS = {
     "keyhole-raytracing": _keyhole_contract,
     "uq-lab": _uq_contract,
+    # Phase 7 wave 2
+    "ttt-cct-kinetics": _kinetics_contract,
+    "icme-motor": _icme_contract,
+    "murakami-fatigue": _fatigue_contract,
+    "optical-tomography": _optical_contract,
+    "toolpath-studio": _toolpath_contract,
+    "adaptive-mitigation": _adaptive_contract,
+    "defect-twin": _defect_twin_contract,
 }
 
 
@@ -903,7 +1351,9 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Forbidden claims: {', '.join(e.forbidden_claims)}",
         f"- Oracle: {oracle}",
         f"- Oracle scope: {c.tests.oracle.scope}" if c.tests.oracle.scope else "- Oracle scope: none",
-        f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note else "- Oracle in CI: no recorded gap",
+        f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note
+        else ("- Oracle in CI: none (oracle pending)" if c.tests.oracle.status == "pending"
+              else "- Oracle in CI: no recorded gap"),
         f"- Note: {e.note}" if e.note else "- Note: none",
         "",
         "## Validity domain",

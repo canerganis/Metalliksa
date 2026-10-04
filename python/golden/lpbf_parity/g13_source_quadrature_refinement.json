@@ -4,9 +4,9 @@
  "group": "G13",
  "description": "integrated_source N-vs-2N refinement branch (unreachable from the CPU transient)",
  "slow": false,
- "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "c76092c861268120ee583a9dad0128a3cff66e0a",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  0.1,
-  0.1
+  0.7,
+  0.6
  ],
  "recordedTwice": true,
  "observations": {
@@ -103,5 +103,27 @@
   ],
   "integratedSource.dt1.250e-03": "9447695d05a138cc6abcf3854311b68f0fe582a82dab3ea0db48edd0b3e3462e",
   "integratedSource.refinementReached": true
+ },
+ "rawValues": {
+  "integratedSource.dt1.000e-03.quadrature": [
+   60,
+   true
+  ],
+  "integratedSource.dt1.250e-03.quadrature": [
+   76,
+   true
+  ],
+  "integratedSource.dt1.250e-04.quadrature": [
+   20,
+   false
+  ],
+  "integratedSource.dt2.500e-04.quadrature": [
+   20,
+   true
+  ],
+  "integratedSource.dt5.000e-04.quadrature": [
+   32,
+   true
+  ]
  }
 }

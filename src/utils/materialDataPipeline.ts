@@ -1,7 +1,8 @@
 import { MaterialSpec } from "../types";
 import type { CandidateAlloySolution } from "./inverseAlloyOptimizer";
 import { MaterialThermalProfile, ThermalStage, HardnessAlloyPreset } from "../types/thermalKinetic";
-import { convertSteelHardness } from "./hardnessConversion";
+import { convertSteelHardness, hardnessMaterialClassOf } from "./hardnessConversion";
+import { estimateSteelHvFromYield, HV_FROM_YIELD_ESTIMATE_NOTE } from "./hardnessStrengthEstimate";
 
 export type ModuleTargetId =
   | "thermal-scheduler"
@@ -41,8 +42,9 @@ export interface PipelineMaterialPayload {
   density: number;
   elongation: number;
   hardness: string;
-  hardnessHV: number;
-  /** Where hardnessHV comes from: the hardness string, an ASTM E140 conversion of a reported HRC, or an estimate. */
+  /** null = unavailable (no reported/convertible hardness and no verified relation for this alloy class). */
+  hardnessHV: number | null;
+  /** Where hardnessHV comes from: the hardness string, an ASTM E140 conversion of a reported hardness, or an estimate. */
   hardnessHVSource?: HardnessHVSource;
   hardnessHRC?: number;
   poissonsRatio: number;
@@ -443,7 +445,27 @@ export function deriveKineticProfile(
   return { profile, stages, icme };
 }
 
-export type HardnessHVSource = "reported" | "converted-astm-e140" | "estimate-from-yield" | "estimate-predicted";
+export type HardnessHVSource = "reported" | "converted-astm-e140" | "estimate-from-yield" | "estimate-predicted" | "unavailable";
+
+/**
+ * Display text of a payload HV with its basis: estimates and conversions are never shown as plain measured values.
+ * When HV is unavailable but the record carries a reported hardness (e.g. "40 - 45 HRC"), that value is shown.
+ */
+export function pipelineHardnessText(
+  hv: number | null | undefined,
+  source: HardnessHVSource | undefined,
+  reportedHardness?: string
+): string {
+  if (hv === null || hv === undefined) {
+    const reported = reportedHardness?.trim();
+    // Our own generated strings ("Unavailable: ...", "≈ n HV: estimate ...") are not reported values.
+    return reported && !/^(unavailable|≈)/i.test(reported) ? `HV unavailable (reported: ${reported})` : "HV unavailable";
+  }
+  if (source === "converted-astm-e140") return `${hv} HV (converted, ASTM E140)`;
+  if (source === "estimate-from-yield" || source === "estimate-predicted") return `${hv} HV (estimate, not measured)`;
+  if (source === "reported") return `${hv} HV (reported)`;
+  return `${hv} HV`;
+}
 
 /**
  * HRC <-> HV conversion only applies to non-austenitic steels (ASTM E140 Table 1). An Fe-base material whose name,
@@ -465,37 +487,72 @@ export function deriveHardnessProfile(
   hardnessStr: string,
   microstructure?: string,
   /** true when hardnessStr itself is a prediction (e.g. a synthesized candidate), not a reported value */
-  hardnessStrIsEstimate = false
-): { hardnessProfile: HardnessAlloyPreset; hardnessHV: number; hardnessHVSource: HardnessHVSource; hardnessHRC?: number } {
-  // Fallback when no usable hardness is reported: an UNVERIFIED rule of thumb HV ~ YS/3 + 35 (no source); it is
-  // labelled as an estimate in hardnessHVSource and in the profile description.
-  let hv = Math.round(yieldStrength / 3.0 + 35);
-  let hvSource: HardnessHVSource = "estimate-from-yield";
+  hardnessStrIsEstimate = false,
+  /** wt% composition; the steel yield-strength relation needs a hypoeutectoid carbon or low-alloy steel */
+  composition?: Record<string, number>
+): { hardnessProfile: HardnessAlloyPreset; hardnessHV: number | null; hardnessHVSource: HardnessHVSource; hardnessHRC?: number } {
+  let hv: number | null = null;
+  let hvSource: HardnessHVSource = "unavailable";
   let hrc: number | undefined = undefined;
+  let convertedFrom = "";
+  let fromPredictedYield = false;
+  let unavailableText = "HV unavailable";
   const steel = isNonAusteniticSteel(baseMetal, matName, category, microstructure);
 
-  // Try extracting from hardness string. HRC <-> HV uses the ASTM E140 Table 1 interpolation, steels only.
+  // Try extracting from hardness string. Scale <-> HV uses the ASTM E140 table interpolation, steels only.
   const hrcMatch = hardnessStr.match(/(\d+(\.\d+)?)\s*HRC/i);
+  const hvMatch = hardnessStr.match(/(\d+(\.\d+)?)\s*HV/i);
   if (hrcMatch) {
     hrc = parseFloat(hrcMatch[1]);
     const convertedHV = steel ? convertSteelHardness(hrc, "HRC").HV : null;
     if (convertedHV !== null) {
       hv = convertedHV;
       hvSource = "converted-astm-e140";
+      convertedFrom = `${hrc} HRC per ASTM E140 Table 1`;
     }
-  } else {
-    const hvMatch = hardnessStr.match(/(\d+(\.\d+)?)\s*HV/i);
-    if (hvMatch) {
-      hv = parseFloat(hvMatch[1]);
-      hvSource = hardnessStrIsEstimate ? "estimate-predicted" : "reported";
-      if (steel) hrc = convertSteelHardness(hv, "HV").HRC ?? undefined;
+  } else if (hvMatch) {
+    hv = parseFloat(hvMatch[1]);
+    hvSource = hardnessStrIsEstimate ? "estimate-predicted" : "reported";
+    if (steel) hrc = convertSteelHardness(hv, "HV").HRC ?? undefined;
+  } else if (steel) {
+    // Reported Rockwell B (E140 Table 2) or Brinell HBW (E140 Table 1, carbide ball): first one inside its table range.
+    for (const [scale, table] of [["HRB", "Table 2"], ["HBW", "Table 1"]] as const) {
+      const m = hardnessStr.match(new RegExp(`(\\d+(\\.\\d+)?)\\s*${scale}`, "i"));
+      if (!m) continue;
+      const value = parseFloat(m[1]);
+      const conv = convertSteelHardness(value, scale);
+      if (conv.HV !== null) {
+        hv = conv.HV;
+        hrc = conv.HRC ?? undefined;
+        hvSource = "converted-astm-e140";
+        convertedFrom = `${value} ${scale} per ASTM E140 ${table}`;
+        break;
+      }
+    }
+  }
+  if (hv === null) {
+    // No usable hardness: the steel-only yield-strength regression (Pavlina & Van Tyne 2008), else unavailable. The
+    // old fallback HV ~ YS/3 + 35 (YS/3 + 30 for candidates) had no source.
+    const est = estimateSteelHvFromYield(yieldStrength, {
+      materialClass: steel ? "non-austenitic-steel" : hardnessMaterialClassOf({ baseMetal, crystalSystem: baseMetal === "Fe" ? "FCC" : undefined }),
+      composition,
+    });
+    if (est.hv !== null) {
+      hv = est.hv;
+      hvSource = hardnessStrIsEstimate ? "estimate-predicted" : "estimate-from-yield";
+      fromPredictedYield = hardnessStrIsEstimate;
+    } else {
+      unavailableText = est.note.replace(/^Unavailable: /, "HV unavailable: ");
     }
   }
   const hvSourceText: Record<HardnessHVSource, string> = {
     reported: `HV ${hv} as reported`,
-    "converted-astm-e140": `HV ${hv} converted from ${hrc} HRC per ASTM E140 Table 1 (approximate)`,
-    "estimate-from-yield": `HV ${hv} is an unverified estimate from yield strength (HV ~ YS/3 + 35)`,
-    "estimate-predicted": `HV ${hv} is a predicted value, not a measurement`,
+    "converted-astm-e140": `HV ${hv} converted from ${convertedFrom} (approximate)`,
+    "estimate-from-yield": `HV ${hv} is an ${HV_FROM_YIELD_ESTIMATE_NOTE}`,
+    "estimate-predicted": fromPredictedYield
+      ? `HV ${hv} is a predicted value from a predicted yield strength, not a measurement (${HV_FROM_YIELD_ESTIMATE_NOTE})`
+      : `HV ${hv} is a predicted value, not a measurement`,
+    unavailable: unavailableText,
   };
 
   const n_hollomon = Math.min(0.28, Math.max(0.08, parseFloat((0.45 * Math.pow(elongation / 100, 0.5)).toFixed(3))));
@@ -515,7 +572,7 @@ export function deriveHardnessProfile(
         : category.includes("Aluminum") || baseMetal === "Al"
         ? "Aluminum Alloys"
         : "Steels & Irons",
-    defaultHardnessHV: hv,
+    defaultHardnessHV: hv ?? undefined,
     defaultHardnessHRC: hrc,
     taborConstraintFactor_c: tabor_c,
     cahoon_m: cahoon_m,
@@ -623,7 +680,9 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
     mat.youngsModulus,
     mat.elongation,
     mat.hardness,
-    mat.microstructure
+    mat.microstructure,
+    false,
+    normComp
   );
   const xrdProfile = deriveXRDProfile(mat.name, baseMetal, normComp);
 
@@ -661,7 +720,8 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
 
 // Convert Synthesized Candidate Alloy (from Inverse Alloy Studio) into Pipeline Payload
 export function createPipelinePayloadFromCandidate(
-  candidate: Pick<CandidateAlloySolution, "name" | "compositionWt" | "yieldStrength_25C_MPa" | "uts_25C_MPa" | "density_gcm3" | "youngsModulus_GPa" | "elongation_pct">,
+  candidate: Pick<CandidateAlloySolution, "name" | "compositionWt" | "yieldStrength_25C_MPa" | "uts_25C_MPa" | "density_gcm3" | "youngsModulus_GPa" | "elongation_pct">
+    & Partial<Pick<CandidateAlloySolution, "matrixPhase">>,
   sourceModule = "Alloy Formulator & Inverse Studio"
 ): PipelineMaterialPayload {
   const comp = { ...candidate.compositionWt };
@@ -681,7 +741,8 @@ export function createPipelinePayloadFromCandidate(
   const elongation = candidate.elongation_pct;
 
   const { profile: kineticProfile, stages: suggestedThermalCycle, icme } = deriveKineticProfile(name, baseMetal, comp, yieldStrength);
-  // The candidate's hardness is itself a prediction (unverified rule of thumb HV ~ YS/3 + 30), flagged as such.
+  // The candidate has no hardness of its own: HV is estimated from its predicted yield strength for non-austenitic
+  // hypoeutectoid steels only (flagged "estimate-predicted"), else unavailable. The old rule HV ~ YS/3 + 30 had no source.
   const { hardnessProfile, hardnessHV, hardnessHVSource, hardnessHRC } = deriveHardnessProfile(
     name,
     `${baseMetal} Formulated Alloy`,
@@ -690,9 +751,11 @@ export function createPipelinePayloadFromCandidate(
     tensileStrength,
     youngsModulus,
     elongation,
-    `${Math.round(yieldStrength / 3 + 30)} HV`,
-    undefined,
-    true
+    "",
+    // An FCC/austenitic matrix excludes the non-austenitic steel relation.
+    candidate.matrixPhase === "FCC" || candidate.matrixPhase === "Austenitic" ? "austenitic (FCC) matrix" : candidate.matrixPhase,
+    true,
+    comp
   );
   const xrdProfile = deriveXRDProfile(name, baseMetal, comp);
 
@@ -712,7 +775,7 @@ export function createPipelinePayloadFromCandidate(
     youngsModulus,
     density,
     elongation,
-    hardness: `${hardnessHV} HV (Predicted)`,
+    hardness: hardnessHV === null ? "Unavailable (no verified hardness-strength relation for this candidate)" : `${hardnessHV} HV (estimate from predicted yield strength, not measured)`,
     hardnessHV,
     hardnessHVSource,
     hardnessHRC,

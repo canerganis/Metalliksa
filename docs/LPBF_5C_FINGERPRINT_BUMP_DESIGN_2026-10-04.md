@@ -489,6 +489,46 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
   writers, G11 build-job melt pool, G12 analytical modules, G13 source-quadrature
   refinement, G14 calibration, G15 square bare plate with opticalObserver, G16 non-IN718
   transients, NPZ determinism.
+- B5 step 2 (orch/b5-goldens): all goldens re-recorded twice at `edddf0dc…` in a commit of
+  their own (observations unchanged; only the recorded hash, git head and timings moved).
+  New cases recorded at `edddf0dc…` document today's behaviour for the corrected-physics bump:
+  - G17 `evaporationModel=True` for Ti-6Al-4V and 316L (80 W) and AlSi10Mg (500 W), all at
+    the default Marangoni multiplier and speed. (AlSi10Mg does not boil at 400 W on the small
+    grid; at 600 W its maximum vapour fraction saturates at 1.0 for both L_v values, at 500 W
+    it does not.) Every alloy passes IN718's 6.4e6 J/kg to the enthalpy inversion (authority:
+    8.9e6, 6.25e6, 1.05e7). A harness-side probe with the authority value gives a bit-equal
+    result: the inversion's vapour fraction is discarded, so today L_v does not reach any
+    result byte; the D1 fix should drift only `evaporation.latentHeatVapUsed_J_kg` and
+    `evaporation.maxVaporFraction`. The probe wraps today's call shape; a bump that changes
+    the call must update the wrapper in the same branch (an unknown shape is recorded as a
+    note, not a crash).
+  - G18 IN625 fusion latent heat per path: the Rosenthal melt-pool path
+    (`calculate_meltpool_physics`) uses 260 kJ/kg, the screening snapshot 290 kJ/kg, the
+    transient specification 227 kJ/kg. The build job resolves only the four alloys
+    (`resolve_alloy_id("Inconel 625")` is None), so it never reaches the 260 kJ/kg table.
+  - G19 the registry emissivity literal 0.35 echoed into `p`/`m` for every alloy, the override
+    bounds, and the core-contract rejection of a 0.36 override after the solve.
+  - The silent `resolve_alloy_id(...) or "in718"` P-v fallback stays pinned by G9.
+  None of the NOT COVERED items below was closed by these cases. `recordedGitHead` is the
+  HEAD at recording time; for goldens recorded from a working tree it may predate the case
+  code (G17-G19 were re-checked bit-equal at their committing HEAD).
+- Planned drift (for the corrected-physics bump): `--check --expect-drift ENTRY[,ENTRY...]`
+  and `tools/lpbf_bump_record.py ... --expect-drift` (same semantics). ENTRY is `CASE` or
+  `CASE:KEY_GLOB` (fnmatch on the observation key).
+  - Only matched observations may drift (status DRIFT, before -> after values, and leaf-level
+    raw values from the golden's `rawValues`, the pre-hash value of small digest observations;
+    never compared). Every other diff fails; pin, implementationHash and golden problems fail.
+  - An entry that matches no drifted observation, or names a case that is not run, is stale
+    and fails.
+  - Identity digests (`*materialRevisionSha256*`, `*materialSha256*`, `*inputSha256*`) fail in
+    every case unless an entry names that exact key.
+  - G1, G2 and G4 (reference transients) are refused as whole cases; their numerics (metrics,
+    thermalHistory, energyBalance, field*, artifacts, NPZ, fixture equality) fail whatever
+    the allowlist. Named G1 observations such as `result.key.analyticalComparison`, the two
+    whole-result digests and `v1Archive.strippedResultEqual` can be allowed one by one.
+  - With `--allow-environment-mismatch` a drift run ends DIAGNOSTIC (exit 3), never PASS.
+  - After the merge, the drifted goldens are re-recorded at the new fingerprint in a commit
+    of their own.
 - Valid only in the recorded environment (Python, numpy, OS, locked runtime, CPU brand,
   numpy SIMD dispatch, BLAS); elsewhere every case is SKIP and `--check` exits 3. Not in CI.
   CI runs `test_lpbf_implementation_fingerprint_pin`, `test_lpbf_implementation_fingerprint`
@@ -505,4 +545,4 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
     azimuth.
   - Worker-side consumers of `opticalObserver` / NIST section operators (not in the manifest).
   - `CpuRunProgress` source-work budget failures.
-  - G11 when `warp` is installed: it is skipped.
+  - G11 and G18 when `warp` is installed: they are skipped.

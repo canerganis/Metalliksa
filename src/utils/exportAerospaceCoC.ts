@@ -3,14 +3,11 @@ import { ENGINEERING_ESTIMATE_DISCLAIMER } from "./engineeringDisclaimer";
 import { toleranceFactorMethodLabel } from "./toleranceFactors";
 
 export interface LabMultiTestData {
-  // Tabor-Cahoon Non-Destructive Tensile Test
+  // Indentation hardness of a preset. Illustrative value only, never a measurement of the lot. No hardness-to-strength
+  // ("Tabor-Cahoon") prediction is made: no verified relation exists for Ti/Ni/Al, and the former predicted yield/UTS,
+  // n, K_IC and "correlation confidence" fields were invented.
   taborTest?: {
-    measuredHardnessHV: number;
-    predictedYieldMpa: number;
-    predictedUtsMpa: number;
-    strainHardeningExponentN: number;
-    fractureToughnessKic: number;
-    correlationConfidencePct: number;
+    illustrativeHardnessHV: number;
     indentationStandard: string;
   };
   // XRD Phase & Residual Stress Analysis
@@ -41,6 +38,13 @@ export interface LabMultiTestData {
     asBuiltVsHipState: string;
     standardReference: string;
   };
+}
+
+/** Hardness cell text for the CoC and the preview: an illustrative preset value is never shown as a measurement. */
+export function coCHardnessText(taborTest: LabMultiTestData["taborTest"]): string {
+  return taborTest
+    ? `${taborTest.illustrativeHardnessHV} HV (illustrative preset value, not measured)`
+    : "Not entered (no hardness test of this lot)";
 }
 
 export interface AerospaceAuditReportData { sampleLotNumber?: string;
@@ -368,10 +372,10 @@ export async function generateAerospaceCoCPDF(data: AerospaceAuditReportData): P
   const labTableHead = [["Testing Discipline", "Analyzed Metric", "Experimental Measurement", "Spec Acceptance Limit", "Verification Result"]];
   const labTableBody = [
     [
-      "Tabor-Cahoon Indentation\n(ASTM E8 / E384)",
-      "Non-Destructive σ-ε Curve\nYield, UTS, Hollomon n",
-      `R_p0.2: ${lab?.taborTest?.predictedYieldMpa ?? data.meanYieldMpa} MPa | R_m: ${lab?.taborTest?.predictedUtsMpa ?? data.meanTensileMpa} MPa\nStrain Hardening n: ${lab?.taborTest?.strainHardeningExponentN ?? 0.14}`,
-      `R_p0.2 ≥ ${data.mmpdsStats.aBasisYield} MPa\nHardness: ${lab?.taborTest?.measuredHardnessHV ?? 330} HV`,
+      "Indentation Hardness\n(ASTM E384 method)",
+      "Vickers hardness only\n(no hardness-strength relation applied)",
+      coCHardnessText(lab?.taborTest),
+      `R_p0.2 ≥ ${data.mmpdsStats.aBasisYield} MPa`,
       "SCREENING ONLY",
     ],
     [

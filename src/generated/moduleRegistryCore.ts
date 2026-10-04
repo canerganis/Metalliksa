@@ -213,7 +213,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "toolpath-studio",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
@@ -225,7 +225,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/LpbfToolpathStudioLab.tsx",
         "export": "LpbfToolpathStudioLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -291,7 +291,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "murakami-fatigue",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
@@ -303,7 +303,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/MurakamiFatigueLab.tsx",
         "export": "MurakamiFatigueLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -317,7 +317,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "defect-twin",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Spatial Defect Twin",
       "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
@@ -329,7 +329,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/LpbfDefectTwinLab.tsx",
         "export": "LpbfDefectTwinLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -343,7 +343,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "adaptive-mitigation",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Defect Mitigation",
       "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
@@ -355,7 +355,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/LpbfAdaptiveMitigationLab.tsx",
         "export": "LpbfAdaptiveMitigationLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -447,7 +447,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "optical-tomography",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Optical Tomography",
       "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
@@ -459,7 +459,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/OpticalTomographyLab.tsx",
         "export": "OpticalTomographyLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -603,7 +603,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "ttt-cct-kinetics",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "TTT / CCT",
       "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
@@ -615,7 +615,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/PhaseKineticsTTTCCTStudio.tsx",
         "export": "PhaseKineticsTTTCCTStudio"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -707,10 +707,10 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "icme-motor",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "ICME Multi-Scale Studio",
-      "description": "Coupled microstructure and property estimates with CALPHAD thermodynamics.",
+      "description": "Illustrative closed-form property estimates on tabulated constants; no DFT, CALPHAD or FEA is run.",
       "next": "materials-project",
       "maturity": "Research",
       "navigation": "listed",
@@ -719,7 +719,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/ICMEMultiScalePipelineStudio.tsx",
         "export": "ICMEMultiScalePipelineStudio"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

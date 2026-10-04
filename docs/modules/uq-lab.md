@@ -51,7 +51,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. aerospaceReliability.qualificationStatus is the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is 'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon evidence or allowables.
 
 ## Validity domain
@@ -74,7 +74,7 @@ Background work: none; resources: fetch.
 ## Source references
 
 - `python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq`
-- `python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled`
+- `python/stochastic_uq_mmpds_solver.py::SobolSequenceGenerator`
 - `python/stochastic_uq_mmpds_solver.py::provenance`
 - `python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE`
 - `python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants`

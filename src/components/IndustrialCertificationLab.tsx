@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Layers, Activity, AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { pythonComputationService } from '../services/pythonComputationService';
+import { formatOptionalValue } from '../utils/icmeDisplay';
 
 export const IndustrialCertificationLab: React.FC = () => {
   const [power, setPower] = useState<number>(300);
@@ -90,6 +91,13 @@ export const IndustrialCertificationLab: React.FC = () => {
         </button>
       </div>
 
+      {result && result.modelStatusNote && (
+        <p role="note" className="text-xs text-amber-300/90">
+          <span className="font-semibold">Model status: {result.modelStatus}.</span> {result.modelStatusNote}
+          {result.Certification_Limits?.Status ? ` ${result.Certification_Limits.Status}.` : ''}
+        </p>
+      )}
+
       {result && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* AI Meltpool */}
@@ -113,13 +121,13 @@ export const IndustrialCertificationLab: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <div className="text-sm text-slate-400">Maximum Simulated Pore</div>
-                <div className="text-xl text-white font-mono">{result.Defect_Simulation?.Max_Simulated_Defect_um} µm</div>
+                <div className="text-xl text-white font-mono">{formatOptionalValue(result.Defect_Simulation?.Max_Simulated_Defect_um, 'µm')}</div>
               </div>
               <div>
                 <div className="text-sm text-slate-400">Characteristic Maximum Critical Defect</div>
                 <div className="text-2xl text-red-400 font-mono font-bold flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
-                  {result.Defect_Simulation?.Gumbel_Predicted_Largest_Defect_um} µm
+                  {formatOptionalValue(result.Defect_Simulation?.Gumbel_Predicted_Largest_Defect_um, 'µm')}
                 </div>
               </div>
             </div>
@@ -131,13 +139,13 @@ export const IndustrialCertificationLab: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <div className="text-sm text-slate-400">Expected Fatigue Limit</div>
-                <div className="text-xl text-white font-mono">{result.Certification_Limits?.Expected_Fatigue_Limit_MPa} MPa</div>
+                <div className="text-xl text-white font-mono">{formatOptionalValue(result.Certification_Limits?.Expected_Fatigue_Limit_MPa, 'MPa')}</div>
               </div>
               <div>
-                <div className="text-sm text-slate-400">99% Survival Design Limit</div>
+                <div className="text-sm text-slate-400">Design Limit (fixed 0.85 knockdown, illustrative)</div>
                 <div className="text-3xl text-emerald-400 font-mono font-bold flex items-center gap-2">
                   <CheckCircle className="w-6 h-6" />
-                  {result.Certification_Limits?.['99_Percent_Survival_Design_Limit_MPa']} MPa
+                  {formatOptionalValue(result.Certification_Limits?.Design_Limit_MPa, 'MPa')}
                 </div>
               </div>
             </div>

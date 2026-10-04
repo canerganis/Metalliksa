@@ -7,6 +7,8 @@ merge-base..HEAD that touches it must carry the trailer ``Ceiling-Review: <reaso
 trailer block (parsed by ``git interpret-trailers``; the reason needs at least four words); an
 earlier reviewed commit does not cover a later unreviewed edit. Ceilings that are new in the
 range are governed by python/test_allowlist_ceilings.py (pinned content plus an explicit delta).
+Every file added, changed or removed below a PROTECTED_PREFIXES directory (the LPBF parity
+goldens) is reviewed the same way as a guard file.
 
 Usage (CI, full history):  git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
 (CI runs the base revision's copy so a branch cannot weaken its own check; locally
@@ -35,7 +37,27 @@ PROTECTED_PATHS = (
     "tests/component-reachability.test.ts",
     # The LPBF implementation fingerprint pin (design 5c): it may change only at the planned bump.
     "python/lpbf_implementation_fingerprint.expected",
+    # ... and the guards around it (review N1, B5 step 2): the pin test, the one strict pin
+    # parser, FORBIDDEN_MANIFEST_IMPORTS (test_lpbf_implementation_fingerprint.py) and the
+    # manifest-count test (test_phase6a_leaf_modules.py). Weakening any of them would let a
+    # branch change manifest files with no trailer.
+    "python/test_lpbf_implementation_fingerprint_pin.py",
+    "python/lpbf_fingerprint_pin.py",
+    "python/test_lpbf_implementation_fingerprint.py",
+    "python/test_phase6a_leaf_modules.py",
+    # The LPBF parity harness: its --expect-drift rules decide what a bump may change.
+    "python/tools/lpbf_parity_check.py",
 )
+# Directories reviewed like a guard file: any added, changed or removed file below them. The
+# LPBF parity goldens are the "before" side of every fingerprint bump; a re-record must be a
+# reviewed, deliberate commit (design 5c section 8).
+PROTECTED_PREFIXES = (
+    "python/golden/lpbf_parity/",
+)
+
+
+def is_protected(path: str) -> bool:
+    return path in PROTECTED_PATHS or path.startswith(PROTECTED_PREFIXES)
 
 
 def _git(args: List[str], cwd: Optional[str] = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -75,7 +97,7 @@ def reviewed_paths(merge_base: str, head: str, cwd: Optional[str] = None) -> Lis
     """
     changed = [p for p in _git(["diff", "--no-renames", "--name-only", merge_base, head], cwd).stdout.splitlines() if p]
     return [p for p in changed
-            if p in PROTECTED_PATHS or (p.endswith(".ceiling.json") and _exists(merge_base, p, cwd))]
+            if is_protected(p) or (p.endswith(".ceiling.json") and _exists(merge_base, p, cwd))]
 
 
 def last_touching_commit(merge_base: str, head: str, path: str, cwd: Optional[str] = None) -> Optional[str]:
