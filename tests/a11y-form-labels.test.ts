@@ -20,7 +20,50 @@ const LABELLED = [
   "src/components/ToolpathThermalMapLab.tsx",
   "src/components/LpbfAdaptiveMitigationLab.tsx",
   "src/components/LpbfToolpathStudioLab.tsx",
+  // Phase 8 batch 2.
+  "src/components/MetallurgicalUnitConverter.tsx",
+  "src/components/PocketCalculators.tsx",
+  "src/components/InverseAlloyStudio.tsx",
+  "src/components/CorrosionEngineeringLab.tsx",
+  "src/components/AIOrchestratorPanel.tsx",
+  "src/components/AerospaceAuditReportGenerator.tsx",
+  "src/components/AlloyBuilder.tsx",
+  "src/components/CALPHADMultiComponentStudio.tsx",
+  "src/components/CALPHADThermodynamicsLab.tsx",
+  "src/components/CorrosionEISKineticsStudio.tsx",
+  "src/components/DigitalTwinHub.tsx",
+  "src/components/DynamicPourbaixStudio.tsx",
+  "src/components/EDSSpectrumLab.tsx",
+  "src/components/HeatTreatmentAgingSimulator.tsx",
+  "src/components/ICMEMultiScalePipelineStudio.tsx",
+  "src/components/IndustrialCertificationLab.tsx",
+  "src/components/LpbfBuildJobRail.tsx",
+  "src/components/LpbfDefectTwinLab.tsx",
+  "src/components/MaterialsDatabaseView.tsx",
+  "src/components/MaterialsProjectExplorer.tsx",
+  "src/components/MaterialsPropertyHeatmapD3.tsx",
+  "src/components/MetallurgicalQuickConversionsGrid.tsx",
+  "src/components/MetallurgyCopilot.tsx",
+  "src/components/MicroAlloySandbox.tsx",
+  "src/components/MicrographLab.tsx",
+  "src/components/MurakamiFatigueLab.tsx",
+  "src/components/PhaseDiagramViewer.tsx",
+  "src/components/PhaseKineticsTTTCCTStudio.tsx",
+  "src/components/PythonAnnualCorrosionRateModule.tsx",
+  "src/components/SEMAutoAnalyzerStudio.tsx",
+  "src/components/StandardQualificationEngine.tsx",
+  "src/components/TafelPolarizationLab.tsx",
+  "src/components/UQLab.tsx",
+  "src/components/WebGLEDSHyperMapCanvas.tsx",
 ];
+
+// Deliberately NOT guarded (documented, not forgotten):
+// - EIS/battery cluster (deletion candidates, .orchestra/DELETION-MANIFEST.md): AdvancedBatteryPhysicsStudio,
+//   BatteryEISDegradationStudio, CircuitLibraryModal, CNLSFittingStudio, EISLabDataUploader, EISUploadInsightsStudio,
+//   EquivalentCircuitBuilder, PresetCircuitLibraryPanel, PythonBatteryCorrosionUploadStudio,
+//   SavitzkyGolayFilterControls, StochasticUQMMPDSStudio, SyntheticNoiseStressStudio, TransportKineticsLab.
+// - Field.tsx (the only "<input" / "<select" hits are in a doc comment) and the thin wrappers Input/Select in
+//   OpticalTomographyLab, PowderDEMCompactionLab, TransientEnthalpy3DGPULab (every call site is wrapped by <label>).
 
 /** aria-label / aria-labelledby with a non-empty, non-undefined value. */
 export function hasNonEmptyAriaName(tag: string): boolean {
@@ -87,6 +130,14 @@ test("negative fixtures: empty or undefined aria names and stale label spans do 
   assert.deepEqual(unlabelledControls("<label>A<input /><input /></label><input />"), [1]);
   assert.equal(insideOpenLabel("<label>x"), true);
   assert.equal(insideOpenLabel("<label>x</label>"), false);
+});
+
+test("guarded list has no duplicates and every file really contains form controls", () => {
+  assert.equal(new Set(LABELLED).size, LABELLED.length);
+  for (const rel of LABELLED) {
+    const src = readFileSync(resolve(process.cwd(), rel), "utf8");
+    assert.match(src, /<(input|select|textarea)\b/, `${rel} has no form controls; remove it from the list`);
+  }
 });
 
 for (const rel of LABELLED) {
