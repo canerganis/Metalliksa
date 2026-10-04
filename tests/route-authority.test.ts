@@ -5,6 +5,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import { MODULE_CONTRACTS } from '../src/modules/registry';
 import { repoRoot } from './support/importGraph';
+import { beyondCeiling, readCeiling } from './support/ceiling';
 
 // Phase 7 slice 1, static part of the route-authority check (design 7 section 5). Every HTTP
 // handler declared in routes/*.ts must either serve a registry operation route or be listed in
@@ -127,13 +128,30 @@ export function routeHandlers(file: string, text: string): RouteHandler[] {
   return handlers;
 }
 
+interface Allowlist { unbound: Record<string, string>; cannedBaseline: Record<string, string> }
+interface AllowlistCeiling { unbound: ReadonlySet<string>; cannedBaseline: ReadonlySet<string> }
+
 const routeFiles = readdirSync(path.join(repoRoot, 'routes')).filter(name => /\.ts$/.test(name)).sort();
 const handlers = routeFiles.flatMap(name => routeHandlers(`routes/${name}`, readFileSync(path.join(repoRoot, 'routes', name), 'utf8')));
-const allowlist = JSON.parse(readFileSync(path.join(repoRoot, 'routes/AUTHORITY_ALLOWLIST.json'), 'utf8')) as {
-  unbound: Record<string, string>; cannedBaseline: Record<string, string>;
-};
-const operationRoutes = new Set(MODULE_CONTRACTS.flatMap(contract => contract.operations.map(operation => operation.route)).filter(Boolean));
+const allowlist = JSON.parse(readFileSync(path.join(repoRoot, 'routes/AUTHORITY_ALLOWLIST.json'), 'utf8')) as Allowlist;
+const ceiling: AllowlistCeiling = readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline');
+const operationRoutes = new Set(MODULE_CONTRACTS.flatMap(contract => contract.operations.map(operation => operation.route)).filter(Boolean) as string[]);
 const routeOf = (key: string) => key.slice(key.indexOf(' ') + 1);
+const where = (handler: RouteHandler) => `${handler.key} (${handler.file}:${handler.line})`;
+
+/** Pure allowlist decision over parsed handlers; every list must come back empty. */
+export function allowlistDecision(found: RouteHandler[], bound: ReadonlySet<string>, live: Allowlist, limit: AllowlistCeiling) {
+  const keys = new Set(found.map(handler => handler.key));
+  const cannedKeys = new Set(found.filter(handler => handler.canned).map(handler => handler.key));
+  return {
+    missingUnbound: found.filter(handler => !bound.has(routeOf(handler.key)) && !live.unbound[handler.key]?.trim()).map(where),
+    staleUnbound: Object.keys(live.unbound).filter(key => !keys.has(key) || bound.has(routeOf(key))),
+    grownCanned: found.filter(handler => handler.canned && !live.cannedBaseline[handler.key]?.trim()).map(where),
+    staleCanned: Object.keys(live.cannedBaseline).filter(key => !cannedKeys.has(key)),
+    beyondCeiling: [...beyondCeiling(Object.keys(live.unbound), limit.unbound).map(key => `unbound: ${key}`),
+      ...beyondCeiling(Object.keys(live.cannedBaseline), limit.cannedBaseline).map(key => `cannedBaseline: ${key}`)],
+  };
+}
 
 test('the static parser finds direct, aliased, prefixed and table-driven handlers', () => {
   const keys = new Set(handlers.map(handler => handler.key));
@@ -156,27 +174,37 @@ test('canned-result heuristic flags literal answers without an authority call an
   });
 });
 
+test('mutation: a new canned route plus matching allowlist entries still fails', () => {
+  const [canned] = routeHandlers('routes/newCanned.ts', `r.post('/api/new-canned', async (_req, res) => res.json({ qualified: true }));`);
+  const live: Allowlist = {
+    unbound: { ...allowlist.unbound, [canned.key]: 'sneaked in' },
+    cannedBaseline: { ...allowlist.cannedBaseline, [canned.key]: 'sneaked in' },
+  };
+  const decision = allowlistDecision([...handlers, canned], operationRoutes, live, ceiling);
+  assert.deepEqual(decision.missingUnbound, []);
+  assert.deepEqual(decision.grownCanned, []);
+  assert.deepEqual(decision.beyondCeiling, ['unbound: POST /api/new-canned', 'cannedBaseline: POST /api/new-canned']);
+  // Removing entries stays allowed (only the stale check then asks for cleanup).
+  const shrunk = allowlistDecision(handlers, operationRoutes, { unbound: {}, cannedBaseline: {} }, ceiling);
+  assert.deepEqual(shrunk.beyondCeiling, []);
+});
+
 test('every routes/*.ts handler is bound to a registry operation or allowlisted with a reason', () => {
-  const unbound = handlers.filter(handler => !operationRoutes.has(routeOf(handler.key)));
-  const missing = unbound.filter(handler => !allowlist.unbound[handler.key]?.trim()).map(handler => `${handler.key} (${handler.file}:${handler.line})`);
-  assert.deepEqual(missing, [], `Unbound handler(s) ${missing.join(', ')}: bind them to a registry operation route or allowlist them with a reason.`);
-  const keys = new Set(handlers.map(handler => handler.key));
-  const stale = Object.keys(allowlist.unbound).filter(key => !keys.has(key) || operationRoutes.has(routeOf(key)));
-  assert.deepEqual(stale, [], `Allowlist entries ${stale.join(', ')} are bound or gone: remove them.`);
+  const decision = allowlistDecision(handlers, operationRoutes, allowlist, ceiling);
+  assert.deepEqual(decision.beyondCeiling, [], `Allowlist entries ${decision.beyondCeiling.join(', ')} are not in routes/AUTHORITY_ALLOWLIST.ceiling.json: bind the route to an authority instead.`);
+  assert.deepEqual(decision.missingUnbound, [], `Unbound handler(s) ${decision.missingUnbound.join(', ')}: bind them to a registry operation route or allowlist them with a reason.`);
+  assert.deepEqual(decision.staleUnbound, [], `Allowlist entries ${decision.staleUnbound.join(', ')} are bound or gone: remove them.`);
 });
 
 test('every registry operation route is served by a routes/*.ts handler', () => {
   const served = new Set(handlers.map(handler => routeOf(handler.key)));
-  const dangling = [...operationRoutes].filter(route => !served.has(route!));
+  const dangling = [...operationRoutes].filter(route => !served.has(route));
   assert.deepEqual(dangling, [], `Registry operation route(s) without a handler: ${dangling.join(', ')}`);
 });
 
 test('canned-result handlers never grow beyond the ratcheted baseline', () => {
-  const canned = handlers.filter(handler => handler.canned);
-  const grown = canned.filter(handler => !allowlist.cannedBaseline[handler.key]?.trim()).map(handler => `${handler.key} (${handler.file}:${handler.line})`);
+  const decision = allowlistDecision(handlers, operationRoutes, allowlist, ceiling);
   console.log(`Canned-result baseline (${Object.keys(allowlist.cannedBaseline).length}):\n${Object.entries(allowlist.cannedBaseline).map(([key, reason]) => `  ${key} - ${reason}`).join('\n')}`);
-  assert.deepEqual(grown, [], `New canned-result handler(s) ${grown.join(', ')}: call an authority (python runner, worker, provider) instead of returning literals.`);
-  const cannedKeys = new Set(canned.map(handler => handler.key));
-  const stale = Object.keys(allowlist.cannedBaseline).filter(key => !cannedKeys.has(key));
-  assert.deepEqual(stale, [], `Canned baseline entries ${stale.join(', ')} no longer match: remove them (the baseline only shrinks).`);
+  assert.deepEqual(decision.grownCanned, [], `New canned-result handler(s) ${decision.grownCanned.join(', ')}: call an authority (python runner, worker, provider) instead of returning literals.`);
+  assert.deepEqual(decision.staleCanned, [], `Canned baseline entries ${decision.staleCanned.join(', ')} no longer match: remove them (the baseline only shrinks).`);
 });

@@ -1,0 +1,28 @@
+{
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review.",
+  "paths": [
+    "src/components/3d-distortion-lab/EmbeddedPythonLPBFSimulator.tsx",
+    "src/components/3d-distortion-lab/LPBFGroundTruthDataLab.tsx",
+    "src/components/3d-distortion-lab/MarangoniPoreInstabilityLab.tsx",
+    "src/components/3d-distortion-lab/index.ts",
+    "src/components/AdvancedBatteryPhysicsStudio.tsx",
+    "src/components/BatteryEISDegradationStudio.tsx",
+    "src/components/CNLSFittingStudio.tsx",
+    "src/components/CircuitLibraryModal.tsx",
+    "src/components/EISLabDataUploader.tsx",
+    "src/components/EISUploadInsightsStudio.tsx",
+    "src/components/EquivalentCircuitBuilder.tsx",
+    "src/components/GrainEvolutionD3Chart.tsx",
+    "src/components/LpbfBuildJobRail.tsx",
+    "src/components/MonteCarloUncertaintyCard.tsx",
+    "src/components/PhysicalValidationStudio.tsx",
+    "src/components/PlotlyEISViewer.tsx",
+    "src/components/PresetCircuitLibraryPanel.tsx",
+    "src/components/PythonBatteryCorrosionUploadStudio.tsx",
+    "src/components/SavitzkyGolayFilterControls.tsx",
+    "src/components/StochasticUQMMPDSStudio.tsx",
+    "src/components/SyntheticNoiseStressStudio.tsx",
+    "src/components/TransportKineticsLab.tsx",
+    "src/components/WebGLEBSDMapCanvas.tsx"
+  ]
+}

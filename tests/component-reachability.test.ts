@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { MODULE_CONTRACTS } from '../src/modules/registry';
 import { reachableFrom, rel, repoRoot } from './support/importGraph';
+import { beyondCeiling, readCeiling } from './support/ceiling';
 
 // Phase 7 slice 1: every file under src/components/** must be reachable through static or
 // lazy imports from the app entry (src/main.tsx -> src/App.tsx) or a registered module view,
@@ -28,13 +29,24 @@ function componentFiles(): string[] {
   return walk(path.join(repoRoot, 'src/components')).map(rel).filter(file => CODE_FILE.test(file)).sort();
 }
 
-/** Pure ratchet decision: which unreachable files are new, and which allowlist entries are stale. */
-export function ratchet(unreachable: string[], sharedPaths: string[], baselinePaths: string[]) {
+const ceilings = {
+  baseline: readCeiling('src/components/UNREACHABLE_BASELINE.ceiling.json', 'paths').paths,
+  shared: readCeiling('src/components/SHARED.ceiling.json', 'paths').paths,
+};
+
+/**
+ * Pure ratchet decision: unreachable files not allowed by the live lists, stale baseline entries,
+ * and live entries that exceed the immutable ceilings (an orphan "allowed" by also adding a
+ * baseline entry still fails here).
+ */
+export function ratchet(unreachable: string[], sharedPaths: string[], baselinePaths: string[],
+  ceiling: { baseline: ReadonlySet<string>; shared: ReadonlySet<string> } = ceilings) {
   const allowed = new Set([...sharedPaths, ...baselinePaths]);
   const unreachableSet = new Set(unreachable);
   return {
     grown: unreachable.filter(file => !allowed.has(file)),
     staleBaseline: baselinePaths.filter(file => !unreachableSet.has(file)),
+    beyondCeiling: [...beyondCeiling(baselinePaths, ceiling.baseline), ...beyondCeiling(sharedPaths, ceiling.shared)],
   };
 }
 
@@ -61,15 +73,30 @@ test('SHARED.json entries exist and carry an owner and a reason', () => {
   }
 });
 
-test('ratchet logic flags growth and stale baseline entries', () => {
-  assert.deepEqual(ratchet(['a', 'b'], [], ['a', 'b']), { grown: [], staleBaseline: [] });
-  assert.deepEqual(ratchet(['a', 'b', 'c'], ['c'], ['a', 'b']), { grown: [], staleBaseline: [] });
-  assert.deepEqual(ratchet(['a', 'new'], [], ['a']).grown, ['new']);
-  assert.deepEqual(ratchet(['a'], [], ['a', 'gone']).staleBaseline, ['gone']);
+test('ratchet logic flags growth, stale entries and allowlist growth past the ceiling', () => {
+  const ceiling = { baseline: new Set(['a', 'b', 'gone']), shared: new Set(['c']) };
+  assert.deepEqual(ratchet(['a', 'b'], [], ['a', 'b'], ceiling), { grown: [], staleBaseline: [], beyondCeiling: [] });
+  assert.deepEqual(ratchet(['a', 'b', 'c'], ['c'], ['a', 'b'], ceiling), { grown: [], staleBaseline: [], beyondCeiling: [] });
+  assert.deepEqual(ratchet(['a', 'new'], [], ['a'], ceiling).grown, ['new']);
+  assert.deepEqual(ratchet(['a'], [], ['a', 'gone'], ceiling).staleBaseline, ['gone']);
+  // Removing entries stays allowed.
+  assert.deepEqual(ratchet(['a'], [], ['a'], ceiling).beyondCeiling, []);
+});
+
+test('mutation: a new orphan plus a matching baseline (or shared) entry still fails', () => {
+  const ceiling = { baseline: new Set(['a']), shared: new Set<string>() };
+  const viaBaseline = ratchet(['a', 'src/components/NewOrphan.tsx'], [], ['a', 'src/components/NewOrphan.tsx'], ceiling);
+  assert.deepEqual(viaBaseline.grown, []);
+  assert.deepEqual(viaBaseline.beyondCeiling, ['src/components/NewOrphan.tsx']);
+  const viaShared = ratchet(['a', 'src/components/NewOrphan.tsx'], ['src/components/NewOrphan.tsx'], ['a'], ceiling);
+  assert.deepEqual(viaShared.beyondCeiling, ['src/components/NewOrphan.tsx']);
+  // Against the committed ceilings too.
+  assert.deepEqual(ratchet(['src/components/NewOrphan.tsx'], [], ['src/components/NewOrphan.tsx']).beyondCeiling, ['src/components/NewOrphan.tsx']);
 });
 
 test('every component is reachable, shared, or in the shrinking unreachable baseline', () => {
-  const { grown, staleBaseline } = ratchet(unreachable, shared.map(entry => entry.path), baseline.map(entry => entry.path));
+  const { grown, staleBaseline, beyondCeiling: overCeiling } = ratchet(unreachable, shared.map(entry => entry.path), baseline.map(entry => entry.path));
+  assert.deepEqual(overCeiling, [], `Allowlist entries ${overCeiling.join(', ')} are not in the immutable *.ceiling.json allowance: wire the file into a view or delete it instead of allowlisting it.`);
   const checklist = baseline.filter(entry => unreachable.includes(entry.path));
   const lines = checklist.map(entry => {
     const loc = readFileSync(path.join(repoRoot, entry.path), 'utf8').split(/\r?\n/).length;
