@@ -53,6 +53,37 @@ class MeltPoolConsumerPins(unittest.TestCase):
         self.assertEqual(g["extentStatus"], "heuristic-width-fallback")
         self.assertIn("not a computed isotherm", g["extentNote"])
 
+    def test_width_floor_is_labelled_not_computed(self):
+        # The computed half-width is below the 0.55 x beam-diameter floor (rr1 S1: 16 such cases).
+        for source, args in (("goldak", ("Inconel 718", 50.0, 800.0, 80.0, 80.0, 40, 110)),
+                             ("eagar-tsai", ("Ti-6Al-4V", 20.0, 800.0, 80.0, 80.0, 40, 110))):
+            g, _ = _geometry(source, *args)
+            self.assertEqual(g["extentStatus"], "width-floor-applied", (source, g["width_um"]))
+            self.assertAlmostEqual(g["width_um"], 44.0, delta=0.05)
+            self.assertIn("width floor", g["extentNote"])
+
+    def test_search_box_grows_until_the_isotherm_closes(self):
+        # rr1 S1: these lengths were capped by the search box (836.2 / 1535.3 / 1011.7 / 373.1 um);
+        # the box now grows and the extents equal the reviewer's unbounded search.
+        for source, args, length in (("eagar-tsai", ("Inconel 718", 500.0, 1500.0, 40.0, 80.0, 40, 110), 1009.9),
+                                     ("rosenthal", ("Inconel 718", 370.0, 800.0, 80.0, 80.0, 40, 110), 1849.5),
+                                     ("rosenthal", ("Inconel 718", 200.0, 1500.0, 40.0, 80.0, 40, 110), 1011.7),
+                                     ("goldak", ("Inconel 718", 200.0, 3000.0, 40.0, 80.0, 40, 110), 391.1)):
+            g, _ = _geometry(source, *args)
+            self.assertEqual(g["extentStatus"], "computed", (source, args))
+            self.assertAlmostEqual(g["length_um"], length, delta=0.5, msg=(source, args))
+
+    def test_search_box_limit_status_when_the_isotherm_never_closes(self):
+        from unittest import mock
+        import lpbf_thermal_solver as solver
+        # Force the growth loop to give up at once so the limit branch is exercised deterministically.
+        original = solver._binary_extent
+        with mock.patch.object(solver, "_binary_extent", lambda pred, lo, hi, iters=18: hi):
+            g, _ = _geometry("rosenthal", *NIST)
+        self.assertEqual(g["extentStatus"], "search-box-limited")
+        self.assertIn("lower bound", g["extentNote"])
+        self.assertIs(solver._binary_extent, original)
+
 
 if __name__ == "__main__":
     unittest.main()

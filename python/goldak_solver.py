@@ -16,11 +16,7 @@ import math
 
 import numpy as np
 from numpy.polynomial.legendre import leggauss
-
-_erf_ufunc = np.frompyfunc(math.erf, 1, 1)
-
-def _erf(arr):
-    return np.asarray(_erf_ufunc(arr), dtype=np.float64)
+from scipy.special import erf as _erf  # vectorised; the frompyfunc(math.erf) wrapper cost 2.6-3.9x in screening()
 
 MODEL_ID = "goldak-half-space-v3"
 # Time quadrature in u = sqrt(tau): a first panel [0, u0], geometric panels (x2) while their width

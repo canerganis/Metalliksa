@@ -9,7 +9,8 @@ This is NOT an evaporation model. With ``evaporationModel=True`` the transient:
    enthalpy in the cell. Nothing leaves the domain: no mass flux, no latent-heat sink, no recoil.
    The returned "vapor fraction" ``excess_h / L_v`` is a diagnostic proxy, not a mass loss, and
    it is not conserved. Such a run is labelled "boiling-capped" and carries a ``boilingCap``
-   block in the result; it is never a successful reference solution.
+   block in the result (``isReferenceSolution: false``, ``isEvaporationModel: false``): it is labelled
+   as not a reference solution and not an evaporation model.
 
 The former ``langmuir_evaporation_flux`` helper was never called by any solver and was removed
 so that this module does not advertise physics the transient does not solve.
