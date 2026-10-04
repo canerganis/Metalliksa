@@ -46,3 +46,79 @@ export function kineticsHardnessText(row: KineticsHardnessRow | null | undefined
     note: KINETICS_HV_STATUS_NOTES[status] ?? (row && !finite(hv) ? "HV unavailable." : ""),
   };
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// LPBF build-job kinetics block (python/lpbf_build_job_solver.py build_job_kinetics). Alloys without a kinetics
+// model of their own (316L, AlSi10Mg) carry {status: "unavailable", reason} instead of a substituted alloy.
+
+export interface BuildJobCctRow extends KineticsHardnessRow {
+  coolingRate_C_s?: number | null;
+  primaryMicrostructure?: string | null;
+}
+
+/** Python's choice of CCT row for the build cooling rate (lpbf_build_job_solver.build_cooling_rate_cct_row). */
+export interface BuildCoolingRateCctRow {
+  status?: string | null;
+  reason?: string | null;
+  rowIndex?: number | null;
+  rowCoolingRate_C_s?: number | null;
+  buildCoolingRate_C_s?: number | null;
+  mapRange_C_s?: [number, number] | null;
+}
+
+export interface BuildJobKineticsLike {
+  status?: string | null;
+  reason?: string | null;
+  buildCoolingRate_C_s?: number | null;
+  buildCoolingRateCctRow?: BuildCoolingRateCctRow | null;
+  cctContinuousCoolingMap?: BuildJobCctRow[] | null;
+  calphadVsKineticsGap?: {
+    kineticRealityAtSelectedCooling?: { predictedMartensite_pct?: number | null; verdict?: string | null } | null;
+  } | null;
+}
+
+/** Whether the build-job kinetics block holds a computed result; otherwise the reason it is unavailable. */
+export function buildJobKineticsAvailability(
+  kinetics: BuildJobKineticsLike | null | undefined
+): { available: boolean; reason: string } {
+  if (!kinetics) return { available: false, reason: "No kinetics block in the build-job result." };
+  if (kinetics.status === "unavailable") {
+    return { available: false, reason: kinetics.reason || "Kinetics unavailable for this alloy." };
+  }
+  if (!kinetics.calphadVsKineticsGap?.kineticRealityAtSelectedCooling) {
+    return { available: false, reason: "The kinetics block has no result at the build cooling rate." };
+  }
+  return { available: true, reason: "" };
+}
+
+/** "0.05", "2000", "1.1e+6" (rates of 10^4 and above in exponent form). */
+export function formatCoolingRate(rate: number): string {
+  return Math.abs(rate) >= 1e4 ? rate.toExponential(1) : String(rate);
+}
+
+export interface BuildJobCctRowSelection {
+  /** The CCT map row the solver selected for the build cooling rate, or null. */
+  row: BuildJobCctRow | null;
+  /** Which cooling rate the row corresponds to, or why no row is shown. */
+  label: string;
+}
+
+/**
+ * The CCT row the Python build job selected (nearest on a log scale to the build cooling rate, never extrapolated
+ * beyond the tabulated rates). The UI does not re-select; without a selected row the tiles show "Unavailable".
+ */
+export function buildJobCctRow(kinetics: BuildJobKineticsLike | null | undefined): BuildJobCctRowSelection {
+  const sel = kinetics?.buildCoolingRateCctRow;
+  const map = kinetics?.cctContinuousCoolingMap;
+  const index = sel?.rowIndex;
+  if (sel?.status === "selected" && Number.isSafeInteger(index) && map && map[index as number]) {
+    const row = map[index as number];
+    const rowRate = finite(row.coolingRate_C_s) ? formatCoolingRate(row.coolingRate_C_s) : "?";
+    const build = finite(sel.buildCoolingRate_C_s) ? formatCoolingRate(sel.buildCoolingRate_C_s) : "?";
+    return {
+      row,
+      label: `CCT row ${rowRate} °C/s (nearest on a log scale to the build cooling rate ${build} °C/s).`,
+    };
+  }
+  return { row: null, label: `No CCT row: ${sel?.reason || "the solver selected no row for the build cooling rate"}.` };
+}

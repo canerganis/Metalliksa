@@ -4,7 +4,13 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { convertSteelHardness } from "../src/utils/hardnessConversion";
-import { KINETICS_HV_STATUS_NOTES, kineticsHardnessText } from "../src/utils/kineticsHardnessDisplay";
+import {
+  KINETICS_HV_STATUS_NOTES,
+  buildJobCctRow,
+  buildJobKineticsAvailability,
+  formatCoolingRate,
+  kineticsHardnessText,
+} from "../src/utils/kineticsHardnessDisplay";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
 const STEP_B = join(ROOT, "python", "golden", "phase6a", "kinetics_ttt_cct_solver", "step_b");
@@ -125,5 +131,71 @@ test("consumers: no invented hardness fallbacks, null HV goes through the displa
   assert.match(studio, /kineticsHardnessText\(currentCCTMatch\)/);
   const lab = readFileSync(join(ROOT, "src", "components", "3d-distortion-lab", "IndustrialLPBFDecisionLab.tsx"), "utf8");
   assert.ok(!/predictedHardness_H(RC|V)\s*\?\?/.test(lab));
-  assert.match(lab, /kineticsHardnessText\(job\?\.kinetics\?\.cctContinuousCoolingMap\?\.\[0\]\)/);
+  // Hardness/primary phase come from the CCT row Python selected for the build cooling rate, never row 0.
+  assert.match(lab, /kineticsHardnessText\(kineticsCct\.row\)/);
+  assert.match(lab, /buildJobCctRow\(job\?\.kinetics\)/);
+  assert.match(lab, /buildJobKineticsAvailability\(job\?\.kinetics\)/);
+  assert.ok(!/cctContinuousCoolingMap\?\.\[0\]/.test(lab));
+});
+
+test("build-job kinetics: unavailable block (316L / AlSi10Mg) shows the reason, never a substituted alloy", () => {
+  const unavailable = {
+    success: false,
+    status: "unavailable",
+    reason: "no kinetics model for 316L Stainless Steel",
+    alloyId: "ss316l",
+    alloy: null,
+    buildCoolingRate_C_s: 1205584,
+    cctContinuousCoolingMap: null,
+    calphadVsKineticsGap: null,
+    buildCoolingRateCctRow: null,
+  };
+  assert.deepEqual(buildJobKineticsAvailability(unavailable), {
+    available: false,
+    reason: "no kinetics model for 316L Stainless Steel",
+  });
+  const sel = buildJobCctRow(unavailable);
+  assert.equal(sel.row, null);
+  assert.equal(kineticsHardnessText(sel.row).hrcValue, "Unavailable");
+  assert.equal(buildJobKineticsAvailability(null).available, false);
+  assert.equal(buildJobKineticsAvailability({ status: "available", calphadVsKineticsGap: null }).available, false);
+});
+
+test("build-job kinetics: the Python-selected CCT row is shown with its cooling rate; none outside the map", () => {
+  const { rows } = goldenRows("in718_lpbf_quench.json");
+  const gap = { kineticRealityAtSelectedCooling: { predictedMartensite_pct: 0, verdict: "x" } };
+  const index = rows.findIndex((r) => r.coolingRate_C_s === 25);
+  const inside = {
+    status: "available",
+    buildCoolingRate_C_s: 30,
+    cctContinuousCoolingMap: rows,
+    calphadVsKineticsGap: gap,
+    buildCoolingRateCctRow: { status: "selected", rowIndex: index, rowCoolingRate_C_s: 25, buildCoolingRate_C_s: 30 },
+  };
+  assert.equal(buildJobKineticsAvailability(inside).available, true);
+  const sel = buildJobCctRow(inside);
+  assert.equal(sel.row, rows[index]);
+  assert.notEqual(index, 0);
+  assert.equal(sel.label, "CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s).");
+
+  const above = {
+    ...inside,
+    buildCoolingRate_C_s: 1089047,
+    buildCoolingRateCctRow: {
+      status: "unavailable",
+      rowIndex: null,
+      reason: "build cooling rate 1.09e+06 C/s is above the CCT map range 0.05-2000 C/s; no row is extrapolated",
+    },
+  };
+  const none = buildJobCctRow(above);
+  assert.equal(none.row, null);
+  assert.equal(
+    none.label,
+    "No CCT row: build cooling rate 1.09e+06 C/s is above the CCT map range 0.05-2000 C/s; no row is extrapolated."
+  );
+  assert.equal(kineticsHardnessText(none.row).hvValue, "Unavailable");
+  // A selection that does not point at a real row is not trusted.
+  assert.equal(buildJobCctRow({ ...inside, buildCoolingRateCctRow: { status: "selected", rowIndex: 99 } }).row, null);
+  assert.equal(formatCoolingRate(2000), "2000");
+  assert.equal(formatCoolingRate(1089047), "1.1e+6");
 });
