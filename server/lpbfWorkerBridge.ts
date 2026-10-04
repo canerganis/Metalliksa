@@ -22,7 +22,8 @@ export class LpbfWorkerUnavailableError extends Error {
 export class LpbfWorkerBridge {
   private process?: ChildProcessWithoutNullStreams;
   private starting?: Promise<void>;
-  private stopping?: Promise<void>;
+  private readonly stopping = new Set<Promise<void>>();
+  private readonly stoppingByChild = new WeakMap<ChildProcessWithoutNullStreams, Promise<void>>();
   private readonly transportFailures = new WeakMap<ChildProcessWithoutNullStreams, (error: Error) => void>();
   private pending = new Map<number, { child: ChildProcessWithoutNullStreams; resolve: (x: unknown) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   private sequence = 0;
@@ -40,8 +41,8 @@ export class LpbfWorkerBridge {
   }
 
   private async start(deadline: number, generation: number) {
-    if (this.stopping) {
-      const stopping = this.stopping;
+    if (this.stopping.size) {
+      const stopping = Promise.all([...this.stopping]).then(() => undefined);
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => reject(new LpbfWorkerUnavailableError(
           'LPBF worker is restarting. Retry shortly.', 'LPBF_WORKER_STARTING')), Math.max(0, deadline - Date.now()));
@@ -88,11 +89,15 @@ export class LpbfWorkerBridge {
   }
 
   private stopTracked(child: ChildProcessWithoutNullStreams) {
-    if (this.stopping) return this.stopping;
+    // Track per child: a stop in flight for another child must not swallow this one.
+    const existing = this.stoppingByChild.get(child);
+    if (existing) return existing;
     const stopping = this.stopChild(child).finally(() => {
-      if (this.stopping === stopping) this.stopping = undefined;
+      this.stopping.delete(stopping);
+      this.stoppingByChild.delete(child);
     });
-    this.stopping = stopping;
+    this.stopping.add(stopping);
+    this.stoppingByChild.set(child, stopping);
     return stopping;
   }
 
@@ -105,6 +110,8 @@ export class LpbfWorkerBridge {
     const child = this.options.spawn?.(command) ?? spawn(command.cmd, command.args, { windowsHide: true, stdio: "pipe" });
     this.process = child;
     let stderr = "";
+    // Bounded ring of non-JSON stdout lines, kept apart from stderr for error detail.
+    const stdoutNoise: string[] = [];
     createInterface({ input: child.stdout }).on("line", line => {
       try {
         const reply = JSON.parse(line);
@@ -112,7 +119,7 @@ export class LpbfWorkerBridge {
         if (!wait || wait.child !== child) return;
         clearTimeout(wait.timer); this.pending.delete(reply.id);
         if (reply.error) wait.reject(new Error(reply.error)); else wait.resolve(reply.data);
-      } catch { stderr = (stderr + line).slice(-4000); }
+      } catch { stdoutNoise.push(line.slice(0, 500)); if (stdoutNoise.length > 20) stdoutNoise.shift(); }
     });
     child.stderr.on("data", data => { stderr = (stderr + data.toString()).slice(-4000); });
     let failed = false;
@@ -128,7 +135,8 @@ export class LpbfWorkerBridge {
     this.transportFailures.set(child, fail);
     child.on("error", fail);
     child.stdin.on('error', fail);
-    child.on("exit", code => fail(new LpbfWorkerUnavailableError(`LPBF worker exited (${code}): ${stderr}`)));
+    child.on("exit", code => fail(new LpbfWorkerUnavailableError(`LPBF worker exited (${code}): ${stderr}`
+      + (stdoutNoise.length ? ` | non-JSON stdout: ${stdoutNoise.join(' / ')}` : ''))));
     try { await this.send("capabilities", null, deadline - Date.now()); }
     catch (error) {
       if (this.process === child) this.process = undefined;
