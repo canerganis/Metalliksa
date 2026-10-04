@@ -39,6 +39,7 @@ import {
   convertCorrosionRate,
   convertDensity,
   computeDualUnitReport,
+  reportHardnessLine,
   ReportHardnessScale,
 } from "../utils/metallurgicalConversions";
 import {
@@ -193,6 +194,9 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [reportHardnessScale, setReportHardnessScale] = useState<ReportHardnessScale>("HRC");
   const [reportHardnessClass, setReportHardnessClass] = useState<HardnessMaterialClass>("titanium-alloy");
   const [reportHardnessSyncNote, setReportHardnessSyncNote] = useState<string | null>(null);
+  // false after "Load Active Specimen": the specimen's name/YS/UTS are loaded but it has no measured hardness, so the
+  // placeholder hardness must not be reported under the specimen's name.
+  const [reportHardnessEntered, setReportHardnessEntered] = useState<boolean>(true);
   const [reportCvnJ, setReportCvnJ] = useState<number>(42);
   const [reportTestTempC, setReportTestTempC] = useState<number>(23);
 
@@ -221,8 +225,9 @@ export const MetallurgicalUnitConverter: React.FC = () => {
         setReportUtsMpa(activeMaterialSpecimen.uts_25C_MPa);
       }
       // The hardness inputs take measured values. The specimen record's HV is a yield-strength estimate or
-      // unavailable (never measured), so the hardness inputs are left unchanged.
+      // unavailable (never measured): the hardness tab is left unchanged and the report hardness is blanked.
       setReportHardnessSyncNote(SPECIMEN_HARDNESS_NOT_LOADED_NOTE);
+      setReportHardnessEntered(false);
       if (activeMaterialSpecimen.name) {
         setReportAlloyName(activeMaterialSpecimen.name);
       }
@@ -233,7 +238,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
     const text = `=== METALLURGICAL TEST REPORT SUMMARY (${reportAlloyName}) ===
 Yield Strength (Rp0.2): ${reportYieldMpa} MPa [${reportCalculated.yieldKsi} ksi]
 Tensile Strength (Rm): ${reportUtsMpa} MPa [${reportCalculated.utsKsi} ksi]
-Hardness: ${reportCalculated.hardnessText}
+Hardness: ${reportHardnessLine(reportHardnessEntered, reportCalculated.hardnessText, reportHardnessSyncNote)}
 Charpy V-Notch Impact: ${reportCvnJ} J [${reportCalculated.cvnFtLbf} ft-lbf]
 Test Condition: ${reportTestTempC} °C [${reportCalculated.tempF} °F / ${reportCalculated.tempK} K]
 Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
@@ -1436,10 +1441,12 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     <div className="flex items-center gap-1.5">
                       <input aria-label="Indentation Hardness (measured value)"
                         type="number"
-                        value={reportHardnessValue}
+                        value={reportHardnessEntered ? reportHardnessValue : ""}
+                        placeholder="not entered"
                         onChange={(e) => {
                           setReportHardnessValue(parseFloat(e.target.value) || 0);
-                          setReportHardnessSyncNote(null);
+                          setReportHardnessEntered(e.target.value !== "");
+                          if (e.target.value !== "") setReportHardnessSyncNote(null);
                         }}
                         className="w-24 px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-sky-400 font-bold text-right"
                       />
@@ -1448,7 +1455,6 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                         value={reportHardnessScale}
                         onChange={(e) => {
                           setReportHardnessScale(e.target.value as ReportHardnessScale);
-                          setReportHardnessSyncNote(null);
                         }}
                         className="px-1.5 py-1 bg-[#0c1322] border border-[#1e2d46] rounded text-slate-300"
                       >
@@ -1477,9 +1483,11 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     </span>
                   </td>
                   <td className="py-3 px-3 bg-indigo-950/10 text-indigo-300">
-                    {reportCalculated.hardnessConverted === null ? (
+                    {!reportHardnessEntered ? (
+                      <span className="text-slate-500">(Converted: Unavailable, no measured hardness entered)</span>
+                    ) : reportCalculated.hardnessConverted === null ? (
                       <span className="text-slate-500">
-                        (Converted: Unavailable{reportHardnessClass === "non-austenitic-steel" ? ", outside the verified table range" : ", no verified conversion table for this alloy class"})
+                        (Converted: Unavailable{reportHardnessClass === "non-austenitic-steel" ? ", outside the verified table range" : ", no conversion table for this alloy class is implemented in this tool"})
                       </span>
                     ) : (
                       <span className="font-bold">

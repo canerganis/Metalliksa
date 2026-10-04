@@ -121,6 +121,10 @@ export interface HardnessInterpretation {
  * The HV bands are qualitative and written for non-austenitic steels. Only the 450 HV limit has outside support
  * (hard turning is usually taken to start at about 45 HRC, ASTM E140: 45 HRC = 446 HV); the 160, 280 and 750 HV
  * limits are app heuristics without a cited source.
+ * Example placement checked against sources (2026-10-04): 300M landing gear is used at 52-55 HRC (Carpenter 300M data
+ * sheet; ~545-595 HV per E140), so it sits in the 450-750 band; AISI 4140 normalized at 870 C is 302 HB / 32 HRC
+ * (MatWeb), i.e. ~318 HV in the 280-450 band; CBN inserts turn hardened steel up to about 68 HRC (trade sources:
+ * Canadian Metalworking, CTE), so >= 750 HV is not "grinding/EDM only". "Solution annealed" is an austenitic/PH term.
  */
 export const HARDNESS_INTERPRETATION_NOTE =
   "Qualitative guide for non-austenitic steels only; band limits are approximate (only the ~450 HV / 45 HRC hard-turning limit has outside support), not from a standard.";
@@ -133,7 +137,7 @@ export function interpretHardness(hv: number, materialClass: HardnessMaterialCla
   if (materialClass !== "non-austenitic-steel" || !Number.isFinite(hv)) return null;
   if (hv < 160) {
     return {
-      condition: "Dead Soft / Solution Annealed",
+      condition: "Dead Soft / Annealed",
       machinability: "Gummy, prone to built-up edge; high rake angle required",
       typicalComponent: "Gaskets, deep-drawn cans, annealed tubing",
       wearResistance: "Low abrasive wear resistance; prone to galling and adhesion",
@@ -142,27 +146,27 @@ export function interpretHardness(hv: number, materialClass: HardnessMaterialCla
     return {
       condition: "Normalized / Stress-Relieved",
       machinability: "Optimal free-machining zone; clean chip breaking",
-      typicalComponent: "Drive shafts, structural beams, forged connecting rods, normalized 4140",
+      typicalComponent: "Drive shafts, structural beams, forged connecting rods",
       wearResistance: "Moderate; suitable for lubricated journal bearings",
     };
   } else if (hv < 450) {
     return {
-      condition: "Quenched & Tempered (Structural Toughness)",
+      condition: "Quenched & Tempered or Normalized Alloy Steel",
       machinability: "Tough cutting; coated carbide or cermet tooling recommended",
-      typicalComponent: "Aircraft landing gear, high-pressure pump shafts",
+      typicalComponent: "High-pressure pump shafts, normalized or Q&T 4140 shafting",
       wearResistance: "High toughness combined with solid impact resistance",
     };
   } else if (hv < 750) {
     return {
       condition: "Fully Hardened / Case Carburized Surface",
       machinability: "Hard turning or grinding only (CBN / ceramic inserts)",
-      typicalComponent: "Transmission gears, cam lobes, ball bearing races (52100), D2 dies",
+      typicalComponent: "Transmission gears, cam lobes, 300M landing gear, ball bearing races (52100), D2 dies",
       wearResistance: "Exceptional resistance to rolling contact fatigue and abrasive wear",
     };
   } else {
     return {
       condition: "Super-Hard Nitride Case",
-      machinability: "Diamond wheel grinding, EDM, or ultrasonic machining only",
+      machinability: "CBN hard turning (up to about 68 HRC) or grinding",
       typicalComponent: "Plasma nitrided cylinder liners, valve stems",
       wearResistance: "Extreme sliding abrasive and erosion wear resistance",
     };
@@ -592,6 +596,12 @@ export interface DualUnitReport {
 }
 
 const REPORT_HARDNESS_ORDER: ReportHardnessScale[] = ["HRC", "HV", "HBW"];
+
+/** Hardness line of the copied report: no placeholder value when no measured hardness was entered (e.g. after a load). */
+export function reportHardnessLine(entered: boolean, hardnessText: string, syncNote: string | null): string {
+  if (entered) return hardnessText;
+  return syncNote ? `not entered (${syncNote})` : "not entered";
+}
 
 export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitReport {
   const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;

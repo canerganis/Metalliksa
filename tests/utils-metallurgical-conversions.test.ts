@@ -16,6 +16,7 @@ import {
   interpretHardness,
   HARDNESS_INTERPRETATION_NOTE,
   HARDNESS_INTERPRETATION_UNAVAILABLE,
+  reportHardnessLine,
   interpretStressMpa,
   type TempUnit,
 } from "../src/utils/metallurgicalConversions";
@@ -182,7 +183,7 @@ test("dual-unit report: default scratchpad (Ti-6Al-4V, 34 HRC measured) is NOT c
       utsKsi: 137.8,
       hardnessMeasured: "34 HRC",
       hardnessConverted: null, // was 602 HV / 573 HBW (polynomial), then 336 / 319 (steel table applied to titanium)
-      hardnessText: "34 HRC (converted values: Unavailable, no verified conversion table for this alloy class)",
+      hardnessText: "34 HRC (converted values: Unavailable, no conversion table for this alloy class is implemented in this tool)",
       hrc: 34,
       hv: null,
       hbw: null,
@@ -348,6 +349,24 @@ test("hardness interpretation bands (non-austenitic steels only)", () => {
   }
   assert.match(HARDNESS_INTERPRETATION_NOTE, /non-austenitic steels only/);
   assert.match(HARDNESS_INTERPRETATION_UNAVAILABLE, /^Unavailable/);
+  // Review S2 (sources in metallurgicalConversions.ts): 300M landing gear at 52-55 HRC (~545-595 HV) belongs to the
+  // 450-750 band, not 280-450; normalized 4140 (302 HB ~ 318 HV) is not a 160-280 example; >= 750 HV is CBN-turnable;
+  // "Solution Annealed" is not a non-austenitic steel condition.
+  const band = (hv: number) => JSON.stringify(interpretHardness(hv, "non-austenitic-steel"));
+  assert.match(band(570), /300M landing gear/);
+  assert.doesNotMatch(band(400), /landing gear/);
+  assert.doesNotMatch(band(200), /4140/);
+  assert.match(band(318), /normalized or Q&T 4140/);
+  assert.match(band(800), /CBN hard turning/);
+  assert.doesNotMatch(band(800), /EDM|ultrasonic|only/);
+  assert.doesNotMatch(band(100), /Solution Annealed/);
+  assert.match(steel(100), /^Dead Soft \/ Annealed$/);
+});
+
+test("report hardness line: no placeholder value after 'Load Active Specimen' (review S2 code)", () => {
+  assert.equal(reportHardnessLine(true, "34 HRC (…)", null), "34 HRC (…)");
+  assert.equal(reportHardnessLine(false, "34 HRC (…)", "Hardness not loaded from the active specimen: x"), "not entered (Hardness not loaded from the active specimen: x)");
+  assert.equal(reportHardnessLine(false, "34 HRC", null), "not entered");
 });
 
 // Former BUG (studio lane, fixed 2026-10): the polynomials HV = 142.8 + 8.94 HRC + 0.134 HRC^2 and
