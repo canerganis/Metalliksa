@@ -101,3 +101,6 @@
 # LPBF 5c implementation pin and parity goldens: identical LF bytes on every checkout.
 /python/lpbf_implementation_fingerprint.expected text eol=lf
 /python/golden/lpbf_parity/** text eol=lf
+
+# Generated UI projection of the Python LPBF material authority: byte-pinned by its equality tests.
+/src/generated/lpbfMaterialAuthority.json text eol=lf
