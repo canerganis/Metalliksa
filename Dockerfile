@@ -45,11 +45,15 @@ RUN <<'EOF' bash -e
 npm run lint
 excluded="$(grep -v '^#' scripts/ci-unit-tests.txt | grep -v '^$' || true)"
 files="$(ls tests/*.test.ts tests/*.test.tsx | { grep -vxF "$excluded" || true; })"
-# Guard (same as ci.yml): every listed exclusion must exist and be absent from the run list. A CRLF copy of the
-# list makes the grep above exclude nothing; this re-reads the list with CRs stripped and fails instead.
+# Guard (same as ci.yml): every listed exclusion must be one of the unit-test glob's files and absent
+# from the run list. A CRLF copy of the list makes the grep above exclude nothing; this re-reads the list with
+# CRs stripped and fails instead. Here-strings, not pipes: with pipefail a grep -q that exits early could
+# SIGPIPE its writer and turn a match into a false negative.
+all="$(ls tests/*.test.ts tests/*.test.tsx)"
 for ex in $(grep -v '^#' scripts/ci-unit-tests.txt | tr -d '\r' | grep -v '^$' || true); do
-  [ -f "$ex" ] || { echo "scripts/ci-unit-tests.txt lists a missing file: $ex" >&2; exit 1; }
-  if printf '%s\n' "$files" | grep -qxF "$ex"; then echo "scripts/ci-unit-tests.txt exclusion not applied: $ex" >&2; exit 1; fi
+  grep -qxF -- "$ex" <<<"$all" \
+    || { echo "scripts/ci-unit-tests.txt lists a file outside the unit test glob (missing or renamed): $ex" >&2; exit 1; }
+  if grep -qxF -- "$ex" <<<"$files"; then echo "scripts/ci-unit-tests.txt exclusion not applied: $ex" >&2; exit 1; fi
 done
 echo "Running $(printf '%s\n' "$files" | wc -l) test files"
 node_modules/.bin/tsx --test $files
