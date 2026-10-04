@@ -90,7 +90,8 @@ export interface SimulationResult {
   productionReady: false; label: string; fallbackReason: string | null;
   metrics: { width_um: number; depth_um: number; length_um: number; [key: string]: unknown };
   material: { name: string; quality: string; source: string; temperatureCoverage_K?: number[]; sourceValidityRange_K?: number[]; liquidus_K?: number; solidus_K?: number; table?: number[][]; uncertaintyNote?: string };
-  analyticalComparison: Record<string, { width_um: number; depth_um: number; length_um: number }>;
+  /** null only when settings.surfaceMode is "bare-plate" (enforced by parseSimulationJob). */
+  analyticalComparison: Record<string, { width_um: number; depth_um: number; length_um: number }> | null;
   assumptions: string[]; regime: string; mainRisk: string; recommendation: string; riskScope: string;
   thermalHistory?: { time_s: number; peak_K: number }[];
   energyBalance?: { input_J: number; losses_J: number; stored_J: number; relativeError: number };
@@ -259,7 +260,11 @@ export function parseSimulationJob(value: unknown): SimulationJob {
       || !["name", "quality", "source"].every(k => typeof (r.material as Record<string, unknown>)[k] === "string")
       || !["label", "regime", "mainRisk", "recommendation", "riskScope"].every(k => typeof r[k] === "string")
       || !Array.isArray(r.assumptions) || !r.assumptions.every(a => typeof a === "string")
-      || !object(r.analyticalComparison) || !Object.values(r.analyticalComparison).every(dimensions)) throw new Error("Invalid LPBF result contract");
+      // The Python producer sets analyticalComparison to null exactly for bare-plate runs
+      // (no powder-layer screening comparison exists); every other value must be a dimension map.
+      || !(object(r.analyticalComparison)
+        ? Object.values(r.analyticalComparison).every(dimensions)
+        : r.analyticalComparison === null && object(r.settings) && r.settings.surfaceMode === "bare-plate")) throw new Error("Invalid LPBF result contract");
     checkCoreContract(r);
     if (r.thermalHistory !== undefined && (!Array.isArray(r.thermalHistory) || !r.thermalHistory.every((h, index, history) => object(h) && typeof h.time_s === "number" && h.time_s >= 0 && typeof h.peak_K === "number" && h.peak_K > 0
       && (index === 0 || h.time_s > history[index - 1].time_s)))) throw new Error("Invalid thermal history");
