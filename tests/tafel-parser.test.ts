@@ -1,25 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-// BUG 1 (real, reported, not fixed here): src/utils/tafelParser.ts evaluates TAFEL_BENCHMARK_DATASETS at module load and
-// createBenchmarkDataset() unconditionally throws "Fabrication of Tafel ... is disabled", so the module cannot be imported.
-// Only that exact signature is tolerated: tests that need the module are marked todo (blocked by BUG 1). Any other import
-// error is rethrown so the file fails loudly. The todo-ed assertions were verified against a scratch copy of the module
-// with the benchmark construction stubbed out (not part of this repo).
-type TafelModule = typeof import('../src/utils/tafelParser');
-let tafel: TafelModule | undefined;
-let bug1: Error | undefined;
-try {
-  tafel = await import('../src/utils/tafelParser');
-} catch (error) {
-  if (error instanceof Error && /Fabrication of Tafel/.test(error.message)) bug1 = error;
-  else throw error;
-}
-const todo = bug1 ? 'BLOCKED by BUG 1: tafelParser.ts throws on import (createBenchmarkDataset)' : false;
-const mod = (): TafelModule => {
-  if (!tafel) throw bug1;
-  return tafel;
-};
+// BUG 1 (fixed in Phase 6a step b): src/utils/tafelParser.ts used to build TAFEL_BENCHMARK_DATASETS at module load
+// through createBenchmarkDataset(), which always throws, so the module could not be imported and these tests were todo.
+// The module is imported directly now: a regression fails this file loudly instead of turning tests into todos.
+import * as tafel from '../src/utils/tafelParser';
+
+const mod = () => tafel;
 
 /** Three-column CSV (time, potential, current) with a unit-bearing header and 12 data rows. */
 function csv(extraHeader = ''): string {
@@ -28,7 +15,7 @@ function csv(extraHeader = ''): string {
   return extraHeader + rows.join('\n');
 }
 
-test('REFERENCE_ELECTRODES lists the documented offsets versus SHE', { todo }, () => {
+test('REFERENCE_ELECTRODES lists the documented offsets versus SHE', () => {
   const refs = mod().REFERENCE_ELECTRODES;
   assert.equal(refs.SHE.offsetVsSHE, 0);
   assert.equal(refs.SCE.offsetVsSHE, 0.241);
@@ -37,7 +24,7 @@ test('REFERENCE_ELECTRODES lists the documented offsets versus SHE', { todo }, (
   assert.equal(refs.Custom.offsetVsSHE, 0);
 });
 
-test('parseTafelFile reads a CSV with a mA unit header and converts to uA/cm2 by area', { todo }, () => {
+test('parseTafelFile reads a CSV with a mA unit header and converts to uA/cm2 by area', () => {
   const ds = mod().parseTafelFile(csv(), 'run_1.csv', 2);
   assert.equal(ds.points.length, 12);
   assert.equal(ds.points[0].currentUnit, 'mA');
@@ -50,7 +37,7 @@ test('parseTafelFile reads a CSV with a mA unit header and converts to uA/cm2 by
   assert.equal(ds.sourceFilename, 'run_1.csv');
 });
 
-test('parseTafelFile keeps the sign of the current in signedCurrentDensity', { todo }, () => {
+test('parseTafelFile keeps the sign of the current in signedCurrentDensity', () => {
   const rows = ['Time (s),Potential (V),Current (A)'];
   for (let i = 0; i < 12; i++) rows.push(`${i},${(-0.3 + i * 0.01).toFixed(3)},${i < 6 ? '-' : ''}0.000001`);
   const ds = mod().parseTafelFile(rows.join('\n'), 'signed.csv');
@@ -59,21 +46,21 @@ test('parseTafelFile keeps the sign of the current in signedCurrentDensity', { t
   assert.ok(ds.points[0].currentDensity_uA_cm2 > 0);
 });
 
-test('parseTafelFile defaults to the SCE offset and adds it to potentialSHE', { todo }, () => {
+test('parseTafelFile defaults to the SCE offset and adds it to potentialSHE', () => {
   const ds = mod().parseTafelFile(csv(), 'x.csv');
   assert.equal(ds.metadata.referenceElectrode, 'SCE');
   assert.equal(ds.metadata.refOffsetVsSHE, 0.241);
   assert.ok(Math.abs((ds.points[0].potentialSHE ?? NaN) - (-0.3 + 0.241)) < 1e-9);
 });
 
-test('parseTafelFile picks up an Ag/AgCl reference from the header and applies its offset', { todo }, () => {
+test('parseTafelFile picks up an Ag/AgCl reference from the header and applies its offset', () => {
   const ds = mod().parseTafelFile(csv('# Reference electrode: Ag/AgCl\n'), 'x.csv');
   assert.equal(ds.metadata.referenceElectrode, 'Ag/AgCl');
   assert.equal(ds.metadata.refOffsetVsSHE, 0.197);
   assert.ok(Math.abs((ds.points[0].potentialSHE ?? NaN) - (-0.3 + 0.197)) < 1e-9);
 });
 
-test('parseTafelFile rejects empty content and files with too few points', { todo }, () => {
+test('parseTafelFile rejects empty content and files with too few points', () => {
   assert.throws(() => mod().parseTafelFile('   \n'), /empty/);
   assert.throws(() => mod().parseTafelFile('Potential (V),Current (A),Time\n-0.3,1e-6,0\n'), /sufficient/);
 });
@@ -88,7 +75,9 @@ test('parseTafelFile accepts a plain two-column comma CSV', { todo: 'BUG 2: spli
   assert.equal(ds.points.length, 12);
 });
 
-// Documents BUG 1 itself: becomes a passing todo (reported by node:test) once the module imports again.
-test('tafelParser module can be imported', { todo: 'BUG 1: tafelParser.ts throws on import (createBenchmarkDataset)' }, () => {
-  assert.equal(bug1, undefined, bug1?.message);
+// BUG 1 regression guard: the module imports, lists no fabricated benchmark curves, and the fabrication helper still refuses.
+test('tafelParser module imports without fabricating benchmark curves', () => {
+  assert.deepEqual(tafel.TAFEL_BENCHMARK_DATASETS, []);
+  assert.throws(() => tafel.createBenchmarkDataset({} as Parameters<typeof tafel.createBenchmarkDataset>[0]),
+    /Fabrication of Tafel potentiodynamic polarization curves via PRNG noise is disabled/);
 });

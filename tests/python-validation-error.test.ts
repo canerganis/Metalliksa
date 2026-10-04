@@ -3,23 +3,9 @@ import assert from "node:assert/strict";
 import { pythonComputationService } from "../src/services/pythonComputationService";
 import type { TafelDataset } from "../src/types/tafel";
 
-// tafelPythonService imports src/utils/tafelParser.ts, which throws at module load
-// (pre-existing BUG 1, see tests/tafel-autofit.test.ts). Only that exact signature is
-// tolerated: the two executePythonTafelFit tests are then marked todo.
-type TafelServiceModule = typeof import("../src/utils/tafelPythonService");
-let tafelService: TafelServiceModule | undefined;
-let bug1: Error | undefined;
-try {
-  tafelService = await import("../src/utils/tafelPythonService");
-} catch (error) {
-  if (error instanceof Error && /Fabrication of Tafel/.test(error.message)) bug1 = error;
-  else throw error;
-}
-const tafelTodo = bug1 ? "BLOCKED by BUG 1: tafelParser.ts throws on import (createBenchmarkDataset)" : false;
-const executePythonTafelFit: TafelServiceModule["executePythonTafelFit"] = (...args) => {
-  if (!tafelService) throw bug1;
-  return tafelService.executePythonTafelFit(...args);
-};
+// tafelPythonService imports src/utils/tafelParser.ts, which threw at module load until
+// BUG 1 was fixed (Phase 6a step b); it is imported directly now.
+import { executePythonTafelFit } from "../src/utils/tafelPythonService";
 import {
   PythonValidationError,
   isPythonValidationError,
@@ -161,7 +147,7 @@ const DATASET: TafelDataset = {
   },
 };
 
-test("executePythonTafelFit propagates a 422 instead of the local autoFit", { todo: tafelTodo }, async () => {
+test("executePythonTafelFit propagates a 422 instead of the local autoFit", async () => {
   stubFetch(422, TAFEL_ENVELOPE);
   await assert.rejects(executePythonTafelFit(DATASET, { alloyId: "duplex2205" }), (err: unknown) => {
     assert.ok(isPythonValidationError(err));
@@ -170,7 +156,7 @@ test("executePythonTafelFit propagates a 422 instead of the local autoFit", { to
   });
 });
 
-test("executePythonTafelFit still falls back to the local fit for 5xx and network errors", { todo: tafelTodo }, async () => {
+test("executePythonTafelFit still falls back to the local fit for 5xx and network errors", async () => {
   stubFetch(500, { error: "boom" });
   let res = await executePythonTafelFit(DATASET, { alloyId: "steel-316l" });
   assert.equal(res.isPythonEngine, false);

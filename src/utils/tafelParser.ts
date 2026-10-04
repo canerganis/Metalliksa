@@ -631,69 +631,14 @@ export function autoFitTafel(
 }
 
 /**
- * Benchmark experimental datasets ready for instant evaluation and testing
+ * Benchmark datasets. Empty: the former entries were Tafel curves fabricated with PRNG
+ * noise by createBenchmarkDataset(), which is disabled (see below). They were built at
+ * module load, so importing this module threw (BUG 1); no measured benchmark curves
+ * exist to replace them, so none are listed. Consumers must handle an empty list.
  */
-export const TAFEL_BENCHMARK_DATASETS: TafelDataset[] = [
-  createBenchmarkDataset({
-    id: "bench_ss316l_nacl",
-    name: "AISI 316L Stainless Steel in 3.5 wt% NaCl",
-    material: COMMON_ALLOYS[0],
-    eCorrTrue: -0.280,
-    iCorrTrue: 0.085, // uA/cm2
-    betaA: 0.095, // V/dec
-    betaC: 0.115, // V/dec
-    eStart: -0.60,
-    eEnd: 0.50,
-    nPoints: 110,
-    hasPitting: true,
-    ePit: 0.360,
-    noiseLevel: 0.04,
-  }),
-  createBenchmarkDataset({
-    id: "bench_ti64_biomed",
-    name: "Ti-6Al-4V Grade 5 in Simulated Body Fluid (Hanks)",
-    material: COMMON_ALLOYS[3],
-    eCorrTrue: -0.150,
-    iCorrTrue: 0.024, // uA/cm2
-    betaA: 0.130,
-    betaC: 0.140,
-    eStart: -0.50,
-    eEnd: 0.60,
-    nPoints: 110,
-    hasPitting: false,
-    noiseLevel: 0.03,
-  }),
-  createBenchmarkDataset({
-    id: "bench_steel1018_acid",
-    name: "AISI 1018 Carbon Steel in 0.5M H₂SO₄ Acidic",
-    material: COMMON_ALLOYS[2],
-    eCorrTrue: -0.475,
-    iCorrTrue: 42.5, // uA/cm2
-    betaA: 0.080,
-    betaC: 0.110,
-    eStart: -0.75,
-    eEnd: -0.20,
-    nPoints: 110,
-    hasPitting: false,
-    noiseLevel: 0.05,
-  }),
-  createBenchmarkDataset({
-    id: "bench_az31b_mg",
-    name: "AZ31B Magnesium Alloy in 0.1M NaCl Seawater",
-    material: COMMON_ALLOYS[8],
-    eCorrTrue: -1.520,
-    iCorrTrue: 118.0, // uA/cm2 (rapid active dissolution)
-    betaA: 0.160,
-    betaC: 0.210,
-    eStart: -1.85,
-    eEnd: -1.20,
-    nPoints: 110,
-    hasPitting: false,
-    noiseLevel: 0.06,
-  }),
-];
+export const TAFEL_BENCHMARK_DATASETS: TafelDataset[] = [];
 
-interface BenchmarkParams {
+export interface BenchmarkParams {
   id: string;
   name: string;
   material: AlloyMaterialPreset;
@@ -709,7 +654,10 @@ interface BenchmarkParams {
   noiseLevel: number;
 }
 
-function createBenchmarkDataset(params: BenchmarkParams): TafelDataset {
+// Disabled on purpose: synthetic (PRNG-noise) polarization curves must not be presented
+// as benchmark data. Nothing calls it any more; it is kept so that the refusal stays
+// explicit if a caller is ever reintroduced.
+export function createBenchmarkDataset(_params: BenchmarkParams): TafelDataset {
   throw new Error("Fabrication of Tafel potentiodynamic polarization curves via PRNG noise is disabled.");
 }
 
