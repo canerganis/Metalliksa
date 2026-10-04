@@ -1,8 +1,8 @@
 {
  "schema": "lpbf-parity-golden-1",
- "case": "g5_evaporation",
- "group": "G5",
- "description": "evaporationModel=True short powder track",
+ "case": "g15_bare_plate_square_optical_observer",
+ "group": "G15",
+ "description": "Square bare plate with opticalObserver='nist-six-section', all artifacts",
  "slow": false,
  "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
  "recordedVersion": "enthalpy-fv-6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  3.8,
-  3.6
+  0.8,
+  0.5
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "65bb6329dee5885a4c44aec8e7d160c976608b3dceac92469e6d1c74f28d7f79",
-  "result.orderedTypedSha256": "be93f695383704b071e0b9853ba5ed849d1dcb181b3196497dd96d094713fd96",
+  "result.canonicalSha256": "2f2095f48e0870daca8c1c20377600549d34dc3417e7a15a77a2af17defa7053",
+  "result.orderedTypedSha256": "6f8a8420bf771851a944f66e66793eef8a91869da5f7a82caa603511e3bc3413",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -109,6 +109,8 @@
    "mainRisk",
    "recommendation",
    "riskScope",
+   "beamConvention",
+   "experimentalComparison",
    "resourceEstimate",
    "unresolvedPhysics",
    "confidenceReason",
@@ -121,46 +123,48 @@
   "result.key.requestedMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
   "result.key.effectiveMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
   "result.key.solver": "379da9f17510ad5e9f42d7be64eda2f553ada427d6a389bd3552f81dbe7cd97d",
-  "result.key.settings": "2a0c2cbe815c91cc8afe3755a07e106a67d09e8863e6822d2f99fe5abc46cb8a",
+  "result.key.settings": "1d15ec4af94285b58ec1c5991d0f147e864fe8473906946649a99ba1997e1b15",
   "result.key.material": "cb542160a40afd7f836bb67fea59242175cda887c75d1b6dfc9ae530848b92eb",
   "result.key.requestedBackend": "86a3d4125c91d4621cfc34f7d2ac1f2fb7df908cae63aef232d0b9e0713171db",
   "result.key.confidence": "364bb7082249ee9fbc5247ee49735c4246f271b82c2745a35107ddda0d7cabcc",
   "result.key.validationStatus": "034d24b06221faeb3860b36b4069fe6436aeadc3db62a687efe73615cfb2541d",
   "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
-  "result.key.provenance": "7dba2ef7f515ad6e88f90e618d596c41da86dbf17cb73bb6ef9a269b2ab9e4f0",
-  "result.key.analyticalComparison": "143d2d04832ebc949d9761053c01ac37ad0216c2725625331f0e6d04f17113dc",
-  "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "result.key.provenance": "681085ff535d49068c7a12d5b46d8569dbc7bdf277b572a5428351686f172f3a",
+  "result.key.analyticalComparison": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.assumptions": "c7880569ef60b587d23c739080df6ddb2cb8f36d1816820c13649fc7f7409446",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "result.key.metrics": "0983982956705d7e148015261a168c4eedd4637b4a5145a10ac0463175ff4ac4",
-  "result.key.thermalHistory": "b0a4e9a2de4eaa78b9512a8a1759574fb140d132f4f5e639e1f7791cb6285745",
+  "result.key.metrics": "955304d76f77dcb03a42bec5dbcbc89232341eb11e2d218c1ba0970f0c5b5eb3",
+  "result.key.thermalHistory": "30a09a6f99fee7d649721caccd0bf72b098caabe022d0a35b23a5226a3f4732d",
   "result.key.fieldSeries": "7e5d844a6929e466a78a570e89bba38f7aca29004a88e1b5afc69fa25fa7c8e3",
-  "result.key.peakInterpolatedMeltPool": "f44ca322657871c68f5f1d9b47515baa5fce66a027605ec8f197c0f921e00731",
-  "result.key.fieldOverlapDiagnostics": "44a535026e155ac8c74933557e65a493708923545d60488b2c9a0f3842a67207",
-  "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "result.key.numericalDiagnostics": "97efcd90f01f072c64fd24b587030cd5b5688b6d021347579661a40115212699",
-  "result.key.energyBalance": "870e12668ffedb7059bd83e0d747c26fd9c42b24adb07a539729ed8199c2dac4",
-  "result.key.discretization": "f076e82e447d13a2ea6feb09d50774af1968fe47695afc9c4103b31f036e60fe",
+  "result.key.peakInterpolatedMeltPool": "fb130091476d35fa45fe327d3eb0ff71508bcc0184a8b0e874944432ed5ae47e",
+  "result.key.fieldOverlapDiagnostics": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.midTrackCrossSection": "63e2beb9012951f26f192a599f0f0146ca352a47e0fe7da6ca39cf4ab56eddac",
+  "result.key.midTrackInterpolatedCrossSection": "8a0b75feb1e807c916bf3f8cdbd94599fd2cce7939674b83504472425bbd35b4",
+  "result.key.numericalDiagnostics": "eaddddec2fde094364bbe5e1ffbc9c7d45cac6c0357fd8ffadef857ae6da21d5",
+  "result.key.energyBalance": "6cd9e0de88f2d0e59ab871526392a57ae679e99fd71b7d13df4f7ef3acbecd69",
+  "result.key.discretization": "c3bfe7a25789033d654c517908affa6e14ca67b6df3cc8f8915e434ec40d4bd4",
   "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
-  "result.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
-  "result.key.phaseAudit": "89022afb09f782ab6b8ba40a2007e8b214d337bab7ad8699e1f9d655ff1bb85f",
-  "result.key.geometricDefectScreen": "a3e0b835eea2d3275603b6b00d3b497e87d02074de2cf51e179f3cee358498e3",
-  "result.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
-  "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
-  "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
-  "result.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
-  "result.key.resourceEstimate": "3ba8bb7b1be206d20f7fa936f8c80d1f03c716c5e219dafddfd57cb35b5baef9",
+  "result.key.massBalance": "a727a808d1d77f0af7a08326b5244480096cb85ec0b7e0094ef243bbd94721fd",
+  "result.key.phaseAudit": "2a2d9be0d0647e4914beb8507a998750e253c41ffa5f314c1d497f5018d51b38",
+  "result.key.geometricDefectScreen": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.regime": "4d560ec4e0d19b490103a64e6c481d040b4aaeebf7a6590ad0d43356393b9ecb",
+  "result.key.mainRisk": "aa32dbdadc4f2ca8795185dc8ec82de5fc062d25818360122b6cf7d682c8eb36",
+  "result.key.recommendation": "4a35b5ecda31ab0004156d49d29025cb6821b6301574d8fb1ec840d9617e7b71",
+  "result.key.riskScope": "341a0cfdf310ec1c1eb8767f5e8f63b3bfd9f6127af2028918dcd936e5552a31",
+  "result.key.beamConvention": "07d0984b73d3d52c49438ac72e6ac9a31744ca419dc06d4d32cd57821d3a2572",
+  "result.key.experimentalComparison": "f5cdf46b1586b3ddc5243b64f1081b0ce5fb4c8a7808836b9fc91370e20cb96a",
+  "result.key.resourceEstimate": "55287027b8a5001773b660996348abec24cf24941e05a3b1e96afe338d977336",
   "result.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
   "result.key.confidenceReason": "906944d2c579df879c4987a7d07a4e032bf053927f6b33f8e6c954537ac1f1e0",
-  "result.key.coreContract": "9bc7e6f77f8847fef53addff9e05613040bdbea31c0b628afd760b9bc0363dc2",
+  "result.key.coreContract": "d25afba5d330ea22dbdf1d91bdaa0490925d92e8930f50b7c528d583bb123b9a",
   "result.key.fieldPreviews": "063bd617bcf8a2240843fb42b737f1c1faedb1825e5ea306d6f222dba9726bf5",
-  "result.key.artifacts": "fb74e434f61c23a22d17bd02fdaa1f2cf4252ef2abf4f3dfdf2ffffbe0b401be",
+  "result.key.artifacts": "f9b37a0483e244c2d599b389fde510cd93a4bffc94953668360795b0e694c352",
   "result.key.retentionPolicy": "ab930f19e2eab573860fa3ee488c98026d2867e0b2408442da3c3d6415a31807",
-  "result.coreContract.inputSha256": "cf81149651717c1265686df6dbebcf04fa590f3a23d5e693bc81b236c3db2f36",
+  "result.coreContract.inputSha256": "d7bee962b9120fc8892e2f6ab83ac9564cc53560264929188773e90069db9a8b",
   "result.coreContract.materialSha256": "6a8d7bde8277b45093a26faab435e6a27167a9e3b67631a0c0b6b04f65b28ce4",
   "result.coreContract.solverId": "enthalpy-fv-6",
-  "result.coreContract.modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+  "result.coreContract.modelId": "stationary-enthalpy-conduction-v1",
   "result.material.materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
   "result.validationStatus": "unvalidated",
   "result.productionReady": false,
@@ -229,7 +233,6 @@
    "field-frame-056.bin",
    "field-frame-057.bin",
    "field-frame-058.bin",
-   "field-frame-059.bin",
    "field-series.json",
    "peak-field.npz",
    "phase-slice.svg",
@@ -237,256 +240,252 @@
    "thermal-history.csv"
   ],
   "artifact.field-coordinates.bin": [
-   13068,
-   "bb8af523b0b1279d27b53b8a363d9ce45ece8ac1cca1628d6fa63f2fce49730c"
+   11616,
+   "0238bbc06fb7113fab7d4133501c2a7756872c57bd26ed56701c814988be0f41"
   ],
   "artifact.field-frame-000.bin": [
-   4356,
-   "5d4825b8e413d55df5772b63348477e5782a57dcc228784298f490dfbab2624f"
+   3872,
+   "608403c54559fcff52fd85b93aa61168302a9851dd8cf4765208f990b39b302e"
   ],
   "artifact.field-frame-001.bin": [
-   4356,
-   "8f0b66af5d00304b6322196ee9ba273d073ab90616b93e58638103c1d6ada2ce"
+   3872,
+   "087df2d4d9a49df96f598807f773bcf9c1bb32fbedcc2df4ece6c7ccf327d3b4"
   ],
   "artifact.field-frame-002.bin": [
-   4356,
-   "9745b8e99447340c0cd75363283ad8d52c61eab1ae1951928eae852962eb9719"
+   3872,
+   "ab0fa10c5e273b0b4335abd1bd481b8dc7c2c82ac344f0c7d6592b884b64e094"
   ],
   "artifact.field-frame-003.bin": [
-   4356,
-   "4e9e3c9ceb9505b8dba8656a102a0cb1f17a556d8e8b05ca7e8e97f8dca8e61a"
+   3872,
+   "e2074c756ca8eab2e00c965968a71c38d72921f89ed26611bac3b44a057c15ed"
   ],
   "artifact.field-frame-004.bin": [
-   4356,
-   "7a4ce6491839333753aae5307ecd7e735692638b3681b649fc110c1f209d2ad0"
+   3872,
+   "efa4ce099cd44f9fa647f46ca5c2222bd9e43ba10771554ba3b8a604d7f2677e"
   ],
   "artifact.field-frame-005.bin": [
-   4356,
-   "c7a270f7e0d381aa539df5793d3580d2603b3fb7aef43569d0409aaa23e6780a"
+   3872,
+   "56f3684cfc8f3161a160345d6cfaeb1c69087536faeb817cab0c08ebc83a7db5"
   ],
   "artifact.field-frame-006.bin": [
-   4356,
-   "233db7bb47642e1035df93096408f529fa6198b6ea02f7e4606b87a1c735c72d"
+   3872,
+   "c7f0308f95036d73ed981b83e6309a0cd48363c294e9fd0f71f86d9849dfc652"
   ],
   "artifact.field-frame-007.bin": [
-   4356,
-   "3e5f32ca0165f9a0b009340426300d51a6b4d2fcec2052ee352672ee8eab7ddf"
+   3872,
+   "40d16f8e7e6278c95d14fd24f00c9f542d45e9ce80d61327a058ffbd90a7a3e0"
   ],
   "artifact.field-frame-008.bin": [
-   4356,
-   "36c4da7475b0854371b866bc8c58383fb0b0487fa581ee9d906c66f97ca67425"
+   3872,
+   "4afbed89d49096d455f70dc6092c6a08dd9f7bf4b2047f31f7ab1bb7397c86e5"
   ],
   "artifact.field-frame-009.bin": [
-   4356,
-   "fbf4aad4826dad82a3fd557f779ba8cd6fde40b6599b5613af48a2fe7924c56b"
+   3872,
+   "4abfacb5603c6e67166794951af26cf4f31b21f6d613b5c3b2d1cf73cc3e5c2b"
   ],
   "artifact.field-frame-010.bin": [
-   4356,
-   "68db259ed0eee2d79af8febf48486abe229828fc1d5752ec3296ce92defe67cb"
+   3872,
+   "10d74a0cad4bc64a44a04a99acde33d07e111fca1a5510727392af45d3029801"
   ],
   "artifact.field-frame-011.bin": [
-   4356,
-   "c393c6f0ec1a911b71485637c9d32f9d04d545b90044de73ccad1a82713e9675"
+   3872,
+   "617f475d488510b0f971a9df0011887410a0e5969f7377dbf83d933b7ab4f238"
   ],
   "artifact.field-frame-012.bin": [
-   4356,
-   "15e0a930dfd477885643b5093696eb7dcbdfb659b29a42de8cd4f76ce9a05abc"
+   3872,
+   "e493c309f5812c52b751fdd2b8b4564e1f801bedf7a2021002b7e52a8a2b6e44"
   ],
   "artifact.field-frame-013.bin": [
-   4356,
-   "382212d2a4dda7fb1f6261a60ed22e5a6049830f3d534bde554cbfed6c6abd5d"
+   3872,
+   "7082f752532459508b984a44cbc6d26126e74fd0879d545fb4cf3bbf27fe7f69"
   ],
   "artifact.field-frame-014.bin": [
-   4356,
-   "bd5c1823c0475475a32d8c8cdf047370a4fd4c4b06d15d9bbcb9a7c7a0a46f49"
+   3872,
+   "214be35a684105b4dad36ebda5d3f60981961704a00e6645bf122cad8f3ebd29"
   ],
   "artifact.field-frame-015.bin": [
-   4356,
-   "cb9cccfb7c797adf39bbd411c54a98d5e078fd57b0d31bf8053cc3c1fe08e44c"
+   3872,
+   "3885c5d493892ce72499f3826e01cf57c499c104e938a559c8b56d9dfdf31113"
   ],
   "artifact.field-frame-016.bin": [
-   4356,
-   "3bdf71a12cd8d67037c90b6525786aa2a98f867a21dbb590a9c03fc3386c5a14"
+   3872,
+   "aa433bb071c74885bc2ff34faf30f1ec8f7a1e020cbab7afb1978af9d41ecd78"
   ],
   "artifact.field-frame-017.bin": [
-   4356,
-   "5164802adf2f1cb8218dd320744b2cdce2c62cf089896fd0dd9702be39108f55"
+   3872,
+   "2192af6c2616852463991e42aba8186288c6cc12267cca07425c11f96d42d8f2"
   ],
   "artifact.field-frame-018.bin": [
-   4356,
-   "3605b96a13d0807b9831f7a27448875a50e67b377ace81113c917cb5f5a5d731"
+   3872,
+   "63637a839777d5a5b3ff2580da822430fc1163f192261c025bb58e5773536697"
   ],
   "artifact.field-frame-019.bin": [
-   4356,
-   "488cdf94c4c87cb413ed59da5f2d2428ab29dbfa6ccd04a006a52a2a619c089d"
+   3872,
+   "67d609beec73f0bf31ff8a36c0f35e8e10021348cc608f78e45393dd586a1d33"
   ],
   "artifact.field-frame-020.bin": [
-   4356,
-   "5c9608adffe8c5ed0f273bf575fc4ab8d3481455349b9ade8904230f231304ee"
+   3872,
+   "7e4b6a8afdfebb7927f4e72dfc40f764b3a171cd3511e903488b956fb40c85bd"
   ],
   "artifact.field-frame-021.bin": [
-   4356,
-   "3f1dcc033d4ab892fa9ce45b3b0ea67e1fedbdcfd959c0edfa4637b299db6baa"
+   3872,
+   "4c33b8aa58d3af1b4f71ca50a9719c2af723836be734ec782110eb467f233e0f"
   ],
   "artifact.field-frame-022.bin": [
-   4356,
-   "c485363a2305e3e0445e8e78511c8124e813b239a523466cd05a6c363a95922d"
+   3872,
+   "226652d5fa3e62df026f33b5df24557748a6df42b495a800aa678b3749984519"
   ],
   "artifact.field-frame-023.bin": [
-   4356,
-   "a935b9581c735d4a67036976e0d909380ee6ccd505f6fc3c2c02b52f6cf17cb1"
+   3872,
+   "af5e1f9daa3263f444499e0791e8def51674028d14bd4449b02732c5fa626e60"
   ],
   "artifact.field-frame-024.bin": [
-   4356,
-   "58e539c06e3c8f2a2ddaba2d3be51ca20227637d78479737608aca825a176307"
+   3872,
+   "8e8dfe743259190091497043f4a5ecdec50fb9811981b2c8916549e36c9bb82d"
   ],
   "artifact.field-frame-025.bin": [
-   4356,
-   "1f5e7d2753fcbdde73c2d27a1512bd4b5ad41fc7b32e3d117654035ec68a1d93"
+   3872,
+   "be14b0377f59b52080730641a2b7b482f24a641f6fc8d250e58d5c7bec1c3e60"
   ],
   "artifact.field-frame-026.bin": [
-   4356,
-   "060b92f28a4fd76b1b05600dbc9b13a78ba24ab27344e6d91da277ef092735bd"
+   3872,
+   "72845138eb07130f0a10f01033e08b8398d0286a514577c14a94a4a9cfd3d1b4"
   ],
   "artifact.field-frame-027.bin": [
-   4356,
-   "1eec5e3d57074e0f091b8d67fed4c318f3d6339ea0623701a674a0811e8133cd"
+   3872,
+   "08a72f4983c30eecb6a38c3ed5fa956ec02b2b0b912e043cb5d0689de2a168dd"
   ],
   "artifact.field-frame-028.bin": [
-   4356,
-   "a124004061a07c10e40110cf9f73f3bdf36a4dd0fcd2bc4a4ae8a73b4f9f869c"
+   3872,
+   "d89fdf0541ec0ef4023c5c3228ba7bafc4381a32a7a71feec35a709cd57ee4b7"
   ],
   "artifact.field-frame-029.bin": [
-   4356,
-   "dca0f4b25e52f5bccbe435d15cc7a80c19b084e945d60cb544726c6ef8332a0c"
+   3872,
+   "ddaecd57ccad738b72fbb0a3908affae5bd43a0d696632de247f06d1e83eb037"
   ],
   "artifact.field-frame-030.bin": [
-   4356,
-   "abb6fb8de25d36fc77e38d1812ff7cde19601a33ac7227bd8be757ed8ef72219"
+   3872,
+   "330e23dbb5a5c7d7250463751b73a5bd1320277a86eb279564b686dc18204be4"
   ],
   "artifact.field-frame-031.bin": [
-   4356,
-   "72160f1d30026e978aa8f7a6a4e579d3fbc1331813fe155f3d8fbe9bfaaac76b"
+   3872,
+   "e30142018462a256ff29adb2005db280630ada5eb6c58b9f4b798407c7a43b95"
   ],
   "artifact.field-frame-032.bin": [
-   4356,
-   "030c0b13a490b06c3764a6c468a091319d79c0e59ff2a43f03cba5ed5df8e826"
+   3872,
+   "2b21ee7a04b22fd1cf24cfd1d52661cc4de31a1978bfc86e7f31cc03a0807042"
   ],
   "artifact.field-frame-033.bin": [
-   4356,
-   "47d5a45cec5ed4971fff34811f0f5370c868518c6a7c19fc1bfa38a45c35ffc6"
+   3872,
+   "9f766932bf2013902d663456813029ae7324a220cbb8be35229608b3258b1718"
   ],
   "artifact.field-frame-034.bin": [
-   4356,
-   "7b4a27b4da0a65d45a44385c8205d2656d13f6623ecdd3d29fe2fd2812cfbb2c"
+   3872,
+   "c4b01068694176f845ea611a0ce9a816439dee0983fca232d1cece83d135fccd"
   ],
   "artifact.field-frame-035.bin": [
-   4356,
-   "23f12e771c784f5dab1701027933505aff05a9e83f8e76896b4e7c6fdfcc75a7"
+   3872,
+   "95babe996005710500da7012bd73e1ab43c0336a42e50aef1a83e15b0aa638dc"
   ],
   "artifact.field-frame-036.bin": [
-   4356,
-   "1dc8b41558dc101c75a626b847f53a0853b6a8df4d1dff6811956a921f4e8f6c"
+   3872,
+   "fdd854b864cf631daeee284f84d08ff8409b840e5a79d3380bdc7cc5114723eb"
   ],
   "artifact.field-frame-037.bin": [
-   4356,
-   "c2c3f56d972e0f6e75337f1b1e83a2638b25604310c4d9d01eff9290dd9a2a90"
+   3872,
+   "eb3ce866b5fd8223dba219911a95d66ce276ecc9ea576ac26d0aabf05f2c40a9"
   ],
   "artifact.field-frame-038.bin": [
-   4356,
-   "303f3d8c48dc2013a40735b9947850e6649b94b7d79dd1f460effe2b063333f9"
+   3872,
+   "c92f215cb677d2a43dab2839e789e9257047238ce2ecb3d28ce9fb9acdef48f3"
   ],
   "artifact.field-frame-039.bin": [
-   4356,
-   "017a548defe45f5d4fa980feb0238ede1b988f4ac33f90fb5f7324916ccbead4"
+   3872,
+   "cc347304ca2706d69fd81d06971818da6e0aff27016c8785a1953402a216e396"
   ],
   "artifact.field-frame-040.bin": [
-   4356,
-   "59332281b9aa8fe3e8b9744d69bff262d1ae9105a5325a6e9c56a1f6073c41e4"
+   3872,
+   "bdeb5186b03a098ff4c235c0998bb9ce8e52e116fc531cb0b5ae05692450a330"
   ],
   "artifact.field-frame-041.bin": [
-   4356,
-   "72439a5cfc57a073085edae0cb517dc2814a6bf0ac67c972911dfd0c9b8bf637"
+   3872,
+   "ab146058180613846953a8ad4a47f8d17c71e5067e617403a9f590b3336f500d"
   ],
   "artifact.field-frame-042.bin": [
-   4356,
-   "9f2e47bda92734a9cf131534a2b352fa210e3fb8b899485c798c9d6937f1cedc"
+   3872,
+   "d04aa2ef5d8a9bb071ea0784d052bd8b93a1804fceddfe79f80f430f9f6476ee"
   ],
   "artifact.field-frame-043.bin": [
-   4356,
-   "5fdd34f095e0f0e322461d27967848180ac73329dc61dce666ab457e9e1b6bf0"
+   3872,
+   "7508131dfa89822874157589b8adbfd6b12fe550de52b661205906913a935ae3"
   ],
   "artifact.field-frame-044.bin": [
-   4356,
-   "f74b30f732ac7fa8763b5fbd767b598c75afd1df2b38d5d0089a22446975c387"
+   3872,
+   "6a12018b964f14fc5b3966ed76589fe9f94b2b5dfe4836221c7c499ed7ee6846"
   ],
   "artifact.field-frame-045.bin": [
-   4356,
-   "5c08cc19f055a80a3ed39748fa33a886caa46937e218b4e8c76df61ea0a4b7ce"
+   3872,
+   "8517d0461f2f8a89332ca826eec4fda080e9eb9a56bcb2d654dd09f6fdd9b95f"
   ],
   "artifact.field-frame-046.bin": [
-   4356,
-   "ff5394d025fd733a8fc59301729fda50ec54204bbe99096171acb73ffbde606c"
+   3872,
+   "f49e0cefce3643b216082e61612c5281c957971af5ce52013358028e83efd38e"
   ],
   "artifact.field-frame-047.bin": [
-   4356,
-   "b605976cdc93b0880d02a937bce634c5849c94600dad5afc1860d86316283183"
+   3872,
+   "0538c3141d4f787d4132f2b774428b4366537a95cfdca015dfb88081ed5a71ea"
   ],
   "artifact.field-frame-048.bin": [
-   4356,
-   "15f3d5e324329baf0b20b54367e4d294044cd9c275be21d18fa78d5d372c33c5"
+   3872,
+   "6629a194141cb2be608b4de1f6538fbb64cad78d229e55340bfe846421c5a44a"
   ],
   "artifact.field-frame-049.bin": [
-   4356,
-   "1abfc370947cc445b73a74c3b1ddd33bb6fed0a6c320b601fc794f8495f33562"
+   3872,
+   "88210edab4e5b804048bac861e4ecba2c86aa513a5f34e84eb8da18a25917389"
   ],
   "artifact.field-frame-050.bin": [
-   4356,
-   "e0bbea5661b057f4a00aab1062c230bf964470fca54f5790d408ec920c72986f"
+   3872,
+   "741f828de72186a3d75f38fed36a7e4a60067c5806128cd3693279de6c910905"
   ],
   "artifact.field-frame-051.bin": [
-   4356,
-   "96a2d9ec39e996890a6d05cd621fd1522b9605b57e0e85eec7cab01f659ff42c"
+   3872,
+   "c3c76a802855dc03f2e218e343072787eb82e26b293000017adb1016f8710c11"
   ],
   "artifact.field-frame-052.bin": [
-   4356,
-   "973db5072487583df7ec3eb3b2f024c1a51aad72e7e74c7350a7aa867d426a67"
+   3872,
+   "f86d8e81ccc29dea7ab2b619372e6d47476b0868c6f9f57af0c9d52e755faf89"
   ],
   "artifact.field-frame-053.bin": [
-   4356,
-   "c53a34689c2ae6af485c7a27379725fc3412e284589cf6cbd2f672ca19cafff0"
+   3872,
+   "96f79d54e99f5b661b3c44234b2ac3ef6dc5d3b374a7377f76ea43afe0379559"
   ],
   "artifact.field-frame-054.bin": [
-   4356,
-   "93351c6f16f1a1791d271e77ddeac1ea9cf0cbfa58aeadd44b188002309de3ea"
+   3872,
+   "618d487d6ab45e821fd7b01514fb81f9d211f8db36e4639ddcc5701b645ba0e4"
   ],
   "artifact.field-frame-055.bin": [
-   4356,
-   "20b0eb96d70c7cb26bbf0df0ca8cb57357df9745e172bca9f8c8da30bfc800de"
+   3872,
+   "58fe6485ed31764de2ef40addd409c8bd01a711cb104e9747890f02929227ac4"
   ],
   "artifact.field-frame-056.bin": [
-   4356,
-   "625a6fcb306e8a3a08ebaba5a713b6f9d8cc4e868a0172c3d71c89c1f07db76a"
+   3872,
+   "80e0b38de2bf2348673b99c7488c76276f53fb52991fa49032681d3114366461"
   ],
   "artifact.field-frame-057.bin": [
-   4356,
-   "dfc4fbce1ac769574310ec47ba204a4389039af90e9ea845444a337c388332fd"
+   3872,
+   "bd7874f100c324fa557b775c38d9418afd1dac60d6aa6e01c6534dda3ba6173b"
   ],
   "artifact.field-frame-058.bin": [
-   4356,
-   "328418197bf9d4ad0019bb02ee017a36aa405da4de6bddcb1bd7d6f5cc1ba73a"
-  ],
-  "artifact.field-frame-059.bin": [
-   4356,
-   "8f871a250339f60d40c2100a74ba154d50ba72578254484255bd04e3c7e62b54"
+   3872,
+   "1bbe52152e2b2ff70b28cd2ee251e5429c884d345ae7c062a0cecc652dc79dec"
   ],
   "artifact.field-series.json": [
-   24478,
-   "2d25228de8f32738ad727ffc5fdb529e5270f947d06dea3dc569376442e739b3"
+   14212,
+   "9650e5024d1adb8987e120b7baa74bd4aacc14027d56142f47306fd8cf4fc556"
   ],
   "artifact.peak-field.npz": [
-   8589,
-   "023b993f0c0b8c4be58ccb6d9aafb01c903c0ba7df53cc895772f91d1072f8d6"
+   7490,
+   "104af8ef07c7cd0a39251a1754845173d921701ba224da76e3747cae9ee9f2ca"
   ],
   "npz.peak-field.npz.arrayNames": [
    "coordinates_m",
@@ -503,38 +502,38 @@
   "npz.peak-field.npz.array.coordinates_m": [
    "<f8",
    [
-    1089,
+    968,
     3
    ],
-   "fb4a6f1d3f88d27d736aaa89f5c9c8a2d829cca1d0c8e7fb7173773e55b6c09f"
+   "ab11723a94d3b544b721d7416ff630974114c9b0b8114454e06ac32bf6b03504"
   ],
   "npz.peak-field.npz.array.T_K": [
    "<f8",
    [
-    1089
+    968
    ],
-   "4fdd27b9065a3e5f9837ce76d63d3f8800046b3c6aa44e322e2d090a8e35ea77"
+   "4fd94e1009dbd0b3e387aa4e79f7b4ee1de8dd8802212555f1de9eb41efec1c9"
   ],
   "npz.peak-field.npz.array.active": [
    "|b1",
    [
-    1089
+    968
    ],
-   "c45de067306ec80ca23e5699c1e8e673c1ada4d805bd96815634710ef47b5a80"
+   "fee5b073be64fec32ac1521df50d729d4a4ea71fe56876cead3493b3714b3a4c"
   ],
   "npz.peak-field.npz.array.liquid_fraction": [
    "<f8",
    [
-    1089
+    968
    ],
-   "9d3d326673247fcb064afc6e78b0dda65bd32129dc7d567ad60ee36347f72d1d"
+   "99666fd3e6abca49e1ac29f8e6d0ef84f0d3e2e47e227d37702ad8b7eba5773f"
   ],
   "npz.peak-field.npz.array.surface_m": [
    "<f8",
    [
     1
    ],
-   "211fadb6688583d4950cc21a825e98e1a2b18fabc1092d8bbf65c69d77f5163c"
+   "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
   ],
   "npz.peak-field.npz.array.scanAngle_deg": [
    "<f8",
@@ -548,14 +547,14 @@
    [
     1
    ],
-   "acf525b55b2143776d01a66428ac5fc06f65f1887d49e509f27fa65062020842"
+   "045db2af4fdceac16007d9d1c5900a0111aa3edddfa9ff7b2fba75452adccc7c"
   ],
   "npz.peak-field.npz.array.step": [
    "<i8",
    [
     1
    ],
-   "b5526034870a728c287d39bbf0bb758b23eb02c1e75a8ebc396d7044ea32bd29"
+   "71565cd53b740546f7d236f21aba165cf52b249891958cdb7edb072614d0c3a4"
   ],
   "npz.peak-field.npz.array.liquidus_K": [
    "<f8",
@@ -572,22 +571,18 @@
    "211fadb6688583d4950cc21a825e98e1a2b18fabc1092d8bbf65c69d77f5163c"
   ],
   "artifact.phase-slice.svg": [
-   8656,
-   "18744b804094f5e72bfb40e10fab53c65725e1fffdec321292679b09dbe76f62"
+   7730,
+   "50efd7deee2118dc2992ab1c3e25ffc0b156c8cc3ce3da4e1784b0a16a3c1c58"
   ],
   "artifact.temperature-slice.svg": [
-   8655,
-   "a1e9b53e5265d7927f1fc1d0e7490c2aa35f81d64b4483649300f791a1636fb1"
+   7725,
+   "b7cb2559b2c1490aefedcdfca84f0a74ce65694167cf617c20d8e504f7df12d3"
   ],
   "artifact.thermal-history.csv": [
-   7133,
-   "171e384e6b4bb98211fa1cf7ed05d61048c5a71aa28f4ed66f3bd0d20bf56f88"
+   7463,
+   "5e55a3cd24dba07690a5718e13704b5893ce6c10207f55ff882b758dc3abd86a"
   ],
   "result.artifactsListedMatchDisk": true,
-  "result.artifactsImplementationHashOccurrences": 0,
-  "baseline": {
-   "error": "ValueError: Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2154978.68 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(4), np.int64(5), np.int64(8)), previous T=3101.41 K, previous specific enthalpy=2137567.29 J/kg, dt=5.45701617e-07 s, source rate=1.95220729e+14 W/m\u00b3, net rate=1.42944944e+14 W/m\u00b3); evaporation/free-surface CFD required"
-  },
-  "evaporation.differsFromBaseline": true
+  "result.artifactsImplementationHashOccurrences": 0
  }
 }

@@ -385,12 +385,12 @@ def case_g3_powder_island(ctx: CaseContext) -> Dict[str, Any]:
 
 
 def case_g4_layered_plate(ctx: CaseContext) -> Dict[str, Any]:
-    _, observations = ctx.run_case(LAYERED)
+    _, observations = ctx.run_case(LAYERED, artifacts=True)
     return observations
 
 
 def case_g5_evaporation(ctx: CaseContext) -> Dict[str, Any]:
-    _, observations = ctx.run_case({**SMALL, "power_W": 80, "evaporationModel": True})
+    _, observations = ctx.run_case({**SMALL, "power_W": 80, "evaporationModel": True}, artifacts=True)
     # Proof that the opt-in path is exercised: the same case without it must differ.
     # At 80 W the baseline stops at the boiling validity limit (fail closed); that error text
     # is pinned too, so this case also covers the boiling STOP message.
@@ -411,11 +411,108 @@ def case_g6_screening_and_fallback(ctx: CaseContext) -> Dict[str, Any]:
                                            "power_W": 180, "speed_mm_s": 900})):
         _, part = ctx.run_case(raw, prefix=prefix)
         observations.update(part)
+    # The fallback reason differs when the worker reports an installed OpenFOAM.
+    _, part = ctx.run_case({"mode": "high-fidelity"}, prefix="highFidelityFallbackWithOpenfoam",
+                           capabilities={"openfoamVersion": "14", "openfoamThermal": False})
+    observations.update(part)
     return observations
 
 
 def case_g7_mesh_study(ctx: CaseContext) -> Dict[str, Any]:
-    _, observations = ctx.run_case({**SMALL, "power_W": 10, "study": "mesh"})
+    _, observations = ctx.run_case({**SMALL, "power_W": 10, "study": "mesh"}, artifacts=True)
+    return observations
+
+
+def case_g7_timestep_study(ctx: CaseContext) -> Dict[str, Any]:
+    """study='timestep': the legacy 2x / sqrt(2)x maxDt protocol."""
+    _, observations = ctx.run_case({**SMALL, "power_W": 10, "study": "timestep"})
+    return observations
+
+
+def case_g3_powder_meander_unidirectional(ctx: CaseContext) -> Dict[str, Any]:
+    observations: Dict[str, Any] = {}
+    for prefix, strategy in (("meander", "meander"), ("unidirectional", "unidirectional")):
+        _, part = ctx.run_case({**SMALL, "strategy": strategy, "tracks": 2, "hatch_um": 80,
+                                "dwell_s": 1e-5}, prefix=prefix)
+        observations.update(part)
+    return observations
+
+
+def case_g14_calibration_measurements(ctx: CaseContext) -> Dict[str, Any]:
+    """mode='calibration' with a matched and an unmatched (process vector) measurement."""
+    from lpbf_simulation import validate
+    from lpbf_evidence import PROCESS_KEYS
+    raw = {**SMALL, "mode": "calibration"}
+    row = dict(width_um=50., depth_um=45., source="Synthetic parity fixture (not a measurement)")
+    p, _ = validate({**raw, "measurements": [row]})
+    matched = dict(row, processVector={k: p[k] for k in PROCESS_KEYS},
+                   uncertainty_um=dict(width_um=2., depth_um=3.), independentHoldout=False)
+    observations: Dict[str, Any] = {}
+    for prefix, rows in (("matched", [matched]), ("unmatched", [row])):
+        _, part = ctx.run_case({**raw, "measurements": rows}, prefix=prefix)
+        observations.update(part)
+    status, value = capture_call(lambda: ctx.run_case({**raw, "mode": "calibration"}))
+    observations["reject.calibrationWithoutMeasurements"] = value if status == "error" else "NO-ERROR"
+    return observations
+
+
+def case_g15_bare_plate_square_optical_observer(ctx: CaseContext) -> Dict[str, Any]:
+    """Square bare plate (G2 is the corridor) with a non-null opticalObserver setting."""
+    raw = {"mode": "standard", "backend": "reference", "surfaceMode": "bare-plate",
+           "barePlateGeometry": "square", "sourcePenetration_um": 40, "power_W": 60,
+           "mesh_um": 40, "trackLength_um": 200, "cooling_s": 1e-4, "dwell_s": 0,
+           "opticalObserver": "nist-six-section"}
+    _, observations = ctx.run_case(raw, artifacts=True)
+    return observations
+
+
+def case_g16_non_in718_transient(ctx: CaseContext) -> Dict[str, Any]:
+    observations: Dict[str, Any] = {}
+    for prefix, name in (("ti6al4v", "Ti-6Al-4V"), ("ss316l", "316L Stainless Steel"),
+                         ("alsi10mg", "AlSi10Mg")):
+        status, value = capture_call(lambda name=name, prefix=prefix: ctx.run_case(
+            {**SMALL, "material": name}, prefix=prefix)[1])
+        if status == "ok":
+            observations.update(value)
+        else:
+            observations[f"{prefix}.error"] = value
+    return observations
+
+
+def case_g13_source_quadrature_refinement(ctx: CaseContext) -> Dict[str, Any]:
+    """Direct integrated_source calls with long intervals: the N-vs-2N refinement branch.
+
+    The CPU scheduler keeps beam travel per accepted step <= 0.25 radius, so no transient
+    case reaches this branch; it is still the shared source integral (GPU pilots use the
+    same tolerance), and B commits must not change it.
+    """
+    import lpbf_core_physics as core
+    observations: Dict[str, Any] = {}
+    dx = 20e-6
+    axis = (np.arange(64) + .5) * dx - 32 * dx
+    z = -(np.arange(6) + .5) * dx
+    segment = {"start_s": 0.0, "end_s": 1.25e-3, "start": [-500e-6, 0.0], "end": [500e-6, 0.0],
+               "layer": 0, "track": 0, "island": None}
+    original_rule = core.source_gauss_rule
+    for dt in (1.25e-4, 2.5e-4, 5e-4, 1e-3, 1.25e-3):
+        orders: List[int] = []
+
+        def rule(order, orders=orders):
+            orders.append(order)
+            return original_rule(order)
+        core.source_gauss_rule = rule
+        try:
+            status, value = capture_call(lambda dt=dt: core.integrated_source(
+                axis, z, dx, segment, 0.0, dt, 0.0, 40e-6, 40e-6, 100.0))
+        finally:
+            core.source_gauss_rule = original_rule
+        key = f"integratedSource.dt{dt:.3e}"
+        observe_value(observations, f"{key}.quadrature",
+                      lambda dt=dt: core.source_time_quadrature(segment, dt, 40e-6))
+        observations[f"{key}.orders"] = orders
+        observations[key] = typed_sha256(value) if status == "ok" else {"error": value}
+    observations["integratedSource.refinementReached"] = any(
+        len(v) > 1 for k, v in observations.items() if k.endswith(".orders"))
     return observations
 
 
@@ -492,7 +589,7 @@ def case_g8_observers(ctx: CaseContext) -> Dict[str, Any]:
 
     tracker = CpuRunProgress(observer=progress)
     _, observations = ctx.run_case(
-        OBSERVER_CASE, final_state_observer=final_states.append,
+        OBSERVER_CASE, artifacts=True, final_state_observer=final_states.append,
         selected_time_observer=selected.append, selected_time_s=event,
         local_history_observer=history, local_history_indices_ijk=[(0, 0, 0), (1, 0, 1)],
         run_progress=tracker)
@@ -821,6 +918,18 @@ CASES: Tuple[Case, ...] = (
     Case("g6_screening_and_fallback", "G6", case_g6_screening_and_fallback,
          "Screening (Goldak/Rosenthal) and the honest high-fidelity fallback"),
     Case("g7_mesh_study", "G7", case_g7_mesh_study, "Smallest layer-aligned three-grid mesh study"),
+    Case("g7_timestep_study", "G7", case_g7_timestep_study, "study='timestep' (2x and sqrt(2)x maxDt)"),
+    Case("g3_powder_meander_unidirectional", "G3", case_g3_powder_meander_unidirectional,
+         "Two-track meander and unidirectional powder runs"),
+    Case("g13_source_quadrature_refinement", "G13", case_g13_source_quadrature_refinement,
+         "integrated_source N-vs-2N refinement branch (unreachable from the CPU transient)",
+         runs_solver=False),
+    Case("g14_calibration_measurements", "G14", case_g14_calibration_measurements,
+         "mode='calibration' with matched/unmatched measurements; measurementComparison"),
+    Case("g15_bare_plate_square_optical_observer", "G15", case_g15_bare_plate_square_optical_observer,
+         "Square bare plate with opticalObserver='nist-six-section', all artifacts"),
+    Case("g16_non_in718_transient", "G16", case_g16_non_in718_transient,
+         "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg"),
     Case("g8_observers", "G8", case_g8_observers,
          "final-state, selected-time, local-history observers and CpuRunProgress; rejection messages"),
     Case("g9_material_snapshots", "G9", case_g9_material_snapshots,
@@ -835,6 +944,24 @@ CASES: Tuple[Case, ...] = (
          "np.savez_compressed bytes are time-independent (fixture arrays, 2.1 s apart)", runs_solver=False),
 )
 CASE_BY_ID = {case.id: case for case in CASES}
+
+# Paths the goldens do NOT cover (design 5c review). B commits that touch these need their
+# own evidence; a green --check says nothing about them.
+NOT_COVERED = (
+    "GPU numerics: lpbf_gpu_thermal.py, lpbf_gpu_thermal_warp.py, lpbf_transient_3d_gpu.py, "
+    "lpbf_gpu_pilot_*.py, warp_thermal_solver.py, powder_bed_raytracer.py and the IN625 CUDA "
+    "adapter (no CUDA/Warp here; design rule: do not edit them in the bump)",
+    "OpenFOAM execution: lpbf_openfoam.thermal(), cfd_multiphysics() and metalliksaThermal.C "
+    "(only case generation is pinned, G10); backend='auto' with openfoamThermal capability",
+    "setup_cfd_multiphysics_case beyond the powder-packer NotImplementedError (G10 pins the error "
+    "and the files written before it)",
+    "User-supplied material properties (validate 'properties' / material(name, supplied))",
+    "Layered plate with supportBottomBoundary='isothermal-at-preheat' and non-zero incidence azimuth",
+    "Worker-side consumers of opticalObserver / NIST section operators (lpbf_worker.py, "
+    "lpbf_nist_*; not in the manifest); G15 pins only that the setting passes through run()",
+    "CpuRunProgress source-work budget failures (maximum_source_evaluations / _cell_steps)",
+    "G11 with warp installed (skipped, see case_g11_build_job_meltpool)",
+)
 
 
 # --------------------------------------------------------------------------- record / check
@@ -1119,7 +1246,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
     if args.list:
         for case in CASES:
-            print(f"{case.id:32s} {case.group:4s} {'slow' if case.slow else 'fast'}  {case.description}")
+            print(f"{case.id:40s} {case.group:4s} {'slow' if case.slow else 'fast'}  {case.description}")
+        print("\nNOT COVERED by these goldens:")
+        for gap in NOT_COVERED:
+            print(f"  - {gap}")
         return 0
     if args.record:
         return command_record(args)

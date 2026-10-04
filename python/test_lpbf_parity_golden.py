@@ -119,7 +119,8 @@ class ParityHarnessTests(unittest.TestCase):
         # Zero tolerance: absorptivity 0.38 -> 0.38 + 1e-15 (about 18 ulp) must move the
         # transient result. (SOURCE_QUADRATURE_RELATIVE_TOLERANCE cannot serve as the
         # mutation here: the CPU scheduler keeps beam travel per step <= 0.25 radius, so
-        # integrated_source never reaches its refinement branch in any CPU case.)
+        # integrated_source never reaches its refinement branch in a CPU transient; G13 covers
+        # that branch directly, see the next test.)
         import four_alloy_materials
         in718 = four_alloy_materials._THERMAL["in718"]
         with patch.dict(in718, {"absorptivity_IR": in718["absorptivity_IR"] + 1e-15}):
@@ -127,6 +128,18 @@ class ParityHarnessTests(unittest.TestCase):
         problems = "\n".join(outcome["problems"])
         self.assertIn("changed result.canonicalSha256", problems)
         self.assertIn("changed result.key.metrics", problems)
+
+    def test_changed_source_quadrature_tolerance_fails_the_refinement_case(self):
+        # G13 drives integrated_source into its N-vs-2N branch directly; a tighter
+        # convergence tolerance adds a refinement level and must change the pinned field.
+        import lpbf_core_physics
+        case = parity.CASE_BY_ID["g13_source_quadrature_refinement"]
+        self.assertEqual(parity.check_case(case, self.root)["problems"], [])
+        with patch.object(lpbf_core_physics, "SOURCE_QUADRATURE_RELATIVE_TOLERANCE", 1e-12):
+            outcome = parity.check_case(case, self.root)
+        problems = "\n".join(outcome["problems"])
+        self.assertIn("changed integratedSource.dt2.500e-04.orders", problems)
+        self.assertIn("changed integratedSource.dt2.500e-04:", problems)
 
     def test_changed_numerical_tolerance_in_the_scheduler_fails_a_solver_case(self):
         # The source-limited step accepts dt when allowed >= dt*(1-1e-12); a different

@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "ed0df5079de9dbe2daa6d61121926ff148d2aec8",
+ "recordedGitHead": "c76092c861268120ee583a9dad0128a3cff66e0a",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  8.3,
-  10.7
+  5.1,
+  5.8
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "e1052f6faf2fac8740a555ae37ccb7d12eb2482891d7e848c093c2672b561c8a",
-  "result.orderedTypedSha256": "7700e37ed0e7232002a7f9969c5fb868065cc9fbd14c40639b02f4dbfdfb4583",
+  "result.canonicalSha256": "5397c9a5b3d87f8551424578fc2ebe554bba0a2c6d72a3b666116ba6c83ff959",
+  "result.orderedTypedSha256": "b56c75b2f9bda2984f858bf3093217b071ca5c5ac788e3b1a258d6a065e9215a",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -117,7 +117,9 @@
    "resourceEstimate",
    "unresolvedPhysics",
    "confidenceReason",
-   "coreContract"
+   "coreContract",
+   "artifacts",
+   "retentionPolicy"
   ],
   "result.key.schemaVersion": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
   "result.key.requestedMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
@@ -136,7 +138,7 @@
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "2c7191dcdc230fb64244f1e5d952f5094b0b9ac76b2ba2f3f9c9d82b8f0681e0",
   "result.key.thermalHistory": "5891f7d4facfbdde39a29024ca1e25e39b473a2344587afff1d8021773bf3c94",
-  "result.key.fieldSeries": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.fieldSeries": "7e5d844a6929e466a78a570e89bba38f7aca29004a88e1b5afc69fa25fa7c8e3",
   "result.key.peakInterpolatedMeltPool": "4de6e2a50bed9e985efae22563b470d5a18b24debddf444177347f6c871e3b12",
   "result.key.fieldOverlapDiagnostics": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackCrossSection": "68a8165a96522fffcc4fa6eb4d27d388942a125a3be3b54dec7eda385bb32c18",
@@ -161,6 +163,8 @@
   "result.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
   "result.key.confidenceReason": "906944d2c579df879c4987a7d07a4e032bf053927f6b33f8e6c954537ac1f1e0",
   "result.key.coreContract": "201d59313d1fbafe0436aa0c93318013de0948eabbb2efdf260a833597682d86",
+  "result.key.artifacts": "33afbd7697a0f0c958ebed3c00d9dbe5250bf28239fd3a7a37935224d8f1212c",
+  "result.key.retentionPolicy": "ab930f19e2eab573860fa3ee488c98026d2867e0b2408442da3c3d6415a31807",
   "result.coreContract.inputSha256": "f902054d7e5165a68aa48d632b98cc8bd30f25bd5608d4190382dfae774059be",
   "result.coreContract.materialSha256": "5096bc16899be3ecade9e3e0ddb49f1bfb4a93bbb6d104d7b36a0375a26d7b28",
   "result.coreContract.solverId": "layered-enthalpy-fv-1",
@@ -171,6 +175,330 @@
   "result.effectiveMode": "standard",
   "result.label": "Unvalidated transient thermal",
   "result.confidence": "low",
-  "result.implementationHashOccurrencesAfterStrip": 0
+  "result.implementationHashOccurrencesAfterStrip": 0,
+  "artifacts.files": [
+   "field-coordinates.bin",
+   "field-frame-000.bin",
+   "field-frame-001.bin",
+   "field-frame-002.bin",
+   "field-frame-003.bin",
+   "field-frame-004.bin",
+   "field-frame-005.bin",
+   "field-frame-006.bin",
+   "field-frame-007.bin",
+   "field-frame-008.bin",
+   "field-frame-009.bin",
+   "field-frame-010.bin",
+   "field-frame-011.bin",
+   "field-frame-012.bin",
+   "field-frame-013.bin",
+   "field-frame-014.bin",
+   "field-frame-015.bin",
+   "field-frame-016.bin",
+   "field-frame-017.bin",
+   "field-frame-018.bin",
+   "field-frame-019.bin",
+   "field-frame-020.bin",
+   "field-frame-021.bin",
+   "field-frame-022.bin",
+   "field-frame-023.bin",
+   "field-frame-024.bin",
+   "field-frame-025.bin",
+   "field-frame-026.bin",
+   "field-frame-027.bin",
+   "field-frame-028.bin",
+   "field-frame-029.bin",
+   "field-frame-030.bin",
+   "field-frame-031.bin",
+   "field-frame-032.bin",
+   "field-frame-033.bin",
+   "field-frame-034.bin",
+   "field-frame-035.bin",
+   "field-frame-036.bin",
+   "field-frame-037.bin",
+   "field-frame-038.bin",
+   "field-frame-039.bin",
+   "field-frame-040.bin",
+   "field-frame-041.bin",
+   "field-frame-042.bin",
+   "field-frame-043.bin",
+   "field-frame-044.bin",
+   "field-frame-045.bin",
+   "field-frame-046.bin",
+   "field-frame-047.bin",
+   "field-frame-048.bin",
+   "field-frame-049.bin",
+   "field-frame-050.bin",
+   "field-frame-051.bin",
+   "field-frame-052.bin",
+   "field-frame-053.bin",
+   "field-frame-054.bin",
+   "field-frame-055.bin",
+   "field-frame-056.bin",
+   "field-frame-057.bin",
+   "field-frame-058.bin",
+   "field-frame-059.bin",
+   "field-frame-060.bin",
+   "field-series.json",
+   "thermal-history.csv"
+  ],
+  "artifact.field-coordinates.bin": [
+   1536,
+   "1e123ed29b03e8ad85454d3e4b3ddfc26bbf5827acc8279df225d679d58ab86a"
+  ],
+  "artifact.field-frame-000.bin": [
+   512,
+   "c4b52e4cd3e31b75aae634864decf4b1a43f4e920811a59d88c6148c89499000"
+  ],
+  "artifact.field-frame-001.bin": [
+   512,
+   "55f25294df80df6969cb3d30246b091ccb287616c15f59653e0c00fd203c5438"
+  ],
+  "artifact.field-frame-002.bin": [
+   512,
+   "bd79b79308dcb01d53940de3e7a0d8ef425265726ddf8960a573d0a83419c740"
+  ],
+  "artifact.field-frame-003.bin": [
+   512,
+   "770f178cfba9122097e09a12afb4ca617047560f9f071c8508d863ea781c92f0"
+  ],
+  "artifact.field-frame-004.bin": [
+   512,
+   "3c40506fef69d396365a9526613e69f64c80d622639b283a29d7e269158190c0"
+  ],
+  "artifact.field-frame-005.bin": [
+   512,
+   "d186e3e56977626b974e4980bfe1878f86e71a37bca9f73f06374eb75abc458b"
+  ],
+  "artifact.field-frame-006.bin": [
+   512,
+   "c6d4fdd3af0a8b5f97115456f245ae706064f57aa2cf39270df29096b7a86de3"
+  ],
+  "artifact.field-frame-007.bin": [
+   512,
+   "976cb16dea8421047f2b449fd83acf9b3cbc79dae23f2d537e0f098a216089e5"
+  ],
+  "artifact.field-frame-008.bin": [
+   512,
+   "a1971cec5b2aff9fd4cf134abb5e3426d14a10d808f419b821d520914cf51673"
+  ],
+  "artifact.field-frame-009.bin": [
+   512,
+   "3bff44a6c32f6cb4d2ea0c2f90ec81899ff865a2ffd5acf1f0effc92d0d6cb7f"
+  ],
+  "artifact.field-frame-010.bin": [
+   512,
+   "340808787da6117af1e242bb5049746b452e7841c343629a91b09182c052c623"
+  ],
+  "artifact.field-frame-011.bin": [
+   512,
+   "26d97cc5699551a01a24293fc508221250628ca7ff5d6975870257b25001943b"
+  ],
+  "artifact.field-frame-012.bin": [
+   512,
+   "b17ca94ab172c9e924338bcd75c2ae6f14c5793e759d5e94b6ec75285256b225"
+  ],
+  "artifact.field-frame-013.bin": [
+   512,
+   "84f6696304402f96e2687574b247370e39134ae03987658ca44c8ad92181cc6f"
+  ],
+  "artifact.field-frame-014.bin": [
+   512,
+   "bd701df8bd0eb01ebea7163819698b2a87ef20f2f8474ed139e2057f24c3a278"
+  ],
+  "artifact.field-frame-015.bin": [
+   512,
+   "45c5b586d18f6e933e08b895befa24c269d94b8934e288737180f3aa1a32c6a9"
+  ],
+  "artifact.field-frame-016.bin": [
+   512,
+   "2c1a060fd7092098442f631aae5a9f31dd2a3fddf9e454f429337d8143d4a706"
+  ],
+  "artifact.field-frame-017.bin": [
+   512,
+   "d6504323922646e0b6716addcbabdb79b9df820f3ec846794ed620c906b3b84c"
+  ],
+  "artifact.field-frame-018.bin": [
+   512,
+   "d0c544040396e1a848c9093af47dcaa90c92f0304017cdb3a2d8d76ca979ce38"
+  ],
+  "artifact.field-frame-019.bin": [
+   512,
+   "a389d26dba3c870b860121e58f06891b359fd6d0991267f5d945f1a108ef6632"
+  ],
+  "artifact.field-frame-020.bin": [
+   512,
+   "f4320c73ab2b278c90afc08ac158b7c187b19a35fd7512caef58b2defc5eb6cd"
+  ],
+  "artifact.field-frame-021.bin": [
+   512,
+   "80b5cb38a948412e850faf635626ea370b4dc4f02ac595d38fb112d18258b437"
+  ],
+  "artifact.field-frame-022.bin": [
+   512,
+   "28582d3be3b1b0a97f72c9f29afa72e15cb38ec823c1843bbde80e5bb57c3d5d"
+  ],
+  "artifact.field-frame-023.bin": [
+   512,
+   "40545fa7bc386ff8639d18e73c05ef2511bdad1447e2f211fb96e4c8f0f507ff"
+  ],
+  "artifact.field-frame-024.bin": [
+   512,
+   "03c8e6581af4f408f9e7bd63885f0e22956f6674d15c1a02d390ec148ee3158e"
+  ],
+  "artifact.field-frame-025.bin": [
+   512,
+   "4bec3f519e091d0b82e677a41b53a6ed88995aa989143a9d16d45e7e2fd56b3d"
+  ],
+  "artifact.field-frame-026.bin": [
+   512,
+   "587cf9d63f1915d291166b199481d6623e963c1390735097559800c4bd3b3768"
+  ],
+  "artifact.field-frame-027.bin": [
+   512,
+   "d1567ec4f1ac75af5bdc9927e3786e3b382186f8d525da163866b0d8d451eb24"
+  ],
+  "artifact.field-frame-028.bin": [
+   512,
+   "4e0b8dbb52d42e9472ebad847d04f6db717d989d8e99a5bc1091cdf0d4f37e3e"
+  ],
+  "artifact.field-frame-029.bin": [
+   512,
+   "c18dbdbe6f00859a372afe0c9d6a5c82ff88994c8329a7eb72475c9a4227288e"
+  ],
+  "artifact.field-frame-030.bin": [
+   512,
+   "0cde4113b6caf1a93f33fdafb3793464d1dc7447d9266295c4fb703fb0a4e885"
+  ],
+  "artifact.field-frame-031.bin": [
+   512,
+   "e3561ae8272c6ef3f1f943932531ad5446013b915547276d688a9a9c33d43745"
+  ],
+  "artifact.field-frame-032.bin": [
+   512,
+   "b373daf9e6ba8df21131fd097acb17690d5e7018f4feb890bb9c79e1028f274c"
+  ],
+  "artifact.field-frame-033.bin": [
+   512,
+   "1826cf91a2e0c47b5c22f24ea7875fc136128175a2430d03b44089960c852991"
+  ],
+  "artifact.field-frame-034.bin": [
+   512,
+   "42400948904be0335176a627ab3ac3add54df2db3948d8a2927206dcd09bf1b0"
+  ],
+  "artifact.field-frame-035.bin": [
+   512,
+   "20b809a0a593f4b4b1b7685eb39c8ec6b34a88f8e9aa560961912ce3dfaa6ad9"
+  ],
+  "artifact.field-frame-036.bin": [
+   512,
+   "df2ddb09d8378fd9690eb673f1c540049fbf253ae32c311f84b12ee7a642f88f"
+  ],
+  "artifact.field-frame-037.bin": [
+   512,
+   "dd6e0c36883bf20cd918a4c86e75076e1c120094d4456f32454d9d18becfde46"
+  ],
+  "artifact.field-frame-038.bin": [
+   512,
+   "9e48d106edf9c3c1858ea3740de39ca5556f972f5bf9e8481de88911bbd589e8"
+  ],
+  "artifact.field-frame-039.bin": [
+   512,
+   "9df951ad3b226e4391ecf795f5b355cc403ee6ea7583ae590e642e18d83f303c"
+  ],
+  "artifact.field-frame-040.bin": [
+   512,
+   "8d2d6d1df3b66495f751df8823790a7808890432b17c01fb47939377302c0904"
+  ],
+  "artifact.field-frame-041.bin": [
+   512,
+   "55959c4993b3043a795c69285acb7d8948dac15e20720bd89a7e53ee367e9fb6"
+  ],
+  "artifact.field-frame-042.bin": [
+   512,
+   "352dcb012cf7f0890e20cb49bdd1fa188c29d470c8ac3195c079f877ddddf751"
+  ],
+  "artifact.field-frame-043.bin": [
+   512,
+   "bf53e54367d03b941836f9c1b614e41f4e717ca1fc749f2519a15d5cf68bfdca"
+  ],
+  "artifact.field-frame-044.bin": [
+   512,
+   "2b9f9d4381675f5f780c77a3b7e1c6bc0cbe055123bce99db8f7eb1a86e85763"
+  ],
+  "artifact.field-frame-045.bin": [
+   512,
+   "c124f8ce51770a6db7875e006b52a56f2de001a58a9bb5a2690a1e249faf7ffb"
+  ],
+  "artifact.field-frame-046.bin": [
+   512,
+   "e2ce73d624a264bcd28dfb16065ce66b15c9b05213701f6cf50d2ad1c2095e6f"
+  ],
+  "artifact.field-frame-047.bin": [
+   512,
+   "8a3696e7344615f1beb997b4e4312fe0d665b583a8ec5b93cc760d646b82f212"
+  ],
+  "artifact.field-frame-048.bin": [
+   512,
+   "4a0400f207c5024e9b0387accfd26ab56edf93dc94513620f211d21208bedcb9"
+  ],
+  "artifact.field-frame-049.bin": [
+   512,
+   "d12d4b4c1acc106b4ddcea485f7bf78af88b0fb2b6e2eab17063e62dd4a5c440"
+  ],
+  "artifact.field-frame-050.bin": [
+   512,
+   "870b4a69201174a526a7e416983c6cc4623c63c1be64fd56bf0e067a4e525ee7"
+  ],
+  "artifact.field-frame-051.bin": [
+   512,
+   "8c5914419a37615482205292519f3bb72bebd9c4194d16e4be2152230002eabf"
+  ],
+  "artifact.field-frame-052.bin": [
+   512,
+   "95312149dc2d0d0f97075ce5413f5d8d317a6f7c5947c63f306d0b6f789769b2"
+  ],
+  "artifact.field-frame-053.bin": [
+   512,
+   "a8aafea64b43149baef21978347f956ae316d8bbf8da6407316ebdbc6cadda72"
+  ],
+  "artifact.field-frame-054.bin": [
+   512,
+   "c0223d17d7e244edf4d82bd8c0cdcb8ecb3f59ef6f211fa4512d23c9f85ef050"
+  ],
+  "artifact.field-frame-055.bin": [
+   512,
+   "1a59778416f10f953e613520df0aa403f1deac888f12f1250efc30e24cd478eb"
+  ],
+  "artifact.field-frame-056.bin": [
+   512,
+   "0e1a51a936b30f0ccb5fb76ccd7b7985571484a9111065e384a3b60eb65f41c4"
+  ],
+  "artifact.field-frame-057.bin": [
+   512,
+   "2d494926def8a2dcb0c9797f4623692c8b3e25e4ea66a8fee3a96b0eb29499c4"
+  ],
+  "artifact.field-frame-058.bin": [
+   512,
+   "2dec5c94f9e76a20ff2663f343085c58703c243b38ba244531c2100354c0790d"
+  ],
+  "artifact.field-frame-059.bin": [
+   512,
+   "fdeaf21ae03efc0e4421c9c77fea9f3c9353a88183a8724c751c3ad32e7e425a"
+  ],
+  "artifact.field-frame-060.bin": [
+   512,
+   "05dde54eaa9f688679af10668084585332a55274c495de8172d3fa1fb5346cfa"
+  ],
+  "artifact.field-series.json": [
+   9382,
+   "36982dbd59ab3f8c375dcb46c424d37b7a59158a9150ddefa2e97600d1b040d9"
+  ],
+  "artifact.thermal-history.csv": [
+   7752,
+   "b5b6f5d9c7d1fa73e384d41a8a1ceb9a4a262f26b136eaf2cd1ec4e2b701a48e"
+  ],
+  "result.artifactsListedMatchDisk": true,
+  "result.artifactsImplementationHashOccurrences": 0
  }
 }
