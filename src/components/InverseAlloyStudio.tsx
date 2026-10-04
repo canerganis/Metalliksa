@@ -361,7 +361,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>σ_y (25°C):</span>
                       <strong className="text-emerald-400">{targets.targetYieldStrength_25C} MPa</strong>
                     </div>
-                    <input aria-label="σ_y (25°C)"
+                    <input aria-label="σ_y (25°C) (MPa)"
                       type="range"
                       min={300}
                       max={2200}
@@ -379,7 +379,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>σ_y (High Temp):</span>
                       <strong className="text-amber-400">{targets.targetYieldStrength_Elevated} MPa</strong>
                     </div>
-                    <input aria-label="σ_y (High Temp)"
+                    <input aria-label="σ_y (High Temp) (MPa)"
                       type="range"
                       min={100}
                       max={1400}
@@ -400,7 +400,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Max Service T:</span>
                       <strong className="text-sky-300">{targets.serviceTemperature_C}°C</strong>
                     </div>
-                    <input aria-label="Max Service T"
+                    <input aria-label="Max Service T (°C)"
                       type="range"
                       min={50}
                       max={1600}
@@ -437,7 +437,7 @@ export const InverseAlloyStudio: React.FC<InverseAlloyStudioProps> = ({ onNaviga
                       <span>Max Density:</span>
                       <strong className="text-white">{targets.maxDensity_gcm3} g/cm³</strong>
                     </div>
-                    <input aria-label="Max Density"
+                    <input aria-label="Max Density (g/cm³)"
                       type="range"
                       min={2.7}
                       max={15.0}

@@ -339,7 +339,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <input aria-label={`${element} content`}
+                      <input aria-label={`${element} content (${activeMaterialSpecimen.unit === "at_pct" ? "at.%" : "wt.%"})`}
                         type="number"
                         step="0.1"
                         min="0"
@@ -360,7 +360,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Slider Control */}
-                  <input aria-label={`${element} content slider`}
+                  <input aria-label={`${element} content slider (${activeMaterialSpecimen.unit === "at_pct" ? "at.%" : "wt.%"})`}
                     type="range"
                     min="0"
                     max={element === activeMaterialSpecimen.metadata?.baseMetal ? 100 : 35}

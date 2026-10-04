@@ -943,7 +943,7 @@ Provide:
                     <span className="text-[10px] text-slate-400">
                       Map Opacity: {Math.round(mapOpacity * 100)}%
                     </span>
-                    <input aria-label="Map Opacity"
+                    <input aria-label="Map Opacity" aria-valuetext={`${Math.round(mapOpacity * 100)}%`}
                       type="range"
                       min="0.1"
                       max="1.0"

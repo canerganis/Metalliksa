@@ -758,7 +758,7 @@ ${diagnosisResult || ""}`
                       {zoomLevel.toFixed(1)}x
                     </span>
                   </div>
-                  <input aria-label="Magnification Zoom"
+                  <input aria-label="Magnification Zoom (x)"
                     type="range"
                     min="1.0"
                     max="2.5"
@@ -773,7 +773,7 @@ ${diagnosisResult || ""}`
                     <span>Brightness</span>
                     <span className="text-sky-400 font-bold">{brightness}%</span>
                   </div>
-                  <input aria-label="Brightness"
+                  <input aria-label="Brightness (%)"
                     type="range"
                     min="60"
                     max="150"
@@ -788,7 +788,7 @@ ${diagnosisResult || ""}`
                     <span>Contrast / Reticle</span>
                     <span className="text-sky-400 font-bold">{contrast}%</span>
                   </div>
-                  <input aria-label="Contrast / Reticle"
+                  <input aria-label="Contrast / Reticle (%)"
                     type="range"
                     min="60"
                     max="180"

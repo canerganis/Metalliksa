@@ -672,7 +672,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                     <span className="font-bold text-slate-200">{el}</span>
                     <span className="text-violet-300 font-bold">{val}%</span>
                   </div>
-                  <input aria-label={`${el} content`}
+                  <input aria-label={`${el} content (%)`}
                     type="range"
                     min="0"
                     max={el === "Ni" || el === "Ti" || el === "Fe" ? "90" : "25"}
@@ -813,7 +813,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             {/* Probe Slider */}
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-400">T Probe: <strong className="text-violet-300">{probeTemperatureC}°C</strong></span>
-              <input aria-label="T Probe"
+              <input aria-label="T Probe (°C)"
                 type="range"
                 min="500"
                 max="1450"

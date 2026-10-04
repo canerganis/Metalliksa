@@ -604,7 +604,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
             }`}
             onClick={() => fileInputRef.current?.click()}
           >
-            <input aria-label="Drag & drop your polarization file here, or browse"
+            <input aria-label="Upload polarization file"
               type="file"
               ref={fileInputRef}
               onChange={(e) => {
@@ -947,7 +947,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div>
                     <span className="text-slate-400 block">Cathodic Lower:</span>
-                    <input aria-label="Cathodic Lower"
+                    <input aria-label="Cathodic Lower (V)"
                       type="number"
                       step="0.01"
                       value={customCathodicRange ? customCathodicRange[0] : fitResult.cathodicRange[0]}
@@ -960,7 +960,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                   </div>
                   <div>
                     <span className="text-slate-400 block">Cathodic Upper:</span>
-                    <input aria-label="Cathodic Upper"
+                    <input aria-label="Cathodic Upper (V)"
                       type="number"
                       step="0.01"
                       value={customCathodicRange ? customCathodicRange[1] : fitResult.cathodicRange[1]}
@@ -991,7 +991,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div>
                     <span className="text-slate-400 block">Anodic Lower:</span>
-                    <input aria-label="Anodic Lower"
+                    <input aria-label="Anodic Lower (V)"
                       type="number"
                       step="0.01"
                       value={customAnodicRange ? customAnodicRange[0] : fitResult.anodicRange[0]}
@@ -1004,7 +1004,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                   </div>
                   <div>
                     <span className="text-slate-400 block">Anodic Upper:</span>
-                    <input aria-label="Anodic Upper"
+                    <input aria-label="Anodic Upper (V)"
                       type="number"
                       step="0.01"
                       value={customAnodicRange ? customAnodicRange[1] : fitResult.anodicRange[1]}
@@ -1033,7 +1033,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                       <span>E_corr Micro-Tune:</span>
                       <span className="text-emerald-400 font-bold">{(manualEcorr ?? fitResult.eCorr).toFixed(4)} V</span>
                     </div>
-                    <input aria-label="E_corr Micro-Tune"
+                    <input aria-label="E_corr Micro-Tune (V)"
                       type="range"
                       min={fitResult.eCorr - 0.20}
                       max={fitResult.eCorr + 0.20}
@@ -1049,7 +1049,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                       <span>log₁₀(i_corr) Micro-Tune:</span>
                       <span className="text-sky-300 font-bold">{(manualLogIcorr ?? fitResult.logIcorr).toFixed(2)} log(µA/cm²)</span>
                     </div>
-                    <input aria-label="log₁₀(i_corr) Micro-Tune"
+                    <input aria-label="log₁₀(i_corr) Micro-Tune (log(µA/cm²))"
                       type="range"
                       min={-4.0}
                       max={4.0}

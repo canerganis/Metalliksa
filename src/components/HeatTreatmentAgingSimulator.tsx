@@ -389,7 +389,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">HIP Temperature (T_HIP)</span>
                 <strong className="text-emerald-300">{hipTemp} °C</strong>
               </div>
-              <input aria-label="HIP Temperature (T_HIP)"
+              <input aria-label="HIP Temperature (T_HIP) (°C)"
                 type="range"
                 min={Math.round(solidus_C * 0.55)}
                 max={Math.round(solidus_C * 0.92)}
@@ -446,7 +446,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                   {solTemp} °C {kinetics.incipientMeltingRisk && "⚠️ (Melting Risk!)"}
                 </strong>
               </div>
-              <input aria-label="Solution Temperature (T_sol)"
+              <input aria-label="Solution Temperature (T_sol) (°C)"
                 type="range"
                 min={Math.round(solidus_C * 0.7)}
                 max={Math.min(liquidus_C, Math.round(solidus_C + 20))}
@@ -472,7 +472,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">Aging Temperature (T_age)</span>
                 <strong className="text-amber-300">{ageTemp} °C</strong>
               </div>
-              <input aria-label="Aging Temperature (T_age)"
+              <input aria-label="Aging Temperature (T_age) (°C)"
                 type="range"
                 min={Math.round(defaults.ageTemp_C * 0.7)}
                 max={Math.round(defaults.ageTemp_C * 1.35)}
@@ -488,7 +488,7 @@ const HeatTreatmentScenario: React.FC<Props & { precipitateFraction: number }> =
                 <span className="text-slate-400">Aging Duration (t_age)</span>
                 <strong className="text-sky-300">{ageTime} Hours</strong>
               </div>
-              <input aria-label="Aging Duration (t_age)"
+              <input aria-label="Aging Duration (t_age) (Hours)"
                 type="range"
                 min={1}
                 max={48}

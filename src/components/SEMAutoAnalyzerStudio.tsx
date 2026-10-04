@@ -1592,7 +1592,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <span className="text-slate-300">Scale Ref:</span>
-                  <input aria-label="Scale Ref"
+                  <input aria-label={`Scale Ref (${caliperInputUnit})`}
                     type="number"
                     min="0.1"
                     max="10000"
@@ -1721,7 +1721,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-[10px] text-slate-400">
                   <span>Overlay:</span>
-                  <input aria-label="Overlay"
+                  <input aria-label="Overlay opacity (%)"
                     type="range"
                     min="20"
                     max="100"
@@ -1805,7 +1805,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Scale Factor:</span>
                     <span className="text-sky-300 font-bold">{scaleMicronsPerPixel} µm/px</span>
                   </div>
-                  <input aria-label="Scale Factor"
+                  <input aria-label="Scale Factor (µm/px)"
                     type="range"
                     min="0.002"
                     max="0.5"
@@ -1821,7 +1821,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Matrix Upper Bound:</span>
                     <span className="text-sky-300 font-bold">{matrixUpperThreshold} lum</span>
                   </div>
-                  <input aria-label="Matrix Upper Bound"
+                  <input aria-label="Matrix Upper Bound (lum)"
                     type="range"
                     min={poreThreshold + 5}
                     max={precipitateUpperThreshold - 5}
@@ -1836,7 +1836,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Precipitate Bound:</span>
                     <span className="text-amber-300 font-bold">{precipitateUpperThreshold} lum</span>
                   </div>
-                  <input aria-label="Precipitate Bound"
+                  <input aria-label="Precipitate Bound (lum)"
                     type="range"
                     min={matrixUpperThreshold + 5}
                     max="250"

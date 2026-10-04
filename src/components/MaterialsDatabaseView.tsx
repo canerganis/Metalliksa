@@ -219,7 +219,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
           {/* Search Input */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input aria-label="Search alloy name, UNS, ASTM, composition (e.g., Ti, Ni, Cu), application..."
+            <input aria-label="Filter materials"
               type="text"
               placeholder="Search alloy name, UNS, ASTM, composition (e.g., Ti, Ni, Cu), application..."
               value={searchQuery}
@@ -298,7 +298,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-emerald-400 font-bold">{minYield} – {maxYield} MPa</span>
               </div>
               <div className="flex items-center gap-2">
-                <input aria-label="Yield Strength (σy)"
+                <input aria-label="Minimum Yield Strength (σy) (MPa)"
                   type="range"
                   min="0"
                   max="3500"
@@ -317,7 +317,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-cyan-400 font-bold">{minModulus} – {maxModulus} GPa</span>
               </div>
               <div className="flex items-center gap-2">
-                <input aria-label="Young&apos;s Modulus (E)"
+                <input aria-label="Minimum Young's Modulus (E) (GPa)"
                   type="range"
                   min="40"
                   max="650"
@@ -336,7 +336,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-amber-400 font-bold">{minDensity.toFixed(1)} – {maxDensity.toFixed(1)} g/cm³</span>
               </div>
               <div className="flex items-center gap-2">
-                <input aria-label="Density (ρ)"
+                <input aria-label="Maximum Density (ρ) (g/cm³)"
                   type="range"
                   min="1.5"
                   max="17.0"

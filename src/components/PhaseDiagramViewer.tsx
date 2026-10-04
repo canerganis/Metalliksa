@@ -906,7 +906,7 @@ export const PhaseDiagramViewer: React.FC = () => {
                 </span>
                 <span className="text-amber-400 font-extrabold text-sm">{temperatureC} °C</span>
               </div>
-              <input aria-label="Isothermal Probe Temperature"
+              <input aria-label="Isothermal Probe Temperature (°C)"
                 type="range"
                 min="400"
                 max="1600"

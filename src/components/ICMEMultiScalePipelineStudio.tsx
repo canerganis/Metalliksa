@@ -415,7 +415,7 @@ export function ICMEMultiScalePipelineStudio() {
                   <span className="text-slate-300 font-semibold">{el}</span>
                   <span className="text-sky-300">{comp[el].toFixed(2)} wt%</span>
                 </div>
-                <input aria-label={`${el} content`}
+                <input aria-label={`${el} content (wt%)`}
                   type="range"
                   min="0"
                   max={el === "Ni" || el === "Fe" || el === "Cr" ? "30" : "15"}
@@ -451,7 +451,7 @@ export function ICMEMultiScalePipelineStudio() {
                 <span className="text-slate-300 font-medium">Solidification Cooling Rate</span>
                 <span className="font-mono text-sky-400">10^{coolingRateLog.toFixed(2)} K/s</span>
               </div>
-              <input aria-label="Solidification Cooling Rate"
+              <input aria-label="Solidification Cooling Rate (log10 K/s)" aria-valuetext={`10^${coolingRateLog.toFixed(2)} K/s`}
                 type="range"
                 min="0.5"
                 max="6.0"

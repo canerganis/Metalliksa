@@ -963,7 +963,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Mean Fty (Yield):</span>
                   <span className="text-sky-300 font-bold">{meanYieldMpa} MPa</span>
                 </div>
-                <input aria-label="Mean Fty (Yield)"
+                <input aria-label="Mean Fty (Yield) (MPa)"
                   type="range"
                   min={200}
                   max={2200}
@@ -979,7 +979,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Mean Ftu (Tensile):</span>
                   <span className="text-emerald-300 font-bold">{meanTensileMpa} MPa</span>
                 </div>
-                <input aria-label="Mean Ftu (Tensile)"
+                <input aria-label="Mean Ftu (Tensile) (MPa)"
                   type="range"
                   min={250}
                   max={2500}
@@ -998,7 +998,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Fracture K_IC:</span>
                   <span className="text-amber-300 font-bold">{fractureToughnessMpaM} MPa√m</span>
                 </div>
-                <input aria-label="Fracture K_IC"
+                <input aria-label="Fracture K_IC (MPa√m)"
                   type="range"
                   min={15}
                   max={140}
@@ -1014,7 +1014,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Sample Count (N):</span>
                   <span className="text-white font-bold">{sampleSizeN} coupons</span>
                 </div>
-                <input aria-label="Sample Count (N)"
+                <input aria-label="Sample Count (N) (coupons)"
                   type="range"
                   min={10}
                   max={300}
@@ -1032,7 +1032,7 @@ export const StandardQualificationEngine: React.FC = () => {
                 <span className="text-slate-400">Statistical Scatter (Cv = σ/μ):</span>
                 <span className="text-cyan-300 font-bold">{customScatterCv}%</span>
               </div>
-              <input aria-label="Statistical Scatter (Cv = σ/μ)"
+              <input aria-label="Statistical Scatter (Cv = σ/μ) (%)"
                 type="range"
                 min={1.0}
                 max={12.0}

@@ -260,7 +260,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 {coolingRate} °C/s
               </span>
             </div>
-            <input aria-label="2. Continuous Cooling Rate"
+            <input aria-label="2. Continuous Cooling Rate (°C/s)"
               type="range"
               min="0.1"
               max="500"
@@ -304,7 +304,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <span className="text-slate-400">Austenitizing / Solution Temp ($T_\gamma$):</span>
                   <span className="text-white font-mono font-bold">{austTemp} °C</span>
                 </div>
-                <input aria-label="Austenitizing / Solution Temp"
+                <input aria-label="Austenitizing / Solution Temp (°C)"
                   type="range"
                   min="400"
                   max="1200"
@@ -320,7 +320,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <span className="text-slate-400">Prior Grain Size ($d_\gamma$):</span>
                   <span className="text-white font-mono font-bold">{grainSize} µm</span>
                 </div>
-                <input aria-label="Prior Grain Size"
+                <input aria-label="Prior Grain Size (µm)"
                   type="range"
                   min="5"
                   max="100"

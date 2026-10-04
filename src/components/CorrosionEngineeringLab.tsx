@@ -381,7 +381,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Uncoupled Base Current Density:</span>
                     <span className="text-amber-400 font-bold">{currentDensity} mA/cm²</span>
                   </div>
-                  <input aria-label="Uncoupled Base Current Density"
+                  <input aria-label="Uncoupled Base Current Density (mA/cm²)"
                     type="range"
                     min="0.1"
                     max="10.0"

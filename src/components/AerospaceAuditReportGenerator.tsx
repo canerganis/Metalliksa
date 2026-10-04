@@ -932,7 +932,7 @@ export function AerospaceAuditReportGenerator() {
                   Mean Yield F_ty (0.2% Offset)
                 </label>
                 <div className="flex items-center gap-1">
-                  <input aria-label="Mean Yield F_ty (0.2% Offset)"
+                  <input aria-label="Mean Yield F_ty (0.2% Offset) (MPa)"
                     type="number"
                     value={meanYieldMpa}
                     onChange={(e) => setMeanYieldMpa(Number(e.target.value))}
@@ -945,7 +945,7 @@ export function AerospaceAuditReportGenerator() {
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Mean Tensile UTS F_tu</label>
                 <div className="flex items-center gap-1">
-                  <input aria-label="Mean Tensile UTS F_tu"
+                  <input aria-label="Mean Tensile UTS F_tu (MPa)"
                     type="number"
                     value={meanTensileMpa}
                     onChange={(e) => setMeanTensileMpa(Number(e.target.value))}
@@ -958,7 +958,7 @@ export function AerospaceAuditReportGenerator() {
               <div>
                 <label className="text-[10px] text-slate-400 block mb-0.5">Fracture Toughness K_IC</label>
                 <div className="flex items-center gap-1">
-                  <input aria-label="Fracture Toughness K_IC"
+                  <input aria-label="Fracture Toughness K_IC (MPa√m)"
                     type="number"
                     value={fractureToughnessMpaM}
                     onChange={(e) => setFractureToughnessMpaM(Number(e.target.value))}

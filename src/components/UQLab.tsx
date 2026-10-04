@@ -1040,7 +1040,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input aria-label="Filter Heat/Specimen..."
+                <input aria-label="Filter lots"
                   type="text"
                   placeholder="Filter Heat/Specimen..."
                   value={searchLot}

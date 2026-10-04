@@ -521,7 +521,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Joint Plate Thickness (t):</span>
                 <span className="font-mono font-bold text-sky-400">{plateThickness} mm</span>
               </div>
-              <input aria-label="Joint Plate Thickness (t)"
+              <input aria-label="Joint Plate Thickness (t) (mm)"
                 type="range"
                 min="5"
                 max="100"
@@ -628,7 +628,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Furnace Temperature (T):</span>
                 <span className="font-mono font-bold text-sky-400">{carbTemp} °C</span>
               </div>
-              <input aria-label="Furnace Temperature (T)"
+              <input aria-label="Furnace Temperature (T) (°C)"
                 type="range"
                 min="840"
                 max="1020"
@@ -645,7 +645,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Soak Time at Temp (t):</span>
                 <span className="font-mono font-bold text-sky-400">{carbTime} Hours</span>
               </div>
-              <input aria-label="Soak Time at Temp (t)"
+              <input aria-label="Soak Time at Temp (t) (Hours)"
                 type="range"
                 min="1"
                 max="24"
@@ -662,7 +662,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Surface Carbon Potential (Cs):</span>
                 <span className="font-mono font-bold text-cyan-400">{carbSurfaceC.toFixed(2)} % C</span>
               </div>
-              <input aria-label="Surface Carbon Potential (Cs)"
+              <input aria-label="Surface Carbon Potential (Cs) (% C)"
                 type="range"
                 min="0.70"
                 max="1.30"
@@ -679,7 +679,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Base Alloy Core Carbon (C₀):</span>
                 <span className="font-mono font-bold text-slate-300">{carbCoreC.toFixed(2)} % C</span>
               </div>
-              <input aria-label="Base Alloy Core Carbon (C₀)"
+              <input aria-label="Base Alloy Core Carbon (C₀) (% C)"
                 type="range"
                 min="0.10"
                 max="0.35"
@@ -1074,7 +1074,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Average Grain Diameter (d):</span>
                 <span className="font-mono font-bold text-sky-400">{grainSize} µm</span>
               </div>
-              <input aria-label="Average Grain Diameter (d)"
+              <input aria-label="Average Grain Diameter (d) (µm)"
                 type="range"
                 min="0.5"
                 max="100"
@@ -1091,7 +1091,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Lattice Friction Stress (σ₀):</span>
                 <span className="font-mono font-bold text-slate-300">{sigma0} MPa</span>
               </div>
-              <input aria-label="Lattice Friction Stress (σ₀)"
+              <input aria-label="Lattice Friction Stress (σ₀) (MPa)"
                 type="range"
                 min="20"
                 max="200"
@@ -1108,7 +1108,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Hall-Petch Slope (k_y):</span>
                 <span className="font-mono font-bold text-cyan-400">{ky} MPa·mm^(1/2)</span>
               </div>
-              <input aria-label="Hall-Petch Slope (k_y)"
+              <input aria-label="Hall-Petch Slope (k_y) (MPa·mm^(1/2))"
                 type="range"
                 min="5"
                 max="30"

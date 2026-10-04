@@ -223,7 +223,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 <span className="text-slate-400">Corrosion Current i_corr</span>
                 <span className="text-amber-400 font-bold font-mono">{i0Corr} µA/cm²</span>
               </div>
-              <input aria-label="Corrosion Current i_corr"
+              <input aria-label="Corrosion Current i_corr (µA/cm²)"
                 type="range"
                 min={0.01}
                 max={10.0}
@@ -243,7 +243,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 </span>
                 <span className="text-sky-300 font-bold font-mono">{exposureDays} days</span>
               </div>
-              <input aria-label="Electrolyte Exposure"
+              <input aria-label="Electrolyte Exposure (days)"
                 type="range"
                 min={0}
                 max={180}

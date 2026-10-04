@@ -321,7 +321,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label="Stress Magnitude"
+                <input aria-label={`Stress Magnitude (${stressUnit})`}
                   type="number"
                   inputMode="decimal"
                   value={stressInput}
@@ -342,7 +342,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label="Stress Magnitude slider"
+              <input aria-label={`Stress Magnitude slider (${stressUnit})`}
                 type="range"
                 min={stressUnit === "GPa" ? 10 : stressUnit === "ksi" ? 5 : 50}
                 max={stressUnit === "GPa" ? 450 : stressUnit === "ksi" ? 350 : 2500}
@@ -717,7 +717,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label="Temperature Value"
+                <input aria-label={`Temperature Value (${tempUnit})`}
                   type="number"
                   inputMode="decimal"
                   value={tempInput}
@@ -736,7 +736,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label="Temperature Value slider"
+              <input aria-label={`Temperature Value slider (${tempUnit})`}
                 type="range"
                 min={tempUnit === "C" ? -200 : tempUnit === "K" ? 70 : -320}
                 max={tempUnit === "C" ? 1600 : tempUnit === "K" ? 1873 : 2900}
@@ -916,7 +916,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 <span className="text-[10px] font-mono text-sky-400">{kicUnit}</span>
               </label>
               <div className="flex gap-2">
-                <input aria-label="Fracture toughness Value"
+                <input aria-label={`Fracture toughness Value (${kicUnit})`}
                   type="number"
                   inputMode="decimal"
                   value={kicInput}
@@ -971,7 +971,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 <span className="text-[10px] font-mono text-emerald-400">{cvnUnit}</span>
               </label>
               <div className="flex gap-2">
-                <input aria-label="Energy Input"
+                <input aria-label={`Energy Input (${cvnUnit})`}
                   type="number"
                   inputMode="decimal"
                   value={cvnInput}
@@ -1117,7 +1117,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
             </div>
 
             <div className="flex gap-2">
-              <input aria-label="Micro Length Scale Converter value"
+              <input aria-label={`Micro Length Scale Converter value (${lengthUnit})`}
                 type="number"
                 inputMode="decimal"
                 value={lengthInput}
@@ -1192,7 +1192,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label="Corrosion Rate Magnitude"
+                <input aria-label={`Corrosion Rate Magnitude (${crUnit})`}
                   type="number"
                   inputMode="decimal"
                   value={crInput}
@@ -1211,7 +1211,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label="Corrosion Rate Magnitude slider"
+              <input aria-label={`Corrosion Rate Magnitude slider (${crUnit})`}
                 type="range"
                 min={crUnit === "mm_yr" ? 0.01 : 0.2}
                 max={crUnit === "mm_yr" ? 1.5 : 50}
@@ -1330,7 +1330,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </td>
                   <td className="py-3 px-3 bg-sky-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Yield Strength (0.2% Offset Rp0.2)"
+                      <input aria-label="Yield Strength (0.2% Offset Rp0.2) (MPa)"
                         type="number"
                         value={reportYieldMpa}
                         onChange={(e) => setReportYieldMpa(parseFloat(e.target.value) || 0)}
@@ -1352,7 +1352,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </td>
                   <td className="py-3 px-3 bg-sky-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Ultimate Tensile Strength (Rm)"
+                      <input aria-label="Ultimate Tensile Strength (Rm) (MPa)"
                         type="number"
                         value={reportUtsMpa}
                         onChange={(e) => setReportUtsMpa(parseFloat(e.target.value) || 0)}
@@ -1377,7 +1377,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </td>
                   <td className="py-3 px-3 bg-indigo-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Indentation Hardness"
+                      <input aria-label="Indentation Hardness (HRC)"
                         type="number"
                         value={reportHardnessHrc}
                         onChange={(e) => setReportHardnessHrc(parseFloat(e.target.value) || 0)}
@@ -1396,7 +1396,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </td>
                   <td className="py-3 px-3 bg-sky-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Charpy V-Notch Impact Toughness"
+                      <input aria-label="Charpy V-Notch Impact Toughness (J)"
                         type="number"
                         value={reportCvnJ}
                         onChange={(e) => setReportCvnJ(parseFloat(e.target.value) || 0)}
@@ -1418,7 +1418,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   </td>
                   <td className="py-3 px-3 bg-sky-950/10">
                     <div className="flex items-center gap-1.5">
-                      <input aria-label="Test Chamber Temperature"
+                      <input aria-label="Test Chamber Temperature (°C)"
                         type="number"
                         value={reportTestTempC}
                         onChange={(e) => setReportTestTempC(parseFloat(e.target.value) || 0)}
