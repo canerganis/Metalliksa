@@ -16,15 +16,20 @@
 //     [C] Struers, "Hardness Conversion Table for Non-Austenitic Steels" (poster, hosted by UPC EPSEVG)
 //         https://epsevg.upc.edu/ca/stl/posters/cem/hardness-conversion-poster.pdf
 //     HBW above HRC 59 is printed in brackets by [B]/[C] (outside the ASTM E10 Brinell range) and blank in [A]: not used.
-//   ASTM E140 Table 2 (Rockwell B range, non-austenitic steels): HRB 55..100 -> HV and HK. Two sources:
+//   ASTM E140 Table 2 (Rockwell B range, non-austenitic steels): HRB 55..100 -> HV, HK and Brinell HB(S) (10 mm steel
+//   ball, 3000 kgf). Two sources:
 //     [D] Anderson Laboratories, "Hardness conversion table ASTM E140 - Rockwell B range (non-austenitic steels)"
 //         https://andersonlabs.com/wp-content/uploads/2021/12/ASTM-Hardness-Conversion-Table-Rockwell-B-Range.pdf
 //     [E] Micro Star 2000, "Approximate Hardness Conversion Numbers for Non-Austenitic Steels (Rockwell B Range)"
 //         https://microstar2000.com/dat/files/345/MS002%20MS002%20Approximate%20Hardness%20Conversion%20Numbers%20for%20Non-Austenitic%20Steels%20Rockwell%20B.pdf
 //     HV agrees for all 46 rows except HRB 84, where [D] prints 165 (the HRB 85 value) and [E] prints 162; 162 is used
 //     ([D]'s own Brinell column, equal to HV everywhere else in that table, also gives 162). Below HRB 55 neither source
-//     lists HV. The Brinell column of Table 2 is not used: it is a steel-ball value ([E]: HBS) and does not join the
-//     Table 1 carbide-ball column monotonically (HRB 99: 234 at HV 234, HRC 20: 226 at HV 238).
+//     lists HV. Brinell column of Table 2 ("3000 kgf, 10 mm ball"; [E] labels it HBS): [D] and [E] agree on every row
+//     except HRB 57-59, where [E] repeats its Knoop column (115/117/118) and [D] prints 103/104/106; those three rows
+//     are left out (null) and interpolated between HRB 56 and 60. The column is kept as its own scale HBS (HV 100-240)
+//     and is NOT merged with the Table 1 HBW column: the two tables do not join at their seam (HRB 99: HB 234 at
+//     HV 234; HRC 20: HBW 226 at HV 238). The ball type is not the issue: [C] lists identical steel-ball (HBS30) and
+//     carbide-ball (HBW30) values for HRC 20-48.
 //   ISO 18265 Table A.1 (unalloyed and low-alloy steels, cast steel): tensile strength estimate Rm vs HV, HV 80..650.
 //   Two sources, identical for all 80 rows:
 //     [F] Bossard, "Hardness comparison table according to ISO 18265" (D.021)
@@ -36,7 +41,7 @@
 //   Leeb (HLD): no public steel table was verified, so HLD is never converted.
 // =====================================================================================================================
 
-export type HardnessScale = "HRC" | "HV" | "HRB" | "HBW" | "HK" | "HLD";
+export type HardnessScale = "HRC" | "HV" | "HRB" | "HBW" | "HBS" | "HK" | "HLD";
 export type HardnessField = HardnessScale | "Rm";
 
 export const HARDNESS_CONVERSION_DISCLAIMER =
@@ -44,6 +49,8 @@ export const HARDNESS_CONVERSION_DISCLAIMER =
 export const TENSILE_ESTIMATE_NOTE =
   "Rm estimate per ISO 18265 Table A.1 (unalloyed/low-alloy steels, HV 80-650); approximate, not a substitute for a tensile test.";
 export const LEEB_UNAVAILABLE_NOTE = "Leeb (HLD) conversion unavailable: no verified conversion table.";
+export const BRINELL_NOTE =
+  "Brinell: HBW = 10 mm carbide ball, 3000 kgf (E140 Table 1, HRC 20-59); HB(S) = 10 mm steel ball, 3000 kgf (E140 Table 2, HV 100-240). The Struers table lists identical steel-ball and carbide-ball values for HRC 20-48; the two E140 tables do not join at HV 234-238, so they are shown separately.";
 
 // [HRC, HV, HBW (null = not tabulated), HK] -- ASTM E140 Table 1 via [A][B][C]
 const E140_TABLE1: ReadonlyArray<readonly [number, number, number | null, number]> = [
@@ -59,15 +66,18 @@ const E140_TABLE1: ReadonlyArray<readonly [number, number, number | null, number
   [65, 832, null, 846], [66, 865, null, 870], [67, 900, null, 895], [68, 940, null, 920],
 ];
 
-// [HRB, HV, HK] -- ASTM E140 Table 2 via [D][E]
-const E140_TABLE2: ReadonlyArray<readonly [number, number, number]> = [
-  [55, 100, 112], [56, 101, 114], [57, 103, 115], [58, 104, 117], [59, 106, 118], [60, 107, 120], [61, 108, 122],
-  [62, 110, 124], [63, 112, 125], [64, 114, 127], [65, 116, 129], [66, 117, 131], [67, 119, 133], [68, 121, 135],
-  [69, 123, 137], [70, 125, 139], [71, 127, 141], [72, 130, 143], [73, 132, 145], [74, 135, 147], [75, 137, 150],
-  [76, 139, 152], [77, 141, 155], [78, 144, 158], [79, 147, 161], [80, 150, 164], [81, 153, 167], [82, 156, 170],
-  [83, 159, 173], [84, 162, 176], [85, 165, 180], [86, 169, 184], [87, 172, 188], [88, 176, 192], [89, 180, 196],
-  [90, 185, 201], [91, 190, 206], [92, 195, 211], [93, 200, 216], [94, 205, 221], [95, 210, 226], [96, 216, 231],
-  [97, 222, 236], [98, 228, 241], [99, 234, 246], [100, 240, 251],
+// [HRB, HV, HB(S) (null = sources disagree, see above), HK] -- ASTM E140 Table 2 via [D][E]
+const E140_TABLE2: ReadonlyArray<readonly [number, number, number | null, number]> = [
+  [55, 100, 100, 112], [56, 101, 101, 114], [57, 103, null, 115], [58, 104, null, 117], [59, 106, null, 118],
+  [60, 107, 107, 120], [61, 108, 108, 122], [62, 110, 110, 124], [63, 112, 112, 125], [64, 114, 114, 127],
+  [65, 116, 116, 129], [66, 117, 117, 131], [67, 119, 119, 133], [68, 121, 121, 135], [69, 123, 123, 137],
+  [70, 125, 125, 139], [71, 127, 127, 141], [72, 130, 130, 143], [73, 132, 132, 145], [74, 135, 135, 147],
+  [75, 137, 137, 150], [76, 139, 139, 152], [77, 141, 141, 155], [78, 144, 144, 158], [79, 147, 147, 161],
+  [80, 150, 150, 164], [81, 153, 153, 167], [82, 156, 156, 170], [83, 159, 159, 173], [84, 162, 162, 176],
+  [85, 165, 165, 180], [86, 169, 169, 184], [87, 172, 172, 188], [88, 176, 176, 192], [89, 180, 180, 196],
+  [90, 185, 185, 201], [91, 190, 190, 206], [92, 195, 195, 211], [93, 200, 200, 216], [94, 205, 205, 221],
+  [95, 210, 210, 226], [96, 216, 216, 231], [97, 222, 222, 236], [98, 228, 228, 241], [99, 234, 234, 246],
+  [100, 240, 240, 251],
 ];
 
 // [HV, Rm MPa] -- ISO 18265 Table A.1 via [F][G]
@@ -95,19 +105,23 @@ const HBW_ANCHORS = anchors(
   E140_TABLE1.filter((r) => r[2] !== null).map((r) => [r[1], r[2] as number] as const)
 );
 const HRB_ANCHORS = anchors(E140_TABLE2.map((r) => [r[1], r[0]] as const));
+const HBS_ANCHORS = anchors(
+  E140_TABLE2.filter((r) => r[2] !== null).map((r) => [r[1], r[2] as number] as const)
+);
 // HK: Table 2 rows HRB 55..99 (HV 100..234) followed by Table 1 rows (HV 238..940); HRB 100 (HV 240, HK 251) overlaps
 // HRC 20 (HV 238, HK 251) and is left out so the list stays strictly increasing.
 const HK_ANCHORS = anchors([
-  ...E140_TABLE2.filter((r) => r[0] < 100).map((r) => [r[1], r[2]] as const),
+  ...E140_TABLE2.filter((r) => r[0] < 100).map((r) => [r[1], r[3]] as const),
   ...E140_TABLE1.map((r) => [r[1], r[3]] as const),
 ]);
 const RM_ANCHORS = anchors(ISO18265_RM);
 
-type TabulatedScale = "HRC" | "HRB" | "HBW" | "HK";
+type TabulatedScale = "HRC" | "HRB" | "HBW" | "HBS" | "HK";
 const SCALE_ANCHORS: Record<TabulatedScale, Anchors> = {
   HRC: HRC_ANCHORS,
   HRB: HRB_ANCHORS,
   HBW: HBW_ANCHORS,
+  HBS: HBS_ANCHORS,
   HK: HK_ANCHORS,
 };
 
@@ -123,7 +137,7 @@ function interpolate(x: number, xs: number[], ys: number[]): number | null {
 }
 
 /** Unrounded table interpolation HV -> scale (null outside the tabulated range); for cross-checks and tests. */
-export function interpolateSteelScaleFromHv(scale: "HRC" | "HRB" | "HBW" | "HK" | "Rm", hv: number): number | null {
+export function interpolateSteelScaleFromHv(scale: TabulatedScale | "Rm", hv: number): number | null {
   const a = scale === "Rm" ? RM_ANCHORS : SCALE_ANCHORS[scale];
   return interpolate(hv, a.hv, a.val);
 }
@@ -133,6 +147,7 @@ export const HARDNESS_VERIFIED_RANGES: Record<HardnessScale, { min: number; max:
   HRC: { min: 20, max: 68 },
   HRB: { min: 55, max: 100 },
   HBW: { min: 226, max: 634 },
+  HBS: { min: 100, max: 240 },
   HK: { min: 112, max: 920 },
   HV: { min: 80, max: 940 },
   HLD: null,
@@ -144,6 +159,7 @@ export const HARDNESS_SCALE_DEFAULT_INPUT: Record<HardnessScale, number> = {
   HRB: 85,
   HV: 350,
   HBW: 320,
+  HBS: 150,
   HK: 350,
   HLD: 600,
 };
@@ -166,6 +182,8 @@ export interface SteelHardnessConversion {
   HRC: number | null;
   HRB: number | null;
   HBW: number | null;
+  /** Brinell, 10 mm steel ball, 3000 kgf, from ASTM E140 Table 2 (HV 100-240). */
+  HBS: number | null;
   HK: number | null;
   HLD: number | null;
   tensileRm_MPa: number | null;
@@ -177,8 +195,8 @@ export interface SteelHardnessConversion {
 const round = (v: number, decimals: number) => Number(v.toFixed(decimals));
 // Converted values are reported as whole numbers on every scale (Rockwell included): the tables themselves list whole
 // HRC/HRB numbers. The measured input is echoed with one decimal (as entered, up to 0.1).
-const DECIMALS: Record<HardnessScale, number> = { HV: 0, HRC: 0, HRB: 0, HBW: 0, HK: 0, HLD: 0 };
-const INPUT_DECIMALS: Record<HardnessScale, number> = { HV: 1, HRC: 1, HRB: 1, HBW: 1, HK: 1, HLD: 1 };
+const DECIMALS: Record<HardnessScale, number> = { HV: 0, HRC: 0, HRB: 0, HBW: 0, HBS: 0, HK: 0, HLD: 0 };
+const INPUT_DECIMALS: Record<HardnessScale, number> = { HV: 1, HRC: 1, HRB: 1, HBW: 1, HBS: 1, HK: 1, HLD: 1 };
 
 const rangeText = (scale: HardnessScale) => {
   const r = HARDNESS_VERIFIED_RANGES[scale];
@@ -194,6 +212,7 @@ export function convertSteelHardness(value: number, fromScale: HardnessScale): S
     HRC: null,
     HRB: null,
     HBW: null,
+    HBS: null,
     HK: null,
     HLD: null,
     tensileRm_MPa: null,
@@ -227,7 +246,7 @@ export function convertSteelHardness(value: number, fromScale: HardnessScale): S
     if (hv === null) out.unavailable.HV = outsideReason("HV");
     else out.HV = round(hv, DECIMALS.HV);
   }
-  for (const scale of ["HRC", "HRB", "HBW", "HK"] as const) {
+  for (const scale of ["HRC", "HRB", "HBW", "HBS", "HK"] as const) {
     if (scale === fromScale) continue;
     const a = SCALE_ANCHORS[scale];
     const v = hv === null ? null : interpolate(hv, a.hv, a.val);
@@ -294,6 +313,7 @@ export function convertHardness(
     HRC: null,
     HRB: null,
     HBW: null,
+    HBS: null,
     HK: null,
     HLD: null,
     tensileRm_MPa: null,
@@ -302,7 +322,7 @@ export function convertHardness(
     validRangeNote: `${NO_TABLE_FOR_CLASS} (${hardnessMaterialClassLabel(materialClass)}). Only the measured ${fromScale} value is shown.`,
   };
   if (Number.isFinite(value)) out[fromScale] = round(value, INPUT_DECIMALS[fromScale]);
-  for (const f of ["HV", "HRC", "HRB", "HBW", "HK", "HLD", "Rm"] as const) {
+  for (const f of ["HV", "HRC", "HRB", "HBW", "HBS", "HK", "HLD", "Rm"] as const) {
     if (f !== fromScale) out.unavailable[f] = NO_TABLE_FOR_CLASS;
   }
   return out;

@@ -31,10 +31,10 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     title: "Standard Hardness Conversion Tables for Metals",
     governingBody: "ASTM Committee E28 / ISO TC 164/SC 3 Hardness Testing",
     methodology:
-      "Linear interpolation between the published conversion numbers of ASTM E140 Table 1 (Rockwell C range) and Table 2 (Rockwell B range) for non-austenitic steels: HRC, HRB, Vickers HV, Brinell HBW (10 mm carbide ball, 3000 kgf) and Knoop HK, with HV as the pivot. Tensile strength Rm is estimated from HV by interpolation in ISO 18265 Table A.1 (unalloyed and low-alloy steels). Outside the tabulated range a value is reported as unavailable; nothing is extrapolated or clamped. Converted values (Rockwell included) are reported as whole numbers.",
+      "Linear interpolation between the published conversion numbers of ASTM E140 Table 1 (Rockwell C range) and Table 2 (Rockwell B range) for non-austenitic steels: HRC, HRB, Vickers HV, Brinell HBW (10 mm carbide ball, 3000 kgf, Table 1), Brinell HB(S) (10 mm steel ball, 3000 kgf, Table 2) and Knoop HK (500 gf and over), with HV as the pivot. Tensile strength Rm is estimated from HV by interpolation in ISO 18265 Table A.1 (unalloyed and low-alloy steels). Outside the tabulated range a value is reported as unavailable; nothing is extrapolated or clamped. Converted values (Rockwell included) are reported as whole numbers.",
     equations:
       "Piecewise-linear interpolation between tabulated rows (no fitted formula) | Rm from HV per ISO 18265 Table A.1",
-    validRange: "HRC 20-68 (HV 238-940) | HRB 55-100 (HV 100-240) | HBW 226-634 (HV 238-674) | HK 112-920 | Rm: HV 80-650 | Leeb HLD: not converted",
+    validRange: "HRC 20-68 (HV 238-940) | HRB 55-100 (HV 100-240) | HBW 226-634 (HV 238-674) | HB(S) 100-240 (HV 100-240) | HK 112-920 | Rm: HV 80-650 | Leeb HLD: not converted",
     criticalNotes:
       "Approximate conversion for non-austenitic steels per ASTM E140 / ISO 18265 tables; not a substitute for direct testing. The tables used here are for non-austenitic steels only; converted values are estimates, not measurements.",
   },

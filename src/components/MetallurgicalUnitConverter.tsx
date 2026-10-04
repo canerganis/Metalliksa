@@ -44,6 +44,7 @@ import {
   HardnessScale,
   HARDNESS_MATERIAL_CLASSES,
   HARDNESS_VERIFIED_RANGES,
+  BRINELL_NOTE,
   TENSILE_ESTIMATE_NOTE,
   UNAVAILABLE_TEXT,
   convertHardness,
@@ -532,7 +533,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
 
             {/* Scale Selector */}
             <div className="grid grid-cols-3 gap-2">
-              {(["HRC", "HV", "HRB", "HBW", "HK", "HLD"] as const).map((s) => (
+              {(["HRC", "HV", "HRB", "HBW", "HBS", "HK", "HLD"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => {
@@ -673,12 +674,19 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-xs text-slate-400 font-mono">Brinell (HBW 10/3000)</span>
                 <div className="text-xl font-black font-mono text-cyan-400 mt-1">{hardnessValue(hardnessState.HBW)}</div>
-                <div className="text-[10px] text-slate-500">10mm tungsten carbide ball</div>
+                <div className="text-[10px] text-slate-500">10 mm carbide ball, E140 Table 1</div>
+              </div>
+
+              {/* Brinell, steel ball (E140 Table 2) */}
+              <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
+                <span className="text-xs text-slate-400 font-mono">Brinell HB(S), E140 Table 2</span>
+                <div className="text-xl font-black font-mono text-cyan-300 mt-1">{hardnessValue(hardnessState.HBS)}</div>
+                <div className="text-[10px] text-slate-500">10 mm steel ball, 3000 kgf</div>
               </div>
 
               {/* Knoop */}
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
-                <span className="text-xs text-slate-400 font-mono">Knoop (HK)</span>
+                <span className="text-xs text-slate-400 font-mono">Knoop (HK, 500 gf and over)</span>
                 <div className="text-xl font-black font-mono text-indigo-300 mt-1">{hardnessValue(hardnessState.HK)}</div>
                 <div className="text-[10px] text-slate-500">Thin foils &amp; case depths</div>
               </div>
@@ -742,6 +750,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="text-[10px] text-slate-500 font-mono">
                 {hardnessState.validRangeNote}
               </div>
+              <div className="text-[10px] text-slate-500 font-mono">{BRINELL_NOTE}</div>
             </div>
           </div>
         </div>

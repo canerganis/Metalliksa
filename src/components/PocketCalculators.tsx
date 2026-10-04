@@ -37,6 +37,7 @@ import {
   HARDNESS_MATERIAL_CLASSES,
   HARDNESS_VERIFIED_RANGES,
   HardnessMaterialClass,
+  BRINELL_NOTE,
   TENSILE_ESTIMATE_NOTE,
   UNAVAILABLE_TEXT,
   convertHardness,
@@ -65,7 +66,7 @@ export const PocketCalculators: React.FC = () => {
 
   // 1. Hardness State
   const [hardnessVal, setHardnessVal] = useState<number>(30);
-  const [hardnessScale, setHardnessScale] = useState<"HRC" | "HV" | "HRB" | "HBW">("HRC");
+  const [hardnessScale, setHardnessScale] = useState<"HRC" | "HV" | "HRB" | "HBW" | "HBS">("HRC");
   // Conversion tables exist only for non-austenitic steels; other classes keep the measured value only.
   const [hardnessClass, setHardnessClass] = useState<HardnessMaterialClass>("non-austenitic-steel");
   const hardnessResult = useMemo(
@@ -310,8 +311,8 @@ export const PocketCalculators: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              {(["HRC", "HV", "HRB", "HBW"] as const).map((s) => (
+            <div className="grid grid-cols-5 gap-2">
+              {(["HRC", "HV", "HRB", "HBW", "HBS"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => {
@@ -429,7 +430,10 @@ export const PocketCalculators: React.FC = () => {
                 <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
                   {hardnessResult.HBW ?? UNAVAILABLE_TEXT} <span className="text-xs font-normal text-slate-500">HBW</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">10mm WC Ball (3000kgf)</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">10 mm carbide ball, 3000 kgf (E140 Table 1)</div>
+                <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                  HB(S), E140 Table 2 (steel ball): {hardnessResult.HBS ?? UNAVAILABLE_TEXT}
+                </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
@@ -463,6 +467,7 @@ export const PocketCalculators: React.FC = () => {
                 <div className="text-[10px] text-slate-400 mt-1.5">
                   {TENSILE_ESTIMATE_NOTE}
                 </div>
+                <div className="text-[10px] text-slate-500 mt-1">{BRINELL_NOTE}</div>
               </div>
             </div>
 

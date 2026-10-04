@@ -265,3 +265,18 @@ test("converted Rockwell values are whole numbers; the measured input keeps its 
   assert.equal(convert(34.5, "HRC").HV, 341); // 340.5 -> 341
   assert.equal(interpolateSteelScaleFromHv("HRC", 300), 29.75);
 });
+
+test("Brinell HB(S), 10 mm steel ball, from ASTM E140 Table 2 ([D][E]): HV 100-240, separate from the Table 1 HBW", () => {
+  for (const [hv, hbs, hrb] of [[100, 100, 55], [150, 150, 80], [162, 162, 84], [200, 200, 93], [240, 240, 100]] as const) {
+    assert.equal(convert(hv, "HV").HBS, hbs, `HV ${hv}`);
+    assert.equal(convert(hbs, "HBS").HV, hv);
+    assert.equal(convert(hbs, "HBS").HRB, hrb);
+  }
+  assert.equal(convert(103, "HBS").HV, 103); // HRB 57 row (sources disagree there) interpolated between HRB 56 and 60
+  assert.equal(convert(99, "HBS").HV, null);
+  assert.equal(convert(241, "HBS").HV, null);
+  assert.equal(convert(241, "HV").HBS, null);
+  assert.equal(convert(238, "HV").HBW, 226); // the two Brinell columns do not join: HBW 226 vs HB(S) 238 at HV 238
+  assert.equal(convert(238, "HV").HBS, 238);
+  assert.equal(convert(126, "HBS").HRC, null);
+});
