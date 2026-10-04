@@ -20,7 +20,15 @@
 /tests/route-authority.test.ts @0000can0000
 /tests/component-reachability.test.ts @0000can0000
 *.ceiling.json @0000can0000
-# LPBF implementation fingerprint pin (changes only at the planned bump) and the pre-bump
-# parity goldens (never re-recorded during the bump); design 5c.
+# LPBF implementation fingerprint pin (changes only at a planned bump) and the parity goldens
+# (the "before" side of the next bump; re-recorded only in a reviewed commit of their own,
+# never together with a manifest edit); design 5c section 8.
 /python/lpbf_implementation_fingerprint.expected @0000can0000
 /python/golden/lpbf_parity/ @0000can0000
+# Guards around the pin: pin test, pin parser, FORBIDDEN_MANIFEST_IMPORTS, manifest count.
+/python/test_lpbf_implementation_fingerprint_pin.py @0000can0000
+/python/lpbf_fingerprint_pin.py @0000can0000
+/python/test_lpbf_implementation_fingerprint.py @0000can0000
+/python/test_phase6a_leaf_modules.py @0000can0000
+# The parity harness (--expect-drift rules).
+/python/tools/lpbf_parity_check.py @0000can0000
