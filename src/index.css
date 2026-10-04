@@ -168,10 +168,19 @@
   transform: translateY(-200%);
 }
 .mk-skip-link:focus { transform: none; }
-/* Skip target: focus lands on <main> without a ring around the whole page. The scroll margin keeps
- * the top of <main> clear of the sticky header when focus() scrolls it into view (browser-checked). */
-#main-content { scroll-margin-top: 6rem; }
+/* Skip target: focus lands on <main> without a ring around the whole page. */
 #main-content:focus { outline: none; }
+
+/* Sticky header height, one variable for three uses: the page scroll padding (a focused element or the
+ * skip target is never scrolled under the header, WCAG 2.4.11), the header's own min-height at lg, and
+ * the sidebar's sticky offset/height at lg. Below lg the header wraps (about 85px at 375px wide), so the
+ * variable is an upper bound there; at lg it is the exact header height. */
+:root { --mk-header-h: 5.5rem; }
+@media (min-width: 64rem) {
+  :root { --mk-header-h: 4.75rem; }
+  .mk-header { min-height: var(--mk-header-h); }
+}
+html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
 
 .mk-header {
   background:

@@ -77,6 +77,14 @@ test("shell rule is layered and sets no z-index, so sticky header and fixed dial
   assert.match(read("src/styles/boot.css"), /\.mk-shell > \.mk-telemetry:not\(\.mk-grid-overlay\):not\(\.mk-scanline\) \{ z-index: 0; \}/);
 });
 
+test("one header-height variable drives scroll padding, the lg header height and the sidebar offset", () => {
+  assert.match(css, /:root \{ --mk-header-h: 5\.5rem; \}/);
+  assert.match(css, /@media \(min-width: 64rem\) \{\s*:root \{ --mk-header-h: 4\.75rem; \}\s*\.mk-header \{ min-height: var\(--mk-header-h\); \}\s*\}/);
+  assert.match(css, /html \{ scroll-padding-top: calc\(var\(--mk-header-h\) \+ 0\.5rem\); \}/, "focus is never scrolled under the sticky header (WCAG 2.4.11)");
+  assert.match(app, /lg:sticky lg:top-\[var\(--mk-header-h\)\] lg:h-\[calc\(100vh_-_var\(--mk-header-h\)\)\]/);
+  assert.doesNotMatch(app, /77px/, "no second, hard-coded header height");
+});
+
 test("skip link is visible on focus and uses contrast-tested tokens only", () => {
   const rule = css.match(/\.mk-skip-link \{([^}]*)\}/)?.[1] ?? "";
   assert.match(rule, /color: var\(--mk-ice\);/);
