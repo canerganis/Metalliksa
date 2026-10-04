@@ -69,7 +69,7 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     governingBody: "ASTM Committee E04 on Metallography / ISO TC 17/SC 7",
     methodology:
       "Standardizes comparison, planimetric (Jeffries), and lineal intercept (Heyn) methods. ASTM micro-grain size number G is defined such that NA = 2^(G-1) grains per square inch at 100× magnification.",
-    equations: "NA = 2^(G-1) grains/in² @ 100× | Mean intercept diameter d̄ = 10 · √(2^(1-G)) mm",
+    equations: "NA = 2^(G-1) grains/in² @ 100× | Planimetric mean diameter d̄ = 0.254 · √(2^(1-G)) mm | Mean lineal intercept ℓ̄ = 10^(-(G + 3.288)/6.643856) mm",
     validRange: "ASTM G: -3 to +16 (Coarse ingot grains to ultra-fine submicron nanocrystals)",
     criticalNotes:
       "ISO 643 grain size index m matches ASTM G within rounding (m = G). Hall-Petch yield strength scales inversely with d^(-1/2).",
@@ -153,7 +153,7 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     governingBody: "ASTM Committee E04 / International Metallurgical Societies",
     methodology:
       "Quantifies dislocation pile-up at grain boundaries: σy = σ0 + ky · d^(-1/2), connecting ASTM G grain size directly to yield strength increment.",
-    equations: "σy = σ0 + ky · d^(-1/2) | d = 1000 · (10 · √(2^(1-G))) / 1000 in µm",
+    equations: "σy = σ0 + ky · d^(-1/2) | d = 254 · √(2^(1-G)) µm (ASTM E112 planimetric diameter)",
     validRange: "Grain diameters d: 1 µm to 500 µm (breakdown occurs in sub-15nm nanocrystals)",
     criticalNotes:
       "ky is the Hall-Petch locking parameter (~0.5–0.7 MPa·m^(1/2) for steel, ~0.07 MPa·m^(1/2) for pure Al).",

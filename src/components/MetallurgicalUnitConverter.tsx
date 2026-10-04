@@ -38,6 +38,7 @@ import {
   CorrosionRateUnit,
   convertCorrosionRate,
   convertDensity,
+  computeDualUnitReport,
 } from "../utils/metallurgicalConversions";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
@@ -171,23 +172,17 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const [reportCvnJ, setReportCvnJ] = useState<number>(42);
   const [reportTestTempC, setReportTestTempC] = useState<number>(23);
 
-  const reportCalculated = useMemo(() => {
-    const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
-    const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
-    const hState = convertMetallurgicalHardness(reportHardnessHrc, "HRC");
-    const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
-    const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
-    const tempK = Number((reportTestTempC + 273.15).toFixed(1));
-    return {
-      yieldKsi,
-      utsKsi,
-      hv: hState.HV,
-      hbw: hState.HBW,
-      cvnFtLbf,
-      tempF,
-      tempK,
-    };
-  }, [reportYieldMpa, reportUtsMpa, reportHardnessHrc, reportCvnJ, reportTestTempC]);
+  const reportCalculated = useMemo(
+    () =>
+      computeDualUnitReport({
+        yieldMpa: reportYieldMpa,
+        utsMpa: reportUtsMpa,
+        hardnessHrc: reportHardnessHrc,
+        cvnJ: reportCvnJ,
+        testTempC: reportTestTempC,
+      }),
+    [reportYieldMpa, reportUtsMpa, reportHardnessHrc, reportCvnJ, reportTestTempC]
+  );
 
   const handleSyncFromActiveSpecimen = () => {
     if (activeMaterialSpecimen) {

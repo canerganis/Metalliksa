@@ -329,9 +329,15 @@ export function calculateHallPetch(
   const d = Math.max(0.1, grainSizeMicrons);
   const yieldStrengthMpa = Math.round(sigma0 + kyMicrons / Math.sqrt(d));
 
-  // ASTM grain size number G: G = -3.322 * log10(d_mm) - 2.95
+  // ASTM E112 grain size number from the average (planimetric) grain diameter d = sqrt(mean grain area):
+  // N_AE = 2^(G-1) grains/in^2 at 100x  =>  N_A = 2^(G-1) * 1e4 / 645.16 grains/mm^2 at 1x = 1/d_mm^2
+  //   =>  G = -6.643856 * log10(d_mm) - 2.954  (6.643856 = 2/log10(2): G is defined on an area count, d is a length).
+  // Note: the unit converter's E112 card (calculateAstmE112FromDiameterUm) takes the mean lineal INTERCEPT l and uses
+  // G = -6.643856 * log10(l_mm) - 3.288; both relations are right for their own input (l is about 0.89 d).
+  // G is clamped to -3..16 like the converter's E112 card. Until 2026-10 the coefficient was 3.322 (the area-count
+  // coefficient, which roughly halved G) and the constant 2.95.
   const dMm = d / 1000;
-  const astmG = Number((-3.322 * Math.log10(dMm) - 2.95).toFixed(1));
+  const astmG = Number(Math.max(-3, Math.min(16, -6.643856 * Math.log10(dMm) - 2.954)).toFixed(1));
 
   return {
     grainSizeMicrons: d,

@@ -1071,10 +1071,10 @@ export const PocketCalculators: React.FC = () => {
             {/* Grain Size Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-300 font-medium">
-                <span>Average Grain Diameter (d):</span>
+                <span>Average Grain Diameter (d, planimetric):</span>
                 <span className="font-mono font-bold text-sky-400">{grainSize} µm</span>
               </div>
-              <input aria-label="Average Grain Diameter (d) (µm)"
+              <input aria-label="Average Grain Diameter (d, planimetric) (µm)"
                 type="range"
                 min="0.5"
                 max="100"
