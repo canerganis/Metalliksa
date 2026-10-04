@@ -89,6 +89,8 @@ wsl.exe -d Ubuntu-22.04 -- env PYTHONDONTWRITEBYTECODE=1 python3 -B python/test_
 
 The 2026-09-15 run passed **26/26** tests in **53.334 seconds**, including the compiled OpenFOAM comparison. Capability RPC reported OpenFOAM-14 and thermal binary SHA-256 `1abadcbe9beacbe60a9ad2228d634830f481ce6966b66de65724c172dc1159d7`. The native Windows CPU worker reported `openfoamThermal: false`.
 
+Job root under WSL (changed 2026-10-04): a `METALLIKSA_JOB_ROOT` set in the Windows environment is now forwarded to the WSL worker through `WSLENV` (`METALLIKSA_JOB_ROOT/p`, translated to `/mnt/<drive>/...`). Before this change the WSL worker silently ignored it and used the checkout's `.lpbf-jobs`. Windows operators with a configured job root will therefore no longer see their earlier WSL jobs, which stay in the checkout's `.lpbf-jobs`; nothing is deleted or moved. The value must be a drive-letter path such as `C:\lpbf-jobs`; a UNC, `\\wsl$` or Linux path stops the worker start with an explicit error instead of being ignored. Without `METALLIKSA_JOB_ROOT` nothing changes.
+
 A separate Node bridge process used a deliberately nonexistent `METALLIKSA_WSL_DISTRO` and an isolated job directory. Its initial WSL capability request failed; the bridge returned Windows capabilities through the explicitly selected CPU interpreter. This verifies initial launch fallback, not mid-job migration or queue recovery. The test-owned process tree was stopped. These software/numerical checks are not experimental validation.
 
 ## Observed clean application run — 2026-09-15

@@ -68,6 +68,19 @@ function fixture(options: {
   return { bridge, commands, children, ready, cleanup };
 }
 
+test('the default spawn passes a command environment to the worker, else the process environment', { timeout: 10000 }, async () => {
+  const echo = `require('node:readline').createInterface({input: process.stdin}).on('line', line => {
+    const request = JSON.parse(line);
+    console.log(JSON.stringify({id: request.id, data: {probe: process.env.LPBF_ENV_PROBE ?? null}}));
+  });`;
+  for (const [env, expected] of [[{ ...process.env, LPBF_ENV_PROBE: 'from-command' }, 'from-command'], [undefined, null]] as const) {
+    const bridge = new LpbfWorkerBridge({ startupTimeoutMs: 5000, requestTimeoutMs: 8000,
+      command: () => ({ cmd: process.execPath, args: ['-e', echo], ...(env ? { env } : {}) }) });
+    try { assert.deepEqual(await bridge.request('get'), { probe: expected }); }
+    finally { bridge.close(); }
+  }
+});
+
 test('concurrent cold requests wait for one readiness handshake before sending RPCs', { timeout: 10000 }, async () => {
   const instance = fixture({ delayMs: 150 });
   try {

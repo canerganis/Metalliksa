@@ -49,20 +49,14 @@ function restoreEnv(name: string, value: string | undefined) {
   else process.env[name] = value;
 }
 
-/** Point the shared real LPBF worker at a per-test job root, also when the bridge starts it through WSL.
- * Windows environment variables reach a wsl.exe child only when WSLENV lists them. Without that the WSL worker
- * ignored METALLIKSA_JOB_ROOT, used the checkout's shared .lpbf-jobs, and exited 2 ("Another LPBF worker owns
- * this job root") whenever another worker held it; the bridge then fell back to a host interpreter after the WSL
- * start-up. '/p' translates the Windows path to its /mnt/<drive> form. Returns a restore function. */
+/** Point the shared real LPBF worker at a per-test job root. The bridge reads it at each launch, and for a WSL
+ * worker lpbfWorkerCommand forwards it through WSLENV (server/pythonRuntime.ts). Before that forwarding, the WSL
+ * worker ignored the per-test root, used the checkout's shared .lpbf-jobs and collided with any other worker on
+ * that checkout. Returns a restore function. */
 export function isolateWorkerJobRoot(jobRoot: string): () => void {
-  const prior = { jobRoot: process.env.METALLIKSA_JOB_ROOT, wslenv: process.env.WSLENV };
-  const forwarded = (prior.wslenv ?? '').split(':').filter(entry => entry && entry.split('/')[0] !== 'METALLIKSA_JOB_ROOT');
+  const prior = process.env.METALLIKSA_JOB_ROOT;
   process.env.METALLIKSA_JOB_ROOT = jobRoot;
-  process.env.WSLENV = [...forwarded, 'METALLIKSA_JOB_ROOT/p'].join(':');
-  return () => {
-    restoreEnv('METALLIKSA_JOB_ROOT', prior.jobRoot);
-    restoreEnv('WSLENV', prior.wslenv);
-  };
+  return () => restoreEnv('METALLIKSA_JOB_ROOT', prior);
 }
 
 /** Close the real worker and wait until its process has exited. The bridge escalates to SIGKILL after 1 s, so

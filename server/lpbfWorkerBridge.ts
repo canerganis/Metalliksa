@@ -4,7 +4,7 @@ import { createInterface } from "node:readline";
 import { getHostPython, loadPythonEnvironment, lpbfWorkerCommand } from "./pythonRuntime.ts";
 import { archiveJobRoot } from './lpbfArchivePaths';
 
-type WorkerCommand = { cmd: string; args: string[] };
+type WorkerCommand = { cmd: string; args: string[]; env?: Record<string, string | undefined> };
 interface WorkerBridgeOptions {
   startupTimeoutMs?: number;
   requestTimeoutMs?: number;
@@ -128,7 +128,7 @@ export class LpbfWorkerBridge {
     const command = this.options.command?.(this.localFallback) ?? lpbfWorkerCommand({ platform: process.platform, file,
       localFallback: this.localFallback, env: process.env, hostPython: getHostPython });
     const attemptedWsl = path.win32.basename(command.cmd).toLowerCase() === 'wsl.exe';
-    const child = this.options.spawn?.(command) ?? spawn(command.cmd, command.args, { windowsHide: true, stdio: "pipe" });
+    const child = this.options.spawn?.(command) ?? spawn(command.cmd, command.args, { windowsHide: true, stdio: "pipe", env: command.env ?? process.env });
     this.process = child;
     let stderr = "";
     // Bounded ring of non-JSON stdout lines, kept apart from stderr for error detail.
