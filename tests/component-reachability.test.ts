@@ -106,6 +106,22 @@ test('mutation: imports whose bindings are unused or only used as types are not 
   assert.deepEqual(importSpecifiers('sample.tsx', sample), ['./jsxUsage', './callUsage', './localReexport', './lazyRendered']);
 });
 
+test('mutation: a class extends clause is a runtime use; implements, interface extends and type arguments are not', () => {
+  const sample = [
+    "import { Base } from './extendsBase';",
+    "import * as NS from './extendsNamespace';",
+    "import { Expr } from './extendsClassExpression';",
+    "import { Iface } from './implementsOnly';",
+    "import { TypeArg } from './typeArgumentOnly';",
+    "import { IBase } from './interfaceExtendsOnly';",
+    "export class A extends Base<TypeArg> implements Iface {}",
+    "export class B extends NS.Parent {}",
+    "export const C = class extends Expr {};",
+    "interface J extends IBase {}",
+  ].join('\n');
+  assert.deepEqual(importSpecifiers('sample.ts', sample), ['./extendsBase', './extendsNamespace', './extendsClassExpression']);
+});
+
 test('SHARED.json entries exist and carry an owner and a reason', () => {
   for (const entry of shared) {
     assert.ok(components.includes(entry.path), `SHARED.json: ${entry.path} is not a component file`);
