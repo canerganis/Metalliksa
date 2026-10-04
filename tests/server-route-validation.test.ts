@@ -4,7 +4,7 @@ import express from "express";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { applySecurity, errorHandler } from "../server/security.ts";
-import { characterizationDeps, characterizationRouter } from "../routes/characterization.ts";
+import { characterizationRouter } from "../routes/characterization.ts";
 import { copilotRouter } from "../routes/copilot.ts";
 import { orchestratorRouter } from "../routes/orchestrator.ts";
 
@@ -59,65 +59,18 @@ async function post(h: Harness, path: string, body: unknown, headers: Record<str
   return { status: res.status, json: json as any, headers: res.headers };
 }
 
-test("upload whitelists fields and the client cannot override action", async () => {
+// The battery/corrosion upload, user-script execution and CNLS HTTP surface had no UI consumer
+// and was removed (exec-script ran user-supplied Python). Keep it gone.
+test("removed battery/corrosion upload, exec-script and CNLS routes are not served", async () => {
   const h = await start(null);
-  const original = characterizationDeps.runPythonScript;
-  const seen: any[] = [];
-  characterizationDeps.runPythonScript = (async (_script: string, payload: any) => {
-    seen.push(payload);
-    return { stdout: JSON.stringify({ success: false }), stderr: "", durationMs: 1 };
-  }) as any;
   try {
-    const r = await post(h, "/api/python/battery-corrosion-upload", {
-      action: "execute_python_script",
-      scriptCode: "import os; os.system('x')",
-      script: "x",
-      data: { a: 1 },
-      nominalCapacityAh: 2,
-      cycles: [1, 2],
-    });
-    assert.equal(r.status, 200);
-    assert.equal(seen.length, 1);
-    assert.equal(seen[0].action, "upload_and_analyze");
-    assert.equal(seen[0].scriptCode, undefined);
-    assert.equal(seen[0].script, undefined);
-    assert.equal(seen[0].data, undefined);
-    assert.equal(seen[0].nominalCapacityAh, 2);
-    assert.deepEqual(seen[0].cycles, [1, 2]);
+    for (const route of ["/api/python/battery-corrosion-upload", "/api/python/battery-corrosion-exec-script",
+      "/api/python/cnls-fit", "/api/python/cnls-autofit", "/api/python/cnls-synthetic-noise"]) {
+      assert.equal((await post(h, route, { scriptCode: "print(1)" })).status, 404, route);
+    }
+    assert.equal((await fetch(h.base + "/api/python/battery-corrosion-upload/recent")).status, 404);
+    assert.equal((await fetch(h.base + "/api/python/battery-corrosion-upload/all", { method: "DELETE" })).status, 404);
   } finally {
-    characterizationDeps.runPythonScript = original;
-    await h.close();
-  }
-});
-
-test("exec-script is 403 unless enabled, then validates scriptCode", async () => {
-  const h = await start(null);
-  const prev = process.env.METALLIKSA_ENABLE_SCRIPT_EXEC;
-  const original = characterizationDeps.runPythonScript;
-  let called = 0;
-  characterizationDeps.runPythonScript = (async () => {
-    called += 1;
-    return { stdout: JSON.stringify({ success: false }), stderr: "", durationMs: 1 };
-  }) as any;
-  try {
-    delete process.env.METALLIKSA_ENABLE_SCRIPT_EXEC;
-    let r = await post(h, "/api/python/battery-corrosion-exec-script", { scriptCode: "print(1)" });
-    assert.equal(r.status, 403);
-    assert.equal(called, 0);
-
-    process.env.METALLIKSA_ENABLE_SCRIPT_EXEC = "1";
-    r = await post(h, "/api/python/battery-corrosion-exec-script", { scriptCode: { not: "a string" } });
-    assert.equal(r.status, 400);
-    r = await post(h, "/api/python/battery-corrosion-exec-script", { scriptCode: "x".repeat(20001) });
-    assert.equal(r.status, 400);
-    assert.equal(called, 0);
-    r = await post(h, "/api/python/battery-corrosion-exec-script", { scriptCode: "x".repeat(20000) });
-    assert.equal(r.status, 200);
-    assert.equal(called, 1);
-  } finally {
-    if (prev === undefined) delete process.env.METALLIKSA_ENABLE_SCRIPT_EXEC;
-    else process.env.METALLIKSA_ENABLE_SCRIPT_EXEC = prev;
-    characterizationDeps.runPythonScript = original;
     await h.close();
   }
 });

@@ -1,11 +1,16 @@
-"""Fail when an existing allowlist ceiling (*.ceiling.json) changes without review.
+"""Fail when an allowlist ceiling (*.ceiling.json) or its guard changes without review.
 
-Every *.ceiling.json that already exists at the merge base and differs at HEAD must be
-touched by at least one commit in merge-base..HEAD whose message carries the trailer
-``Ceiling-Review: <reason>``. Ceilings that are new in the range are governed by
-python/test_allowlist_ceilings.py (pinned original content plus an explicit delta).
+Reviewed paths: every *.ceiling.json that already exists at the merge base and differs at
+HEAD, plus the guard files in PROTECTED_PATHS (this script, the pinned-ceiling test, the CI
+workflow that runs both, and the TypeScript ratchet tests and scanners) whenever they differ. For each such path the LAST commit in
+merge-base..HEAD that touches it must carry the trailer ``Ceiling-Review: <reason>`` in its
+trailer block (parsed by ``git interpret-trailers``; the reason needs at least four words); an
+earlier reviewed commit does not cover a later unreviewed edit. Ceilings that are new in the
+range are governed by python/test_allowlist_ceilings.py (pinned content plus an explicit delta).
 
-Usage (CI, full history):  python scripts/check_ceiling_review.py <base-sha> [head]
+Usage (CI, full history):  git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
+(CI runs the base revision's copy so a branch cannot weaken its own check; locally
+``python scripts/check_ceiling_review.py <base-sha> [head]`` runs the working copy.)
 A missing/all-zero base (first push of a branch) falls back to HEAD^.
 """
 from __future__ import annotations
@@ -15,6 +20,20 @@ import sys
 from typing import List, Optional
 
 TRAILER = "Ceiling-Review:"
+MIN_REASON_WORDS = 4
+# Guard files reviewed like a ceiling: weakening any of them would silently disable the ratchet.
+PROTECTED_PATHS = (
+    "scripts/check_ceiling_review.py",
+    "python/test_allowlist_ceilings.py",
+    ".github/workflows/ci.yml",
+    ".github/CODEOWNERS",
+    # The TypeScript ratchets: ceiling reader, route and import scanners and the tests using them.
+    "tests/support/ceiling.ts",
+    "tests/support/routeScan.ts",
+    "tests/support/importGraph.ts",
+    "tests/route-authority.test.ts",
+    "tests/component-reachability.test.ts",
+)
 
 
 def _git(args: List[str], cwd: Optional[str] = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -25,23 +44,60 @@ def _exists(rev: str, path: str, cwd: Optional[str]) -> bool:
     return _git(["cat-file", "-e", f"{rev}:{path}"], cwd, check=False).returncode == 0
 
 
+def review_reasons(message: str) -> List[str]:
+    """Values of 'Ceiling-Review' trailers, as git itself parses the trailer block."""
+    parsed = subprocess.run(["git", "interpret-trailers", "--parse"], input=message, capture_output=True,
+                            text=True, check=True).stdout
+    reasons = []
+    for line in parsed.splitlines():
+        key, separator, value = line.partition(":")
+        if separator and key.strip().lower() == TRAILER[:-1].lower():
+            reasons.append(value.strip())
+    return reasons
+
+
+def is_reason(text: str) -> bool:
+    """A reason is at least MIN_REASON_WORDS words that contain a letter or digit ('.' is not one)."""
+    return len([word for word in text.split() if any(char.isalnum() for char in word)]) >= MIN_REASON_WORDS
+
+
 def has_review_trailer(message: str) -> bool:
-    for line in message.splitlines():
-        if line.startswith(TRAILER) and line[len(TRAILER):].strip():
-            return True
-    return False
+    return any(is_reason(reason) for reason in review_reasons(message))
+
+
+def reviewed_paths(merge_base: str, head: str, cwd: Optional[str] = None) -> List[str]:
+    """Changed paths that need review: pre-existing ceilings and the protected guard files.
+
+    --no-renames: a renamed ceiling shows as a deletion of the old path (which exists at the
+    merge base, so it is reviewed) plus an addition, not as a new file that escapes review.
+    """
+    changed = [p for p in _git(["diff", "--no-renames", "--name-only", merge_base, head], cwd).stdout.splitlines() if p]
+    return [p for p in changed
+            if p in PROTECTED_PATHS or (p.endswith(".ceiling.json") and _exists(merge_base, p, cwd))]
+
+
+def last_touching_commit(merge_base: str, head: str, path: str, cwd: Optional[str] = None) -> Optional[str]:
+    """Newest commit in merge_base..head that changes ``path``, or None.
+
+    Default history simplification: a merge that takes the file unchanged from one parent is
+    skipped (the reviewed branch commit stays the last one); a merge whose result differs from
+    every parent (conflict resolution or an evil merge) is itself the last change and needs
+    the trailer.
+    """
+    out = _git(["log", "-1", "--format=%H", f"{merge_base}..{head}", "--", path], cwd).stdout.strip()
+    return out or None
 
 
 def unreviewed_ceiling_changes(base: str, head: str = "HEAD", cwd: Optional[str] = None) -> List[str]:
     merge_base = _git(["merge-base", base, head], cwd).stdout.strip()
-    changed = [p for p in _git(["diff", "--name-only", merge_base, head, "--", "*.ceiling.json"], cwd).stdout.splitlines() if p]
     problems = []
-    for path in changed:
-        if not _exists(merge_base, path, cwd):
-            continue  # New ceiling: pinned by python/test_allowlist_ceilings.py.
-        log = _git(["log", "--format=%B%x00", f"{merge_base}..{head}", "--", path], cwd).stdout
-        if not any(has_review_trailer(message) for message in log.split("\x00")):
-            problems.append(f"{path}: changed since {merge_base[:12]} without a '{TRAILER} <reason>' commit trailer")
+    for path in reviewed_paths(merge_base, head, cwd):
+        commit = last_touching_commit(merge_base, head, path, cwd)
+        message = _git(["log", "-1", "--format=%B", commit], cwd).stdout if commit else ""
+        if not has_review_trailer(message):
+            where = f"last changed in {commit[:12]}" if commit else "changed"
+            problems.append(f"{path}: {where} since {merge_base[:12]} without a '{TRAILER} <reason of"
+                            f" {MIN_REASON_WORDS}+ words>' commit trailer")
     return problems
 
 

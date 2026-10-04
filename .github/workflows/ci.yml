@@ -87,8 +87,17 @@ jobs:
           test_lpbf_worker_validation_error
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_phase6b_vector_parity
-      - name: Allowlist ceilings change only with a 'Ceiling-Review:' commit trailer
-        run: python scripts/check_ceiling_review.py "${{ github.event.pull_request.base.sha || github.event.before }}"
+      # Runs the BASE revision's copy of the checker, so a change cannot weaken the check that
+      # reviews it; .github/CODEOWNERS (enforced by branch protection) covers the same paths.
+      - name: Allowlist ceilings and guard files change only with a 'Ceiling-Review:' commit trailer
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE//0/}" ]; then BASE="$(git rev-parse HEAD^)"; fi
+          git cat-file -e "$BASE:scripts/check_ceiling_review.py"
+          git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
         run: npm run test:lpbf:engineering
         continue-on-error: true
