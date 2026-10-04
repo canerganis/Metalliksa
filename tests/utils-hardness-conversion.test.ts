@@ -12,6 +12,12 @@ import {
 } from "../src/utils/hardnessConversion";
 import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
 import { HARDNESS_PRESETS } from "../src/utils/hardnessPresets";
+import {
+  E140_T1_ANDERSON,
+  E140_T2_ANDERSON,
+  ISO18265_HRC_BOSSARD,
+  ISO18265_RM_STAHLNETZ,
+} from "./fixtures/hardness-tables-sources";
 
 // Reference values, read from the public reproductions cited in src/utils/hardnessConversion.ts:
 //   ASTM E140 Table 1 (non-austenitic steels): [A] labtesting.com chart-hardness-c.pdf, [B] andersonlabs.com Rockwell C
@@ -173,11 +179,50 @@ test("tensile strength estimate reproduces ISO 18265 Table A.1 and stops at HV 8
   assert.equal(convert(90, "HV").tensileRm_MPa, 285);
 });
 
-test("independent cross-check: ISO 18265 Table A.1 HRC values ([F]) agree with the E140 interpolation within 0.15 HRC", () => {
-  const isoHvHrc: Array<[number, number]> = [[240, 20.3], [300, 29.8], [400, 40.8], [500, 49.1], [600, 55.2], [700, 60.1], [800, 64.0], [900, 67.0]];
-  for (const [hv, hrcIso] of isoHvHrc) {
+test("independent cross-check: ALL 65 ISO 18265 Table A.1 HRC points ([F]) agree with the E140 interpolation within 0.15 HRC", () => {
+  assert.equal(ISO18265_HRC_BOSSARD.length, 65);
+  let worst = 0;
+  for (const [hv, hrcIso] of ISO18265_HRC_BOSSARD) {
     const got = interpolateSteelScaleFromHv("HRC", hv); // unrounded
-    assert.ok(got !== null && Math.abs(got - hrcIso) <= 0.15, `HV ${hv}: ${got} vs ISO ${hrcIso}`);
+    assert.ok(got !== null, `HV ${hv}`);
+    worst = Math.max(worst, Math.abs(got - hrcIso));
+    assert.ok(Math.abs(got - hrcIso) <= 0.15, `HV ${hv}: ${got} vs ISO ${hrcIso}`);
+  }
+  assert.ok(worst > 0.1 && worst <= 0.15, `worst ${worst}`); // 0.14 when written; guards against a vacuous check
+});
+
+test("every ASTM E140 Table 1 row (49, fixture from [B]) is reproduced exactly, forward and inverse", () => {
+  assert.equal(E140_T1_ANDERSON.length, 49);
+  for (const [hrc, hv, hbw, hk] of E140_T1_ANDERSON) {
+    const r = convert(hrc, "HRC");
+    assert.deepEqual([r.HV, r.HBW, r.HK], [hv, hbw, hk], `HRC ${hrc}`);
+    assert.equal(convert(hv, "HV").HRC, hrc, `HV ${hv} -> HRC`);
+    assert.equal(convert(hk, "HK").HRC, hrc, `HK ${hk} -> HRC`);
+    if (hbw !== null) assert.equal(convert(hbw, "HBW").HRC, hrc, `HBW ${hbw} -> HRC`);
+  }
+});
+
+test("every ASTM E140 Table 2 row (46, fixture from [D]) is reproduced; the two known misprints are resolved as documented", () => {
+  assert.equal(E140_T2_ANDERSON.length, 46);
+  for (const [hrb, hvPrinted, hb, hk] of E140_T2_ANDERSON) {
+    // [D] prints HV 165 at HRB 84 (the HRB 85 value); [E] and [D]'s own Brinell column give 162
+    const hv = hrb === 84 ? 162 : hvPrinted;
+    if (hrb === 84) assert.deepEqual([hvPrinted, hb], [165, 162]);
+    const r = convert(hrb, "HRB");
+    assert.equal(r.HV, hv, `HRB ${hrb} HV`);
+    assert.equal(convert(hv, "HV").HRB, hrb, `HV ${hv} -> HRB`);
+    // Brinell steel ball: [D] for all rows (HRB 57-59, where [E] misprints, come out of the interpolation unchanged)
+    assert.equal(convert(hv, "HV").HBS, hb, `HV ${hv} -> HB(S)`);
+    assert.equal(convert(hb, "HBS").HRB, hrb, `HB(S) ${hb} -> HRB`);
+    if (hrb < 100) assert.equal(r.HK, hk, `HRB ${hrb} HK`); // HRB 100 overlaps HRC 20 in the merged HK list
+  }
+});
+
+test("every ISO 18265 Table A.1 Rm pair (80, fixture from [G]) is reproduced exactly", () => {
+  assert.equal(ISO18265_RM_STAHLNETZ.length, 80);
+  for (const [hv, rm] of ISO18265_RM_STAHLNETZ) {
+    assert.equal(convert(hv, "HV").tensileRm_MPa, rm, `HV ${hv}`);
+    assert.equal(interpolateSteelScaleFromHv("Rm", hv), rm, `HV ${hv} (unrounded)`);
   }
 });
 
