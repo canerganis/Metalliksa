@@ -48,9 +48,9 @@ test("the boot screen is an early-started lazy chunk behind an opaque, text-free
 
 test("one subsystem wording everywhere: engine-status modal, boot row and strip all use subsystemQualifier", () => {
   assert.equal(subsystemQualifier({ online: true, status: "online", subsystemStatus: "unverified" }), "unverified (server)");
-  const app = readFileSync(resolve(process.cwd(), "src/App.tsx"), "utf8");
-  assert.match(app, /Subsystems: \{status\?\.online \? subsystemQualifier\(status\) : 'unavailable'\}/);
-  assert.ok(!app.includes("Subsystem status has not been reported"), "old modal wording removed");
+  const dialog = readFileSync(resolve(process.cwd(), "src/components/EngineStatusDialog.tsx"), "utf8");
+  assert.match(dialog, /Subsystems: \{status\?\.online \? subsystemQualifier\(status\) : 'unavailable'\}/);
+  assert.ok(!dialog.includes("Subsystem status has not been reported"), "old modal wording removed");
   const strip = renderToStaticMarkup(
     <TelemetryStrip engine={{ online: true, status: "online", pythonVersion: "3.14.5", subsystemStatus: "unverified" }} engineChecking={false} moduleCount={MODULES.length} />,
   );

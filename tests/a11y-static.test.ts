@@ -6,7 +6,7 @@ import { test } from "node:test";
 const SRC_ROOT = resolve(process.cwd(), "src");
 
 // Overlays without role="dialog" on the overlay or its first child are listed here as "path:line" with a reason.
-// Currently empty: every fixed inset-0 overlay (including the App.tsx engine status panel) declares role="dialog".
+// Currently empty: every fixed inset-0 overlay (including the engine status dialog) declares role="dialog".
 const OVERLAY_ALLOW_LIST: string[] = [];
 
 function listTsx(dir: string): string[] {

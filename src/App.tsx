@@ -1,24 +1,32 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Cpu, X, ArrowRight, Search, Layers, BookOpen, Flame, Network } from 'lucide-react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { ArrowRight, Search } from 'lucide-react';
 import { MODULES, WORKSPACES, ModuleId, isModuleId, moduleFromHash, moduleHash } from './data/workspaces';
 import { WorkspaceVisibility } from './components/WorkspaceVisibility';
 import { ModuleBoundary } from './components/ModuleBoundary';
-import { AccessibleModal } from './components/AccessibleModal';
 import { useMaterialSpecimenStore } from './store/useMaterialSpecimenStore';
 import { AirgapBanner } from './components/AirgapBanner';
 import { pythonComputationService, PythonEngineStatus } from './services/pythonComputationService';
 import { startMaterialContextBridge, useMaterialContextBridgeStore } from './services/materialContextBridge';
 import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore';
-import { ScientificContextPanel } from './components/ScientificContextPanel';
+import { EvidenceBadge } from './components/sdk/EvidenceBadge';
 import { SilentBoundary } from './components/SilentBoundary';
-import { subsystemQualifier } from './utils/engineStatusText';
+import { ModuleNav } from './components/ModuleNav';
+import { formatExactNumber } from './utils/numberFormat';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
 bootChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render (shell shows).
 const BootSequence = lazy(() => bootChunk.then(m => ({ default: m.BootSequence })));
+// Scientific context panel (mostly explanatory text) in its own chunk, requested at module evaluation like the
+// boot chunk; it arrives while the boot overlay still covers the shell. Keeps the index chunk within budget.
+const contextChunk = import('./components/ScientificContextPanel');
+contextChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render.
+const ScientificContextPanel = lazy(() => contextChunk.then(m => ({ default: m.ScientificContextPanel })));
 // Own chunk: the strip sits at the end of the page, so it does not need to be in the index chunk.
 const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m => ({ default: m.TelemetryStrip })));
+// Own chunk: the engine availability dialog is opened on demand from the header status button. A factory,
+// because React.lazy caches a rejected import: a retry after a failed chunk needs a new lazy component.
+const loadEngineStatusDialog = () => lazy(() => import('./components/EngineStatusDialog').then(m => ({ default: m.EngineStatusDialog })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
 const PocketCalculators = lazy(() => import("./components/PocketCalculators").then(m => ({ default: m.PocketCalculators })));
@@ -81,11 +89,23 @@ export default function App() {
   const [status, setStatus] = useState<PythonEngineStatus | null>(null);
   const [checking, setChecking] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [dialogLoad, setDialogLoad] = useState(0);
+  const EngineStatusDialog = useMemo(loadEngineStatusDialog, [dialogLoad]);
+  // Chunk failure: Retry remounts the boundary with a fresh lazy import; Close also resets it so the next open retries.
+  // Chrome keeps a failed module fetch for the page's lifetime (browser-checked: Retry did not refetch), so the
+  // alert also offers a reload, as ModuleBoundary does.
+  const retryDialog = () => setDialogLoad(n => n + 1);
+  const closeDialog = () => { setShowStatus(false); retryDialog(); };
   const specimen = useMaterialSpecimenStore(s => s.activeSpecimen);
   const materialTransfer = useMaterialContextBridgeStore();
   const activeModule = MODULES.find(m => m.id === activeTab)!;
   const activeWorkspace = WORKSPACES.find(w => w.id === activeModule.workspace)!;
   const filtered = MODULES.filter(m => `${m.label} ${m.description} ${m.workspace}`.toLowerCase().includes(moduleSearch.toLowerCase()));
+  // Hash routing owns location.hash, so the skip link moves focus itself instead of following "#main-content".
+  function skipToMain(event: React.MouseEvent) {
+    event.preventDefault();
+    document.getElementById('main-content')?.focus();
+  }
 
   function activate(id: ModuleId) {
     setActiveTab(id);
@@ -162,7 +182,9 @@ export default function App() {
     }
   }
 
-  return <><SilentBoundary><Suspense fallback={<div className="mk-boot-cover" aria-hidden="true" />}><BootSequence /></Suspense></SilentBoundary><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
+  // The skip link follows the boot overlay in the DOM: when the overlay closes, the browser's Tab starting point is
+  // where the overlay was, so the next Tab lands on the skip link (it is the first focusable element left on the page).
+  return <><SilentBoundary><Suspense fallback={<div className="mk-boot-cover" aria-hidden="true" />}><BootSequence /></Suspense></SilentBoundary><a href="#main-content" className="mk-skip-link" onClick={skipToMain}>Skip to main content</a><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
     <div className="mk-grid-overlay" aria-hidden="true" />
     <div className="mk-scanline" aria-hidden="true" />
     <AirgapBanner />
@@ -173,26 +195,18 @@ export default function App() {
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
-      <aside className={`${navigationOpen ? 'block' : 'hidden'} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[77px] lg:h-[calc(100vh-77px)] overflow-y-auto`}>
+      <aside className={`${navigationOpen ? 'block' : 'hidden'} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[var(--mk-header-h)] lg:h-[calc(100vh_-_var(--mk-header-h))] overflow-y-auto`}>
         <div className="mb-5 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-[0.18em] text-cyan-100/75">Navigation</p><p className="mt-1 text-xs text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(MODULES.length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-cyan-50/85">Find a module</label><div className="relative mb-5"><Search className="absolute left-3 top-3 w-4 h-4 text-cyan-200/80"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm focus:ring-2 focus:ring-cyan-400/40"/></div>
-        <nav aria-label="Engineering workspaces">
-          {WORKSPACES.map(workspace => {
-            const Icon = workspace.id === 'lpbf' ? Flame : workspace.id === 'materials' ? Layers : workspace.id === 'orchestration' ? Network : BookOpen;
-            const modules = filtered.filter(m => m.workspace === workspace.id);
-            if (!modules.length) return null;
-            return <div key={workspace.id} className="mb-5"><button onClick={() => navigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace.id ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{modules.map(module => <button key={module.id} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => navigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
-          })}
-          {!filtered.length && <p role="status" className="text-sm text-slate-400">No matching modules. Try a material, method or workflow name.</p>}
-        </nav>
+        <ModuleNav modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
       </aside>
-      <main className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
-        <div className="mk-content-header mb-5 border-b pb-5 pl-4"><p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-cyan-200">{activeWorkspace.label} / Active surface</p><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-semibold text-white">{activeModule.label}</h2><span title="Module maturity; this is not a validation claim for any result." className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span></div><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-200">{activeModule.description}</p></div>
+      <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
+        <div className="mk-content-header mb-5 border-b pb-5 pl-4"><p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-cyan-200">{activeWorkspace.label} / Active surface</p><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-semibold text-white">{activeModule.label}</h2><span title="Module maturity; this is not a validation claim for any result." className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span><EvidenceBadge moduleId={activeModule.id} /></div><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-200">{activeModule.description}</p></div>
         <details className="mb-5 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 text-xs">
-          <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {specimen.lpbf.laserPower_W} W / {specimen.lpbf.scanSpeed_mms} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
+          <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {formatExactNumber(specimen.lpbf.laserPower_W)} W / {formatExactNumber(specimen.lpbf.scanSpeed_mms)} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
         </details>
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
-        {activeTab !== 'ai-orchestrator' && <ScientificContextPanel moduleId={activeTab} specimen={specimen} />}
+        {activeTab !== 'ai-orchestrator' && <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>}
         {visited.map(id => <div key={id} hidden={id !== activeTab} data-module={id}><WorkspaceVisibility visible={id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>
             <Suspense fallback={<div role="status" className="min-h-60 flex items-center justify-center text-slate-400">Loading engineering module…</div>}>
@@ -205,15 +219,7 @@ export default function App() {
       </main>
     </div>
     <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
-    {showStatus && <AccessibleModal open onClose={() => setShowStatus(false)} labelledBy="engine-title" closeOnBackdrop overlayClassName="bg-slate-950/80 p-4" panelClassName="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 p-6">
-        <div className="flex justify-between items-center"><h2 id="engine-title" className="font-semibold flex gap-2 items-center"><Cpu className="w-5 h-5 text-sky-400"/>Engine availability</h2><button aria-label="Close engine status" onClick={() => setShowStatus(false)}><X className="w-5 h-5"/></button></div>
-        <p className="my-4 text-sm text-slate-400">Availability is reported by the backend. An installed solver does not establish a validated physical model.</p>
-        {statusError && <p role="alert" className="text-sm text-amber-300">{statusError}</p>}
-        <p className="text-sm mb-3">{status?.online ? `Python ${status.pythonVersion ?? 'version unavailable'} · ${status.status}` : 'Python backend unavailable. Check the local server and Python runtime.'}</p>
-        <dl className="divide-y divide-slate-800">{(Object.entries(status?.subsystems ?? {}) as [string, { available: boolean }][]).map(([name, subsystem]) => <div key={name} className="py-2 flex justify-between gap-3 text-xs"><dt>{name.replaceAll('_', ' ')}</dt><dd className={subsystem.available ? 'text-sky-300' : 'text-amber-300'}>{subsystem.available ? 'Available' : 'Unavailable'}</dd></div>)}</dl>
-        {!status?.subsystems && <p className="text-xs text-slate-500">Subsystems: {status?.online ? subsystemQualifier(status) : 'unavailable'}</p>}
-        <button disabled={checking} onClick={() => void refreshStatus()} className="mt-4 rounded-lg bg-sky-600 px-4 py-2 text-sm disabled:opacity-50">{checking ? 'Checking…' : 'Refresh status'}</button>
-    </AccessibleModal>}
+    {showStatus && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
   </div></>;
 }
 

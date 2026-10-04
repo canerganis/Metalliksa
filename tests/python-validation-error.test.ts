@@ -198,3 +198,18 @@ test("solveCalphadEquilibrium still falls back to the client solver for 5xx and 
   res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
   assert.equal(res.isPythonEngine, false);
 });
+
+test("deconvolveXRD never returns a made-up fit: failures throw, success passes through", async () => {
+  const payload = { twoTheta: [43, 43.5, 44], intensity: [1, 9, 1] };
+  stubFetch(500, { error: "solver crashed" });
+  await assert.rejects(pythonComputationService.deconvolveXRD(payload), /XRD deconvolution failed \(HTTP 500\): solver crashed/);
+  stubFetch(200, { success: false, error: "Insufficient data points" });
+  await assert.rejects(pythonComputationService.deconvolveXRD(payload), /HTTP 200\): Insufficient data points/);
+  stubFetch(200, "not json");
+  await assert.rejects(pythonComputationService.deconvolveXRD(payload), /XRD deconvolution failed \(HTTP 200\)/);
+  stubNetworkError();
+  await assert.rejects(pythonComputationService.deconvolveXRD(payload), /fetch failed/);
+  const calls = stubFetch(200, { success: true, engine: "python", peaks: [] });
+  const ok = await pythonComputationService.deconvolveXRD(payload);
+  assert.deepEqual([ok.success, ok.engine, ok.isPythonEngine, calls], [true, "python", true, ["/api/python/xrd-deconvolve"]]);
+});

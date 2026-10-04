@@ -106,6 +106,22 @@ test('mutation: imports whose bindings are unused or only used as types are not 
   assert.deepEqual(importSpecifiers('sample.tsx', sample), ['./jsxUsage', './callUsage', './localReexport', './lazyRendered']);
 });
 
+test('mutation: a class extends clause is a runtime use; implements, interface extends and type arguments are not', () => {
+  const sample = [
+    "import { Base } from './extendsBase';",
+    "import * as NS from './extendsNamespace';",
+    "import { Expr } from './extendsClassExpression';",
+    "import { Iface } from './implementsOnly';",
+    "import { TypeArg } from './typeArgumentOnly';",
+    "import { IBase } from './interfaceExtendsOnly';",
+    "export class A extends Base<TypeArg> implements Iface {}",
+    "export class B extends NS.Parent {}",
+    "export const C = class extends Expr {};",
+    "interface J extends IBase {}",
+  ].join('\n');
+  assert.deepEqual(importSpecifiers('sample.ts', sample), ['./extendsBase', './extendsNamespace', './extendsClassExpression']);
+});
+
 test('SHARED.json entries exist and carry an owner and a reason', () => {
   for (const entry of shared) {
     assert.ok(components.includes(entry.path), `SHARED.json: ${entry.path} is not a component file`);
@@ -159,6 +175,13 @@ test('every support module (utils/services/hooks/features) is reachable or in it
   assert.deepEqual(result.beyondCeiling, [], `Support baseline entries ${result.beyondCeiling.join(', ')} exceed src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json.`);
   assert.deepEqual(result.grown, [], `New unreachable support module(s) ${result.grown.join(', ')}: import them from a registered view or delete them.`);
   assert.deepEqual(result.staleBaseline, [], `Support baseline entries ${result.staleBaseline.join(', ')} are reachable again or deleted: remove them.`);
+});
+
+test('every src ceiling slot is a live entry or an existing file (no slots of deleted files)', () => {
+  const live = new Set([...baseline, ...shared, ...supportBaseline].map(entry => entry.path));
+  const slots = [...ceilings.baseline, ...ceilings.shared, ...supportCeiling];
+  const stale = slots.filter(slot => !live.has(slot) && !existsSync(path.join(repoRoot, slot))).sort();
+  assert.deepEqual(stale, [], `Ceiling slot(s) ${stale.join(', ')} name deleted files: remove them (reviewed shrink) so they cannot regrow.`);
 });
 
 test('mutation: a new support orphan plus a matching support-baseline entry still fails', () => {

@@ -1,5 +1,5 @@
 {
-  "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. Route behaviour is unchanged.",
+  "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. 'unclassified' keys of use mounts carry their site (file#ordinal of that path's mounts in the file); the ceiling caps them by path and by site count per path. Route behaviour is unchanged.",
   "unbound": {
     "GET /api/health": "Infrastructure (server.ts): liveness and API-key presence flag.",
     "GET /api/runtime-config": "Infrastructure (server.ts): air-gap configuration for the UI banner.",
@@ -13,15 +13,8 @@
     "POST /api/python/marangoni-pore-instability": "Python marangoni solver route; only called by the unreachable MarangoniPoreInstabilityLab.",
     "POST /api/python/part-scale-inherent-strain": "Python part-scale inherent strain route; no caller in src/.",
     "POST /api/python/inverse-alloy-optimize": "Python inverse alloy optimizer route; the service method has no caller in src/.",
-    "POST /api/python/cnls-fit": "Python CNLS route; callers are the unreachable EIS cluster and src/utils/cnlsOptimizer.ts (not reached from a registered view).",
-    "POST /api/python/cnls-autofit": "Python CNLS route; callers are the unreachable EIS cluster and src/utils/cnlsOptimizer.ts.",
-    "POST /api/python/cnls-synthetic-noise": "Python CNLS route; no caller in src/.",
     "POST /api/python/bisquert-tlm-identify": "Python EIS route; the service method has no caller in src/.",
     "POST /api/python/xrd-deconvolve": "Python XRD route; the service method has no caller in src/.",
-    "POST /api/python/battery-corrosion-upload": "Battery/corrosion upload ingestion; caller is the unreachable PythonBatteryCorrosionUploadStudio (also external scripts).",
-    "POST /api/python/battery-corrosion-exec-script": "Opt-in custom script execution (METALLIKSA_ENABLE_SCRIPT_EXEC); caller is the unreachable PythonBatteryCorrosionUploadStudio.",
-    "GET /api/python/battery-corrosion-upload/recent": "In-memory recent-upload list for the unreachable PythonBatteryCorrosionUploadStudio.",
-    "DELETE /api/python/battery-corrosion-upload/:id?": "Clears the in-memory upload list for the unreachable PythonBatteryCorrosionUploadStudio.",
     "POST /api/metallurgy/detect-sem-legend": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/analyze-sem": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/qualify-aerospace": "Canned constant response with qualified: true (see cannedBaseline); recorded as a qualification/aerospace-pdf-audit legacyNote, not bound.",
@@ -58,10 +51,12 @@
     "POST /api/python/lpbf-bayesian-optimization": "LPBF worker route; the UI calls the python-ipc /api/python/lpbf-bayesian-optimize instead."
   },
   "unclassified": {
-    "USE /api/lpbf": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
-    "USE /api/lpbf/sources": "routes/lpbfSources.ts guard (read-only/origin/content-type checks) plus the body-size error handler; no result payload.",
-    "USE /api/lpbf/runs": "routes/lpbfRuns.ts no-store/guard middleware plus the body error handler; no result payload.",
-    "USE /api/research/registry": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
+    "USE /api/lpbf (routes/lpbfSimulation.ts#1)": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#1)": "routes/lpbfSources.ts guard (no-store, read-only/origin/content-type checks); calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#2)": "routes/lpbfSources.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#1)": "routes/lpbfRuns.ts no-store/guard middleware; calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#2)": "routes/lpbfRuns.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/research/registry (routes/researchRegistry.ts#1)": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
   },
   "cannedBaseline": {
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",

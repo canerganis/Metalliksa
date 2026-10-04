@@ -92,3 +92,8 @@
 /docs/LPBF_MODEL_ORCHESTRATION_2026-10-03.json -text whitespace=cr-at-eol
 /docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/* -text -whitespace
 /docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/*.log -whitespace
+
+# Docker build inputs: the heredoc RUN in Dockerfile and the exclusion list parsed by it must stay LF on Windows checkouts.
+/Dockerfile text eol=lf
+/.dockerignore text eol=lf
+/scripts/ci-unit-tests.txt text eol=lf
