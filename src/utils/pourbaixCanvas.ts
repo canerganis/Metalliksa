@@ -16,7 +16,7 @@ export const ZONE_LABEL: Record<StabilityCategory, string> = {
   "Immunity": "IMMUNITY",
   "Corrosion (acid)": "ACID CORROSION",
   "Corrosion (alkaline)": "ALKALINE CORROSION",
-  "Passivation (thermodynamic, film-forming)": "PASSIVATION (THERMODYNAMIC)",
+  "Passivation (thermodynamic)": "PASSIVATION (THERMODYNAMIC)",
   "Transpassive": "TRANSPASSIVE",
 };
 
@@ -40,6 +40,8 @@ export interface PourbaixScene {
   viewBounds: { minPH: number; maxPH: number; minE: number; maxE: number };
   /** E(displayed reference) = E(SHE) - refOffset. */
   refOffset: number;
+  /** Name of the displayed reference electrode (default "SHE"); the water-line equations are written on it. */
+  refLabel?: string;
   domains: PourbaixDomain[];
   coeffs: SpeciesCoefficients[] | null;
   waterLines: WaterStabilityLines;
@@ -167,14 +169,17 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
   ctx.setLineDash([]);
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 11px monospace";
+  // Equations on the displayed reference scale (review Sol 6.1 NIT 1): intercept = E0(SHE) - refOffset
+  const refLabel = s.refLabel ?? "SHE";
+  const intercept = (e0: number) => (e0 - refOffset).toFixed(3);
   ctx.fillText(
-    `(a) H₂/H⁺: E = -${nernstSlope.toFixed(3)}·pH`,
+    `(a) H₂/H⁺: E = ${intercept(waterLines.herLine.e_at_ph0)} - ${nernstSlope.toFixed(3)}·pH V vs ${refLabel}`,
     phToX(2) + 6,
     eToY(waterLines.herLine.e_at_ph0 + waterLines.herLine.slope * 2) - 6
   );
   ctx.fillStyle = "#f43f5e";
   ctx.fillText(
-    `(b) O₂/H₂O: E = ${waterLines.oerLine.e_at_ph0.toFixed(2)} - ${nernstSlope.toFixed(3)}·pH`,
+    `(b) O₂/H₂O: E = ${intercept(waterLines.oerLine.e_at_ph0)} - ${nernstSlope.toFixed(3)}·pH V vs ${refLabel}`,
     phToX(2) + 6,
     eToY(waterLines.oerLine.e_at_ph0 + waterLines.oerLine.slope * 2) - 6
   );

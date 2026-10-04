@@ -179,3 +179,16 @@ test("withheld-data regions (Cr, Mo, Ti) are hatched with strokes clipped to eac
     }
   }
 });
+
+test("review Sol 6.1 NIT 1: the water-line equations are written on the displayed reference scale", () => {
+  const she = recorder();
+  drawPourbaixScene(she.ctx, scene("Fe"));
+  assert.ok(she.calls.some((c) => c.op === "fillText" && c.args[0] === `(a) H₂/H⁺: E = 0.000 - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SHE`));
+  const sce = recorder();
+  drawPourbaixScene(sce.ctx, scene("Fe", { refOffset: REF_OFFSETS_VS_SHE.SCE, refLabel: "SCE" }));
+  const a = sce.calls.find((c) => c.op === "fillText" && String(c.args[0]).startsWith("(a) H₂/H⁺"))!;
+  const b = sce.calls.find((c) => c.op === "fillText" && String(c.args[0]).startsWith("(b) O₂/H₂O"))!;
+  assert.equal(a.args[0], `(a) H₂/H⁺: E = -0.241 - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SCE`);
+  assert.equal(b.args[0], `(b) O₂/H₂O: E = ${(POURBAIX_DATA.water.e0_O2_H2O_V - 0.241).toFixed(3)} - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SCE`);
+  assert.ok(String(b.args[0]).includes("0.988"));
+});

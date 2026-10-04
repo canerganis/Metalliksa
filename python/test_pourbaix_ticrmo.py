@@ -275,8 +275,8 @@ class WithheldCandidatesTest(unittest.TestCase):
         out = solver.solve_pourbaix_diagram("Cr", 25, -6, 0, pts)
         got = {p["id"]: (p["dominantSpeciesId"], p["category"], p["insideWithheldDataRegion"])
                for p in out["experimentalOverlay"]["points"]}
-        self.assertEqual(got["cr_acid"], ("Cr2O3", "Passivation (thermodynamic, film-forming)", True))
-        self.assertEqual(got["cr_neutral"], ("Cr2O3", "Passivation (thermodynamic, film-forming)", False))
+        self.assertEqual(got["cr_acid"], ("Cr2O3", "Passivation (thermodynamic)", True))
+        self.assertEqual(got["cr_neutral"], ("Cr2O3", "Passivation (thermodynamic)", False))
         self.assertEqual(got["cr_trans"], ("CrO4^2-", "Transpassive", False))
         self.assertEqual(out["experimentalOverlay"]["points"][0]["withheldDataSpeciesIds"],
                          ["Cr3+[CRC]", "Cr3+[SSWS97]", "Cr3+[LLNL]", "Cr3+[BN98]"])

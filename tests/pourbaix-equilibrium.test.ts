@@ -28,7 +28,7 @@ import {
   withheldSpeciesAt,
 } from "../src/utils/pourbaixThermodynamics";
 import { DynamicPourbaixStudio } from "../src/components/DynamicPourbaixStudio";
-import { EXPERIMENTAL_POURBAIX_PRESETS } from "../src/utils/experimentalPourbaixOverlay";
+import { CAPTURED_PROBE_NOTE, CAPTURED_PROBE_STAGE, EXPERIMENTAL_POURBAIX_PRESETS } from "../src/utils/experimentalPourbaixOverlay";
 import { pourbaixRequestSignature } from "../src/utils/pourbaixRequest";
 
 const text = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -225,7 +225,7 @@ test("Al (available since WP-Al: OBIGT TS01 + gibbsite): the engine's pins at a 
   // the passive (gibbsite) domain sits between the two vertical boundaries inside the water window
   const al = speciesCoefficients("Al", -6);
   assert.equal(classifyPourbaixPoint(al, 7, -0.2).speciesId, "Al(OH)3");
-  assert.equal(classifyPourbaixPoint(al, 7, -0.2).category, "Passivation (thermodynamic, film-forming)");
+  assert.equal(classifyPourbaixPoint(al, 7, -0.2).category, "Passivation (thermodynamic)");
   assert.equal(classifyPourbaixPoint(al, 2, 0).speciesId, "Al3+");
   assert.equal(classifyPourbaixPoint(al, 11, -0.3).speciesId, "Al(OH)4-");
   assert.equal(classifyPourbaixPoint(al, 11, -0.3).category, "Corrosion (alkaline)");
@@ -247,7 +247,7 @@ test("the three audit spot points: Fe2+ (not passivation) at pH 6/-0.40 and pH 8
   assert.equal(classifyPourbaixPoint(fe, 6, -0.4).category, "Corrosion (acid)");
   assert.equal(classifyPourbaixPoint(fe, 8, -0.55).speciesId, "Fe2+");
   assert.equal(classifyPourbaixPoint(fe, 3, 0.6).speciesId, "Fe2O3");
-  assert.equal(classifyPourbaixPoint(fe, 3, 0.6).category, "Passivation (thermodynamic, film-forming)");
+  assert.equal(classifyPourbaixPoint(fe, 3, 0.6).category, "Passivation (thermodynamic)");
 });
 
 test("default-case drift: UI default Fe marine preset points at 25 C (SHE) land in the documented species", () => {
@@ -543,4 +543,23 @@ test("second re-review: every tab has a render branch, preset point labels are n
   assert.match(text("server/processOrchestrator.ts"), /pyProcess\.stdout\.setEncoding\("utf8"\);\s*pyProcess\.stderr\.setEncoding\("utf8"\);/);
   assert.match(plain(render()), /Zn is constant-dependent \(with the wateq4f \/ Baes & Mesmer Zn\(OH\)₂\(aq\) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays\)/);
   assert.match(plain(renderToStaticMarkup(React.createElement(DynamicPourbaixStudio, { initialSolveError: "boom" }))), /boom/);
+});
+
+test("review Sol 6.1 SF-1: illustrative and captured points are test points, never measurements", () => {
+  const t = plain(render());
+  assert.ok(t.includes("Capture probe as test point"));
+  assert.ok(t.includes("Test points:"));
+  for (const gone of ["Experimental Points", "Capture as Experimental Test Point", "Probed Sample", "Probed Test Point"]) {
+    assert.ok(!t.includes(gone), `visible text still contains ${gone}`);
+  }
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  const capture = studio.slice(studio.indexOf("const handleAddProbedCoordinateAsPoint"), studio.indexOf("const selectElement"));
+  assert.match(capture, /stageName: CAPTURED_PROBE_STAGE,/);
+  assert.match(capture, /notes: `\$\{CAPTURED_PROBE_NOTE\} /);
+  assert.match(capture, /name: `Computed probe coordinate/);
+  assert.match(CAPTURED_PROBE_STAGE, /not measured/);
+  assert.match(CAPTURED_PROBE_NOTE, /not a measurement/);
+  for (const p of EXPERIMENTAL_POURBAIX_PRESETS) for (const pt of p.points) assert.ok(!/(?<!not )measured/i.test(`${pt.name} ${pt.stageName} ${pt.notes}`), pt.id);
+  assert.ok(!text("python/pourbaix_solver.py").includes("measured point"));
+  assert.ok(!text("python/tools/pourbaix_golden_check.py").includes("measured point"));
 });

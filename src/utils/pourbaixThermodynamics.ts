@@ -260,7 +260,7 @@ export const CATEGORY_STYLE: Record<StabilityCategory, { color: string; alpha: n
   "Immunity": { color: "#38bdf8", alpha: 0.25, legend: "Immunity (metal stable)" },
   "Corrosion (acid)": { color: "#f87171", alpha: 0.22, legend: "Corrosion (acid): cation stable" },
   "Corrosion (alkaline)": { color: "#fb923c", alpha: 0.28, legend: "Corrosion (alkaline): anion stable" },
-  "Passivation (thermodynamic, film-forming)": { color: "#10b981", alpha: 0.32, legend: "Passivation (thermodynamic): solid oxide/hydroxide stable" },
+  "Passivation (thermodynamic)": { color: "#10b981", alpha: 0.32, legend: "Passivation (thermodynamic): solid oxide/hydroxide stable" },
   "Transpassive": { color: "#a855f7", alpha: 0.30, legend: "Transpassive: high-valence oxyanion or oxyacid stable" },
 };
 
@@ -269,7 +269,7 @@ export const CATEGORY_DISPLAY: Record<StabilityCategory, string> = {
   "Immunity": "Metal stable (immunity domain)",
   "Corrosion (acid)": "Cation stable (acid corrosion domain)",
   "Corrosion (alkaline)": "Oxyanion stable (alkaline corrosion domain)",
-  "Passivation (thermodynamic, film-forming)": "Solid oxide/hydroxide stable (thermodynamic domain only)",
+  "Passivation (thermodynamic)": "Solid oxide/hydroxide stable (thermodynamic domain only)",
   "Transpassive": "High-valence oxyanion or oxyacid stable (transpassive domain)",
 };
 

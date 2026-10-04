@@ -44,6 +44,8 @@ import {
 } from "../types/pourbaix";
 import {
   EXPERIMENTAL_POURBAIX_PRESETS,
+  CAPTURED_PROBE_NOTE,
+  CAPTURED_PROBE_STAGE,
   PRESET_POINTS_NOTE,
   REF_OFFSETS_VS_SHE,
 } from "../utils/experimentalPourbaixOverlay";
@@ -55,7 +57,7 @@ import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbai
 /** The engine data is 25 °C only (python/pourbaix_solver.py raises TEMPERATURE_UNSUPPORTED otherwise). */
 const SUPPORTED_TEMPERATURE_C = POURBAIX_DATA.temperature_C;
 const BOX = POURBAIX_DATA.box;
-const PASSIVATION: StabilityCategory = "Passivation (thermodynamic, film-forming)";
+const PASSIVATION: StabilityCategory = "Passivation (thermodynamic)";
 
 /** Accessible solver-failure line; shows the existing error text only. */
 export function PourbaixSolveError({ message }: { message: string | null }) {
@@ -264,6 +266,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
       height: canvas.height,
       viewBounds,
       refOffset,
+      refLabel: refElectrode,
       domains,
       coeffs,
       waterLines,
@@ -286,6 +289,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   }, [
     viewBounds,
     refOffset,
+    refElectrode,
     log10Activity,
     domains,
     coeffs,
@@ -352,12 +356,12 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   const handleAddProbedCoordinateAsPoint = () => {
     const newEntry: ExperimentalEpHEntry = {
       id: `pt_probed_${Date.now()}`,
-      name: `Probed Sample (${probePH.toFixed(2)}, ${(probePotential_SHE - refOffset).toFixed(3)}V)`,
+      name: `Computed probe coordinate (pH ${probePH.toFixed(2)}, ${(probePotential_SHE - refOffset).toFixed(3)} V ${refElectrode})`,
       pH: probePH,
       potential_V: probePotential_SHE - refOffset,
       refElectrode: refElectrode,
-      stageName: "Probed Test Point",
-      notes: `Captured at T=${temperature_C}°C (25 °C data only), a(M)=10^${log10Activity}. Dominant: ${probedState ? probedState.formula : "no verified data"}`,
+      stageName: CAPTURED_PROBE_STAGE,
+      notes: `${CAPTURED_PROBE_NOTE} Captured at T=${temperature_C}°C (25 °C data only), a(M)=10^${log10Activity}. Dominant in the computed map: ${probedState ? probedState.formula : "no verified data"}`,
     };
     const updated = [...experimentalPoints, newEntry];
     setExperimentalPoints(updated);
@@ -414,7 +418,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
               </span>
             </div>
             <div className="px-3.5 py-2 rounded-xl bg-[#09101c] border border-amber-500/30 flex items-center justify-between gap-4">
-              <span className="text-slate-400">Experimental Points:</span>
+              <span className="text-slate-400">Test points:</span>
               <span className="text-amber-300 font-bold">{experimentalPoints.length} Loaded</span>
             </div>
           </div>
@@ -686,7 +690,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 className="w-full mt-2 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-300 hover:bg-sky-500/20 text-xs font-bold transition flex items-center justify-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Capture as Experimental Test Point
+                Capture probe as test point
               </button>
             </div>
           </div>

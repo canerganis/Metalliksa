@@ -768,7 +768,7 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
         "polygon": [{"pH": p[0], "E_V_SHE": p[1]} for p in poly],
     } for sid, poly in compute_domains(element, log_a).items()]
 
-    # 5. Process Experimental Points Overlay
+    # 5. Test points (user or illustrative inputs; never described as measured)
     analyzed_experimental_points = []
     risk_breakdown = {
         "Immune": 0,
@@ -842,7 +842,7 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
         parts = ", ".join(f"{n} in {c}" for c, n in sorted(counts.items()))
         outside = sum(1 for p in analyzed_experimental_points if not p["isInsideWaterStability"])
         trajectory_diagnosis = (
-            f"Equilibrium classification of {total_pts} measured point(s) in the {element}–H₂O map at 25 °C "
+            f"Equilibrium classification of {total_pts} test point(s) in the {element}–H₂O map at 25 °C "
             f"(dissolved activity 10^{log_a:g}): {parts}."
         )
         if outside:

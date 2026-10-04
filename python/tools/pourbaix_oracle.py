@@ -258,7 +258,7 @@ def withheld_polygons(element, log_a=-6.0, box=BOX):
 
 
 CATEGORY = {"metal": "Immunity", "cation": "Corrosion (acid)", "anion_low": "Corrosion (alkaline)",
-            "oxide": "Passivation (thermodynamic, film-forming)", "anion_high": "Transpassive"}
+            "oxide": "Passivation (thermodynamic)", "anion_high": "Transpassive"}
 
 
 def dataset(element, include_withheld=False):

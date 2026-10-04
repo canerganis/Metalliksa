@@ -114,7 +114,7 @@ class FeSpecNumbersTest(unittest.TestCase):
             self.assertEqual(oracle.dominant("Fe", ph, e), expected)
         self.assertEqual(solver.evaluate_point_mechanism("Fe", 6.0, -0.40)["category"], "Corrosion (acid)")
         self.assertEqual(solver.evaluate_point_mechanism("Fe", 3.0, 0.60)["category"],
-                         "Passivation (thermodynamic, film-forming)")
+                         "Passivation (thermodynamic)")
 
 
 class OtherElementPinsTest(unittest.TestCase):
@@ -206,7 +206,7 @@ class AluminiumSetOTest(unittest.TestCase):
             self.assertTrue(any(abs(p - ph) <= VERTICAL and abs(v - e) <= TRIPLE_E for p, v in ends[ident]),
                             (ident, ends[ident]))
         # inside the water window at pH 7 the stable phase is gibbsite (passivation), pH 2 Al3+, pH 11 Al(OH)4-
-        for ph, e, sid, cat in ((7.0, -0.2, "Al(OH)3", "Passivation (thermodynamic, film-forming)"),
+        for ph, e, sid, cat in ((7.0, -0.2, "Al(OH)3", "Passivation (thermodynamic)"),
                                 (2.0, 0.0, "Al3+", "Corrosion (acid)"), (11.0, -0.3, "Al(OH)4-", "Corrosion (alkaline)"),
                                 (7.0, -2.2, "Al", "Immunity")):
             r = solver.evaluate_point_mechanism("Al", ph, e)
@@ -561,7 +561,7 @@ class CategoryTest(unittest.TestCase):
                          {k: k for k in res})
         self.assertEqual({k: v["category"] for k, v in res.items()}, {
             "Fe": "Immunity", "Fe2+": "Corrosion (acid)", "HFeO2-": "Corrosion (alkaline)",
-            "Fe2O3": "Passivation (thermodynamic, film-forming)", "FeO4^2-": "Transpassive"})
+            "Fe2O3": "Passivation (thermodynamic)", "FeO4^2-": "Transpassive"})
 
     def test_outside_water_window_is_labelled(self):
         inside = solver.evaluate_point_mechanism("Fe", 7.0, 0.0)
@@ -801,6 +801,25 @@ class OutputContractTest(unittest.TestCase):
         for token in ("base_epit", "Chloride Pitting Breakdown", "k_sensitivity", "calculate_chloride_pitting_boundary"):
             self.assertNotIn(token, source)
 
+    def test_test_points_are_never_described_as_measured(self):
+        # review Sol 6.1 SF-1: illustrative preset points and probes captured from the computed map carry no
+        # measurement provenance; the API text calls every input a test point
+        pts = [{"id": "fe_p1", "name": "Illustrative", "ph": 8.2, "potential_V": -0.42, "refElectrode": "SCE",
+                "stageName": "Point 1 (illustrative)", "notes": "Illustrative scenario point; no measurement."},
+               {"id": "pt_probed_1", "name": "Computed probe coordinate (pH 7.00, 0.200 V SHE)", "ph": 7.0,
+                "potential_V": 0.2, "stageName": "Computed coordinate (probe, not measured)",
+                "notes": "Coordinate copied from the computed map probe; not a measurement."}]
+        for el in ("Fe", "Cr", "Ti"):
+            out = solver.solve_pourbaix_diagram(el, 25, -6, 0, pts)
+            diag = out["experimentalOverlay"]["overallTrajectoryDiagnosis"]
+            self.assertIn("Equilibrium classification of 2 test point(s)", diag)
+            self.assertNotIn("measured", diag.lower())
+            for p in out["experimentalOverlay"]["points"]:
+                for key in ("regime", "mechanismTitle", "mechanismDetails", "depolarizer"):
+                    self.assertNotIn("measured", p[key].lower(), (el, key))
+        src = (HERE / "pourbaix_solver.py").read_text(encoding="utf-8")
+        self.assertNotIn("measured point", src)
+
     def test_reference_electrode_offsets_applied(self):
         pts = {p["id"]: p for p in self.result["experimentalOverlay"]["points"]}
         self.assertAlmostEqual(pts["p1"]["potential_V_SHE"], -0.2 + 0.241, places=6)
@@ -816,8 +835,8 @@ class OutputContractTest(unittest.TestCase):
         got = {p["id"]: (p["category"], p["dominantSpeciesId"]) for p in fe["experimentalOverlay"]["points"]}
         self.assertEqual(got["p4"], ("Corrosion (acid)", "Fe2+"))
         self.assertEqual(got["p1"][0], "Corrosion (acid)")
-        self.assertEqual(got["p2"][0], "Passivation (thermodynamic, film-forming)")
-        self.assertEqual(got["p3"][0], "Passivation (thermodynamic, film-forming)")
+        self.assertEqual(got["p2"][0], "Passivation (thermodynamic)")
+        self.assertEqual(got["p3"][0], "Passivation (thermodynamic)")
         cu = solver.solve_pourbaix_diagram("Cu", 25, -6, 0, [{"ph": 5, "potential_V": 0.4, "refElectrode": "SHE"}])
         self.assertEqual(cu["experimentalOverlay"]["points"][0]["category"], "Corrosion (acid)")
 

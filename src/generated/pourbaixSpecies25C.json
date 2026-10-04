@@ -31,7 +31,7 @@
     "metal": "Immunity",
     "cation": "Corrosion (acid)",
     "anion_low": "Corrosion (alkaline)",
-    "oxide": "Passivation (thermodynamic, film-forming)",
+    "oxide": "Passivation (thermodynamic)",
     "anion_high": "Transpassive"
   },
   "tieBreak": "table order: metal, cations, solids, anions (first species wins an exact tie)",
@@ -107,7 +107,7 @@
           "source": "A",
           "verification": "V2",
           "evidence": "OpenStax App. G -1015.4 kJ/mol (delta +1.2); E0(Fe3O4/Fe) -0.0848 vs -0.085 V; E0(Fe3O4/Fe2+) 0.9813 vs 0.98 V",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Fe2O3",
@@ -122,7 +122,7 @@
           "source": "A",
           "verification": "V2",
           "evidence": "OpenStax App. G -742.2 kJ/mol (delta +1.2); E0(Fe2O3/Fe2+) 0.7279 vs 0.728 V; E0(Fe2O3/Fe3O4) 0.2209 vs 0.22 V",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "HFeO2-",
@@ -198,7 +198,7 @@
           "source": "N",
           "verification": "V2",
           "evidence": "NBS (Wagman 1982, Table 51) -1058.1 kJ/mol; LLNL thermo.com.V8.R6 eskolaite (llnl.dat log K -9.1306 with its CrO4 2-) -1058.10. NIST-JANAF (Chase 1998, Cr-014) -1053.07 and Ziemniak et al. (KAPL LM-06K145, 2007) -1049.96 are 5.0 and 8.1 kJ/mol less negative: E0(Cr2O3/Cr) -0.5989 V (NBS) vs -0.5902 V (JANAF), 8.7 mV; -0.5848 V (KAPL), 14 mV",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "HCrO4-",
@@ -806,7 +806,7 @@
           "source": "E",
           "verification": "V2",
           "evidence": "beta-Ni(OH)2(cr) + 2H+ = Ni2+ + 2H2O: table log K 11.02 = NEA-TDB selection (+/- 0.20, from Gamsjaeger et al. 2002 solubility measurements; PSI/Nagra TM-44-14-05 adopts the same value); wateq4f.dat (Nordstrom 1990) 10.8 (delta 1.3 kJ/mol). Open databases spread 10.8 to 12.7 (llnl.dat 12.75: 9.9 kJ/mol above NEA). E0(Ni(OH)2/Ni, alkaline) -0.739 V vs -0.72 V (CRC, older solubility constants): documented exception",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "HNiO2-",
@@ -840,7 +840,7 @@
           "source": "A",
           "verification": "V3",
           "evidence": "no open source found for the atlas value, which the atlas itself calls uncertain; not used. Withholding Ni3O4 and Ni2O3 changes the category (Ni2+ or HNiO2- instead of Passivation) of about 2 % of the Ni cells inside the water window (4 % on the atlas set, measured with the atlas rows anchored to the NEA Ni2+ and CODATA water). The value shown is the atlas one",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Ni2O3",
@@ -855,7 +855,7 @@
           "source": "A",
           "verification": "V3",
           "evidence": "no open source found for the atlas value (an E0 of 1.753 V is only reproduced by the same table); the atlas calls it uncertain; not used",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "NiO2",
@@ -870,7 +870,7 @@
           "source": "E",
           "verification": "V3",
           "evidence": "WITHHELD estimate (it was served as V2 until the second re-review): anchored to the NEA Ni2+ through E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one lineage, so the E0 check is tautological); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher nickel oxides uncertain. Its domain would lie above the O2 line, at least 38 mV above it (minimum at pH 8.5), so withholding it leaves the water-window map unchanged; above the O2 line the map shows Ni(OH)2, Ni2+ and HNiO2- instead of a NiO2 passivation domain",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         }
       ]
     },
@@ -914,7 +914,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "NBS (Wagman 1982, Table 57) -1434.2 kJ/mol; NIST-JANAF (O-059) -1433.83 (0.37 kJ/mol). E0(2TiO2/Ti2O3) -0.5580 V vs -0.56 V (Wikipedia data page)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Ti3O5",
@@ -929,7 +929,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "NBS -2317.4 kJ/mol; NIST-JANAF (O-080) -2317.29 (0.11 kJ/mol). It has no domain with these values (Ti2O3 + TiO2 is lower)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "TiO2",
@@ -944,7 +944,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "NBS rutile -889.5 kJ/mol; NIST-JANAF (O-043) -889.41 (0.09 kJ/mol). E0(TiO2/Ti) -1.0759 V",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         }
       ],
       "candidateSets": [
@@ -1080,7 +1080,7 @@
           "source": "C",
           "verification": "V3",
           "evidence": "WITHHELD candidate: E0(TiO + 2H+ + 2e- = Ti + H2O) -1.31 V (Wikipedia data page) gives -489.92 kJ/mol",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "TiO2+[CRC-b]",
@@ -1110,7 +1110,7 @@
           "source": "N",
           "verification": "V3",
           "evidence": "WITHHELD candidate: NBS TiO alpha -495.0 kJ/mol; NIST-JANAF (O-018) -513.28: 18.3 kJ/mol apart (95 mV in E0(TiO/Ti)). Both values give TiO a band between Ti and Ti2O3",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "TiO[JANAF]",
@@ -1125,7 +1125,7 @@
           "source": "J",
           "verification": "V3",
           "evidence": "WITHHELD candidate: NIST-JANAF TiO alpha (O-018) -513.278 kJ/mol; NBS -495.0",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Ti4+[BE16]",
@@ -1230,7 +1230,7 @@
           "source": "N",
           "verification": "V2",
           "evidence": "EXCLUDED (metastable): NBS anatase -884.5 kJ/mol, 5.0 kJ/mol above rutile (JANAF O-042 -883.27, 6.1 above); it never has a domain",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         }
       ]
     },
@@ -1289,7 +1289,7 @@
           "source": "O",
           "verification": "V2",
           "evidence": "OBIGT gibbsite (Robie, Hemingway & Fisher 1978) -1154889 J. Gibbsite + 3H+ = Al3+ + 3H2O: set log K 7.730; LLNL thermo.com.V8.R6 (PHREEQC llnl.dat) 7.756 (0.15 kJ/mol); Nordstrom et al. 1990 (PHREEQC phreeqc.dat/wateq4f.dat) 8.11 (2.2 kJ/mol). Hydrargillite is the old name of gibbsite; the atlas hydrargillite value is 5.3 kJ/mol per Al more negative and is not used",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Al(OH)4-",
@@ -1338,7 +1338,7 @@
           "source": "A",
           "verification": "V3",
           "evidence": "REJECTED atlas row (atlas set, H2O -237.19): -1160.2 kJ/mol per Al vs gibbsite -1154.9 (Robie, Hemingway & Fisher 1978); with it the Al3+/hydroxide boundary is pH 3.90 instead of 4.58 at a = 1e-6. Replaced by Al(OH)3 gibbsite (set O)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "AlO(OH)",
@@ -1353,7 +1353,7 @@
           "source": "O",
           "verification": "V2",
           "evidence": "EXCLUDED (metastable by convention): OBIGT boehmite (Hemingway, Robie & Apps 1991) -918400 J; AlOOH + 3H+ = Al3+ + 2H2O set log K 7.609 vs llnl.dat 7.564. Boehmite + H2O lies 0.69 kJ/mol below gibbsite in this set, but the sign differs between open databases (llnl.dat boehmite 1.1 kJ/mol lower; wateq4f.dat and minteq.v4.dat gibbsite 2.7 and 1.6 kJ/mol lower). The 25 C map uses gibbsite, the Al(OH)3 phase of the conventional diagram; with boehmite the Al3+/solid boundary moves to pH 4.54 and the solid/Al(OH)4- boundary to pH 9.24 at a = 1e-6 (same categories)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "Al2O3",
@@ -1368,7 +1368,7 @@
           "source": "O",
           "verification": "V2",
           "evidence": "EXCLUDED (metastable): dfG from the CODATA 1989 key values (dfH -1675.7 kJ/mol, S 50.92; Al 28.30, O2 205.152 J/mol/K) = -1582.26 kJ/mol (OpenStax App. G -1582). Per Al it lies 8.0 kJ/mol above gibbsite + water, so it never has a domain",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         }
       ]
     },
@@ -1442,7 +1442,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "OpenStax App. G -146.0 kJ/mol; E0(Cu2O/Cu, alkaline) -0.356 V vs -0.36 V",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "CuO",
@@ -1457,7 +1457,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "OpenStax App. G -129.7 kJ/mol",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "HCuO2-",
@@ -1548,7 +1548,7 @@
           "source": "N",
           "verification": "V2",
           "evidence": "OpenStax App. G -320.5 kJ/mol (CHNOSZ zincite -76596 cal): table is 2.2 kJ/mol less negative; known sensitivity (Zn2+/ZnO pH 8.77 here, 8.58 with -320.5); sets not mixed. The omitted Zn(OH)2(aq) is constant-dependent at the default 1e-6 M: with IUPAC 2013 (Powell & Brown, log *beta2 -17.82) ZnO + H2O = Zn(OH)2(aq) has log K -6.28 and ZnO keeps its domain (0.28 log margin); with the wateq4f / Baes & Mesmer constant (-16.9) log K is -5.36 and Zn(OH)2(aq) would replace the whole ZnO domain",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "HZnO2-",
@@ -1639,7 +1639,7 @@
           "source": "N",
           "verification": "V2",
           "evidence": "E0(Mg(OH)2/Mg, alkaline) table -2.690 V vs -2.69 V (Wikipedia data page)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         }
       ],
       "candidateSets": [],
@@ -1685,7 +1685,7 @@
           "source": "N",
           "verification": "V2",
           "evidence": "NBS (Wagman 1982, Table 52) -533.01 kJ/mol; NIST-JANAF (Mo-009) -532.01 (1.0 kJ/mol). E0(MoO2/Mo) -0.1522 V vs -0.15 V (Wikipedia data page)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "MoO3",
@@ -1700,7 +1700,7 @@
           "source": "N",
           "verification": "V1",
           "evidence": "NBS -667.97 kJ/mol; NIST-JANAF (Mo-014) -668.08 (0.11 kJ/mol). MoO3 + H2O = MoO4 2- + 2H+: table log K -12.05 vs Baes & Mesmer -12.06 (3 M NaClO4, NECTAR Mo table); MoO3 + H2O = H2MoO4(aq) -3.93, so MoO3 has a domain only above 10^-3.93 M (outside the Mo activity range)",
-          "category": "Passivation (thermodynamic, film-forming)"
+          "category": "Passivation (thermodynamic)"
         },
         {
           "id": "H2MoO4",

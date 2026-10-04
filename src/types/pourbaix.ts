@@ -6,7 +6,7 @@ export type StabilityCategory =
   | "Immunity"
   | "Corrosion (acid)"
   | "Corrosion (alkaline)"
-  | "Passivation (thermodynamic, film-forming)"
+  | "Passivation (thermodynamic)"
   | "Transpassive";
 
 export type PourbaixRole = "metal" | "cation" | "anion_low" | "oxide" | "anion_high";

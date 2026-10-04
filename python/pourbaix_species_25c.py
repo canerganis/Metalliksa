@@ -84,7 +84,7 @@ CATEGORY_BY_ROLE = {
     "metal": "Immunity",
     "cation": "Corrosion (acid)",
     "anion_low": "Corrosion (alkaline)",
-    "oxide": "Passivation (thermodynamic, film-forming)",
+    "oxide": "Passivation (thermodynamic)",
     "anion_high": "Transpassive",
 }
 

@@ -551,7 +551,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             withheld_pts += 1 if hits else 0
         if pts:
             parts = ", ".join(f"{n} in {c}" for c, n in sorted(counts.items()))
-            diag = (f"Equilibrium classification of {len(pts)} measured point(s) in the {element}–H₂O map at "
+            diag = (f"Equilibrium classification of {len(pts)} test point(s) in the {element}–H₂O map at "
                     f"25 °C (dissolved activity 10^{log_a:g}): {parts}.")
             if outside:
                 diag += f" {outside} point(s) lie outside the water stability window (metastable)."

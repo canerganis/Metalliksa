@@ -252,7 +252,7 @@
   {
    "key": "analyticalBoundaries[1].boundaryType",
    "kind": "changed",
-   "new": "Immunity / Passivation (thermodynamic, film-forming)",
+   "new": "Immunity / Passivation (thermodynamic)",
    "old": "Immunity / Cuprite (Cu₂O) Passivity"
   },
   {
@@ -760,7 +760,7 @@
   {
    "key": "analyticalBoundaries[3].boundaryType",
    "kind": "changed",
-   "new": "Corrosion (acid) / Passivation (thermodynamic, film-forming)",
+   "new": "Corrosion (acid) / Passivation (thermodynamic)",
    "old": "Alkaline Dissolution"
   },
   {
@@ -942,7 +942,7 @@
   {
    "key": "analyticalBoundaries[4].boundaryType",
    "kind": "added",
-   "new": "Corrosion (acid) / Passivation (thermodynamic, film-forming)",
+   "new": "Corrosion (acid) / Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -1026,7 +1026,7 @@
   {
    "key": "analyticalBoundaries[5].boundaryType",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming): Cu₂O / CuO",
+   "new": "Passivation (thermodynamic): Cu₂O / CuO",
    "old": null
   },
   {
@@ -1116,7 +1116,7 @@
   {
    "key": "analyticalBoundaries[6].boundaryType",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+   "new": "Passivation (thermodynamic) / Corrosion (alkaline)",
    "old": null
   },
   {
@@ -1206,7 +1206,7 @@
   {
    "key": "analyticalBoundaries[7].boundaryType",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+   "new": "Passivation (thermodynamic) / Corrosion (alkaline)",
    "old": null
   },
   {
@@ -1296,7 +1296,7 @@
   {
    "key": "analyticalBoundaries[8].boundaryType",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+   "new": "Passivation (thermodynamic) / Corrosion (alkaline)",
    "old": null
   },
   {
@@ -1710,7 +1710,7 @@
   {
    "key": "domains[2].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -1782,7 +1782,7 @@
   {
    "key": "domains[3].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -1980,7 +1980,7 @@
   {
    "key": "experimentalOverlay.overallTrajectoryDiagnosis",
    "kind": "changed",
-   "new": "Equilibrium classification of 1 measured point(s) in the Cu–H₂O map at 25 °C (dissolved activity 10^-6): 1 in Corrosion (acid). This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting.",
+   "new": "Equilibrium classification of 1 test point(s) in the Cu–H₂O map at 25 °C (dissolved activity 10^-6): 1 in Corrosion (acid). This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting.",
    "old": "ACTIVE DISSOLUTION DETECTED: 1 test point(s) (Test Point #1) are located in the active acid corrosion domain with rapid uniform metal loss driven by cathodic depolarization."
   },
   {
@@ -2522,7 +2522,7 @@
   {
    "key": "speciesTable.species[3].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -2600,7 +2600,7 @@
   {
    "key": "speciesTable.species[4].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -4562,7 +4562,7 @@
   {
    "key": "stabilityFieldGrid[137].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -4598,7 +4598,7 @@
   {
    "key": "stabilityFieldGrid[137].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -5522,7 +5522,7 @@
   {
    "key": "stabilityFieldGrid[158].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5558,13 +5558,13 @@
   {
    "key": "stabilityFieldGrid[158].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[159].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5600,7 +5600,7 @@
   {
    "key": "stabilityFieldGrid[159].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -5648,7 +5648,7 @@
   {
    "key": "stabilityFieldGrid[160].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5684,13 +5684,13 @@
   {
    "key": "stabilityFieldGrid[160].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[161].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5726,13 +5726,13 @@
   {
    "key": "stabilityFieldGrid[161].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[162].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5768,13 +5768,13 @@
   {
    "key": "stabilityFieldGrid[162].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[163].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5810,13 +5810,13 @@
   {
    "key": "stabilityFieldGrid[163].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[164].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5852,13 +5852,13 @@
   {
    "key": "stabilityFieldGrid[164].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[165].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5894,13 +5894,13 @@
   {
    "key": "stabilityFieldGrid[165].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[166].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5936,13 +5936,13 @@
   {
    "key": "stabilityFieldGrid[166].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[167].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -5978,7 +5978,7 @@
   {
    "key": "stabilityFieldGrid[167].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -6434,7 +6434,7 @@
   {
    "key": "stabilityFieldGrid[178].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6470,13 +6470,13 @@
   {
    "key": "stabilityFieldGrid[178].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[179].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6512,7 +6512,7 @@
   {
    "key": "stabilityFieldGrid[179].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -6560,7 +6560,7 @@
   {
    "key": "stabilityFieldGrid[180].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6596,13 +6596,13 @@
   {
    "key": "stabilityFieldGrid[180].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[181].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6638,13 +6638,13 @@
   {
    "key": "stabilityFieldGrid[181].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[182].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6680,13 +6680,13 @@
   {
    "key": "stabilityFieldGrid[182].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[183].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6722,13 +6722,13 @@
   {
    "key": "stabilityFieldGrid[183].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[184].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6764,13 +6764,13 @@
   {
    "key": "stabilityFieldGrid[184].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[185].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6806,13 +6806,13 @@
   {
    "key": "stabilityFieldGrid[185].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[186].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6848,13 +6848,13 @@
   {
    "key": "stabilityFieldGrid[186].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[187].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6890,13 +6890,13 @@
   {
    "key": "stabilityFieldGrid[187].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[188].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -6932,7 +6932,7 @@
   {
    "key": "stabilityFieldGrid[188].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -7388,7 +7388,7 @@
   {
    "key": "stabilityFieldGrid[199].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7424,7 +7424,7 @@
   {
    "key": "stabilityFieldGrid[199].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -7514,7 +7514,7 @@
   {
    "key": "stabilityFieldGrid[200].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7550,13 +7550,13 @@
   {
    "key": "stabilityFieldGrid[200].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[201].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7592,13 +7592,13 @@
   {
    "key": "stabilityFieldGrid[201].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[202].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7634,13 +7634,13 @@
   {
    "key": "stabilityFieldGrid[202].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[203].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7676,13 +7676,13 @@
   {
    "key": "stabilityFieldGrid[203].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[204].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7718,13 +7718,13 @@
   {
    "key": "stabilityFieldGrid[204].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[205].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7760,13 +7760,13 @@
   {
    "key": "stabilityFieldGrid[205].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[206].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7802,13 +7802,13 @@
   {
    "key": "stabilityFieldGrid[206].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[207].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7844,13 +7844,13 @@
   {
    "key": "stabilityFieldGrid[207].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[208].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7886,13 +7886,13 @@
   {
    "key": "stabilityFieldGrid[208].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[209].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -7928,7 +7928,7 @@
   {
    "key": "stabilityFieldGrid[209].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -8438,7 +8438,7 @@
   {
    "key": "stabilityFieldGrid[220].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8474,13 +8474,13 @@
   {
    "key": "stabilityFieldGrid[220].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[221].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8516,13 +8516,13 @@
   {
    "key": "stabilityFieldGrid[221].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[222].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8558,13 +8558,13 @@
   {
    "key": "stabilityFieldGrid[222].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[223].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8600,13 +8600,13 @@
   {
    "key": "stabilityFieldGrid[223].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[224].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8642,13 +8642,13 @@
   {
    "key": "stabilityFieldGrid[224].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[225].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8684,13 +8684,13 @@
   {
    "key": "stabilityFieldGrid[225].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[226].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8726,13 +8726,13 @@
   {
    "key": "stabilityFieldGrid[226].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[227].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8768,13 +8768,13 @@
   {
    "key": "stabilityFieldGrid[227].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[228].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8810,13 +8810,13 @@
   {
    "key": "stabilityFieldGrid[228].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[229].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8852,7 +8852,7 @@
   {
    "key": "stabilityFieldGrid[229].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -8900,7 +8900,7 @@
   {
    "key": "stabilityFieldGrid[230].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -8936,7 +8936,7 @@
   {
    "key": "stabilityFieldGrid[230].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -9398,7 +9398,7 @@
   {
    "key": "stabilityFieldGrid[241].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9434,13 +9434,13 @@
   {
    "key": "stabilityFieldGrid[241].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[242].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9476,13 +9476,13 @@
   {
    "key": "stabilityFieldGrid[242].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[243].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9518,13 +9518,13 @@
   {
    "key": "stabilityFieldGrid[243].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[244].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9560,13 +9560,13 @@
   {
    "key": "stabilityFieldGrid[244].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[245].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9602,13 +9602,13 @@
   {
    "key": "stabilityFieldGrid[245].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[246].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9644,13 +9644,13 @@
   {
    "key": "stabilityFieldGrid[246].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[247].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9686,13 +9686,13 @@
   {
    "key": "stabilityFieldGrid[247].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[248].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9728,13 +9728,13 @@
   {
    "key": "stabilityFieldGrid[248].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[249].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9770,7 +9770,7 @@
   {
    "key": "stabilityFieldGrid[249].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -9818,7 +9818,7 @@
   {
    "key": "stabilityFieldGrid[250].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9854,13 +9854,13 @@
   {
    "key": "stabilityFieldGrid[250].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[251].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -9896,7 +9896,7 @@
   {
    "key": "stabilityFieldGrid[251].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -10310,7 +10310,7 @@
   {
    "key": "stabilityFieldGrid[261].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10346,13 +10346,13 @@
   {
    "key": "stabilityFieldGrid[261].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[262].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10388,13 +10388,13 @@
   {
    "key": "stabilityFieldGrid[262].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[263].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10430,13 +10430,13 @@
   {
    "key": "stabilityFieldGrid[263].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[264].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10472,13 +10472,13 @@
   {
    "key": "stabilityFieldGrid[264].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[265].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10514,13 +10514,13 @@
   {
    "key": "stabilityFieldGrid[265].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[266].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10556,13 +10556,13 @@
   {
    "key": "stabilityFieldGrid[266].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[267].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10598,13 +10598,13 @@
   {
    "key": "stabilityFieldGrid[267].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[268].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10640,13 +10640,13 @@
   {
    "key": "stabilityFieldGrid[268].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[269].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10682,7 +10682,7 @@
   {
    "key": "stabilityFieldGrid[269].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -10730,7 +10730,7 @@
   {
    "key": "stabilityFieldGrid[270].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10766,13 +10766,13 @@
   {
    "key": "stabilityFieldGrid[270].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[271].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10808,13 +10808,13 @@
   {
    "key": "stabilityFieldGrid[271].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
    "key": "stabilityFieldGrid[272].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -10850,7 +10850,7 @@
   {
    "key": "stabilityFieldGrid[272].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)",
+   "new": "Passivation (thermodynamic) — outside water stability (metastable)",
    "old": "Passivation (Cu₂O / CuO)"
   },
   {
@@ -11276,7 +11276,7 @@
   {
    "key": "stabilityFieldGrid[282].category",
    "kind": "added",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": null
   },
   {
@@ -11318,7 +11318,7 @@
   {
    "key": "stabilityFieldGrid[282].regime",
    "kind": "changed",
-   "new": "Passivation (thermodynamic, film-forming)",
+   "new": "Passivation (thermodynamic)",
    "old": "Alkaline Corrosion"
   },
   {
@@ -16187,7 +16187,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "d55f912b91d74f79bf02a6c91774ba5188a1cabc",
+ "gitHead": "739a887b91d13ced852de57337dd70da196c8c77",
  "input": {
   "chloride_ppm": 0,
   "element": "Cu",
@@ -16214,7 +16214,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "pourbaix_solver",
  "solverFile": "python/pourbaix_solver.py",
- "solverSha256": "1a679e55c65fbbc2ff79752c8ef29c11b94823d563d4323e01afc87110475221",
+ "solverSha256": "2908c98e29f60a633d5e361a90a7db01f459d0b02ddbf534337df1192da2049b",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -16245,7 +16245,7 @@
     "speciesBId": "Cu2+"
    },
    {
-    "boundaryType": "Immunity / Passivation (thermodynamic, film-forming)",
+    "boundaryType": "Immunity / Passivation (thermodynamic)",
     "equation": "2Cu + H₂O ⇌ Cu₂O + 2H⁺ + 2e⁻",
     "id": "Cu__Cu2O",
     "line": {
@@ -16295,7 +16295,7 @@
     "speciesBId": "CuO2^2-"
    },
    {
-    "boundaryType": "Corrosion (acid) / Passivation (thermodynamic, film-forming)",
+    "boundaryType": "Corrosion (acid) / Passivation (thermodynamic)",
     "equation": "2Cu²⁺ + H₂O + 2e⁻ ⇌ Cu₂O + 2H⁺",
     "id": "Cu2+__Cu2O",
     "line": {
@@ -16320,7 +16320,7 @@
     "speciesBId": "Cu2O"
    },
    {
-    "boundaryType": "Corrosion (acid) / Passivation (thermodynamic, film-forming)",
+    "boundaryType": "Corrosion (acid) / Passivation (thermodynamic)",
     "equation": "Cu²⁺ + H₂O ⇌ CuO + 2H⁺",
     "id": "Cu2+__CuO",
     "line": {
@@ -16344,7 +16344,7 @@
     "speciesBId": "CuO"
    },
    {
-    "boundaryType": "Passivation (thermodynamic, film-forming): Cu₂O / CuO",
+    "boundaryType": "Passivation (thermodynamic): Cu₂O / CuO",
     "equation": "Cu₂O + H₂O ⇌ 2CuO + 2H⁺ + 2e⁻",
     "id": "Cu2O__CuO",
     "line": {
@@ -16369,7 +16369,7 @@
     "speciesBId": "CuO"
    },
    {
-    "boundaryType": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+    "boundaryType": "Passivation (thermodynamic) / Corrosion (alkaline)",
     "equation": "Cu₂O + 3H₂O ⇌ 2HCuO₂⁻ + 4H⁺ + 2e⁻",
     "id": "Cu2O__HCuO2-",
     "line": {
@@ -16394,7 +16394,7 @@
     "speciesBId": "HCuO2-"
    },
    {
-    "boundaryType": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+    "boundaryType": "Passivation (thermodynamic) / Corrosion (alkaline)",
     "equation": "Cu₂O + 3H₂O ⇌ 2CuO₂²⁻ + 6H⁺ + 2e⁻",
     "id": "Cu2O__CuO2^2-",
     "line": {
@@ -16419,7 +16419,7 @@
     "speciesBId": "CuO2^2-"
    },
    {
-    "boundaryType": "Passivation (thermodynamic, film-forming) / Corrosion (alkaline)",
+    "boundaryType": "Passivation (thermodynamic) / Corrosion (alkaline)",
     "equation": "CuO + H₂O ⇌ HCuO₂⁻ + H⁺",
     "id": "CuO__HCuO2-",
     "line": {
@@ -16551,7 +16551,7 @@
     "speciesId": "Cu2+"
    },
    {
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "polygon": [
      {
       "E_V_SHE": -0.12661450933469923,
@@ -16577,7 +16577,7 @@
     "speciesId": "Cu2O"
    },
    {
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "polygon": [
      {
       "E_V_SHE": 2.5,
@@ -16650,7 +16650,7 @@
   "element": "Cu",
   "engine": "pourbaix-gibbs-25c-v5",
   "experimentalOverlay": {
-   "overallTrajectoryDiagnosis": "Equilibrium classification of 1 measured point(s) in the Cu–H₂O map at 25 °C (dissolved activity 10^-6): 1 in Corrosion (acid). This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting.",
+   "overallTrajectoryDiagnosis": "Equilibrium classification of 1 test point(s) in the Cu–H₂O map at 25 °C (dissolved activity 10^-6): 1 in Corrosion (acid). This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting.",
    "points": [
     {
      "category": "Corrosion (acid)",
@@ -16808,7 +16808,7 @@
      "z": 2
     },
     {
-     "category": "Passivation (thermodynamic, film-forming)",
+     "category": "Passivation (thermodynamic)",
      "dfG_kJ_mol": -146.0,
      "evidence": "OpenStax App. G -146.0 kJ/mol; E0(Cu2O/Cu, alkaline) -0.356 V vs -0.36 V",
      "formula": "Cu₂O",
@@ -16823,7 +16823,7 @@
      "z": 0
     },
     {
-     "category": "Passivation (thermodynamic, film-forming)",
+     "category": "Passivation (thermodynamic)",
      "dfG_kJ_mol": -129.7,
      "evidence": "OpenStax App. G -129.7 kJ/mol",
      "formula": "CuO",
@@ -18518,7 +18518,7 @@
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -18526,7 +18526,7 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 6.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
@@ -18770,7 +18770,7 @@
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -18778,11 +18778,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18790,11 +18790,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18802,11 +18802,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18814,11 +18814,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18826,11 +18826,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18838,11 +18838,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18850,11 +18850,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18862,11 +18862,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18874,11 +18874,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -18886,7 +18886,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 7.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -19010,7 +19010,7 @@
    },
    {
     "E_V_SHE": 0.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -19018,11 +19018,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19030,11 +19030,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19042,11 +19042,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19054,11 +19054,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19066,11 +19066,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19078,11 +19078,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19090,11 +19090,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19102,11 +19102,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19114,11 +19114,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19126,11 +19126,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19138,7 +19138,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 8.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -19262,7 +19262,7 @@
    },
    {
     "E_V_SHE": 0.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -19270,11 +19270,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19282,11 +19282,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19294,11 +19294,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19306,11 +19306,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19318,11 +19318,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19330,11 +19330,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19342,11 +19342,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19354,11 +19354,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19366,11 +19366,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19378,11 +19378,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19390,7 +19390,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 9.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -19514,7 +19514,7 @@
    },
    {
     "E_V_SHE": 0.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -19522,11 +19522,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19534,11 +19534,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19546,11 +19546,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19558,11 +19558,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19570,11 +19570,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19582,11 +19582,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19594,11 +19594,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19606,11 +19606,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19618,11 +19618,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19630,11 +19630,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19642,7 +19642,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 10.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -19766,7 +19766,7 @@
    },
    {
     "E_V_SHE": 0.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19774,11 +19774,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19786,11 +19786,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19798,11 +19798,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19810,11 +19810,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19822,11 +19822,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19834,11 +19834,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19846,11 +19846,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19858,11 +19858,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19870,11 +19870,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19882,11 +19882,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -19894,7 +19894,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 11.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -20006,7 +20006,7 @@
    },
    {
     "E_V_SHE": -0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -20014,11 +20014,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20026,11 +20026,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20038,11 +20038,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20050,11 +20050,11 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20062,11 +20062,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 0.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20074,11 +20074,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20086,11 +20086,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20098,11 +20098,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.4,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20110,11 +20110,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.6,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20122,11 +20122,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 1.8,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20134,11 +20134,11 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": 2.0,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "CuO",
     "dominantSpeciesId": "CuO",
@@ -20146,7 +20146,7 @@
     "isInsideWaterStability": false,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 12.0,
-    "regime": "Passivation (thermodynamic, film-forming) — outside water stability (metastable)"
+    "regime": "Passivation (thermodynamic) — outside water stability (metastable)"
    },
    {
     "E_V_SHE": -2.0,
@@ -20258,7 +20258,7 @@
    },
    {
     "E_V_SHE": -0.2,
-    "category": "Passivation (thermodynamic, film-forming)",
+    "category": "Passivation (thermodynamic)",
     "color": "#10b981",
     "dominantSpecies": "Cu₂O",
     "dominantSpeciesId": "Cu2O",
@@ -20266,7 +20266,7 @@
     "isInsideWaterStability": true,
     "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
     "pH": 13.0,
-    "regime": "Passivation (thermodynamic, film-forming)"
+    "regime": "Passivation (thermodynamic)"
    },
    {
     "E_V_SHE": 0.0,
