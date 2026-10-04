@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useEscapeToClose } from "./AccessibleModal";
+import { AccessibleModal } from "./AccessibleModal";
 import {
   Database,
   Search,
@@ -55,7 +55,6 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
   // Comparison drawer state
   const [compareList, setCompareList] = useState<MaterialSpec[]>([MATERIALS_DATABASE[0], MATERIALS_DATABASE[5]]);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
-  useEscapeToClose(isCompareOpen, () => setIsCompareOpen(false));
   const [copied, setCopied] = useState<boolean>(false);
 
   const categories = [
@@ -725,8 +724,13 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
 
       {/* Side-by-Side Alloy Comparison Modal / Drawer */}
       {isCompareOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div role="dialog" aria-modal="true" aria-label="Compare materials" className="bg-[#090e18] border border-[#162032] rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <AccessibleModal
+          open
+          onClose={() => setIsCompareOpen(false)}
+          label="Compare materials"
+          overlayClassName="bg-black/80 backdrop-blur-sm p-4"
+          panelClassName="bg-[#090e18] border border-[#162032] rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-[#162032] bg-[#0c1322]">
               <div className="flex items-center gap-2 text-indigo-400 font-mono text-sm font-bold">
@@ -845,8 +849,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 Close Comparison
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

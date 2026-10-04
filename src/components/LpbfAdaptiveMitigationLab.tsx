@@ -69,7 +69,7 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
         <div className="w-88 p-4 border-r border-gray-700 overflow-y-auto space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Source G-Code</label>
-            <textarea
+            <textarea aria-label="Source G-Code"
               rows={7}
               value={gcodeText}
               onChange={e => setGcodeText(e.target.value)}
@@ -115,7 +115,7 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
                 <span className="text-xs font-medium text-white block">67° Interlayer Rotation</span>
                 <span className="text-[10px] text-gray-400 block">Suppresses grain texture anisotropy</span>
               </div>
-              <input
+              <input aria-label="67° Interlayer Rotation"
                 type="checkbox"
                 checked={apply67Deg}
                 onChange={e => setApply67Deg(e.target.checked)}

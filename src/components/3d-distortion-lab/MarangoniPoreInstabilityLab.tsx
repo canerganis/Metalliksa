@@ -962,7 +962,7 @@ if __name__ == "__main__":
                   <span className="text-slate-400 text-[11px] whitespace-nowrap">
                     Min Prob Threshold: <strong className="text-cyan-300">{minProbThreshold}%</strong>
                   </span>
-                  <input
+                  <input aria-label="Min Prob Threshold"
                     type="range"
                     min="0"
                     max="80"
@@ -1164,7 +1164,7 @@ if __name__ == "__main__":
                 <span>Laser Power (P):</span>
                 <span className="text-cyan-400 font-bold">{laserPower_W} W</span>
               </div>
-              <input
+              <input aria-label="Laser Power (P)"
                 type="range"
                 min="100"
                 max="600"
@@ -1181,7 +1181,7 @@ if __name__ == "__main__":
                 <span>Scan Speed (v):</span>
                 <span className="text-blue-400 font-bold">{scanSpeed_mms} mm/s</span>
               </div>
-              <input
+              <input aria-label="Scan Speed (v)"
                 type="range"
                 min="400"
                 max="2400"
@@ -1198,7 +1198,7 @@ if __name__ == "__main__":
                 <span>Beam Diameter (2r₀):</span>
                 <span className="text-purple-400 font-bold">{beamDiameter_um} µm</span>
               </div>
-              <input
+              <input aria-label="Beam Diameter (2r₀)"
                 type="range"
                 min="50"
                 max="160"
@@ -1229,7 +1229,7 @@ if __name__ == "__main__":
                   </span>
                 </span>
               </div>
-              <input
+              <input aria-label="Surfactant Sulfur"
                 type="range"
                 min="2"
                 max="100"

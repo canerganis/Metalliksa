@@ -98,42 +98,42 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
             <div>
               <label className="mb-1 block text-slate-400">Laser Power (W)</label>
               <div className="flex gap-2">
-                <input type="number" value={bounds.laserPower_W[0]} onChange={e => setBounds(b => ({...b, laserPower_W: [+e.target.value, b.laserPower_W[1]]}))} className="aero-input w-full" />
+                <input aria-label="Laser Power (W) minimum" type="number" value={bounds.laserPower_W[0]} onChange={e => setBounds(b => ({...b, laserPower_W: [+e.target.value, b.laserPower_W[1]]}))} className="aero-input w-full" />
                 <span className="text-slate-500 self-center">-</span>
-                <input type="number" value={bounds.laserPower_W[1]} onChange={e => setBounds(b => ({...b, laserPower_W: [b.laserPower_W[0], +e.target.value]}))} className="aero-input w-full" />
+                <input aria-label="Laser Power (W) maximum" type="number" value={bounds.laserPower_W[1]} onChange={e => setBounds(b => ({...b, laserPower_W: [b.laserPower_W[0], +e.target.value]}))} className="aero-input w-full" />
               </div>
             </div>
             <div>
               <label className="mb-1 block text-slate-400">Scan Speed (mm/s)</label>
               <div className="flex gap-2">
-                <input type="number" value={bounds.scanSpeed_mms[0]} onChange={e => setBounds(b => ({...b, scanSpeed_mms: [+e.target.value, b.scanSpeed_mms[1]]}))} className="aero-input w-full" />
+                <input aria-label="Scan Speed (mm/s) minimum" type="number" value={bounds.scanSpeed_mms[0]} onChange={e => setBounds(b => ({...b, scanSpeed_mms: [+e.target.value, b.scanSpeed_mms[1]]}))} className="aero-input w-full" />
                 <span className="text-slate-500 self-center">-</span>
-                <input type="number" value={bounds.scanSpeed_mms[1]} onChange={e => setBounds(b => ({...b, scanSpeed_mms: [b.scanSpeed_mms[0], +e.target.value]}))} className="aero-input w-full" />
+                <input aria-label="Scan Speed (mm/s) maximum" type="number" value={bounds.scanSpeed_mms[1]} onChange={e => setBounds(b => ({...b, scanSpeed_mms: [b.scanSpeed_mms[0], +e.target.value]}))} className="aero-input w-full" />
               </div>
             </div>
             <div>
               <label className="mb-1 block text-slate-400">Hatch Spacing (µm)</label>
               <div className="flex gap-2">
-                <input type="number" value={bounds.hatch_um[0]} onChange={e => setBounds(b => ({...b, hatch_um: [+e.target.value, b.hatch_um[1]]}))} className="aero-input w-full" />
+                <input aria-label="Hatch Spacing (µm) minimum" type="number" value={bounds.hatch_um[0]} onChange={e => setBounds(b => ({...b, hatch_um: [+e.target.value, b.hatch_um[1]]}))} className="aero-input w-full" />
                 <span className="text-slate-500 self-center">-</span>
-                <input type="number" value={bounds.hatch_um[1]} onChange={e => setBounds(b => ({...b, hatch_um: [b.hatch_um[0], +e.target.value]}))} className="aero-input w-full" />
+                <input aria-label="Hatch Spacing (µm) maximum" type="number" value={bounds.hatch_um[1]} onChange={e => setBounds(b => ({...b, hatch_um: [b.hatch_um[0], +e.target.value]}))} className="aero-input w-full" />
               </div>
             </div>
             <div>
               <label className="mb-1 block text-slate-400">Layer Thickness (µm)</label>
               <div className="flex gap-2">
-                <input type="number" value={bounds.layer_um[0]} onChange={e => setBounds(b => ({...b, layer_um: [+e.target.value, b.layer_um[1]]}))} className="aero-input w-full" />
+                <input aria-label="Layer Thickness (µm) minimum" type="number" value={bounds.layer_um[0]} onChange={e => setBounds(b => ({...b, layer_um: [+e.target.value, b.layer_um[1]]}))} className="aero-input w-full" />
                 <span className="text-slate-500 self-center">-</span>
-                <input type="number" value={bounds.layer_um[1]} onChange={e => setBounds(b => ({...b, layer_um: [b.layer_um[0], +e.target.value]}))} className="aero-input w-full" />
+                <input aria-label="Layer Thickness (µm) maximum" type="number" value={bounds.layer_um[1]} onChange={e => setBounds(b => ({...b, layer_um: [b.layer_um[0], +e.target.value]}))} className="aero-input w-full" />
               </div>
             </div>
             
             <div className="pt-2 border-t border-slate-800">
               <label className="mb-1 block text-slate-400">Iterations (Total / Warmup)</label>
               <div className="flex gap-2">
-                <input type="number" value={nIter} onChange={e => setNIter(+e.target.value)} className="aero-input w-full" />
+                <input aria-label="Iterations (Total)" type="number" value={nIter} onChange={e => setNIter(+e.target.value)} className="aero-input w-full" />
                 <span className="text-slate-500 self-center">/</span>
-                <input type="number" value={nWarmup} onChange={e => setNWarmup(+e.target.value)} className="aero-input w-full" />
+                <input aria-label="Iterations (Warmup)" type="number" value={nWarmup} onChange={e => setNWarmup(+e.target.value)} className="aero-input w-full" />
               </div>
             </div>
           </div>

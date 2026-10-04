@@ -124,7 +124,7 @@ export const MultiTrackThermalLab: React.FC = () => {
         <div className="w-80 p-4 border-r border-gray-700 bg-gray-850 flex flex-col gap-4 overflow-y-auto">
           <div>
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">Alloy Selection</h3>
-            <select
+            <select aria-label="Alloy Selection"
               value={alloy}
               onChange={(e) => setAlloy(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white text-xs"
@@ -145,7 +145,7 @@ export const MultiTrackThermalLab: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-gray-400 mb-1">Laser Power: {power} W</label>
-                <input
+                <input aria-label="Laser Power"
                   type="range"
                   min="100"
                   max="500"
@@ -157,7 +157,7 @@ export const MultiTrackThermalLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Scan Velocity: {velocity} mm/s</label>
-                <input
+                <input aria-label="Scan Velocity"
                   type="range"
                   min="400"
                   max="2000"
@@ -169,7 +169,7 @@ export const MultiTrackThermalLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Hatch Spacing: {hatchSpacing} μm</label>
-                <input
+                <input aria-label="Hatch Spacing"
                   type="range"
                   min="50"
                   max="200"
@@ -181,7 +181,7 @@ export const MultiTrackThermalLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Vector Length: {trackLength} mm</label>
-                <input
+                <input aria-label="Vector Length"
                   type="range"
                   min="3.0"
                   max="25.0"
@@ -193,7 +193,7 @@ export const MultiTrackThermalLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Number of Hatches: {numTracks}</label>
-                <input
+                <input aria-label="Number of Hatches"
                   type="range"
                   min="4"
                   max="24"
@@ -205,7 +205,7 @@ export const MultiTrackThermalLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Turnaround Delay: {turnaroundDelay} ms</label>
-                <input
+                <input aria-label="Turnaround Delay"
                   type="range"
                   min="0.1"
                   max="5.0"
@@ -223,7 +223,7 @@ export const MultiTrackThermalLab: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">Optimization Threshold</h3>
             <div className="text-xs">
               <label className="block text-gray-400 mb-1">Max Allowable Drift: {maxAllowableDrift} K</label>
-              <input
+              <input aria-label="Max Allowable Drift"
                 type="range"
                 min="30"
                 max="250"
