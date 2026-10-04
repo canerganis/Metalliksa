@@ -195,9 +195,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
         _AI_CONSULT,
     ),
-    "micrograph": (
-        _op("diagnose-micrograph", "POST", "/api/metallurgy/diagnose-micrograph", _NODE),
-    ),
     "eds-lab": (_AI_CONSULT,),
     "electrochem-suite": (
         _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
@@ -945,6 +942,109 @@ def _defect_twin_contract(row: Dict[str, str]) -> ModuleContract:
         ))
 
 
+# micrograph (micrograph rework): keys, defaults and bounds are those of python/micrograph_measure.py
+# read_request (literal defaults) and the _int/_finite checks in measure(); the authority rejects
+# values outside the declared ranges with MeasureInputError (HTTP 400 through the worker route).
+_GREY_OFF_NOTE = "is not a threshold: no grey level satisfies it, so the class is not measured"
+_MICROGRAPH_FIELDS = (
+    _num("cropTopPx", "Rows excluded at the top", "px", "pixel-count", 0, 0, 4095, integer=True),
+    _num("cropBottomPx", "Rows excluded at the bottom (data bar)", "px", "pixel-count", 0, 0, 4095, integer=True,
+         note="The SEM data bar is excluded by the user here; nothing is excluded by default."),
+    _num("cropLeftPx", "Columns excluded at the left", "px", "pixel-count", 0, 0, 4095, integer=True),
+    _num("cropRightPx", "Columns excluded at the right", "px", "pixel-count", 0, 0, 4095, integer=True),
+    _num("umPerPx", "Stated pixel size", "µm/px", "image-scale", 0.0, 0, None,
+         note="0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be "
+              "combined with a scale bar."),
+    _num("barLengthUm", "Scale-bar length", _MICRO, "length", 0.0, 0, None,
+         note="0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx."),
+    _num("barLengthPx", "Scale-bar length on the image", "px", "pixel-length", 0.0, 0, None,
+         note="Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied."),
+    _num("darkMaxGrey", "Dark class: grey <= threshold", "1", "grey-level", -1, -1, 254, integer=True,
+         note=f"-1 (default) {_GREY_OFF_NOTE}. Must be below brightMinGrey when both classes are measured."),
+    _num("brightMinGrey", "Bright class: grey >= threshold", "1", "grey-level", 256, 1, 256, integer=True,
+         note=f"256 (default) {_GREY_OFF_NOTE}."),
+    _num("boundaryMaxGrey", "Grain boundaries: grey <= threshold", "1", "grey-level", -1, -1, 254, integer=True,
+         note=f"-1 (default) {_GREY_OFF_NOTE}; automatic E112 counting assumes boundaries darker than grains."),
+    _num("tiles", "Tiles per side for the field-to-field CI", "1", "count", 4, 2, 10, integer=True,
+         note="Convention of this module (k x k tiles of one image), not a standard value."),
+    _num("sensitivityDeltaGrey", "Threshold sensitivity step", "1", "grey-level", 10, 1, 64, integer=True,
+         note="The class fraction is also reported at threshold -/+ this many grey levels."),
+    _num("minAreaPx", "Smallest counted particle", "px", "pixel-count", 4, 1, 100000, integer=True,
+         note="Detection limit of the particle count (reported as an ECD when calibrated); a convention."),
+    _num("linesPerDirection", "E112 test lines per direction", "1", "count", 8, 1, 50, integer=True,
+         note="Horizontal rows and vertical columns at i/(m+1) of the region of interest."),
+    _flag("returnMasks", "Return class masks for the overlay", True),
+)
+_MICROGRAPH_UNDECLARED = ("imageWidth", "imageHeight", "imageData", "calibrationNote", "darkLabel", "brightLabel",
+                          "manualCounts", "manualClicks")
+_MICROGRAPH_OUTPUT = OutputSchema(
+    fields=("schema", "methodVersion", "record", "calibrationRequired", "testLines", "classes", "grainSize",
+            "grainSizeManual", "limitations"),
+    status_key=None,
+)
+_MICROGRAPH_ORACLE_SCOPE = "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
+_MICROGRAPH_EVIDENCE_NOTE = (
+    "Emits no evidence status: neither output carries a status key. micrograph-measure is measurement software "
+    "(threshold area fraction with field-to-field CI and threshold sensitivity, connected-component particles, "
+    "ASTM E112 intersection counting) checked against synthetic oracle images in "
+    "python/test_micrograph_measure.py; it has no comparison with real micrographs or with manual counts by a "
+    "metallographer, so the ceiling stays screening-only. Lengths, areas, densities and G are null without a "
+    "user calibration. diagnose-micrograph returns language-model text: advisory, never a measurement.")
+
+
+def _micrograph_contract(row: Dict[str, str]) -> ModuleContract:
+    measure = Operation(
+        id="micrograph-measure", method="POST", route="/api/python/micrograph-measure",
+        authority=_worker("micrograph-measure"), input=_MICROGRAPH_FIELDS, output=_MICROGRAPH_OUTPUT,
+        undeclared_input=_MICROGRAPH_UNDECLARED)
+    describe = Operation(
+        id="diagnose-micrograph", method="POST", route="/api/metallurgy/diagnose-micrograph",
+        authority=Authority(kind="node-provider", timeout_ms=60000),
+        input=(_choice("mimeType", "Image media type", "media-type",
+                       ("image/jpeg", "image/png", "image/webp", "image/gif"), "image/jpeg",
+                       note="Used only when imageBase64 is not a data: URL (the data-URL type wins); other types "
+                            "are rejected with HTTP 415."),),
+        output=OutputSchema(fields=("diagnosis",), status_key=None),
+        undeclared_input=("imageBase64", "prompt"))
+    seed = {"label": row["label"], "description": row["description"], "next": row["next"], "maturity": row["scope"]}
+    return ModuleContract(
+        id=row["id"], version=CONTRACT_VERSION, owner=OWNER_UNASSIGNED, workspace=row["workspace"],
+        label=seed["label"], description=seed["description"], next=seed["next"], maturity=seed["maturity"],
+        navigation="listed", seed_derived=SEED_TEXT_FIELDS,
+        view=View(component=row["viewComponent"], export=row["viewExport"]),
+        evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
+                          note=_MICROGRAPH_EVIDENCE_NOTE),
+        tests=TestRefs(oracle=Oracle(status="present", scope=_MICROGRAPH_ORACLE_SCOPE,
+                                     ref="python/test_micrograph_measure.py::O1SquareGrid.test_exact_intercept_and_g"),
+                       schema="python/test_contract_micrograph.py", docs=module_doc_path(row["id"])),
+        migration_state="contracted", operations=(measure, describe),
+        lifecycle=Lifecycle(background_work="none", resources=("fetch",)),
+        legacy_notes=(
+            "imageData is the 8-bit greyscale image (row-major bytes, base64) with imageWidth and imageHeight "
+            "(each 1-4096); labels, calibrationNote, manualCounts (one count per test line, multiples of 0.5) and "
+            "manualClicks are free text or lists. The Field schema cannot describe them, so they are recorded as "
+            "undeclaredInput; the authority validates them.",
+            "The view decodes PNG/JPEG/BMP/GIF/WebP in the browser; TIFF is not decoded (the view says so) and no "
+            "instrument metadata (pixel size) is read from files.",
+            "diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider "
+            "default (server/openaiService.ts), the route passes none.",
+            "No validity domain is declared: no real-image comparison establishes an applicability range.",
+        ),
+        source_refs=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_micrograph_measure",
+            "python/micrograph_measure.py::read_request",
+            "python/micrograph_measure.py::measure",
+            "python/micrograph_measure.py::intercept_statistics",
+            "routes/lpbfSimulation.ts",
+            "routes/copilot.ts",
+            "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
+            "src/components/MicrographLab.tsx::MicrographLab",
+            "src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis",
+        ),
+    )
+
+
 def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
     """Contract around one operation. ``reviewed`` replaces seed identity text (SEED_TEXT_FIELDS);
     every field not replaced is recorded as seed-derived (unreviewed)."""
@@ -981,6 +1081,8 @@ CONTRACTED_BUILDERS = {
     "toolpath-studio": _toolpath_contract,
     "adaptive-mitigation": _adaptive_contract,
     "defect-twin": _defect_twin_contract,
+    # Micrograph rework (python/micrograph_measure.py authority)
+    "micrograph": _micrograph_contract,
 }
 
 

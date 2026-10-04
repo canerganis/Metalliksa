@@ -44,11 +44,14 @@ for (const [method, route, rpc] of [
   ["post", "/api/python/lpbf-keyhole-raytracing", "keyhole-raytracing"],
   ["post", "/api/python/lpbf-bayesian-optimization", "bayesian-optimizer"],
   ["post", "/api/python/lpbf-toolpath-thermal-map", "toolpath-thermal-map"],
+  ["post", "/api/python/micrograph-measure", "micrograph-measure"],
 ] as const) {
   lpbfSimulationRouter[method](route, async (req, res) => {
     try {
       if (rpc === "submit" && Buffer.byteLength(JSON.stringify(req.body)) > 50000000) return res.status(413).json({ error: "Simulation input too large" });
-      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "experimental-validation", "modulus-fno", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "powder-dem-compaction", "optical-tomography", "support-optimization", "transient-enthalpy-fdm", "thermal-accumulation", "keyhole-raytracing", "bayesian-optimizer", "toolpath-thermal-map"].includes(rpc);
+      // A 4096 x 4096 8-bit image is 22.4 MB as base64 JSON (python/micrograph_measure.py MAX_SIDE_PX).
+      if (rpc === "micrograph-measure" && Buffer.byteLength(JSON.stringify(req.body)) > 24000000) return res.status(413).json({ error: "Micrograph image too large (max 4096 x 4096 8-bit)" });
+      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "experimental-validation", "modulus-fno", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "powder-dem-compaction", "optical-tomography", "support-optimization", "transient-enthalpy-fdm", "thermal-accumulation", "keyhole-raytracing", "bayesian-optimizer", "toolpath-thermal-map", "micrograph-measure"].includes(rpc);
       const data = await lpbfWorker.request(rpc, passBody ? req.body : ("id" in req.params ? req.params.id : null));
       res.status(rpc === "submit" ? 202 : 200).json(data);
     } catch (e) { workerError(res, e, "Simulation request failed"); }

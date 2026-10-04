@@ -413,6 +413,12 @@ def _rpc_transient_3d_gpu(request):
     return data
 
 
+def _rpc_micrograph_measure(request):
+    # Micrograph measurement authority (numpy/scipy only); invalid requests raise MeasureInputError.
+    from micrograph_measure import measure
+    return measure(request.get("payload"))
+
+
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -441,6 +447,7 @@ RESEARCH_HANDLERS = {
     "transient-enthalpy-fdm": _rpc_transient_enthalpy_fdm,
     "transient-3d-gpu": _rpc_transient_3d_gpu,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
+    "micrograph-measure": _rpc_micrograph_measure,
 }
 
 

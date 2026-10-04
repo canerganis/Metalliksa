@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 28
+LEGACY_CEILING = 27  # micrograph rework contracted micrograph (28 -> 27)
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "defect-twin", "adaptive-mitigation", "optical-tomography",
-              "keyhole-raytracing", "ttt-cct-kinetics", "icme-motor", "uq-lab")
+              "keyhole-raytracing", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
 
 
 def _view():
@@ -577,7 +577,9 @@ class ContractedRegistryTests(unittest.TestCase):
         units = {f.unit for c in self.contracted.values() for op in c.operations for f in op.input if f.unit}
         self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%",
                                      # Phase 7 wave 2
-                                     "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s"})
+                                     "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s",
+                                     # micrograph rework (image pixels and image scale)
+                                     "px", "µm/px"})
         texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
         texts += [n for c in self.contracted.values() for n in c.legacy_notes]
         texts += [c.evidence.note for c in self.contracted.values()]
