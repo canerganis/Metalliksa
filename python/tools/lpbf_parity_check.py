@@ -23,7 +23,9 @@ What "bit-equal" means (design 2.1):
 - Every artifact file written by run() is compared by SHA-256; every NPZ is also
   compared array by array (dtype, shape, bytes).
 
-Cases (design 2.3 matrix): G1..G12 plus an NPZ determinism check. G2 (the in-repo
+Cases (design 2.3 matrix): G1..G16 plus an NPZ determinism check; G17-G19 (B5 step 2)
+document today's non-IN718 evaporation L_v, IN625 latent heats and the emissivity echo
+so the corrected-physics bump has measurable drift. G2 (the in-repo
 real bare-plate 100 W fixture) takes about 106 s on the reference machine and is
 opt-in (--slow or --case). Everything else runs in about one minute.
 
@@ -479,6 +481,179 @@ def case_g16_non_in718_transient(ctx: CaseContext) -> Dict[str, Any]:
     return observations
 
 
+def value_hex(value: Any) -> Any:
+    """Value-level observation: floats as [value, float.hex()] so a drift report shows both."""
+    if type(value) is float:
+        return [value, value.hex()]
+    return value
+
+
+# Non-IN718 evaporationModel=True cases (B5 step 2). They document TODAY's behaviour so the
+# corrected-physics bump has measurable drift: lpbf_simulation passes
+# m.get("latent_heat_vap_J_kg", 6.4e6) to the enthalpy inversion, and material() never
+# carries that key, so every alloy uses IN718's 6.4e6 J/kg (FABLE-B5-OPINION D1).
+# AlSi10Mg does not reach its boiling enthalpy on the SMALL grid at the default Marangoni
+# multiplier (2.2) even at 1200 W, so its case uses marangoniMultiplier=1.0, 300 W, 400 mm/s.
+EVAPORATION_CASES = {
+    "ti6al4v": ("Ti-6Al-4V", {**SMALL, "material": "Ti-6Al-4V", "power_W": 80, "evaporationModel": True}),
+    "ss316l": ("316L Stainless Steel", {**SMALL, "material": "316L Stainless Steel", "power_W": 80,
+                                         "evaporationModel": True}),
+    "alsi10mg": ("AlSi10Mg", {**SMALL, "material": "AlSi10Mg", "power_W": 300, "speed_mm_s": 400,
+                              "marangoniMultiplier": 1.0, "evaporationModel": True}),
+}
+
+
+def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str,
+                              substitute_latent_heat_vap: Optional[float] = None):
+    """Run with the evaporation inversion wrapped: record the L_v it receives, change nothing
+    (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe)."""
+    import lpbf_evaporation_marangoni as evaporation
+    calls: List[Tuple[float, float]] = []
+    original = evaporation.invert_enthalpy_with_evaporation
+
+    def recording(*args, **kwargs):
+        args = list(args)
+        if substitute_latent_heat_vap is not None:
+            if len(args) > 4:
+                args[4] = substitute_latent_heat_vap
+            else:
+                kwargs["latent_heat_vap_j_kg"] = substitute_latent_heat_vap
+        temperature, vapor_fraction = original(*args, **kwargs)
+        used = args[4] if len(args) > 4 else kwargs["latent_heat_vap_j_kg"]
+        calls.append((float(used), float(np.max(vapor_fraction))))
+        return temperature, vapor_fraction
+
+    evaporation.invert_enthalpy_with_evaporation = recording
+    try:
+        _, observations = ctx.run_case(raw, artifacts=True, prefix=prefix)
+    finally:
+        evaporation.invert_enthalpy_with_evaporation = original
+    return observations, calls
+
+
+def _evaporation_case(ctx: CaseContext, key: str) -> Dict[str, Any]:
+    import four_alloy_materials as fam
+    import lpbf_material_registry as registry
+    name, raw = EVAPORATION_CASES[key]
+    observations, calls = _recorded_evaporation_run(ctx, raw, "result")
+    authority = fam.thermal_props(name)["latent_heat_vap_J_kg"]
+    observations["evaporation.inversionCalls"] = len(calls)
+    observations["evaporation.latentHeatVapUsed_J_kg"] = [value_hex(v) for v in sorted({c[0] for c in calls})]
+    observations["evaporation.maxVaporFraction"] = value_hex(max((c[1] for c in calls), default=None))
+    observations["evaporation.authorityLatentHeatVap_J_kg"] = value_hex(float(authority))
+    observations["evaporation.materialSnapshotHasLatentHeatVap"] = "latent_heat_vap_J_kg" in registry.material(name)
+    # Harness-side probe (no implementation change): the same run with the authority L_v
+    # substituted. Equal digests mean today's result does not depend on L_v (the inversion's
+    # vapour fraction is discarded); the corrected bump may legitimately change that.
+    probe, probe_calls = _recorded_evaporation_run(ctx, raw, "authorityLatentHeatVap",
+                                                   substitute_latent_heat_vap=float(authority))
+    observations["evaporation.authorityProbe.latentHeatVapUsed_J_kg"] = [
+        value_hex(v) for v in sorted({c[0] for c in probe_calls})]
+    observations["evaporation.authorityProbe.maxVaporFraction"] = value_hex(
+        max((c[1] for c in probe_calls), default=None))
+    observations["evaporation.authorityProbe.resultCanonicalEqual"] = (
+        probe["authorityLatentHeatVap.canonicalSha256"] == observations["result.canonicalSha256"])
+    observations["evaporation.authorityProbe.artifactsEqual"] = all(
+        probe.get(f"authorityLatentHeatVap.{k}") == v for k, v in observations.items()
+        if k.startswith(("artifact.", "npz.")))
+    return observations
+
+
+def case_g17_evaporation_ti6al4v(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "ti6al4v")
+
+
+def case_g17_evaporation_316l(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "ss316l")
+
+
+def case_g17_evaporation_alsi10mg(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "alsi10mg")
+
+
+IN625_MELTPOOL_PAYLOAD = dict(material_name="Inconel 625", laser_power_W=200.0, scan_speed_mm_s=800.0,
+                              beam_diameter_um=80.0, preheat_temp_C=80.0, layer_thickness_um=40.0,
+                              hatch_spacing_um=100.0, heat_source="rosenthal")
+# The three IN625 fusion latent heats in the code base (FABLE-B5-OPINION D5): 227 kJ/kg
+# (Mills, transient specification), 260 kJ/kg (lpbf_thermal_solver secondary table,
+# Rosenthal melt-pool path), 290 kJ/kg (Sabau, bounded thermal screening snapshot).
+IN625_LATENT_HEAT_CANDIDATES = (227000.0, 260000.0, 290000.0)
+
+
+def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
+    """Which IN625 fusion latent heat each path uses today (value level)."""
+    import importlib.util
+    if importlib.util.find_spec("warp") is not None:
+        raise CaseSkipped("warp is importable here: calculate_meltpool_physics would take the GPU "
+                          "ray-tracing path; the G18 golden pins the CPU fallback without warp")
+    import lpbf_material_registry as registry
+    import in625_thermal_material as in625
+    from lpbf_thermal_solver import calculate_meltpool_physics, SECONDARY_THERMOPHYSICAL_DB
+    from four_alloy_materials import resolve_alloy_id
+
+    observations: Dict[str, Any] = {}
+    status, plain = capture_call(lambda: calculate_meltpool_physics(**IN625_MELTPOOL_PAYLOAD))
+    observations["meltpool.in625"] = typed_sha256(plain) if status == "ok" else {"error": plain}
+    if status == "ok":
+        observations["meltpool.in625.materialEvidence"] = plain.get("materialEvidence")
+    # prop_overrides merge onto the resolved table: the result is bit-equal to the plain run
+    # exactly for the latent heat the path already uses, and differs for the others.
+    for value in IN625_LATENT_HEAT_CANDIDATES:
+        status_o, overridden = capture_call(lambda value=value: calculate_meltpool_physics(
+            **IN625_MELTPOOL_PAYLOAD, prop_overrides={"latent_heat_fusion_J_kg": value}))
+        observations[f"meltpool.in625.equalWithLatentHeatFusion.{value:.0f}"] = (
+            typed_sha256(overridden) == observations["meltpool.in625"] if status_o == "ok"
+            else {"error": overridden})
+    table = SECONDARY_THERMOPHYSICAL_DB["Inconel 625"]
+    observations["meltpool.in625.table.latent_heat_fusion_J_kg"] = value_hex(table["latent_heat_fusion_J_kg"])
+    observations["meltpool.in625.table.latent_heat_vap_J_kg"] = value_hex(table["latent_heat_vap_J_kg"])
+    observe_value(observations, "buildJob.resolveAlloyId.Inconel 625", lambda: resolve_alloy_id("Inconel 625"))
+    for name in ("Inconel 625", "IN625"):
+        status_s, screening = capture_call(lambda name=name: registry.thermal_screening_material(name))
+        observations[f"thermalScreening.{name}.latentHeat_J_kg"] = (
+            value_hex(screening["latentHeat_J_kg"]) if status_s == "ok" else {"error": screening})
+    observations["in625.snapshot.latentHeat_J_kg"] = value_hex(in625.in625_lpbf_thermal_snapshot()["latentHeat_J_kg"])
+    observations["in625.transientSpecification.latentHeat_J_kg"] = value_hex(
+        in625.in625_transient_material_specification()["latentHeat_J_kg"])
+    status_r, value_r = capture_call(lambda: registry.material("Inconel 625"))
+    observations["registry.material.Inconel 625"] = (
+        value_hex(value_r.get("latentHeat_J_kg")) if status_r == "ok" else {"error": value_r})
+    return observations
+
+
+def case_g19_emissivity_echo(ctx: CaseContext) -> Dict[str, Any]:
+    """Emissivity: one registry literal (0.35) for every alloy, echoed into p and used in the
+    top-surface radiation term (lpbf_simulation reference transient); FABLE-B5-OPINION D6."""
+    import lpbf_material_registry as registry
+    from lpbf_simulation import validate
+
+    observations: Dict[str, Any] = {}
+    names = [item["name"] for item in registry.catalog()]
+    for name in names:
+        status, value = capture_call(lambda name=name: registry.material(name)["emissivity"])
+        observations[f"registry.material.{name}.emissivity"] = value_hex(value) if status == "ok" else {"error": value}
+        status, value = capture_call(lambda name=name: validate({"mode": "standard", "material": name}))
+        observations[f"validate.{name}.emissivity"] = (
+            [value_hex(value[0]["emissivity"]), value_hex(value[1]["emissivity"])] if status == "ok"
+            else {"error": value})
+    for override in (0.35, 0.5, 0, 1, 1.5, True):
+        status, value = capture_call(lambda override=override: validate(
+            {"mode": "standard", "material": "Inconel 718", "emissivity": override}))
+        observations[f"validate.override.{override!r}.emissivity"] = (
+            [value_hex(value[0]["emissivity"]), value_hex(value[1]["emissivity"])] if status == "ok"
+            else {"error": value})
+    _, implicit = ctx.run_case(SMALL, prefix="implicit")
+    observations.update(implicit)
+    _, explicit = ctx.run_case({**SMALL, "emissivity": 0.35}, prefix="explicit")
+    observations["explicit0.35.canonicalEqualsImplicit"] = (
+        explicit["explicit.canonicalSha256"] == implicit["implicit.canonicalSha256"])
+    # A different user emissivity changes the material dict but not its revision identity:
+    # the core contract rejects the run after the solve (fail closed), pinned here.
+    status, value = capture_call(lambda: ctx.run_case({**SMALL, "emissivity": 0.36}, prefix="override036")[1])
+    observations["run.override0.36"] = value["override036.canonicalSha256"] if status == "ok" else {"error": value}
+    return observations
+
+
 def case_g13_source_quadrature_refinement(ctx: CaseContext) -> Dict[str, Any]:
     """Direct integrated_source calls with long intervals: the N-vs-2N refinement branch.
 
@@ -930,6 +1105,17 @@ CASES: Tuple[Case, ...] = (
          "Square bare plate with opticalObserver='nist-six-section', all artifacts"),
     Case("g16_non_in718_transient", "G16", case_g16_non_in718_transient,
          "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg"),
+    Case("g17_evaporation_ti6al4v", "G17", case_g17_evaporation_ti6al4v,
+         "evaporationModel=True Ti-6Al-4V 80 W: L_v passed to the inversion (today IN718's 6.4e6)"),
+    Case("g17_evaporation_316l", "G17", case_g17_evaporation_316l,
+         "evaporationModel=True 316L 80 W: L_v passed to the inversion (today IN718's 6.4e6)"),
+    Case("g17_evaporation_alsi10mg", "G17", case_g17_evaporation_alsi10mg,
+         "evaporationModel=True AlSi10Mg 300 W 400 mm/s marangoniMultiplier 1.0: L_v passed to the inversion"),
+    Case("g18_in625_latent_heat", "G18", case_g18_in625_latent_heat,
+         "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
+         runs_solver=False),
+    Case("g19_emissivity_echo", "G19", case_g19_emissivity_echo,
+         "Registry emissivity literal 0.35 echoed into p/m per alloy; overrides; 0.36 override rejected"),
     Case("g8_observers", "G8", case_g8_observers,
          "final-state, selected-time, local-history observers and CpuRunProgress; rejection messages"),
     Case("g9_material_snapshots", "G9", case_g9_material_snapshots,

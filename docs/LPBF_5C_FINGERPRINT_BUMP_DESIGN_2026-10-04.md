@@ -489,6 +489,22 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
   writers, G11 build-job melt pool, G12 analytical modules, G13 source-quadrature
   refinement, G14 calibration, G15 square bare plate with opticalObserver, G16 non-IN718
   transients, NPZ determinism.
+- B5 step 2 (orch/b5-goldens): all goldens re-recorded twice at `edddf0dc…` in a commit of
+  their own (observations unchanged; only the recorded hash, git head and timings moved).
+  New cases recorded at `edddf0dc…` document today's behaviour for the corrected-physics bump:
+  - G17 `evaporationModel=True` for Ti-6Al-4V, 316L and AlSi10Mg (AlSi10Mg needs
+    `marangoniMultiplier=1.0`, 300 W, 400 mm/s to reach boiling on the small grid). Every alloy
+    passes IN718's 6.4e6 J/kg to the enthalpy inversion (authority: 8.9e6, 6.25e6, 1.05e7).
+    A harness-side probe with the authority value gives a bit-equal result: the inversion's
+    vapour fraction is discarded, so today L_v does not reach any result byte.
+  - G18 IN625 fusion latent heat per path: the Rosenthal melt-pool path
+    (`calculate_meltpool_physics`) uses 260 kJ/kg, the screening snapshot 290 kJ/kg, the
+    transient specification 227 kJ/kg. The build job resolves only the four alloys
+    (`resolve_alloy_id("Inconel 625")` is None), so it never reaches the 260 kJ/kg table.
+  - G19 the registry emissivity literal 0.35 echoed into `p`/`m` for every alloy, the override
+    bounds, and the core-contract rejection of a 0.36 override after the solve.
+  - The silent `resolve_alloy_id(...) or "in718"` P-v fallback stays pinned by G9.
+  None of the NOT COVERED items below was closed by these cases.
 - Valid only in the recorded environment (Python, numpy, OS, locked runtime, CPU brand,
   numpy SIMD dispatch, BLAS); elsewhere every case is SKIP and `--check` exits 3. Not in CI.
   CI runs `test_lpbf_implementation_fingerprint_pin`, `test_lpbf_implementation_fingerprint`

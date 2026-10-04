@@ -96,6 +96,32 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(bare["fixture.fieldArtifactsCompared"], 67)
         self.assertEqual(bare["fixture.artifactsCompared"], 68)
 
+    def test_b5_goldens_document_todays_material_values(self):
+        # B5 step 2: these are the values the corrected-physics bump is expected to move.
+        authority = {"g17_evaporation_ti6al4v": 8.9e6, "g17_evaporation_316l": 6.25e6,
+                     "g17_evaporation_alsi10mg": 10.5e6}
+        for case_id, value in authority.items():
+            with self.subTest(case=case_id):
+                observations = json.loads(parity.golden_path(parity.CASE_BY_ID[case_id]).read_text(
+                    encoding="utf-8"))["observations"]
+                self.assertGreater(observations["evaporation.inversionCalls"], 0)
+                self.assertEqual(observations["evaporation.latentHeatVapUsed_J_kg"], [[6.4e6, (6.4e6).hex()]])
+                self.assertEqual(observations["evaporation.authorityLatentHeatVap_J_kg"], [value, value.hex()])
+                self.assertIs(observations["evaporation.materialSnapshotHasLatentHeatVap"], False)
+                self.assertIs(observations["evaporation.authorityProbe.resultCanonicalEqual"], True)
+        in625 = json.loads(parity.golden_path(parity.CASE_BY_ID["g18_in625_latent_heat"]).read_text(
+            encoding="utf-8"))["observations"]
+        self.assertEqual([in625[f"meltpool.in625.equalWithLatentHeatFusion.{v}"] for v in ("227000", "260000", "290000")],
+                         [False, True, False])
+        self.assertEqual(in625["in625.snapshot.latentHeat_J_kg"][0], 290000.0)
+        self.assertEqual(in625["in625.transientSpecification.latentHeat_J_kg"][0], 227000.0)
+        emissivity = json.loads(parity.golden_path(parity.CASE_BY_ID["g19_emissivity_echo"]).read_text(
+            encoding="utf-8"))["observations"]
+        for name in ("Ti-6Al-4V", "316L Stainless Steel", "AlSi10Mg", "Inconel 718"):
+            self.assertEqual(emissivity[f"validate.{name}.emissivity"], [[0.35, (0.35).hex()]] * 2)
+        self.assertEqual(emissivity["run.override0.36"], {"error": "ValueError: LPBF material revision identity mismatch"})
+        self.assertIs(emissivity["explicit0.35.canonicalEqualsImplicit"], True)
+
     def _mutated_golden_dir(self, case_id, mutate):
         directory = Path(tempfile.mkdtemp(dir=self.root))
         for path in parity.GOLDEN_DIR.glob("*.json"):
