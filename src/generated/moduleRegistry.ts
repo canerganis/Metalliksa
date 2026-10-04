@@ -51,7 +51,8 @@ export interface ModuleContract {
   };
   readonly lifecycle: { readonly backgroundWork: BackgroundWork; readonly resources: readonly LifecycleResource[] } | null;
   readonly tests: {
-    readonly schema: string | null; readonly oracle: { readonly status: OracleState; readonly ref: string | null };
+    readonly schema: string | null;
+    readonly oracle: { readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null };
     readonly docs: string | null;
   };
   readonly migrationState: MigrationState;
@@ -346,7 +347,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -407,7 +409,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -468,7 +471,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -529,7 +533,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -590,7 +595,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -651,7 +657,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -712,7 +719,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -773,7 +781,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -834,7 +843,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -895,7 +905,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -956,7 +967,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1017,7 +1029,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1078,7 +1091,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1139,7 +1153,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1200,7 +1215,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1261,7 +1277,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1304,7 +1321,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1584,7 +1602,7 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling."
+        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack)."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -1598,7 +1616,8 @@ export const MODULE_REGISTRY = {
         "schema": "python/test_contract_keyhole_raytracing.py",
         "oracle": {
           "status": "present",
-          "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"
+          "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts",
+          "ciNote": "Oracle not run in CI (requires Warp/GPU stack)."
         },
         "docs": "docs/modules/keyhole-raytracing.md"
       },
@@ -1673,7 +1692,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1734,7 +1754,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1829,7 +1850,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1890,7 +1912,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1968,7 +1991,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2031,7 +2055,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2126,7 +2151,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2187,7 +2213,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2265,7 +2292,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2328,7 +2356,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2423,7 +2452,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2466,7 +2496,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2529,7 +2560,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2895,7 +2927,8 @@ export const MODULE_REGISTRY = {
         "schema": "python/test_contract_uq_lab.py",
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": "docs/modules/uq-lab.md"
       },
@@ -2978,7 +3011,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3041,7 +3075,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3086,7 +3121,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3149,7 +3185,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3210,7 +3247,8 @@ export const MODULE_REGISTRY = {
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },

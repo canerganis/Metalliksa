@@ -421,14 +421,20 @@ class ValidityDomain:
 class Oracle:
     status: str = "pending"
     ref: Optional[str] = None
+    # Recorded gap when a present oracle cannot run in CI (its imports are outside the
+    # CI CPU lock). Must also appear in evidence.note; checked against the oracle's imports.
+    ci_note: Optional[str] = None
 
     def __post_init__(self) -> None:
         _one_of(self.status, ORACLE_STATES, "oracle.status")
         if self.status == "present":
             _text(self.ref, "oracle.ref")
+        if self.ci_note is not None:
+            _require(self.status == "present", "oracle.ciNote applies only to a present oracle")
+            _text(self.ci_note, "oracle.ciNote")
 
     def to_dict(self) -> dict:
-        return {"status": self.status, "ref": self.ref}
+        return {"status": self.status, "ref": self.ref, "ciNote": self.ci_note}
 
 
 @dataclass(frozen=True)
@@ -572,6 +578,9 @@ class ModuleContract:
                          f"{self.id}: emits must be empty when no operation output carries a status key")
                 _text(self.evidence.note, f"{self.id}.evidence.note")
             _require(self.lifecycle is not None, f"{self.id}: contracted modules need a lifecycle")
+            if self.tests.oracle.ci_note:
+                _require(self.tests.oracle.ci_note in (self.evidence.note or ""),
+                         f"{self.id}: evidence.note must state the oracle CI gap")
             _text(self.tests.schema, f"{self.id}.tests.schema")
             _text(self.tests.docs, f"{self.id}.tests.docs")
             _require(len(self.source_refs) > 0, f"{self.id}: contracted modules need sourceRefs")
@@ -634,7 +643,8 @@ def contract_from_dict(d: dict) -> ModuleContract:
         evidence=Evidence(emits=tuple(ev["emits"]), ceiling=ev["ceiling"],
                           forbidden_claims=tuple(ev["forbiddenClaims"]), note=ev["note"]),
         lifecycle=Lifecycle(background_work=lc["backgroundWork"], resources=tuple(lc["resources"])) if lc else None,
-        tests=TestRefs(oracle=Oracle(status=t["oracle"]["status"], ref=t["oracle"]["ref"]),
+        tests=TestRefs(oracle=Oracle(status=t["oracle"]["status"], ref=t["oracle"]["ref"],
+                                     ci_note=t["oracle"]["ciNote"]),
                        schema=t["schema"], docs=t["docs"]),
         migration_state=d["migrationState"], legacy_notes=tuple(d["legacyNotes"]),
         source_refs=tuple(d["sourceRefs"]),

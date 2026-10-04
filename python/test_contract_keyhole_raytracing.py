@@ -86,7 +86,11 @@ class KeyholeContractScaffold(ContractScaffold, unittest.TestCase):
 
     def run_oracle(self, ref):
         if not WARP:
-            self.skipTest("oracle present but NVIDIA Warp is not installed on this interpreter")
+            # Recorded-gap option: skipping is allowed only because the contract states the gap
+            # (evidence note and badge tooltip); without the note this fails, in CI or not.
+            ci_note = self.contract.tests.oracle.ci_note
+            self.assertTrue(ci_note, "Warp missing and no oracle CI gap recorded in the contract")
+            self.skipTest(f"oracle not run on this interpreter: {ci_note}")
         run_unittest_ref(self, ref)
 
 

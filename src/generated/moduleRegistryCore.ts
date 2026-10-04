@@ -18,7 +18,7 @@ export interface ModuleContractCore {
   readonly view: { readonly component: string; readonly export: string };
   readonly migrationState: MigrationState;
   readonly evidence: { readonly ceiling: EvidenceType };
-  readonly tests: { readonly oracle: { readonly status: OracleState } };
+  readonly tests: { readonly oracle: { readonly status: OracleState; readonly ciNote: string | null } };
 }
 export interface ModuleRegistryCoreDocument {
   readonly schemaVersion: number; readonly generatedBy: string;
@@ -73,7 +73,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -97,7 +98,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -121,7 +123,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -145,7 +148,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -169,7 +173,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -193,7 +198,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -217,7 +223,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -241,7 +248,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -265,7 +273,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -289,7 +298,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -313,7 +323,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -337,7 +348,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -361,7 +373,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -385,7 +398,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -409,7 +423,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -433,7 +448,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -457,7 +473,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -481,7 +498,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "present"
+          "status": "present",
+          "ciNote": "Oracle not run in CI (requires Warp/GPU stack)."
         }
       }
     },
@@ -505,7 +523,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -529,7 +548,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -553,7 +573,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -577,7 +598,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -601,7 +623,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -625,7 +648,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -649,7 +673,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -673,7 +698,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -697,7 +723,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -721,7 +748,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -745,7 +773,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -769,7 +798,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -793,7 +823,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -817,7 +848,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -841,7 +873,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -865,7 +898,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -889,7 +923,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -913,7 +948,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     },
@@ -937,7 +973,8 @@ export const MODULE_REGISTRY_CORE = {
       },
       "tests": {
         "oracle": {
-          "status": "pending"
+          "status": "pending",
+          "ciNote": null
         }
       }
     }

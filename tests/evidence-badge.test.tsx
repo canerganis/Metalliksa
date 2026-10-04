@@ -51,6 +51,16 @@ test('the view is a pure projection of whatever ceiling the contract holds', () 
   assert.equal(evidenceBadgeView({ ...base, migrationState: 'legacy' } as unknown as RegisteredContract), null);
 });
 
+test('a recorded oracle CI gap is shown with the badge', () => {
+  for (const contract of MODULE_CONTRACTS.filter(item => item.migrationState === 'contracted')) {
+    const view = evidenceBadgeView(contract);
+    const ciNote = contract.tests.oracle.ciNote;
+    if (ciNote) assert.ok(view?.title.includes(ciNote), contract.id);
+  }
+  const keyhole = MODULE_CONTRACTS.find(contract => contract.id === 'keyhole-raytracing');
+  assert.equal(keyhole?.tests.oracle.ciNote, 'Oracle not run in CI (requires Warp/GPU stack).');
+});
+
 test('the badge reads only the committed contract (no store, service or fetch)', () => {
   const source = read('src/components/sdk/EvidenceBadge.tsx');
   const imports = [...source.matchAll(/from '([^']+)'/g)].map(match => match[1]);

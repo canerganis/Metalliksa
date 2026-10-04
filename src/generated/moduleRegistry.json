@@ -280,7 +280,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -341,7 +342,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -402,7 +404,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -463,7 +466,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -524,7 +528,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -585,7 +590,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -646,7 +652,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -707,7 +714,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -768,7 +776,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -829,7 +838,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -890,7 +900,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -951,7 +962,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1012,7 +1024,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1073,7 +1086,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1134,7 +1148,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1195,7 +1210,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1238,7 +1254,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1518,7 +1535,7 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling."
+        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack)."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -1532,7 +1549,8 @@
         "schema": "python/test_contract_keyhole_raytracing.py",
         "oracle": {
           "status": "present",
-          "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"
+          "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts",
+          "ciNote": "Oracle not run in CI (requires Warp/GPU stack)."
         },
         "docs": "docs/modules/keyhole-raytracing.md"
       },
@@ -1607,7 +1625,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1668,7 +1687,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1763,7 +1783,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1824,7 +1845,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1902,7 +1924,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -1965,7 +1988,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2060,7 +2084,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2121,7 +2146,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2199,7 +2225,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2262,7 +2289,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2357,7 +2385,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2400,7 +2429,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2463,7 +2493,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2829,7 +2860,8 @@
         "schema": "python/test_contract_uq_lab.py",
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": "docs/modules/uq-lab.md"
       },
@@ -2912,7 +2944,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -2975,7 +3008,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3020,7 +3054,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3083,7 +3118,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },
@@ -3144,7 +3180,8 @@
         "schema": null,
         "oracle": {
           "status": "pending",
-          "ref": null
+          "ref": null,
+          "ciNote": null
         },
         "docs": null
       },

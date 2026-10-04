@@ -329,6 +329,10 @@ _KEYHOLE_OUTPUT = OutputSchema(
     transport_values=(("status", ("success",)),),
 )
 
+# test_keyhole_contract.py imports warp, which the CI CPU lock (python/requirements-lpbf.in)
+# does not install; test_module_contract checks this note against the oracle's imports.
+_KEYHOLE_ORACLE_CI_NOTE = "Oracle not run in CI (requires Warp/GPU stack)."
+
 _KEYHOLE_EVIDENCE_NOTE = (
     "Emits no evidence status: the output has no status key ('status' is the transport value "
     "'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with "
@@ -336,7 +340,7 @@ _KEYHOLE_EVIDENCE_NOTE = (
     "(python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an "
     "independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in "
     "python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, "
-    "and does not raise the ceiling."
+    "and does not raise the ceiling. " + _KEYHOLE_ORACLE_CI_NOTE
 )
 
 _UQ_FIELDS = (
@@ -402,7 +406,8 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
     return _pilot(row, owner="lpbf workspace", operation=operation,
                   evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
                                     note=_KEYHOLE_EVIDENCE_NOTE),
-                  oracle=Oracle(status="present", ref="python/test_keyhole_contract.py::KeyholeContract."
+                  oracle=Oracle(status="present", ci_note=_KEYHOLE_ORACLE_CI_NOTE,
+                                ref="python/test_keyhole_contract.py::KeyholeContract."
                                                       "test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"),
                   lifecycle=Lifecycle(background_work="none", resources=("raf", "three", "fetch")),
                   notes=(
@@ -572,6 +577,35 @@ def ref_problem(ref: str, root: Path = REPO_ROOT, generated: frozenset = frozens
     return ""
 
 
+CI_LOCK = PYTHON_DIR / "requirements-lpbf.in"  # the CI python job installs only this
+
+
+def _top_level_imports(path: Path) -> set:
+    import ast
+    names = set()
+    for node in ast.parse(path.read_text(encoding="utf-8")).body:
+        if isinstance(node, ast.Import):
+            names.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            names.add(node.module.split(".")[0])
+    return names
+
+
+def oracle_ci_missing_packages(ref: str) -> List[str]:
+    """Third-party packages the oracle test (and the repo modules it imports directly) need
+    that the CI CPU lock does not install. Non-empty means the oracle cannot run in CI."""
+    oracle = REPO_ROOT / ref.split("::")[0]
+    names = _top_level_imports(oracle)
+    for name in list(names):
+        local = PYTHON_DIR / f"{name}.py"
+        if local.is_file():
+            names |= _top_level_imports(local)
+    lock = {re.split(r"[=<>\[ ]", line.strip())[0].lower()
+            for line in CI_LOCK.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")}
+    third_party = {n for n in names if n not in sys.stdlib_module_names and not (PYTHON_DIR / f"{n}.py").is_file()}
+    return sorted(n for n in third_party if n.lower() not in lock)
+
+
 def contract_ref_problems(contract: ModuleContract, root: Path = REPO_ROOT,
                           generated: frozenset = frozenset()) -> List[str]:
     return [p for p in (ref_problem(ref, root, generated) for ref in contract_refs(contract)) if p]
@@ -690,7 +724,8 @@ def render_ts(document: dict) -> str:
         "  };",
         "  readonly lifecycle: { readonly backgroundWork: BackgroundWork; readonly resources: readonly LifecycleResource[] } | null;",
         "  readonly tests: {",
-        "    readonly schema: string | null; readonly oracle: { readonly status: OracleState; readonly ref: string | null };",
+        "    readonly schema: string | null;",
+        "    readonly oracle: { readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null };",
         "    readonly docs: string | null;",
         "  };",
         "  readonly migrationState: MigrationState;",
@@ -776,6 +811,7 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Emits: {', '.join(e.emits) if e.emits else 'none'}",
         f"- Forbidden claims: {', '.join(e.forbidden_claims)}",
         f"- Oracle: {oracle}",
+        f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note else "- Oracle in CI: no recorded gap",
         f"- Note: {e.note}" if e.note else "- Note: none",
         "",
         "## Validity domain",
@@ -816,7 +852,8 @@ def core_document(document: dict) -> dict:
     def core(contract: dict) -> dict:
         slim = {key: contract[key] for key in CORE_CONTRACT_KEYS}
         slim["evidence"] = {"ceiling": contract["evidence"]["ceiling"]}
-        slim["tests"] = {"oracle": {"status": contract["tests"]["oracle"]["status"]}}
+        oracle = contract["tests"]["oracle"]
+        slim["tests"] = {"oracle": {"status": oracle["status"], "ciNote": oracle["ciNote"]}}
         return slim
     vocabulary = document["vocabulary"]
     return {
@@ -851,7 +888,7 @@ def render_core_ts(document: dict) -> str:
         "  readonly view: { readonly component: string; readonly export: string };",
         "  readonly migrationState: MigrationState;",
         "  readonly evidence: { readonly ceiling: EvidenceType };",
-        "  readonly tests: { readonly oracle: { readonly status: OracleState } };",
+        "  readonly tests: { readonly oracle: { readonly status: OracleState; readonly ciNote: string | null } };",
         "}",
         "export interface ModuleRegistryCoreDocument {",
         "  readonly schemaVersion: number; readonly generatedBy: string;",

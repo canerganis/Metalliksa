@@ -508,6 +508,33 @@ class ContractedRegistryTests(unittest.TestCase):
         self.assertTrue(keyhole.ref.startswith("python/test_keyhole_contract.py::"))
         self.assertEqual(self.contracted["uq-lab"].tests.oracle.status, "pending")
 
+    def test_oracle_ci_gap_is_recorded_exactly_when_the_oracle_cannot_run_in_ci(self):
+        for contract in self.contracted.values():
+            oracle = contract.tests.oracle
+            if oracle.status != "present":
+                self.assertIsNone(oracle.ci_note, contract.id)
+                continue
+            missing = mr.oracle_ci_missing_packages(oracle.ref)
+            with self.subTest(module=contract.id, missing=missing):
+                if missing:
+                    self.assertTrue(oracle.ci_note, "a present oracle outside the CI lock must record the gap")
+                    self.assertIn("not run in CI", oracle.ci_note)
+                    for package in missing:
+                        self.assertIn(package.lower(), oracle.ci_note.lower())
+                    self.assertIn(oracle.ci_note, contract.evidence.note)
+                else:
+                    self.assertIsNone(oracle.ci_note, "no gap to record")
+        self.assertEqual(mr.oracle_ci_missing_packages(self.contracted["keyhole-raytracing"].tests.oracle.ref), ["warp"])
+
+    def test_ci_note_must_be_echoed_in_the_evidence_note(self):
+        base = mr.CONTRACTED_BUILDERS["keyhole-raytracing"]
+        row = next(r for r in mr.load_seed() if r["id"] == "keyhole-raytracing")
+        contract = base(row)
+        with self.assertRaisesRegex(mc.ContractError, "oracle CI gap"):
+            dataclasses.replace(contract, evidence=dataclasses.replace(contract.evidence, note="silent"))
+        with self.assertRaises(mc.ContractError):
+            mc.Oracle(status="pending", ci_note="not run")
+
     def test_pilot_authorities_match_the_legacy_binding(self):
         keyhole = self.contracted["keyhole-raytracing"].operations[0]
         self.assertEqual((keyhole.method, keyhole.route, keyhole.authority.worker_method, keyhole.authority.timeout_ms),
@@ -523,6 +550,7 @@ class ContractedRegistryTests(unittest.TestCase):
             self.assertEqual(set(entry), allowed)
             self.assertEqual(set(entry["evidence"]), {"ceiling"})
             self.assertEqual(set(entry["tests"]), {"oracle"})
+            self.assertEqual(set(entry["tests"]["oracle"]), {"status", "ciNote"})
         self.assertIn(mr.GENERATED_CORE_TS, mr.rendered_outputs())
 
     def test_ref_forms(self):
