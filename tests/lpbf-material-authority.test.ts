@@ -109,8 +109,8 @@ test('committed JSON equals the live Python authority (read without the generato
   assert.deepEqual(values('latent heat of fusion'), [py.in625.latent_heat_fusion_J_kg, ...py.in625Other.latent]);
   assert.deepEqual(values('boiling point'), [py.in625.boiling_C, Number((py.in625Other.boiling_K - 273.15).toFixed(2))]);
   assert.deepEqual(values('IR absorptivity'), [py.in625.absorptivity_IR, py.in625Other.absorptivity]);
-  assert.match(in625.note, /260000 vs 290000 vs 227000 J\/kg/);
-  assert.match(in625.note, /2880 vs 2900 C/);
+  assert.match(in625.note, /latent heat of fusion: 290000 J\/kg in Rosenthal \/ build-job path \[SECONDARY_THERMOPHYSICAL_DB\] and Sabau et al\. 2020 fusion-enthalpy screening \[LATENT_HEAT_J_KG\] vs 227000 J\/kg in transient material spec \[IN625_LATENT_HEAT_FUSION_MILLS_J_KG\]/);
+  assert.match(in625.note, /boiling point: 2880 C in .* vs 2900 C in /);
 });
 
 test('accessor refuses an unsupported schemaVersion and labels every row it serves', () => {

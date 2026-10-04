@@ -547,6 +547,25 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
     # hoisted unchanged from the step body, so every value and message is bit-identical.
     minimum_allowed_h = float(hh[0])-1e-8
     boiling_enthalpy = float(np.interp(m["boiling_K"], tt, hh))
+    # evaporationModel=True is a BOILING CAP, not an evaporation model: the inversion clips T at
+    # T_boil and keeps the excess enthalpy in the cell (nothing leaves the domain). These counters
+    # make the cap visible in the result (boilingCap block); flag-false runs never touch them.
+    boiling_cap = bool(p.get("evaporationModel", False))
+    cap_steps = 0
+    cap_max_excess_h = 0.
+    cap_max_vapor_fraction_proxy = 0.
+    cap_latent_heat_vap = None
+    if boiling_cap:
+        from four_alloy_materials import thermal_props
+        # D1: L_v from the material authority for the four alloys; no literal and no other-alloy
+        # fallback. Snapshot bytes are untouched (material() does not carry this key).
+        authority = thermal_props(m["materialId"]) if m.get("provenanceClass") == "estimated-legacy" else None
+        if authority is None or "latent_heat_vap_J_kg" not in authority:
+            cause = ("user-supplied material properties" if m.get("provenanceClass") != "estimated-legacy"
+                     else f"material {m.get('materialId')!r} has no latent_heat_vap_J_kg in four_alloy_materials")
+            raise ValueError(f"evaporationModel (boiling cap) requires a sourced latent heat of vaporization: {cause}; "
+                             "no literal and no other-alloy value is substituted")
+        cap_latent_heat_vap = float(authority["latent_heat_vap_J_kg"])
     while time < end:
         seg = next((s for s in segments if s["start_s"] <= time+1e-14 and time < s["end_s"]-1e-14), None)
         active_layer = max([s["layer"] for s in segments if s["start_s"] <= time+1e-14] or [0])
@@ -634,10 +653,12 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                     f"at {float(tt[0]):.6g} K)"
                 )
             if maximum_h >= boiling_enthalpy:
-                if p.get("evaporationModel", False):
-                    from lpbf_evaporation_marangoni import invert_enthalpy_with_evaporation
-                    l_vap = float(m.get("latent_heat_vap_J_kg", 6.4e6))
-                    T, _ = invert_enthalpy_with_evaporation(h, hh, tt, m["boiling_K"], l_vap)
+                if boiling_cap:
+                    from lpbf_evaporation_marangoni import invert_enthalpy_with_boiling_cap
+                    T, vapor_proxy = invert_enthalpy_with_boiling_cap(h, hh, tt, m["boiling_K"], cap_latent_heat_vap)
+                    cap_steps += 1
+                    cap_max_excess_h = max(cap_max_excess_h, maximum_h-boiling_enthalpy)
+                    cap_max_vapor_fraction_proxy = max(cap_max_vapor_fraction_proxy, float(np.max(vapor_proxy)))
                 else:
                     hot_cell = np.unravel_index(int(np.argmax(h)), h.shape)
                     cell_density = float(rho[hot_cell])
@@ -813,6 +834,15 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                                        for row in bare_plate_section_observations),
             }
     return dict(metrics=best, thermalHistory=history, fieldSeries=recorder.finish(),
+                **({"boilingCap": dict(
+                    modelId="boiling-cap-v1", active=True, cappedSteps=cap_steps,
+                    maxExcessEnthalpy_J_kg=cap_max_excess_h,
+                    maxVaporFractionProxy=cap_max_vapor_fraction_proxy,
+                    latentHeatVap_J_kg=cap_latent_heat_vap, energyLeavesDomain=False,
+                    isReferenceSolution=False, isEvaporationModel=False,
+                    note="Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess "
+                         "enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is "
+                         "not conserved. Not an evaporation model.")} if boiling_cap else {}),
                 peakInterpolatedMeltPool=interpolated_peak,
                 fieldOverlapDiagnostics=overlap_metrics,
                 midTrackCrossSection=midtrack_bare_plate_section(axis, z, ever, dx, axis_y=axis_y) if bare else None,
@@ -921,7 +951,9 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                               version=VERSION, openfoam=(capabilities or {}).get("openfoamVersion")),
                   settings=p, material=m, requestedBackend=requested_backend,
                   confidence="low", validationStatus="unvalidated", productionReady=False,
-                  label="Screening only" if p["mode"] == "screening" or fallback else "Unvalidated transient thermal",
+                  label=("Screening only" if p["mode"] == "screening" or fallback
+                         else "Unvalidated transient thermal (boiling-capped: temperature clipped at T_boil, excess enthalpy retained in-cell; not an evaporation model)"
+                         if p.get("evaporationModel", False) else "Unvalidated transient thermal"),
                   provenance=dict(inputHash=hashlib.sha256(json.dumps(requested_p, sort_keys=True, allow_nan=False).encode()).hexdigest(),
                                   executionInputHash=hashlib.sha256(json.dumps(p, sort_keys=True, allow_nan=False).encode()).hexdigest(),
                                   implementationHash=implementation_fingerprint(),
@@ -930,7 +962,12 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                   createdAt=datetime.datetime.now(datetime.timezone.utc).isoformat()),
                   analyticalComparison=analytical,
                   assumptions=["SI internal units; beam diameter is 1/e^2 intensity diameter.",
-                               "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores.",
+                               ("evaporationModel=true: no resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores. "
+                                "Above the boiling enthalpy the inversion caps T at T_boil and keeps the excess enthalpy in the cell; "
+                                "no mass or energy leaves the domain (see boilingCap). Liquid conductivity is multiplied by "
+                                "1+(marangoniMultiplier-1)*f_liq, an isotropic surrogate (estimated, uncited)."
+                                if p.get("evaporationModel", False) else
+                                "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores."),
                                "Estimated material laws; fixed reference density conserves mass on a stationary grid.",
                                ("Homogeneous solid bare plate; no powder or deposited layer."
                                 if bare else "Uniform effective powder, irreversible conductivity densification; no resolved powder particles."),

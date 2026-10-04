@@ -157,11 +157,23 @@ def run_ambench_validation(thermal_fn, material_props=None) -> Dict[str, Any]:
             float(geo["depth_um"]),
             case,
         )
+        extent_status = str(geo.get("extentStatus") or "not-reported")
+        row["extentStatus"] = extent_status
+        row["extentNote"] = geo.get("extentNote")
+        if extent_status == "computed":
+            row["status"] = "computed"
+            if row["mape_pct"]["mean"] is not None:
+                mean_mapes.append(row["mape_pct"]["mean"])
+        else:
+            # Heuristic / floored / box-limited extent is not a liquidus isotherm: the row is
+            # reported but carries no error and never enters the overall mean.
+            row["status"] = "not-computed"
+            row["mape_pct"] = None
+            row["predictedIsHeuristic"] = True
         cases_out.append(row)
-        if row["mape_pct"]["mean"] is not None:
-            mean_mapes.append(row["mape_pct"]["mean"])
 
     overall = None if not mean_mapes else round(sum(mean_mapes) / len(mean_mapes), 2)
+    not_computed = len(cases_out) - len(mean_mapes)
     return {
         "source": SOURCE,
         "model": "rosenthal-screening-v1",
@@ -171,6 +183,14 @@ def run_ambench_validation(thermal_fn, material_props=None) -> Dict[str, Any]:
         ),
         "cases": cases_out,
         "overallMeanMape_pct": overall,
+        "computedCases": len(mean_mapes),
+        "notComputedCases": not_computed,
+        "overallNote": (
+            "overallMeanMape_pct is the mean over cases whose melt-pool extent is a computed "
+            "liquidus isotherm (extentStatus 'computed') only; cases with status 'not-computed' "
+            "(heuristic fallback, width floor or search-box limit) are listed without an error "
+            "and excluded. null when no case is computed."
+        ),
         "fourAlloyCoverage": FOUR_ALLOY_AMBENCH_COVERAGE,
     }
 

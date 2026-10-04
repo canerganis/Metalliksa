@@ -4,9 +4,9 @@
  "group": "G14",
  "description": "mode='calibration' with matched/unmatched measurements; measurementComparison",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  4.7,
-  5.0
+  4.1,
+  4.2
  ],
  "recordedTwice": true,
  "observations": {
-  "matched.canonicalSha256": "0b0efb7b4511cd6bf1f026bad540164592ee707c56c9c224f9b8b00c7dcebf80",
-  "matched.orderedTypedSha256": "214ae7a8149981f7da4ecb103487547b873e0eaf0d3d6ac81e6638e0e4b46aba",
+  "matched.canonicalSha256": "41c939768fa47c855020e7777ed787b33989974b546aa286b5c57348d15ac59f",
+  "matched.orderedTypedSha256": "22f99a38ba8f002db735d98add1d3c8c4adde9b61830b8b7dfdef07a40c8eff6",
   "matched.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -129,7 +129,7 @@
   "matched.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "matched.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "matched.key.provenance": "bbe4f1e2954a6e1cc674efad947d489ec79b58462f3e1e6323a2b13198db4907",
-  "matched.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "matched.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "matched.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "matched.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "matched.key.metrics": "1110333dbb63b5bacc73cb8069a0232df03c4f645bb75533cd62f9db2ee458ca",
@@ -168,8 +168,8 @@
   "matched.label": "Unvalidated transient thermal",
   "matched.confidence": "low",
   "matched.implementationHashOccurrencesAfterStrip": 0,
-  "unmatched.canonicalSha256": "b55cd6afa03b078164e1f8a41530db2a6849d3e974dbd3241e6aaa847639dcd1",
-  "unmatched.orderedTypedSha256": "556ddfc61efc19f854a503d40cbf08ed4b74dc61488ff751ff2da38d11a7b814",
+  "unmatched.canonicalSha256": "b904b95918b905a5ccf8775efaa2e8185c3b491eba4f4b31e19ed5630908fdd9",
+  "unmatched.orderedTypedSha256": "908215b46c2e4009ae66136ad374ce0ba4398ea832d8f2f5cd76b9bd04e60912",
   "unmatched.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -224,7 +224,7 @@
   "unmatched.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "unmatched.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "unmatched.key.provenance": "c72c14d076aa758e9ef032e8b4c1eda7de5758b14549602065dd60e6572dc7a6",
-  "unmatched.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "unmatched.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "unmatched.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "unmatched.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "unmatched.key.metrics": "1110333dbb63b5bacc73cb8069a0232df03c4f645bb75533cd62f9db2ee458ca",
@@ -279,9 +279,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -751,9 +751,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334

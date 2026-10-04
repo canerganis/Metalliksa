@@ -4,9 +4,9 @@
  "group": "G8",
  "description": "final-state, selected-time, local-history observers and CpuRunProgress; rejection messages",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  37.5,
-  41.2
+  30.0,
+  31.0
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "178b3db209a2b224dce5a08cb00ce54293bb37b1d3bdc64c895eaf88618efdc2",
-  "result.orderedTypedSha256": "f82dd95c4c64579773fd12d0d78a0dcef73946dc46c97f8a56dfdaddfaa61616",
+  "result.canonicalSha256": "8cb2429bbac8ce1d36807ee05fa7a0b85b871a8a26411fbda609654c3d61120e",
+  "result.orderedTypedSha256": "c848624722089db3688d8a4878e30ad16ddad170289a45f3cdae64cb0f547e8a",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -129,7 +129,7 @@
   "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "result.key.provenance": "31e5fecb869886b72d3b766c3cfe5b5b8cd448a8dd61a4aa419c10642744d860",
-  "result.key.analyticalComparison": "e3ba82396d094a40f6a0aeac86dab858785e57f75d1c1a320b23a97e19540edb",
+  "result.key.analyticalComparison": "fc0532aeb4bcacfaa25726de67f3aae2eda62225c48176c3355d0412c5fc8dc0",
   "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "6939d926749948cb51f3a7691728a8b9d7090426d06ebf667b5ea39efc6c5b7a",
@@ -603,7 +603,8 @@
   "observer.runProgress.count": 419,
   "observer.runProgress.chainSha256": "d010409affccdd4328e120b100f720a403ada99231b611626252f2ff2eb53670",
   "observer.runProgress.finalSnapshot": "499527d6ae5a1d3f5f61786a41a1d610c52c4e2d5172b5b40e6f01dc11d19fbb",
-  "plain.canonicalSha256": "ff7ae33eab5edf22209bf0a7e26357d17b079850d96a884a048f72b927e369a4",
+  "plain.canonicalSha256": "1c12c5c9d84406189adc84315142e30bcdaf8a0ebebf320e3eaffc07a4a01bfb",
+  "plain.key.analyticalComparison": "fc0532aeb4bcacfaa25726de67f3aae2eda62225c48176c3355d0412c5fc8dc0",
   "reject.finalState.screening": "ValueError: Final state capture supports standard reference powder-layer runs only",
   "reject.finalState.meshStudy": "ValueError: Final state capture supports standard reference powder-layer runs only",
   "reject.finalState.barePlate": "ValueError: Final state capture supports standard reference powder-layer runs only",
@@ -626,6 +627,30 @@
   "reject.validate.unknownField": "ValueError: Unknown simulation input fields"
  },
  "rawValues": {
+  "plain.key.analyticalComparison": {
+   "rosenthal": {
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 221.66666666666688,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   },
+   "goldak": {
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 186.66666666666657,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   }
+  },
   "result.key.analyticalComparison": {
    "rosenthal": {
     "width_um": 50.0,
@@ -639,9 +664,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 16.666666666666668,
-    "depth_um": 8.333333333333334,
-    "length_um": 70.00000000000018,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 186.66666666666657,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334

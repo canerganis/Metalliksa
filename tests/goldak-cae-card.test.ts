@@ -5,10 +5,10 @@ import { resolve } from "node:path";
 import { buildGoldakCaeCard, goldakAbsorbedPower_W, goldakFrontRearFractions, type GoldakCaeCardInput } from "../src/utils/goldakCaeCard";
 
 // Solver-producible keyhole state: IN718, 285 W / 960 mm/s, beam 80 um, layer 40 um, hatch 110 um
-// (eta_eff 0.887 > eta_cond 0.38 because H* = 30.8 > 15; goldak-total-power-v2 liquidus extents 17/267/42/108 um;
+// (eta_eff 0.887 > eta_cond 0.38 because H* = 30.8 > 15; liquidus extents 17/267/42/108 um recorded under the retired goldak-total-power-v2 model, fixture values only;
 // seed axes 40/80 um; python/lpbf_thermal_solver.py).
 const input = (over: Partial<GoldakCaeCardInput["processParameters"]> = {}): GoldakCaeCardInput => ({
-  heatSourceModel: "goldak-total-power-v2",
+  heatSourceModel: "goldak-half-space-v3",
   material: "Inconel 718",
   baseMetal: "Ni",
   laserWavelength: "IR_1064nm",
@@ -83,8 +83,8 @@ test("f_f and f_r are exported by continuity (0.12 / 1.88 for the IN718 keyhole 
 
 test("card prints the heat source actually used and states the axes are liquidus extents", () => {
   const { text } = buildGoldakCaeCard(input());
-  assert.ok(text.includes("** Heat source used by the screening solver: goldak-total-power-v2. *GOLDAK_DOUBLE_ELLIPSOID above is only the TARGET source type of the DFLUX."));
-  assert.ok(text.includes("** axes = liquidus extents of the goldak-total-power-v2 screening field (x_front, x_rear, W/2, D incl. keyhole depth), used as UNCALIBRATED Goldak axes"));
+  assert.ok(text.includes("** Heat source used by the screening solver: goldak-half-space-v3. *GOLDAK_DOUBLE_ELLIPSOID above is only the TARGET source type of the DFLUX."));
+  assert.ok(text.includes("** axes = liquidus extents of the goldak-half-space-v3 screening field (x_front, x_rear, W/2, D incl. keyhole depth), used as UNCALIBRATED Goldak axes"));
   assert.ok(!text.includes("seed axes; not"), "old seed-axes claim removed");
   const rosenthal = buildGoldakCaeCard({ ...input(), heatSourceModel: undefined, modelId: "rosenthal-screening-v1" }).text;
   assert.ok(rosenthal.includes("** axes = liquidus extents of the rosenthal-screening-v1 screening field"));
@@ -183,7 +183,7 @@ test("rosenthal fixture: absorbed power is eta_eff*P, conductionAbsorptivity is 
 });
 
 test("goldak and eagar-tsai sources keep eta_cond*P as the field absorbed power", () => {
-  for (const model of ["goldak-total-power-v2", "eagar-tsai-v1"]) {
+  for (const model of ["goldak-half-space-v3", "eagar-tsai-v2"]) {
     const { text } = buildGoldakCaeCard({ ...input(), heatSourceModel: model });
     assert.ok(text.includes("conduction-field absorbed power before the Stefan factor, eta_cond*P_laser: 108.3 W"), model);
     assert.ok(!text.includes("(rosenthal source), P_absorbed"), model);

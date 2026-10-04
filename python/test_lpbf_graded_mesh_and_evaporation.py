@@ -1,10 +1,11 @@
-"""Unit and physics tests for graded mesh (< 5 um) and evaporation heat sink / k_eff Marangoni model.
+"""Unit tests for the graded mesh (< 5 um) and the boiling cap / k_eff multiplier (lpbf_evaporation_marangoni).
 
 Verifies:
 1. Graded mesh generates sub-5 um resolution (< 5 um) in laser zone with conservative metrics.
-2. Liquid-phase Marangoni k_eff convection enhancement (lambda = 2.0..2.5).
-3. Langmuir evaporative flux and latent heat buffering.
-4. Resolution of the 280 W boiling lock on IN718 / IN625 without non-physical crash.
+2. Liquid-phase k_eff multiplier 1 + (lambda - 1) f_liq (isotropic surrogate; estimated).
+3. The boiling cap: T is clipped at T_boil above the boiling enthalpy, the excess enthalpy stays
+   in the cell and the returned vapor fraction is a diagnostic proxy, not a mass loss.
+   This is NOT an evaporation model (no Langmuir flux is used anywhere in the solver).
 """
 
 import math
@@ -14,8 +15,7 @@ import numpy as np
 from lpbf_graded_mesh import generate_graded_axis, generate_graded_mesh_3d
 from lpbf_evaporation_marangoni import (
     calculate_keff_marangoni,
-    langmuir_evaporation_flux,
-    invert_enthalpy_with_evaporation,
+    invert_enthalpy_with_boiling_cap,
 )
 from lpbf_material_registry import material, enthalpy_table
 
@@ -86,25 +86,6 @@ class TestGradedMeshAndEvaporationPhysics(unittest.TestCase):
         k_eff_mushy = calculate_keff_marangoni(k_mushy, liquid_fraction=0.5, lambda_marangoni=2.2)
         self.assertTrue(k_solid < k_eff_mushy < k_eff_liq)
 
-    def test_langmuir_evaporation_flux(self):
-        t_boil = 3123.15  # IN718 boiling point
-        molar_mass = 0.0587  # kg/mol
-        l_vap = 6.4e6  # J/kg
-
-        # Below 0.7 * T_boil: negligible evaporation
-        j_low, q_low = langmuir_evaporation_flux(2000.0, t_boil, molar_mass, l_vap)
-        self.assertEqual(j_low, 0.0)
-        self.assertEqual(q_low, 0.0)
-
-        # At boiling point: active vaporization
-        j_boil, q_boil = langmuir_evaporation_flux(t_boil, t_boil, molar_mass, l_vap)
-        self.assertGreater(j_boil, 0.1)  # Significant mass flux
-        self.assertGreater(q_boil, 1e6)  # MW/m^2 heat sink rate
-
-        # Above boiling point (superheated boundary): very high heat sink
-        j_super, q_super = langmuir_evaporation_flux(t_boil + 100.0, t_boil, molar_mass, l_vap)
-        self.assertGreater(q_super, q_boil)
-
     def test_280w_boiling_lock_resolution(self):
         # Retrieve IN718 material properties and enthalpy table
         mat = material("Inconel 718")
@@ -115,17 +96,17 @@ class TestGradedMeshAndEvaporationPhysics(unittest.TestCase):
 
         # In standard model, an enthalpy exceeding h_boil (as occurs with 280 W laser input)
         # crashes with ValueError: Thermal model validity exceeded...
-        # Here we test invert_enthalpy_with_evaporation:
+        # Here we test invert_enthalpy_with_boiling_cap (a temperature cap, not evaporation):
         
         # Scenario 1: Below boiling (normal transient heating)
         h_normal = np.array([h_table[0], h_boil * 0.5, h_boil * 0.9])
-        t_norm, vap_norm = invert_enthalpy_with_evaporation(h_normal, h_table, t_table, t_boil, l_vap)
+        t_norm, vap_norm = invert_enthalpy_with_boiling_cap(h_normal, h_table, t_table, t_boil, l_vap)
         self.assertTrue((vap_norm == 0.0).all())
         self.assertTrue((t_norm < t_boil).all())
 
         # Scenario 2: 280 W laser spot energy injection exceeding h_boil by 50 kJ/kg
         h_exceed = np.array([h_boil + 50_000.0, h_boil + 200_000.0])
-        t_exceed, vap_exceed = invert_enthalpy_with_evaporation(h_exceed, h_table, t_table, t_boil, l_vap)
+        t_exceed, vap_exceed = invert_enthalpy_with_boiling_cap(h_exceed, h_table, t_table, t_boil, l_vap)
         
         # Temperature is safely bounded at T_boil (vaporization buffering)
         for t in t_exceed:

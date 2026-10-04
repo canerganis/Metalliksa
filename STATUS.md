@@ -2,11 +2,28 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## LPBF düzeltilmiş-fizik güncellemesi — 2026-10-05 (birleştirme `783c655`, altın yeniden kaydı `6e5f2e2`; yerel, push yok)
+
+- **Sonuç:** parmak izi `edddf0dc…` → `11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359`, `VERSION enthalpy-fv-6`. Bu güncellemede Goldak kaynağı emilen gücün tamamını (Q = P_abs) kullanır (`goldak-half-space-v3`), Eagar–Tsai v2'ye geçti, kaynama sınırı etiketlenir, IN625 Rosenthal/yapı-işi yolunda L_f 290 kJ/kg oldu (**Mills geçici spesifikasyonu 227 kJ/kg ile ayrı kalır**) ve bilinmeyen alaşım reddedilir. Eriyik havuzu uzantısı dört durumla etiketlenir (`computed`, `heuristic-width-fallback`, `width-floor-applied`, `search-box-limited`); yapı-işi kararı çözümlenmemiş geometride `inconclusive` verir (`BUILD_JOB_SOLVER_REVISION` `lpbf-build-job-extent-status-v6`). Planlı sapma gözlem düzeyinde kayıtlıdır: 8 PASS / `17` DRIFT / 0 FAIL, `125` tam anahtarlı gözlem. G2/G4 ve bütün referans sayısal sonuçları bit-aynıdır. Altınlar ayrı commit ile yeniden kaydedildi.
+- **Kullanıcıya görünür karar değişiklikleri:** Melt Pool 3D'de 316L Goldak anahtar deliği riski high → moderate, top oluşumu low → high; Ti-6Al-4V Eagar–Tsai morfolojisi Cellular → Columnar dendritic; yapı-işi IN718 285 W / 960 mm/s G 1,84e7 → 1,64e7 K/m, R 0,030 → 0,040 m/s, Cellular → Columnar dendritic (büyütülmüş arama kutusu).
+- **G1/V1:** G1'de yalnız dört gözlem değişti: Goldak analitik eşlikçisi, iki tüm-sonuç özeti ve `v1Archive.strippedResultEqual` (true → false). Bu beklenen sonuçtur. **V1 kabulü, kullanıcı kararı (2026-10-04) gereği birleştirme SHA'sındaki talep koşularıyla `11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359` parmak izine yeniden bağlandı (aşağıdaki blok).**
+- **Ertelenen:** D6 (emisivite anahtarı). Durumlar değişmedi: residual null (`unavailable`), `experimentalValidation=false`, `opticalOperatorMatched=false`, `productionReady=false`; `unavailable`/`inconclusive`/`unvalidated` gevşetilmedi.
+- **Bu turda tamamlandı:** parite aracının dürüstlük kümesi genişletildi (`experimentalValidation`, `experimentalComparison`, `unresolvedPhysics`, `opticalOperatorMatched`, G9 `in625.validateScreeningAdmission`); dört yeni test `ci.yml` listesine eklendi (Ceiling-Review trailer'ı ile); `tests/goldak-cae-card.test.ts` fikstürleri güncel model kimliklerine taşındı.
+- **Sıradaki:** Linux/GitHub CI koşusu; GPU ışın izli Goldak genişliğinin v3 ile ölçümü.
+
+## V1 kabulünün `11b04b8f…` parmak izine bağlanması — 2026-10-05 (birleştirme `783c655`, altın yeniden kaydı `6e5f2e2`; yerel, push yok)
+
+- **Dayanak (kullanıcı kararı 2026-10-04):** planlı fiziksel düzeltme güncellemesinden sonra V1 60 W ve G2 koşuları yeni revizyonda yeniden yapılacak ve kabul yeni parmak izine ayrıca bağlanacaktı. Bu blok o koşuları kaydeder; önceki `edddf0dc…` bağlaması (Faz C `1104bec`) ve ondan önceki `10e3005`/`7482697c…` kaydı tarihsel kayıt olarak kalır, bu bağlama onların yerine geçer.
+- **V1 60 W gerçek sunucu tekrarı (`/api/lpbf/jobs/repeat`, arşivli `input.json` artefakt baytları 784 B, sha `60e28643…`; dev `tsx server.ts`, izole kökler, `METALLIX_PYTHON` = kilitli yorumlayıcı):** iş `da98bc48…`, 202, `cacheHit=false`, tamamlandı (20,1 s duvar). İşçinin yazdığı `result.json` ayıklanmış özeti **`6a5e59be…`** = yeniden kaydedilen G1 altınının `result.canonicalSha256` değeri; `implementationHash 11b04b8f…`; arşivli `318937f6` sonucundan tam-ağaç farkı yalnız altı yaprak: `provenance.createdAt`, `provenance.runtime_s`, `provenance.implementationHash` ve `analyticalComparison.goldak` W/D/L 16,7/8,3/70,0 → 50,0/25,0/186,7 µm (bilinen faktör-2 güç hatasının düzeltilmesi). `inputSha256 fc8325d9…`, `materialSha256 6a8d7bde…`, `materialRevisionSha256 5c9179e9…`, `solverId enthalpy-fv-6`, `actualBackend numpy-reference`; 69 artefaktın 69'u diskteki SHA-256 ile ve arşivli listeyle aynı; `input.json` artefaktı arşivli baytlarla aynı. Arşivleme (`/api/lpbf/runs/preview` → `verified-at-dry-run`, `exact-revision-bound`; `import` → belge `ca33f9ae…`, `evidenceStatus unvalidated-model`), `capture.inputJson`/`materialJson` arşivle bayt-aynı; paket dışa aktarma `a8f0cf12…` (69 artefakt) `verified:true`, indirme 7.603.200 B sha `995a3e34…`, taşınabilir içe aktarma ve iki geri yükleme `verified:true`, geri yüklenen çalıştırma belgesi canlı belgeyle aynı.
+- **G2 bare-plate 100 W:** `tools/lpbf_parity_check.py --check --slow` (yeniden kaydedilen altınlara karşı, izin listesi yok) → `PASS g2_bare_plate_100w_corridor 165 observations` (fikstür eşitliği, 68 artefakt ve NPZ dahil); 25/25 PASS.
+- **Kapsam:** kabul yazılım/yeniden üretilebilirlik düzeyindedir; deneysel doğrulama değildir. NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`, `productionReady=false`, `validationStatus=unvalidated`). HTTP iş JSON'u sayı tiplerini (ör. `270000.0` → `270000`) Node'dan geçirirken değiştirir; eşitlik işçinin yazdığı `result.json` ve arşiv belgesi `capture.resultJson` üzerinden kuruldu (Faz C ile aynı yöntem). Kanıt dosyaları oturum scratchpad'inde (`fable-rerecord/claim_v1.json`, `run/`, `check_slow.log`), depoya kopyalanmadı.
+
 ## LPBF 5c tek planlı parmak izi güncellemesi — 2026-10-04 (dal `orch/p5c-b`; yerel ana dala tek atomik birleştirme ile alındı, push yok)
 
 - **Sonuç:** Faz B (B1 CFD vaka yazıcıları `lpbf_cfd_cases.py`'ye taşındı; B1' ulaşılamayan `openfoam-cfd` dalı silindi, `lpbf_cfd.py` manifestten çıktı (37 → 36); B2 ölü kod; B3 gözlemci kapısı yardımcısı; B4 bit-aynı döngü taşımaları; B6 pin/kayıt). Malzeme otoritesi göçü (B5) ertelendi. Parmak izi `7482697c…` → `edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e`; `VERSION enthalpy-fv-6` değişmedi.
 - **Kanıt:** `tools/lpbf_parity_check.py --check --slow` 20/20 PASS (altınlar yeniden kaydedilmedi, gözlem özetleri ön-güncellemeyle aynı); kayıt `docs/LPBF_IMPLEMENTATION_BUMP_2026-10-04.json`; gerçek sunucu V1 duman testi arşivlenmiş V1 ayıklanmış özetine eşit; WSL LF checkout aynı parmak izini verdi. Ayrıntı `PROOF.md` en üst girdi. Bilimsel durum değişmedi (residual null, `experimentalValidation=false`, `opticalOperatorMatched=false`).
 - **V1 kabulü eski parmak izine bağlıdır:** `10e3005` kabul kaydı `7482697c…` ile yapıldı ve `edddf0dc…` için yeniden kurulmuş değildir; duman testi yeniden kabul sayılmaz.
+  - *Yerine geçti (2026-10-05):* V1 kabulü kullanıcı kararıyla önce `edddf0dc…` kaydına (Faz C `1104bec`), bu düzeltilmiş-fizik güncellemesinden sonra da `11b04b8f…` parmak izine bağlandı; bkz. en üstteki "V1 kabulünün `11b04b8f…` parmak izine bağlanması" bloğu. Bu satır tarihsel kayıttır.
 - **Sıradaki:** (dal bağımsız iki inceleme sonrası birleştirildi) birleştirme SHA'sında Faz C talep koşuları (V1 60 W arşivli tekrar + G2); ardından `.orchestra/claude-lanes-common.txt` donmuş değeri ve Agent Memory güncellemesi. Tarihsel kayıtlardaki `7482697c` değerleri değiştirilmez.
 
 ## V1 kabulünün yeni parmak izine bağlanması — 2026-10-04 (kullanıcı kararı; yerel, push yok)
@@ -22,8 +39,92 @@
 - **Anahtar sırası notu:** istek gövdesi arşivli çalıştırmanın özgün anahtar sırasıyla gönderildiğinde `input.json` ve tüm 69 artefakt arşivdekiyle bayt-aynıdır; gövde sıralı (sorted) anahtarlarla gönderildiğinde değerler aynı kalır ama `powderGridPolicy` konumu ve dolayısıyla `input.json` artefakt SHA-256'sı değişir (`60e28643…` → `3babffa4…`). Bu davranış parite aracının yorumunda da belirtilir (`python/tools/lpbf_parity_check.py:345-347`); işçi koduna inilerek izlenmedi ve bu parmak izi güncellemesinden kaynaklandığına dair bir kanıt yoktur.
 - **G2:** 165 gözlem PASS, 67 alan artefaktı ve NPZ (`1aa6571e…`) depodaki fikstürle bayt-aynı (aracın kendi karşılaştırması).
 - **V1 kabulü:** `10e3005` kabulü eski parmak izine (`7482697c…`) bağlı kalır; bu kayıt `edddf0dc…` için yeniden bağlamaya yeterli kanıttır ama yeniden kabul ilan edilmemiştir, karar kullanıcıdadır.
+  - *Yerine geçti (2026-10-05):* V1 kabulü kullanıcı kararıyla önce `edddf0dc…` kaydına (Faz C `1104bec`), bu düzeltilmiş-fizik güncellemesinden sonra da `11b04b8f…` parmak izine bağlandı; bkz. en üstteki "V1 kabulünün `11b04b8f…` parmak izine bağlanması" bloğu. Bu satır tarihsel kayıttır.
 - **Kanıtlanmayan:** tarayıcı arayüzü, üretim başlatma yolu, Linux/Docker/CI, GPU, OpenFOAM, test paketleri (kod değişmedi). Bu yazılım eşitliğidir, bilimsel doğrulama değil; aynı girdinin aynı çıktıyı vermesi bağımsız replike değildir.
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+
+## 2026-10-04 — Birleştirilmiş motor dürüstlüğü düzeltmeleri (3728516, 09b76c7)
+
+### UQ sampler (1eeb789)
+- norm_ppf düzeltildi; SciPy ndtri ile 24.003 nokta için azami hata 3,6e-15. IN718 Seed42/N500 ortalama/SS/A/B: 3467,7/32,54/3387,2/3422,6 → 3467,8/41,37/3365,4/3410,5.
+- Python fix paketi 502 test; 16 atlandı, 1 ortam/IPC hatası. Tarayıcı ve Linux/Python 3.11 doğrulanmadı; model kalibre değil, yarıçap 0,8 nm tabanında.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Murakami (0b57f9b)
+- Ortak sabitler yüzey 1,43, yüzey-altı 1,41, iç 1,56; HV380/√area50 µm için iç sınır 372,5→406,4 MPa, yüzey 367,3→372,5 MPa; 13 test geçti.
+- R≥1 ve geçersiz kusur girdileri reddedilir. Birincil kaynak erişilemedi; teyit ikincil arama parçacıklarına dayanır, sanayi uçtan uca koşu yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### XRD/CNLS (044d684)
+- XRD v4.0→v4.1, W-H v3.10→v3.11; Pearson-VII alanı ve yakınsama/kötü uyum sinyalleri düzeltildi; CNLS kapsamı daraltıldı.
+- TS 1049 testte 1044 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. XRD UI çağrısı/tarayıcı yok; Williamson–Smallman birincil makalesi okunmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Tafel/korozyon-EIS (9ba2753)
+- Eksik girdilerden varsayılan Tafel/Rp/korozyon değerleri kaldırıldı; Al-7075 korozyon hızı 0,01938→0,02058 mm/yıl (EW 9,0→9,5583).
+- Python 363 OK; TS 1097 testte 1092 geçti, 0 başarısız, 1 atlandı, 4 todo; parity/bundle PASS. Tarayıcı yok; P2D/TLM ve başka varsayımlar açık.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Elastik sabitler (aca7a78)
+- Uydurma varsayılanlar kaldırıldı; tam kütüphane eşleşmesi/kaynak, aksi durumda unavailable. Fe3C boş girdi ve Al2O3 Debye K 70,25 GPa artık unavailable.
+- 33 oracle testi; Python 238 OK; TS 1088 testte 1083 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. Tarayıcı ve kimi kristal durumları doğrulanmadı, her değer için kaynak bulunamadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### ICME/phase10 (635c0fd)
+- ICME illustrative/yield-only; UTS, KIC, kusur ölçüsü/rp unavailable. Phase10 uydurma kusur ve “%99 hayatta kalma” iddiası kaldırıldı.
+- Python 248 OK; TS 1041 testte 1036 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. Tarayıcı/sertifikasyon ve fizik doğrulaması yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Çelik kinetiği (049b72a)
+- TTT/CCT yalnız destekli çelik modelleri; diğer alaşım, aralık dışı hız ve taban sürelerinde unavailable; cache v4.
+- Python 744 OK/22 atlandı; hızlı build-job/parity PASS; TS 1132 testte 1127 geçti, 0 başarısız, 1 atlandı, 4 todo; bundle PASS. Yavaş ve phase-7 benchmark koşulmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### CALPHAD (257864a)
+- Sentetik denge yedeği kaldırıldı; DB kapsamı/başarısızlık açık, NaN güvenli serileştirilir; sınırlar aralık olarak etiketlenir. 316L uydurma 1550/700 °C yerine equilibrium-failed.
+- Fix testleri 48 (43 geçti, 5 atlandı); parity PASS. Tarayıcı yok, DB kapsamı eksik, IPC paketi tekrarlanmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Build-job mikro yapı (e4db30e)
+- Entegrasyon cb12043, BUILD_JOB_SOLVER_REVISION değerini v5 yaptı.
+- Isıl katılaşma çıktısı yansıtılır, ikinci Hunt–Lu hesabı yok; eksik veri/CFD-RPC unavailable.
+- Hızlı kontrol PASS; TS 1063 testte 1058 geçti, 0 başarısız, 1 atlandı, 4 todo; odaklı Python 29 OK. Yavaş/NIST, Ti ve worker E2E yok; revision bump bu lane’de yapılmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Geçerlilik zarfı (71a09bd)
+- Mesh zarfı: IN718 40W, 20µm 2804K/20µm derinlik; 10µm 2617K/30µm. 50W 3116/3044K; 60W iki ağda durdu.
+- 18 planlı + 4 ek koşu; G6 156 gözlem PASS, 17 test geçti. 5µm ve diğer alaşım koşuları, çökme doğrulaması yok; cache değişiminden sonra tarama tekrarlanmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### CAE kartı / kernel TS (581514e)
+- Kart screening/solver ayrımını ve kalibrasyonsuzluğu gösterir; örnek ηeff 0,887, ηcond 0,38, Q 252,795W.
+- Kart testleri 13/13; TS 1065 testte 1060 geçti, 0 başarısız, 1 atlandı, 4 todo. Fikstür sentetik; gerçek Python sonucu, browser/indirilen kart doğrulaması yok; model-id metni açık.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### B5 adım 1-2 (9cb17a6, 76538fa; birleşimler ff4ace5, fbf310b)
+- TS malzeme otoritesi düzeltildi; IN625 hs 2,4e9→4,6715e9 J/m³, desteklenmeyen ΔH sıralama yolu kaldırıldı. Adım 2 G17-G19 ve drift koruması ekledi.
+- Adım 1 Python 198 OK, TS 1049 testte 1044 geçti; adım 2 parity --check --slow 25/25, golden 49 OK/1 atlandı. GPU/OpenFOAM/tarayıcı/CI yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### SDK wave 2 (cd4f2ab)
+- 7 modül sözleşmeli; toplam 9/37, 28 legacy.
+- Python listesi 519 OK/22 atlandı; TS 1038 testte 1033 geçti, 0 başarısız, 1 atlandı, 4 todo. CI/Python3.11/tarayıcı yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Komut paleti (688594c)
+- Ctrl/Cmd+K paleti modül kaydından gezinme ve odak yönetimiyle eklendi.
+- TS 1027 testte 1022 geçti, 0 başarısız, 1 atlandı, 4 todo; masaüstü ve 375px mobil kontrolü yapıldı. Axe/ekran okuyucu/reduced-motion/Mac/tablet yok; 320px taşması kayıtlı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Sertlik tahminleri (826f690; persist 6db1369 sonrası)
+- Tahmin karbon/düşük alaşımlı çeliğe sınırlandı; diğerleri unavailable. AlSi10Mg NaN→594°C; maraging 300 362→unavailable.
+- TS 1063 testte 1058 geçti, 0 başarısız, 1 atlandı, 4 todo; 22 mutant öldürüldü; tsc/bundle PASS. Göç v0→v1 yalnız 6db1369 ve sonrasındaki app başlangıcında işler.
+- Tarayıcı yok, dönüşüm tabloları eksik. NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+## Pourbaix 25 °C Gibbs-minimizasyon motoru — 2026-10-05 (birleştirme `a280144`; CI testleri `54e168a`)
+
+- **Sonuç:** Tek-element Gibbs argmin motoru `pourbaix-gibbs-25c-v4` (`python/pourbaix_species_25c.py`), üretilen `src/generated/pourbaixSpecies25C.json` ve 200×200 TS parite fikstürü/portu; etkinlik aralığı `1e-6..1` (önceki alt sınır `1e-8`). Ni sınırları (a=1e-6): Ni/Ni²⁺ −0.4275→−0.4147 V; Ni²⁺/Ni(OH)₂ pH 9.088→8.514; Ni(OH)₂/HNiO₂⁻ pH 12.204→12.171; Ni/Ni(OH)₂ 0.1101→0.0890−0.0592·pH. UI'da Al–H₂O haritası eski “veri yok” durumundan dört tür alanına geçti; pH sınırları 4.577/9.118 (a=1e-6), 2.577/15.118 (a=1). CI (`54e168a`) `test_pourbaix_equilibrium` ve `test_pourbaix_ts_fixture` testlerini ekledi.
+- **Kanıt/sınırlar:** 307 Python testi OK; tsx 1213 testte 1208 geçti, 0 başarısız, 1 atlandı, 4 todo. Bundle index 69.9 KB gzip / 70 KB bütçe: marj 0.1 KB, ince. Test-point tablosunun tarayıcı görünümü ve Linux/CI koşusu doğrulanmadı. Zn hidroliz ihmalinin etkisi sabite bağlı (wateq4f log K −5.36; IUPAC 2013 −6.28); NiO₂ V3 olarak withheld. NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
 ## Sertlik dönüşümleri ve kinetik HV: ASTM E140 / ISO 18265 tabloları — 2026-10-04 (yerel ana dala birleştirildi: `3251a87`, kinetik HV `ce7df77`; push yok)
 
