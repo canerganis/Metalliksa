@@ -26,6 +26,25 @@ import alloy_registry
 import kinetics_ttt_cct_solver as kin
 
 HERE = Path(__file__).parent
+STUDIO_FIXTURE = HERE.parent / "tests" / "fixtures" / "kinetics-studio-results.json"
+# Studio defaults (src/components/PhaseKineticsTTTCCTStudio.tsx ALLOY_OPTIONS): alloy -> (austenitising C, aging C),
+# 10 C/s, grain 25 um, aging 8 h. The last two reproduce the former 720 C aging default (LSW above the solvus).
+STUDIO_CASES = {
+    "aisi4140": ("AISI 4140", 860.0, 720.0), "aisi4340": ("AISI 4340", 845.0, 650.0),
+    "aisid2": ("AISI D2", 1020.0, 720.0), "in718": ("Inconel 718", 980.0, 720.0),
+    "ti6al4v": ("Ti-6Al-4V", 1050.0, 720.0), "al7075": ("Al 7075", 475.0, 120.0),
+    "aisi4340_aging720": ("AISI 4340", 845.0, 720.0), "al7075_aging720": ("Al 7075", 475.0, 720.0),
+}
+
+
+def studio_fixture_results():
+    """Real solver output for the Studio render test (tests/phase-kinetics-studio.test.tsx), without timing."""
+    out = {}
+    for key, (name, aust, aging_c) in STUDIO_CASES.items():
+        res = kin.solve_phase_transformation_kinetics(name, 10.0, 25.0, aust, 8.0, aging_c)
+        res.pop("computeTimeMs")
+        out[key] = res
+    return json.loads(json.dumps(out))
 STEELS = ("AISI 4140", "AISI 4340", "AISI D2")
 NON_STEELS = ("Inconel 718", "Ti-6Al-4V", "Al 7075")
 DEFAULT_AUST = {"AISI 4140": 860.0, "AISI 4340": 845.0, "AISI D2": 1020.0,
@@ -69,13 +88,15 @@ class LswUnitTest(unittest.TestCase):
         self.assertGreater(row["meanRadius_nm"], 9.5)
 
     def test_matches_independent_si_oracle_for_every_alloy_and_time(self):
-        for name, q in (("AISI 4140", 240.0), ("Inconel 718", 285.0), ("Al 7075", 130.0)):
-            res = solve(name)
+        # Al 7075 is aged at 120 C (its 720 C default is above the solvus: unavailable, see LswAboveSolvusTest).
+        for name, q, aging_c in (("AISI 4140", 240.0, 720.0), ("Inconel 718", 285.0, 720.0), ("Al 7075", 130.0, 120.0)):
+            res = solve(name, aging_c=aging_c)
             self.assertEqual(res["alloyMetadata"]["Q_diff_kJ_mol"], q)
             for row in res["lswPrecipitateCoarsening"]:
-                expected = lsw_si_oracle_nm(q, 720.0, row["agingTime_h"])
+                expected = lsw_si_oracle_nm(q, aging_c, row["agingTime_h"])
                 self.assertAlmostEqual(row["meanRadius_nm"], expected, delta=0.0051,
                                        msg=f"{name} {row['agingTime_h']} h")
+                self.assertEqual(row["status"], "generic-constants-illustrative")
 
     def test_hand_calculated_values(self):
         # K(AISI 4140, 720 C) = 3.05e-29 m^3/s -> r(100 h) = 22.2 nm; IN718 K = 1.31e-31 m^3/s -> 3.70 nm
@@ -128,7 +149,17 @@ class SteelOnlyTest(unittest.TestCase):
                 for key in ("criticalCoolingRate_C_s", "isSuppressedEquilibrium", "predictedMartensite_pct",
                             "diffusionSuppressionIndex", "verdict"):
                     self.assertIsNone(reality[key], key)
-                self.assertIsNone(res["criticalTransformationTemperatures"]["CriticalCoolingRate_CCR_C_s"])
+                crit = res["criticalTransformationTemperatures"]
+                self.assertIsNone(crit["CriticalCoolingRate_CCR_C_s"])
+                # the steel-template registry echoes are withdrawn in both blocks (fx-kinetics review S3/S4)
+                self.assertIsNone(crit["Ae1_C"])
+                self.assertEqual(crit["Ae1_C_status"], "unavailable-kinetics-model-steel-only")
+                self.assertIsNone(res["alloyMetadata"]["Ae1_C"])
+                self.assertIsNone(res["alloyMetadata"]["critical_cooling_rate_C_s"])
+                self.assertEqual(crit["CriticalCoolingRate_CCR_status"], "unavailable-kinetics-model-steel-only")
+                # the model note does not repeat the reason (the UI prints both)
+                self.assertFalse(res["kineticsModel"]["note"].startswith(STEEL_ONLY))
+                self.assertFalse(res["tttIncubationFloor"]["note"].startswith(STEEL_ONLY))
 
     def test_old_audit_claims_are_gone(self):
         # audit: IN718 at 100 C/s gave 63 % "martensite"; "Ferrite + Cementite" for every alloy.
@@ -225,17 +256,43 @@ class TttFloorTest(unittest.TestCase):
                 self.assertIsNone(row["transformedStartTemp_C"])
                 self.assertIsNone(row["transformedStartTime_s"])
                 self.assertIsNone(row["primaryMicrostructure"])
-                self.assertEqual(row["transformedStart_status"], "unavailable-ttt-incubation-floor-or-step-limited")
-                self.assertIn("1 ms floor", row["unavailableReason"])
+                self.assertEqual(row["transformedStart_status"], "unavailable-ttt-incubation-law-no-ae3-asymptote")
+                self.assertEqual(row["unavailableReason"], "incubation law has no Ae3 asymptote; start not computed")
 
-    def test_an_accumulated_start_is_still_reported(self):
-        # Not everything is blanked: AISI 4140 from 800 C with a 100 um grain at 2000 C/s accumulates its
-        # incubation over several steps (no floor point, no single-step crossing).
-        res = solve("AISI 4140", aust=800.0, grain=100.0)
-        row = next(r for r in res["cctContinuousCoolingMap"] if r["coolingRate_C_s"] == 2000.0)
-        self.assertEqual(row["transformedStart_status"], "diffusional-start-scheil-additivity")
-        self.assertEqual((row["transformedStartTemp_C"], row["primaryMicrostructure"]), (760.0, "Pearlite"))
-        self.assertIsNone(row["unavailableReason"])
+    def test_no_steel_row_reports_a_diffusional_start(self):
+        # fx-kinetics review S1: with no Ae3 asymptote the Scheil start is the first step below Ae3 - 5 K, whatever
+        # the time step, so NO steel row reports one (the former 760 C "Pearlite" at 2000 C/s, AISI 4140, aust 800 C,
+        # 100 um grain, while the same row's lookup says 98 % martensite, is gone).
+        checked = 0
+        for name in STEELS:
+            for aust_offset in (-60.0, 0.0, 100.0):
+                for grain in (5.0, 25.0, 100.0):
+                    res = solve(name, grain=grain, aust=DEFAULT_AUST[name] + aust_offset)
+                    for row in res["cctContinuousCoolingMap"]:
+                        checked += 1
+                        self.assertNotIn(row["primaryMicrostructure"], ("Pearlite", "Bainite", "Ferrite"),
+                                         (name, aust_offset, grain, row["coolingRate_C_s"]))
+                        self.assertIn(row["transformedStart_status"],
+                                      ("unavailable-ttt-incubation-law-no-ae3-asymptote",
+                                       "athermal-martensite-no-diffusional-start-above-ms"))
+        self.assertEqual(checked, 3 * 3 * 3 * 10)
+        row = next(r for r in solve("AISI 4140", aust=800.0, grain=100.0)["cctContinuousCoolingMap"]
+                   if r["coolingRate_C_s"] == 2000.0)
+        self.assertIsNone(row["transformedStartTemp_C"])
+        self.assertIsNone(row["primaryMicrostructure"])
+        self.assertEqual(row["phaseFractions"]["Martensite_pct"], 98.0)  # the lookup, unchanged
+
+    def test_athermal_row_when_no_diffusional_start_exists_above_ms(self):
+        # Austenitised just above Ms (340 C vs Ms 330 C): the law finds no start before Ms: the Ms row stays.
+        res = solve("AISI 4140", aust=340.0)
+        for row in res["cctContinuousCoolingMap"]:
+            if row["transformedStart_status"] == "athermal-martensite-no-diffusional-start-above-ms":
+                self.assertEqual((row["transformedStartTemp_C"], row["primaryMicrostructure"]), (330.0, "Martensite (Athermal)"))
+                self.assertIsInstance(row["transformedStartTime_s"], float)
+                self.assertIsNone(row["unavailableReason"])
+                break
+        else:
+            self.fail("no athermal row for AISI 4140 austenitised at 340 C")
 
     def test_floor_check_uses_the_unrounded_law_value(self):
         steel = kin.resolve_kinetics_alloy("AISI 4140")[2]
@@ -254,6 +311,60 @@ class TttFloorTest(unittest.TestCase):
             self.assertGreater(block["floorHitCount"], 0)
 
 
+class LswAboveSolvusTest(unittest.TestCase):
+    """fx-kinetics review S2: no precipitate population at or above the registry Ae3 (steels: Ae1)."""
+
+    LIMIT = {"AISI 4140": 725.0, "AISI 4340": 710.0, "AISI D2": 800.0,  # Ae1 of the steels
+             "Inconel 718": 1020.0, "Ti-6Al-4V": 995.0, "Al 7075": 480.0}  # Ae3 of the non-steels
+
+    def test_al7075_studio_default_720_c_is_unavailable(self):
+        res = solve("Al 7075")  # 720 C, above its 480 C solvus (and above its liquidus)
+        for row in res["lswPrecipitateCoarsening"]:
+            self.assertEqual((row["meanRadius_nm"], row["precipitationHardening_MPa"], row["strengtheningMechanism"]),
+                             (None, None, None))
+            self.assertEqual(row["status"], "unavailable-aging-temperature-at-or-above-solvus")
+        block = res["kineticsModel"]["lswPrecipitateCoarsening"]
+        self.assertEqual(block["status"], "unavailable-aging-temperature-at-or-above-solvus")
+        self.assertIn("720 C is at or above the registry Ae3 (solvus/transus) of 480 C", block["reason"])
+        self.assertNotIn("1884", json.dumps(res))  # the old 1.88 um "Orowan" value
+
+    def test_boundary_is_at_or_above_the_registry_temperature(self):
+        for name, limit in self.LIMIT.items():
+            below = solve(name, aging_c=limit - 0.1)["lswPrecipitateCoarsening"]
+            at = solve(name, aging_c=limit)["lswPrecipitateCoarsening"]
+            self.assertTrue(all(r["meanRadius_nm"] is not None for r in below), name)
+            self.assertTrue(all(r["meanRadius_nm"] is None for r in at), name)
+
+    def test_steels_use_ae1_and_non_steels_only_ae3(self):
+        # 4340 (Ae1 710 C) is at the old 720 C default: unavailable; Ti-6Al-4V 720 C is above the Ae1 of its
+        # registry row (700 C, a steel concept that is withheld) but below its 995 C transus: available.
+        self.assertIsNone(solve("AISI 4340")["lswPrecipitateCoarsening"][0]["meanRadius_nm"])
+        self.assertIn("Ae1", solve("AISI 4340")["kineticsModel"]["lswPrecipitateCoarsening"]["reason"])
+        self.assertIsNotNone(solve("Ti-6Al-4V")["lswPrecipitateCoarsening"][0]["meanRadius_nm"])
+        self.assertIsNotNone(solve("AISI 4140", aging_c=600.0)["lswPrecipitateCoarsening"][0]["meanRadius_nm"])
+
+    def test_available_block_has_no_reason(self):
+        block = solve("AISI 4140", aging_c=600.0)["kineticsModel"]["lswPrecipitateCoarsening"]
+        self.assertEqual((block["status"], block["reason"]), ("generic-constants-illustrative", None))
+        self.assertIn("one molar volume", block["note"])
+
+
+class SteelTextTest(unittest.TestCase):
+    def test_d2_names_carbides_not_cementite(self):
+        d2 = solve("AISI D2")["calphadVsKineticsGap"]["equilibriumPrediction"]
+        self.assertEqual(d2["stablePhasesAtRT"], "Ferrite + alloy carbides (M7C3 / M23C6)")
+        self.assertNotIn("Cementite", d2["stablePhasesAtRT"])
+        for name in ("AISI 4140", "AISI 4340"):
+            self.assertIn("Cementite", solve(name)["calphadVsKineticsGap"]["equilibriumPrediction"]["stablePhasesAtRT"])
+
+
+class StudioFixtureTest(unittest.TestCase):
+    def test_committed_fixture_is_the_current_solver_output(self):
+        committed = json.loads(STUDIO_FIXTURE.read_text(encoding="utf-8"))
+        self.assertEqual(committed, studio_fixture_results(),
+                         "tests/fixtures/kinetics-studio-results.json is stale: python -B test_kinetics_fx.py --write-studio-fixture")
+
+
 class MainEnvelopeTest(unittest.TestCase):
     def test_stdout_json_has_the_new_keys(self):
         proc = subprocess.run([sys.executable, "-B", "kinetics_ttt_cct_solver.py"], capture_output=True, cwd=str(HERE),
@@ -266,4 +377,8 @@ class MainEnvelopeTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    if "--write-studio-fixture" in sys.argv:
+        STUDIO_FIXTURE.write_text(json.dumps(studio_fixture_results(), indent=1, ensure_ascii=False) + "\n",
+                                  encoding="utf-8", newline="\n")
+    else:
+        unittest.main()

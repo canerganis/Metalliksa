@@ -41,47 +41,66 @@ import {
   kineticsCctRowText,
   kineticsHardnessText,
   kineticsLabelText,
+  kineticsLswAvailability,
   kineticsModelBanner,
   kineticsPhaseSlices,
   kineticsStatusNote,
   kineticsValueText,
+  kineticsVerdictSentence,
 } from "../utils/kineticsHardnessDisplay";
+
+export type PhaseKineticsStudioTab = "ttt" | "cct" | "calphad_vs_kinetics" | "lsw_aging" | "microstructure";
 
 interface PhaseKineticsTTTCCTStudioProps {
   initialAlloy?: string;
   onSendToModule?: (target: string, payload: any) => void;
+  /** Test seam: a solver result to show instead of calling the solver (the effect that fetches one is skipped). */
+  initialData?: PythonKineticsResult | null;
+  /** Test seam: the tab shown first. */
+  initialTab?: PhaseKineticsStudioTab;
+  /** Test seam: the selected cooling rate (°C/s). */
+  initialCoolingRate?: number;
 }
+
+// defAging: a default aging temperature below the registry solvus (steels: below Ae1); the LSW profile is
+// unavailable at or above it (python/kinetics_ttt_cct_solver.py). Al 7075 ages at 120 C (T6), not at 720 C.
+const ALLOY_OPTIONS = [
+  { id: "AISI 4140", name: "AISI 4140 (Cr-Mo Structural Steel)", type: "Low-Alloy Steel", defAust: 860, defAging: 720 },
+  { id: "AISI 4340", name: "AISI 4340 (Ni-Cr-Mo High Hardenability)", type: "High-Strength Steel", defAust: 845, defAging: 650 },
+  { id: "AISI D2", name: "AISI D2 (Ledeburitic Tool Steel)", type: "Cold-Work Tool Steel", defAust: 1020, defAging: 720 },
+  { id: "Inconel 718", name: "Inconel 718 (Ni-Fe Superalloy)", type: "Ni Superalloy", defAust: 980, defAging: 720 },
+  { id: "Ti-6Al-4V", name: "Ti-6Al-4V (Grade 5 Alpha-Beta)", type: "Titanium Alloy", defAust: 1050, defAging: 720 },
+  { id: "Al 7075", name: "Al 7075-T6 (Al-Zn-Mg-Cu)", type: "Aerospace Aluminum", defAust: 475, defAging: 120 }
+];
 
 export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps> = ({
   initialAlloy = "AISI 4140",
-  onSendToModule
+  onSendToModule,
+  initialData = null,
+  initialTab = "ttt",
+  initialCoolingRate = 10.0
 }) => {
+  const initialOption = ALLOY_OPTIONS.find((o) => o.id === initialAlloy);
   const [selectedAlloy, setSelectedAlloy] = useState<string>(initialAlloy);
-  const [coolingRate, setCoolingRate] = useState<number>(10.0);
+  const [coolingRate, setCoolingRate] = useState<number>(initialCoolingRate);
   const [grainSize, setGrainSize] = useState<number>(25.0);
-  const [austTemp, setAustTemp] = useState<number>(860.0);
-  const [agingTemp, setAgingTemp] = useState<number>(720.0);
+  const [austTemp, setAustTemp] = useState<number>(initialOption?.defAust ?? 860.0);
+  const [agingTemp, setAgingTemp] = useState<number>(initialOption?.defAging ?? 720.0);
   const [agingTime, setAgingTime] = useState<number>(8.0);
-  const [activeViewTab, setActiveViewTab] = useState<"ttt" | "cct" | "calphad_vs_kinetics" | "lsw_aging" | "microstructure">("ttt");
-  
+  const [activeViewTab, setActiveViewTab] = useState<PhaseKineticsStudioTab>(initialTab);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [kineticsData, setKineticsData] = useState<PythonKineticsResult | null>(null);
+  const [kineticsData, setKineticsData] = useState<PythonKineticsResult | null>(initialData);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const alloyOptions = [
-    { id: "AISI 4140", name: "AISI 4140 (Cr-Mo Structural Steel)", type: "Low-Alloy Steel", defAust: 860 },
-    { id: "AISI 4340", name: "AISI 4340 (Ni-Cr-Mo High Hardenability)", type: "High-Strength Steel", defAust: 845 },
-    { id: "AISI D2", name: "AISI D2 (Ledeburitic Tool Steel)", type: "Cold-Work Tool Steel", defAust: 1020 },
-    { id: "Inconel 718", name: "Inconel 718 (Ni-Fe Superalloy)", type: "Ni Superalloy", defAust: 980 },
-    { id: "Ti-6Al-4V", name: "Ti-6Al-4V (Grade 5 Alpha-Beta)", type: "Titanium Alloy", defAust: 1050 },
-    { id: "Al 7075", name: "Al 7075-T6 (Al-Zn-Mg-Cu)", type: "Aerospace Aluminum", defAust: 475 }
-  ];
+  const alloyOptions = ALLOY_OPTIONS;
 
   const handleAlloyChange = (alloyName: string) => {
     setSelectedAlloy(alloyName);
     const opt = alloyOptions.find(o => o.id === alloyName);
     if (opt) {
       setAustTemp(opt.defAust);
+      setAgingTemp(opt.defAging);
     }
   };
 
@@ -107,6 +126,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
   };
 
   useEffect(() => {
+    if (initialData) return; // a supplied result is shown as given (test seam); the solver is not called
     runKineticsCalculation();
   }, [selectedAlloy]);
 
@@ -173,6 +193,10 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
   );
   const modelBanner = kineticsModelBanner(kineticsData?.kineticsModel, kineticsData?.tttIncubationFloor);
   const gap = kineticsData?.calphadVsKineticsGap;
+  const lswState = kineticsLswAvailability(
+    kineticsData?.lswPrecipitateCoarsening,
+    kineticsData?.kineticsModel?.lswPrecipitateCoarsening
+  );
   const criticalTemps = kineticsData?.criticalTransformationTemperatures;
 
   return (
@@ -410,7 +434,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-500">$A_&#123;e1&#125;$ Eutectoid</div>
                   <div className="text-slate-300 font-bold text-sm">
-                    {kineticsData.criticalTransformationTemperatures.Ae1_C} °C
+                    {kineticsValueText(kineticsData.criticalTransformationTemperatures.Ae1_C, " °C")}
                   </div>
                 </div>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
@@ -724,11 +748,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     {kineticsStatusNote(gap?.kineticRealityAtSelectedCooling.status) || gap?.kineticRealityAtSelectedCooling.reason || ""}
                   </p>
                   <div className="p-2.5 rounded bg-amber-950/40 border border-amber-500/20 text-[11px] text-amber-200">
-                    {modelBanner.available ? (
-                      <>⚡ <em>At {coolingRate} °C/s, carbon and alloying atoms cannot diffuse across grain boundaries in time; austenite is forced to transform athermally via shear.</em></>
-                    ) : (
-                      <em>Unavailable: kinetics model is steel-only.</em>
-                    )}
+                    <em data-verdict-sentence>
+                      {kineticsVerdictSentence(gap?.kineticRealityAtSelectedCooling.verdict, coolingRate, modelBanner.available)}
+                    </em>
                   </div>
                 </div>
               </div>
@@ -752,8 +774,13 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 </div>
               </div>
 
-              {/* LSW Coarsening Chart */}
-              <div className="h-[320px] w-full pt-2">
+              {/* LSW Coarsening Chart (no data at or above the registry solvus) */}
+              {!lswState.available && kineticsData && (
+                <div data-lsw-unavailable className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300">
+                  LSW coarsening unavailable: {lswState.reason}
+                </div>
+              )}
+              <div className={lswState.available ? "h-[320px] w-full pt-2" : "hidden"}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={kineticsData?.lswPrecipitateCoarsening || []}
@@ -852,6 +879,11 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                         ({currentHardness.hv})
                       </span>
                     </div>
+                    {kineticsStatusNote(currentCCTMatch?.predictedHardness_HRC_status) && (
+                      <p data-hardness-caveat className="text-[10px] text-slate-500">
+                        {kineticsStatusNote(currentCCTMatch?.predictedHardness_HRC_status)}
+                      </p>
+                    )}
                   </div>
 
                   {phaseSlices.reason ? (

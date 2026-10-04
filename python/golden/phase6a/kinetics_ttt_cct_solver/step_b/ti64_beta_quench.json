@@ -2,6 +2,18 @@
  "case": "ti64_beta_quench",
  "driftVsBase": [
   {
+   "key": "alloyMetadata.Ae1_C",
+   "kind": "changed",
+   "new": null,
+   "old": 700.0
+  },
+  {
+   "key": "alloyMetadata.critical_cooling_rate_C_s",
+   "kind": "changed",
+   "new": null,
+   "old": 410.0
+  },
+  {
    "key": "calphadVsKineticsGap.equilibriumPrediction.martensiteFraction",
    "kind": "changed",
    "new": null,
@@ -914,6 +926,18 @@
    "old": null
   },
   {
+   "key": "criticalTransformationTemperatures.Ae1_C",
+   "kind": "changed",
+   "new": null,
+   "old": 700.0
+  },
+  {
+   "key": "criticalTransformationTemperatures.Ae1_C_status",
+   "kind": "added",
+   "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
    "key": "criticalTransformationTemperatures.CriticalCoolingRate_CCR_C_s",
    "kind": "changed",
    "new": null,
@@ -946,7 +970,13 @@
   {
    "key": "kineticsModel.lswPrecipitateCoarsening.note",
    "kind": "added",
-   "new": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy); the strengthening column is an unsourced screening curve.",
+   "new": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.lswPrecipitateCoarsening.reason",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -958,7 +988,7 @@
   {
    "key": "kineticsModel.note",
    "kind": "added",
-   "new": "kinetics model is steel-only: The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "new": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
    "old": null
   },
   {
@@ -1008,6 +1038,12 @@
    "rel": 0.027996500437445344
   },
   {
+   "key": "lswPrecipitateCoarsening[0].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.3600000000000001,
    "key": "lswPrecipitateCoarsening[1].meanRadius_nm",
    "kind": "numeric",
@@ -1022,6 +1058,12 @@
    "new": 127.2,
    "old": 114.3,
    "rel": 0.1128608923884515
+  },
+  {
+   "key": "lswPrecipitateCoarsening[1].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 0.6200000000000001,
@@ -1040,6 +1082,12 @@
    "rel": 0.1872265966754155
   },
   {
+   "key": "lswPrecipitateCoarsening[2].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 1.0,
    "key": "lswPrecipitateCoarsening[3].meanRadius_nm",
    "kind": "numeric",
@@ -1054,6 +1102,12 @@
    "new": 147.5,
    "old": 114.3,
    "rel": 0.2904636920384952
+  },
+  {
+   "key": "lswPrecipitateCoarsening[3].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 1.5299999999999998,
@@ -1072,6 +1126,12 @@
    "rel": 0.42082239720035003
   },
   {
+   "key": "lswPrecipitateCoarsening[4].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 2.23,
    "key": "lswPrecipitateCoarsening[5].meanRadius_nm",
    "kind": "numeric",
@@ -1086,6 +1146,12 @@
    "new": 180.4,
    "old": 114.4,
    "rel": 0.5769230769230769
+  },
+  {
+   "key": "lswPrecipitateCoarsening[5].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 3.1500000000000004,
@@ -1104,6 +1170,12 @@
    "rel": 0.7596153846153846
   },
   {
+   "key": "lswPrecipitateCoarsening[6].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 3.8099999999999996,
    "key": "lswPrecipitateCoarsening[7].meanRadius_nm",
    "kind": "numeric",
@@ -1118,6 +1190,12 @@
    "new": 215.0,
    "old": 114.4,
    "rel": 0.8793706293706293
+  },
+  {
+   "key": "lswPrecipitateCoarsening[7].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 5.15,
@@ -1136,6 +1214,12 @@
    "rel": 1.1020942408376966
   },
   {
+   "key": "lswPrecipitateCoarsening[8].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 6.98,
    "key": "lswPrecipitateCoarsening[9].meanRadius_nm",
    "kind": "numeric",
@@ -1152,6 +1236,12 @@
    "rel": 1.3672758920800696
   },
   {
+   "key": "lswPrecipitateCoarsening[9].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "key": "tttIncubationFloor.floorHitCount",
    "kind": "added",
    "new": null,
@@ -1166,7 +1256,7 @@
   {
    "key": "tttIncubationFloor.note",
    "kind": "added",
-   "new": "kinetics model is steel-only: The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "new": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
    "old": null
   },
   {
@@ -3079,7 +3169,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "f41e3163ad0f13b43ede2186a5e144c64bb0bdf2",
+ "gitHead": "f4bc04b10402e8f8bdac23fa40778041c3144e54",
  "input": {
   "agingTemp_C": 550.0,
   "agingTime_h": 4.0,
@@ -3120,13 +3210,13 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "fc757dc2caa8aed9cf94f0589f28f326d1d47251f22f2c9208d34cc7276ff405",
+ "solverSha256": "2990cbe8ad4ad676b81ec78c9d60073142a03b510e63ad6d8c0de87c6dce0b9e",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
   "alloy": "Ti-6Al-4V",
   "alloyMetadata": {
-   "Ae1_C": 700.0,
+   "Ae1_C": null,
    "Ae3_C": 995.0,
    "Mf_C": 650.0,
    "Ms_C": 800.0,
@@ -3139,7 +3229,7 @@
     "Ti": 90.0,
     "V": 4.0
    },
-   "critical_cooling_rate_C_s": 410.0,
+   "critical_cooling_rate_C_s": null,
    "description": "Workhorse titanium alloy; transformation kinetics govern lamellar vs equiaxed microstructure.",
    "grain_size_d_um_default": 50.0,
    "phases": [
@@ -3361,7 +3451,8 @@
    }
   ],
   "criticalTransformationTemperatures": {
-   "Ae1_C": 700.0,
+   "Ae1_C": null,
+   "Ae1_C_status": "unavailable-kinetics-model-steel-only",
    "Ae3_BetaTransus_GammaSolvus_C": 995.0,
    "CriticalCoolingRate_CCR_C_s": null,
    "CriticalCoolingRate_CCR_status": "unavailable-kinetics-model-steel-only",
@@ -3381,10 +3472,11 @@
   "kineticsModel": {
    "illustrativeOnly": true,
    "lswPrecipitateCoarsening": {
-    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy); the strengthening column is an unsourced screening curve.",
+    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+    "reason": null,
     "status": "generic-constants-illustrative"
    },
-   "note": "kinetics model is steel-only: The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "note": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
    "placeholderParameters": [],
    "reason": "kinetics model is steel-only",
    "registryAlloyId": "ti6al4v",
@@ -3396,60 +3488,70 @@
     "agingTime_h": 0.1,
     "meanRadius_nm": 1.59,
     "precipitationHardening_MPa": 117.5,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 0.5,
     "meanRadius_nm": 1.86,
     "precipitationHardening_MPa": 127.2,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 1.0,
     "meanRadius_nm": 2.12,
     "precipitationHardening_MPa": 135.7,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 2.0,
     "meanRadius_nm": 2.5,
     "precipitationHardening_MPa": 147.5,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 4.0,
     "meanRadius_nm": 3.03,
     "precipitationHardening_MPa": 162.4,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 8.0,
     "meanRadius_nm": 3.73,
     "precipitationHardening_MPa": 180.4,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 16.0,
     "meanRadius_nm": 4.65,
     "precipitationHardening_MPa": 201.3,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 24.0,
     "meanRadius_nm": 5.31,
     "precipitationHardening_MPa": 215.0,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 48.0,
     "meanRadius_nm": 6.66,
     "precipitationHardening_MPa": 240.9,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 100.0,
     "meanRadius_nm": 8.49,
     "precipitationHardening_MPa": 272.0,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    }
   ],
@@ -3457,7 +3559,7 @@
   "tttIncubationFloor": {
    "floorHitCount": null,
    "floorValue_s": 0.001,
-   "note": "kinetics model is steel-only: The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "note": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
    "pointCount": null,
    "status": "unavailable-kinetics-model-steel-only"
   },

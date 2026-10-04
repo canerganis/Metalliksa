@@ -70,13 +70,13 @@
   {
    "key": "cctContinuousCoolingMap[0].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[0].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -124,13 +124,13 @@
   {
    "key": "cctContinuousCoolingMap[1].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[1].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -180,13 +180,13 @@
   {
    "key": "cctContinuousCoolingMap[2].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[2].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -236,13 +236,13 @@
   {
    "key": "cctContinuousCoolingMap[3].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[3].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -292,13 +292,13 @@
   {
    "key": "cctContinuousCoolingMap[4].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[4].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -348,13 +348,13 @@
   {
    "key": "cctContinuousCoolingMap[5].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[5].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -404,13 +404,13 @@
   {
    "key": "cctContinuousCoolingMap[6].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[6].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -460,13 +460,13 @@
   {
    "key": "cctContinuousCoolingMap[7].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[7].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -516,13 +516,13 @@
   {
    "key": "cctContinuousCoolingMap[8].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[8].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
    "old": null
   },
   {
@@ -572,13 +572,19 @@
   {
    "key": "cctContinuousCoolingMap[9].transformedStart_status",
    "kind": "added",
-   "new": "unavailable-ttt-incubation-floor-or-step-limited",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
    "old": null
   },
   {
    "key": "cctContinuousCoolingMap[9].unavailableReason",
    "kind": "added",
-   "new": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Ae1_C_status",
+   "kind": "added",
+   "new": "registry-screening-value",
    "old": null
   },
   {
@@ -608,7 +614,13 @@
   {
    "key": "kineticsModel.lswPrecipitateCoarsening.note",
    "kind": "added",
-   "new": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy); the strengthening column is an unsourced screening curve.",
+   "new": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.lswPrecipitateCoarsening.reason",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -662,6 +674,12 @@
    "rel": 0.0008748906386702408
   },
   {
+   "key": "lswPrecipitateCoarsening[0].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.010000000000000009,
    "key": "lswPrecipitateCoarsening[1].meanRadius_nm",
    "kind": "numeric",
@@ -676,6 +694,12 @@
    "new": 114.5,
    "old": 114.3,
    "rel": 0.0017497812773403574
+  },
+  {
+   "key": "lswPrecipitateCoarsening[1].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 0.010000000000000009,
@@ -694,6 +718,12 @@
    "rel": 0.003499562554680715
   },
   {
+   "key": "lswPrecipitateCoarsening[2].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.020000000000000018,
    "key": "lswPrecipitateCoarsening[3].meanRadius_nm",
    "kind": "numeric",
@@ -708,6 +738,12 @@
    "new": 115.1,
    "old": 114.3,
    "rel": 0.006999125109361305
+  },
+  {
+   "key": "lswPrecipitateCoarsening[3].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 0.040000000000000036,
@@ -726,6 +762,12 @@
    "rel": 0.013998250218722735
   },
   {
+   "key": "lswPrecipitateCoarsening[4].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.08000000000000007,
    "key": "lswPrecipitateCoarsening[5].meanRadius_nm",
    "kind": "numeric",
@@ -740,6 +782,12 @@
    "new": 117.4,
    "old": 114.4,
    "rel": 0.026223776223776224
+  },
+  {
+   "key": "lswPrecipitateCoarsening[5].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 0.15999999999999992,
@@ -758,6 +806,12 @@
    "rel": 0.04982517482517472
   },
   {
+   "key": "lswPrecipitateCoarsening[6].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.22999999999999998,
    "key": "lswPrecipitateCoarsening[7].meanRadius_nm",
    "kind": "numeric",
@@ -772,6 +826,12 @@
    "new": 122.6,
    "old": 114.4,
    "rel": 0.07167832167832157
+  },
+  {
+   "key": "lswPrecipitateCoarsening[7].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
   },
   {
    "abs": 0.3899999999999999,
@@ -790,6 +850,12 @@
    "rel": 0.12390924956369997
   },
   {
+   "key": "lswPrecipitateCoarsening[8].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "abs": 0.7,
    "key": "lswPrecipitateCoarsening[9].meanRadius_nm",
    "kind": "numeric",
@@ -806,6 +872,12 @@
    "rel": 0.2062663185378589
   },
   {
+   "key": "lswPrecipitateCoarsening[9].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
    "key": "tttIncubationFloor.floorHitCount",
    "kind": "added",
    "new": 27,
@@ -820,7 +892,7 @@
   {
    "key": "tttIncubationFloor.note",
    "kind": "added",
-   "new": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it. A CCT start that the floor drives is reported unavailable.",
+   "new": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it.",
    "old": null
   },
   {
@@ -1205,7 +1277,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "f41e3163ad0f13b43ede2186a5e144c64bb0bdf2",
+ "gitHead": "f4bc04b10402e8f8bdac23fa40778041c3144e54",
  "input": {
   "agingTemp_C": 600.0,
   "agingTime_h": 4.0,
@@ -1246,7 +1318,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "fc757dc2caa8aed9cf94f0589f28f326d1d47251f22f2c9208d34cc7276ff405",
+ "solverSha256": "2990cbe8ad4ad676b81ec78c9d60073142a03b510e63ad6d8c0de87c6dce0b9e",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -1314,8 +1386,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 0.2,
@@ -1333,8 +1405,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 1.0,
@@ -1352,8 +1424,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 5.0,
@@ -1371,8 +1443,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 10.0,
@@ -1390,8 +1462,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 25.0,
@@ -1409,8 +1481,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 50.0,
@@ -1428,8 +1500,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 100.0,
@@ -1447,8 +1519,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 500.0,
@@ -1466,8 +1538,8 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 2000.0,
@@ -1485,12 +1557,13 @@
     "primaryMicrostructure": null,
     "transformedStartTemp_C": null,
     "transformedStartTime_s": null,
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    }
   ],
   "criticalTransformationTemperatures": {
    "Ae1_C": 710.0,
+   "Ae1_C_status": "registry-screening-value",
    "Ae3_BetaTransus_GammaSolvus_C": 765.0,
    "CriticalCoolingRate_CCR_C_s": 8.5,
    "CriticalCoolingRate_CCR_status": "registry-screening-value",
@@ -1510,7 +1583,8 @@
   "kineticsModel": {
    "illustrativeOnly": true,
    "lswPrecipitateCoarsening": {
-    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy); the strengthening column is an unsourced screening curve.",
+    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+    "reason": null,
     "status": "generic-constants-illustrative"
    },
    "note": "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed.",
@@ -1525,60 +1599,70 @@
     "agingTime_h": 0.1,
     "meanRadius_nm": 1.5,
     "precipitationHardening_MPa": 114.4,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 0.5,
     "meanRadius_nm": 1.51,
     "precipitationHardening_MPa": 114.5,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 1.0,
     "meanRadius_nm": 1.51,
     "precipitationHardening_MPa": 114.7,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 2.0,
     "meanRadius_nm": 1.52,
     "precipitationHardening_MPa": 115.1,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 4.0,
     "meanRadius_nm": 1.54,
     "precipitationHardening_MPa": 115.9,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 8.0,
     "meanRadius_nm": 1.58,
     "precipitationHardening_MPa": 117.4,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 16.0,
     "meanRadius_nm": 1.66,
     "precipitationHardening_MPa": 120.1,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 24.0,
     "meanRadius_nm": 1.73,
     "precipitationHardening_MPa": 122.6,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 48.0,
     "meanRadius_nm": 1.9,
     "precipitationHardening_MPa": 128.8,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 100.0,
     "meanRadius_nm": 2.21,
     "precipitationHardening_MPa": 138.6,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    }
   ],
@@ -1586,7 +1670,7 @@
   "tttIncubationFloor": {
    "floorHitCount": 27,
    "floorValue_s": 0.001,
-   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it. A CCT start that the floor drives is reported unavailable.",
+   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it.",
    "pointCount": 40,
    "status": "floor-hit-points-flagged"
   },

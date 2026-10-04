@@ -27,9 +27,13 @@ const finite = (v: unknown): v is number => typeof v === "number" && Number.isFi
 // "kinetics model is steel-only". A start temperature the 1 ms TTT incubation floor drives is null as well.
 export const KINETICS_STATUS_NOTES: Readonly<Record<string, string>> = {
   "unavailable-kinetics-model-steel-only": "Unavailable: kinetics model is steel-only.",
-  "unavailable-ttt-incubation-floor-or-step-limited":
-    "Unavailable: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one " +
-    "integration step, so the start is not a model result.",
+  "unavailable-ttt-incubation-law-no-ae3-asymptote":
+    "Unavailable: incubation law has no Ae3 asymptote; start not computed.",
+  "unavailable-aging-temperature-at-or-above-solvus":
+    "Unavailable: the aging temperature is at or above the registry solvus (steels: Ae1); no precipitate population.",
+  "generic-constants-illustrative":
+    "Generic constants shared by every alloy (only the activation energy is per alloy); illustrative.",
+  "registry-screening-value": "Registry screening value (unsourced); not a measured or computed temperature.",
   "unavailable-registry-placeholder": "Unavailable: the registry value is a non-physical placeholder.",
   "athermal-martensite-no-diffusional-start-above-ms": "No diffusional start above Ms; the martensite start is Ms.",
   "steel-lookup-by-ccr-band-not-computed":
@@ -79,6 +83,39 @@ export function kineticsHardnessText(row: KineticsHardnessRow | null | undefined
 
 // ---------------------------------------------------------------------------------------------------------------
 // Phase Kinetics Studio: CCT rows, phase fractions, model status (python/kinetics_ttt_cct_solver.py).
+
+/** The verdict sentence under the CALPHAD-vs-kinetics tab: only the mechanism the solver's verdict supports. */
+export function kineticsVerdictSentence(verdict: unknown, coolingRate: number, modelAvailable: boolean): string {
+  if (!modelAvailable) return "Unavailable: kinetics model is steel-only.";
+  const rate = finite(coolingRate) ? `${coolingRate} °C/s` : "the selected cooling rate";
+  if (typeof verdict !== "string") return "";
+  if (verdict.startsWith("Full Martensitic")) {
+    return `At ${rate}, carbon and alloying atoms cannot diffuse across grain boundaries in time; austenite is forced to transform athermally via shear.`;
+  }
+  if (verdict.startsWith("Mixed")) {
+    return `At ${rate}, part of the austenite transforms by shear (martensite) and the rest by diffusion (bainite).`;
+  }
+  return `At ${rate}, diffusion has time to decompose the austenite; little or no martensite forms.`;
+}
+
+export interface LswRowLike {
+  meanRadius_nm?: number | null;
+  precipitationHardening_MPa?: number | null;
+  strengtheningMechanism?: string | null;
+  status?: string | null;
+}
+
+/** Whether any LSW row has a radius; otherwise the solver's reason (aging at or above the registry solvus). */
+export function kineticsLswAvailability(
+  rows: LswRowLike[] | null | undefined,
+  block: { status?: string | null; reason?: string | null } | null | undefined
+): { available: boolean; reason: string } {
+  if ((rows ?? []).some((r) => finite(r?.meanRadius_nm))) return { available: true, reason: "" };
+  return {
+    available: false,
+    reason: sentence(block?.reason || kineticsStatusNote(block?.status) || "No LSW coarsening profile was computed"),
+  };
+}
 
 export interface KineticsCctRowLike extends KineticsHardnessRow {
   transformedStartTemp_C?: number | null;
@@ -196,6 +233,8 @@ export function kineticsModelBanner(
 export interface BuildJobCctRow extends KineticsHardnessRow {
   coolingRate_C_s?: number | null;
   primaryMicrostructure?: string | null;
+  /** Why the start/primary phase of a (steel) row is null, e.g. "incubation law has no Ae3 asymptote; ...". */
+  unavailableReason?: string | null;
 }
 
 /** Python's choice of CCT row for the build cooling rate (lpbf_build_job_solver.build_cooling_rate_cct_row). */

@@ -13,10 +13,12 @@ import {
   kineticsCctRowText,
   kineticsHardnessText,
   kineticsLabelText,
+  kineticsLswAvailability,
   kineticsModelBanner,
   kineticsPhaseSlices,
   kineticsStatusNote,
   kineticsValueText,
+  kineticsVerdictSentence,
 } from "../src/utils/kineticsHardnessDisplay";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
@@ -281,7 +283,7 @@ test("fx-kinetics: steel goldens flag the TTT floor, CCT starts the floor drives
     const rt = kineticsCctRowText(row);
     assert.equal(rt.startTemp, "Unavailable");
     assert.equal(rt.microstructure, "Unavailable");
-    assert.match(rt.startNote, /1 ms floor/);
+    assert.match(rt.startNote, /no Ae3 asymptote; start not computed/);
     // the phase-fraction lookup is shown with its caveat
     assert.match(rt.fractionsNote, /lookup by cooling-rate band/);
   }
@@ -298,6 +300,34 @@ test("fx-kinetics: steel goldens flag the TTT floor, CCT starts the floor drives
   assert.equal(kineticsModelBanner(null, null).available, false);
   assert.equal(kineticsCctRowText(null).startTemp, "Unavailable");
   assert.equal(kineticsCctRowText({ transformedStartTemp_C: Number.NaN }).startTemp, "Unavailable");
+});
+
+test("fx-kinetics: floor line only when at least one point is on the floor; LSW availability follows the solver", () => {
+  const model = { status: "available", note: "n" };
+  assert.equal(kineticsModelBanner(model, { pointCount: 40, floorHitCount: 0, floorValue_s: 0.001 }).floorLine, null);
+  assert.equal(
+    kineticsModelBanner(model, { pointCount: 40, floorHitCount: 1, floorValue_s: 0.001 }).floorLine,
+    "1 of 40 TTT points are on the 0.001 s incubation floor (floorHit): their start time is the floor, not a model value."
+  );
+  assert.equal(kineticsModelBanner(model, { pointCount: null, floorHitCount: null }).floorLine, null);
+  const unavailable = kineticsLswAvailability(
+    [{ meanRadius_nm: null }, { meanRadius_nm: Number.NaN }],
+    { status: "unavailable-aging-temperature-at-or-above-solvus", reason: "aging temperature 720 C is at or above the registry Ae3" }
+  );
+  assert.deepEqual(unavailable, { available: false, reason: "aging temperature 720 C is at or above the registry Ae3." });
+  assert.equal(kineticsLswAvailability([{ meanRadius_nm: 2.5 }], null).available, true);
+  assert.equal(
+    kineticsLswAvailability(null, { status: "unavailable-aging-temperature-at-or-above-solvus" }).reason,
+    "Unavailable: the aging temperature is at or above the registry solvus (steels: Ae1); no precipitate population."
+  );
+  // the verdict sentence follows the verdict and never claims shear for a diffusional verdict
+  assert.match(kineticsVerdictSentence("Full Martensitic / Metastable Quench", 100, true), /athermally via shear/);
+  assert.match(kineticsVerdictSentence("Mixed Microstructure (Martensite + Bainite)", 10, true), /part of the austenite/);
+  assert.doesNotMatch(kineticsVerdictSentence("Diffusional Equilibrium Decomposition", 0.05, true), /shear/);
+  assert.equal(kineticsVerdictSentence(null, 10, false), "Unavailable: kinetics model is steel-only.");
+  assert.equal(kineticsVerdictSentence(null, 10, true), "");
+  // registry-screening-value has a note (the Ti-6Al-4V Ms/Mf tooltips were empty)
+  assert.notEqual(kineticsStatusNote("registry-screening-value"), "");
 });
 
 test("fx-kinetics: the Studio renders only through the null-safe helpers", () => {

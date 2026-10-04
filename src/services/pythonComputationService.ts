@@ -470,7 +470,8 @@ export interface PythonKineticsResult {
     type: string;
     composition_wt: Record<string, number>;
     Ae3_C: number;
-    Ae1_C: number;
+    /** null for non-steel alloys (a eutectoid Ae1 is a steel concept). */
+    Ae1_C: number | null;
     /** null where the registry value is a non-physical placeholder (alloy_registry.KINETICS_PLACEHOLDERS). */
     Ms_C: number | null;
     Mf_C: number | null;
@@ -478,7 +479,8 @@ export interface PythonKineticsResult {
     grain_size_d_um_default: number;
     aust_temp_C_default: number;
     phases: string[];
-    critical_cooling_rate_C_s: number;
+    /** null for non-steel alloys (the kinetics model is steel-only). */
+    critical_cooling_rate_C_s: number | null;
     description: string;
   };
   inputParameters: {
@@ -490,7 +492,9 @@ export interface PythonKineticsResult {
   };
   criticalTransformationTemperatures: {
     Ae3_BetaTransus_GammaSolvus_C: number;
-    Ae1_C: number;
+    /** null for non-steel alloys (Ae1_C_status "unavailable-kinetics-model-steel-only"). */
+    Ae1_C: number | null;
+    Ae1_C_status?: string;
     /** null for a registry placeholder (Ms_C_status "unavailable-registry-placeholder"). */
     Ms_C: number | null;
     Mf_C: number | null;
@@ -538,11 +542,13 @@ export interface PythonKineticsResult {
     predictedHardness_HRC_status?: string;
     unavailableReason?: string | null;
   }>;
+  /** Radius/strengthening/regime are null at or above the registry solvus (steels: Ae1): status says so. */
   lswPrecipitateCoarsening: Array<{
     agingTime_h: number;
-    meanRadius_nm: number;
-    precipitationHardening_MPa: number;
-    strengtheningMechanism: string;
+    meanRadius_nm: number | null;
+    precipitationHardening_MPa: number | null;
+    strengtheningMechanism: string | null;
+    status?: string;
   }>;
   calphadVsKineticsGap: {
     equilibriumPrediction: {
@@ -573,7 +579,7 @@ export interface PythonKineticsResult {
     illustrativeOnly: boolean;
     note: string;
     placeholderParameters: string[];
-    lswPrecipitateCoarsening?: { status: string; note: string };
+    lswPrecipitateCoarsening?: { status: string; note: string; reason: string | null };
   };
   /** TTT incubation floor summary: points whose tStart_s is the 1 ms floor (floorHit). */
   tttIncubationFloor?: {

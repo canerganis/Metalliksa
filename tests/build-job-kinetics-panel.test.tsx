@@ -21,6 +21,10 @@ const metric = (markup: string, label: string): string | null => {
   const values = [...m[1].matchAll(/<div[^>]*>([^<]*)<\/div>/g)].map((x) => x[1]);
   return values[1] ?? null; // [label, value, hint]
 };
+const hint = (markup: string, label: string): string | null => {
+  const m = new RegExp(`data-kinetics-metric="${label.replace(/[()]/g, "\\$&")}"[^>]*>(.*?)</div></div>`).exec(markup);
+  return m ? ([...m[1].matchAll(/<div[^>]*>([^<]*)/g)].map((x) => x[1])[2] ?? null) : null;
+};
 const NUMBER_TILES = ["Primary Phase", "Martensite", "Hardness (HRC)", "Hardness (HV)"];
 
 test("TS and Python build-job solver revisions are the same string", () => {
@@ -77,6 +81,8 @@ test("hypothetical steel in-map rate (no build-job alloy is a steel): the Python
   // The steel CCT start at 25 °C/s is floor/step-limited: primary phase is null -> Unavailable, never "null".
   assert.equal(row.primaryMicrostructure, null);
   assert.equal(metric(markup, "Primary Phase"), "Unavailable");
+  // the blank primary phase carries the solver's reason, not a bare "From the CCT row below"
+  assert.equal(hint(markup, "Primary Phase"), "incubation law has no Ae3 asymptote; start not computed.");
   assert.equal(metric(markup, "Hardness (HRC)"), String(row.predictedHardness_HRC));
   assert.equal(metric(markup, "Martensite"), `${steel.buildRateMartensite.predictedMartensite_pct}%`);
   const t = text(markup);

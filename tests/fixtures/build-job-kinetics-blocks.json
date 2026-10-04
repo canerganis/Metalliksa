@@ -140,6 +140,7 @@
    "Ms_C": 330.0,
    "Mf_C": 180.0,
    "CriticalCoolingRate_CCR_C_s": 45.0,
+   "Ae1_C_status": "registry-screening-value",
    "Ms_C_status": "registry-screening-value",
    "Mf_C_status": "registry-screening-value",
    "CriticalCoolingRate_CCR_status": "registry-screening-value"
@@ -159,10 +160,10 @@
     "predictedHardness_HRC": 18.0,
     "predictedHardness_HV": null,
     "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 0.2,
@@ -178,10 +179,10 @@
     "predictedHardness_HRC": 18.0,
     "predictedHardness_HV": null,
     "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 1.0,
@@ -197,10 +198,10 @@
     "predictedHardness_HRC": 28.0,
     "predictedHardness_HV": 286.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 5.0,
@@ -216,10 +217,10 @@
     "predictedHardness_HRC": 28.0,
     "predictedHardness_HV": 286.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 10.0,
@@ -235,10 +236,10 @@
     "predictedHardness_HRC": 42.0,
     "predictedHardness_HV": 412.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 25.0,
@@ -254,10 +255,10 @@
     "predictedHardness_HRC": 42.0,
     "predictedHardness_HV": 412.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 50.0,
@@ -273,10 +274,10 @@
     "predictedHardness_HRC": 54.0,
     "predictedHardness_HV": 577.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 100.0,
@@ -292,10 +293,10 @@
     "predictedHardness_HRC": 58.0,
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 500.0,
@@ -311,10 +312,10 @@
     "predictedHardness_HRC": 58.0,
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 2000.0,
@@ -330,10 +331,10 @@
     "predictedHardness_HRC": 58.0,
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "transformedStart_status": "unavailable-ttt-incubation-floor-or-step-limited",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
     "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
-    "unavailableReason": "the Scheil-additivity start is not a model result: the TTT incubation time at the start temperature is on the 1 ms floor or shorter than one integration step, so the start is set by the first admissible step below Ae3 (the incubation law has no Ae3 asymptote)"
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    }
   ],
   "calphadVsKineticsGap": {
@@ -365,7 +366,8 @@
    "placeholderParameters": [],
    "lswPrecipitateCoarsening": {
     "status": "generic-constants-illustrative",
-    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy); the strengthening column is an unsourced screening curve."
+    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+    "reason": null
    }
   },
   "tttIncubationFloor": {
@@ -373,7 +375,7 @@
    "floorValue_s": 0.001,
    "pointCount": 40,
    "floorHitCount": 32,
-   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it. A CCT start that the floor drives is reported unavailable."
+   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it."
   },
   "status": "available",
   "alloyId": "aisi4140",
