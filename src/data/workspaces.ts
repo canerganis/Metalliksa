@@ -2,6 +2,8 @@ import { LISTED_CONTRACTS, type ListedModuleId } from '../modules/registry';
 
 /** Product navigation and maturity are separate from the evidence of any result. */
 export type ModuleScope = 'Production' | 'Research' | 'Preview' | 'Unresolved';
+/** Tooltip of every maturity badge (module header, command palette). */
+export const MATURITY_BADGE_TITLE = 'Module maturity; this is not a validation claim for any result.';
 export type WorkspaceId = 'lpbf' | 'materials' | 'evidence' | 'orchestration';
 export const WORKSPACES = [
   { id: 'lpbf', label: 'LPBF Engineering', description: 'Process setup through thermal research, build screening and qualification evidence.', defaultModule: '3d-distortion-lab' },
