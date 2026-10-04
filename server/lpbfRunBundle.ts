@@ -6,12 +6,14 @@ import { createReadStream, lstatSync, readFileSync, readdirSync } from 'node:fs'
 import { open } from 'node:fs/promises';
 import path from 'node:path';
 import { artifactDirectory, LpbfArtifactStore, verifyLocalArtifact, type ArtifactIdentity } from './lpbfArtifactStore';
-import { LpbfRunRepository } from './lpbfRunRepository';
+import { LpbfRunRepository, type RunRecord } from './lpbfRunRepository';
 import { runArtifacts } from './lpbfRunImport';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
 import { backupSourceBundle, verifySourceBundle } from './lpbfSourceBundle';
 import { storeGpuPilotArtifactResolver } from './lpbfGpuPilotArtifacts';
 import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
+import { isDeepStrictEqual } from 'node:util';
+import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure, validateArchivedProxySections } from './lpbfProxyCampaignBinding';
 
 export interface RunBundleManifest {
   schemaVersion: 1 | 2;
@@ -41,6 +43,18 @@ function noSidecars(root: string) {
     catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue; throw error; }
     throw new Error('Bundle SQLite sidecar state is not permitted');
   }
+}
+
+function matchesCapturedCampaignBinding(track: any, derived: { runIdentity: Record<string, any>; observations: any[] }): boolean {
+  const expectedIdentity = structuredClone(derived.runIdentity);
+  const historicalMissingSettings = !Object.hasOwn(track.runIdentity, 'executedSettings');
+  if (historicalMissingSettings) delete expectedIdentity.executedSettings;
+  if (!isDeepStrictEqual(track.runIdentity, expectedIdentity)) return false;
+  const expectedObservations = structuredClone(derived.observations);
+  if (historicalMissingSettings) for (const observation of expectedObservations) {
+    observation.provenance.runIdentity = structuredClone(track.runIdentity);
+  }
+  return isDeepStrictEqual(track.observations, expectedObservations);
 }
 
 function readManifest(root: string): RunBundleManifest {
@@ -95,6 +109,16 @@ function references(root: string) {
       let campaignCount = 0;
       for (const campaign of runs.allProxyCampaigns()) {
         campaignCount++;
+        if (campaign.document.schemaVersion === 2) {
+          const binding = campaign.document.sourceBinding;
+          const revision = sources.revision(binding.datasetId, binding.revision);
+          const sourceArtifact = revision?.document.artifacts.find(item => item.relativePath === binding.artifactPath);
+          if (!revision || revision.documentSha256 !== binding.documentSha256 || !sourceArtifact
+            || sourceArtifact.sha256 !== binding.artifactSha256 || sourceArtifact.byteSize !== binding.artifactSizeBytes) {
+            throw new Error('Campaign Table 4 source artifact binding mismatch');
+          }
+        }
+        const campaignRuns: RunRecord[] = [];
         for (const track of campaign.document.tracks) {
           const identity = track.runIdentity;
           const referenced = runs.get(identity.runId);
@@ -106,6 +130,11 @@ function references(root: string) {
             && link.documentSha256 === campaign.document.sourceBinding?.documentSha256)) {
             throw new Error('Campaign exact source revision is not bound by its archived run');
           }
+          if (campaign.document.schemaVersion === 2) campaignRuns.push(referenced);
+        }
+        if (campaign.document.schemaVersion === 2) {
+          const failure = proxyCampaignEligibilityFailure(campaignRuns);
+          if (failure) throw new Error(`Campaign execution eligibility verification failed: ${failure}`);
         }
       }
       return { artifacts, sourceArtifacts, runCount, sourceLinkCount, campaignCount, gpuResults };
@@ -146,6 +175,26 @@ async function verifyContents(root: string, manifest: RunBundleManifest, complet
     || (manifest.schemaVersion === 1 && refs.campaignCount !== 0)) throw new Error('Run bundle metadata counts mismatch');
   const store = new LpbfArtifactStore(path.join(root, 'artifacts'), { readOnly: true });
   for (const ref of refs.artifacts.values()) await store.verify(ref);
+  const runs = new LpbfRunRepository(path.join(root, 'runs.sqlite'), { readOnly: true });
+  try {
+    for (const campaign of runs.allProxyCampaigns()) {
+      if (campaign.document.schemaVersion !== 2) continue;
+      const campaignRuns = campaign.document.tracks.map(track => runs.get(track.runIdentity.runId)).filter(Boolean) as RunRecord[];
+      const eligibilityFailure = proxyCampaignEligibilityFailure(campaignRuns);
+      if (eligibilityFailure) throw new Error(`Campaign execution eligibility verification failed: ${eligibilityFailure}`);
+      for (const track of campaign.document.tracks) {
+        const run = runs.get(track.runIdentity.runId);
+        const derived = run && deriveProxyCampaignRunBinding(run, campaign.document.sourceBinding);
+        if (!run || !derived || !matchesCapturedCampaignBinding(track, derived)) {
+          throw new Error('Campaign archived run provenance binding mismatch');
+        }
+        const result = JSON.parse(run.document.capture.resultJson);
+        if (await validateArchivedProxySections(result, store)) {
+          throw new Error('Campaign captured section artifact verification failed');
+        }
+      }
+    }
+  } finally { runs.close(); }
   const resolver = storeGpuPilotArtifactResolver(store);
   for (const item of refs.gpuResults) await verifyGpuPilotArchive(item.result, item.runId, resolver);
   verifyInventory(root, refs, completed);

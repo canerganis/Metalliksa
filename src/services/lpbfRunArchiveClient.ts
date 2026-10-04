@@ -1,6 +1,8 @@
 import type { RunRecord, RunSourceLink, RunDocument, RunSourceBindingStatus, RunKind,
-  NistOpticalCaseNumber, NistOpticalReport } from '../types/lpbfRun';
+  NistOpticalCaseNumber, NistOpticalReport, NistProxyBeamInputDeclaration,
+  NistProxyCampaignSourceBinding } from '../types/lpbfRun';
 import { parseGpuPilotJob } from './lpbfSimulationService';
+import { MELT_POOL_LITERATURE_CASES } from '../data/meltPoolLiteratureCases';
 
 export interface RunPreview {
   document: RunDocument;
@@ -40,27 +42,44 @@ export interface VerifiedRunBundle extends ExportedRunBundle { verified: true }
 export interface RestoredRunBundle extends VerifiedRunBundle { restoreId: string }
 export interface ImportedRunBundle extends VerifiedRunBundle { importId: string }
 
-export interface NistProxyCampaign {
-  schemaVersion: 1;
+interface NistProxyCampaignShared {
   kind: 'lpbf-nist-amb2022-03-proxy-campaign';
   campaignId: string;
   benchmark: 'AMB2022-03-TMPG';
   caseNumber: NistOpticalCaseNumber;
-  sourceBinding: RunSourceLink & { artifactPath: string; artifactSha256: string; artifactSizeBytes: number; caseNumber: NistOpticalCaseNumber };
+  sourceBinding: NistProxyCampaignSourceBinding;
   claimBoundary: { resultKind: 'thermal-proxy-screening'; validationStatus: 'unvalidated'; experimentalValidation: false; opticalOperatorMatched: false };
-  samplingPlan: { coordinateFrame: 'scan-start-relative'; scanDirection: '+X'; sectionPositions_mm: [4.9, 6.0]; expectedTrackCount: 3; expectedObservationCount: 6; replicateSemantics: 'independent-computational-runs-only' };
-  tracks: {
+}
+
+interface NistProxySamplingPlan<ReplicateSemantics extends string> {
+  coordinateFrame: 'scan-start-relative';
+  scanDirection: '+X';
+  sectionPositions_mm: [4.9, 6.0];
+  expectedTrackCount: 3;
+  expectedObservationCount: 6;
+  replicateSemantics: ReplicateSemantics;
+}
+
+interface NistProxyTrack<ReplicateKind extends string, Identity extends NistProxyRunIdentity = NistProxyRunIdentity> {
     simulatedTrackId: string;
     experimentalTrackId: null;
-    replicateKind: 'independent-computational-run';
-    runIdentity: NistProxyRunIdentity;
+    replicateKind: ReplicateKind;
+    runIdentity: Identity;
     observations: { sectionId: 'x-4p9mm' | 'x-6p0mm'; coordinateFrame: 'scan-start-relative'; scanDirection: '+X';
       distanceFromScanStart_mm: 4.9 | 6.0; surfaceZ_m: 0; status: 'thermal-proxy';
       geometry: { width_um: number; depth_um: number };
       operator: { sectionOperatorId: string; interpolationOperatorId: string; contourOperatorId: string; evidenceClass: 'thermal-proxy-only' };
-      provenance: { sourceBinding: NistProxyCampaign['sourceBinding']; runIdentity: NistProxyRunIdentity } }[];
-  }[];
+      provenance: { sourceBinding: NistProxyCampaign['sourceBinding']; runIdentity: Identity } }[];
 }
+
+export type NistProxyCampaign = NistProxyCampaignShared & (
+  { schemaVersion: 1; beamInputDeclaration?: never;
+    samplingPlan: NistProxySamplingPlan<'independent-computational-runs-only'>;
+    tracks: NistProxyTrack<'independent-computational-run'>[] }
+  | { schemaVersion: 2; beamInputDeclaration: NistProxyBeamInputDeclaration;
+    samplingPlan: NistProxySamplingPlan<'reproducibility-evidence-not-independent-replicates'>;
+    tracks: NistProxyTrack<'reproducibility-execution', NistProxyRunIdentityV2>[] }
+);
 
 export interface NistProxyRunIdentity {
   runId: string;
@@ -73,9 +92,14 @@ export interface NistProxyRunIdentity {
   coreContract: { schemaVersion: number; modelId: string; solverId: string; actualBackend: string };
 }
 
+export interface NistProxyRunIdentityV2 extends NistProxyRunIdentity {
+  executedSettings: Record<string, unknown> & { beamDiameter_um: number };
+}
+
 export interface NistProxyCampaignValidation {
   schemaVersion: 1;
   kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation';
+  campaignId: string | null;
   status: 'unavailable' | 'proxy-screening-only';
   validationStatus: 'unvalidated';
   experimentalValidation: false;
@@ -374,8 +398,12 @@ export async function importRun(jobId: string, sources: RunSourceLink[], signal:
 const campaignId = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
 const exactKeys = (value: Record<string, unknown>, expected: string) => Object.keys(value).sort().join(',') === expected;
 
-function proxyRunIdentity(value: unknown, expectedRunId: string): value is NistProxyRunIdentity {
-  return object(value) && exactKeys(value, 'coreContract,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId')
+function proxyRunIdentity(value: unknown, expectedRunId: string, schemaVersion: 1 | 2,
+  expectedCase: NistOpticalCaseNumber): value is NistProxyRunIdentity | NistProxyRunIdentityV2 {
+  const expectedKeys = schemaVersion === 2
+    ? 'coreContract,executedSettings,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId'
+    : 'coreContract,inputSha256,materialId,materialRevisionSha256,materialSha256,resultArtifact,runDocumentSha256,runId';
+  return object(value) && exactKeys(value, expectedKeys)
     && value.runId === expectedRunId && sha(value.runDocumentSha256) && sha(value.inputSha256)
     && sha(value.materialSha256) && sha(value.materialRevisionSha256) && typeof value.materialId === 'string'
     && object(value.resultArtifact) && exactKeys(value.resultArtifact, 'path,sha256,size_bytes')
@@ -383,12 +411,16 @@ function proxyRunIdentity(value: unknown, expectedRunId: string): value is NistP
     && Number.isSafeInteger(value.resultArtifact.size_bytes) && (value.resultArtifact.size_bytes as number) >= 0
     && object(value.coreContract) && exactKeys(value.coreContract, 'actualBackend,modelId,schemaVersion,solverId')
     && Number.isSafeInteger(value.coreContract.schemaVersion) && typeof value.coreContract.modelId === 'string'
-    && typeof value.coreContract.solverId === 'string' && typeof value.coreContract.actualBackend === 'string';
+    && typeof value.coreContract.solverId === 'string' && typeof value.coreContract.actualBackend === 'string'
+    && (schemaVersion === 1 || (object(value.executedSettings) && finite(value.executedSettings.beamDiameter_um)
+      && value.executedSettings.beamDiameter_um === MELT_POOL_LITERATURE_CASES.find(
+        item => item.id === `nist-amb2022-03-${expectedCase}`)?.beamDiameter_um));
 }
 
 function proxyCampaignValidation(value: unknown): asserts value is NistProxyCampaignValidation {
   if (!object(value) || value.schemaVersion !== 1 || value.kind !== 'lpbf-nist-amb2022-03-proxy-campaign-validation'
-    || Object.keys(value).sort().join(',') !== 'comparisonResiduals,experimentalValidation,kind,numericalConvergenceStatus,observationCount,reasons,schemaVersion,status,validationStatus'
+    || Object.keys(value).sort().join(',') !== 'campaignId,comparisonResiduals,experimentalValidation,kind,numericalConvergenceStatus,observationCount,reasons,schemaVersion,status,validationStatus'
+    || (value.campaignId !== null && !campaignId(value.campaignId))
     || !['unavailable', 'proxy-screening-only'].includes(value.status as string)
     || value.validationStatus !== 'unvalidated' || value.experimentalValidation !== false
     || value.numericalConvergenceStatus !== 'not-evaluated' || value.comparisonResiduals !== null
@@ -399,8 +431,11 @@ function proxyCampaignValidation(value: unknown): asserts value is NistProxyCamp
 }
 
 function proxyCampaign(value: unknown, expectedRunIds: string[], expectedCase: NistOpticalCaseNumber): asserts value is NistProxyCampaign {
-  if (!object(value) || value.schemaVersion !== 1 || value.kind !== 'lpbf-nist-amb2022-03-proxy-campaign'
-    || Object.keys(value).sort().join(',') !== 'benchmark,campaignId,caseNumber,claimBoundary,kind,samplingPlan,schemaVersion,sourceBinding,tracks'
+  const expectedKeys = value && typeof value === 'object' && (value as Record<string, unknown>).schemaVersion === 2
+    ? 'beamInputDeclaration,benchmark,campaignId,caseNumber,claimBoundary,kind,samplingPlan,schemaVersion,sourceBinding,tracks'
+    : 'benchmark,campaignId,caseNumber,claimBoundary,kind,samplingPlan,schemaVersion,sourceBinding,tracks';
+  if (!object(value) || ![1, 2].includes(value.schemaVersion as number) || value.kind !== 'lpbf-nist-amb2022-03-proxy-campaign'
+    || Object.keys(value).sort().join(',') !== expectedKeys
     || !campaignId(value.campaignId) || value.benchmark !== 'AMB2022-03-TMPG' || value.caseNumber !== expectedCase
     || !object(value.sourceBinding) || !exactKeys(value.sourceBinding, 'artifactPath,artifactSha256,artifactSizeBytes,caseNumber,datasetId,documentSha256,revision')
     || value.sourceBinding.datasetId !== opticalDatasetId
@@ -408,6 +443,17 @@ function proxyCampaign(value: unknown, expectedRunIds: string[], expectedCase: N
     || !sha(value.sourceBinding.documentSha256) || value.sourceBinding.artifactPath !== 'table4-aggregate-v2.json'
     || value.sourceBinding.artifactSha256 !== opticalArtifactSha || value.sourceBinding.artifactSizeBytes !== 4321
     || value.sourceBinding.caseNumber !== expectedCase
+    || (value.schemaVersion === 2 && (!object(value.beamInputDeclaration)
+      || !exactKeys(value.beamInputDeclaration, 'definition,mappingStatus,measuredProfileMatched,sourceBinding,status,value_um')
+      || value.beamInputDeclaration.status !== 'published-source-declared'
+      || value.beamInputDeclaration.definition !== 'D4sigma'
+      || !finite(value.beamInputDeclaration.value_um)
+      || value.beamInputDeclaration.value_um !== MELT_POOL_LITERATURE_CASES.find(item => item.id === `nist-amb2022-03-${expectedCase}`)?.beamDiameter_um
+      || value.beamInputDeclaration.mappingStatus !== 'conditional-ideal-Gaussian'
+      || value.beamInputDeclaration.measuredProfileMatched !== false
+      || !object(value.beamInputDeclaration.sourceBinding)
+      || !exactKeys(value.beamInputDeclaration.sourceBinding, 'artifactPath,artifactSha256,artifactSizeBytes,caseNumber,datasetId,documentSha256,revision')
+      || !sameProxySourceBinding(value.beamInputDeclaration.sourceBinding, value.sourceBinding)))
     || !object(value.claimBoundary) || !exactKeys(value.claimBoundary, 'experimentalValidation,opticalOperatorMatched,resultKind,validationStatus')
     || value.claimBoundary.resultKind !== 'thermal-proxy-screening'
     || value.claimBoundary.validationStatus !== 'unvalidated' || value.claimBoundary.experimentalValidation !== false
@@ -418,14 +464,16 @@ function proxyCampaign(value: unknown, expectedRunIds: string[], expectedCase: N
     || value.samplingPlan.sectionPositions_mm.length !== 2 || value.samplingPlan.sectionPositions_mm[0] !== 4.9
     || value.samplingPlan.sectionPositions_mm[1] !== 6 || value.samplingPlan.expectedTrackCount !== 3
     || value.samplingPlan.expectedObservationCount !== 6
-    || value.samplingPlan.replicateSemantics !== 'independent-computational-runs-only'
+    || value.samplingPlan.replicateSemantics !== (value.schemaVersion === 1
+      ? 'independent-computational-runs-only' : 'reproducibility-evidence-not-independent-replicates')
     || !Array.isArray(value.tracks) || value.tracks.length !== 3) throw invalid();
   const seen = new Set<string>();
   for (let index = 0; index < value.tracks.length; index++) {
     const track = value.tracks[index];
     if (!object(track) || !exactKeys(track, 'experimentalTrackId,observations,replicateKind,runIdentity,simulatedTrackId')
       || track.simulatedTrackId !== `sim-${expectedRunIds[index]}` || track.experimentalTrackId !== null
-      || track.replicateKind !== 'independent-computational-run' || !proxyRunIdentity(track.runIdentity, expectedRunIds[index])
+      || track.replicateKind !== (value.schemaVersion === 1 ? 'independent-computational-run' : 'reproducibility-execution')
+      || !proxyRunIdentity(track.runIdentity, expectedRunIds[index], value.schemaVersion as 1 | 2, expectedCase)
       || seen.has(track.runIdentity.runId) || !Array.isArray(track.observations) || track.observations.length !== 2) throw invalid();
     seen.add(track.runIdentity.runId);
     const sections = new Set<string>();
@@ -450,15 +498,22 @@ function proxyCampaign(value: unknown, expectedRunIds: string[], expectedCase: N
   }
 }
 
+function sameProxySourceBinding(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
+  return ['datasetId', 'revision', 'documentSha256', 'artifactPath', 'artifactSha256', 'artifactSizeBytes', 'caseNumber']
+    .every(key => left[key] === right[key]);
+}
+
 function proxyCampaignPreview(value: unknown, expectedRunIds: string[], expectedCase: NistOpticalCaseNumber): asserts value is NistProxyCampaignPreview {
   if (!object(value)) throw invalid();
   proxyCampaignValidation(value.validation);
   if (value.campaign === null) {
-    if (value.validation.status !== 'unavailable' || value.previewSha256 !== undefined) throw invalid();
+    if (value.validation.status !== 'unavailable' || value.validation.campaignId !== null || value.previewSha256 !== undefined) throw invalid();
     return;
   }
-  if (value.validation.status !== 'proxy-screening-only' || !sha(value.previewSha256)) throw invalid();
-  proxyCampaign(value.campaign, expectedRunIds, expectedCase);
+  const campaign = value.campaign;
+  proxyCampaign(campaign, expectedRunIds, expectedCase);
+  if (value.validation.status !== 'proxy-screening-only' || value.validation.campaignId !== campaign.campaignId
+    || !sha(value.previewSha256)) throw invalid();
 }
 
 function campaignRequestInputs(runIds: string[], caseNumber: NistOpticalCaseNumber) {
