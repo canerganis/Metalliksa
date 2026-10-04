@@ -1,5 +1,8 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
+import '@fontsource/newsreader/latin-300.css';
+import '@fontsource/newsreader/latin-ext-300.css';
+import '@fontsource/newsreader/latin-300-italic.css';
 import '@fontsource/fira-sans/latin-300.css';
 import '@fontsource/fira-sans/latin-ext-300.css';
 import '@fontsource/fira-sans/latin-400.css';

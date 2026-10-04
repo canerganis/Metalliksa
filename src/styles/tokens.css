@@ -53,6 +53,8 @@
     /* Typography */
     --mk-font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
     --mk-font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+    /* Display serif for headlines (self-hosted @fontsource/newsreader). */
+    --mk-font-serif: "Newsreader", Georgia, "Times New Roman", serif;
     --mk-fs-2xs: 11px;
     --mk-fs-xs: 12px;
     --mk-fs-sm: 14px;
