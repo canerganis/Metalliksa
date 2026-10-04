@@ -100,6 +100,12 @@
 - TS 1063 testte 1058 geçti, 0 başarısız, 1 atlandı, 4 todo; 22 mutant öldürüldü; tsc/bundle PASS. Göç v0→v1 yalnız 6db1369 ve sonrasındaki app başlangıcında işler.
 - Tarayıcı yok, dönüşüm tabloları eksik. NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
 
+## 2026-10-05 — Pourbaix 25 °C Gibbs-minimizasyon motoru (`a280144`; CI testleri `54e168a`)
+
+- Tek-element `pourbaix-gibbs-25c-v4` (`python/pourbaix_species_25c.py`), üretilen `src/generated/pourbaixSpecies25C.json` ve 200×200 TS port/parite fikstürü; etkinlik aralığı `1e-6..1` (önceki alt sınır `1e-8`). Ni sınırları (a=1e-6): Ni/Ni²⁺ −0.4275→−0.4147 V; Ni²⁺/Ni(OH)₂ pH 9.088→8.514; Ni(OH)₂/HNiO₂⁻ pH 12.204→12.171; Ni/Ni(OH)₂ 0.1101→0.0890−0.0592·pH. Al–H₂O: eski “veri yok” durumundan dört tür alanına; pH sınırları 4.577/9.118 (a=1e-6), 2.577/15.118 (a=1). `ci.yml` (`54e168a`) `test_pourbaix_equilibrium` ve `test_pourbaix_ts_fixture` testlerini çalıştıracak şekilde güncellendi.
+- **Kontroller:** 307 Python testi OK; tsx 1213 testte 1208 geçti, 0 başarısız, 1 atlandı, 4 todo. Vite build ve bundle kontrolü OK; index 69.9 KB gzip / 70 KB bütçe, yalnız 0.1 KB marj.
+- **Doğrulanmayan/sınırlamalar:** Yeni test-point tablosu tarayıcıda görülmedi; Linux/CI koşusu yapılmadı. Zn hidroliz ihmalinin etkisi sabite bağlı (wateq4f log K −5.36; IUPAC 2013 −6.28). NiO₂, V3 olarak sunumdan withheld. NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+
 ## 2026-10-04 — Sertlik dönüşümleri (ASTM E140 / ISO 18265) ve kinetik HV (`3251a87`, `ce7df77`)
 
 - **Kapsam:** `src/utils/hardnessConversion.ts` (E140 Tablo 1: HRC 20-68; Tablo 2: HRB 55-100; ISO 18265 A.1 Rm, HV 80-650; doğrusal interpolasyon, tablo dışı `Unavailable`, yalnız östenitik olmayan çelikler); `python/hardness_conversion_e140.py` ile kinetik `predictedHardness_HV` E140 Tablo 1'den (AISI 4140/4340/D2, HRC 20-68), diğerleri `null` + `predictedHardness_HV_status`. Bu bir yazılım/doğruluk düzeltmesidir; yeni bilimsel iddia yoktur ve dönüşümler yaklaşıktır (ölçüm değildir).
