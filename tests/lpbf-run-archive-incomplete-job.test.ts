@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { once } from 'node:events';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -11,33 +11,20 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 // Phase 2 D9: archiving a cancelled job through the real worker and the real route used to answer
 // 503 "Run archive unavailable or integrity check failed." It is a client error.
-async function waitForWorker(deadline: number) {
-  for (;;) {
-    try { return await lpbfWorker.request('capabilities'); }
-    catch (error) {
-      if ((error as { code?: unknown })?.code !== 'LPBF_WORKER_STARTING' || Date.now() > deadline) throw error;
-      await new Promise(resolve => setTimeout(resolve, 250));
-    }
-  }
-}
 
 test('archiving a cancelled, unknown or malformed job returns a specific 4xx without paths', async t => {
   const root = mkdtempSync(path.join(process.cwd(), '.tmp-lpbf-archive-incomplete-'));
-  const priorJobRoot = process.env.METALLIKSA_JOB_ROOT;
-  process.env.METALLIKSA_JOB_ROOT = path.join(root, 'jobs');
+  const restoreJobRoot = isolateWorkerJobRoot(path.join(root, 'jobs'));
   let server: Server | undefined;
   t.after(async () => {
-    const workerProcess = (lpbfWorker as unknown as { process?: NodeJS.EventEmitter }).process;
-    const workerExit = workerProcess ? once(workerProcess, 'exit') : undefined;
-    lpbfWorker.close();
-    if (workerExit) await Promise.race([workerExit, new Promise(resolve => setTimeout(resolve, 3000))]);
-    if (priorJobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
-    else process.env.METALLIKSA_JOB_ROOT = priorJobRoot;
+    await stopRealWorker();
+    restoreJobRoot();
     if (server) await new Promise<void>(resolve => server!.close(() => resolve()));
-    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    await removeWorkerTestRoot(root);
   });
 
   const sourceRoot = path.join(root, 'sources');
@@ -64,7 +51,7 @@ test('archiving a cancelled, unknown or malformed job returns a specific 4xx wit
     return { status: response.status, body: JSON.parse(text) as { error?: string } };
   };
 
-  await waitForWorker(Date.now() + 90_000);
+  await waitForRealWorker(Date.now() + 90_000);
   // Submit and cancel are two separate RPCs and the worker executes concurrently, so a job can in principle finish first (cancel keeps a
   // completed status). The 3 mm powder-layer track (the validator maximum) makes that very unlikely; to remove the remaining timing dependence
   // we retry with a distinct input (no cache hit) until a cancel actually lands, and fail loudly if it never does.
