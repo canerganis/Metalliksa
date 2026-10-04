@@ -1,0 +1,1024 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g17_evaporation_alsi10mg",
+ "group": "G17",
+ "description": "evaporationModel=True AlSi10Mg 500 W: L_v passed to the inversion (today IN718's 6.4e6)",
+ "slow": false,
+ "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  12.6,
+  11.9
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "result.canonicalSha256": "4705b71ed89641fd8962cfd061e2769d8dad7992b5e734122ed4f6cf837e9990",
+  "result.orderedTypedSha256": "a9a4cbc0311fbc152a318dee7679a2840993cbbd76ad04815622b2f8426e0e41",
+  "result.topLevelKeys": [
+   "schemaVersion",
+   "requestedMode",
+   "effectiveMode",
+   "solver",
+   "settings",
+   "material",
+   "requestedBackend",
+   "confidence",
+   "validationStatus",
+   "productionReady",
+   "label",
+   "provenance",
+   "analyticalComparison",
+   "assumptions",
+   "fallbackReason",
+   "metrics",
+   "thermalHistory",
+   "fieldSeries",
+   "peakInterpolatedMeltPool",
+   "fieldOverlapDiagnostics",
+   "midTrackCrossSection",
+   "midTrackInterpolatedCrossSection",
+   "numericalDiagnostics",
+   "energyBalance",
+   "discretization",
+   "scanPath",
+   "massBalance",
+   "phaseAudit",
+   "geometricDefectScreen",
+   "regime",
+   "mainRisk",
+   "recommendation",
+   "riskScope",
+   "resourceEstimate",
+   "unresolvedPhysics",
+   "confidenceReason",
+   "coreContract",
+   "fieldPreviews",
+   "artifacts",
+   "retentionPolicy"
+  ],
+  "result.key.schemaVersion": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+  "result.key.requestedMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
+  "result.key.effectiveMode": "cb2842d6687d19c69a6c0d4eb6a0f1af02951cef170de56ab331046ea5baac08",
+  "result.key.solver": "379da9f17510ad5e9f42d7be64eda2f553ada427d6a389bd3552f81dbe7cd97d",
+  "result.key.settings": "ebfae08ad43152c7dcf395aadd7aae82cd0f7d597565438da1df6372fdceab7f",
+  "result.key.material": "b7ca40e2dab7b2d4584c3db5d4df7dd315dcc2d2cbdc5e0180cbcc350cad08ae",
+  "result.key.requestedBackend": "86a3d4125c91d4621cfc34f7d2ac1f2fb7df908cae63aef232d0b9e0713171db",
+  "result.key.confidence": "364bb7082249ee9fbc5247ee49735c4246f271b82c2745a35107ddda0d7cabcc",
+  "result.key.validationStatus": "034d24b06221faeb3860b36b4069fe6436aeadc3db62a687efe73615cfb2541d",
+  "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+  "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
+  "result.key.provenance": "6da17333b3241036e2902629d6860961a6badf770dccf880ccd65764271ef0e0",
+  "result.key.analyticalComparison": "d09ba7782cf607ff8ca84ef61f1af78ae80254d4cb68c386baab752d2e8cd963",
+  "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.metrics": "02fc6dd2a82fe16c05ccec3f12fc87e18ea94e3467d9f3b55a16ac54e316359e",
+  "result.key.thermalHistory": "58cfde7b8039836996df11d1d41376c0ddc35808703f9e133c68b72f65c514cd",
+  "result.key.fieldSeries": "7e5d844a6929e466a78a570e89bba38f7aca29004a88e1b5afc69fa25fa7c8e3",
+  "result.key.peakInterpolatedMeltPool": "204e3171c2745c701beaacb22584fe589503d19f63b89da99a1f0147e11c4d30",
+  "result.key.fieldOverlapDiagnostics": "907b22e527fbe7132939187694c83d95ded991b5cde9d8449533ed30cb71c5ce",
+  "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.numericalDiagnostics": "75da1e786ad7aa63059ac11d37f0ec27830333bb0942c81a26415a8322c180a9",
+  "result.key.energyBalance": "2f01ce4831f85110f2f46af6aabb325b19f4cb4493c8aa432d7a5376d3981c51",
+  "result.key.discretization": "e795e35511827244307c9091931f8b58660ed592ca08b4f37bea6606d4fa8fcf",
+  "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
+  "result.key.massBalance": "703f979690e4dc9e68bbf717347866acf2dd6240bf8b056d35c388898e30b6fd",
+  "result.key.phaseAudit": "71aaeacf1605d54f31a45f0251afee20e04959789a20f057056c268788d676da",
+  "result.key.geometricDefectScreen": "c0763bd05192cd5243a0a5a5b1a10dca1921c97023713092c873de750becfca6",
+  "result.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
+  "result.key.mainRisk": "e41166513bee88e218627842ae69030e5c223d8e673ebb24f2ee9c705d3d2f55",
+  "result.key.recommendation": "80c4c6614e14f73e5e14c65ec698078e407eb1636f70ab16023cbb0e62e003b9",
+  "result.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
+  "result.key.resourceEstimate": "3ba8bb7b1be206d20f7fa936f8c80d1f03c716c5e219dafddfd57cb35b5baef9",
+  "result.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
+  "result.key.confidenceReason": "906944d2c579df879c4987a7d07a4e032bf053927f6b33f8e6c954537ac1f1e0",
+  "result.key.coreContract": "3347de47a1a6c9f57a7038c547fc14f5686f3a965d98cc3d24c142bcdacb1bd6",
+  "result.key.fieldPreviews": "063bd617bcf8a2240843fb42b737f1c1faedb1825e5ea306d6f222dba9726bf5",
+  "result.key.artifacts": "93db4881b2e827df907b18806a241fa02e61abc61c21c05b06217e709ad73967",
+  "result.key.retentionPolicy": "ab930f19e2eab573860fa3ee488c98026d2867e0b2408442da3c3d6415a31807",
+  "result.coreContract.inputSha256": "998c076e37db3d0be8c7425df5d2db57ffa61110a351f51d4abb9911a86b0e9c",
+  "result.coreContract.materialSha256": "bffd5a517a8132a8237b0d56bd2ef0be637d400fa8286436eb2516c48e76e5ea",
+  "result.coreContract.solverId": "enthalpy-fv-6",
+  "result.coreContract.modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+  "result.material.materialRevisionSha256": "718d88cff3b99cff86cbcf702ee295e0940e8e5bc481a68d8f23f9224e3ff456",
+  "result.validationStatus": "unvalidated",
+  "result.productionReady": false,
+  "result.effectiveMode": "standard",
+  "result.label": "Unvalidated transient thermal",
+  "result.confidence": "low",
+  "result.implementationHashOccurrencesAfterStrip": 0,
+  "artifacts.files": [
+   "field-coordinates.bin",
+   "field-frame-000.bin",
+   "field-frame-001.bin",
+   "field-frame-002.bin",
+   "field-frame-003.bin",
+   "field-frame-004.bin",
+   "field-frame-005.bin",
+   "field-frame-006.bin",
+   "field-frame-007.bin",
+   "field-frame-008.bin",
+   "field-frame-009.bin",
+   "field-frame-010.bin",
+   "field-frame-011.bin",
+   "field-frame-012.bin",
+   "field-frame-013.bin",
+   "field-frame-014.bin",
+   "field-frame-015.bin",
+   "field-frame-016.bin",
+   "field-frame-017.bin",
+   "field-frame-018.bin",
+   "field-frame-019.bin",
+   "field-frame-020.bin",
+   "field-frame-021.bin",
+   "field-frame-022.bin",
+   "field-frame-023.bin",
+   "field-frame-024.bin",
+   "field-frame-025.bin",
+   "field-frame-026.bin",
+   "field-frame-027.bin",
+   "field-frame-028.bin",
+   "field-frame-029.bin",
+   "field-frame-030.bin",
+   "field-frame-031.bin",
+   "field-frame-032.bin",
+   "field-frame-033.bin",
+   "field-frame-034.bin",
+   "field-frame-035.bin",
+   "field-frame-036.bin",
+   "field-frame-037.bin",
+   "field-frame-038.bin",
+   "field-frame-039.bin",
+   "field-frame-040.bin",
+   "field-frame-041.bin",
+   "field-frame-042.bin",
+   "field-frame-043.bin",
+   "field-frame-044.bin",
+   "field-frame-045.bin",
+   "field-frame-046.bin",
+   "field-frame-047.bin",
+   "field-frame-048.bin",
+   "field-frame-049.bin",
+   "field-frame-050.bin",
+   "field-frame-051.bin",
+   "field-frame-052.bin",
+   "field-frame-053.bin",
+   "field-frame-054.bin",
+   "field-frame-055.bin",
+   "field-frame-056.bin",
+   "field-frame-057.bin",
+   "field-frame-058.bin",
+   "field-frame-059.bin",
+   "field-series.json",
+   "peak-field.npz",
+   "phase-slice.svg",
+   "temperature-slice.svg",
+   "thermal-history.csv"
+  ],
+  "artifact.field-coordinates.bin": [
+   13068,
+   "bb8af523b0b1279d27b53b8a363d9ce45ece8ac1cca1628d6fa63f2fce49730c"
+  ],
+  "artifact.field-frame-000.bin": [
+   4356,
+   "74795dbb5625ad74776d96a9aeb01888c293307839374f0893fb385700708041"
+  ],
+  "artifact.field-frame-001.bin": [
+   4356,
+   "c642a413182e43efda9e189f8df2ede52bb683d597f98fddcd3ce39844fd9a94"
+  ],
+  "artifact.field-frame-002.bin": [
+   4356,
+   "7994c3dcc9ba94495bce54d8d8e41e0bf0ba07168af88b308461278823d1c8bb"
+  ],
+  "artifact.field-frame-003.bin": [
+   4356,
+   "130218bdf15f2a02c208ebafcc0e3b3c62abbcfc5e8d3bfc00b43fe73fd4583e"
+  ],
+  "artifact.field-frame-004.bin": [
+   4356,
+   "be7b2db67b73f698a4a9723f904623be75f94f642e183304f8eb4a786c22c7c1"
+  ],
+  "artifact.field-frame-005.bin": [
+   4356,
+   "d5d7aba9543b021307d4772841ee9fb795aa21de0fc878a1ad8629891a98d0d3"
+  ],
+  "artifact.field-frame-006.bin": [
+   4356,
+   "415d4bf738857efbb584b951ec93a6c54fb076c726ae7e2a9f4d0a8e9b6b40cc"
+  ],
+  "artifact.field-frame-007.bin": [
+   4356,
+   "efca9fc8e337aa807bd9ea47b714c8e3242718a028e7f89ffefe1448fa5e2000"
+  ],
+  "artifact.field-frame-008.bin": [
+   4356,
+   "3cbb899ccf96ea024a50c3c46e78b087bc652e0fa85bc6b06e6f1b5d0e015084"
+  ],
+  "artifact.field-frame-009.bin": [
+   4356,
+   "a0f868a65f63e1ae4f77322d0793ea069d0d7cf2b1cd020ad317b941100b86d9"
+  ],
+  "artifact.field-frame-010.bin": [
+   4356,
+   "22ded0236874847a037ce704620abedb69a3c71a9d7750b7fa35c415b04ce7d1"
+  ],
+  "artifact.field-frame-011.bin": [
+   4356,
+   "c3d52552142a5eece44b3175cd0efc525f32c85e8c19e0494f51da536e4e5c60"
+  ],
+  "artifact.field-frame-012.bin": [
+   4356,
+   "9cb132075526fa0f2b2429c303f271ac3260f24d3805a52805b83b66498fde9b"
+  ],
+  "artifact.field-frame-013.bin": [
+   4356,
+   "dd5cda314b83b25fa71e4628d592833320c394c147c2adb79850ff701900f007"
+  ],
+  "artifact.field-frame-014.bin": [
+   4356,
+   "9cc83122aa77899f5a1b9c4f8050657bad12b484e085fb283b9dc50efd88c5ff"
+  ],
+  "artifact.field-frame-015.bin": [
+   4356,
+   "63b686da61eb28d2dfa9ac4b18af6832bee58f76753b172a639f3f9c0910b745"
+  ],
+  "artifact.field-frame-016.bin": [
+   4356,
+   "901e9011b471a8a648aea709588e9a8b2f65625267f84d484b909c4091deb628"
+  ],
+  "artifact.field-frame-017.bin": [
+   4356,
+   "27de76a008f46399f78cde4bbe9f16ccfc2f732103d555ddf821472e464e5034"
+  ],
+  "artifact.field-frame-018.bin": [
+   4356,
+   "f88f40471af4344ab762b5d4a6acf3ca6bfbd571ac52ce746b8329ce4efa563d"
+  ],
+  "artifact.field-frame-019.bin": [
+   4356,
+   "3653202a465dcc96aa72d6b0643a00d403ccedcc0290af5cb595824dde92e0ac"
+  ],
+  "artifact.field-frame-020.bin": [
+   4356,
+   "57587025d14554899fa023daa58880400bcaa14847edaf3f3071ee650e380150"
+  ],
+  "artifact.field-frame-021.bin": [
+   4356,
+   "b907658dc43e1d2c607dec6e43fe5b15dfc3550ca8b1546edceb021822e9354b"
+  ],
+  "artifact.field-frame-022.bin": [
+   4356,
+   "b0232d8fe70ac6eec560fa6a8e673cec0c4c139028fca900ab0c74bde8cf4b9f"
+  ],
+  "artifact.field-frame-023.bin": [
+   4356,
+   "d134b03c7eefc869b97dfe83834750192864a7caa88c0d729f069a11d772a7ed"
+  ],
+  "artifact.field-frame-024.bin": [
+   4356,
+   "67aac9bcd666b9b4b60ee3878cf46945d0050c3ad2ccd17916adb569765834ed"
+  ],
+  "artifact.field-frame-025.bin": [
+   4356,
+   "2a1f09c9c5dbb83625a55252458550129b577db969c9e35b2413fb857abde4f2"
+  ],
+  "artifact.field-frame-026.bin": [
+   4356,
+   "db1c17afb36e29a9cd9af2df10d464e6ecffeaf6e01ec530f5457e93f3d73d16"
+  ],
+  "artifact.field-frame-027.bin": [
+   4356,
+   "8df4ac6f7dfa0ce7a38508de5199b2a9b224ea9c20d08382e2f16cd9a03126b8"
+  ],
+  "artifact.field-frame-028.bin": [
+   4356,
+   "188ca72c651edc05792c325195b4567fe7369e3dd86c3404ff237c961b460d11"
+  ],
+  "artifact.field-frame-029.bin": [
+   4356,
+   "37b37f8694d53be43e32d6dbc5deaa3085bb525b568771c295b0d906271108bb"
+  ],
+  "artifact.field-frame-030.bin": [
+   4356,
+   "42c6f410b741c5a8904a7e3541ca2129d198ee6f61f369ae7c69d816d5e3b6a7"
+  ],
+  "artifact.field-frame-031.bin": [
+   4356,
+   "3cd121eb88bfc04d7b64b20a4333295f344fb5c1cecf0ab2d41a7b7838ad8396"
+  ],
+  "artifact.field-frame-032.bin": [
+   4356,
+   "875ef1e7301974ddd45ba04f3e0d01fd0e35b6964a49d9865260290a1c3b9ae6"
+  ],
+  "artifact.field-frame-033.bin": [
+   4356,
+   "5b68723e846bdf4b42d0785bf1c7cce9d32a5b998565be8409eb83048f8f9150"
+  ],
+  "artifact.field-frame-034.bin": [
+   4356,
+   "2607cbff4a60d4004bed830162bc64258d4cfccd5999bc4892a54417c0804eb2"
+  ],
+  "artifact.field-frame-035.bin": [
+   4356,
+   "8bfd18abb1f169e4755a593bee3b6721bf8634aa4cabb7be46668c78d33af9c6"
+  ],
+  "artifact.field-frame-036.bin": [
+   4356,
+   "bf1e34807a6056484ca12a691cd698b6f0a442850badeb0a59de4e68510454e2"
+  ],
+  "artifact.field-frame-037.bin": [
+   4356,
+   "8cf9b331f6382613f045bb1e70e1a5adc48807aaa56e8318a6ea36a6cfe1aacf"
+  ],
+  "artifact.field-frame-038.bin": [
+   4356,
+   "d9a37f9f4b13d0d2a628a86b71e37932707a030fc199bd6658639a002ece8f42"
+  ],
+  "artifact.field-frame-039.bin": [
+   4356,
+   "6bb748d727e42a6a28e16065077a4c4a77e2e259e1e9f85de75652f74403d187"
+  ],
+  "artifact.field-frame-040.bin": [
+   4356,
+   "43d7fc579517b6081a7c1bfac5f811a7d8cf34a4e41fc7382ff558e61feae3bc"
+  ],
+  "artifact.field-frame-041.bin": [
+   4356,
+   "d65a71b9bd153533642bced9ca1ae612e71542e8bf579286757cd5c095311239"
+  ],
+  "artifact.field-frame-042.bin": [
+   4356,
+   "870eb13109b37875aca3f273757c3bd478cc46da6d75f6e6d60ceb319c39d50b"
+  ],
+  "artifact.field-frame-043.bin": [
+   4356,
+   "676411093b4ce3eaa9cb6fce0a08625bb0a83619ebefa19d003bf51be6ac3a16"
+  ],
+  "artifact.field-frame-044.bin": [
+   4356,
+   "8feca76dec9974b9d60af56888fc46e1413207069f2b9c5539461e18ef995451"
+  ],
+  "artifact.field-frame-045.bin": [
+   4356,
+   "c784067a59ac3549a6bad45ee96fbea4f21de476e48c7ed2f1d0df9c7c366c0e"
+  ],
+  "artifact.field-frame-046.bin": [
+   4356,
+   "ddde9fe582ec3673e51026faccfeb7cfc1c982188b1d55df292cec1348d13fa2"
+  ],
+  "artifact.field-frame-047.bin": [
+   4356,
+   "26c47f7804a3d6ce62f7951061f0d1f0405419b177187df79ddd25476d69fbc2"
+  ],
+  "artifact.field-frame-048.bin": [
+   4356,
+   "fff4e9c5eddddded987c55208d9808f2eb43f42eaa291bad2cd75cf0cb4f2b8b"
+  ],
+  "artifact.field-frame-049.bin": [
+   4356,
+   "7f4aeb0d6e314cd944579749625fad4d69c2e026f6e21c8f3382eaef50512705"
+  ],
+  "artifact.field-frame-050.bin": [
+   4356,
+   "272f2c0bebb5e7255f58d9ef94a90517e503e798a36ebe7442a759c40e922b4e"
+  ],
+  "artifact.field-frame-051.bin": [
+   4356,
+   "1ecc9e395531df28f74951d3a357f63d1e3647cebd24aa776d7ab3022d5570dd"
+  ],
+  "artifact.field-frame-052.bin": [
+   4356,
+   "d5b7d75f1cf2a66d62e87d80adade0be6e5f8faff579e0f334f939113cd9c527"
+  ],
+  "artifact.field-frame-053.bin": [
+   4356,
+   "12d4a3ffa4537cd5304146c8d3ed3fde26b038dedb20258a4603dd10f2b242e7"
+  ],
+  "artifact.field-frame-054.bin": [
+   4356,
+   "91335fc5a7e4c413969a9ee30d702de774b449de71dbb59914e56d8747354a8d"
+  ],
+  "artifact.field-frame-055.bin": [
+   4356,
+   "71a0eb575c8e50dd5589729b1e78dd47ba1d9a7bf7bf0951adc6e253fa9f96dd"
+  ],
+  "artifact.field-frame-056.bin": [
+   4356,
+   "0090ebde4e5a055c005d562648ddec3366f7c0c82e3bd6aa492f35f6b7876830"
+  ],
+  "artifact.field-frame-057.bin": [
+   4356,
+   "6cdfa47e99ba531bdee548214664775a1831fb7c515a2ef7ea5e08d324ec17ec"
+  ],
+  "artifact.field-frame-058.bin": [
+   4356,
+   "6d86164fb7a05326af1395e5e975ef1f746809e54362ec7958fad342741d4812"
+  ],
+  "artifact.field-frame-059.bin": [
+   4356,
+   "ee6b8e9880db3670593786f1133471af5b743caf798cef3d8aae5443b37af6d1"
+  ],
+  "artifact.field-series.json": [
+   25376,
+   "c252af45edde7d8edb9987aeb764d768ac18788cea3a0a4119c17d8ce29ba340"
+  ],
+  "artifact.peak-field.npz": [
+   9796,
+   "71060b56646b4c4622ef59908f213328ccbac6c1eee714269cee210644a2c6ea"
+  ],
+  "npz.peak-field.npz.arrayNames": [
+   "coordinates_m",
+   "T_K",
+   "active",
+   "liquid_fraction",
+   "surface_m",
+   "scanAngle_deg",
+   "time_s",
+   "step",
+   "liquidus_K",
+   "mesh_m"
+  ],
+  "npz.peak-field.npz.array.coordinates_m": [
+   "<f8",
+   [
+    1089,
+    3
+   ],
+   "fb4a6f1d3f88d27d736aaa89f5c9c8a2d829cca1d0c8e7fb7173773e55b6c09f"
+  ],
+  "npz.peak-field.npz.array.T_K": [
+   "<f8",
+   [
+    1089
+   ],
+   "e313a66ffa8ba72b5fee47129731b0b62b132aac05b858c58b017ec1c7dac01d"
+  ],
+  "npz.peak-field.npz.array.active": [
+   "|b1",
+   [
+    1089
+   ],
+   "c45de067306ec80ca23e5699c1e8e673c1ada4d805bd96815634710ef47b5a80"
+  ],
+  "npz.peak-field.npz.array.liquid_fraction": [
+   "<f8",
+   [
+    1089
+   ],
+   "74d02dbcd6bf6f8aba112c6df94e47fd6721c950da7e54b8faaed5c9fd6c1b12"
+  ],
+  "npz.peak-field.npz.array.surface_m": [
+   "<f8",
+   [
+    1
+   ],
+   "211fadb6688583d4950cc21a825e98e1a2b18fabc1092d8bbf65c69d77f5163c"
+  ],
+  "npz.peak-field.npz.array.scanAngle_deg": [
+   "<f8",
+   [
+    1
+   ],
+   "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+  ],
+  "npz.peak-field.npz.array.time_s": [
+   "<f8",
+   [
+    1
+   ],
+   "99cdad826237236fa3074d48d5af340b6531d1adffda379af9323c5ca093a1a6"
+  ],
+  "npz.peak-field.npz.array.step": [
+   "<i8",
+   [
+    1
+   ],
+   "58e02619f600d78b2f70fea4baa6d67b6ba3c8836c6cbe2d9e6f462426f05e9d"
+  ],
+  "npz.peak-field.npz.array.liquidus_K": [
+   "<f8",
+   [
+    1
+   ],
+   "9c38983a39b3d9a565b8867162e8bd4ac4dddccdb777f438dc830aaf3a183737"
+  ],
+  "npz.peak-field.npz.array.mesh_m": [
+   "<f8",
+   [
+    1
+   ],
+   "211fadb6688583d4950cc21a825e98e1a2b18fabc1092d8bbf65c69d77f5163c"
+  ],
+  "artifact.phase-slice.svg": [
+   8671,
+   "474c17e2849b2b75e3db6892c13184ff2367fe82ff535ab7c3e2ef2b29058e0f"
+  ],
+  "artifact.temperature-slice.svg": [
+   8680,
+   "7ff1ab53145eba0a8a4fb6867858f963dda8afe82604dba70d57f49737da24d1"
+  ],
+  "artifact.thermal-history.csv": [
+   6935,
+   "ca4d9e2bfc2e76f14bd5cde82dabf3e47c6ebba1be569ddb1eabaf4937216a2f"
+  ],
+  "result.artifactsListedMatchDisk": true,
+  "result.artifactsImplementationHashOccurrences": 0,
+  "evaporation.inversionCalls": 1135,
+  "evaporation.latentHeatVapUsed_J_kg": [
+   [
+    6400000.0,
+    "0x1.86a0000000000p+22"
+   ]
+  ],
+  "evaporation.maxVaporFraction": [
+   0.7520321767565515,
+   "0x1.810a5c896b0c9p-1"
+  ],
+  "evaporation.authorityLatentHeatVap_J_kg": [
+   10500000.0,
+   "0x1.406f400000000p+23"
+  ],
+  "evaporation.materialSnapshotHasLatentHeatVap": false,
+  "evaporation.authorityProbe.latentHeatVapUsed_J_kg": [
+   [
+    10500000.0,
+    "0x1.406f400000000p+23"
+   ]
+  ],
+  "evaporation.authorityProbe.maxVaporFraction": [
+   0.45838151726113613,
+   "0x1.d561f6e6e8e5dp-2"
+  ],
+  "evaporation.authorityProbe.resultCanonicalEqual": true,
+  "evaporation.authorityProbe.artifactsEqual": true
+ },
+ "rawValues": {
+  "result.key.analyticalComparison": {
+   "rosenthal": {
+    "width_um": 216.66666666666669,
+    "depth_um": 108.33333333333334,
+    "length_um": 291.66666666666663,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   },
+   "goldak": {
+    "width_um": 133.33333333333334,
+    "depth_um": 66.66666666666667,
+    "length_um": 151.6666666666667,
+    "gridResolution_um": [
+     11.666666666666769,
+     8.333333333333334
+    ],
+    "truncated": false,
+    "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+   }
+  },
+  "result.key.assumptions": [
+   "SI internal units; beam diameter is 1/e^2 intensity diameter.",
+   "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores.",
+   "Estimated material laws; fixed reference density conserves mass on a stationary grid.",
+   "Uniform effective powder, irreversible conductivity densification; no resolved powder particles.",
+   "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
+   "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
+   "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
+   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
+   "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
+   "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
+  ],
+  "result.key.confidence": "low",
+  "result.key.confidenceReason": "estimated material data and unresolved flow; no independent experimental validation.",
+  "result.key.coreContract": {
+   "schemaVersion": 1,
+   "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+   "actualBackend": "numpy-reference",
+   "requestedBackend": "reference",
+   "effectiveMode": "standard",
+   "solverId": "enthalpy-fv-6",
+   "inputSha256": "998c076e37db3d0be8c7425df5d2db57ffa61110a351f51d4abb9911a86b0e9c",
+   "materialSha256": "bffd5a517a8132a8237b0d56bd2ef0be637d400fa8286436eb2516c48e76e5ea",
+   "units": {
+    "power": "W",
+    "speed": "mm/s",
+    "length": "um",
+    "preheat": "degC",
+    "temperature": "K",
+    "internalLength": "m",
+    "time": "s",
+    "energy": "J",
+    "beamDiameter": "1/e2-intensity"
+   },
+   "resolvedPhysics": {
+    "conduction": true,
+    "transient": true,
+    "latentHeat": true,
+    "momentum": false,
+    "freeSurface": false,
+    "evaporation": false
+   },
+   "evidenceClass": "unvalidated-model"
+  },
+  "result.key.discretization": {
+   "cells": 1089,
+   "mesh_m": 3.9999999999999996e-05,
+   "minimumDt_s": 6.27594046510205e-08,
+   "meanDt_s": 2.471751412429378e-07,
+   "steps": 1416
+  },
+  "result.key.effectiveMode": "standard",
+  "result.key.energyBalance": {
+   "input_J": 0.022500000000000013,
+   "losses_J": 0.0008147320635808594,
+   "stored_J": 0.021685267936419134,
+   "relativeError": 9.251858538542966e-16
+  },
+  "result.key.fallbackReason": null,
+  "result.key.fieldOverlapDiagnostics": {
+   "modelId": "field-inter-track-overlap-v1",
+   "scope": "single-track",
+   "tracks": 1,
+   "layers": 1,
+   "trackOverlapRatio": null,
+   "meanInterTrackOverlapRatio": null,
+   "minInterTrackOverlapRatio": null,
+   "interTrackGapVolume_um3": 0.0,
+   "hasInterTrackGap": false,
+   "interTrackLackOfFusion": false,
+   "interLayerPenetrationDepth_um": 80.0,
+   "interLayerRemeltRatio": 0.4745762711864407,
+   "globalRemeltRatio": 0.0,
+   "totalMeltVolume_um3": 3775999.9999999986,
+   "totalRemeltVolume_um3": 0.0,
+   "status": "single-track-evaluated",
+   "note": "Single track simulation; inter-track overlap requires >= 2 tracks."
+  },
+  "result.key.fieldPreviews": [
+   "temperature-slice.svg",
+   "phase-slice.svg"
+  ],
+  "result.key.fieldSeries": "field-series.json",
+  "result.key.geometricDefectScreen": {
+   "modelId": "elliptic-overlap-screening-v1",
+   "scope": "single-track-cross-section",
+   "status": "geometry-screened",
+   "limitations": [
+    "Geometric screening only; no pore probability, porosity estimate, or certification.",
+    "Requires local single-track width and penetration depth for an aligned semi-elliptical cross-section.",
+    "Ignores local pool fluctuations, track registration, powder packing, and remelting history.",
+    "Accuracy depends on supplied geometry; Rosenthal-derived dimensions can fail this screen.",
+    "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
+   ],
+   "lackOfFusion": {
+    "status": "covered-geometrically",
+    "ellipseIndex": 0.36111111111111127,
+    "signedMargin": 0.6388888888888887,
+    "overlapDepth_um": 103.92304845413261,
+    "maximumHatch_um": 188.56180831641265,
+    "riskScreened": false,
+    "reason": "Only the idealized elliptical overlap condition is evaluated."
+   },
+   "keyhole": {
+    "depthToWidth": 0.6,
+    "risk": "low",
+    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+   },
+   "balling": {
+    "lengthToWidth": 1.4000000000000001,
+    "risk": "low",
+    "reason": "L/W ratio 1.40 < \u03c0 indicates stable continuous track without capillary breakup."
+   },
+   "gasPore": {
+    "risk": null,
+    "reason": "Gas inventory, transport, and pore nucleation are not resolved."
+   },
+   "porosity": {
+    "value": null,
+    "reason": "Geometry screening does not predict volumetric porosity."
+   },
+   "provenance": [
+    {
+     "title": "Harkin et al. (2023), Equation 5",
+     "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
+     "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
+    },
+    {
+     "title": "Yadroitsev et al. (2010)",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
+     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
+    },
+    {
+     "title": "King et al. (2014) & Cunningham et al. (2019)",
+     "url": "https://doi.org/10.1126/science.aav4687",
+     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+    }
+   ]
+  },
+  "result.key.label": "Unvalidated transient thermal",
+  "result.key.mainRisk": "keyhole (screening)",
+  "result.key.massBalance": {
+   "initial_kg": 1.7486433559663857e-07,
+   "deposited_kg": 0.0,
+   "final_kg": 1.7486433559663857e-07,
+   "relativeError": 0.0,
+   "scope": "Stationary reference mass accounting; no continuity, evaporation or shrinkage solved"
+  },
+  "result.key.material": {
+   "solidus_K": 830.15,
+   "liquidus_K": 868.15,
+   "boiling_K": 2743.15,
+   "latentHeat_J_kg": 397000.0,
+   "absorptivity": 0.18,
+   "emissivity": 0.35,
+   "dGamma_dT": -0.00035,
+   "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+   "quality": "estimated",
+   "table": [
+    [
+     273.15,
+     2680.0,
+     130.0,
+     910.0,
+     0.0013
+    ],
+    [
+     868.15,
+     2390.0,
+     85.0,
+     1180.0,
+     0.0013
+    ],
+    [
+     2743.15,
+     2390.0,
+     85.0,
+     1180.0,
+     0.0013
+    ]
+   ],
+   "name": "AlSi10Mg",
+   "version": "lpbf-materials-1",
+   "temperatureCoverage_K": [
+    273.15,
+    2743.15
+   ],
+   "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+   "materialId": "alsi10mg",
+   "provenanceClass": "estimated-legacy",
+   "materialIdentitySchemaVersion": 1,
+   "materialAuthority": "four_alloy_materials.py",
+   "materialAuthorityRevisionSha256": "5312833a6fb7f7fd632ca6a300349928c43dc04c271c579866a9bef050791e2c",
+   "materialRevisionSha256": "718d88cff3b99cff86cbcf702ee295e0940e8e5bc481a68d8f23f9224e3ff456"
+  },
+  "result.key.metrics": {
+   "length_um": 280.0,
+   "width_um": 199.99999999999997,
+   "depth_um": 119.99999999999999,
+   "volume_um3": 3391999.999999999,
+   "crossSectionArea_um2": 17599.999999999996,
+   "peakTemperature_K": 2743.15,
+   "thermalGradient_K_m": 2419608.9837611103,
+   "solidificationRate_m_s": 0.8084249472868746,
+   "coolingRate_K_s": 885650.9390247617,
+   "keyholeDepth_um": null,
+   "recoilPressure_Pa": null,
+   "marangoniNumber": 3349.785067873302,
+   "pecletNumber": 5.308611764705882,
+   "aspectRatio": 0.6,
+   "trackOverlapRatio": null,
+   "remeltingRatio": 0.0
+  },
+  "result.key.midTrackCrossSection": null,
+  "result.key.midTrackInterpolatedCrossSection": null,
+  "result.key.numericalDiagnostics": {
+   "meltPoolExtraction": "accepted-step-molten-volume-v1",
+   "peakMeltTime_s": 0.00023436807676823144,
+   "peakMeltStep": 1082,
+   "meltPoolObservedSteps": 1416,
+   "peakMeltCellCount": 53,
+   "equalMaximumEndpointCount": 5,
+   "firstEqualMaximumTime_s": 0.00023436807676823144,
+   "lastEqualMaximumTime_s": 0.00023544484217867374,
+   "sampledPeakMeltVolume_um3": 3327999.9999999986,
+   "peakMeltSamplingLossFraction": 0.018867924528301886,
+   "overlapExtraction": "field-inter-track-overlap-v1",
+   "sourceIntegration": "cell-integrated-gaussian-adaptive-gl-v2",
+   "solidificationExtraction": "linear-liquidus-crossing-v1",
+   "stabilityLimit": "local-conductance-row-sum",
+   "minimumCapturedSourceFraction": 0.999999999017185,
+   "maximumSourceRenormalization": 1.0000000009828152,
+   "maximumSurfaceOffset_um": 0.0,
+   "maximumTimestep_s": 1e-06,
+   "maximumEnthalpyIncrement_K": 24.489178702665257,
+   "sourceTimestepRetries": 1341,
+   "acceptedTimestepDistribution": {
+    "methodId": "accepted-timestep-distribution-v1",
+    "count": 1416,
+    "total_s": 0.0003499999999999984,
+    "sumSquared_s2": 1.5456188331819057e-10,
+    "mean_s": 2.4717514124293675e-07,
+    "minimum_s": 6.27594046510205e-08,
+    "p50_s": 1.716158300757047e-07,
+    "p90_s": 5.065607474441879e-07,
+    "p99_s": 1e-06,
+    "maximum_s": 1e-06,
+    "eulerFirstOrderWeightedDt_s": 4.416053809091179e-07,
+    "requestedMaxDt_s": 1e-06,
+    "requestedMaxDtHitFraction": 0.05155367231638418,
+    "sourceLimitedStepCount": 1341,
+    "sourceTimestepRetries": 1341
+   }
+  },
+  "result.key.peakInterpolatedMeltPool": {
+   "status": "thermal-proxy",
+   "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+   "temporalSelection": "accepted-step-molten-volume-v1",
+   "contour": "linear liquidus crossings between neighboring active cell centers",
+   "surfaceTreatment": "No temperature extrapolation to the model surface",
+   "width_um": 213.2944822402231,
+   "depth_um": 111.25143728432305,
+   "evidenceScope": "Numerical thermal proxy; no experimental validation",
+   "sampleCells": 53,
+   "crossingCount": 83
+  },
+  "result.key.phaseAudit": {
+   "liquidVolume_m3": 1.9139459163991953e-12,
+   "solidVolume_m3": 6.778205408360077e-11,
+   "activeVolume_m3": 6.969599999999997e-11,
+   "minFraction": 0.0,
+   "maxFraction": 0.9958025423059876,
+   "interfaceConservation": null,
+   "scope": "Enthalpy liquid fraction partition; not a metal/gas interface conservation test"
+  },
+  "result.key.productionReady": false,
+  "result.key.provenance": {
+   "inputHash": "ebfae08ad43152c7dcf395aadd7aae82cd0f7d597565438da1df6372fdceab7f",
+   "executionInputHash": "ebfae08ad43152c7dcf395aadd7aae82cd0f7d597565438da1df6372fdceab7f",
+   "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+   "materialVersion": "lpbf-materials-1",
+   "solverBinaryHash": null
+  },
+  "result.key.recommendation": "Reduce power or increase speed; verify with free-surface CFD.",
+  "result.key.regime": "keyhole-risk (screening)",
+  "result.key.requestedBackend": "reference",
+  "result.key.requestedMode": "standard",
+  "result.key.resourceEstimate": {
+   "cells": 1089,
+   "spacing_m": 3.9999999999999996e-05,
+   "shape": [
+    11,
+    11,
+    9
+   ],
+   "duration_s": 0.00034999999999999994,
+   "minimumEstimatedSteps": 350,
+   "workingMemoryEstimate_MB": 0.2178,
+   "minimumRequiredSteps": 350,
+   "stepBudget": 250000,
+   "exceedsStepBudget": false,
+   "runs": 1,
+   "cellBudget": 600000,
+   "exceedsCellBudget": false,
+   "runtimeEstimate": "Seconds to minutes; hardware and adaptive timestep dependent",
+   "note": "Uniform orthogonal mesh; memory is approximate. Source limiting can increase steps. No calibrated wall-time estimate."
+  },
+  "result.key.retentionPolicy": "Retained locally until explicit operator deletion; no automatic expiry. Paths relative to job directory.",
+  "result.key.riskScope": "Geometric screening only; no probability, density qualification or solidification cracking assessment.",
+  "result.key.scanPath": [
+   {
+    "start_s": 0.0,
+    "end_s": 0.00024999999999999995,
+    "start": [
+     -9.999999999999999e-05,
+     0.0
+    ],
+    "end": [
+     9.999999999999999e-05,
+     0.0
+    ],
+    "layer": 0,
+    "track": 0,
+    "island": null
+   }
+  ],
+  "result.key.schemaVersion": 1,
+  "result.key.settings": {
+   "mode": "standard",
+   "material": "AlSi10Mg",
+   "power_W": 500,
+   "speed_mm_s": 800.0,
+   "beamDiameter_um": 80.0,
+   "preheat_C": 80.0,
+   "layer_um": 40.0,
+   "hatch_um": 100.0,
+   "mesh_um": 40,
+   "maxDt_s": 1e-06,
+   "trackLength_um": 200,
+   "tracks": 1,
+   "layers": 1,
+   "dwell_s": 0,
+   "cooling_s": 0.0001,
+   "scanAngle_deg": 0.0,
+   "layerRotation_deg": 67.0,
+   "strategy": "meander",
+   "stripeWidth_um": 500.0,
+   "islandSize_um": 200.0,
+   "packingFraction": 0.55,
+   "powderConductivityRatio": 0.12,
+   "convection_W_m2K": 20.0,
+   "timeout_s": 300.0,
+   "study": "none",
+   "backend": "reference",
+   "surfaceMode": "powder-layer",
+   "sourcePenetration_um": null,
+   "barePlateGeometry": "square",
+   "evaporationModel": true,
+   "marangoniMultiplier": 2.2,
+   "opticalObserver": null,
+   "powderGridPolicy": "layer-conforming",
+   "absorptivity": 0.18,
+   "emissivity": 0.35
+  },
+  "result.key.solver": {
+   "id": "enthalpy-fv-6",
+   "version": "enthalpy-fv-6",
+   "openfoam": null
+  },
+  "result.key.unresolvedPhysics": {
+   "freeSurface": null,
+   "velocity": null,
+   "evaporationMassFlux": null,
+   "evaporationLoss": null,
+   "recoilPressure": null,
+   "keyholeDepth": null,
+   "porosityProbability": null,
+   "residualStress": null
+  },
+  "result.key.validationStatus": "unvalidated"
+ }
+}

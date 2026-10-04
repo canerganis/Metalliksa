@@ -1,6 +1,6 @@
 import { createUqRunSession } from '../utils/uqRunSession';
 import { AccessibleModal } from "./AccessibleModal";
-import { CouponSummary, CouponWorksheet, formatUqNumber } from './UqCouponReport';
+import { CouponSummary, CouponWorksheet, formatUqNumber, UqModelStatusNote } from './UqCouponReport';
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
@@ -923,6 +923,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
           </div>
 
           <p className="text-xs text-amber-200">{uqResult.sensitivityMetadata?.limitations}</p>
+          <UqModelStatusNote modelStatus={uqResult.provenance?.modelStatus} />
           {/* Bar Chart */}
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">

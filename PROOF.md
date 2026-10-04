@@ -9,6 +9,12 @@
 - **V1 kabulü:** `10e3005` kabul kaydı eski parmak izine (`7482697c…`) bağlı kalır; `edddf0dc…` için Faz C talep koşuları çalışana kadar yeniden kurulmuş değildir (duman testi yeniden kabul değildir).
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
+## 2026-10-04 — V1 kabulünün `edddf0dc…` parmak izine bağlanması (kullanıcı kararı)
+
+- **Kanıt:** `.orchestra/PHASEC-RECORD.md` (revizyon `1104bec`); özet `STATUS.md` "5c Faz C" ve "V1 kabulünün yeni parmak izine bağlanması". Kullanıcı bağlamayı sohbette onayladı.
+- **Sınır:** yazılım eşitliği/yeniden üretilebilirlik; bağımsız replike veya bilimsel doğrulama değildir. Planlı fiziksel düzeltme güncellemesinden sonra yeniden yapılacaktır.
+- **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+
 ## 2026-10-04 — LPBF 5c Faz C: yeni parmak izinde talep koşuları (`1104bec`, `edddf0dc…`)
 
 - **Kapsam:** V1 60 W arşivli vakasının gerçek sunucuda tekrarı + G2 bare-plate 100 W `--check --slow`; yerel, kayıt `.orchestra/PHASEC-RECORD.md`, özet `STATUS.md` "5c Faz C".

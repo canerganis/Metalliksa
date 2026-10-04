@@ -9,6 +9,12 @@
 - **V1 kabulü eski parmak izine bağlıdır:** `10e3005` kabul kaydı `7482697c…` ile yapıldı ve `edddf0dc…` için yeniden kurulmuş değildir; duman testi yeniden kabul sayılmaz.
 - **Sıradaki:** (dal bağımsız iki inceleme sonrası birleştirildi) birleştirme SHA'sında Faz C talep koşuları (V1 60 W arşivli tekrar + G2); ardından `.orchestra/claude-lanes-common.txt` donmuş değeri ve Agent Memory güncellemesi. Tarihsel kayıtlardaki `7482697c` değerleri değiştirilmez.
 
+## V1 kabulünün yeni parmak izine bağlanması — 2026-10-04 (kullanıcı kararı; yerel, push yok)
+
+- **Karar:** Kullanıcı (sohbette) V1 kabulünün `edddf0dc…` parmak izine bağlanmasını onayladı. Dayanak: `.orchestra/PHASEC-RECORD.md` (revizyon `1104bec`: V1 60 W arşivli tekrar özetinin `3eed50ef…` ile eşitliği, 69 artefakt SHA-256 eşleşmesi, G2 bare-plate 100 W 165 gözlem PASS) ve `STATUS.md` "5c Faz C".
+- **Kapsam:** kabul, yazılım/yeniden üretilebilirlik düzeyindedir; deneysel doğrulama değildir. NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+- **Geçerlilik süresi:** planlı fiziksel düzeltme güncellemesi (Goldak güç normalleştirmesi, Eagar–Tsai v2, buharlaşma etiketi, malzeme otoritesi düzeltmeleri) yeni bir parmak izi üretecek; o durumda V1 60 W ve G2 koşuları yeni revizyonda yeniden yapılacak ve kabul yeni parmak izine ayrıca bağlanacaktır. G1'in `analyticalComparison` gözlemleri o güncellemede belgelenmiş şekilde değişecektir.
+
 ## LPBF 5c Faz C: yeni parmak izinde talep koşuları — 2026-10-04 (revizyon `1104bec`, parmak izi `edddf0dc…`; yerel, push yok)
 
 - **Sonuç:** V1 60 W arşivli vakası gerçek sunucuda (loopback, izole kökler, kilitli yorumlayıcı) yeniden koşuldu ve G2 bare-plate 100 W vakası `--check --slow` ile yeniden doğrulandı; ikisi de geçti. Ayrıntı ve komutlar `.orchestra/PHASEC-RECORD.md` (yerel, commit'siz).

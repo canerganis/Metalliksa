@@ -1,6 +1,6 @@
 /**
  * MetalliX Python HPC Subsystem & Proxy Client Service
- * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, DFT tensors, PHACOMP,
+ * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, elastic-constant homogenisation, PHACOMP,
  * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, single-element Pourbaix E–pH at 25 °C)
  * to the backend Python 3.10 runtime with automatic fallback to client TypeScript engines.
  */
@@ -18,6 +18,7 @@ import {
 } from "../types/tafel";
 import { createSeededRandom } from "../utils/seededRandom";
 import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
+import { MILS_PER_MM } from "../utils/tafelDisplay";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 
 export interface PersistentIPCDiagnostics {
@@ -119,8 +120,11 @@ export interface DFTStructureInput {
   formation_energy_per_atom?: number;
   energy_above_hull?: number;
   band_gap?: number;
+  /** Cell site count. Not used by the engine (it is not atoms per formula unit); kept for old callers. */
   nsites?: number;
+  /** Formula-unit molar mass (g/mol); used only with atoms_per_formula_unit when the formula is not a composition. */
   molar_mass?: number;
+  atoms_per_formula_unit?: number;
   custom_c_ij?: {
     c11?: number;
     c22?: number;
@@ -134,25 +138,39 @@ export interface DFTStructureInput {
   };
 }
 
+/**
+ * Result of the continuum-elasticity engine (python/dft_property_calculator.py, v4.1). The name is
+ * historical: nothing here is a DFT calculation (isDft is always false). The engine homogenises supplied
+ * or built-in single-crystal elastic constants C_ij.
+ */
 export interface PythonDFTResult {
-  success: boolean;
+  success: true;
+  status: "available";
   engine: string;
   scientificModel?: string;
+  /** What the module is: "Continuum elasticity ... (not a DFT calculation)". Show it next to results. */
+  label?: string;
+  isDft?: false;
+  /** custom-user-supplied | builtin-library-exact-match | isotropic-from-supplied-K-G */
+  constantsOrigin?: string;
+  /** unverified | cited-secondary-compilation | supplied-by-caller */
+  referenceStatus?: string;
   sourceNotes?: string;
-  computeTimeMs: number;
+  /** Engine-measured milliseconds; null when none was reported (no invented 0). */
+  computeTimeMs: number | null;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   materialInfo: {
-    formula: string;
+    formula: string | null;
     material_id: string;
-    crystal_system: string;
-    space_group: string;
-    density: number;
-    formation_energy_per_atom: number;
-    energy_above_hull: number;
-    band_gap: number;
-    is_stable: boolean;
-    is_metal: boolean;
+    crystal_system: string | null;
+    space_group: string | null;
+    density: number | null;
+    formation_energy_per_atom: number | null;
+    energy_above_hull: number | null;
+    band_gap: number | null;
+    is_stable: boolean | null;
+    is_metal: boolean | null;
   };
   elasticStiffnessMatrix_Cij_GPa: number[][];
   elasticComplianceMatrix_Sij_1_over_GPa: number[][];
@@ -185,23 +203,60 @@ export interface PythonDFTResult {
     cauchyPressure_C12_minus_C44_GPa: number;
     ductilityVerdict: string;
     universalAnisotropyIndex_AU: number;
-    zenerAnisotropyFactor_AZ: number;
+    /** null for non-cubic crystals: the Zener ratio is defined for cubic crystals only. */
+    zenerAnisotropyFactor_AZ: number | null;
     isIsotropic: boolean;
   };
+  /** Every number is null (with `reason`) when it cannot be computed without a default or a guess. */
   acousticAndThermalProperties: {
-    longitudinalSoundVelocity_m_s: number;
-    transverseSoundVelocity_m_s: number;
-    meanSoundVelocity_m_s: number;
-    debyeTemperature_K: number;
-    gruneisenParameter_gamma: number;
-    minimumThermalConductivity_W_mK: number;
+    status?: "available" | "unavailable";
+    reason?: string | null;
+    longitudinalSoundVelocity_m_s: number | null;
+    transverseSoundVelocity_m_s: number | null;
+    meanSoundVelocity_m_s: number | null;
+    debyeTemperature_K: number | null;
+    gruneisenParameter_gamma: number | null;
+    minimumThermalConductivity_W_mK: number | null;
+    debyeBasis?: {
+      atomsPerFormulaUnit: number;
+      formulaUnitMolarMass_g_mol: number;
+      meanAtomicMass_g_mol: number;
+      atomNumberDensity_per_m3: number;
+      source: string;
+      reference: string;
+    } | null;
   };
+  /** null for a mechanically unstable tensor (see directionalYoungsModuliReason). */
   directionalYoungsModuli: {
     direction: string;
     hkl: number[];
-    youngsModulusGPa: number;
-    ratioToAverage: number;
-  }[];
+    /** "lattice": a lattice [hkl]; "cartesian": a Cartesian direction (lattice parameters are not inputs). */
+    frame?: "lattice" | "cartesian";
+    label?: string;
+    youngsModulusGPa: number | null;
+    ratioToAverage: number | null;
+  }[] | null;
+  directionalYoungsModuliStatus?: "available" | "unavailable";
+  directionalYoungsModuliReason?: string | null;
+}
+
+/** The engine has no result for this input (no default or nearest guess is substituted). */
+export interface PythonDFTUnavailable {
+  success: false;
+  status: "unavailable";
+  unavailableCode: string;
+  reason: string;
+  engine: string;
+  label?: string;
+  isDft?: false;
+  computeTimeMs: number | null;
+  isPythonEngine: boolean;
+}
+
+export type PythonDFTOutcome = PythonDFTResult | PythonDFTUnavailable;
+
+export function isDftUnavailable(outcome: PythonDFTOutcome): outcome is PythonDFTUnavailable {
+  return outcome.status === "unavailable";
 }
 
 export interface PythonXRDResult {
@@ -223,10 +278,10 @@ export interface PythonXRDResult {
   williamsonHall: {
     linear_slope_4_epsilon: number;
     intercept_K_lambda_over_D: number;
-    microstrain_epsilon: number;
-    microstrain_percent: number;
-    crystallite_size_nm: number;
-    dislocation_density_m_minus_2: number;
+    microstrain_epsilon: number | null;
+    microstrain_percent: number | null;
+    crystallite_size_nm: number | null;
+    dislocation_density_m_minus_2: number | null;
     r_squared: number;
   };
 }
@@ -1089,161 +1144,62 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch DFT 6x6 Elastic Tensor and Ab-Initio Property Calculations to Python
+   * Dispatch the continuum-elasticity calculation (6x6 stiffness homogenisation, Born stability,
+   * per-atom Debye temperature) to Python. The route name (dft-properties) is historical: this is not a
+   * DFT calculation. When Python cannot answer there is no client-side substitute (the old fallback
+   * filled in fixed velocities, a 450 K Debye temperature and a Grueneisen constant): the result is
+   * "unavailable" with the reason.
    */
   async calculateDFTProperties(
     input: DFTStructureInput,
     usePython = true
-  ): Promise<PythonDFTResult> {
-    if (usePython) {
-      try {
-        const res = await fetch("/api/python/dft-properties", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.elasticStiffnessMatrix_Cij_GPa) {
-            return {
-              ...data,
-              isPythonEngine: true,
-              engine: data.engine || "MetalliX-Python-HPC-DFT",
-              computeTimeMs: data.computeTimeMs || 15,
-            };
-          }
-        }
-      } catch (err) {
-        console.warn("Python DFT proxy call failed, using client calculations:", err);
-      }
-    }
-
-    // Client-side fallback calculation
-    const startTime = performance.now();
-    const k = input.k_vrh || 160;
-    const g = input.g_vrh || 75;
-    const youngs = (9 * k * g) / (3 * k + g);
-    const nu = (3 * k - 2 * g) / (2 * (3 * k + g));
-    const pugh = k / Math.max(0.1, g);
-
-    const c11 = k + (4 / 3) * g;
-    const c12 = k - (2 / 3) * g;
-    const c44 = g;
-
-    const cij: number[][] = [
-      [c11, c12, c12, 0, 0, 0],
-      [c12, c11, c12, 0, 0, 0],
-      [c12, c12, c11, 0, 0, 0],
-      [0, 0, 0, c44, 0, 0],
-      [0, 0, 0, 0, c44, 0],
-      [0, 0, 0, 0, 0, c44],
-    ];
-
-    // Mathematically exact compliance matrix for isotropic/cubic:
-    // S11 = (C11 + C12) / ((C11 - C12)*(C11 + 2*C12))
-    // S12 = -C12 / ((C11 - C12)*(C11 + 2*C12))
-    // S44 = 1 / C44
-    const denom = (c11 - c12) * (c11 + 2 * c12);
-    const s11 = denom > 0 ? (c11 + c12) / denom : 1 / c11;
-    const s12 = denom > 0 ? -c12 / denom : 0;
-    const s44 = 1 / c44;
-
-    const sij: number[][] = [
-      [s11, s12, s12, 0, 0, 0],
-      [s12, s11, s12, 0, 0, 0],
-      [s12, s12, s11, 0, 0, 0],
-      [0, 0, 0, s44, 0, 0],
-      [0, 0, 0, 0, s44, 0],
-      [0, 0, 0, 0, 0, s44],
-    ];
-
-    return {
-      success: true,
-      engine: "MetalliX-Client-Symmetry-Continuum/TS",
-      scientificModel: "Isotropic Continuum Homogenization Baseline",
-      sourceNotes: "Client-side fallback using exact isotropic Hookean elasticity",
-      computeTimeMs: Math.round(performance.now() - startTime),
+  ): Promise<PythonDFTOutcome> {
+    const unavailable = (code: string, reason: string): PythonDFTUnavailable => ({
+      success: false,
+      status: "unavailable",
+      unavailableCode: code,
+      reason,
+      engine: "MetalliX-Continuum-Elasticity-Homogenizer",
+      isDft: false,
+      computeTimeMs: null,
       isPythonEngine: false,
-      materialInfo: {
-        formula: input.formula || "Compound",
-        material_id: input.material_id || "mp-custom",
-        crystal_system: input.crystal_system || "Cubic",
-        space_group: input.space_group || "Fm-3m",
-        density: input.density || 7.85,
-        formation_energy_per_atom: input.formation_energy_per_atom || -0.45,
-        energy_above_hull: input.energy_above_hull || 0.0,
-        band_gap: input.band_gap || 0.0,
-        is_stable: (input.energy_above_hull || 0) <= 0.005,
-        is_metal: (input.band_gap || 0) < 0.05,
-      },
-      elasticStiffnessMatrix_Cij_GPa: cij,
-      elasticComplianceMatrix_Sij_1_over_GPa: sij,
-      bornStability: {
-        isMechanicallyStable: c11 - c12 > 0 && c11 + 2 * c12 > 0 && c44 > 0,
-        minimumEigenvalueGPa: Math.min(c11 - c12, c44, c11 + 2 * c12),
-        allEigenvaluesGPa: [c11 - c12, c11 - c12, c44, c44, c44, c11 + 2 * c12],
-        verdict: "Mechanically Stable (Passes Born Criteria & Positive Definite Energy)",
-        criteriaChecks: [
-          {
-            name: "Tetragonal Shear Modulus C'",
-            formula: "C11 - C12 > 0",
-            value: +(c11 - c12).toFixed(2),
-            passed: c11 - c12 > 0,
-            physicalMeaning: "Resistance to volume-conserving shear deformation",
-          },
-          {
-            name: "Bulk Hydrostatic Compression",
-            formula: "C11 + 2*C12 > 0",
-            value: +(c11 + 2 * c12).toFixed(2),
-            passed: c11 + 2 * c12 > 0,
-            physicalMeaning: "Lattice resists hydrostatic volume collapse",
-          },
-          {
-            name: "Shear Modulus C44",
-            formula: "C44 > 0",
-            value: +c44.toFixed(2),
-            passed: c44 > 0,
-            physicalMeaning: "Angular shear distortion resistance",
-          },
-        ],
-      },
-      voigtReussHillModuli: {
-        bulkModulus_K_Voigt_GPa: k,
-        bulkModulus_K_Reuss_GPa: k,
-        bulkModulus_K_VRH_GPa: k,
-        shearModulus_G_Voigt_GPa: g,
-        shearModulus_G_Reuss_GPa: g,
-        shearModulus_G_VRH_GPa: g,
-        youngsModulus_E_VRH_GPa: Math.round(youngs),
-        poissonsRatio_nu: +nu.toFixed(3),
-        pWaveModulus_GPa: Math.round(k + (4 / 3) * g),
-      },
-      mechanicalIntegrityIndices: {
-        pughRatio_B_over_G: +pugh.toFixed(3),
-        cauchyPressure_C12_minus_C44_GPa: +(c12 - c44).toFixed(2),
-        ductilityVerdict: pugh > 1.75 && nu > 0.26 ? "Ductile (Metallic Slip)" : "Brittle / Covalent",
-        universalAnisotropyIndex_AU: 0.0,
-        zenerAnisotropyFactor_AZ: 1.0,
-        isIsotropic: true,
-      },
-      acousticAndThermalProperties: {
-        longitudinalSoundVelocity_m_s: 5800,
-        transverseSoundVelocity_m_s: 3200,
-        meanSoundVelocity_m_s: 3550,
-        debyeTemperature_K: 450,
-        gruneisenParameter_gamma: 1.85,
-        minimumThermalConductivity_W_mK: 1.25,
-      },
-      directionalYoungsModuli: [
-        { direction: "[100]", hkl: [1, 0, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[110]", hkl: [1, 1, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[111]", hkl: [1, 1, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[001]", hkl: [0, 0, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[210]", hkl: [2, 1, 0], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-        { direction: "[311]", hkl: [3, 1, 1], youngsModulusGPa: Math.round(youngs), ratioToAverage: 1.0 },
-      ],
-    };
+    });
+    if (!usePython) {
+      return unavailable("PYTHON_NOT_REQUESTED", "The Python elasticity engine was not requested; there is no client-side substitute.");
+    }
+    try {
+      const res = await fetch("/api/python/dft-properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.status === "unavailable") {
+          return {
+            ...data,
+            success: false,
+            isPythonEngine: true,
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
+          };
+        }
+        if (data && data.success && data.elasticStiffnessMatrix_Cij_GPa) {
+          return {
+            ...data,
+            status: "available",
+            isPythonEngine: true,
+            engine: data.engine || "MetalliX-Continuum-Elasticity-Homogenizer",
+            computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
+          };
+        }
+        const detail = data && typeof data.error === "string" ? `: ${data.error}` : "";
+        return unavailable("PYTHON_BAD_RESPONSE", `The Python elasticity engine returned no tensor${detail}.`);
+      }
+      return unavailable("PYTHON_HTTP_ERROR", `The Python elasticity engine answered HTTP ${res.status}.`);
+    } catch (err) {
+      console.warn("Python elasticity proxy call failed:", err);
+      return unavailable("PYTHON_UNREACHABLE", "The Python elasticity engine could not be reached; there is no client-side substitute.");
+    }
   }
 
   /**
@@ -1404,7 +1360,7 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch ICME Multi-Scale Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA) Solver to Python
+   * Dispatch the ICME multi-scale closed-form estimator (illustrative: tabulated constants, no DFT/CALPHAD/FEA run) to Python
    */
   async calculateICMEMultiScalePipeline(payload: {
     alloyName?: string;
@@ -2131,6 +2087,8 @@ export interface PythonStochasticUQResult {
     status: string;
     limitations: string;
   };
+  /** Added by the solver script (python/stochastic_uq_mmpds_solver.py provenance()); only modelStatus is read. */
+  provenance?: { modelStatus?: string };
   sobolSensitivityAnalysis: {
     parameter: string;
     description: string;
@@ -2152,6 +2110,10 @@ export interface PythonStochasticUQResult {
 }
 
 export interface PythonICMEMultiScaleResult {
+  /** "illustrative": closed-form estimates on tabulated constants (no DFT, CALPHAD or FEA run). */
+  modelStatus?: string;
+  modelStatusNote?: string;
+  modelParts?: string[];
   success: boolean;
   engine: string;
   computeTimeMs: number;
@@ -2232,10 +2194,14 @@ export interface PythonICMEMultiScaleResult {
     };
     mechanicalProperties: {
       yieldStrength_Rp02_MPa: number;
-      ultimateTensileStrength_UTS_MPa: number;
+      /** null = unavailable (see ultimateTensileStrength_UTS_status); never the yield strength. */
+      ultimateTensileStrength_UTS_MPa: number | null;
+      ultimateTensileStrength_UTS_status?: string;
       uniformElongationPct: number;
       totalElongationPct: number;
-      fractureToughness_K1c_MPa_sqrt_m: number;
+      /** null = unavailable (see fractureToughness_K1c_status). */
+      fractureToughness_K1c_MPa_sqrt_m: number | null;
+      fractureToughness_K1c_status?: string;
       hollomon_n: number;
       hollomon_K_MPa: number;
     };
@@ -2261,10 +2227,13 @@ export interface PythonICMEMultiScaleResult {
     requiredSafetyFactor: number;
     actualSafetyFactor: number;
     structuralVerdict: string;
+    structuralVerdictBasis?: string;
     lefmDamageTolerance: {
-      criticalFlawSize_ac_mm: number;
-      plasticZoneRadius_rp_mm: number;
+      /** null = unavailable: needs a fracture toughness K_Ic the model does not provide. */
+      criticalFlawSize_ac_mm: number | null;
+      plasticZoneRadius_rp_mm: number | null;
       inspectionNDICapability: string;
+      status?: string;
     };
   };
   caeExportCards: {
@@ -2587,6 +2556,58 @@ export async function identifyBisquertTLMCircuitComponents(
   return pythonComputationService.identifyBisquertTLMCircuit(payload);
 }
 
+function unavailableTafelCorrosionRate(
+  payload: TafelPythonCorrosionRateInput,
+  alloyId: string,
+  alloyName: string,
+  eCorr_V: number | null,
+  specimenAreaCm2: number,
+  temperatureC: number,
+  initialThicknessMm: number,
+  allowableLossMm: number,
+  unavailable: Record<string, string>
+): TafelPythonCorrosionRateResult {
+  return {
+    success: true,
+    status: "unavailable",
+    unavailable,
+    unavailableReason: "Corrosion rate unavailable: " + Object.values(unavailable).join("; ") + ".",
+    isPythonEngine: false,
+    pythonVersion: "3.10 (Client Dual-Engine)",
+    standards: ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169"],
+    durationMs: 0.5,
+    timestamp: new Date().toISOString(),
+    corrosionRateMmYr: null,
+    corrosionRateMpy: null,
+    corrosionRateUmYr: null,
+    corrosionRateNmHr: null,
+    massLoss_g_m2_day: null,
+    massLoss_mdd: null,
+    massLoss_kg_m2_yr: null,
+    sternGearyB_V: null,
+    rp_ohm_cm2: null,
+    rp_apparent_ohm: null,
+    alloyId,
+    alloyName,
+    density_g_cm3: payload.density_g_cm3 ?? 0,
+    equivalentWeight: payload.equivalentWeight ?? 0,
+    iCorr_uA_cm2: null,
+    eCorr_V,
+    betaA: typeof payload.betaA === "number" ? payload.betaA : null,
+    betaC: typeof payload.betaC === "number" ? payload.betaC : null,
+    specimenAreaCm2,
+    temperatureC,
+    initialThicknessMm,
+    allowableLossMm,
+    rulUniformYears: null,
+    rulPittingYears: null,
+    severity: null,
+    timelineProjections: [],
+    temperatureSensitivity: [],
+    pythonCode: null,
+  };
+}
+
 /**
  * Pure TypeScript fallback for ASTM G102 / G59 Annual Corrosion Rate solver
  * providing parity with python/tafel_corrosion_rate_solver.py
@@ -2594,31 +2615,62 @@ export async function identifyBisquertTLMCircuitComponents(
 export function fallbackClientTafelCorrosionRate(
   payload: TafelPythonCorrosionRateInput
 ): TafelPythonCorrosionRateResult {
-  const iCorr_uA_cm2 = Math.max(1e-9, Math.abs(payload.iCorr_uA_cm2 || 1.25));
-  const eCorr_V = payload.eCorr_V ?? -0.35;
-  const betaA = Math.max(0.005, Math.abs(payload.betaA || 0.12));
-  const betaC = Math.max(0.005, Math.abs(payload.betaC || 0.10));
-  const density = Math.max(0.1, payload.density_g_cm3 || 7.98);
-  // 316L preset EW from python/alloy_registry.py (computed, Phase 6a step b; was 25.68).
-  const ew = Math.max(1.0, payload.equivalentWeight || 24.8205);
+  // Same rules as the Python engine: the corrosion current density is a required measurement, the slopes are
+  // required only for Stern-Geary B and Rp, and the substrate (density, equivalent weight) must be supplied because
+  // this client formula cannot resolve alloy presets. Nothing is defaulted: no 1.25 uA/cm2, no 0.12 / 0.10 V/dec
+  // slopes, no 316L substrate.
+  const positive = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
+  const iCorrIn = positive(payload.iCorr_uA_cm2);
+  const betaAIn = positive(payload.betaA);
+  const betaCIn = positive(payload.betaC);
+  const densityIn = positive(payload.density_g_cm3);
+  const ewIn = positive(payload.equivalentWeight);
+  const eCorr_V = typeof payload.eCorr_V === "number" && Number.isFinite(payload.eCorr_V) ? payload.eCorr_V : null;
   const specimenArea = Math.max(1e-4, payload.specimenAreaCm2 || 1.0);
   const initialThickness = Math.max(0.1, payload.initialThicknessMm || 5.0);
   const allowableLoss = Math.max(0.01, payload.allowableLossMm || 1.5);
   const tempC = payload.temperatureC ?? 25.0;
-  const alloyName = payload.alloyName || "AISI 316L Stainless Steel";
-  const alloyId = payload.alloyId || "steel-316l";
+  const alloyName = payload.alloyName || payload.alloyId || "Unspecified substrate";
+  const alloyId = payload.alloyId || "";
 
-  // Stern-Geary kinetics
-  const sternGearyB = (betaA * betaC) / (2.302585 * (betaA + betaC));
-  const iCorr_A_cm2 = iCorr_uA_cm2 * 1e-6;
-  const rp_ohm_cm2 = sternGearyB / iCorr_A_cm2;
-  const rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
+  const unavailable: Record<string, string> = {};
+  if (iCorrIn === null) {
+    unavailable.iCorr_uA_cm2 =
+      payload.iCorr_uA_cm2 === undefined || payload.iCorr_uA_cm2 === null
+        ? "iCorr_uA_cm2 was not supplied"
+        : `iCorr_uA_cm2 must be a finite number > 0 (received ${String(payload.iCorr_uA_cm2)})`;
+  }
+  if (densityIn === null || ewIn === null) {
+    unavailable.substrate =
+      "density_g_cm3 and equivalentWeight must be supplied: the client formula cannot resolve an alloy preset";
+  }
+  if (iCorrIn === null || densityIn === null || ewIn === null) {
+    return unavailableTafelCorrosionRate(payload, alloyId, alloyName, eCorr_V, specimenArea, tempC, initialThickness, allowableLoss, unavailable);
+  }
+
+  const iCorr_uA_cm2 = Math.max(1e-9, iCorrIn);
+  const density = Math.max(0.1, densityIn);
+  const ew = Math.max(1.0, ewIn);
+  const betaA = betaAIn === null ? null : Math.max(0.005, betaAIn);
+  const betaC = betaCIn === null ? null : Math.max(0.005, betaCIn);
+  if (betaA === null) unavailable.betaA = "betaA was not supplied";
+  if (betaC === null) unavailable.betaC = "betaC was not supplied";
+
+  // Stern-Geary kinetics (need both slopes)
+  let sternGearyB: number | null = null;
+  let rp_ohm_cm2: number | null = null;
+  let rp_apparent_ohm: number | null = null;
+  if (betaA !== null && betaC !== null) {
+    sternGearyB = (betaA * betaC) / (Math.LN10 * (betaA + betaC));
+    rp_ohm_cm2 = sternGearyB / (iCorr_uA_cm2 * 1e-6);
+    rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
+  }
 
   // Faraday penetration (ASTM G102)
   // Same K1/K2 as python/tafel_corrosion_rate_solver.py, from the exact F.
   const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
   const cr_mm_yr = (exactK1 * iCorr_uA_cm2 * ew) / density;
-  const cr_mpy = cr_mm_yr * 39.37007874;
+  const cr_mpy = cr_mm_yr * MILS_PER_MM;
   const cr_um_yr = cr_mm_yr * 1000.0;
   const cr_nm_hr = (cr_mm_yr * 1e6) / (365.25 * 24.0);
 
@@ -2648,12 +2700,14 @@ export function fallbackClientTafelCorrosionRate(
   const rulPittingYears = +(allowableLoss / (cr_mm_yr * pittingFactor)).toFixed(2);
 
   // Temperature sensitivity (Arrhenius)
-  const ea = payload.activationEnergyJ_mol || 32000.0;
+  // No registry in the browser: without a caller-supplied activation energy the 32 kJ/mol stand-in of the old
+  // fallback would be an invented number, so the Arrhenius table is left empty instead.
+  const ea = payload.activationEnergyJ_mol || null;
   const rGas = GAS_CONSTANT_R;
   const tRefK = tempC + 273.15;
-  const temperatureSensitivity = [5, 15, 25, 35, 45, 55, 65, 75, 85].map((t) => {
+  const temperatureSensitivity = (ea === null ? [] : [5, 15, 25, 35, 45, 55, 65, 75, 85]).map((t) => {
     const tK = t + 273.15;
-    const exp = (-ea / rGas) * (1 / tK - 1 / tRefK);
+    const exp = (-(ea as number) / rGas) * (1 / tK - 1 / tRefK);
     const factor = Math.exp(Math.max(-10, Math.min(10, exp)));
     const iT = iCorr_uA_cm2 * factor;
     const crT = (exactK1 * iT * ew) / density;
@@ -2663,7 +2717,7 @@ export function fallbackClientTafelCorrosionRate(
       arrheniusFactor: +factor.toFixed(3),
       iCorr_uA_cm2: +iT.toFixed(4),
       corrosionRateMmYr: +crT.toFixed(4),
-      corrosionRateMpy: +(crT * 39.37).toFixed(2),
+      corrosionRateMpy: +(crT * MILS_PER_MM).toFixed(2),
     };
   });
 
@@ -2734,9 +2788,9 @@ print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
     massLoss_g_m2_day: +mass_loss_g_m2_day.toFixed(4),
     massLoss_mdd: +mass_loss_mdd.toFixed(3),
     massLoss_kg_m2_yr: +mass_loss_kg_m2_yr.toFixed(4),
-    sternGearyB_V: +sternGearyB.toFixed(5),
-    rp_ohm_cm2: +rp_ohm_cm2.toFixed(1),
-    rp_apparent_ohm: +rp_apparent_ohm.toFixed(2),
+    sternGearyB_V: sternGearyB === null ? null : +sternGearyB.toFixed(5),
+    rp_ohm_cm2: rp_ohm_cm2 === null ? null : +rp_ohm_cm2.toFixed(1),
+    rp_apparent_ohm: rp_apparent_ohm === null ? null : +rp_apparent_ohm.toFixed(2),
     alloyId,
     alloyName,
     density_g_cm3: density,
@@ -2745,6 +2799,14 @@ print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
     eCorr_V,
     betaA,
     betaC,
+    ...(Object.keys(unavailable).length > 0
+      ? {
+          status: "partial" as const,
+          unavailable,
+          unavailableReason:
+            "Stern-Geary B and polarization resistance unavailable: " + Object.values(unavailable).join("; ") + ".",
+        }
+      : {}),
     specimenAreaCm2: specimenArea,
     temperatureC: tempC,
     initialThicknessMm: initialThickness,

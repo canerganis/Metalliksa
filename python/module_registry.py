@@ -469,7 +469,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                   # pythonComputationService.ts is anchored by symbol because other lanes delete lines there.
                   sources=(
                       "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
-                      "python/stochastic_uq_mmpds_solver.py:398#Pseudo-Random Monte Carlo is disabled",
+                      "python/stochastic_uq_mmpds_solver.py::SobolSequenceGenerator",
                       "python/stochastic_uq_mmpds_solver.py::provenance",
                       "python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE",
                       "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
@@ -620,10 +620,12 @@ _ICME_FIELDS = (
                  "the three catalog keys."),
 )
 _ICME_OUTPUT = OutputSchema(
-    fields=("success", "engine", "computeTimeMs", "inputParameters", "scale0_dftAtomistic",
+    fields=("success", "modelStatus", "modelStatusNote", "modelParts", "engine", "computeTimeMs",
+            "inputParameters", "scale0_dftAtomistic",
             "scale1_calphadSoluteMisfit", "scale2_microstructureKinetics", "scale3_continuumPlasticity",
             "scale4_macroComponentFEA", "caeExportCards", "provenance"),
     status_key=None,
+    transport_values=(("modelStatus", ("illustrative",)),),
 )
 
 
@@ -637,10 +639,15 @@ def _icme_contract(row: Dict[str, str]) -> ModuleContract:
     return _wave2(
         row, operation,
         evidence_note=(
-            "Emits no evidence status: the output has no status key. scale4_macroComponentFEA.structuralVerdict is "
-            "fixed text chosen by comparing the estimated yield strength with a catalog safety factor; it is not an "
+            "Emits no evidence status: modelStatus is a model label (always 'illustrative'), not an evidence "
+            "status, and the output has no evidence status key. scale4_macroComponentFEA.structuralVerdict is "
+            "fixed text chosen by comparing the estimated yield strength with a catalog safety factor (a "
+            "yield-only check: no creep, fatigue or fracture check); it is not an "
             "evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated "
             "constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. "
+            "ultimateTensileStrength_UTS_MPa, fractureToughness_K1c_MPa_sqrt_m, criticalFlawSize_ac_mm and "
+            "plasticZoneRadius_rp_mm are null (unavailable, with a status text) because the model has no valid way "
+            "to compute them. "
             + _PENDING_CAP),
         notes=(
             "alloyName is a free-text label written into the output and the material cards; crystalSystem is "
@@ -648,11 +655,16 @@ def _icme_contract(row: Dict[str, str]) -> ModuleContract:
             "without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override "
             "with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, "
             "so they are recorded as undeclaredInput.",
-            "Recorded wording gap (not changed here): when the yield-based safety factor passes, "
-            "scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', "
-            "but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.",
-            "Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX "
-            "Multi-Scale ICME Calibrated Card', although no calibration against data is performed.",
+            "Wording gap fixed in fx-icme: the verdict used to read 'STRUCTURALLY SAFE (Passed Yield & Creep "
+            "Criteria)' although no creep check exists. It is now a yield-only text ('YIELD CHECK PASSED ... no "
+            "creep, fatigue or fracture check'); serviceTemp_C is still not used and the verdict is the same at "
+            "1000 degC (no creep check exists).",
+            "Wording gap fixed in fx-icme: the exported CAE material cards were headed 'MetalliX Multi-Scale ICME "
+            "Calibrated Card'; they are now headed 'ILLUSTRATIVE Card (uncalibrated, not validated)' because no "
+            "calibration against data is performed.",
+            "Unavailable by design (fx-icme): the former UTS (equal to the yield strength by the Hollomon K choice) "
+            "and the former K_Ic (a formula with the unit MPa, not MPa*sqrt(m)) are null with status texts; the "
+            "critical flaw size and plastic zone radius that need K_Ic are null too.",
             "No validity domain is declared: no source-backed applicability range is established for the "
             "coupled estimates.",
             "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
@@ -680,17 +692,17 @@ _FATIGUE_FIELDS = (
                  "unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table "
                  "names the view offers."),
     _num("sqrtArea_um", "Defect size (sqrt area)", _MICRO, "length", 45.0,
-         note="Converted with float(); no bound is enforced. A negative value fails in the Paris integration "
-              "(math domain error)."),
+         note="Converted with float(); the authority requires a finite value > 0 and rejects anything else with "
+              "input_validation NON_POSITIVE (HTTP 422)."),
     _choice("location", "Defect location", "defect-location", ("surface", "sub-surface", "internal"), "internal",
-            note="The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts "
-                 "any text; the contract accepts the view's three values."),
+            note="The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and "
+                 "internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the "
+                 "contract accepts the view's three values."),
     _num("stressRatio_R", "Stress ratio R", "1", "stress-ratio", -1.0,
-         note="Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the "
-              "Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative "
-              "maximum stress. State at main f41e316; another lane may fix the R = 1 crash later."),
+         note="Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE "
+              "(HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."),
     _num("stressAmplitude_MPa", "Cyclic stress amplitude", "MPa", "stress", 220.0,
-         note="Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError)."),
+         note="Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."),
 )
 
 
@@ -710,8 +722,8 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
             "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
             "No validity domain is declared: no source-backed applicability range is established for the "
             "defect sizes or stress ratios.",
-            "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts "
-            "workerError); the arithmetic failures noted on the fields reach it as HTTP 400.",
+            "UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through "
+            "LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError).",
         ),
         sources=_WORKER_SOURCES + (
             "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",

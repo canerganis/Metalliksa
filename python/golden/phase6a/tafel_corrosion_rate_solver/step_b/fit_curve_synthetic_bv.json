@@ -27,7 +27,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "ddac0eb61853ac1bf0b23e28e81a39fb8e534d42",
+ "gitHead": "348ed5c05b4cd38c32caaf7329dd861acc84dbf2",
  "input": {
   "action": "fit_curve",
   "alloyId": "al-6061",
@@ -214,7 +214,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "050808ff4d12771a669fbbe37c3b72b094e1f228d79287a67e3e21499021cd62",
+ "solverSha256": "a48034be77d0cf63ef20cdd12747568eec4e9636ae1361016f15e0d6372d6cc4",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

@@ -56,6 +56,7 @@ import {
   pythonComputationService,
   PythonICMEMultiScaleResult
 } from "../services/pythonComputationService";
+import { formatOptionalValue } from "../utils/icmeDisplay";
 
 interface BenchmarkPreset {
   id: string;
@@ -205,8 +206,8 @@ export function ICMEMultiScalePipelineStudio() {
     if (!pipelineResult) return [];
     const sc = pipelineResult.scale3_continuumPlasticity.strengtheningContributions_MPa;
     return [
-      { name: "Lattice Friction (σ₀)", value: sc.sigma_0_LatticeFriction, fill: "#38bdf8", desc: "DFT Peierls-Nabarro" },
-      { name: "Solid Solution (Δσ_ss)", value: sc.deltaSigma_SS_SolidSolution, fill: "#818cf8", desc: "CALPHAD Solute Misfit" },
+      { name: "Lattice Friction (σ₀)", value: sc.sigma_0_LatticeFriction, fill: "#38bdf8", desc: "Tabulated-constant Peierls-Nabarro" },
+      { name: "Solid Solution (Δσ_ss)", value: sc.deltaSigma_SS_SolidSolution, fill: "#818cf8", desc: "Solute coefficients (k·√wt%)" },
       { name: "Grain Boundary (Δσ_hp)", value: sc.deltaSigma_HP_GrainBoundary, fill: "#34d399", desc: "Hall-Petch Grain Size" },
       { name: "Dislocations (Δσ_ρ)", value: sc.deltaSigma_Disloc_Forest, fill: "#fbbf24", desc: "Taylor Forest Strain" },
       { name: "Precipitation (Δσ_ppt)", value: sc.deltaSigma_Precip_OrowanCutting, fill: "#f87171", desc: "LSW Orowan Looping" }
@@ -223,17 +224,21 @@ export function ICMEMultiScalePipelineStudio() {
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
                 <Atom className="w-3.5 h-3.5 text-sky-400" />
-                ICME Digital Thread (10⁻¹⁰ m → 10⁻¹ m)
+                ICME illustrative estimate (10⁻¹⁰ m → 10⁻¹ m)
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Python 3.10 HPC
+                Illustrative · closed-form
               </span>
             </div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
               Multi-Scale ICME Alloy Pipeline
             </h1>
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl">
-              Seamless multiscale bridging from <span className="text-sky-300 font-medium">DFT Atomistic Elastic Tensor (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">CALPHAD Solute Misfit</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Constitutive σ-ε Tensile Curve</span> → <span className="text-rose-300 font-medium">Macro FEA Component Limits</span>.
+              Closed-form chain on tabulated constants (no DFT, CALPHAD or FEA is run): <span className="text-sky-300 font-medium">Elastic constants table (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">Solute strengthening table</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Schematic σ-ε Curve</span> → <span className="text-rose-300 font-medium">Yield-only Component Check</span>.
+            </p>
+            <p role="note" className="text-[11px] text-amber-300/90 max-w-3xl">
+              <span className="font-semibold">Model status: {pipelineResult?.modelStatus ?? "illustrative"}.</span>{" "}
+              {pipelineResult?.modelStatusNote ?? "Illustrative closed-form estimate on tabulated constants; not calibrated or validated. Ultimate tensile strength and fracture toughness are unavailable."}
             </p>
           </div>
 
@@ -244,7 +249,7 @@ export function ICMEMultiScalePipelineStudio() {
               className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs transition flex items-center gap-2 shadow-lg shadow-sky-500/20 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-              {isLoading ? "Solving HPC..." : "Re-Calculate Pipeline"}
+              {isLoading ? "Solving..." : "Re-Calculate Pipeline"}
             </button>
           </div>
         </div>
@@ -263,7 +268,7 @@ export function ICMEMultiScalePipelineStudio() {
               <span>SCALE 0 (10⁻¹⁰ m)</span>
               <Atom className="w-3 h-3" />
             </div>
-            <div className="font-bold text-slate-200">DFT Atomistic</div>
+            <div className="font-bold text-slate-200">Elastic Constants</div>
             <div className="text-[10px] text-slate-400 mt-0.5">Cᵢⱼ, G, B, τ_PN, Taylor M</div>
           </div>
 
@@ -279,7 +284,7 @@ export function ICMEMultiScalePipelineStudio() {
               <span>SCALE 1 (10⁻⁸ m)</span>
               <Layers className="w-3 h-3" />
             </div>
-            <div className="font-bold text-slate-200">CALPHAD & Solute</div>
+            <div className="font-bold text-slate-200">Solute Strengthening</div>
             <div className="text-[10px] text-slate-400 mt-0.5">Size/Modulus Misfit, Δσ_ss</div>
           </div>
 
@@ -312,7 +317,7 @@ export function ICMEMultiScalePipelineStudio() {
               <Activity className="w-3 h-3" />
             </div>
             <div className="font-bold text-slate-200">Tensile Constitutive</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">σ-ε, Rp0.2, UTS, K₁c, J-C</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">σ-ε, Rp0.2, J-C (UTS, K₁c unavailable)</div>
           </div>
 
           <div
@@ -327,8 +332,8 @@ export function ICMEMultiScalePipelineStudio() {
               <span>SCALE 4 (10⁻¹ m)</span>
               <Target className="w-3 h-3" />
             </div>
-            <div className="font-bold text-slate-200">Macro Structural FEA</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Component Load, Flaw a_c, CAE</div>
+            <div className="font-bold text-slate-200">Macro Yield Check</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">Component Load, CAE (flaw a_c unavailable)</div>
           </div>
         </div>
       </div>
@@ -360,7 +365,7 @@ export function ICMEMultiScalePipelineStudio() {
         {pipelineResult && (
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            HPC Solver latency: <span className="text-emerald-300 font-bold">{pipelineResult.computeTimeMs} ms</span>
+            Solver latency: <span className="text-emerald-300 font-bold">{pipelineResult.computeTimeMs} ms</span>
           </div>
         )}
       </div>
@@ -394,8 +399,8 @@ export function ICMEMultiScalePipelineStudio() {
               </select>
             </div>
             <div>
-              <label className="text-[11px] text-slate-400 font-medium">Target Component FEA</label>
-              <select aria-label="Target Component FEA"
+              <label className="text-[11px] text-slate-400 font-medium">Target Component</label>
+              <select aria-label="Target Component"
                 value={componentType}
                 onChange={(e) => setComponentType(e.target.value)}
                 className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500"
@@ -505,7 +510,7 @@ export function ICMEMultiScalePipelineStudio() {
               </div>
               <div className="p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/60">
                 <div className="text-[10px] text-slate-400">Tensile UTS</div>
-                <div className="text-base font-bold text-indigo-400">{pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa} MPa</div>
+                <div className="text-base font-bold text-indigo-400" title={pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status}>{formatOptionalValue(pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa, "MPa")}</div>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/60">
                 <div className="text-[10px] text-slate-400">Elongation (A%)</div>
@@ -513,7 +518,7 @@ export function ICMEMultiScalePipelineStudio() {
               </div>
               <div className="p-2.5 rounded-xl bg-slate-800/70 border border-slate-700/60">
                 <div className="text-[10px] text-slate-400">Fracture K₁c</div>
-                <div className="text-base font-bold text-rose-400">{pipelineResult.scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m} MPa√m</div>
+                <div className="text-base font-bold text-rose-400" title={pipelineResult.scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status}>{formatOptionalValue(pipelineResult.scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m, "MPa√m")}</div>
               </div>
             </div>
           )}
@@ -540,7 +545,7 @@ export function ICMEMultiScalePipelineStudio() {
               : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
           }`}
         >
-          <Atom className="w-3.5 h-3.5" /> Scale 0: DFT Atomistic
+          <Atom className="w-3.5 h-3.5" /> Scale 0: Elastic Constants
         </button>
         <button
           onClick={() => setActiveScaleTab("scale1")}
@@ -580,7 +585,7 @@ export function ICMEMultiScalePipelineStudio() {
               : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
           }`}
         >
-          <Target className="w-3.5 h-3.5" /> Scale 4: Component FEA
+          <Target className="w-3.5 h-3.5" /> Scale 4: Yield Check
         </button>
         <button
           onClick={() => setActiveScaleTab("cae")}
@@ -681,7 +686,9 @@ export function ICMEMultiScalePipelineStudio() {
                         labelFormatter={(lbl) => `Strain: ${lbl}%`}
                       />
                       <ReferenceLine y={pipelineResult.scale3_continuumPlasticity.mechanicalProperties.yieldStrength_Rp02_MPa} stroke="#38bdf8" strokeDasharray="3 3" label={{ value: "Rp0.2", fill: "#38bdf8", fontSize: 10 }} />
-                      <ReferenceLine y={pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa} stroke="#f87171" strokeDasharray="3 3" label={{ value: "UTS", fill: "#f87171", fontSize: 10 }} />
+                      {pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa != null && (
+                        <ReferenceLine y={pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa} stroke="#f87171" strokeDasharray="3 3" label={{ value: "UTS", fill: "#f87171", fontSize: 10 }} />
+                      )}
                       <Line type="monotone" dataKey="engineeringStressMPa" stroke="#38bdf8" strokeWidth={2.5} dot={false} name="engineeringStressMPa" />
                       <Line type="monotone" dataKey="trueStressMPa" stroke="#34d399" strokeWidth={1.5} dot={false} strokeDasharray="4 4" name="trueStressMPa" />
                     </LineChart>
@@ -690,7 +697,7 @@ export function ICMEMultiScalePipelineStudio() {
 
                 <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                   <div className="p-2 rounded-xl bg-slate-800/40 border border-slate-700/50">
-                    <span className="text-slate-400 block text-[10px]">Hollomon Hardening (n):</span>
+                    <span className="text-slate-400 block text-[10px]">Hardening exponent n (placeholder):</span>
                     <span className="text-amber-300 font-bold">{pipelineResult.scale3_continuumPlasticity.mechanicalProperties.hollomon_n}</span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-800/40 border border-slate-700/50">
@@ -712,9 +719,9 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-sky-300 flex items-center gap-2">
                   <Atom className="w-4 h-4 text-sky-400" />
-                  Scale 0 (10⁻¹⁰ m): DFT Atomistic Elastic Stiffness & Peierls-Nabarro
+                  Scale 0 (10⁻¹⁰ m): Tabulated Elastic Stiffness & Peierls-Nabarro Estimate
                 </h3>
-                <span className="text-xs font-mono text-slate-400">Ab-Initio / Density Functional Theory</span>
+                <span className="text-xs font-mono text-slate-400">Tabulated constants (no DFT run)</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -886,9 +893,9 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
                   <Target className="w-4 h-4 text-rose-400" />
-                  Scale 4 (10⁻¹ m): Macro FEA Component Structural Limit & Damage Tolerance
+                  Scale 4 (10⁻¹ m): Macro Yield Check (no FEA); Flaw Tolerance Unavailable
                 </h3>
-                <span className="text-xs font-mono text-slate-400">ASTM E1820 / LEFM Criterion</span>
+                <span className="text-xs font-mono text-slate-400">Yield-only check, no creep / fracture check</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -916,8 +923,15 @@ export function ICMEMultiScalePipelineStudio() {
                     <span className="text-2xl font-bold text-emerald-400">{pipelineResult.scale4_macroComponentFEA.actualSafetyFactor}x</span>
                     <span className="text-xs text-slate-400">against Rp0.2</span>
                   </div>
-                  <div className="p-2 rounded bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-300 font-semibold flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div
+                    className={`p-2 rounded border text-[11px] font-semibold flex items-center gap-1.5 ${
+                      pipelineResult.scale4_macroComponentFEA.structuralVerdict.startsWith("WARNING")
+                        ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
+                        : "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
+                    }`}
+                    title={pipelineResult.scale4_macroComponentFEA.structuralVerdictBasis}
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
                     {pipelineResult.scale4_macroComponentFEA.structuralVerdict}
                   </div>
                 </div>
@@ -927,11 +941,11 @@ export function ICMEMultiScalePipelineStudio() {
                   <div className="space-y-1 text-xs font-mono">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Critical Flaw Size (a_c):</span>
-                      <span className="text-sky-300 font-bold">{pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm} mm</span>
+                      <span className="text-sky-300 font-bold" title={pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.status}>{formatOptionalValue(pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm, "mm")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Plastic Zone Radius (r_p):</span>
-                      <span className="text-slate-200">{pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm} mm</span>
+                      <span className="text-slate-200" title={pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.status}>{formatOptionalValue(pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm, "mm")}</span>
                     </div>
                     <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-700">
                       NDI: {pipelineResult.scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability}
@@ -948,9 +962,9 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-purple-400" />
-                  Calibrated CAE Material Cards (Abaqus, ANSYS, LS-DYNA)
+                  Illustrative CAE Material Cards (Abaqus, ANSYS, LS-DYNA; uncalibrated)
                 </h3>
-                <span className="text-xs font-mono text-slate-400">1-Click Direct FEM Deck Export</span>
+                <span className="text-xs font-mono text-slate-400">Uncalibrated deck export, not for design use</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

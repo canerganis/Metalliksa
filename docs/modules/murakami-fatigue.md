@@ -19,10 +19,10 @@ Authority: lpbf-worker `fatigue-fracture`; timeout 20000 ms; GPU none; warm fals
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `alloyName` | Alloy | enum ['Ti-6Al-4V', '316L SS', 'Inconel 718', 'AlSi10Mg'] | — | — | — | — | Ti-6Al-4V | The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers. |
-| `sqrtArea_um` | Defect size (sqrt area) | number | µm | — | — | — | 45.0 | Converted with float(); no bound is enforced. A negative value fails in the Paris integration (math domain error). |
-| `location` | Defect location | enum ['surface', 'sub-surface', 'internal'] | — | — | — | — | internal | The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts any text; the contract accepts the view's three values. |
-| `stressRatio_R` | Stress ratio R | number | 1 | — | — | — | -1.0 | Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative maximum stress. State at main f41e316; another lane may fix the R = 1 crash later. |
-| `stressAmplitude_MPa` | Cyclic stress amplitude | number | MPa | — | — | — | 220.0 | Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError). |
+| `sqrtArea_um` | Defect size (sqrt area) | number | µm | — | — | — | 45.0 | Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422). |
+| `location` | Defect location | enum ['surface', 'sub-surface', 'internal'] | — | — | — | — | internal | The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values. |
+| `stressRatio_R` | Stress ratio R | number | 1 | — | — | — | -1.0 | Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99. |
+| `stressAmplitude_MPa` | Cyclic stress amplitude | number | MPa | — | — | — | 220.0 | Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422). |
 
 — = not established from the authority code or a source; the contract states no bound.
 All keys are optional at the authority, which applies the listed default when a key is absent.
@@ -53,7 +53,7 @@ Background work: none; resources: fetch.
 
 - The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.
 - No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.
-- UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError); the arithmetic failures noted on the fields reach it as HTTP 400.
+- UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError).
 
 ## Source references
 

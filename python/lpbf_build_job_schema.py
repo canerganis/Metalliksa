@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Annotated, Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -44,9 +44,9 @@ class LpbfBuildJobRequest(BaseModel):
     enableUq: bool = False
     uqSamples: int = Field(96, ge=8, le=500)
     includeAmbench: bool = False
-    defectSqrtAreas_um: Optional[List[float]] = None
+    defectSqrtAreas_um: Optional[List[Annotated[float, Field(gt=0, allow_inf_nan=False)]]] = None
     defectSqrtAreasPaste: Optional[str] = None
-    hardness_HV: Optional[float] = None
+    hardness_HV: Optional[float] = Field(None, gt=0, allow_inf_nan=False)
     ctDetectionThreshold_um: Optional[float] = None
     bypassCache: bool = False
     gitSha: Optional[str] = None
