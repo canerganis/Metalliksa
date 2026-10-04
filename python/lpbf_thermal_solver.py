@@ -213,9 +213,9 @@ def _normalize_heat_source(heat_source: str | None) -> str:
     key = heat_source.strip().lower().replace("_", "-")
     if key in ("rosenthal", "rosenthal-screening", "rosenthal-screening-v1"):
         return "rosenthal"
-    if key in ("eagar-tsai", "eagar-tsai-v1", "et", "eager-tsai"):
+    if key in ("eagar-tsai", "eagar-tsai-v1", "eagar-tsai-v2", "et", "eager-tsai"):
         return "eagar-tsai"
-    if key in ("goldak", "goldak-v1", "goldak-double-ellipsoid"):
+    if key in ("goldak", "goldak-v1", "goldak-double-ellipsoid", "goldak-half-space-v3"):
         return "goldak"
     raise ValueError(f"Unsupported LPBF heat source: {heat_source!r}")
 

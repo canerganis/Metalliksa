@@ -648,7 +648,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1">
                   <Cpu className="w-3 h-3 text-sky-400" />
                   {pyResult?.modelId ||
-                    (heatSource === "goldak" ? "goldak-total-power-v2" : heatSource === "eagar-tsai" ? "eagar-tsai-v1" : "rosenthal-screening-v1")}
+                    (heatSource === "goldak" ? "goldak-half-space-v3" : heatSource === "eagar-tsai" ? "eagar-tsai-v2" : "rosenthal-screening-v1")}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">

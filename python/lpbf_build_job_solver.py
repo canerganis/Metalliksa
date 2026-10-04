@@ -3,7 +3,7 @@
 Single LPBF Build Job engine: Rosenthal melt-pool screening + STL slicer + print verdict.
 
 The industrial UI must display this verdict. TypeScript must not re-decide printability.
-Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v1`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
+Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v2`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
 """
 
 import json
