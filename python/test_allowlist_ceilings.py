@@ -309,8 +309,12 @@ class CeilingReviewTrailerTests(unittest.TestCase):
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
 
     def test_guard_files_are_protected_like_ceilings(self):
-        self.assertEqual(set(review.PROTECTED_PATHS), {"scripts/check_ceiling_review.py",
-                                                       "python/test_allowlist_ceilings.py", ".github/workflows/ci.yml"})
+        self.assertEqual(set(review.PROTECTED_PATHS), {
+            "scripts/check_ceiling_review.py", "python/test_allowlist_ceilings.py", ".github/workflows/ci.yml",
+            "tests/support/ceiling.ts", "tests/support/routeScan.ts", "tests/support/importGraph.ts",
+            "tests/route-authority.test.ts", "tests/component-reachability.test.ts"})
+        for guard in review.PROTECTED_PATHS:
+            self.assertTrue((REPO_ROOT / guard).is_file(), f"protected path {guard} does not exist")
         for guard in review.PROTECTED_PATHS:
             with self.subTest(guard=guard):
                 start = self._rev()

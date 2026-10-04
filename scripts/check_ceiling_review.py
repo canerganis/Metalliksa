@@ -1,8 +1,8 @@
 """Fail when an allowlist ceiling (*.ceiling.json) or its guard changes without review.
 
 Reviewed paths: every *.ceiling.json that already exists at the merge base and differs at
-HEAD, plus the guard files in PROTECTED_PATHS (this script, the pinned-ceiling test and the
-CI workflow that runs both) whenever they differ. For each such path the LAST commit in
+HEAD, plus the guard files in PROTECTED_PATHS (this script, the pinned-ceiling test, the CI
+workflow that runs both, and the TypeScript ratchet tests and scanners) whenever they differ. For each such path the LAST commit in
 merge-base..HEAD that touches it must carry the trailer ``Ceiling-Review: <reason>`` in its
 trailer block (parsed by ``git interpret-trailers``; the reason needs at least four words); an
 earlier reviewed commit does not cover a later unreviewed edit. Ceilings that are new in the
@@ -24,6 +24,12 @@ PROTECTED_PATHS = (
     "scripts/check_ceiling_review.py",
     "python/test_allowlist_ceilings.py",
     ".github/workflows/ci.yml",
+    # The TypeScript ratchets: ceiling reader, route and import scanners and the tests using them.
+    "tests/support/ceiling.ts",
+    "tests/support/routeScan.ts",
+    "tests/support/importGraph.ts",
+    "tests/route-authority.test.ts",
+    "tests/component-reachability.test.ts",
 )
 
 
