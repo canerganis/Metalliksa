@@ -21,6 +21,9 @@ const KineticsMetric: React.FC<{ label: string; value: string; hint?: string }> 
   </div>
 );
 
+/** Python reasons have no final period; add one for display. */
+const sentence = (text: string): string => (/[.!?]$/.test(text) ? text : `${text}.`);
+
 export const BuildJobKineticsPanel: React.FC<{ kinetics: BuildJobKineticsLike | null | undefined }> = ({ kinetics }) => {
   if (!kinetics) return null;
   const availability = buildJobKineticsAvailability(kinetics);
@@ -39,7 +42,13 @@ export const BuildJobKineticsPanel: React.FC<{ kinetics: BuildJobKineticsLike | 
             <KineticsMetric
               label="Primary Phase"
               value={cct.row?.primaryMicrostructure || UNAVAILABLE_TEXT}
-              hint={cct.row ? "From the CCT row below" : "No CCT row selected"}
+              hint={
+                !cct.row
+                  ? "No CCT row selected"
+                  : cct.row.primaryMicrostructure
+                    ? "From the CCT row below"
+                    : sentence(cct.row.unavailableReason || "No primary phase in the CCT row")
+              }
             />
             <KineticsMetric label="Martensite" value={martensite.value} hint={martensite.hint} />
             <KineticsMetric

@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """
-MetalliX Python Pourbaix E-pH Stability & Electrochemical Equilibrium Solver
-Evaluates multi-element Nernst electrochemical equilibria, water stability limits,
-corrosion, passivation, and immunity phase domains across pH (0 to 14) and E (-2.5V to +2.5V).
-Includes overlay analysis for experimental E-pH test data to identify specific corrosion mechanisms.
+MetalliX single-element M-H2O Pourbaix (E-pH) solver, 25 C only.
+
+Engine: minimum Gibbs energy per metal atom over a sourced species table
+(pourbaix_species_25c.py), fixed activities, ideal solution (gamma = 1). The stable
+species at (pH, E) is argmin g_i with
+
+    g_i = [dfG_i - o_i*dfG(H2O) + RT ln a_i] / x_i - m_i ln10 RT pH - n_i F E,
+    m_i = (2 o_i - h_i)/x_i,   n_i = (z_i + 2 o_i - h_i)/x_i,   a_i = 1 for solids,
+
+(exact one-element Gibbs minimisation, Persson et al., Phys. Rev. B 85, 235438 (2012)).
+Every g_i is affine in (pH, E), so each domain is a convex polygon and each boundary an
+exact line g_i = g_j; no E0 or slope is entered by hand. Temperature is limited to 25 C:
+the table has no consistent entropies or heat capacities for the atlas-sourced species.
+The chloride/Epit model was removed (no sourced generic Epit exists).
 """
 
 import sys
@@ -12,7 +22,9 @@ import math
 import time
 
 import physical_constants
-from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+import pourbaix_species_25c as species_table
+from input_validation import (MISSING_PROPERTY, NON_FINITE, OUT_OF_RANGE, UNKNOWN_ELEMENT, ValidationError,
+                              require_finite, require_range, validation_envelope)
 
 # Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
 # from physical_constants (they replaced the CODATA printed truncations
@@ -24,6 +36,36 @@ ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 # would be 35.45, not the 35.453 used here, so this stays local until step (b).
 CHLORIDE_MOLAR_MASS_G_MOL = 35.453
 
+ENGINE_ID = "pourbaix-gibbs-25c-v4"
+SUPPORTED_TEMPERATURE_C = 25.0
+TEMPERATURE_TOLERANCE_C = 0.5
+T_KELVIN = ZERO_CELSIUS_K + SUPPORTED_TEMPERATURE_C
+LN10 = math.log(10.0)
+RT = R_GAS * T_KELVIN  # J/mol
+
+# Error codes of this engine. input_validation.ERROR_CODES is pinned to seven design codes
+# (test_input_validation), so these are raised through a subclass that carries the same
+# envelope shape (validation_envelope reads only .to_json()).
+TEMPERATURE_UNSUPPORTED = "TEMPERATURE_UNSUPPORTED"
+POURBAIX_DATA_UNAVAILABLE = "POURBAIX_DATA_UNAVAILABLE"
+UNKNOWN_REFERENCE_ELECTRODE = "UNKNOWN_REFERENCE_ELECTRODE"
+POURBAIX_ERROR_CODES = frozenset({TEMPERATURE_UNSUPPORTED, POURBAIX_DATA_UNAVAILABLE,
+                                  UNKNOWN_REFERENCE_ELECTRODE})
+
+
+class PourbaixValidationError(ValidationError):
+    """ValidationError with a Pourbaix-specific code (same code/field/message/detail contract)."""
+
+    def __init__(self, code, field, message, detail=None):
+        if code not in POURBAIX_ERROR_CODES:
+            raise ValueError(f"Unknown Pourbaix validation error code {code!r}")
+        ValueError.__init__(self, f"[{code}] {field}: {message}")
+        self.code = code
+        self.field = field
+        self.message = message
+        self.detail = dict(detail or {})
+
+
 # Reference Electrode Standard Offsets vs SHE at 25°C
 REF_ELECTRODE_OFFSETS = {
     "SHE": 0.000,
@@ -34,429 +76,99 @@ REF_ELECTRODE_OFFSETS = {
     "MMS": 0.640,               # Mercury/Mercurous Sulfate (Sat. K2SO4)
 }
 
-# Standard Thermodynamic Electrochemical Equilibrium Systems
+# Elements the engine knows. ``available`` follows the species table; the numbers come
+# from the table, never from this dictionary. (standardE0_V is the unit-activity E0 of the
+# metal / reference-cation couple derived from the table, None when unavailable.)
 POURBAIX_ELEMENT_SYSTEMS = {
-    "Fe": {
-        "name": "Iron (Fe-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Fe"),
-        "standardE0_V": -0.440,
-        "reactions": [
-            {
-                "id": "fe_imm_act",
-                "name": "Fe / Fe²⁺",
-                "equation": "Fe(s) ⇌ Fe²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -0.440,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Active Dissolution",
-                "speciesA": "Fe (Metallic Immunity)",
-                "speciesB": "Fe²⁺ (aq)"
-            },
-            {
-                "id": "fe_act_fe3",
-                "name": "Fe²⁺ / Fe³⁺",
-                "equation": "Fe²⁺ ⇌ Fe³⁺ + e⁻",
-                "type": "redox",
-                "e0": 0.771,
-                "slope_pH": 0.0,
-                "domain": "active",
-                "boundaryType": "Acid Redox Fe(II)/Fe(III)",
-                "speciesA": "Fe²⁺ (aq)",
-                "speciesB": "Fe³⁺ (aq)"
-            },
-            {
-                "id": "fe_act_pass",
-                "name": "2Fe²⁺ + 3H₂O / Fe₂O₃",
-                "equation": "2Fe²⁺ + 3H₂O ⇌ Fe₂O₃(s) + 6H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": 0.728,
-                "slope_pH": -0.1773, # (6 * 0.05916 / 2) = -0.1775
-                "domain": "active_vs_passive",
-                "boundaryType": "Active Dissolution / Passivation",
-                "speciesA": "Fe²⁺ (aq)",
-                "speciesB": "Fe₂O₃ (Hematite Passive)"
-            },
-            {
-                "id": "fe_imm_magnetite",
-                "name": "3Fe + 4H₂O / Fe₃O₄",
-                "equation": "3Fe(s) + 4H₂O ⇌ Fe₃O₄(s) + 8H⁺ + 8e⁻",
-                "type": "redox_ph",
-                "e0": -0.085,
-                "slope_pH": -0.0592,
-                "domain": "immunity_vs_passive",
-                "boundaryType": "Immunity / Magnetite Passivation",
-                "speciesA": "Fe(s)",
-                "speciesB": "Fe₃O₄ (Magnetite)"
-            },
-            {
-                "id": "fe_pass_trans",
-                "name": "Fe₂O₃ + 5H₂O / 2FeO₄²⁻",
-                "equation": "Fe₂O₃(s) + 5H₂O ⇌ 2FeO₄²⁻ + 10H⁺ + 6e⁻",
-                "type": "transpassive",
-                "e0": 2.20,
-                "slope_pH": -0.0986,
-                "domain": "transpassive",
-                "boundaryType": "Passivation / Transpassive Dissolution",
-                "speciesA": "Fe₂O₃",
-                "speciesB": "FeO₄²⁻ (Ferryl Anion)"
-            },
-            {
-                "id": "fe_alkaline",
-                "name": "Fe + 2H₂O / HFeO₂⁻",
-                "equation": "Fe(s) + 2H₂O ⇌ HFeO₂⁻ + 3H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": 0.493,
-                "slope_pH": -0.0886,
-                "domain": "alkaline_corrosion",
-                "boundaryType": "Alkaline Caustic Dissolution",
-                "speciesA": "Fe₃O₄",
-                "speciesB": "HFeO₂⁻ (Hypoferrite)"
-            }
-        ],
-        "species": {
-            "immunity": ["Fe(s) (Metallic Zero-Valence)"],
-            "corrosion_acid": ["Fe²⁺(aq)", "Fe³⁺(aq)", "FeOH²⁺(aq)"],
-            "passivation": ["Fe₂O₃(s) (Hematite)", "Fe₃O₄(s) (Magnetite)", "FeOOH(s) (Goethite)"],
-            "corrosion_alkaline": ["HFeO₂⁻(aq) (Bihypoferrite)", "FeO₄²⁻(aq) (Ferryl VI)"]
-        }
-    },
-    "Cr": {
-        "name": "Chromium (Cr-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Cr"),
-        "standardE0_V": -0.913,
-        "reactions": [
-            {
-                "id": "cr_imm_act",
-                "name": "Cr / Cr²⁺",
-                "equation": "Cr(s) ⇌ Cr²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -0.913,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Active Dissolution",
-                "speciesA": "Cr (Metallic)",
-                "speciesB": "Cr²⁺ (aq)"
-            },
-            {
-                "id": "cr_act_pass",
-                "name": "2Cr²⁺ + 3H₂O / Cr₂O₃",
-                "equation": "2Cr²⁺ + 3H₂O ⇌ Cr₂O₃(s) + 6H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": -0.580,
-                "slope_pH": -0.1773,
-                "domain": "active_vs_passive",
-                "boundaryType": "Active / Passivation",
-                "speciesA": "Cr²⁺ (aq)",
-                "speciesB": "Cr₂O₃ (Chromia Barrier)"
-            },
-            {
-                "id": "cr_pass_trans",
-                "name": "Cr₂O₃ + 4H₂O / 2CrO₄²⁻",
-                "equation": "Cr₂O₃(s) + 4H₂O ⇌ 2CrO₄²⁻ + 8H⁺ + 6e⁻",
-                "type": "transpassive",
-                "e0": 1.350,
-                "slope_pH": -0.0788,
-                "domain": "passive_vs_transpassive",
-                "boundaryType": "Passivation / Transpassive (Chromate)",
-                "speciesA": "Cr₂O₃",
-                "speciesB": "CrO₄²⁻ / Cr₂O₇²⁻ (aq)"
-            }
-        ],
-        "species": {
-            "immunity": ["Cr(s)"],
-            "corrosion_acid": ["Cr²⁺(aq)", "Cr³⁺(aq)"],
-            "passivation": ["Cr₂O₃(s) (Chromia Passive Film)", "Cr(OH)₃(s)"],
-            "corrosion_alkaline": ["CrO₄²⁻(aq) (Chromate VI)", "Cr₂O₇²⁻(aq) (Dichromate VI)"]
-        }
-    },
-    "Ni": {
-        "name": "Nickel (Ni-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Ni"),
-        "standardE0_V": -0.257,
-        "reactions": [
-            {
-                "id": "ni_imm_act",
-                "name": "Ni / Ni²⁺",
-                "equation": "Ni(s) ⇌ Ni²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -0.257,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Active Dissolution",
-                "speciesA": "Ni(s)",
-                "speciesB": "Ni²⁺ (aq)"
-            },
-            {
-                "id": "ni_act_pass",
-                "name": "Ni²⁺ + H₂O / NiO",
-                "equation": "Ni²⁺ + H₂O ⇌ NiO(s) + 2H⁺",
-                "type": "hydrolysis",
-                "pH_trans": 6.8,
-                "domain": "active_vs_passive",
-                "boundaryType": "Active Hydrolysis / NiO Passivation",
-                "speciesA": "Ni²⁺ (aq)",
-                "speciesB": "NiO / Ni(OH)₂"
-            },
-            {
-                "id": "ni_pass_trans",
-                "name": "Ni(OH)₂ / NiO₂",
-                "equation": "Ni(OH)₂(s) ⇌ NiO₂(s) + 2H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": 1.434,
-                "slope_pH": -0.0592,
-                "domain": "passive",
-                "boundaryType": "Ni(II) / Ni(IV) Higher Oxide",
-                "speciesA": "Ni(OH)₂",
-                "speciesB": "NiO₂ (s)"
-            }
-        ],
-        "species": {
-            "immunity": ["Ni(s)"],
-            "corrosion_acid": ["Ni²⁺(aq)"],
-            "passivation": ["NiO(s)", "Ni(OH)₂(s)", "Ni₂O₃(s)", "NiO₂(s)"],
-            "corrosion_alkaline": ["HNiO₂⁻(aq)"]
-        }
-    },
-    "Ti": {
-        "name": "Titanium (Ti-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Ti"),
-        "standardE0_V": -1.630,
-        "reactions": [
-            {
-                "id": "ti_imm_act",
-                "name": "Ti / Ti²⁺",
-                "equation": "Ti(s) ⇌ Ti²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -1.630,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Ti²⁺",
-                "speciesA": "Ti(s)",
-                "speciesB": "Ti²⁺"
-            },
-            {
-                "id": "ti_imm_pass",
-                "name": "Ti + 2H₂O / TiO₂",
-                "equation": "Ti(s) + 2H₂O ⇌ TiO₂(s) + 4H⁺ + 4e⁻",
-                "type": "redox_ph",
-                "e0": -0.860,
-                "slope_pH": -0.0592,
-                "domain": "immunity_vs_passive",
-                "boundaryType": "Immunity / Titania Barrier",
-                "speciesA": "Ti(s)",
-                "speciesB": "TiO₂ (Rutile/Anatase)"
-            },
-            {
-                "id": "ti_pass_acid",
-                "name": "TiO₂ + 2H⁺ / TiO²⁺",
-                "equation": "TiO₂(s) + 2H⁺ ⇌ TiO²⁺ + H₂O",
-                "type": "acid_dissolution",
-                "pH_trans": 1.2,
-                "domain": "active_vs_passive",
-                "boundaryType": "Concentrated Acid Dissolution",
-                "speciesA": "TiO₂",
-                "speciesB": "TiO²⁺ (Titanyl)"
-            }
-        ],
-        "species": {
-            "immunity": ["Ti(s)"],
-            "corrosion_acid": ["Ti²⁺(aq)", "Ti³⁺(aq)", "TiO²⁺(Titanyl)"],
-            "passivation": ["TiO₂(s) (Rutile/Anatase Titania)", "Ti₂O₃(s)", "TiO(s)"],
-            "corrosion_alkaline": ["HTiO₃⁻(aq)"]
-        }
-    },
-    "Al": {
-        "name": "Aluminum (Al-H₂O Amphoteric System)",
-        "atomicMass": physical_constants.atomic_weight("Al"),
-        "standardE0_V": -1.662,
-        "reactions": [
-            {
-                "id": "al_imm_act",
-                "name": "Al / Al³⁺",
-                "equation": "Al(s) ⇌ Al³⁺ + 3e⁻",
-                "type": "redox",
-                "e0": -1.662,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Acid Active",
-                "speciesA": "Al(s)",
-                "speciesB": "Al³⁺ (aq)"
-            },
-            {
-                "id": "al_act_pass",
-                "name": "2Al³⁺ + 3H₂O / Al₂O₃",
-                "equation": "2Al³⁺ + 3H₂O ⇌ Al₂O₃(s) + 6H⁺",
-                "type": "hydrolysis",
-                "pH_trans": 3.9,
-                "domain": "active_vs_passive",
-                "boundaryType": "Acid Active / Passivation",
-                "speciesA": "Al³⁺ (aq)",
-                "speciesB": "Al₂O₃·3H₂O (Bayerite)"
-            },
-            {
-                "id": "al_pass_alkaline",
-                "name": "Al₂O₃ + 2OH⁻ / 2AlO₂⁻",
-                "equation": "Al₂O₃(s) + 2OH⁻ ⇌ 2AlO₂⁻ + H₂O",
-                "type": "alkaline_dissolution",
-                "pH_trans": 8.8,
-                "domain": "passive_vs_alkaline",
-                "boundaryType": "Passivity / Alkaline Aluminate Dissolution",
-                "speciesA": "Al₂O₃",
-                "speciesB": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)"
-            }
-        ],
-        "species": {
-            "immunity": ["Al(s)"],
-            "corrosion_acid": ["Al³⁺(aq)", "AlOH²⁺(aq)"],
-            "passivation": ["Al₂O₃·3H₂O (Bayerite/Boehmite Barrier Oxide)"],
-            "corrosion_alkaline": ["AlO₂⁻(aq)", "Al(OH)₄⁻(aq) (Aluminate)"]
-        }
-    },
-    "Cu": {
-        "name": "Copper (Cu-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Cu"),
-        "standardE0_V": +0.342,
-        "reactions": [
-            {
-                "id": "cu_imm_act",
-                "name": "Cu / Cu²⁺",
-                "equation": "Cu(s) ⇌ Cu²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": 0.342,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Cu²⁺ Acid Active",
-                "speciesA": "Cu(s)",
-                "speciesB": "Cu²⁺ (aq)"
-            },
-            {
-                "id": "cu_act_cu2o",
-                "name": "2Cu + H₂O / Cu₂O",
-                "equation": "2Cu(s) + H₂O ⇌ Cu₂O(s) + 2H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": 0.471,
-                "slope_pH": -0.0592,
-                "domain": "immunity_vs_passive",
-                "boundaryType": "Immunity / Cuprite (Cu₂O) Passivity",
-                "speciesA": "Cu(s)",
-                "speciesB": "Cu₂O (Cuprite)"
-            },
-            {
-                "id": "cu_cu2o_cuo",
-                "name": "Cu₂O + H₂O / 2CuO",
-                "equation": "Cu₂O(s) + H₂O ⇌ 2CuO(s) + 2H⁺ + 2e⁻",
-                "type": "redox_ph",
-                "e0": 0.669,
-                "slope_pH": -0.0592,
-                "domain": "passive",
-                "boundaryType": "Cu₂O / Tenorite (CuO) Passivity",
-                "speciesA": "Cu₂O",
-                "speciesB": "CuO (Tenorite)"
-            },
-            {
-                "id": "cu_alkaline",
-                "name": "CuO + H₂O / HCuO₂⁻",
-                "equation": "CuO(s) + H₂O ⇌ HCuO₂⁻ + H⁺",
-                "type": "alkaline_dissolution",
-                "pH_trans": 12.8,
-                "domain": "passive_vs_alkaline",
-                "boundaryType": "Alkaline Dissolution",
-                "speciesA": "CuO",
-                "speciesB": "HCuO₂⁻ / CuO₂²⁻"
-            }
-        ],
-        "species": {
-            "immunity": ["Cu(s) (Noble Element Immunity)"],
-            "corrosion_acid": ["Cu⁺(aq)", "Cu²⁺(aq)"],
-            "passivation": ["Cu₂O(s) (Cuprite)", "CuO(s) (Tenorite)", "Cu(OH)₂(s)"],
-            "corrosion_alkaline": ["HCuO₂⁻(aq)", "CuO₂²⁻(aq)"]
-        }
-    },
-    "Zn": {
-        "name": "Zinc (Zn-H₂O System Amphoteric)",
-        "atomicMass": physical_constants.atomic_weight("Zn"),
-        "standardE0_V": -0.763,
-        "reactions": [
-            {
-                "id": "zn_imm_act",
-                "name": "Zn / Zn²⁺",
-                "equation": "Zn(s) ⇌ Zn²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -0.763,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Acid Active Zn²⁺",
-                "speciesA": "Zn(s)",
-                "speciesB": "Zn²⁺ (aq)"
-            },
-            {
-                "id": "zn_act_pass",
-                "name": "Zn²⁺ + H₂O / ZnO",
-                "equation": "Zn²⁺ + H₂O ⇌ ZnO(s) + 2H⁺",
-                "type": "hydrolysis",
-                "pH_trans": 6.0,
-                "domain": "active_vs_passive",
-                "boundaryType": "Acid Active / Zincite Passivation",
-                "speciesA": "Zn²⁺ (aq)",
-                "speciesB": "ZnO / Zn(OH)₂"
-            },
-            {
-                "id": "zn_pass_alkaline",
-                "name": "ZnO + H₂O / ZnO₂²⁻",
-                "equation": "ZnO(s) + H₂O ⇌ ZnO₂²⁻ + 2H⁺",
-                "type": "alkaline_dissolution",
-                "pH_trans": 11.5,
-                "domain": "passive_vs_alkaline",
-                "boundaryType": "Alkaline Zincate Dissolution",
-                "speciesA": "ZnO",
-                "speciesB": "ZnO₂²⁻ / HZnO₂⁻ (Zincate)"
-            }
-        ],
-        "species": {
-            "immunity": ["Zn(s)"],
-            "corrosion_acid": ["Zn²⁺(aq)"],
-            "passivation": ["ZnO(s) (Zincite)", "Zn(OH)₂(s) (Wülfingite)"],
-            "corrosion_alkaline": ["HZnO₂⁻(aq)", "ZnO₂²⁻(aq) (Zincate)"]
-        }
-    },
-    "Mg": {
-        "name": "Magnesium (Mg-H₂O System)",
-        "atomicMass": physical_constants.atomic_weight("Mg"),
-        "standardE0_V": -2.372,
-        "reactions": [
-            {
-                "id": "mg_imm_act",
-                "name": "Mg / Mg²⁺",
-                "equation": "Mg(s) ⇌ Mg²⁺ + 2e⁻",
-                "type": "redox",
-                "e0": -2.372,
-                "slope_pH": 0.0,
-                "domain": "immunity_vs_active",
-                "boundaryType": "Immunity / Active Dissolution",
-                "speciesA": "Mg(s)",
-                "speciesB": "Mg²⁺ (aq)"
-            },
-            {
-                "id": "mg_act_pass",
-                "name": "Mg²⁺ + 2H₂O / Mg(OH)₂",
-                "equation": "Mg²⁺ + 2H₂O ⇌ Mg(OH)₂(s) + 2H⁺",
-                "type": "hydrolysis",
-                "pH_trans": 10.5,
-                "domain": "active_vs_passive",
-                "boundaryType": "Active Acid / Brucite Passivity",
-                "speciesA": "Mg²⁺ (aq)",
-                "speciesB": "Mg(OH)₂ (Brucite)"
-            }
-        ],
-        "species": {
-            "immunity": ["Mg(s) (Extreme Negative Potential)"],
-            "corrosion_acid": ["Mg²⁺(aq) (Aggressive HER Self-Dissolution)"],
-            "passivation": ["Mg(OH)₂(s) (Brucite Alkaline Passive Layer)"],
-            "corrosion_alkaline": ["Mg(OH)₂(s)"]
-        }
-    }
+    "Fe": {"name": species_table.NAMES["Fe"], "atomicMass": physical_constants.atomic_weight("Fe")},
+    "Cr": {"name": species_table.NAMES["Cr"], "atomicMass": physical_constants.atomic_weight("Cr")},
+    "Ni": {"name": species_table.NAMES["Ni"], "atomicMass": physical_constants.atomic_weight("Ni")},
+    "Ti": {"name": species_table.NAMES["Ti"], "atomicMass": physical_constants.atomic_weight("Ti")},
+    "Al": {"name": species_table.NAMES["Al"], "atomicMass": physical_constants.atomic_weight("Al")},
+    "Cu": {"name": species_table.NAMES["Cu"], "atomicMass": physical_constants.atomic_weight("Cu")},
+    "Zn": {"name": species_table.NAMES["Zn"], "atomicMass": physical_constants.atomic_weight("Zn")},
+    "Mg": {"name": species_table.NAMES["Mg"], "atomicMass": physical_constants.atomic_weight("Mg")},
 }
+# Elements without a Python system entry that the lab still names: reported as unavailable.
+UNAVAILABLE_ONLY_ELEMENTS = ("Mo",)
+
+# ---------------------------------------------------------------------------------------
+# Fixed category texts (one text per category; no rate, protectiveness or pitting claims).
+# ---------------------------------------------------------------------------------------
+CATEGORY_IMMUNITY = species_table.CATEGORY_BY_ROLE["metal"]
+CATEGORY_ACID = species_table.CATEGORY_BY_ROLE["cation"]
+CATEGORY_ALKALINE = species_table.CATEGORY_BY_ROLE["anion_low"]
+CATEGORY_PASSIVATION = species_table.CATEGORY_BY_ROLE["oxide"]
+CATEGORY_TRANSPASSIVE = species_table.CATEGORY_BY_ROLE["anion_high"]
+OUTSIDE_WATER_LABEL = "outside water stability (metastable)"
+INSIDE_WATER_LABEL = "inside water stability"
+
+CATEGORY_TEXTS = {
+    CATEGORY_IMMUNITY: {
+        "mechanismId": "metal_stable",
+        "mechanismTitle": "Metal is the stable phase (thermodynamic immunity)",
+        "mechanismDetails": "The metal has the lowest Gibbs energy of all tabulated species at this "
+                            "pH, potential and dissolved activity; oxidation is not thermodynamically favoured.",
+        "riskLevel": "Immune",
+        "color": "#0284c7",
+    },
+    CATEGORY_ACID: {
+        "mechanismId": "cation_stable",
+        "mechanismTitle": "Dissolved cation is the stable phase (acidic corrosion domain)",
+        "mechanismDetails": "A dissolved metal cation has the lowest Gibbs energy at this pH, potential and "
+                            "dissolved activity; the metal is thermodynamically unstable. The map gives no "
+                            "corrosion rate.",
+        "riskLevel": "Severe Corrosion",
+        "color": "#ef4444",
+    },
+    CATEGORY_ALKALINE: {
+        "mechanismId": "anion_stable",
+        "mechanismTitle": "Dissolved oxyanion is the stable phase (alkaline corrosion domain)",
+        "mechanismDetails": "A dissolved hydroxo/oxo anion has the lowest Gibbs energy at this pH, potential and "
+                            "dissolved activity; the metal and its oxides are thermodynamically unstable. The map "
+                            "gives no corrosion rate.",
+        "riskLevel": "High Risk",
+        "color": "#f97316",
+    },
+    CATEGORY_PASSIVATION: {
+        "mechanismId": "solid_oxide_stable",
+        "mechanismTitle": "Solid oxide or hydroxide is the stable phase (thermodynamic passivation domain)",
+        "mechanismDetails": "A solid oxide or hydroxide has the lowest Gibbs energy at this pH, potential and "
+                            "dissolved activity. This is an equilibrium statement: it does not establish that a "
+                            "film forms, is protective, or resists chloride breakdown.",
+        "riskLevel": "Stable Passivity",
+        "color": "#10b981",
+    },
+    CATEGORY_TRANSPASSIVE: {
+        "mechanismId": "oxyanion_high_potential_stable",
+        "mechanismTitle": "High-valence oxyanion is the stable phase (transpassive domain)",
+        "mechanismDetails": "A high-valence dissolved oxyanion has the lowest Gibbs energy at this pH, potential and "
+                            "dissolved activity; the solid oxide is thermodynamically unstable.",
+        "riskLevel": "High Risk",
+        "color": "#e11d48",
+    },
+}
+
+CATEGORY_MITIGATION = {
+    CATEGORY_ACID: [
+        "Pourbaix map: polarising below the computed metal-domain boundary at this pH would place the point in the metal-stability domain.",
+        "Changing pH moves the point across the computed boundaries (see analyticalBoundaries); inhibitors and kinetics are not assessed by this map.",
+    ],
+    CATEGORY_ALKALINE: [
+        "Lowering pH moves the point out of the dissolved-anion domain (see analyticalBoundaries); stress-corrosion susceptibility is alloy- and stress-dependent and is not assessed by this map.",
+    ],
+    CATEGORY_TRANSPASSIVE: [
+        "Lowering the potential below the passivation/transpassive boundary removes the thermodynamic drive to form the high-valence oxyanion (see analyticalBoundaries).",
+    ],
+    CATEGORY_PASSIVATION: [
+        "A solid oxide/hydroxide is the equilibrium phase here. Film protectiveness, chloride breakdown (pitting) and kinetics are not assessed by this map.",
+    ],
+}
+
+# ---------------------------------------------------------------------------------------
+# Thermodynamics
+# ---------------------------------------------------------------------------------------
+
 
 def calculate_nernst_slope(temperature_C=25.0):
     t_kelvin = ZERO_CELSIUS_K + float(temperature_C)
@@ -464,449 +176,248 @@ def calculate_nernst_slope(temperature_C=25.0):
     f_faraday = F_FARADAY
     return (2.302585093 * r_gas * t_kelvin) / f_faraday # 0.05916 V/pH at 25°C
 
+
+_E0_O2_H2O_V = -species_table.WATER_DFG_NBS_KJ_MOL * 1000.0 / (2.0 * F_FARADAY)  # 1.2288 V
+
+
 def generate_water_stability_lines(temperature_C=25.0):
-    nernst_slope = calculate_nernst_slope(temperature_C)
-    t_k = temperature_C + ZERO_CELSIUS_K
-    # Standard O2 potential temperature dependence: E0(T) = 1.229 - 0.000845*(T - 298.15)
-    e0_oer = 1.229 - 0.000845 * (t_k - 298.15)
-    
+    """Water lines at 25 C: E(H+/H2) = -k pH, E(O2/H2O) = 1.2288 - k pH (k = ln10 RT/F)."""
+    nernst_slope = calculate_nernst_slope(SUPPORTED_TEMPERATURE_C)
+    e0_oer = _E0_O2_H2O_V
     line_a = []
     line_b = []
-    for ph_i in range(16): # 0 to 15
+    for ph_i in range(16):  # 0 to 15
         ph = float(ph_i)
-        e_her = 0.0 - nernst_slope * ph
-        e_oer = e0_oer - nernst_slope * ph
-        line_a.append({"pH": ph, "E_V_SHE": round(e_her, 4)})
-        line_b.append({"pH": ph, "E_V_SHE": round(e_oer, 4)})
-        
+        line_a.append({"pH": ph, "E_V_SHE": round(0.0 - nernst_slope * ph, 4)})
+        line_b.append({"pH": ph, "E_V_SHE": round(e0_oer - nernst_slope * ph, 4)})
     return {
         "nernstSlope": round(nernst_slope, 5),
         "e0_OER": round(e0_oer, 4),
         "line_a_hydrogen_HER": line_a,
         "line_b_oxygen_OER": line_b,
         "equation_HER": f"E = 0.000 - {nernst_slope:.4f}·pH (Line a: 2H⁺ + 2e⁻ ⇌ H₂)",
-        "equation_OER": f"E = {e0_oer:.3f} - {nernst_slope:.4f}·pH (Line b: O₂ + 4H⁺ + 4e⁻ ⇌ 2H₂O)"
+        "equation_OER": f"E = {e0_oer:.4f} - {nernst_slope:.4f}·pH (Line b: O₂ + 4H⁺ + 4e⁻ ⇌ 2H₂O)",
     }
 
-def calculate_chloride_pitting_boundary(element="Fe", temperature_C=25.0, chloride_ppm=0.0):
-    """
-    Computes pitting breakdown threshold Epit vs pH in presence of Cl-
-    """
-    base_epit = {
-        "Fe": 0.45,
-        "Cr": 0.85,
-        "Ni": 0.55,
-        "Ti": 1.85,
-        "Al": -0.45,
-        "Cu": 0.25,
-        "Zn": -0.65,
-        "Mg": -1.35
-    }.get(element, 0.50)
-    
-    if chloride_ppm <= 0:
-        return {"pittingActive": False, "pittingPotential_V_SHE": None, "points": []}
-        
-    cl_mol_l = (chloride_ppm * 1e-3) / CHLORIDE_MOLAR_MASS_G_MOL
-    # Shift: delta_Epit = k * log10([Cl-] / 0.001 M)
-    k_sensitivity = 0.088
-    if element == "Al":
-        k_sensitivity = 0.120
-    elif element == "Ti":
-        k_sensitivity = 0.020 # highly resistant
-        
-    delta_epit = k_sensitivity * math.log10(max(1e-5, cl_mol_l) / 1e-3)
-    e_pit_she = base_epit - delta_epit
-    
-    pitting_line = []
-    nernst_slope = calculate_nernst_slope(temperature_C)
-    for ph_i in range(15):
-        ph = float(ph_i)
-        # Epit often slopes slightly with pH in passive regions
-        e_val = e_pit_she - 0.02 * ph
-        pitting_line.append({"pH": ph, "E_V_SHE": round(e_val, 3)})
-        
-    return {
-        "pittingActive": True,
-        "chloride_ppm": chloride_ppm,
-        "chloride_Molar": round(cl_mol_l, 5),
-        "nominal_Epit_V_SHE": round(e_pit_she, 3),
-        "pittingThresholdLine": pitting_line
-    }
 
-def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log10=-6.0, chloride_ppm=0.0):
-    """
-    Evaluates exact thermodynamic phase and identifies active corrosion mechanism for an (E, pH) point.
-    """
-    nernst = calculate_nernst_slope(temperature_C)
-    e_her = 0.0 - nernst * ph
-    e_oer = (1.229 - 0.000845 * (temperature_C + ZERO_CELSIUS_K - 298.15)) - nernst * ph
-    
-    # Calculate pitting potential
-    pitting_data = calculate_chloride_pitting_boundary(element, temperature_C, chloride_ppm)
-    e_pit = pitting_data.get("nominal_Epit_V_SHE")
-    
-    # Default variables
-    regime = "Active Corrosion"
-    dominant_species = "M²⁺(aq)"
-    mechanism_id = "general_acid_dissolution"
-    mechanism_title = "Active Acid Dissolution"
-    mechanism_details = "Metallic dissolution with ionic discharge into aqueous electrolyte."
-    risk_level = "Severe Corrosion"
-    color = "#ef4444"
-    depolarizer = "H⁺ (HER)" if e_she < e_her else ("O₂ (ORR)" if e_she < e_oer else "Anodic Overpotential")
-    delta_imm = 0.0
-    delta_pit = None if e_pit is None else round(e_pit - e_she, 3)
-    
-    if element == "Fe":
-        e_imm = -0.440 + (nernst / 2.0) * ion_act_log10
-        e_magnetite = -0.085 - nernst * ph
-        e_passive_line = 0.728 - (nernst * 1.5) * ph
-        delta_imm = round(e_she - e_imm, 3)
-        
-        if e_she < min(e_imm, e_magnetite):
-            regime = "Immunity"
-            dominant_species = "Fe(s) (Zero-Valence Metal)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity Protection"
-            mechanism_details = "Fe is thermodynamically immune to oxidation. No Faraday metal loss occurs."
-            risk_level = "Immune"
-            color = "#0284c7"
-            if e_she < e_her - 0.35:
-                mechanism_details += " Caution: Significant overpotential for Hydrogen Evolution Reaction (HER); check for Hydrogen Embrittlement (HE) / HIC risk."
-        elif ph < 3.8 and e_she > e_imm and e_she < 1.8:
-            regime = "Active Corrosion (Acid Dissolution)"
-            dominant_species = "Fe²⁺ / Fe³⁺ (aq)"
-            mechanism_id = "active_acid_attack"
-            mechanism_title = "Active Acid Corrosion (Uniform Rusting)"
-            mechanism_details = f"Spontaneous anodic oxidation: Fe → Fe²⁺ + 2e⁻ driven by {depolarizer} depolarization."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        elif ph > 13.0 and e_she > -0.7:
-            regime = "Alkaline Corrosion"
-            dominant_species = "HFeO₂⁻ (Hypoferrite Anion)"
-            mechanism_id = "caustic_alkaline_attack"
-            mechanism_title = "Alkaline Caustic Etching / Caustic Embrittlement"
-            mechanism_details = "High-pH caustic dissolution forming soluble bihypoferrite HFeO₂⁻. High risk of Caustic Stress Corrosion Cracking (SCC)."
-            risk_level = "High Risk"
-            color = "#f97316"
-        elif e_she > 1.8 - nernst * ph:
-            regime = "Transpassive Dissolution"
-            dominant_species = "FeO₄²⁻ (Ferryl VI Oxyanion)"
-            mechanism_id = "transpassive_overoxidation"
-            mechanism_title = "Transpassive Anodic Dissolution"
-            mechanism_details = "Overpotential breaks the passive hematite film, oxidizing solid iron into highly soluble hexavalent FeO₄²⁻ ferryl ions."
-            risk_level = "High Risk"
-            color = "#e11d48"
-        else:
-            # Passive domain
-            if e_pit is not None and e_she >= e_pit:
-                regime = "Chloride Pitting Breakdown"
-                dominant_species = "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)"
-                mechanism_id = "chloride_pitting"
-                mechanism_title = "Chloride-Induced Localized Pitting Attack"
-                mechanism_details = f"Electrochemical potential ({e_she:.2f}V) exceeds pitting threshold Epit ({e_pit:.2f}V). Cl⁻ anions penetrate passive film to initiate autocatalytic crevice/pitting cells."
-                risk_level = "Pitting Hazard"
-                color = "#dc2626"
+def _water_lines_at(ph):
+    k = RT * LN10 / F_FARADAY
+    return 0.0 - k * ph, _E0_O2_H2O_V - k * ph
+
+
+class _Species:
+    __slots__ = ("id", "formula", "x", "o", "h", "z", "phase", "dfG_kJ", "role", "category",
+                 "c0", "cpH", "cE", "n", "m")
+
+
+_COEFF_CACHE = {}
+
+
+def _coefficients(element, log_a):
+    """[(species, c0 J, cpH J/pH, cE J/V)] for g per metal atom, in table order."""
+    key = (element, float(log_a))
+    cached = _COEFF_CACHE.get(key)
+    if cached is not None:
+        return cached
+    h2o = species_table.water_dfg_kj_mol(element) * 1000.0
+    out = []
+    for row in species_table.species_rows(element):
+        sp = _Species()
+        for name in ("id", "formula", "x", "o", "h", "z", "phase", "role", "category"):
+            setattr(sp, name, row[name])
+        sp.dfG_kJ = row["dfG_kJ_mol"]
+        ln_a = 0.0 if row["phase"] == "s" else log_a * LN10
+        sp.m = (2 * row["o"] - row["h"]) / row["x"]
+        sp.n = (row["z"] + 2 * row["o"] - row["h"]) / row["x"]
+        sp.c0 = (sp.dfG_kJ * 1000.0 - row["o"] * h2o + RT * ln_a) / row["x"]
+        sp.cpH = -sp.m * LN10 * RT
+        sp.cE = -sp.n * F_FARADAY
+        out.append(sp)
+    _COEFF_CACHE[key] = out
+    return out
+
+
+def _argmin(coeffs, ph, e_she):
+    best = None
+    best_g = None
+    for sp in coeffs:  # strict < keeps the earlier table row on an exact tie
+        g = sp.c0 + sp.cpH * ph + sp.cE * e_she
+        if best is None or g < best_g:
+            best, best_g = sp, g
+    return best
+
+
+def _metal_boundary_E(coeffs, ph):
+    """Highest E (V SHE) at which the metal is still the argmin at this pH (None if unbounded)."""
+    bound = None
+    for sp in coeffs:
+        if sp.n > 0:  # g_i >= 0 (metal g = 0)  <=>  E <= (c0 + cpH pH) / (n F)
+            e = (sp.c0 + sp.cpH * ph) / (sp.n * F_FARADAY)
+            bound = e if bound is None else min(bound, e)
+    return bound
+
+
+def _clip_polygon(poly, a, b, c):
+    """Sutherland-Hodgman: keep points with c + a*pH + b*E <= 0."""
+    out = []
+    for k in range(len(poly)):
+        p, q = poly[k], poly[(k + 1) % len(poly)]
+        fp, fq = c + a * p[0] + b * p[1], c + a * q[0] + b * q[1]
+        if fp <= 0:
+            out.append(p)
+        if (fp < 0 < fq) or (fq < 0 < fp):
+            t = fp / (fp - fq)
+            out.append((p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])))
+    return out
+
+
+def _polygon_area(poly):
+    return 0.5 * abs(sum(poly[k][0] * poly[(k + 1) % len(poly)][1] - poly[(k + 1) % len(poly)][0] * poly[k][1]
+                         for k in range(len(poly))))
+
+
+def compute_domains(element, log_a):
+    """species id -> convex polygon [(pH, E)] clipped to the box (species with area > 1e-9 only)."""
+    box = species_table.BOX
+    coeffs = _coefficients(element, log_a)
+    domains = {}
+    for sp in coeffs:
+        poly = [(box["pH_min"], box["E_min_V_SHE"]), (box["pH_max"], box["E_min_V_SHE"]),
+                (box["pH_max"], box["E_max_V_SHE"]), (box["pH_min"], box["E_max_V_SHE"])]
+        for other in coeffs:
+            if other is sp:
+                continue
+            poly = _clip_polygon(poly, sp.cpH - other.cpH, sp.cE - other.cE, sp.c0 - other.c0)
+            if not poly:
+                break
+        if poly and _polygon_area(poly) > 1e-9:
+            domains[sp.id] = poly
+    return domains
+
+
+def _line_between(a, b):
+    """Boundary g_a = g_b as ('sloped', E0, slope) or ('vertical', pH); None when identical."""
+    d0, dp, de = a.c0 - b.c0, a.cpH - b.cpH, a.cE - b.cE
+    if abs(de) < 1e-9:
+        if abs(dp) < 1e-9:
+            return None
+        return ("vertical", -d0 / dp + 0.0)
+    return ("sloped", -d0 / de + 0.0, -dp / de + 0.0)  # + 0.0 turns -0.0 into 0.0
+
+
+def boundary_line(element, id_a, id_b, log_a=-6.0):
+    """Exact line g_a = g_b of two table species: {'type': 'sloped', 'E_V_SHE_at_pH0', 'slope_V_per_pH'}
+    or {'type': 'vertical', 'pH'} (None when the species are identical). The couple need not be
+    a boundary of the diagram."""
+    by_id = {sp.id: sp for sp in _coefficients(element, float(log_a))}
+    line = _line_between(by_id[id_a], by_id[id_b])
+    if line is None:
+        return None
+    if line[0] == "vertical":
+        return {"type": "vertical", "pH": line[1]}
+    return {"type": "sloped", "E_V_SHE_at_pH0": line[1], "slope_V_per_pH": line[2]}
+
+
+def _equation(a, b):
+    """Balanced reaction text A + w H2O <=> B + p H+ + q e- on a common metal count."""
+    m_atoms = a.x * b.x // math.gcd(a.x, b.x)
+    ca, cb = m_atoms // a.x, m_atoms // b.x
+    w = b.o * cb - a.o * ca
+    p = round(b.m * m_atoms - a.m * m_atoms)
+    q = round(b.n * m_atoms - a.n * m_atoms)
+    left, right = [], []
+
+    def term(n, label):
+        return label if n == 1 else f"{n}{label}"
+    left.append(term(ca, a.formula))
+    right.append(term(cb, b.formula))
+    for n, label in ((w, "H₂O"), (p, "H⁺"), (q, "e⁻")):
+        if n > 0:
+            (left if label == "H₂O" else right).append(term(n, label))
+        elif n < 0:
+            (right if label == "H₂O" else left).append(term(-n, label))
+    return " + ".join(left) + " ⇌ " + " + ".join(right)
+
+
+def compute_boundaries(element, log_a):
+    """Shared polygon edges with exact line equations, clipped to the box and to the region
+    where both species are minimal (g_a = g_b <= g_k for every other species k)."""
+    box = species_table.BOX
+    coeffs = _coefficients(element, log_a)
+    result = []
+    for ia in range(len(coeffs)):
+        for ib in range(ia + 1, len(coeffs)):
+            a, b = coeffs[ia], coeffs[ib]
+            line = _line_between(a, b)
+            if line is None:
+                continue
+            if line[0] == "vertical":
+                ph0 = line[1]
+                if not box["pH_min"] <= ph0 <= box["pH_max"]:
+                    continue
+                lo, hi = box["E_min_V_SHE"], box["E_max_V_SHE"]
+
+                def point(t, ph0=ph0):
+                    return ph0, t
+                slope_of = lambda k, a=a: (a.cE - k.cE)
+                const_of = lambda k, a=a, ph0=ph0: (a.c0 - k.c0) + (a.cpH - k.cpH) * ph0
             else:
-                regime = "Passivation (Oxide Barrier)"
-                dominant_species = "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)"
-                mechanism_id = "stable_passivation"
-                mechanism_title = "Protective Passive Oxide Film"
-                mechanism_details = "Spontaneous formation of dense, protective Fe₂O₃/Fe₃O₄ barrier film. Corrosion rate is stifled to negligible passivation current density."
-                risk_level = "Stable Passivity"
-                color = "#10b981"
-                
-    elif element == "Al":
-        e_imm = -1.662 + (nernst / 3.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Al(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Al metal is thermodynamically immune."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 4.0:
-            regime = "Active Acid Corrosion"
-            dominant_species = "Al³⁺ (aq)"
-            mechanism_id = "acid_aluminate_corrosion"
-            mechanism_title = "Acidic Active Dissolution"
-            mechanism_details = f"Al → Al³⁺ + 3e⁻ active dissolution. Rapid hydrogen gas evolution ({depolarizer})."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        elif ph > 8.5:
-            regime = "Alkaline Corrosion (Amphoteric Dissolution)"
-            dominant_species = "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)"
-            mechanism_id = "amphoteric_caustic_attack"
-            mechanism_title = "Amphoteric Caustic Dissolution"
-            mechanism_details = "Hydroxide ions dissolve the alumina passive film: Al + 4OH⁻ → Al(OH)₄⁻ + 3e⁻."
-            risk_level = "Severe Corrosion"
-            color = "#f97316"
-        else:
-            if e_pit is not None and e_she >= e_pit:
-                regime = "Chloride Pitting Breakdown"
-                dominant_species = "Al³⁺ (Pits) + Al₂O₃·3H₂O"
-                mechanism_id = "chloride_pitting"
-                mechanism_title = "Severe Chloride Pitting Attack"
-                mechanism_details = f"Potential exceeds Epit ({e_pit:.2f}V). Aggressive localized pitting in Al alloy matrix."
-                risk_level = "Pitting Hazard"
-                color = "#dc2626"
-            else:
-                regime = "Passivation (Al₂O₃ Barrier)"
-                dominant_species = "Al₂O₃·3H₂O (Bayerite/Boehmite)"
-                mechanism_id = "stable_passivation"
-                mechanism_title = "Dense Barrier Alumina Passive Film"
-                mechanism_details = "Dense self-healing ceramic alumina layer provides corrosion resistance."
-                risk_level = "Stable Passivity"
-                color = "#10b981"
-                
-    elif element == "Cr":
-        e_imm = -0.913 + (nernst / 2.0) * ion_act_log10
-        e_trans = 1.350 - (nernst * 1.33) * ph
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Cr(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Cr is cathodically protected in zero-valence metallic state."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 3.2 and e_she < 0.2:
-            regime = "Active Acid Corrosion"
-            dominant_species = "Cr²⁺ / Cr³⁺ (aq)"
-            mechanism_id = "active_acid_attack"
-            mechanism_title = "Active Acid Dissolution"
-            mechanism_details = "Acidic dissolution of chromium into divalent/trivalent ions."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        elif e_she > e_trans:
-            regime = "Transpassive Dissolution"
-            dominant_species = "CrO₄²⁻ / Cr₂O₇²⁻ (Hexavalent Chromate)"
-            mechanism_id = "transpassive_overoxidation"
-            mechanism_title = "Transpassive Hexavalent Chromate Dissolution"
-            mechanism_details = "Passive Cr₂O₃ oxidizes into highly soluble chromate/dichromate oxyanions."
-            risk_level = "High Risk"
-            color = "#e11d48"
-        else:
-            if e_pit is not None and e_she >= e_pit:
-                regime = "Chloride Pitting Breakdown"
-                dominant_species = "Cr³⁺ + Cr₂O₃"
-                mechanism_id = "chloride_pitting"
-                mechanism_title = "Pitting Breakdown in Chromia Barrier"
-                mechanism_details = f"Chloride ions penetrate passive Cr₂O₃ above Epit ({e_pit:.2f}V)."
-                risk_level = "Pitting Hazard"
-                color = "#dc2626"
-            else:
-                regime = "Passivation (Cr₂O₃ Barrier)"
-                dominant_species = "Cr₂O₃ (Chromia Passive Film)"
-                mechanism_id = "stable_passivation"
-                mechanism_title = "Ultra-Protective Chromia Passive Barrier"
-                mechanism_details = "High-stability passive chromium(III) oxide film; standard stainless steel passivity."
-                risk_level = "Stable Passivity"
-                color = "#10b981"
+                e0, slope = line[1], line[2]
+                # parameter t = pH, E = e0 + slope * pH, with E kept inside the box
+                lo, hi = box["pH_min"], box["pH_max"]
+                if abs(slope) > 1e-12:
+                    t_a = (box["E_min_V_SHE"] - e0) / slope
+                    t_b = (box["E_max_V_SHE"] - e0) / slope
+                    lo, hi = max(lo, min(t_a, t_b)), min(hi, max(t_a, t_b))
+                elif not box["E_min_V_SHE"] <= e0 <= box["E_max_V_SHE"]:
+                    continue
 
-    elif element == "Ti":
-        e_imm = -1.630 + (nernst / 2.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Ti(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Metallic titanium immune region."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 1.0 and e_she > 0.0:
-            regime = "Active Acid Corrosion"
-            dominant_species = "TiO²⁺ (Titanyl)"
-            mechanism_id = "acid_titanyl_corrosion"
-            mechanism_title = "Aggressive Non-Oxidizing Acid Attack"
-            mechanism_details = "Dissolution into titanyl ions in concentrated reducing acids (e.g. concentrated HCl/H₂SO₄)."
-            risk_level = "High Risk"
-            color = "#ef4444"
-        else:
-            regime = "Passivation (TiO₂ Titania)"
-            dominant_species = "TiO₂ (Rutile/Anatase)"
-            mechanism_id = "stable_passivation"
-            mechanism_title = "Immense Rutile/Anatase Passive Oxide Protection"
-            mechanism_details = "Exceptionally dense, chemically inert TiO₂ barrier oxide. Practically immune to seawater chloride pitting."
-            risk_level = "Stable Passivity"
-            color = "#10b981"
-            
-    elif element == "Cu":
-        e_imm = 0.342 + (nernst / 2.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < 0.342 - nernst * ph and e_she < 0.471 - nernst * ph:
-            regime = "Immunity"
-            dominant_species = "Cu(s) (Metallic Copper)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Thermodynamic Noble Immunity"
-            mechanism_details = "Metallic copper is noble; immune to deaerated acid dissolution (E > E_HER)."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 6.5 and e_she > 0.342:
-            regime = "Active Acid Corrosion"
-            dominant_species = "Cu²⁺ (aq)"
-            mechanism_id = "aerated_acid_copper_corrosion"
-            mechanism_title = "Oxygen-Reduction Driven Copper Dissolution"
-            mechanism_details = "In presence of dissolved oxygen (ORR), Cu spontaneously dissolves into cupric Cu²⁺ ions."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        elif ph > 12.8:
-            regime = "Alkaline Corrosion"
-            dominant_species = "HCuO₂⁻ / CuO₂²⁻"
-            mechanism_id = "caustic_alkaline_attack"
-            mechanism_title = "Alkaline Cuprate Dissolution"
-            mechanism_details = "Dissolution in concentrated alkaline caustic electrolytes forming soluble cuprate complexes."
-            risk_level = "High Risk"
-            color = "#f97316"
-        else:
-            regime = "Passivation (Cu₂O / CuO)"
-            dominant_species = "Cu₂O (Cuprite) / CuO (Tenorite)"
-            mechanism_id = "stable_passivation"
-            mechanism_title = "Cuprite / Tenorite Passive Patina"
-            mechanism_details = "Protective Cu₂O/CuO film (patina) formation stifling metal loss."
-            risk_level = "Stable Passivity"
-            color = "#10b981"
-            
-    elif element == "Zn":
-        e_imm = -0.763 + (nernst / 2.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Zn(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Zinc metallic immunity state."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 6.0:
-            regime = "Active Acid Corrosion"
-            dominant_species = "Zn²⁺ (aq)"
-            mechanism_id = "active_acid_attack"
-            mechanism_title = "Rapid Acidic Zinc Dissolution"
-            mechanism_details = "Fast active dissolution: Zn → Zn²⁺ + 2e⁻ accompanied by hydrogen gas evolution."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        elif ph > 11.5:
-            regime = "Alkaline Corrosion"
-            dominant_species = "ZnO₂²⁻ / HZnO₂⁻ (Zincate)"
-            mechanism_id = "caustic_alkaline_attack"
-            mechanism_title = "Alkaline Zincate Dissolution"
-            mechanism_details = "Zinc amphoteric dissolution in strong alkalis forming soluble zincates."
-            risk_level = "High Risk"
-            color = "#f97316"
-        else:
-            regime = "Passivation (ZnO / Zn(OH)₂)"
-            dominant_species = "ZnO (Zincite) / Zn(OH)₂"
-            mechanism_id = "stable_passivation"
-            mechanism_title = "Zinc Oxide / Hydroxide Passivation"
-            mechanism_details = "Protective zincite film passivation (typical of galvanized atmospheric exposure)."
-            risk_level = "Stable Passivity"
-            color = "#10b981"
+                def point(t, e0=e0, slope=slope):
+                    return t, e0 + slope * t
+                const_of = lambda k, a=a, e0=e0: (a.c0 - k.c0) + (a.cE - k.cE) * e0
+                slope_of = lambda k, a=a, slope=slope: (a.cpH - k.cpH) + (a.cE - k.cE) * slope
+            # keep g_a <= g_k: const + slope_coeff * t <= 0
+            for k in coeffs:
+                if k is a or k is b or lo >= hi:
+                    continue
+                c, s = const_of(k), slope_of(k)
+                if abs(s) < 1e-12:
+                    if c > 0:
+                        lo = hi
+                    continue
+                t_cross = -c / s
+                if s > 0:
+                    hi = min(hi, t_cross)
+                else:
+                    lo = max(lo, t_cross)
+            if hi - lo <= 1e-9:
+                continue
+            p_lo, p_hi = point(lo), point(hi)
+            entry = {
+                "id": f"{a.id}__{b.id}",
+                "name": f"{a.formula} / {b.formula}",
+                "equation": _equation(a, b),
+                "boundaryType": f"{a.category} / {b.category}" if a.category != b.category
+                else f"{a.category}: {a.formula} / {b.formula}",
+                "speciesA": a.formula,
+                "speciesB": b.formula,
+                "speciesAId": a.id,
+                "speciesBId": b.id,
+                "points": [{"pH": p_lo[0], "E_V_SHE": p_lo[1]}, {"pH": p_hi[0], "E_V_SHE": p_hi[1]}],
+            }
+            entry["line"] = boundary_line(element, a.id, b.id, log_a)
+            result.append(entry)
+    return result
 
-    elif element == "Mg":
-        e_imm = -2.372 + (nernst / 2.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Mg(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Metallic magnesium immunity (requires extreme cathodic polarization)."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 10.5:
-            regime = "Active Acid / Neutral Corrosion"
-            dominant_species = "Mg²⁺ (aq)"
-            mechanism_id = "intense_her_galvanic_attack"
-            mechanism_title = "Aggressive Self-Dissolution & Negative Difference Effect"
-            mechanism_details = "Extreme thermodynamic drive for Mg → Mg²⁺ + 2e⁻ with vigorous hydrogen evolution even in neutral water."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        else:
-            regime = "Passivation (Mg(OH)₂ Brucite)"
-            dominant_species = "Mg(OH)₂ (Brucite)"
-            mechanism_id = "stable_passivation"
-            mechanism_title = "Brucite Alkaline Passivation"
-            mechanism_details = "Precipitation of protective Mg(OH)₂ layer in alkaline environments (pH > 10.5)."
-            risk_level = "Stable Passivity"
-            color = "#10b981"
 
-    else: # Default Ni / other
-        e_imm = -0.257 + (nernst / 2.0) * ion_act_log10
-        delta_imm = round(e_she - e_imm, 3)
-        if e_she < e_imm:
-            regime = "Immunity"
-            dominant_species = "Ni(s)"
-            mechanism_id = "cathodic_immunity"
-            mechanism_title = "Cathodic Immunity"
-            mechanism_details = "Metallic nickel immunity state."
-            risk_level = "Immune"
-            color = "#0284c7"
-        elif ph < 6.8 and e_she > e_imm and e_she < 1.6:
-            regime = "Active Acid Corrosion"
-            dominant_species = "Ni²⁺ (aq)"
-            mechanism_id = "active_acid_attack"
-            mechanism_title = "Active Nickel Dissolution"
-            mechanism_details = "Anodic dissolution into Ni²⁺ in acidic solutions."
-            risk_level = "Severe Corrosion"
-            color = "#ef4444"
-        else:
-            regime = "Passivation (NiO / Ni(OH)₂)"
-            dominant_species = "NiO / Ni(OH)₂ (s)"
-            mechanism_id = "stable_passivation"
-            mechanism_title = "Nickel Oxide / Hydroxide Passive Barrier"
-            mechanism_details = "Formation of stable, protective NiO/Ni(OH)₂ passive film."
-            risk_level = "Stable Passivity"
-            color = "#10b981"
-            
-    # Generate tailored engineering mitigation recommendations
-    mitigations = []
-    if regime.startswith("Active Acid"):
-        mitigations.append("Apply Cathodic Protection (CP) to depress potential below immunity boundary (E < " + str(round(e_she - delta_imm, 2)) + " V vs SHE).")
-        mitigations.append("Add anodic passivation inhibitors (e.g. chromates, nitrites, molybdates) or neutralizers to shift pH > 7.0.")
-    elif regime.startswith("Chloride Pitting"):
-        mitigations.append(f"Chloride concentration ({chloride_ppm} ppm) breaches Epit. Upgrade to higher PREN alloy (e.g., Duplex 2205 or Super Austenitic 254SMO).")
-        mitigations.append("Deaerate electrolyte to lower Mixed Corrosion Potential (Ecorr) safely below Epit.")
-    elif regime.startswith("Alkaline"):
-        mitigations.append("Buffer pH down to neutral regime (pH 6 - 9) to prevent amphoteric/caustic dissolution.")
-        mitigations.append("Inspect for Caustic Stress Corrosion Cracking (SCC) in weld heat-affected zones.")
-    elif regime.startswith("Transpassive"):
-        mitigations.append("Reduce oxidizer concentration or eliminate stray anodic currents to prevent transpassive breakdown.")
-    elif regime.startswith("Immunity"):
-        if e_she < e_her - 0.3:
-            mitigations.append("Reduce CP over-polarization to avoid hydrogen evolution and atomic hydrogen embrittlement.")
-        else:
-            mitigations.append("Maintain current cathodic polarization settings for 100% corrosion protection.")
-    else:
-        mitigations.append("Conditions maintain a stable passive barrier. Monitor pH and chloride levels to avoid sudden local acidification.")
+# ---------------------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------------------
 
-    return {
-        "regime": regime,
-        "dominantSpecies": dominant_species,
-        "mechanismId": mechanism_id,
-        "mechanismTitle": mechanism_title,
-        "mechanismDetails": mechanism_details,
-        "riskLevel": risk_level,
-        "color": color,
-        "depolarizer": depolarizer,
-        "deltaE_Immunity_V": delta_imm,
-        "deltaE_Pitting_V": delta_pit,
-        "isInsideWaterStability": (e_she >= e_her and e_she <= e_oer),
-        "e_HER_V_SHE": round(e_her, 3),
-        "e_OER_V_SHE": round(e_oer, 3),
-        "engineeringMitigations": mitigations
-    }
 
-def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=-6.0, chloride_ppm=0.0, experimental_points=None):
-    """
-    Solves 2D Pourbaix E-pH equilibrium boundaries, water stability limits,
-    and overlays user measured experimental test data to classify active corrosion mechanisms.
-    """
-    start_time = time.perf_counter()
+def _check_element(element):
+    if isinstance(element, str) and element in UNAVAILABLE_ONLY_ELEMENTS:
+        return  # reported as unavailable after the temperature check
     if not isinstance(element, str) or element not in POURBAIX_ELEMENT_SYSTEMS:
         # Phase 6a: no silent substitution of the Fe system for an unknown element.
         supported = list(POURBAIX_ELEMENT_SYSTEMS)
@@ -915,63 +426,243 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             f"No Pourbaix system for element {element!r}; supported: {', '.join(supported)}.",
             {"element": repr(element), "supported": supported},
         )
+
+
+def _check_temperature(temperature_C):
+    t = require_finite("temperature_C", temperature_C)
+    if abs(t - SUPPORTED_TEMPERATURE_C) > TEMPERATURE_TOLERANCE_C:
+        raise PourbaixValidationError(
+            TEMPERATURE_UNSUPPORTED, "temperature_C",
+            f"The Pourbaix engine supports 25 °C only (|T - 25| <= {TEMPERATURE_TOLERANCE_C} °C); "
+            f"received {t} °C. No temperature extrapolation is performed: the species table has no "
+            "consistent entropies or heat capacities.",
+            {"requested": t, "supported": [SUPPORTED_TEMPERATURE_C], "toleranceC": TEMPERATURE_TOLERANCE_C},
+        )
+    return t
+
+
+def _check_availability(element):
+    if element in species_table.available_elements():
+        return
+    reason = species_table.UNAVAILABLE_ELEMENTS.get(element, "No verified data.")
+    raise PourbaixValidationError(
+        POURBAIX_DATA_UNAVAILABLE, "element",
+        f"No verified {element}-H₂O data: {reason}",
+        {"element": element, "reason": reason, "available": species_table.available_elements()},
+    )
+
+
+def _ref_offset(ref_electrode):
+    if not isinstance(ref_electrode, str) or ref_electrode not in REF_ELECTRODE_OFFSETS:
+        raise PourbaixValidationError(
+            UNKNOWN_REFERENCE_ELECTRODE, "refElectrode",
+            f"Unknown reference electrode {ref_electrode!r}; supported: {', '.join(REF_ELECTRODE_OFFSETS)}.",
+            {"refElectrode": repr(ref_electrode), "supported": list(REF_ELECTRODE_OFFSETS)},
+        )
+    return REF_ELECTRODE_OFFSETS[ref_electrode]
+
+
+# ---------------------------------------------------------------------------------------
+# Point classification
+# ---------------------------------------------------------------------------------------
+
+
+def _depolarizer(e_she, e_her, e_oer):
+    if e_she < e_her:
+        return "H⁺ reduction possible (E below water line a)"
+    if e_she < e_oer:
+        return "O₂ reduction possible (E between water lines a and b)"
+    return "Above water line b (water oxidation region)"
+
+
+def _classify(element, ph, e_she, log_a):
+    coeffs = _coefficients(element, log_a)
+    sp = _argmin(coeffs, ph, e_she)
+    e_her, e_oer = _water_lines_at(ph)
+    inside = e_her <= e_she <= e_oer
+    e_imm = _metal_boundary_E(coeffs, ph)
+    return sp, inside, e_her, e_oer, e_imm
+
+
+def _check_point(ph, e_she, name="point"):
+    """pH and E (V vs SHE) must be finite and inside the map box; nothing is classified outside it."""
+    box = species_table.BOX
+    ph = require_range(f"{name}.pH", ph, box["pH_min"], box["pH_max"], "pH")
+    e_she = require_range(f"{name}.potential_V_SHE", e_she, box["E_min_V_SHE"], box["E_max_V_SHE"], "V vs SHE")
+    return ph, e_she
+
+
+def _point_number(pt, idx, keys, label):
+    """Required numeric input of an experimental point (no silent defaults, no strings, no NaN)."""
+    for key in keys:
+        if key in pt:
+            return require_finite(f"experimentalPoints[{idx}].{label}", pt[key])
+    raise ValidationError(MISSING_PROPERTY, f"experimentalPoints[{idx}].{label}",
+                          f"is required (one of {', '.join(keys)})", {"index": idx, "keys": list(keys)})
+
+
+def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log10=-6.0, chloride_ppm=0.0):
+    """
+    Thermodynamic phase at an (E, pH) point from the minimum-Gibbs-energy species table
+    (25 C only). The category text is fixed per category; no rate or protectiveness claim.
+    """
+    _check_temperature(temperature_C)
+    ph, e_she = _check_point(ph, e_she)
+    sp, inside, e_her, e_oer, e_imm = _classify(element, ph, e_she, ion_act_log10)
+    text = CATEGORY_TEXTS[sp.category]
+    delta_imm = None if e_imm is None else round(e_she - e_imm, 3)
+    regime = sp.category if inside else f"{sp.category} — {OUTSIDE_WATER_LABEL}"
+
+    mitigations = []
+    if sp.category == CATEGORY_IMMUNITY:
+        if e_she < e_her:
+            mitigations.append("E is below water line a: hydrogen evolution is thermodynamically possible; hydrogen uptake can matter for susceptible alloys.")
+        else:
+            mitigations.append("The metal is the equilibrium phase at this point; the map makes no statement about rates or protection.")
+    else:
+        if sp.category == CATEGORY_ACID and e_imm is not None:
+            mitigations.append(f"Cathodic protection: polarise below the computed metal-domain boundary (E < {round(e_imm, 2)} V vs SHE at pH {ph:g}).")
+        elif sp.category != CATEGORY_ACID and e_imm is not None:
+            mitigations.append(f"The metal-domain boundary at pH {ph:g} lies at {round(e_imm, 2)} V vs SHE.")
+        mitigations.extend(CATEGORY_MITIGATION[sp.category])
+
+    return {
+        "regime": regime,
+        "category": sp.category,
+        "dominantSpecies": sp.formula,
+        "dominantSpeciesId": sp.id,
+        "mechanismId": text["mechanismId"],
+        "mechanismTitle": text["mechanismTitle"],
+        "mechanismDetails": text["mechanismDetails"],
+        "riskLevel": text["riskLevel"],
+        "color": text["color"],
+        "depolarizer": _depolarizer(e_she, e_her, e_oer),
+        "deltaE_Immunity_V": delta_imm,
+        "deltaE_Pitting_V": None,
+        "isInsideWaterStability": inside,
+        "waterStabilityLabel": INSIDE_WATER_LABEL if inside else OUTSIDE_WATER_LABEL,
+        "e_HER_V_SHE": round(e_her, 3),
+        "e_OER_V_SHE": round(e_oer, 3),
+        "engineeringMitigations": mitigations,
+    }
+
+
+# ---------------------------------------------------------------------------------------
+# Diagram
+# ---------------------------------------------------------------------------------------
+
+
+def _species_inventory(element):
+    inventory = {"immunity": [], "corrosion_acid": [], "passivation": [], "corrosion_alkaline": [],
+                 "transpassive": []}
+    key_by_role = {"metal": "immunity", "cation": "corrosion_acid", "oxide": "passivation",
+                   "anion_low": "corrosion_alkaline", "anion_high": "transpassive"}
+    for row in species_table.species_rows(element):
+        label = row["formula"] + ("(s)" if row["phase"] == "s" else "(aq)")
+        inventory[key_by_role[row["role"]]].append(label)
+    return inventory
+
+
+def _model_block(log_a):
+    return {
+        "temperature_C": SUPPORTED_TEMPERATURE_C,
+        "temperature_K": T_KELVIN,
+        "method": "minimum Gibbs energy per metal atom over the sourced species table (argmin); "
+                  "domains are exact convex polygons, boundaries exact lines g_i = g_j",
+        "reference": "Persson et al., Phys. Rev. B 85, 235438 (2012)",
+        "activityConvention": f"every dissolved metal species has activity 10^{log_a:g}; solids and water "
+                              "have unit activity; gases 1 bar",
+        "activityCoefficients": "ideal (γ=1), no ionic-strength correction",
+        "dissolvedActivityRange_log10": list(species_table.ACTIVITY_LOG10_RANGE),
+        "excludedSpecies": [
+            "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined",
+            "chloro and other complexes: the equilibrium contains no chloride species",
+            "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. "
+            "Checked with open-database constants they change at most about 0.6 % of the water-window cells at "
+            "10⁻⁶ M and above for Fe, Ni, Cu, Mg and Al, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) "
+            "up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M. Zn is "
+            "constant-dependent at 10⁻⁶ M: with the IUPAC 2013 Zn(OH)₂(aq) constant ZnO keeps its domain, with "
+            "the wateq4f / Baes & Mesmer constant Zn(OH)₂(aq) would replace the whole ZnO domain",
+        ],
+        "chloride": "chloride_ppm is echoed only; the equilibrium has no chloro-complexes and no sourced "
+                    "generic pitting potential exists (chloridePittingBoundary.status)",
+        "temperatureScope": "25 °C only; |T - 25| > 0.5 °C raises TEMPERATURE_UNSUPPORTED",
+        "waterLines": "E(H⁺/H₂) = -k pH; E(O₂/H₂O) = 1.2288 - k pH, 1.2288 = -dfG(H₂O, NBS -237.129 kJ/mol)/2F",
+        "tieBreak": "exact ties go to the earlier row of the species table (metal, cations, solids, anions)",
+        "riskLevelNote": "riskLevel is a display label derived from the thermodynamic category; it makes no rate claim",
+        "gasConstantR_J_molK": R_GAS,
+        "faraday_C_mol": F_FARADAY,
+        "box": dict(species_table.BOX),
+        "engine": ENGINE_ID,
+    }
+
+
+def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=-6.0, chloride_ppm=0.0, experimental_points=None):
+    """
+    Solves the single-element M-H2O E-pH equilibrium (25 C): water lines, exact domain
+    boundaries, a classified stability grid and the classification of user E-pH points.
+    """
+    start_time = time.perf_counter()
+    _check_element(element)
+    _check_temperature(temperature_C)
+    if element in UNAVAILABLE_ONLY_ELEMENTS:
+        raise PourbaixValidationError(
+            POURBAIX_DATA_UNAVAILABLE, "element",
+            f"No verified {element}-H₂O data: {species_table.UNAVAILABLE_ELEMENTS[element]}",
+            {"element": element, "reason": species_table.UNAVAILABLE_ELEMENTS[element],
+             "available": species_table.available_elements()})
+    _check_availability(element)
+    lo, hi = species_table.ACTIVITY_LOG10_RANGE
+    log_a = require_range("ionActivity_log10", ion_activity_log10, lo, hi, "log10 activity")
+    chloride_ppm = require_finite("chloride_ppm", chloride_ppm)
     sys_data = POURBAIX_ELEMENT_SYSTEMS[element]
-    nernst_slope = calculate_nernst_slope(temperature_C)
-    
+    nernst_slope = calculate_nernst_slope(SUPPORTED_TEMPERATURE_C)
+    chloride_molar = max(chloride_ppm, 0.0) * 1e-3 / CHLORIDE_MOLAR_MASS_G_MOL
+    rows = species_table.species_rows(element)
+
     # 1. Water stability boundaries
-    water_stability = generate_water_stability_lines(temperature_C)
-    
-    # 2. Chloride Pitting boundary
-    pitting_boundary = calculate_chloride_pitting_boundary(element, temperature_C, chloride_ppm)
-    
-    # 3. 2D Stability Field Grid (for smooth rendering / surface plots)
+    water_stability = generate_water_stability_lines(SUPPORTED_TEMPERATURE_C)
+
+    # 2. Chloride: no sourced generic Epit exists
+    pitting_boundary = {
+        "pittingActive": False,
+        "status": "unavailable-no-sourced-epit",
+        "chloride_ppm": chloride_ppm,
+        "chloride_Molar": round(chloride_molar, 5),
+        "nominal_Epit_V_SHE": None,
+        "points": [],
+        "note": "No sourced generic pitting potential exists for a pure element (Epit depends on alloy, "
+                "surface and test method); the equilibrium contains no chloro-complexes.",
+    }
+
+    # 3. 2D stability field grid (315 cells: pH 0-14 x E -2.0..+2.0 V in 0.2 V steps)
     stability_grid = []
-    for p_idx in range(15): # pH 0 to 14
+    for p_idx in range(15):  # pH 0 to 14
         ph = float(p_idx)
-        for e_idx in range(21): # E -2.0 to +2.0 V (0.2V step)
+        for e_idx in range(21):
             e_she = -2.0 + e_idx * 0.2
-            point_eval = evaluate_point_mechanism(element, ph, e_she, temperature_C, ion_activity_log10, chloride_ppm)
+            sp, inside, _, _, _ = _classify(element, ph, e_she, log_a)
+            text = CATEGORY_TEXTS[sp.category]
             stability_grid.append({
                 "pH": ph,
                 "E_V_SHE": round(e_she, 2),
-                "regime": point_eval["regime"],
-                "dominantSpecies": point_eval["dominantSpecies"],
-                "mechanismTitle": point_eval["mechanismTitle"],
-                "color": point_eval["color"]
+                "regime": sp.category if inside else f"{sp.category} — {OUTSIDE_WATER_LABEL}",
+                "category": sp.category,
+                "dominantSpecies": sp.formula,
+                "dominantSpeciesId": sp.id,
+                "mechanismTitle": text["mechanismTitle"],
+                "color": text["color"],
+                "isInsideWaterStability": inside,
             })
-            
-    # 4. Analytical Phase Boundaries Lines
-    analytical_boundaries = []
-    for rxn in sys_data["reactions"]:
-        rxn_type = rxn["type"]
-        line_points = []
-        if rxn_type == "redox":
-            e_val = rxn["e0"] + (nernst_slope / 2.0) * ion_activity_log10
-            for ph_i in range(15):
-                line_points.append({"pH": float(ph_i), "E_V_SHE": round(e_val, 4)})
-        elif rxn_type in ["redox_ph", "transpassive"]:
-            e0_adj = rxn["e0"]
-            slope_adj = rxn.get("slope_pH", -0.0592)
-            for ph_i in range(15):
-                ph_v = float(ph_i)
-                e_val = e0_adj + slope_adj * ph_v
-                line_points.append({"pH": ph_v, "E_V_SHE": round(e_val, 4)})
-        elif rxn_type in ["hydrolysis", "acid_dissolution", "alkaline_dissolution"]:
-            ph_trans = rxn.get("pH_trans", 7.0)
-            for e_step in range(9): # -2.0 to +2.0
-                e_v = -2.0 + e_step * 0.5
-                line_points.append({"pH": ph_trans, "E_V_SHE": e_v})
-                
-        analytical_boundaries.append({
-            "id": rxn["id"],
-            "name": rxn["name"],
-            "equation": rxn["equation"],
-            "boundaryType": rxn.get("boundaryType", "Phase Boundary"),
-            "speciesA": rxn.get("speciesA", ""),
-            "speciesB": rxn.get("speciesB", ""),
-            "points": line_points
-        })
-        
+
+    # 4. Exact boundaries and domains
+    analytical_boundaries = compute_boundaries(element, log_a)
+    domains = [{
+        "speciesId": sid,
+        "category": next(r["category"] for r in rows if r["id"] == sid),
+        "polygon": [{"pH": p[0], "E_V_SHE": p[1]} for p in poly],
+    } for sid, poly in compute_domains(element, log_a).items()]
+
     # 5. Process Experimental Points Overlay
     analyzed_experimental_points = []
     risk_breakdown = {
@@ -982,27 +673,30 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
         "Severe Corrosion": 0,
         "High Risk": 0
     }
-    
+
     if experimental_points and isinstance(experimental_points, list):
         for idx, pt in enumerate(experimental_points):
+            if not isinstance(pt, dict):
+                raise ValidationError(MISSING_PROPERTY, f"experimentalPoints[{idx}]", "must be an object",
+                                      {"index": idx, "type": type(pt).__name__})
             pt_id = pt.get("id", f"exp_pt_{idx+1}")
             pt_name = pt.get("name", f"Test Point #{idx+1}")
-            ph_val = float(pt.get("ph", pt.get("pH", 7.0)))
-            pot_input = float(pt.get("potential_V", pt.get("potential", pt.get("E_V", 0.0))))
+            ph_val = _point_number(pt, idx, ("ph", "pH"), "pH")
+            pot_input = _point_number(pt, idx, ("potential_V", "potential", "E_V"), "potential_V")
             ref_elec = pt.get("refElectrode", "SHE")
-            ref_offset = REF_ELECTRODE_OFFSETS.get(ref_elec, 0.0)
-            
+            ref_offset = _ref_offset(ref_elec)
+
             # Convert measured potential to E vs SHE
             e_she = pot_input + ref_offset
-            
-            # Mechanism evaluation
+            _check_point(ph_val, e_she, f"experimentalPoints[{idx}]")
+
             eval_res = evaluate_point_mechanism(
-                element, ph_val, e_she, temperature_C, ion_activity_log10, chloride_ppm
+                element, ph_val, e_she, SUPPORTED_TEMPERATURE_C, log_a, chloride_ppm
             )
-            
+
             risk_level = eval_res["riskLevel"]
             risk_breakdown[risk_level] = risk_breakdown.get(risk_level, 0) + 1
-            
+
             analyzed_experimental_points.append({
                 "id": pt_id,
                 "name": pt_name,
@@ -1015,7 +709,9 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
                 "stageName": pt.get("stageName", f"Stage {idx+1}"),
                 "notes": pt.get("notes", ""),
                 "regime": eval_res["regime"],
+                "category": eval_res["category"],
                 "dominantSpecies": eval_res["dominantSpecies"],
+                "dominantSpeciesId": eval_res["dominantSpeciesId"],
                 "mechanismId": eval_res["mechanismId"],
                 "mechanismTitle": eval_res["mechanismTitle"],
                 "mechanismDetails": eval_res["mechanismDetails"],
@@ -1025,51 +721,70 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
                 "deltaE_Immunity_V": eval_res["deltaE_Immunity_V"],
                 "deltaE_Pitting_V": eval_res["deltaE_Pitting_V"],
                 "isInsideWaterStability": eval_res["isInsideWaterStability"],
+                "waterStabilityLabel": eval_res["waterStabilityLabel"],
                 "engineeringMitigations": eval_res["engineeringMitigations"]
             })
-            
-    # Trajectory Synthesis Diagnosis
+
+    # Trajectory synthesis (equilibrium statements only)
     trajectory_diagnosis = "No experimental data provided."
     if analyzed_experimental_points:
         total_pts = len(analyzed_experimental_points)
-        severe_count = risk_breakdown["Severe Corrosion"] + risk_breakdown["Pitting Hazard"] + risk_breakdown["High Risk"]
-        pass_count = risk_breakdown["Stable Passivity"]
-        immune_count = risk_breakdown["Immune"]
-        
-        if severe_count == 0 and pass_count > 0:
-            trajectory_diagnosis = f"OPTIMAL PASSIVE STATE: All {total_pts} measured test points reside securely inside the protective passive oxide boundary. Metal degradation rate is stifled by a dense barrier film."
-        elif severe_count == 0 and immune_count == total_pts:
-            trajectory_diagnosis = f"COMPLETE CATHODIC IMMUNITY: All {total_pts} test points operate at potentials below the Nernst equilibrium dissolution limit. Zero Faraday metal loss occurs."
-        elif risk_breakdown["Pitting Hazard"] > 0:
-            pitting_pts = [p["name"] for p in analyzed_experimental_points if p["riskLevel"] == "Pitting Hazard"]
-            trajectory_diagnosis = f"CRITICAL PITTING HAZARD: {len(pitting_pts)} measured point(s) ({', '.join(pitting_pts[:3])}) exceed the chloride pitting breakdown potential (Epit). Localized autocatalytic pitting is thermodynamically favored."
-        elif risk_breakdown["Severe Corrosion"] > 0:
-            corrosive_pts = [p["name"] for p in analyzed_experimental_points if p["riskLevel"] == "Severe Corrosion"]
-            trajectory_diagnosis = f"ACTIVE DISSOLUTION DETECTED: {len(corrosive_pts)} test point(s) ({', '.join(corrosive_pts[:3])}) are located in the active acid corrosion domain with rapid uniform metal loss driven by cathodic depolarization."
-        else:
-            trajectory_diagnosis = f"MIXED REGIME EXPOSURE: Experimental trajectory traverses across multiple thermodynamic domains ({severe_count} hazardous points, {pass_count} passivated, {immune_count} immune)."
+        counts = {}
+        for p in analyzed_experimental_points:
+            counts[p["category"]] = counts.get(p["category"], 0) + 1
+        parts = ", ".join(f"{n} in {c}" for c, n in sorted(counts.items()))
+        outside = sum(1 for p in analyzed_experimental_points if not p["isInsideWaterStability"])
+        trajectory_diagnosis = (
+            f"Equilibrium classification of {total_pts} measured point(s) in the {element}–H₂O map at 25 °C "
+            f"(dissolved activity 10^{log_a:g}): {parts}."
+        )
+        if outside:
+            trajectory_diagnosis += f" {outside} point(s) lie outside the water stability window (metastable)."
+        trajectory_diagnosis += " This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting."
 
     compute_time_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
+    standard_e0 = _standard_e0(element)
+
     return {
         "success": True,
-        "engine": "MetalliX-Python-HPC-Pourbaix-v3.10",
+        "engine": ENGINE_ID,
         "computeTimeMs": compute_time_ms,
         "element": element,
         "systemName": sys_data["name"],
         "parameters": {
-            "temperature_C": temperature_C,
+            "temperature_C": SUPPORTED_TEMPERATURE_C,
+            "requestedTemperature_C": float(temperature_C),
             "nernstSlope_V_pH": round(nernst_slope, 5),
-            "ionActivity_log10": ion_activity_log10,
+            "ionActivity_log10": log_a,
             "chlorideConcentration_ppm": chloride_ppm,
-            "chloride_Molar": pitting_boundary.get("chloride_Molar", 0.0),
-            "pittingPotential_V_SHE": pitting_boundary.get("nominal_Epit_V_SHE"),
-            "pittingRisk": "High Pitting Risk" if chloride_ppm > 500 else ("Moderate Localized Attack" if chloride_ppm > 0 else "Low (Chloride Free)")
+            "chloride_Molar": round(chloride_molar, 5),
+            "pittingPotential_V_SHE": None,
+            "pittingRisk": "Not assessed (no sourced pitting potential)",
+            "standardE0_V": standard_e0,
+        },
+        "temperatureStatus": {
+            "status": "supported-25C-only",
+            "temperature_C": SUPPORTED_TEMPERATURE_C,
+            "supported_C": [SUPPORTED_TEMPERATURE_C],
+            "toleranceC": TEMPERATURE_TOLERANCE_C,
+            "note": "No temperature extrapolation: the table has no consistent entropies or heat capacities.",
+        },
+        "model": _model_block(log_a),
+        "speciesTable": {
+            "sourceSet": species_table.ELEMENT_SET[element][0],
+            "sourceSetNote": species_table.ELEMENT_SET[element][2],
+            "waterDfG_kJ_mol": species_table.water_dfg_kj_mol(element),
+            "schema": species_table.SCHEMA,
+            "species": rows,
+            "withheldSpecies": [{"id": r[0], "verification": r[10], "reason": r[11]}
+                                for r in species_table.WITHHELD_SPECIES.get(element, ())],
         },
         "waterStabilityLines": water_stability,
         "chloridePittingBoundary": pitting_boundary,
         "analyticalBoundaries": analytical_boundaries,
-        "speciesInventory": sys_data["species"],
+        "domains": domains,
+        "speciesInventory": _species_inventory(element),
         "stabilityFieldGrid": stability_grid,
         "experimentalOverlay": {
             "totalPointsCount": len(analyzed_experimental_points),
@@ -1087,35 +802,60 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
         },
     }
 
+
+def _standard_e0(element):
+    """Unit-activity E0 (V SHE) of metal / reference cation, derived from the table (informational)."""
+    coeffs = {sp.id: sp for sp in _coefficients(element, 0.0)}
+    cation = coeffs[species_table.REFERENCE_CATION[element]]
+    line = _line_between(coeffs[next(iter(coeffs))], cation)
+    return None if line is None or line[0] != "sloped" else round(line[1], 4)
+
+
+def _element_standard_e0(element):
+    return _standard_e0(element) if element in species_table.available_elements() else None
+
+
+for _symbol, _entry in POURBAIX_ELEMENT_SYSTEMS.items():
+    _entry["available"] = _symbol in species_table.available_elements()
+    _entry["standardE0_V"] = _element_standard_e0(_symbol)
+    if not _entry["available"]:
+        _entry["unavailableReason"] = species_table.UNAVAILABLE_ELEMENTS[_symbol]
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--status":
         print(json.dumps({
             "status": "ready",
-            "engine": "MetalliX Python Pourbaix E-pH Stability & Experimental Overlay Solver",
+            "engine": "MetalliX single-element M–H₂O Pourbaix E-pH solver (25 °C, ΔfG minimisation)",
+            "engineId": ENGINE_ID,
+            "availableElements": species_table.available_elements(),
+            "unavailableElements": {k: v for k, v in species_table.UNAVAILABLE_ELEMENTS.items()},
             "capabilities": [
-                "Multi-Element Nernst Equilibria (Fe, Cr, Ni, Ti, Al, Cu, Zn, Mg)",
-                "Water Stability Line A & B (HER & OER)",
-                "Analytical Reaction Lines & Exact Polygons",
-                "Chloride Pitting Breakdown Boundary (Epit)",
-                "Experimental E-pH Test Data Overlay & Trajectory Tracking",
-                "Automated Corrosion Mechanism Identification & Mitigation Rules"
+                "Single-element M–H₂O equilibrium by minimum Gibbs energy (25 °C only)",
+                "Water stability lines a and b (HER, OER)",
+                "Exact domain polygons and boundary lines derived from a sourced species table",
+                "Experimental E-pH point overlay classified by thermodynamic category",
+                "No chloride/pitting model (no sourced generic Epit)"
             ]
         }))
         sys.exit(0)
-        
+
     try:
-        raw_input = sys.stdin.read()
+        # UTF-8 explicitly: the locale code page (cp1254 on Turkish Windows) would garble notes such as "Fe²⁺"
+        # (the persistent IPC relay replaces sys.stdin by a text stream without .buffer: use it as is)
+        stdin_bytes = getattr(sys.stdin, "buffer", None)
+        raw_input = stdin_bytes.read().decode("utf-8") if stdin_bytes is not None else sys.stdin.read()
         if not raw_input.strip():
             print(json.dumps({"error": "Empty stdin payload", "errorKind": "internal"}))
             sys.exit(1)
-            
+
         data = json.loads(raw_input)
         el = data.get("element", "Fe")
         temp = float(data.get("temperature_C", 25.0))
         act = float(data.get("ionActivity_log10", -6.0))
         cl_ppm = float(data.get("chloride_ppm", 0.0))
         exp_pts = data.get("experimentalPoints", data.get("points", []))
-        
+
         result = solve_pourbaix_diagram(el, temp, act, cl_ppm, exp_pts)
         print(json.dumps(result))
     except ValidationError as e:

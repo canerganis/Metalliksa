@@ -10,7 +10,9 @@ EXPECTED_BEHAVIOUR_CHANGES; for those cases the old golden stays on disk as the
 record of the old behaviour and the test asserts the new validation envelope.
 """
 
+import copy
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -24,12 +26,16 @@ import drift_report  # noqa: E402
 from phase6a_test_support import require_git_revision  # noqa: E402
 
 # (solver, case) -> expected validation error code (exit 2, errorKind "validation").
-# Both were silent defaults before the Phase 6a structural migration:
+# The first two were silent defaults before the Phase 6a structural migration:
 # - tafel alloyId "unobtainium-x" was solved with the AISI 316L preset;
 # - pourbaix element "Unobtainium" was drawn with the Fe system (Ni point branch).
+# The last two are the WP-E 25 C Gibbs engine: a 60 C (Al) or 80 C (Ni) request used to get a map
+# from hand-written temperature extrapolations; it now gets the TEMPERATURE_UNSUPPORTED envelope.
 EXPECTED_BEHAVIOUR_CHANGES = {
     ("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"): "UNKNOWN_ALLOY",
     ("pourbaix_solver", "edge_unknown_element_badvals"): "UNKNOWN_ELEMENT",
+    ("pourbaix_solver", "al_hot_chloride"): "TEMPERATURE_UNSUPPORTED",
+    ("pourbaix_solver", "ni_acid_points"): "TEMPERATURE_UNSUPPORTED",
 }
 # ---- BEGIN phase6a-t2b block: kinetics / fatigue unknown alloy (was AISI 4140 / Ti-6Al-4V) ----
 EXPECTED_BEHAVIOUR_CHANGES.update(golden._t2b_cases.EXPECTED_BEHAVIOUR_CHANGES)
@@ -111,6 +117,17 @@ class GoldenRegressionTest(unittest.TestCase):
         for case in golden.CASES["pourbaix_solver"]:
             with self.subTest(case=case):
                 self._check("pourbaix_solver", case)
+
+    def test_pourbaix_temperature_envelope_detail(self):
+        # WP-E: the 60 C Al and 80 C Ni requests are refused (25 C engine, no extrapolation).
+        for case in ("al_hot_chloride", "ni_acid_points"):
+            with self.subTest(case=case):
+                requested = golden.CASES["pourbaix_solver"][case]["temperature_C"]
+                self.assertNotEqual(requested, 25)
+                fresh = golden.run_solver("pourbaix_solver", golden.CASES["pourbaix_solver"][case])
+                err = fresh["stdout"]["error"]
+                self.assertEqual((fresh["exitCode"], err["code"], err["field"]), (2, "TEMPERATURE_UNSUPPORTED", "temperature_C"))
+                self.assertEqual(err["detail"], {"requested": float(requested), "supported": [25.0], "toleranceC": 0.5})
 
 
 def _git_available() -> bool:
@@ -201,12 +218,14 @@ class StepBGoldenTest(unittest.TestCase):
                 self.assertNotIn((solver, case), EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)
                 self.assertNotIn((solver, case), golden.step_b_excluded_cases())
 
     def test_excluded_cases_cover_every_behaviour_change(self):
         excluded = golden.step_b_excluded_cases()
         for key in (set(EXPECTED_BEHAVIOUR_CHANGES) | set(golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
-                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)):
+                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                    | set(golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)):
             self.assertIn(key, excluded)
 
     def test_recorded_drift_is_a_bounded_value_change(self):
@@ -216,8 +235,10 @@ class StepBGoldenTest(unittest.TestCase):
             solver, case = path.parent.parent.name, path.stem
             with self.subTest(file=f"{solver}/{case}"):
                 doc = json.loads(path.read_text(encoding="utf-8"))
+                base = golden.load_golden(solver, case)["stdout"]
                 self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"],
-                                                          golden.CASES[solver][case]), [])
+                                                          golden.CASES[solver][case], base), [])
+                self.assertEqual(golden.step_b_document_violations(solver, doc["stdout"]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -277,6 +298,558 @@ class StepBGoldenTest(unittest.TestCase):
                                                  steel(18.0, rng)))
         big = {"key": "x", "kind": "numeric", "old": 1.0, "new": 1.02, "abs": 0.02, "rel": 0.02}
         self.assertTrue(golden.step_b_violations(solver, [big], steel(42.0, conv)))
+
+    # ---- pourbaix: WP-E equilibrium engine, documented value change (WP-G) ----------------------
+    POURBAIX = "pourbaix_solver"
+    POURBAIX_CASES = ("fe_chloride_points", "cu_nochloride")
+
+    def _pb(self, case):
+        old = golden.load_golden(self.POURBAIX, case)["stdout"]
+        new = copy.deepcopy(golden.load_expected(self.POURBAIX, case)["stdout"])
+        return old, new
+
+    def _pb_violations(self, old, new):
+        return golden.step_b_violations(self.POURBAIX, drift_report.diff(old, new), new, old_stdout=old)
+
+    def test_pourbaix_step_b_files_exist_for_the_value_cases_only(self):
+        for case in self.POURBAIX_CASES:
+            self.assertTrue(golden.step_b_path(self.POURBAIX, case).is_file(), case)
+            self.assertEqual(golden.load_expected(self.POURBAIX, case)["label"], golden.STEP_B_LABEL)
+        for case in ("al_hot_chloride", "ni_acid_points", "edge_unknown_element_badvals"):
+            self.assertFalse(golden.step_b_path(self.POURBAIX, case).exists(), case)
+            self.assertIn((self.POURBAIX, case), EXPECTED_BEHAVIOUR_CHANGES)
+            self.assertIn((self.POURBAIX, case), golden.step_b_excluded_cases())
+
+    def test_pourbaix_documented_patterns_are_listed_exactly(self):
+        import pourbaix_golden_check as check
+        table = golden.EXPECTED_DOCUMENTED_VALUE_CHANGES
+        self.assertEqual(set(table), {"kinetics_ttt_cct_solver", "pourbaix_solver", "stochastic_uq_mmpds_solver",
+                                        "icme_multiscale_pipeline_solver"})
+        self.assertEqual(set(table["pourbaix_solver"]), set(check.DOCUMENTED_VALUE_CHANGES))
+        self.assertEqual(len(table["pourbaix_solver"]), len(check.DOCUMENTED_KEYS))
+        # no catch-all: every pattern is one leaf-key path, anchored by fullmatch
+        for key in check.DOCUMENTED_KEYS:
+            self.assertNotIn(".*", key)
+            self.assertTrue(golden._is_documented_change_row(self.POURBAIX, key.replace("[]", "[7]")), key)
+        for key in ("model.hiddenSwitch", "stabilityFieldGrid[3].note", "systemName", "success", "provenance.x",
+                    "speciesTable.species[2].extra", "analyticalBoundaries[0].line.extra",
+                    "experimentalOverlay.points[0].verdict", "parameters.nernstSlope_V_pH"):
+            self.assertFalse(golden._is_documented_change_row(self.POURBAIX, key), key)
+
+    def test_pourbaix_documented_change_is_checked_exactly(self):
+        # The real re-blessed documents are exactly the oracle's equilibrium (every row verified).
+        for case in self.POURBAIX_CASES:
+            with self.subTest(case=case):
+                old, new = self._pb(case)
+                self.assertEqual(self._pb_violations(old, new), [])
+
+    def test_pourbaix_guard_rejects_wrong_species_line_text_and_undocumented_keys(self):
+        def other_id(doc, current):
+            return next(s["id"] for s in doc["speciesTable"]["species"] if s["id"] != current)
+
+        def grid_species(doc):
+            doc["stabilityFieldGrid"][100]["dominantSpeciesId"] = other_id(
+                doc, doc["stabilityFieldGrid"][100]["dominantSpeciesId"])
+
+        def grid_category(doc):
+            doc["stabilityFieldGrid"][5]["category"] = "Immunity (wrong)"
+
+        def grid_regime(doc):
+            doc["stabilityFieldGrid"][7]["regime"] += " "
+
+        def line_intercept(doc):
+            b = next(b for b in doc["analyticalBoundaries"] if b["line"]["type"] == "sloped")
+            b["line"]["E_V_SHE_at_pH0"] += 2e-4
+
+        def line_slope(doc):
+            b = next(b for b in doc["analyticalBoundaries"] if b["line"]["type"] == "sloped"
+                     and abs(b["line"]["slope_V_per_pH"]) > 1e-3)
+            b["line"]["slope_V_per_pH"] *= 1.01
+
+        def boundary_species(doc):
+            b = doc["analyticalBoundaries"][1]
+            b["speciesAId"], b["speciesBId"] = b["speciesBId"], b["speciesAId"]
+
+        def boundary_end(doc):
+            doc["analyticalBoundaries"][2]["points"][1]["pH"] += 2e-4
+
+        def boundary_dropped(doc):
+            del doc["analyticalBoundaries"][-1]
+
+        def boundary_equation(doc):
+            doc["analyticalBoundaries"][1]["equation"] = doc["analyticalBoundaries"][1]["equation"].replace("e⁻", "")
+
+        def table_dfg(doc):
+            doc["speciesTable"]["species"][1]["dfG_kJ_mol"] += 1e-3
+
+        def table_stoichiometry(doc):
+            doc["speciesTable"]["species"][2]["z"] += 1
+
+        def inventory(doc):
+            doc["speciesInventory"]["immunity"].append("Xx(s)")
+
+        def domain_vertex(doc):
+            doc["domains"][1]["polygon"][0]["E_V_SHE"] += 2e-4
+
+        def point_species(doc):
+            pt = doc["experimentalOverlay"]["points"][0]
+            pt["dominantSpeciesId"] = other_id(doc, pt["dominantSpeciesId"])
+
+        def point_text(doc):
+            doc["experimentalOverlay"]["points"][0]["mechanismDetails"] += " It is always protective."
+
+        def point_delta(doc):
+            doc["experimentalOverlay"]["points"][0]["deltaE_Immunity_V"] += 0.001
+
+        def water_line(doc):
+            doc["waterStabilityLines"]["line_b_oxygen_OER"][3]["E_V_SHE"] += 0.001
+
+        def pitting_status(doc):
+            doc["chloridePittingBoundary"]["status"] = "available"
+
+        def temperature_note(doc):
+            doc["temperatureStatus"]["note"] += "!"
+
+        def model_text(doc):
+            doc["model"]["method"] = "rule tree"
+
+        def key_in_section(doc):
+            doc["model"]["hiddenSwitch"] = True
+
+        def key_in_cell(doc):
+            doc["stabilityFieldGrid"][3]["note"] = "x"
+
+        def key_top_level(doc):
+            doc["confidence"] = 1.0
+
+        def undocumented_change(doc):
+            doc["systemName"] += " (edited)"
+
+        def undocumented_numeric(doc):
+            doc["parameters"]["nernstSlope_V_pH"] *= 1.2
+
+        # REVIEW-pbx-code SHOULD-FIX 2/3: forged provenance and drift under the old 1 % bound
+        def self_intersecting_polygon(doc):
+            d = next(d for d in doc["domains"] if len(d["polygon"]) >= 4)
+            d["polygon"][1], d["polygon"][2] = d["polygon"][2], d["polygon"][1]
+
+        def consistent_species_rename(doc):
+            formula = doc["speciesTable"]["species"][4]["formula"]
+            renamed = json.loads(json.dumps(doc, ensure_ascii=False).replace(formula, formula + "·film"))
+            doc.clear()
+            doc.update(renamed)
+
+        def level_upgrade(doc):
+            row = next(r for r in doc["speciesTable"]["species"] if r["verification"] == "V2")
+            row["verification"] = "V1"
+
+        def forged_evidence(doc):
+            doc["speciesTable"]["species"][1]["evidence"] = "exact NIST value, fully protective"
+
+        def forged_source(doc):
+            doc["speciesTable"]["species"][1]["source"] = "Z"
+
+        def scaled_equation(doc):
+            b = doc["analyticalBoundaries"][1]
+            left, right = b["equation"].split(" ⇌ ")
+            def double(side):
+                out = []
+                for t in side.split(" + "):
+                    m = re.fullmatch(r"(\d*)(.+)", t)
+                    out.append(str(2 * int(m.group(1) or 1)) + m.group(2))
+                return " + ".join(out)
+            b["equation"] = double(left) + " ⇌ " + double(right)
+
+        def water_padded_equation(doc):
+            b = doc["analyticalBoundaries"][1]
+            left, right = b["equation"].split(" ⇌ ")
+            b["equation"] = left + " + 7H₂O ⇌ " + right + " + 7H₂O"
+
+        def nernst_slope_half_percent(doc):
+            doc["parameters"]["nernstSlope_V_pH"] *= 1.005
+
+        def her_line_drift(doc):
+            doc["waterStabilityLines"]["line_a_hydrogen_HER"][5]["E_V_SHE"] *= 1.009
+
+        def her_equation_text(doc):
+            doc["waterStabilityLines"]["equation_HER"] += " "
+
+        def measured_potential_drift(doc):
+            doc["experimentalOverlay"]["points"][0]["potential_Input_V"] *= 1.008
+
+        def withheld_text(doc):
+            doc["speciesTable"]["withheldSpecies"].append({"id": "Xx", "verification": "V3", "reason": "x"})
+
+        mutants = [
+            ("wrong species in a grid cell", grid_species, "stabilityFieldGrid"),
+            ("wrong category in a grid cell", grid_category, "stabilityFieldGrid"),
+            ("wrong regime text", grid_regime, "stabilityFieldGrid"),
+            ("wrong line intercept (+2e-4 V)", line_intercept, "analyticalBoundaries"),
+            ("wrong line slope (+1 %)", line_slope, "analyticalBoundaries"),
+            ("boundary species swapped", boundary_species, "analyticalBoundaries"),
+            ("boundary end moved (2e-4)", boundary_end, "analyticalBoundaries"),
+            ("boundary dropped", boundary_dropped, "analyticalBoundaries"),
+            ("unbalanced equation", boundary_equation, "analyticalBoundaries"),
+            ("species dfG +1e-3 kJ/mol", table_dfg, "speciesTable"),
+            ("species charge changed", table_stoichiometry, "speciesTable"),
+            ("species inventory changed", inventory, "speciesInventory"),
+            ("domain vertex moved (2e-4)", domain_vertex, "domains"),
+            ("wrong species at a measured point", point_species, "experimentalOverlay"),
+            ("wrong text at a measured point", point_text, "experimentalOverlay"),
+            ("wrong deltaE_Immunity_V (+1 mV)", point_delta, "experimentalOverlay"),
+            ("water line b +1 mV", water_line, "waterStabilityLines"),
+            ("pitting status text", pitting_status, "chloridePittingBoundary"),
+            ("temperature note text", temperature_note, "temperatureStatus"),
+            ("model method text", model_text, "model"),
+            ("undocumented key inside a documented section", key_in_section, "not a value drift"),
+            ("undocumented key inside a grid cell", key_in_cell, "not a value drift"),
+            ("undocumented top-level key", key_top_level, "not a value drift"),
+            ("undocumented changed key", undocumented_change, "not a value drift"),
+            ("undocumented numeric change (20 %)", undocumented_numeric, "|rel|"),
+            ("self-intersecting polygon (two vertices swapped)", self_intersecting_polygon, "domains"),
+            ("consistent species-formula rename", consistent_species_rename, "speciesTable"),
+            ("verification level V2 -> V1", level_upgrade, "speciesTable"),
+            ("forged evidence text", forged_evidence, "speciesTable"),
+            ("forged source id", forged_source, "speciesTable"),
+            ("equation scaled by 2", scaled_equation, "analyticalBoundaries"),
+            ("equation padded with water on both sides", water_padded_equation, "analyticalBoundaries"),
+            ("Nernst slope +0.5 % (under the old 1 % bound)", nernst_slope_half_percent, "|rel|"),
+            ("HER line +0.9 % (under the old 1 % bound)", her_line_drift, "|rel|"),
+            ("HER equation text", her_equation_text, "waterStabilityLines"),
+            ("measured input potential +0.8 % (under the old 1 % bound)", measured_potential_drift, "|rel|"),
+            ("withheld species appended", withheld_text, "speciesTable"),
+        ]
+        for name, mutate, expect in mutants:
+            for case in self.POURBAIX_CASES:
+                with self.subTest(mutant=name, case=case):
+                    old, new = self._pb(case)
+                    mutate(new)
+                    violations = self._pb_violations(old, new)
+                    self.assertTrue(violations, "mutant accepted")
+                    self.assertTrue(any(expect in v for v in violations), (expect, violations[:3]))
+
+    def test_pourbaix_oracle_check_itself_rejects_her_and_input_drift(self):
+        # independent of the step-(b) bound: the section checks of document_problems
+        import pourbaix_golden_check as check
+        for case in self.POURBAIX_CASES:
+            old, new = self._pb(case)
+            self.assertEqual({k: v for k, v in check.document_problems(old, new).items() if v}, {})
+            her = copy.deepcopy(new)
+            her["waterStabilityLines"]["line_a_hydrogen_HER"][5]["E_V_SHE"] *= 1.009
+            self.assertTrue(check.document_problems(old, her)["waterStabilityLines"], case)
+            eq = copy.deepcopy(new)
+            eq["waterStabilityLines"]["equation_HER"] += " "
+            self.assertTrue(check.document_problems(old, eq)["waterStabilityLines"], case)
+            pot = copy.deepcopy(new)
+            pot["experimentalOverlay"]["points"][0]["potential_Input_V"] *= 1.008
+            self.assertTrue(check.document_problems(old, pot)["experimentalOverlay"], case)
+            slope = copy.deepcopy(new)
+            slope["parameters"]["nernstSlope_V_pH"] *= 1.005
+            self.assertTrue(check.document_problems(old, slope)["parameters"], case)
+            slope_w = copy.deepcopy(new)
+            slope_w["waterStabilityLines"]["nernstSlope"] *= 1.005
+            self.assertTrue(check.document_problems(old, slope_w)["waterStabilityLines"], case)
+
+    def test_pourbaix_has_no_generic_percentage_bound(self):
+        # every numeric Pourbaix drift row is a documented change or a violation: bound 0
+        self.assertEqual(golden.step_b_max_rel(self.POURBAIX, [{"key": "x", "rel": 0.001}]), 0.0)
+        self.assertEqual(golden.step_b_max_rel("kinetics_ttt_cct_solver", []), golden.STEP_B_DEFAULT_MAX_REL)
+        row = {"key": "parameters.nernstSlope_V_pH", "kind": "numeric", "old": 0.05916, "new": 0.05917,
+               "abs": 1e-5, "rel": 1.7e-4}
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, [row]))
+
+    def test_pourbaix_polygon_order_check(self):
+        import pourbaix_golden_check as check
+        square = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+        self.assertTrue(check._convex_simple(square))
+        self.assertTrue(check._convex_simple(list(reversed(square))))
+        self.assertFalse(check._convex_simple([square[0], square[2], square[1], square[3]]))  # bow tie
+        self.assertFalse(check._convex_simple(square[:2]))
+        self.assertFalse(check._convex_simple([(0.0, 0.0), (2.0, 0.0), (1.0, 0.5), (2.0, 2.0), (0.0, 2.0)]))  # concave
+
+    def test_pourbaix_guard_tolerance_is_only_the_boundary_coordinate_bound(self):
+        # 1e-4 V is the spec's bound for boundary coordinates; a shift inside it is accepted,
+        # outside it (see the mutants above) is not. Nothing else is accepted by tolerance.
+        old, new = self._pb("fe_chloride_points")
+        b = next(b for b in new["analyticalBoundaries"] if b["line"]["type"] == "sloped")
+        b["line"]["E_V_SHE_at_pH0"] += 5e-5
+        b["points"][0]["E_V_SHE"] += 5e-5
+        self.assertEqual(self._pb_violations(old, new), [])
+        old, new = self._pb("fe_chloride_points")
+        new["stabilityFieldGrid"][0]["E_V_SHE"] = round(new["stabilityFieldGrid"][0]["E_V_SHE"] + 5e-5, 6)
+        self.assertTrue(self._pb_violations(old, new))
+
+    def test_pourbaix_guard_checks_the_old_value_and_the_documents(self):
+        import pourbaix_golden_check as check
+        old, new = self._pb("cu_nochloride")
+        rows = drift_report.diff(old, new)
+        self.assertEqual(golden.step_b_violations(self.POURBAIX, rows, new, old_stdout=old), [])
+        # without the d33b6f5 golden or the re-blessed document nothing is accepted
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, rows, new))
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, rows, None, old_stdout=old))
+        # the old value of a row must be the golden's leaf; the new value the document's leaf
+        forged = copy.deepcopy(rows)
+        next(r for r in forged if r["key"] == "stabilityFieldGrid[3].regime")["old"] = "Immunity (forged)"
+        self.assertTrue(any("d33b6f5 golden" in v for v in golden.step_b_violations(self.POURBAIX, forged, new, old_stdout=old)))
+        forged = copy.deepcopy(rows)
+        next(r for r in forged if r["key"] == "stabilityFieldGrid[3].regime")["new"] = "Immunity (forged)"
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, forged, new, old_stdout=old))
+        # a "removed" row whose key still exists in the re-blessed document is not accepted
+        removed = next(r for r in rows if r["kind"] == "removed")
+        self.assertNotIn(removed["key"], check.flatten(new))
+        self.assertEqual(golden.step_b_violations(self.POURBAIX, [removed], new, old_stdout=old), [])
+        still_there = copy.deepcopy(new)
+        still_there["analyticalBoundaries"][0]["points"] += [{"pH": 0.0, "E_V_SHE": 0.0}] * 20
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, [removed], still_there, old_stdout=old))
+        # the exception is per solver: the same keys elsewhere stay structural drift
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", rows, new, old_stdout=old))
+        # a document of another element than the golden's is not accepted
+        other_old, _ = self._pb("fe_chloride_points")
+        self.assertTrue(golden.step_b_violations(self.POURBAIX, rows, new, old_stdout=other_old))
+
+    def test_pourbaix_oracle_check_holds_for_other_inputs(self):
+        # The check is not tuned to the two blessed cases: it recomputes the equilibrium of any
+        # served element/activity from the oracle and must agree with the engine.
+        import pourbaix_golden_check as check
+        import pourbaix_solver
+        points = [{"id": "a", "ph": 1.0, "potential_V": -0.3, "refElectrode": "SCE"},
+                  {"ph": 6.5, "potential_V": 0.5, "refElectrode": "SHE"},
+                  {"ph": 13.0, "potential_V": -1.2, "refElectrode": "MMS"},
+                  {"ph": 9.0, "potential_V": 1.9, "refElectrode": "Ag/AgCl (3M KCl)"}]
+        # Al joined the served set with WP-Al (OBIGT TS01 + gibbsite): the guard must hold for it too.
+        for element, log_a in (("Ni", -6.0), ("Zn", -4.0), ("Mg", -6.0), ("Fe", -3.0), ("Cu", -4.0),
+                               ("Al", -6.0), ("Al", -3.0), ("Al", 0.0)):
+            with self.subTest(element=element, log_a=log_a):
+                doc = json.loads(json.dumps(
+                    pourbaix_solver.solve_pourbaix_diagram(element, 25.0, log_a, 350.0, points)))
+                problems = check.document_problems(doc, doc)
+                self.assertEqual({k: v[:2] for k, v in problems.items() if v}, {})
+
+    def test_pourbaix_guard_rejects_wrong_aluminium_data(self):
+        # Mutants on an Al document (served by the engine since WP-Al): each must be a violation.
+        import copy
+        import pourbaix_golden_check as check
+        import pourbaix_solver
+        base = json.loads(json.dumps(pourbaix_solver.solve_pourbaix_diagram(
+            "Al", 25.0, -6.0, 350.0, [{"ph": 6.5, "potential_V": -0.2, "refElectrode": "SHE"}])))
+
+        def species(doc, sid):
+            return next(r for r in doc["speciesTable"]["species"] if r["id"] == sid)
+
+        def mutate_dfg(doc):
+            species(doc, "Al(OH)3")["dfG_kJ_mol"] += 1e-3
+
+        def mutate_charge(doc):
+            species(doc, "Al(OH)4-")["z"] = -2
+
+        def mutate_withheld_level(doc):
+            doc["speciesTable"]["withheldSpecies"][2]["verification"] = "V3"  # boehmite is V2 (excluded)
+
+        def mutate_withheld_dropped(doc):
+            doc["speciesTable"]["withheldSpecies"].pop()
+
+        def mutate_domain(doc):
+            doc["domains"][1]["polygon"][0]["E_V_SHE"] += 2e-4
+
+        def mutate_point(doc):
+            doc["experimentalOverlay"]["points"][0]["dominantSpeciesId"] = "Al3+"
+
+        def mutate_level(doc):
+            species(doc, "Al(OH)4-")["verification"] = "V1"
+
+        def mutate_evidence(doc):
+            species(doc, "Al(OH)3")["evidence"] += " (exact)"
+
+        def mutate_withheld_reason(doc):
+            doc["speciesTable"]["withheldSpecies"][0]["reason"] = "unverified"
+
+        self.assertEqual({k: v for k, v in check.document_problems(base, base).items() if v}, {})
+        for mutate in (mutate_dfg, mutate_charge, mutate_withheld_level, mutate_withheld_dropped,
+                       mutate_domain, mutate_point, mutate_level, mutate_evidence, mutate_withheld_reason):
+            with self.subTest(mutant=mutate.__name__):
+                doc = copy.deepcopy(base)
+                mutate(doc)
+                problems = check.document_problems(base, doc)
+                self.assertTrue(any(problems.values()), mutate.__name__)
+    def _kinetics_step_b(self, case):
+        path = golden.step_b_path("kinetics_ttt_cct_solver", case)
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        return doc["driftVsBase"], doc["stdout"]
+
+    def test_fx_kinetics_documented_changes_are_checked_exactly(self):
+        # Engine-fix lane fx-kinetics (tools/kinetics_documented_changes.py): every documented row is
+        # verified against the re-blessed document; a wrong value, a wrong status, the wrong alloy class
+        # or an unflagged placeholder is a violation, and numeric R drift stays under the bounded guard.
+        import copy
+        solver = "kinetics_ttt_cct_solver"
+        for case in ("aisi4140_ui_defaults", "aisi4340_slow_cool", "in718_lpbf_quench", "ti64_beta_quench"):
+            rows, new = self._kinetics_step_b(case)
+            self.assertEqual(golden.step_b_violations(solver, rows, new), [], case)
+            self.assertEqual(golden.step_b_document_violations(solver, new), [], case)
+
+        def violations(case, mutate_rows=None, mutate_doc=None):
+            rows, new = self._kinetics_step_b(case)
+            rows, new = copy.deepcopy(rows), copy.deepcopy(new)
+            if mutate_rows:
+                mutate_rows(rows)
+            if mutate_doc:
+                mutate_doc(new)
+            return golden.step_b_violations(solver, rows, new) + golden.step_b_document_violations(solver, new)
+
+        def row(rows, key):
+            return next(r for r in rows if r["key"] == key)
+
+        def doc_set(path, value):
+            def mutate(doc):
+                node = doc
+                for part in path[:-1]:
+                    node = node[part]
+                node[path[-1]] = value
+            return mutate
+
+        # non-steel: the steel-only claim must hold in the document, and every nulled value must be null
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["kineticsModel", "status"], "available")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["alloyMetadata", "type"], "Low-Alloy Steel")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct").update(new=63.0)))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].transformedStart_status").update(new="available")))
+        # placeholders: only keys flagged in alloy_registry.KINETICS_PLACEHOLDERS may be null
+        self.assertTrue(violations("ti64_beta_quench", mutate_rows=lambda rows: rows.append(
+            {"key": "alloyMetadata.Ms_C", "kind": "changed", "old": 800.0, "new": None})))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "criticalTransformationTemperatures.Ms_C_status").update(new="registry-screening-value")))
+        # LSW: the recorded old/new radius, strengthening and regime must equal the independent oracle
+        key = "lswPrecipitateCoarsening[9].meanRadius_nm"
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(new=22.9)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(old=1.6)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(
+            rows, "lswPrecipitateCoarsening[9].strengtheningMechanism").update(new="Weak-Pair / Strong-Pair Cutting")))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["lswPrecipitateCoarsening", 0, "meanRadius_nm"], 1.5)))
+        # steel TTT floor flags and the floor-driven CCT start
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["tttIsothermalCurves", 0, "floorHit"], not self._kinetics_step_b("aisi4140_ui_defaults")[1][
+                "tttIsothermalCurves"][0]["floorHit"])))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(["tttIncubationFloor", "floorHitCount"], 31)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["cctContinuousCoolingMap", 0, "primaryMicrostructure"], "Pearlite")))
+        # a steel row may not lose its phase fractions (only non-steel rows do)
+        self.assertTrue(golden.step_b_violations(solver, [
+            {"key": "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct", "kind": "changed", "old": 98.0, "new": None}],
+            self._kinetics_step_b("aisi4140_ui_defaults")[1]))
+        # numeric R drift of a steel TTT time stays under the default bound (not a documented row)
+        num = lambda rel: [{"key": "tttIsothermalCurves[0].t50_s", "kind": "numeric", "old": 1.0,
+                            "new": 1.0 + rel, "abs": rel, "rel": rel}]
+        steel_doc = self._kinetics_step_b("aisi4140_ui_defaults")[1]
+        self.assertEqual(golden.step_b_violations(solver, num(0.005), steel_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, num(0.05), steel_doc))
+        # without the re-blessed document nothing of this is accepted
+        self.assertTrue(golden.step_b_violations(solver, self._kinetics_step_b("in718_lpbf_quench")[0]))
+    def test_fx_kinetics_document_checks_reject_the_review_mutants(self):
+        # fx-kinetics code review S1: the row handlers see only drifted values, so every mutant below
+        # (a value that equals the base, or an inconsistent status/flag) must be caught by the whole-document
+        # checks (tools/kinetics_documented_changes.document_violations).
+        import copy
+        solver = "kinetics_ttt_cct_solver"
+        docs = {c: self._kinetics_step_b(c)[1] for c in ("aisi4140_ui_defaults", "in718_lpbf_quench", "ti64_beta_quench")}
+
+        def rejected(case, mutate):
+            doc = copy.deepcopy(docs[case])
+            mutate(doc)
+            self.assertTrue(golden.step_b_document_violations(solver, doc), case)
+
+        for case, doc in docs.items():
+            self.assertEqual(golden.step_b_document_violations(solver, doc), [], case)
+
+        def floor_never(doc):
+            for p in doc["tttIsothermalCurves"]:
+                p["floorHit"] = False
+            doc["tttIncubationFloor"].update(floorHitCount=0, status="no-floor-hit-points")
+
+        def floor_from_rounded(doc):  # one flagged point lost
+            next(p for p in doc["tttIsothermalCurves"] if p["floorHit"])["floorHit"] = False
+            doc["tttIncubationFloor"]["floorHitCount"] -= 1
+
+        def reported_start(doc):  # the old "775 C Pearlite" claim comes back with a "computed" status
+            row = doc["cctContinuousCoolingMap"][4]
+            row.update(transformedStartTemp_C=774.5, transformedStartTime_s=8.55, primaryMicrostructure="Pearlite",
+                       transformedStart_status="diffusional-start-scheil-additivity", unavailableReason=None)
+
+        def start_null_with_wrong_status(doc):
+            doc["cctContinuousCoolingMap"][4]["transformedStart_status"] = "athermal-martensite-no-diffusional-start-above-ms"
+
+        def start_blanking_narrowed(doc):  # a start reported while the status still says "not computed"
+            doc["cctContinuousCoolingMap"][9].update(transformedStartTemp_C=765.0, primaryMicrostructure="Pearlite")
+
+        rejected("aisi4140_ui_defaults", floor_never)
+        rejected("aisi4140_ui_defaults", floor_from_rounded)
+        rejected("aisi4140_ui_defaults", reported_start)
+        rejected("aisi4140_ui_defaults", start_null_with_wrong_status)
+        rejected("aisi4140_ui_defaults", start_blanking_narrowed)
+        # placeholder echoed in alloyMetadata although it is flagged and null elsewhere
+        rejected("in718_lpbf_quench", lambda d: d["alloyMetadata"].update(Ms_C=-50.0))
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(Ms_C=-50.0))
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(Ms_C_status="registry-screening-value"))
+        # non-steel critical cooling rate shown while its status says unavailable (both blocks), eutectoid Ae1 shown
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(CriticalCoolingRate_CCR_C_s=150.0))
+        rejected("in718_lpbf_quench", lambda d: d["alloyMetadata"].update(critical_cooling_rate_C_s=150.0))
+        rejected("ti64_beta_quench", lambda d: d["criticalTransformationTemperatures"].update(Ae1_C=700.0))
+        rejected("ti64_beta_quench", lambda d: d["alloyMetadata"].update(Ae1_C=700.0))
+        rejected("ti64_beta_quench", lambda d: d["alloyMetadata"].update(Ms_C=None))  # unflagged: must stay a number
+        # kineticsModel block
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(illustrativeOnly=False))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(scope="all-alloys"))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(placeholderParameters=[]))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(note="Steel template"))
+        rejected("aisi4140_ui_defaults", lambda d: d["kineticsModel"].update(status="unavailable"))
+        rejected("aisi4140_ui_defaults", lambda d: d["tttIncubationFloor"].update(note="x"))
+        # gap fields of a non-steel and the steel texts
+        rejected("ti64_beta_quench", lambda d: d["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"].update(
+            criticalCoolingRate_C_s=410.0))
+        rejected("ti64_beta_quench", lambda d: d["calphadVsKineticsGap"]["equilibriumPrediction"].update(
+            stablePhasesAtRT="Ferrite + Cementite / Equilibrium intermetallics"))
+        rejected("aisi4140_ui_defaults", lambda d: d["calphadVsKineticsGap"]["equilibriumPrediction"].update(reason="x"))
+        rejected("aisi4140_ui_defaults", lambda d: d["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"].update(
+            verdict="Full Martensitic / Metastable Quench"))
+        # LSW: a number above the solvus is rejected, a null below it is rejected
+        rejected("in718_lpbf_quench", lambda d: d["lswPrecipitateCoarsening"][0].update(meanRadius_nm=None))
+        rejected("in718_lpbf_quench", lambda d: d["inputParameters"].update(agingTemp_C=1100.0))
+
+        # untested guard branches (code review N1)
+        steel_doc, in718_doc = docs["aisi4140_ui_defaults"], docs["in718_lpbf_quench"]
+        # a handler that cannot verify (bad index) is a violation, never "accepted"
+        bad_index = {"key": "tttIsothermalCurves[99].floorHit", "kind": "added", "old": None, "new": True}
+        self.assertTrue(golden.step_b_violations(solver, [bad_index], steel_doc))
+        # registryAlloyId is the registry id the request alloy resolves to
+        rid = {"key": "kineticsModel.registryAlloyId", "kind": "added", "old": None, "new": "in718"}
+        self.assertEqual(golden.step_b_violations(solver, [rid], in718_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(rid, new="ti6al4v")], in718_doc))
+        # HV of a non-steel row whose HRC is now null: the old value must be the old formula of an old HRC band
+        hv = lambda old: {"key": "cctContinuousCoolingMap[0].predictedHardness_HV", "kind": "changed", "old": old, "new": None}
+        self.assertEqual(golden.step_b_violations(solver, [hv(229.0)], in718_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [hv(500.0)], in718_doc))
+        # the not-computed CCT start reason must be the exact text
+        reason = {"key": "cctContinuousCoolingMap[0].unavailableReason", "kind": "added", "old": None,
+                  "new": "incubation law has no Ae3 asymptote; start not computed"}
+        self.assertEqual(golden.step_b_violations(solver, [reason], steel_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(reason, new="the Scheil-additivity start is not a model result")], steel_doc))
+        # D2 only: the equilibrium text names carbides; another steel may not change it
+        d2 = {"alloyMetadata": {"type": "Cold-Work Tool Steel"}, "kineticsModel": {"registryAlloyId": "aisid2"}}
+        phases = {"key": "calphadVsKineticsGap.equilibriumPrediction.stablePhasesAtRT", "kind": "changed",
+                  "old": "Ferrite + Cementite / Equilibrium intermetallics", "new": "Ferrite + alloy carbides (M7C3 / M23C6)"}
+        self.assertEqual(golden.step_b_violations(solver, [phases], d2), [])
+        self.assertTrue(golden.step_b_violations(solver, [phases], steel_doc))
+        self.assertTrue(golden.step_b_violations(solver, [dict(phases, new="Ferrite + carbides")], d2))
+        # LSW above the solvus: old value must still be the old formula, new must be null
+        al = {"alloyMetadata": {"type": "Aerospace Aluminum", "Q_diff_kJ_mol": 130.0, "Ae3_C": 480.0, "Ae1_C": None},
+              "inputParameters": {"agingTemp_C": 720.0}, "lswPrecipitateCoarsening": [{"agingTime_h": 0.1}]}
+        import kinetics_documented_changes as kdc
+        old_r = round(kdc.lsw_radius_nm(130.0, 720.0, 0.1, 8.314, corrected=False), 2)
+        lsw = {"key": "lswPrecipitateCoarsening[0].meanRadius_nm", "kind": "changed", "old": old_r, "new": None}
+        self.assertEqual(golden.step_b_violations(solver, [lsw], al), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(lsw, old=old_r + 1.0)], al))
+        self.assertTrue(golden.step_b_violations(solver, [dict(lsw, new=1884.97, kind="numeric", abs=1.0, rel=1.0)], al))
 
     def test_documented_uq_sampler_change_is_checked_against_the_scipy_oracle(self):
         # EXPECTED_DOCUMENTED_VALUE_CHANGES: stochastic UQ norm_ppf sign fix. The drift rows are

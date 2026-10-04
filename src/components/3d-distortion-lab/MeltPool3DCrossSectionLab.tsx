@@ -47,6 +47,7 @@ import {
   regimeFamily,
   relativeErrorPct,
 } from "../../data/meltPoolLiteratureCases";
+import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";
 
 export interface MeltPool3DCrossSectionProps {
   initialPower_W?: number;
@@ -596,35 +597,13 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
   // Export Goldak FEA DFLUX Card
   const exportGoldakCard = () => {
     if (!pyResult) return;
-    const geom = pyResult.meltPoolGeometry;
-    const params = pyResult.processParameters;
-    const goldak = geom.goldakParameters;
-
-    const feaCard = `** -------------------------------------------------------------
-** METALLIX LPBF GOLDAK HEAT SOURCE CAE EXPORT CARD
-** Material: ${pyResult.material} (Base: ${pyResult.baseMetal})
-** Laser Power: ${params.laserPower_W} W | Scan Speed: ${params.scanSpeed_mm_s} mm/s
-** Beam Diameter: ${params.beamDiameter_um} um | Wavelength: ${pyResult.laserWavelength}
-** Volumetric Energy Density (VED): ${params.volumetricEnergyDensity_J_mm3} J/mm3
-** Normalized Enthalpy (ΔH/hs): ${params.normalizedEnthalpy} (${geom.regime})
-** -------------------------------------------------------------
-*DFLUX, USER
-*GOLDAK_DOUBLE_ELLIPSOID
-** Semi-Axes in meters (SI Units):
-** a_front (m), a_rear (m), b_halfwidth (m), c_depth (m), Q_Goldak=Q_total/2 (W), eta_eff
- ${(goldak.semiAxis_af_front_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_ar_rear_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_b_halfwidth_um * 1e-6).toExponential(4)}, ${(goldak.semiAxis_c_depth_um * 1e-6).toExponential(4)}, ${params.laserPower_W / 2}, ${params.effectiveAbsorptivity}
-** Solidification Kinetics:
-** G_avg: ${pyResult.solidificationKinetics.thermalGradient_G_K_m} K/m
-** R_solid: ${pyResult.solidificationKinetics.solidificationRate_R_m_s} m/s
-** Cooling Rate: ${pyResult.solidificationKinetics.coolingRate_K_s} K/s
-** Primary Spacing (PDAS): ${pyResult.solidificationKinetics.primaryDendriteArmSpacing_PDAS_um} um
-** -------------------------------------------------------------`;
+    const { text: feaCard, filename } = buildGoldakCaeCard(pyResult, "cross-section");
 
     const blob = new Blob([feaCard], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Goldak_LPBF_CrossSection_${pyResult.material.replace(/\s+/g, "_")}_${params.laserPower_W}W.inp`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -652,7 +631,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Goldak / Eagar–Tsai / Rosenthal. Fabbro keyhole uses Fresnel A (no double-counted trapping). Heiple–Roper Marangoni is screening, not CFD. Build Job stays Rosenthal.
+                Goldak / Eagar–Tsai / Rosenthal. Fabbro keyhole uses the tabulated flat-plate absorptivity (no double-counted trapping). Heiple–Roper Marangoni is screening, not CFD. Build Job stays Rosenthal.
               </p>
             </div>
           </div>
@@ -701,10 +680,10 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
               type="button"
               onClick={exportGoldakCard}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#050810] hover:bg-slate-800 text-slate-200 border border-slate-700 transition"
-              title="Export Abaqus / Ansys DFLUX Card"
+              title="Export Goldak parameter card for a user DFLUX subroutine (not an input deck)"
             >
               <Download className="w-3.5 h-3.5 text-sky-400" />
-              <span>Goldak CAE (.inp)</span>
+              <span>Goldak CAE card (.goldak.txt)</span>
             </button>
           </div>
         </div>
@@ -1105,7 +1084,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 <h4 className="text-xs font-bold text-white">Melt Pool Dimensions</h4>
               </div>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
-                Goldak 3D
+                {pyResult?.heatSourceModel ?? pyResult?.modelId ?? heatSource} · screening
               </span>
             </div>
 
@@ -1288,7 +1267,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 leading-relaxed">
-                Published isolated single-track W/D with DOI (NIST AMB2022-03 Table 4, Guo 2024 Table 3). AlSi10Mg is an honest gap. Solver-echo sweeps are not benchmarks. Goldak/ET depth uses Fabbro with Fresnel A; Marangoni does not refit W/D.
+                Published isolated single-track W/D with DOI (NIST AMB2022-03 Table 4, Guo 2024 Table 3). AlSi10Mg is an honest gap. Solver-echo sweeps are not benchmarks. Goldak/ET depth uses Fabbro with the tabulated flat-plate absorptivity; Marangoni does not refit W/D.
               </p>
               {MELT_POOL_LITERATURE_CASES.map((c) => {
                 const loadable = isLoadableLiteratureCase(c);

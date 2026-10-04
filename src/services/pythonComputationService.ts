@@ -1,7 +1,7 @@
 /**
  * MetalliX Python HPC Subsystem & Proxy Client Service
  * Dispatches heavy, CPU-intensive calculations (CALPHAD Gibbs minimization, elastic-constant homogenisation, PHACOMP,
- * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, Pourbaix E-pH)
+ * CNLS Levenberg-Marquardt EIS, XRD Peak Deconvolution, 3D Goldak LPBF Thermal, Inverse Alloy NSGA-II, single-element Pourbaix E–pH at 25 °C)
  * to the backend Python 3.10 runtime with automatic fallback to client TypeScript engines.
  */
 
@@ -20,6 +20,13 @@ import { createSeededRandom } from "../utils/seededRandom";
 import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
 import { MILS_PER_MM } from "../utils/tafelDisplay";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
+import {
+  CLIENT_DATABASE_LABEL,
+  CLIENT_MODEL_LABEL,
+  parseCalphadUnavailable,
+  type CalphadFieldStatus,
+  type CalphadUnavailable,
+} from "../utils/calphadDisplay";
 
 export interface PersistentIPCDiagnostics {
   success: boolean;
@@ -70,11 +77,18 @@ export interface PythonCalphadDatabaseEntry {
   primaryPhases: string[];
   source: string;
   suitability: string;
+  /** "assessment" or "test-fixture"; a test fixture is refused by the solver. */
+  status?: "assessment" | "test-fixture";
+  usable?: boolean;
+  statusReason?: string | null;
+  /** Machine-readable scope: the base elements this database is assessed for. */
+  assessedBaseElements?: string[];
 }
 
 export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   engine: string;
-  computeTimeMs: number;
+  /** null when the engine did not report a time (never an invented one). */
+  computeTimeMs: number | null;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   iterations?: number;
@@ -83,29 +97,28 @@ export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   databasePath?: string;
   thermodynamicModel?: string;
   isEmpirical?: boolean;
+  databaseId?: string;
+  databaseStatus?: string;
+  /** Per critical-temperature field: computed, heuristic or unavailable with a reason. */
+  criticalTemperatureStatus?: Record<string, CalphadFieldStatus>;
+  multiElementScheilStatus?: string;
+  multiElementScheilNote?: string;
+  /** Set when the Python CALPHAD engine answered "unavailable"; the numbers are then the client screening model's. */
+  pythonUnavailable?: CalphadUnavailable;
   activeComponents?: string[];
   unsupportedElements?: string[];
-  adaptiveGrid?: boolean;
-  adaptiveTelemetry?: {
-    isAdaptive: boolean;
-    coarseStepsCount: number;
-    refinedStepsCount: number;
-    totalEvaluations: number;
-    equivalentUniformSteps: number;
-    speedupFactor: number;
-    minRefineStepC: number;
-    boundaryToleranceC: number;
-    transitionZones: Array<{
-      description: string;
-      intervalC: [number, number];
-    }>;
-  };
+  databaseSuitability?: string;
+  /** Grid temperatures (degC) whose equilibrium did not converge; their profile entries are null. */
+  nonConvergedPoints?: number[];
+  boundaryRefinement?: { enabled: boolean; toleranceC: number; equilibriumCalls: number; note: string };
   phacompAnalysis?: {
-    n_v_bar: number;
-    m_d_bar: number;
-    tcpEmbrittlementRisk: "Low" | "Moderate" | "High";
+    status: "screening-tabulated-values" | "unavailable";
+    reason?: string;
+    n_v_bar: number | null;
+    m_d_bar: number | null;
+    tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
     tcpSigmaRiskTemperatureC: number | null;
-    thermodynamicStabilityIndex: number;
+    thermodynamicStabilityIndex: number | null;
   };
 }
 
@@ -470,14 +483,17 @@ export interface PythonKineticsResult {
     type: string;
     composition_wt: Record<string, number>;
     Ae3_C: number;
-    Ae1_C: number;
-    Ms_C: number;
-    Mf_C: number;
+    /** null for non-steel alloys (a eutectoid Ae1 is a steel concept). */
+    Ae1_C: number | null;
+    /** null where the registry value is a non-physical placeholder (alloy_registry.KINETICS_PLACEHOLDERS). */
+    Ms_C: number | null;
+    Mf_C: number | null;
     Q_diff_kJ_mol: number;
     grain_size_d_um_default: number;
     aust_temp_C_default: number;
     phases: string[];
-    critical_cooling_rate_C_s: number;
+    /** null for non-steel alloys (the kinetics model is steel-only). */
+    critical_cooling_rate_C_s: number | null;
     description: string;
   };
   inputParameters: {
@@ -489,11 +505,22 @@ export interface PythonKineticsResult {
   };
   criticalTransformationTemperatures: {
     Ae3_BetaTransus_GammaSolvus_C: number;
-    Ae1_C: number;
-    Ms_C: number;
-    Mf_C: number;
-    CriticalCoolingRate_CCR_C_s: number;
+    /** null for non-steel alloys (Ae1_C_status "unavailable-kinetics-model-steel-only"). */
+    Ae1_C: number | null;
+    Ae1_C_status?: string;
+    /** null for a registry placeholder (Ms_C_status "unavailable-registry-placeholder"). */
+    Ms_C: number | null;
+    Mf_C: number | null;
+    /** null for non-steel alloys (the kinetics model is steel-only). */
+    CriticalCoolingRate_CCR_C_s: number | null;
+    Ms_C_status?: string;
+    Mf_C_status?: string;
+    CriticalCoolingRate_CCR_status?: string;
   };
+  /**
+   * Steel TTT points; null for non-steel alloys (kinetics model is steel-only). floorHit: tStart_s is the 1 ms
+   * incubation floor, not a model value.
+   */
   tttIsothermalCurves: Array<{
     temperature_C: number;
     phase: string;
@@ -502,43 +529,78 @@ export interface PythonKineticsResult {
     tFinish_s: number;
     avramiExponent_n: number;
     drivingForce_DeltaT_C: number;
-  }>;
+    floorHit?: boolean;
+  }> | null;
+  /**
+   * The values below are null where unavailable: for every non-steel alloy (kinetics model is steel-only) and for a
+   * steel start the 1 ms TTT floor drives (see transformedStart_status / unavailableReason).
+   */
   cctContinuousCoolingMap: Array<{
     coolingRate_C_s: number;
-    transformedStartTemp_C: number;
-    transformedStartTime_s: number;
-    primaryMicrostructure: string;
+    transformedStartTemp_C: number | null;
+    transformedStartTime_s: number | null;
+    primaryMicrostructure: string | null;
     phaseFractions: {
-      Martensite_pct: number;
-      Bainite_pct: number;
-      Pearlite_Ferrite_pct: number;
-      RetainedAustenite_pct: number;
+      Martensite_pct: number | null;
+      Bainite_pct: number | null;
+      Pearlite_Ferrite_pct: number | null;
+      RetainedAustenite_pct: number | null;
     };
-    predictedHardness_HRC: number;
+    predictedHardness_HRC: number | null;
     /** ASTM E140 Table 1 conversion of the predicted HRC (non-austenitic steels, HRC 20-68); null otherwise. */
     predictedHardness_HV: number | null;
     predictedHardness_HV_status?: string;
+    transformedStart_status?: string;
+    phaseFractions_status?: string;
+    predictedHardness_HRC_status?: string;
+    unavailableReason?: string | null;
   }>;
+  /** Radius/strengthening/regime are null at or above the registry solvus (steels: Ae1): status says so. */
   lswPrecipitateCoarsening: Array<{
     agingTime_h: number;
-    meanRadius_nm: number;
-    precipitationHardening_MPa: number;
-    strengtheningMechanism: string;
+    meanRadius_nm: number | null;
+    precipitationHardening_MPa: number | null;
+    strengtheningMechanism: string | null;
+    status?: string;
   }>;
   calphadVsKineticsGap: {
     equilibriumPrediction: {
-      stablePhasesAtRT: string;
-      martensiteFraction: string;
-      soluteSupersaturation: string;
+      /** null for non-steel alloys; for steels a fixed text (status "static-text-not-a-calphad-calculation"). */
+      stablePhasesAtRT: string | null;
+      martensiteFraction: string | null;
+      soluteSupersaturation: string | null;
+      status?: string;
+      reason?: string;
     };
     kineticRealityAtSelectedCooling: {
       coolingRate_C_s: number;
-      criticalCoolingRate_C_s: number;
-      isSuppressedEquilibrium: boolean;
-      predictedMartensite_pct: number;
-      diffusionSuppressionIndex: number;
-      verdict: string;
+      criticalCoolingRate_C_s: number | null;
+      isSuppressedEquilibrium: boolean | null;
+      predictedMartensite_pct: number | null;
+      diffusionSuppressionIndex: number | null;
+      verdict: string | null;
+      status?: string;
+      reason?: string;
     };
+  };
+  /** "unavailable" with reason "kinetics model is steel-only" for Inconel 718, Ti-6Al-4V and Al 7075. */
+  kineticsModel?: {
+    status: "available" | "unavailable";
+    reason: string | null;
+    scope: string;
+    registryAlloyId: string;
+    illustrativeOnly: boolean;
+    note: string;
+    placeholderParameters: string[];
+    lswPrecipitateCoarsening?: { status: string; note: string; reason: string | null };
+  };
+  /** TTT incubation floor summary: points whose tStart_s is the 1 ms floor (floorHit). */
+  tttIncubationFloor?: {
+    status: string;
+    floorValue_s: number;
+    pointCount: number | null;
+    floorHitCount: number | null;
+    note: string;
   };
 }
 
@@ -568,26 +630,73 @@ export interface PythonBayesianOptimizationResult {
   nIterations: number;
 }
 
-// Phase 8: Solidification Microstructure Lab result type
-export interface SolidificationMicrostructureResult {
+// Phase 8: Solidification Microstructure Lab result type.
+// Screening-field path (python/lpbf_solidification_microstructure.py compute_screening_field_microstructure):
+// the numbers are thermal.solidificationKinetics from lpbf_thermal_solver (equal to the Build Job projection only
+// for heatSource=rosenthal with the Build Job's inputs).
+// status "available" = liquidus field-map G/R; "screening-fallback" = tail-length heuristic (reason says so);
+// "degenerate-floor" = field map used but R/cooling are the solver's clamp floors (R <= 1e-4 m/s or cooling <=
+// 1 K/s): the numbers are copied but are NOT a computed result and must not be shown as one;
+// "unavailable" = no numbers (missing/unknown/impossible input), reason says why. Callers must check status first.
+export interface SolidificationMicrostructureAvailable {
+  status: 'available' | 'screening-fallback';
+  reason?: string | null;
   source: string;
+  modelId?: string | null;
+  gradientSource?: string | null;
+  usedFieldMap?: boolean | null;
+  heatSourceModel?: string | null;
+  materialName?: string | null;
+  regime?: string | null;
+  regimeNote?: string | null;
+  normalizedEnthalpy?: number | null;
+  absorptivity?: { effective: number | null; conduction: number | null };
+  materialEvidence?: Record<string, unknown>;
+  inputs?: Record<string, number>;
+  morphologyBands_G_over_R?: { planar: number; cellular: number; columnar: number };
+  scope?: string;
   G_K_m: number;
-  maxG_K_m: number;
   R_m_s: number;
-  maxR_m_s: number;
   coolingRate_K_s: number;
+  g_over_r_ratio?: number | null;
   PDAS_um: number;
   SDAS_um: number;
-  morphology: 'columnar' | 'equiaxed' | 'mixed';
-  morphologyFractions: {
-    columnar: number;
-    equiaxed: number;
-    mixed: number;
-  };
-  frontCellCount: number;
-  doi: Record<string, string>;
+  morphology: string;
+  doi?: string | Record<string, string> | null;
   disclaimer: string;
+  // Legacy CFD path only (a cfdResult was supplied); absent on the screening-field path.
+  maxG_K_m?: number;
+  maxR_m_s?: number;
+  morphologyFractions?: { columnar: number; equiaxed: number; mixed: number };
+  frontCellCount?: number;
 }
+
+export interface SolidificationMicrostructureUnavailable {
+  status: 'unavailable';
+  reason: string;
+  source: string;
+  heatSourceModel?: string | null;
+  scope?: string;
+  disclaimer?: string;
+  doi?: string | Record<string, string> | null;
+  G_K_m: null;
+  R_m_s: null;
+  coolingRate_K_s: null;
+  PDAS_um: null;
+  SDAS_um: null;
+  morphology: null;
+}
+
+export type SolidificationMicrostructureDegenerate =
+  Omit<SolidificationMicrostructureAvailable, 'status' | 'reason'> & {
+    status: 'degenerate-floor';
+    reason: string;
+  };
+
+export type SolidificationMicrostructureResult =
+  | SolidificationMicrostructureAvailable
+  | SolidificationMicrostructureDegenerate
+  | SolidificationMicrostructureUnavailable;
 
 // Phase 9: Thermomechanical Distortion Lab result type
 export interface ThermomechanicalDistortionResult {
@@ -651,9 +760,11 @@ class PythonComputationService {
   }
 
   // Phase 8: Solidification Microstructure Lab
+  // params: materialName + power_W, speed_mm_s, beamDiameter_um, preheat_C, layerThickness_um, hatch_um, heatSource.
+  // Python looks the alloy up by materialName; no k/liquidus/absorptivity is sent.
   async computeSolidificationMicrostructure(data: {
     params: Record<string, number | string>;
-    material: Record<string, number | string>;
+    material?: Record<string, number | string>;
     cfdResult?: Record<string, unknown>;
   }): Promise<SolidificationMicrostructureResult> {
     const res = await fetch("/api/python/lpbf-solidification-microstructure", {
@@ -1077,6 +1188,7 @@ class PythonComputationService {
     boundaryRefinement = true,
     minRefineStep = 0.5
   ): Promise<PythonCalphadSolveResult> {
+    let pythonUnavailable: CalphadUnavailable | null = null;
     if (usePython) {
       let validation: PythonValidationError | null = null;
       try {
@@ -1105,9 +1217,11 @@ class PythonComputationService {
               ...data,
               isPythonEngine: true,
               engine: data.engine || "pycalphad-open-tdb",
-              computeTimeMs: data.computeTimeMs || 12,
+              computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
             };
           }
+          // The Python engine has no fallback model: it says "unavailable" and why.
+          pythonUnavailable = parseCalphadUnavailable(data);
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
         }
@@ -1128,12 +1242,17 @@ class PythonComputationService {
     const clientResult = solveMultiComponentEquilibrium(alloy, fallbackTdb, tMin, tMax, tStep);
     const elapsed = Math.round(performance.now() - startTime);
 
+    // Client screening numbers: labelled as such, never as a pycalphad/CALPHAD result.
     return {
       ...clientResult,
       engine: "MetalliX-Client-TS-Solver",
       computeTimeMs: elapsed,
       isPythonEngine: false,
+      isEmpirical: true,
+      thermodynamicModel: CLIENT_MODEL_LABEL,
+      databaseUsed: CLIENT_DATABASE_LABEL,
       iterations: (tMax - tMin) / tStep,
+      ...(pythonUnavailable ? { pythonUnavailable } : {}),
     };
   }
 

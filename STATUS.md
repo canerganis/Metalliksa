@@ -25,6 +25,84 @@
 - **Kanıtlanmayan:** tarayıcı arayüzü, üretim başlatma yolu, Linux/Docker/CI, GPU, OpenFOAM, test paketleri (kod değişmedi). Bu yazılım eşitliğidir, bilimsel doğrulama değil; aynı girdinin aynı çıktıyı vermesi bağımsız replike değildir.
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
+## 2026-10-04 — Birleştirilmiş motor dürüstlüğü düzeltmeleri (3728516, 09b76c7)
+
+### UQ sampler (1eeb789)
+- norm_ppf düzeltildi; SciPy ndtri ile 24.003 nokta için azami hata 3,6e-15. IN718 Seed42/N500 ortalama/SS/A/B: 3467,7/32,54/3387,2/3422,6 → 3467,8/41,37/3365,4/3410,5.
+- Python fix paketi 502 test; 16 atlandı, 1 ortam/IPC hatası. Tarayıcı ve Linux/Python 3.11 doğrulanmadı; model kalibre değil, yarıçap 0,8 nm tabanında.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Murakami (0b57f9b)
+- Ortak sabitler yüzey 1,43, yüzey-altı 1,41, iç 1,56; HV380/√area50 µm için iç sınır 372,5→406,4 MPa, yüzey 367,3→372,5 MPa; 13 test geçti.
+- R≥1 ve geçersiz kusur girdileri reddedilir. Birincil kaynak erişilemedi; teyit ikincil arama parçacıklarına dayanır, sanayi uçtan uca koşu yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### XRD/CNLS (044d684)
+- XRD v4.0→v4.1, W-H v3.10→v3.11; Pearson-VII alanı ve yakınsama/kötü uyum sinyalleri düzeltildi; CNLS kapsamı daraltıldı.
+- TS 1049 testte 1044 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. XRD UI çağrısı/tarayıcı yok; Williamson–Smallman birincil makalesi okunmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Tafel/korozyon-EIS (9ba2753)
+- Eksik girdilerden varsayılan Tafel/Rp/korozyon değerleri kaldırıldı; Al-7075 korozyon hızı 0,01938→0,02058 mm/yıl (EW 9,0→9,5583).
+- Python 363 OK; TS 1097 testte 1092 geçti, 0 başarısız, 1 atlandı, 4 todo; parity/bundle PASS. Tarayıcı yok; P2D/TLM ve başka varsayımlar açık.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Elastik sabitler (aca7a78)
+- Uydurma varsayılanlar kaldırıldı; tam kütüphane eşleşmesi/kaynak, aksi durumda unavailable. Fe3C boş girdi ve Al2O3 Debye K 70,25 GPa artık unavailable.
+- 33 oracle testi; Python 238 OK; TS 1088 testte 1083 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. Tarayıcı ve kimi kristal durumları doğrulanmadı, her değer için kaynak bulunamadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### ICME/phase10 (635c0fd)
+- ICME illustrative/yield-only; UTS, KIC, kusur ölçüsü/rp unavailable. Phase10 uydurma kusur ve “%99 hayatta kalma” iddiası kaldırıldı.
+- Python 248 OK; TS 1041 testte 1036 geçti, 0 başarısız, 1 atlandı, 4 todo; parity PASS. Tarayıcı/sertifikasyon ve fizik doğrulaması yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Çelik kinetiği (049b72a)
+- TTT/CCT yalnız destekli çelik modelleri; diğer alaşım, aralık dışı hız ve taban sürelerinde unavailable; cache v4.
+- Python 744 OK/22 atlandı; hızlı build-job/parity PASS; TS 1132 testte 1127 geçti, 0 başarısız, 1 atlandı, 4 todo; bundle PASS. Yavaş ve phase-7 benchmark koşulmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### CALPHAD (257864a)
+- Sentetik denge yedeği kaldırıldı; DB kapsamı/başarısızlık açık, NaN güvenli serileştirilir; sınırlar aralık olarak etiketlenir. 316L uydurma 1550/700 °C yerine equilibrium-failed.
+- Fix testleri 48 (43 geçti, 5 atlandı); parity PASS. Tarayıcı yok, DB kapsamı eksik, IPC paketi tekrarlanmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Build-job mikro yapı (e4db30e)
+- Entegrasyon cb12043, BUILD_JOB_SOLVER_REVISION değerini v5 yaptı.
+- Isıl katılaşma çıktısı yansıtılır, ikinci Hunt–Lu hesabı yok; eksik veri/CFD-RPC unavailable.
+- Hızlı kontrol PASS; TS 1063 testte 1058 geçti, 0 başarısız, 1 atlandı, 4 todo; odaklı Python 29 OK. Yavaş/NIST, Ti ve worker E2E yok; revision bump bu lane’de yapılmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Geçerlilik zarfı (71a09bd)
+- Mesh zarfı: IN718 40W, 20µm 2804K/20µm derinlik; 10µm 2617K/30µm. 50W 3116/3044K; 60W iki ağda durdu.
+- 18 planlı + 4 ek koşu; G6 156 gözlem PASS, 17 test geçti. 5µm ve diğer alaşım koşuları, çökme doğrulaması yok; cache değişiminden sonra tarama tekrarlanmadı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### CAE kartı / kernel TS (581514e)
+- Kart screening/solver ayrımını ve kalibrasyonsuzluğu gösterir; örnek ηeff 0,887, ηcond 0,38, Q 252,795W.
+- Kart testleri 13/13; TS 1065 testte 1060 geçti, 0 başarısız, 1 atlandı, 4 todo. Fikstür sentetik; gerçek Python sonucu, browser/indirilen kart doğrulaması yok; model-id metni açık.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### B5 adım 1-2 (9cb17a6, 76538fa; birleşimler ff4ace5, fbf310b)
+- TS malzeme otoritesi düzeltildi; IN625 hs 2,4e9→4,6715e9 J/m³, desteklenmeyen ΔH sıralama yolu kaldırıldı. Adım 2 G17-G19 ve drift koruması ekledi.
+- Adım 1 Python 198 OK, TS 1049 testte 1044 geçti; adım 2 parity --check --slow 25/25, golden 49 OK/1 atlandı. GPU/OpenFOAM/tarayıcı/CI yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### SDK wave 2 (cd4f2ab)
+- 7 modül sözleşmeli; toplam 9/37, 28 legacy.
+- Python listesi 519 OK/22 atlandı; TS 1038 testte 1033 geçti, 0 başarısız, 1 atlandı, 4 todo. CI/Python3.11/tarayıcı yok.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Komut paleti (688594c)
+- Ctrl/Cmd+K paleti modül kaydından gezinme ve odak yönetimiyle eklendi.
+- TS 1027 testte 1022 geçti, 0 başarısız, 1 atlandı, 4 todo; masaüstü ve 375px mobil kontrolü yapıldı. Axe/ekran okuyucu/reduced-motion/Mac/tablet yok; 320px taşması kayıtlı.
+- NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
+### Sertlik tahminleri (826f690; persist 6db1369 sonrası)
+- Tahmin karbon/düşük alaşımlı çeliğe sınırlandı; diğerleri unavailable. AlSi10Mg NaN→594°C; maraging 300 362→unavailable.
+- TS 1063 testte 1058 geçti, 0 başarısız, 1 atlandı, 4 todo; 22 mutant öldürüldü; tsc/bundle PASS. Göç v0→v1 yalnız 6db1369 ve sonrasındaki app başlangıcında işler.
+- Tarayıcı yok, dönüşüm tabloları eksik. NIST optik residual unavailable/null; yakınsama inconclusive; deneysel doğrulama unvalidated (experimentalValidation=false, opticalOperatorMatched=false).
+
 ## Sertlik dönüşümleri ve kinetik HV: ASTM E140 / ISO 18265 tabloları — 2026-10-04 (yerel ana dala birleştirildi: `3251a87`, kinetik HV `ce7df77`; push yok)
 
 - **Sonuç (arayüz):** `src/utils/hardnessConversion.ts` tek ortak dönüşüm yardımcısıdır. ASTM E140 Tablo 1 (HRC 20-68; HV/HBW/HK) ve Tablo 2 (HRB 55-100; HV/HK; HB(S) yalnız HV 100-240) ile ISO 18265 Tablo A.1 (Rm, HV 80-650) çapalarında doğrusal interpolasyon yapar; tablo dışında `Unavailable`/`N/A` döner, ekstrapolasyon ya da kırpma yoktur. Yalnız östenitik olmayan çelikler dönüştürülür; östenitik, titanyum, nikel, alüminyum, sert metal ve "diğer" sınıfları yalnız ölçülen değeri gösterir. Eski HRC/HV polinomları, iki kopya dönüşüm ve Leeb HLD dönüşümü silindi; Rm artık ISO 18265 tablo tahminidir (yaklaşık, çekme deneyinin yerine geçmez).

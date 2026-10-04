@@ -17,7 +17,7 @@ def get_system_status():
         "subsystems": {
             "calphad_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "calphad_solver.py")),
-                "description": "Multi-component CALPHAD Gibbs free energy minimizer, Scheil-Gulliver & New-PHACOMP solver"
+                "description": "pycalphad Gibbs free energy minimisation (needs pycalphad and an assessed database; answers unavailable otherwise, no fallback model) with New-PHACOMP screening"
             },
             "dft_property_calculator": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "dft_property_calculator.py")),
@@ -45,7 +45,7 @@ def get_system_status():
             },
             "pourbaix_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "pourbaix_solver.py")),
-                "description": "Multi-Element Nernst E-pH electrochemical equilibrium, corrosion/passivation/immunity stability map"
+                "description": "Single-element M–H₂O Pourbaix map (25 °C, ΔfG minimisation)"
             },
             "kinetics_ttt_cct_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "kinetics_ttt_cct_solver.py")),

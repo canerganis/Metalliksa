@@ -225,16 +225,19 @@ test('GPU lab: each dropdown label maps to its alloy and the payload carries the
   assert.equal(source.match(/computeTransient3DGPU\(/g)?.length, 1);
 });
 
-test('Solidification lab: each preset label maps to its alloy and the payload carries the authority row', () => {
+test('Solidification lab: each preset label maps to its alloy; the payload carries the Python name, not alloy numbers', () => {
   assert.deepEqual({ ...SOLIDIFICATION_PRESETS }, SOLIDIFICATION_LABELS);
-  const process = { power_W: 285, speed_mm_s: 960, hatch_um: 110, layerThickness_um: 40 };
+  const process = { power_W: 285, speed_mm_s: 960, hatch_um: 110, layerThickness_um: 40, beamDiameter_um: 80, preheat_C: 80, heatSource: 'rosenthal' as const };
   for (const [label, id] of Object.entries(SOLIDIFICATION_LABELS)) {
     assertLabelNamesAlloy(label, id);
     const t = LPBF_MATERIAL_AUTHORITY.alloys[id].thermal;
     const expected = { k_WmK: t.thermal_conductivity_W_mK, liquidus_K: celsiusToKelvin(t.liquidus_C), absorptivity: t.absorptivity_IR };
     assert.deepEqual(solidificationPresetInputs(label), expected, label);
     assert.deepEqual(solidificationMaterialInputs(id), expected, label);
-    assert.deepEqual(solidificationRequest(label, process), { params: process, material: expected }, label);
+    // Display-only authority row above; the request carries the Python thermophysical name and no k/liquidus/absorptivity.
+    const request = solidificationRequest(label, process);
+    assert.deepEqual(request, { params: { materialName: LPBF_MATERIAL_AUTHORITY.alloys[id].thermalName, ...process } }, label);
+    for (const key of ['k_WmK', 'liquidus_K', 'absorptivity']) assert.ok(!(key in request.params) && !('material' in request), `${label} sends ${key}`);
   }
   const source = readFileSync('src/components/SolidificationMicrostructureLab.tsx', 'utf8');
   assert.match(source, /computeSolidificationMicrostructure\(solidificationRequest\(selectedAlloy,/);

@@ -293,6 +293,14 @@ KINETICS_PLACEHOLDER_NOTE = (
 KINETICS_PLACEHOLDERS = frozenset({
     ("in718", "Ms_C"), ("in718", "Mf_C"), ("al7075", "Ms_C"), ("al7075", "Mf_C"),
 })
+# Per-value citations that are known (every other kinetics value carries the generic "no per-value citation" note).
+KINETICS_VALUE_NOTES = {
+    ("ti6al4v", "critical_cooling_rate_C_s"): (
+        "Solver-local screening value. It agrees with the cooling rate above which Ti-6Al-4V transforms fully "
+        "martensitically (alpha prime), 410 C/s: T. Ahmed and H. J. Rack, Mater. Sci. Eng. A 243 (1998) 206-211 "
+        "(cited from the published abstract; the paper itself was not read). The kinetics model is steel-only, so "
+        "the value is not used for this alloy."),
+}
 BARE_GRADES = frozenset({"304", "316", "4140", "4340", "6061", "7075", "1018", "d2"})
 
 
@@ -648,6 +656,7 @@ def _copied_domains(aid: str) -> Dict[str, Mapping[str, ValueRecord]]:
             if domain == DOMAIN_KINETICS:
                 key_notes = {k: KINETICS_PLACEHOLDER_NOTE
                              for a, k in KINETICS_PLACEHOLDERS if a == aid}
+                key_notes.update({k: note for (a, k), note in KINETICS_VALUE_NOTES.items() if a == aid})
             out[domain] = _domain_table(
                 table[aid], units, ref, f"{REGISTRY_VERSION}:{domain}",
                 "Solver-local screening value copied unchanged; no per-value citation in source.",

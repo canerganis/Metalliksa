@@ -243,14 +243,40 @@ class TafelPresetTest(unittest.TestCase):
 
 
 class PourbaixElementTest(unittest.TestCase):
-    def test_supported_elements_still_solve(self):
-        for el in pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS:
+    # WP-E (25 C Gibbs engine): an element is served only with a verified species table. The
+    # others (Cr, Ti, and Mo which has no system at all) raise POURBAIX_DATA_UNAVAILABLE,
+    # a code of its own that is never confused with UNKNOWN_ELEMENT (a name no system knows).
+    # WP-Al: Al is available (OBIGT TS01 + gibbsite set), so it is pinned as solving.
+    GOLDEN_ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg", "Al")
+    PINNED_UNAVAILABLE = ("Cr", "Ti", "Mo")
+
+    def test_available_elements_still_solve(self):
+        available = [el for el, entry in pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS.items() if entry["available"]]
+        self.assertTrue(set(self.GOLDEN_ELEMENTS) <= set(available), available)
+        for el in available:
             with self.subTest(element=el):
                 out = pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
                 self.assertEqual(out["element"], el)
+        self.assertEqual(set(available), {"Fe", "Ni", "Cu", "Zn", "Mg", "Al"})  # Al joined by WP-Al; Cr, Ti, Mo stay out
+
+    def test_unavailable_elements_raise_data_unavailable(self):
+        unavailable = [el for el, entry in pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS.items()
+                       if not entry["available"]]
+        self.assertIn("Ti", unavailable)  # no consistent Ti-H2O dataset (species table UNAVAILABLE_ELEMENTS)
+        self.assertNotIn("Al", unavailable)  # Al now solves (test_available_elements_still_solve)
+        # Cr and Ti are system entries marked unavailable; Mo has no system at all
+        self.assertTrue({"Cr", "Ti"} <= set(unavailable), unavailable)
+        self.assertIn("Mo", pourbaix_solver.UNAVAILABLE_ONLY_ELEMENTS)
+        for el in sorted(set(unavailable) | set(self.PINNED_UNAVAILABLE) | set(pourbaix_solver.UNAVAILABLE_ONLY_ELEMENTS)):
+            with self.subTest(element=el):
+                with self.assertRaises(iv.ValidationError) as ctx:
+                    pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
+                self.assertEqual(ctx.exception.code, pourbaix_solver.POURBAIX_DATA_UNAVAILABLE)
+                self.assertEqual(ctx.exception.field, "element")
+                self.assertTrue(ctx.exception.detail["reason"])
 
     def test_unknown_or_non_string_element_raises(self):
-        for el in ("Unobtainium", "fe", "Mo", "", None, ["Fe"]):
+        for el in ("Unobtainium", "fe", "", None, ["Fe"]):
             with self.subTest(element=el):
                 with self.assertRaises(iv.ValidationError) as ctx:
                     pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
