@@ -258,6 +258,49 @@ class CnlsKernelParityTest(unittest.TestCase):
                 rows = tolerance_violations(old, new)
                 self.assertEqual(rows, [], drift_report.render(case, rows, 20))
 
+    @staticmethod
+    def _random_start_payloads(count=100, seed=11):
+        import random
+        rng = random.Random(seed)
+        fits = [k for k, v in cases.CASES["cnls_fitting_solver"].items() if v["action"] == "fit"]
+        out = []
+        for i in range(count):
+            base = cases.CASES["cnls_fitting_solver"][fits[i % len(fits)]]
+            params = []
+            for p in base["parameters"]:
+                q = dict(p)
+                if p["field"] == "exponent":
+                    q["value"] = min(p["max"], max(p["min"], p["value"] + rng.uniform(-0.1, 0.1)))
+                else:
+                    q["value"] = min(p["max"], max(p["min"], p["value"] * math.exp(rng.uniform(-1.2, 1.2))))
+                params.append(q)
+            out.append(dict(base, parameters=params))
+        return out
+
+    def test_random_starts_reach_the_same_optimum(self):
+        """Iteration counts are NOT guaranteed equal. Near the optimum the LM
+        accept/stop tests (relative step <= 1e-8 with reduction <= 1e-12, scaled
+        gradient <= 1e-10) act on rounding-level quantities of an ill-conditioned
+        J^T J, so LAPACK vs Gauss-Jordan rounding changes how many iterations run
+        (Windows capture machine, these 100 starts: 70 identical, 26 differ in
+        iteration count only, 4 differ in termination - in 2 the old run hit
+        maxIterations and the new converged, in 1 the reverse, in 1 both converged by
+        different stopping rules). The optimum agrees:
+        chi-square within 1e-9 relative, every fitted value within 1e-8 relative
+        (observed max 2.2e-9). Diagonal column scaling of the damped system was
+        tried and did not improve agreement (68 identical), so it was not added."""
+        old = blob_module("cnls_fitting_solver")
+        import cnls_fitting_solver as cnls
+        for i, payload in enumerate(self._random_start_payloads()):
+            with self.subTest(start=i):
+                args = (payload["topology"], payload["points"], payload["parameters"], payload["weighting"],
+                        int(payload["maxIterations"]))
+                with np.errstate(all="ignore"):
+                    a, b = old.run_cnls_fit(*args), cnls.run_cnls_fit(*args)
+                self.assertLessEqual(abs(b["chiSquare"] - a["chiSquare"]), REL_TOL * a["chiSquare"])
+                for pa, pb in zip(a["parameters"], b["parameters"]):
+                    self.assertLessEqual(abs(pb["fittedValue"] - pa["fittedValue"]), 1e-8 * abs(pa["fittedValue"]))
+
     def test_mutation_half_lm_step_is_detected(self):
         import cnls_fitting_solver as cnls
         solve = np.linalg.solve
