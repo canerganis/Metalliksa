@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MODULES, WORKSPACES } from '../src/data/workspaces';
 import { LISTED_CONTRACTS } from '../src/modules/registry';
 import {
-  normalizeForSearch, paletteKeyAction, rankPaletteEntries, scorePaletteEntry, subsequenceScore, type PaletteEntry,
+  FUZZY_SCORE_CAP, normalizeForSearch, paletteKeyAction, rankPaletteEntries, scorePaletteEntry, subsequenceScore, type PaletteEntry,
 } from '../src/utils/commandPalette';
 import { isPaletteShortcut, paletteShortcutLabel } from '../src/hooks/useCommandPaletteShortcut';
 
@@ -68,11 +70,57 @@ test('real registry queries: label, id and workspace hits', () => {
   assert.ok(ids('preview').length >= MODULES.filter(module => module.scope === 'Preview').length, 'scope is searchable');
 });
 
-test('a single letter does not match descriptions or scattered letters', () => {
-  const list = [entry('Alpha', { description: 'q in description' }), entry('Quench')];
-  assert.deepEqual(rankPaletteEntries(list, 'q').map(e => e.label), ['Quench']);
-  assert.deepEqual(rankPaletteEntries([entry('Keyhole')], 'y').length, 1, 'substring of the label still counts');
-  assert.deepEqual(rankPaletteEntries([entry('Kxxxxe')], 'ke').length, 1, 'two-letter subsequence counts');
+test('a single letter matches only word starts in labels (not id, workspace, maturity, description or inner letters)', () => {
+  const list = [
+    entry('Alpha', { description: 'q in description', id: 'q-id', workspaceLabel: 'Q workspace', scope: 'Q' }),
+    entry('Quench'), entry('Big Quartz'), entry('Aqua'),
+  ];
+  assert.deepEqual(rankPaletteEntries(list, 'q').map(e => e.label), ['Quench', 'Big Quartz']);
+  assert.equal(rankPaletteEntries([entry('Keyhole')], 'y').length, 0, 'an inner letter is not enough');
+  assert.equal(rankPaletteEntries([entry('Kxxxxe')], 'ke').length, 1, 'two-letter subsequence counts');
+});
+
+test('real registry: one letter never lists every module; each hit has a label word starting with it', () => {
+  for (const letter of 'abcdefghijklmnopqrstuvwxyz') {
+    const hits = ids(letter);
+    assert.ok(hits.length < MODULES.length, `"${letter}" lists ${hits.length} of ${MODULES.length}`);
+    for (const id of hits) {
+      const label = normalizeForSearch(ENTRIES.find(e => e.id === id)!.label);
+      assert.ok(label.split(/[^a-z0-9]+/).some(word => word.startsWith(letter)), `"${letter}" -> ${id}`);
+    }
+  }
+  // The review's measured cases: e, r and i used to match all 37 through workspace and maturity names.
+  for (const letter of ['e', 'r', 'i', 'İ', 'ı']) assert.ok(ids(letter).length < MODULES.length, letter);
+  assert.deepEqual(ids('k'), ['keyhole-raytracing', 'toolpath-studio'], 'Keyhole Ray Tracing (prefix) before Toolpath & Kinematics (word start)');
+  assert.ok(ids('re').length > ids('r').length, 'two characters reach id, workspace, maturity and description');
+});
+
+test('a later word-start occurrence counts as a word start', () => {
+  assert.equal(scorePaletteEntry(entry('Axkey key'), 'key'), 100);
+  assert.equal(scorePaletteEntry(entry('Axkey'), 'key'), 80);
+});
+
+test('scattered matches are capped below every exact field match', () => {
+  const long = entry('Abcdefghijklmnopqrstuvwxyz');
+  const raw = subsequenceScore(normalizeForSearch(long.label), 'acdefghij')!;
+  assert.ok(raw > FUZZY_SCORE_CAP, `uncapped ${raw}`);
+  assert.equal(scorePaletteEntry(long, 'acdefghij'), FUZZY_SCORE_CAP);
+  assert.ok(FUZZY_SCORE_CAP < 20, 'below a description match (20)');
+});
+
+test('punctuation and symbols separate tokens; a query of only symbols lists everything', () => {
+  assert.deepEqual(ids('ebsd/ct'), ids('ebsd ct'));
+  assert.equal(ids('thermal-map')[0], 'toolpath-thermal-map');
+  assert.deepEqual(ids('&'), MODULES.map(module => module.id));
+  assert.deepEqual(ids('кейхол'), [], 'letters outside the labels match nothing');
+});
+
+test('normalization uses visible escapes and folds the dotted and dotless i', () => {
+  const source = readFileSync(resolve(process.cwd(), 'src/utils/commandPalette.ts'), 'utf8');
+  assert.match(source, /\/\[\\u0300-\\u036f\]\/g/);
+  assert.match(source, /\/\\u0131\/g/);
+  assert.doesNotMatch(source, /[\u0300-\u036f\u0131]/, 'no invisible combining or dotless characters in the source');
+  assert.equal(normalizeForSearch('İı'), 'ii');
 });
 
 test('ties keep the input (registry) order', () => {

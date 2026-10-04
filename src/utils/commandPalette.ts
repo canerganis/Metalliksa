@@ -16,13 +16,21 @@ export interface PaletteEntry {
   readonly workspaceLabel: string;
 }
 
-/** Lower case without diacritics (and dotless i folded to i), so "alasim" finds "Alaşım". */
+/** Lower case without combining diacritics, dotless i folded to i: "resume" finds "Résumé", "celik" a Turkish "Çelik". */
 export function normalizeForSearch(text: string): string {
-  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-    .replace(/ı/g, 'i');
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/\u0131/g, 'i');
 }
 
 const isWordStart = (text: string, index: number) => index === 0 || !/[a-z0-9]/.test(text[index - 1]);
+
+/** Index of the first occurrence of `token` in `text` that starts a word, or -1. */
+function wordStartIndex(text: string, token: string): number {
+  for (let at = text.indexOf(token); at !== -1; at = text.indexOf(token, at + 1)) {
+    if (isWordStart(text, at)) return at;
+  }
+  return -1;
+}
 
 /**
  * Subsequence match of `token` in `text` (both normalized). Returns null when some character is
@@ -45,25 +53,47 @@ export function subsequenceScore(text: string, token: string): number | null {
   return score;
 }
 
-/** Best score of one token against one entry, or null when no field matches. */
+/** Highest score a scattered (subsequence) label match can reach: below every exact field match. */
+export const FUZZY_SCORE_CAP = 19;
+
+interface NormalizedEntry { readonly label: string; readonly id: string; readonly workspace: string; readonly scope: string; readonly description: string }
+// Entries are static (the registry), so each is normalized once, not on every keystroke.
+const normalized = new WeakMap<PaletteEntry, NormalizedEntry>();
+function normalizedEntry(entry: PaletteEntry): NormalizedEntry {
+  let value = normalized.get(entry);
+  if (!value) {
+    value = {
+      label: normalizeForSearch(entry.label), id: normalizeForSearch(entry.id), workspace: normalizeForSearch(entry.workspaceLabel),
+      scope: normalizeForSearch(entry.scope), description: normalizeForSearch(entry.description),
+    };
+    normalized.set(entry, value);
+  }
+  return value;
+}
+
+/**
+ * Best score of one token against one entry, or null when no field matches.
+ * A one-character token matches only the start of a word in the label: id, workspace, maturity and
+ * description substrings (and scattered letters) need two or more characters, because one common letter
+ * is contained in every workspace or maturity name and would list every module.
+ */
 function tokenScore(entry: PaletteEntry, token: string): number | null {
-  const label = normalizeForSearch(entry.label);
-  const at = label.indexOf(token);
-  if (at === 0) return 120;
-  if (at > 0 && isWordStart(label, at)) return 100;
-  if (at > 0) return 80;
-  if (normalizeForSearch(entry.id).includes(token)) return 60;
-  if (normalizeForSearch(entry.workspaceLabel).includes(token) || normalizeForSearch(entry.scope).includes(token)) return 40;
-  // Description words count only from two characters on, so a single letter does not match every entry.
-  if (token.length >= 2 && normalizeForSearch(entry.description).includes(token)) return 20;
-  const fuzzy = subsequenceScore(label, token);
-  // A scattered match needs at least two characters; it ranks below every exact field match.
-  return fuzzy !== null && token.length >= 2 ? Math.min(fuzzy, 19) : null;
+  const fields = normalizedEntry(entry);
+  if (fields.label.startsWith(token)) return 120;
+  if (wordStartIndex(fields.label, token) > 0) return 100;
+  if (token.length < 2) return null;
+  if (fields.label.includes(token)) return 80;
+  if (fields.id.includes(token)) return 60;
+  if (fields.workspace.includes(token) || fields.scope.includes(token)) return 40;
+  if (fields.description.includes(token)) return 20;
+  const fuzzy = subsequenceScore(fields.label, token);
+  return fuzzy === null ? null : Math.min(fuzzy, FUZZY_SCORE_CAP);
 }
 
 /** Score of an entry for a query (sum over tokens), or null when any token matches nothing. */
 export function scorePaletteEntry(entry: PaletteEntry, query: string): number | null {
-  const tokens = normalizeForSearch(query).split(/\s+/).filter(Boolean);
+  // Whitespace, punctuation and symbols separate tokens: "EBSD/CT", "thermal-map" and "&" carry no letter to match.
+  const tokens = normalizeForSearch(query).split(/[\s\p{P}\p{S}]+/u).filter(Boolean);
   let total = 0;
   for (const token of tokens) {
     const score = tokenScore(entry, token);
@@ -71,6 +101,15 @@ export function scorePaletteEntry(entry: PaletteEntry, query: string): number | 
     total += score;
   }
   return total;
+}
+
+/** Matching entries, best first; ties keep the input order (Array.prototype.sort is stable). */
+export function rankPaletteEntries<T extends PaletteEntry>(entries: readonly T[], query: string): T[] {
+  return entries
+    .map(entry => ({ entry, score: scorePaletteEntry(entry, query) }))
+    .filter((row): row is { entry: T; score: number } => row.score !== null)
+    .sort((a, b) => b.score - a.score)
+    .map(row => row.entry);
 }
 
 export interface PaletteKey {
@@ -92,13 +131,4 @@ export function paletteKeyAction(event: PaletteKey, count: number, current: numb
   if (event.altKey || event.ctrlKey || event.metaKey) return null;
   const index = rovingIndex(count, current, event.key);
   return index === null ? null : { type: 'move', index };
-}
-
-/** Matching entries, best first; ties keep the input order (Array.prototype.sort is stable). */
-export function rankPaletteEntries<T extends PaletteEntry>(entries: readonly T[], query: string): T[] {
-  return entries
-    .map(entry => ({ entry, score: scorePaletteEntry(entry, query) }))
-    .filter((row): row is { entry: T; score: number } => row.score !== null)
-    .sort((a, b) => b.score - a.score)
-    .map(row => row.entry);
 }
