@@ -449,6 +449,9 @@ _IDENTITIES: Dict[str, Dict[str, Any]] = {
     },
     "alsi10mg": {
         "display": ("AlSi10Mg",), "base": "Al",
+        # "(AMS 4215)" / "ams4215": UI-label compatibility only (StochasticUQMMPDSStudio);
+        # SAE AMS 4215 is a casting spec, not AlSi10Mg LPBF. No AMS equivalence is
+        # claimed; see alloy_data_kinetics_uq_fatigue.EXTRA_ALIASES["alsi10mg"].
         "aliases": ("AlSi10Mg Additive (AMS 4215)", "alsi10mg_ams4215", "AlSi10Mg Additive Alloy"),
     },
     "in718": {

@@ -86,7 +86,13 @@ EXTRA_ALIASES: Mapping[str, Tuple[str, ...]] = MappingProxyType({
     "al7075": ("al7075-t651", "Al 7075-T651 Aerospace Plate (AMS 4045)"),
     # uqLabData.ts:416
     "aisi4340": ("AISI 4340 Ultra-High Strength VAR (AMS 6414)",),
-    # uqLabData.ts:453-454 dataset id and name
+    # uqLabData.ts:453-454 dataset id and name. UI-LABEL COMPATIBILITY ONLY, no AMS equivalence is claimed.
+    # The "AMS 4215" in these strings is UI label text. SAE AMS 4215 is an aluminium
+    # CASTING specification (C355.0-T6 per the Phase 6a dual review), not an AlSi10Mg
+    # LPBF specification (the UI also names ASTM F3318). The aliases only let the
+    # existing UI strings resolve to the AlSi10Mg record; nothing here (and nothing in
+    # the registry values) is derived from AMS 4215. Source note: review finding,
+    # fix round p6a-fix2; the SAE text itself was not consulted here.
     "alsi10mg": ("alsi10mg-lpbf-ams4215", "AlSi10Mg Additive LPBF As-Built & SR (AMS 4215)"),
 })
 
