@@ -26,7 +26,7 @@ delete process.env.METALLIX_IPC_PORT;
 delete process.env.METALLIX_IPC_SOCK;
 delete process.env.METALLIX_IPC_HOST;
 process.env.METALLIX_IPC_WORKERS = "1";
-delete process.env.METALLIX_IPC_TOKEN;
+process.env.METALLIX_IPC_TOKEN = "stale-value-from-the-environment"; // must be scrubbed at startup
 
 const orchestrator = await import("../server/processOrchestrator.ts");
 const {
@@ -119,7 +119,7 @@ test("buildIpcSpawnSpec passes the token via env only; ephemeral port and privat
   assert.equal(explicit.env.METALLIX_IPC_PORT, "5099");
 });
 
-test("isLoopbackHost / resolveIpcHost: loopback by default, remote only by override", () => {
+test("isLoopbackHost / resolveIpcHost: loopback by default, never a wildcard, remote only by override", () => {
   for (const h of ["127.0.0.1", "127.8.9.10", "localhost", "LOCALHOST", "::1", "[::1]"]) assert.equal(isLoopbackHost(h), true, h);
   for (const h of ["0.0.0.0", "::", "192.168.1.5", "10.0.0.1", "example.com", "127.0.0.1.nip.io", ""]) assert.equal(isLoopbackHost(h), false, h);
 
@@ -129,10 +129,13 @@ test("isLoopbackHost / resolveIpcHost: loopback by default, remote only by overr
   assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "localhost" }, warn), "localhost");
   assert.equal(warnings.length, 0);
   assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5" }, warn), "127.0.0.1");
+  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "0.0.0.0", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "127.0.0.1");
+  assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "::", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "127.0.0.1");
   assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5", METALLIX_IPC_ALLOW_REMOTE: "true" }, warn), "127.0.0.1");
-  assert.equal(warnings.length, 2);
+  assert.equal(warnings.length, 4);
+  assert.match(warnings[1], /wildcard/);
   assert.equal(resolveIpcHost({ METALLIX_IPC_HOST: "192.168.1.5", METALLIX_IPC_ALLOW_REMOTE: "1" }, warn), "192.168.1.5");
-  assert.match(warnings[2], /WARNING.*NON-LOOPBACK/);
+  assert.match(warnings[4], /WARNING.*NON-LOOPBACK/);
 });
 
 test("assertDispatchableScript only allows python/<module>.py", async () => {
@@ -144,7 +147,8 @@ test("assertDispatchableScript only allows python/<module>.py", async () => {
   await assert.rejects(runPythonScript("python/../../outside/pwn.py", {}), /Refusing to dispatch/);
 });
 
-test("the daemon gets its own token in env, never argv", () => {
+test("startup scrubs an inherited METALLIX_IPC_TOKEN; the daemon gets its own token in env, never argv", () => {
+  assert.equal(process.env.METALLIX_IPC_TOKEN, undefined);
   const child = supervisor.child;
   assert.ok(child, "supervisor spawned a daemon");
   const token: string = supervisor.ipcToken;

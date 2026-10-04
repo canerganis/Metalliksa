@@ -316,6 +316,13 @@ class StartupConfigTest(unittest.TestCase):
             self.assertIn("METALLIX_IPC_TOKEN", str(ctx.exception.code))
         ipc.validate_startup_config("127.0.0.1", "x" * 32, False)
 
+    def test_wildcards_are_always_refused(self):
+        for host in ("0.0.0.0", "::", "[::]", ""):
+            for allow in (False, True):
+                with self.assertRaises(SystemExit) as ctx:
+                    ipc.validate_startup_config(host, TOKEN, allow)
+                self.assertIn("wildcard", str(ctx.exception.code))
+
     def test_non_loopback_needs_explicit_override(self):
         for host in ("192.168.1.10", "example.com"):
             with self.assertRaises(SystemExit) as ctx:
@@ -527,6 +534,14 @@ class InThreadHttpTest(unittest.TestCase):
         status, parsed, _, _, _ = _raw_request(self.port, "POST", "/execute", headers, None)
         self.assertEqual((status, parsed["code"]), (413, "PAYLOAD_TOO_LARGE"))
 
+    def test_idle_connection_is_closed(self):
+        with mock.patch.object(ipc.MicroserviceHTTPHandler, "timeout", 0.5):
+            with socket.create_connection(("127.0.0.1", self.port), timeout=10) as s:
+                s.sendall(b"POST /execute HTTP/1.1\r\nHost: 127.0.0.1\r\n")  # never finishes the headers
+                t0 = time.time()
+                self.assertEqual(s.recv(1024), b"")
+                self.assertLess(time.time() - t0, 8)
+
 
 def _unix_frame(request, token=TOKEN, ts=None, nonce=None):
     body = json.dumps(request)
@@ -593,6 +608,20 @@ class UnixSocketTest(unittest.TestCase):
         self.assertEqual(res["status"], 400)
         self.assertEqual(self._verified(res, frame["nonce"])["code"], "INVALID_SCRIPT_PATH")
         self.assertEqual(self.reg.calls, [])
+
+    def test_unterminated_oversized_frame_is_413(self):
+        with mock.patch.object(ipc, "MAX_LINE_BYTES", 1024):
+            res = self._send_raw(b"x" * 4096)
+        self.assertEqual(res["status"], 413)
+
+    def test_idle_connection_is_closed(self):
+        with mock.patch.object(ipc, "CONNECTION_IDLE_TIMEOUT_S", 0.5):
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                s.settimeout(10)
+                s.connect(self.path)
+                t0 = time.time()
+                self.assertEqual(s.recv(1024), b"")
+                self.assertLess(time.time() - t0, 8)
 
 
 def _free_port():
@@ -707,6 +736,10 @@ class ServiceStartupTest(unittest.TestCase):
 
     def test_refuses_without_token(self):
         self._expect_refusal({}, "METALLIX_IPC_TOKEN")
+
+    def test_refuses_wildcard_even_with_override(self):
+        self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "0.0.0.0",
+                              "METALLIX_IPC_ALLOW_REMOTE": "1"}, "wildcard")
 
     def test_refuses_non_loopback_without_override(self):
         self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "192.0.2.1"},

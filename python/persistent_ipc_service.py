@@ -22,7 +22,8 @@ Security model (both channels, protocol "metallix-ipc-v1"):
    resolved with realpath and required to stay in SCRIPT_DIR.
  - The UNIX socket lives in a fresh 0700 directory (mkdtemp, under XDG_RUNTIME_DIR when set) and
    is created 0600; on POSIX a socket that cannot be created is fatal, not a silent HTTP-only mode.
- - A non-loopback METALLIX_IPC_HOST is refused unless METALLIX_IPC_ALLOW_REMOTE=1.
+ - A non-loopback METALLIX_IPC_HOST is refused unless METALLIX_IPC_ALLOW_REMOTE=1; wildcard
+   addresses (0.0.0.0, ::) are always refused.
 """
 
 import sys
@@ -294,8 +295,19 @@ def is_loopback_host(host: str) -> bool:
         return False
 
 
+def is_wildcard_host(host: str) -> bool:
+    try:
+        return ipaddress.ip_address(host.strip().strip("[]")).is_unspecified
+    except ValueError:
+        return host.strip() == ""
+
+
 def allowed_host_headers(bind_host: str, port: int) -> frozenset:
-    """Host header values accepted by the HTTP service (anything else: DNS rebinding)."""
+    """Host header values accepted by the HTTP service (anything else: DNS rebinding).
+
+    With METALLIX_IPC_ALLOW_REMOTE=1 the bind host is a specific interface address (wildcards are
+    refused at startup), so remote clients must address the service by exactly that host:port.
+    """
     hosts = {f"127.0.0.1:{port}", f"localhost:{port}", f"[::1]:{port}"}
     h = bind_host.strip().lower()
     hosts.add(f"[{h.strip('[]')}]:{port}" if ":" in h.strip("[]") else f"{h}:{port}")
@@ -328,11 +340,15 @@ def check_http_headers(headers: Any, *, allowed_hosts: Iterable[str], require_js
 
 
 def validate_startup_config(host: str, token: Optional[str], allow_remote: bool) -> None:
-    """Refuse to serve without a usable token or on a non-loopback address unless allowed."""
+    """Refuse to serve without a usable token, on a wildcard address, or off loopback unless allowed."""
     if not token or len(token) < MIN_TOKEN_LENGTH:
         raise SystemExit(
             f"[PersistentIPC] Refusing to start: METALLIX_IPC_TOKEN must be set (>= {MIN_TOKEN_LENGTH} "
             "characters). The Node supervisor generates it; set it yourself when launching by hand.")
+    if is_wildcard_host(host):
+        raise SystemExit(
+            f"[PersistentIPC] Refusing to bind wildcard METALLIX_IPC_HOST={host!r}; bind one specific "
+            "interface address (and set METALLIX_IPC_ALLOW_REMOTE=1 if it is not loopback).")
     if not is_loopback_host(host):
         if not allow_remote:
             raise SystemExit(
@@ -678,6 +694,9 @@ registry: Optional[ConcurrentModuleRegistry] = (
     None if (__name__ == "__main__" or _is_pool_worker_process()) else ConcurrentModuleRegistry(SCRIPT_DIR))
 WarmModuleRegistry = ConcurrentModuleRegistry
 
+CONNECTION_IDLE_TIMEOUT_S = 60
+MAX_LINE_BYTES = MAX_BODY_BYTES + 64 * 1024  # a UNIX frame is the JSON-quoted body plus auth fields
+
 
 def create_socket_path(explicit: Optional[str]) -> Tuple[str, Optional[str]]:
     """Returns (socket path, private directory to remove on stop or None).
@@ -781,11 +800,15 @@ class UnixIPCServer:
     def _handle_client(self, conn: socket.socket):
         buffer = b""
         try:
+            conn.settimeout(CONNECTION_IDLE_TIMEOUT_S)
             while self.running:
                 chunk = conn.recv(65536)
                 if not chunk:
                     break
                 buffer += chunk
+                if b"\n" not in buffer and len(buffer) > MAX_LINE_BYTES:
+                    self._send_frame(conn, 413, {"error": "IPC frame too large", "code": "PAYLOAD_TOO_LARGE"}, None)
+                    return
 
                 while b"\n" in buffer:
                     line, buffer = buffer.split(b"\n", 1)
@@ -827,7 +850,7 @@ class UnixIPCServer:
                         if req_id is not None:
                             result["id"] = req_id
                         self._send_frame(conn, 200, result, nonce)
-        except (ConnectionResetError, BrokenPipeError):
+        except (ConnectionResetError, BrokenPipeError, socket.timeout):
             pass
         except Exception as e:
             sys.stderr.write(f"[PersistentIPC] Client connection error: {e}\n")
@@ -865,6 +888,7 @@ class MicroserviceHTTPHandler(http.server.BaseHTTPRequestHandler):
     X-Metallix-Mac (response_mac over nonce, status, body).
     """
 
+    timeout = CONNECTION_IDLE_TIMEOUT_S  # socket timeout: slow or idle clients cannot pin a thread
     _MAX_DRAIN_BYTES = 1 << 20
 
     def log_message(self, format, *args):

@@ -82,9 +82,15 @@ export function isLoopbackHost(host: string): boolean {
   return net.isIPv4(h) && h.split(".")[0] === "127";
 }
 
+function isWildcardHost(host: string): boolean {
+  const h = host.trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return h === "" || h === "0.0.0.0" || h === "::" || h === "0:0:0:0:0:0:0:0";
+}
+
 /**
- * The daemon binds loopback unless METALLIX_IPC_ALLOW_REMOTE=1. A non-loopback
- * METALLIX_IPC_HOST without that override is replaced by 127.0.0.1 (loud warning).
+ * The daemon binds loopback unless METALLIX_IPC_ALLOW_REMOTE=1 names one specific interface
+ * address. A wildcard (0.0.0.0, ::) is never used, and a non-loopback host without the override
+ * is replaced by 127.0.0.1 (loud warning either way).
  */
 export function resolveIpcHost(
   env: Record<string, string | undefined>,
@@ -92,6 +98,10 @@ export function resolveIpcHost(
 ): string {
   const requested = (env.METALLIX_IPC_HOST || "127.0.0.1").trim();
   if (isLoopbackHost(requested)) return requested;
+  if (isWildcardHost(requested)) {
+    warn(`[Python-Supervisor] WARNING: ignoring wildcard METALLIX_IPC_HOST=${requested}; binding 127.0.0.1 (name one interface address instead).`);
+    return "127.0.0.1";
+  }
   if (env.METALLIX_IPC_ALLOW_REMOTE === "1") {
     warn(`[Python-Supervisor] WARNING: IPC daemon bound to NON-LOOPBACK host ${requested} (METALLIX_IPC_ALLOW_REMOTE=1); HMAC-authenticated only.`);
     return requested;
@@ -191,6 +201,8 @@ export class PersistentPythonIPCSupervisor {
 
   constructor() {
     loadPythonEnvironment();
+    // The daemon's token is generated here; an inherited or .env value must not linger.
+    delete process.env.METALLIX_IPC_TOKEN;
     this.configuredSocketPath = process.env.METALLIX_IPC_SOCK || undefined;
     this.configuredPort = parsePort(process.env.METALLIX_IPC_PORT);
     this.httpHost = resolveIpcHost(process.env);
