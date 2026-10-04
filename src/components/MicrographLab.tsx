@@ -758,7 +758,7 @@ ${diagnosisResult || ""}`
                       {zoomLevel.toFixed(1)}x
                     </span>
                   </div>
-                  <input aria-label="Magnification Zoom (x)"
+                  <input aria-label="Magnification Zoom (x magnification)"
                     type="range"
                     min="1.0"
                     max="2.5"
