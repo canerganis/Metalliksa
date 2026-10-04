@@ -214,15 +214,17 @@ test("Hall-Petch: sigma_y = sigma_0 + k_y / sqrt(d) (hand computed) and the grai
 });
 
 // FIXED (2026-10): calculateHallPetch used G = -3.322 log10(d_mm) - 2.95. 3.322 = 1/log10(2) is the coefficient for
-// log10 of an AREA (or area count); d is a length, so the coefficient is 2/log10(2) = 6.643856.
+// log10 of an AREA (or area count); d is a length, so the coefficient is 2/log10(2) = 6.643856, and the constant is
+// now the exact 2.954 derived below. G is clamped to -3..16 like the unit converter's E112 card.
 //
 // First-principles oracle (ASTM E112 definition only, no tables):
 //   N_AE = 2^(G-1) grains per square inch at 100x.  At 1x a field 1 in^2 is 100^2 times larger in area, and
 //   1 in^2 = 25.4^2 = 645.16 mm^2, so N_A = 2^(G-1) * 100^2 / 645.16 grains/mm^2.
-//   Relation relied on: the average grain diameter shown in the calculator ("Average Grain Diameter (d)") is the
-//   planimetric diameter d = sqrt(mean grain area) = 1/sqrt(N_A).  Solving for G:
+//   Relation relied on: the average grain diameter shown in the calculator ("Average Grain Diameter (d, planimetric)")
+//   is the planimetric diameter d = sqrt(mean grain area) = 1/sqrt(N_A).  Solving for G:
 //   G = 1 + log2(645.16e-4) - 2 log2(d_mm) = -6.643856 log10(d_mm) - 2.9542.
-// The code's constant 2.95 is that 2.9542 rounded (|dG| = 0.004); only the coefficient was wrong.
+// The unit converter's E112 card takes the mean lineal INTERCEPT l instead and uses -3.288 (E112 intercept relation);
+// both are right for their own input (l = 2^(-(3.288 - 2.954)/2) d = 0.89 d).
 function e112PlanimetricG(dUm: number): number {
   const dMm = dUm / 1000;
   const NA = 1 / (dMm * dMm); // grains per mm^2 at 1x
@@ -236,10 +238,15 @@ test("Hall-Petch ASTM G equals the E112 planimetric grain size number derived fr
   assert.ok(Math.abs(2 / Math.log10(2) - 6.643856) < 1e-6);
   for (let d = 0.5; d <= 100; d += 0.5) {
     const code = calculateHallPetch(d).astmG;
-    const oracle = e112PlanimetricG(d);
-    // displayed to 0.1; constant 2.95 vs 2.9542 shifts by 0.0042
-    assert.ok(Math.abs(code - oracle) <= 0.05 + 0.0042 + 1e-9, `d=${d} um: code ${code} vs oracle ${oracle}`);
+    const oracle = Math.max(-3, Math.min(16, e112PlanimetricG(d)));
+    // displayed to 0.1 (constant 2.954 vs the derived 2.95420: |dG| < 3e-5)
+    assert.ok(Math.abs(code - oracle) <= 0.05 + 3e-5, `d=${d} um: code ${code} vs oracle ${oracle}`);
   }
+  // clamp: the slider minimum 0.5 um would be G 19.0, shown as 16 (same range as calculateAstmE112FromG)
+  assert.equal(calculateHallPetch(0.5).astmG, 16);
+  assert.equal(calculateHallPetch(1).astmG, 16);
+  assert.equal(calculateHallPetch(1.5).astmG, 15.8);
+  assert.equal(calculateHallPetch(10000).astmG, -3);
   // cross-check against the E112 count definition at G = 8: N_AE = 128 /in^2 at 100x -> N_A = 1984.0 /mm^2,
   // d = 1/sqrt(N_A) = 22.45 um (the "22.4 um" planimetric figure). The 22.1 um value of calculateAstmE112FromG
   // used 2^(G+3) = 2048 /mm^2 (16 instead of 15.5 per in^2-at-100x), and the mean lineal intercept at G 8 is 20.0 um.
@@ -249,26 +256,39 @@ test("Hall-Petch ASTM G equals the E112 planimetric grain size number derived fr
   assert.equal(calculateHallPetch(22.4).astmG, 8);
 });
 
-test("Hall-Petch ASTM G stays within the planimetric/intercept offset (0.334) of the intercept relation", () => {
+test("Hall-Petch ASTM G (planimetric d) sits 0.334 above the intercept relation for the same length", () => {
   for (const d of [10, 22.4, 25, 50, 100]) {
     const code = calculateHallPetch(d).astmG;
     const e112 = astmGrainSizeNumberFromIntercept(d);
-    // same coefficient, constants 2.95 vs 3.288 -> G differs by 0.338 (+ display rounding)
-    assert.ok(Math.abs(code - e112 - 0.338) <= 0.1, `d=${d} um: code G ${code} vs intercept G ${e112}`);
+    // same coefficient, constants 2.954 vs 3.288 -> G differs by 0.334 (+ display rounding)
+    assert.ok(Math.abs(code - e112 - 0.334) <= 0.1, `d=${d} um: code G ${code} vs intercept G ${e112}`);
   }
 });
 
-// HISTORICAL (pre-fix values shown in Pocket Calculators, pinned so reviewers see the delta).
-test("HISTORICAL Hall-Petch ASTM G before the coefficient fix: about half the E112 value", () => {
-  const oldG = (dUm: number) => Number((-3.322 * Math.log10(dUm / 1000) - 2.95).toFixed(1));
-  const rows = [10, 22.4, 25, 50, 100].map((d) => [d, oldG(d), calculateHallPetch(d).astmG]);
+// HISTORICAL (values shown in Pocket Calculators before 2026-10, pinned so reviewers see the delta):
+// "original" = -3.322 log10(d) - 2.95; "coef" = -6.643856 log10(d) - 2.95 (commit 0727d3c); now = exact 2.954 + clamp.
+test("HISTORICAL Hall-Petch ASTM G: original (about half) -> coefficient fix -> exact constant and clamp", () => {
+  const original = (dUm: number) => Number((-3.322 * Math.log10(dUm / 1000) - 2.95).toFixed(1));
+  const coef = (dUm: number) => Number((-6.643856 * Math.log10(dUm / 1000) - 2.95).toFixed(1));
+  const rows = [0.5, 1, 10, 22.4, 24.5, 25, 49, 50, 52.5, 91.5, 98, 100].map((d) => [d, original(d), coef(d), calculateHallPetch(d).astmG]);
   assert.deepEqual(rows, [
-    [10, 3.7, 10.3],
-    [22.4, 2.5, 8],
-    [25, 2.4, 7.7],
-    [50, 1.4, 5.7],
-    [100, 0.4, 3.7],
+    [0.5, 8, 19, 16],
+    [1, 7, 17, 16],
+    [10, 3.7, 10.3, 10.3],
+    [22.4, 2.5, 8, 8],
+    [24.5, 2.4, 7.8, 7.7],
+    [25, 2.4, 7.7, 7.7],
+    [49, 1.4, 5.8, 5.7],
+    [50, 1.4, 5.7, 5.7],
+    [52.5, 1.3, 5.6, 5.5],
+    [91.5, 0.5, 4, 3.9],
+    [98, 0.4, 3.8, 3.7],
+    [100, 0.4, 3.7, 3.7],
   ]);
+  // over the whole slider (0.5..100 um, step 0.5) the 2.95 -> 2.954 + clamp step changes exactly these 7 values
+  const changed: number[] = [];
+  for (let i = 1; i <= 200; i++) if (coef(i / 2) !== calculateHallPetch(i / 2).astmG) changed.push(i / 2);
+  assert.deepEqual(changed, [0.5, 1, 24.5, 49, 52.5, 91.5, 98]);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
