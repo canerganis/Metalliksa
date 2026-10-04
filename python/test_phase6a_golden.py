@@ -216,7 +216,8 @@ class StepBGoldenTest(unittest.TestCase):
             solver, case = path.parent.parent.name, path.stem
             with self.subTest(file=f"{solver}/{case}"):
                 doc = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"]), [])
+                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"],
+                                                          golden.CASES[solver][case]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -276,6 +277,34 @@ class StepBGoldenTest(unittest.TestCase):
                                                  steel(18.0, rng)))
         big = {"key": "x", "kind": "numeric", "old": 1.0, "new": 1.02, "abs": 0.02, "rel": 0.02}
         self.assertTrue(golden.step_b_violations(solver, [big], steel(42.0, conv)))
+
+    def test_documented_uq_sampler_change_is_checked_against_the_scipy_oracle(self):
+        # EXPECTED_DOCUMENTED_VALUE_CHANGES: stochastic UQ norm_ppf sign fix. The drift rows are
+        # not bounded; the whole new document must equal the solver run with scipy's ndtri.
+        import copy
+        solver, case = "stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni"
+        payload = golden.CASES[solver][case]
+        oracle = golden._uq_scipy_oracle_stdout(payload)
+        base = golden.load_golden(solver, case)["stdout"]
+        rows = drift_report.diff(base, oracle)
+        self.assertTrue(rows)
+        self.assertEqual(golden.step_b_violations(solver, rows, oracle, payload), [])
+        # not the oracle: a perturbed document, the pre-fix (sigma 0.776) document itself
+        perturbed = copy.deepcopy(oracle)
+        perturbed["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"] += 0.01
+        self.assertTrue(golden.step_b_violations(solver, rows, perturbed, payload))
+        self.assertTrue(golden.step_b_violations(solver, rows, base, payload))
+        # no document or no payload cannot be verified
+        self.assertTrue(golden.step_b_violations(solver, rows, oracle))
+        self.assertTrue(golden.step_b_violations(solver, rows, None, payload))
+        # rows outside the listed patterns keep the numeric bound, and structural rows are refused
+        other = {"key": "samplingMetadata.centeredL2Discrepancy", "kind": "numeric", "old": 1.0, "new": 1.5,
+                 "abs": 0.5, "rel": 0.5}
+        self.assertTrue(golden.step_b_violations(solver, [other], oracle, payload))
+        added = {"key": "stochasticProperties.yieldStrength_Rp02.newKey", "kind": "added", "old": None, "new": 1.0}
+        self.assertTrue(golden.step_b_violations(solver, [added], oracle, payload))
+        # the exception does not leak to another solver
+        self.assertTrue(golden.step_b_violations("kinetics_ttt_cct_solver", rows[:1], oracle, payload))
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).
