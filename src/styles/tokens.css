@@ -1,42 +1,54 @@
 /*
- * Metalliksa design tokens (Phase 9, package A).
+ * Metalliksa design tokens: Porcelain identity (light, white titanium and graphite).
  *
- * Dark mission-control identity. The base palette (--mk-bg, --mk-surface,
- * --mk-surface-raised, --mk-border, --mk-border-bright, --mk-ice, --mk-plasma,
- * --mk-amber, --mk-text, --mk-muted) stays in src/index.css :root; this file
- * only adds tokens. Contrast is enforced by tests/design-tokens-contrast.test.ts.
+ * The base palette (--mk-bg, --mk-surface, --mk-surface-raised, --mk-border, --mk-border-bright,
+ * --mk-ice, --mk-plasma, --mk-amber, --mk-text, --mk-muted) stays in src/index.css :root; this file
+ * adds the ramps. Contrast is enforced by tests/design-tokens-contrast.test.ts.
  *
- * Rules: no external URLs (air-gap), fonts are self-hosted via @fontsource in
- * src/main.tsx, glow is for active/focus only, the focus ring never animates,
- * and evidence labels (unavailable / inconclusive / unvalidated) are never
- * de-emphasized by opacity, blur or reduced contrast.
+ * Rules: no external URLs (air-gap), fonts are self-hosted via @fontsource in src/main.tsx, the
+ * laser colour is ornament only (never a status), the focus ring never animates, and evidence labels
+ * (unavailable / inconclusive / unvalidated) are never de-emphasized by opacity, blur or reduced contrast.
  */
 @layer base {
   :root {
-    /* Text ramp. Values mirror the existing slate overrides in index.css. */
-    --mk-text-strong: #f0f7fb;
-    --mk-text-soft: #e2edf5;
-    --mk-text-subtle: #c3d0dc;
-    --mk-text-dim: #a8b7c7;
-    --mk-text-faint: #94a3b8;
-    --mk-text-cyan-soft: rgba(207, 250, 254, 0.8);
-    --mk-text-cyan-faint: rgba(207, 250, 254, 0.74);
+    /* Text ramp (graphite). Every step reaches 4.5:1 on every surface token. */
+    --mk-text-strong: #0e1116;
+    --mk-text-soft: #1f242c;
+    --mk-text-subtle: #353c46;
+    --mk-text-dim: #474e59;
+    --mk-text-faint: #545b66;
+    --mk-text-cyan-soft: #0b5770;
+    --mk-text-cyan-faint: #155e74;
 
-    /* Lines and fills. Mirror existing overrides; decorative separators. */
-    --mk-line-subtle: rgba(125, 211, 252, 0.24);
-    --mk-line-neutral: rgba(148, 163, 184, 0.38);
-    --mk-line-divider: rgba(125, 211, 252, 0.22);
-    --mk-fill-panel: rgba(15, 23, 42, 0.72);
-    --mk-fill-deep: rgba(2, 6, 14, 0.9);
+    /* Lines and fills: graphite hairlines on porcelain. Decorative separators. */
+    --mk-line-subtle: rgba(17, 22, 31, 0.11);
+    --mk-line-neutral: rgba(17, 22, 31, 0.17);
+    --mk-line-divider: rgba(17, 22, 31, 0.08);
+    --mk-fill-panel: rgba(255, 255, 255, 0.7);
+    --mk-fill-deep: rgba(233, 236, 240, 0.88);
+
+    /* Light surfaces the dark-era literal classes are mapped onto (src/styles/theme-porcelain.css). */
+    --mk-paper: #ffffff;
+    --mk-paper-2: #f7f8fa;
+    --mk-well: #f1f3f6;
+    --mk-hover: #ebeef2;
+    --mk-hover-2: #e2e6eb;
+    --mk-hair: #e2e5ea;
+    --mk-hair-2: #d0d5dc;
+    --mk-chart-axis: #8a919c;
+
+    /* Ornament only: the incandescent laser line (logo, filament, active spot). Never text, never status. */
+    --mk-laser: #ff5b1f;
+    --mk-laser-soft: #ffb27a;
 
     /* Component boundary that must stay >= 3:1 (inputs, toggles, badges). */
-    --mk-border-strong: #4f87a8;
+    --mk-border-strong: #78808b;
 
     /* Status signals. Used as text, so they meet 4.5:1 on every surface. */
-    --mk-signal-ok: #6ee7b7;
-    --mk-signal-warn: #f5b84b;
-    --mk-signal-fail: #fb7185;
-    --mk-evidence-unvalidated: #f0abfc;
+    --mk-signal-ok: #0a6b4b;
+    --mk-signal-warn: #8a4600;
+    --mk-signal-fail: #b4232f;
+    --mk-evidence-unvalidated: #8b1d9c;
 
     /* Typography */
     --mk-font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
@@ -61,18 +73,18 @@
     --mk-space-7: 48px;
 
     /* Glass: shell chrome only, never behind charts or data marks. */
-    --mk-glass-bg: rgba(6, 17, 28, 0.72);
-    --mk-glass-blur: 12px;
+    --mk-glass-bg: rgba(250, 251, 252, 0.76);
+    --mk-glass-blur: 18px;
 
     /* Glow: active and focus states only. */
-    --mk-glow-sm: 0 0 10px rgba(34, 211, 238, 0.52);
-    --mk-glow-md: 0 0 18px rgba(34, 211, 238, 0.38);
+    --mk-glow-sm: 0 0 0 1px rgba(35, 70, 176, 0.12), 0 4px 14px rgba(35, 70, 176, 0.14);
+    --mk-glow-md: 0 0 0 1px rgba(35, 70, 176, 0.1), 0 10px 28px rgba(35, 70, 176, 0.16);
 
-    /* Elevation: border + shadow, no stacked blur. */
+    /* Elevation: hairline + soft porcelain shadow, no stacked blur. */
     --mk-elev-0: none;
-    --mk-elev-1: 0 0 0 1px rgba(34, 211, 238, 0.06), 0 8px 24px rgba(0, 0, 0, 0.32);
-    --mk-elev-2: 0 0 0 1px rgba(125, 211, 252, 0.14), 0 14px 40px rgba(0, 0, 0, 0.4);
-    --mk-elev-3: 0 0 0 1px rgba(125, 211, 252, 0.2), 0 22px 70px rgba(0, 0, 0, 0.5);
+    --mk-elev-1: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 28px -16px rgba(16, 24, 40, 0.2);
+    --mk-elev-2: 0 1px 2px rgba(16, 24, 40, 0.06), 0 20px 44px -18px rgba(16, 24, 40, 0.26);
+    --mk-elev-3: 0 2px 6px rgba(16, 24, 40, 0.06), 0 36px 90px -28px rgba(16, 24, 40, 0.38);
 
     /* Motion */
     --mk-dur-fast: 120ms;
@@ -82,9 +94,9 @@
     --mk-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
 
     /* Focus ring: static, never transitioned or animated. */
-    --mk-focus-color: #67e8f9;
+    --mk-focus-color: #2346b0;
     --mk-focus-width: 2px;
     --mk-focus-offset: 3px;
-    --mk-focus-halo: 0 0 0 4px rgba(103, 232, 249, 0.25);
+    --mk-focus-halo: 0 0 0 4px rgba(35, 70, 176, 0.2);
   }
 }

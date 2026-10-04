@@ -126,21 +126,22 @@ test("UI boundary and focus tokens reach 3:1 on every background token", () => {
   assert.deepEqual(failures, []);
 });
 
-// Before/after proof for the slate overrides in src/index.css: each token must keep the
-// literal the override used before tokenization, so the computed colors are unchanged.
+// Pinned values for the slate overrides in src/index.css: each override must use its token, and the
+// token must hold the reviewed literal, so a palette drift is a visible test change. Values are the
+// porcelain (light) identity; the dark-era literals were replaced deliberately by the UI redesign.
 const OVERRIDE_LITERALS: Record<string, [string, string]> = {
-  ".text-slate-600": ["--mk-text-faint", "#94a3b8"],
-  ".text-slate-500": ["--mk-text-dim", "#a8b7c7"],
-  ".text-slate-400": ["--mk-text-subtle", "#c3d0dc"],
-  ".text-slate-300": ["--mk-text-soft", "#e2edf5"],
-  ".text-slate-200": ["--mk-text-strong", "#f0f7fb"],
-  ".text-cyan-200\\/55": ["--mk-text-cyan-soft", "rgba(207, 250, 254, 0.8)"],
-  ".text-cyan-200\\/45": ["--mk-text-cyan-faint", "rgba(207, 250, 254, 0.74)"],
-  ".border-slate-800": ["--mk-line-subtle", "rgba(125, 211, 252, 0.24)"],
-  ".border-slate-700": ["--mk-line-neutral", "rgba(148, 163, 184, 0.38)"],
-  ".bg-slate-900\\/40": ["--mk-fill-panel", "rgba(15, 23, 42, 0.72)"],
-  ".bg-slate-950\\/80": ["--mk-fill-deep", "rgba(2, 6, 14, 0.9)"],
-  ".divide-slate-800": ["--mk-line-divider", "rgba(125, 211, 252, 0.22)"],
+  ".text-slate-600": ["--mk-text-faint", "#545b66"],
+  ".text-slate-500": ["--mk-text-dim", "#474e59"],
+  ".text-slate-400": ["--mk-text-subtle", "#353c46"],
+  ".text-slate-300": ["--mk-text-soft", "#1f242c"],
+  ".text-slate-200": ["--mk-text-strong", "#0e1116"],
+  ".text-cyan-200\\/55": ["--mk-text-cyan-soft", "#0b5770"],
+  ".text-cyan-200\\/45": ["--mk-text-cyan-faint", "#155e74"],
+  ".border-slate-800": ["--mk-line-subtle", "rgba(17, 22, 31, 0.11)"],
+  ".border-slate-700": ["--mk-line-neutral", "rgba(17, 22, 31, 0.17)"],
+  ".bg-slate-900\\/40": ["--mk-fill-panel", "rgba(255, 255, 255, 0.7)"],
+  ".bg-slate-950\\/80": ["--mk-fill-deep", "rgba(233, 236, 240, 0.88)"],
+  ".divide-slate-800": ["--mk-line-divider", "rgba(17, 22, 31, 0.08)"],
 };
 
 test("tokenized slate overrides keep their previous computed colors", () => {
