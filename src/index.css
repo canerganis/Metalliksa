@@ -153,6 +153,26 @@
   }
 }
 
+/* Skip link: first Tab stop, off-screen until focused. Colors are contrast-tested tokens. */
+.mk-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 1rem;
+  z-index: 60;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--mk-focus-color);
+  border-radius: 0.5rem;
+  background: var(--mk-surface-raised);
+  color: var(--mk-ice);
+  font-size: 0.875rem;
+  transform: translateY(-200%);
+}
+.mk-skip-link:focus { transform: none; }
+/* Skip target: focus lands on <main> without a ring around the whole page. The scroll margin keeps
+ * the top of <main> clear of the sticky header when focus() scrolls it into view (browser-checked). */
+#main-content { scroll-margin-top: 6rem; }
+#main-content:focus { outline: none; }
+
 .mk-header {
   background:
     linear-gradient(90deg, rgba(34, 211, 238, 0.1), rgba(3, 10, 20, 0.94) 32%, rgba(245, 184, 75, 0.07)),

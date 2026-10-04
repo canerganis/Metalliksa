@@ -1,0 +1,86 @@
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { test } from "node:test";
+import { rovingIndex } from "../src/utils/rovingFocus";
+
+// D7 (Phase 2 record): skip link, one main landmark, one banner header, the module navigation as a
+// single Tab stop, and the shell CSS that lets the sticky header and fixed dialogs work.
+const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), "utf8").replace(/\r/g, "");
+const app = read("src/App.tsx");
+const css = read("src/index.css");
+
+function listTsx(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name);
+    return statSync(full).isDirectory() ? listTsx(full) : name.endsWith(".tsx") ? [full] : [];
+  });
+}
+const sources = listTsx(resolve(process.cwd(), "src")).map((full) => ({ rel: relative(process.cwd(), full).replace(/\\/g, "/"), text: readFileSync(full, "utf8") }));
+
+test("the skip link is the first focusable element after the boot overlay and targets the one <main>", () => {
+  const returned = app.slice(app.indexOf("  return <>"));
+  // Only the boot overlay (a focus-trapping dialog that is removed once closed) precedes it; nothing focusable sits between.
+  assert.match(returned, /^ {2}return <><SilentBoundary><Suspense fallback=\{<div className="mk-boot-cover" aria-hidden="true" \/>\}><BootSequence \/><\/Suspense><\/SilentBoundary><a href="#main-content" className="mk-skip-link" onClick=\{skipToMain\}>Skip to main content<\/a><div className="mk-shell /);
+  assert.match(app, /<main id="main-content" tabIndex=\{-1\}/);
+  // Hash routing owns location.hash: the handler must not follow the fragment, it focuses <main> itself.
+  const handler = app.slice(app.indexOf("function skipToMain"), app.indexOf("function skipToMain") + 220);
+  assert.match(handler, /event\.preventDefault\(\);/);
+  assert.match(handler, /document\.getElementById\('main-content'\)\?\.focus\(\)/);
+});
+
+test("exactly one <main> landmark and one banner <header> in the source tree", () => {
+  const mains = sources.flatMap(({ rel, text }) => [...text.matchAll(/<main\b/g)].map(() => rel));
+  assert.deepEqual(mains, ["src/App.tsx"], `module views must not declare their own <main>: ${mains.join(", ")}`);
+  for (const { rel, text } of sources) {
+    assert.doesNotMatch(text, /role=["'](main|banner)["']/, `${rel} declares a main/banner role`);
+  }
+  // The app header is the only <header> outside <main>; module headers render inside <main>, where they are not banners.
+  assert.equal((app.match(/<header\b/g) ?? []).length, 1);
+  assert.ok(app.indexOf("<header") < app.indexOf("<main"), "the banner header sits before (outside) <main>");
+  assert.match(app, /<header className="mk-header sticky top-0 z-40 /);
+});
+
+test("module navigation is one Tab stop with arrow keys; aria-current stays on the active module", () => {
+  assert.match(app, /<nav aria-label="Engineering workspaces" onKeyDown=\{onNavKey\}>/);
+  assert.match(app, /<p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules\.<\/p>/);
+  assert.match(app, /tabIndex: key === navStop \? 0 : -1/);
+  assert.match(app, /<button \{\.\.\.navItem\('ws:' \+ workspace\.id\)\}/, "workspace headings join the roving group");
+  assert.match(app, /<button key=\{module\.id\} \{\.\.\.navItem\(module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
+  // The Tab stop falls back to the active module, then to the first visible one, so a filter never hides the whole nav.
+  assert.match(app, /const navStop = \[navFocus, activeTab\]\.find\(shown\) \?\? filtered\[0\]\?\.id;/);
+});
+
+test("rovingIndex: Up/Down wrap, Home/End jump, other keys are ignored", () => {
+  assert.equal(rovingIndex(5, 0, "ArrowDown"), 1);
+  assert.equal(rovingIndex(5, 4, "ArrowDown"), 0);
+  assert.equal(rovingIndex(5, -1, "ArrowDown"), 0);
+  assert.equal(rovingIndex(5, 0, "ArrowUp"), 4);
+  assert.equal(rovingIndex(5, 3, "ArrowUp"), 2);
+  assert.equal(rovingIndex(5, -1, "ArrowUp"), 4);
+  assert.equal(rovingIndex(5, 2, "Home"), 0);
+  assert.equal(rovingIndex(5, 2, "End"), 4);
+  assert.equal(rovingIndex(5, 2, "Tab"), null);
+  assert.equal(rovingIndex(5, 2, "Enter"), null);
+  assert.equal(rovingIndex(0, -1, "ArrowDown"), null);
+});
+
+test("shell rule is layered and sets no z-index, so sticky header and fixed dialogs keep their utilities", () => {
+  const layered = /@layer components \{\s*\.mk-shell > \*:not\(\.mk-grid-overlay\):not\(\.mk-scanline\) \{\s*position: relative;\s*\}\s*\}/;
+  assert.match(css, layered);
+  // No unlayered copy of the rule that would beat Tailwind's `sticky`/`fixed` again.
+  const unlayered = css.replace(layered, "");
+  assert.doesNotMatch(unlayered, /\.mk-shell > \*:not\(\.mk-grid-overlay\)/);
+  // The telemetry strip keeps its own z-index 0 (in-flow footer below module dialogs).
+  assert.match(read("src/styles/boot.css"), /\.mk-shell > \.mk-telemetry:not\(\.mk-grid-overlay\):not\(\.mk-scanline\) \{ z-index: 0; \}/);
+});
+
+test("skip link is visible on focus and uses contrast-tested tokens only", () => {
+  const rule = css.match(/\.mk-skip-link \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(rule, /color: var\(--mk-ice\);/);
+  assert.match(rule, /background: var\(--mk-surface-raised\);/);
+  assert.match(rule, /border: 1px solid var\(--mk-focus-color\);/);
+  assert.match(rule, /position: fixed;/);
+  assert.doesNotMatch(rule, /#[0-9a-f]{3,6}\b|rgba?\(|transition/i, "token colors only, never animated");
+  assert.match(css, /\.mk-skip-link:focus \{ transform: none; \}/);
+});

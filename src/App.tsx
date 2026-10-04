@@ -10,6 +10,7 @@ import { startMaterialContextBridge, useMaterialContextBridgeStore } from './ser
 import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore';
 import { ScientificContextPanel } from './components/ScientificContextPanel';
 import { SilentBoundary } from './components/SilentBoundary';
+import { rovingIndex } from './utils/rovingFocus';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
@@ -86,6 +87,24 @@ export default function App() {
   const activeModule = MODULES.find(m => m.id === activeTab)!;
   const activeWorkspace = WORKSPACES.find(w => w.id === activeModule.workspace)!;
   const filtered = MODULES.filter(m => `${m.label} ${m.description} ${m.workspace}`.toLowerCase().includes(moduleSearch.toLowerCase()));
+  // The module navigation is one Tab stop (roving tabindex): the last focused entry, else the active module, else the first.
+  const [navFocus, setNavFocus] = useState('');
+  const shown = (key: string) => filtered.some(m => m.id === key || 'ws:' + m.workspace === key);
+  const navStop = [navFocus, activeTab].find(shown) ?? filtered[0]?.id;
+  const navItem = (key: string) => ({ tabIndex: key === navStop ? 0 : -1, onFocus: () => setNavFocus(key), 'aria-describedby': 'module-nav-hint' });
+  function onNavKey(event: React.KeyboardEvent<HTMLElement>) {
+    // Every button in the navigation is a navigation entry (workspace headings and modules).
+    const items = Array.from(event.currentTarget.querySelectorAll('button'));
+    const next = rovingIndex(items.length, items.indexOf(document.activeElement as HTMLButtonElement), event.key);
+    if (next === null) return;
+    event.preventDefault();
+    items[next].focus();
+  }
+  // Hash routing owns location.hash, so the skip link moves focus itself instead of following "#main-content".
+  function skipToMain(event: React.MouseEvent) {
+    event.preventDefault();
+    document.getElementById('main-content')?.focus();
+  }
 
   function activate(id: ModuleId) {
     setActiveTab(id);
@@ -162,7 +181,9 @@ export default function App() {
     }
   }
 
-  return <><SilentBoundary><Suspense fallback={<div className="mk-boot-cover" aria-hidden="true" />}><BootSequence /></Suspense></SilentBoundary><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
+  // The skip link follows the boot overlay in the DOM: when the overlay closes, the browser's Tab starting point is
+  // where the overlay was, so the next Tab lands on the skip link (it is the first focusable element left on the page).
+  return <><SilentBoundary><Suspense fallback={<div className="mk-boot-cover" aria-hidden="true" />}><BootSequence /></Suspense></SilentBoundary><a href="#main-content" className="mk-skip-link" onClick={skipToMain}>Skip to main content</a><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
     <div className="mk-grid-overlay" aria-hidden="true" />
     <div className="mk-scanline" aria-hidden="true" />
     <AirgapBanner />
@@ -175,17 +196,18 @@ export default function App() {
     <div className="flex flex-col lg:flex-row">
       <aside className={`${navigationOpen ? 'block' : 'hidden'} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[77px] lg:h-[calc(100vh-77px)] overflow-y-auto`}>
         <div className="mb-5 flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-[0.18em] text-cyan-100/75">Navigation</p><p className="mt-1 text-xs text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(MODULES.length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-cyan-50/85">Find a module</label><div className="relative mb-5"><Search className="absolute left-3 top-3 w-4 h-4 text-cyan-200/80"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm focus:ring-2 focus:ring-cyan-400/40"/></div>
-        <nav aria-label="Engineering workspaces">
+        <nav aria-label="Engineering workspaces" onKeyDown={onNavKey}>
+          <p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules.</p>
           {WORKSPACES.map(workspace => {
             const Icon = workspace.id === 'lpbf' ? Flame : workspace.id === 'materials' ? Layers : workspace.id === 'orchestration' ? Network : BookOpen;
             const modules = filtered.filter(m => m.workspace === workspace.id);
             if (!modules.length) return null;
-            return <div key={workspace.id} className="mb-5"><button onClick={() => navigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace.id ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{modules.map(module => <button key={module.id} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => navigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
+            return <div key={workspace.id} className="mb-5"><button {...navItem('ws:' + workspace.id)} onClick={() => navigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace.id ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{modules.map(module => <button key={module.id} {...navItem(module.id)} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => navigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
           })}
           {!filtered.length && <p role="status" className="text-sm text-slate-400">No matching modules. Try a material, method or workflow name.</p>}
         </nav>
       </aside>
-      <main className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
+      <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
         <div className="mk-content-header mb-5 border-b pb-5 pl-4"><p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-cyan-200">{activeWorkspace.label} / Active surface</p><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-semibold text-white">{activeModule.label}</h2><span title="Module maturity; this is not a validation claim for any result." className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span></div><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-200">{activeModule.description}</p></div>
         <details className="mb-5 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 text-xs">
           <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {specimen.lpbf.laserPower_W} W / {specimen.lpbf.scanSpeed_mms} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
