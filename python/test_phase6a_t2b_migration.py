@@ -76,9 +76,29 @@ class KineticsTest(unittest.TestCase):
 
     ARGS = ((), (0.3, 40.0, 900.0, 4.0, 650.0), (2000.0,))
 
+    def _split_documented_hv(self, new, old):
+        """Remove the documented HV change (EXPECTED_DOCUMENTED_VALUE_CHANGES) after checking it.
+
+        predictedHardness_HV moved from round(10.5 * HRC + 40) to ASTM E140 Table 1 for the
+        steels (null outside HRC 20-68) and to null for the other alloy classes; the new
+        predictedHardness_HV_status key follows it. Everything else is compared unchanged.
+        """
+        import hardness_conversion_e140 as e140
+        steel = "Steel" in new["alloyMetadata"]["type"]
+        self.assertEqual(len(new["cctContinuousCoolingMap"]), len(old["cctContinuousCoolingMap"]))
+        for n, o in zip(new["cctContinuousCoolingMap"], old["cctContinuousCoolingMap"]):
+            hrc = n["predictedHardness_HRC"]
+            self.assertEqual(o["predictedHardness_HV"], round(hrc * 10.5 + 40.0, 0))
+            expected = (e140.hrc_to_hv_non_austenitic_steel(hrc) if steel
+                        else (None, e140.STATUS_UNAVAILABLE_ALLOY_CLASS))
+            self.assertEqual((n.pop("predictedHardness_HV"), n.pop("predictedHardness_HV_status")), expected)
+            o.pop("predictedHardness_HV")
+        return new, old
+
     def test_every_alloy_equals_the_base_blob_with_the_legacy_r_including_key_order(self):
         # Design step (b) changed only R (8.314 -> exact). With R_GAS put back to 8.314
-        # the migrated solver must still reproduce the base blob bit for bit.
+        # the migrated solver must still reproduce the base blob bit for bit, apart from
+        # the documented HV change (checked exactly in _split_documented_hv).
         with mock.patch.object(kin, "R_GAS", 8.314):
             for name in self.LEGACY:
                 for extra in self.ARGS:
@@ -86,6 +106,7 @@ class KineticsTest(unittest.TestCase):
                     with self.subTest(args=args):
                         new = _strip(kin.solve_phase_transformation_kinetics(*args))
                         old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
+                        new, old = self._split_documented_hv(new, old)
                         self.assertEqual(json.dumps(new), json.dumps(old))
 
     def test_exact_r_drift_is_numeric_and_bounded(self):
@@ -97,6 +118,7 @@ class KineticsTest(unittest.TestCase):
                 with self.subTest(args=args):
                     new = _strip(kin.solve_phase_transformation_kinetics(*args))
                     old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
+                    new, old = self._split_documented_hv(new, old)
                     rows = drift_report.diff(old, new)
                     self.assertTrue(all(r["kind"] == "numeric" for r in rows), drift_report.render(name, rows, 10))
                     # Last printed digit of rounded Arrhenius outputs (largest seen: 6.7e-3,

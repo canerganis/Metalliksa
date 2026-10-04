@@ -12,6 +12,7 @@ import time
 
 import alloy_data_kinetics_uq_fatigue as _kinetics_data
 import alloy_registry
+import hardness_conversion_e140
 import input_validation
 import physical_constants
 
@@ -23,6 +24,19 @@ import physical_constants
 # Phase 6a value step (b): exact SI 2019 R = N_A*k (was the 4-significant-figure 8.314).
 R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
+
+# predictedHardness_HV: ASTM E140 Table 1 HRC -> HV (hardness_conversion_e140), which applies
+# to non-austenitic steels only. Of the six kinetics alloys these are the three steels
+# (AISI 4140, AISI 4340, AISI D2); Inconel 718, Ti-6Al-4V and Al 7075 get HV None with
+# STATUS_UNAVAILABLE_ALLOY_CLASS. It replaced the unsourced HV = 10.5 * HRC + 40.
+E140_NON_AUSTENITIC_STEEL_IDS = frozenset({"aisi4140", "aisi4340", "aisid2"})
+
+
+def predicted_hardness_hv(hrc, registry_id):
+    """(HV or None, status) for the solver's predicted HRC; see hardness_conversion_e140."""
+    if registry_id not in E140_NON_AUSTENITIC_STEEL_IDS:
+        return None, hardness_conversion_e140.STATUS_UNAVAILABLE_ALLOY_CLASS
+    return hardness_conversion_e140.hrc_to_hv_non_austenitic_steel(hrc)
 
 
 def resolve_kinetics_alloy(alloy_name):
@@ -56,6 +70,11 @@ def provenance(registry_id):
                          "4-significant-figure R = 8.314.",
     }
     out.update(_kinetics_data.provenance())
+    out["hardnessConversion"] = dict(
+        hardness_conversion_e140.provenance(),
+        appliesToRegistryIds=sorted(E140_NON_AUSTENITIC_STEEL_IDS),
+        appliedToThisAlloy=registry_id in E140_NON_AUSTENITIC_STEEL_IDS,
+    )
     return out
 
 def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_type="Pearlite"):
@@ -140,7 +159,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
     """
     start_time = time.perf_counter()
     
-    _registry_id, legacy_name, alloy = resolve_kinetics_alloy(alloy_name)
+    registry_id, legacy_name, alloy = resolve_kinetics_alloy(alloy_name)
     
     ae3 = alloy["Ae3_C"]
     ae1 = alloy["Ae1_C"]
@@ -236,6 +255,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
             pct_austenite = 1.5
             hard_hrc = 18.0
 
+        hard_hv, hard_hv_status = predicted_hardness_hv(hard_hrc, registry_id)
         cct_transformation_map.append({
             "coolingRate_C_s": cr,
             "transformedStartTemp_C": round(trans_start_temp, 1) if trans_start_temp else ms,
@@ -248,7 +268,9 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
                 "RetainedAustenite_pct": pct_austenite
             },
             "predictedHardness_HRC": round(hard_hrc, 1),
-            "predictedHardness_HV": round(hard_hrc * 10.5 + 40.0, 0)
+            # ASTM E140 Table 1 estimate (non-austenitic steels, HRC 20-68), else None.
+            "predictedHardness_HV": hard_hv,
+            "predictedHardness_HV_status": hard_hv_status,
         })
 
     # 3. CURRENT EVALUATION AT USER-SELECTED COOLING RATE

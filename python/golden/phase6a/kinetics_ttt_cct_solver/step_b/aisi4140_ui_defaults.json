@@ -2,6 +2,142 @@
  "case": "aisi4140_ui_defaults",
  "driftVsBase": [
   {
+   "key": "cctContinuousCoolingMap[0].predictedHardness_HV",
+   "kind": "changed",
+   "new": null,
+   "old": 229.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "unavailable-outside-e140-table1-hrc-20-68",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].predictedHardness_HV",
+   "kind": "changed",
+   "new": null,
+   "old": 229.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "unavailable-outside-e140-table1-hrc-20-68",
+   "old": null
+  },
+  {
+   "abs": -48.0,
+   "key": "cctContinuousCoolingMap[2].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 286.0,
+   "old": 334.0,
+   "rel": -0.1437125748502994
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": -48.0,
+   "key": "cctContinuousCoolingMap[3].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 286.0,
+   "old": 334.0,
+   "rel": -0.1437125748502994
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": -69.0,
+   "key": "cctContinuousCoolingMap[4].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 412.0,
+   "old": 481.0,
+   "rel": -0.14345114345114346
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": -69.0,
+   "key": "cctContinuousCoolingMap[5].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 412.0,
+   "old": 481.0,
+   "rel": -0.14345114345114346
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": -30.0,
+   "key": "cctContinuousCoolingMap[6].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 577.0,
+   "old": 607.0,
+   "rel": -0.04942339373970346
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": 4.0,
+   "key": "cctContinuousCoolingMap[7].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 653.0,
+   "old": 649.0,
+   "rel": 0.0061633281972265025
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": 4.0,
+   "key": "cctContinuousCoolingMap[8].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 653.0,
+   "old": 649.0,
+   "rel": 0.0061633281972265025
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "abs": 4.0,
+   "key": "cctContinuousCoolingMap[9].predictedHardness_HV",
+   "kind": "numeric",
+   "new": 653.0,
+   "old": 649.0,
+   "rel": 0.0061633281972265025
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].predictedHardness_HV_status",
+   "kind": "added",
+   "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
    "abs": -0.00029999999999996696,
    "key": "tttIsothermalCurves[0].t50_s",
    "kind": "numeric",
@@ -51,7 +187,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "5391bdd54af980305545d5b93c5381030cc8adf1",
+ "gitHead": "f1df352062f10cd2c4ae1673ce9a3333f51e9af6",
  "input": {
   "agingTemp_C": 720.0,
   "agingTime_h": 8.0,
@@ -69,6 +205,22 @@
    "domainDataBaseRevision": "7f3f803",
    "domainDataVersion": "alloy-data-kinetics-uq-fatigue-1",
    "gasConstantR_J_molK": 8.31446261815324,
+   "hardnessConversion": {
+    "appliedToThisAlloy": true,
+    "appliesToRegistryIds": [
+     "aisi4140",
+     "aisi4340",
+     "aisid2"
+    ],
+    "method": "linear interpolation between tabulated HRC rows; HV rounded half up to an integer",
+    "note": "Approximate table conversion, not a measurement and not a substitute for direct testing.",
+    "scope": "non-austenitic steels only; other alloy classes are unavailable",
+    "table": "ASTM E140 Table 1 (Rockwell C range, non-austenitic steels)",
+    "validRange_HRC": [
+     20.0,
+     68.0
+    ]
+   },
    "registryAlloyId": "aisi4140",
    "registryVersion": "alloy-registry-2"
   }
@@ -76,7 +228,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "d9a5e9abed377e9d26cdcae1707b16e30630822f1e745e95597f378e538dcc0c",
+ "solverSha256": "4a999e944d10fad53484aa85fc7b1bdcddde20e410a78b4277c3ab1eebcc00d3",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -132,7 +284,8 @@
      "RetainedAustenite_pct": 1.5
     },
     "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": 229.0,
+    "predictedHardness_HV": null,
+    "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 775.0,
     "transformedStartTime_s": 1700.05
@@ -146,7 +299,8 @@
      "RetainedAustenite_pct": 1.5
     },
     "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": 229.0,
+    "predictedHardness_HV": null,
+    "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 775.0,
     "transformedStartTime_s": 425.0
@@ -160,7 +314,8 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": 334.0,
+    "predictedHardness_HV": 286.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 775.0,
     "transformedStartTime_s": 85.05
@@ -174,7 +329,8 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": 334.0,
+    "predictedHardness_HV": 286.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 775.0,
     "transformedStartTime_s": 17.0
@@ -188,7 +344,8 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": 481.0,
+    "predictedHardness_HV": 412.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 774.5,
     "transformedStartTime_s": 8.55
@@ -202,7 +359,8 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": 481.0,
+    "predictedHardness_HV": 412.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 773.8,
     "transformedStartTime_s": 3.45
@@ -216,7 +374,8 @@
      "RetainedAustenite_pct": 1.0
     },
     "predictedHardness_HRC": 54.0,
-    "predictedHardness_HV": 607.0,
+    "predictedHardness_HV": 577.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 772.5,
     "transformedStartTime_s": 1.75
@@ -230,7 +389,8 @@
      "RetainedAustenite_pct": 0.5
     },
     "predictedHardness_HRC": 58.0,
-    "predictedHardness_HV": 649.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 770.0,
     "transformedStartTime_s": 0.9
@@ -244,7 +404,8 @@
      "RetainedAustenite_pct": 0.5
     },
     "predictedHardness_HRC": 58.0,
-    "predictedHardness_HV": 649.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 770.0,
     "transformedStartTime_s": 0.18
@@ -258,7 +419,8 @@
      "RetainedAustenite_pct": 0.5
     },
     "predictedHardness_HRC": 58.0,
-    "predictedHardness_HV": 649.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
     "primaryMicrostructure": "Pearlite",
     "transformedStartTemp_C": 765.0,
     "transformedStartTime_s": 0.05
