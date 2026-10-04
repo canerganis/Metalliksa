@@ -3,7 +3,8 @@
  * A 64x64 instanced powder bed with a laser spot on a stripe toolpath and a decaying heat tint.
  * It is an illustration only: no solver, no physical units, no data from any model.
  * Mounted only with WebGL, motion allowed and after the runtime-config check. DPR <= 1.5,
- * paused while the tab is hidden, stops animating after 30 consecutive frames slower than 20 ms,
+ * paused while the tab is hidden, after 30 consecutive frames slower than 20 ms it renders one static
+ * cold-bed frame (no spot, no heat) and stops,
  * and disposes renderer, geometries, materials and observers on unmount.
  */
 import React, { useEffect, useRef } from "react";
@@ -123,6 +124,12 @@ export default function BootHero() {
           heat[i] = Math.max(heat[i], 1 - Math.hypot(x - gx, z - gz) / 3.2);
         }
       }
+      const bail = slow >= SLOW_FRAME_LIMIT;
+      if (bail) {
+        // Too slow for this device: settle on a clean static frame (cold bed, no spot), then stop.
+        heat.fill(0);
+        spot.visible = false;
+      }
       for (let i = 0; i < heat.length; i += 1) {
         const h = heat[i];
         color.copy(base).multiplyScalar(tint[i]);
@@ -131,8 +138,8 @@ export default function BootHero() {
       }
       if (bed.instanceColor) bed.instanceColor.needsUpdate = true;
       renderer.render(scene, camera);
-      if (slow >= SLOW_FRAME_LIMIT) {
-        stopped = true; // Too slow for this device: keep the last frame, stop animating.
+      if (bail) {
+        stopped = true;
         return;
       }
       raf = requestAnimationFrame(frame);

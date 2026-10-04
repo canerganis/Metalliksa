@@ -606,6 +606,7 @@ export interface ExperimentalValidationResult {
 class PythonComputationService {
   private statusCache: PythonEngineStatus | null = null;
   private lastCheckTime = 0;
+  private statusInflight: Promise<PythonEngineStatus> | null = null;
 
   async runLpbfBayesianOptimization(data: any): Promise<PythonBayesianOptimizationResult> {
     const res = await fetch("/api/python/lpbf-bayesian-optimize", {
@@ -914,7 +915,16 @@ class PythonComputationService {
     if (!forceRefresh && this.statusCache && now - this.lastCheckTime < 15000) {
       return this.statusCache;
     }
+    // Non-forced callers share one in-flight request (app shell and boot check start together).
+    if (!forceRefresh && this.statusInflight) return this.statusInflight;
+    const request = this.requestEngineStatus(now).finally(() => {
+      if (this.statusInflight === request) this.statusInflight = null;
+    });
+    this.statusInflight = request;
+    return request;
+  }
 
+  private async requestEngineStatus(now: number): Promise<PythonEngineStatus> {
     try {
       const res = await fetch("/api/python/status", {
         method: "GET",

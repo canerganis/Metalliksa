@@ -25,8 +25,20 @@ function setAccessRequired(v: boolean) {
   accessListeners.forEach((l) => l(v));
 }
 
-export async function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
-  if (cached && !force) return cached;
+let inflight: Promise<RuntimeConfig> | null = null;
+
+/** Non-forced callers share one in-flight request (banner, boot check and telemetry start together). */
+export function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
+  if (cached && !force) return Promise.resolve(cached);
+  if (inflight && !force) return inflight;
+  const request = requestRuntimeConfig().finally(() => {
+    if (inflight === request) inflight = null;
+  });
+  inflight = request;
+  return request;
+}
+
+async function requestRuntimeConfig(): Promise<RuntimeConfig> {
   try {
     const res = await (nativeFetch ?? fetch)("/api/runtime-config");
     setAccessRequired(res.status === 401);

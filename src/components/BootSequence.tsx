@@ -58,11 +58,20 @@ export function BootSequence() {
   const snap = useBootSnapshot();
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
-  const [webgl] = useState(() => snap.animate && webglAvailable());
+  const [webgl, setWebgl] = useState(false);
+  const configChecked = !["pending", "running"].includes(snap.rows[0]?.state ?? "pending");
+  // Hero only for a plain start (no deep link) with motion allowed, after the config check.
+  const deepLink = typeof window !== "undefined" && window.location.hash.length > 1;
+  const wantsHero = snap.animate && configChecked && !snap.dismissed && !leaving && !deepLink;
 
   useEffect(() => {
     void controller.start();
   }, [controller]);
+
+  useEffect(() => {
+    // WebGL is probed only at the moment the hero would mount, never on a static or skipped boot.
+    if (wantsHero && !webgl) setWebgl(webglAvailable());
+  }, [wantsHero, webgl]);
 
   useEffect(() => {
     if (snap.phase !== "done") return undefined;
@@ -82,7 +91,6 @@ export function BootSequence() {
     writeSkipFlag();
     controller.skip();
   };
-  const configChecked = !["pending", "running"].includes(snap.rows[0]?.state ?? "pending");
   const stopped = snap.phase === "stopped";
 
   return (
@@ -118,7 +126,7 @@ export function BootSequence() {
             Sign-in required: <a href="/login">open the sign-in page</a>, or use the one-time login link printed in the server console.
           </p>
         )}
-        {webgl && configChecked && !leaving && (
+        {webgl && wantsHero && (
           <Suspense fallback={null}>
             <BootHero />
           </Suspense>
