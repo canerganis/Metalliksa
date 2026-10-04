@@ -1360,7 +1360,7 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch ICME Multi-Scale Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA) Solver to Python
+   * Dispatch the ICME multi-scale closed-form estimator (illustrative: tabulated constants, no DFT/CALPHAD/FEA run) to Python
    */
   async calculateICMEMultiScalePipeline(payload: {
     alloyName?: string;
@@ -2110,6 +2110,10 @@ export interface PythonStochasticUQResult {
 }
 
 export interface PythonICMEMultiScaleResult {
+  /** "illustrative": closed-form estimates on tabulated constants (no DFT, CALPHAD or FEA run). */
+  modelStatus?: string;
+  modelStatusNote?: string;
+  modelParts?: string[];
   success: boolean;
   engine: string;
   computeTimeMs: number;
@@ -2190,10 +2194,14 @@ export interface PythonICMEMultiScaleResult {
     };
     mechanicalProperties: {
       yieldStrength_Rp02_MPa: number;
-      ultimateTensileStrength_UTS_MPa: number;
+      /** null = unavailable (see ultimateTensileStrength_UTS_status); never the yield strength. */
+      ultimateTensileStrength_UTS_MPa: number | null;
+      ultimateTensileStrength_UTS_status?: string;
       uniformElongationPct: number;
       totalElongationPct: number;
-      fractureToughness_K1c_MPa_sqrt_m: number;
+      /** null = unavailable (see fractureToughness_K1c_status). */
+      fractureToughness_K1c_MPa_sqrt_m: number | null;
+      fractureToughness_K1c_status?: string;
       hollomon_n: number;
       hollomon_K_MPa: number;
     };
@@ -2219,10 +2227,13 @@ export interface PythonICMEMultiScaleResult {
     requiredSafetyFactor: number;
     actualSafetyFactor: number;
     structuralVerdict: string;
+    structuralVerdictBasis?: string;
     lefmDamageTolerance: {
-      criticalFlawSize_ac_mm: number;
-      plasticZoneRadius_rp_mm: number;
+      /** null = unavailable: needs a fracture toughness K_Ic the model does not provide. */
+      criticalFlawSize_ac_mm: number | null;
+      plasticZoneRadius_rp_mm: number | null;
       inspectionNDICapability: string;
+      status?: string;
     };
   };
   caeExportCards: {

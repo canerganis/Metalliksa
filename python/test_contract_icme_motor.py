@@ -55,27 +55,45 @@ class IcmeContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.TestC
 
     def test_structural_verdict_is_not_an_evidence_status(self):
         self.assertNotIn("structuralVerdict", self.operation.output.fields, "nested, not a top-level status")
+        self.assertNotIn("modelStatus", (self.operation.output.status_key or ""), "a model label, not an evidence status")
         self.assertIn("structuralVerdict is fixed text", self.contract.evidence.note)
+        self.assertIn("yield-only check", self.contract.evidence.note)
         # The verdict is one of the two fixed texts in the solver (vocabulary tripwire).
         self.assertIn(self.result["scale4_macroComponentFEA"]["structuralVerdict"],
-                      ("STRUCTURALLY SAFE (Passed Yield & Creep Criteria)",
-                       "WARNING: INSUFFICIENT SAFETY MARGIN (Risk of Plastic Yielding)"))
+                      ("YIELD CHECK PASSED (yield strength vs fixed catalogue stress only; no creep, fatigue or "
+                       "fracture check)",
+                       "WARNING: INSUFFICIENT YIELD SAFETY MARGIN (Risk of Plastic Yielding; yield-only check)"))
 
-    def test_recorded_gap_creep_wording_without_a_creep_check(self):
-        # Known gap pinned as current behaviour: fixing the wording (or adding a creep check) means
-        # updating the contract note and this test.
-        verdict = "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
-        self.assertEqual(self.result["scale4_macroComponentFEA"]["structuralVerdict"], verdict)
+    def test_model_status_is_illustrative(self):
+        self.assertEqual(self.result["modelStatus"], "illustrative")
+        self.assertIn("no DFT is run", self.result["modelStatusNote"])
+
+    def test_creep_wording_gap_is_fixed_and_the_verdict_ignores_service_temperature(self):
+        # Fixed in fx-icme: the verdict no longer claims a creep check. serviceTemp_C is still unused.
+        verdict = self.result["scale4_macroComponentFEA"]["structuralVerdict"]
+        self.assertNotIn("Creep Criteria", verdict)
+        self.assertNotIn("STRUCTURALLY SAFE", verdict)
         exit_code, hot = run_script(SCRIPT, {"serviceTemp_C": 1000.0})
         self.assertEqual(exit_code, 0, hot)
         self.assertEqual(hot["scale4_macroComponentFEA"], self.result["scale4_macroComponentFEA"])
-        self.assertTrue(any("no creep check exists" in note for note in self.contract.legacy_notes))
-
-    def test_recorded_gap_calibrated_card_header(self):
-        # Known gap pinned as current behaviour: fixing the wording means updating the contract note and this test.
-        self.assertIn("MetalliX Multi-Scale ICME Calibrated Card", self.result["caeExportCards"]["abaqus"])
-        self.assertTrue(any("'MetalliX Multi-Scale ICME Calibrated Card'" in note
+        self.assertTrue(any("Wording gap fixed in fx-icme" in note and "no creep check exists" in note
                             for note in self.contract.legacy_notes))
+
+    def test_calibrated_card_gap_is_fixed(self):
+        abaqus = self.result["caeExportCards"]["abaqus"]
+        self.assertNotIn("Calibrated Card", abaqus)
+        self.assertIn("MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated)", abaqus)
+        self.assertTrue(any("'ILLUSTRATIVE Card (uncalibrated, not validated)'" in note
+                            for note in self.contract.legacy_notes))
+
+    def test_unavailable_outputs_are_null(self):
+        mech = self.result["scale3_continuumPlasticity"]["mechanicalProperties"]
+        self.assertIsNone(mech["ultimateTensileStrength_UTS_MPa"])
+        self.assertIsNone(mech["fractureToughness_K1c_MPa_sqrt_m"])
+        lefm = self.result["scale4_macroComponentFEA"]["lefmDamageTolerance"]
+        self.assertIsNone(lefm["criticalFlawSize_ac_mm"])
+        self.assertIsNone(lefm["plasticZoneRadius_rp_mm"])
+        self.assertTrue(any("Unavailable by design (fx-icme)" in note for note in self.contract.legacy_notes))
 
 
 if __name__ == "__main__":

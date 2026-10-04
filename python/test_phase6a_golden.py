@@ -355,6 +355,81 @@ class StepBGoldenTest(unittest.TestCase):
             rows = drift_report.diff(base, mutant)
             self.assertTrue(golden.step_b_violations(solver, rows, mutant, payload), name)
 
+    def test_documented_icme_change_is_checked_exactly(self):
+        # EXPECTED_DOCUMENTED_VALUE_CHANGES (fx-icme, lane 9): UTS/K_Ic/a_c/r_p -> null, the
+        # verdict without a creep claim, 'Calibrated Card' relabelled, new honesty keys. Rows are
+        # derived from the real d33b6f5 golden vs a fresh run, then mutated one at a time.
+        solver, case = "icme_multiscale_pipeline_solver", "default_payload_in718"
+        base = golden.load_golden(solver, case)["stdout"]
+        fresh = golden.run_solver(solver, golden.CASES[solver][case])["stdout"]
+        rows = drift_report.diff(base, fresh)
+        self.assertEqual(golden.step_b_violations(solver, rows, fresh), [])
+        self.assertTrue(golden.step_b_violations(solver, rows))  # no re-blessed document: not verifiable
+
+        def mutated(key, **changes):
+            out = []
+            for r in rows:
+                out.append(dict(r, **changes) if r["key"] == key else r)
+            self.assertIn(key, [r["key"] for r in rows], key)
+            return out
+
+        uts = "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa"
+        k1c = "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m"
+        verdict = "scale4_macroComponentFEA.structuralVerdict"
+        ac = "scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm"
+        ndi = "scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability"
+        bad = [
+            mutated(uts, old=1000.0),                          # old UTS was not the old yield strength
+            # free-text claims: only the exact pinned texts are accepted (review S2)
+            mutated("modelStatusNote", new=fresh["modelStatusNote"] + " Validated against FEA and CALPHAD."),
+            mutated("modelParts[3]", new="validated FEA component limit"),
+            mutated("scale4_macroComponentFEA.structuralVerdictBasis",
+                    new=fresh["scale4_macroComponentFEA"]["structuralVerdictBasis"] + " Certified to ASME."),
+            mutated("engine", new="MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; DFT-validated"),
+            mutated("scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status", new="unavailable: DFT-validated"),
+            mutated("scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status", new="unavailable: certified"),
+            mutated("scale4_macroComponentFEA.lefmDamageTolerance.status", new="unavailable: FEA-validated"),
+            mutated(uts, new=1191.8),                          # UTS must be null, not a number
+            mutated(k1c, new=100.0),
+            mutated(ac, new=1.0),
+            mutated(verdict, new="STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"),
+            mutated(verdict, new="YIELD CHECK PASSED (no creep, but with a Creep claim)"),
+            mutated(ndi, new="Detectable with Standard X-Ray / UT (Flaw > 1.0mm)"),
+            mutated("modelStatus", new="validated"),
+            mutated("engine", new="MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)"),
+            mutated("caeExportCards.abaqus", new=fresh["caeExportCards"]["abaqus"] + "\n*EXTRA"),
+            mutated("caeExportCards.ansys", new=fresh["caeExportCards"]["ansys"].replace("ILLUSTRATIVE", "CALIBRATED")),
+        ]
+        for i, variant in enumerate(bad):
+            with self.subTest(mutation=i):
+                self.assertTrue(golden.step_b_violations(solver, variant, fresh))
+        # review S1: every documented rule must occur and the unavailable values must be null.
+        # Mutant: UTS and K_Ic put back to the old value (== yield) -> no UTS/K_Ic drift rows.
+        import copy
+        reverted = copy.deepcopy(fresh)
+        mech = reverted["scale3_continuumPlasticity"]["mechanicalProperties"]
+        mech["ultimateTensileStrength_UTS_MPa"] = base["scale3_continuumPlasticity"]["mechanicalProperties"][
+            "ultimateTensileStrength_UTS_MPa"]
+        mech.pop("ultimateTensileStrength_UTS_status")
+        rows_reverted = drift_report.diff(base, reverted)
+        self.assertNotIn(uts, [r["key"] for r in rows_reverted])
+        self.assertTrue(golden.step_b_violations(solver, rows_reverted, reverted))
+        # a documented row dropped from an otherwise valid table, with the value still null in the document
+        for dropped in (uts, verdict, "modelStatus", "caeExportCards.lsDyna", "modelParts[2]"):
+            with self.subTest(dropped=dropped):
+                partial = [r for r in rows if r["key"] != dropped]
+                self.assertTrue(golden.step_b_violations(solver, partial, fresh))
+        # a unavailable value that is not null in the re-blessed document
+        not_null = copy.deepcopy(fresh)
+        not_null["scale3_continuumPlasticity"]["mechanicalProperties"]["fractureToughness_K1c_MPa_sqrt_m"] = 100.0
+        self.assertTrue(golden.step_b_violations(solver, rows, not_null))
+        # the exception is per solver: the same row under another solver is structural
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", [rows[0]], fresh))
+        # an undocumented non-numeric row of the same solver still fails
+        extra = {"key": "scale3_continuumPlasticity.mechanicalProperties.hollomon_n", "kind": "changed",
+                 "old": "a", "new": "b"}
+        self.assertTrue(golden.step_b_violations(solver, rows + [extra], fresh))
+
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).
         for path in self._step_b_files():

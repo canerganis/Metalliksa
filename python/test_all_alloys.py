@@ -97,8 +97,10 @@ def test_all_alloys():
             gumbel = res.get("Defect_Simulation", {})
             
             print(f"  -> Meltpool: Width=~{mp.get('Mean_Depth_um', 0)*1.1:.1f}um | Depth={mp.get('Mean_Depth_um', 0):.1f}um (±{mp.get('Uncertainty_Std_um', 0):.1f})")
-            print(f"  -> Largest Expected Defect: {gumbel.get('Gumbel_Predicted_Largest_Defect_um', 0):.1f} um")
-            print(f"  -> Fatigue Limit (99% Survival): {fatigue.get('99_Percent_Survival_Design_Limit_MPa', 0):.1f} MPa")
+            largest = gumbel.get('Gumbel_Predicted_Largest_Defect_um')
+            design = fatigue.get('Design_Limit_MPa')
+            print(f"  -> Largest Expected Defect: {'unavailable (no defect simulated)' if largest is None else f'{largest:.1f} um'}")
+            print(f"  -> Design Limit (fixed 0.85 knockdown, illustrative): {'unavailable' if design is None else f'{design:.1f} MPa'}")
         except Exception as e:
             print(f"  -> Failed to analyze: {e}")
 

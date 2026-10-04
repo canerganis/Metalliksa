@@ -254,7 +254,7 @@
     "workspace": "materials",
     "label": "ICME Multi-Scale Studio",
     "scope": "Research",
-    "description": "Coupled microstructure and property estimates with CALPHAD thermodynamics.",
+    "description": "Illustrative closed-form property estimates on tabulated constants; no DFT, CALPHAD or FEA is run.",
     "next": "materials-project",
     "viewComponent": "src/components/ICMEMultiScalePipelineStudio.tsx",
     "viewExport": "ICMEMultiScalePipelineStudio"
