@@ -33,7 +33,7 @@ from module_contract import (
     ALWAYS_FORBIDDEN_CLAIMS, AUTHORITY_KINDS, BACKGROUND_WORK, EVIDENCE_STATUSES, EVIDENCE_TYPES,
     FORBIDDEN_CLAIM_KEYS, GPU_MODES, LIFECYCLE_RESOURCES, MATURITY, MIGRATION_STATES, NAVIGATION,
     ORACLE_STATES, PENDING_ORACLE_CEILING, RUN_STATES, TODO_MARKER, WORKSPACES,
-    Evidence, ModuleContract, Oracle, TestRefs, View,
+    Authority, Evidence, ModuleContract, Operation, Oracle, TestRefs, View,
 )
 
 PYTHON_DIR = Path(__file__).resolve().parent
@@ -152,6 +152,166 @@ def load_seed() -> List[Dict[str, str]]:
     return json.loads(SEED_PATH.read_text(encoding="utf-8"))
 
 
+# --- Legacy authorities (Phase 7 slice 1) ------------------------------------
+#
+# Best-effort record of which server route and authority each view calls today,
+# read from the code (the view's static import closure, src/services/*, routes/*,
+# server/*). Timeouts are the values the dispatching code uses: physics.ts
+# handlePythonDispatch default 25000 ms (calphad 40000/15000, Bayesian 120000),
+# characterization.ts runPythonScript default 15000 ms, LpbfWorkerBridge
+# requestTimeoutMs default 20000 ms. node-provider and browser-local authorities
+# declare no timeout in code, so none is recorded. ``warm`` is set by hand from
+# the script's presence in python/persistent_ipc_service.py WARM_MODULE_NAMES at
+# the time of writing; test_module_contract checks the two lists against each
+# other instead of deriving one from the other.
+#
+# Nothing here is an evidence statement: input fields, output schemas, validity
+# domains and source refs stay undeclared until a module is contracted.
+
+_PHYSICS_TIMEOUT_MS = 25000      # routes/physics.ts handlePythonDispatch default
+_CHARACTERIZATION_TIMEOUT_MS = 15000  # server/processOrchestrator.ts runPythonScript default
+_WORKER_TIMEOUT_MS = 20000       # server/lpbfWorkerBridge.ts requestTimeoutMs default
+
+
+def _py(script: str, timeout_ms: int, warm: bool) -> Authority:
+    return Authority(kind="python-ipc", script=f"python/{script}.py", timeout_ms=timeout_ms, warm=warm)
+
+
+def _worker(method: str) -> Authority:
+    return Authority(kind="lpbf-worker", worker_method=method, timeout_ms=_WORKER_TIMEOUT_MS)
+
+
+_NODE = Authority(kind="node-provider")
+
+
+def _browser(reason: str) -> Authority:
+    return Authority(kind="browser-local", exception_reason=f"Recorded debt (single-authority rule): {reason}")
+
+
+def _op(op_id: str, route, authority: Authority) -> Operation:
+    return Operation(id=op_id, route=route, authority=authority)
+
+
+def _worker_op(method: str) -> Operation:
+    return _op(method, f"/api/python/lpbf-{method}", _worker(method))
+
+
+_THERMAL_SOLVER = _op("lpbf-thermal-solver", "/api/python/lpbf-thermal-solver",
+                      _py("lpbf_thermal_solver", _PHYSICS_TIMEOUT_MS, warm=True))
+_AI_CONSULT = _op("ai-consult", "/api/consult", _NODE)
+_BUILD_JOB_SUBMIT = _op("lpbf-job-submit", "/api/lpbf/jobs", _worker("submit"))
+_BUILD_JOB_STATUS = _op("lpbf-job-status", "/api/lpbf/jobs/:id", _worker("get"))
+_CANNED_QUALIFY = ("POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) "
+                   "without calling any authority; not bound as an operation.")
+
+LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
+    "3d-distortion-lab": (
+        _op("lpbf-capabilities", "/api/lpbf/capabilities", _worker("capabilities")),
+        _op("lpbf-estimate", "/api/lpbf/estimate", _worker("estimate")),
+        _BUILD_JOB_SUBMIT,
+        _op("lpbf-job-repeat", "/api/lpbf/jobs/repeat", _worker("submit-repeat")),
+        _BUILD_JOB_STATUS,
+        _op("lpbf-job-cancel", "/api/lpbf/jobs/:id", _worker("cancel")),
+        _op("lpbf-job-artifact", "/api/lpbf/jobs/:id/artifacts/:name", _worker("artifact")),
+        _THERMAL_SOLVER,
+        _op("stl-slicer-build-time", "/api/python/stl-slicer-build-time",
+            _py("stl_slicer_build_time_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("lpbf-source-catalog", "/api/lpbf/sources", _NODE),
+        _op("lpbf-run-archive", "/api/lpbf/runs", _NODE),
+    ),
+    "lpbf-optimizer": (
+        _op("bayesian-optimize", "/api/python/lpbf-bayesian-optimize",
+            _py("lpbf_bayesian_optimizer", 120000, warm=False)),
+    ),
+    "solidification-microstructure": (_worker_op("solidification-microstructure"),),
+    "thermomechanical-distortion": (_worker_op("thermomechanical-distortion"),),
+    "experimental-validation": (
+        _op("lpbf-source-measurements", "/api/lpbf/sources/:datasetId/measurements", _NODE),
+    ),
+    "modulus-fno-lab": (_worker_op("modulus-fno"),),
+    "toolpath-studio": (_worker_op("toolpath-kinematics"),),
+    "toolpath-thermal-map": (_worker_op("toolpath-thermal-map"),),
+    "industrial-certification": (_worker_op("industrial-fatigue"),),
+    "murakami-fatigue": (_worker_op("fatigue-fracture"),),
+    "defect-twin": (_worker_op("stl-voxelize"),),
+    "adaptive-mitigation": (_worker_op("adaptive-feedforward"),),
+    "multilaser-plume": (_worker_op("multilaser-plume"),),
+    "thermal-accumulation": (_worker_op("thermal-accumulation"),),
+    "powder-compaction": (_worker_op("powder-dem-compaction"),),
+    "optical-tomography": (_worker_op("optical-tomography"),),
+    "transient-3d-gpu": (),
+    "keyhole-raytracing": (_worker_op("keyhole-raytracing"),),
+    "database": (
+        _op("catalog-lookup", None, _browser("material records are read from the bundled src/data/materialsDatabase.ts in the browser.")),
+    ),
+    "alloy-builder": (_THERMAL_SOLVER,),
+    "phase-diagram": (
+        _op("calphad-databases", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
+        _op("calphad-minimize", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
+        _AI_CONSULT,
+    ),
+    "ttt-cct-kinetics": (
+        _op("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct", _py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+    ),
+    "micrograph": (
+        _op("diagnose-micrograph", "/api/metallurgy/diagnose-micrograph", _NODE),
+        _AI_CONSULT,
+    ),
+    "eds-lab": (_AI_CONSULT,),
+    "electrochem-suite": (
+        _op("pourbaix-diagram", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("tafel-corrosion-rate", "/api/python/tafel-corrosion-rate",
+            _py("tafel_corrosion_rate_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
+        _op("battery-corrosion-eis", "/api/python/battery-corrosion-eis",
+            _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
+    ),
+    "icme-motor": (
+        _op("icme-multiscale-pipeline", "/api/python/icme-multiscale-pipeline",
+            _py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+    ),
+    "materials-project": (
+        _op("materials-project-search", "/api/materials-project/search", _NODE),
+        _op("dft-properties", "/api/python/dft-properties", _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("metallurgy-consult", "/api/metallurgy/consult", _NODE),
+    ),
+    "calculators": (
+        _op("engineering-correlations", None, _browser("unit-aware engineering correlations are evaluated in the browser.")),
+    ),
+    "research-hub": (
+        _op("research-registry", "/api/research/registry", _NODE),
+        _op("research-search", "/api/research/search", _NODE),
+    ),
+    "experimental-data": (_BUILD_JOB_SUBMIT, _BUILD_JOB_STATUS),
+    "digital-twin": (_AI_CONSULT,),
+    "uq-lab": (
+        _op("stochastic-uq-mmpds", "/api/python/stochastic-uq-mmpds",
+            _py("stochastic_uq_mmpds_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+    ),
+    "qualification": (
+        _op("coupon-statistics", None, _browser("protocol screening and coupon statistics are computed in the browser.")),
+    ),
+    "aerospace-pdf-audit": (
+        _op("report-template", None, _browser("demonstration report templates are assembled in the browser.")),
+    ),
+    "traceability": (_BUILD_JOB_SUBMIT, _BUILD_JOB_STATUS),
+    "copilot": (_op("metallurgy-consult", "/api/metallurgy/consult", _NODE),),
+    "ai-orchestrator": (_op("dataset-plan", "/api/orchestrator/dataset-plan", _NODE),),
+}
+
+LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
+    "transient-3d-gpu": (
+        "The view calls POST /api/python/transient-3d-gpu, which no server route handles; "
+        "no authority exists for this module.",
+    ),
+    "micrograph": (
+        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant "
+        "values without calling any authority; not bound as operations.",
+    ),
+    "qualification": (_CANNED_QUALIFY,),
+    "aerospace-pdf-audit": (_CANNED_QUALIFY,),
+}
+
+
 # --- Registry ---------------------------------------------------------------
 
 def legacy_contract(row: Dict[str, str]) -> ModuleContract:
@@ -177,6 +337,8 @@ def legacy_contract(row: Dict[str, str]) -> ModuleContract:
         ),
         tests=TestRefs(oracle=Oracle(status="pending")),
         migration_state="legacy",
+        operations=LEGACY_OPERATIONS[row["id"]],
+        legacy_notes=LEGACY_NOTES.get(row["id"], ()),
     )
 
 
@@ -187,6 +349,10 @@ def build_registry(seed: List[Dict[str, str]] = None) -> Tuple[ModuleContract, .
     if len(set(ids)) != len(ids):
         raise ValueError("duplicate module ids in registry")
     known = set(ids)
+    for table, name in ((LEGACY_OPERATIONS, "LEGACY_OPERATIONS"), (LEGACY_NOTES, "LEGACY_NOTES")):
+        unknown = set(table) - known
+        if unknown:
+            raise ValueError(f"{name} names unregistered modules: {sorted(unknown)}")
     for contract in contracts:
         if contract.next not in known:
             raise ValueError(f"{contract.id}: next {contract.next!r} is not a registered module")
@@ -226,7 +392,7 @@ def render_ts(document: dict) -> str:
     body = json.dumps(document, indent=2, ensure_ascii=False)
     lines = [
         "// GENERATED by python/module_registry.py. Do not edit by hand.",
-        "// Regenerate: python scripts/emit-module-registry.py",
+        "// Regenerate: python -m module_contract emit (from python/) or python scripts/emit-module-registry.py",
         "",
         f"export type EvidenceType = {_union(EVIDENCE_TYPES)};",
         f"export type RunState = {_union(RUN_STATES)};",
@@ -250,12 +416,12 @@ def render_ts(document: dict) -> str:
         "}",
         "export interface ContractAuthority {",
         "  readonly kind: AuthorityKind; readonly script: string | null; readonly workerMethod: string | null;",
-        "  readonly timeoutMs: number; readonly gpu: GpuMode; readonly warm: boolean; readonly exceptionReason: string | null;",
+        "  readonly timeoutMs: number | null; readonly gpu: GpuMode; readonly warm: boolean; readonly exceptionReason: string | null;",
         "}",
         "export interface ContractOperation {",
-        "  readonly id: string; readonly route: string; readonly authority: ContractAuthority;",
+        "  readonly id: string; readonly route: string | null; readonly authority: ContractAuthority;",
         "  readonly input: readonly ContractField[];",
-        "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string };",
+        "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string } | null;",
         "}",
         "export interface ContractValidityDomain {",
         "  readonly ranges: readonly { readonly key: string; readonly min: number; readonly max: number; readonly unit: string }[];",
@@ -278,6 +444,7 @@ def render_ts(document: dict) -> str:
         "    readonly docs: string | null;",
         "  };",
         "  readonly migrationState: MigrationState;",
+        "  readonly legacyNotes: readonly string[];",
         "}",
         "export interface ModuleRegistryDocument {",
         "  readonly schemaVersion: number; readonly generatedBy: string;",

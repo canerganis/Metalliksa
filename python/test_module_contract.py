@@ -138,6 +138,39 @@ class FieldAndAuthorityTests(unittest.TestCase):
         with self.assertRaises(mc.ContractError):
             _operation(timeout_ms=0)
 
+    def test_timeout_required_only_where_code_runs_under_a_deadline(self):
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="python-ipc", script="python/x.py")
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="lpbf-worker", worker_method="get")
+        self.assertIsNone(mc.Authority(kind="node-provider").timeout_ms)
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="node-provider", timeout_ms=0)
+
+    def test_warm_applies_only_to_python_ipc(self):
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="lpbf-worker", worker_method="get", timeout_ms=1, warm=True)
+        self.assertTrue(mc.Authority(kind="python-ipc", script="python/x.py", timeout_ms=1, warm=True).warm)
+
+    def test_only_browser_local_operations_omit_a_route(self):
+        local = mc.Authority(kind="browser-local", exception_reason="recorded debt")
+        self.assertIsNone(mc.Operation(id="local", route=None, authority=local).route)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", route=None, authority=mc.Authority(kind="node-provider"))
+
+    def test_contracted_operations_must_declare_output(self):
+        undeclared = mc.Operation(id="run", route="/api/uq/run",
+                                  authority=mc.Authority(kind="python-ipc", script="uq_lab.py", timeout_ms=1))
+        with self.assertRaises(mc.ContractError):
+            _contract(operations=(undeclared,))
+        self.assertIsNone(undeclared.to_dict()["output"])
+
+    def test_legacy_notes_are_unique_text(self):
+        with self.assertRaises(mc.ContractError):
+            _contract(legacy_notes=("same", "same"))
+        with self.assertRaises(mc.ContractError):
+            _contract(legacy_notes=(" ",))
+
     def test_route_must_be_api(self):
         with self.assertRaises(mc.ContractError):
             mc.Operation(id="run", route="uq/run", authority=mc.Authority(kind="node-provider", timeout_ms=1),
@@ -270,6 +303,34 @@ class LegacyRegistryTests(unittest.TestCase):
         for contract in self.registry:
             with self.subTest(module=contract.id):
                 self.assertTrue((REPO_ROOT / contract.view.component).is_file())
+
+    def test_legacy_operations_declare_authority_only(self):
+        # Slice 1 records which authority each view calls; fields, outputs, validity
+        # domains and source refs stay undeclared until a module is contracted.
+        for contract in self.registry:
+            for operation in contract.operations:
+                with self.subTest(module=contract.id, operation=operation.id):
+                    self.assertEqual(operation.input, ())
+                    self.assertIsNone(operation.output)
+                    if operation.authority.kind == "browser-local":
+                        self.assertIn("Recorded debt", operation.authority.exception_reason)
+
+    def test_legacy_authority_targets_exist_in_code(self):
+        worker_routes = (REPO_ROOT / "routes" / "lpbfSimulation.ts").read_text(encoding="utf-8")
+        for contract in self.registry:
+            for operation in contract.operations:
+                authority = operation.authority
+                with self.subTest(module=contract.id, operation=operation.id):
+                    if authority.kind == "python-ipc":
+                        self.assertTrue((REPO_ROOT / authority.script).is_file(), authority.script)
+                    if authority.kind == "lpbf-worker":
+                        self.assertRegex(worker_routes, rf"[\"']{re.escape(authority.worker_method)}[\"']")
+
+    def test_every_module_has_an_authority_or_a_recorded_gap(self):
+        for contract in self.registry:
+            with self.subTest(module=contract.id):
+                self.assertTrue(contract.operations or contract.legacy_notes,
+                                "record the authority or explain why none exists")
 
 
 if __name__ == "__main__":

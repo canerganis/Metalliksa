@@ -180,7 +180,9 @@ class InputField:
 @dataclass(frozen=True)
 class Authority:
     kind: str
-    timeout_ms: int
+    # None means the code declares no timeout for this authority (browser-local,
+    # node-provider). python-ipc and lpbf-worker always run under a deadline.
+    timeout_ms: Optional[int] = None
     gpu: str = "none"
     warm: bool = False
     script: Optional[str] = None
@@ -190,8 +192,13 @@ class Authority:
     def __post_init__(self) -> None:
         _one_of(self.kind, AUTHORITY_KINDS, "authority.kind")
         _one_of(self.gpu, GPU_MODES, "authority.gpu")
-        _require(isinstance(self.timeout_ms, int) and not isinstance(self.timeout_ms, bool)
-                 and self.timeout_ms > 0, "authority.timeoutMs must be a positive integer")
+        if self.timeout_ms is not None or self.kind in ("python-ipc", "lpbf-worker"):
+            _require(isinstance(self.timeout_ms, int) and not isinstance(self.timeout_ms, bool)
+                     and self.timeout_ms > 0, "authority.timeoutMs must be a positive integer")
+        _require(isinstance(self.warm, bool), "authority.warm must be a boolean")
+        if self.warm:
+            # Only the persistent Python IPC service keeps modules warm.
+            _require(self.kind == "python-ipc", "authority.warm applies only to python-ipc")
         if self.kind == "python-ipc":
             _text(self.script, "authority.script")
         if self.kind == "lpbf-worker":
@@ -232,20 +239,26 @@ class OutputSchema:
 @dataclass(frozen=True)
 class Operation:
     id: str
-    route: str
+    # None only for browser-local operations, which have no server route.
+    route: Optional[str]
     authority: Authority
-    input: Tuple[InputField, ...]
-    output: OutputSchema
+    input: Tuple[InputField, ...] = ()
+    # None = output schema not yet declared (legacy contracts only; see ModuleContract).
+    output: Optional[OutputSchema] = None
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid operation id {self.id!r}")
-        _require(isinstance(self.route, str) and self.route.startswith("/api/"), "operation.route must start with /api/")
+        if self.route is None:
+            _require(self.authority.kind == "browser-local", f"{self.id}: only browser-local operations may omit a route")
+        else:
+            _require(isinstance(self.route, str) and self.route.startswith("/api/"), "operation.route must start with /api/")
         _unique(tuple(f.key for f in self.input), f"{self.id}.input keys")
 
     def to_dict(self) -> dict:
         return {
             "id": self.id, "route": self.route, "authority": self.authority.to_dict(),
-            "input": [f.to_dict() for f in self.input], "output": self.output.to_dict(),
+            "input": [f.to_dict() for f in self.input],
+            "output": self.output.to_dict() if self.output else None,
         }
 
 
@@ -395,6 +408,9 @@ class ModuleContract:
     hidden_reason: Optional[str] = None
     validity_domain: Optional[ValidityDomain] = None
     lifecycle: Optional[Lifecycle] = None
+    # Recorded facts about missing or non-authoritative behaviour (e.g. a route the
+    # view calls that no server handles). Notes never raise a claim.
+    legacy_notes: Tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid module id {self.id!r}")
@@ -412,11 +428,16 @@ class ModuleContract:
             _require(self.hidden_reason is None, f"{self.id}: hiddenReason only applies to hidden modules")
         _one_of(self.migration_state, MIGRATION_STATES, f"{self.id}.migrationState")
         _unique(tuple(op.id for op in self.operations), f"{self.id}.operations ids")
+        _unique(self.legacy_notes, f"{self.id}.legacyNotes")
+        for note in self.legacy_notes:
+            _text(note, f"{self.id}.legacyNotes")
         if self.tests.oracle.status == "pending":
             _require(EVIDENCE_RANK[self.evidence.ceiling] >= EVIDENCE_RANK[PENDING_ORACLE_CEILING],
                      f"{self.id}: a pending oracle caps the ceiling at {PENDING_ORACLE_CEILING!r}")
         if self.migration_state == "contracted":
             _require(len(self.operations) > 0, f"{self.id}: contracted modules need operations")
+            _require(all(op.output is not None for op in self.operations),
+                     f"{self.id}: contracted operations must declare an output schema")
             _require(len(self.evidence.emits) > 0, f"{self.id}: contracted modules must declare emits")
             _require(self.lifecycle is not None, f"{self.id}: contracted modules need a lifecycle")
             _text(self.tests.schema, f"{self.id}.tests.schema")
@@ -433,4 +454,19 @@ class ModuleContract:
             "evidence": self.evidence.to_dict(),
             "lifecycle": self.lifecycle.to_dict() if self.lifecycle else None,
             "tests": self.tests.to_dict(), "migrationState": self.migration_state,
+            "legacyNotes": list(self.legacy_notes),
         }
+
+
+if __name__ == "__main__":
+    # `python -m module_contract emit [--check] [--refresh-seed]` (run from python/)
+    # delegates to the registry emitter; scripts/emit-module-registry.py is equivalent.
+    import sys
+
+    from module_registry import main as _registry_main
+
+    _args = sys.argv[1:]
+    if not _args or _args[0] != "emit":
+        print("usage: python -m module_contract emit [--check] [--refresh-seed]", file=sys.stderr)
+        raise SystemExit(2)
+    raise SystemExit(_registry_main(_args[1:]))
