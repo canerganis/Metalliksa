@@ -1,6 +1,5 @@
 import path from "path";
 import { PythonReadiness } from "./pythonStatus.ts";
-import os from "os";
 import net from "net";
 import http from "http";
 import crypto from "crypto";
@@ -9,11 +8,72 @@ import { getHostPython, loadPythonEnvironment } from "./pythonRuntime.ts";
 
 // =========================================================================
 // IPC security helpers (python/persistent_ipc_service.py enforces the other side)
+// Protocol metallix-ipc-v1: the per-spawn token never travels on the wire. Each request carries
+// ts, nonce and HMAC-SHA256(token, request); each response carries HMAC-SHA256(token, nonce,
+// status, body). A listener that is not our daemon learns nothing reusable and cannot forge a
+// response we accept.
 // =========================================================================
+
+export const IPC_PROTOCOL = "metallix-ipc-v1";
+const HEX64 = /^[0-9a-f]{64}$/;
 
 /** Fresh per-spawn shared secret (64 hex chars); passed to the daemon via env, never argv. */
 export function generateIpcToken(): string {
   return crypto.randomBytes(32).toString("hex");
+}
+
+export function ipcRequestMac(token: string, method: string, reqPath: string, ts: string, nonce: string, body: Buffer): string {
+  return crypto.createHmac("sha256", token)
+    .update(Buffer.from(`${IPC_PROTOCOL}\nreq\n${method}\n${reqPath}\n${ts}\n${nonce}\n`, "utf8"))
+    .update(body)
+    .digest("hex");
+}
+
+export function ipcResponseMac(token: string, nonce: string, status: number, body: Buffer): string {
+  return crypto.createHmac("sha256", token)
+    .update(Buffer.from(`${IPC_PROTOCOL}\nresp\n${nonce}\n${status}\n`, "utf8"))
+    .update(body)
+    .digest("hex");
+}
+
+export function signIpcRequest(token: string, method: string, reqPath: string, body: Buffer, now: number = Date.now()) {
+  const ts = String(now);
+  const nonce = crypto.randomBytes(16).toString("hex");
+  return { ts, nonce, mac: ipcRequestMac(token, method, reqPath, ts, nonce, body) };
+}
+
+/** Constant-time check that a response really comes from the daemon holding our token. */
+export function verifyIpcResponseMac(token: string, nonce: string, status: number, body: Buffer, mac: unknown): boolean {
+  if (typeof mac !== "string" || !HEX64.test(mac)) return false;
+  const expected = ipcResponseMac(token, nonce, status, body);
+  return crypto.timingSafeEqual(Buffer.from(mac, "ascii"), Buffer.from(expected, "ascii"));
+}
+
+/** One UNIX-socket request frame (newline-terminated) and the nonce its response must echo. */
+export function buildUnixFrame(token: string, request: unknown, now: number = Date.now()): { line: string; nonce: string } {
+  const body = JSON.stringify(request);
+  const { ts, nonce, mac } = signIpcRequest(token, "UNIX", "/", Buffer.from(body, "utf8"), now);
+  return { line: JSON.stringify({ v: 1, ts, nonce, mac, body }) + "\n", nonce };
+}
+
+/**
+ * Verifies a UNIX-socket response frame. Channel policy (same as HTTP): an unsigned or badly
+ * signed frame, or any status >= 400, is a channel failure and the caller falls back.
+ */
+export function parseUnixResponse(token: string, nonce: string, line: string): any {
+  let frame: any;
+  try { frame = JSON.parse(line); } catch { throw new Error("UNIX socket IPC returned a malformed frame"); }
+  const status = Number.isInteger(frame?.status) ? frame.status : NaN;
+  if (typeof frame?.body !== "string" || !Number.isFinite(status)
+    || !verifyIpcResponseMac(token, nonce, status, Buffer.from(frame.body, "utf8"), frame.mac)) {
+    throw new Error(`UNIX socket IPC response is not signed by this server's daemon${Number.isFinite(status) ? ` (status ${status})` : ""}`);
+  }
+  if (status >= 400) {
+    let code = "";
+    try { code = String(JSON.parse(frame.body)?.code ?? ""); } catch { /* non-JSON error body */ }
+    throw new Error(`UNIX socket IPC refused the request (status ${status}${code ? ` ${code}` : ""})`);
+  }
+  return JSON.parse(frame.body);
 }
 
 export function isLoopbackHost(host: string): boolean {
@@ -33,35 +93,33 @@ export function resolveIpcHost(
   const requested = (env.METALLIX_IPC_HOST || "127.0.0.1").trim();
   if (isLoopbackHost(requested)) return requested;
   if (env.METALLIX_IPC_ALLOW_REMOTE === "1") {
-    warn(`[Python-Supervisor] WARNING: IPC daemon bound to NON-LOOPBACK host ${requested} (METALLIX_IPC_ALLOW_REMOTE=1); token-protected only.`);
+    warn(`[Python-Supervisor] WARNING: IPC daemon bound to NON-LOOPBACK host ${requested} (METALLIX_IPC_ALLOW_REMOTE=1); HMAC-authenticated only.`);
     return requested;
   }
   warn(`[Python-Supervisor] WARNING: ignoring non-loopback METALLIX_IPC_HOST=${requested}; binding 127.0.0.1 (set METALLIX_IPC_ALLOW_REMOTE=1 to override).`);
   return "127.0.0.1";
 }
 
-/** Spawn spec for the daemon: the token travels only in the child's environment. */
+/**
+ * Spawn spec for the daemon: the token travels only in the child's environment. Port 0 (the
+ * default) lets the daemon bind an ephemeral port; without a socket path the daemon creates a
+ * private 0700 directory. Both actual addresses come back in its ready message.
+ */
 export function buildIpcSpawnSpec(
   python: { cmd: string; prefix: string[] },
   scriptPath: string,
   baseEnv: NodeJS.ProcessEnv,
-  ipc: { socketPath: string; port: number; host: string; token: string }
+  ipc: { socketPath?: string; port: number; host: string; token: string }
 ): { cmd: string; args: string[]; env: NodeJS.ProcessEnv } {
-  return {
-    cmd: python.cmd,
-    args: [...python.prefix, scriptPath],
-    env: {
-      ...baseEnv,
-      METALLIX_IPC_SOCK: ipc.socketPath,
-      METALLIX_IPC_PORT: String(ipc.port),
-      METALLIX_IPC_HOST: ipc.host,
-      METALLIX_IPC_TOKEN: ipc.token,
-    },
+  const env: NodeJS.ProcessEnv = {
+    ...baseEnv,
+    METALLIX_IPC_PORT: String(ipc.port),
+    METALLIX_IPC_HOST: ipc.host,
+    METALLIX_IPC_TOKEN: ipc.token,
   };
-}
-
-export function ipcAuthorizationHeader(token: string): string {
-  return `Bearer ${token}`;
+  if (ipc.socketPath) env.METALLIX_IPC_SOCK = ipc.socketPath;
+  else delete env.METALLIX_IPC_SOCK;
+  return { cmd: python.cmd, args: [...python.prefix, scriptPath], env };
 }
 
 /** Only the fixed `python/<module>.py` form used by routes/*.ts is dispatched. */
@@ -70,6 +128,11 @@ export function assertDispatchableScript(scriptRelativePath: string): void {
   if (typeof scriptRelativePath !== "string" || !SCRIPT_REF.test(scriptRelativePath)) {
     throw new Error(`Refusing to dispatch Python script path ${JSON.stringify(scriptRelativePath)}; expected python/<module>.py`);
   }
+}
+
+function parsePort(value: string | undefined): number {
+  const port = Number.parseInt(value ?? "0", 10);
+  return Number.isInteger(port) && port >= 0 && port <= 65535 ? port : 0;
 }
 
 // Python Execution Result Interface
@@ -114,25 +177,22 @@ export class PersistentPythonIPCSupervisor {
   private isRestarting: boolean = false;
   private restartAttempts: number = 0;
   private maxRestartAttempts: number = 10;
-  private socketPath: string;
-  private httpPort: number;
+  // Requested addresses; the channels actually used come from the child's ready message.
+  private configuredSocketPath: string | undefined;
+  private configuredPort: number;
   private httpHost: string;
   private startTime: number = Date.now();
   private requestsHandled: number = 0;
   private totalDurationMs: number = 0;
   private readiness = new PythonReadiness();
   private lastError: string | null = null;
-  // Regenerated on every spawn; never logged or put on the command line.
+  // Regenerated on every spawn; never logged, put on the command line or sent on the wire.
   private ipcToken: string = generateIpcToken();
 
   constructor() {
     loadPythonEnvironment();
-    this.socketPath =
-      process.env.METALLIX_IPC_SOCK ||
-      (process.platform === "win32"
-        ? path.join(os.tmpdir(), "metallix_python_ipc.sock")
-        : "/tmp/metallix_python_ipc.sock");
-    this.httpPort = parseInt(process.env.METALLIX_IPC_PORT || "5055", 10);
+    this.configuredSocketPath = process.env.METALLIX_IPC_SOCK || undefined;
+    this.configuredPort = parsePort(process.env.METALLIX_IPC_PORT);
     this.httpHost = resolveIpcHost(process.env);
 
     this.startWorker();
@@ -148,20 +208,23 @@ export class PersistentPythonIPCSupervisor {
     const scriptPath = path.join(process.cwd(), "python", "persistent_ipc_service.py");
 
     this.ipcToken = generateIpcToken();
+    this.readiness.reset();
     const spec = buildIpcSpawnSpec(getHostPython(), scriptPath, process.env, {
-      socketPath: this.socketPath,
-      port: this.httpPort,
+      socketPath: this.configuredSocketPath,
+      port: this.configuredPort,
       host: this.httpHost,
       token: this.ipcToken,
     });
-    this.child = spawn(spec.cmd, spec.args, {
+    const child = spawn(spec.cmd, spec.args, {
       windowsHide: true,
       env: spec.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    this.child = child;
 
-    // Capture stdout for readiness signal
-    this.child.stdout?.on("data", (data) => {
+    // Readiness (and with it the channel addresses) is taken only from this spawn's own stdout.
+    child.stdout?.on("data", (data) => {
+      if (child !== this.child) return;
       if (this.readiness.consume(data.toString())) {
         this.isReady = this.readiness.ready;
         if (this.isReady) {
@@ -173,7 +236,7 @@ export class PersistentPythonIPCSupervisor {
       }
     });
 
-    this.child.stderr?.on("data", (data) => {
+    child.stderr?.on("data", (data) => {
       const msg = data.toString().trim();
       if (msg.includes("[PersistentIPC]")) {
         console.log(msg);
@@ -182,15 +245,15 @@ export class PersistentPythonIPCSupervisor {
       }
     });
 
-    this.child.on("error", (err) => {
+    child.on("error", (err) => {
       console.error("[Python-Supervisor] Worker process error:", err);
       this.lastError = err.message;
-      this.handleProcessExit();
+      if (child === this.child) this.handleProcessExit();
     });
 
-    this.child.on("exit", (code, signal) => {
+    child.on("exit", (code, signal) => {
       console.warn(`[Python-Supervisor] Persistent Python worker exited (code=${code}, signal=${signal})`);
-      this.handleProcessExit();
+      if (child === this.child) this.handleProcessExit();
     });
   }
 
@@ -224,10 +287,21 @@ export class PersistentPythonIPCSupervisor {
     process.on("exit", shutdown);
   }
 
+  /** The UNIX socket path, only when this server's own daemon announced an active socket. */
+  private unixTarget(): string | null {
+    return this.isReady && this.readiness.unixActive && this.readiness.unixSocketPath ? this.readiness.unixSocketPath : null;
+  }
+
+  /** The HTTP port, only when this server's own daemon announced an active HTTP listener. */
+  private httpTarget(): number | null {
+    return this.isReady && this.readiness.httpActive && this.readiness.httpPort ? this.readiness.httpPort : null;
+  }
+
   /**
    * Dispatches script execution to the persistent Python daemon over UNIX domain socket
    */
   private executeViaUnixSocket(
+    socketPath: string,
     script: string,
     payload: any,
     args: string[],
@@ -235,8 +309,10 @@ export class PersistentPythonIPCSupervisor {
   ): Promise<PythonExecResult> {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
-      const socket = net.createConnection(this.socketPath);
+      const token = this.ipcToken;
+      const socket = net.createConnection(socketPath);
       let buffer = "";
+      let nonce = "";
 
       const timer = setTimeout(() => {
         socket.destroy();
@@ -244,15 +320,9 @@ export class PersistentPythonIPCSupervisor {
       }, timeoutMs);
 
       socket.on("connect", () => {
-        const req = {
-          action: "execute",
-          token: this.ipcToken,
-          script,
-          payload,
-          args,
-          timeoutMs,
-        };
-        socket.write(JSON.stringify(req) + "\n");
+        const frame = buildUnixFrame(token, { action: "execute", script, payload, args, timeoutMs });
+        nonce = frame.nonce;
+        socket.write(frame.line);
       });
 
       socket.on("data", (chunk) => {
@@ -263,12 +333,7 @@ export class PersistentPythonIPCSupervisor {
 
           const line = buffer.substring(0, buffer.indexOf("\n")).trim();
           try {
-            const parsed = JSON.parse(line);
-            if (parsed?.status === 401 || parsed?.code === "UNAUTHORIZED") {
-              // e.g. a daemon from another server instance owns this socket path
-              reject(new Error("UNIX socket IPC rejected the token (401)"));
-              return;
-            }
+            const parsed = parseUnixResponse(token, nonce, line);
             const durationMs = Date.now() - startTime;
             resolve({
               stdout: parsed.stdout ?? "",
@@ -279,7 +344,7 @@ export class PersistentPythonIPCSupervisor {
               channel: "unix_socket",
             });
           } catch (e: any) {
-            reject(new Error(`Failed to parse IPC JSON response: ${e.message}`));
+            reject(e instanceof Error ? e : new Error(String(e)));
           }
         }
       });
@@ -292,9 +357,12 @@ export class PersistentPythonIPCSupervisor {
   }
 
   /**
-   * Fallback channel: Dispatches via HTTP loopback microservice (http://127.0.0.1:5055/execute)
+   * HTTP loopback channel (port announced by this server's daemon). Policy, same as the UNIX
+   * socket: a response without a valid daemon signature, or any status other than 200, is a
+   * channel failure and the caller falls back to an ad-hoc spawn.
    */
   private executeViaHttp(
+    port: number,
     script: string,
     payload: any,
     args: string[],
@@ -302,35 +370,43 @@ export class PersistentPythonIPCSupervisor {
   ): Promise<PythonExecResult> {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
-      const reqPayload = JSON.stringify({ script, payload, args, timeoutMs });
+      const token = this.ipcToken;
+      const body = Buffer.from(JSON.stringify({ script, payload, args, timeoutMs }), "utf8");
+      const auth = signIpcRequest(token, "POST", "/execute", body);
 
       const req = http.request(
         {
-          hostname: this.httpHost,
-          port: this.httpPort,
+          hostname: this.httpHost.replace(/^\[|\]$/g, ""),
+          port,
           path: "/execute",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Content-Length": Buffer.byteLength(reqPayload),
-            Authorization: ipcAuthorizationHeader(this.ipcToken),
+            "Content-Length": body.length,
+            "X-Metallix-Ts": auth.ts,
+            "X-Metallix-Nonce": auth.nonce,
+            "X-Metallix-Mac": auth.mac,
           },
           timeout: timeoutMs,
         },
         (res) => {
-          let body = "";
-          res.on("data", (chunk) => (body += chunk));
+          const chunks: Buffer[] = [];
+          res.on("data", (chunk: Buffer) => chunks.push(chunk));
           res.on("end", () => {
-            if (res.statusCode !== 200) {
-              // 401: another instance's daemon owns the port; 4xx: refused request.
-              // The caller falls back to an ad-hoc spawn.
+            const raw = Buffer.concat(chunks);
+            const status = res.statusCode ?? 0;
+            if (!verifyIpcResponseMac(token, auth.nonce, status, raw, res.headers["x-metallix-mac"])) {
+              reject(new Error(`HTTP microservice response is not signed by this server's daemon (HTTP ${status})`));
+              return;
+            }
+            if (status !== 200) {
               let code = "";
-              try { code = String(JSON.parse(body)?.code ?? ""); } catch { /* non-JSON error body */ }
-              reject(new Error(`HTTP microservice refused the request (HTTP ${res.statusCode}${code ? ` ${code}` : ""})`));
+              try { code = String(JSON.parse(raw.toString("utf8"))?.code ?? ""); } catch { /* non-JSON error body */ }
+              reject(new Error(`HTTP microservice refused the request (HTTP ${status}${code ? ` ${code}` : ""})`));
               return;
             }
             try {
-              const parsed = JSON.parse(body);
+              const parsed = JSON.parse(raw.toString("utf8"));
               const durationMs = Date.now() - startTime;
               resolve({
                 stdout: parsed.stdout ?? "",
@@ -353,7 +429,7 @@ export class PersistentPythonIPCSupervisor {
       });
 
       req.on("error", (err) => reject(err));
-      req.write(reqPayload);
+      req.write(body);
       req.end();
     });
   }
@@ -416,7 +492,9 @@ export class PersistentPythonIPCSupervisor {
   }
 
   /**
-   * Primary unified execution dispatcher
+   * Primary unified execution dispatcher. Only channels announced by this server's own daemon
+   * are used; anything else (not ready, channel inactive, refused or unsigned reply) falls back
+   * to an ad-hoc spawn.
    */
   public async execute(
     scriptRelativePath: string,
@@ -426,33 +504,38 @@ export class PersistentPythonIPCSupervisor {
   ): Promise<PythonExecResult> {
     assertDispatchableScript(scriptRelativePath);
     const t0 = Date.now();
+    const failures: string[] = [];
 
-    const skipUnix = process.platform === "win32";
-    let unixErr: unknown = skipUnix ? new Error("UNIX domain sockets skipped on win32") : null;
-
-    if (!skipUnix) {
+    const socketPath = this.unixTarget();
+    if (socketPath) {
       try {
-        const result = await this.executeViaUnixSocket(scriptRelativePath, inputJson, args, timeoutMs);
+        const result = await this.executeViaUnixSocket(socketPath, scriptRelativePath, inputJson, args, timeoutMs);
         this.recordSuccess(Date.now() - t0);
         return result;
-      } catch (err) {
-        unixErr = err;
+      } catch (err: any) {
+        failures.push(err?.message || String(err));
       }
+    } else {
+      failures.push("no UNIX socket announced by this server's daemon");
     }
 
-    try {
-      const httpResult = await this.executeViaHttp(scriptRelativePath, inputJson, args, timeoutMs);
-      this.recordSuccess(Date.now() - t0);
-      return httpResult;
-    } catch (httpErr: any) {
-      const unixMsg = unixErr instanceof Error ? unixErr.message : String(unixErr);
-      console.warn(
-        `[Python-Supervisor] IPC channels unavailable (${unixMsg} / ${httpErr?.message || httpErr}). Falling back to ad-hoc spawn...`
-      );
-      const spawnResult = await this.executeViaAdHocSpawn(scriptRelativePath, inputJson, args, timeoutMs);
-      this.recordSuccess(Date.now() - t0);
-      return spawnResult;
+    const port = this.httpTarget();
+    if (port) {
+      try {
+        const httpResult = await this.executeViaHttp(port, scriptRelativePath, inputJson, args, timeoutMs);
+        this.recordSuccess(Date.now() - t0);
+        return httpResult;
+      } catch (err: any) {
+        failures.push(err?.message || String(err));
+      }
+    } else {
+      failures.push("no HTTP listener announced by this server's daemon");
     }
+
+    console.warn(`[Python-Supervisor] IPC channels unavailable (${failures.join(" / ")}). Falling back to ad-hoc spawn...`);
+    const spawnResult = await this.executeViaAdHocSpawn(scriptRelativePath, inputJson, args, timeoutMs);
+    this.recordSuccess(Date.now() - t0);
+    return spawnResult;
   }
 
   private recordSuccess(durationMs: number) {
@@ -463,17 +546,19 @@ export class PersistentPythonIPCSupervisor {
   public getStatus(): IPCDaemonStatus {
     const avgDuration =
       this.requestsHandled > 0 ? (this.totalDurationMs / this.requestsHandled).toFixed(2) : "0.00";
+    const httpPort = this.readiness.httpPort;
+    const host = this.httpHost.includes(":") && !this.httpHost.startsWith("[") ? `[${this.httpHost}]` : this.httpHost;
     return {
       status: this.isReady ? "online" : this.isRestarting ? "restarting" : "initializing",
       isPersistent: true,
       channels: {
         unixSocket: {
-          path: this.socketPath,
-          active: this.isReady && this.readiness.unixActive,
+          path: this.readiness.unixSocketPath ?? this.configuredSocketPath ?? "",
+          active: this.unixTarget() !== null,
         },
         httpMicroservice: {
-          url: `http://${this.httpHost}:${this.httpPort}`,
-          active: this.isReady && this.readiness.httpActive,
+          url: httpPort ? `http://${host}:${httpPort}` : "",
+          active: this.httpTarget() !== null,
         },
       },
       requestsProcessed: this.requestsHandled,

@@ -162,20 +162,99 @@ class AllowlistTest(unittest.TestCase):
                              (403, "SCRIPT_NOT_ALLOWED"), name)
 
 
+VECTOR_TOKEN = "k" * 64
+VECTOR_NONCE = "0123456789abcdef0123456789abcdef"
+VECTOR_REQ_BODY = b'{"script":"python/pourbaix_solver.py"}'
+VECTOR_REQ_MAC = "00622ace5f176a373bda15f2e964903e74d6457c8a60d5907f17b10e34773ffe"
+VECTOR_RESP_BODY = b'{"stdout": "x"}'
+VECTOR_RESP_MAC = "3baf7d40b3db8b160d35c8e4caf1338cad617f030cb908dd06c0e87bd128973c"
+
+
+def _now_ms():
+    return int(time.time() * 1000)
+
+
+def _auth_fields(method, path, body, token=TOKEN, ts=None, nonce=None):
+    ts = ts or str(_now_ms())
+    nonce = nonce or secrets.token_hex(16)
+    return ts, nonce, ipc.request_mac(token, method, path, ts, nonce, body)
+
+
+class MutualAuthTest(unittest.TestCase):
+    def test_cross_language_vectors(self):
+        # Same vectors as tests/persistent-ipc-auth.test.ts (computed with plain hmac/hashlib).
+        self.assertEqual(ipc.request_mac(VECTOR_TOKEN, "POST", "/execute", "1700000000000", VECTOR_NONCE,
+                                         VECTOR_REQ_BODY), VECTOR_REQ_MAC)
+        self.assertEqual(ipc.response_mac(VECTOR_TOKEN, VECTOR_NONCE, 200, VECTOR_RESP_BODY), VECTOR_RESP_MAC)
+
+    def test_verify_accepts_exact_request_once(self):
+        nonces = ipc.NonceCache()
+        body = b'{"a": 1}'
+        ts, nonce, mac = _auth_fields("POST", "/execute", body)
+        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces)
+        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces),
+                         (401, "REPLAYED_REQUEST"))
+
+    def test_any_change_or_wrong_token_is_401(self):
+        body = b'{"a": 1}'
+        ts, nonce, mac = _auth_fields("POST", "/execute", body)
+        cases = [
+            (TOKEN, "POST", "/execute", ts, nonce, mac, b'{"a": 2}'),
+            (TOKEN, "POST", "/run", ts, nonce, mac, body),
+            (TOKEN, "GET", "/execute", ts, nonce, mac, body),
+            (TOKEN, "POST", "/execute", str(int(ts) + 1), nonce, mac, body),
+            (TOKEN, "POST", "/execute", ts, secrets.token_hex(16), mac, body),
+            ("0" * 64, "POST", "/execute", ts, nonce, mac, body),
+            (None, "POST", "/execute", ts, nonce, mac, body),
+            ("", "POST", "/execute", ts, nonce, mac, body),
+        ]
+        for case in cases:
+            self.assertEqual(_status(ipc.verify_request, *case, ipc.NonceCache())[0], 401, case[:5])
+
+    def test_failed_mac_does_not_burn_the_nonce(self):
+        nonces = ipc.NonceCache()
+        body = b"{}"
+        ts, nonce, mac = _auth_fields("POST", "/execute", body)
+        self.assertEqual(_status(ipc.verify_request, TOKEN, "POST", "/execute", ts, nonce, "f" * 64, body, nonces)[0], 401)
+        ipc.verify_request(TOKEN, "POST", "/execute", ts, nonce, mac, body, nonces)
+
+    def test_stale_or_future_timestamps_are_401(self):
+        for delta in (-ipc.MAX_CLOCK_SKEW_MS - 1000, ipc.MAX_CLOCK_SKEW_MS + 1000):
+            ts, nonce, mac = _auth_fields("GET", "/status", b"", ts=str(_now_ms() + delta))
+            self.assertEqual(_status(ipc.verify_request, TOKEN, "GET", "/status", ts, nonce, mac, b"", ipc.NonceCache()),
+                             (401, "STALE_REQUEST"))
+
+    def test_mac_compare_is_constant_time(self):
+        with mock.patch.object(ipc.hmac, "compare_digest", wraps=ipc.hmac.compare_digest) as cd:
+            self.assertTrue(ipc.macs_equal("a" * 64, "a" * 64))
+            self.assertFalse(ipc.macs_equal("b" * 64, "a" * 64))
+        self.assertEqual(cd.call_count, 2)
+        for bad in (None, 5, "A" * 64, "a" * 63, "g" * 64):
+            self.assertFalse(ipc.macs_equal(bad, "a" * 64))
+
+    def test_nonce_cache_fails_closed_when_full(self):
+        cache = ipc.NonceCache(ttl_ms=10_000, max_entries=2)
+        self.assertTrue(cache.add_if_new("a" * 32, 0))
+        self.assertTrue(cache.add_if_new("b" * 32, 0))
+        self.assertFalse(cache.add_if_new("c" * 32, 1))      # full of live entries
+        self.assertTrue(cache.add_if_new("c" * 32, 20_000))  # expired entries purged
+        self.assertFalse(cache.add_if_new("c" * 32, 20_001))  # replay
+
+
 class HeaderCheckTest(unittest.TestCase):
     HOSTS = ipc.allowed_host_headers("127.0.0.1", 5055)
 
-    def _check(self, pairs, require_json=True, token=TOKEN):
-        return _status(ipc.check_http_headers, _headers(pairs), token=token,
-                       allowed_hosts=self.HOSTS, require_json=require_json)
+    def _check(self, pairs, require_json=True):
+        return _status(ipc.check_http_headers, _headers(pairs), allowed_hosts=self.HOSTS, require_json=require_json)
 
     def _ok(self, **override):
-        base = {"Host": "127.0.0.1:5055", "Authorization": f"Bearer {TOKEN}",
+        ts, nonce, mac = _auth_fields("POST", "/execute", b"{}")
+        base = {"Host": "127.0.0.1:5055", "X-Metallix-Ts": ts, "X-Metallix-Nonce": nonce, "X-Metallix-Mac": mac,
                 "Content-Type": "application/json"}
         base.update(override)
         return [(k, v) for k, v in base.items() if v is not None]
 
-    def test_legit_request_passes(self):
+    def test_well_formed_request_passes(self):
         self.assertIsNone(self._check(self._ok()))
         self.assertIsNone(self._check(self._ok(Host="localhost:5055")))
         self.assertIsNone(self._check(self._ok(Host="LOCALHOST:5055")))
@@ -186,31 +265,24 @@ class HeaderCheckTest(unittest.TestCase):
         for host in (None, "evil.example:5055", "evil.example", "127.0.0.1", "127.0.0.1:5056",
                      "127.0.0.1.nip.io:5055", "localhost", "0.0.0.0:5055", ""):
             self.assertEqual(self._check(self._ok(Host=host)), (403, "HOST_NOT_ALLOWED"), host)
-        dup = self._ok() + [("Host", "evil.example:5055")]
-        self.assertEqual(self._check(dup), (403, "HOST_NOT_ALLOWED"))
+        self.assertEqual(self._check(self._ok() + [("Host", "evil.example:5055")]), (403, "HOST_NOT_ALLOWED"))
 
     def test_any_origin_is_403(self):
         for origin in ("https://evil.example", "null", "http://127.0.0.1:5055", "http://localhost:3000"):
             self.assertEqual(self._check(self._ok(Origin=origin)), (403, "ORIGIN_NOT_ALLOWED"), origin)
 
-    def test_missing_or_wrong_token_is_401(self):
-        for auth in (None, "", "Bearer", f"Basic {TOKEN}", f"Bearer {TOKEN}x", f"Bearer {TOKEN[:-1]}",
-                     "Bearer " + "0" * 64, TOKEN, f"Bearer  {TOKEN.upper()}"):
-            self.assertEqual(self._check(self._ok(Authorization=auth)), (401, "UNAUTHORIZED"), auth)
-        dup = self._ok() + [("Authorization", "Bearer other")]
-        self.assertEqual(self._check(dup), (401, "UNAUTHORIZED"))
-
-    def test_unconfigured_token_fails_closed(self):
-        self.assertEqual(self._check(self._ok(), token=None), (401, "UNAUTHORIZED"))
-        self.assertEqual(self._check(self._ok(Authorization="Bearer "), token=""), (401, "UNAUTHORIZED"))
-
-    def test_token_compare_is_constant_time(self):
-        with mock.patch.object(ipc.hmac, "compare_digest", wraps=ipc.hmac.compare_digest) as cd:
-            self.assertTrue(ipc.token_matches(TOKEN, TOKEN))
-            self.assertFalse(ipc.token_matches("x" * 64, TOKEN))
-        self.assertEqual(cd.call_count, 2)
-        self.assertFalse(ipc.token_matches(None, TOKEN))
-        self.assertFalse(ipc.token_matches(12345, TOKEN))
+    def test_missing_or_malformed_auth_fields_are_401(self):
+        bad = [{"X-Metallix-Ts": None}, {"X-Metallix-Nonce": None}, {"X-Metallix-Mac": None},
+               {"X-Metallix-Ts": "abc"}, {"X-Metallix-Ts": "-5"}, {"X-Metallix-Nonce": "0" * 31},
+               {"X-Metallix-Nonce": "A" * 32}, {"X-Metallix-Mac": "0" * 63}, {"X-Metallix-Mac": "Z" * 64}]
+        for override in bad:
+            self.assertEqual(self._check(self._ok(**override))[0], 401, override)
+        self.assertEqual(self._check(self._ok() + [("X-Metallix-Nonce", "1" * 32)])[0], 401)  # duplicate
+        self.assertEqual(self._check(self._ok(**{"X-Metallix-Ts": str(_now_ms() - 10 ** 6)})),
+                         (401, "STALE_REQUEST"))
+        # A bearer token alone (the previous scheme) is no longer accepted.
+        self.assertEqual(self._check([("Host", "127.0.0.1:5055"), ("Authorization", f"Bearer {TOKEN}"),
+                                      ("Content-Type", "application/json")])[0], 401)
 
     def test_non_json_content_type_is_415(self):
         for ctype in (None, "text/plain", "text/plain;charset=UTF-8", "application/x-www-form-urlencoded",
@@ -222,21 +294,7 @@ class HeaderCheckTest(unittest.TestCase):
         self.assertIn("127.0.0.2:9000", ipc.allowed_host_headers("127.0.0.2", 9000))
         self.assertIn("[::1]:9000", ipc.allowed_host_headers("::1", 9000))
         self.assertIn("127.0.0.1:9000", ipc.allowed_host_headers("::1", 9000))
-
-
-class ExclusiveBindTest(unittest.TestCase):
-    def test_second_process_cannot_bind_the_daemon_port(self):
-        httpd = ipc.make_http_server("127.0.0.1", 0, TOKEN, None)
-        try:
-            port = httpd.server_address[1]
-            if os.name == "nt":
-                self.assertFalse(httpd.allow_reuse_address)
-            with socket.socket() as squatter:
-                squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                with self.assertRaises(OSError):
-                    squatter.bind(("127.0.0.1", port))
-        finally:
-            httpd.server_close()
+        self.assertIn("192.0.2.7:9000", ipc.allowed_host_headers("192.0.2.7", 9000))
 
 
 class ExecRequestValidationTest(unittest.TestCase):
@@ -259,21 +317,54 @@ class StartupConfigTest(unittest.TestCase):
         ipc.validate_startup_config("127.0.0.1", "x" * 32, False)
 
     def test_non_loopback_needs_explicit_override(self):
-        for host in ("0.0.0.0", "192.168.1.10", "::", "example.com"):
+        for host in ("192.168.1.10", "example.com"):
             with self.assertRaises(SystemExit) as ctx:
                 ipc.validate_startup_config(host, TOKEN, False)
             self.assertIn("METALLIX_IPC_ALLOW_REMOTE", str(ctx.exception.code))
         err = io.StringIO()
         with mock.patch.object(sys, "stderr", err):
-            ipc.validate_startup_config("0.0.0.0", TOKEN, True)
+            ipc.validate_startup_config("192.168.1.10", TOKEN, True)
         self.assertIn("WARNING", err.getvalue())
         with self.assertRaises(SystemExit):  # the override never waives the token
-            ipc.validate_startup_config("0.0.0.0", None, True)
+            ipc.validate_startup_config("192.168.1.10", None, True)
         for host in ("127.0.0.1", "127.0.0.5", "localhost", "::1"):
             ipc.validate_startup_config(host, TOKEN, False)
 
     def test_token_is_not_left_in_environment(self):
         self.assertNotIn("METALLIX_IPC_TOKEN", os.environ)
+
+
+class ExclusiveBindTest(unittest.TestCase):
+    def test_second_process_cannot_bind_the_daemon_port(self):
+        httpd = ipc.make_http_server("127.0.0.1", 0, TOKEN, _StubRegistry())
+        try:
+            port = httpd.server_address[1]
+            if os.name == "nt":
+                self.assertFalse(httpd.allow_reuse_address)
+            with socket.socket() as squatter:
+                squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                with self.assertRaises(OSError):
+                    squatter.bind(("127.0.0.1", port))
+        finally:
+            httpd.server_close()
+
+
+@unittest.skipIf(os.name == "nt", "UNIX socket directory is POSIX only")
+class SocketPathTest(unittest.TestCase):
+    def test_default_is_private_0700_directory(self):
+        path, private_dir = ipc.create_socket_path(None)
+        try:
+            self.assertEqual(os.path.dirname(path), private_dir)
+            self.assertEqual(stat.S_IMODE(os.stat(private_dir).st_mode), 0o700)
+        finally:
+            shutil.rmtree(private_dir, ignore_errors=True)
+
+    def test_explicit_path_in_shared_directory_is_refused(self):
+        with self.assertRaises(SystemExit):
+            ipc.create_socket_path("/tmp/metallix_python_ipc.sock")
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chmod(tmp, 0o700)
+            self.assertEqual(ipc.create_socket_path(os.path.join(tmp, "s.sock")), (os.path.join(tmp, "s.sock"), None))
 
 
 class _StubRegistry:
@@ -296,58 +387,70 @@ def _raw_request(port, method, path, headers, body=None):
     conn = http.client.HTTPConnection("127.0.0.1", port, timeout=120)
     conn.putrequest(method, path, skip_host=True, skip_accept_encoding=True)
     data = body.encode("utf-8") if isinstance(body, str) else body
-    if data is not None:
+    if data is not None and "Content-Length" not in headers:
         headers = dict(headers, **{"Content-Length": str(len(data))})
     for key, value in headers.items():
         conn.putheader(key, value)
     conn.endheaders(data)
     res = conn.getresponse()
-    raw = res.read().decode("utf-8", "replace")
+    raw = res.read()
     acao = res.getheader("Access-Control-Allow-Origin")
+    mac = res.getheader("X-Metallix-Mac")
     conn.close()
     try:
-        parsed = json.loads(raw)
+        parsed = json.loads(raw.decode("utf-8", "replace"))
     except ValueError:
-        parsed = raw
-    return res.status, parsed, acao
+        parsed = raw.decode("utf-8", "replace")
+    return res.status, parsed, acao, mac, raw
 
 
-def _attack_matrix(port, token):
-    """(name, method, path, headers, body, expected status) for attacker-shaped requests."""
+def _signed(port, method, path, body, token=TOKEN, host=None, ctype="application/json", ts=None, nonce=None,
+            sign_body=None):
+    data = body.encode("utf-8") if isinstance(body, str) else (body or b"")
+    ts, nonce, mac = _auth_fields(method, path, data if sign_body is None else sign_body.encode("utf-8"),
+                                  token=token, ts=ts, nonce=nonce)
+    headers = {"Host": host or f"127.0.0.1:{port}", "X-Metallix-Ts": ts, "X-Metallix-Nonce": nonce,
+               "X-Metallix-Mac": mac}
+    if ctype:
+        headers["Content-Type"] = ctype
+    return headers
+
+
+def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
+    """(name, method, path, headers, body, expected status) for attacker-shaped requests (signed fresh)."""
     host = f"127.0.0.1:{port}"
-    auth = f"Bearer {token}"
-    traversal = json.dumps({"script": "python/../../outside/pwn.py", "payload": {}})
+    traversal = json.dumps({"script": traversal_script, "payload": {}})
     legit = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}})
-    js = "application/json"
+
+    def s(body, **kw):
+        return _signed(port, "POST", "/execute", body, **kw)
+
     return [
         ("cross-origin text/plain POST (browser)", "POST", "/execute",
          {"Host": host, "Origin": "https://evil.example", "Content-Type": "text/plain"}, traversal, 403),
-        ("DNS rebinding Host", "POST", "/execute",
-         {"Host": f"evil.example:{port}", "Content-Type": js, "Authorization": auth}, legit, 403),
-        ("Origin even with token", "POST", "/execute",
-         {"Host": host, "Origin": "https://evil.example", "Content-Type": js, "Authorization": auth}, legit, 403),
-        ("no token", "POST", "/execute", {"Host": host, "Content-Type": js}, legit, 401),
-        ("wrong token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": "Bearer " + "0" * 64}, legit, 401),
-        ("no token GET /status", "GET", "/status", {"Host": host}, None, 401),
-        ("text/plain with token", "POST", "/execute",
-         {"Host": host, "Content-Type": "text/plain", "Authorization": auth}, legit, 415),
-        ("form with token", "POST", "/execute",
-         {"Host": host, "Content-Type": "application/x-www-form-urlencoded", "Authorization": auth}, legit, 415),
-        ("traversal with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth}, traversal, 400),
-        ("backslash traversal with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth},
+        ("DNS rebinding Host", "POST", "/execute", s(legit, host=f"evil.example:{port}"), legit, 403),
+        ("Origin even when signed", "POST", "/execute", dict(s(legit), Origin="https://evil.example"), legit, 403),
+        ("no authentication", "POST", "/execute", {"Host": host, "Content-Type": "application/json"}, legit, 401),
+        ("old bearer token scheme", "POST", "/execute",
+         {"Host": host, "Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"}, legit, 401),
+        ("signed with the wrong token", "POST", "/execute", s(legit, token="0" * 64), legit, 401),
+        ("signed body swapped for traversal", "POST", "/execute", s(traversal, sign_body=legit), traversal, 401),
+        ("stale timestamp", "POST", "/execute", s(legit, ts=str(_now_ms() - 10 ** 6)), legit, 401),
+        ("no authentication GET /status", "GET", "/status", {"Host": host}, None, 401),
+        ("text/plain when signed", "POST", "/execute", s(legit, ctype="text/plain"), legit, 415),
+        ("form when signed", "POST", "/execute", s(legit, ctype="application/x-www-form-urlencoded"), legit, 415),
+        ("signed traversal", "POST", "/execute", s(traversal), traversal, 400),
+        ("signed backslash traversal", "POST", "/execute",
+         s(json.dumps({"script": "python\\..\\..\\outside\\pwn.py"})),
          json.dumps({"script": "python\\..\\..\\outside\\pwn.py"}), 400),
-        ("absolute drive path with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth}, json.dumps({"script": "C:/x/pwn.py"}), 400),
-        ("UNC path with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth}, json.dumps({"script": "//srv/share/pwn.py"}), 400),
-        ("unlisted script with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth},
+        ("signed drive path", "POST", "/execute", s(json.dumps({"script": "C:/x/pwn.py"})),
+         json.dumps({"script": "C:/x/pwn.py"}), 400),
+        ("signed UNC path", "POST", "/execute", s(json.dumps({"script": "//srv/share/pwn.py"})),
+         json.dumps({"script": "//srv/share/pwn.py"}), 400),
+        ("signed unlisted script", "POST", "/execute", s(json.dumps({"script": "python/persistent_ipc_service.py"})),
          json.dumps({"script": "python/persistent_ipc_service.py"}), 403),
-        ("non-list args with token", "POST", "/execute",
-         {"Host": host, "Content-Type": js, "Authorization": auth},
+        ("signed non-list args", "POST", "/execute",
+         s(json.dumps({"script": "python/pourbaix_solver.py", "args": "-c x"})),
          json.dumps({"script": "python/pourbaix_solver.py", "args": "-c x"}), 400),
         ("CORS preflight", "OPTIONS", "/execute",
          {"Host": host, "Origin": "https://evil.example", "Access-Control-Request-Method": "POST"}, None, 501),
@@ -374,72 +477,110 @@ class InThreadHttpTest(unittest.TestCase):
         self.reg.calls.clear()
 
     def test_attacks_are_refused_before_any_execution(self):
-        for name, method, path, headers, body, expected in _attack_matrix(self.port, TOKEN):
-            status, parsed, acao = _raw_request(self.port, method, path, headers, body)
+        for name, method, path, headers, body, expected in _attack_matrix(self.port):
+            status, parsed, acao, _, _ = _raw_request(self.port, method, path, headers, body)
             self.assertEqual(status, expected, (name, parsed))
             self.assertIsNone(acao, name)
         self.assertEqual(self.reg.calls, [])
 
-    def test_legit_request_reaches_registry(self):
-        status, parsed, acao = _raw_request(
-            self.port, "POST", "/execute",
-            {"Host": f"localhost:{self.port}", "Content-Type": "application/json; charset=utf-8",
-             "Authorization": f"Bearer {TOKEN}"},
-            json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "id": 7}))
+    def test_legit_request_reaches_registry_and_response_is_signed(self):
+        body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "id": 7})
+        headers = _signed(self.port, "POST", "/execute", body, host=f"localhost:{self.port}",
+                          ctype="application/json; charset=utf-8")
+        status, parsed, acao, mac, raw = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, parsed["stdout"], parsed["id"], acao), (200, "stub-ran", 7, None))
+        self.assertEqual(mac, ipc.response_mac(TOKEN, headers["X-Metallix-Nonce"], 200, raw))
         self.assertEqual(self.reg.calls, [("python/pourbaix_solver.py", {"element": "Fe"}, [], 15000)])
-        status, parsed, _ = _raw_request(self.port, "GET", "/status",
-                                         {"Host": f"127.0.0.1:{self.port}", "Authorization": f"Bearer {TOKEN}"})
+        # The same request again is a replay.
+        status, parsed, _, _, _ = _raw_request(self.port, "POST", "/execute", headers, body)
+        self.assertEqual((status, parsed["code"]), (401, "REPLAYED_REQUEST"))
+        self.assertEqual(len(self.reg.calls), 1)
+        get_headers = _signed(self.port, "GET", "/status", b"", ctype=None)
+        status, parsed, _, mac, raw = _raw_request(self.port, "GET", "/status", get_headers)
         self.assertEqual((status, parsed), (200, {"status": "online"}))
+        self.assertEqual(mac, ipc.response_mac(TOKEN, get_headers["X-Metallix-Nonce"], 200, raw))
+
+    def test_unauthenticated_rejections_are_not_signed(self):
+        status, _, _, mac, _ = _raw_request(self.port, "POST", "/execute",
+                                            _signed(self.port, "POST", "/execute", "{}", token="0" * 64), "{}")
+        self.assertEqual((status, mac), (401, None))
 
     def test_warmup_requires_auth(self):
-        status, _, _ = _raw_request(self.port, "POST", "/warmup",
-                                    {"Host": f"127.0.0.1:{self.port}", "Content-Type": "application/json"}, "{}")
+        status, _, _, _, _ = _raw_request(self.port, "POST", "/warmup",
+                                          {"Host": f"127.0.0.1:{self.port}", "Content-Type": "application/json"}, "{}")
         self.assertEqual(status, 401)
         self.assertEqual(self.reg.calls, [])
+
+    def test_oversized_body_is_413_before_reading(self):
+        headers = dict(_signed(self.port, "POST", "/execute", b"{}"), **{"Content-Length": str(ipc.MAX_BODY_BYTES + 1)})
+        status, parsed, _, _, _ = _raw_request(self.port, "POST", "/execute", headers, None)
+        self.assertEqual((status, parsed["code"]), (413, "PAYLOAD_TOO_LARGE"))
+
+
+def _unix_frame(request, token=TOKEN, ts=None, nonce=None):
+    body = json.dumps(request)
+    ts, nonce, mac = _auth_fields("UNIX", "/", body.encode("utf-8"), token=token, ts=ts, nonce=nonce)
+    return {"v": 1, "ts": ts, "nonce": nonce, "mac": mac, "body": body}
 
 
 @unittest.skipIf(os.name == "nt" or not hasattr(socket, "AF_UNIX"), "UNIX socket channel is POSIX only")
 class UnixSocketTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.mkdtemp()
-        self.path = os.path.join(self.tmp, "ipc.sock")
+        self.path, self.private_dir = ipc.create_socket_path(None)
         self.reg = _StubRegistry()
-        self.server = ipc.UnixIPCServer(self.path, self.reg, TOKEN)
+        self.server = ipc.UnixIPCServer(self.path, self.reg, TOKEN, self.private_dir)
         self.server.start()
 
     def tearDown(self):
         self.server.stop()
-        shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def _send(self, req):
+    def _send_raw(self, data: bytes):
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.settimeout(10)
             s.connect(self.path)
-            s.sendall(json.dumps(req).encode("utf-8") + b"\n")
-            data = b""
-            while b"\n" not in data:
+            s.sendall(data)
+            buf = b""
+            while b"\n" not in buf:
                 chunk = s.recv(65536)
                 if not chunk:
                     break
-                data += chunk
-        return json.loads(data.split(b"\n", 1)[0])
+                buf += chunk
+        return json.loads(buf.split(b"\n", 1)[0])
 
-    def test_socket_mode_is_owner_only(self):
+    def _send(self, frame):
+        return self._send_raw(json.dumps(frame).encode("utf-8") + b"\n")
+
+    def _verified(self, frame, nonce):
+        self.assertEqual(frame["mac"], ipc.response_mac(TOKEN, nonce, frame["status"], frame["body"].encode("utf-8")))
+        return json.loads(frame["body"])
+
+    def test_socket_and_directory_are_owner_only(self):
         self.assertEqual(stat.S_IMODE(os.stat(self.path).st_mode), 0o600)
+        self.assertEqual(stat.S_IMODE(os.stat(self.private_dir).st_mode), 0o700)
+        self.server.stop()
+        self.assertFalse(os.path.exists(self.private_dir))
 
-    def test_token_required(self):
+    def test_authentication_required_and_responses_signed(self):
         req = {"action": "execute", "script": "python/pourbaix_solver.py", "payload": {}}
-        for token in (None, "", "0" * 64):
-            body = dict(req) if token is None else dict(req, token=token)
-            self.assertEqual(self._send(body)["status"], 401)
-        self.assertEqual(self._send({"action": "status"})["status"], 401)
+        for frame in ({"token": TOKEN, **req}, dict(_unix_frame(req), mac="0" * 64), _unix_frame(req, token="0" * 64),
+                      dict(_unix_frame(req), body=json.dumps(dict(req, script="python/calphad_solver.py"))),
+                      _unix_frame(req, ts=str(_now_ms() - 10 ** 6))):
+            res = self._send(frame)
+            self.assertEqual(res["status"], 401)
+            self.assertNotIn("mac", res)
         self.assertEqual(self.reg.calls, [])
-        self.assertEqual(self._send(dict(req, token=TOKEN))["stdout"], "stub-ran")
+        frame = _unix_frame(req)
+        res = self._send(frame)
+        self.assertEqual(res["status"], 200)
+        self.assertEqual(self._verified(res, frame["nonce"])["stdout"], "stub-ran")
+        self.assertEqual(self._send(frame)["status"], 401)  # replay
+        self.assertEqual(len(self.reg.calls), 1)
 
-    def test_traversal_rejected_on_socket(self):
-        res = self._send({"action": "execute", "token": TOKEN, "script": "python/../../x/pwn.py"})
-        self.assertEqual((res["status"], res["exitCode"]), (400, 1))
+    def test_traversal_rejected_on_socket_with_signed_4xx(self):
+        frame = _unix_frame({"action": "execute", "script": "python/../../x/pwn.py"})
+        res = self._send(frame)
+        self.assertEqual(res["status"], 400)
+        self.assertEqual(self._verified(res, frame["nonce"])["code"], "INVALID_SCRIPT_PATH")
         self.assertEqual(self.reg.calls, [])
 
 
@@ -470,8 +611,9 @@ def _kill_tree(proc):
 
 def _spawn_service(extra_env, cwd):
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", METALLIX_IPC_WORKERS="1")
-    env.pop("METALLIX_IPC_TOKEN", None)
-    env.pop("METALLIX_IPC_ALLOW_REMOTE", None)
+    for key in ("METALLIX_IPC_TOKEN", "METALLIX_IPC_ALLOW_REMOTE", "METALLIX_IPC_PORT", "METALLIX_IPC_SOCK",
+                "METALLIX_IPC_HOST"):
+        env.pop(key, None)
     env.update(extra_env)
     return subprocess.Popen([sys.executable, "-B", str(HERE / "persistent_ipc_service.py")], cwd=str(cwd),
                             env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -479,7 +621,7 @@ def _spawn_service(extra_env, cwd):
 
 
 class ServiceIntegrationTest(unittest.TestCase):
-    """Starts the real service (cwd = repo root, as server/processOrchestrator.ts does)."""
+    """Starts the real service with defaults (ephemeral port, private socket dir; cwd = repo root)."""
 
     @classmethod
     def setUpClass(cls):
@@ -490,15 +632,14 @@ class ServiceIntegrationTest(unittest.TestCase):
         (cls.outside / "pwn.py").write_text(
             "import pathlib\npathlib.Path(__file__).with_name('PWNED.txt').write_text('x')\nprint('PWNED')\n",
             encoding="utf-8")
-        cls.port = _free_port()
-        cls.proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(cls.port),
-                                   "METALLIX_IPC_SOCK": os.path.join(cls.tmp, "ipc.sock")}, REPO)
+        cls.proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN}, REPO)
         line = cls.proc.stdout.readline()
         if not line:
             err = cls.proc.stderr.read()
             _kill_tree(cls.proc)
             raise AssertionError(f"service did not start: {err[-2000:]}")
         cls.ready = json.loads(line)
+        cls.port = cls.ready["httpPort"]
         threading.Thread(target=cls.proc.stderr.read, daemon=True).start()  # drain
 
     @classmethod
@@ -506,51 +647,90 @@ class ServiceIntegrationTest(unittest.TestCase):
         _kill_tree(cls.proc)
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
-    def test_ready_message_has_no_token(self):
+    def test_ready_message_announces_actual_channels_and_no_token(self):
         self.assertEqual(self.ready["status"], "ready")
         self.assertTrue(self.ready["httpActive"])
+        self.assertIsInstance(self.port, int)
+        self.assertGreater(self.port, 0)
+        self.assertEqual(self.ready["http"], f"http://127.0.0.1:{self.port}")
         self.assertNotIn(TOKEN, json.dumps(self.ready))
+        if os.name != "nt":
+            self.assertTrue(self.ready["unixSocketActive"])
+            sock_dir = os.path.dirname(self.ready["unixSocket"])
+            self.assertEqual(stat.S_IMODE(os.stat(sock_dir).st_mode), 0o700)
+        else:
+            self.assertFalse(self.ready["unixSocketActive"])
 
     def test_attacks_fail_and_legit_request_succeeds(self):
         rel = os.path.relpath(self.outside / "pwn.py", REPO).replace(os.sep, "/")
-        real_traversal = json.dumps({"script": "python/../" + rel})
-        host = f"127.0.0.1:{self.port}"
-        for name, method, path, headers, body, expected in _attack_matrix(self.port, TOKEN):
-            if body and "outside/pwn.py" in body and "\\\\" not in body:
-                body = real_traversal  # aim at a file that really exists
-            status, parsed, acao = _raw_request(self.port, method, path, headers, body)
+        for name, method, path, headers, body, expected in _attack_matrix(self.port, "python/../" + rel):
+            status, parsed, acao, _, _ = _raw_request(self.port, method, path, headers, body)
             self.assertEqual(status, expected, (name, parsed))
             self.assertIsNone(acao, name)
             self.assertFalse(self.marker.exists(), name)
-        status, parsed, acao = _raw_request(
-            self.port, "POST", "/execute",
-            {"Host": host, "Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"},
-            json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "timeoutMs": 60000}))
+        body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "timeoutMs": 60000})
+        headers = _signed(self.port, "POST", "/execute", body)
+        status, parsed, acao, mac, raw = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, acao), (200, None), parsed)
+        self.assertEqual(mac, ipc.response_mac(TOKEN, headers["X-Metallix-Nonce"], 200, raw))
         self.assertEqual(parsed["exitCode"], 0, parsed.get("stderr"))
         self.assertTrue(json.loads(parsed["stdout"])["success"])
         self.assertFalse(self.marker.exists())
 
 
-class ServiceStartupRefusalTest(unittest.TestCase):
-    def _expect_refusal(self, extra_env, needle):
-        proc = _spawn_service(dict(extra_env, METALLIX_IPC_PORT=str(_free_port()),
-                                   METALLIX_IPC_SOCK=os.path.join(tempfile.gettempdir(), f"ipc-{os.getpid()}.sock")),
-                              REPO)
+class ServiceStartupTest(unittest.TestCase):
+    def _run_to_exit(self, extra_env):
+        proc = _spawn_service(extra_env, REPO)
         try:
             out, err = proc.communicate(timeout=180)
         finally:
             _kill_tree(proc)
-        self.assertNotEqual(proc.returncode, 0)
+        return proc.returncode, out, err
+
+    def _expect_refusal(self, extra_env, needle):
+        code, out, err = self._run_to_exit(extra_env)
+        self.assertNotEqual(code, 0)
         self.assertNotIn('"ready"', out)
         self.assertIn(needle, err)
+        self.assertNotIn("Warming up", err)  # refused before any warm-up
 
     def test_refuses_without_token(self):
         self._expect_refusal({}, "METALLIX_IPC_TOKEN")
 
     def test_refuses_non_loopback_without_override(self):
-        self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "0.0.0.0"},
+        self._expect_refusal({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_HOST": "192.0.2.1"},
                              "METALLIX_IPC_ALLOW_REMOTE")
+
+    @unittest.skipIf(os.name == "nt", "UNIX socket is POSIX only")
+    def test_refuses_socket_in_shared_tmp(self):
+        code, out, err = self._run_to_exit({"METALLIX_IPC_TOKEN": TOKEN,
+                                            "METALLIX_IPC_SOCK": f"/tmp/metallix-test-{os.getpid()}.sock"})
+        self.assertNotEqual(code, 0)
+        self.assertNotIn('"ready"', out)
+        self.assertIn("METALLIX_IPC_SOCK", err)
+
+    def test_squatted_fixed_port_is_never_announced(self):
+        with socket.socket() as squatter:
+            squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            squatter.bind(("127.0.0.1", 0))
+            squatter.listen(5)
+            port = squatter.getsockname()[1]
+            if os.name == "nt":
+                # Exclusive bind fails and HTTP is the only channel: the daemon exits.
+                code, out, err = self._run_to_exit({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(port)})
+                self.assertNotEqual(code, 0)
+                self.assertNotIn('"ready"', out)
+                self.assertIn("no IPC channel", err)
+                self.assertNotIn("Warming up", err)  # no pool was created for a launch that failed
+            else:
+                proc = _spawn_service({"METALLIX_IPC_TOKEN": TOKEN, "METALLIX_IPC_PORT": str(port)}, REPO)
+                try:
+                    ready = json.loads(proc.stdout.readline())
+                finally:
+                    _kill_tree(proc)
+                self.assertFalse(ready["httpActive"])
+                self.assertIsNone(ready["httpPort"])
+                self.assertTrue(ready["unixSocketActive"])
 
 
 if __name__ == "__main__":
