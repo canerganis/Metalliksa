@@ -27,7 +27,7 @@ ALLOWED_LOCAL_IMPORTS = {
                        "physical_constants"},  # design step (b): computed corrosion EW
     "alloy_data_kinetics_uq_fatigue": set(),  # phase6a-t2b
     "input_validation": {"alloy_registry", "physical_constants"},
-    "murakami_constants": {"input_validation"},
+    "murakami_constants": {"input_validation"},  # fx-murakami: ValidationError (unknown location, bad sqrt(area)/HV)
 }
 # Phase 6a tranche 2a domain-data leaf (its own guard: test_alloy_data_calphad_battery_icme).
 ALLOWED_LOCAL_IMPORTS["alloy_registry"].add("alloy_data_calphad_battery_icme")
