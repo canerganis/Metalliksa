@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { create } from "zustand";
 import { simulationApi, type SimulationInput, type SimulationJob, type SimulationMode } from "../services/lpbfSimulationService";
+import { resultSignatureOnPoll, resultSignatureOnRestore } from "../utils/lpbfResultStaleness";
 
 export const LPBF_ENGINEERING_DEFAULTS: Partial<SimulationInput> = { stripeWidth_um:500,islandSize_um:200,mesh_um:20,maxDt_s:1e-6,tracks:1,layers:1,trackLength_um:600,dwell_s:.0002,cooling_s:.0005,packingFraction:.55,powderConductivityRatio:.12,convection_W_m2K:20,timeout_s:300,scanAngle_deg:0,layerRotation_deg:67,study:"none",backend:"auto" };
 export interface LpbfEngineeringState {
@@ -64,7 +65,7 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
     simulationApi.get(snapshot.id).then(job => {
       if (!live || superseded || useLpbfEngineeringStore.getState().job || useLpbfEngineeringStore.getState().busy) return;
       // Keep current controls intact. A different executed signature remains stale.
-      useLpbfEngineeringStore.setState({job:{...job,cacheHit:snapshot.cacheHit}, submittedInput:snapshot.input ?? job.result?.settings, submittedSignature:snapshot.signature || "", resultSignature:job.status === "completed" ? snapshot.signature || "" : "", error:""});
+      useLpbfEngineeringStore.setState({job:{...job,cacheHit:snapshot.cacheHit}, submittedInput:snapshot.input ?? job.result?.settings, submittedSignature:snapshot.signature || "", resultSignature:resultSignatureOnRestore(job.status, snapshot.signature), error:""});
       resumeEngineeringJob();
     }).catch(error => {
       if (live && !superseded && !useLpbfEngineeringStore.getState().job && !useLpbfEngineeringStore.getState().busy) useLpbfEngineeringStore.setState({error:`Saved job unavailable: ${error instanceof Error ? error.message : "Worker connection failed"}`});
@@ -100,7 +101,7 @@ export function resumeEngineeringJob(): void {
       const next = await simulationApi.get(id);
       const current = useLpbfEngineeringStore.getState();
       if (current.job?.id !== id || !["queued", "running"].includes(current.job.status)) {if (pollingId === id) pollingId = undefined;return;}
-      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(next.status === "completed" ? {resultSignature: current.submittedSignature} : {}) });
+      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(resultSignatureOnPoll(next.status, current.submittedSignature) !== undefined ? {resultSignature: current.submittedSignature} : {}) });
     } catch (error) {
       if (useLpbfEngineeringStore.getState().job?.id === id) useLpbfEngineeringStore.setState({error: error instanceof Error ? error.message : "Worker connection failed"});
     }
