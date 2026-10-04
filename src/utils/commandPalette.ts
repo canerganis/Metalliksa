@@ -16,6 +16,9 @@ export interface PaletteEntry {
   readonly workspaceLabel: string;
 }
 
+/** Longest query the palette field accepts (the input's maxLength). */
+export const PALETTE_QUERY_MAX_LENGTH = 120;
+
 /** Lower case without combining diacritics, dotless i folded to i: "resume" finds "Résumé", "celik" a Turkish "Çelik". */
 export function normalizeForSearch(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()

@@ -18,6 +18,7 @@
   width: 100%;
   max-width: 42rem;
   max-height: min(36rem, 76vh);
+  max-height: min(36rem, 76dvh); /* dynamic viewport: shrinks with the on-screen keyboard */
   border: 1px solid var(--mk-border-strong);
   border-radius: 12px;
   background: var(--mk-surface-raised);
@@ -116,6 +117,8 @@
   background: var(--mk-surface);
   box-shadow: inset 3px 0 0 var(--mk-focus-color);
 }
+/* Pointer hover is visual only; aria-activedescendant follows the keyboard. */
+.mk-palette-option:hover:not([data-active="true"]) { border-color: var(--mk-line-subtle); }
 .mk-palette-option-main { display: flex; flex-direction: column; min-width: 0; }
 .mk-palette-option-label { font-size: var(--mk-fs-sm); font-weight: 500; color: var(--mk-text-strong); }
 .mk-palette-option-workspace { font-size: var(--mk-fs-2xs); color: var(--mk-text-subtle); }
@@ -145,5 +148,5 @@
 
 @media (max-width: 639px) {
   .mk-palette-overlay { padding-top: var(--mk-space-4); }
-  .mk-palette { max-height: calc(100vh - 2 * var(--mk-space-4)); }
+  .mk-palette { max-height: calc(100vh - 2 * var(--mk-space-4)); max-height: calc(100dvh - 2 * var(--mk-space-4)); }
 }

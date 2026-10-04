@@ -6,7 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CommandPalette } from '../src/components/CommandPalette';
 import { evidenceBadgeView } from '../src/components/sdk/EvidenceBadge';
-import { MODULES } from '../src/data/workspaces';
+import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES } from '../src/data/workspaces';
 import { contractById } from '../src/modules/registry';
 
 // Phase 9 command palette a11y, same static pattern as the Phase 8 tests (tests/accessible-modal.test.tsx,
@@ -30,14 +30,15 @@ test('dialog: role=dialog, aria-modal, named by its visible heading', () => {
 test('combobox: labelled text field that controls the listbox and points at the active option', () => {
   const [combo] = openingTags('combobox');
   assert.ok(combo?.startsWith('<input'), 'the combobox is the text input');
-  assert.equal(attr(combo, 'aria-expanded'), 'true');
+  assert.equal(attr(combo, 'aria-expanded'), 'true', 'results are shown');
+  assert.match(attr(combo, 'maxlength') ?? attr(combo, 'maxLength') ?? '', /^120$/, 'query length is capped');
   assert.equal(attr(combo, 'aria-autocomplete'), 'list');
   const listboxId = attr(combo, 'aria-controls')!;
   const [listbox] = openingTags('listbox');
   assert.equal(attr(listbox, 'id'), listboxId);
   assert.ok(attr(listbox, 'aria-label'), 'listbox is named');
   const inputId = attr(combo, 'id')!;
-  assert.match(html, new RegExp(`<label for="${inputId}"[^>]*>[^<]+</label>`), 'the field has a label element');
+  assert.match(html, new RegExp(`<label for="${inputId}" class="sr-only">[^<]+</label>`), 'the field has a label (Tailwind sr-only from the eager index CSS)');
   assert.ok(hasId(attr(combo, 'aria-describedby')!), 'keyboard hint exists');
   const options = openingTags('option');
   assert.equal(attr(combo, 'aria-activedescendant'), attr(options[0], 'id'), 'first result is active');
@@ -50,7 +51,10 @@ test('options: one per registry module, exactly one selected, each named and des
   assert.equal(options.filter(tag => attr(tag, 'aria-selected') === 'false').length, MODULES.length - 1);
   for (const tag of options) {
     for (const name of ['id', 'aria-labelledby', 'aria-describedby']) assert.ok(attr(tag, name), `${name} on ${tag}`);
-    assert.ok(hasId(attr(tag, 'aria-labelledby')!) && hasId(attr(tag, 'aria-describedby')!), tag);
+    assert.ok(hasId(attr(tag, 'aria-labelledby')!), tag);
+    const described = attr(tag, 'aria-describedby')!.split(' ');
+    assert.deepEqual(described.map(id => id.replace(/^command-palette-option-.*?-(workspace|meta)$/, '$1')), ['workspace', 'meta'], tag);
+    for (const id of described) assert.ok(hasId(id), `${id} exists`);
     assert.doesNotMatch(tag, /tabindex/, 'options are not Tab stops (focus stays in the combobox)');
   }
   const ids = new Set(options.map(tag => attr(tag, 'id')));
@@ -85,7 +89,7 @@ test('palette source: AccessibleModal for trap/Escape/restore, registry list, sh
   assert.match(source, /<AccessibleModal open onClose=\{onClose\} labelledBy="command-palette-title" closeOnBackdrop lockScroll/);
   assert.ok(!source.includes('fixed inset-0'), 'no hand-made overlay');
   assert.doesNotMatch(source, /addEventListener|['"]Escape['"]/, 'Escape and focus restore stay with AccessibleModal');
-  assert.match(source, /import \{ MODULES, WORKSPACES, type ModuleId \} from '\.\.\/data\/workspaces';/);
+  assert.match(source, /import \{ MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId \} from '\.\.\/data\/workspaces';/);
   assert.match(source, /<EvidenceBadge moduleId=\{entry\.id\} \/>/);
   for (const module of MODULES) assert.ok(!source.includes(`'${module.id}'`) && !source.includes(`"${module.id}"`), `hard-coded ${module.id}`);
   // Wiring of the tested seam (behaviour: tests/command-palette.test.ts, Enter/click/IME with recorded effects).
@@ -136,6 +140,34 @@ test('phone header keeps one row with the trigger: decorative brand mark from sm
   assert.match(app, /<h1 className="mk-brand-title[^"]*">METALLIKSA<\/h1>/, 'the brand name stays visible at every width');
 });
 
+test('options describe workspace and current state to assistive tech, not only visually', () => {
+  const current = MODULES[0];
+  const options = openingTags('option');
+  assert.deepEqual(options.filter(tag => attr(tag, 'aria-current') === 'page').map(tag => attr(tag, 'id')), [`command-palette-option-${current.id}`]);
+  for (const module of MODULES) {
+    const id = `command-palette-option-${module.id}-workspace`;
+    const text = html.match(new RegExp(`<span id="${id}"[^>]*>([^<]*)</span>`))?.[1] ?? '';
+    const workspace = WORKSPACES.find(w => w.id === module.workspace)!.label.replace(/&/g, '&amp;');
+    assert.equal(text, module.id === current.id ? `${workspace} · current` : workspace, module.id);
+  }
+});
+
+test('details: aria-expanded follows the results, hover never moves the active option, one maturity title', () => {
+  const source = read('src/components/CommandPalette.tsx');
+  assert.match(source, /aria-expanded=\{results\.length > 0\}/);
+  assert.doesNotMatch(source, /onMouseMove|onMouseEnter|onPointer(Move|Enter)/, 'aria-activedescendant follows the keyboard only');
+  assert.match(source, /maxLength=\{PALETTE_QUERY_MAX_LENGTH\}/);
+  assert.match(source, /onChange=\{event => \{ setQuery\(event\.target\.value\); setActive\(0\); if \(list\.current\) list\.current\.scrollTop = 0; \}\}/, 'a new query shows the first result');
+  for (const file of ['src/App.tsx', 'src/components/CommandPalette.tsx']) {
+    const text = read(file);
+    assert.match(text, /<span title=\{MATURITY_BADGE_TITLE\} className=\{`mk-scope-badge/, file);
+    assert.doesNotMatch(text, /not a validation claim/, `${file} uses the shared title`);
+  }
+  assert.equal(MATURITY_BADGE_TITLE, 'Module maturity; this is not a validation claim for any result.');
+  const css = read('src/styles/palette.css');
+  assert.match(css, /max-height: min\(36rem, 76vh\);\s*max-height: min\(36rem, 76dvh\);/, 'dvh with a vh fallback');
+  assert.match(css, /max-height: calc\(100vh - 2 \* var\(--mk-space-4\)\); max-height: calc\(100dvh - 2 \* var\(--mk-space-4\)\);/);
+});
 // Same token sets as tests/design-tokens-contrast.test.ts, which checks their contrast.
 const TEXT_TOKEN = /^--mk-(text|muted|signal-|evidence-)|^--mk-(ice|plasma|amber)$/;
 const SURFACES = ['--mk-bg', '--mk-surface', '--mk-surface-raised', '--mk-glass-bg', '--mk-fill-panel', '--mk-fill-deep'];

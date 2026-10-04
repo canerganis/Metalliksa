@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AccessibleModal } from './AccessibleModal';
 import { EvidenceBadge } from './sdk/EvidenceBadge';
-import { MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
-import { commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects } from '../utils/commandPalette';
+import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
+import {
+  PALETTE_QUERY_MAX_LENGTH, commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects,
+} from '../utils/commandPalette';
 
 // Command palette (Phase 9 shell, DESIGN-9 section 3). Lazy chunk opened from the header button or
 // Ctrl/Cmd+K. Entries are the registry-derived navigation modules (MODULES); choosing one calls the
@@ -27,6 +29,7 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
   const results = useMemo(() => rankPaletteEntries(ENTRIES, query), [query]);
   const current = results.length ? Math.min(active, results.length - 1) : -1;
   const activeEntry = current >= 0 ? results[current] : undefined;
+  const list = useRef<HTMLUListElement>(null);
 
   // What Enter and click do is decided in src/utils/commandPalette.ts (tested there with these effects):
   // navigate is the shell's navigate() (the sidebar's path), then the palette closes.
@@ -64,28 +67,29 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
       </div>
       <div className="mk-palette-field">
         <Search className="mk-palette-icon" aria-hidden="true" />
-        <label htmlFor="command-palette-input" className="mk-sr-only">Search modules by name, workspace or description</label>
-        <input id="command-palette-input" type="text" role="combobox" autoFocus autoComplete="off" spellCheck={false}
-          aria-expanded="true" aria-controls="command-palette-listbox" aria-autocomplete="list"
+        <label htmlFor="command-palette-input" className="sr-only">Search modules by name, workspace or description</label>
+        <input id="command-palette-input" type="text" role="combobox" autoFocus autoComplete="off" spellCheck={false} maxLength={PALETTE_QUERY_MAX_LENGTH}
+          aria-expanded={results.length > 0} aria-controls="command-palette-listbox" aria-autocomplete="list"
           aria-activedescendant={activeEntry ? optionId(activeEntry.id) : undefined}
           aria-describedby="command-palette-hint"
           value={query} placeholder="Module, workspace or method…" className="mk-palette-input"
-          onChange={event => { setQuery(event.target.value); setActive(0); }} onKeyDown={onKeyDown} />
+          onChange={event => { setQuery(event.target.value); setActive(0); if (list.current) list.current.scrollTop = 0; }} onKeyDown={onKeyDown} />
       </div>
       <p id="command-palette-hint" className="mk-palette-hint">Arrow keys, Home and End move through the results; Enter opens the module; Escape closes.</p>
-      <ul id="command-palette-listbox" role="listbox" aria-label="Modules" className="mk-palette-list">
+      <ul ref={list} id="command-palette-listbox" role="listbox" aria-label="Modules" className="mk-palette-list">
         {results.map((entry, index) => (
           <li key={entry.id} id={optionId(entry.id)} role="option" aria-selected={index === current}
-            aria-labelledby={`${optionId(entry.id)}-name`} aria-describedby={`${optionId(entry.id)}-meta`}
+            aria-current={entry.id === activeTab ? 'page' : undefined}
+            aria-labelledby={`${optionId(entry.id)}-name`} aria-describedby={`${optionId(entry.id)}-workspace ${optionId(entry.id)}-meta`}
             className="mk-palette-option" data-active={index === current ? 'true' : undefined}
-            onMouseDown={event => event.preventDefault()} onMouseMove={() => { if (index !== current) setActive(index); }}
+            onMouseDown={event => event.preventDefault()}
             onClick={() => commitPaletteChoice(results, index, effects)}>
             <span className="mk-palette-option-main">
               <span id={`${optionId(entry.id)}-name`} className="mk-palette-option-label">{entry.label}</span>
-              <span className="mk-palette-option-workspace">{entry.workspaceLabel}{entry.id === activeTab ? ' · current' : ''}</span>
+              <span id={`${optionId(entry.id)}-workspace`} className="mk-palette-option-workspace">{entry.workspaceLabel}{entry.id === activeTab ? ' · current' : ''}</span>
             </span>
             <span id={`${optionId(entry.id)}-meta`} className="mk-palette-option-meta">
-              <span title="Module maturity; this is not a validation claim for any result." className={`mk-scope-badge ${entry.scope === 'Preview' ? 'is-preview' : ''}`}>{entry.scope}</span>
+              <span title={MATURITY_BADGE_TITLE} className={`mk-scope-badge ${entry.scope === 'Preview' ? 'is-preview' : ''}`}>{entry.scope}</span>
               <EvidenceBadge moduleId={entry.id} />
             </span>
           </li>
