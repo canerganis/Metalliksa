@@ -31,6 +31,14 @@ Start Metalliksa normally with `npm run dev`. The capabilities endpoint must sho
 - **High-Fidelity CFD:** unavailable free-surface capability; explicit analytical screening fallback. It cannot produce a CFD validation badge.
 - **Calibration / Validation:** Standard plus measured dimension comparison. Replicates must belong to the submitted process vector. Calibration is never automatically promoted to independent validation.
 
+### CAE parameter card (Goldak export)
+
+The melt pool views can download a text parameter card (`src/utils/goldakCaeCard.ts`). It is a parameter card for a user DFLUX subroutine, not an Abaqus or Ansys input deck, and it is not validated.
+
+- **Axes.** The four semi-axes on the data line are the liquidus-isotherm extents of the screening field that Python solved (x_front, x_rear, W/2 and depth D including any keyhole depth), for whichever heat source the request used (`heatSourceModel` of the result; the thermal-map view requests none, so it runs the regularised Rosenthal source). `*GOLDAK_DOUBLE_ELLIPSOID` names only the target source type of the DFLUX. The Goldak seed axes are separate reference values, printed on their own comment line. The front/rear fractions are given by continuity, `f_f = 2*a_f/(a_f + a_r)`, `f_r = 2 - f_f`.
+- **Q.** `Q = eta_eff * P_laser`, the absorbed power deposited in the half-space body, not halved. `eta_eff` is already contained in Q and must not be applied again in the DFLUX routine.
+- **Not a calibrated pair.** The screening field was driven by `P_absorbed / (1 + 0.55*Stefan)`, where `P_absorbed` is `conductionAbsorptivity * P_laser` for the Goldak and Eagar–Tsai sources and `eta_eff * P_laser` for Rosenthal. The solver does not export that power and the card does not recompute it. Where the keyhole multi-reflection term applies (`eta_eff > conductionAbsorptivity`), Q is larger than the conduction-field power, so an FEA run with these axes and Q is not expected to reproduce the screening pool. The card prints `conductionAbsorptivity * P_laser` for comparison when the result carries it.
+
 ## Governing model
 
 The stationary control volumes solve

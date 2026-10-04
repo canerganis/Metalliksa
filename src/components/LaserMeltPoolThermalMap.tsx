@@ -755,10 +755,10 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
               type="button"
               onClick={exportGoldakCard}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono transition"
-              title="Export Goldak heat source parameter card for Abaqus / Ansys"
+              title="Export Goldak heat source parameter card for a user DFLUX subroutine (not an input deck)"
             >
               <Download className="w-3.5 h-3.5 text-sky-400" />
-              <span>Goldak CAE (.inp)</span>
+              <span>Goldak CAE card (.goldak.txt)</span>
             </button>
           </div>
         </div>

@@ -121,9 +121,9 @@ test("conductionAbsorptivity lines are omitted when the result lacks it, the not
 });
 
 test("filenames are unchanged per variant", () => {
-  assert.equal(buildGoldakCaeCard(input()).filename, "Goldak_LPBF_Inconel_718_285W.inp");
-  assert.equal(buildGoldakCaeCard(input(), "thermal-map").filename, "Goldak_LPBF_Inconel_718_285W.inp");
-  assert.equal(buildGoldakCaeCard(input(), "cross-section").filename, "Goldak_LPBF_CrossSection_Inconel_718_285W.inp");
+  assert.equal(buildGoldakCaeCard(input()).filename, "Goldak_LPBF_Inconel_718_285W.goldak.txt");
+  assert.equal(buildGoldakCaeCard(input(), "thermal-map").filename, "Goldak_LPBF_Inconel_718_285W.goldak.txt");
+  assert.equal(buildGoldakCaeCard(input(), "cross-section").filename, "Goldak_LPBF_CrossSection_Inconel_718_285W.goldak.txt");
 });
 
 test("axes are exported in metres with 4-digit exponent format", () => {

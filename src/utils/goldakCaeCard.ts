@@ -1,4 +1,5 @@
-// Goldak double-ellipsoid CAE export card (Abaqus-style DFLUX text) shared by the LPBF melt pool views.
+// Goldak double-ellipsoid CAE parameter card for a user DFLUX subroutine (not an Abaqus/Ansys input deck), shared by the
+// LPBF melt pool views.
 //
 // Power normalisation: with f_f + f_r = 2 the Goldak double ellipsoid integrates to Q over the half-space body
 // (z >= 0). In an FEA half-space model Q is therefore the ABSORBED power deposited in the part, Q = eta_eff * P_laser.
@@ -87,6 +88,7 @@ export function buildGoldakCaeCard(
   const lines: string[] = [
     RULE,
     "** METALLIX LPBF GOLDAK HEAT SOURCE CAE EXPORT CARD",
+    "** Parameter card for a user DFLUX subroutine, not an input deck.",
     `** Material: ${pyResult.material} (Base: ${pyResult.baseMetal})`,
     `** Laser Power: ${params.laserPower_W} W | Scan Speed: ${params.scanSpeed_mm_s} mm/s`,
     `** Beam Diameter: ${params.beamDiameter_um} um | Wavelength: ${pyResult.laserWavelength}`,
@@ -128,6 +130,6 @@ export function buildGoldakCaeCard(
   );
 
   const material = pyResult.material.replace(/\s+/g, "_");
-  const filename = `Goldak_LPBF_${crossSection ? "CrossSection_" : ""}${material}_${params.laserPower_W}W.inp`;
+  const filename = `Goldak_LPBF_${crossSection ? "CrossSection_" : ""}${material}_${params.laserPower_W}W.goldak.txt`;
   return { filename, text: lines.join("\n") };
 }

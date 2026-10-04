@@ -631,7 +631,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Goldak / Eagar–Tsai / Rosenthal. Fabbro keyhole uses Fresnel A (no double-counted trapping). Heiple–Roper Marangoni is screening, not CFD. Build Job stays Rosenthal.
+                Goldak / Eagar–Tsai / Rosenthal. Fabbro keyhole uses the tabulated flat-plate absorptivity (no double-counted trapping). Heiple–Roper Marangoni is screening, not CFD. Build Job stays Rosenthal.
               </p>
             </div>
           </div>
@@ -680,10 +680,10 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
               type="button"
               onClick={exportGoldakCard}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#050810] hover:bg-slate-800 text-slate-200 border border-slate-700 transition"
-              title="Export Abaqus / Ansys DFLUX Card"
+              title="Export Goldak parameter card for a user DFLUX subroutine (not an input deck)"
             >
               <Download className="w-3.5 h-3.5 text-sky-400" />
-              <span>Goldak CAE (.inp)</span>
+              <span>Goldak CAE card (.goldak.txt)</span>
             </button>
           </div>
         </div>
@@ -1084,7 +1084,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 <h4 className="text-xs font-bold text-white">Melt Pool Dimensions</h4>
               </div>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
-                Goldak 3D · screening
+                {pyResult?.heatSourceModel ?? pyResult?.modelId ?? heatSource} · screening
               </span>
             </div>
 
