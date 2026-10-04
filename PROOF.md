@@ -9,6 +9,13 @@
 - **V1 kabulü:** `10e3005` kabul kaydı eski parmak izine (`7482697c…`) bağlı kalır; `edddf0dc…` için Faz C talep koşuları çalışana kadar yeniden kurulmuş değildir (duman testi yeniden kabul değildir).
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
+## 2026-10-04 — LPBF 5c Faz C: yeni parmak izinde talep koşuları (`1104bec`, `edddf0dc…`)
+
+- **Kapsam:** V1 60 W arşivli vakasının gerçek sunucuda tekrarı + G2 bare-plate 100 W `--check --slow`; yerel, kayıt `.orchestra/PHASEC-RECORD.md`, özet `STATUS.md` "5c Faz C".
+- **Sonuç:** worker `result.json` ayıklanmış özeti `3eed50ef…` (arşivli V1) ile aynı; `inputSha256`, `materialSha256`, `materialRevisionSha256`, `solverId enthalpy-fv-6` aynı; `implementationHash edddf0dc…`; 69 artefakt SHA-256 eşleşti; arşivleme/dışa aktarma/içe aktarma/geri yükleme doğrulandı. G2: 165 gözlem PASS, 67 alan artefaktı + NPZ fikstürle bayt-aynı. Gövde anahtar sırası arşivlinin özgün sırasıyla gönderilmediğinde yalnız `input.json` artefaktı (anahtar sırası) farklılaşır; değerler aynıdır.
+- **Sınır:** yazılım eşitliği/yeniden üretilebilirlik; bağımsız replike veya bilimsel doğrulama değildir. V1 kabulü (`10e3005`) eski parmak izine bağlı kalır; yeniden kabul kararı kullanıcıdadır. Kanıtlanmayan: tarayıcı, Linux/Docker/CI, GPU, OpenFOAM.
+- **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
+
 ## 2026-10-04 — Sertlik dönüşümleri (ASTM E140 / ISO 18265) ve kinetik HV (`3251a87`, `ce7df77`)
 
 - **Kapsam:** `src/utils/hardnessConversion.ts` (E140 Tablo 1: HRC 20-68; Tablo 2: HRB 55-100; ISO 18265 A.1 Rm, HV 80-650; doğrusal interpolasyon, tablo dışı `Unavailable`, yalnız östenitik olmayan çelikler); `python/hardness_conversion_e140.py` ile kinetik `predictedHardness_HV` E140 Tablo 1'den (AISI 4140/4340/D2, HRC 20-68), diğerleri `null` + `predictedHardness_HV_status`. Bu bir yazılım/doğruluk düzeltmesidir; yeni bilimsel iddia yoktur ve dönüşümler yaklaşıktır (ölçüm değildir).
