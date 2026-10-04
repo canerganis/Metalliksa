@@ -1,8 +1,9 @@
 /**
  * SolidificationMicrostructureLab.tsx — Phase 8
  * Screening-field LPBF solidification: G/R map, dendrite spacing, morphology tendency and diagnostics.
- * Every number comes from Python (lpbf_thermal_solver thermal.solidificationKinetics, the same numbers the
- * Build Job projects) through pythonComputationService. The lab sends the alloy name and visible process
+ * Every number comes from Python (lpbf_thermal_solver thermal.solidificationKinetics for the selected heat
+ * source; with Rosenthal and the Build Job's inputs they equal the Build Job projection, Goldak/Eagar–Tsai
+ * fields give different G/R) through pythonComputationService. The lab sends the alloy name and visible process
  * inputs only; Python looks the alloy up, nothing is defaulted or substituted. Status-labelled screening:
  * not in-situ front tracking, not validated.
  */
@@ -117,6 +118,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   const [result, setResult] = useState<SolidificationMicrostructureAvailable | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [unavailableReason, setUnavailableReason] = useState<string | null>(null);
+  const [degenerate, setDegenerate] = useState(false);
   const [activeTab, setActiveTab] = useState<ChartTab>('gr-map');
 
   const alloyProps = solidificationPresetInputs(selectedAlloy);
@@ -125,12 +127,14 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
     setResult(null);
     setError(null);
     setUnavailableReason(null);
+    setDegenerate(false);
   };
 
   const handleCompute = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setUnavailableReason(null);
+    setDegenerate(false);
     setResult(null);
     try {
       const res = await pythonComputationService.computeSolidificationMicrostructure(solidificationRequest(selectedAlloy, {
@@ -145,6 +149,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
       const outcome = solidificationOutcome(res);
       if ('error' in outcome) {
         setUnavailableReason(outcome.error);
+        setDegenerate(outcome.degenerate === true);
         return;
       }
       setResult(outcome.result);
@@ -162,7 +167,8 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   ] : [];
   const morphColor = morphologyColor(result?.morphology);
   const cellular = (result?.morphology ?? '').startsWith('Cellular');
-  const provenance = result ? [result.modelId, result.gradientSource].filter(Boolean).join(' · ') || result.source : '';
+  // modelId and gradientSource are the same string on the field-map path: show each distinct value once.
+  const provenance = result ? Array.from(new Set([result.modelId, result.gradientSource].filter(Boolean))).join(' · ') || result.source : '';
   // Hunt G/R band boundaries come from Python (solidification_front); the lab holds no thresholds.
   const grBands = result?.morphologyBands_G_over_R
     ? ([
@@ -284,7 +290,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             >
               {(Object.entries(SOLIDIFICATION_HEAT_SOURCES) as [SolidificationHeatSource, string][]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
-            <span className="mt-1.5 block text-[10px] text-slate-500">Sent explicitly; the Python solver does not assume one</span>
+            <span className="mt-1.5 block text-[10px] text-slate-500">Always sent explicitly: {SOLIDIFICATION_HEAT_SOURCES[heatSource]} is selected (Python alone would default to Rosenthal if it were absent)</span>
           </label>
         </div>
 
@@ -308,9 +314,12 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
       )}
 
       {unavailableReason && !isLoading && (
-        <section role="status" data-solidification-status="unavailable" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[.04] px-4 py-3.5 text-sm text-slate-200">
+        <section role="status" data-solidification-status={degenerate ? 'degenerate-floor' : 'unavailable'} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[.04] px-4 py-3.5 text-sm text-slate-200">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/20 text-xs">i</span>
-          <div className="min-w-0"><h2 className="font-semibold">Unavailable</h2><p className="mt-1 break-words text-xs leading-5 text-slate-400">{unavailableReason}. No numbers are shown: nothing is defaulted or substituted.</p></div>
+          <div className="min-w-0">
+            <h2 className="font-semibold">{degenerate ? 'No computed solidification result' : 'Unavailable'}</h2>
+            <p className="mt-1 break-words text-xs leading-5 text-slate-400">{unavailableReason}. {degenerate ? 'The solver returned clamp-floor values, so no G/R, spacing or morphology is shown as a result.' : 'No numbers are shown: nothing is defaulted or substituted.'}</p>
+          </div>
         </section>
       )}
 
@@ -339,7 +348,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           </div>
           <div className="relative max-w-lg">
             <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.18em] text-cyan-100/70">Your analysis canvas</div>
-            <h2 className="text-xl font-semibold tracking-tight text-slate-100 sm:text-2xl">A process window, made visible.</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-100 sm:text-2xl">Screening operating point</h2>
             <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">Choose a material and operating point, then run the analysis to reveal the screening G–R regime, dendrite scales and morphology tendency.</p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-slate-500"><span><b className="mr-1.5 text-cyan-100/70">01</b>Conduction field</span><span><b className="mr-1.5 text-cyan-100/70">02</b>Cell spacing</span><span><b className="mr-1.5 text-cyan-100/70">03</b>Morphology tendency</span></div>
           </div>
@@ -360,10 +369,10 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           <section aria-label="Analysis summary" className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <Metric label="Thermal gradient" value={result.G_K_m.toExponential(2)} unit="K/m" accent="#75b8ff" detail={provenance} />
             <Metric label="Solidification rate" value={result.R_m_s.toExponential(2)} unit="m/s" accent="#70d8b0" detail="screening field" />
-            <Metric label="Cooling rate" value={result.coolingRate_K_s.toExponential(2)} unit="K/s" accent="#f08080" detail="G · R" />
+            <Metric label="Cooling rate" value={result.coolingRate_K_s.toExponential(2)} unit="K/s" accent="#f08080" detail="median of G·R over front samples" />
             <Metric label="Primary spacing · λ₁" value={result.PDAS_um.toFixed(2)} unit="µm" accent="#bba3f4" detail="Hunt–Lu 1996 PDAS" />
             <Metric label="Secondary spacing · λ₂" value={result.SDAS_um.toFixed(2)} unit="µm" accent="#f0bd73" detail={cellular ? 'cells have no secondary arms · Kirkwood 1985' : 'Kirkwood 1985 SDAS'} />
-            <Metric label="Morphology tendency" value={result.morphology} accent={morphColor} detail={`${result.heatSourceModel ?? 'screening field'} · ${result.gradientSource ?? result.source}`} />
+            <Metric label="Morphology tendency" value={result.morphology} accent={morphColor} detail={result.heatSourceModel ?? 'screening field'} />
           </section>
 
           <section className={`${panelClass} min-h-[420px] overflow-hidden`} aria-label="Analysis visualisations">
@@ -426,7 +435,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
                       {[
                         ['G', `${result.G_K_m.toExponential(3)} K/m`],
                         ['R', `${result.R_m_s.toExponential(3)} m/s`],
-                        ['Cooling rate', `${result.coolingRate_K_s.toExponential(3)} K/s`],
+                        ['Cooling (median of G·R over front samples)', `${result.coolingRate_K_s.toExponential(3)} K/s`],
                         ['G/R', result.g_over_r_ratio != null ? `${result.g_over_r_ratio.toExponential(2)} K·s/m²` : '—'],
                         ['Normalised enthalpy', result.normalizedEnthalpy != null ? String(result.normalizedEnthalpy) : '—'],
                         ['Regime', result.regime ?? '—'],

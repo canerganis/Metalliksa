@@ -3,17 +3,24 @@ import type {
   SolidificationMicrostructureResult,
 } from '../services/pythonComputationService';
 
-export type SolidificationOutcome = { error: string } | { result: SolidificationMicrostructureAvailable };
+export type SolidificationOutcome =
+  | { error: string; degenerate?: true }
+  | { result: SolidificationMicrostructureAvailable };
 
 /**
  * Guard for the Microstructure Lab: only a Python result with status "available" or "screening-fallback" may
- * reach the numeric panels. "unavailable" yields Python's reason; a legacy block without a status (an old
- * worker) is never rendered as available, and a numeric block that lacks finite G/R/PDAS/SDAS is rejected.
+ * reach the numeric panels. "unavailable" yields Python's reason; "degenerate-floor" (R/cooling are solver
+ * clamp floors) also yields Python's reason, flagged `degenerate`, and its copied numbers are never rendered
+ * as results; a legacy block without a status (an old worker) is never rendered as available, and a numeric
+ * block that lacks finite G/R/PDAS/SDAS is rejected.
  */
 export function solidificationOutcome(res: SolidificationMicrostructureResult | null | undefined): SolidificationOutcome {
   const status = (res as { status?: unknown } | null | undefined)?.status;
   if (status === 'unavailable') {
     return { error: (res as { reason?: string }).reason || 'no solidification data' };
+  }
+  if (status === 'degenerate-floor') {
+    return { error: (res as { reason?: string }).reason || 'solidification front degenerate: floor-clamped R/cooling', degenerate: true };
   }
   if (status !== 'available' && status !== 'screening-fallback') {
     return { error: 'legacy result without status' };

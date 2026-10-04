@@ -12,15 +12,20 @@ const html = (name: string) => {
   assert.ok(BLOCKS[name], name);
   return renderToStaticMarkup(<BuildJobMicrostructurePanel micro={BLOCKS[name]} />);
 };
-const text = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&gt;/g, ">").replace(/\s+/g, " ");
+const text = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/\s+/g, " ");
 
 test("available (field map): numbers, correlation names, modelId · gradientSource, keyhole regime note, no fallback note", () => {
   const markup = html("available_in718_285_960");
   const t = text(markup);
   assert.match(markup, /data-micro-status="available"/);
   assert.ok(t.includes("0.67") && t.includes("0.53"), t);
-  assert.ok(t.includes("Hunt–Lu 1996 · solidification-front-v1 · solidification-front-v1"), t);
+  assert.ok(t.includes("Hunt–Lu 1996"), t);
+  // modelId and gradientSource are the same string on the field-map path: the source is shown once, not repeated.
+  assert.equal(t.split("solidification-front-v1").length - 1, 1, t);
+  assert.match(markup, /data-micro-provenance/);
+  assert.ok(t.includes("Source: solidification-front-v1"), t);
   assert.ok(t.includes("cells have no secondary arms · Kirkwood 1985"), t);
+  assert.ok(t.includes("median of G·R over front samples"), t);
   assert.ok(t.includes("Cellular (Hunt G/R screening)"), t);
   assert.match(markup, /data-micro-note="regime"/);
   assert.ok(t.includes("Keyhole Mode: outside the conduction regime of the G/R field"), t);
@@ -36,8 +41,25 @@ test("screening-fallback: amber note with Python's reason, tail-length-fallback 
   assert.ok(t.includes(BLOCKS.screening_fallback_in718_60_2000.reason), t);
   assert.ok(t.includes("tail-length-fallback"), t);
   assert.ok(t.includes("2.67"), t);
-  assert.ok(t.includes("Kirkwood 1985 · solidification-front-v1 · tail-length-fallback"), t);
+  assert.ok(t.includes("Source: solidification-front-v1 · tail-length-fallback"), t);
+  assert.equal(t.split("tail-length-fallback").length - 1, 1, t); // only in the single source line
   assert.doesNotMatch(markup, /data-micro-note="regime"/);
+});
+
+test("degenerate-floor: rendered like unavailable (reason, no PDAS/SDAS/morphology/cooling as results)", () => {
+  const block = BLOCKS.degenerate_floor_in718_285_1200;
+  assert.equal(block.status, "degenerate-floor");
+  assert.equal(block.coolingRate_K_s, 1);
+  const markup = html("degenerate_floor_in718_285_1200");
+  const t = text(markup);
+  assert.match(markup, /data-micro-status="degenerate-floor"/);
+  assert.match(markup, /data-micro-note="degenerate-floor"/);
+  assert.ok(t.includes(block.reason), t);
+  assert.ok(t.includes("solidification front degenerate: floor-clamped R/cooling"), t);
+  assert.doesNotMatch(markup, /data-micro-metric=/);
+  assert.doesNotMatch(markup, /data-micro-provenance/);
+  // The clamp-floor numbers and the labels derived from them are not shown.
+  assert.ok(!t.includes("19.64") && !t.includes("1.29") && !t.includes("Planar"), t);
 });
 
 test("unavailable: reason only, no numbers, no PDAS/SDAS tiles", () => {

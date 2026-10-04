@@ -515,9 +515,12 @@ export interface PythonBayesianOptimizationResult {
 
 // Phase 8: Solidification Microstructure Lab result type.
 // Screening-field path (python/lpbf_solidification_microstructure.py compute_screening_field_microstructure):
-// the numbers are thermal.solidificationKinetics from lpbf_thermal_solver, the same ones the Build Job projects.
+// the numbers are thermal.solidificationKinetics from lpbf_thermal_solver (equal to the Build Job projection only
+// for heatSource=rosenthal with the Build Job's inputs).
 // status "available" = liquidus field-map G/R; "screening-fallback" = tail-length heuristic (reason says so);
-// "unavailable" = no numbers (missing/unknown input), reason says why. Callers must check status first.
+// "degenerate-floor" = field map used but R/cooling are the solver's clamp floors (R <= 1e-4 m/s or cooling <=
+// 1 K/s): the numbers are copied but are NOT a computed result and must not be shown as one;
+// "unavailable" = no numbers (missing/unknown/impossible input), reason says why. Callers must check status first.
 export interface SolidificationMicrostructureAvailable {
   status: 'available' | 'screening-fallback';
   reason?: string | null;
@@ -567,8 +570,15 @@ export interface SolidificationMicrostructureUnavailable {
   morphology: null;
 }
 
+export type SolidificationMicrostructureDegenerate =
+  Omit<SolidificationMicrostructureAvailable, 'status' | 'reason'> & {
+    status: 'degenerate-floor';
+    reason: string;
+  };
+
 export type SolidificationMicrostructureResult =
   | SolidificationMicrostructureAvailable
+  | SolidificationMicrostructureDegenerate
   | SolidificationMicrostructureUnavailable;
 
 // Phase 9: Thermomechanical Distortion Lab result type

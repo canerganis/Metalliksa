@@ -16,6 +16,16 @@ test("available and screening-fallback pass through with their status", () => {
   assert.equal(fb.result.reason, BLOCKS.screening_fallback_in718_60_2000.reason);
 });
 
+test("degenerate-floor yields Python's reason flagged degenerate and never a result", () => {
+  const block = BLOCKS.degenerate_floor_in718_285_1200;
+  assert.equal(block.status, "degenerate-floor");
+  const out = solidificationOutcome(as(block));
+  assert.deepEqual(out, { error: block.reason, degenerate: true });
+  assert.ok(!("result" in out));
+  // A numeric block with finite G/R/PDAS/SDAS is still not a result when its status says degenerate-floor.
+  assert.ok("error" in solidificationOutcome(as({ ...BLOCKS.available_in718_285_960, status: "degenerate-floor", reason: "r" })));
+});
+
 test("unavailable yields Python's reason and never a result", () => {
   const out = solidificationOutcome(as(BLOCKS.unavailable_no_kinetics));
   assert.deepEqual(out, { error: "thermal.solidificationKinetics missing or non-finite" });
@@ -36,4 +46,14 @@ test("the Lab routes every result through the guard", () => {
   assert.ok(!/setResult\(res\)/.test(source));
   assert.ok(!/source\.includes\('rosenthal'\)/.test(source));
   assert.ok(!/Preset supplies k, liquidus and absorptivity/.test(source));
+});
+
+test("Lab wording: heat-source note is accurate, no overclaim, no marketing line", () => {
+  const source = readFileSync("src/components/SolidificationMicrostructureLab.tsx", "utf8");
+  assert.ok(!source.includes("the Python solver does not assume one"));
+  assert.match(source, /Always sent explicitly: \{SOLIDIFICATION_HEAT_SOURCES\[heatSource\]\} is selected/);
+  assert.ok(!source.includes("A process window, made visible."));
+  assert.ok(!source.includes("the same numbers the"));
+  assert.match(source, /median of G·R over front samples/);
+  assert.match(source, /outcome\.degenerate === true/);
 });
