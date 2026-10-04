@@ -165,39 +165,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "EBSD/CT Validation",
       "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
-      "next": "modulus-fno-lab",
+      "next": "toolpath-studio",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/ExperimentalValidationLab.tsx",
         "export": "ExperimentalValidationLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "modulus-fno-lab",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Modulus FNO Surrogate",
-      "description": "Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.",
-      "next": "toolpath-studio",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ModulusFNOLab.tsx",
-        "export": "ModulusFNOLab"
       },
       "migrationState": "legacy",
       "evidence": {
@@ -399,7 +373,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Thermal Accumulation",
       "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "powder-compaction",
+      "next": "optical-tomography",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -420,38 +394,12 @@ export const MODULE_REGISTRY_CORE = {
       }
     },
     {
-      "id": "powder-compaction",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Powder DEM Compaction",
-      "description": "Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.",
-      "next": "optical-tomography",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PowderDEMCompactionLab.tsx",
-        "export": "PowderDEMCompactionLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
       "id": "optical-tomography",
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Optical Tomography",
       "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-      "next": "transient-3d-gpu",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -460,32 +408,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "OpticalTomographyLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "transient-3d-gpu",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Transient 3D GPU Solver",
-      "description": "Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/TransientEnthalpy3DGPULab.tsx",
-        "export": "TransientEnthalpy3DGPULab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

@@ -596,23 +596,6 @@ class PythonComputationService {
     return res.json();
   }
 
-  // Phase 11: Modulus FNO Surrogate
-  async computeModulusFNO(data: {
-    laserPower_W: number;
-    scanSpeed_mms: number;
-    preheatTemp_C: number;
-    hatch_um: number;
-    layer_um: number;
-  }): Promise<any> {
-    const res = await fetch("/api/python/lpbf-modulus-fno", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
   // Phase 12: Toolpath & Scanner Kinematics
   async simulateToolpathKinematics(data: {
     content: string;
@@ -732,24 +715,6 @@ class PythonComputationService {
     return res.json();
   }
 
-  // Phase 18: Powder Bed DEM Roller Compaction
-  async simulatePowderDEMCompaction(data: {
-    d10_um: number;
-    d50_um: number;
-    d90_um: number;
-    recoater_gap_um: number;
-    box_width_um?: number;
-    num_particles?: number;
-  }): Promise<any> {
-    const res = await fetch("/api/python/lpbf-powder-dem-compaction", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
   // Phase 19: Optical Tomography
   async simulateOpticalTomography(data: {
     laser_power_W: number;
@@ -760,31 +725,6 @@ class PythonComputationService {
     fov_um?: number;
   }): Promise<any> {
     const res = await fetch("/api/python/lpbf-optical-tomography", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
-  // Phase 22: Transient 3D GPU Solver
-  async computeTransient3DGPU(data: {
-    nx: number; ny: number; nz: number;
-    dx: number; dy: number; dz: number;
-    power_W: number;
-    T_preheat_K: number;
-    toolpath?: { t: number[]; x: number[]; y: number[]; p: number[] };
-    rho?: number;
-    L_f?: number;
-    T_solidus?: number;
-    T_liquidus?: number;
-    cp_solid?: number;
-    cp_liquid?: number;
-    k_solid?: number;
-    k_liquid?: number;
-  }): Promise<any> {
-    const res = await fetch("/api/python/transient-3d-gpu", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

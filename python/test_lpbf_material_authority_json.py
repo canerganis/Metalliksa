@@ -33,7 +33,6 @@ ACCESSOR_TS = REPO / "src" / "data" / "lpbfMaterialAuthority.ts"
 # file -> (allowed literal block, allowed line fragments). Same allowances as the TS test.
 CONSUMERS_TS = {
     "src/types/lpbfDataFoundation.ts": (None, ()),
-    "src/components/TransientEnthalpy3DGPULab.tsx": (None, ()),
     "src/components/SolidificationMicrostructureLab.tsx": (None, ("radius={[7, 7, 2, 2]}",)),
     # The labelled TS-local IN625 P-v box is the only literal block allowed.
     "src/utils/lpbfFourAlloySchema.ts": (re.compile(r"const IN625_PV_WINDOW_TS_LOCAL[\s\S]*?\n};\n"),

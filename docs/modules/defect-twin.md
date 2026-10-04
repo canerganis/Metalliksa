@@ -61,7 +61,7 @@ Background work: none; resources: fetch.
 - `python/lpbf_worker_rpc.py::_rpc_stl_voxelize`
 - `python/stl_voxelizer.py::STLVoxelizer.compute_bounds`
 - `python/stl_voxelizer.py::STLVoxelizer.voxelize`
-- `routes/lpbfSimulation.ts:35#/api/python/lpbf-stl-voxelize`
+- `routes/lpbfSimulation.ts:34#/api/python/lpbf-stl-voxelize`
 - `src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab`
 - `src/services/pythonComputationService.ts::voxelizeSTLDefects`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin`

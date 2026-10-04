@@ -67,7 +67,7 @@ Background work: none; resources: fetch.
 - `python/lpbf_toolpath_kinematics.py::ScannerProfile`
 - `python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector`
 - `python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath`
-- `routes/lpbfSimulation.ts:33#/api/python/lpbf-toolpath-kinematics`
+- `routes/lpbfSimulation.ts:32#/api/python/lpbf-toolpath-kinematics`
 - `src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab`
 - `src/services/pythonComputationService.ts::simulateToolpathKinematics`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics`

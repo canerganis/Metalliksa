@@ -52,7 +52,6 @@ const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOpt
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
 const ThermomechanicalDistortionLab = lazy(() => import("./components/ThermomechanicalDistortionLab").then(m => ({ default: m.ThermomechanicalDistortionLab })));  // Phase 9
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
-const ModulusFNOLab = lazy(() => import("./components/ModulusFNOLab").then(m => ({ default: m.ModulusFNOLab }))); // Phase 11
 const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudioLab").then(m => ({ default: m.LpbfToolpathStudioLab }))); // Phase 12
 const ToolpathThermalMapLab = lazy(() => import("./components/ToolpathThermalMapLab").then(m => ({ default: m.ToolpathThermalMapLab }))); // Phase 12+17
 const IndustrialCertificationLab = lazy(() => import("./components/IndustrialCertificationLab").then(m => ({ default: m.IndustrialCertificationLab }))); // Phase 9 & 10
@@ -61,9 +60,7 @@ const LpbfDefectTwinLab = lazy(() => import("./components/LpbfDefectTwinLab").th
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const MultiLaserPlumeLab = lazy(() => import("./components/MultiLaserPlumeLab").then(m => ({ default: m.MultiLaserPlumeLab }))); // Phase 16
 const MultiTrackThermalLab = lazy(() => import("./components/MultiTrackThermalLab").then(m => ({ default: m.MultiTrackThermalLab }))); // Phase 17
-const PowderDEMCompactionLab = lazy(() => import("./components/PowderDEMCompactionLab").then(m => ({ default: m.PowderDEMCompactionLab }))); // Phase 18
 const OpticalTomographyLab = lazy(() => import("./components/OpticalTomographyLab").then(m => ({ default: m.OpticalTomographyLab }))); // Phase 19
-const TransientEnthalpy3DGPULab = lazy(() => import("./components/TransientEnthalpy3DGPULab").then(m => ({ default: m.TransientEnthalpy3DGPULab }))); // Phase 22
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 
 const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
@@ -165,7 +162,6 @@ export default function App() {
       case 'solidification-microstructure': return <SolidificationMicrostructureLab />;  // Phase 8
       case 'thermomechanical-distortion': return <ThermomechanicalDistortionLab />; // Phase 9
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
-      case 'modulus-fno-lab': return <ModulusFNOLab />; // Phase 11
       case 'toolpath-studio': return <LpbfToolpathStudioLab />; // Phase 12
       case 'toolpath-thermal-map': return <ToolpathThermalMapLab />; // Phase 12+17
       case 'industrial-certification': return <IndustrialCertificationLab />; // Phase 9 & 10
@@ -174,9 +170,7 @@ export default function App() {
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'multilaser-plume': return <MultiLaserPlumeLab />; // Phase 16
       case 'thermal-accumulation': return <MultiTrackThermalLab />; // Phase 17
-      case 'powder-compaction': return <PowderDEMCompactionLab />; // Phase 18
       case 'optical-tomography': return <OpticalTomographyLab />; // Phase 19
-      case 'transient-3d-gpu': return <TransientEnthalpy3DGPULab />; // Phase 22
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;

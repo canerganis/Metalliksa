@@ -37,14 +37,6 @@
     "label": "EBSD/CT Validation",
     "scope": "Research",
     "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
-    "next": "modulus-fno-lab"
-  },
-  {
-    "id": "modulus-fno-lab",
-    "workspace": "lpbf",
-    "label": "Modulus FNO Surrogate",
-    "scope": "Preview",
-    "description": "Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.",
     "next": "toolpath-studio"
   },
   {
@@ -109,14 +101,6 @@
     "label": "Thermal Accumulation",
     "scope": "Research",
     "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-    "next": "powder-compaction"
-  },
-  {
-    "id": "powder-compaction",
-    "workspace": "lpbf",
-    "label": "Powder DEM Compaction",
-    "scope": "Research",
-    "description": "Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.",
     "next": "optical-tomography"
   },
   {
@@ -125,14 +109,6 @@
     "label": "Optical Tomography",
     "scope": "Research",
     "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-    "next": "transient-3d-gpu"
-  },
-  {
-    "id": "transient-3d-gpu",
-    "workspace": "lpbf",
-    "label": "Transient 3D GPU Solver",
-    "scope": "Research",
-    "description": "Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.",
     "next": "keyhole-raytracing"
   },
   {

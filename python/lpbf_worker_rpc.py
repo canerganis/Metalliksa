@@ -8,7 +8,6 @@ from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
 from lpbf_fatigue_fracture import MurakamiFatigueEngine
 from lpbf_multilaser_plume import ShieldGasFlow, PlumeParameters, MultiLaserPlumeEngine
 from lpbf_optical_tomography import OpticalTomographySimulator
-from lpbf_powder_dem_compaction import PowderCompactionEngine
 from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
@@ -53,21 +52,6 @@ def _rpc_industrial_fatigue(request):
     layer = float(payload.get("layer_um", 30.0))
     hatch = float(payload.get("hatch_um", 100.0))
     data = run_industrial_fatigue_analysis(alloy, power, speed, layer, hatch)
-    return data
-
-
-def _rpc_modulus_fno(request):
-    # Phase 11
-    from lpbf_modulus_fno import predict_part_scale_thermal_history
-    payload = request["payload"]
-    power_W = payload.get("laserPower_W", 250.0)
-    speed_mms = payload.get("scanSpeed_mms", 1000.0)
-    preheat_C = payload.get("preheatTemp_C", 25.0)
-    hatch_um = payload.get("hatch_um", 100.0)
-    layer_um = payload.get("layer_um", 40.0)
-    data = predict_part_scale_thermal_history(
-        power_W=power_W, speed_mms=speed_mms, preheat_C=preheat_C, hatch_um=hatch_um, layer_um=layer_um
-    )
     return data
 
 
@@ -256,20 +240,6 @@ def _rpc_thermal_accumulation(request):
     return data
 
 
-def _rpc_powder_dem_compaction(request):
-    # Phase 18
-    payload = request["payload"]
-    engine = PowderCompactionEngine(
-        d10_um=float(payload.get("d10_um", 20.0)),
-        d50_um=float(payload.get("d50_um", 35.0)),
-        d90_um=float(payload.get("d90_um", 55.0)),
-        recoater_gap_um=float(payload.get("recoater_gap_um", 60.0)),
-        box_width_um=float(payload.get("box_width_um", 500.0))
-    )
-    data = engine.generate_psd_deterministic(int(payload.get("num_particles", 500)))
-    return data
-
-
 def _rpc_optical_tomography(request):
     # Phase 19
     payload = request["payload"]
@@ -288,50 +258,6 @@ def _rpc_optical_tomography(request):
     return data
 
 
-def _rpc_transient_3d_gpu(request):
-    # Phase 22
-    from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
-    payload = request["payload"]
-    
-    # Safety clamping to prevent GPU OOM
-    nx = max(8, min(256, int(payload.get("nx", 64))))
-    ny = max(8, min(256, int(payload.get("ny", 64))))
-    nz = max(8, min(128, int(payload.get("nz", 32))))
-
-    solver = TransientEnthalpy3DGPU(
-        nx=nx,
-        ny=ny,
-        nz=nz,
-        dx=float(payload.get("dx", 2e-6)),
-        dy=float(payload.get("dy", 2e-6)),
-        dz=float(payload.get("dz", 2e-6))
-    )
-    toolpath = payload.get("toolpath", {
-        't': [0.0, 100e-6],
-        'x': [32e-6, 96e-6],
-        'y': [32e-6, 32e-6],
-        'p': [float(payload.get("power_W", 200.0)), float(payload.get("power_W", 200.0))]
-    })
-    
-    # Check for empty toolpath arrays
-    if not toolpath.get("t") or not toolpath.get("x") or not toolpath.get("y") or not toolpath.get("p"):
-         raise ValueError("Toolpath arrays cannot be empty")
-
-    data = solver.solve_toolpath(
-        toolpath=toolpath,
-        T_preheat_K=float(payload.get("T_preheat_K", 300.0)),
-        rho=float(payload.get("rho", 4420.0)),
-        L_f=float(payload.get("L_f", 2.9e5)),
-        T_solidus=float(payload.get("T_solidus", 1878.0)),
-        T_liquidus=float(payload.get("T_liquidus", 1928.0)),
-        cp_solid=float(payload.get("cp_solid", 670.0)),
-        cp_liquid=float(payload.get("cp_liquid", 730.0)),
-        k_solid=float(payload.get("k_solid", 15.0)),
-        k_liquid=float(payload.get("k_liquid", 25.0))
-    )
-    return data
-
-
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -344,7 +270,6 @@ RESEARCH_HANDLERS = {
     "solidification-microstructure": _rpc_solidification_microstructure,
     "thermomechanical-distortion": _rpc_thermomechanical_distortion,
     "industrial-fatigue": _rpc_industrial_fatigue,
-    "modulus-fno": _rpc_modulus_fno,
     "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
     "toolpath-thermal-map": _rpc_toolpath_thermal_map,
@@ -352,9 +277,7 @@ RESEARCH_HANDLERS = {
     "adaptive-feedforward": _rpc_adaptive_feedforward,
     "multilaser-plume": _rpc_multilaser_plume,
     "thermal-accumulation": _rpc_thermal_accumulation,
-    "powder-dem-compaction": _rpc_powder_dem_compaction,
     "optical-tomography": _rpc_optical_tomography,
-    "transient-3d-gpu": _rpc_transient_3d_gpu,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }
 

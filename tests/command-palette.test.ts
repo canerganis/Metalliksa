@@ -67,7 +67,6 @@ test('every token must match (AND); scattered letters match the label only, rank
 
 test('real registry queries: label, id and workspace hits', () => {
   assert.equal(ids('keyhole')[0], 'keyhole-raytracing');
-  assert.equal(ids('fno')[0], 'modulus-fno-lab');
   assert.equal(ids('calphad')[0], 'phase-diagram');
   const evidence = ids('evidence & qualification');
   const inEvidence = MODULES.filter(module => module.workspace === 'evidence').map(module => module.id);

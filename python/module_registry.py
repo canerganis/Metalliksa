@@ -179,13 +179,10 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
-    "modulus-fno-lab": (_worker_op("modulus-fno"),),
     "toolpath-thermal-map": (_worker_op("toolpath-thermal-map"),),
     "industrial-certification": (_worker_op("industrial-fatigue"),),
     "multilaser-plume": (_worker_op("multilaser-plume"),),
     "thermal-accumulation": (_worker_op("thermal-accumulation"),),
-    "powder-compaction": (_worker_op("powder-dem-compaction"),),
-    "transient-3d-gpu": (),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -234,10 +231,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
-    "transient-3d-gpu": (
-        "The view calls POST /api/python/transient-3d-gpu, which no server route handles; "
-        "no authority exists for this module.",
-    ),
     "micrograph": (
         "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant "
         "values without calling any authority; not bound as operations.",
@@ -431,7 +424,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "python/lpbf_keyhole_raytracing.py::_number",
                       "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
                       "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-                      "routes/lpbfSimulation.ts:41#/api/python/lpbf-keyhole-raytracing",
+                      "routes/lpbfSimulation.ts:39#/api/python/lpbf-keyhole-raytracing",
                       "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
                       "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
                       "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing",
@@ -742,7 +735,7 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
             "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
             "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
             "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
-            "routes/lpbfSimulation.ts:34#/api/python/lpbf-fatigue-fracture",
+            "routes/lpbfSimulation.ts:33#/api/python/lpbf-fatigue-fracture",
             "routes/lpbfSimulation.ts::workerError",
             "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
             "src/services/pythonComputationService.ts::computeMurakamiFatigue",
@@ -796,7 +789,7 @@ def _optical_contract(row: Dict[str, str]) -> ModuleContract:
         sources=_WORKER_SOURCES + (
             "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
             "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
-            "routes/lpbfSimulation.ts:39#/api/python/lpbf-optical-tomography",
+            "routes/lpbfSimulation.ts:37#/api/python/lpbf-optical-tomography",
             "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
             "src/services/pythonComputationService.ts::simulateOpticalTomography",
             "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography",
@@ -850,7 +843,7 @@ def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
             "python/lpbf_toolpath_kinematics.py::ScannerProfile",
             "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
             "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
-            "routes/lpbfSimulation.ts:33#/api/python/lpbf-toolpath-kinematics",
+            "routes/lpbfSimulation.ts:32#/api/python/lpbf-toolpath-kinematics",
             "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
             "src/services/pythonComputationService.ts::simulateToolpathKinematics",
             "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics",
@@ -901,7 +894,7 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
             "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
-            "routes/lpbfSimulation.ts:36#/api/python/lpbf-adaptive-feedforward",
+            "routes/lpbfSimulation.ts:35#/api/python/lpbf-adaptive-feedforward",
             "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
             "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
             "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation",
@@ -943,7 +936,7 @@ def _defect_twin_contract(row: Dict[str, str]) -> ModuleContract:
             "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
             "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
             "python/stl_voxelizer.py::STLVoxelizer.voxelize",
-            "routes/lpbfSimulation.ts:35#/api/python/lpbf-stl-voxelize",
+            "routes/lpbfSimulation.ts:34#/api/python/lpbf-stl-voxelize",
             "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
             "src/services/pythonComputationService.ts::voxelizeSTLDefects",
             "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin",
