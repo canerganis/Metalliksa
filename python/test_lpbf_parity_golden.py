@@ -35,8 +35,8 @@ PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a7
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
 # The goldens are recorded at this implementation (after the 5c bump, B5 step 2), and
 # GOLDEN_REVISION is a main commit carrying it: the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e"
-GOLDEN_REVISION = "6dd5b73508151f0af1561387a0df509ec78a06c9"
+GOLDEN_FINGERPRINT = "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359"
+GOLDEN_REVISION = "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -97,8 +97,11 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertTrue(observations["result.material.materialRevisionSha256"].startswith("5c9179e9"))
         self.assertEqual(observations["result.validationStatus"], "unvalidated")
         self.assertIs(observations["result.productionReady"], False)
-        self.assertIs(observations["v1Archive.strippedResultEqual"], True)
-        self.assertEqual(observations["result.canonicalSha256"], parity.V1_ARCHIVED_RESULT_STRIPPED_SHA256)
+        # Corrected-physics bump: only analyticalComparison.goldak differs from the archived V1 run.
+        self.assertIs(observations["v1Archive.strippedResultEqual"], False)
+        self.assertNotEqual(observations["result.canonicalSha256"], parity.V1_ARCHIVED_RESULT_STRIPPED_SHA256)
+        self.assertEqual(observations["result.canonicalSha256"],
+                         "6a5e59bec2d296b4decdffcae4aab13c64eb84e02f1f7af80d83b17a057c81e9")
         self.assertEqual(observations["result.implementationHashOccurrencesAfterStrip"], 0)
         self.assertEqual(observations["result.artifactsImplementationHashOccurrences"], 0)
         bare = json.loads(parity.golden_path(
@@ -118,14 +121,14 @@ class ParityHarnessTests(unittest.TestCase):
                 observations = json.loads(parity.golden_path(parity.CASE_BY_ID[case_id]).read_text(
                     encoding="utf-8"))["observations"]
                 self.assertGreater(observations["evaporation.inversionCalls"], 0)
-                self.assertEqual(observations["evaporation.latentHeatVapUsed_J_kg"], [[6.4e6, (6.4e6).hex()]])
+                self.assertEqual(observations["evaporation.latentHeatVapUsed_J_kg"], [[value, value.hex()]])
                 self.assertEqual(observations["evaporation.authorityLatentHeatVap_J_kg"], [value, value.hex()])
                 self.assertIs(observations["evaporation.materialSnapshotHasLatentHeatVap"], False)
                 self.assertIs(observations["evaporation.authorityProbe.resultCanonicalEqual"], True)
         in625 = json.loads(parity.golden_path(parity.CASE_BY_ID["g18_in625_latent_heat"]).read_text(
             encoding="utf-8"))["observations"]
         self.assertEqual([in625[f"meltpool.in625.equalWithLatentHeatFusion.{v}"] for v in ("227000", "260000", "290000")],
-                         [False, True, False])
+                         [False, False, True])
         self.assertEqual(in625["in625.snapshot.latentHeat_J_kg"][0], 290000.0)
         self.assertEqual(in625["in625.transientSpecification.latentHeat_J_kg"][0], 227000.0)
         emissivity = json.loads(parity.golden_path(parity.CASE_BY_ID["g19_emissivity_echo"]).read_text(
@@ -373,7 +376,7 @@ class ParityHarnessTests(unittest.TestCase):
             self.assertIn("DRIFT g18_in625_latent_heat", output)
             self.assertIn("PASS g12_analytical_modules", output)
             self.assertIn("DRIFT meltpool.in625.table.latent_heat_fusion_J_kg: 250000.0 (0x1.e848000000000p+17)"
-                          " -> 260000.0 (0x1.fbd0000000000p+17)", output)
+                          " -> 290000.0 (0x1.1b34000000000p+18)", output)
             self.assertIn("RESULT: PASS (planned drift in g18_in625_latent_heat)", output)
 
     def test_expect_drift_with_a_wrong_allowlist_fails(self):
@@ -561,7 +564,7 @@ class ParityHarnessTests(unittest.TestCase):
         def reviewer(observations):  # review b5g S1: result digest + material revision + V1 equality
             observations["result.canonicalSha256"] = "0" * 64
             observations["result.material.materialRevisionSha256"] = "1" * 64
-            observations["v1Archive.strippedResultEqual"] = False
+            observations["v1Archive.strippedResultEqual"] = True
         g1 = ["--case", "g1_v1_60w_in718"]
         with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", reviewer)):
             code, output = self._check(*g1, "--expect-drift",
@@ -573,7 +576,7 @@ class ParityHarnessTests(unittest.TestCase):
         def planned(observations):  # the four G1 observations a corrected bump may name
             for key in ("result.key.analyticalComparison", "result.canonicalSha256", "result.orderedTypedSha256"):
                 observations[key] = "0" * 64
-            observations["v1Archive.strippedResultEqual"] = False
+            observations["v1Archive.strippedResultEqual"] = True
         allow = ("g1_v1_60w_in718:result.key.analyticalComparison,g1_v1_60w_in718:result.canonicalSha256,"
                  "g1_v1_60w_in718:result.orderedTypedSha256,g1_v1_60w_in718:v1Archive.strippedResultEqual")
         with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", planned)):
@@ -686,7 +689,7 @@ class ParityHarnessTests(unittest.TestCase):
         record = planned["g18_in625_latent_heat"]["drift"][0]
         self.assertEqual(record["key"], "meltpool.in625.table.latent_heat_fusion_J_kg")
         self.assertEqual(record["before"], [250000.0, (250000.0).hex()])
-        self.assertEqual(record["after"], [260000.0, (260000.0).hex()])
+        self.assertEqual(record["after"], [290000.0, (290000.0).hex()])
         self.assertEqual(stale["g12_analytical_modules"]["status"], "FAIL")
 
     def test_require_parity_turns_a_not_verified_skip_into_a_failure(self):

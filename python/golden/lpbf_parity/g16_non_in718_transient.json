@@ -4,9 +4,9 @@
  "group": "G16",
  "description": "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  7.9,
-  7.6
+  6.3,
+  5.6
  ],
  "recordedTwice": true,
  "observations": {
-  "ti6al4v.canonicalSha256": "3696f0e96ba627b39460e928fcf927f2630c1579713fcc0ecbd7fd2c9d8b799a",
-  "ti6al4v.orderedTypedSha256": "2a515d067df200261a39830ca0eed400d9d3061a0f63e5fbb542f3f47decb660",
+  "ti6al4v.canonicalSha256": "02a8c186e4335b64451f20be05668756377bd7dd02bdcda7f1bb7b7d7e2bfc62",
+  "ti6al4v.orderedTypedSha256": "9c3a302296cc6e9b635e91854af41f170f9dae166b793feb0e61aac0bc93e9e2",
   "ti6al4v.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -126,7 +126,7 @@
   "ti6al4v.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "ti6al4v.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "ti6al4v.key.provenance": "5e133c8cff3775da7b4f2c36157b493fb5214c7f4766bbed1ad9b5828d50aeb4",
-  "ti6al4v.key.analyticalComparison": "b54264c2ca09ffc32879f2249b491724c1e924d92a01f21b99d777116a84bb75",
+  "ti6al4v.key.analyticalComparison": "472a7d62de6b96ef003f7766bbdd405d17d873b2b76e692dc012af7bf803fe34",
   "ti6al4v.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "ti6al4v.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "ti6al4v.key.metrics": "f44e9fb1f7efe4386e208d8c603eaebbdb1e656c64a7c4fdec1122bbf1d4e8f0",
@@ -162,8 +162,8 @@
   "ti6al4v.label": "Unvalidated transient thermal",
   "ti6al4v.confidence": "low",
   "ti6al4v.implementationHashOccurrencesAfterStrip": 0,
-  "ss316l.canonicalSha256": "88d1bf400079c63f4e1f0c4e1efd0f2fcb09ccc85ccfa599bf5a3df7a77c001c",
-  "ss316l.orderedTypedSha256": "b5384436f140f856e0bd4ad502d2d2f32e79cc96ff179aec8201ce910fc32f08",
+  "ss316l.canonicalSha256": "db9ea136ed7c46a52858db763c57df4ae1bcba7cf40ccbb244bbf7de50eb58ec",
+  "ss316l.orderedTypedSha256": "0e91373650021852c3ad9a02e3be4580db3051b1b204fdba853e6b0f0afbd6f2",
   "ss316l.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -215,7 +215,7 @@
   "ss316l.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "ss316l.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "ss316l.key.provenance": "6fff73f5ed1b01cbe8d25fc5cecefede3d8cf9fe99f0202bc247823a76725670",
-  "ss316l.key.analyticalComparison": "53dff6e112cd525d5b243e25cf3dc605f4126acc35fa1e08fd9e19046e7baf4a",
+  "ss316l.key.analyticalComparison": "1f43708bfa31fb81443464ce9e7749fbf432fb9280a32106a5392e47bbb189fe",
   "ss316l.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "ss316l.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "ss316l.key.metrics": "d2388104be1f34f2f82beceb7663ae23a03006fcebd7df70d9aaf557404d7f2a",
@@ -755,9 +755,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 0.0,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 105.00000000000006,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -1155,9 +1155,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 16.666666666666668,
-    "depth_um": 8.333333333333334,
-    "length_um": 58.333333333333414,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 163.33333333333348,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
