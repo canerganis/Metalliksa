@@ -72,7 +72,184 @@
         "component": "src/components/LpbfEngineeringWorkspace.tsx",
         "export": "LpbfEngineeringWorkspace"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "lpbf-capabilities",
+          "method": "GET",
+          "route": "/api/lpbf/capabilities",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "capabilities",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-estimate",
+          "method": "POST",
+          "route": "/api/lpbf/estimate",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "estimate",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-job-submit",
+          "method": "POST",
+          "route": "/api/lpbf/jobs",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "submit",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-job-repeat",
+          "method": "POST",
+          "route": "/api/lpbf/jobs/repeat",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "submit-repeat",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-job-status",
+          "method": "GET",
+          "route": "/api/lpbf/jobs/:id",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "get",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-job-cancel",
+          "method": "DELETE",
+          "route": "/api/lpbf/jobs/:id",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "cancel",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-job-artifact",
+          "method": "GET",
+          "route": "/api/lpbf/jobs/:id/artifacts/:name",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "artifact",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-thermal-solver",
+          "method": "POST",
+          "route": "/api/python/lpbf-thermal-solver",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_thermal_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "stl-slicer-build-time",
+          "method": "POST",
+          "route": "/api/python/stl-slicer-build-time",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/stl_slicer_build_time_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-source-catalog",
+          "method": "GET",
+          "route": "/api/lpbf/sources",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-run-archive",
+          "method": "GET",
+          "route": "/api/lpbf/runs",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -96,7 +273,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "lpbf-optimizer",
@@ -113,7 +291,24 @@
         "component": "src/components/LpbfBayesianOptimizerLab.tsx",
         "export": "LpbfBayesianOptimizerLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "bayesian-optimize",
+          "method": "POST",
+          "route": "/api/python/lpbf-bayesian-optimize",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_bayesian_optimizer.py",
+            "workerMethod": null,
+            "timeoutMs": 120000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -137,7 +332,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "solidification-microstructure",
@@ -154,7 +350,24 @@
         "component": "src/components/SolidificationMicrostructureLab.tsx",
         "export": "SolidificationMicrostructureLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "solidification-microstructure",
+          "method": "POST",
+          "route": "/api/python/lpbf-solidification-microstructure",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "solidification-microstructure",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -178,7 +391,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "thermomechanical-distortion",
@@ -195,7 +409,24 @@
         "component": "src/components/ThermomechanicalDistortionLab.tsx",
         "export": "ThermomechanicalDistortionLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "thermomechanical-distortion",
+          "method": "POST",
+          "route": "/api/python/lpbf-thermomechanical-distortion",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "thermomechanical-distortion",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -219,7 +450,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "experimental-validation",
@@ -236,7 +468,24 @@
         "component": "src/components/ExperimentalValidationLab.tsx",
         "export": "ExperimentalValidationLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "lpbf-source-measurements",
+          "method": "GET",
+          "route": "/api/lpbf/sources/:datasetId/measurements",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -260,7 +509,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "modulus-fno-lab",
@@ -277,7 +527,24 @@
         "component": "src/components/ModulusFNOLab.tsx",
         "export": "ModulusFNOLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "modulus-fno",
+          "method": "POST",
+          "route": "/api/python/lpbf-modulus-fno",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "modulus-fno",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -301,7 +568,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "toolpath-studio",
@@ -318,7 +586,24 @@
         "component": "src/components/LpbfToolpathStudioLab.tsx",
         "export": "LpbfToolpathStudioLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "toolpath-kinematics",
+          "method": "POST",
+          "route": "/api/python/lpbf-toolpath-kinematics",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "toolpath-kinematics",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -342,7 +627,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "toolpath-thermal-map",
@@ -359,7 +645,24 @@
         "component": "src/components/ToolpathThermalMapLab.tsx",
         "export": "ToolpathThermalMapLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "toolpath-thermal-map",
+          "method": "POST",
+          "route": "/api/python/lpbf-toolpath-thermal-map",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "toolpath-thermal-map",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -383,7 +686,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "industrial-certification",
@@ -400,7 +704,24 @@
         "component": "src/components/IndustrialCertificationLab.tsx",
         "export": "IndustrialCertificationLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "industrial-fatigue",
+          "method": "POST",
+          "route": "/api/python/lpbf-industrial-fatigue",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "industrial-fatigue",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -424,7 +745,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "murakami-fatigue",
@@ -441,7 +763,24 @@
         "component": "src/components/MurakamiFatigueLab.tsx",
         "export": "MurakamiFatigueLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "fatigue-fracture",
+          "method": "POST",
+          "route": "/api/python/lpbf-fatigue-fracture",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "fatigue-fracture",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -465,7 +804,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "defect-twin",
@@ -482,7 +822,24 @@
         "component": "src/components/LpbfDefectTwinLab.tsx",
         "export": "LpbfDefectTwinLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "stl-voxelize",
+          "method": "POST",
+          "route": "/api/python/lpbf-stl-voxelize",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "stl-voxelize",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -506,7 +863,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "adaptive-mitigation",
@@ -523,7 +881,24 @@
         "component": "src/components/LpbfAdaptiveMitigationLab.tsx",
         "export": "LpbfAdaptiveMitigationLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "adaptive-feedforward",
+          "method": "POST",
+          "route": "/api/python/lpbf-adaptive-feedforward",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "adaptive-feedforward",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -547,7 +922,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "multilaser-plume",
@@ -564,7 +940,24 @@
         "component": "src/components/MultiLaserPlumeLab.tsx",
         "export": "MultiLaserPlumeLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "multilaser-plume",
+          "method": "POST",
+          "route": "/api/python/lpbf-multilaser-plume",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "multilaser-plume",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -588,7 +981,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "thermal-accumulation",
@@ -605,7 +999,24 @@
         "component": "src/components/MultiTrackThermalLab.tsx",
         "export": "MultiTrackThermalLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "thermal-accumulation",
+          "method": "POST",
+          "route": "/api/python/lpbf-thermal-accumulation",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "thermal-accumulation",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -629,7 +1040,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "powder-compaction",
@@ -646,7 +1058,24 @@
         "component": "src/components/PowderDEMCompactionLab.tsx",
         "export": "PowderDEMCompactionLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "powder-dem-compaction",
+          "method": "POST",
+          "route": "/api/python/lpbf-powder-dem-compaction",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "powder-dem-compaction",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -670,7 +1099,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "optical-tomography",
@@ -687,7 +1117,24 @@
         "component": "src/components/OpticalTomographyLab.tsx",
         "export": "OpticalTomographyLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "optical-tomography",
+          "method": "POST",
+          "route": "/api/python/lpbf-optical-tomography",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "optical-tomography",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -711,7 +1158,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "transient-3d-gpu",
@@ -752,7 +1200,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "The view calls POST /api/python/transient-3d-gpu, which no server route handles; no authority exists for this module."
+      ]
     },
     {
       "id": "keyhole-raytracing",
@@ -769,7 +1220,24 @@
         "component": "src/components/KeyholeRaytracingLab.tsx",
         "export": "KeyholeRaytracingLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "keyhole-raytracing",
+          "method": "POST",
+          "route": "/api/python/lpbf-keyhole-raytracing",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "keyhole-raytracing",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -793,7 +1261,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "database",
@@ -810,7 +1279,24 @@
         "component": "src/components/MaterialsDatabaseView.tsx",
         "export": "MaterialsDatabaseView"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "catalog-lookup",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): material records are read from the bundled src/data/materialsDatabase.ts in the browser."
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -834,7 +1320,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "alloy-builder",
@@ -851,7 +1338,24 @@
         "component": "src/components/AlloyBuilder.tsx",
         "export": "AlloyBuilder"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "lpbf-thermal-solver",
+          "method": "POST",
+          "route": "/api/python/lpbf-thermal-solver",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_thermal_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -875,7 +1379,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "phase-diagram",
@@ -892,7 +1397,56 @@
         "component": "src/components/PhaseDiagramViewer.tsx",
         "export": "PhaseDiagramViewer"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "calphad-databases",
+          "method": "GET",
+          "route": "/api/python/calphad-databases",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/calphad_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 15000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "calphad-minimize",
+          "method": "POST",
+          "route": "/api/python/calphad-minimize",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/calphad_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 40000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "ai-consult",
+          "method": "POST",
+          "route": "/api/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -916,7 +1470,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "ttt-cct-kinetics",
@@ -933,7 +1488,24 @@
         "component": "src/components/PhaseKineticsTTTCCTStudio.tsx",
         "export": "PhaseKineticsTTTCCTStudio"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "kinetics-ttt-cct",
+          "method": "POST",
+          "route": "/api/python/kinetics-ttt-cct",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/kinetics_ttt_cct_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -957,7 +1529,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "micrograph",
@@ -974,7 +1547,40 @@
         "component": "src/components/MicrographLab.tsx",
         "export": "MicrographLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "diagnose-micrograph",
+          "method": "POST",
+          "route": "/api/metallurgy/diagnose-micrograph",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "ai-consult",
+          "method": "POST",
+          "route": "/api/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -998,7 +1604,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
+      ]
     },
     {
       "id": "eds-lab",
@@ -1015,7 +1624,24 @@
         "component": "src/components/EDSSpectrumLab.tsx",
         "export": "EDSSpectrumLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "ai-consult",
+          "method": "POST",
+          "route": "/api/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1039,7 +1665,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "electrochem-suite",
@@ -1056,7 +1683,56 @@
         "component": "src/components/CorrosionEngineeringLab.tsx",
         "export": "CorrosionEngineeringLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "pourbaix-diagram",
+          "method": "POST",
+          "route": "/api/python/pourbaix-diagram",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/pourbaix_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "tafel-corrosion-rate",
+          "method": "POST",
+          "route": "/api/python/tafel-corrosion-rate",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/tafel_corrosion_rate_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 15000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "battery-corrosion-eis",
+          "method": "POST",
+          "route": "/api/python/battery-corrosion-eis",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/battery_corrosion_eis_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 15000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1080,7 +1756,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "icme-motor",
@@ -1097,7 +1774,24 @@
         "component": "src/components/ICMEMultiScalePipelineStudio.tsx",
         "export": "ICMEMultiScalePipelineStudio"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "icme-multiscale-pipeline",
+          "method": "POST",
+          "route": "/api/python/icme-multiscale-pipeline",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/icme_multiscale_pipeline_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1121,7 +1815,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "materials-project",
@@ -1138,7 +1833,40 @@
         "component": "src/components/MaterialsProjectExplorer.tsx",
         "export": "MaterialsProjectExplorer"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "dft-properties",
+          "method": "POST",
+          "route": "/api/python/dft-properties",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/dft_property_calculator.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "metallurgy-consult",
+          "method": "POST",
+          "route": "/api/metallurgy/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1162,7 +1890,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
+      ]
     },
     {
       "id": "calculators",
@@ -1179,7 +1910,24 @@
         "component": "src/components/PocketCalculators.tsx",
         "export": "PocketCalculators"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "engineering-correlations",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): unit-aware engineering correlations are evaluated in the browser."
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1203,7 +1951,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "research-hub",
@@ -1220,7 +1969,56 @@
         "component": "src/components/AdvancedResearchHub.tsx",
         "export": "AdvancedResearchHub"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "research-registry",
+          "method": "GET",
+          "route": "/api/research/registry",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "research-registry-save",
+          "method": "PUT",
+          "route": "/api/research/registry",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "research-search",
+          "method": "GET",
+          "route": "/api/research/search",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1244,7 +2042,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "experimental-data",
@@ -1285,7 +2084,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+      ]
     },
     {
       "id": "digital-twin",
@@ -1302,7 +2104,24 @@
         "component": "src/components/DigitalTwinHub.tsx",
         "export": "DigitalTwinHub"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "ai-consult",
+          "method": "POST",
+          "route": "/api/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1326,7 +2145,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "uq-lab",
@@ -1343,7 +2163,24 @@
         "component": "src/components/UQLab.tsx",
         "export": "UQLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "stochastic-uq-mmpds",
+          "method": "POST",
+          "route": "/api/python/stochastic-uq-mmpds",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/stochastic_uq_mmpds_solver.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": true,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1367,7 +2204,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "qualification",
@@ -1384,7 +2222,24 @@
         "component": "src/components/StandardQualificationEngine.tsx",
         "export": "StandardQualificationEngine"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "coupon-statistics",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): protocol screening and coupon statistics are computed in the browser."
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1408,7 +2263,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
+      ]
     },
     {
       "id": "aerospace-pdf-audit",
@@ -1425,7 +2283,24 @@
         "component": "src/components/AerospaceAuditReportGenerator.tsx",
         "export": "AerospaceAuditReportGenerator"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "report-template",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): demonstration report templates are assembled in the browser."
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1449,7 +2324,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
+      ]
     },
     {
       "id": "traceability",
@@ -1490,7 +2368,10 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+      ]
     },
     {
       "id": "copilot",
@@ -1507,7 +2388,24 @@
         "component": "src/components/MetallurgyCopilot.tsx",
         "export": "MetallurgyCopilot"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "metallurgy-consult",
+          "method": "POST",
+          "route": "/api/metallurgy/consult",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1531,7 +2429,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     },
     {
       "id": "ai-orchestrator",
@@ -1548,7 +2447,24 @@
         "component": "src/components/AIOrchestratorPanel.tsx",
         "export": "AIOrchestratorPanel"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "dataset-plan",
+          "method": "POST",
+          "route": "/api/orchestrator/dataset-plan",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1572,7 +2488,8 @@
         },
         "docs": null
       },
-      "migrationState": "legacy"
+      "migrationState": "legacy",
+      "legacyNotes": []
     }
   ]
 }

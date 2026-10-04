@@ -3,7 +3,7 @@
 Usage (from the repo root):
     python scripts/emit-module-registry.py                 # write generated files
     python scripts/emit-module-registry.py --check         # exit 1 when out of date
-    python scripts/emit-module-registry.py --refresh-seed  # re-snapshot workspaces.ts + App.tsx, then emit
+Equivalent (from python/): python -m module_contract emit [--check]
 """
 import sys
 from pathlib import Path

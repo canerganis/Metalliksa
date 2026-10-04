@@ -1,0 +1,4 @@
+{
+  "description": "Ratchet baseline (Phase 7 slice 1, base 464806f): files under src/components/** that no import path reaches from src/main.tsx, src/App.tsx or any registered module view. The set may only shrink. Phase 5a deleted all 23 original entries (merge fd4ad3c lineage); the list is now empty. Nothing here is deleted automatically: deletion needs user approval (see .orchestra/DELETION-MANIFEST.md, Phase 5a, verdicts NUA / NUA+TM). When a file is deleted or becomes reachable, remove its entry.",
+  "files": []
+}

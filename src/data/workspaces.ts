@@ -1,3 +1,5 @@
+import { LISTED_CONTRACTS, type ListedModuleId } from '../modules/registry';
+
 /** Product navigation and maturity are separate from the evidence of any result. */
 export type ModuleScope = 'Production' | 'Research' | 'Preview' | 'Unresolved';
 export type WorkspaceId = 'lpbf' | 'materials' | 'evidence' | 'orchestration';
@@ -8,53 +10,21 @@ export const WORKSPACES = [
   { id: 'orchestration', label: 'AI Orchestration', description: 'Human-gated multi-agent planning for datasets and engineering workflows.', defaultModule: 'ai-orchestrator' },
 ] as const;
 
-export const MODULES = [
-  // LPBF Engineering Workspace
-  { id: '3d-distortion-lab', workspace: 'lpbf', label: 'LPBF workflow', scope: 'Research', description: 'One material and process vector; explicit simulation and screening scope.', next: 'lpbf-optimizer' },
-  { id: 'lpbf-optimizer', workspace: 'lpbf', label: 'Bayesian Optimization', scope: 'Preview', description: 'Autonomous closed-loop search for optimal parameters balancing productivity and defect risk.', next: 'solidification-microstructure' },
-  { id: 'solidification-microstructure', workspace: 'lpbf', label: 'Microstructure Lab', scope: 'Research', description: 'In-situ G/R solidification front tracking with Hunt-Lu PDAS, Kirkwood SDAS and dendrite morphology prediction.', next: 'thermomechanical-distortion' },
-  { id: 'thermomechanical-distortion', workspace: 'lpbf', label: 'Thermomechanical Lab', scope: 'Research', description: 'Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.', next: 'experimental-validation' },
-  { id: 'experimental-validation', workspace: 'lpbf', label: 'EBSD/CT Validation', scope: 'Research', description: 'Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.', next: 'modulus-fno-lab' },
-  { id: 'modulus-fno-lab', workspace: 'lpbf', label: 'Modulus FNO Surrogate', scope: 'Preview', description: 'Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.', next: 'toolpath-studio' },
-  { id: 'toolpath-studio', workspace: 'lpbf', label: 'Toolpath & Kinematics', scope: 'Research', description: 'Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.', next: 'toolpath-thermal-map' },
-  { id: 'toolpath-thermal-map', workspace: 'lpbf', label: 'Toolpath Thermal Map', scope: 'Preview', description: 'Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).', next: 'industrial-certification' },
-  { id: 'industrial-certification', workspace: 'lpbf', label: 'Industrial Certification', scope: 'Preview', description: 'Industrial qualification standards and audit readiness for production release.', next: 'murakami-fatigue' },
-  { id: 'murakami-fatigue', workspace: 'lpbf', label: 'Fatigue & Fracture Lab', scope: 'Research', description: 'Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.', next: 'defect-twin' },
-  { id: 'defect-twin', workspace: 'lpbf', label: 'Spatial Defect Twin', scope: 'Research', description: 'Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).', next: 'adaptive-mitigation' },
-  { id: 'adaptive-mitigation', workspace: 'lpbf', label: 'Defect Mitigation', scope: 'Research', description: 'Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.', next: 'multilaser-plume' },
-  { id: 'multilaser-plume', workspace: 'lpbf', label: 'Multi-Laser Plume', scope: 'Research', description: 'Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.', next: 'thermal-accumulation' },
-  { id: 'thermal-accumulation', workspace: 'lpbf', label: 'Thermal Accumulation', scope: 'Research', description: 'Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.', next: 'powder-compaction' },
-  { id: 'powder-compaction', workspace: 'lpbf', label: 'Powder DEM Compaction', scope: 'Research', description: 'Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.', next: 'optical-tomography' },
-  { id: 'optical-tomography', workspace: 'lpbf', label: 'Optical Tomography', scope: 'Research', description: 'Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.', next: 'transient-3d-gpu' },
-  { id: 'transient-3d-gpu', workspace: 'lpbf', label: 'Transient 3D GPU Solver', scope: 'Research', description: 'Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.', next: 'keyhole-raytracing' },
-  { id: 'keyhole-raytracing', workspace: 'lpbf', label: 'Keyhole Ray Tracing', scope: 'Research', description: 'Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.', next: 'database' },
+export type ModuleId = ListedModuleId;
+export interface NavigationModule {
+  readonly id: ModuleId; readonly workspace: WorkspaceId; readonly label: string;
+  readonly scope: ModuleScope; readonly description: string; readonly next: string;
+}
 
-
-  // Materials Intelligence Workspace
-  { id: 'database', workspace: 'materials', label: 'Materials Database', scope: 'Research', description: 'Handbook values and reviewed research references; source applicability requires review.', next: 'alloy-builder' },
-  { id: 'alloy-builder', workspace: 'materials', label: 'Alloy Builder', scope: 'Research', description: 'Composition exploration and inverse design with model-dependent estimates.', next: 'phase-diagram' },
-  { id: 'phase-diagram', workspace: 'materials', label: 'CALPHAD', scope: 'Research', description: 'Phase equilibrium within the selected database and model coverage.', next: 'ttt-cct-kinetics' },
-  { id: 'ttt-cct-kinetics', workspace: 'materials', label: 'TTT / CCT', scope: 'Research', description: 'Transformation kinetics depend on supplied material parameters.', next: 'micrograph' },
-  { id: 'micrograph', workspace: 'materials', label: 'Micrograph Analysis', scope: 'Preview', description: 'Image segmentation requires scale calibration and independent inspection.', next: 'eds-lab' },
-  { id: 'eds-lab', workspace: 'materials', label: 'SEM-EDS', scope: 'Research', description: 'Spectroscopy and composition characterization with method limitations.', next: 'electrochem-suite' },
-  { id: 'electrochem-suite', workspace: 'materials', label: 'Corrosion / EIS', scope: 'Research', description: 'Electrochemical measurements, equivalent circuits and model fitting.', next: 'icme-motor' },
-  { id: 'icme-motor', workspace: 'materials', label: 'ICME Multi-Scale Studio', scope: 'Research', description: 'Coupled microstructure and property estimates with CALPHAD thermodynamics.', next: 'materials-project' },
-  { id: 'materials-project', workspace: 'materials', label: 'Materials Project', scope: 'Research', description: 'External computed-material records; connection and coverage may be unavailable.', next: 'calculators' },
-  { id: 'calculators', workspace: 'materials', label: 'Engineering Calculators', scope: 'Research', description: 'Unit-aware engineering correlations within their stated assumptions.', next: 'research-hub' },
-
-  // Evidence & Qualification Workspace
-  { id: 'research-hub', workspace: 'evidence', label: 'Research Hub', scope: 'Research', description: 'Research briefs, source comparison, numeric extraction and reviewed registry links.', next: 'experimental-data' },
-  { id: 'experimental-data', workspace: 'evidence', label: 'Experimental Data', scope: 'Research', description: 'Measured findings, traceability gaps and feedback linked to simulation jobs.', next: 'digital-twin' },
-  { id: 'digital-twin', workspace: 'evidence', label: 'Digital Twin', scope: 'Research', description: 'Specimen history and module context; completeness does not establish qualification.', next: 'uq-lab' },
-  { id: 'uq-lab', workspace: 'evidence', label: 'Uncertainty & Coupons', scope: 'Research', description: 'Sampling and uploaded coupon statistics; simulation scatter is not test evidence.', next: 'qualification' },
-  { id: 'qualification', workspace: 'evidence', label: 'ASTM / MMPDS Screening', scope: 'Research', description: 'Protocol screening and coupon statistics; no automatic standards certification.', next: 'aerospace-pdf-audit' },
-  { id: 'aerospace-pdf-audit', workspace: 'evidence', label: 'Audit Templates', scope: 'Preview', description: 'Demonstration report templates; no airworthiness or NADCAP approval.', next: 'traceability' },
-  { id: 'traceability', workspace: 'evidence', label: 'Export / Traceability', scope: 'Research', description: 'Export active specimen, source provenance and linked evidence as a review package.', next: 'copilot' },
-  { id: 'copilot', workspace: 'evidence', label: 'Research Assistant', scope: 'Preview', description: 'AI suggestions require source verification before use in engineering decisions.', next: '3d-distortion-lab' },
-  { id: 'ai-orchestrator', workspace: 'orchestration', label: 'AI Orchestrator', scope: 'Preview', description: 'Plan and review multi-agent dataset decisions before any data is uploaded or changed.', next: 'research-hub' },
-] as const satisfies ReadonlyArray<{ id: string; workspace: WorkspaceId; label: string; scope: ModuleScope; description: string; next: string }>;
-
-export type ModuleId = typeof MODULES[number]['id'];
+/**
+ * Navigation entries derived from the module registry (src/generated/moduleRegistry.ts, emitted by
+ * python/module_registry.py): every `listed` contract in registry order. `scope` is the contract
+ * maturity. tests/workspaces-registry-parity.test.ts pins this list to the hand-written golden.
+ */
+export const MODULES: readonly NavigationModule[] = LISTED_CONTRACTS.map(contract => ({
+  id: contract.id, workspace: contract.workspace, label: contract.label,
+  scope: contract.maturity, description: contract.description, next: contract.next,
+}));
 export function isModuleId(value: unknown): value is ModuleId {
   return typeof value === 'string' && MODULES.some(module => module.id === value);
 }

@@ -1,0 +1,29 @@
+{
+  "description": "Ratchet baseline (Phase 7 slice 1, fix round 2): files under src/features, src/utils, src/services and src/hooks that no runtime import path reaches from src/main.tsx, src/App.tsx or a registered module view. The set may only shrink; entries must stay within src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json. Nothing is deleted automatically (user approval).",
+  "files": [
+    {
+      "path": "src/hooks/useVisibleAbortSignal.ts",
+      "note": "Shared visibility lifecycle hook (Phase 5b helper) not adopted by a view yet; covered by tests/visibility-hooks.test.tsx."
+    },
+    {
+      "path": "src/utils/ebsdParser.ts",
+      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
+    },
+    {
+      "path": "src/utils/savitzkyGolay.ts",
+      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
+    },
+    {
+      "path": "src/utils/seededRandom.ts",
+      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
+    },
+    {
+      "path": "src/utils/xrdParser.ts",
+      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
+    },
+    {
+      "path": "src/utils/xrdProfileFitting.ts",
+      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
+    }
+  ]
+}
