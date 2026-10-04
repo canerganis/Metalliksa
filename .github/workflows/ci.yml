@@ -100,6 +100,7 @@ jobs:
           test_kinetics_fx test_calphad_honesty
           test_lpbf_validity_envelope test_phase8_microstructure_contract
           test_lpbf_solidification_microstructure_rpc
+          test_pourbaix_equilibrium test_pourbaix_ts_fixture
       # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
       # package-aware manifest import closure and the canonical-v3 framing vectors. The
       # canonical identity normalises CRLF, so these are checkout-newline independent.
