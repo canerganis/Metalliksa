@@ -141,6 +141,14 @@
     "label": "Keyhole Ray Tracing",
     "scope": "Research",
     "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
+    "next": "lpbf-dataset-comparison"
+  },
+  {
+    "id": "lpbf-dataset-comparison",
+    "workspace": "lpbf",
+    "label": "Dataset Comparison (LPBF)",
+    "scope": "Research",
+    "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
     "next": "database"
   },
   {

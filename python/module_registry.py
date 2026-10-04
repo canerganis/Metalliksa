@@ -186,6 +186,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "thermal-accumulation": (_worker_op("thermal-accumulation"),),
     "powder-compaction": (_worker_op("powder-dem-compaction"),),
     "transient-3d-gpu": (),
+    "lpbf-dataset-comparison": (),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -234,6 +235,11 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
+    "lpbf-dataset-comparison": (
+        "Read-only view of the committed Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json "
+        "(src/data/lpbfDatasetComparison.ts); it dispatches no request and computes nothing in the browser, "
+        "so no operation is bound.",
+    ),
     "transient-3d-gpu": (
         "The view calls POST /api/python/transient-3d-gpu, which no server route handles; "
         "no authority exists for this module.",

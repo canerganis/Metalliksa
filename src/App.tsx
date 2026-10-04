@@ -65,6 +65,7 @@ const PowderDEMCompactionLab = lazy(() => import("./components/PowderDEMCompacti
 const OpticalTomographyLab = lazy(() => import("./components/OpticalTomographyLab").then(m => ({ default: m.OpticalTomographyLab }))); // Phase 19
 const TransientEnthalpy3DGPULab = lazy(() => import("./components/TransientEnthalpy3DGPULab").then(m => ({ default: m.TransientEnthalpy3DGPULab }))); // Phase 22
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
+const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
 
 const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
@@ -178,6 +179,7 @@ export default function App() {
       case 'optical-tomography': return <OpticalTomographyLab />; // Phase 19
       case 'transient-3d-gpu': return <TransientEnthalpy3DGPULab />; // Phase 22
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
+      case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
