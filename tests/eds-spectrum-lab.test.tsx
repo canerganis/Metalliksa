@@ -2,7 +2,7 @@ import React from 'react';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { EDSSpectrumLab } from '../src/components/EDSSpectrumLab';
+import { EDSSpectrumLab, vendorSignature } from '../src/components/EDSSpectrumLab';
 
 // Static render of the first paint: nothing has been imported, so the view must show only the empty state.
 const markup = renderToStaticMarkup(<EDSSpectrumLab />);
@@ -32,4 +32,18 @@ test('empty EDS view has no peak table, no plot and no Alloy Builder transfer be
   assert.doesNotMatch(markup, /recharts/);
   assert.doesNotMatch(markup, /<canvas/);
   assert.doesNotMatch(markup, /eds-send-to-module-btn/);
+});
+
+test('a vendor result is tied to its file and metadata: any change gives a new signature (review Sol #8)', () => {
+  const file = { fileName: 'quant.csv', bytes: new ArrayBuffer(12), loadedAt: new Date('2026-10-05T10:00:00Z') };
+  const base = vendorSignature(file, 'SEM A', 'Quant 1', 'spot');
+  assert.equal(vendorSignature({ ...file }, 'SEM A', 'Quant 1', 'spot'), base);
+  for (const changed of [
+    vendorSignature({ ...file, fileName: 'other.csv' }, 'SEM A', 'Quant 1', 'spot'),
+    vendorSignature({ ...file, loadedAt: new Date('2026-10-05T10:00:01Z') }, 'SEM A', 'Quant 1', 'spot'),
+    vendorSignature(file, '', 'Quant 1', 'spot'),
+    vendorSignature(file, 'SEM A', 'Quant 2', 'spot'),
+    vendorSignature(file, 'SEM A', 'Quant 1', 'area'),
+    vendorSignature(null, 'SEM A', 'Quant 1', 'spot'),
+  ]) assert.notEqual(changed, base);
 });

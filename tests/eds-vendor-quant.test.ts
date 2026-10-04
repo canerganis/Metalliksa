@@ -112,6 +112,21 @@ test('tab / whitespace delimiters, percent signs and plus-minus sigma are accept
   assert.equal(result.rows[0].sigmaWeightPct, 0.4);
 });
 
+test('an explicit atomic-percent or unknown-unit column title is rejected, never read as wt% (review Sol #5)', () => {
+  for (const title of ['Atomic%', 'at%', 'At. %', 'Atom %', 'Intensity', 'Counts']) {
+    const result = parseVendorQuantText([`Element,${title},Sigma`, 'Fe,70,0.3', 'Cr,30,0.2'].join('\n'), 'at.csv', SHA, META, FIXED_NOW);
+    assert.equal(result.accepted, false, title);
+    assert.ok(result.errors.some(e => e.row === 1 && /not weight percent/.test(e.message)), title);
+    assert.equal(result.transferLabel ?? null, null, title);
+  }
+  for (const title of ['wt%', 'Wt %', 'Weight%', 'Mass %', 'wt. %']) {
+    const result = parseVendorQuantText([`Element,${title}`, 'Fe,70', 'Cr,30'].join('\n'), 'wt.csv', SHA, META, FIXED_NOW);
+    assert.equal(result.accepted, true, title);
+  }
+  // Headerless rows stay supported (documented format: element, wt%, optional sigma).
+  assert.equal(parseVendorQuantText(['Fe,70', 'Cr,30'].join('\n'), 'nohead.csv', SHA, META, FIXED_NOW).accepted, true);
+});
+
 test('element symbol check covers the periodic table', () => {
   for (const symbol of ['H', 'Fe', 'Og', 'W', 'Re']) assert.equal(isElementSymbol(symbol), true, symbol);
   for (const symbol of ['', 'Xx', 'fe', 'FE', 'D']) assert.equal(isElementSymbol(symbol), false, symbol);

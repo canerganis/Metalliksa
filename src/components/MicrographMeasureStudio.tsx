@@ -12,6 +12,7 @@ import {
   greyFromRgba,
   greyHistogram,
   manualCounts,
+  testLineGeometry,
   requestSignature,
   runBlocker,
   sha256Hex,
@@ -133,7 +134,8 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
       setSettings(DEFAULT_SETTINGS);
       setLoadMessage(grey.wasColour ? "Colour image: converted to grey with BT.601 luma." : null);
     } catch (err) {
-      setLoadMessage(err instanceof Error ? err.message : "The image could not be loaded.");
+      const reason = err instanceof Error ? err.message : "The image could not be loaded.";
+      setLoadMessage(image ? `${reason} The previous image stays loaded.` : reason);
     }
   };
 
@@ -248,7 +250,7 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
       if (!best || d < best.d) best = ln.orientation === "h" ? { line: ln.index, x, y: oy + ln.position, d } : { line: ln.index, x: ox + ln.position, y, d };
     }
     if (best && best.d <= Math.max(4, image.width / 150)) {
-      setManual({ clicks: [...manual.clicks, { line: best.line, x: best.x, y: best.y, weight: e.shiftKey ? 0.5 : 1 }] });
+      setManual({ geometry: manual.geometry, clicks: [...manual.clicks, { line: best.line, x: best.x, y: best.y, weight: e.shiftKey ? 0.5 : 1 }] });
     }
   };
 
@@ -262,8 +264,12 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
     }
   };
 
-  const setCrop = (key: keyof MeasureSettings["crop"], value: string) =>
-    setSettings({ ...settings, crop: { ...settings.crop, [key]: intIn(value, 0, MAX_SIDE_PX - 1, 0) } });
+  // Any change of the test-line geometry discards manual clicks: they were counted on the old lines (review S1).
+  const setCrop = (key: keyof MeasureSettings["crop"], value: string) => {
+    const next = { ...settings, crop: { ...settings.crop, [key]: intIn(value, 0, MAX_SIDE_PX - 1, 0) } };
+    setSettings(next);
+    if (manual) setManual({ clicks: [], geometry: testLineGeometry(next) });
+  };
   const calKeys = calibrationRequestKeys(calibration);
   const maxBin = histogram ? Math.max(...histogram) : 1;
   const counts = manual ? manualCounts(manual.clicks, 2 * settings.linesPerDirection) : null;
@@ -280,6 +286,12 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
         </button>
         {image && <span className="text-[11px] font-mono text-slate-400">{image.source.fileName} · {image.width} x {image.height} px</span>}
         {loadMessage && <p role="alert" className="w-full text-[11px] text-amber-200">{loadMessage}</p>}
+        {!image && (
+          <p className="w-full text-[11px] text-slate-400">
+            Steps: load a micrograph, calibrate the scale (caliper over the scale bar, or a stated pixel size), exclude the
+            data bar, choose and name grey-level classes or grain counting, then measure. No built-in images are provided.
+          </p>
+        )}
       </div>
 
       {image && (
@@ -419,10 +431,14 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
                 </label>
                 <label className="text-[11px] text-slate-400">Test lines per direction
                   <input className={input} type="number" min={1} max={50} step={1} value={settings.linesPerDirection}
-                    onChange={(e) => { setSettings({ ...settings, linesPerDirection: intIn(e.target.value, 1, 50, 8) }); if (manual) setManual({ clicks: [] }); }} />
+                    onChange={(e) => {
+                      const next = { ...settings, linesPerDirection: intIn(e.target.value, 1, 50, 8) };
+                      setSettings(next);
+                      if (manual) setManual({ clicks: [], geometry: testLineGeometry(next) });
+                    }} />
                 </label>
                 <label className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <input type="checkbox" checked={manual !== null} onChange={(e) => { setManual(e.target.checked ? { clicks: [] } : null); if (e.target.checked) setTool("manual"); }} />
+                  <input type="checkbox" checked={manual !== null} onChange={(e) => { setManual(e.target.checked ? { clicks: [], geometry: testLineGeometry(settings) } : null); if (e.target.checked) setTool("manual"); }} />
                   Manual counting (any image type)
                 </label>
               </div>
@@ -430,8 +446,8 @@ export const MicrographMeasureStudio: React.FC<{ onImageChange?: (image: { dataU
                 <div className="text-[11px] text-slate-400 space-y-1">
                   <div>Clicks: {manual.clicks.length}; per line: {counts?.join(" / ")}</div>
                   <div className="flex gap-2">
-                    <button type="button" className="px-2 py-0.5 rounded border border-[#1e2d46]" onClick={() => setManual({ clicks: manual.clicks.slice(0, -1) })}>Undo last click</button>
-                    <button type="button" className="px-2 py-0.5 rounded border border-[#1e2d46]" onClick={() => setManual({ clicks: [] })}>Clear clicks</button>
+                    <button type="button" className="px-2 py-0.5 rounded border border-[#1e2d46]" onClick={() => setManual({ ...manual, clicks: manual.clicks.slice(0, -1) })}>Undo last click</button>
+                    <button type="button" className="px-2 py-0.5 rounded border border-[#1e2d46]" onClick={() => setManual({ clicks: [], geometry: testLineGeometry(settings) })}>Clear clicks</button>
                   </div>
                 </div>
               )}

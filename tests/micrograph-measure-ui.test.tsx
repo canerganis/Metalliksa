@@ -18,6 +18,7 @@ import {
   unsupportedImageReason,
   type CalibrationInput,
   type GreyImage,
+  testLineGeometry,
 } from "../src/utils/micrographInput";
 
 // Micrograph rework, W3: the view decodes and assembles inputs, python/micrograph_measure.py computes. These tests
@@ -103,6 +104,24 @@ test("the run stays blocked until an image and a calibration exist", () => {
   assert.equal(runBlocker(grid, { mode: "pixel-size", umPerPx: 0.5, note: "SEM record" }, dark, null), null);
 });
 
+test("manual clicks from another crop or line count block the run (review S1 / Sol #4)", () => {
+  const grid = testGrid();
+  const cal = scaleBar({ x1: 50, y1: 220, x2: 150, y2: 220 }, 50);
+  const settings = { ...DEFAULT_SETTINGS, crop: { ...DEFAULT_SETTINGS.crop, bottom: 40 } };
+  const clicks = [{ line: 0, x: 12, y: 22, weight: 1 }];
+  const manual = { clicks, geometry: testLineGeometry(settings) };
+  assert.equal(runBlocker(grid, cal, settings, manual), null);
+  const cropped = { ...settings, crop: { ...settings.crop, top: 100 } };
+  assert.match(runBlocker(grid, cal, cropped, manual)!, /earlier crop or line count/);
+  assert.match(runBlocker(grid, cal, { ...settings, linesPerDirection: 4 }, manual)!, /earlier crop or line count/);
+  assert.equal(runBlocker(grid, cal, cropped, { clicks: [], geometry: testLineGeometry(settings) }), null, "no clicks, nothing stale");
+});
+
+test("default class names are neutral: the user names what a class is (review S3)", () => {
+  assert.equal(DEFAULT_SETTINGS.dark.label, "dark class");
+  assert.equal(DEFAULT_SETTINGS.bright.label, "bright class");
+});
+
 test("TIFF is refused with an explicit message before any decoding (no hang)", () => {
   assert.equal(unsupportedImageReason("sample.tif", "image/tiff"), TIFF_MESSAGE);
   assert.equal(unsupportedImageReason("SAMPLE.TIFF", ""), TIFF_MESSAGE);
@@ -113,7 +132,8 @@ test("TIFF is refused with an explicit message before any decoding (no hang)", (
 
 test("the result view shows the authority's numbers unchanged (no recomputation)", () => {
   const html = renderToStaticMarkup(<MicrographMeasureResults result={mockResult(true)} stale={false} />);
-  for (const text of ["9.3", "9.25 to 9.35", "12.5 µm", "12.25 to 12.75 µm", "2.13 %", "1.87 % to 2.39 %", "3.75 µm",
+  for (const text of ["9.3", "test lines of this image only 9.25 to 9.35", "12.5 µm", "12.25 to 12.75 µm", "2.13 %",
+    "95 % CI, tiles of this image only 1.87 % to 2.39 %", "3.75 µm",
     "48.9 µm", "4200 1/mm²", "42 (2 touch the ROI edge; 3 below 4 px not counted)", "2.01 % / 2.25 %", "0.5 µm/px"]) {
     assert.ok(html.includes(text), `missing ${text}`);
   }
@@ -135,7 +155,7 @@ test("request assembly: calibration, crop, classes and manual counts; image byte
     grains: { enabled: true, boundaryMaxGrey: 120 } };
   const cal = scaleBar({ x1: grid.scaleBar.x1, y1: grid.scaleBar.y, x2: grid.scaleBar.x2, y2: grid.scaleBar.y }, 50);
   const clicks = [{ line: 0, x: 12, y: 22, weight: 1 }, { line: 0, x: 37, y: 22, weight: 0.5 }, { line: 3, x: 1, y: 2, weight: 1 }];
-  const req = buildMeasureRequest(grid, cal, settings, { clicks });
+  const req = buildMeasureRequest(grid, cal, settings, { clicks, geometry: testLineGeometry(settings) });
   assert.equal(req.barLengthUm, 50);
   assert.equal(req.barLengthPx, 100);
   assert.equal(req.cropBottomPx, 40);
@@ -186,4 +206,25 @@ test("the module view has no invented samples, AI scan wording or property estim
   assert.match(html, /Load image/);
   assert.doesNotMatch(html, /Synthetic test pattern|Known answer/, "no built-in demo images (user decision 2026-10-05)");
   assert.doesNotMatch(html, /authentic|AI Scanning|Hall-Petch|cooling rate|inspection report|certif|Calibrated standard/i);
+});
+
+test("the client turns validation, internal and transport errors into thrown messages", async () => {
+  const { measureMicrograph } = await import("../src/services/micrographMeasureService");
+  const original = globalThis.fetch;
+  const reply = (status: number, body: unknown) => async () => new Response(JSON.stringify(body), { status });
+  try {
+    const cases: [number, unknown, RegExp][] = [
+      [422, { success: false, errorKind: "validation", error: { code: "INVALID_INPUT", message: "imageHeight must be an integer" } }, /imageHeight must be an integer/],
+      [200, { success: false, errorKind: "internal", error: "MemoryError: x" }, /MemoryError/],
+      [413, { error: "Micrograph image too large (at most 4096 x 4096 pixels, 8-bit)." }, /too large/],
+      [500, { error: "Ad-hoc Python execution timed out after 60000ms" }, /timed out/],
+      [200, { unexpected: true }, /Measurement failed \(200\)/],
+    ];
+    for (const [status, body, pattern] of cases) {
+      globalThis.fetch = reply(status, body) as typeof fetch;
+      await assert.rejects(measureMicrograph({ imageWidth: 1, imageHeight: 1, imageData: "AA==" }), pattern);
+    }
+  } finally {
+    globalThis.fetch = original;
+  }
 });

@@ -25,7 +25,7 @@ import {
   sha256Bytes,
   type EDSSourceRecord,
 } from "../utils/edsSourceArchive";
-import { NET_AREA_LABEL, findEdsPeaks, type EdsPeakIdResult } from "../utils/edsPeakId";
+import { FWHM_LIMITS_EV, NET_AREA_LABEL, findEdsPeaks, type EdsPeakIdResult } from "../utils/edsPeakId";
 import {
   importVendorQuant,
   type VendorAnalysisType,
@@ -50,6 +50,23 @@ type UploadedSource = Pick<EDSSourceRecord, "fileName" | "mediaType" | "bytes"> 
 type UploadedSpectrum = ParsedEDSSpectrum & { source: UploadedSource | null };
 
 const DEFAULT_FWHM_EV = 130;
+
+/** Marker text: an overlap peak names its first two candidates, so the chart never shows one of them as the answer. */
+function markerLabel(peak: { candidates: { label: string }[]; overlap: boolean; energyKeV: number }): string {
+  if (peak.candidates.length === 0) return peak.energyKeV.toFixed(2);
+  return peak.overlap && peak.candidates.length > 1
+    ? `${peak.candidates[0].label} / ${peak.candidates[1].label}`
+    : peak.candidates[0].label;
+}
+
+/** Identity of the vendor import input (file and metadata); a parsed result is valid only for the same signature. */
+export function vendorSignature(
+  file: { fileName: string; bytes: ArrayBuffer; loadedAt: Date } | null,
+  instrument: string, software: string, analysisType: string,
+): string {
+  return JSON.stringify([file ? [file.fileName, file.bytes.byteLength, file.loadedAt.getTime()] : null,
+    instrument, software, analysisType]);
+}
 
 function fmt(value: number, digits: number): string {
   return Number.isFinite(value) ? value.toFixed(digits) : "-";
@@ -97,23 +114,30 @@ export const EDSSpectrumLab: React.FC<{
     return () => { active = false; };
   }, []);
 
+  // The parsed vendor table belongs to exactly one (file, metadata) input. Any change clears it at once, so a
+  // stale accepted result can neither be shown beside a new file name nor sent while the new input is parsed.
+  const vendorInputSignature = vendorSignature(vendorFile, vendorInstrument, vendorSoftware, vendorAnalysisType);
+  const [vendorResultSignature, setVendorResultSignature] = useState<string | null>(null);
   useEffect(() => {
-    if (!vendorFile) {
-      setVendorResult(null);
-      return;
-    }
+    setVendorResult(null);
+    setVendorResultSignature(null);
+    if (!vendorFile) return;
     let active = true;
     void importVendorQuant(
       vendorFile.bytes,
       vendorFile.fileName,
       { instrument: vendorInstrument, software: vendorSoftware, analysisType: vendorAnalysisType },
       vendorFile.loadedAt,
-    ).then(result => { if (active) setVendorResult(result); })
-      .catch(() => { if (active) setVendorResult(null); });
+    ).then(result => {
+      if (!active) return;
+      setVendorResult(result);
+      setVendorResultSignature(vendorSignature(vendorFile, vendorInstrument, vendorSoftware, vendorAnalysisType));
+    }).catch(() => { if (active) setVendorResult(null); });
     return () => { active = false; };
   }, [vendorFile, vendorInstrument, vendorSoftware, vendorAnalysisType]);
+  const vendorCurrent = vendorResult !== null && vendorResultSignature === vendorInputSignature;
 
-  const fwhmValid = Number.isFinite(fwhmEv) && fwhmEv > 0;
+  const fwhmValid = Number.isFinite(fwhmEv) && fwhmEv >= FWHM_LIMITS_EV.min && fwhmEv <= FWHM_LIMITS_EV.max;
   const peakAnalysis = useMemo<{ result: EdsPeakIdResult | null; error: string | null }>(() => {
     if (!uploadedSpectrum) return { result: null, error: null };
     try {
@@ -147,7 +171,7 @@ export const EDSSpectrumLab: React.FC<{
   const gpuAnnotations = useMemo(
     () => (peakResult?.peaks ?? []).map(peak => ({
       x: peak.energyKeV,
-      label: peak.candidates[0]?.label ?? "peak",
+      label: markerLabel(peak),
       intensity: peak.netCounts,
     })),
     [peakResult],
@@ -236,7 +260,7 @@ export const EDSSpectrumLab: React.FC<{
   };
 
   const sendVendorComposition = () => {
-    if (!vendorResult?.accepted || !vendorResult.provenance || !vendorResult.transferLabel) return;
+    if (!vendorCurrent || !vendorResult?.accepted || !vendorResult.provenance || !vendorResult.transferLabel) return;
     const transfer: EDSCompositionTransfer = { label: vendorResult.transferLabel, provenance: vendorResult.provenance };
     if (onSendToAlloyBuilder) {
       onSendToAlloyBuilder(vendorResult.composition, transfer);
@@ -360,7 +384,8 @@ export const EDSSpectrumLab: React.FC<{
               <span>Detector FWHM (eV)</span>
               <input
                 type="number"
-                min={20}
+                min={FWHM_LIMITS_EV.min}
+                max={FWHM_LIMITS_EV.max}
                 step={1}
                 value={Number.isFinite(fwhmEv) ? fwhmEv : ""}
                 onChange={(e) => setFwhmEv(e.target.value === "" ? Number.NaN : Number(e.target.value))}
@@ -381,7 +406,9 @@ export const EDSSpectrumLab: React.FC<{
             </label>
           </div>
           {!fwhmValid && (
-            <p role="alert" className="text-xs text-amber-200">Enter a positive FWHM; {DEFAULT_FWHM_EV} eV is used until then.</p>
+            <p role="alert" className="text-xs text-amber-200">
+              Enter an FWHM between {FWHM_LIMITS_EV.min} and {FWHM_LIMITS_EV.max} eV; {DEFAULT_FWHM_EV} eV is used until then.
+            </p>
           )}
           {peakResult && (
             <p className="text-xs text-slate-400">
@@ -435,7 +462,7 @@ export const EDSSpectrumLab: React.FC<{
                       x={peak.energyKeV}
                       stroke={peak.overlap ? "#f59e0b" : "#34d399"}
                       strokeDasharray="3 3"
-                      label={{ value: peak.candidates[0]?.label ?? fmt(peak.energyKeV, 2), fill: peak.overlap ? "#fbbf24" : "#6ee7b7", fontSize: 10, position: "top" }}
+                      label={{ value: markerLabel(peak), fill: peak.overlap ? "#fbbf24" : "#6ee7b7", fontSize: 10, position: "top" }}
                     />
                   ))}
                   {showBackground && peakResult && (
@@ -599,7 +626,10 @@ export const EDSSpectrumLab: React.FC<{
           />
         </div>
 
-        {vendorResult && vendorFile && (
+        {vendorFile && !vendorCurrent && (
+          <p role="status" className="text-xs text-slate-400">Checking {vendorFile.fileName} with the current metadata...</p>
+        )}
+        {vendorResult && vendorFile && vendorCurrent && (
           <div className="space-y-2 text-xs">
             <p className="text-slate-400 break-words">Imported {vendorFile.fileName}</p>
             {vendorResult.errors.length > 0 && (

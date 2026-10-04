@@ -18,7 +18,9 @@ export function fmtPct(fraction: number | null | undefined, digits = 4): string 
   return fraction === null || fraction === undefined ? "—" : `${fmt(fraction * 100, digits)} %`;
 }
 
-function Quantity({ q, pct = false }: { q: MeasuredQuantity; pct?: boolean }) {
+// Every interval here is computed within ONE image (tiles or test lines of this field), not between specimens
+// (review S4), so the label says so where the number is shown.
+function Quantity({ q, pct = false, ciScope }: { q: MeasuredQuantity; pct?: boolean; ciScope?: string }) {
   if (q.value === null) return <span className="text-slate-400">Unavailable: {q.reason}</span>;
   const show = (v: number | null) => (pct ? fmtPct(v) : fmt(v));
   const unit = pct || !q.unit || q.unit === "1" ? "" : ` ${q.unit}`;
@@ -26,7 +28,7 @@ function Quantity({ q, pct = false }: { q: MeasuredQuantity; pct?: boolean }) {
     <span>
       <span className="text-white font-mono">{show(q.value)}{unit}</span>
       {q.ci95 && (
-        <span className="text-slate-400 font-mono"> (95 % CI {show(q.ci95[0])} to {show(q.ci95[1])}{unit})</span>
+        <span className="text-slate-400 font-mono"> (95 % CI{ciScope ? `, ${ciScope}` : ""} {show(q.ci95[0])} to {show(q.ci95[1])}{unit})</span>
       )}
     </span>
   );
@@ -49,7 +51,7 @@ function ClassBlock({ cls }: { cls: MicrographClassResult }) {
     <section className="space-y-1" aria-label={`Results for ${cls.label}`}>
       <h4 className="text-xs font-mono font-bold text-sky-300">{cls.label} ({rule})</h4>
       <table className="w-full text-xs"><tbody>
-        <Row name="Area fraction (A_A)"><Quantity q={af.pixelFraction} pct /></Row>
+        <Row name="Area fraction (A_A)"><Quantity q={af.pixelFraction} pct ciScope="tiles of this image only" /></Row>
         <Row name="Field-to-field spread">
           {af.fieldToField.tiles} tiles, SD {fmtPct(af.fieldToField.sd)}, half-width {fmtPct(af.fieldToField.halfWidth)}
         </Row>
@@ -80,8 +82,8 @@ function GrainBlock({ title, gs }: { title: string; gs: MicrographGrainSize }) {
       <h4 className="text-xs font-mono font-bold text-sky-300">{title}</h4>
       <table className="w-full text-xs"><tbody>
         <Row name="Intersections P">{fmt(gs.totalIntersections)} on {gs.lines} lines ({fmt(gs.totalLengthPx)} px)</Row>
-        <Row name="Mean intercept length"><Quantity q={gs.meanIntercept} /></Row>
-        <Row name="ASTM E112 grain size number G"><Quantity q={gs.astmG} /></Row>
+        <Row name="Mean intercept length"><Quantity q={gs.meanIntercept} ciScope="test lines of this image only" /></Row>
+        <Row name="ASTM E112 grain size number G"><Quantity q={gs.astmG} ciScope="test lines of this image only" /></Row>
         <Row name="Relative accuracy">{gs.relativeAccuracyPct === null ? "—" : `${fmt(gs.relativeAccuracyPct, 3)} %`}</Row>
       </tbody></table>
       {gs.warnings.length > 0 && (

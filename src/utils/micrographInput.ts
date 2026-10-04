@@ -93,8 +93,9 @@ export interface MeasureSettings {
 
 export const DEFAULT_SETTINGS: MeasureSettings = {
   crop: { top: 0, bottom: 0, left: 0, right: 0 },
-  dark: { enabled: false, label: "pores / voids", maxGrey: 60 },
-  bright: { enabled: false, label: "second phase", minGrey: 200 },
+  // Neutral names: the user names what a class is (review S3); nothing is inferred from grey levels.
+  dark: { enabled: false, label: "dark class", maxGrey: 60 },
+  bright: { enabled: false, label: "bright class", minGrey: 200 },
   grains: { enabled: false, boundaryMaxGrey: 90 },
   tiles: 4,
   sensitivityDeltaGrey: 10,
@@ -104,6 +105,13 @@ export const DEFAULT_SETTINGS: MeasureSettings = {
 
 export interface ManualCounting {
   clicks: { line: number; x: number; y: number; weight: number }[];
+  /** testLineGeometry() when the clicks were made; clicks never carry over to another crop or line count. */
+  geometry: string;
+}
+
+/** Identity of the test-line layout (crop margins and lines per direction) that manual clicks refer to. */
+export function testLineGeometry(settings: MeasureSettings): string {
+  return JSON.stringify([settings.crop, settings.linesPerDirection]);
 }
 
 /** Why a run is not possible yet (the button stays disabled), or null. Calibration is mandatory in the view. */
@@ -114,6 +122,9 @@ export function runBlocker(image: GreyImage | null, calibration: CalibrationInpu
   if ("reason" in cal) return `Calibration required: ${cal.reason}`;
   if (!settings.dark.enabled && !settings.bright.enabled && !settings.grains.enabled && !manual) {
     return "Choose at least one measurement (dark class, bright class, grain intercepts or manual counting).";
+  }
+  if (manual && manual.clicks.length > 0 && manual.geometry !== testLineGeometry(settings)) {
+    return "The manual clicks belong to an earlier crop or line count: clear them and count again on the current lines.";
   }
   if (settings.dark.enabled && settings.bright.enabled && settings.dark.maxGrey >= settings.bright.minGrey) {
     return "The dark threshold must be below the bright threshold.";

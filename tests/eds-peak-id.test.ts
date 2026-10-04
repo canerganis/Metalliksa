@@ -283,6 +283,14 @@ test('peak search rejects a non-uniform energy axis and an invalid FWHM', () => 
   assert.throws(() => findEdsPeaks(channels), /uniformly spaced/);
   const ok: EdsChannel[] = Array.from({ length: 64 }, (_, i) => ({ energyKeV: i * 0.01, counts: 100 }));
   assert.throws(() => findEdsPeaks(ok, { fwhmEv: 0 }), /FWHM/);
+  // Micrograph review Sol #6: an unbounded FWHM used to overflow the kernel size (1e308 eV -> infinite loop).
+  for (const fwhmEv of [1e308, Number.POSITIVE_INFINITY, Number.NaN, 19, 1001]) {
+    assert.throws(() => findEdsPeaks(ok, { fwhmEv }), /FWHM must be between 20 and 1000 eV/, String(fwhmEv));
+  }
+  // 1000 eV on a 64-channel, 10 eV axis is 100 channels: more than a quarter of the spectrum.
+  assert.throws(() => findEdsPeaks(ok, { fwhmEv: 1000 }), /more than a quarter/);
+  assert.throws(() => findEdsPeaks(ok, { snipIterations: 1e9 }), /snipIterations/);
+  assert.doesNotThrow(() => findEdsPeaks(ok, { fwhmEv: 130 }));
 });
 
 // ---------------------------------------------------------------------------------------------

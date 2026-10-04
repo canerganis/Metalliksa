@@ -127,7 +127,15 @@ export function parseVendorQuantText(
       return;
     }
     const fields = (/[,;\t]/.test(line) ? line.split(/[,;\t]/) : line.split(/\s+/)).map(cell => cell.trim());
-    if (/^(element|symbol|el)$/i.test(fields[0])) return;
+    if (/^(element|symbol|el)$/i.test(fields[0])) {
+      // An explicit column title must name weight percent; atomic percent (or anything else) is never read as wt%.
+      const unit = fields[1] ?? "";
+      if (!/\b(wt|weight|mass)\b|wt\.?\s*%/i.test(unit) || /\bat(om(ic)?)?\.?\s*%|\batom/i.test(unit)) {
+        errors.push({ row, text: line, message: `Column 2 title '${unit}' is not weight percent (wt%). Export the ` +
+          "weight-percent table from the instrument software; atomic percent is not converted here." });
+      }
+      return;
+    }
     if (fields.length < 2 || fields.length > 3) {
       errors.push({ row, text: line, message: `Expected 2 or 3 columns (element, wt%, optional sigma), found ${fields.length}.` });
       return;

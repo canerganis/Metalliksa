@@ -149,6 +149,12 @@ export const KNOWN_OVERLAP_GROUPS: readonly KnownOverlapGroup[] = [
 // peaks) lowers that bias; the peak signal itself is only lightly smoothed (5 channels).
 const BG_SMOOTH_FWHM_DIVISOR = 4;
 
+/**
+ * Accepted detector FWHM range in eV. Energy-dispersive detectors resolve roughly 120-180 eV at Mn K-alpha; the
+ * range is a sanity bound against typos and runaway kernels, not a property of any detector.
+ */
+export const FWHM_LIMITS_EV = { min: 20, max: 1000 } as const;
+
 const DEFAULTS = {
   fwhmEv: 130,
   minSignificance: 3,
@@ -338,8 +344,19 @@ export function findEdsPeaks(channels: readonly EdsChannel[], options: EdsPeakId
   const stepKeV = assertUniformAxis(channels);
   const channelWidthEv = stepKeV * 1000;
   const fwhmEv = options.fwhmEv ?? DEFAULTS.fwhmEv;
-  if (!Number.isFinite(fwhmEv) || fwhmEv <= 0) throw new Error("Detector FWHM must be a positive number of eV.");
+  if (!Number.isFinite(fwhmEv) || fwhmEv < FWHM_LIMITS_EV.min || fwhmEv > FWHM_LIMITS_EV.max) {
+    throw new Error(`Detector FWHM must be between ${FWHM_LIMITS_EV.min} and ${FWHM_LIMITS_EV.max} eV.`);
+  }
   const fwhmChannels = fwhmEv / channelWidthEv;
+  // The SNIP window, smoothing kernel and peak window all scale with FWHM in channels; they must fit the spectrum.
+  if (!Number.isFinite(fwhmChannels) || fwhmChannels > channels.length / 4) {
+    throw new Error(`An FWHM of ${fwhmEv} eV spans ${fwhmChannels.toFixed(1)} channels, more than a quarter of the ` +
+      `${channels.length}-channel spectrum; peak search is not possible at this resolution.`);
+  }
+  if (options.snipIterations !== undefined &&
+      !(Number.isInteger(options.snipIterations) && options.snipIterations >= 1 && options.snipIterations <= channels.length)) {
+    throw new Error("snipIterations must be an integer between 1 and the number of channels.");
+  }
   const minSignificance = options.minSignificance ?? DEFAULTS.minSignificance;
   const minEnergyKeV = options.minEnergyKeV ?? DEFAULTS.minEnergyKeV;
   const snipIterations = options.snipIterations ?? Math.max(1, Math.ceil(DEFAULTS.snipHalfWindowFwhm * fwhmChannels));
