@@ -1,4 +1,8 @@
-@import "tailwindcss";
+/* Explicit sources: automatic detection depends on .gitignore, which Tailwind only honours inside a git checkout, so a source archive built a larger stylesheet. */
+@import "tailwindcss" source(none);
+@source "../index.html";
+@source ".";
+@source "../tests/*-browser.tsx";
 
 :root {
   --mk-bg: #020409;
