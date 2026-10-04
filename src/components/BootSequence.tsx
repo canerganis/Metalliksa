@@ -11,6 +11,7 @@ import { fetchRuntimeConfig, runtimeConfigProbe } from "./AirgapBanner";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { MODULES } from "../data/workspaces";
 import { getBootController } from "../services/bootSteps";
+import { setBootOverlayOpen } from "../utils/bootOverlay";
 import {
   BOOT_STATE_TEXT,
   bootAnnouncement,
@@ -93,6 +94,8 @@ export function BootSequence() {
   }, [snap.phase, snap.animate]);
 
   const open = !gone && !snap.dismissed;
+  // Shell decisions outside this chunk (the command palette never opens over the boot screen).
+  useEffect(() => setBootOverlayOpen(open), [open]);
   // Esc (shared escape stack), backdrop click and the button all hide the overlay; checks keep running.
   const skip = () => controller.skip();
   const stopped = snap.phase === "stopped";
