@@ -1,0 +1,49 @@
+{
+ "baseRevision": "d33b6f5",
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "schema": "phase6a-golden-1",
+ "solver": "lpbf_fatigue_fracture",
+ "solverFile": "python/lpbf_fatigue_fracture.py",
+ "solverSha256": "1c045a23e50dd327c2f2c6961b98543cd111e16d773284fae4cc111c56c0dede",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "table": "ALLOY_FATIGUE_DATABASE",
+ "values": {
+  "316L SS": {
+   "fracture_toughness_K_IC": 85.0,
+   "hardness_HV": 215.0,
+   "name": "316L SS",
+   "paris_C": 3.5e-12,
+   "paris_m": 3.1,
+   "smooth_fatigue_limit_MPa": 240.0,
+   "threshold_stress_intensity_MPa_m": 4.8
+  },
+  "AlSi10Mg": {
+   "fracture_toughness_K_IC": 32.0,
+   "hardness_HV": 115.0,
+   "name": "AlSi10Mg",
+   "paris_C": 2.1e-10,
+   "paris_m": 3.8,
+   "smooth_fatigue_limit_MPa": 150.0,
+   "threshold_stress_intensity_MPa_m": 1.8
+  },
+  "Inconel 718": {
+   "fracture_toughness_K_IC": 70.0,
+   "hardness_HV": 440.0,
+   "name": "Inconel 718",
+   "paris_C": 1.2e-11,
+   "paris_m": 3.4,
+   "smooth_fatigue_limit_MPa": 620.0,
+   "threshold_stress_intensity_MPa_m": 4.2
+  },
+  "Ti-6Al-4V": {
+   "fracture_toughness_K_IC": 55.0,
+   "hardness_HV": 340.0,
+   "name": "Ti-6Al-4V",
+   "paris_C": 1.8e-11,
+   "paris_m": 3.3,
+   "smooth_fatigue_limit_MPa": 510.0,
+   "threshold_stress_intensity_MPa_m": 3.2
+  }
+ }
+}

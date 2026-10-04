@@ -10,93 +10,51 @@ import json
 import math
 import time
 
-# Material Kinetics Database with thermodynamic transition temperatures, activation energies, and JMAK parameters
-ALLOY_KINETICS_DB = {
-    "AISI 4140": {
-        "type": "Low-Alloy Steel",
-        "composition_wt": {"Fe": 96.8, "C": 0.40, "Mn": 0.85, "Cr": 1.00, "Mo": 0.20, "Si": 0.25},
-        "Ae3_C": 780.0,
-        "Ae1_C": 725.0,
-        "Ms_C": 330.0,
-        "Mf_C": 180.0,
-        "Q_diff_kJ_mol": 240.0,
-        "grain_size_d_um_default": 25.0,
-        "aust_temp_C_default": 860.0,
-        "phases": ["Ferrite", "Pearlite", "Bainite", "Martensite"],
-        "critical_cooling_rate_C_s": 45.0, # Rate to get >90% Martensite
-        "description": "Medium-carbon Cr-Mo through-hardening alloy steel for shafts and landing gears."
-    },
-    "AISI 4340": {
-        "type": "High-Strength Ni-Cr-Mo Steel",
-        "composition_wt": {"Fe": 95.7, "C": 0.40, "Ni": 1.85, "Cr": 0.80, "Mo": 0.25, "Mn": 0.70, "Si": 0.30},
-        "Ae3_C": 765.0,
-        "Ae1_C": 710.0,
-        "Ms_C": 290.0,
-        "Mf_C": 140.0,
-        "Q_diff_kJ_mol": 265.0,
-        "grain_size_d_um_default": 20.0,
-        "aust_temp_C_default": 845.0,
-        "phases": ["Ferrite", "Pearlite", "Bainite", "Martensite"],
-        "critical_cooling_rate_C_s": 8.5, # Deep hardenability due to Ni+Cr+Mo
-        "description": "Ultra-high strength structural steel with high hardenability and fracture toughness."
-    },
-    "AISI D2": {
-        "type": "Cold-Work High-Carbon High-Cr Tool Steel",
-        "composition_wt": {"Fe": 82.5, "C": 1.55, "Cr": 12.0, "Mo": 0.90, "V": 0.80, "Si": 0.40, "Mn": 0.35},
-        "Ae3_C": 860.0,
-        "Ae1_C": 800.0,
-        "Ms_C": 210.0,
-        "Mf_C": 40.0,
-        "Q_diff_kJ_mol": 310.0,
-        "grain_size_d_um_default": 15.0,
-        "aust_temp_C_default": 1020.0,
-        "phases": ["Proeutectoid Carbides", "Pearlite", "Bainite", "Martensite", "Retained Austenite"],
-        "critical_cooling_rate_C_s": 2.2, # Air hardening
-        "description": "High wear-resistant ledeburitic tool steel with M7C3 carbides."
-    },
-    "Inconel 718": {
-        "type": "Precipitation-Hardenable Ni-Fe Superalloy",
-        "composition_wt": {"Ni": 52.5, "Cr": 19.0, "Fe": 18.5, "Nb": 5.1, "Mo": 3.05, "Ti": 0.90, "Al": 0.55, "C": 0.04},
-        "Ae3_C": 1020.0, # Gamma Solvus
-        "Ae1_C": 620.0,
-        "Ms_C": -50.0, # Stable FCC matrix (no martensite)
-        "Mf_C": -100.0,
-        "Q_diff_kJ_mol": 285.0, # Nb diffusion in Ni
-        "grain_size_d_um_default": 35.0,
-        "aust_temp_C_default": 980.0, # Solutionizing temp
-        "phases": ["Gamma Prime (Ni3Al,Ti)", "Gamma Double Prime (Ni3Nb)", "Delta (Ni3Nb orthorhombic)", "Laves TCP"],
-        "critical_cooling_rate_C_s": 150.0, # To suppress delta & Laves in LPBF
-        "description": "Aerospace superalloy hardened by coherent metastable gamma double prime (bct-DO22)."
-    },
-    "Ti-6Al-4V": {
-        "type": "Alpha-Beta Titanium Alloy",
-        "composition_wt": {"Ti": 90.0, "Al": 6.0, "V": 4.0, "Fe": 0.25, "O": 0.18},
-        "Ae3_C": 995.0, # Beta Transus
-        "Ae1_C": 700.0,
-        "Ms_C": 800.0, # Alpha-prime (hexagonal martensite) start
-        "Mf_C": 650.0,
-        "Q_diff_kJ_mol": 220.0,
-        "grain_size_d_um_default": 50.0,
-        "aust_temp_C_default": 1050.0, # Beta anneal
-        "phases": ["Equiaxed Alpha", "Lamellar Alpha+Beta (Widmanstatten)", "Alpha-Prime Martensite (HCP)"],
-        "critical_cooling_rate_C_s": 410.0, # Rate for complete martensitic alpha-prime
-        "description": "Workhorse titanium alloy; transformation kinetics govern lamellar vs equiaxed microstructure."
-    },
-    "Al 7075": {
-        "type": "Precipitation-Hardenable Al-Zn-Mg-Cu Alloy",
-        "composition_wt": {"Al": 90.0, "Zn": 5.6, "Mg": 2.5, "Cu": 1.6, "Cr": 0.23},
-        "Ae3_C": 480.0, # Solvus
-        "Ae1_C": 100.0,
-        "Ms_C": -200.0,
-        "Mf_C": -273.0,
-        "Q_diff_kJ_mol": 130.0,
-        "grain_size_d_um_default": 20.0,
-        "aust_temp_C_default": 475.0,
-        "phases": ["GP Zones", "Eta-Prime (MgZn2)", "Eta Equilibrium (MgZn2)"],
-        "critical_cooling_rate_C_s": 250.0, # Water quench required to retain SSSS
-        "description": "Ultra-high strength aerospace aluminum susceptible to quench-sensitivity and stress corrosion."
+import alloy_data_kinetics_uq_fatigue as _kinetics_data
+import alloy_registry
+import input_validation
+import physical_constants
+
+# Alloy kinetics data (Phase 6a structural migration, design step (a)): the numeric
+# columns of the former local ALLOY_KINETICS_DB come from alloy_registry (domain
+# "kinetics"), the labels from alloy_data_kinetics_uq_fatigue. Values and the
+# "alloyMetadata" key order are unchanged. An unknown alloy name now raises
+# input_validation.ValidationError (UNKNOWN_ALLOY) instead of silently using AISI 4140.
+R_GAS = physical_constants.LEGACY_GAS_CONSTANT_R_4SF  # 8.314, exact R is step (b)
+ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
+
+
+def resolve_kinetics_alloy(alloy_name):
+    """Return (registry id, legacy table name, alloy metadata dict) for ``alloy_name``.
+
+    The metadata dict has the legacy ALLOY_KINETICS_DB layout and key order.
+    Raises ValidationError(UNKNOWN_ALLOY) for names without kinetics data.
+    """
+    record = input_validation.require_known_alloy(alloy_name, alloy_registry.DOMAIN_KINETICS, field="alloy")
+    labels = _kinetics_data.KINETICS_DESCRIPTORS[record.id]
+    metadata = {}
+    for key in _kinetics_data.KINETICS_METADATA_KEYS:
+        if key == "phases":
+            metadata[key] = list(labels[key])
+        elif key in _kinetics_data.KINETICS_DESCRIPTOR_KEYS:
+            metadata[key] = labels[key]
+        elif key == "composition_wt":
+            metadata[key] = dict(record.value(key, alloy_registry.DOMAIN_KINETICS))
+        else:
+            metadata[key] = record.value(key, alloy_registry.DOMAIN_KINETICS)
+    return record.id, _kinetics_data.KINETICS_LEGACY_NAMES[record.id], metadata
+
+
+def provenance(registry_id):
+    out = {
+        "registryVersion": alloy_registry.REGISTRY_VERSION,
+        "constantsVersion": physical_constants.CONSTANTS_VERSION,
+        "registryAlloyId": registry_id,
+        "gasConstantR_J_molK": R_GAS,
+        "constantsNote": "Legacy 4-significant-figure R (8.314); exact CODATA R is design step (b).",
     }
-}
+    out.update(_kinetics_data.provenance())
+    return out
 
 def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_type="Pearlite"):
     """
@@ -104,8 +62,8 @@ def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_typ
     Using classic nucleation and growth driving force:
     tau(T) = A * (d_grain)^p * (Delta T)^(-m) * exp(Q / (R * T))
     """
-    t_k = t_c + 273.15
-    r_gas = 8.314 # J/(mol*K)
+    t_k = t_c + ZERO_C_K
+    r_gas = R_GAS # J/(mol*K)
     
     t_eq = alloy_data["Ae3_C"] if phase_type in ["Ferrite", "Pearlite", "Equiaxed Alpha"] else (alloy_data["Ae1_C"] + 150.0)
     delta_t = t_eq - t_c
@@ -149,7 +107,7 @@ def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_typ
     # Phenomenological incubation & transformation time
     # tau_nose is typically 0.5s to 50s depending on hardenability
     tau_geom = math.exp(((t_c - t_nose) / 85.0) ** 2)
-    diff_term = math.exp((q_act / r_gas) * (1.0 / t_k - 1.0 / (t_nose + 273.15)))
+    diff_term = math.exp((q_act / r_gas) * (1.0 / t_k - 1.0 / (t_nose + ZERO_C_K)))
     
     # Incubation time for 1% transformed (start)
     t_start_s = max(0.001, c_factor * tau_geom * diff_term * (100.0 / max(10.0, delta_t)) ** 1.2)
@@ -180,7 +138,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
     """
     start_time = time.perf_counter()
     
-    alloy = ALLOY_KINETICS_DB.get(alloy_name, ALLOY_KINETICS_DB["AISI 4140"])
+    _registry_id, legacy_name, alloy = resolve_kinetics_alloy(alloy_name)
     
     ae3 = alloy["Ae3_C"]
     ae1 = alloy["Ae1_C"]
@@ -250,7 +208,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
             pct_bainite = 1.0
             pct_pearlite = 0.5
             pct_austenite = 0.5
-            hard_hrc = 58.0 if "4140" in alloy_name or "4340" in alloy_name else 64.0
+            hard_hrc = 58.0 if "4140" in legacy_name or "4340" in legacy_name else 64.0
         elif cr >= ccr * 0.7:
             pct_martensite = 85.0
             pct_bainite = 12.0
@@ -301,10 +259,10 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
     # 4. LIFSHITZ-SLYOZOV-WAGNER (LSW) PRECIPITATE COARSENING
     # r^3(t) - r_0^3 = K_LSW * t
     # K_LSW = (8 * gamma * D * C_e * Vm^2) / (9 * R * T)
-    aging_t_k = aging_temp_c + 273.15
+    aging_t_k = aging_temp_c + ZERO_C_K
     q_precip = alloy["Q_diff_kJ_mol"] * 1000.0
-    d_diff = 1.2e-4 * math.exp(-q_precip / (8.314 * aging_t_k))
-    k_lsw = (8.0 * 0.045 * d_diff * 0.02 * (1.1e-5 ** 2)) / (9.0 * 8.314 * aging_t_k) # m^3/s
+    d_diff = 1.2e-4 * math.exp(-q_precip / (R_GAS * aging_t_k))
+    k_lsw = (8.0 * 0.045 * d_diff * 0.02 * (1.1e-5 ** 2)) / (9.0 * R_GAS * aging_t_k) # m^3/s
     k_lsw_nm3_h = k_lsw * (1e9 ** 3) * 3600.0 # nm^3/h
     
     r0_nm = 1.5 # Initial nucleus radius
@@ -393,7 +351,7 @@ if __name__ == "__main__":
     try:
         raw_input = sys.stdin.read()
         if not raw_input.strip():
-            print(json.dumps({"error": "Empty stdin payload"}))
+            print(json.dumps({"error": "Empty stdin payload", "errorKind": "internal"}))
             sys.exit(1)
             
         data = json.loads(raw_input)
@@ -405,7 +363,11 @@ if __name__ == "__main__":
         time_aging = data.get("agingTime_h", 8.0)
         
         result = solve_phase_transformation_kinetics(mat, cr, d_grain, t_aust, time_aging, t_aging)
+        result["provenance"] = provenance(resolve_kinetics_alloy(mat)[0])
         print(json.dumps(result))
+    except input_validation.ValidationError as err:
+        print(json.dumps(input_validation.validation_envelope(err)))
+        sys.exit(2)
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        print(json.dumps({"error": str(e), "errorKind": "internal"}))
         sys.exit(1)

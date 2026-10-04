@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 
 from lpbf_thermal_solver import calculate_meltpool_physics
+from alloy_data_kinetics_uq_fatigue import process_map_material_name
 
 SURROGATE_DIR = Path(".lpbf-surrogates")
 SURROGATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -67,8 +68,8 @@ def generate_synthetic_data(alloy_name: str, num_samples: int = 100):
     if csv_path.exists():
         print(f"[{alloy_name}] Loading comprehensive data from {csv_path}...")
         df = pd.read_csv(csv_path)
-        # Map nomenclature if necessary
-        query_mat = "Inconel 718" if alloy_name.upper() == "IN718" else alloy_name
+        # Map nomenclature if necessary (only "IN718" is renamed; Phase 6a moved the table)
+        query_mat = process_map_material_name(alloy_name)
         df_alloy = df[df["Material"] == query_mat]
         
         if not df_alloy.empty:

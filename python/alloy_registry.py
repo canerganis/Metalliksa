@@ -494,6 +494,14 @@ _IDENTITIES: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# ---- BEGIN phase6a-t2b block: kinetics / stochastic UQ / fatigue domain data ----
+# UI names harvested for tranche 2b (alloy_data_kinetics_uq_fatigue.EXTRA_ALIASES).
+import alloy_data_kinetics_uq_fatigue as _t2b_data  # noqa: E402  (leaf, stdlib only)
+
+for _t2b_id, _t2b_names in _t2b_data.EXTRA_ALIASES.items():
+    _IDENTITIES[_t2b_id]["aliases"] = tuple(_IDENTITIES[_t2b_id]["aliases"]) + tuple(_t2b_names)
+# ---- END phase6a-t2b block ----
+
 
 def normalise_name(name: object) -> Optional[str]:
     """Same normalisation as four_alloy_materials.resolve_alloy_id (exact key form)."""

@@ -8,8 +8,9 @@ with the JSON payload on stdin, cwd = python/. The stdout JSON is parsed, volati
 keys are stripped (wall-clock durations, timestamps and the interpreter version)
 and the result is written to ``python/golden/phase6a/<solver>/<case>.json``.
 
-None of the captured solvers uses an RNG, so no seed is needed; every case is
-deterministic once the volatile keys are removed.
+Only stochastic_uq_mmpds_solver uses an RNG; its cases pass a fixed seed (42), so
+every case is deterministic once the volatile keys are removed. Library modules
+without a __main__ (lpbf_fatigue_fracture) run through a driver (MODULE_DRIVERS).
 
 Golden files are only (re)written with ``--force``. Re-blessing after a value
 change (design step (b)) must attach the drift report (tools/drift_report.py) to
@@ -33,6 +34,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import types
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -206,7 +208,13 @@ def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout:
     """
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
     cmd = [python, "-B", f"{solver}.py"]
-    if script is not None:
+    driver = MODULE_DRIVERS.get(solver)
+    if driver is not None:
+        # Library module: run its driver; the module under test comes first on the path.
+        cmd = [python, "-B", driver]
+        search = ([str(script.parent)] if script is not None else []) + [str(PYTHON_DIR)]
+        env["PYTHONPATH"] = os.pathsep.join(search + [env.get("PYTHONPATH", "")])
+    elif script is not None:
         env["PYTHONPATH"] = str(PYTHON_DIR) + os.pathsep + env.get("PYTHONPATH", "")
         # Execute the copied bytes as if they were python/<solver>.py: solvers that
         # locate data next to __file__ (calphad_solver's databases/) must see the
@@ -317,6 +325,17 @@ _TABLE_TARGETS = {
         el: {"atomicMass": d["atomicMass"], "standardE0_V": d["standardE0_V"], "name": d["name"]}
         for el, d in t.items()}),
 }
+# Solvers without a __main__: solver -> driver script relative to python/ (see run_solver).
+MODULE_DRIVERS: Dict[str, str] = {}
+
+# ---- BEGIN phase6a-t2b block: kinetics / stochastic UQ / fatigue cases ----
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import phase6a_t2b_golden_cases as _t2b_cases  # noqa: E402
+
+CASES.update(_t2b_cases.CASES)
+_TABLE_TARGETS.update(_t2b_cases.TABLE_TARGETS)
+MODULE_DRIVERS.update(_t2b_cases.MODULE_DRIVERS)
+# ---- END phase6a-t2b block ----
 
 
 def capture_source_tables(force: bool, label: str = BASE_REVISION,
@@ -337,8 +356,14 @@ def capture_source_tables(force: bool, label: str = BASE_REVISION,
             out.append(f"skip {solver}/{SOURCE_TABLES_FILE} (exists)")
             continue
         meta, source = _binding(solver, label, from_revision)
-        namespace: Dict[str, Any] = {"__name__": f"_phase6a_snapshot_{solver}"}
-        exec(compile(source, f"{solver}.py@{label}", "exec"), namespace)
+        # A registered module object: @dataclass resolves its class module via sys.modules.
+        module = types.ModuleType(f"_phase6a_snapshot_{solver}")
+        sys.modules[module.__name__] = module
+        try:
+            exec(compile(source, f"{solver}.py@{label}", "exec"), module.__dict__)
+        finally:
+            sys.modules.pop(module.__name__, None)
+        namespace: Dict[str, Any] = module.__dict__
         table = namespace.get(attr)
         if table is None:
             out.append(f"skip {solver}/{SOURCE_TABLES_FILE} ({attr} missing)")
