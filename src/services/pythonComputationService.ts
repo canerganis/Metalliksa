@@ -20,6 +20,13 @@ import { createSeededRandom } from "../utils/seededRandom";
 import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
 import { MILS_PER_MM } from "../utils/tafelDisplay";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
+import {
+  CLIENT_DATABASE_LABEL,
+  CLIENT_MODEL_LABEL,
+  parseCalphadUnavailable,
+  type CalphadFieldStatus,
+  type CalphadUnavailable,
+} from "../utils/calphadDisplay";
 
 export interface PersistentIPCDiagnostics {
   success: boolean;
@@ -70,11 +77,18 @@ export interface PythonCalphadDatabaseEntry {
   primaryPhases: string[];
   source: string;
   suitability: string;
+  /** "assessment" or "test-fixture"; a test fixture is refused by the solver. */
+  status?: "assessment" | "test-fixture";
+  usable?: boolean;
+  statusReason?: string | null;
+  /** Machine-readable scope: the base elements this database is assessed for. */
+  assessedBaseElements?: string[];
 }
 
 export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   engine: string;
-  computeTimeMs: number;
+  /** null when the engine did not report a time (never an invented one). */
+  computeTimeMs: number | null;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   iterations?: number;
@@ -83,29 +97,28 @@ export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   databasePath?: string;
   thermodynamicModel?: string;
   isEmpirical?: boolean;
+  databaseId?: string;
+  databaseStatus?: string;
+  /** Per critical-temperature field: computed, heuristic or unavailable with a reason. */
+  criticalTemperatureStatus?: Record<string, CalphadFieldStatus>;
+  multiElementScheilStatus?: string;
+  multiElementScheilNote?: string;
+  /** Set when the Python CALPHAD engine answered "unavailable"; the numbers are then the client screening model's. */
+  pythonUnavailable?: CalphadUnavailable;
   activeComponents?: string[];
   unsupportedElements?: string[];
-  adaptiveGrid?: boolean;
-  adaptiveTelemetry?: {
-    isAdaptive: boolean;
-    coarseStepsCount: number;
-    refinedStepsCount: number;
-    totalEvaluations: number;
-    equivalentUniformSteps: number;
-    speedupFactor: number;
-    minRefineStepC: number;
-    boundaryToleranceC: number;
-    transitionZones: Array<{
-      description: string;
-      intervalC: [number, number];
-    }>;
-  };
+  databaseSuitability?: string;
+  /** Grid temperatures (degC) whose equilibrium did not converge; their profile entries are null. */
+  nonConvergedPoints?: number[];
+  boundaryRefinement?: { enabled: boolean; toleranceC: number; equilibriumCalls: number; note: string };
   phacompAnalysis?: {
-    n_v_bar: number;
-    m_d_bar: number;
-    tcpEmbrittlementRisk: "Low" | "Moderate" | "High";
+    status: "screening-tabulated-values" | "unavailable";
+    reason?: string;
+    n_v_bar: number | null;
+    m_d_bar: number | null;
+    tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
     tcpSigmaRiskTemperatureC: number | null;
-    thermodynamicStabilityIndex: number;
+    thermodynamicStabilityIndex: number | null;
   };
 }
 
@@ -1181,6 +1194,7 @@ class PythonComputationService {
     boundaryRefinement = true,
     minRefineStep = 0.5
   ): Promise<PythonCalphadSolveResult> {
+    let pythonUnavailable: CalphadUnavailable | null = null;
     if (usePython) {
       let validation: PythonValidationError | null = null;
       try {
@@ -1209,9 +1223,11 @@ class PythonComputationService {
               ...data,
               isPythonEngine: true,
               engine: data.engine || "pycalphad-open-tdb",
-              computeTimeMs: data.computeTimeMs || 12,
+              computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
             };
           }
+          // The Python engine has no fallback model: it says "unavailable" and why.
+          pythonUnavailable = parseCalphadUnavailable(data);
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
         }
@@ -1232,12 +1248,17 @@ class PythonComputationService {
     const clientResult = solveMultiComponentEquilibrium(alloy, fallbackTdb, tMin, tMax, tStep);
     const elapsed = Math.round(performance.now() - startTime);
 
+    // Client screening numbers: labelled as such, never as a pycalphad/CALPHAD result.
     return {
       ...clientResult,
       engine: "MetalliX-Client-TS-Solver",
       computeTimeMs: elapsed,
       isPythonEngine: false,
+      isEmpirical: true,
+      thermodynamicModel: CLIENT_MODEL_LABEL,
+      databaseUsed: CLIENT_DATABASE_LABEL,
       iterations: (tMax - tMin) / tStep,
+      ...(pythonUnavailable ? { pythonUnavailable } : {}),
     };
   }
 

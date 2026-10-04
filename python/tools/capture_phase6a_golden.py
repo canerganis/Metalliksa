@@ -719,6 +719,7 @@ def step_b_excluded_cases() -> set:
         if cases is not None:
             excluded |= set(getattr(cases, "EXPECTED_BEHAVIOUR_CHANGES", {}))
             excluded |= set(getattr(cases, "EXPECTED_SUCCESS_FLAG_CHANGES", ()))
+            excluded |= set(getattr(cases, "EXPECTED_UNAVAILABLE_CHANGES", {}))
     excluded |= {("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"),
                  ("pourbaix_solver", "edge_unknown_element_badvals")}
     return excluded
