@@ -75,6 +75,8 @@ npm start
 
 Read `/api/python/status` on the application port. Require the expected interpreter version, `online: true`, and an active transport. On Windows the Python daemon binds HTTP and skips UNIX sockets. `warmModules` records imports only; `subsystemStatus: unverified` explicitly withholds solver availability. `/api/python/ipc-warmup` reports readiness and returns 503 before the daemon is ready; it does not run solver validation.
 
+The Python daemon (`python/persistent_ipc_service.py`) is an internal channel, not an API. `server/processOrchestrator.ts` generates a fresh random token for every daemon spawn and passes it only through the child environment (`METALLIX_IPC_TOKEN`); every HTTP and UNIX-socket request must carry it. The daemon refuses to start without a token, sends no CORS headers, rejects requests with an `Origin` header or a `Host` other than its own loopback `host:port`, accepts only `application/json` bodies, and runs only allowlisted `python/<module>.py` scripts that resolve inside `python/`. Its UNIX socket is owner-only (0600). A non-loopback `METALLIX_IPC_HOST` is ignored by the supervisor and refused by the daemon unless `METALLIX_IPC_ALLOW_REMOTE=1`. If two servers share one `METALLIX_IPC_PORT`, the second one's requests are refused with 401 by the first one's daemon and it falls back to ad-hoc script spawns, so keep the ports distinct. To launch the daemon by hand (diagnostics only), set `METALLIX_IPC_TOKEN` to at least 32 random characters and send `Authorization: Bearer <token>`.
+
 Stop only the processes launched for this check. Keep the original checkout and preview separate.
 
 ## WSL boundary verification
