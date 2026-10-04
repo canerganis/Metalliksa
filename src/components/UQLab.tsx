@@ -88,7 +88,8 @@ export function UQLab({ onNavigate }: UQLabProps) {
   }, [datasets, activeDatasetId]);
 
   // Solver Engine Configuration
-  const [samplingMethod, setSamplingMethod] = useState<"sobol_qmc" | "pseudo_mc">("sobol_qmc");
+  // Sobol QMC is the only sampling engine the solver accepts (pseudo-random MC was removed upstream in f9ae3e4).
+  const samplingMethod = "sobol_qmc" as const;
   const [scramble, setScramble] = useState<boolean>(true);
   const [mcSamples, setMcSamples] = useState<number>(2500);
   const [seed, setSeed] = useState<number>(42);
@@ -352,16 +353,10 @@ export function UQLab({ onNavigate }: UQLabProps) {
                 Normal-model statistics (screening)
               </span>
 
-              {samplingMethod === "sobol_qmc" ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
-                  <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  Sobol sampling · screening
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                  Pseudo-Random PRNG
-                </span>
-              )}
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                Sobol sampling · screening
+              </span>
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Coupons: {activeDataset.coupons.length} | Heats: {empiricalStats.lotCount}
@@ -437,9 +432,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
                   <Zap className="w-3.5 h-3.5" />
                 </span>
                 <span className="font-bold text-slate-200">
-                  {uqResult.samplingMetadata.samplingMethod === "sobol_qmc"
-                    ? "Sobol digital-net sampling diagnostics"
-                    : "Standard Pseudo-Random Monte Carlo (PRNG)"}
+                  Sobol digital-net sampling diagnostics
                 </span>
                 <span className="text-[10px] text-slate-400 hidden md:inline">
                   — {uqResult.samplingMetadata.samplingDescription}
@@ -527,46 +520,27 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
           {/* Engine Parameters Controls */}
           <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-            {/* Method Toggle */}
+            {/* Sampling engine (fixed: Sobol QMC is the only engine the solver accepts) */}
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400">Engine:</span>
               <div className="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700">
-                <button
-                  onClick={() => setSamplingMethod("sobol_qmc")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
-                    samplingMethod === "sobol_qmc"
-                      ? "bg-amber-500 text-slate-950 shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
+                <span className="px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1 bg-amber-500 text-slate-950 shadow">
                   <Zap className="w-3 h-3" />
                   Sobol QMC
-                </button>
-                <button
-                  onClick={() => setSamplingMethod("pseudo_mc")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
-                    samplingMethod === "pseudo_mc"
-                      ? "bg-sky-500 text-slate-950 shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Pseudo-MC
-                </button>
+                </span>
               </div>
             </div>
 
             {/* Scrambling */}
-            {samplingMethod === "sobol_qmc" && (
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 select-none">
-                <input
-                  type="checkbox"
-                  checked={scramble}
-                  onChange={(e) => setScramble(e.target.checked)}
-                  className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Digital shift</span>
-              </label>
-            )}
+            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 select-none">
+              <input
+                type="checkbox"
+                checked={scramble}
+                onChange={(e) => setScramble(e.target.checked)}
+                className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+              />
+              <span>Digital shift</span>
+            </label>
 
             {/* Samples */}
             <div className="flex items-center gap-1.5 text-slate-400">

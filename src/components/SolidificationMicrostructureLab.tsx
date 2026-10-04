@@ -148,7 +148,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   );
 
   return (
-    <main className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto bg-[#0a1118] p-4 text-slate-100 sm:p-6 lg:p-7">
+    <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto bg-[#0a1118] p-4 text-slate-100 sm:p-6 lg:p-7">
       <header className={`${panelClass} relative isolate overflow-hidden p-5 sm:p-7`}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-80 w-80 rounded-full border border-cyan-200/10 bg-[radial-gradient(circle_at_center,rgba(90,195,214,.16),rgba(90,195,214,0)_68%)]" />
         <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-[8%] -z-10 h-px w-2/5 bg-gradient-to-l from-cyan-200/40 to-transparent" />
@@ -380,7 +380,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           <p className="px-1 pb-2 text-[10px] leading-5 text-slate-600">Results are model-derived estimates. Use the diagnostic notes and calculation source when interpreting comparisons; this view does not replace experimental validation.</p>
         </>
       )}
-    </main>
+    </div>
   );
 };
 

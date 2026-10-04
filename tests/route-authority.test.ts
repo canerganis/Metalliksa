@@ -2,8 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { MODULE_CONTRACTS, type ContractOperation } from '../src/modules/registry';
+// Merge note: imports combine the p7-wave1 full-registry operations with the dead-surface `siteless` helper.
+// Operations live in the full registry, which the app loads lazily (the eager core slice has none).
+import { MODULE_REGISTRY, type ContractOperation } from '../src/generated/moduleRegistry';
 import { routeHandlers, siteless, type RouteHandler } from './support/routeScan';
+
+const MODULE_CONTRACTS = MODULE_REGISTRY.contracts;
 import { repoRoot } from './support/importGraph';
 import { beyondCeiling, beyondSiteCounts, readCeiling, readCeilingCounts } from './support/ceiling';
 

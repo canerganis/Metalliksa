@@ -41,8 +41,13 @@ function fixture(options: {
   let markReady: () => void;
   const ready = new Promise<void>(resolve => { markReady = resolve; });
   const bridge = new LpbfWorkerBridge({
+    // Default budgets bound a cold Node start plus its handshake; no test relies on them firing (tests that
+    // exercise a deadline pass their own). The request default was 2000 ms, below the 3000 ms startup bound, and a
+    // cold first test peaked at 1861 ms under stress (40 concurrent copies plus 24 CPU-spin threads). 5000 ms
+    // keeps it above the startup bound, so a slow start reports the bounded startup failure instead of the
+    // caller deadline, with ~2.7x margin over that peak and inside each test's 10 s timeout.
     startupTimeoutMs: options.startupTimeoutMs ?? 3000,
-    requestTimeoutMs: options.requestTimeoutMs ?? 2000,
+    requestTimeoutMs: options.requestTimeoutMs ?? 5000,
     command: fallback => {
       const command = options.command?.(fallback, commands.length) ?? { cmd: 'native-python', mode: 'normal' };
       return { cmd: command.cmd, args: [String(options.delayMs ?? 20), command.mode ?? 'normal'] };
@@ -67,6 +72,19 @@ function fixture(options: {
   }
   return { bridge, commands, children, ready, cleanup };
 }
+
+test('the default spawn passes a command environment to the worker, else the process environment', { timeout: 10000 }, async () => {
+  const echo = `require('node:readline').createInterface({input: process.stdin}).on('line', line => {
+    const request = JSON.parse(line);
+    console.log(JSON.stringify({id: request.id, data: {probe: process.env.LPBF_ENV_PROBE ?? null}}));
+  });`;
+  for (const [env, expected] of [[{ ...process.env, LPBF_ENV_PROBE: 'from-command' }, 'from-command'], [undefined, null]] as const) {
+    const bridge = new LpbfWorkerBridge({ startupTimeoutMs: 5000, requestTimeoutMs: 8000,
+      command: () => ({ cmd: process.execPath, args: ['-e', echo], ...(env ? { env } : {}) }) });
+    try { assert.deepEqual(await bridge.request('get'), { probe: expected }); }
+    finally { bridge.close(); }
+  }
+});
 
 test('concurrent cold requests wait for one readiness handshake before sending RPCs', { timeout: 10000 }, async () => {
   const instance = fixture({ delayMs: 150 });
@@ -139,7 +157,12 @@ test('a failed actual WSL command falls back once to the host command', { timeou
 });
 
 test('bounded background readiness failure can be retried by a later caller', { timeout: 10000 }, async () => {
-  const instance = fixture({ startupTimeoutMs: 500, command: (_fallback, launches) => ({
+  // The startup bound applies to every launch. The never-ready launch is rejected by it at any value, but the
+  // retry launch is a cold Node start whose handshake must also finish inside it: with 500 ms it failed under
+  // full-suite load with "LPBF worker RPC timeout" from the startup capabilities RPC. Use the fixture's cold-start
+  // bound (3000 ms) and keep the caller deadline above it, so the first caller observes the bounded startup
+  // failure itself rather than its own deadline ("still starting").
+  const instance = fixture({ startupTimeoutMs: 3000, requestTimeoutMs: 6000, command: (_fallback, launches) => ({
     cmd: 'native-python', mode: launches === 0 ? 'never-ready' : 'normal',
   }) });
   try {
