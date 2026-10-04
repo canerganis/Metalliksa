@@ -1,8 +1,10 @@
 """LPBF 5c parity goldens (design stage P2/P3): bit equality before and after the bump.
 
 Each case in tools/lpbf_parity_check.py is checked against python/golden/lpbf_parity/.
-The goldens were recorded once, twice each, at the pre-bump implementation
-7482697c...; they must never be re-recorded during the bump. G2 (real bare-plate
+The goldens were first recorded at 7482697c... (the side before the 5c bump) and,
+after that bump, re-recorded twice each at edddf0dc... in a commit of their own (B5
+step 2). They are the "before" side of the next bump and must never be re-recorded
+in the same commit as a manifest edit. G2 (real bare-plate
 fixture, ~106-140 s) runs only with LPBF_PARITY_SLOW=1; the fast cases take about
 1.5 minutes. The mutation tests prove that a changed golden byte, a changed
 numerical tolerance, a changed material value and an unpinned implementation
@@ -26,8 +28,12 @@ parity = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(parity)
 
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
-# Main before the single planned bump (design 5c stage B); the bump record's "from" side.
+# Main before the 5c bump (design 5c stage B); that bump record's "from" side.
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
+# The goldens are recorded at this implementation (after the 5c bump, B5 step 2), and
+# GOLDEN_REVISION is a main commit carrying it: the "from" side of the next bump.
+GOLDEN_FINGERPRINT = "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e"
+GOLDEN_REVISION = "6dd5b73508151f0af1561387a0df509ec78a06c9"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 
 
@@ -63,7 +69,7 @@ class ParityHarnessTests(unittest.TestCase):
                 golden = json.loads(parity.golden_path(case).read_text(encoding="utf-8"))
                 self.assertEqual(golden["schema"], parity.GOLDEN_SCHEMA)
                 self.assertEqual(golden["case"], case.id)
-                self.assertEqual(golden["recordedImplementationHash"], PRE_BUMP_FINGERPRINT)
+                self.assertEqual(golden["recordedImplementationHash"], GOLDEN_FINGERPRINT)
                 self.assertEqual(golden["recordedVersion"], "enthalpy-fv-6")
                 self.assertTrue(golden["recordedTwice"])
                 self.assertGreater(len(golden["observations"]), 0)
@@ -262,33 +268,32 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(raised.exception.name, "lpbf_missing_dependency_for_test")
 
     def test_bump_record_refuses_same_hash_and_foreign_goldens(self):
-        # After the bump (B6) the worktree is the "to" side and PRE_BUMP_REVISION the "from"
-        # side; the goldens stay recorded at PRE_BUMP_FINGERPRINT, so skeleton mode (which
-        # treats the worktree as "from") must now refuse.
+        # The goldens are recorded at GOLDEN_FINGERPRINT, the current pin, so they are the
+        # "from" side of the NEXT bump: skeleton mode (worktree as "from") accepts them, a
+        # record from the older PRE_BUMP_REVISION refuses them, and a record from
+        # GOLDEN_REVISION refuses the unchanged fingerprint unless it is a dry run.
         spec = importlib.util.spec_from_file_location("lpbf_bump_record", HERE / "tools" / "lpbf_bump_record.py")
         bump = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(bump)
         try:
             before = bump.revision_side(PRE_BUMP_REVISION)
+            recorded = bump.revision_side(GOLDEN_REVISION)
         except subprocess.CalledProcessError:
-            self.skipTest(f"pre-bump revision {PRE_BUMP_REVISION[:12]} is not in this clone")
+            self.skipTest(f"revision {PRE_BUMP_REVISION[:12]} or {GOLDEN_REVISION[:12]} is not in this clone")
         self.assertEqual(before["implementationHash"], PRE_BUMP_FINGERPRINT)
         self.assertEqual(before["manifestCount"], 37)
+        self.assertEqual(recorded["implementationHash"], GOLDEN_FINGERPRINT)
+        self.assertEqual(recorded["manifestCount"], 36)
+        skeleton = bump.build_record(None, False, False)
+        self.assertEqual(skeleton["fromHash"], GOLDEN_FINGERPRINT)
+        self.assertIsNone(skeleton["toHash"])
         with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
-            bump.build_record(None, False, False)
-        record = bump.build_record(PRE_BUMP_REVISION, False, False)
-        self.assertEqual(record["fromHash"], PRE_BUMP_FINGERPRINT)
-        self.assertEqual(record["toHash"], parity.pinned_fingerprint())
-        self.assertTrue(record["pinMatchesToHash"])
-        self.assertTrue(record["versionUnchanged"])
-        self.assertEqual(record["to"]["manifestCount"], 36)
-        self.assertEqual(record["manifestDiff"]["added"], [])
-        self.assertEqual(record["manifestDiff"]["removed"], ["lpbf_cfd.py"])
-        with patch.object(bump, "worktree_side", return_value=before):
-            with self.assertRaisesRegex(SystemExit, "toHash equals fromHash"):
-                bump.build_record(PRE_BUMP_REVISION, False, False)
-            dry = bump.build_record(PRE_BUMP_REVISION, False, False, allow_same_hash=True)
+            bump.build_record(PRE_BUMP_REVISION, False, False)
+        with self.assertRaisesRegex(SystemExit, "toHash equals fromHash"):
+            bump.build_record(GOLDEN_REVISION, False, False)
+        dry = bump.build_record(GOLDEN_REVISION, False, False, allow_same_hash=True)
         self.assertTrue(dry["dryRunSameHash"])
+        self.assertEqual(dry["fromHash"], GOLDEN_FINGERPRINT)
         directory = self._mutated_golden_dir("npz_determinism", lambda observations: None)
         target = directory / "npz_determinism.json"
         golden = json.loads(target.read_text(encoding="utf-8"))
@@ -296,7 +301,7 @@ class ParityHarnessTests(unittest.TestCase):
         target.write_text(json.dumps(golden), encoding="utf-8")
         with patch.object(bump, "GOLDEN_DIR", directory):
             with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
-                bump.build_record(PRE_BUMP_REVISION, False, False)
+                bump.build_record(GOLDEN_REVISION, False, False, allow_same_hash=True)
 
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):
