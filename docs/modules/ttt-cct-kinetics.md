@@ -19,11 +19,11 @@ Authority: python-ipc `python/kinetics_ttt_cct_solver.py`; timeout 25000 ms; GPU
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `alloy` | Alloy | enum ['AISI 4140', 'AISI 4340', 'AISI D2', 'Inconel 718', 'Ti-6Al-4V', 'Al 7075'] | — | — | — | — | AISI 4140 | The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers. |
-| `coolingRate_C_s` | Selected cooling rate | number | K/s | — | — | — | 10.0 | Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced. |
-| `grainSize_um` | Prior austenite grain size | number | µm | — | — | — | 25.0 | No bound is enforced; a negative value fails inside the JMAK power law (internal error, exit 1). |
-| `austTemp_C` | Austenitisation temperature | number | degC | — | — | — | 860.0 | No bound is enforced. |
-| `agingTemp_C` | Aging temperature | number | degC | — | — | — | 720.0 | No bound is enforced. |
-| `agingTime_h` | Aging time | number | h | — | — | — | 8.0 | Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid. |
+| `coolingRate_C_s` | Selected cooling rate | number | K/s | — | — | — | 10.0 | Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced. |
+| `grainSize_um` | Prior austenite grain size | number | µm | — | — | — | 25.0 | Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0. |
+| `austTemp_C` | Austenitisation temperature | number | degC | — | — | — | 860.0 | Passed unconverted by the entry point; no bound is enforced. |
+| `agingTemp_C` | Aging temperature | number | degC | — | — | — | 720.0 | Passed unconverted by the entry point; no bound is enforced. |
+| `agingTime_h` | Aging time | number | h | — | — | — | 8.0 | Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid. |
 
 — = not established from the authority code or a source; the contract states no bound.
 All keys are optional at the authority, which applies the listed default when a key is absent.
@@ -37,7 +37,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key (cctContinuousCoolingMap[].predictedHardness_HV_status is a hardness-conversion applicability flag, not an evidence status). Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -50,7 +50,9 @@ Background work: none; resources: fetch.
 
 ## Recorded notes
 
-- calphadVsKineticsGap.equilibriumPrediction is fixed text in the solver (the same for every alloy); no CALPHAD calculation runs in this operation.
+- calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); no CALPHAD calculation runs in this operation.
+- cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output.
+- The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs.
 - No validity domain is declared: no source-backed applicability range is established for the kinetic constants.
 - warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt.
 

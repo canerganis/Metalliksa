@@ -862,7 +862,7 @@ export const MODULE_REGISTRY = {
               "default": 120.0,
               "required": false,
               "enum": [],
-              "note": "Stored in the scanner profile but not used by the kinematics engine."
+              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine."
             },
             {
               "key": "markDelay_us",
@@ -1171,7 +1171,7 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced. A negative value fails in the Paris integration (math domain error)."
             },
             {
               "key": "location",
@@ -1205,7 +1205,7 @@ export const MODULE_REGISTRY = {
               "default": -1.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError)."
+              "note": "Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative maximum stress. State at main f41e316; another lane may fix the R = 1 crash later."
             },
             {
               "key": "stressAmplitude_MPa",
@@ -1220,7 +1220,7 @@ export const MODULE_REGISTRY = {
               "default": 220.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError)."
             }
           ],
           "undeclaredInput": [
@@ -1271,7 +1271,7 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
         "No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.",
-        "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError)."
+        "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError); the arithmetic failures noted on the fields reach it as HTTP 400."
       ],
       "sourceRefs": [
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
@@ -1395,7 +1395,9 @@ export const MODULE_REGISTRY = {
       "migrationState": "contracted",
       "legacyNotes": [
         "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
-        "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and reports relative_density_pct 100 (observed in Phase 7 wave 2).",
+        "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct 100; with the 8 synthesized defects the view always sends it reports about 94.95 against that fictitious volume (observed in Phase 7 wave 2).",
+        "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed 8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count proxy, orders of magnitude below the enclosed volume.",
+        "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
         "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
         "No validity domain is declared: no source-backed applicability range is established."
       ],
@@ -1523,7 +1525,7 @@ export const MODULE_REGISTRY = {
               "default": 1,
               "required": false,
               "enum": [],
-              "note": "Converted with int(); no bound is enforced. The rotation angle is 67° x layerIndex."
+              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0."
             },
             {
               "key": "accelMax_mms2",
@@ -1607,6 +1609,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "contracted",
       "legacyNotes": [
         "content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.",
+        "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
+        "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
         "No validity domain is declared: no source-backed applicability range is established."
       ],
       "sourceRefs": [
@@ -1877,7 +1881,7 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Converted with int(); no bound is enforced. The pixel loop runs res_x * res_y times."
+              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop runs res_x * res_y times with no limit below the 20000 ms worker timeout."
             },
             {
               "key": "res_y",
@@ -1892,7 +1896,7 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Converted with int(); no bound is enforced."
+              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."
             },
             {
               "key": "fov_um",
@@ -1982,7 +1986,7 @@ export const MODULE_REGISTRY = {
               "default": 5e-06,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."
             },
             {
               "key": "T0_K",
@@ -2046,7 +2050,8 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "contracted",
       "legacyNotes": [
-        "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply; material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.",
+        "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.",
+        "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD (noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, not a temperature-domain noise bound.",
         "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
         "No validity domain is declared: no source-backed applicability range is established."
       ],
@@ -2739,7 +2744,7 @@ export const MODULE_REGISTRY = {
               "default": 10.0,
               "required": false,
               "enum": [],
-              "note": "Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced."
+              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced."
             },
             {
               "key": "grainSize_um",
@@ -2754,7 +2759,7 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; a negative value fails inside the JMAK power law (internal error, exit 1)."
+              "note": "Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
             },
             {
               "key": "austTemp_C",
@@ -2769,7 +2774,7 @@ export const MODULE_REGISTRY = {
               "default": 860.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced."
+              "note": "Passed unconverted by the entry point; no bound is enforced."
             },
             {
               "key": "agingTemp_C",
@@ -2784,7 +2789,7 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced."
+              "note": "Passed unconverted by the entry point; no bound is enforced."
             },
             {
               "key": "agingTime_h",
@@ -2799,7 +2804,7 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."
+              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."
             }
           ],
           "undeclaredInput": [],
@@ -2855,7 +2860,9 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "contracted",
       "legacyNotes": [
-        "calphadVsKineticsGap.equilibriumPrediction is fixed text in the solver (the same for every alloy); no CALPHAD calculation runs in this operation.",
+        "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); no CALPHAD calculation runs in this operation.",
+        "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output.",
+        "The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs.",
         "No validity domain is declared: no source-backed applicability range is established for the kinetic constants.",
         "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
       ],
@@ -3203,7 +3210,7 @@ export const MODULE_REGISTRY = {
               "default": 150000.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."
+              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."
             },
             {
               "key": "agingTemp_C",
@@ -3218,7 +3225,7 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced."
+              "note": "Converted with float(); no bound is enforced."
             },
             {
               "key": "agingTime_h",
@@ -3233,7 +3240,7 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced."
+              "note": "Converted with float(); no bound is enforced."
             },
             {
               "key": "strainRate_s_inv",
@@ -3248,7 +3255,7 @@ export const MODULE_REGISTRY = {
               "default": 0.001,
               "required": false,
               "enum": [],
-              "note": "Written into the exported material cards only. No bound is enforced."
+              "note": "Converted with float(); written into the exported material cards only. No bound is enforced."
             },
             {
               "key": "serviceTemp_C",
@@ -3263,7 +3270,7 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Read by the authority but not used in any computed value."
+              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC)."
             },
             {
               "key": "componentType",
@@ -3343,6 +3350,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "contracted",
       "legacyNotes": [
         "alloyName is a free-text label written into the output and the material cards; crystalSystem is echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, so they are recorded as undeclaredInput.",
+        "Recorded wording gap (not changed here): when the yield-based safety factor passes, scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.",
+        "Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX Multi-Scale ICME Calibrated Card', although no calibration against data is performed.",
         "No validity domain is declared: no source-backed applicability range is established for the coupled estimates.",
         "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
       ],

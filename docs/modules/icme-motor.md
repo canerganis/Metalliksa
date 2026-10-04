@@ -19,11 +19,11 @@ Authority: python-ipc `python/icme_multiscale_pipeline_solver.py`; timeout 25000
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `baseMetal` | Base metal | enum ['Ni', 'Fe', 'Ti', 'Al'] | — | — | — | — | Ni | Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422). |
-| `coolingRate_C_s` | Cooling rate | number | K/s | — | — | — | 150000.0 | No bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law. |
-| `agingTemp_C` | Aging temperature | number | degC | — | — | — | 720.0 | No bound is enforced. |
-| `agingTime_h` | Aging time | number | h | — | — | — | 8.0 | No bound is enforced. |
-| `strainRate_s_inv` | Reference strain rate | number | 1/s | — | — | — | 0.001 | Written into the exported material cards only. No bound is enforced. |
-| `serviceTemp_C` | Service temperature | number | degC | — | — | — | 25.0 | Read by the authority but not used in any computed value. |
+| `coolingRate_C_s` | Cooling rate | number | K/s | — | — | — | 150000.0 | Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law. |
+| `agingTemp_C` | Aging temperature | number | degC | — | — | — | 720.0 | Converted with float(); no bound is enforced. |
+| `agingTime_h` | Aging time | number | h | — | — | — | 8.0 | Converted with float(); no bound is enforced. |
+| `strainRate_s_inv` | Reference strain rate | number | 1/s | — | — | — | 0.001 | Converted with float(); written into the exported material cards only. No bound is enforced. |
+| `serviceTemp_C` | Service temperature | number | degC | — | — | — | 25.0 | Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC). |
 | `componentType` | Component | enum ['turbine_blade_root', 'pressure_bulkhead', 'lpbf_bracket'] | — | — | — | — | turbine_blade_root | The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys. |
 
 — = not established from the authority code or a source; the contract states no bound.
@@ -40,7 +40,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. scale4_macroComponentFEA.structuralVerdict is fixed text chosen by comparing the estimated yield strength with a catalog safety factor; it is not an evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -54,6 +54,8 @@ Background work: none; resources: fetch.
 ## Recorded notes
 
 - alloyName is a free-text label written into the output and the material cards; crystalSystem is echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, so they are recorded as undeclaredInput.
+- Recorded wording gap (not changed here): when the yield-based safety factor passes, scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.
+- Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX Multi-Scale ICME Calibrated Card', although no calibration against data is performed.
 - No validity domain is declared: no source-backed applicability range is established for the coupled estimates.
 - warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt.
 

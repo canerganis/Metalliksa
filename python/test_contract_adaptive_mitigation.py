@@ -37,7 +37,18 @@ class AdaptiveMitigationContractScaffold(ContractScaffold, AuthorityReadsMixin, 
         self.assertEqual(rotated["rotation_angle_deg"], 134.0)
         self.assertEqual(self.result["rotation_angle_deg"], 0.0)
 
+    def test_hotspot_count_is_the_peak_speed_definition(self):
+        # mitigated_hotspots_count counts vectors with v_peak < 0.99 v_nom (recorded note), not LED spikes.
+        from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
+        from lpbf_toolpath_kinematics import LPBFToolpathParser
+        vectors = LPBFToolpathParser.parse_gcode(GCODE, default_power_W=280.0, default_speed_mms=1000.0)
+        mitigator = AdaptiveFeedforwardMitigator()
+        expected = sum(1 for v in vectors if mitigator.compensate_vector(v).is_mitigated)
+        self.assertEqual(self.result["mitigated_hotspots_count"], expected)
+        self.assertTrue(any("0.99 x the nominal speed" in note for note in self.contract.legacy_notes))
+
     def test_recorded_gap_string_flag_is_rejected_by_the_contract_but_coerced_by_the_authority(self):
+        # Known gap pinned as current behaviour: fixing it means updating the contract note and this test.
         self.assertEqual(len(self.operation.input_problems({"apply67DegRotation": "false"})), 1)
         coerced = worker_dispatch("adaptive-feedforward", {"content": GCODE, "apply67DegRotation": "false"})
         self.assertEqual(coerced["rotation_angle_deg"], 67.0, "bool('false') is True at the authority")

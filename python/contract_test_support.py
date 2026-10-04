@@ -53,19 +53,64 @@ def _is_get(node: ast.AST, receiver: str) -> bool:
             and isinstance(node.args[0], ast.Constant))
 
 
+def _is_subscript(node: ast.AST, receiver: str) -> bool:
+    return (isinstance(node, ast.Subscript) and getattr(node.value, "id", None) == receiver
+            and isinstance(node.slice, ast.Constant))
+
+
+def key_accesses(node: ast.AST, receiver: str) -> list:
+    """Every way ``node`` reads the request dict ``receiver``: (key, kind, default node).
+
+    kind is 'get' (``r.get("k", d)``), 'subscript' (``r["k"]``) or 'in' (``"k" in r``). Any other
+    use of the receiver (a computed key, iteration, ``.items()``, passing it on whole) is returned
+    with key None and kind 'escape', because the key set can then no longer be read from the code.
+    """
+    parents = {child: parent for parent in ast.walk(node) for child in ast.iter_child_nodes(parent)}
+    accesses = []
+    for name in ast.walk(node):
+        if not (isinstance(name, ast.Name) and name.id == receiver and isinstance(name.ctx, ast.Load)):
+            continue
+        parent = parents.get(name)
+        grand = parents.get(parent)
+        if isinstance(parent, ast.Attribute) and parent.attr == "get" and _is_get(grand, receiver):
+            accesses.append((grand.args[0].value, "get", grand.args[1] if len(grand.args) > 1 else None))
+        elif _is_subscript(parent, receiver):
+            accesses.append((parent.slice.value, "subscript", None))
+        elif (isinstance(parent, ast.Compare) and len(parent.ops) == 1 and isinstance(parent.ops[0], (ast.In, ast.NotIn))
+              and parent.comparators[0] is name and isinstance(parent.left, ast.Constant)):
+            accesses.append((parent.left.value, "in", None))
+        else:
+            accesses.append((None, "escape", getattr(name, "lineno", None)))
+    return accesses
+
+
 def get_reads(node: ast.AST, receiver: str) -> dict:
-    """key -> default node (None without one) for every ``<receiver>.get("key", default)`` under ``node``."""
-    return {call.args[0].value: (call.args[1] if len(call.args) > 1 else None)
-            for call in ast.walk(node) if _is_get(call, receiver)}
+    """key -> default node (None without one) for every read of the request dict ``receiver``.
+
+    Fails on a read the AST cannot attribute to a literal key (see key_accesses) and on a key read
+    more than once, so a second read with another default cannot hide behind the first.
+    """
+    accesses = key_accesses(node, receiver)
+    escapes = [line for key, kind, line in accesses if kind == "escape"]
+    if escapes:
+        raise AssertionError(f"{receiver} is used in a way the key check cannot follow (lines {escapes})")
+    keys = [key for key, _, _ in accesses]
+    duplicates = sorted({key for key in keys if keys.count(key) > 1})
+    if duplicates:
+        raise AssertionError(f"{receiver} reads these keys more than once: {duplicates}")
+    return {key: default for key, _, default in accesses}
 
 
 def get_conversions(node: ast.AST, receiver: str) -> dict:
-    """key -> 'float' | 'int' | 'bool' when the get call is wrapped in that conversion, else None."""
+    """key -> 'float' | 'int' | 'bool' when the read is wrapped in that conversion, else None."""
     conversions = {key: None for key in get_reads(node, receiver)}
     for call in ast.walk(node):
-        if (isinstance(call, ast.Call) and getattr(call.func, "id", None) in ("float", "int", "bool")
-                and call.args and _is_get(call.args[0], receiver)):
-            conversions[call.args[0].args[0].value] = call.func.id
+        if (isinstance(call, ast.Call) and getattr(call.func, "id", None) in ("float", "int", "bool") and call.args):
+            inner = call.args[0]
+            if _is_get(inner, receiver):
+                conversions[inner.args[0].value] = call.func.id
+            elif _is_subscript(inner, receiver):
+                conversions[inner.slice.value] = call.func.id
     return conversions
 
 
@@ -77,7 +122,10 @@ def run_script(script: str, payload: dict) -> tuple:
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
     proc = subprocess.run([sys.executable, "-B", str(PYTHON_DIR / script)], input=json.dumps(payload),
                           capture_output=True, text=True, cwd=str(PYTHON_DIR), env=env, timeout=300)
-    return proc.returncode, json.loads(proc.stdout)
+    try:
+        return proc.returncode, json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(f"{script} printed no JSON (exit {proc.returncode}); stderr: {proc.stderr}") from exc
 
 
 def worker_dispatch(method: str, payload: dict):
@@ -97,28 +145,32 @@ class AuthorityReadsMixin:
             if key not in fields:
                 continue
             with self.subTest(key=key):
+                self.assertIsNotNone(node, "a declared optional key has a literal default in the authority")
                 default = ast.literal_eval(node)  # declared defaults are literals in the authority (e.g. -1.0)
                 self.assertEqual(fields[key].default, default)
-                self.assertEqual(isinstance(fields[key].default, bool), isinstance(default, bool))
+                # Same type as well as value: 64 (int) and 64.0 (float) are different defaults.
+                self.assertIs(type(fields[key].default), type(default))
                 self.assertFalse(fields[key].required)
                 self.assertIsNone(fields[key].min, "the authority enforces no bound")
                 self.assertIsNone(fields[key].max, "the authority enforces no bound")
 
+    CONVERSION_PHRASES = {"float": "Converted with float()", "int": "Converted with int()",
+                          "bool": "coerces with bool()", None: "Passed unconverted"}
+
     def assert_conversion_notes(self, operation: mc.Operation, conversions: dict) -> None:
-        """Field notes that state a conversion must match the code; integer fields are int()-converted."""
+        """Both directions: every number/integer/boolean field note states exactly the conversion the
+        authority applies (float()/int()/bool() or none), and int() <-> valueType integer."""
         for field in operation.input:
             with self.subTest(key=field.key):
                 note = field.note or ""
-                if "Converted with float()" in note:
-                    self.assertEqual(conversions[field.key], "float")
-                if "Converted with int()" in note:
-                    self.assertEqual(conversions[field.key], "int")
-                if "Passed unconverted" in note:
-                    self.assertIsNone(conversions[field.key])
-                if "coerces with bool()" in note:
-                    self.assertEqual(conversions[field.key], "bool")
-                if field.value_type == "integer":
-                    self.assertEqual(conversions[field.key], "int")
+                stated = [conv for conv, phrase in self.CONVERSION_PHRASES.items() if phrase in note]
+                actual = conversions[field.key]
+                if field.value_type in ("number", "integer", "boolean"):
+                    self.assertEqual(stated, [actual], "the note must state the authority's conversion")
+                else:
+                    self.assertIn(stated, ([], [actual]))
+                self.assertEqual(field.value_type == "integer", actual == "int",
+                                 "int()-converted keys are integer fields and integer fields are int()-converted")
 
 
 def has_module(name: str) -> bool:

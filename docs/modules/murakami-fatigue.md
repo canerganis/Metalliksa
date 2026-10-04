@@ -19,10 +19,10 @@ Authority: lpbf-worker `fatigue-fracture`; timeout 20000 ms; GPU none; warm fals
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `alloyName` | Alloy | enum ['Ti-6Al-4V', '316L SS', 'Inconel 718', 'AlSi10Mg'] | — | — | — | — | Ti-6Al-4V | The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers. |
-| `sqrtArea_um` | Defect size (sqrt area) | number | µm | — | — | — | 45.0 | Converted with float(); no bound is enforced. |
+| `sqrtArea_um` | Defect size (sqrt area) | number | µm | — | — | — | 45.0 | Converted with float(); no bound is enforced. A negative value fails in the Paris integration (math domain error). |
 | `location` | Defect location | enum ['surface', 'sub-surface', 'internal'] | — | — | — | — | internal | The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts any text; the contract accepts the view's three values. |
-| `stressRatio_R` | Stress ratio R | number | 1 | — | — | — | -1.0 | Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError). |
-| `stressAmplitude_MPa` | Cyclic stress amplitude | number | MPa | — | — | — | 220.0 | Converted with float(); no bound is enforced. |
+| `stressRatio_R` | Stress ratio R | number | 1 | — | — | — | -1.0 | Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative maximum stress. State at main f41e316; another lane may fix the R = 1 crash later. |
+| `stressAmplitude_MPa` | Cyclic stress amplitude | number | MPa | — | — | — | 220.0 | Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError). |
 
 — = not established from the authority code or a source; the contract states no bound.
 All keys are optional at the authority, which applies the listed default when a key is absent.
@@ -38,7 +38,7 @@ Output fields (no status key, so the output carries no evidence status): `fatigu
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key (paris_crack_growth.status is the integration outcome 'non_propagating', 'fractured' or 'runout', not an evidence status). Murakami, El-Haddad and Paris expressions with per-alloy constants from alloy_registry (fatigue_fracture domain); no oracle compares the result with an independent reference. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -53,7 +53,7 @@ Background work: none; resources: fetch.
 
 - The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.
 - No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.
-- UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError).
+- UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError); the arithmetic failures noted on the fields reach it as HTTP 400.
 
 ## Source references
 

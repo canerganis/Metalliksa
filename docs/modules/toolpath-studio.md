@@ -25,7 +25,7 @@ Authority: lpbf-worker `toolpath-kinematics`; timeout 20000 ms; GPU none; warm f
 | `accelMax_mms2` | Maximum mirror acceleration | number | mm/s^2 | — | — | — | 40000.0 | Passed unconverted; no bound is enforced. |
 | `jumpSpeed_mms` | Jump speed | number | mm/s | — | — | — | 3000.0 | Passed unconverted; no bound is enforced. |
 | `laserOnDelay_us` | Laser-on delay | number | µs | — | — | — | 100.0 | Passed unconverted; no bound is enforced. |
-| `laserOffDelay_us` | Laser-off delay | number | µs | — | — | — | 120.0 | Stored in the scanner profile but not used by the kinematics engine. |
+| `laserOffDelay_us` | Laser-off delay | number | µs | — | — | — | 120.0 | Passed unconverted; stored in the scanner profile but not used by the kinematics engine. |
 | `markDelay_us` | Mark delay | number | µs | — | — | — | 200.0 | Passed unconverted; no bound is enforced. |
 | `jumpDelay_us` | Jump delay | number | µs | — | — | — | 350.0 | Passed unconverted; no bound is enforced. |
 
@@ -43,7 +43,7 @@ Output fields (no status key, so the output carries no evidence status): `total_
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain

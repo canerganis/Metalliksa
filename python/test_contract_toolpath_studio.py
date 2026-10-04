@@ -32,12 +32,13 @@ class ToolpathContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.T
         empty = worker_dispatch("toolpath-kinematics", {})
         self.assertEqual((tuple(empty), empty["total_segments"]), (self.operation.output.fields, 0))
 
-    def test_non_numeric_power_is_rejected_by_the_contract_and_fails_in_the_authority(self):
+    def test_non_numeric_acceleration_is_rejected_by_the_contract_and_fails_in_the_authority(self):
         self.assertEqual(len(self.operation.input_problems({"accelMax_mms2": "fast"})), 1)
         with self.assertRaises(TypeError):
             worker_dispatch("toolpath-kinematics", {"content": GCODE, "accelMax_mms2": "fast"})
 
     def test_recorded_gap_unknown_format_is_parsed_as_gcode(self):
+        # Known gap pinned as current behaviour: fixing it means updating the contract note and this test.
         self.assertEqual(len(self.operation.input_problems({"format": "step"})), 1)
         as_unknown = worker_dispatch("toolpath-kinematics", {"content": GCODE, "format": "step"})
         self.assertEqual(as_unknown, self.result)

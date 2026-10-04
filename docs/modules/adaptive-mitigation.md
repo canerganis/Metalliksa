@@ -22,7 +22,7 @@ Authority: lpbf-worker `adaptive-feedforward`; timeout 20000 ms; GPU none; warm 
 | `defaultPower_W` | Default laser power | number | W | — | — | — | 280.0 | Converted with float(); no bound is enforced. |
 | `defaultSpeed_mms` | Default scan speed | number | mm/s | — | — | — | 1000.0 | Converted with float(); no bound is enforced. |
 | `apply67DegRotation` | Apply 67° interlayer rotation | boolean | — | — | — | — | false | The authority coerces with bool(); the contract accepts only booleans. |
-| `layerIndex` | Layer index | integer | 1 | — | — | 1 | 1 | Converted with int(); no bound is enforced. The rotation angle is 67° x layerIndex. |
+| `layerIndex` | Layer index | integer | 1 | — | — | 1 | 1 | Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0. |
 | `accelMax_mms2` | Maximum mirror acceleration | number | mm/s^2 | — | — | — | 40000.0 | Converted with float(); no bound is enforced. |
 | `jumpSpeed_mms` | Jump speed | number | mm/s | — | — | — | 3000.0 | Converted with float(); no bound is enforced. |
 
@@ -40,7 +40,7 @@ Output fields (no status key, so the output carries no evidence status): `total_
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. Feed-forward power scaling P_nom * min(1, v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect reduction is measured. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -54,6 +54,8 @@ Background work: none; resources: fetch.
 ## Recorded notes
 
 - content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.
+- mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.
+- The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.
 - No validity domain is declared: no source-backed applicability range is established.
 
 ## Source references

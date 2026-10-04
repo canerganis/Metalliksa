@@ -48,12 +48,19 @@ class FatigueContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.Te
         factors = {loc: engine.murakami_geometric_constant(loc) for loc in locations}
         self.assertEqual(factors, {"surface": 1.43, "sub-surface": 1.41, "internal": 1.56})
 
-    def test_recorded_gap_stress_ratio_one_fails_in_the_paris_integration(self):
-        self.assertEqual(self.operation.input_problems({"stressRatio_R": 1.0}), [], "no bound is declared")
-        with self.assertRaises(ZeroDivisionError):
-            worker_dispatch("fatigue-fracture", {"stressRatio_R": 1.0})
-        note = next(f.note for f in self.operation.input if f.key == "stressRatio_R")
-        self.assertIn("R = 1 fails", note)
+    def test_recorded_gaps_arithmetic_failures_in_the_paris_integration(self):
+        # Known gaps pinned as current behaviour at main f41e316: fixing one (another lane may fix R = 1)
+        # means updating the contract note and this test.
+        notes = {f.key: f.note for f in self.operation.input}
+        for payload, error, phrase in (({"stressRatio_R": 1.0}, ZeroDivisionError, "R = 1 fails"),
+                                       ({"stressAmplitude_MPa": 0.0}, ZeroDivisionError, "0 fails"),
+                                       ({"sqrtArea_um": -5.0}, ValueError, "negative value fails")):
+            (key,) = payload
+            with self.subTest(key=key):
+                self.assertEqual(self.operation.input_problems(payload), [], "no bound is declared")
+                with self.assertRaises(error):
+                    worker_dispatch("fatigue-fracture", payload)
+                self.assertIn(phrase, notes[key])
 
 
 if __name__ == "__main__":

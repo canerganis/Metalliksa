@@ -623,6 +623,12 @@ class ContractedRegistryTests(unittest.TestCase):
                 self.assertEqual(self.contracted[module_id].tests.oracle.status, "pending")
                 self.assertEqual(self.contracted[module_id].seed_derived, mc.SEED_TEXT_FIELDS,
                                  "wave 2 does not rewrite identity text")
+                # The cited inventory row names the route that is actually served.
+                (row_ref,) = [r for r in self.contracted[module_id].source_refs
+                              if r.startswith("docs/MODULE_EVIDENCE_INVENTORY.md:")]
+                line = int(row_ref.split(":")[1].split("#")[0])
+                inventory = (REPO_ROOT / "docs" / "MODULE_EVIDENCE_INVENTORY.md").read_text(encoding="utf-8")
+                self.assertIn(f"`{operation.route}`", inventory.splitlines()[line - 1])
 
     def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
         core = mr.core_document(mr.registry_document(self.registry))

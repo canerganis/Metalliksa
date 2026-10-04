@@ -34,7 +34,7 @@ Output fields (no status key, so the output carries no evidence status): `num_tr
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with the summed sphere volumes of the defects supplied in the request; the defects are inputs, not detections. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -48,7 +48,9 @@ Background work: none; resources: fetch.
 ## Recorded notes
 
 - stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.
-- An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and reports relative_density_pct 100 (observed in Phase 7 wave 2).
+- An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct 100; with the 8 synthesized defects the view always sends it reports about 94.95 against that fictitious volume (observed in Phase 7 wave 2).
+- The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed 8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count proxy, orders of magnitude below the enclosed volume.
+- The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.
 - The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.
 - No validity domain is declared: no source-backed applicability range is established.
 

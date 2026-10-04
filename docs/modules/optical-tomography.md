@@ -18,14 +18,14 @@ Authority: lpbf-worker `optical-tomography`; timeout 20000 ms; GPU none; warm fa
 
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `res_x` | Sensor pixels (x) | integer | 1 | — | — | 1 | 64 | Converted with int(); no bound is enforced. The pixel loop runs res_x * res_y times. |
-| `res_y` | Sensor pixels (y) | integer | 1 | — | — | 1 | 64 | Converted with int(); no bound is enforced. |
+| `res_x` | Sensor pixels (x) | integer | 1 | — | — | 1 | 64 | Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop runs res_x * res_y times with no limit below the 20000 ms worker timeout. |
+| `res_y` | Sensor pixels (y) | integer | 1 | — | — | 1 | 64 | Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError). |
 | `fov_um` | Field of view | number | µm | — | — | — | 1000.0 | Converted with float(); no bound is enforced. |
 | `emissivity` | Emissivity | number | 1 | — | — | — | 0.35 | Converted with float(); no bound is enforced. |
 | `laserPower_W` | Laser power | number | W | — | — | — | 280.0 | Converted with float(); no bound is enforced. |
 | `scanSpeed_mms` | Scan speed | number | mm/s | — | — | — | 1000.0 | Converted with float(); no bound is enforced. |
 | `material_k` | Thermal conductivity | number | W/(m*K) | — | — | — | 15.0 | Converted with float(); no bound is enforced. |
-| `material_alpha` | Thermal diffusivity | number | m^2/s | — | — | — | 5e-06 | Converted with float(); no bound is enforced. |
+| `material_alpha` | Thermal diffusivity | number | m^2/s | — | — | — | 5e-06 | Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError). |
 | `T0_K` | Ambient temperature | number | K | — | — | — | 300.0 | Converted with float(); no bound is enforced. |
 
 — = not established from the authority code or a source; the contract states no bound.
@@ -40,7 +40,7 @@ Output fields (no status key, so the output carries no evidence status): `resolu
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
-- Oracle in CI: no recorded gap
+- Oracle in CI: none (oracle pending)
 - Note: Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; the noise value is the square root of that signal. No sensor calibration or measured frame is involved. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
@@ -53,7 +53,8 @@ Background work: none; resources: fetch.
 
 ## Recorded notes
 
-- The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply; material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.
+- The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.
+- Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD (noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, not a temperature-domain noise bound.
 - The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.
 - No validity domain is declared: no source-backed applicability range is established.
 

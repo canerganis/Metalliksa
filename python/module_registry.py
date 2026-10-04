@@ -534,15 +534,18 @@ _KINETICS_FIELDS = (
                  "or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the "
                  "six kinetics table names the view offers."),
     _num("coolingRate_C_s", "Selected cooling rate", "K/s", "cooling-rate", 10.0,
-         note="Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of "
-              "rates. No bound is enforced."),
+         note="Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; "
+              "the CCT map uses a fixed list of rates. No bound is enforced."),
     _num("grainSize_um", "Prior austenite grain size", _MICRO, "length", 25.0,
-         note="No bound is enforced; a negative value fails inside the JMAK power law (internal error, exit 1)."),
+         note="Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, "
+              "AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and "
+              "Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."),
     _num("austTemp_C", "Austenitisation temperature", "degC", "temperature", 860.0,
-         note="No bound is enforced."),
-    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0, note="No bound is enforced."),
+         note="Passed unconverted by the entry point; no bound is enforced."),
+    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
+         note="Passed unconverted by the entry point; no bound is enforced."),
     _num("agingTime_h", "Aging time", "h", "time", 8.0,
-         note="Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."),
+         note="Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."),
 )
 _KINETICS_OUTPUT = OutputSchema(
     fields=("success", "engine", "computeTimeMs", "alloy", "alloyMetadata", "inputParameters",
@@ -567,8 +570,14 @@ def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
             "solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). "
             + _PENDING_CAP),
         notes=(
-            "calphadVsKineticsGap.equilibriumPrediction is fixed text in the solver (the same for every alloy); "
+            "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / "
+            "Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); "
             "no CALPHAD calculation runs in this operation.",
+            "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate "
+            "band relative to the alloy's critical cooling rate, not JMAK/Scheil output.",
+            "The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting "
+            "strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion "
+            "activation energy differs.",
             "No validity domain is declared: no source-backed applicability range is established for the "
             "kinetic constants.",
             "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
@@ -597,13 +606,15 @@ _ICME_FIELDS = (
     _choice("baseMetal", "Base metal", "element", ("Ni", "Fe", "Ti", "Al"), "Ni",
             note="Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."),
     _num("coolingRate_C_s", "Cooling rate", "K/s", "cooling-rate", 150000.0,
-         note="No bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."),
-    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0, note="No bound is enforced."),
-    _num("agingTime_h", "Aging time", "h", "time", 8.0, note="No bound is enforced."),
+         note="Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."),
+    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
+         note="Converted with float(); no bound is enforced."),
+    _num("agingTime_h", "Aging time", "h", "time", 8.0, note="Converted with float(); no bound is enforced."),
     _num("strainRate_s_inv", "Reference strain rate", "1/s", "strain-rate", 0.001,
-         note="Written into the exported material cards only. No bound is enforced."),
+         note="Converted with float(); written into the exported material cards only. No bound is enforced."),
     _num("serviceTemp_C", "Service temperature", "degC", "temperature", 25.0,
-         note="Read by the authority but not used in any computed value."),
+         note="Converted with float() by the authority but not used in any computed value (the structuralVerdict "
+              "text is the same at 1000 degC)."),
     _choice("componentType", "Component", "component-catalog", _ICME_COMPONENTS, "turbine_blade_root",
             note="The authority silently uses turbine_blade_root for any other value; the contract accepts only "
                  "the three catalog keys."),
@@ -637,6 +648,11 @@ def _icme_contract(row: Dict[str, str]) -> ModuleContract:
             "without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override "
             "with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, "
             "so they are recorded as undeclaredInput.",
+            "Recorded wording gap (not changed here): when the yield-based safety factor passes, "
+            "scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', "
+            "but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.",
+            "Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX "
+            "Multi-Scale ICME Calibrated Card', although no calibration against data is performed.",
             "No validity domain is declared: no source-backed applicability range is established for the "
             "coupled estimates.",
             "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
@@ -664,15 +680,17 @@ _FATIGUE_FIELDS = (
                  "unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table "
                  "names the view offers."),
     _num("sqrtArea_um", "Defect size (sqrt area)", _MICRO, "length", 45.0,
-         note="Converted with float(); no bound is enforced."),
+         note="Converted with float(); no bound is enforced. A negative value fails in the Paris integration "
+              "(math domain error)."),
     _choice("location", "Defect location", "defect-location", ("surface", "sub-surface", "internal"), "internal",
             note="The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts "
                  "any text; the contract accepts the view's three values."),
     _num("stressRatio_R", "Stress ratio R", "1", "stress-ratio", -1.0,
          note="Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the "
-              "Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError)."),
+              "Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative "
+              "maximum stress. State at main f41e316; another lane may fix the R = 1 crash later."),
     _num("stressAmplitude_MPa", "Cyclic stress amplitude", "MPa", "stress", 220.0,
-         note="Converted with float(); no bound is enforced."),
+         note="Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError)."),
 )
 
 
@@ -693,7 +711,7 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
             "No validity domain is declared: no source-backed applicability range is established for the "
             "defect sizes or stress ratios.",
             "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts "
-            "workerError).",
+            "workerError); the arithmetic failures noted on the fields reach it as HTTP 400.",
         ),
         sources=_WORKER_SOURCES + (
             "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",
@@ -712,9 +730,10 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
 # optical-tomography: keys and defaults of _rpc_optical_tomography in python/lpbf_worker_rpc.py.
 _OPTICAL_FIELDS = (
     _num("res_x", "Sensor pixels (x)", "1", "count", 64, integer=True,
-         note="Converted with int(); no bound is enforced. The pixel loop runs res_x * res_y times."),
+         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop "
+              "runs res_x * res_y times with no limit below the 20000 ms worker timeout."),
     _num("res_y", "Sensor pixels (y)", "1", "count", 64, integer=True,
-         note="Converted with int(); no bound is enforced."),
+         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."),
     _num("fov_um", "Field of view", _MICRO, "length", 1000.0, note="Converted with float(); no bound is enforced."),
     _num("emissivity", "Emissivity", "1", "emissivity", 0.35, note="Converted with float(); no bound is enforced."),
     _num("laserPower_W", "Laser power", "W", "power", 280.0, note="Converted with float(); no bound is enforced."),
@@ -722,7 +741,7 @@ _OPTICAL_FIELDS = (
     _num("material_k", "Thermal conductivity", "W/(m*K)", "thermal-conductivity", 15.0,
          note="Converted with float(); no bound is enforced."),
     _num("material_alpha", "Thermal diffusivity", "m^2/s", "thermal-diffusivity", 5e-6,
-         note="Converted with float(); no bound is enforced."),
+         note="Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."),
     _num("T0_K", "Ambient temperature", "K", "temperature", 300.0, note="Converted with float(); no bound is enforced."),
 )
 
@@ -742,8 +761,12 @@ def _optical_contract(row: Dict[str, str]) -> ModuleContract:
         notes=(
             "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read "
             "(it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are "
-            "ignored and the authority defaults apply; material_k, material_alpha and fov_um match. Observed in "
+            "ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in "
+            "practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in "
             "Phase 7 wave 2; the view is not changed here.",
+            "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD "
+            "(noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, "
+            "not a temperature-domain noise bound.",
             _WORKER_NO_VALIDATION,
             "No validity domain is declared: no source-backed applicability range is established.",
         ),
@@ -775,7 +798,7 @@ _TOOLPATH_FIELDS = (
     _num("jumpSpeed_mms", "Jump speed", "mm/s", "speed", 3000.0, note="Passed unconverted; no bound is enforced."),
     _num("laserOnDelay_us", "Laser-on delay", "µs", "time", 100.0, note="Passed unconverted; no bound is enforced."),
     _num("laserOffDelay_us", "Laser-off delay", "µs", "time", 120.0,
-         note="Stored in the scanner profile but not used by the kinematics engine."),
+         note="Passed unconverted; stored in the scanner profile but not used by the kinematics engine."),
     _num("markDelay_us", "Mark delay", "µs", "time", 200.0, note="Passed unconverted; no bound is enforced."),
     _num("jumpDelay_us", "Jump delay", "µs", "time", 350.0, note="Passed unconverted; no bound is enforced."),
 )
@@ -820,7 +843,8 @@ _ADAPTIVE_FIELDS = (
     _flag("apply67DegRotation", "Apply 67° interlayer rotation", False,
           note="The authority coerces with bool(); the contract accepts only booleans."),
     _num("layerIndex", "Layer index", "1", "count", 1, integer=True,
-         note="Converted with int(); no bound is enforced. The rotation angle is 67° x layerIndex."),
+         note="Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is "
+              "67° x layerIndex; otherwise it is 0."),
     _num("accelMax_mms2", "Maximum mirror acceleration", "mm/s^2", "acceleration", 40000.0,
          note="Converted with float(); no bound is enforced."),
     _num("jumpSpeed_mms", "Jump speed", "mm/s", "speed", 3000.0, note="Converted with float(); no bound is enforced."),
@@ -843,6 +867,11 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
             "reduction is measured. " + _PENDING_CAP),
         notes=(
             _CONTENT_NOTE,
+            "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal "
+            "speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x "
+            "nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
+            "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the "
+            "Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
             "No validity domain is declared: no source-backed applicability range is established.",
         ),
         sources=_WORKER_SOURCES + (
@@ -876,7 +905,14 @@ def _defect_twin_contract(row: Dict[str, str]) -> ModuleContract:
             "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} "
             "objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
             "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero "
-            "triangles and reports relative_density_pct 100 (observed in Phase 7 wave 2).",
+            "triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct "
+            "100; with the 8 synthesized defects the view always sends it reports about 94.95 against that "
+            "fictitious volume (observed in Phase 7 wave 2).",
+            "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed "
+            "8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count "
+            "proxy, orders of magnitude below the enclosed volume.",
+            "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the "
+            "Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
             _WORKER_NO_VALIDATION,
             "No validity domain is declared: no source-backed applicability range is established.",
         ),
@@ -1303,7 +1339,9 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Forbidden claims: {', '.join(e.forbidden_claims)}",
         f"- Oracle: {oracle}",
         f"- Oracle scope: {c.tests.oracle.scope}" if c.tests.oracle.scope else "- Oracle scope: none",
-        f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note else "- Oracle in CI: no recorded gap",
+        f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note
+        else ("- Oracle in CI: none (oracle pending)" if c.tests.oracle.status == "pending"
+              else "- Oracle in CI: no recorded gap"),
         f"- Note: {e.note}" if e.note else "- Note: none",
         "",
         "## Validity domain",

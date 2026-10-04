@@ -35,7 +35,20 @@ class OpticalTomographyContractScaffold(ContractScaffold, AuthorityReadsMixin, u
         with self.assertRaises(ValueError):
             worker_dispatch("optical-tomography", {"scanSpeed_mms": "fast"})
 
+    def test_recorded_gap_zero_diffusivity_or_resolution_fails(self):
+        # Known gap pinned as current behaviour: fixing it means updating the contract note and this test.
+        notes = {f.key: f.note for f in self.operation.input}
+        for payload in ({"material_alpha": 0.0, "res_x": 2, "res_y": 2}, {"res_x": 0}, {"res_y": 0}):
+            with self.subTest(payload=payload):
+                self.assertEqual(self.operation.input_problems(payload), [], "no bound is declared")
+                with self.assertRaises(ZeroDivisionError):
+                    worker_dispatch("optical-tomography", payload)
+        for key in ("material_alpha", "res_x", "res_y"):
+            self.assertIn("0 fails (ZeroDivisionError)", notes[key])
+        self.assertTrue(any("NETD" in note for note in self.contract.legacy_notes))
+
     def test_recorded_gap_view_keys_are_not_read_by_the_authority(self):
+        # Known gap pinned as current behaviour: fixing the view means updating the contract note and this test.
         view = (PYTHON_DIR.parent / "src" / "components" / "OpticalTomographyLab.tsx").read_text(encoding="utf-8")
         reads = get_reads(HANDLER, "payload")
         for key in VIEW_KEYS:

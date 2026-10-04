@@ -5,8 +5,8 @@ The oracle is pending, so the oracle test is skipped and the ceiling stays cappe
 """
 import unittest
 
-from contract_test_support import (PYTHON_DIR, AuthorityReadsMixin, ContractScaffold, function_node, get_reads,
-                                   run_script)
+from contract_test_support import (PYTHON_DIR, AuthorityReadsMixin, ContractScaffold, function_node, get_conversions,
+                                   get_reads, run_script)
 
 SCRIPT = "icme_multiscale_pipeline_solver.py"
 
@@ -21,8 +21,9 @@ class IcmeContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.TestC
         cls.exit_code, cls.result = run_script(SCRIPT, {})
 
     def test_every_key_the_authority_reads_is_declared(self):
-        reads = get_reads(function_node(PYTHON_DIR / SCRIPT, "solve_multiscale_pipeline"), "params")
-        self.assert_reads_match(self.operation, reads)
+        solver = function_node(PYTHON_DIR / SCRIPT, "solve_multiscale_pipeline")
+        self.assert_reads_match(self.operation, get_reads(solver, "params"))
+        self.assert_conversion_notes(self.operation, get_conversions(solver, "params"))
 
     def test_output_fields_match_the_default_run(self):
         self.assertEqual(self.exit_code, 0, self.result)
@@ -53,10 +54,28 @@ class IcmeContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.TestC
         self.assertIn("silently uses turbine_blade_root", note)
 
     def test_structural_verdict_is_not_an_evidence_status(self):
-        verdict = self.result["scale4_macroComponentFEA"]["structuralVerdict"]
         self.assertNotIn("structuralVerdict", self.operation.output.fields, "nested, not a top-level status")
         self.assertIn("structuralVerdict is fixed text", self.contract.evidence.note)
-        self.assertIsInstance(verdict, str)
+        # The verdict is one of the two fixed texts in the solver (vocabulary tripwire).
+        self.assertIn(self.result["scale4_macroComponentFEA"]["structuralVerdict"],
+                      ("STRUCTURALLY SAFE (Passed Yield & Creep Criteria)",
+                       "WARNING: INSUFFICIENT SAFETY MARGIN (Risk of Plastic Yielding)"))
+
+    def test_recorded_gap_creep_wording_without_a_creep_check(self):
+        # Known gap pinned as current behaviour: fixing the wording (or adding a creep check) means
+        # updating the contract note and this test.
+        verdict = "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
+        self.assertEqual(self.result["scale4_macroComponentFEA"]["structuralVerdict"], verdict)
+        exit_code, hot = run_script(SCRIPT, {"serviceTemp_C": 1000.0})
+        self.assertEqual(exit_code, 0, hot)
+        self.assertEqual(hot["scale4_macroComponentFEA"], self.result["scale4_macroComponentFEA"])
+        self.assertTrue(any("no creep check exists" in note for note in self.contract.legacy_notes))
+
+    def test_recorded_gap_calibrated_card_header(self):
+        # Known gap pinned as current behaviour: fixing the wording means updating the contract note and this test.
+        self.assertIn("MetalliX Multi-Scale ICME Calibrated Card", self.result["caeExportCards"]["abaqus"])
+        self.assertTrue(any("'MetalliX Multi-Scale ICME Calibrated Card'" in note
+                            for note in self.contract.legacy_notes))
 
 
 if __name__ == "__main__":
