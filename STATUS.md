@@ -2,6 +2,13 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Temizlik dalgası (Phase 5a) — 2026-10-04 (yerel; kullanıcı yetkisiyle)
+
+- **Silinenler:** kök çöp betikleri (`fix_cfd*.py`, `patch_all.py`, `append_*`, `test_cfd_pipeline.py`, `wrapper.ts`, kök `run_e2e.ts`), `src/physics/lpbfBuildJob.ts`, menüden erişilemeyen lab/stüdyo bileşenleri (EIS/CNLS devre zinciri, pil/UQ-MMPDS stüdyoları, LPBF zemin-doğruluk/Marangoni/gömülü simülatör laboratuvarları) ve yalnız onlara hizmet eden yardımcılar/testler; 18 izlenen `python/__pycache__/*.pyc` takipten çıkarıldı. Yaklaşık 25,8 bin satır; 62 test yalnızca silinen kodu sınadığı için kaldırıldı. Her şey `faa6684` ve dal commit'lerinde duruyor (geri alma: ilgili grup commit'ini `git revert`).
+- **Kanıt etkisi:** `docs/LPBF_*_2026-10-03_SUPPORT/` altındaki 27 donmuş kanıt dosyası (26 JSON + `clean-unit.log`) silinen yolların SHA-256'larını listeler ve **artık bugünkü ağaçla eşleşmez**; hiçbir kod/test/CI bunları okumaz. Bu dosyalar kendi revizyonlarının tarihsel kaydıdır, değiştirilmedi. LPBF uygulama parmak izi (`IMPLEMENTATION_SOURCE_FILES`) etkilenmedi.
+- **Sarkan referanslar (tarihsel metinler, değiştirilmedi):** `PROOF.md` (`lpbfBuildJob.ts`, `LPBFGroundTruthDataLab`, `LpbfBuildJobRail`), `STATUS.md` eski bölümleri (EquivalentCircuitBuilder, EISLabDataUploader, eisFileParser), `docs/MODULE_EVIDENCE_INVENTORY.md`, `docs/ACTIVE_WORK.md`, `docs/SECONDARY_MODULE_BACKLOG.md`. Bu bileşenler artık depoda yoktur.
+- **Açık takip:** `routes/characterization.ts` içinde artık arayüz tüketicisi olmayan sunucu yüzeyi (battery-corrosion-upload/exec-script, cnls-fit/autofit/synthetic-noise) ve ilgili istemci metotları; `exec-script` kullanıcı Python'u çalıştırır, kaldırılması planlandı.
+
 ## V1 kabul kaydı — 2026-10-04 (kod revizyonu `6b2bded`, yerel; push yok)
 
 **Sonuç: V1 çıkışı henüz TEK revizyonda kabul edilmedi.** Kanıt `066b6b9` → `6b2bded` arasında birikti; kapılar aşağıda ayrı ayrı kaydedildi. Bu bölüm geçici bir kayıttır; ayrıntılı komut çıktıları yerel/izlenmeyen `.orchestra/PHASE1-RECORD.md`, `PHASE2-RECORD.md`, `PHASE3-RECORD.md` dosyalarındadır ve kalıcı sürüm kanıtı yerine geçmez. Bu boşluklarla "kabul" ilanı, ROADMAP'teki "aynı sürüm revizyonu" çıkış ölçütünden **vazgeçmek** (kapsam değişikliği) anlamına gelir; karar kullanıcıya aittir. Önceki 2026-10-03 özeti aşağıda tarihsel kayıt olarak durur; "üç gerçek koşu" ve "token-mode giriş sürüyor" maddeleri bu bölümle **geçersiz kılınmıştır**.

@@ -6,11 +6,6 @@ import { test } from "node:test";
 // Components whose hand-rolled overlays were migrated to the shared AccessibleModal.
 const MIGRATED = [
   "src/App.tsx",
-  "src/components/CircuitLibraryModal.tsx",
-  "src/components/CNLSFittingStudio.tsx",
-  "src/components/EISLabDataUploader.tsx",
-  "src/components/EISUploadInsightsStudio.tsx",
-  "src/components/EquivalentCircuitBuilder.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/SendToModuleModal.tsx",
   "src/components/StandardQualificationEngine.tsx",
