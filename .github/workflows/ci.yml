@@ -89,7 +89,7 @@ jobs:
           test_lpbf_worker_validation_error
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_contract_keyhole_raytracing test_contract_uq_lab
-          test_phase6b_vector_parity test_stochastic_uq_evidence
+          test_phase6b_vector_parity test_stochastic_uq_evidence test_persistent_ipc_security
       # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
       # package-aware manifest import closure and the canonical-v3 framing vectors. The
       # canonical identity normalises CRLF, so these are checkout-newline independent.

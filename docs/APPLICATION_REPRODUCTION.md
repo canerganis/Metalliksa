@@ -60,14 +60,13 @@ Keep `METALLIX_PYTHON` and `PYTHONDONTWRITEBYTECODE` set for the entire sequence
 
 ## Start with an explicit Python interpreter
 
-First install the separately locked CPU environment following the linked guide. From the clean snapshot, assign `METALLIX_PYTHON` its absolute executable path. Assign unused application and Python HTTP ports; inspect existing listeners first. Then run:
+First install the separately locked CPU environment following the linked guide. From the clean snapshot, assign `METALLIX_PYTHON` its absolute executable path. Assign an unused application port; the Python daemon binds a free loopback port itself (leave `METALLIX_IPC_PORT` unset). Then run:
 
 ```powershell
 $env:NODE_ENV = 'production'
 $env:AIRGAPPED = '1'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 $env:PORT = '3016'
-$env:METALLIX_IPC_PORT = '5058'
 # Replace this example with the absolute path of the verified CPU interpreter.
 $env:METALLIX_PYTHON = 'C:/verified-environment/Scripts/python.exe'
 npm start
@@ -76,6 +75,8 @@ npm start
 Run `npm start` from the application root. The server resolves `python/`, `dist/` and the default data directories against the working directory (`server/pythonRoot.ts`, `server/processOrchestrator.ts`, `server.ts`). Started elsewhere, it exits with a message naming the missing `python/persistent_ipc_service.py` or, in production, `dist/index.html` (`server/startupGuard.ts`).
 
 Read `/api/python/status` on the application port. Require the expected interpreter version, `online: true`, and an active transport. On Windows the Python daemon binds HTTP and skips UNIX sockets. `warmModules` records imports only; `subsystemStatus: unverified` explicitly withholds solver availability. `/api/python/ipc-warmup` reports readiness and returns 503 before the daemon is ready; it does not run solver validation.
+
+The Python daemon (`python/persistent_ipc_service.py`) is an internal channel, not an API. `server/processOrchestrator.ts` generates a fresh random secret for every daemon spawn and passes it only through the child environment (`METALLIX_IPC_TOKEN`; inherited and `.env` values are deleted). The secret never travels on the wire (protocol `metallix-ipc-v2`): a request's HMAC-SHA256 covers method, path, timestamp, nonce, body length and the body's SHA-256 and is checked from the request head before any body byte is read; the body is then streamed and must match its hash. Every reply carries an HMAC over the nonce, status, length and body hash, so a process that is not the daemon can neither replay a request nor forge solver output the server accepts. Unauthenticated connections are bounded (8 at a time, 10 s for the request head, one request per connection). The daemon announces its channels in its ready message: on Linux/macOS a UNIX socket (0600) in a fresh 0700 directory (HTTP only with `METALLIX_IPC_HTTP=1`), on Windows an ephemeral loopback HTTP port bound with `SO_EXCLUSIVEADDRUSE`. The server uses only channels its own daemon announced. A request is retried on another channel or spawned ad hoc only when the daemon certainly did not run it (no connection, request not fully sent, or an unsigned or 400-or-higher reply); after a timeout or a broken reply the error is returned instead, so a solver never runs twice. The daemon warms its modules once and starts its worker processes before announcing readiness; it exits and removes its socket directory when the server process is gone (its stdin pipe closes). It refuses to start without a secret, binds only loopback addresses, sends no CORS headers, rejects requests with an `Origin` header or a `Host` other than its own `host:port`, accepts only `application/json` bodies up to 64 MiB, and runs only the `python/<module>.py` scripts that `routes/*.ts` dispatch, resolved inside `python/` (the server's ad-hoc fallback uses the same list). Residual risk: code running as the same user can read the secret from the process environment or memory. To launch the daemon by hand (diagnostics only), set `METALLIX_IPC_TOKEN` to at least 32 random characters and sign requests as `server/processOrchestrator.ts` does (`signIpcRequest`).
 
 Stop only the processes launched for this check. Keep the original checkout and preview separate.
 

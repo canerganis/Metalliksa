@@ -958,8 +958,9 @@ class PythonComputationService {
         status: "fallback_mode",
         isPersistent: false,
         channels: {
-          unixSocket: { path: "/tmp/metallix_python_ipc.sock", active: false },
-          httpMicroservice: { url: "http://127.0.0.1:5055", active: false },
+          // Unknown while the status endpoint is unreachable (the daemon picks its own addresses).
+          unixSocket: { path: "", active: false },
+          httpMicroservice: { url: "", active: false },
         },
         requestsProcessed: 0,
         avgLatencyMs: 0,
