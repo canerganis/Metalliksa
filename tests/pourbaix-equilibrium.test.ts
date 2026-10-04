@@ -159,7 +159,7 @@ test("Fe boundary lines match the spec oracle (intercepts +/-1 mV, slopes +/-0.0
   sloped("Fe", "Fe2+", "Fe3+", 0.7706, 0, 0);
 });
 
-test("other elements: regression pins of the spec (Al is unavailable and has none)", () => {
+test("other elements: regression pins of the spec", () => {
   sloped("Ni", "Ni", "Ni2+", -0.4275, 0);
   vertical("Ni", "Ni2+", "Ni(OH)2", 9.088);
   vertical("Ni", "Ni(OH)2", "HNiO2-", 12.204);
@@ -176,6 +176,30 @@ test("other elements: regression pins of the spec (Al is unavailable and has non
   vertical("Zn", "HZnO2-", "ZnO2^2-", 12.77);
   sloped("Mg", "Mg", "Mg2+", -2.5343, 0);
   vertical("Mg", "Mg2+", "Mg(OH)2", 11.37);
+});
+
+test("Al (available since WP-Al: OBIGT TS01 + gibbsite): the engine's pins at a = 1e-6 and 1", () => {
+  const ids = speciesCoefficients("Al", -6).map((s) => s.id);
+  assert.deepEqual(ids, ["Al", "Al3+", "Al(OH)3", "Al(OH)4-"]);
+  sloped("Al", "Al", "Al3+", -1.8024, 0);
+  vertical("Al", "Al3+", "Al(OH)3", 4.577);
+  vertical("Al", "Al(OH)3", "Al(OH)4-", 9.118);
+  sloped("Al", "Al", "Al(OH)3", -1.5317, -0.0592);
+  sloped("Al", "Al", "Al(OH)4-", -1.3519, -0.0789);
+  // unit activity
+  sloped("Al", "Al", "Al3+", -1.6841, 0, 0);
+  sloped("Al", "Al", "Al(OH)4-", -1.2335, -0.0789, 0);
+  const line = boundaryLine(speciesCoefficients("Al", 0), "Al3+", "Al(OH)3");
+  assert.equal(line?.type, "vertical");
+  if (line?.type === "vertical") near(line.pH, 2.577, 0.01, "Al3+/gibbsite pH at a = 1");
+  // the passive (gibbsite) domain sits between the two vertical boundaries inside the water window
+  const al = speciesCoefficients("Al", -6);
+  assert.equal(classifyPourbaixPoint(al, 7, -0.2).speciesId, "Al(OH)3");
+  assert.equal(classifyPourbaixPoint(al, 7, -0.2).category, "Passivation (thermodynamic, film-forming)");
+  assert.equal(classifyPourbaixPoint(al, 2, 0).speciesId, "Al3+");
+  assert.equal(classifyPourbaixPoint(al, 11, -0.3).speciesId, "Al(OH)4-");
+  assert.equal(classifyPourbaixPoint(al, 11, -0.3).category, "Corrosion (alkaline)");
+  assert.equal(classifyPourbaixPoint(al, 7, -2.2).speciesId, "Al");
 });
 
 test("an exact tie goes to the earlier table row (metal, cations, solids, anions)", () => {
@@ -223,17 +247,32 @@ test("water lines and Nernst slope at 25 C: E = -k pH and 1.2288 - k pH", () => 
 // Availability, defaults and the removal of the old rule trees
 // ---------------------------------------------------------------------------------------------
 
-test("Al, Cr, Ti and Mo are unavailable with the engine's reason; Fe, Ni, Cu, Zn, Mg have a map", () => {
-  assert.deepEqual(availablePourbaixElements().sort(), ["Cu", "Fe", "Mg", "Ni", "Zn"]);
-  for (const el of ["Al", "Cr", "Ti", "Mo"]) {
+test("Cr, Ti and Mo are unavailable with the engine's reason; Fe, Ni, Cu, Zn, Mg, Al have a map", () => {
+  assert.deepEqual(availablePourbaixElements().sort(), ["Al", "Cu", "Fe", "Mg", "Ni", "Zn"]);
+  for (const el of ["Cr", "Ti", "Mo"]) {
     const reason = pourbaixUnavailableReason(el);
     assert.ok(reason && reason.length > 20, `${el} reason`);
     assert.throws(() => speciesCoefficients(el, -6), /No verified/);
   }
   assert.match(pourbaixUnavailableReason("Ti")!, /mutually inconsistent/);
-  assert.match(pourbaixUnavailableReason("Al")!, /could not be confirmed/);
-  assert.equal(pourbaixUnavailableReason("Fe"), null);
+  assert.match(pourbaixUnavailableReason("Cr")!, /Blocked until WP-Cr/);
+  assert.equal(pourbaixUnavailableReason("Mo"), "No sourced Mo-H2O data.");
+  for (const el of ["Fe", "Al"]) assert.equal(pourbaixUnavailableReason(el), null, el);
   assert.ok(pourbaixUnavailableReason("Xx"), "an element absent from the table is unavailable, not Fe");
+});
+
+test("availability is read from the generated JSON, not from a list in the TS sources", () => {
+  const json = JSON.parse(text("src/generated/pourbaixSpecies25C.json")) as { elements: Record<string, { available: boolean; reason?: string; species?: unknown[] }> };
+  const fromJson = Object.entries(json.elements).filter(([, v]) => v.available).map(([k]) => k).sort();
+  assert.deepEqual(availablePourbaixElements().sort(), fromJson);
+  for (const [el, v] of Object.entries(json.elements)) {
+    assert.equal(pourbaixUnavailableReason(el), v.available ? null : v.reason, el);
+    assert.equal(v.available, Array.isArray(v.species) && v.species.length > 0, `${el}: available iff it has species`);
+  }
+  const thermo = text("src/utils/pourbaixThermodynamics.ts");
+  const studio = text("src/components/DynamicPourbaixStudio.tsx");
+  assert.ok(!/\[\s*"Fe"\s*,\s*"Ni"/.test(thermo + studio), "no hard-coded list of available elements");
+  assert.ok(!/available[A-Za-z]*\s*=\s*\[/.test(thermo + studio));
 });
 
 test("the default alloy exists, is pure Fe and agrees with the default experimental preset element", () => {
@@ -296,6 +335,19 @@ test("Ti-6Al-4V shows the engine's no-verified-data reason instead of a map; Inc
   const inconel = render({ initialAlloyId: "inconel-718" });
   assert.match(inconel, /<canvas/);
   assert.match(plain(inconel), /Ni–H₂O \(Inconel 718/);
+  assert.match(plain(inconel), /Al \(0\.5% wt\) (?!- no verified data)/, "Al is an available element of Inconel 718");
+  assert.match(plain(inconel), /Cr \(19% wt\) - no verified data/, "Cr stays unavailable");
+  assert.match(plain(inconel), /Mo \(3% wt\) - no verified data/, "Mo stays unavailable");
+});
+
+test("Al-7075 selects Al and draws the gibbsite map (no reason panel); Al in other compositions is no longer flagged \"no verified data\"", () => {
+  const html = render({ initialAlloyId: "al-7075-t6" });
+  const t = plain(html);
+  assert.match(html, /<canvas/);
+  assert.match(t, /Al–H₂O \( ?Aluminum 7075-T6/);
+  assert.ok(!t.includes("POURBAIX_DATA_UNAVAILABLE"));
+  assert.ok(!t.includes("No verified Al–H₂O data"));
+  assert.equal(t.split(PASSIVATION_NOTE).length - 1, 2, "legend caveat + probe-card caveat (the default probe pH 7 / 0.2 V is a gibbsite point)");
 });
 
 test("Corrosion lab tab and the Python service comment use the new wording", () => {
