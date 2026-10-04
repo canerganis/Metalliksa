@@ -1,3 +1,5 @@
+// First import: checks the working directory before any module below starts the Python worker.
+import "./server/startupGuard.ts";
 import express, { Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
