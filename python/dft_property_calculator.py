@@ -53,39 +53,36 @@ DEBYE_REFERENCE = ("Anderson, J. Phys. Chem. Solids 24 (1963) 909: theta_D = (h/
 
 # Built-in single-crystal elastic-constants library (GPa). This is a lookup table, not a calculation and
 # not a DFT result. Entries are served ONLY for an exact formula match (see lookup_library_entry).
-# "reference_status": "cited-secondary-compilation" = the three constants appear, as the experimental
-# column, in the cited paper's tables; "unverified" = no citation for these values has been checked
-# (the values were carried over from the previous library and must not be read as cited data).
+# "reference_status":
+#   "experimental-single-crystal"  measured single-crystal constants (ultrasonic / resonance), cited below;
+#   "experimental-polycrystal-neutron-diffraction"  derived from neutron diffraction of a polycrystal;
+#   "dft-calculation"  first-principles values (no single-crystal measurement exists); never read as measured.
+# "reference" names the primary source and, where the value was read in a secondary table, that table.
+# "reference_note" states a caveat (state, temperature, conflicting sources) and is shown with the result.
+# "density_basis" says where "density" (g/cm^3, used only when the caller sends none) comes from.
+# Sourcing was verified against the downloaded papers in .orchestra/external-data/review-fxb-sci
+# (SOURCES.txt); the entries marked "read online" were checked in the reviewer's session only.
 ELASTIC_CONSTANTS_LIBRARY = {
     "fe3c": {
         "match": "Fe3C",
         "formula": "Fe3C (Cementite)",
         "crystal_system": "Orthorhombic",
         "space_group": "Pnma (62)",
+        # Voigt axes 1, 2, 3 = a, b, c of the Pnma setting (a=5.08, b=6.73, c=4.51 A); c44 is the soft
+        # (010)[001] shear. Order in Jiang's Table III: c11 c22 c33 c12 c23 c13 c44 c55 c66.
         "c_ij": {
-            "c11": 385.0, "c22": 340.0, "c33": 320.0,
-            "c12": 156.0, "c13": 162.0, "c23": 160.0,
-            "c44": 63.0,  "c55": 61.0,  "c66": 85.0
+            "c11": 388.0, "c22": 345.0, "c33": 322.0,
+            "c12": 156.0, "c13": 164.0, "c23": 162.0,
+            "c44": 15.0,  "c55": 134.0, "c66": 134.0
         },
         "density": 7.68,
-        "reference_status": "unverified",
-        "reference": None,
+        "density_basis": "unverified (the experimental lattice of Wood et al., a=5.08 b=6.73 c=4.51 A, gives 7.73)",
+        "reference_status": "dft-calculation",
+        "reference": ("Jiang, Srinivasan, Caro, Maloy, J. Appl. Phys. 103, 043502 (2008), Table III, "
+                      "energy-strain method (DFT-GGA, relaxed)"),
+        "reference_note": ("first-principles values; no experimental single crystal of cementite exists; "
+                           "c44 = 15 GPa is anomalously soft (82 GPa unrelaxed)"),
         "notes": "Metastable orthorhombic carbide; high hardness, directional Fe-C covalent-metallic bonding."
-    },
-    "lifepo4": {
-        "match": "LiFePO4",
-        "formula": "LiFePO4 (Triphylite)",
-        "crystal_system": "Orthorhombic",
-        "space_group": "Pnma (62)",
-        "c_ij": {
-            "c11": 139.0, "c22": 178.0, "c33": 172.0,
-            "c12": 65.0,  "c13": 52.0,  "c23": 48.0,
-            "c44": 37.0,  "c55": 49.0,  "c66": 44.0
-        },
-        "density": 3.59,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "Olivine cathode; strong [010] 1D Li-ion transport channels, moderate anisotropy."
     },
     "ni3al": {
         "match": "Ni3Al",
@@ -93,12 +90,15 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Pm-3m (221)",
         "c_ij": {
-            "c11": 223.0, "c12": 148.0, "c44": 125.0
+            "c11": 224.3, "c12": 148.6, "c44": 125.8
         },
         "density": 7.42,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "L1_2 ordered superalloy strengthener; high Zener anisotropy A_Z ~ 3.33."
+        "density_basis": "unverified",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Kayser & Stassis, Phys. Status Solidi A 64, 335 (1981), room temperature, as quoted in "
+                      "Luan et al., Crystals 8, 307 (2018), Table 2"),
+        "reference_note": None,
+        "notes": "L1_2 ordered superalloy strengthener; high Zener anisotropy A_Z ~ 3.3."
     },
     "ti3alc2": {
         "match": "Ti3AlC2",
@@ -106,11 +106,15 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Hexagonal",
         "space_group": "P6_3/mmc (194)",
         "c_ij": {
-            "c11": 360.0, "c33": 350.0, "c12": 90.0, "c13": 85.0, "c44": 120.0
+            "c11": 361.0, "c33": 299.0, "c12": 75.0, "c13": 70.0, "c44": 124.0
         },
         "density": 4.25,
-        "reference_status": "unverified",
-        "reference": None,
+        "density_basis": "unverified",
+        "reference_status": "experimental-polycrystal-neutron-diffraction",
+        "reference": ("Gray, Kisi, Kirstein, Stampfl, J. Am. Ceram. Soc. 100, 705 (2017), as tabulated in "
+                      "Ahams et al., Sci. Rep. 2021, Table 2 (read online)"),
+        "reference_note": ("not a single-crystal measurement: constants derived from neutron diffraction of a "
+                           "polycrystal; first-principles (Materials Project) values agree"),
         "notes": "Layered ternary carbide; metallic electrical conductivity with ceramic temperature resistance."
     },
     "zno": {
@@ -119,11 +123,15 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Hexagonal",
         "space_group": "P6_3mc (186)",
         "c_ij": {
-            "c11": 209.0, "c33": 216.0, "c12": 120.0, "c13": 104.0, "c44": 44.0
+            "c11": 209.7, "c33": 210.9, "c12": 121.1, "c13": 105.1, "c44": 42.47
         },
-        "density": 5.56,
-        "reference_status": "unverified",
-        "reference": None,
+        "density": 5.68,
+        "density_basis": ("calculated from a=3.2496, c=5.2042 A (Morkoc & Ozgur, Zinc Oxide, Wiley-VCH 2009, "
+                          "Table 1.2) and M=81.38 g/mol, 2 formula units per cell"),
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Bateman, J. Appl. Phys. 33, 3309 (1962), as tabulated in Morkoc & Ozgur, Zinc Oxide "
+                      "(Wiley-VCH 2009), Table 1.6"),
+        "reference_note": "room temperature; other measurements scatter by several percent",
         "notes": "Piezoelectric semiconductor; polar hexagonal wurtzite structure."
     },
     "niti": {
@@ -132,12 +140,16 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Pm-3m (221)",
         "c_ij": {
-            "c11": 162.0, "c12": 130.0, "c44": 34.0
+            "c11": 162.0, "c12": 129.0, "c44": 35.0
         },
         "density": 6.45,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "Nitinol shape memory alloy; low C' = (C11 - C12)/2 = 16 GPa precedes thermoelastic martensitic transformation."
+        "density_basis": "unverified (a 2025 resonant-ultrasound study uses 6.5)",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Mercier, Melton, Gremaud, Hagi, J. Appl. Phys. 51, 1833 (1980), 298 K, as quoted in "
+                      "Ren & Sehitoglu, Comput. Mater. Sci. 123, 19 (2016), Table 4"),
+        "reference_note": ("B2 austenite; the constants depend strongly on composition and on the temperature "
+                           "relative to the martensite start (C' = (C11-C12)/2 softens on cooling)"),
+        "notes": "Nitinol shape memory alloy; low C' = (C11 - C12)/2 = 16.5 GPa precedes thermoelastic martensitic transformation."
     },
     "wc": {
         "match": "WC",
@@ -145,11 +157,16 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Hexagonal",
         "space_group": "P-6m2 (187)",
         "c_ij": {
-            "c11": 720.0, "c33": 970.0, "c12": 250.0, "c13": 150.0, "c44": 290.0
+            "c11": 720.0, "c33": 972.0, "c12": 254.0, "c13": 267.0, "c44": 328.0
         },
         "density": 15.63,
-        "reference_status": "unverified",
-        "reference": None,
+        "density_basis": "unverified (the X-ray cell volume 20.75 A^3 of Brugman et al. gives 15.67)",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Lee & Gilmore, J. Mater. Sci. 17, 2657 (1982), ultrasonic pulse-echo, as tabulated in "
+                      "Kim, Massa, Rohrer, Int. J. Refract. Met. Hard Mater. 24, 89 (2006), Table 2"),
+        "reference_note": ("secondary-source conflict on C13: Zhang et al. (arXiv:2201.02411) imply C13 near 150 "
+                           "GPa and a DFT study reports C13 about 100 GPa below this experiment; the original "
+                           "1982 paper was not read (abstract only), so C13 = 267 GPa rests on the Kim et al. table"),
         "notes": "Ultra-hard transition metal carbide; high shear modulus and severe brittleness."
     },
     "fe": {
@@ -158,12 +175,15 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Im-3m (229)",
         "c_ij": {
-            "c11": 230.0, "c12": 135.0, "c44": 117.0
+            "c11": 233.1, "c12": 135.4, "c44": 117.8
         },
         "density": 7.87,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "Ferromagnetic BCC iron; Zener anisotropy A_Z = 2.46."
+        "density_basis": "Ledbetter & Reed, J. Phys. Chem. Ref. Data 2, 531 (1973), Table 4 (293 K)",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Rayne & Chandrasekhar, Phys. Rev. 122, 1714 (1961), 10 MHz pulse-echo, 99.99 Fe, no field, "
+                      "as tabulated in Ledbetter & Reed, J. Phys. Chem. Ref. Data 2, 531 (1973), Table 5"),
+        "reference_note": "room temperature; at 0 K the same authors give 243.1/138.1/121.9",
+        "notes": "Ferromagnetic BCC iron; Zener anisotropy A_Z = 2.41."
     },
     "ni": {
         "match": "Ni",
@@ -171,11 +191,16 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Fm-3m (225)",
         "c_ij": {
-            "c11": 247.0, "c12": 147.0, "c44": 125.0
+            "c11": 250.8, "c12": 150.0, "c44": 123.5
         },
-        "density": 8.90,
-        "reference_status": "unverified",
-        "reference": None,
+        "density": 8.91,
+        "density_basis": "Ledbetter & Reed, J. Phys. Chem. Ref. Data 2, 531 (1973), Table 4 (293 K)",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Alers, Neighbours, Sato, J. Phys. Chem. Solids 13, 40 (1960), 99.95 Ni, 10 MHz pulse-echo, "
+                      "as tabulated in Ledbetter & Reed, J. Phys. Chem. Ref. Data 2, 531 (1973), Table 6"),
+        "reference_note": ("measured in a 10 kOe saturating magnetic field; zero-field (unsaturated) values "
+                           "are lower in C44 (Ledbetter & Reed best values: 249/155/114 no field, 254/155/123 "
+                           "saturated)"),
         "notes": "FCC matrix base for nickel superalloys; high ductility."
     },
     "ti": {
@@ -187,8 +212,11 @@ ELASTIC_CONSTANTS_LIBRARY = {
             "c11": 162.4, "c33": 180.7, "c12": 92.0, "c13": 69.0, "c44": 46.7
         },
         "density": 4.51,
-        "reference_status": "unverified",
-        "reference": None,
+        "density_basis": "unverified",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Fisher & Renken, Phys. Rev. 135, A482 (1964), as tabulated in Chakraborty & Rogal, "
+                      "arXiv:2008.00165, Suppl. Table S1 (experimental hcp Ti row)"),
+        "reference_note": "room temperature",
         "notes": "Hexagonal close-packed room-temperature titanium; moderate elastic anisotropy."
     },
     "al": {
@@ -197,12 +225,16 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Fm-3m (225)",
         "c_ij": {
-            "c11": 108.0, "c12": 62.0, "c44": 28.3
+            "c11": 107.3, "c12": 60.08, "c44": 28.3
         },
         "density": 2.70,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "Nearly isotropic FCC metal (A_Z = 1.23); low density."
+        "density_basis": "unverified",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Vallin, Mongy, Salama, Beckman, J. Appl. Phys. 35, 1825 (1964), as listed in "
+                      "Rassoulinejad-Mousavi et al., J. Appl. Phys. 119, 244304 (2016) (arXiv:1605.09237), Table 2"),
+        "reference_note": ("C12 = 60.08 is as printed in that table; other compilations give 60.7-60.9 GPa "
+                           "(Kamm & Alers 1964), a 0.1-1.4 % spread that moves A_Z between 1.20 and 1.21"),
+        "notes": "Nearly isotropic FCC metal (A_Z = 1.20); low density."
     },
     "w": {
         "match": "W",
@@ -210,12 +242,15 @@ ELASTIC_CONSTANTS_LIBRARY = {
         "crystal_system": "Cubic",
         "space_group": "Im-3m (229)",
         "c_ij": {
-            "c11": 523.0, "c12": 203.0, "c44": 160.0
+            "c11": 523.27, "c12": 204.53, "c44": 160.72
         },
-        "density": 19.25,
-        "reference_status": "unverified",
-        "reference": None,
-        "notes": "Unique among elemental metals for being almost perfectly elastically isotropic (A_Z = 1.00)."
+        "density": 19.26,
+        "density_basis": "Archimedes measurement 19.260 g/cm^3, Qi et al. (OSTI 1529600)",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Featherston & Neighbours, Phys. Rev. 130, 1324 (1963), ultrasonic, 300 K, as listed in "
+                      "Qi et al. (OSTI 1529600), Table III"),
+        "reference_note": None,
+        "notes": "Unique among elemental metals for being almost perfectly elastically isotropic (A_Z = 1.01)."
     },
     "cu": {
         "match": "Cu",
@@ -226,12 +261,19 @@ ELASTIC_CONSTANTS_LIBRARY = {
             "c11": 168.4, "c12": 121.4, "c44": 75.4
         },
         "density": 8.96,
-        "reference_status": "cited-secondary-compilation",
-        "reference": ("J. Appl. Phys. 119, 244304 (2016) (arXiv:1605.09237), Table 1 experimental column: "
-                      "C11=168.4, C12=121.4, C44=75.4 GPa"),
+        "density_basis": "unverified",
+        "reference_status": "experimental-single-crystal",
+        "reference": ("Overton & Gaffney, Phys. Rev. 98, 969 (1955), room temperature (1.6839/1.2142/0.7539 "
+                      "x 10^12 dyn/cm^2), as listed in Ledbetter & Naimon, J. Phys. Chem. Ref. Data 3, 897 "
+                      "(1974), Table 2; also J. Appl. Phys. 119, 244304 (2016), Table 1"),
+        "reference_note": None,
         "notes": "Highly anisotropic FCC metal (A_Z = 3.21); high thermal and electrical conductivity."
     }
 }
+# LiFePO4 (triphylite) is deliberately NOT in the library: its constants in the previous library were
+# unsourced and the values recalled by a reviewer (Maxisch & Ceder, Phys. Rev. B 73, 174112, DFT) could not be
+# checked against the paper. A formula without an entry gets the isotropic tensor from supplied K_VRH/G_VRH,
+# or "unavailable".
 
 # Constants each symmetry class needs (Voigt notation). Nothing missing is filled in.
 REQUIRED_CONSTANTS = {
@@ -443,7 +485,10 @@ def build_stiffness_matrix(crystal_system: str, k_vrh: float, g_vrh: float, form
                 f"({entry['space_group']}); the requested crystal system {crystal_system!r} is another phase")
         family = entry_family
         source_notes = (f"Built-in elastic-constants library entry (a lookup table, not a DFT calculation): "
-                        f"{entry['formula']} ({entry['notes']}); reference status: {entry['reference_status']}")
+                        f"{entry['formula']} ({entry['notes']}); reference status: {entry['reference_status']}; "
+                        f"reference: {entry['reference']}")
+        if entry["reference_note"]:
+            source_notes += f"; caveat: {entry['reference_note']}"
         values = _custom_values(entry["c_ij"], family)
     else:
         if family is None:

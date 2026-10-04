@@ -149,10 +149,15 @@ class LibraryLookupTest(unittest.TestCase):
 
     def test_exact_formulas_and_descriptive_suffix_match(self):
         for formula, entry in (("Al", "al"), ("Ni3Al", "ni3al"), ("Ni3Al (gamma prime)", "ni3al"),
-                               ("Fe3C (Cementite)", "fe3c"), ("LiFePO4", "lifepo4"), ("Cu", "cu")):
+                               ("Fe3C (Cementite)", "fe3c"), ("Cu", "cu"), ("ZnO", "zno")):
             with self.subTest(formula=formula):
                 self.assertIs(dft.lookup_library_entry(formula), dft.ELASTIC_CONSTANTS_LIBRARY[entry])
         self.assertIsNone(dft.lookup_library_entry("al"))  # case-sensitive: not a different formula
+        # LiFePO4 has no sourced constants and is not in the library (no unverified values are offered)
+        self.assertIsNone(dft.lookup_library_entry("LiFePO4"))
+        self.assertEqual(run({"formula": "LiFePO4"})["unavailableCode"], "NO_ELASTIC_CONSTANTS")
+        iso = run({"formula": "LiFePO4", "k_vrh": 96.5, "g_vrh": 52.8, "density": 3.59})
+        self.assertEqual(iso["constantsOrigin"], "isotropic-from-supplied-K-G")
         out = run({"formula": "Al"})
         self.assertEqual(out["status"], "available")
         self.assertEqual(out["constantsOrigin"], "builtin-library-exact-match")
@@ -172,9 +177,111 @@ class LibraryLookupTest(unittest.TestCase):
         self.assertNotIn("DFT", out["sourceNotes"].replace("not a DFT calculation", ""))
         self.assertNotIn("Authentic", out["sourceNotes"])
         self.assertIn("not a DFT calculation", out["label"])
-        self.assertEqual(out["referenceStatus"], "unverified")
-        self.assertEqual(run({"formula": "Cu"})["referenceStatus"], "cited-secondary-compilation")
-        self.assertIn("arXiv:1605.09237", dft.ELASTIC_CONSTANTS_LIBRARY["cu"]["reference"])
+        self.assertEqual(out["referenceStatus"], "experimental-single-crystal")
+        self.assertIn("Kayser & Stassis", out["sourceNotes"])
+        self.assertEqual(run({"formula": "Fe3C"})["referenceStatus"], "dft-calculation")
+        self.assertIn("Jiang", run({"formula": "Fe3C"})["sourceNotes"])
+        self.assertIn("Overton & Gaffney", dft.ELASTIC_CONSTANTS_LIBRARY["cu"]["reference"])
+        self.assertIn("caveat: secondary-source conflict on C13", run({"formula": "WC"})["sourceNotes"])
+
+
+# Sourced library constants, restated independently of the module (GPa). Every value was read in the cited
+# table: Rayne & Chandrasekhar 1961 / Alers, Neighbours & Sato 1960 via Ledbetter & Reed, JPCRD 2, 531 (1973),
+# Tables 5 and 6; Vallin et al. 1964 via arXiv:1605.09237; Featherston & Neighbours 1963 via OSTI 1529600;
+# Kayser & Stassis 1981 via Luan et al. 2018; Mercier et al. 1980 via Ren & Sehitoglu 2016; Bateman 1962 via
+# Morkoc & Ozgur 2009; Lee & Gilmore 1982 via Kim, Massa & Rohrer 2006; Fisher & Renken 1964 via arXiv:2008.00165;
+# Jiang et al. 2008 Table III (energy-strain DFT); Overton & Gaffney 1955 via Ledbetter & Naimon 1974.
+SOURCED = {
+    "Cu": {"c11": 168.4, "c12": 121.4, "c44": 75.4},
+    "Fe": {"c11": 233.1, "c12": 135.4, "c44": 117.8},
+    "Ni": {"c11": 250.8, "c12": 150.0, "c44": 123.5},
+    "Al": {"c11": 107.3, "c12": 60.08, "c44": 28.3},
+    "W": {"c11": 523.27, "c12": 204.53, "c44": 160.72},
+    "Ni3Al": {"c11": 224.3, "c12": 148.6, "c44": 125.8},
+    "NiTi": {"c11": 162.0, "c12": 129.0, "c44": 35.0},
+    "Ti": {"c11": 162.4, "c12": 92.0, "c13": 69.0, "c33": 180.7, "c44": 46.7},
+    "ZnO": {"c11": 209.7, "c12": 121.1, "c13": 105.1, "c33": 210.9, "c44": 42.47},
+    "WC": {"c11": 720.0, "c12": 254.0, "c13": 267.0, "c33": 972.0, "c44": 328.0},
+    "Ti3AlC2": {"c11": 361.0, "c12": 75.0, "c13": 70.0, "c33": 299.0, "c44": 124.0},
+    "Fe3C": {"c11": 388.0, "c22": 345.0, "c33": 322.0, "c12": 156.0, "c13": 164.0, "c23": 162.0,
+             "c44": 15.0, "c55": 134.0, "c66": 134.0},
+}
+# Zener ratios 2 C44 / (C11 - C12) of the cubic entries as stated by the reviewer (rounded)
+ZENER_REVIEW = {"Fe": 2.41, "Ni": 2.45, "Cu": 3.22, "Al": 1.20, "W": 1.008, "Ni3Al": 3.32, "NiTi": 2.12}
+ENTRY_MASS = {"Cu": 63.546, "Fe": 55.845, "Ni": 58.693, "Al": 26.982, "W": 183.84, "Ti": 47.867}
+
+
+class SourcedLibraryTest(unittest.TestCase):
+    def test_every_entry_holds_the_sourced_constants_and_a_citation(self):
+        self.assertEqual({e["match"] for e in dft.ELASTIC_CONSTANTS_LIBRARY.values()}, set(SOURCED))
+        statuses = {"experimental-single-crystal", "experimental-polycrystal-neutron-diffraction", "dft-calculation"}
+        for entry in dft.ELASTIC_CONSTANTS_LIBRARY.values():
+            with self.subTest(entry=entry["match"]):
+                self.assertEqual(entry["c_ij"], SOURCED[entry["match"]])
+                self.assertIn(entry["reference_status"], statuses)
+                self.assertGreater(len(entry["reference"]), 30)
+                self.assertTrue(entry["density_basis"])
+        self.assertEqual(dft.ELASTIC_CONSTANTS_LIBRARY["fe3c"]["reference_status"], "dft-calculation")
+        self.assertEqual(dft.ELASTIC_CONSTANTS_LIBRARY["ti3alc2"]["reference_status"],
+                         "experimental-polycrystal-neutron-diffraction")
+        self.assertIn("C13", dft.ELASTIC_CONSTANTS_LIBRARY["wc"]["reference_note"])
+        self.assertIn("saturating", dft.ELASTIC_CONSTANTS_LIBRARY["ni"]["reference_note"])
+
+    def test_mutated_library_value_is_detected(self):
+        with patch.dict(dft.ELASTIC_CONSTANTS_LIBRARY["fe3c"]["c_ij"], {"c44": 63.0}):  # the old, unsourced shear
+            self.assertNotEqual(dft.ELASTIC_CONSTANTS_LIBRARY["fe3c"]["c_ij"], SOURCED["Fe3C"])
+
+    def test_cubic_entries_moduli_zener_and_per_atom_debye(self):
+        for name, c in SOURCED.items():
+            if len(c) != 3:
+                continue
+            with self.subTest(entry=name):
+                out = run({"formula": name})
+                o = cubic_oracle(c["c11"], c["c12"], c["c44"])
+                vrh = out["voigtReussHillModuli"]
+                self.assertAlmostEqual(vrh["bulkModulus_K_VRH_GPa"], o["K"], delta=0.006)
+                self.assertAlmostEqual(vrh["shearModulus_G_VRH_GPa"], o["G"], delta=0.006)
+                zener = 2.0 * c["c44"] / (c["c11"] - c["c12"])
+                self.assertAlmostEqual(out["mechanicalIntegrityIndices"]["zenerAnisotropyFactor_AZ"], zener, delta=0.0006)
+                self.assertAlmostEqual(zener, ZENER_REVIEW[name], delta=0.012)
+                entry = dft.ELASTIC_CONSTANTS_LIBRARY[name.lower()]
+                if name in ENTRY_MASS:
+                    theta = debye_oracle(o["K"], o["G"], entry["density"], ENTRY_MASS[name])
+                else:  # Ni3Al: 4 atoms per formula unit, 3 Ni + 1 Al
+                    theta = debye_oracle(o["K"], o["G"], entry["density"], 3 * 58.693 + 26.982, atoms_per_formula=4.0) \
+                        if name == "Ni3Al" else None
+                if theta is not None:
+                    self.assertAlmostEqual(out["acousticAndThermalProperties"]["debyeTemperature_K"], theta, delta=0.15)
+
+    def test_noncubic_voigt_bounds_from_the_sourced_tensors(self):
+        # Voigt averages in closed form from the sourced constants (hexagonal: c66 = (c11 - c12) / 2)
+        for name, c in SOURCED.items():
+            if len(c) != 5:
+                continue
+            with self.subTest(entry=name):
+                c66 = (c["c11"] - c["c12"]) / 2.0
+                k_v = (2.0 * c["c11"] + c["c33"] + 2.0 * (c["c12"] + 2.0 * c["c13"])) / 9.0
+                g_v = (2.0 * c["c11"] + c["c33"] - (c["c12"] + 2.0 * c["c13"]) + 3.0 * (2.0 * c["c44"] + c66)) / 15.0
+                vrh = run({"formula": name})["voigtReussHillModuli"]
+                self.assertAlmostEqual(vrh["bulkModulus_K_Voigt_GPa"], k_v, delta=0.006)
+                self.assertAlmostEqual(vrh["shearModulus_G_Voigt_GPa"], g_v, delta=0.006)
+
+    def test_cementite_uses_jiangs_axis_order(self):
+        c = SOURCED["Fe3C"]
+        out = run({"formula": "Fe3C"})
+        m = out["elasticStiffnessMatrix_Cij_GPa"]
+        self.assertEqual([m[i][i] for i in range(6)], [388.0, 345.0, 322.0, 15.0, 134.0, 134.0])
+        self.assertEqual((m[0][1], m[0][2], m[1][2]), (156.0, 164.0, 162.0))  # c12, c13, c23
+        k_v = (c["c11"] + c["c22"] + c["c33"] + 2 * (c["c12"] + c["c23"] + c["c13"])) / 9.0
+        self.assertAlmostEqual(out["voigtReussHillModuli"]["bulkModulus_K_Voigt_GPa"], k_v, delta=0.006)
+        self.assertTrue(out["bornStability"]["isMechanicallyStable"])
+        self.assertEqual(out["referenceStatus"], "dft-calculation")
+
+    def test_zno_density_is_the_lattice_density(self):
+        a, c_ax = 3.2496, 5.2042  # Angstrom (Morkoc & Ozgur 2009, Table 1.2)
+        volume_cm3 = (math.sqrt(3.0) / 2.0) * a * a * c_ax * 1e-24
+        rho = 2.0 * (65.38 + 15.999) / (NA * volume_cm3)
+        self.assertAlmostEqual(dft.ELASTIC_CONSTANTS_LIBRARY["zno"]["density"], rho, delta=0.01)
 
 
 class NoSilentDefaultsTest(unittest.TestCase):

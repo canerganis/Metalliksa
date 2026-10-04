@@ -81,6 +81,82 @@ DFT_DEFAULT_ECHOES = {"materialInfo.band_gap": 0.0, "materialInfo.energy_above_h
 _DFT_UNSTABLE_CASES = ("singular_custom_cij_fallback", "tetragonal_c11_eq_c12_marginal")
 
 
+# Fix round: the Ni3Al library constants became the sourced Kayser & Stassis (1981) values
+# (223/148/125 -> 224.3/148.6/125.8). The ni3al golden case uses that entry, so every constant-derived number moves
+# a little. They are explained ONLY if they equal this independent closed-form cubic computation (plain arithmetic,
+# no module code) within the display rounding of the key; nothing else may drift.
+NI3AL_C11, NI3AL_C12, NI3AL_C44 = 224.3, 148.6, 125.8
+NI3AL_RHO, NI3AL_MASS, NI3AL_N = 7.42, 3 * 58.693 + 26.982, 4.0  # payload density; Ni3Al: 4 atoms per formula unit
+
+
+def ni3al_expected():
+    """{flattened output key: (value, absolute tolerance)} of the ni3al case from the sourced constants."""
+    c11, c12, c44 = NI3AL_C11, NI3AL_C12, NI3AL_C44
+    k = (c11 + 2 * c12) / 3
+    g_v = (c11 - c12 + 3 * c44) / 5
+    g_r = 5 * (c11 - c12) * c44 / (4 * c44 + 3 * (c11 - c12))
+    g = (g_v + g_r) / 2
+    e = 9 * k * g / (3 * k + g)
+    nu = (3 * k - 2 * g) / (2 * (3 * k + g))
+    den = (c11 - c12) * (c11 + 2 * c12)
+    s11, s12, s44 = (c11 + c12) / den, -c12 / den, 1.0 / c44
+    out = {}
+    cm = [[c11, c12, c12, 0, 0, 0], [c12, c11, c12, 0, 0, 0], [c12, c12, c11, 0, 0, 0],
+          [0, 0, 0, c44, 0, 0], [0, 0, 0, 0, c44, 0], [0, 0, 0, 0, 0, c44]]
+    sm = [[s11, s12, s12, 0, 0, 0], [s12, s11, s12, 0, 0, 0], [s12, s12, s11, 0, 0, 0],
+          [0, 0, 0, s44, 0, 0], [0, 0, 0, 0, s44, 0], [0, 0, 0, 0, 0, s44]]
+    for i in range(6):
+        for j in range(6):
+            out[f"elasticStiffnessMatrix_Cij_GPa[{i}][{j}]"] = (cm[i][j], 0.0051)
+            out[f"elasticComplianceMatrix_Sij_1_over_GPa[{i}][{j}]"] = (sm[i][j], 6e-7)
+    for key, val in (("bulkModulus_K_Voigt_GPa", k), ("bulkModulus_K_Reuss_GPa", k), ("bulkModulus_K_VRH_GPa", k),
+                     ("shearModulus_G_Voigt_GPa", g_v), ("shearModulus_G_Reuss_GPa", g_r), ("shearModulus_G_VRH_GPa", g),
+                     ("youngsModulus_E_VRH_GPa", e), ("pWaveModulus_GPa", k + 4 * g / 3)):
+        out[f"voigtReussHillModuli.{key}"] = (val, 0.0051)
+    out["voigtReussHillModuli.poissonsRatio_nu"] = (nu, 0.00051)
+    out["mechanicalIntegrityIndices.pughRatio_B_over_G"] = (k / g, 0.00051)
+    out["mechanicalIntegrityIndices.cauchyPressure_C12_minus_C44_GPa"] = (c12 - c44, 0.0051)
+    out["mechanicalIntegrityIndices.universalAnisotropyIndex_AU"] = (5 * g_v / g_r - 5, 0.00006)
+    out["mechanicalIntegrityIndices.zenerAnisotropyFactor_AZ"] = (2 * c44 / (c11 - c12), 0.00051)
+    eig = sorted([c11 - c12, c11 - c12, c44, c44, c44, c11 + 2 * c12])
+    for i, v in enumerate(eig):
+        out[f"bornStability.allEigenvaluesGPa[{i}]"] = (v, 0.0051)
+    out["bornStability.minimumEigenvalueGPa"] = (eig[0], 0.00051)
+    for i, v in enumerate((c11 - c12, c11 + 2 * c12, c44)):
+        out[f"bornStability.criteriaChecks[{i}].value"] = (v, 0.0051)
+    rho = NI3AL_RHO * 1000.0
+    v_l = math.sqrt((k + 4 * g / 3) * 1e9 / rho)
+    v_t = math.sqrt(g * 1e9 / rho)
+    v_m = (((1 / v_l ** 3) + 2 / v_t ** 3) / 3) ** (-1 / 3)
+    n_dens = NI3AL_N * rho * 6.02214076e23 / (NI3AL_MASS * 1e-3)
+    out["acousticAndThermalProperties.longitudinalSoundVelocity_m_s"] = (v_l, 0.051)
+    out["acousticAndThermalProperties.transverseSoundVelocity_m_s"] = (v_t, 0.051)
+    out["acousticAndThermalProperties.meanSoundVelocity_m_s"] = (v_m, 0.051)
+    out["acousticAndThermalProperties.debyeTemperature_K"] = (
+        (6.62607015e-34 / 1.380649e-23) * (3 * n_dens / (4 * math.pi)) ** (1 / 3) * v_m, 0.051)
+    out["acousticAndThermalProperties.gruneisenParameter_gamma"] = (1.5 * (1 + nu) / (2 - 3 * nu), 0.0051)
+    out["acousticAndThermalProperties.minimumThermalConductivity_W_mK"] = (
+        0.87 * 1.380649e-23 * n_dens ** (2 / 3) * math.sqrt(e * 1e9 / rho), 0.00051)
+    for i, (h, kk, l) in enumerate(((1, 0, 0), (1, 1, 0), (1, 1, 1), (0, 0, 1), (2, 1, 0), (3, 1, 1))):
+        nn = h * h + kk * kk + l * l
+        cross = (h * h * kk * kk + kk * kk * l * l + h * h * l * l) / nn ** 2
+        e_dir = 1.0 / (s11 - 2 * (s11 - s12 - s44 / 2) * cross)
+        out[f"directionalYoungsModuli[{i}].youngsModulusGPa"] = (e_dir, 0.0051)
+        out[f"directionalYoungsModuli[{i}].ratioToAverage"] = (e_dir / e, 0.00051)
+    return out
+
+
+def _flatten(value, prefix=""):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            yield from _flatten(item, f"{prefix}.{key}" if prefix else key)
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            yield from _flatten(item, f"{prefix}[{i}]")
+    else:
+        yield prefix, value
+
+
 def _eq(value):
     return lambda x: x == value
 
@@ -112,7 +188,7 @@ def _dft_rules(case):
              ("constantsOrigin", "added", r"constantsOrigin", _is_none,
               _eq("custom-user-supplied" if custom else "builtin-library-exact-match")),
              ("referenceStatus", "added", r"referenceStatus", _is_none,
-              _eq("supplied-by-caller" if custom else "unverified")),
+              _eq("supplied-by-caller" if custom else "experimental-single-crystal")),
              ("acoustic.status", "added", r"acousticAndThermalProperties\.status", _is_none,
               _eq("unavailable" if unstable else "available")),
              ("acoustic.reason", "added", r"acousticAndThermalProperties\.reason", _is_none,
@@ -128,7 +204,8 @@ def _dft_rules(case):
         rules += [
             ("sourceNotes", "changed", r"sourceNotes", lambda x: x.startswith("Authentic DFT Benchmark: Ni3Al"),
              lambda x: x.startswith("Built-in elastic-constants library entry (a lookup table, not a DFT calculation): "
-                                    "Ni3Al") and x.endswith("reference status: unverified")),
+                                    "Ni3Al") and "reference status: experimental-single-crystal; reference: Kayser & Stassis"
+             in x),
             ("basis.n", "added", basis + "atomsPerFormulaUnit", _is_none, _eq(4.0)),
             ("basis.M", "added", basis + "formulaUnitMolarMass_g_mol", _is_none, _approx(203.061, 1e-6)),
             ("basis.mean", "added", basis + "meanAtomicMass_g_mol", _is_none, _approx(50.7653, 1e-6)),
@@ -179,8 +256,14 @@ def dft_unexplained(case, rows):
                 hit.add(name)
                 break
         else:
-            bad.append(row)
-    return bad, sorted({r[0] for r in rules} - hit)
+            expected = ni3al_expected().get(row["key"]) if case == "ni3al_cubic_benchmark" else None
+            if (expected is not None and row["kind"] == "numeric" and isinstance(row["new"], float)
+                    and abs(row["new"] - expected[0]) <= expected[1]):
+                hit.add("ni3al.sourced-constants")
+            else:
+                bad.append(row)
+    required = {r[0] for r in rules} | ({"ni3al.sourced-constants"} if case == "ni3al_cubic_benchmark" else set())
+    return bad, sorted(required - hit)
 
 
 XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.0"
@@ -899,6 +982,22 @@ class DftDocumentedChangeGuardTest(unittest.TestCase):
                 continue
             with self.subTest(case=case):
                 self.assertEqual(dft_unexplained(case, self._rows(case)), ([], []))
+
+    def test_ni3al_output_equals_the_independent_sourced_constants_oracle(self):
+        fresh = golden.run_solver("dft_property_calculator", cases.CASES["dft_property_calculator"]["ni3al_cubic_benchmark"])
+        flat = dict(_flatten(fresh["stdout"]))
+        expected = ni3al_expected()
+        self.assertGreater(len(expected), 100)
+        for key, (value, tol) in expected.items():
+            self.assertIn(key, flat)
+            self.assertAlmostEqual(flat[key], value, delta=tol, msg=key)
+
+    def test_ni3al_old_constants_are_not_explained(self):
+        # a value that is neither the golden (223.0) nor the sourced 224.3 must not pass as "sourced"
+        def old_constants(out):
+            out["elasticStiffnessMatrix_Cij_GPa"][0][0] = 223.5
+        bad, _ = dft_unexplained("ni3al_cubic_benchmark", self._rows("ni3al_cubic_benchmark", old_constants))
+        self.assertEqual([r["key"] for r in bad], ["elasticStiffnessMatrix_Cij_GPa[0][0]"])
 
     def test_mutated_values_are_not_explained(self):
         def kelvin(out):
