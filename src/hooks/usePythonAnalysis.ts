@@ -10,6 +10,13 @@ interface AnalysisState<T> {
   elapsedMs: number | null;
 }
 
+/** Whether the effect must (re)issue a request. Only the retained state itself can justify a skip. */
+export function shouldRequestAnalysis(gated: boolean, visible: boolean, key: string, retained: { key: string; pending: boolean; error: string | null } | null): boolean {
+  if (!gated) return true;
+  if (!visible) return false;
+  return !(retained && retained.key === key && !retained.pending && retained.error === null);
+}
+
 /** Input identity gates rendering before effects run; cleanup rejects late replies.
  * Aborting HTTP does not imply that the Python computation has been cancelled.
  *
@@ -21,28 +28,29 @@ export function usePythonAnalysis<T>(url: string, payload: unknown, decode: (dat
   const debounceMs = options?.debounceMs;
   const gated = debounceMs !== undefined;
   const visible = useWorkspaceVisible();
-  const doneKey = useRef<string | null>(null);
   const body = JSON.stringify(payload);
   const [attempt, setAttempt] = useState(0);
   const key = JSON.stringify([url, body, attempt]);
   const [state, setState] = useState<AnalysisState<T> | null>(null);
+  const retainedRef = useRef(state);
+  retainedRef.current = state;
+  // Ungated callers keep the original effect lifecycle: visibility never re-triggers them.
+  const effectVisible = gated ? visible : true;
   useEffect(() => {
-    if (gated && (!visible || doneKey.current === key)) return;
+    if (!shouldRequestAnalysis(gated, effectVisible, key, retainedRef.current)) return;
     const controller = new AbortController();
-    const start = performance.now();
     setState(previous => previous?.key === key && previous.pending ? previous : { key, result: null, error: null, pending: true, elapsedMs: null });
-    const send = () => requestPythonAnalysis(url, body, controller.signal).then(decode).then(result => {
+    const send = () => { const start = performance.now(); return requestPythonAnalysis(url, body, controller.signal).then(decode).then(result => {
       if (!controller.signal.aborted) {
-        if (gated) doneKey.current = key;
         setState({ key, result, error: null, pending: false, elapsedMs: Math.round(performance.now() - start) });
       }
     }).catch(error => {
       if (!controller.signal.aborted) setState({ key, result: null, error: error instanceof Error ? error.message : 'Python analysis unavailable.', pending: false, elapsedMs: null });
-    });
+    }); };
     const timer = gated && debounceMs > 0 ? setTimeout(send, debounceMs) : null;
     if (timer === null) void send();
     return () => { if (timer !== null) clearTimeout(timer); controller.abort(); };
-  }, [url, body, key, decode, gated, debounceMs, visible]);
+  }, [url, body, key, decode, gated, debounceMs, effectVisible]);
   const current = state?.key === key ? state : null;
   return {
     result: current?.result ?? null,

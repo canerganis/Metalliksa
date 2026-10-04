@@ -15,9 +15,11 @@ export function useDebouncedLatestTask(
   const visible = useWorkspaceVisible();
   const runRef = useRef(run);
   runRef.current = run;
+  const delayRef = useRef(delayMs);
+  delayRef.current = delayMs;
   const taskRef = useRef<DebouncedLatestTask | null>(null);
   if (!taskRef.current) {
-    taskRef.current = createDebouncedLatestTask({ delayMs, run: (sig, signal) => runRef.current(sig, signal) });
+    taskRef.current = createDebouncedLatestTask({ delayMs: () => delayRef.current, run: (sig, signal) => runRef.current(sig, signal) });
   }
   const task = taskRef.current;
   useEffect(() => {

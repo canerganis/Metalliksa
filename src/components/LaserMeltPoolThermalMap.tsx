@@ -995,6 +995,11 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
 
             {/* Canvas Container */}
             <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-[#060913]">
+              {!pyResult && (
+                <div role="status" className="px-3 py-1.5 text-[10px] font-mono text-amber-300 bg-amber-500/10 border-b border-amber-500/30">
+                  {solverError ? "Provisional client-side heuristic field; Python solve failed." : "Provisional client-side heuristic field; Python solve pending."}
+                </div>
+              )}
               <canvas
                 ref={canvasRef}
                 width={780}

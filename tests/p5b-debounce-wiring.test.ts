@@ -18,7 +18,7 @@ test('slicer, thermal map, Pourbaix and corrosion EIS use the debounced latest-t
   }
   assert.match(src('src/components/3d-distortion-lab/BasicSTLSlicerLab.tsx'), /AbortSignal\.any\(\[signal/);
   assert.match(src('src/components/LaserMeltPoolThermalMap.tsx'), /solveLPBFThermalPhysics\([\s\S]*?\}, signal\)/);
-  assert.match(src('src/components/DynamicPourbaixStudio.tsx'), /\}, signal\);/);
+  assert.match(src('src/components/DynamicPourbaixStudio.tsx'), /experimentalPoints \}\), signal\);/);
 });
 
 test('thermal map does not re-solve when the parent re-renders with a new inline callback', () => {
@@ -46,4 +46,11 @@ test('micrograph diagnosis shows an honest indeterminate state, not simulated st
   const text = src('src/components/MicrographLab.tsx');
   assert.doesNotMatch(text, /setInterval|analysisStep|LOADING_STEPS|stepInterval/);
   assert.match(text, /Progress is not reported/);
+});
+
+test('thermal map labels the heuristic fallback field while no Python result is available', () => {
+  const text = src('src/components/LaserMeltPoolThermalMap.tsx');
+  assert.match(text, /\{!pyResult && \(\s*<div role="status"/);
+  assert.match(text, /Provisional client-side heuristic field; Python solve failed\./);
+  assert.match(text, /Provisional client-side heuristic field; Python solve pending\./);
 });

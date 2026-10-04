@@ -50,6 +50,7 @@ import {
 } from "../utils/experimentalPourbaixOverlay";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
+import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbaixRequest";
 
 
 export function DynamicPourbaixStudio() {
@@ -177,22 +178,15 @@ export function DynamicPourbaixStudio() {
   // ASYNC PYTHON POURBAIX EQUILIBRIUM SOLVER DISPATCH
   // -------------------------------------------------------------
   // Debounced, visibility-gated and abortable; an unchanged input is not re-solved when the module is shown again.
-  const pourbaixInputSignature = JSON.stringify([primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints.length]);
+  const pourbaixInputSignature = pourbaixRequestSignature({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints });
   useDebouncedLatestTask(pourbaixInputSignature, async (_signature, signal): Promise<boolean> => {
-    const chloride_ppm = Math.round(chlorideActivity * 35453); // Convert Molar to ppm Cl-
-
     async function dispatchPythonSolver(): Promise<boolean> {
       try {
         setIsPythonSolving(true);
         setPythonSolveError(null);
 
-        const result = await pythonComputationService.solvePourbaixDiagram({
-          element: primaryElement,
-          temperature_C,
-          ionActivity_log10: Math.log10(ionActivity),
-          chloride_ppm,
-          experimentalPoints: experimentalPoints.length > 0 ? experimentalPoints : undefined,
-        }, signal);
+        const result = await pythonComputationService.solvePourbaixDiagram(
+          buildPourbaixRequest({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints }), signal);
 
         if (!signal.aborted && result.success) {
           setPythonPourbaixData(result);

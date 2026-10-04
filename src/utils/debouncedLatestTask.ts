@@ -18,7 +18,8 @@ export interface DebouncedLatestTask {
 }
 
 export function createDebouncedLatestTask(options: {
-  delayMs: number;
+  /** Read at each schedule so a changed delay takes effect. */
+  delayMs: number | (() => number);
   run: (signature: string, signal: AbortSignal) => Promise<boolean | void>;
 }): DebouncedLatestTask {
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -58,7 +59,7 @@ export function createDebouncedLatestTask(options: {
       stopUnfinished();
       doneSignature = null;
       activeSignature = signature;
-      timer = setTimeout(() => start(signature), options.delayMs);
+      timer = setTimeout(() => start(signature), typeof options.delayMs === "function" ? options.delayMs() : options.delayMs);
     },
     runNow(signature) {
       stopUnfinished();
