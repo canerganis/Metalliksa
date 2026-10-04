@@ -531,7 +531,7 @@ EVAPORATION_CASES = {
 
 def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str,
                               substitute_latent_heat_vap: Optional[float] = None):
-    """Run with the evaporation inversion wrapped: record the L_v it receives, change nothing
+    """Run with the boiling-cap inversion wrapped: record the L_v it receives, change nothing
     (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe).
 
     The wrapper knows today's call shape (L_v as 5th positional or latent_heat_vap_j_kg
@@ -540,7 +540,7 @@ def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str
     must update this wrapper in the same branch."""
     import lpbf_evaporation_marangoni as evaporation
     calls: List[Tuple[Any, Any]] = []
-    original = evaporation.invert_enthalpy_with_evaporation
+    original = evaporation.invert_enthalpy_with_boiling_cap
     keyword = "latent_heat_vap_j_kg"
 
     def recording(*args, **kwargs):
@@ -565,11 +565,11 @@ def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str
         calls.append((used, fraction))
         return result
 
-    evaporation.invert_enthalpy_with_evaporation = recording
+    evaporation.invert_enthalpy_with_boiling_cap = recording
     try:
         _, observations = ctx.run_case(raw, artifacts=True, prefix=prefix)
     finally:
-        evaporation.invert_enthalpy_with_evaporation = original
+        evaporation.invert_enthalpy_with_boiling_cap = original
     return observations, calls
 
 

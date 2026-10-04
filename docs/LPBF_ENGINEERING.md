@@ -51,7 +51,7 @@ The grid activates powder layers at scan events, with newly active material at p
 
 The explicit timestep is bounded by a conservative 3D Fourier limit, laser motion per step, scan event boundaries and a 25 K sensible-equivalent enthalpy increment. Refinement uses the realized grid spacing and mean used timestep; cap-limited sensitivity runs may be inconclusive.
 
-**Validity stop:** nonfinite enthalpy, temperatures below the enthalpy domain, boiling, energy imbalance over 1%, mesh budget or step budget violation fail the job. Temperature is never clipped to boiling and then reported as a successful solution.
+**Validity stop:** nonfinite enthalpy, temperatures below the enthalpy domain, boiling, energy imbalance over 1%, mesh budget or step budget violation fail the job. Temperature is never clipped to boiling and then reported as a successful solution. Exception, opt-in and off in every archived claim run: `evaporationModel=true` caps the inverted temperature at the boiling temperature and keeps the excess enthalpy in the cell; no mass or energy leaves the domain. Such a result is labelled "boiling-capped", carries a `boilingCap` diagnostic block (capped steps, maximum excess enthalpy, vapor-fraction proxy) and is never a successful reference solution or an evaporation model; its latent heat of vaporization comes from the material authority (no per-alloy fallback).
 
 ## Outputs and definitions
 
