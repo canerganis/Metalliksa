@@ -11,17 +11,17 @@ class SamplingEvidenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.qmc = solver.solve_stochastic_uq({'mcSamples': 500})
-        cls.mc = solver.solve_stochastic_uq({'mcSamples': 500, 'samplingMethod': 'pseudo_mc'})
+        # The pseudo-MC comparison arm was removed: the solver rejects samplingMethod='pseudo_mc'
+        # (disabled upstream in f9ae3e4). No replacement baseline is invented; QMC assertions only.
 
     def test_single_run_does_not_invent_performance_or_effective_samples(self):
-        for result in (self.qmc, self.mc):
+        for result in (self.qmc,):
             metadata = result['samplingMetadata']
             for key in ('qmcAccelerationFactor', 'effectiveSampleSize', 'varianceReductionRatio'):
                 self.assertIsNone(metadata[key])
             self.assertEqual(metadata['discrepancySampleSize'], 150)
             self.assertEqual(result['sampleSizeN'], 500)
             self.assertNotIn('Certified', result['aerospaceReliability']['qualificationStatus'])
-        self.assertFalse(self.mc['samplingMetadata']['scrambled'])
 
     def test_qmc_uncertainty_is_unavailable_without_replicates(self):
         for stats in self.qmc['stochasticProperties'].values():
@@ -29,14 +29,11 @@ class SamplingEvidenceTests(unittest.TestCase):
                         'allowableStandardError_A', 'allowableStandardError_B'):
                 self.assertIsNone(stats[key])
             self.assertIn('replicates', stats['allowableUncertaintyMethod'])
-        for stats in self.mc['stochasticProperties'].values():
-            self.assertIsNotNone(stats['aBasisConfidenceInterval95'])
-            self.assertIn('iid-normal', stats['allowableUncertaintyMethod'])
 
     def test_material_distribution_baseline_preserved(self):
-        # Recorded from the previous implementation, seed 42 / 500 draws.
-        for result, expected in ((self.qmc, (3467.7, 32.54, 3387.2, 3422.6)),
-                                 (self.mc, (3468.6, 32.7, 3387.6, 3423.3))):
+        # Recorded from the previous implementation, seed 42 / 500 draws (QMC arm only;
+        # the pseudo-MC arm was removed together with the removed solver option).
+        for result, expected in ((self.qmc, (3467.7, 32.54, 3387.2, 3422.6)),):
             stats = result['stochasticProperties']['yieldStrength_Rp02']
             self.assertEqual(tuple(stats[key] for key in ('mean', 'stdDev', 'aBasisAllowable', 'bBasisAllowable')), expected)
 

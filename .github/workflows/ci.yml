@@ -77,6 +77,7 @@ jobs:
           test_lpbf_worker_validation_error
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_phase6b_vector_parity
+          test_stochastic_uq_evidence
       - name: Allowlist ceilings change only with a 'Ceiling-Review:' commit trailer
         run: python scripts/check_ceiling_review.py "${{ github.event.pull_request.base.sha || github.event.before }}"
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
