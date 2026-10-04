@@ -1,5 +1,8 @@
 import ast
+import contextlib
 import re
+import shutil
+import tempfile
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -12,6 +15,76 @@ from lpbf_simulation import (
     fingerprint,
     validate,
 )
+
+# Local modules that no manifest file may import even if they were manifested:
+# design 5c B1 moves the test-only CFD case writers to lpbf_cfd_cases (non-manifest).
+FORBIDDEN_MANIFEST_IMPORTS = frozenset({"lpbf_cfd_cases"})
+
+
+def _imported_names(tree):
+    """Dotted names imported statically, via importlib.import_module/__import__ literals,
+    or relatively (returned with their leading dots)."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                yield alias.name
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                yield "." * node.level + (node.module or "")
+            elif node.module:
+                yield node.module
+        elif (isinstance(node, ast.Call) and node.args and isinstance(node.args[0], ast.Constant)
+              and isinstance(node.args[0].value, str)):
+            func = node.func
+            name = (func.attr if isinstance(func, ast.Attribute)
+                    else func.id if isinstance(func, ast.Name) else None)
+            if name in ("import_module", "__import__"):
+                yield node.args[0].value
+
+
+def unmanifested_local_imports(python_root, manifest):
+    """Return (manifest file, module, kind) for each local import outside the manifest.
+
+    Resolution mirrors importlib's path finder for one directory: a regular package
+    (<name>/__init__.py) wins over <name>.py, which wins over a namespace directory.
+    A package or directory is covered only if every .py file below it is manifested.
+    """
+    python_root = Path(python_root)
+    manifested = {Path(item).as_posix() for item in manifest}
+    problems = []
+    for relative in manifest:
+        if not relative.endswith(".py"):
+            continue
+        path = python_root / relative
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for name in sorted(set(_imported_names(tree))):
+            if name.startswith("."):
+                problems.append((relative, ".", "relative import"))
+                continue
+            top = name.split(".")[0]
+            if top in FORBIDDEN_MANIFEST_IMPORTS:
+                problems.append((relative, top, "forbidden in manifest"))
+            package = python_root / top
+            if (package / "__init__.py").is_file() or (
+                    package.is_dir() and not (python_root / f"{top}.py").is_file()):
+                sources = sorted(p.relative_to(python_root).as_posix() for p in package.rglob("*.py"))
+                if not sources or any(source not in manifested for source in sources):
+                    kind = "package" if (package / "__init__.py").is_file() else "namespace directory"
+                    problems.append((relative, top, kind))
+            elif (python_root / f"{top}.py").is_file() and f"{top}.py" not in manifested:
+                problems.append((relative, top, "module"))
+    return sorted(set(problems))
+
+
+@contextlib.contextmanager
+def _closure_fixture_root():
+    base = Path(__file__).resolve().parents[1] / ".tmp-lpbf-closure-fixtures"
+    base.mkdir(exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory(dir=base) as directory:
+            yield Path(directory)
+    finally:
+        shutil.rmtree(base, ignore_errors=True)
 
 
 class ImplementationFingerprintTests(unittest.TestCase):
@@ -36,24 +109,53 @@ class ImplementationFingerprintTests(unittest.TestCase):
                 root, ("solver.py", "solver.py"), "solver-v1")
 
     def test_manifest_covers_static_local_python_import_closure(self):
-        python_root = Path(__file__).parent
-        manifested = {Path(item).stem for item in IMPLEMENTATION_SOURCE_FILES
-                      if item.endswith(".py")}
-        for relative in IMPLEMENTATION_SOURCE_FILES:
-            if not relative.endswith(".py"):
-                continue
-            path = python_root / relative
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            for node in ast.walk(tree):
-                imported = []
-                if isinstance(node, ast.Import):
-                    imported.extend(alias.name.split(".")[0] for alias in node.names)
-                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                    imported.append(node.module.split(".")[0])
-                for module in imported:
-                    if (python_root / f"{module}.py").is_file():
-                        self.assertIn(module, manifested,
-                                      f"{relative} imports unmanifested local module {module}")
+        # Covers local modules, regular packages (<name>/__init__.py), namespace
+        # directories, importlib/__import__ string literals and relative imports.
+        self.assertEqual(
+            unmanifested_local_imports(Path(__file__).parent, IMPLEMENTATION_SOURCE_FILES), [])
+
+    def test_closure_checker_detects_packages_directories_and_dynamic_imports(self):
+        with _closure_fixture_root() as root:
+            files = {
+                "solver.py": ("import numpy\nimport leaf\nimport pkgmod.core\n"
+                              "from nsdir import helper\nimport importlib\n"
+                              "importlib.import_module('dyn')\n__import__('dyn2')\n"
+                              "from . import sibling\nimport lpbf_cfd_cases\n"),
+                "leaf.py": "VALUE = 1\n",
+                "pkgmod/__init__.py": "",
+                "pkgmod/core.py": "VALUE = 2\n",
+                "nsdir/helper.py": "VALUE = 3\n",
+                "dyn.py": "VALUE = 4\n",
+                "dyn2.py": "VALUE = 5\n",
+                "lpbf_cfd_cases.py": "VALUE = 6\n",
+            }
+            for relative, text in files.items():
+                (root / relative).parent.mkdir(parents=True, exist_ok=True)
+                (root / relative).write_text(text, encoding="utf-8")
+            problems = unmanifested_local_imports(root, ("solver.py", "leaf.py"))
+            flagged = {(module, kind) for _, module, kind in problems}
+            self.assertEqual(flagged, {
+                ("pkgmod", "package"), ("nsdir", "namespace directory"),
+                ("dyn", "module"), ("dyn2", "module"), (".", "relative import"),
+                ("lpbf_cfd_cases", "forbidden in manifest"), ("lpbf_cfd_cases", "module"),
+            })
+            # The pre-5c checker looked only for <name>.py and missed both directories.
+            self.assertNotIn("pkgmod.py", files)
+            covered = unmanifested_local_imports(root, (
+                "solver.py", "leaf.py", "pkgmod/__init__.py", "pkgmod/core.py",
+                "nsdir/helper.py", "dyn.py", "dyn2.py"))
+            self.assertEqual({(m, k) for _, m, k in covered},
+                             {(".", "relative import"), ("lpbf_cfd_cases", "forbidden in manifest"),
+                              ("lpbf_cfd_cases", "module")})
+
+    def test_regular_package_shadows_same_named_module_like_importlib(self):
+        with _closure_fixture_root() as root:
+            (root / "solver.py").write_text("import twin\n", encoding="utf-8")
+            (root / "twin.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (root / "twin").mkdir()
+            (root / "twin" / "__init__.py").write_text("VALUE = 2\n", encoding="utf-8")
+            problems = unmanifested_local_imports(root, ("solver.py", "twin.py"))
+            self.assertEqual([(m, k) for _, m, k in problems], [("twin", "package")])
 
     def test_manifest_covers_checked_in_openfoam_includes(self):
         source_root = Path(__file__).parent

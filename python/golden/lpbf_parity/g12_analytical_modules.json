@@ -1,0 +1,91 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g12_analytical_modules",
+ "group": "G12",
+ "description": "Eagar-Tsai, Rosenthal, Goldak, Fabbro, Marangoni, solidification front",
+ "slow": false,
+ "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "ed0df5079de9dbe2daa6d61121926ff148d2aec8",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  0.0,
+  0.0
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "eagarTsai.temperature": "accd3fbab6c0ae362764e22de2167718edaab0a143e5eaed11c884de7fa6f5d9",
+  "rosenthal.temperature": "935f253ae980c2324aead11109e627323d375b166585a45308eca43a32d78f27",
+  "goldak.field": "516393812af8d62c76a0ce2c60cf6f8f5d3d22e3665680141b87e4608aa761b0",
+  "fabbro.depth": "f34136a2f56d8b21a68bbc4a8208df80e8f48ed8ea0dd31b12715fd162eb8476",
+  "marangoni.heipleRoper": "76d623965f3510de7d4a8bf448f689e2cf121e63c88cad7aba5e30cd48950684",
+  "marangoni.screening": "505412fc6db7ab44e5aa9381d577c7ce3117a5b42036a6c388166c0370a0f735",
+  "solidification.hunt": "6fa44203139e750b644c79cb4305ead9fa2878a2908948252d87aaa05034eb24",
+  "solidification.pdas": "6310041425088cc02995e3d4a8e0c28913327371dfb1bb47d45c706bb0f09507",
+  "solidification.sdas": "8fc4b0101adb6ade0393cf83ce899c1e6b3ed5589cbb7a31c56c16e53fa1684a",
+  "solidification.phaseNote": "c31bae0821408d3b9de0f2d5c94163ec9031f667bfa848d9b5df4f43c886d107",
+  "solidification.evaluate": "86ea6c07f821df113d9099f2d27d89d9b6d09d6604eb3f2dfa1fef544ee296c8",
+  "powderPacker.seeded": {
+   "error": "NotImplementedError: Fabrication of powder bed via random packing is disabled. Use proper LPBF DEM coupling."
+  }
+ }
+}

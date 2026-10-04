@@ -33,6 +33,8 @@ PROTECTED_PATHS = (
     "tests/support/importGraph.ts",
     "tests/route-authority.test.ts",
     "tests/component-reachability.test.ts",
+    # The LPBF implementation fingerprint pin (design 5c): it may change only at the planned bump.
+    "python/lpbf_implementation_fingerprint.expected",
 )
 
 

@@ -51,3 +51,5 @@ graft/.graph/
 /python/lpbf-run-shape-*/
 docs/**/queue.sqlite
 docs/**/worker.lock
+# Orchestra lane run roots (local logs and scratch artifacts)
+/.orchestra-run/

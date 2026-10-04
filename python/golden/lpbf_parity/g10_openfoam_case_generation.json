@@ -1,0 +1,741 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g10_openfoam_case_generation",
+ "group": "G10",
+ "description": "OpenFOAM case writers (CFD setup_*_case, multiphysics, thermal) file-tree SHA-256",
+ "slow": false,
+ "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "ed0df5079de9dbe2daa6d61121926ff148d2aec8",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  1.5,
+  0.4
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "cfd.setup_droplet_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_droplet_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_droplet_case.file.0/alpha.metal": [
+   2826,
+   "68447736301d54d0ba99fb12d1a6a25d31601b87a041a19750a5c64283ef92f6"
+  ],
+  "cfd.setup_droplet_case.file.0/liquidFraction": [
+   2401,
+   "de898ada50b0c1c1a77c5c3b4f311645c564d75047b74957011efb784cb8f11e"
+  ],
+  "cfd.setup_droplet_case.file.0/p_rgh": [
+   818,
+   "db98f87755bf2c961dc16dff0bfc96d33c69c4843b13bd01037ad460990cf089"
+  ],
+  "cfd.setup_droplet_case.file.0/T": [
+   780,
+   "27b45022f850ea45dbf90c7f9a01e505d14908d7978557cf1204dd384128ba28"
+  ],
+  "cfd.setup_droplet_case.file.0/U": [
+   774,
+   "ff5736cdc49d94e1321bc1357215ebef992ab598888303505a74609ccdcf5b39"
+  ],
+  "cfd.setup_droplet_case.file.constant/g": [
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
+  ],
+  "cfd.setup_droplet_case.file.constant/momentumTransport": [
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
+  ],
+  "cfd.setup_droplet_case.file.constant/phaseProperties": [
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
+  ],
+  "cfd.setup_droplet_case.file.constant/physicalProperties.gas": [
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
+  ],
+  "cfd.setup_droplet_case.file.constant/physicalProperties.metal": [
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
+  ],
+  "cfd.setup_droplet_case.file.constant/thermalProperties": [
+   784,
+   "35af69b83c82eb86a3c5636c7bd784b43e127e361c4fb3a47bbb8672cd1a19a7"
+  ],
+  "cfd.setup_droplet_case.file.system/blockMeshDict": [
+   1201,
+   "f0483b70d6496234769a8c15f5d755fe8f48cdd92037e6df5833d54ac3e447ee"
+  ],
+  "cfd.setup_droplet_case.file.system/controlDict": [
+   945,
+   "2be8c9ad854b6eb6eea3d4ebcef0797c7be748e3a2599d6765b63cbc03897992"
+  ],
+  "cfd.setup_droplet_case.file.system/fvSchemes": [
+   1109,
+   "8137ff3840db049b4ac7d21c8acf39f8aa65d3ef6a9b2ca7410e457988a7d785"
+  ],
+  "cfd.setup_droplet_case.file.system/fvSolution": [
+   1712,
+   "1111bc4c17b1929138e7ac88ace5653eba51f23c2bcac509e92decafe026448d"
+  ],
+  "cfd.setup_stefan_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_stefan_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_stefan_case.file.0/alpha.metal": [
+   806,
+   "cad101b7e7665d84d8f770aef4b28e32b8a4b6bb369fde9787a4248a55551b34"
+  ],
+  "cfd.setup_stefan_case.file.0/liquidFraction": [
+   809,
+   "975611c441388e814fedfabdd49b694a48840d2f92a60fe87d65f8d780635f6e"
+  ],
+  "cfd.setup_stefan_case.file.0/p_rgh": [
+   874,
+   "268a97ad4e00ed3585652860e7f6d8f5fda2e16154411933ab7d21911f3ffb5c"
+  ],
+  "cfd.setup_stefan_case.file.0/T": [
+   832,
+   "9035bf8ba5b929c34f257f1476d6b748a3be14b82544ccf88990731536b3a317"
+  ],
+  "cfd.setup_stefan_case.file.0/U": [
+   792,
+   "0c0d175a5a5215acfe4e6bd1d0f77bc6512bb44a6c2c56167823eec499d6a6e8"
+  ],
+  "cfd.setup_stefan_case.file.constant/g": [
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
+  ],
+  "cfd.setup_stefan_case.file.constant/momentumTransport": [
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
+  ],
+  "cfd.setup_stefan_case.file.constant/phaseProperties": [
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
+  ],
+  "cfd.setup_stefan_case.file.constant/physicalProperties.gas": [
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
+  ],
+  "cfd.setup_stefan_case.file.constant/physicalProperties.metal": [
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
+  ],
+  "cfd.setup_stefan_case.file.constant/thermalProperties": [
+   784,
+   "ca09d39fb0aead5ba5a01722afc1684a5cb880a1e4191b3f5fc62ad819448b34"
+  ],
+  "cfd.setup_stefan_case.file.system/blockMeshDict": [
+   1261,
+   "af9230b5f75ad17144aba84926479de13fe9ae487532c91b6f27ced4a2851b7a"
+  ],
+  "cfd.setup_stefan_case.file.system/controlDict": [
+   945,
+   "b79126f12f1d93251ac06004bd59ec9e3c9d2ed56ee3dec53c70e79a6508bdc3"
+  ],
+  "cfd.setup_stefan_case.file.system/fvSchemes": [
+   1109,
+   "8137ff3840db049b4ac7d21c8acf39f8aa65d3ef6a9b2ca7410e457988a7d785"
+  ],
+  "cfd.setup_stefan_case.file.system/fvSolution": [
+   1612,
+   "9383fbf3f7cc4f3d1a6eb5d1bce49434f0983d26be85424c5f53c6c00a2337ca"
+  ],
+  "cfd.setup_darcy_damping_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_darcy_damping_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_darcy_damping_case.file.0/alpha.metal": [
+   821,
+   "7a7a5cbf7533fa8aa8cdad81f58ed0e05f5e4ecf1db403869309a4030ffdde83"
+  ],
+  "cfd.setup_darcy_damping_case.file.0/liquidFraction": [
+   1631,
+   "0a60c0258b02cfb144946b2a1ff90b22d583e2d8ad3b3a85c874c6aba4dfe09e"
+  ],
+  "cfd.setup_darcy_damping_case.file.0/p_rgh": [
+   862,
+   "2b897c90917ad610bf8421f962ec74f1b52d687a17a4f1bec951409555277bca"
+  ],
+  "cfd.setup_darcy_damping_case.file.0/T": [
+   2129,
+   "6b689d447efd9eb04b2981d92165eb8f2aedfa95cda2e0b094c61eaf72bff053"
+  ],
+  "cfd.setup_darcy_damping_case.file.0/U": [
+   840,
+   "3332cc5e7568ecd92e3319939bc60ac16004636c88860b8fd9d3b2a9c62def18"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/g": [
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/momentumTransport": [
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/phaseProperties": [
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/physicalProperties.gas": [
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/physicalProperties.metal": [
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
+  ],
+  "cfd.setup_darcy_damping_case.file.constant/thermalProperties": [
+   784,
+   "ca09d39fb0aead5ba5a01722afc1684a5cb880a1e4191b3f5fc62ad819448b34"
+  ],
+  "cfd.setup_darcy_damping_case.file.system/blockMeshDict": [
+   1276,
+   "9819ee28978399082aa2a4fd52449acd37c96ef610ca3741db8d5c09d04bc279"
+  ],
+  "cfd.setup_darcy_damping_case.file.system/controlDict": [
+   945,
+   "44a165dbce78852b190da92ea46b7fd124941fe311c2d28c70b35e39d748075c"
+  ],
+  "cfd.setup_darcy_damping_case.file.system/fvSchemes": [
+   1062,
+   "cfb32f89d67675342c54962fc6449f7e5e3cdc06a49a3457b72d730371ffa182"
+  ],
+  "cfd.setup_darcy_damping_case.file.system/fvSolution": [
+   1472,
+   "b61d98cc59517463ea608ce9c25416e30b51c49967a4316a5c12dd900f0629d3"
+  ],
+  "cfd.setup_thermal_parity_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_thermal_parity_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_thermal_parity_case.file.0/alpha.metal": [
+   786,
+   "1915c2c29698c57f7252d9cc59194287c6a39e98ca7a5bd07d26f685ab751594"
+  ],
+  "cfd.setup_thermal_parity_case.file.0/liquidFraction": [
+   789,
+   "10a0938faf40c98b2d9445e053615ad8697abedf243bbecb64dd9fb0397c7001"
+  ],
+  "cfd.setup_thermal_parity_case.file.0/p_rgh": [
+   854,
+   "9f6e923054a6045a91bc9725472f32dca63f7f88ddd70dace51022a5e08e5379"
+  ],
+  "cfd.setup_thermal_parity_case.file.0/T": [
+   810,
+   "3624156919741b5ab76575a7b5d33b43ecbd04be541ac2cd2825e314349e01d4"
+  ],
+  "cfd.setup_thermal_parity_case.file.0/U": [
+   853,
+   "4cc31c1afa335d3ca7bca4732fd3ae169a1cd40ad833206173ed447e63cda0fe"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/g": [
+   626,
+   "d138b6c533437bef74e4b850ddf8198a3dc1a76d428592f935f4d5e512f07633"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/momentumTransport": [
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/phaseProperties": [
+   629,
+   "6567e45df60f1b83ece3614f0d5bf19862631a6c707d01d402e56de1b4e6db44"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/physicalProperties.gas": [
+   651,
+   "978f3dcf218f69d1206dec8c399e6182b7153507d4d1c766517272a2000f76e4"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/physicalProperties.metal": [
+   654,
+   "78198eed90374cb2b2aaa818d6d3bb9c922abb67dfc837d3a19bdf702ac9edf7"
+  ],
+  "cfd.setup_thermal_parity_case.file.constant/thermalProperties": [
+   720,
+   "3e86c0d24a52330e6f7d121c5240779c2acb03cdb30fbf925e087dc2efb42361"
+  ],
+  "cfd.setup_thermal_parity_case.file.system/blockMeshDict": [
+   1257,
+   "6dfc577467da32ae139ada9bb0ec1661c2c7b3a1c361a6e012d975ea397358c2"
+  ],
+  "cfd.setup_thermal_parity_case.file.system/controlDict": [
+   945,
+   "60d90cbc0014b8ae2a8cddfd72b0a8408bd2bf8802220c30a9645a0174d391e0"
+  ],
+  "cfd.setup_thermal_parity_case.file.system/fvSchemes": [
+   999,
+   "e3af8ea18b2dd731a63bd22e4847d251d1c1d4f567f84083a5e5289a120845e8"
+  ],
+  "cfd.setup_thermal_parity_case.file.system/fvSolution": [
+   1590,
+   "3e9e8a96be8e68450ae16bf9502748820cd7fbd1ea99d990d1c1fd40f1b35d8a"
+  ],
+  "cfd.setup_marangoni_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_marangoni_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_marangoni_case.file.0/alpha.metal": [
+   1670,
+   "b4263121da8bec2b5e8dfe16dd1b65761e17129573a4a53cc00fb71f964c9819"
+  ],
+  "cfd.setup_marangoni_case.file.0/liquidFraction": [
+   837,
+   "5fc740e2df0a739317e7985e2ae840ce560a588a8c1e4d41ed26afdeaf0d1799"
+  ],
+  "cfd.setup_marangoni_case.file.0/p_rgh": [
+   931,
+   "578da06f5c5b6ee35427a21adfccd98ba6ce559eecbb5876f1bc5a5b3a0dd13d"
+  ],
+  "cfd.setup_marangoni_case.file.0/T": [
+   4739,
+   "773013703a9ac851c49f51f8f89ddfd3c70713c79e718dfd3d2715c36a189cbb"
+  ],
+  "cfd.setup_marangoni_case.file.0/U": [
+   816,
+   "8c2693801c0fd48a83fecc314a39e77d79cfbab1181afce09d31524e29fdeb78"
+  ],
+  "cfd.setup_marangoni_case.file.constant/g": [
+   660,
+   "c4a31d247f39c92d27008c040132f022eb2a28b8bceaf626ad269ed5915f39b8"
+  ],
+  "cfd.setup_marangoni_case.file.constant/momentumTransport": [
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
+  ],
+  "cfd.setup_marangoni_case.file.constant/phaseProperties": [
+   649,
+   "e6a88fe6e1d123f3cc30cda07be82f843da6061bcd3a605e422d8cf9ed7150ed"
+  ],
+  "cfd.setup_marangoni_case.file.constant/physicalProperties.gas": [
+   676,
+   "1836bf0332b14f911b8f18c6498c1137d937962406f953a268789fffe62f3743"
+  ],
+  "cfd.setup_marangoni_case.file.constant/physicalProperties.metal": [
+   677,
+   "27fa1cd0f55aaec202e0be60a551ed271cc95153a2fea2f61d5f69a5cbb4ea9b"
+  ],
+  "cfd.setup_marangoni_case.file.constant/thermalProperties": [
+   964,
+   "6e9be40daebb898555780162675c492d7df09d63194369fa9389903cfd14f422"
+  ],
+  "cfd.setup_marangoni_case.file.system/blockMeshDict": [
+   1227,
+   "0e4ef693185421849c58ef8e5ceb0d01c91bf84cec89d7b9e71f1ab974e33636"
+  ],
+  "cfd.setup_marangoni_case.file.system/controlDict": [
+   879,
+   "73647433f0a29f25b6d073fac255d299c13c948cb5c4a149031c0fd04678b395"
+  ],
+  "cfd.setup_marangoni_case.file.system/fvSchemes": [
+   1049,
+   "ba25ba9e2b63611b9aa88908cf97cc6bba5944eec3b999037037c9735a8336a3"
+  ],
+  "cfd.setup_marangoni_case.file.system/fvSolution": [
+   1515,
+   "198045783d868ebd7d7d5e8a6d301110f586f193ff554871b068a3aa467e463b"
+  ],
+  "cfd.setup_recoil_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_recoil_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_recoil_case.file.0/alpha.metal": [
+   1670,
+   "c89f26bd8a1d1cda6ff61dbd36746902d690f70446d040136caa23f97533016c"
+  ],
+  "cfd.setup_recoil_case.file.0/liquidFraction": [
+   837,
+   "6ebd614223fd596ff19641afeb6bc040c37b6ae7813a92e20320892c9e9618f8"
+  ],
+  "cfd.setup_recoil_case.file.0/p": [
+   854,
+   "10429c1c80e4531c9d4c473649e5e0f41b4a5a796cc2076cbeb3bffd9b5e20a2"
+  ],
+  "cfd.setup_recoil_case.file.0/p_rgh": [
+   931,
+   "ec63150ff80f5fd65b6d94a771c07a730117450b900c45d37a8afb7567ed2d05"
+  ],
+  "cfd.setup_recoil_case.file.0/T": [
+   3940,
+   "83e572435855a97f9fc200e5ba3ee66547014a16719bca449203d55d89ad4500"
+  ],
+  "cfd.setup_recoil_case.file.0/U": [
+   814,
+   "5371ccda5c9a31589e164c5d9e62ac654d22ef8768658bb4e90368772af7116c"
+  ],
+  "cfd.setup_recoil_case.file.constant/g": [
+   660,
+   "c4a31d247f39c92d27008c040132f022eb2a28b8bceaf626ad269ed5915f39b8"
+  ],
+  "cfd.setup_recoil_case.file.constant/momentumTransport": [
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
+  ],
+  "cfd.setup_recoil_case.file.constant/phaseProperties": [
+   649,
+   "e6a88fe6e1d123f3cc30cda07be82f843da6061bcd3a605e422d8cf9ed7150ed"
+  ],
+  "cfd.setup_recoil_case.file.constant/physicalProperties.gas": [
+   676,
+   "1836bf0332b14f911b8f18c6498c1137d937962406f953a268789fffe62f3743"
+  ],
+  "cfd.setup_recoil_case.file.constant/physicalProperties.metal": [
+   677,
+   "27fa1cd0f55aaec202e0be60a551ed271cc95153a2fea2f61d5f69a5cbb4ea9b"
+  ],
+  "cfd.setup_recoil_case.file.constant/thermalProperties": [
+   1204,
+   "98496a5ac947fb7c6312f91cd63df63c89149fab8936778716bd7b31e6d3c74b"
+  ],
+  "cfd.setup_recoil_case.file.system/blockMeshDict": [
+   1227,
+   "614c0ce7003c0545bcf8ff5bfbcd743a1dbb4a58708b76d2e032bfe8032a3dc0"
+  ],
+  "cfd.setup_recoil_case.file.system/controlDict": [
+   879,
+   "73647433f0a29f25b6d073fac255d299c13c948cb5c4a149031c0fd04678b395"
+  ],
+  "cfd.setup_recoil_case.file.system/fvSchemes": [
+   1049,
+   "ba25ba9e2b63611b9aa88908cf97cc6bba5944eec3b999037037c9735a8336a3"
+  ],
+  "cfd.setup_recoil_case.file.system/fvSolution": [
+   1515,
+   "198045783d868ebd7d7d5e8a6d301110f586f193ff554871b068a3aa467e463b"
+  ],
+  "cfd.setup_laser_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "cfd.setup_laser_case.files": [
+   "0/alpha.metal",
+   "0/liquidFraction",
+   "0/p_rgh",
+   "0/T",
+   "0/U",
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_laser_case.file.0/alpha.metal": [
+   1537,
+   "41b7c8178317d8ccc28a28fb5f7556c1f0a7839d943270b6287fab35acddc734"
+  ],
+  "cfd.setup_laser_case.file.0/liquidFraction": [
+   718,
+   "ca389d8e05111719cf2f300fcff80ba1266cce5de30776fe8842af6d6a012902"
+  ],
+  "cfd.setup_laser_case.file.0/p_rgh": [
+   739,
+   "a2a5c55d62de7df582497b310256cbb62f7e18e8eeb2eccad1013642036235aa"
+  ],
+  "cfd.setup_laser_case.file.0/T": [
+   718,
+   "a742cbd9799399a72123d9519ac5d7386551908d7b682bfcf10154e899bb2018"
+  ],
+  "cfd.setup_laser_case.file.0/U": [
+   713,
+   "fb7ef340fd888299e9d8fdc54714ee1e460b5014488150d7573e5624bc268756"
+  ],
+  "cfd.setup_laser_case.file.constant/g": [
+   626,
+   "d138b6c533437bef74e4b850ddf8198a3dc1a76d428592f935f4d5e512f07633"
+  ],
+  "cfd.setup_laser_case.file.constant/momentumTransport": [
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
+  ],
+  "cfd.setup_laser_case.file.constant/phaseProperties": [
+   629,
+   "6567e45df60f1b83ece3614f0d5bf19862631a6c707d01d402e56de1b4e6db44"
+  ],
+  "cfd.setup_laser_case.file.constant/physicalProperties.gas": [
+   651,
+   "978f3dcf218f69d1206dec8c399e6182b7153507d4d1c766517272a2000f76e4"
+  ],
+  "cfd.setup_laser_case.file.constant/physicalProperties.metal": [
+   654,
+   "78198eed90374cb2b2aaa818d6d3bb9c922abb67dfc837d3a19bdf702ac9edf7"
+  ],
+  "cfd.setup_laser_case.file.constant/thermalProperties": [
+   1036,
+   "555a5f8206821bb53ba1695a13d1a24030e0dd08982cb45551d31760d148e8a8"
+  ],
+  "cfd.setup_laser_case.file.system/blockMeshDict": [
+   1081,
+   "0b26b461b873c8f3f558e55991f9f11247acfe2d1ec5481f97e2389850940eab"
+  ],
+  "cfd.setup_laser_case.file.system/controlDict": [
+   945,
+   "b9a9a9697f372766bf96c2971ad71ea6a39614b250247c349a5ab0344ed7ff3b"
+  ],
+  "cfd.setup_laser_case.file.system/fvSchemes": [
+   999,
+   "e3af8ea18b2dd731a63bd22e4847d251d1c1d4f567f84083a5e5289a120845e8"
+  ],
+  "cfd.setup_laser_case.file.system/fvSolution": [
+   1590,
+   "3e9e8a96be8e68450ae16bf9502748820cd7fbd1ea99d990d1c1fd40f1b35d8a"
+  ],
+  "cfd.stefan_analytical_solution": "0df26d32712aeda392291ed43b9a65f96312e30135d61a82942a4ef5b3edc42c",
+  "cfd.knight_analytical_recoil_pressure": "50f655bd5e641cca286006a199788975bdfb7950c4c8bc48895c32182302c143",
+  "cfd.setup_cfd_multiphysics_case.return": {
+   "error": "NotImplementedError: Fabrication of powder bed via random packing is disabled. Use proper LPBF DEM coupling."
+  },
+  "cfd.setup_cfd_multiphysics_case.files": [
+   "constant/g",
+   "constant/momentumTransport",
+   "constant/phaseProperties",
+   "constant/physicalProperties.gas",
+   "constant/physicalProperties.metal",
+   "constant/thermalProperties",
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/g": [
+   632,
+   "9555812616aee190500ef920b4e2f31de3ed50bf3ba578613ad58f0867171cab"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/momentumTransport": [
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/phaseProperties": [
+   630,
+   "3a9aa0035b265464e5c29bb82e08f03b12b36937cef5da0d2d347a3586fd3349"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/physicalProperties.gas": [
+   651,
+   "a1ded1c1bd6fc5d4c975ad3419d6827b20ea470d715dd474ad0e3659fd659406"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/physicalProperties.metal": [
+   654,
+   "2157a88528d96c9f11b392f47e8ca0f1b0c21ef6ac24b5bf2c8b290ef3679458"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.constant/thermalProperties": [
+   1755,
+   "ec137c58a9e7b29746823880e6df4d55173f2e088ddd6720ab1d85061067533f"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.system/blockMeshDict": [
+   1567,
+   "23a18bd247f80c4490c67c2755f7cd95b93ef1fab0b64d97344f66979a80987f"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.system/controlDict": [
+   1063,
+   "0679ad8964100079c5b629e5abdf5adbb821c6e2cac988121ae8891f7dd1546f"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.system/fvSchemes": [
+   1041,
+   "500aa9062844fd9f25191f9a1799b89f37805425e2b70e4c310cb881edbcd11e"
+  ],
+  "cfd.setup_cfd_multiphysics_case.file.system/fvSolution": [
+   1250,
+   "17b9549a2c46866bfac4af33ab35ffd704d69c0fe0941b522cdaaa7f488f78af"
+  ],
+  "openfoam.generate_case.powder.return": "88356dc81a26f3985c4326758bdcf1446dea0f5c93218bbcbb2e5e320058bf97",
+  "openfoam.generate_case.powder.files": [
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution",
+   "thermalInput.dat"
+  ],
+  "openfoam.generate_case.powder.file.system/blockMeshDict": [
+   889,
+   "9c789c880685b72fbe2d66e3e05292389d37807ae1cfdffe6f23122a8f284476"
+  ],
+  "openfoam.generate_case.powder.file.system/controlDict": [
+   308,
+   "5c3cea3847765e783cbc9ce4137e5f46020695e63141fec806e25a996faa2e01"
+  ],
+  "openfoam.generate_case.powder.file.system/fvSchemes": [
+   306,
+   "78b41c97038a9c7cce3e2dfb677f48b6db0fa9bf7634f04b2ec2018b9beca739"
+  ],
+  "openfoam.generate_case.powder.file.system/fvSolution": [
+   88,
+   "48e61e0402615d31ff14eba640055603421bb51a9f2372bb18cb865a4a5f9f40"
+  ],
+  "openfoam.generate_case.powder.file.thermalInput.dat": [
+   1112988,
+   "d388e615176af2c218cca7e51231af8ca63b75fe1c1e228895ca0efe7922dcd1"
+  ],
+  "openfoam.generate_case.powderMultilayer.return": "3f7e518e03f817d41da0e4f57b06d072fd285e0f8d3e65060c832264ee7a4b06",
+  "openfoam.generate_case.powderMultilayer.files": [
+   "system/blockMeshDict",
+   "system/controlDict",
+   "system/fvSchemes",
+   "system/fvSolution",
+   "thermalInput.dat"
+  ],
+  "openfoam.generate_case.powderMultilayer.file.system/blockMeshDict": [
+   646,
+   "281590b66be90cca81221dfcacdc762eb3f33ad16585c2bf1913a4c4cf6ac2d1"
+  ],
+  "openfoam.generate_case.powderMultilayer.file.system/controlDict": [
+   307,
+   "a596cfa9018d743b2c6dda0b00f68031f0af2974d01a36c9a65f1c7f1916ab27"
+  ],
+  "openfoam.generate_case.powderMultilayer.file.system/fvSchemes": [
+   306,
+   "78b41c97038a9c7cce3e2dfb677f48b6db0fa9bf7634f04b2ec2018b9beca739"
+  ],
+  "openfoam.generate_case.powderMultilayer.file.system/fvSolution": [
+   88,
+   "48e61e0402615d31ff14eba640055603421bb51a9f2372bb18cb865a4a5f9f40"
+  ],
+  "openfoam.generate_case.powderMultilayer.file.thermalInput.dat": [
+   1113512,
+   "e4efdf9f2440b02c77b9dbb3f6bb234978b6122b58624ae260177c30280474f6"
+  ]
+ }
+}
