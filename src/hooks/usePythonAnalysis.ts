@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestPythonAnalysis } from '../services/pythonAnalysis';
+import { useWorkspaceVisible } from '../components/WorkspaceVisibility';
 
 interface AnalysisState<T> {
   key: string;
@@ -9,25 +10,47 @@ interface AnalysisState<T> {
   elapsedMs: number | null;
 }
 
+/** Whether the effect must (re)issue a request. Only the retained state itself can justify a skip. */
+export function shouldRequestAnalysis(gated: boolean, visible: boolean, key: string, retained: { key: string; pending: boolean; error: string | null } | null): boolean {
+  if (!gated) return true;
+  if (!visible) return false;
+  return !(retained && retained.key === key && !retained.pending && retained.error === null);
+}
+
 /** Input identity gates rendering before effects run; cleanup rejects late replies.
  * Aborting HTTP does not imply that the Python computation has been cancelled.
+ *
+ * With `options.debounceMs` the request is also delayed until the input has been stable for that long
+ * (pending stays true meanwhile), is not sent while the workspace is hidden, and an already finished
+ * identical input is not requested again when the workspace is shown. Without options nothing changes.
  */
-export function usePythonAnalysis<T>(url: string, payload: unknown, decode: (data: Record<string, unknown>) => T) {
+export function usePythonAnalysis<T>(url: string, payload: unknown, decode: (data: Record<string, unknown>) => T, options?: { debounceMs?: number }) {
+  const debounceMs = options?.debounceMs;
+  const gated = debounceMs !== undefined;
+  const visible = useWorkspaceVisible();
   const body = JSON.stringify(payload);
   const [attempt, setAttempt] = useState(0);
   const key = JSON.stringify([url, body, attempt]);
   const [state, setState] = useState<AnalysisState<T> | null>(null);
+  const retainedRef = useRef(state);
+  retainedRef.current = state;
+  // Ungated callers keep the original effect lifecycle: visibility never re-triggers them.
+  const effectVisible = gated ? visible : true;
   useEffect(() => {
+    if (!shouldRequestAnalysis(gated, effectVisible, key, retainedRef.current)) return;
     const controller = new AbortController();
-    const start = performance.now();
-    setState({ key, result: null, error: null, pending: true, elapsedMs: null });
-    requestPythonAnalysis(url, body, controller.signal).then(decode).then(result => {
-      if (!controller.signal.aborted) setState({ key, result, error: null, pending: false, elapsedMs: Math.round(performance.now() - start) });
+    setState(previous => previous?.key === key && previous.pending ? previous : { key, result: null, error: null, pending: true, elapsedMs: null });
+    const send = () => { const start = performance.now(); return requestPythonAnalysis(url, body, controller.signal).then(decode).then(result => {
+      if (!controller.signal.aborted) {
+        setState({ key, result, error: null, pending: false, elapsedMs: Math.round(performance.now() - start) });
+      }
     }).catch(error => {
       if (!controller.signal.aborted) setState({ key, result: null, error: error instanceof Error ? error.message : 'Python analysis unavailable.', pending: false, elapsedMs: null });
-    });
-    return () => controller.abort();
-  }, [url, body, key, decode]);
+    }); };
+    const timer = gated && debounceMs > 0 ? setTimeout(send, debounceMs) : null;
+    if (timer === null) void send();
+    return () => { if (timer !== null) clearTimeout(timer); controller.abort(); };
+  }, [url, body, key, decode, gated, debounceMs, effectVisible]);
   const current = state?.key === key ? state : null;
   return {
     result: current?.result ?? null,

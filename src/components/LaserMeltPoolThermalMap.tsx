@@ -26,8 +26,10 @@ import {
   RefreshCw,
   Box,
 } from "lucide-react";
-import { CandidateAlloySolution, InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
+import { useVisibleInterval } from "../hooks/useVisibleInterval";
+import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
+import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 
 interface Props {
   candidate: CandidateAlloySolution;
@@ -122,7 +124,9 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
   }, [initialHatchSpacing]);
 
   // Execute Python LPBF Solver
-  const runPythonSolver = useCallback(async () => {
+  const onParametersChangeRef = useRef(onParametersChange);
+  onParametersChangeRef.current = onParametersChange;
+  const runPythonSolver = useCallback(async (signal?: AbortSignal): Promise<boolean> => {
     setIsSolving(true);
     setSolverError(null);
     try {
@@ -135,10 +139,12 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
         layerThickness_um,
         hatchSpacing_um,
         laserWavelength,
-      });
+      }, signal);
+      if (signal?.aborted) return false;
       setPyResult(res);
-      if (onParametersChange) {
-        onParametersChange({
+      const notifyParametersChange = onParametersChangeRef.current;
+      if (notifyParametersChange) {
+        notifyParametersChange({
           laserPower_W,
           scanSpeed_mms,
           beamDiameter_um,
@@ -147,11 +153,14 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           hatchSpacing_um,
         });
       }
+      return true;
     } catch (err: any) {
+      if (signal?.aborted) return false;
       console.warn("Python LPBF solver error:", err);
       setSolverError(err.message || "Failed to solve LPBF thermal fields.");
+      return false;
     } finally {
-      setIsSolving(false);
+      if (!signal?.aborted) setIsSolving(false);
     }
   }, [
     selectedMaterial,
@@ -162,25 +171,21 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
     layerThickness_um,
     hatchSpacing_um,
     laserWavelength,
-    onParametersChange,
   ]);
 
-  // Run on mount or when key parameters change with debounce
+  // Run on mount or when key parameters change with debounce. The parent callback is read through a ref so
+  // its (inline, per-render) identity cannot retrigger the solver; superseded/hidden requests are aborted.
+  const thermalInputSignature = JSON.stringify([selectedMaterial, laserPower_W, scanSpeed_mms, beamDiameter_um, preheatTemp_C, layerThickness_um, hatchSpacing_um, laserWavelength]);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      runPythonSolver();
-    }, 180);
-    return () => clearTimeout(timer);
-  }, [runPythonSolver]);
+    setPyResult(null);
+    setSolverError(null);
+  }, [thermalInputSignature]);
+  const { runNow: runPythonSolverNow } = useDebouncedLatestTask(thermalInputSignature, (_signature, signal) => runPythonSolver(signal), 180);
 
   // Animation Loop for Laser Motion
-  useEffect(() => {
-    if (!isSimulating) return;
-    const interval = setInterval(() => {
-      setTimeStep((prev) => (prev + 1) % 120);
-    }, 40);
-    return () => clearInterval(interval);
-  }, [isSimulating]);
+  useVisibleInterval(() => {
+    setTimeStep((prev) => (prev + 1) % 120);
+  }, isSimulating ? 40 : null);
 
   // Fallback / Live Rosenthal temperature helper for client pixel sampling
   const calculateRosenthalPoint = useCallback(
@@ -746,7 +751,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={runPythonSolver}
+              onClick={() => runPythonSolverNow()}
               disabled={isSolving}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-mono font-bold transition shadow-sm disabled:opacity-50"
             >
@@ -991,6 +996,11 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
 
             {/* Canvas Container */}
             <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-[#060913]">
+              {!pyResult && (
+                <div role="status" className="px-3 py-1.5 text-[10px] font-mono text-amber-300 bg-amber-500/10 border-b border-amber-500/30">
+                  {solverError ? "Provisional client-side heuristic field; Python solve failed." : "Provisional client-side heuristic field; Python solve pending."}
+                </div>
+              )}
               <canvas
                 ref={canvasRef}
                 width={780}
