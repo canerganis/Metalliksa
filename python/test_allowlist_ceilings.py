@@ -202,7 +202,6 @@ CEILING_SNAPSHOT = {
             "GET /api/lpbf/sources/:datasetId",
             "GET /api/lpbf/sources/:datasetId/revisions",
             "GET /api/lpbf/sources/:datasetId/revisions/:revision",
-            "GET /api/materials-project/search",
             "GET /api/python/ipc-status",
             "GET /api/python/status",
             "GET /api/research/registry/history",
@@ -242,7 +241,6 @@ CEILING_SNAPSHOT = {
         },
         "cannedBaseline": [
             "GET /api/health",
-            "GET /api/materials-project/search",
             "POST /api/metallurgy/analyze-sem",
             "POST /api/metallurgy/detect-sem-legend",
         ],

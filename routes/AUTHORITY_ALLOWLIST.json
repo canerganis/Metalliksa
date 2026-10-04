@@ -12,7 +12,6 @@
     "POST /api/python/xrd-deconvolve": "Python XRD route; the service method has no caller in src/.",
     "POST /api/metallurgy/detect-sem-legend": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/analyze-sem": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
-    "GET /api/materials-project/search": "Canned hard-coded record list (see cannedBaseline); recorded as a materials-project legacyNote, not bound.",
     "GET /api/research/registry/history": "Research registry sub-resource of the research-hub research-registry operation.",
     "GET /api/research/registry/revisions/:revision": "Research registry sub-resource of the research-hub research-registry operation.",
     "GET /api/lpbf/sources/:datasetId": "LPBF source catalog sub-resource (src/services/lpbfSourceService.ts, 3d-distortion-lab lpbf-source-catalog).",
@@ -49,7 +48,6 @@
   "cannedBaseline": {
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
     "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",
-    "GET /api/materials-project/search": "Serves a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without any authority. Real offender; deletion/follow-up candidate.",
     "GET /api/health": "server.ts liveness: 'hasApiKey: AIRGAPPED ? false : <runtime check>' trips the ternary-of-literals rule. Transport metadata, not a result; heuristic false positive kept visible."
   }
 }

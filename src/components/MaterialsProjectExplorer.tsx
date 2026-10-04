@@ -299,53 +299,17 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
     setError(null);
 
     try {
-      // Determine if query is material_id (starts with mp- or mvc-) or formula
-      const isMpId = term.toLowerCase().startsWith("mp-") || term.toLowerCase().startsWith("mvc-");
-      const url = isMpId
-        ? `/api/materials-project/search?material_id=${encodeURIComponent(term)}`
-        : `/api/materials-project/search?formula=${encodeURIComponent(term)}`;
-
-      const res = await fetch(url);
-      const rawText = await res.text();
-      let json: any = {};
-      try {
-        json = JSON.parse(rawText);
-      } catch {
-        throw new Error(res.ok ? "Invalid data from Materials Project" : `Error (${res.status}): ${rawText.substring(0, 80)}`);
-      }
-
-      if (!res.ok) {
-        throw new Error(json.error || `Materials Project API returned HTTP ${res.status}`);
-      }
-
-      if (json.data && json.data.length > 0) {
-        setResults(json.data);
-        setSelectedDoc(json.data[0]);
-      } else {
-        // Check if matching curated presets
-        const localMatch = CURATED_MP_PRESETS.filter(
-          (p) =>
-            p.formula_pretty.toLowerCase() === term.toLowerCase() ||
-            p.material_id.toLowerCase() === term.toLowerCase()
-        );
-        if (localMatch.length > 0) {
-          setResults(localMatch);
-          setSelectedDoc(localMatch[0]);
-        } else {
-          setError(`No materials found for "${term}". Try formulas like Fe3C, LiFePO4, Ti3AlC2, Ni3Al, or mp-id.`);
-        }
-      }
-    } catch (err: any) {
-      console.warn("Falling back to local DFT dataset:", err);
-      // Fallback search in presets
-      const localMatch = CURATED_MP_PRESETS.filter((p) =>
-        p.formula_pretty.toLowerCase().includes(term.toLowerCase())
+      // The canned server catalog (GET /api/materials-project/search) was deleted on 2026-10-04:
+      // the search filters the bundled client list only (no Materials Project API is queried).
+      const needle = term.toLowerCase();
+      const localMatch = CURATED_MP_PRESETS.filter(
+        (p) => p.formula_pretty.toLowerCase().includes(needle) || p.material_id.toLowerCase() === needle
       );
       if (localMatch.length > 0) {
         setResults(localMatch);
         setSelectedDoc(localMatch[0]);
       } else {
-        setError(`Materials Project query note: ${err.message}. Showing local benchmark entries.`);
+        setError(`No bundled entry matches "${term}". No Materials Project API is queried.`);
       }
     } finally {
       setLoading(false);

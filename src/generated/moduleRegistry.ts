@@ -2568,7 +2568,7 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [
-        "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
+        "The canned GET /api/materials-project/search route and its server catalog were deleted on 2026-10-04. The view still lists a hard-coded client catalog (CURATED_MP_PRESETS) that feeds the elasticity tool; replacing it with a user C_ij input form is an open follow-up."
       ],
       "sourceRefs": [],
       "seedDerived": [
