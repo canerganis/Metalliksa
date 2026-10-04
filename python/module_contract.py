@@ -459,7 +459,7 @@ class ModuleContract:
 
 
 if __name__ == "__main__":
-    # `python -m module_contract emit [--check] [--refresh-seed]` (run from python/)
+    # `python -m module_contract emit [--check]` (run from python/)
     # delegates to the registry emitter; scripts/emit-module-registry.py is equivalent.
     import sys
 
@@ -467,6 +467,6 @@ if __name__ == "__main__":
 
     _args = sys.argv[1:]
     if not _args or _args[0] != "emit":
-        print("usage: python -m module_contract emit [--check] [--refresh-seed]", file=sys.stderr)
+        print("usage: python -m module_contract emit [--check]", file=sys.stderr)
         raise SystemExit(2)
     raise SystemExit(_registry_main(_args[1:]))

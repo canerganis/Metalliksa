@@ -3,6 +3,7 @@
 Run from the python directory:  python -B -m unittest test_module_contract
 """
 import dataclasses
+import json
 import re
 import unittest
 from pathlib import Path
@@ -254,23 +255,25 @@ class LegacyRegistryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.registry = mr.build_registry()
-        cls.workspaces = (REPO_ROOT / "src" / "data" / "workspaces.ts").read_text(encoding="utf-8")
         cls.app = (REPO_ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
+        cls.golden = json.loads((REPO_ROOT / "tests" / "fixtures" / "modules-nav-golden.json").read_text(encoding="utf-8"))
 
-    def test_one_contract_per_listed_module_and_legacy_ratchet(self):
-        modules = mr.parse_workspaces_modules(self.workspaces)
-        self.assertEqual(len(modules), mr.count_module_ids(self.workspaces))
-        ids = [c.id for c in self.registry]
-        self.assertEqual(len(ids), len(modules))
-        self.assertEqual(set(ids), {m["id"] for m in modules})
+    def test_registry_matches_pre_registry_navigation_and_legacy_ratchet(self):
+        # The registry is the navigation source since slice 1; the golden is the
+        # hand-written MODULES list captured before derivation (same order).
+        listed = [c for c in self.registry if c.navigation == "listed"]
+        self.assertEqual(
+            [{"id": c.id, "workspace": c.workspace, "label": c.label, "scope": c.maturity,
+              "description": c.description, "next": c.next} for c in listed],
+            self.golden)
         legacy = [c for c in self.registry if c.migration_state == "legacy"]
         # Ratchet: migration may lower the legacy count; it must never grow.
         self.assertLessEqual(len(legacy), LEGACY_CEILING)
 
-    def test_unparseable_module_row_fails_loudly(self):
-        bad = self.workspaces.replace("scope: 'Research'", "scope: \"Research\"", 1)
-        with self.assertRaisesRegex(ValueError, "unparseable MODULES row"):
-            mr.parse_workspaces_modules(bad)
+    def test_workspaces_ts_no_longer_hand_lists_modules(self):
+        workspaces = (REPO_ROOT / "src" / "data" / "workspaces.ts").read_text(encoding="utf-8")
+        self.assertIn("LISTED_CONTRACTS", workspaces)
+        self.assertNotRegex(workspaces, r"\{\s*id:\s*'[a-z0-9-]+',\s*workspace:")
 
     def test_render_module_switch_is_bounded_and_rejects_duplicates(self):
         trailing = self.app + "\nfunction later() { switch (x) { case 'zzz-extra': return <UQLab />; } }\n"
@@ -280,9 +283,12 @@ class LegacyRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate renderModule case"):
             mr.parse_app_views(duplicated)
 
-    def test_seed_matches_typescript_sources(self):
-        self.assertEqual(mr.load_seed(), mr.build_seed(self.workspaces, self.app),
-                         "seed drifted; run python scripts/emit-module-registry.py --refresh-seed")
+    def test_seed_views_match_app_render_switch(self):
+        self.assertEqual(mr.seed_view_mismatches(mr.load_seed(), self.app), [])
+        drifted = [dict(row) for row in mr.load_seed()]
+        drifted[0]["viewExport"] = "SomethingElse"
+        self.assertEqual(len(mr.seed_view_mismatches(drifted, self.app)), 1)
+        self.assertIn("App.tsx case without a registry module", mr.seed_view_mismatches(drifted[1:], self.app)[0])
 
     def test_generated_files_are_current(self):
         self.assertEqual(mr.stale_outputs(), [], "run python scripts/emit-module-registry.py")

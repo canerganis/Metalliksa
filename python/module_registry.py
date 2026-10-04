@@ -4,22 +4,23 @@ Holds one ``ModuleContract`` per product module and emits the committed
 frontend artifacts ``src/generated/moduleRegistry.json`` and
 ``src/generated/moduleRegistry.ts``.
 
-Migration step 0: every module listed in ``MODULES`` (src/data/workspaces.ts)
-is auto-generated as a ``legacy`` contract from the committed snapshot
-``python/module_registry_seed.json``. The snapshot is used instead of parsing
-TypeScript at runtime so the Python side needs no TS sources and stays
-deterministic; ``test_module_contract.py`` re-parses workspaces.ts and App.tsx
-and fails when the snapshot drifts. Refresh it with
-``python scripts/emit-module-registry.py --refresh-seed``.
+Migration step 0 generated one ``legacy`` contract per navigation module from
+``python/module_registry_seed.json``. Since Phase 7 slice 1 the registry is the
+single source for navigation: ``MODULES`` in src/data/workspaces.ts is derived
+from the emitted listed contracts, so the seed JSON is the canonical identity
+data (id, workspace, label, maturity, description, next, view) and is edited by
+hand. ``test_module_contract.py`` checks the seed views against the App.tsx
+renderModule switch; tests/workspaces-registry-parity.test.ts pins the derived
+navigation to the pre-registry golden list.
 
-Legacy contracts carry only identity and view data from the existing UI. All
-other values are TODO(maintainer-review) placeholders that bound claims
-conservatively; they are not reviewed facts.
+Legacy contracts carry identity, view and best-effort authority data from the
+existing code. All other values are TODO(maintainer-review) placeholders that
+bound claims conservatively; they are not reviewed facts.
 
+Usage (from python/):  python -m module_contract emit [--check]
 Usage (from the repo root):
     python scripts/emit-module-registry.py            # write generated files
     python scripts/emit-module-registry.py --check    # fail if out of date
-    python scripts/emit-module-registry.py --refresh-seed
 """
 from __future__ import annotations
 
@@ -39,7 +40,6 @@ from module_contract import (
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
 SEED_PATH = PYTHON_DIR / "module_registry_seed.json"
-WORKSPACES_TS = REPO_ROOT / "src" / "data" / "workspaces.ts"
 APP_TSX = REPO_ROOT / "src" / "App.tsx"
 GENERATED_JSON = REPO_ROOT / "src" / "generated" / "moduleRegistry.json"
 GENERATED_TS = REPO_ROOT / "src" / "generated" / "moduleRegistry.ts"
@@ -52,56 +52,13 @@ LEGACY_EVIDENCE_NOTE = (
     "undeclared; neither is a reviewed per-module evidence statement."
 )
 
-# --- Seed parsing (development helpers; pure functions on source text) ------
+# --- App.tsx view parsing (pure function on source text) ---------------------
 
-_MODULE_ROW = re.compile(
-    r"\{\s*id:\s*'([^']+)',\s*workspace:\s*'([^']+)',\s*label:\s*'((?:[^'\\]|\\.)*)',\s*"
-    r"scope:\s*'([^']+)',\s*description:\s*'((?:[^'\\]|\\.)*)',\s*next:\s*'([^']+)'\s*\}"
-)
 _LAZY_IMPORT = re.compile(
     r"const\s+(\w+)\s*=\s*lazy\(\(\)\s*=>\s*import\(\s*[\"']\./components/([\w/]+)[\"']\s*\)"
     r"\.then\(\s*m\s*=>\s*\(\{\s*default:\s*m\.(\w+)\s*\}\)\s*\)\s*\)"
 )
 _CASE = re.compile(r"case\s+'([^']+)':\s*return\s*<(\w+)")
-
-
-def _unescape(value: str) -> str:
-    return re.sub(r"\\(.)", r"\1", value)
-
-
-_MODULES_START = "export const MODULES = ["
-_MODULE_ID_KEY = re.compile(r"(?<![\w$])id:\s*'")
-
-
-def modules_array_body(text: str) -> str:
-    """Source text between ``export const MODULES = [`` and its ``] as const``."""
-    start = text.index(_MODULES_START) + len(_MODULES_START)
-    return text[start:text.index("] as const", start)]
-
-
-def count_module_ids(text: str) -> int:
-    """Structural count of ``id: '...'`` keys inside the MODULES array."""
-    return len(_MODULE_ID_KEY.findall(modules_array_body(text)))
-
-
-def parse_workspaces_modules(text: str) -> List[Dict[str, str]]:
-    """Extract MODULES rows from src/data/workspaces.ts source text.
-
-    Every non-blank, non-comment line of the array must be exactly one row;
-    anything else raises instead of being skipped.
-    """
-    rows = []
-    for line in modules_array_body(text).splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("//"):
-            continue
-        match = _MODULE_ROW.fullmatch(stripped.rstrip(",").rstrip())
-        if match is None:
-            raise ValueError(f"unparseable MODULES row in workspaces.ts: {stripped!r}")
-        module_id, workspace, label, scope, description, next_id = match.groups()
-        rows.append({"id": module_id, "workspace": workspace, "label": _unescape(label),
-                     "scope": scope, "description": _unescape(description), "next": next_id})
-    return rows
 
 
 def _function_body(text: str, marker: str) -> str:
@@ -131,21 +88,6 @@ def parse_app_views(text: str) -> Dict[str, Dict[str, str]]:
         path, export = lazy[component]
         views[module_id] = {"component": f"src/components/{path}.tsx", "export": export}
     return views
-
-
-def build_seed(workspaces_text: str, app_text: str) -> List[Dict[str, str]]:
-    views = parse_app_views(app_text)
-    seed = []
-    for row in parse_workspaces_modules(workspaces_text):
-        view = views.get(row["id"])
-        if view is None:
-            raise ValueError(f"module {row['id']!r} has no renderModule case")
-        seed.append({**row, "viewComponent": view["component"], "viewExport": view["export"]})
-    return seed
-
-
-def render_seed(seed: List[Dict[str, str]]) -> str:
-    return json.dumps(seed, indent=2, ensure_ascii=False) + "\n"
 
 
 def load_seed() -> List[Dict[str, str]]:
@@ -486,16 +428,20 @@ def emit() -> List[Path]:
     return written
 
 
-def refresh_seed() -> Path:
-    seed = build_seed(WORKSPACES_TS.read_text(encoding="utf-8"), APP_TSX.read_text(encoding="utf-8"))
-    with SEED_PATH.open("w", encoding="utf-8", newline="\r\n") as handle:
-        handle.write(render_seed(seed))
-    return SEED_PATH
+def seed_view_mismatches(seed: List[Dict[str, str]], app_text: str) -> List[str]:
+    """Differences between the seed views and the App.tsx renderModule switch."""
+    views = parse_app_views(app_text)
+    problems = []
+    for row in seed:
+        view = views.pop(row["id"], None)
+        expected = {"component": row["viewComponent"], "export": row["viewExport"]}
+        if view != expected:
+            problems.append(f"{row['id']}: seed view {expected} != App.tsx {view}")
+    problems.extend(f"{module_id}: App.tsx case without a registry module" for module_id in sorted(views))
+    return problems
 
 
 def main(argv: List[str]) -> int:
-    if "--refresh-seed" in argv:
-        print(f"wrote {refresh_seed()}")
     if "--check" in argv:
         stale = stale_outputs()
         for path in stale:
