@@ -63,7 +63,8 @@ export function PourbaixSolveError({ message }: { message: string | null }) {
   );
 }
 
-export function DynamicPourbaixStudio() {
+/** `initialSolveError` is a render-test seam only (the solver effect resets it before every dispatch). */
+export function DynamicPourbaixStudio({ initialSolveError = null }: { initialSolveError?: string | null } = {}) {
   // Selected Alloy Preset & Custom Elements
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>("carbon-steel");
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
@@ -104,7 +105,7 @@ export function DynamicPourbaixStudio() {
   // Python Backend Computation State
   const [pythonPourbaixData, setPythonPourbaixData] = useState<PythonPourbaixResult | null>(null);
   const [isPythonSolving, setIsPythonSolving] = useState<boolean>(false);
-  const [pythonSolveError, setPythonSolveError] = useState<string | null>(null);
+  const [pythonSolveError, setPythonSolveError] = useState<string | null>(initialSolveError);
 
   // Interactive Crosshair Probe
   const [probePH, setProbePH] = useState<number>(7.0);
