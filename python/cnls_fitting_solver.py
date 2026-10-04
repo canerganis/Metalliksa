@@ -18,7 +18,20 @@ try:
     import numpy as np
     HAS_NUMPY = True
 except ImportError:
+    np = None
     HAS_NUMPY = False
+
+
+def _is_array(omega):
+    """True for a NumPy frequency array. Independent of HAS_NUMPY, which only gates the
+    legacy scalar paths of the (disabled) global auto-fit."""
+    return np is not None and isinstance(omega, np.ndarray)
+
+
+def _require_numpy(what):
+    if np is None:
+        raise RuntimeError(f"{what} requires NumPy (python/requirements.txt)")
+
 
 def evaluate_element_impedance(el_type, params, omega):
     """
@@ -38,7 +51,7 @@ def evaluate_element_impedance(el_type, params, omega):
     - TLM_short / BisquertShort: Porous electrode transmission line (transmissive boundary)
     - L: Inductor
     """
-    is_arr = HAS_NUMPY and isinstance(omega, np.ndarray)
+    is_arr = _is_array(omega)
     j = 1j
     w = np.maximum(1e-9, omega) if is_arr else max(1e-9, omega)
     
@@ -187,7 +200,7 @@ def evaluate_custom_topology_impedance(branches, params_dict, omega):
     Handles series and parallel branches with arbitrary combinations of elements.
     Supports both scalar frequency omega and vectorized NumPy 1D frequency array omega.
     """
-    is_arr = HAS_NUMPY and isinstance(omega, np.ndarray)
+    is_arr = _is_array(omega)
     if not branches:
         return np.full_like(omega, complex(10.0, 0.0), dtype=np.complex128) if is_arr else complex(10.0, 0.0)
     
@@ -266,7 +279,7 @@ def evaluate_circuit_impedance(topology_data, params_dict, omega):
     Evaluates total complex impedance Z(omega) for either custom drag-and-drop topologies or standard presets.
     Supports both scalar frequency omega and vectorized NumPy 1D frequency array omega.
     """
-    is_arr = HAS_NUMPY and isinstance(omega, np.ndarray)
+    is_arr = _is_array(omega)
     j = 1j
     
     # Check if topology_data is a dict containing custom branches
@@ -1045,14 +1058,14 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
         raise ValueError("CNLS requires more residual observations than adjustable parameters")
     
     weights = compute_weights(points, weighting)
-    
-    # Precompute arrays for vectorized LM residuals
-    if HAS_NUMPY:
-        omegas_arr = np.array([2.0 * math.pi * pt["frequency"] for pt in points], dtype=np.float64)
-        exp_re_arr = np.array([pt["zReal"] for pt in points], dtype=np.float64)
-        exp_im_arr = np.array([pt.get("minusZImag", -pt.get("zImag", 0.0)) for pt in points], dtype=np.float64)
-        sqrt_w_re_arr = np.array([math.sqrt(w[0]) for w in weights], dtype=np.float64)
-        sqrt_w_im_arr = np.array([math.sqrt(w[1]) for w in weights], dtype=np.float64)
+    _require_numpy("CNLS fitting")
+
+    # Precompute arrays for the vectorized LM residuals (the only residual path)
+    omegas_arr = np.array([2.0 * math.pi * pt["frequency"] for pt in points], dtype=np.float64)
+    exp_re_arr = np.array([pt["zReal"] for pt in points], dtype=np.float64)
+    exp_im_arr = np.array([pt.get("minusZImag", -pt.get("zImag", 0.0)) for pt in points], dtype=np.float64)
+    sqrt_w_re_arr = np.array([math.sqrt(w[0]) for w in weights], dtype=np.float64)
+    sqrt_w_im_arr = np.array([math.sqrt(w[1]) for w in weights], dtype=np.float64)
 
     def get_param_dict(p_list):
         d = {}
@@ -1069,35 +1082,18 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
         return d
     
     def compute_residuals(p_list):
+        # Weighted residual vector [re_0, im_0, re_1, im_1, ...] as a float64 array.
         p_dict = get_param_dict(p_list)
-        if HAS_NUMPY:
-            z_calc = evaluate_circuit_impedance(topology_id, p_dict, omegas_arr)
-            diff_re = (exp_re_arr - z_calc.real) * sqrt_w_re_arr
-            diff_im = (exp_im_arr - (-z_calc.imag)) * sqrt_w_im_arr
-            res = np.empty(len(points) * 2, dtype=np.float64)
-            res[0::2] = diff_re
-            res[1::2] = diff_im
-            return res.tolist()
-        else:
-            res_list = []
-            for idx, pt in enumerate(points):
-                omega = 2.0 * math.pi * pt["frequency"]
-                z_calc = evaluate_circuit_impedance(topology_id, p_dict, omega)
-                
-                exp_re = pt["zReal"]
-                exp_im = pt.get("minusZImag", -pt.get("zImag", 0.0))
-                
-                w_re, w_im = weights[idx]
-                
-                diff_re = (exp_re - z_calc.real) * math.sqrt(w_re)
-                diff_im = (exp_im - (-z_calc.imag)) * math.sqrt(w_im)
-                
-                res_list.append(diff_re)
-                res_list.append(diff_im)
-            return res_list
+        z_calc = evaluate_circuit_impedance(topology_id, p_dict, omegas_arr)
+        res = np.empty(len(points) * 2, dtype=np.float64)
+        res[0::2] = (exp_re_arr - z_calc.real) * sqrt_w_re_arr
+        res[1::2] = (exp_im_arr - (-z_calc.imag)) * sqrt_w_im_arr
+        return res
 
     def compute_jacobian(p_list, residuals):
-        jac = [[0.0] * num_adj for _ in residuals]
+        # Forward-difference Jacobian (2N x num_adj), one vectorised residual
+        # evaluation per adjustable parameter; same steps as the former scalar loop.
+        jac = np.empty((residuals.shape[0], num_adj), dtype=np.float64)
         for col, p_idx in enumerate(adjustable_indices):
             p = p_list[p_idx]
             original = p["value"]
@@ -1110,13 +1106,15 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
                 shifted = compute_residuals(p_list)
             finally:
                 p["value"] = original
-            for row in range(len(residuals)):
-                jac[row][col] = (shifted[row] - residuals[row]) / delta
+            jac[:, col] = (shifted - residuals) / delta
         return jac
+
+    def chi_square(residuals):
+        return float(residuals @ residuals)
 
     # Levenberg-Marquardt Iteration Loop
     current_residuals = compute_residuals(params)
-    current_chi_sq = sum(r * r for r in current_residuals)
+    current_chi_sq = chi_square(current_residuals)
     
     lambda_damp = damping
     iter_count = 0
@@ -1133,62 +1131,29 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
         
         # J differentiates (experimental - calculated) residuals. The minimizing
         # step solves (J^T J + lambda * diag(J^T J)) dp = -J^T residuals.
-        jt_j = [[0.0] * num_adj for _ in range(num_adj)]
-        jt_r = [0.0] * num_adj
-        
-        for i in range(num_adj):
-            for j in range(num_adj):
-                s = 0.0
-                for k in range(len(current_residuals)):
-                    s += jacobian[k][i] * jacobian[k][j]
-                jt_j[i][j] = s
-            
-            s_r = 0.0
-            for k in range(len(current_residuals)):
-                s_r += jacobian[k][i] * current_residuals[k]
-            jt_r[i] = s_r
+        jt_j = jacobian.T @ jacobian
+        jt_r = jacobian.T @ current_residuals
+        diag_jtj = np.diag(jt_j)
 
         # Scale by Jacobian column norms so farad/ohm units do not set the test.
-        gradient = max(abs(jt_r[i]) / max(math.sqrt(jt_j[i][i]), 1e-300) for i in range(num_adj))
+        gradient = float(np.max(np.abs(jt_r) / np.maximum(np.sqrt(diag_jtj), 1e-300)))
         if gradient <= 1e-10 * max(1.0, math.sqrt(current_chi_sq)):
             converged = True
             termination_reason = "scaled_gradient_tolerance"
             break
-        
-        # Apply Levenberg damping to diagonal
-        a_mat = [[jt_j[i][j] for j in range(num_adj)] for i in range(num_adj)]
-        for i in range(num_adj):
-            diag = a_mat[i][i]
-            a_mat[i][i] += lambda_damp * (diag if diag > 1e-12 else 1.0)
-        
-        # Solve linear system A * dp = -jt_r using Gauss-Jordan elimination
-        dp = [0.0] * num_adj
+
+        # Apply Levenberg damping to diagonal (diag(J^T J), or 1 for a null column)
+        a_mat = jt_j.copy()
+        a_mat[np.diag_indices(num_adj)] += lambda_damp * np.where(diag_jtj > 1e-12, diag_jtj, 1.0)
+
+        # Solve the damped normal equations A * dp = -jt_r (LAPACK LU with partial
+        # pivoting; A is positive definite by construction).
         try:
-            # Augment matrix
-            aug = [a_mat[i] + [-jt_r[i]] for i in range(num_adj)]
-            for i in range(num_adj):
-                # Pivot
-                max_row = i
-                for r in range(i + 1, num_adj):
-                    if abs(aug[r][i]) > abs(aug[max_row][i]):
-                        max_row = r
-                aug[i], aug[max_row] = aug[max_row], aug[i]
-                
-                pivot = aug[i][i]
-                if abs(pivot) < 1e-18:
-                    continue
-                for c in range(i, num_adj + 1):
-                    aug[i][c] /= pivot
-                for r in range(num_adj):
-                    if r != i:
-                        factor = aug[r][i]
-                        for c in range(i, num_adj + 1):
-                            aug[r][c] -= factor * aug[i][c]
-            dp = [aug[i][num_adj] for i in range(num_adj)]
-        except Exception:
+            dp = np.linalg.solve(a_mat, -jt_r).tolist()
+        except np.linalg.LinAlgError:
             lambda_damp *= 5.0
             continue
-        
+
         # Trial update
         trial_params = [dict(p) for p in params]
         for col_idx, p_idx in enumerate(adjustable_indices):
@@ -1196,9 +1161,9 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
             # Clamp to bounds
             new_val = max(trial_params[p_idx]["min"], min(trial_params[p_idx]["max"], new_val))
             trial_params[p_idx]["value"] = new_val
-            
+
         trial_residuals = compute_residuals(trial_params)
-        trial_chi_sq = sum(r * r for r in trial_residuals)
+        trial_chi_sq = chi_square(trial_residuals)
         
         if trial_chi_sq < current_chi_sq:
             relative_step = max(abs(trial_params[i]["value"] - params[i]["value"]) /
@@ -1228,10 +1193,10 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
     uncertainty_status = "unavailable_not_converged"
     if num_adj == 0:
         uncertainty_status = "fixed_parameters_not_estimated"
-    elif converged and HAS_NUMPY:
+    elif converged:
         uncertainty_status = "unavailable_rank_deficient_or_active_bound"
         at_bound = any(params[i]["value"] in (params[i]["min"], params[i]["max"]) for i in adjustable_indices)
-        final_j = np.asarray(compute_jacobian(params, current_residuals))
+        final_j = compute_jacobian(params, current_residuals)
         scales = np.linalg.norm(final_j, axis=0)
         if not at_bound and np.all(scales > 0):
             try:
@@ -1242,8 +1207,6 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
                     uncertainty_status = "local_linearized_residual_scaled"
             except np.linalg.LinAlgError:
                 uncertainty_status = "unavailable_svd_failed"
-    elif converged:
-        uncertainty_status = "unavailable_numpy_required"
 
     # Final Parameter Report with Uncertainties
     p_dict = get_param_dict(params)
@@ -1561,83 +1524,25 @@ def perform_lin_kk_stationarity_test(points):
     # Z_kk_re(w) = R_0 + sum_k [ R_k / (1 + (w*tau_k)^2) ]
     # Z_kk_im(w) = - sum_k [ R_k * (w*tau_k) / (1 + (w*tau_k)^2) ]
     # Least-squares fit of R_0, R_1... R_M to experimental data
-    n_vars = m_voigt + 1
-    a_mat = [[0.0] * n_vars for _ in range(2 * n_pts)]
-    b_vec = [0.0] * (2 * n_pts)
-    
-    for i in range(n_pts):
-        w = omegas[i]
-        weight = 1.0 / max(1e-6, z_mag_exp[i])
-        
-        # Real row
-        a_mat[i][0] = 1.0 * weight # R_0 coefficient
-        for k in range(m_voigt):
-            w_tau = w * tau_voigt[k]
-            a_mat[i][k + 1] = (1.0 / (1.0 + w_tau**2)) * weight
-        b_vec[i] = z_re_exp[i] * weight
-        
-        # Imag row (minusZImag)
-        a_mat[n_pts + i][0] = 0.0 # R_0 does not contribute to imaginary
-        for k in range(m_voigt):
-            w_tau = w * tau_voigt[k]
-            a_mat[n_pts + i][k + 1] = (w_tau / (1.0 + w_tau**2)) * weight
-        b_vec[n_pts + i] = z_im_exp[i] * weight
+    _require_numpy("Lin-KK Voigt screening")
+    # Non-finite observations propagate to NaN metrics silently, as in the former loops.
+    with np.errstate(all="ignore"):
+        x_voigt, re_kk_all, im_kk_all = _lin_kk_voigt_solve(omegas, tau_voigt, z_re_exp, z_im_exp, z_mag_exp)
 
-    # Solve normal equations: (A^T A + lambda*I) x = A^T b
-    lambda_reg = 1e-4
-    ata = [[0.0] * n_vars for _ in range(n_vars)]
-    atb = [0.0] * n_vars
-    
-    for i in range(n_vars):
-        for j in range(n_vars):
-            s = 0.0
-            for r in range(2 * n_pts):
-                s += a_mat[r][i] * a_mat[r][j]
-            ata[i][j] = s + (lambda_reg if i == j else 0.0)
-            
-        s_b = 0.0
-        for r in range(2 * n_pts):
-            s_b += a_mat[r][i] * b_vec[r]
-        atb[i] = s_b
-
-    # Gaussian elimination to find Voigt parameters
-    x_voigt = [0.0] * n_vars
-    aug = [ata[i][:] + [atb[i]] for i in range(n_vars)]
-    for i in range(n_vars):
-        p_row = max(range(i, n_vars), key=lambda r: abs(aug[r][i]))
-        aug[i], aug[p_row] = aug[p_row], aug[i]
-        p_val = aug[i][i]
-        if abs(p_val) < 1e-12:
-            continue
-        for j in range(i, n_vars + 1):
-            aug[i][j] /= p_val
-        for r in range(n_vars):
-            if r != i:
-                f_mult = aug[r][i]
-                for j in range(i, n_vars + 1):
-                    aug[r][j] -= f_mult * aug[i][j]
-                    
-    for i in range(n_vars):
-        x_voigt[i] = max(0.0, aug[i][n_vars]) # Positivity constraint
-
-    r0_fit = x_voigt[0]
-    rk_fit = x_voigt[1:]
-    
     # 3. Compute Lin-KK Residuals point by point
     residuals = []
     re_res_list = []
     im_res_list = []
     tot_res_list = []
     flagged_freqs = []
-    
+
     for i in range(n_pts):
-        w = omegas[i]
         f = freqs[i]
-        
-        # Calc Lin-KK model
-        re_kk = r0_fit + sum(rk_fit[k] / (1.0 + (w * tau_voigt[k])**2) for k in range(m_voigt))
-        im_kk = sum(rk_fit[k] * (w * tau_voigt[k]) / (1.0 + (w * tau_voigt[k])**2) for k in range(m_voigt))
-        
+
+        # Lin-KK model at this frequency
+        re_kk = re_kk_all[i]
+        im_kk = im_kk_all[i]
+
         re_err_pct = ((z_re_exp[i] - re_kk) / max(1e-6, z_mag_exp[i])) * 100.0
         im_err_pct = ((z_im_exp[i] - im_kk) / max(1e-6, z_mag_exp[i])) * 100.0
         tot_err_pct = math.sqrt(re_err_pct**2 + im_err_pct**2)
@@ -1695,6 +1600,37 @@ def perform_lin_kk_stationarity_test(points):
         "residuals": residuals,
         "recommendation": recom
     }
+
+
+def _lin_kk_voigt_solve(omegas, tau_voigt, z_re_exp, z_im_exp, z_mag_exp):
+    """Fixed-basis Voigt fit of the Lin-KK screen; returns (x, Z_kk_re, Z_kk_im)."""
+    m_voigt = len(tau_voigt)
+    n_pts = len(omegas)
+    w_tau = np.outer(np.asarray(omegas, dtype=np.float64), np.asarray(tau_voigt, dtype=np.float64))
+    basis_re = 1.0 / (1.0 + w_tau**2)          # R_k coefficient in Z_kk_re
+    basis_im = w_tau / (1.0 + w_tau**2)        # R_k coefficient in Z_kk_im (minusZImag)
+    weight = 1.0 / np.maximum(1e-6, np.asarray(z_mag_exp, dtype=np.float64))
+
+    # Weighted design matrix: real rows [1, basis_re], imag rows [0, basis_im].
+    a_mat = np.zeros((2 * n_pts, m_voigt + 1), dtype=np.float64)
+    a_mat[:n_pts, 0] = weight
+    a_mat[:n_pts, 1:] = basis_re * weight[:, None]
+    a_mat[n_pts:, 1:] = basis_im * weight[:, None]
+    b_vec = np.concatenate((np.asarray(z_re_exp) * weight, np.asarray(z_im_exp) * weight))
+
+    # Tikhonov-regularised normal equations (A^T A + lambda*I) x = A^T b, solved
+    # densely (the matrix is symmetric positive definite, smallest eigenvalue >=
+    # lambda), then clipped at zero. Clipping an unconstrained solve is NOT a
+    # non-negative least-squares (NNLS) solution; it is kept as the legacy model.
+    lambda_reg = 1e-4
+    ata = a_mat.T @ a_mat + lambda_reg * np.eye(m_voigt + 1)
+    x_voigt = np.maximum(0.0, np.linalg.solve(ata, a_mat.T @ b_vec))  # Positivity constraint
+
+    r0_fit = x_voigt[0]
+    rk_fit = x_voigt[1:]
+    re_kk_all = (r0_fit + basis_re @ rk_fit).tolist()
+    im_kk_all = (basis_im @ rk_fit).tolist()
+    return x_voigt, re_kk_all, im_kk_all
 
 
 def analyze_and_deembed_high_freq_inductance(points):
