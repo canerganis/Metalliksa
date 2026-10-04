@@ -1,6 +1,8 @@
 // Static import graph over repository TypeScript sources, built with the TypeScript compiler
 // (Phase 7 slice 1). Follows `import`, `export ... from`, `import type` and string-literal
 // dynamic `import()`/`lazy(() => import(...))`; resolution uses the tsconfig module options.
+// A binding counts as a runtime use in any value position, including `class X extends Base`;
+// type positions (implements, interface extends, type arguments, typeof in types) are erased.
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

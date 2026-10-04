@@ -177,6 +177,13 @@ test('every support module (utils/services/hooks/features) is reachable or in it
   assert.deepEqual(result.staleBaseline, [], `Support baseline entries ${result.staleBaseline.join(', ')} are reachable again or deleted: remove them.`);
 });
 
+test('every src ceiling slot is a live entry or an existing file (no slots of deleted files)', () => {
+  const live = new Set([...baseline, ...shared, ...supportBaseline].map(entry => entry.path));
+  const slots = [...ceilings.baseline, ...ceilings.shared, ...supportCeiling];
+  const stale = slots.filter(slot => !live.has(slot) && !existsSync(path.join(repoRoot, slot))).sort();
+  assert.deepEqual(stale, [], `Ceiling slot(s) ${stale.join(', ')} name deleted files: remove them (reviewed shrink) so they cannot regrow.`);
+});
+
 test('mutation: a new support orphan plus a matching support-baseline entry still fails', () => {
   const sneaked = 'src/utils/newOrphan.ts';
   const result = ratchet([sneaked], [], [sneaked], { baseline: supportCeiling, shared: new Set() });

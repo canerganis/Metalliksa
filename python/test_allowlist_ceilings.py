@@ -16,6 +16,7 @@ Run from the python directory:  python -B -m unittest test_allowlist_ceilings
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -177,6 +178,132 @@ COUNT_CAPS = {
         },
     },
 }
+# Exact entries of every ceiling at its last reviewed change (descriptions excluded). A ceiling
+# may not differ from its snapshot: a shrink updates the snapshot in the same reviewed commit, so
+# the freed slots can never be refilled later without editing this protected file again.
+CEILING_SNAPSHOT = {
+    "python/module_warm_parity.ceiling.json": {
+        "names": [
+            "cnls_fitting_solver",
+            "engine_dispatcher",
+            "inverse_alloy_optimizer",
+            "lpbf_build_job_solver",
+            "marangoni_pore_instability_solver",
+            "part_scale_inherent_strain_solver",
+            "xrd_peak_deconvolution",
+        ],
+    },
+    "routes/AUTHORITY_ALLOWLIST.ceiling.json": {
+        "unbound": [
+            "ALL /api/*",
+            "GET /api/calphad/databases",
+            "GET /api/health",
+            "GET /api/lpbf/runs/:runId",
+            "GET /api/lpbf/runs/bundles/:bundleId/download",
+            "GET /api/lpbf/runs/bundles/restores/:restoreId/runs",
+            "GET /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId",
+            "GET /api/lpbf/runs/proxy-campaigns",
+            "GET /api/lpbf/sources/:datasetId",
+            "GET /api/lpbf/sources/:datasetId/revisions",
+            "GET /api/lpbf/sources/:datasetId/revisions/:revision",
+            "GET /api/materials-project/search",
+            "GET /api/orchestrator/approved-sources",
+            "GET /api/python/ipc-status",
+            "GET /api/python/status",
+            "GET /api/research/registry/history",
+            "GET /api/research/registry/revisions/:revision",
+            "GET /api/runtime-config",
+            "POST /api/calphad/minimize",
+            "POST /api/lpbf/runs/:runId/nist-comparison",
+            "POST /api/lpbf/runs/bundles/:bundleId/restore",
+            "POST /api/lpbf/runs/bundles/:bundleId/verify",
+            "POST /api/lpbf/runs/bundles/export",
+            "POST /api/lpbf/runs/bundles/import",
+            "POST /api/lpbf/runs/bundles/imports/:bundleId/restore",
+            "POST /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId/nist-comparison",
+            "POST /api/lpbf/runs/import",
+            "POST /api/lpbf/runs/preview",
+            "POST /api/lpbf/runs/proxy-campaigns",
+            "POST /api/lpbf/runs/proxy-campaigns/preview",
+            "POST /api/lpbf/sources/:datasetId/import",
+            "POST /api/lpbf/sources/:datasetId/preview",
+            "POST /api/lpbf/sources/:datasetId/verify",
+            "POST /api/metallurgy/analyze-sem",
+            "POST /api/metallurgy/detect-sem-legend",
+            "POST /api/metallurgy/qualify-aerospace",
+            "POST /api/orchestrator/collect-source",
+            "POST /api/python/bisquert-tlm-identify",
+            "POST /api/python/inverse-alloy-optimize",
+            "POST /api/python/ipc-warmup",
+            "POST /api/python/lpbf-bayesian-optimization",
+            "POST /api/python/lpbf-experimental-validation",
+            "POST /api/python/lpbf-support-optimization",
+            "POST /api/python/lpbf-thermal",
+            "POST /api/python/lpbf-transient-enthalpy-fdm",
+            "POST /api/python/marangoni-pore-instability",
+            "POST /api/python/part-scale-inherent-strain",
+            "POST /api/python/xrd-deconvolve",
+        ],
+        "unclassified": [
+            "USE /api/lpbf",
+            "USE /api/lpbf/runs",
+            "USE /api/lpbf/sources",
+            "USE /api/research/registry",
+        ],
+        "unclassifiedSites": {
+            "USE /api/lpbf": 1,
+            "USE /api/lpbf/runs": 2,
+            "USE /api/lpbf/sources": 2,
+            "USE /api/research/registry": 1,
+        },
+        "cannedBaseline": [
+            "GET /api/health",
+            "GET /api/materials-project/search",
+            "GET /api/orchestrator/approved-sources",
+            "POST /api/metallurgy/analyze-sem",
+            "POST /api/metallurgy/detect-sem-legend",
+            "POST /api/metallurgy/qualify-aerospace",
+        ],
+    },
+    "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": {
+        "paths": [
+            "src/hooks/useVisibleAbortSignal.ts",
+            "src/utils/ebsdParser.ts",
+            "src/utils/savitzkyGolay.ts",
+            "src/utils/seededRandom.ts",
+            "src/utils/xrdParser.ts",
+            "src/utils/xrdProfileFitting.ts",
+        ],
+    },
+    "src/components/SHARED.ceiling.json": {
+        "paths": [
+            "src/components/Field.tsx",
+        ],
+    },
+    "src/components/UNREACHABLE_BASELINE.ceiling.json": {
+        "paths": [],
+    },
+}
+# Entries that were removed for cause and must never return to any ceiling or live allowlist:
+# the deleted battery-corrosion upload / user-script execution and CNLS routes.
+FORBIDDEN_ENTRIES = {
+    "POST /api/python/battery-corrosion-exec-script",
+    "POST /api/python/battery-corrosion-upload",
+    "GET /api/python/battery-corrosion-upload/recent",
+    "DELETE /api/python/battery-corrosion-upload/:id?",
+    "POST /api/python/cnls-fit",
+    "POST /api/python/cnls-autofit",
+    "POST /api/python/cnls-synthetic-noise",
+}
+# Live list behind each ceiling: (live file, how to read its entries). A ceiling entry must be in
+# the live list or name a file that still exists; anything else is a stale slot to remove.
+LIVE_LISTS = {
+    "src/components/UNREACHABLE_BASELINE.ceiling.json": "src/components/UNREACHABLE_BASELINE.json",
+    "src/components/SHARED.ceiling.json": "src/components/SHARED.json",
+    "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": "src/UNREACHABLE_SUPPORT_BASELINE.json",
+    "routes/AUTHORITY_ALLOWLIST.ceiling.json": "routes/AUTHORITY_ALLOWLIST.json",
+    "python/module_warm_parity.ceiling.json": "python/test_module_warm_parity.py",
+}
 IGNORED_DIRS = {"node_modules", ".git", "dist", "graft", ".runtime"}
 
 
@@ -208,6 +335,37 @@ def count_growth(path: str, data: dict) -> list:
             if limit is None or not isinstance(count, int) or isinstance(count, bool) or count < 0 or count > limit:
                 problems.append(f"{key}: {entry} = {count!r} (cap {limit})")
     return problems
+
+
+def snapshot_of(data: dict) -> dict:
+    """Entries of a parsed ceiling as compared with CEILING_SNAPSHOT (lists sorted, no description)."""
+    return {key: sorted(value) if isinstance(value, list) else dict(value)
+            for key, value in data.items() if isinstance(value, (list, dict))}
+
+
+def live_entries(ceiling_path: str) -> set:
+    """Entries of the live list a ceiling caps (site suffixes of USE keys stripped)."""
+    live_path = LIVE_LISTS[ceiling_path]
+    if live_path.endswith(".py"):
+        sys.path.insert(0, str(REPO_ROOT / "python"))
+        import test_module_warm_parity as warm
+        return set(warm.WARM_WITHOUT_REGISTRY_OPERATION)
+    data = json.loads((REPO_ROOT / live_path).read_text(encoding="utf-8"))
+    if "files" in data:
+        return {entry["path"] for entry in data["files"]}
+    return {re.sub(r" \([^()]+#\d+\)$", "", key) for section in ("unbound", "cannedBaseline", "unclassified") for key in data[section]}
+
+
+def stale_slots(ceiling_path: str, data: dict, live: set) -> list:
+    """Ceiling entries neither in the live list nor naming an existing file (repo path or python module)."""
+    stale = []
+    for key, values in data.items():
+        entries = values if isinstance(values, list) else list(values) if isinstance(values, dict) else []
+        for entry in entries:
+            on_disk = (REPO_ROOT / entry).is_file() or (REPO_ROOT / "python" / f"{entry}.py").is_file()
+            if entry not in live and not on_disk:
+                stale.append(f"{key}: {entry}")
+    return stale
 
 
 def growth(original: dict, current: dict, delta: dict) -> list:
@@ -266,6 +424,52 @@ class PinnedCeilingTests(unittest.TestCase):
         current = entry_sets((REPO_ROOT / path).read_text(encoding="utf-8"))
         current["unbound"] = current["unbound"] | {"POST /api/sneaked-in"}
         self.assertEqual(growth(original, current, DELIBERATE_DELTA[path]), ["unbound: POST /api/sneaked-in"])
+
+    def test_every_ceiling_equals_its_reviewed_snapshot(self):
+        self.assertEqual(sorted(CEILING_SNAPSHOT), ceiling_files())
+        for path in ceiling_files():
+            with self.subTest(path=path):
+                data = json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+                self.assertEqual(snapshot_of(data), CEILING_SNAPSHOT[path],
+                                 "a ceiling changed: shrink it and its snapshot together in one reviewed commit")
+
+    def test_snapshot_never_exceeds_original_plus_delta(self):
+        for path in PINNED:
+            with self.subTest(path=path):
+                original = {key: set(values) for key, values in ORIGINAL_ENTRIES[path].items()}
+                snapshot = {key: set(values) for key, values in CEILING_SNAPSHOT[path].items() if isinstance(values, list)}
+                self.assertEqual(growth(original, snapshot, DELIBERATE_DELTA.get(path, {})), [])
+
+    def test_shrunk_entries_cannot_regrow_even_if_the_original_allowed_them(self):
+        path = "src/components/UNREACHABLE_BASELINE.ceiling.json"
+        data = json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+        regrown = dict(data, paths=data["paths"] + ["src/components/CNLSFittingStudio.tsx"])
+        original = {key: set(values) for key, values in ORIGINAL_ENTRIES[path].items()}
+        self.assertEqual(growth(original, entry_sets(json.dumps(regrown)), {}), [], "the original alone would allow it")
+        self.assertNotEqual(snapshot_of(regrown), CEILING_SNAPSHOT[path], "the snapshot does not")
+
+    def test_forbidden_entries_never_return(self):
+        for path in ceiling_files():
+            with self.subTest(path=path):
+                data = json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+                values = {entry for value in data.values() if isinstance(value, (list, dict)) for entry in value}
+                self.assertEqual(values & FORBIDDEN_ENTRIES, set())
+                self.assertEqual({entry for value in CEILING_SNAPSHOT[path].values() for entry in value} & FORBIDDEN_ENTRIES, set())
+        allowlist = json.loads((REPO_ROOT / "routes" / "AUTHORITY_ALLOWLIST.json").read_text(encoding="utf-8"))
+        live = {key for section in allowlist.values() if isinstance(section, dict) for key in section}
+        self.assertEqual(live & FORBIDDEN_ENTRIES, set())
+
+    def test_every_ceiling_entry_is_live_or_exists_on_disk(self):
+        self.assertEqual(sorted(LIVE_LISTS), ceiling_files())
+        for path in ceiling_files():
+            with self.subTest(path=path):
+                data = json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+                self.assertEqual(stale_slots(path, data, live_entries(path)), [], "remove stale ceiling slots (reviewed shrink)")
+
+    def test_stale_slot_logic(self):
+        live = {"src/a.ts"}
+        data = {"paths": ["src/a.ts", "src/deleted-file.ts", "python/test_allowlist_ceilings.py"], "names": ["module_registry", "gone_module"]}
+        self.assertEqual(stale_slots("x", data, live), ["paths: src/deleted-file.ts", "names: gone_module"])
 
     def test_count_ceilings_never_grow(self):
         for path in ceiling_files():
