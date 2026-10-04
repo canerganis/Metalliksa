@@ -5,11 +5,27 @@ Maintains scientific calculation modules warm in memory, bypassing Python startu
 Exposes:
  1. Ultra-fast UNIX Domain Socket IPC (/tmp/metallix_python_ipc.sock) for direct Node.js streaming.
  2. High-Performance Loopback HTTP Microservice (http://127.0.0.1:5055) for REST execution & diagnostics.
+
+Security model (both channels):
+ - Every request must carry the per-process shared secret METALLIX_IPC_TOKEN that the
+   Node supervisor (server/processOrchestrator.ts) generates at spawn and passes through
+   the environment. HTTP: ``Authorization: Bearer <token>``; UNIX socket: ``"token"`` field.
+   The service refuses to start without a token (at least 32 characters).
+ - HTTP: no CORS headers at all; requests carrying an ``Origin`` header (browsers) are
+   rejected; the ``Host`` header must name the bound loopback address and port (DNS
+   rebinding); POST bodies must be ``application/json``.
+ - Scripts: only ``python/<name>.py`` or ``<name>.py`` where <name> is in
+   ALLOWED_SCRIPT_NAMES, resolved with realpath and required to stay in SCRIPT_DIR.
+ - The UNIX socket is created with mode 0o600.
+ - A non-loopback METALLIX_IPC_HOST is refused unless METALLIX_IPC_ALLOW_REMOTE=1.
 """
 
 import sys
 import os
 import io
+import re
+import hmac
+import ipaddress
 import json
 import time
 import socket
@@ -20,7 +36,7 @@ import traceback
 import signal
 from concurrent.futures import ProcessPoolExecutor, TimeoutError
 from concurrent.futures.process import BrokenProcessPool
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Iterable, Tuple
 
 # Add script directory to sys.path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +46,11 @@ if SCRIPT_DIR not in sys.path:
 UNIX_SOCKET_PATH = os.environ.get("METALLIX_IPC_SOCK", "/tmp/metallix_python_ipc.sock")
 HTTP_PORT = int(os.environ.get("METALLIX_IPC_PORT", "5055"))
 HTTP_HOST = os.environ.get("METALLIX_IPC_HOST", "127.0.0.1")
+ALLOW_REMOTE = os.environ.get("METALLIX_IPC_ALLOW_REMOTE", "") == "1"
+# Read once and removed from os.environ before the worker pool is created, so neither pool
+# workers nor the solver scripts executed in them inherit the secret.
+IPC_TOKEN: Optional[str] = os.environ.pop("METALLIX_IPC_TOKEN", None)
+MIN_TOKEN_LENGTH = 32
 
 # Number of parallel workers (defaults to CPU count clamped between 2 and 4)
 DEFAULT_WORKERS = max(2, min(4, (os.cpu_count() or 2)))
@@ -56,6 +77,157 @@ WARM_MODULE_NAMES = [
     "engine_dispatcher",
 ]
 
+# Scripts the service may execute: the warm modules plus the scripts that routes/*.ts
+# dispatch through runPythonScript without keeping them warm. Anything else in python/
+# (tools, tests, this service itself) is refused. test_persistent_ipc_security checks
+# this list against the literal script paths in routes/*.ts.
+EXTRA_ALLOWED_SCRIPT_NAMES = [
+    "battery_corrosion_python_ingest",
+    "lpbf_bayesian_optimizer",
+]
+ALLOWED_SCRIPT_NAMES = frozenset(WARM_MODULE_NAMES) | frozenset(EXTRA_ALLOWED_SCRIPT_NAMES)
+
+_SCRIPT_FILE_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.py\Z")
+MAX_SCRIPT_ARGS = 64
+MAX_TIMEOUT_MS = 600000
+
+
+class IPCRequestRejected(Exception):
+    """A request refused before any script runs; ``status`` is the HTTP status to send."""
+
+    def __init__(self, status: int, code: str, message: str):
+        super().__init__(message)
+        self.status = status
+        self.code = code
+        self.message = message
+
+    def as_result(self) -> Dict[str, Any]:
+        return {"stdout": "", "stderr": self.message, "exitCode": 1, "error": self.message,
+                "code": self.code, "status": self.status}
+
+
+def _same_dir(a: str, b: str) -> bool:
+    return os.path.normcase(os.path.normpath(a)) == os.path.normcase(os.path.normpath(b))
+
+
+def resolve_script_path(script_dir: str, script: Any,
+                        allowed: Iterable[str] = ALLOWED_SCRIPT_NAMES) -> str:
+    """Map a request's script reference to an allowlisted file directly inside script_dir.
+
+    Accepted forms are exactly ``python/<name>.py`` and ``<name>.py``. Traversal, absolute
+    paths, drive letters, UNC paths, backslashes and nested directories are refused (400);
+    names outside the allowlist and symlinks resolving outside script_dir are refused (403).
+    """
+    if not isinstance(script, str) or not script.strip():
+        raise IPCRequestRejected(400, "MISSING_SCRIPT", "Missing script path")
+    ref = script.strip()
+    if len(ref) > 200 or any(ch in ref for ch in ("\\", ":", "\x00")) or ref.startswith("/"):
+        raise IPCRequestRejected(400, "INVALID_SCRIPT_PATH", "Invalid script path")
+    parts = ref.split("/")
+    if len(parts) == 2 and parts[0] == "python":
+        file_name = parts[1]
+    elif len(parts) == 1:
+        file_name = parts[0]
+    else:
+        raise IPCRequestRejected(400, "INVALID_SCRIPT_PATH", "Invalid script path")
+    if not _SCRIPT_FILE_RE.match(file_name):
+        raise IPCRequestRejected(400, "INVALID_SCRIPT_PATH", "Invalid script path")
+    if file_name[:-3] not in allowed:
+        raise IPCRequestRejected(403, "SCRIPT_NOT_ALLOWED", f"Script not allowed: {file_name}")
+    base = os.path.realpath(script_dir)
+    full_path = os.path.realpath(os.path.join(base, file_name))
+    if not _same_dir(os.path.dirname(full_path), base):
+        raise IPCRequestRejected(403, "SCRIPT_OUTSIDE_SCRIPT_DIR",
+                                 f"Script resolves outside the scripts directory: {file_name}")
+    if not os.path.isfile(full_path):
+        raise IPCRequestRejected(404, "SCRIPT_NOT_FOUND", f"Script not found: {script}")
+    return full_path
+
+
+def validate_exec_request(req: Any) -> Tuple[Any, Any, list, int]:
+    """Shape checks shared by both channels; returns (script, payload, args, timeout_ms)."""
+    if not isinstance(req, dict):
+        raise IPCRequestRejected(400, "INVALID_REQUEST", "Request body must be a JSON object")
+    args = req.get("args", [])
+    if args is None:
+        args = []
+    if (not isinstance(args, list) or len(args) > MAX_SCRIPT_ARGS
+            or not all(isinstance(a, str) for a in args)):
+        raise IPCRequestRejected(400, "INVALID_ARGS", "args must be a list of strings")
+    timeout_ms = req.get("timeoutMs", 15000)
+    if isinstance(timeout_ms, bool) or not isinstance(timeout_ms, (int, float)) \
+            or not (0 < timeout_ms <= MAX_TIMEOUT_MS):
+        raise IPCRequestRejected(400, "INVALID_TIMEOUT", f"timeoutMs must be in (0, {MAX_TIMEOUT_MS}]")
+    return req.get("script", ""), req.get("payload"), args, int(timeout_ms)
+
+
+def token_matches(presented: Any, expected: Optional[str]) -> bool:
+    """Constant-time comparison; fails closed when no token is configured."""
+    if not expected or not isinstance(presented, str):
+        return False
+    return hmac.compare_digest(presented.encode("utf-8"), expected.encode("utf-8"))
+
+
+def bearer_token(header_value: Optional[str]) -> Optional[str]:
+    if not header_value:
+        return None
+    scheme, _, value = header_value.strip().partition(" ")
+    if scheme.lower() != "bearer":
+        return None
+    return value.strip() or None
+
+
+def is_loopback_host(host: str) -> bool:
+    if host.strip().lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host.strip().strip("[]")).is_loopback
+    except ValueError:
+        return False
+
+
+def allowed_host_headers(bind_host: str, port: int) -> frozenset:
+    """Host header values accepted by the HTTP service (anything else: DNS rebinding)."""
+    hosts = {f"127.0.0.1:{port}", f"localhost:{port}", f"[::1]:{port}"}
+    h = bind_host.strip().lower()
+    hosts.add(f"[{h.strip('[]')}]:{port}" if ":" in h.strip("[]") else f"{h}:{port}")
+    return frozenset(hosts)
+
+
+def check_http_headers(headers: Any, *, token: Optional[str], allowed_hosts: Iterable[str],
+                       require_json: bool) -> None:
+    """Raise IPCRequestRejected unless the request passes Host, Origin, auth and type checks."""
+    hosts = headers.get_all("Host") or []
+    if len(hosts) != 1 or hosts[0].strip().lower() not in allowed_hosts:
+        raise IPCRequestRejected(403, "HOST_NOT_ALLOWED", "Host header not allowed")
+    if headers.get("Origin") is not None:
+        raise IPCRequestRejected(403, "ORIGIN_NOT_ALLOWED", "Browser-originated requests are not allowed")
+    auths = headers.get_all("Authorization") or []
+    if len(auths) != 1 or not token_matches(bearer_token(auths[0]), token):
+        raise IPCRequestRejected(401, "UNAUTHORIZED", "Missing or invalid IPC token")
+    if require_json:
+        media_type = (headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+        if media_type != "application/json":
+            raise IPCRequestRejected(415, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json")
+
+
+def validate_startup_config(host: str, token: Optional[str], allow_remote: bool) -> None:
+    """Refuse to serve without a usable token or on a non-loopback address unless allowed."""
+    if not token or len(token) < MIN_TOKEN_LENGTH:
+        raise SystemExit(
+            f"[PersistentIPC] Refusing to start: METALLIX_IPC_TOKEN must be set (>= {MIN_TOKEN_LENGTH} "
+            "characters). The Node supervisor generates it; set it yourself when launching by hand.")
+    if not is_loopback_host(host):
+        if not allow_remote:
+            raise SystemExit(
+                f"[PersistentIPC] Refusing to bind non-loopback METALLIX_IPC_HOST={host!r}; "
+                "set METALLIX_IPC_ALLOW_REMOTE=1 to override.")
+        sys.stderr.write(
+            "[PersistentIPC] WARNING ************************************************************\n"
+            f"[PersistentIPC] WARNING: binding NON-LOOPBACK host {host!r} (METALLIX_IPC_ALLOW_REMOTE=1).\n"
+            "[PersistentIPC] WARNING: the IPC service executes Python solvers for any client holding the token.\n"
+            "[PersistentIPC] WARNING ************************************************************\n")
+
 # =========================================================================
 # Worker Subprocess Routines (Run in isolated multi-core processes)
 # =========================================================================
@@ -72,7 +244,8 @@ def _worker_init(script_dir: str, module_names: list):
     _worker_compiled_cache = {}
 
     for mod_name in module_names:
-        py_file = os.path.join(script_dir, f"{mod_name}.py")
+        # realpath: the key execute_script submits (resolve_script_path returns realpaths).
+        py_file = os.path.realpath(os.path.join(script_dir, f"{mod_name}.py"))
         try:
             mod = __import__(mod_name)
             _worker_modules[mod_name] = mod
@@ -170,7 +343,7 @@ class ConcurrentModuleRegistry:
         sys.stderr.write("[PersistentIPC] Warming up scientific modules in memory...\n")
         t0 = time.time()
         for mod_name in WARM_MODULE_NAMES:
-            py_file = os.path.join(self.script_dir, f"{mod_name}.py")
+            py_file = os.path.realpath(os.path.join(self.script_dir, f"{mod_name}.py"))
             t_mod0 = time.time()
             try:
                 mod = __import__(mod_name)
@@ -227,25 +400,14 @@ class ConcurrentModuleRegistry:
         start_time = time.perf_counter()
         args = args or []
 
-        # Resolve path
-        clean_path = script_rel_path.strip().lstrip("/")
-        if not clean_path.startswith("python/"):
-            full_path = os.path.join(self.script_dir, os.path.basename(clean_path))
-        else:
-            full_path = os.path.abspath(clean_path)
-
-        if not os.path.exists(full_path):
-            alt_path = os.path.join(self.script_dir, os.path.basename(clean_path))
-            if os.path.exists(alt_path):
-                full_path = alt_path
-            else:
-                return {
-                    "stdout": "",
-                    "stderr": f"Script not found: {script_rel_path}",
-                    "exitCode": 1,
-                    "durationMs": round((time.perf_counter() - start_time) * 1000.0, 2),
-                    "warm": True,
-                }
+        # Resolve path: allowlisted names only, contained in script_dir (no traversal).
+        try:
+            full_path = resolve_script_path(self.script_dir, script_rel_path)
+        except IPCRequestRejected as rejected:
+            result = rejected.as_result()
+            result["durationMs"] = round((time.perf_counter() - start_time) * 1000.0, 2)
+            result["warm"] = True
+            return result
 
         # Prepare JSON input string
         if payload is not None:
@@ -392,9 +554,10 @@ WarmModuleRegistry = ConcurrentModuleRegistry
 # 1. UNIX Domain Socket IPC Server (Low-Latency Binary / JSON Streaming)
 # =========================================================================
 class UnixIPCServer:
-    def __init__(self, sock_path: str, reg: ConcurrentModuleRegistry):
+    def __init__(self, sock_path: str, reg: ConcurrentModuleRegistry, token: Optional[str] = None):
         self.sock_path = sock_path
         self.reg = reg
+        self.token = token
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.running = False
         self.thread = None
@@ -406,8 +569,13 @@ class UnixIPCServer:
             except OSError:
                 pass
 
-        self.sock.bind(self.sock_path)
-        os.chmod(self.sock_path, 0o777)
+        # Owner-only from creation (umask) and explicitly afterwards; never world-writable.
+        old_umask = os.umask(0o177)
+        try:
+            self.sock.bind(self.sock_path)
+        finally:
+            os.umask(old_umask)
+        os.chmod(self.sock_path, 0o600)
         self.sock.listen(64)
         self.running = True
 
@@ -446,6 +614,12 @@ class UnixIPCServer:
                         conn.sendall(json.dumps(resp).encode("utf-8") + b"\n")
                         continue
 
+                    if not isinstance(req, dict) or not token_matches(req.get("token"), self.token):
+                        resp = {"error": "Missing or invalid IPC token", "code": "UNAUTHORIZED",
+                                "status": 401, "exitCode": 1}
+                        conn.sendall(json.dumps(resp).encode("utf-8") + b"\n")
+                        return  # finally closes the connection
+
                     action = req.get("action", "execute")
                     req_id = req.get("id")
 
@@ -457,12 +631,12 @@ class UnixIPCServer:
                     elif action == "ping":
                         conn.sendall(json.dumps({"pong": True, "id": req_id}).encode("utf-8") + b"\n")
                     else:
-                        script = req.get("script", "")
-                        payload = req.get("payload")
-                        args = req.get("args", [])
-                        timeout_ms = req.get("timeoutMs", 15000)
-
-                        result = self.reg.execute_script(script, payload, args, timeout_ms)
+                        try:
+                            script, payload, args, timeout_ms = validate_exec_request(req)
+                            resolve_script_path(self.reg.script_dir, script)
+                            result = self.reg.execute_script(script, payload, args, timeout_ms)
+                        except IPCRequestRejected as rejected:
+                            result = rejected.as_result()
                         if req_id is not None:
                             result["id"] = req_id
 
@@ -494,59 +668,102 @@ class UnixIPCServer:
 # 2. Loopback HTTP Microservice (REST endpoints on 127.0.0.1:5055)
 # =========================================================================
 class MicroserviceHTTPHandler(http.server.BaseHTTPRequestHandler):
+    """Loopback REST handler. No CORS: browsers are not clients of this service.
+
+    Security configuration lives on the server object (see ThreadedHTTPServer):
+    ``ipc_token``, ``allowed_hosts`` and ``registry``.
+    """
+
     def log_message(self, format, *args):
         # Silence default access log to keep stdout/stderr clean
         pass
+
+    @property
+    def _registry(self) -> "ConcurrentModuleRegistry":
+        return getattr(self.server, "registry", None) or registry
 
     def _send_json(self, status_code: int, data: Any):
         body = json.dumps(data).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store")
+        if status_code == 401:
+            self.send_header("WWW-Authenticate", 'Bearer realm="metallix-ipc"')
         self.end_headers()
         self.wfile.write(body)
 
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
+    _MAX_DRAIN_BYTES = 1 << 20
+
+    def _reject(self, rejected: IPCRequestRejected):
+        # Drain a small unread body first: closing a socket with unread data makes some
+        # stacks (Windows) reset the connection before the client reads the error.
+        if self.command == "POST" and not getattr(self, "_body_read", False):
+            try:
+                pending = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                pending = 0
+            if 0 < pending <= self._MAX_DRAIN_BYTES:
+                try:
+                    self.rfile.read(pending)
+                except OSError:
+                    pass
+        self.close_connection = True
+        self._send_json(rejected.status, {"error": rejected.message, "code": rejected.code})
+
+    def _guard(self, require_json: bool) -> bool:
+        try:
+            check_http_headers(self.headers, token=getattr(self.server, "ipc_token", None),
+                               allowed_hosts=getattr(self.server, "allowed_hosts", frozenset()),
+                               require_json=require_json)
+            return True
+        except IPCRequestRejected as rejected:
+            self._reject(rejected)
+            return False
 
     def do_GET(self):
+        if not self._guard(require_json=False):
+            return
         if self.path in ["/status", "/health", "/api/status", "/api/health"]:
-            self._send_json(200, registry.get_status())
+            self._send_json(200, self._registry.get_status())
         elif self.path == "/ping":
             self._send_json(200, {"pong": True, "timestamp": time.time()})
         else:
             self._send_json(404, {"error": "Endpoint not found", "path": self.path})
 
     def do_POST(self):
+        self._body_read = False
+        if not self._guard(require_json=True):
+            return
         if self.path in ["/execute", "/run", "/api/execute", "/api/run"]:
-            content_len = int(self.headers.get("Content-Length", 0))
-            if content_len == 0:
-                return self._send_json(400, {"error": "Missing JSON body"})
+            try:
+                content_len = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                content_len = -1
+            if content_len <= 0:
+                return self._reject(IPCRequestRejected(400, "MISSING_BODY", "Missing JSON body"))
 
             body_bytes = self.rfile.read(content_len)
+            self._body_read = True
             try:
                 req = json.loads(body_bytes.decode("utf-8"))
             except Exception as e:
-                return self._send_json(400, {"error": f"JSON parse error: {str(e)}"})
+                return self._reject(IPCRequestRejected(400, "INVALID_JSON", f"JSON parse error: {str(e)}"))
 
-            script = req.get("script", "")
-            payload = req.get("payload")
-            args = req.get("args", [])
-            timeout_ms = req.get("timeoutMs", 15000)
+            try:
+                script, payload, args, timeout_ms = validate_exec_request(req)
+                resolve_script_path(self._registry.script_dir, script)
+            except IPCRequestRejected as rejected:
+                return self._reject(rejected)
 
-            result = registry.execute_script(script, payload, args, timeout_ms)
+            result = self._registry.execute_script(script, payload, args, timeout_ms)
             if "id" in req:
                 result["id"] = req["id"]
             self._send_json(200, result)
 
         elif self.path == "/warmup":
-            registry.warmup()
-            self._send_json(200, registry.get_status())
+            self._registry.warmup()
+            self._send_json(200, self._registry.get_status())
         else:
             self._send_json(404, {"error": "Endpoint not found", "path": self.path})
 
@@ -554,15 +771,34 @@ class MicroserviceHTTPHandler(http.server.BaseHTTPRequestHandler):
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+    ipc_token: Optional[str] = None
+    allowed_hosts: frozenset = frozenset()
+    registry: Optional["ConcurrentModuleRegistry"] = None
+
+
+def make_http_server(host: str, port: int, token: Optional[str],
+                     reg: Optional["ConcurrentModuleRegistry"] = None) -> ThreadedHTTPServer:
+    """Builds the HTTP service with its security configuration (port 0 picks a free port)."""
+    httpd = ThreadedHTTPServer((host, port), MicroserviceHTTPHandler)
+    httpd.ipc_token = token
+    httpd.allowed_hosts = allowed_host_headers(host, httpd.server_address[1])
+    httpd.registry = reg
+    return httpd
 
 
 def run_services():
     """Starts both UNIX socket IPC and HTTP microservice."""
+    try:
+        validate_startup_config(HTTP_HOST, IPC_TOKEN, ALLOW_REMOTE)
+    except SystemExit:
+        registry.shutdown()
+        raise
+
     # 1. Start UNIX domain socket IPC (skipped on Windows — AF_UNIX bind is unreliable)
     ipc_server = None
     if os.name != "nt":
         try:
-            ipc_server = UnixIPCServer(UNIX_SOCKET_PATH, registry)
+            ipc_server = UnixIPCServer(UNIX_SOCKET_PATH, registry, IPC_TOKEN)
             ipc_server.start()
         except Exception as e:
             sys.stderr.write(f"[PersistentIPC] UNIX socket unavailable ({e}); HTTP loopback only.\n")
@@ -572,7 +808,7 @@ def run_services():
 
     # 2. Start HTTP microservice
     try:
-        httpd = ThreadedHTTPServer((HTTP_HOST, HTTP_PORT), MicroserviceHTTPHandler)
+        httpd = make_http_server(HTTP_HOST, HTTP_PORT, IPC_TOKEN)
         sys.stderr.write(
             f"[PersistentIPC] HTTP microservice listening at http://{HTTP_HOST}:{HTTP_PORT}\n"
         )

@@ -10,6 +10,7 @@ Supports:
 """
 
 import sys
+import os
 import json
 import math
 import cmath
@@ -568,6 +569,12 @@ if __name__ == "__main__":
         start_time = time.perf_counter()
 
         if action == "execute_python_script":
+            # Same opt-in as routes/characterization.ts (inherited through the daemon's env), so
+            # the IPC path cannot run arbitrary code when the Node route is disabled.
+            if os.environ.get("METALLIKSA_ENABLE_SCRIPT_EXEC") != "1":
+                print(json.dumps({"success": False, "error": "Custom script execution is disabled "
+                                  "(set METALLIKSA_ENABLE_SCRIPT_EXEC=1 before starting the server)."}))
+                sys.exit(1)
             script_code = payload.get("scriptCode") or payload.get("script") or ""
             custom_data = payload.get("data")
             res = execute_user_python_script(script_code, custom_data)
