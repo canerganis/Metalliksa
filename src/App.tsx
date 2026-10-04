@@ -50,13 +50,10 @@ const StandardQualificationEngine = lazy(() => import("./components/StandardQual
 const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineeringWorkspace").then(m => ({ default: m.LpbfEngineeringWorkspace })));
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
-const ThermomechanicalDistortionLab = lazy(() => import("./components/ThermomechanicalDistortionLab").then(m => ({ default: m.ThermomechanicalDistortionLab })));  // Phase 9
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
 const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudioLab").then(m => ({ default: m.LpbfToolpathStudioLab }))); // Phase 12
-const IndustrialCertificationLab = lazy(() => import("./components/IndustrialCertificationLab").then(m => ({ default: m.IndustrialCertificationLab }))); // Phase 9 & 10
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
-const MultiLaserPlumeLab = lazy(() => import("./components/MultiLaserPlumeLab").then(m => ({ default: m.MultiLaserPlumeLab }))); // Phase 16
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 
 const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
@@ -156,13 +153,10 @@ export default function App() {
       case '3d-distortion-lab': return <LpbfEngineeringWorkspace />;
       case 'lpbf-optimizer': return <LpbfBayesianOptimizerLab />;
       case 'solidification-microstructure': return <SolidificationMicrostructureLab />;  // Phase 8
-      case 'thermomechanical-distortion': return <ThermomechanicalDistortionLab />; // Phase 9
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
       case 'toolpath-studio': return <LpbfToolpathStudioLab />; // Phase 12
-      case 'industrial-certification': return <IndustrialCertificationLab />; // Phase 9 & 10
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
-      case 'multilaser-plume': return <MultiLaserPlumeLab />; // Phase 16
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;

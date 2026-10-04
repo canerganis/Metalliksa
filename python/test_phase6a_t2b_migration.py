@@ -317,10 +317,8 @@ class SourceGuardTest(unittest.TestCase):
         for literal in ("3.585", "0.2535", "247.0", '"Nb": 14.5', '"Inconel 718 (Aero LPBF)"'):
             self.assertNotIn(literal, src)
 
-    def test_phase9_mapping_moved(self):
-        src = (HERE / "phase9_surrogate.py").read_text(encoding="utf-8")
-        self.assertIn("query_mat = process_map_material_name(alloy_name)", src)
-        self.assertNotIn('"Inconel 718" if alloy_name.upper()', src)
+    # test_phase9_mapping_moved left with python/phase9_surrogate.py (deleted 2026-10-04 with
+    # industrial-certification); the mapping itself stays covered by test_alloy_data_kinetics_uq_fatigue.
 
 
 if __name__ == "__main__":

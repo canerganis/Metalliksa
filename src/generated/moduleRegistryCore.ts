@@ -113,39 +113,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Microstructure Lab",
       "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
-      "next": "thermomechanical-distortion",
+      "next": "experimental-validation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/SolidificationMicrostructureLab.tsx",
         "export": "SolidificationMicrostructureLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "thermomechanical-distortion",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Thermomechanical Lab",
-      "description": "Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.",
-      "next": "experimental-validation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ThermomechanicalDistortionLab.tsx",
-        "export": "ThermomechanicalDistortionLab"
       },
       "migrationState": "legacy",
       "evidence": {
@@ -191,7 +165,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-      "next": "industrial-certification",
+      "next": "murakami-fatigue",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -200,32 +174,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "LpbfToolpathStudioLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "industrial-certification",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Industrial Certification",
-      "description": "Industrial qualification standards and audit readiness for production release.",
-      "next": "murakami-fatigue",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/IndustrialCertificationLab.tsx",
-        "export": "IndustrialCertificationLab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -269,7 +217,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Defect Mitigation",
       "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
-      "next": "multilaser-plume",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -278,32 +226,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "LpbfAdaptiveMitigationLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "multilaser-plume",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Multi-Laser Plume",
-      "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiLaserPlumeLab.tsx",
-        "export": "MultiLaserPlumeLab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

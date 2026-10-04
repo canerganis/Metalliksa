@@ -65,7 +65,7 @@ Background work: none; resources: fetch.
 - `python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward`
 - `python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector`
 - `python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath`
-- `routes/lpbfSimulation.ts:34#/api/python/lpbf-adaptive-feedforward`
+- `routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward`
 - `src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab`
 - `src/services/pythonComputationService.ts::processAdaptiveFeedforward`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation`

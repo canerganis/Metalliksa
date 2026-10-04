@@ -4,7 +4,6 @@ from lpbf_evidence import resource_estimate
 from lpbf_simulation import validate
 from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
 from lpbf_fatigue_fracture import MurakamiFatigueEngine
-from lpbf_multilaser_plume import ShieldGasFlow, PlumeParameters, MultiLaserPlumeEngine
 from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
@@ -25,29 +24,6 @@ def _rpc_solidification_microstructure(request):
     # material k/liquidus/absorptivity are looked up there, never taken from the payload.
     # Unusable inputs return status "unavailable" with a reason instead of raising.
     return compute_screening_field_microstructure(p)
-
-
-def _rpc_thermomechanical_distortion(request):
-    # Phase 9
-    payload = request["payload"]
-    p = payload.get("params", {})
-    m = payload.get("material", {})
-    from lpbf_thermomechanical import analyze_distortion
-    data = analyze_distortion(p, m)
-    return data
-
-
-def _rpc_industrial_fatigue(request):
-    # Phase 10 (New)
-    payload = request["payload"]
-    from phase10_industrial import run_industrial_fatigue_analysis
-    alloy = payload.get("alloy", "IN718")
-    power = float(payload.get("power_W", 300))
-    speed = float(payload.get("speed_mms", 1000))
-    layer = float(payload.get("layer_um", 30.0))
-    hatch = float(payload.get("hatch_um", 100.0))
-    data = run_industrial_fatigue_analysis(alloy, power, speed, layer, hatch)
-    return data
 
 
 def _rpc_toolpath_kinematics(request):
@@ -127,39 +103,6 @@ def _rpc_adaptive_feedforward(request):
     return data
 
 
-def _rpc_multilaser_plume(request):
-    # Phase 16
-    payload = request["payload"]
-    gas_cfg = payload.get("gasFlow", {})
-    flow = ShieldGasFlow(
-        gas_type=gas_cfg.get("gasType", "Argon"),
-        velocity_m_s=float(gas_cfg.get("velocity_m_s", 2.0)),
-        angle_deg=float(gas_cfg.get("angle_deg", 0.0))
-    )
-    plume_cfg = payload.get("plumeParams", {})
-    plume_params = PlumeParameters(
-        sigma_plume_mm=float(plume_cfg.get("sigma_plume_mm", 2.5)),
-        decay_length_mm=float(plume_cfg.get("decay_length_mm", 25.0)),
-        base_extinction_coeff=float(plume_cfg.get("base_extinction_coeff", 0.35)),
-        min_collision_dist_mm=float(plume_cfg.get("min_collision_dist_mm", 1.0)),
-        attenuation_hazard_threshold=float(plume_cfg.get("attenuation_hazard_threshold", 0.10))
-    )
-    engine = MultiLaserPlumeEngine(flow, plume_params)
-    l1_vecs = [tuple(v) for v in payload.get("laser1_vectors", [])]
-    l2_vecs = [tuple(v) for v in payload.get("laser2_vectors", [])]
-    if not l1_vecs:
-        l1_vecs = [(0.0, 0.0, 40.0, 0.0, 300.0, 1000.0)]
-    if not l2_vecs:
-        l2_vecs = [(10.0, 1.0, 50.0, 1.0, 300.0, 1000.0)]
-
-    mode = payload.get("mode", "simulate")
-    if mode == "optimize":
-        data = engine.optimize_deconfliction_schedule(l1_vecs, l2_vecs)
-    else:
-        data = engine.simulate_multitrack_scenarios(l1_vecs, l2_vecs)
-    return data
-
-
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -170,12 +113,9 @@ def _rpc_keyhole_raytracing(request):
 # Pure research endpoints: handler(request) -> data.
 RESEARCH_HANDLERS = {
     "solidification-microstructure": _rpc_solidification_microstructure,
-    "thermomechanical-distortion": _rpc_thermomechanical_distortion,
-    "industrial-fatigue": _rpc_industrial_fatigue,
     "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
     "adaptive-feedforward": _rpc_adaptive_feedforward,
-    "multilaser-plume": _rpc_multilaser_plume,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }
 

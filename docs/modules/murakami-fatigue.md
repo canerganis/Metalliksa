@@ -64,7 +64,7 @@ Background work: none; resources: fetch.
 - `python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit`
 - `python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth`
 - `python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES`
-- `routes/lpbfSimulation.ts:33#/api/python/lpbf-fatigue-fracture`
+- `routes/lpbfSimulation.ts:31#/api/python/lpbf-fatigue-fracture`
 - `routes/lpbfSimulation.ts::workerError`
 - `src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab`
 - `src/services/pythonComputationService.ts::computeMurakamiFatigue`

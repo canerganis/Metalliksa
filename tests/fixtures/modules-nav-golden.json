@@ -21,14 +21,6 @@
     "label": "Microstructure Lab",
     "scope": "Research",
     "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
-    "next": "thermomechanical-distortion"
-  },
-  {
-    "id": "thermomechanical-distortion",
-    "workspace": "lpbf",
-    "label": "Thermomechanical Lab",
-    "scope": "Research",
-    "description": "Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.",
     "next": "experimental-validation"
   },
   {
@@ -45,14 +37,6 @@
     "label": "Toolpath & Kinematics",
     "scope": "Research",
     "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-    "next": "industrial-certification"
-  },
-  {
-    "id": "industrial-certification",
-    "workspace": "lpbf",
-    "label": "Industrial Certification",
-    "scope": "Preview",
-    "description": "Industrial qualification standards and audit readiness for production release.",
     "next": "murakami-fatigue"
   },
   {
@@ -69,14 +53,6 @@
     "label": "Defect Mitigation",
     "scope": "Research",
     "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
-    "next": "multilaser-plume"
-  },
-  {
-    "id": "multilaser-plume",
-    "workspace": "lpbf",
-    "label": "Multi-Laser Plume",
-    "scope": "Research",
-    "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
     "next": "keyhole-raytracing"
   },
   {

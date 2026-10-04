@@ -13,8 +13,7 @@
 #    data/benchmark/**/raw measurement payloads (data/benchmark/nist-amb2022-03/raw alone is about 525 MB)
 #  - spparks: a gitlink (optional solver checkout, about 250 MB when populated); CI checks out no submodules
 #    and nothing in the build, the tests or the server reads it
-# NOT excluded on purpose: .lpbf-surrogates/ (tracked; only the offline python/phase9_surrogate.py reads
-# it), docs/sources/in625 (read at run time by the server), *.log (tracked evidence logs under docs/), docs/, data/, scripts/, tests/.
+# NOT excluded on purpose: docs/sources/in625 (read at run time by the server), *.log (tracked evidence logs under docs/), docs/, data/, scripts/, tests/.
 node_modules
 dist
 .orchestra*
