@@ -1,0 +1,90 @@
+/*
+ * Metalliksa design tokens (Phase 9, package A).
+ *
+ * Dark mission-control identity. The base palette (--mk-bg, --mk-surface,
+ * --mk-surface-raised, --mk-border, --mk-border-bright, --mk-ice, --mk-plasma,
+ * --mk-amber, --mk-text, --mk-muted) stays in src/index.css :root; this file
+ * only adds tokens. Contrast is enforced by tests/design-tokens-contrast.test.ts.
+ *
+ * Rules: no external URLs (air-gap), fonts are self-hosted via @fontsource in
+ * src/main.tsx, glow is for active/focus only, the focus ring never animates,
+ * and evidence labels (unavailable / inconclusive / unvalidated) are never
+ * de-emphasized by opacity, blur or reduced contrast.
+ */
+@layer base {
+  :root {
+    /* Text ramp. Values mirror the existing slate overrides in index.css. */
+    --mk-text-strong: #f0f7fb;
+    --mk-text-soft: #e2edf5;
+    --mk-text-subtle: #c3d0dc;
+    --mk-text-dim: #a8b7c7;
+    --mk-text-faint: #94a3b8;
+    --mk-text-cyan-soft: rgba(207, 250, 254, 0.8);
+    --mk-text-cyan-faint: rgba(207, 250, 254, 0.74);
+
+    /* Lines and fills. Mirror existing overrides; decorative separators. */
+    --mk-line-subtle: rgba(125, 211, 252, 0.24);
+    --mk-line-neutral: rgba(148, 163, 184, 0.38);
+    --mk-line-divider: rgba(125, 211, 252, 0.22);
+    --mk-fill-panel: rgba(15, 23, 42, 0.72);
+    --mk-fill-deep: rgba(2, 6, 14, 0.9);
+
+    /* Component boundary that must stay >= 3:1 (inputs, toggles, badges). */
+    --mk-border-strong: #4f87a8;
+
+    /* Status signals. Used as text, so they meet 4.5:1 on every surface. */
+    --mk-signal-ok: #6ee7b7;
+    --mk-signal-warn: #f5b84b;
+    --mk-signal-fail: #fb7185;
+    --mk-evidence-unvalidated: #f0abfc;
+
+    /* Typography */
+    --mk-font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
+    --mk-font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+    --mk-fs-2xs: 11px;
+    --mk-fs-xs: 12px;
+    --mk-fs-sm: 14px;
+    --mk-fs-md: 16px;
+    --mk-fs-lg: 20px;
+    --mk-fs-xl: 28px;
+    --mk-fs-2xl: 40px;
+    --mk-tracking-caps: 0.12em;
+    --mk-tracking-caps-max: 0.18em;
+
+    /* Spacing */
+    --mk-space-1: 4px;
+    --mk-space-2: 8px;
+    --mk-space-3: 12px;
+    --mk-space-4: 16px;
+    --mk-space-5: 24px;
+    --mk-space-6: 32px;
+    --mk-space-7: 48px;
+
+    /* Glass: shell chrome only, never behind charts or data marks. */
+    --mk-glass-bg: rgba(6, 17, 28, 0.72);
+    --mk-glass-blur: 12px;
+
+    /* Glow: active and focus states only. */
+    --mk-glow-sm: 0 0 10px rgba(34, 211, 238, 0.52);
+    --mk-glow-md: 0 0 18px rgba(34, 211, 238, 0.38);
+
+    /* Elevation: border + shadow, no stacked blur. */
+    --mk-elev-0: none;
+    --mk-elev-1: 0 0 0 1px rgba(34, 211, 238, 0.06), 0 8px 24px rgba(0, 0, 0, 0.32);
+    --mk-elev-2: 0 0 0 1px rgba(125, 211, 252, 0.14), 0 14px 40px rgba(0, 0, 0, 0.4);
+    --mk-elev-3: 0 0 0 1px rgba(125, 211, 252, 0.2), 0 22px 70px rgba(0, 0, 0, 0.5);
+
+    /* Motion */
+    --mk-dur-fast: 120ms;
+    --mk-dur-base: 200ms;
+    --mk-dur-slow: 420ms;
+    --mk-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --mk-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+    /* Focus ring: static, never transitioned or animated. */
+    --mk-focus-color: #67e8f9;
+    --mk-focus-width: 2px;
+    --mk-focus-offset: 3px;
+    --mk-focus-halo: 0 0 0 4px rgba(103, 232, 249, 0.25);
+  }
+}
