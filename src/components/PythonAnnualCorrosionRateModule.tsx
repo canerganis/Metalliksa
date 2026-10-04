@@ -407,7 +407,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
               <label className="block text-slate-600 dark:text-slate-400 mb-1 font-medium">
                 Alloy Substrate
               </label>
-              <select
+              <select aria-label="Alloy Substrate"
                 value={alloyId}
                 onChange={(e) => handleAlloyChange(e.target.value)}
                 className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium"
@@ -426,7 +426,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Density (g/cm³) / EW (g/eq)
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Density (g/cm³)"
                   type="number"
                   step="0.01"
                   value={customDensity}
@@ -434,7 +434,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Density"
                 />
-                <input
+                <input aria-label="EW (g/eq)"
                   type="number"
                   step="0.01"
                   value={customEw}
@@ -451,7 +451,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Thickness / Allowance (mm)
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Thickness (mm)"
                   type="number"
                   step="0.1"
                   value={initialThicknessMm}
@@ -459,7 +459,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Thickness"
                 />
-                <input
+                <input aria-label="Allowance (mm)"
                   type="number"
                   step="0.1"
                   value={allowableLossMm}
@@ -476,7 +476,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Temperature (°C) {overrideIcorr ? "| Icorr (μA/cm²)" : ""}
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Temperature (°C)"
                   type="number"
                   step="1"
                   value={temperatureC}
@@ -484,7 +484,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Temp °C"
                 />
-                <input
+                <input aria-label="Icorr (μA/cm²)"
                   type="number"
                   step="0.01"
                   disabled={!overrideIcorr}

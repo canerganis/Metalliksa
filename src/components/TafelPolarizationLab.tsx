@@ -604,7 +604,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
             }`}
             onClick={() => fileInputRef.current?.click()}
           >
-            <input
+            <input aria-label="Upload polarization file"
               type="file"
               ref={fileInputRef}
               onChange={(e) => {
@@ -822,7 +822,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
               {/* Alloy Selector */}
               <div className="space-y-1">
                 <label className="text-slate-300 block">Material Substrate:</label>
-                <select
+                <select aria-label="Material Substrate"
                   value={selectedAlloyId}
                   onChange={(e) => handleAlloyChange(e.target.value)}
                   className="w-full bg-[#050810] border border-[#162032] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400"
@@ -839,7 +839,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <span className="text-slate-400 block">Area (cm²):</span>
-                  <input
+                  <input aria-label="Area (cm²)"
                     type="number"
                     min="0.01"
                     max="1000"
@@ -851,7 +851,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-400 block">Ref. Electrode:</span>
-                  <select
+                  <select aria-label="Ref. Electrode"
                     value={referenceElectrode}
                     onChange={(e) => setReferenceElectrode(e.target.value as ReferenceElectrodeType)}
                     className="w-full bg-[#050810] border border-[#162032] rounded-lg px-2 py-1.5 text-white text-[11px]"
@@ -868,7 +868,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
               <div className="grid grid-cols-2 gap-3 text-[11px]">
                 <div className="space-y-1">
                   <span className="text-slate-400 block">Density (g/cm³):</span>
-                  <input
+                  <input aria-label="Density (g/cm³)"
                     type="number"
                     step="0.01"
                     value={customDensity}
@@ -878,7 +878,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-400 block">Equiv. Weight (g/eq):</span>
-                  <input
+                  <input aria-label="Equiv. Weight (g/eq)"
                     type="number"
                     step="0.01"
                     value={customEW}
@@ -891,7 +891,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
               {/* Electrolyte description */}
               <div className="space-y-1">
                 <span className="text-slate-400 block">Electrolyte Medium:</span>
-                <input
+                <input aria-label="Electrolyte Medium"
                   type="text"
                   value={electrolyteDesc}
                   onChange={(e) => setElectrolyteDesc(e.target.value)}
@@ -925,7 +925,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                   <span className="text-white font-bold block">Interactive Manual Tuning</span>
                   <span className="text-[10px] text-slate-400 block">Enable manual sliders for Ecorr, Icorr &amp; Slopes</span>
                 </div>
-                <input
+                <input aria-label="Interactive Manual Tuning"
                   type="checkbox"
                   checked={isManualOverride}
                   onChange={(e) => setIsManualOverride(e.target.checked)}
@@ -947,7 +947,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div>
                     <span className="text-slate-400 block">Cathodic Lower:</span>
-                    <input
+                    <input aria-label="Cathodic Lower (V)"
                       type="number"
                       step="0.01"
                       value={customCathodicRange ? customCathodicRange[0] : fitResult.cathodicRange[0]}
@@ -960,7 +960,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                   </div>
                   <div>
                     <span className="text-slate-400 block">Cathodic Upper:</span>
-                    <input
+                    <input aria-label="Cathodic Upper (V)"
                       type="number"
                       step="0.01"
                       value={customCathodicRange ? customCathodicRange[1] : fitResult.cathodicRange[1]}
@@ -991,7 +991,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div>
                     <span className="text-slate-400 block">Anodic Lower:</span>
-                    <input
+                    <input aria-label="Anodic Lower (V)"
                       type="number"
                       step="0.01"
                       value={customAnodicRange ? customAnodicRange[0] : fitResult.anodicRange[0]}
@@ -1004,7 +1004,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                   </div>
                   <div>
                     <span className="text-slate-400 block">Anodic Upper:</span>
-                    <input
+                    <input aria-label="Anodic Upper (V)"
                       type="number"
                       step="0.01"
                       value={customAnodicRange ? customAnodicRange[1] : fitResult.anodicRange[1]}
@@ -1033,7 +1033,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                       <span>E_corr Micro-Tune:</span>
                       <span className="text-emerald-400 font-bold">{(manualEcorr ?? fitResult.eCorr).toFixed(4)} V</span>
                     </div>
-                    <input
+                    <input aria-label="E_corr Micro-Tune (V)"
                       type="range"
                       min={fitResult.eCorr - 0.20}
                       max={fitResult.eCorr + 0.20}
@@ -1049,7 +1049,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                       <span>log₁₀(i_corr) Micro-Tune:</span>
                       <span className="text-sky-300 font-bold">{(manualLogIcorr ?? fitResult.logIcorr).toFixed(2)} log(µA/cm²)</span>
                     </div>
-                    <input
+                    <input aria-label="log₁₀(i_corr) Micro-Tune (log(µA/cm²))"
                       type="range"
                       min={-4.0}
                       max={4.0}
@@ -1593,7 +1593,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
               Paste two columns (Potential V and Current A/mA/µA) separated by tabs, commas, or spaces from Excel, Origin, or instrument logs:
             </p>
 
-            <textarea
+            <textarea aria-label="Paste two columns (Potential V and Current A/mA/µA)"
               rows={10}
               value={pastedText}
               onChange={(e) => setPastedText(e.target.value)}

@@ -1592,7 +1592,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <span className="text-slate-300">Scale Ref:</span>
-                  <input
+                  <input aria-label={`Scale Ref (${caliperInputUnit})`}
                     type="number"
                     min="0.1"
                     max="10000"
@@ -1601,7 +1601,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     onChange={(e) => setCaliperInputVal(parseFloat(e.target.value) || 1)}
                     className="w-16 px-2 py-1 rounded bg-[#090e18] border border-amber-500/40 text-white font-bold text-center"
                   />
-                  <select
+                  <select aria-label="Scale Ref unit"
                     value={caliperInputUnit}
                     onChange={(e) => setCaliperInputUnit(e.target.value as any)}
                     className="px-2 py-1 rounded bg-[#090e18] border border-amber-500/40 text-amber-300 text-xs font-bold"
@@ -1705,7 +1705,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                 </button>
 
                 {isPipetteActive && (
-                  <select
+                  <select aria-label="Phase Pipette target phase"
                     value={pipetteTargetPhase}
                     onChange={(e) => setPipetteTargetPhase(e.target.value)}
                     className="px-1.5 py-0.5 rounded bg-[#0c1322] border border-purple-500/40 text-purple-300 text-[10px]"
@@ -1721,7 +1721,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 text-[10px] text-slate-400">
                   <span>Overlay:</span>
-                  <input
+                  <input aria-label="Overlay opacity (%)"
                     type="range"
                     min="20"
                     max="100"
@@ -1805,7 +1805,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Scale Factor:</span>
                     <span className="text-sky-300 font-bold">{scaleMicronsPerPixel} µm/px</span>
                   </div>
-                  <input
+                  <input aria-label="Scale Factor (µm/px)"
                     type="range"
                     min="0.002"
                     max="0.5"
@@ -1821,7 +1821,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Matrix Upper Bound:</span>
                     <span className="text-sky-300 font-bold">{matrixUpperThreshold} lum</span>
                   </div>
-                  <input
+                  <input aria-label="Matrix Upper Bound (lum)"
                     type="range"
                     min={poreThreshold + 5}
                     max={precipitateUpperThreshold - 5}
@@ -1836,7 +1836,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                     <span>Precipitate Bound:</span>
                     <span className="text-amber-300 font-bold">{precipitateUpperThreshold} lum</span>
                   </div>
-                  <input
+                  <input aria-label="Precipitate Bound (lum)"
                     type="range"
                     min={matrixUpperThreshold + 5}
                     max="250"

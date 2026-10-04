@@ -674,7 +674,7 @@ Provide an evidence-gap review:
                   {Object.entries(activeTwin.chemistry.nominalComposition).map(([el, val]) => (
                     <span key={el} className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs font-mono flex items-center gap-1">
                       <strong className="text-sky-400">{el}:</strong>
-                      <input
+                      <input aria-label={`${el} nominal composition`}
                         type="number"
                         step="0.1"
                         min="0"

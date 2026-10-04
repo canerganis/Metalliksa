@@ -218,7 +218,7 @@ export const WebGLEDSHyperMapCanvas: React.FC<WebGLEDSHyperMapCanvasProps> = ({
         <div className="absolute top-14 right-3 z-20 bg-slate-950/95 border border-slate-700/80 rounded-xl p-3 shadow-2xl space-y-2 text-xs font-mono backdrop-blur-md w-56">
           <div className="flex justify-between items-center text-slate-300">
             <span>GPU Gamma ({localGamma.toFixed(2)})</span>
-            <input
+            <input aria-label="GPU Gamma"
               type="range"
               min="0.4"
               max="2.5"
@@ -230,7 +230,7 @@ export const WebGLEDSHyperMapCanvas: React.FC<WebGLEDSHyperMapCanvasProps> = ({
           </div>
           <div className="flex justify-between items-center text-slate-300">
             <span>Contrast ({localContrast.toFixed(2)})</span>
-            <input
+            <input aria-label="Contrast"
               type="range"
               min="0.5"
               max="2.0"

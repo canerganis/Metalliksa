@@ -219,7 +219,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
           {/* Search Input */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input
+            <input aria-label="Filter materials"
               type="text"
               placeholder="Search alloy name, UNS, ASTM, composition (e.g., Ti, Ni, Cu), application..."
               value={searchQuery}
@@ -248,7 +248,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
             {/* Sort Selector */}
             <div className="flex items-center gap-1 bg-[#090e18] border border-[#162032] rounded-lg p-0.5 text-xs text-slate-400">
               <span className="pl-2 font-mono text-[10px] text-slate-500">Sort:</span>
-              <select
+              <select aria-label="Sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="bg-transparent px-2 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
@@ -298,7 +298,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-emerald-400 font-bold">{minYield} – {maxYield} MPa</span>
               </div>
               <div className="flex items-center gap-2">
-                <input
+                <input aria-label="Minimum Yield Strength (σy) (MPa)"
                   type="range"
                   min="0"
                   max="3500"
@@ -317,7 +317,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-cyan-400 font-bold">{minModulus} – {maxModulus} GPa</span>
               </div>
               <div className="flex items-center gap-2">
-                <input
+                <input aria-label="Minimum Young's Modulus (E) (GPa)"
                   type="range"
                   min="40"
                   max="650"
@@ -336,7 +336,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
                 <span className="text-amber-400 font-bold">{minDensity.toFixed(1)} – {maxDensity.toFixed(1)} g/cm³</span>
               </div>
               <div className="flex items-center gap-2">
-                <input
+                <input aria-label="Maximum Density (ρ) (g/cm³)"
                   type="range"
                   min="1.5"
                   max="17.0"

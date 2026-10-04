@@ -879,7 +879,7 @@ export const PhaseDiagramViewer: React.FC = () => {
                 </span>
                 <span className="text-sky-400 font-extrabold text-sm">{compositionC.toFixed(2)} % C</span>
               </div>
-              <input
+              <input aria-label="Carbon Composition (wt % C)"
                 type="range"
                 min="0"
                 max="6.67"
@@ -906,7 +906,7 @@ export const PhaseDiagramViewer: React.FC = () => {
                 </span>
                 <span className="text-amber-400 font-extrabold text-sm">{temperatureC} °C</span>
               </div>
-              <input
+              <input aria-label="Isothermal Probe Temperature (°C)"
                 type="range"
                 min="400"
                 max="1600"
@@ -1029,7 +1029,7 @@ export const PhaseDiagramViewer: React.FC = () => {
               <label className="text-[11px] font-mono text-slate-400 block mb-1">
                 Select Alloy Standard Preset:
               </label>
-              <select
+              <select aria-label="Select Alloy Standard Preset"
                 value={selectedPreset}
                 onChange={(e) => handleSelectPreset(e.target.value)}
                 className="w-full px-3 py-2 bg-[#050810] border border-[#162032] text-sky-300 font-mono text-xs rounded-xl focus:outline-none focus:border-sky-400"

@@ -948,7 +948,7 @@ export const StandardQualificationEngine: React.FC = () => {
             {/* Alloy Name */}
             <div className="space-y-1">
               <label className="text-[11px] text-slate-400 block">Alloy Designation & Spec:</label>
-              <input
+              <input aria-label="Alloy Designation & Spec"
                 type="text"
                 value={alloyName}
                 onChange={(e) => setAlloyName(e.target.value)}
@@ -963,7 +963,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Mean Fty (Yield):</span>
                   <span className="text-sky-300 font-bold">{meanYieldMpa} MPa</span>
                 </div>
-                <input
+                <input aria-label="Mean Fty (Yield) (MPa)"
                   type="range"
                   min={200}
                   max={2200}
@@ -979,7 +979,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Mean Ftu (Tensile):</span>
                   <span className="text-emerald-300 font-bold">{meanTensileMpa} MPa</span>
                 </div>
-                <input
+                <input aria-label="Mean Ftu (Tensile) (MPa)"
                   type="range"
                   min={250}
                   max={2500}
@@ -998,7 +998,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Fracture K_IC:</span>
                   <span className="text-amber-300 font-bold">{fractureToughnessMpaM} MPa√m</span>
                 </div>
-                <input
+                <input aria-label="Fracture K_IC (MPa√m)"
                   type="range"
                   min={15}
                   max={140}
@@ -1014,7 +1014,7 @@ export const StandardQualificationEngine: React.FC = () => {
                   <span className="text-slate-400">Sample Count (N):</span>
                   <span className="text-white font-bold">{sampleSizeN} coupons</span>
                 </div>
-                <input
+                <input aria-label="Sample Count (N) (coupons)"
                   type="range"
                   min={10}
                   max={300}
@@ -1032,7 +1032,7 @@ export const StandardQualificationEngine: React.FC = () => {
                 <span className="text-slate-400">Statistical Scatter (Cv = σ/μ):</span>
                 <span className="text-cyan-300 font-bold">{customScatterCv}%</span>
               </div>
-              <input
+              <input aria-label="Statistical Scatter (Cv = σ/μ) (%)"
                 type="range"
                 min={1.0}
                 max={12.0}
@@ -1060,7 +1060,7 @@ export const StandardQualificationEngine: React.FC = () => {
             {/* Route Selector */}
             <div className="space-y-1.5">
               <label className="text-[11px] text-slate-400 block">Manufacturing & Processing Route:</label>
-              <select
+              <select aria-label="Manufacturing & Processing Route"
                 value={selectedMfgRouteId}
                 onChange={(e) => handleRouteSelect(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg bg-[#050810] border border-[#162032] text-xs text-sky-300 focus:outline-none focus:border-sky-400"
@@ -1076,7 +1076,7 @@ export const StandardQualificationEngine: React.FC = () => {
             {/* Protective Barrier Coating */}
             <div className="space-y-1.5">
               <label className="text-[11px] text-slate-400 block">Surface Barrier & Corrosion Protection:</label>
-              <select
+              <select aria-label="Surface Barrier & Corrosion Protection"
                 value={selectedCoatingId}
                 onChange={(e) => setSelectedCoatingId(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg bg-[#050810] border border-[#162032] text-xs text-emerald-300 focus:outline-none focus:border-emerald-400"
@@ -1093,7 +1093,7 @@ export const StandardQualificationEngine: React.FC = () => {
             <div className="grid grid-cols-3 gap-2.5 pt-1">
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-400 block">Min Temp (°C):</span>
-                <input
+                <input aria-label="Min Temp (°C)"
                   type="number"
                   value={serviceTempMin}
                   onChange={(e) => setServiceTempMin(parseInt(e.target.value))}
@@ -1103,7 +1103,7 @@ export const StandardQualificationEngine: React.FC = () => {
 
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-400 block">Max Temp (°C):</span>
-                <input
+                <input aria-label="Max Temp (°C)"
                   type="number"
                   value={serviceTempMax}
                   onChange={(e) => setServiceTempMax(parseInt(e.target.value))}
@@ -1113,7 +1113,7 @@ export const StandardQualificationEngine: React.FC = () => {
 
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-400 block">Design Stress (MPa):</span>
-                <input
+                <input aria-label="Design Stress (MPa)"
                   type="number"
                   value={operatingStressMpa}
                   onChange={(e) => setOperatingStressMpa(parseInt(e.target.value))}
@@ -1456,7 +1456,7 @@ export const StandardQualificationEngine: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[11px] block">Lead Metallurgical Engineer / Signatory:</label>
-                    <input
+                    <input aria-label="Lead Metallurgical Engineer / Signatory"
                       type="text"
                       value={cocEngineerName}
                       onChange={(e) => setCocEngineerName(e.target.value)}
@@ -1466,7 +1466,7 @@ export const StandardQualificationEngine: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[11px] block">Accredited Testing Facility / Org:</label>
-                    <input
+                    <input aria-label="Accredited Testing Facility / Org"
                       type="text"
                       value={cocFacility}
                       onChange={(e) => setCocFacility(e.target.value)}
@@ -1476,7 +1476,7 @@ export const StandardQualificationEngine: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[11px] block">Target program / screening example:</label>
-                    <input
+                    <input aria-label="Target program / screening example"
                       type="text"
                       value={cocProgramName}
                       onChange={(e) => setCocProgramName(e.target.value)}
@@ -1486,7 +1486,7 @@ export const StandardQualificationEngine: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="text-slate-400 text-[11px] block">Document Revision ID:</label>
-                    <input
+                    <input aria-label="Document Revision ID"
                       type="text"
                       value={cocRevision}
                       onChange={(e) => setCocRevision(e.target.value)}

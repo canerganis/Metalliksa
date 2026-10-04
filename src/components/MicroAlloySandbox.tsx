@@ -489,7 +489,7 @@ export const MicroAlloySandbox: React.FC<Props> = ({
 
               {/* Slider Input */}
               <div className="flex items-center gap-3">
-                <input
+                <input aria-label={`${elem} weight percent slider`}
                   type="range"
                   min="0"
                   max={isBase ? "95" : "45"}
@@ -515,7 +515,7 @@ export const MicroAlloySandbox: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <select
+            <select aria-label="Add Micro-Alloying Element to Formula (Dopant / Grain Refiner)"
               value={elementToAdd}
               onChange={(e) => setElementToAdd(e.target.value)}
               className="px-2.5 py-1.5 rounded-lg bg-[#162032] border border-[#273754] text-xs text-white focus:outline-none focus:border-amber-400 font-mono"
