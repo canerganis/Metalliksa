@@ -12,6 +12,7 @@ import {
   BOOT_SKIP_STORAGE_KEY,
   createBootController,
   type BootController,
+  type BootOptions,
   type BootOutcome,
   type BootStep,
 } from "../utils/bootSequence";
@@ -129,14 +130,23 @@ export function writeSkipFlag(): void {
   }
 }
 
+/**
+ * Controller options from the environment. The remembered flag and reduced motion only switch the
+ * animation off; the steps are always the full list and always run.
+ */
+export function bootOptions(deps: BootStepDeps): BootOptions {
+  return {
+    steps: buildBootSteps(deps),
+    reducedMotion: prefersReducedMotion(),
+    skipAnimation: readSkipFlag(),
+    remember: writeSkipFlag,
+  };
+}
+
 let controller: BootController | null = null;
 
 /** One controller per page load, shared by the boot overlay and the telemetry strip. */
 export function getBootController(deps: () => BootStepDeps): BootController {
-  controller ??= createBootController({
-    steps: buildBootSteps(deps()),
-    reducedMotion: prefersReducedMotion(),
-    skipAnimation: readSkipFlag(),
-  });
+  controller ??= createBootController(bootOptions(deps()));
   return controller;
 }

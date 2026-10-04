@@ -2,7 +2,9 @@ import React from "react";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { BootSequence } from "../src/components/BootSequence";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { BootSequence, bootController } from "../src/components/BootSequence";
 import { TelemetryStrip } from "../src/components/TelemetryStrip";
 import { MODULES } from "../src/data/workspaces";
 
@@ -21,6 +23,35 @@ test("first paint of the boot screen: a labelled dialog, a plain list of five wa
   assert.ok(!html.includes("%"), "no percent progress");
   assert.ok(!/online|OK</.test(html), "nothing is reported before a check has answered");
   assert.match(html, />Skip intro</);
+});
+
+test("Esc, backdrop and the button share one skip handler that only hides the overlay", () => {
+  const src = readFileSync(resolve(process.cwd(), "src/components/BootSequence.tsx"), "utf8");
+  const tag = src.slice(src.indexOf("<AccessibleModal"), src.indexOf(">", src.indexOf("panelClassName")));
+  assert.match(tag, /onClose=\{skip\}/, "Esc goes through the shared escape stack to skip");
+  assert.match(tag, /\bcloseOnBackdrop\b/, "backdrop click skips");
+  assert.match(src, /onClick=\{skip\}/);
+  assert.match(src, /const skip = \(\) => controller\.skip\(\);/, "skip never cancels or replaces checks");
+});
+
+// Runs after the first-paint test: it hides the page singleton for the rest of this file.
+test("after a skip the overlay renders nothing while the checks still run to the end", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async () => {
+    throw new TypeError("offline in test");
+  }) as typeof fetch;
+  try {
+    const controller = bootController();
+    const run = controller.start();
+    controller.skip();
+    assert.equal(renderToStaticMarkup(<BootSequence />), "");
+    await run;
+    const snap = controller.getSnapshot();
+    assert.equal(snap.finished, 5);
+    assert.deepEqual(snap.rows.map((r) => r.state), ["limited", "unavailable", "unavailable", "unavailable", "ok"]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("telemetry strip before any source answers: 'checking'/'unavailable', never a placeholder value", () => {

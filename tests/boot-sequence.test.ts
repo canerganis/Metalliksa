@@ -81,6 +81,23 @@ test("a check that does not answer within 8 s is recorded as timed-out and the n
   assert.equal(BOOT_STEP_TIMEOUT_MS, 8000);
 });
 
+test("a late answer after the 8 s timeout is ignored: the row stays timed-out", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let late!: (o: BootOutcome) => void;
+  const c = createBootController({ steps: [step("slow", () => new Promise((r) => (late = r))), step("next", ok("after"))] });
+  void c.start();
+  await flush();
+  t.mock.timers.tick(BOOT_STEP_TIMEOUT_MS);
+  await flush();
+  assert.equal(c.getSnapshot().rows[0].state, "timed-out");
+  late({ state: "ok", detail: "too late" });
+  await flush();
+  const snap = c.getSnapshot();
+  assert.deepEqual([snap.rows[0].state, snap.rows[0].detail.startsWith("No answer within 8 s")], ["timed-out", true]);
+  assert.deepEqual([snap.rows[1].state, snap.rows[1].detail], ["ok", "after"]);
+  assert.equal(snap.finished, 2);
+});
+
 test("a failing check (throw or reject) is recorded with its reason and boot continues", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const c = createBootController({

@@ -133,11 +133,16 @@ test("boot rows are a plain list with one live k/N region, the overlay reuses Ac
   assert.doesNotMatch(boot, /%|percent/i, "progress is a discrete k/N count, never a percent");
 });
 
-test("boot and telemetry text never claims validation or readiness", () => {
-  for (const file of [...NEW_TSX, "src/services/bootSteps.ts"]) {
-    const literals = [...read(file).matchAll(/"([^"\n]*)"|`([^`\n]*)`/g)].map((m) => m[1] ?? m[2]);
-    for (const s of literals) assert.doesNotMatch(s, /\bvalidated\b|\bready\b|\bcertified\b/i, `${file}: "${s}"`);
+test("boot and telemetry text never claims validation or readiness (strings in any quote style and JSX text)", () => {
+  const claim = /\b(validated|ready|certified|qualified)\b/i;
+  for (const file of [...NEW_TSX, ...NEW_TS]) {
+    // Whole source minus comments: covers "..." '...' `...` literals and JSX text nodes alike.
+    const code = read(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+    const hits = code.split(/\r?\n/).filter((line) => claim.test(line));
+    assert.deepEqual(hits, [], `${file} claims validation/readiness`);
   }
+  // Self-check: the scan sees single-quoted strings and JSX text.
+  assert.ok(claim.test("<p>Engine ready</p>") && claim.test("'validated'"));
 });
 
 test("hero is labelled illustrative and respects DPR, visibility and disposal budgets", () => {

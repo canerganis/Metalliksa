@@ -10,7 +10,7 @@ import { AccessibleModal } from "./AccessibleModal";
 import { fetchRuntimeConfig, runtimeConfigProbe } from "./AirgapBanner";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { MODULES } from "../data/workspaces";
-import { getBootController, writeSkipFlag } from "../services/bootSteps";
+import { getBootController } from "../services/bootSteps";
 import { BOOT_STATE_TEXT, bootSummary, type BootController, type BootStepState } from "../utils/bootSequence";
 // Styles: src/styles/boot.css, imported once from src/main.tsx.
 
@@ -74,8 +74,8 @@ export function BootSequence() {
   }, [wantsHero, webgl]);
 
   useEffect(() => {
+    // The controller already remembered the finished boot (sessionStorage) before entering "done".
     if (snap.phase !== "done") return undefined;
-    writeSkipFlag();
     if (!snap.animate) {
       setGone(true);
       return undefined;
@@ -87,10 +87,8 @@ export function BootSequence() {
 
   if (gone || snap.dismissed) return null;
 
-  const skip = () => {
-    writeSkipFlag();
-    controller.skip();
-  };
+  // Esc (shared escape stack), backdrop click and the button all hide the overlay; checks keep running.
+  const skip = () => controller.skip();
   const stopped = snap.phase === "stopped";
 
   return (

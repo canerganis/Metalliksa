@@ -49,6 +49,8 @@ export interface BootOptions {
   exitDelayMs?: number;
   reducedMotion?: boolean;
   skipAnimation?: boolean;
+  /** Called on skip() and when the boot finishes, to remember "no animation" for reloads. Never skips a check. */
+  remember?: () => void;
 }
 
 export interface BootController {
@@ -155,7 +157,9 @@ export function createBootController(options: BootOptions): BootController {
     }
     set({ phase: "complete" });
     exitTimer = setTimeout(() => {
-      if (!disposed) set({ phase: "done" });
+      if (disposed) return;
+      options.remember?.();
+      set({ phase: "done" });
     }, exitDelayMs);
   };
 
@@ -165,6 +169,7 @@ export function createBootController(options: BootOptions): BootController {
       return started;
     },
     skip() {
+      options.remember?.();
       if (!snapshot.dismissed) set({ dismissed: true, animate: false });
     },
     dispose() {

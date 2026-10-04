@@ -2,7 +2,7 @@ import React from "react";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AirgapBanner, fetchRuntimeConfig, installApiUnauthorizedWatcher, isWatchedApiRequest } from "../src/components/AirgapBanner";
+import { AirgapBanner, fetchRuntimeConfig, installApiUnauthorizedWatcher, isWatchedApiRequest, runtimeConfigProbe } from "../src/components/AirgapBanner";
 import { pythonComputationService } from "../src/services/pythonComputationService";
 
 test("isWatchedApiRequest only matches same-origin /api requests other than runtime-config", () => {
@@ -41,6 +41,35 @@ test("SCRIPT_EXEC_DISABLED server message is surfaced instead of the generic sta
     await assert.rejects(pythonComputationService.executeBatteryCorrosionUserScript("print(1)"), /Script execution is disabled\./);
     globalThis.fetch = (async () => new Response("oops", { status: 500 })) as typeof fetch;
     await assert.rejects(pythonComputationService.executeBatteryCorrosionUserScript("print(1)"), /HTTP 500/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("runtimeConfigProbe reports what the last request established (500, network error, 401, 200)", async () => {
+  const realFetch = globalThis.fetch;
+  const respond = (status: number, body = "{}") => (async () => new Response(body, { status })) as typeof fetch;
+  try {
+    globalThis.fetch = respond(500);
+    const fallback = await fetchRuntimeConfig(true);
+    assert.deepEqual(runtimeConfigProbe(), { loaded: false, accessRequired: false, failure: "HTTP 500" });
+    assert.equal(fallback.airgapped, false, "fallback values are returned...");
+    // ...but are never reported as loaded (checked above), so the boot and strip show "unavailable".
+
+    globalThis.fetch = (async () => {
+      throw new TypeError("network down");
+    }) as typeof fetch;
+    await fetchRuntimeConfig(true);
+    assert.deepEqual(runtimeConfigProbe(), { loaded: false, accessRequired: false, failure: "network down" });
+
+    globalThis.fetch = respond(401);
+    await fetchRuntimeConfig(true);
+    assert.deepEqual(runtimeConfigProbe(), { loaded: false, accessRequired: true, failure: "HTTP 401" });
+
+    globalThis.fetch = respond(200, JSON.stringify({ airgapped: true, blockedServices: ["x"], allowedLocal: [] }));
+    const cfg = await fetchRuntimeConfig(true);
+    assert.deepEqual(runtimeConfigProbe(), { loaded: true, accessRequired: false, failure: null });
+    assert.equal(cfg.airgapped, true);
   } finally {
     globalThis.fetch = realFetch;
   }
