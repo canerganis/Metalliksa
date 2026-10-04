@@ -55,16 +55,15 @@ const PINNED_GUARDED = [
   "src/components/MetallurgicalQuickConversionsGrid.tsx",
   "src/components/MetallurgyCopilot.tsx",
   "src/components/MicroAlloySandbox.tsx",
-  "src/components/MicrographLab.tsx",
+  "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab
+  "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MurakamiFatigueLab.tsx",
   "src/components/PhaseDiagramViewer.tsx",
   "src/components/PhaseKineticsTTTCCTStudio.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
-  "src/components/SEMAutoAnalyzerStudio.tsx",
   "src/components/StandardQualificationEngine.tsx",
   "src/components/TafelPolarizationLab.tsx",
   "src/components/UQLab.tsx",
-  "src/components/WebGLEDSHyperMapCanvas.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
@@ -244,8 +243,8 @@ export function rawUnitInterpolations(source: string): number[] {
     });
   return lines;
 }
-// Option values are already the display text there (µm/nm/mm), so interpolating the state is safe.
-const RAW_UNIT_ALLOWED = new Set(["src/components/SEMAutoAnalyzerStudio.tsx"]);
+// Files whose *Unit state values are already display text (µm/nm/mm), so interpolating them is safe.
+const RAW_UNIT_ALLOWED = new Set<string>([]); // the only former entry (SEMAutoAnalyzerStudio.tsx) was deleted
 
 function listTsx(dir: string): string[] {
   return (readdirSync(resolve(ROOT, dir), { recursive: true }) as string[])
