@@ -274,12 +274,16 @@ class EvidenceCeilingTests(unittest.TestCase):
         with self.assertRaises(mc.ContractError):
             _contract(evidence=strong)
         present = mc.TestRefs(schema="python/test_contract_uq_lab.py", docs="docs/modules/uq-lab.md",
-                              oracle=mc.Oracle(status="present", ref="python/test_uq_oracle.py"))
+                              oracle=mc.Oracle(status="present", ref="python/test_uq_oracle.py", scope="Checks x."))
         self.assertEqual(_contract(evidence=strong, tests=present).evidence.ceiling, "calibrated-simulation")
 
     def test_present_oracle_requires_reference(self):
         with self.assertRaises(mc.ContractError):
             mc.Oracle(status="present")
+        with self.assertRaises(mc.ContractError):  # and a user-facing scope sentence
+            mc.Oracle(status="present", ref="python/x.py")
+        with self.assertRaises(mc.ContractError):
+            mc.Oracle(status="pending", scope="Checks x.")
 
 
 class ForbiddenClaimTests(unittest.TestCase):
@@ -487,7 +491,8 @@ class ContractedRegistryTests(unittest.TestCase):
         # The oracle reference is checked too.
         def bad_oracle(row):
             contract = mr.CONTRACTED_BUILDERS[row["id"]](row)
-            tests = dataclasses.replace(contract.tests, oracle=mc.Oracle(status="present", ref="python/nope.py::T.t"))
+            oracle = dataclasses.replace(contract.tests.oracle, ref="python/nope.py::T.t")
+            tests = dataclasses.replace(contract.tests, oracle=oracle)
             return dataclasses.replace(contract, tests=tests)
         with self.assertRaisesRegex(ValueError, "keyhole-raytracing: unresolved references"):
             mr.build_registry(builders=dict(mr.CONTRACTED_BUILDERS, **{"keyhole-raytracing": bad_oracle}))
@@ -550,7 +555,7 @@ class ContractedRegistryTests(unittest.TestCase):
             self.assertEqual(set(entry), allowed)
             self.assertEqual(set(entry["evidence"]), {"ceiling"})
             self.assertEqual(set(entry["tests"]), {"oracle"})
-            self.assertEqual(set(entry["tests"]["oracle"]), {"status", "ciNote"})
+            self.assertEqual(set(entry["tests"]["oracle"]), {"status", "ciNote", "scope"})
         self.assertIn(mr.GENERATED_CORE_TS, mr.rendered_outputs())
 
     def test_ref_forms(self):

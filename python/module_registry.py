@@ -407,6 +407,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                   evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
                                     note=_KEYHOLE_EVIDENCE_NOTE),
                   oracle=Oracle(status="present", ci_note=_KEYHOLE_ORACLE_CI_NOTE,
+                                scope="It checks sampling and energy bookkeeping on a flat surface only.",
                                 ref="python/test_keyhole_contract.py::KeyholeContract."
                                                       "test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"),
                   lifecycle=Lifecycle(background_work="none", resources=("raf", "three", "fetch")),
@@ -725,7 +726,9 @@ def render_ts(document: dict) -> str:
         "  readonly lifecycle: { readonly backgroundWork: BackgroundWork; readonly resources: readonly LifecycleResource[] } | null;",
         "  readonly tests: {",
         "    readonly schema: string | null;",
-        "    readonly oracle: { readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null };",
+        "    readonly oracle: {",
+        "      readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null; readonly scope: string | null;",
+        "    };",
         "    readonly docs: string | null;",
         "  };",
         "  readonly migrationState: MigrationState;",
@@ -811,6 +814,7 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Emits: {', '.join(e.emits) if e.emits else 'none'}",
         f"- Forbidden claims: {', '.join(e.forbidden_claims)}",
         f"- Oracle: {oracle}",
+        f"- Oracle scope: {c.tests.oracle.scope}" if c.tests.oracle.scope else "- Oracle scope: none",
         f"- Oracle in CI: {c.tests.oracle.ci_note}" if c.tests.oracle.ci_note else "- Oracle in CI: no recorded gap",
         f"- Note: {e.note}" if e.note else "- Note: none",
         "",
@@ -853,7 +857,7 @@ def core_document(document: dict) -> dict:
         slim = {key: contract[key] for key in CORE_CONTRACT_KEYS}
         slim["evidence"] = {"ceiling": contract["evidence"]["ceiling"]}
         oracle = contract["tests"]["oracle"]
-        slim["tests"] = {"oracle": {"status": oracle["status"], "ciNote": oracle["ciNote"]}}
+        slim["tests"] = {"oracle": {"status": oracle["status"], "ciNote": oracle["ciNote"], "scope": oracle["scope"]}}
         return slim
     vocabulary = document["vocabulary"]
     return {
@@ -888,7 +892,9 @@ def render_core_ts(document: dict) -> str:
         "  readonly view: { readonly component: string; readonly export: string };",
         "  readonly migrationState: MigrationState;",
         "  readonly evidence: { readonly ceiling: EvidenceType };",
-        "  readonly tests: { readonly oracle: { readonly status: OracleState; readonly ciNote: string | null } };",
+        "  readonly tests: {",
+        "    readonly oracle: { readonly status: OracleState; readonly ciNote: string | null; readonly scope: string | null };",
+        "  };",
         "}",
         "export interface ModuleRegistryCoreDocument {",
         "  readonly schemaVersion: number; readonly generatedBy: string;",

@@ -75,7 +75,7 @@ test('the eager core slice is exactly the projection of the full registry', () =
   const expected = registry.contracts.map(contract => ({
     ...Object.fromEntries(CORE_KEYS.map(key => [key, contract[key]])),
     evidence: { ceiling: contract.evidence.ceiling },
-    tests: { oracle: { status: contract.tests.oracle.status, ciNote: contract.tests.oracle.ciNote } },
+    tests: { oracle: { status: contract.tests.oracle.status, ciNote: contract.tests.oracle.ciNote, scope: contract.tests.oracle.scope } },
   }));
   assert.deepEqual(MODULE_REGISTRY_CORE.contracts, expected);
   const text = readFileSync(new URL('../src/generated/moduleRegistryCore.ts', import.meta.url), 'utf8');

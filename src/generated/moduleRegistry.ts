@@ -52,7 +52,9 @@ export interface ModuleContract {
   readonly lifecycle: { readonly backgroundWork: BackgroundWork; readonly resources: readonly LifecycleResource[] } | null;
   readonly tests: {
     readonly schema: string | null;
-    readonly oracle: { readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null };
+    readonly oracle: {
+      readonly status: OracleState; readonly ref: string | null; readonly ciNote: string | null; readonly scope: string | null;
+    };
     readonly docs: string | null;
   };
   readonly migrationState: MigrationState;
@@ -348,7 +350,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -410,7 +413,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -472,7 +476,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -534,7 +539,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -596,7 +602,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -658,7 +665,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -720,7 +728,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -782,7 +791,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -844,7 +854,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -906,7 +917,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -968,7 +980,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1030,7 +1043,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1092,7 +1106,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1154,7 +1169,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1216,7 +1232,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1278,7 +1295,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1322,7 +1340,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1617,7 +1636,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "present",
           "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts",
-          "ciNote": "Oracle not run in CI (requires Warp/GPU stack)."
+          "ciNote": "Oracle not run in CI (requires Warp/GPU stack).",
+          "scope": "It checks sampling and energy bookkeeping on a flat surface only."
         },
         "docs": "docs/modules/keyhole-raytracing.md"
       },
@@ -1693,7 +1713,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1755,7 +1776,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1851,7 +1873,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1913,7 +1936,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -1992,7 +2016,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2056,7 +2081,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2152,7 +2178,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2214,7 +2241,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2293,7 +2321,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2357,7 +2386,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2453,7 +2483,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2497,7 +2528,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2561,7 +2593,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -2928,7 +2961,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": "docs/modules/uq-lab.md"
       },
@@ -3012,7 +3046,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -3076,7 +3111,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -3122,7 +3158,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -3186,7 +3223,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },
@@ -3248,7 +3286,8 @@ export const MODULE_REGISTRY = {
         "oracle": {
           "status": "pending",
           "ref": null,
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         },
         "docs": null
       },

@@ -424,17 +424,22 @@ class Oracle:
     # Recorded gap when a present oracle cannot run in CI (its imports are outside the
     # CI CPU lock). Must also appear in evidence.note; checked against the oracle's imports.
     ci_note: Optional[str] = None
+    # User-facing sentence on what a present oracle checks (shown with the evidence badge).
+    scope: Optional[str] = None
 
     def __post_init__(self) -> None:
         _one_of(self.status, ORACLE_STATES, "oracle.status")
         if self.status == "present":
             _text(self.ref, "oracle.ref")
+            _text(self.scope, "oracle.scope")
+        else:
+            _require(self.scope is None, "oracle.scope applies only to a present oracle")
         if self.ci_note is not None:
             _require(self.status == "present", "oracle.ciNote applies only to a present oracle")
             _text(self.ci_note, "oracle.ciNote")
 
     def to_dict(self) -> dict:
-        return {"status": self.status, "ref": self.ref, "ciNote": self.ci_note}
+        return {"status": self.status, "ref": self.ref, "ciNote": self.ci_note, "scope": self.scope}
 
 
 @dataclass(frozen=True)
@@ -644,7 +649,7 @@ def contract_from_dict(d: dict) -> ModuleContract:
                           forbidden_claims=tuple(ev["forbiddenClaims"]), note=ev["note"]),
         lifecycle=Lifecycle(background_work=lc["backgroundWork"], resources=tuple(lc["resources"])) if lc else None,
         tests=TestRefs(oracle=Oracle(status=t["oracle"]["status"], ref=t["oracle"]["ref"],
-                                     ci_note=t["oracle"]["ciNote"]),
+                                     ci_note=t["oracle"]["ciNote"], scope=t["oracle"]["scope"]),
                        schema=t["schema"], docs=t["docs"]),
         migration_state=d["migrationState"], legacy_notes=tuple(d["legacyNotes"]),
         source_refs=tuple(d["sourceRefs"]),

@@ -44,6 +44,7 @@ Output fields (no status key, so the output carries no evidence status): `status
 - Emits: none
 - Forbidden claims: qualified, certified, validated, measured, productionReady, airworthy
 - Oracle: present, `python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts`
+- Oracle scope: It checks sampling and energy bookkeeping on a flat surface only.
 - Oracle in CI: Oracle not run in CI (requires Warp/GPU stack).
 - Note: Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack).
 

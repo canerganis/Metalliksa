@@ -18,7 +18,9 @@ export interface ModuleContractCore {
   readonly view: { readonly component: string; readonly export: string };
   readonly migrationState: MigrationState;
   readonly evidence: { readonly ceiling: EvidenceType };
-  readonly tests: { readonly oracle: { readonly status: OracleState; readonly ciNote: string | null } };
+  readonly tests: {
+    readonly oracle: { readonly status: OracleState; readonly ciNote: string | null; readonly scope: string | null };
+  };
 }
 export interface ModuleRegistryCoreDocument {
   readonly schemaVersion: number; readonly generatedBy: string;
@@ -74,7 +76,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -99,7 +102,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -124,7 +128,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -149,7 +154,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -174,7 +180,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -199,7 +206,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -224,7 +232,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -249,7 +258,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -274,7 +284,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -299,7 +310,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -324,7 +336,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -349,7 +362,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -374,7 +388,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -399,7 +414,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -424,7 +440,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -449,7 +466,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -474,7 +492,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -499,7 +518,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "present",
-          "ciNote": "Oracle not run in CI (requires Warp/GPU stack)."
+          "ciNote": "Oracle not run in CI (requires Warp/GPU stack).",
+          "scope": "It checks sampling and energy bookkeeping on a flat surface only."
         }
       }
     },
@@ -524,7 +544,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -549,7 +570,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -574,7 +596,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -599,7 +622,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -624,7 +648,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -649,7 +674,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -674,7 +700,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -699,7 +726,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -724,7 +752,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -749,7 +778,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -774,7 +804,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -799,7 +830,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -824,7 +856,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -849,7 +882,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -874,7 +908,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -899,7 +934,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -924,7 +960,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -949,7 +986,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     },
@@ -974,7 +1012,8 @@ export const MODULE_REGISTRY_CORE = {
       "tests": {
         "oracle": {
           "status": "pending",
-          "ciNote": null
+          "ciNote": null,
+          "scope": null
         }
       }
     }

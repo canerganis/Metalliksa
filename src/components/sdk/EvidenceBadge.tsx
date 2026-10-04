@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { contractById, type EvidenceType, type OracleState, type RegisteredContract } from '../../modules/registry';
 
-// Phase 7 module SDK: shows a contracted module's evidence ceiling and oracle state from the
-// committed contract (src/generated/moduleRegistry.ts). It needs no server, takes no evidence
-// input and never derives or upgrades a claim; legacy modules render nothing.
+// Phase 7 module SDK: shows a contracted module's maximum evidence claim (the contract ceiling) and
+// oracle state from the committed core registry (src/generated/moduleRegistryCore.ts). It needs no
+// server, takes no evidence input and never derives or upgrades a claim; legacy modules render nothing.
 
 // Labels match the evidence legend in the App header.
 const EVIDENCE_LABELS: Record<EvidenceType, string> = {
@@ -19,7 +19,7 @@ export interface EvidenceBadgeView {
   readonly ceiling: EvidenceType;
   readonly oracle: OracleState;
   readonly text: string;
-  readonly title: string;
+  readonly description: string;
 }
 
 type BadgeContract = Pick<RegisteredContract, 'migrationState' | 'evidence' | 'tests'>;
@@ -28,26 +28,33 @@ type BadgeContract = Pick<RegisteredContract, 'migrationState' | 'evidence' | 't
 export function evidenceBadgeView(contract: BadgeContract | undefined): EvidenceBadgeView | null {
   if (!contract || contract.migrationState !== 'contracted') return null;
   const ceiling: EvidenceType = contract.evidence.ceiling;
-  const { status, ciNote } = contract.tests.oracle;
-  const oracleText = (status === 'present'
-    ? 'Oracle present. It checks the numerics only.'
-    : 'Oracle pending, so the ceiling stays capped.') + (ciNote ? ` ${ciNote}` : '');
+  const { status, ciNote, scope } = contract.tests.oracle;
+  const oracle = status === 'present' ? `Oracle present. ${scope ?? ''}` : 'Oracle pending, so the maximum claim stays capped.';
   return {
     ceiling,
     oracle: status,
-    text: `Ceiling: ${EVIDENCE_LABELS[ceiling]} · Oracle ${status}`,
-    title: `Contract evidence ceiling: the strongest evidence class this module may claim. `
-      + `It is not the status of a result and not a validation claim. ${oracleText}`,
+    text: `Max claim: ${EVIDENCE_LABELS[ceiling]} · Oracle ${status}`,
+    description: 'Maximum claim: the strongest evidence class this module may report under its contract. '
+      + `It is not the status of a result and not a validation claim. ${oracle.trim()}${ciNote ? ` ${ciNote}` : ''}`,
   };
 }
 
-export function EvidenceBadge({ moduleId }: { readonly moduleId: string }) {
-  const view = evidenceBadgeView(contractById(moduleId));
+/** Renders a given contract (exported for tests); the app uses EvidenceBadge by module id. */
+export function ContractEvidenceBadge({ contract }: { readonly contract: BadgeContract | undefined }) {
+  const descriptionId = useId();
+  const view = evidenceBadgeView(contract);
   if (!view) return null;
   return (
-    <span title={view.title} data-evidence-ceiling={view.ceiling} data-oracle={view.oracle}
-      className="rounded border border-slate-500/60 px-2 py-0.5 text-[11px] text-slate-200">
-      {view.text}
-    </span>
+    <>
+      <span className="mk-count-badge text-[11px]" title={view.description} aria-describedby={descriptionId}
+        data-evidence-ceiling={view.ceiling} data-oracle={view.oracle}>
+        {view.text}
+      </span>
+      <span id={descriptionId} className="mk-sr-only">{view.description}</span>
+    </>
   );
+}
+
+export function EvidenceBadge({ moduleId }: { readonly moduleId: string }) {
+  return <ContractEvidenceBadge contract={contractById(moduleId)} />;
 }
