@@ -2,11 +2,12 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
-## LPBF 5c tek planlı parmak izi güncellemesi — 2026-10-04 (dal `orch/p5c-b`; birleştirilmedi, push yok)
+## LPBF 5c tek planlı parmak izi güncellemesi — 2026-10-04 (dal `orch/p5c-b`; yerel ana dala tek atomik birleştirme ile alındı, push yok)
 
 - **Sonuç:** Faz B (B1 CFD vaka yazıcıları `lpbf_cfd_cases.py`'ye taşındı; B1' ulaşılamayan `openfoam-cfd` dalı silindi, `lpbf_cfd.py` manifestten çıktı (37 → 36); B2 ölü kod; B3 gözlemci kapısı yardımcısı; B4 bit-aynı döngü taşımaları; B6 pin/kayıt). Malzeme otoritesi göçü (B5) ertelendi. Parmak izi `7482697c…` → `edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e`; `VERSION enthalpy-fv-6` değişmedi.
 - **Kanıt:** `tools/lpbf_parity_check.py --check --slow` 20/20 PASS (altınlar yeniden kaydedilmedi, gözlem özetleri ön-güncellemeyle aynı); kayıt `docs/LPBF_IMPLEMENTATION_BUMP_2026-10-04.json`; gerçek sunucu V1 duman testi arşivlenmiş V1 ayıklanmış özetine eşit; WSL LF checkout aynı parmak izini verdi. Ayrıntı `PROOF.md` en üst girdi. Bilimsel durum değişmedi (residual null, `experimentalValidation=false`, `opticalOperatorMatched=false`).
-- **Sıradaki:** dalın tek atomik birleştirmesi (bağımsız iki inceleme sonrası); birleştirme SHA'sında Faz C talep koşuları (V1 60 W arşivli tekrar + G2); ardından `.orchestra/claude-lanes-common.txt` donmuş değeri ve Agent Memory güncellemesi. Tarihsel kayıtlardaki `7482697c` değerleri değiştirilmez.
+- **V1 kabulü eski parmak izine bağlıdır:** `10e3005` kabul kaydı `7482697c…` ile yapıldı ve `edddf0dc…` için yeniden kurulmuş değildir; duman testi yeniden kabul sayılmaz.
+- **Sıradaki:** (dal bağımsız iki inceleme sonrası birleştirildi) birleştirme SHA'sında Faz C talep koşuları (V1 60 W arşivli tekrar + G2); ardından `.orchestra/claude-lanes-common.txt` donmuş değeri ve Agent Memory güncellemesi. Tarihsel kayıtlardaki `7482697c` değerleri değiştirilmez.
 
 ## V1 kabul kaydı — 2026-10-04 (kod revizyonu `10e3005`, yerel; push yok)
 
