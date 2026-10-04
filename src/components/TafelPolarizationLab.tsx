@@ -66,13 +66,60 @@ interface TafelPolarizationLabProps {
   className?: string;
 }
 
-export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelPolarizationLabProps) {
+/**
+ * TAFEL_BENCHMARK_DATASETS is empty (the former PRNG-fabricated curves were removed), so
+ * the lab starts without data: it shows an empty state with a file input and renders the
+ * full lab only once a polarization file has been parsed.
+ */
+export function TafelPolarizationLab(props: TafelPolarizationLabProps) {
+  const [initialDataset, setInitialDataset] = useState<TafelDataset | null>(TAFEL_BENCHMARK_DATASETS[0] ?? null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  if (initialDataset) {
+    return <TafelPolarizationLabWithData {...props} initialDataset={initialDataset} />;
+  }
+
+  const handleFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = parseTafelFile(String(reader.result ?? ""), file.name, 1.0, COMMON_ALLOYS[0]);
+        setLoadError(null);
+        setInitialDataset(parsed);
+        if (props.onDatasetLoaded) props.onDatasetLoaded(parsed);
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : String(err));
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className={`rounded-2xl border border-[#162032] bg-[#050810] p-6 text-slate-300 font-mono text-xs space-y-3 ${props.className ?? ""}`}>
+      <p>No benchmark dataset available</p>
+      <input
+        aria-label="Load polarization data file"
+        type="file"
+        accept=".csv,.txt,.dta,.mpt,.tsv"
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+      {loadError && <p role="alert" className="text-rose-400">{loadError}</p>}
+    </div>
+  );
+}
+
+function TafelPolarizationLabWithData({
+  onDatasetLoaded,
+  className = "",
+  initialDataset,
+}: TafelPolarizationLabProps & { initialDataset: TafelDataset }) {
   // Digital Twin Context for syncing
   const dtContext = useDigitalTwin();
 
   // Active dataset & fitting state
-  const [dataset, setDataset] = useState<TafelDataset>(TAFEL_BENCHMARK_DATASETS[0]);
-  const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>(TAFEL_BENCHMARK_DATASETS[0].id);
+  const [dataset, setDataset] = useState<TafelDataset>(initialDataset);
+  const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>(initialDataset.id);
 
   // File upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -187,11 +234,12 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
       return baseFit;
     } catch (err) {
       console.error("Tafel fit error:", err);
-      // Fallback safe result
-      return autoFitTafel(TAFEL_BENCHMARK_DATASETS[0]);
+      // Fall back to the dataset the lab was opened with (no fabricated benchmark exists).
+      return autoFitTafel(initialDataset);
     }
   }, [
     dataset,
+    initialDataset,
     electrodeAreaCm2,
     referenceElectrode,
     currentAlloy,
