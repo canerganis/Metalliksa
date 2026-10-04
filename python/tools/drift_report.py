@@ -117,6 +117,10 @@ def golden_vs_current(solver_filter: Optional[str] = None,
 
 
 def main(argv=None) -> int:
+    # Solver strings contain non-ASCII (e.g. reaction arrows); a redirected Windows
+    # console would otherwise use a legacy code page and fail to encode them.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--solver", choices=sorted(golden.CASES))
     parser.add_argument("--old", type=Path)
