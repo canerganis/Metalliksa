@@ -3,7 +3,7 @@
 @import "./styles/tokens.css";
 @source "../index.html";
 @source ".";
-@source "../tests/*-browser.tsx";
+@source "../tests/{contracts,eis,input-bound-task,lpbf-evidence}-browser.tsx";
 
 :root {
   --mk-bg: #020409;
