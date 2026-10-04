@@ -30,6 +30,7 @@ import calphad_solver  # noqa: E402
 import icme_multiscale_pipeline_solver as icme  # noqa: E402
 import input_validation as iv  # noqa: E402
 import physical_constants as pc  # noqa: E402
+from phase6a_test_support import require_git_revision  # noqa: E402
 
 SOLVERS = ("calphad_solver", "battery_corrosion_eis_solver", "icme_multiscale_pipeline_solver")
 TRANCHE2_BASE = "7f3f803"
@@ -105,7 +106,7 @@ class GoldenRegressionTest(unittest.TestCase):
         self.assertIn("pythonDurationMs", golden.VOLATILE_KEYS)
 
 
-@unittest.skipUnless(_git_available(), "git or base revisions unavailable")
+@require_git_revision(_git_available(), "git or base revisions d33b6f5/7f3f803 unavailable")
 class BaseBlobTest(unittest.TestCase):
     """The pre-migration blob vs the migrated solver on payloads outside the golden set."""
 

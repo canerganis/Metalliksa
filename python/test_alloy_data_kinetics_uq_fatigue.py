@@ -19,6 +19,7 @@ import alloy_data_kinetics_uq_fatigue as data
 import alloy_registry as reg
 import input_validation as iv
 import physical_constants as pc
+from phase6a_test_support import require_git_revision
 
 HERE = Path(__file__).parent
 SNAPSHOTS = HERE / "golden" / "phase6a"
@@ -130,7 +131,7 @@ class KineticsAndFatigueValueTest(unittest.TestCase):
                                  repr(old[key]), f"{aid}.{key}")
 
 
-@unittest.skipUnless(_base_blob("python/stochastic_uq_mmpds_solver.py"), f"git revision {BASE} unavailable")
+@require_git_revision(bool(_base_blob("python/stochastic_uq_mmpds_solver.py")), f"git revision {BASE} unavailable")
 class StochasticValueTest(unittest.TestCase):
     """The UQ constants equal the literals of the base blob (AST extraction)."""
 

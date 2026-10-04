@@ -21,6 +21,7 @@ sys.path.insert(0, str(HERE / "tools"))
 
 import capture_phase6a_golden as golden  # noqa: E402
 import drift_report  # noqa: E402
+from phase6a_test_support import require_git_revision  # noqa: E402
 
 # (solver, case) -> expected validation error code (exit 2, errorKind "validation").
 # Both were silent defaults before the Phase 6a structural migration:
@@ -112,7 +113,7 @@ def _git_available() -> bool:
         return False
 
 
-@unittest.skipUnless(_git_available(), f"git or revision {golden.BASE_REVISION} unavailable")
+@require_git_revision(_git_available(), f"git or revision {golden.BASE_REVISION} unavailable")
 class GoldenBindingTest(unittest.TestCase):
     """Golden files are bound to the immutable solver blobs they were captured from."""
 

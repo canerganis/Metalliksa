@@ -24,6 +24,7 @@ import kinetics_ttt_cct_solver as kin
 import lpbf_fatigue_fracture as ff
 import physical_constants as pc
 import stochastic_uq_mmpds_solver as uq
+from phase6a_test_support import require_git_revision
 
 HERE = Path(__file__).parent
 BASE = "7f3f803"
@@ -66,7 +67,7 @@ OLD_UQ = _base_module("stochastic_uq_mmpds_solver")
 OLD_FF = _base_module("lpbf_fatigue_fracture")
 
 
-@unittest.skipIf(OLD_KIN is None, f"git revision {BASE} unavailable")
+@require_git_revision(OLD_KIN is not None, f"git revision {BASE} unavailable")
 class KineticsTest(unittest.TestCase):
     LEGACY = ("AISI 4140", "AISI 4340", "AISI D2", "Inconel 718", "Ti-6Al-4V", "Al 7075")
 
@@ -125,7 +126,7 @@ class KineticsTest(unittest.TestCase):
         self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
 
 
-@unittest.skipIf(OLD_FF is None, f"git revision {BASE} unavailable")
+@require_git_revision(OLD_FF is not None, f"git revision {BASE} unavailable")
 class FatigueTest(unittest.TestCase):
     def test_database_view_equals_the_old_table(self):
         self.assertEqual(list(ff.ALLOY_FATIGUE_DATABASE), list(OLD_FF.ALLOY_FATIGUE_DATABASE))
@@ -158,7 +159,7 @@ class FatigueTest(unittest.TestCase):
         self.assertEqual(ff.MurakamiFatigueEngine("IN718").alloy.name, "Inconel 718")
 
 
-@unittest.skipIf(OLD_UQ is None, f"git revision {BASE} unavailable")
+@require_git_revision(OLD_UQ is not None, f"git revision {BASE} unavailable")
 class StochasticTest(unittest.TestCase):
     def test_single_realization_equals_the_base_blob_for_every_branch(self):
         comp = {"Nb": 5.0, "Ti": 0.9, "Al": 0.5, "Zr": 0.3, "Mg": 0.1}
