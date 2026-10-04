@@ -3,7 +3,8 @@
 Reviewed paths: every *.ceiling.json that already exists at the merge base and differs at
 HEAD, plus the guard files in PROTECTED_PATHS (this script, the pinned-ceiling test and the
 CI workflow that runs both) whenever they differ. For each such path the LAST commit in
-merge-base..HEAD that touches it must carry the trailer ``Ceiling-Review: <reason>``; an
+merge-base..HEAD that touches it must carry the trailer ``Ceiling-Review: <reason>`` in its
+trailer block (parsed by ``git interpret-trailers``; the reason needs at least four words); an
 earlier reviewed commit does not cover a later unreviewed edit. Ceilings that are new in the
 range are governed by python/test_allowlist_ceilings.py (pinned content plus an explicit delta).
 
@@ -17,6 +18,7 @@ import sys
 from typing import List, Optional
 
 TRAILER = "Ceiling-Review:"
+MIN_REASON_WORDS = 4
 # Guard files reviewed like a ceiling: weakening any of them would silently disable the ratchet.
 PROTECTED_PATHS = (
     "scripts/check_ceiling_review.py",
@@ -33,16 +35,34 @@ def _exists(rev: str, path: str, cwd: Optional[str]) -> bool:
     return _git(["cat-file", "-e", f"{rev}:{path}"], cwd, check=False).returncode == 0
 
 
+def review_reasons(message: str) -> List[str]:
+    """Values of 'Ceiling-Review' trailers, as git itself parses the trailer block."""
+    parsed = subprocess.run(["git", "interpret-trailers", "--parse"], input=message, capture_output=True,
+                            text=True, check=True).stdout
+    reasons = []
+    for line in parsed.splitlines():
+        key, separator, value = line.partition(":")
+        if separator and key.strip().lower() == TRAILER[:-1].lower():
+            reasons.append(value.strip())
+    return reasons
+
+
+def is_reason(text: str) -> bool:
+    """A reason is at least MIN_REASON_WORDS words that contain a letter or digit ('.' is not one)."""
+    return len([word for word in text.split() if any(char.isalnum() for char in word)]) >= MIN_REASON_WORDS
+
+
 def has_review_trailer(message: str) -> bool:
-    for line in message.splitlines():
-        if line.startswith(TRAILER) and line[len(TRAILER):].strip():
-            return True
-    return False
+    return any(is_reason(reason) for reason in review_reasons(message))
 
 
 def reviewed_paths(merge_base: str, head: str, cwd: Optional[str] = None) -> List[str]:
-    """Changed paths that need review: pre-existing ceilings and the protected guard files."""
-    changed = [p for p in _git(["diff", "--name-only", merge_base, head], cwd).stdout.splitlines() if p]
+    """Changed paths that need review: pre-existing ceilings and the protected guard files.
+
+    --no-renames: a renamed ceiling shows as a deletion of the old path (which exists at the
+    merge base, so it is reviewed) plus an addition, not as a new file that escapes review.
+    """
+    changed = [p for p in _git(["diff", "--no-renames", "--name-only", merge_base, head], cwd).stdout.splitlines() if p]
     return [p for p in changed
             if p in PROTECTED_PATHS or (p.endswith(".ceiling.json") and _exists(merge_base, p, cwd))]
 
@@ -67,7 +87,8 @@ def unreviewed_ceiling_changes(base: str, head: str = "HEAD", cwd: Optional[str]
         message = _git(["log", "-1", "--format=%B", commit], cwd).stdout if commit else ""
         if not has_review_trailer(message):
             where = f"last changed in {commit[:12]}" if commit else "changed"
-            problems.append(f"{path}: {where} since {merge_base[:12]} without a '{TRAILER} <reason>' commit trailer")
+            problems.append(f"{path}: {where} since {merge_base[:12]} without a '{TRAILER} <reason of"
+                            f" {MIN_REASON_WORDS}+ words>' commit trailer")
     return problems
 
 

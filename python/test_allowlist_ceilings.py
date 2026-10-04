@@ -283,7 +283,7 @@ class CeilingReviewTrailerTests(unittest.TestCase):
         self.assertEqual(len(review.unreviewed_ceiling_changes(self.base, cwd=self.repo)), 1)
 
     def test_reviewed_change_passes(self):
-        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved b")
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved entry b today")
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
 
     def test_nested_and_new_ceilings(self):
@@ -294,17 +294,17 @@ class CeilingReviewTrailerTests(unittest.TestCase):
         self.assertEqual(len(review.unreviewed_ceiling_changes(middle, cwd=self.repo)), 1)
 
     def test_only_the_last_commit_touching_a_ceiling_counts(self):
-        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved b")
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved entry b today")
         self._commit("x.ceiling.json", '{"paths": ["a", "b", "c"]}\n', "sneak c in afterwards")
         problems = review.unreviewed_ceiling_changes(self.base, cwd=self.repo)
         self.assertEqual(len(problems), 1)
         self.assertIn("x.ceiling.json", problems[0])
         # A reviewed last commit covers an earlier unreviewed one (the reviewer sees the result).
-        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "drop c\n\nCeiling-Review: reviewed final list")
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "drop c\n\nCeiling-Review: reviewed the final list again")
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
 
     def test_unrelated_later_commits_do_not_matter(self):
-        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved b")
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: maintainer approved entry b today")
         self._commit("other.txt", "x\n", "unrelated, no trailer")
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
 
@@ -318,7 +318,7 @@ class CeilingReviewTrailerTests(unittest.TestCase):
                 problems = review.unreviewed_ceiling_changes(start, cwd=self.repo)
                 self.assertEqual(len(problems), 1)
                 self.assertIn(guard, problems[0])
-                self._commit(guard, f"reviewed {guard}\n", "edit the guard\n\nCeiling-Review: maintainer approved")
+                self._commit(guard, f"reviewed {guard}\n", "edit the guard\n\nCeiling-Review: maintainer approved this guard edit")
                 self.assertEqual(review.unreviewed_ceiling_changes(start, cwd=self.repo), [])
                 self._commit(guard, f"weakened again {guard}\n", "weaken it after review")
                 self.assertEqual(len(review.unreviewed_ceiling_changes(start, cwd=self.repo)), 1)
@@ -328,16 +328,42 @@ class CeilingReviewTrailerTests(unittest.TestCase):
             return subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True, text=True).stdout.strip()
         main = run("branch", "--show-current")
         run("checkout", "-q", "-b", "feature")
-        self._commit("x.ceiling.json", '{"paths": []}\n', "shrink\n\nCeiling-Review: shrink only")
+        self._commit("x.ceiling.json", '{"paths": []}\n', "shrink\n\nCeiling-Review: shrink only, nothing added")
         run("checkout", "-q", main)
         self._commit("other.txt", "x\n", "main moves on")
         run("merge", "-q", "--no-ff", "-m", "merge: feature", "feature")
         self.assertEqual(review.unreviewed_ceiling_changes(self.base, cwd=self.repo), [])
 
     def test_trailer_parser(self):
-        self.assertTrue(review.has_review_trailer("subject\n\nCeiling-Review: reason"))
+        self.assertTrue(review.has_review_trailer("subject\n\nCeiling-Review: shrink only, nothing added"))
+        self.assertTrue(review.has_review_trailer("subject\n\nbody\n\nCeiling-Review: four words of reason\nCo-Authored-By: X <x@example.invalid>"))
         self.assertFalse(review.has_review_trailer("subject mentions Ceiling-Review: inline"))
         self.assertFalse(review.has_review_trailer("subject\n\nCeiling-Review:   "))
+        # Too short, punctuation only, or outside the trailer block (git interpret-trailers --parse).
+        self.assertFalse(review.has_review_trailer("subject\n\nCeiling-Review: reason"))
+        self.assertFalse(review.has_review_trailer("subject\n\nCeiling-Review: . . . ."))
+        self.assertFalse(review.has_review_trailer("subject\n\nCeiling-Review: approved by maintainer today\n\nA later paragraph that is not a trailer block."))
+
+    def test_short_reason_fails(self):
+        self._commit("x.ceiling.json", '{"paths": ["a", "b"]}\n', "grow it\n\nCeiling-Review: ok")
+        self.assertEqual(len(review.unreviewed_ceiling_changes(self.base, cwd=self.repo)), 1)
+
+    def test_renamed_ceiling_is_reviewed_under_its_old_path(self):
+        subprocess.run(["git", "mv", "x.ceiling.json", "renamed.ceiling.json"], cwd=self.repo, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-q", "-m", "rename the ceiling"], cwd=self.repo, check=True, capture_output=True)
+        problems = review.unreviewed_ceiling_changes(self.base, cwd=self.repo)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("x.ceiling.json", problems[0])
+        # A renamed guard file is caught the same way.
+        start = self._rev()
+        guard = review.PROTECTED_PATHS[0]
+        self._commit(guard, "guard\n", "add guard\n\nCeiling-Review: maintainer approved this guard file")
+        middle = self._rev()
+        Path(self.repo, "moved").mkdir()
+        subprocess.run(["git", "mv", guard, "moved/guard.py"], cwd=self.repo, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-q", "-m", "move the guard away"], cwd=self.repo, check=True, capture_output=True)
+        self.assertEqual(len(review.unreviewed_ceiling_changes(middle, cwd=self.repo)), 1)
+        self.assertNotEqual(start, middle)
 
 
 if __name__ == "__main__":
