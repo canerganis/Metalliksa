@@ -510,9 +510,10 @@ function proxyCampaignPreview(value: unknown, expectedRunIds: string[], expected
     if (value.validation.status !== 'unavailable' || value.validation.campaignId !== null || value.previewSha256 !== undefined) throw invalid();
     return;
   }
-  if (value.validation.status !== 'proxy-screening-only' || value.validation.campaignId !== value.campaign.campaignId
+  const campaign = value.campaign;
+  proxyCampaign(campaign, expectedRunIds, expectedCase);
+  if (value.validation.status !== 'proxy-screening-only' || value.validation.campaignId !== campaign.campaignId
     || !sha(value.previewSha256)) throw invalid();
-  proxyCampaign(value.campaign, expectedRunIds, expectedCase);
 }
 
 function campaignRequestInputs(runIds: string[], caseNumber: NistOpticalCaseNumber) {
