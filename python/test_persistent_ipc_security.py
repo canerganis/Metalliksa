@@ -224,6 +224,21 @@ class HeaderCheckTest(unittest.TestCase):
         self.assertIn("127.0.0.1:9000", ipc.allowed_host_headers("::1", 9000))
 
 
+class ExclusiveBindTest(unittest.TestCase):
+    def test_second_process_cannot_bind_the_daemon_port(self):
+        httpd = ipc.make_http_server("127.0.0.1", 0, TOKEN, None)
+        try:
+            port = httpd.server_address[1]
+            if os.name == "nt":
+                self.assertFalse(httpd.allow_reuse_address)
+            with socket.socket() as squatter:
+                squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                with self.assertRaises(OSError):
+                    squatter.bind(("127.0.0.1", port))
+        finally:
+            httpd.server_close()
+
+
 class ExecRequestValidationTest(unittest.TestCase):
     def test_shapes(self):
         ok = ipc.validate_exec_request({"script": "python/pourbaix_solver.py", "payload": {"a": 1}})

@@ -782,10 +782,18 @@ class MicroserviceHTTPHandler(http.server.BaseHTTPRequestHandler):
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    # On Windows SO_REUSEADDR lets another process bind the same port while we hold it (port
+    # stealing); bind with SO_EXCLUSIVEADDRUSE there instead. POSIX SO_REUSEADDR only allows
+    # rebinding over TIME_WAIT and is kept.
+    allow_reuse_address = os.name != "nt"
     ipc_token: Optional[str] = None
     allowed_hosts: frozenset = frozenset()
     registry: Optional["ConcurrentModuleRegistry"] = None
+
+    def server_bind(self):
+        if os.name == "nt" and hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
 
 def make_http_server(host: str, port: int, token: Optional[str],
