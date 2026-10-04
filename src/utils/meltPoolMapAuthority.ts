@@ -35,3 +35,12 @@ export function mapPhaseTemperaturesC(materialName: string): MapPhaseTemperature
   }
   return null;
 }
+
+/**
+ * Heat-source wording for the thermal-map header: the model id the Python result reports, or the documented default
+ * (the view sends no heatSource, so Python runs the regularised Rosenthal source) while no result exists yet.
+ */
+export function thermalMapHeaderSource(heatSourceModel?: string | null): string {
+  const reported = heatSourceModel?.trim();
+  return reported ? `${reported} point-source conduction field` : "regularised Rosenthal point-source conduction field (default heat source; no result yet)";
+}

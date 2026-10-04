@@ -31,7 +31,7 @@ import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAll
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildGoldakCaeCard } from "../utils/goldakCaeCard";
-import { mapPhaseTemperaturesC } from "../utils/meltPoolMapAuthority";
+import { mapPhaseTemperaturesC, thermalMapHeaderSource } from "../utils/meltPoolMapAuthority";
 
 interface Props {
   candidate: CandidateAlloySolution;
@@ -727,7 +727,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Analytical screening: regularised Rosenthal point-source conduction field (Python, heatSourceModel from the result); the map is an illustrative TS interpolation of the Python pool extents, not a solved field. Knight recoil estimate at the vapour temperature, Heiple–Roper Marangoni screening, geometric lack-of-fusion overlap. Not FEA, not CFD, not validated.
+                  Analytical screening: {thermalMapHeaderSource(pyResult ? (pyResult.heatSourceModel ?? pyResult.modelId ?? null) : null)} (Python); the map is an illustrative TS interpolation of the Python pool extents, not a solved field. Knight recoil estimate at the vapour temperature, Heiple–Roper Marangoni screening, geometric lack-of-fusion overlap. Not FEA, not CFD, not validated.
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
                   Heat source reported by Python: {heatSourceLabel ?? "no result yet"}

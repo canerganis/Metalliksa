@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { thermalMapHeaderSource } from "../src/utils/meltPoolMapAuthority";
 import { buildGoldakCaeCard, goldakAbsorbedPower_W, goldakFrontRearFractions, type GoldakCaeCardInput } from "../src/utils/goldakCaeCard";
 
 // Solver-producible keyhole state: IN718, 285 W / 960 mm/s, beam 80 um, layer 40 um, hatch 110 um
@@ -108,7 +109,10 @@ test("card states that axes and Q are NOT a calibrated pair and prints eta_cond*
     const { text } = buildGoldakCaeCard(input(), variant);
     assert.ok(text.includes("** axes and Q are NOT a calibrated pair: the screening field was driven by P_field = P_absorbed/(1+0.55*Stefan)"));
     assert.ok(text.includes("P_field is not exported by the solver and is not recomputed here."));
-    assert.ok(text.includes("(eta_eff/eta_cond = 2.33 here; they are equal in conduction cases); an FEA with these axes and Q will not reproduce the screening pool."));
+    assert.ok(text.includes("** field power = P_absorbed/(1+0.55*Stefan); Stefan not exported — Q exceeds the field power by at least the Stefan factor in EVERY regime (and by eta_eff/eta_cond additionally for goldak/eagar-tsai in transition/keyhole cases)"));
+    assert.ok(text.includes("eta_eff/eta_cond = 2.33 here"));
+    assert.ok(text.includes("an FEA with these axes and Q will not reproduce the screening pool."));
+    assert.ok(!text.includes("equal in conduction cases"));
     assert.ok(text.includes("** conduction-field absorbed power before the Stefan factor, eta_cond*P_laser: 108.3 W"));
     assert.ok(text.includes("conductionAbsorptivity (tabulated flat-plate absorptivity, or ray-traced powder value when warp is present; used by the screening conduction field): 0.38"));
     assert.ok(!text.includes("Fresnel"));
@@ -131,9 +135,67 @@ test("conductionAbsorptivity lines are omitted when the result lacks it, the not
   const { text } = buildGoldakCaeCard(input({ conductionAbsorptivity: undefined }));
   assert.ok(!text.includes("conduction-field absorbed power before the Stefan factor"));
   assert.ok(!text.includes("tabulated flat-plate absorptivity"));
-  assert.ok(!text.includes("eta_eff/eta_cond"));
+  assert.ok(!text.includes("eta_eff/eta_cond ="), "no numeric eta ratio without conductionAbsorptivity");
   assert.ok(text.includes("** axes and Q are NOT a calibrated pair"));
-  assert.ok(text.includes("can exceed the conduction-field power in transition/keyhole cases"));
+  assert.ok(text.includes("exceeds the field power by at least the Stefan factor"));
+  assert.ok(!text.includes("can exceed the conduction-field power"));
+});
+
+// Rosenthal fixture: IN718 285 W / 960 mm/s, thermal-map default source (the view sends no heatSource). The field is
+// driven by P_absorbed = eta_eff*P = 252.795 W (not eta_cond*P = 108.3 W); liquidus extents 14/1156/87/155 um, seed 40/80.
+const rosenthalInput = (): GoldakCaeCardInput => ({
+  ...input(),
+  heatSourceModel: "rosenthal-screening-v1",
+  meltPoolGeometry: {
+    regime: "Keyhole Mode",
+    goldakParameters: {
+      semiAxis_af_front_um: 14,
+      semiAxis_ar_rear_um: 1156,
+      semiAxis_b_halfwidth_um: 87,
+      semiAxis_c_depth_um: 155,
+      seed_af_um: 40,
+      seed_ar_um: 80,
+    },
+  },
+});
+
+test("rosenthal fixture: absorbed power is eta_eff*P, conductionAbsorptivity is informational, no equal-in-conduction claim", () => {
+  for (const variant of ["thermal-map", "cross-section"] as const) {
+    const { text } = buildGoldakCaeCard(rosenthalInput(), variant);
+    const lines = text.split("\n");
+    assert.ok(lines.includes("** field absorbed power before the Stefan factor (rosenthal source), P_absorbed = eta_eff*P_laser: 252.795 W"));
+    assert.ok(lines.some((l) => l.startsWith("** conductionAbsorptivity (") && l.includes("informational, NOT used by the rosenthal source") && l.endsWith("): 0.38")));
+    assert.ok(!text.includes("used by the screening conduction field"));
+    assert.ok(!text.includes("eta_cond*P_laser: 108.3 W"), "eta_cond*P is not the rosenthal field power");
+    assert.ok(!text.includes("equal in conduction cases"));
+    assert.ok(!text.includes("eta_eff/eta_cond = 2.33"));
+    assert.ok(lines.includes("** field power = P_absorbed/(1+0.55*Stefan); Stefan not exported — Q exceeds the field power by at least the Stefan factor in EVERY regime (and by eta_eff/eta_cond additionally for goldak/eagar-tsai in transition/keyhole cases)"));
+    assert.ok(lines.some((l) => l.startsWith("** Q = eta_eff*P_laser = 252.795 W is the rosenthal P_absorbed") && l.includes("Stefan factor only")));
+    assert.ok(lines.includes("** Heat source used by the screening solver: rosenthal-screening-v1. *GOLDAK_DOUBLE_ELLIPSOID above is only the TARGET source type of the DFLUX."));
+    assert.deepEqual(dataLine(text).trim().split(",").map((f) => f.trim()), ["1.4000e-5", "1.1560e-3", "8.7000e-5", "1.5500e-4", "252.795", "0.887"]);
+  }
+  // modelId alone (heatSourceModel absent) is still recognised as rosenthal.
+  const viaModelId = buildGoldakCaeCard({ ...rosenthalInput(), heatSourceModel: undefined, modelId: "rosenthal-screening-v1" }).text;
+  assert.ok(viaModelId.includes("(rosenthal source), P_absorbed = eta_eff*P_laser: 252.795 W"));
+  // Without conductionAbsorptivity the rosenthal absorbed-power line still prints and the informational line is dropped.
+  const noEta = buildGoldakCaeCard({ ...rosenthalInput(), processParameters: { ...rosenthalInput().processParameters, conductionAbsorptivity: undefined } }).text;
+  assert.ok(noEta.includes("P_absorbed = eta_eff*P_laser: 252.795 W"));
+  assert.ok(!noEta.includes("conductionAbsorptivity (tabulated"));
+});
+
+test("goldak and eagar-tsai sources keep eta_cond*P as the field absorbed power", () => {
+  for (const model of ["goldak-total-power-v2", "eagar-tsai-v1"]) {
+    const { text } = buildGoldakCaeCard({ ...input(), heatSourceModel: model });
+    assert.ok(text.includes("conduction-field absorbed power before the Stefan factor, eta_cond*P_laser: 108.3 W"), model);
+    assert.ok(!text.includes("(rosenthal source), P_absorbed"), model);
+  }
+});
+
+test("unidentified heat source makes no claim about which absorptivity drove the field", () => {
+  const { text } = buildGoldakCaeCard({ ...input(), heatSourceModel: undefined });
+  assert.ok(text.includes("depends on the heat source, which is not identified here: eta_cond*P_laser = 108.3 W (goldak/eagar-tsai) or eta_eff*P_laser = 252.795 W (rosenthal)"));
+  assert.ok(!text.includes("used by the screening conduction field"));
+  assert.ok(!text.includes("equal in conduction cases"));
 });
 
 test("filenames are unchanged per variant", () => {
@@ -184,9 +246,18 @@ test("thermal-map header states the Rosenthal / TS-interpolation wording and no 
   const thermalMap = source("src/components/LaserMeltPoolThermalMap.tsx");
   assert.ok(!/high[- ]fidelity/i.test(thermalMap), "no High-fidelity wording");
   assert.ok(!thermalMap.includes("Goldak 3D · screening"), "no fixed Goldak chip");
-  assert.ok(thermalMap.includes("Analytical screening: regularised Rosenthal point-source conduction field"));
+  assert.ok(thermalMap.includes("Analytical screening: {thermalMapHeaderSource("), "header renders the model id from the result");
+  assert.ok(!thermalMap.includes("Analytical screening: regularised Rosenthal"), "no hard-coded Rosenthal in the header");
   assert.ok(thermalMap.includes("illustrative TS interpolation of the Python pool extents, not a solved field"));
   assert.ok(thermalMap.includes("Not FEA, not CFD, not validated."));
   assert.ok(thermalMap.includes("screening map (TS interpolation)"));
   assert.ok(!/const (Tm|Ts) = 1350|const (Tm|Ts) = 1260/.test(thermalMap), "no hard-coded liquidus/solidus");
+});
+
+test("thermal-map header source: result model id, Rosenthal only as the documented default without a result", () => {
+  assert.equal(thermalMapHeaderSource("goldak-total-power-v2"), "goldak-total-power-v2 point-source conduction field");
+  assert.equal(thermalMapHeaderSource("rosenthal-screening-v1"), "rosenthal-screening-v1 point-source conduction field");
+  for (const absent of [undefined, null, "", "  "]) {
+    assert.equal(thermalMapHeaderSource(absent), "regularised Rosenthal point-source conduction field (default heat source; no result yet)");
+  }
 });
