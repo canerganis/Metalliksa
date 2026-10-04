@@ -53,6 +53,7 @@
     "POST /api/python/lpbf-transient-enthalpy-fdm": "LPBF worker route; the service method has no caller in src/ (transient-3d-gpu calls the non-existent /api/python/transient-3d-gpu instead).",
     "POST /api/python/lpbf-bayesian-optimization": "LPBF worker route; the UI calls the python-ipc /api/python/lpbf-bayesian-optimize instead."
   },
+  "unclassified": {},
   "cannedBaseline": {
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
     "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",

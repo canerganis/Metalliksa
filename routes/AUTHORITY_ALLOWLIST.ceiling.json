@@ -53,6 +53,7 @@
     "POST /api/python/part-scale-inherent-strain",
     "POST /api/python/xrd-deconvolve"
   ],
+  "unclassified": [],
   "cannedBaseline": [
     "GET /api/materials-project/search",
     "GET /api/orchestrator/approved-sources",
