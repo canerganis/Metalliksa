@@ -552,7 +552,7 @@ export const LpbfBuildJobRail: React.FC<Props> = ({
             {lpbf.specimenDoi}
           </span>
         )}
-        <select
+        <select aria-label="Scan strategy"
           value={lpbf.scanStrategy}
           onChange={(e) => updateLpbfProcess({ scanStrategy: e.target.value as LpbfScanStrategy })}
           className="bg-[#0c1322] border border-[#162032] rounded px-1.5 py-0.5 text-[10px] text-slate-200"

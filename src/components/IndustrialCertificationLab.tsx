@@ -45,7 +45,7 @@ export const IndustrialCertificationLab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
             <label className="block text-sm text-slate-400 mb-2">Laser Power (W)</label>
-            <input 
+            <input aria-label="Laser Power (W)" 
               type="range" min="50" max="600" value={power} 
               onChange={(e) => setPower(Number(e.target.value))}
               className="w-full accent-blue-500"
@@ -55,7 +55,7 @@ export const IndustrialCertificationLab: React.FC = () => {
           
           <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
             <label className="block text-sm text-slate-400 mb-2">Scan Speed (mm/s)</label>
-            <input 
+            <input aria-label="Scan Speed (mm/s)" 
               type="range" min="200" max="2500" value={speed} 
               onChange={(e) => setSpeed(Number(e.target.value))}
               className="w-full accent-blue-500"
@@ -65,7 +65,7 @@ export const IndustrialCertificationLab: React.FC = () => {
 
           <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
             <label className="block text-sm text-slate-400 mb-2">Alloy</label>
-            <select 
+            <select aria-label="Alloy" 
               value={alloy} onChange={(e) => setAlloy(e.target.value)}
               className="w-full bg-slate-900 text-white border border-slate-700 rounded-md p-2"
             >

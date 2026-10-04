@@ -445,7 +445,7 @@ Provide an in-depth engineering assessment:
           className="flex items-center gap-2 w-full md:w-auto"
         >
           <div className="relative flex-1 md:w-64">
-            <input
+            <input aria-label="e.g. Fe3C, LiFePO4, mp-13..."
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

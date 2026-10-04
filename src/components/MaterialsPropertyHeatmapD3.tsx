@@ -936,7 +936,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Target Property Selector */}
         <div className="md:col-span-4 flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Property:</span>
-          <select
+          <select aria-label="Property"
             value={selectedPropertyKey}
             onChange={(e) => setSelectedPropertyKey(e.target.value)}
             className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 font-mono focus:outline-none focus:border-sky-400"
@@ -952,7 +952,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Focused Element Selector (Relevant for Binned mode & sorting) */}
         <div className="md:col-span-3 flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Element:</span>
-          <select
+          <select aria-label="Element"
             value={selectedElement}
             onChange={(e) => setSelectedElement(e.target.value)}
             className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-sky-400 font-mono focus:outline-none focus:border-sky-400 font-bold"
@@ -969,7 +969,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {heatmapMode === "alloy-elements" && (
           <div className="md:col-span-3 flex items-center gap-2">
             <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Sort:</span>
-            <select
+            <select aria-label="Sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none"
@@ -985,7 +985,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Color Palette Selector */}
         <div className={`${heatmapMode === "alloy-elements" ? "md:col-span-2" : "md:col-span-5"} flex items-center justify-end gap-2`}>
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Theme:</span>
-          <select
+          <select aria-label="Theme"
             value={colorPalette}
             onChange={(e) => setColorPalette(e.target.value as ColorPaletteKey)}
             className="bg-[#090e18] border border-[#162032] rounded-lg px-2 py-1.5 text-xs text-amber-400 font-mono focus:outline-none"

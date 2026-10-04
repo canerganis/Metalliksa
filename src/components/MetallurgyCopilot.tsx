@@ -278,7 +278,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
         }}
         className="flex gap-2 p-1.5 bg-[#090e18] rounded-xl border border-[#162032]"
       >
-        <input
+        <input aria-label="Ask about phase diagrams, heat treatments, fracture modes, alloy design..."
           type="text"
           value={inputPrompt}
           onChange={(e) => setInputPrompt(e.target.value)}

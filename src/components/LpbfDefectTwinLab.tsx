@@ -106,7 +106,7 @@ export const LpbfDefectTwinLab: React.FC = () => {
         <div className="w-84 p-4 border-r border-gray-700 overflow-y-auto space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">STL Geometry (ASCII / Base64)</label>
-            <textarea
+            <textarea aria-label="STL Geometry (ASCII / Base64)"
               rows={6}
               value={stlContent}
               onChange={e => setStlContent(e.target.value)}

@@ -382,7 +382,7 @@ export function ICMEMultiScalePipelineStudio() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[11px] text-slate-400 font-medium">Base Metal</label>
-              <select
+              <select aria-label="Base Metal"
                 value={baseMetal}
                 onChange={(e) => setBaseMetal(e.target.value as any)}
                 className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500"
@@ -395,7 +395,7 @@ export function ICMEMultiScalePipelineStudio() {
             </div>
             <div>
               <label className="text-[11px] text-slate-400 font-medium">Target Component FEA</label>
-              <select
+              <select aria-label="Target Component FEA"
                 value={componentType}
                 onChange={(e) => setComponentType(e.target.value)}
                 className="w-full mt-1 bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500"
@@ -415,7 +415,7 @@ export function ICMEMultiScalePipelineStudio() {
                   <span className="text-slate-300 font-semibold">{el}</span>
                   <span className="text-sky-300">{comp[el].toFixed(2)} wt%</span>
                 </div>
-                <input
+                <input aria-label={`${el} content`}
                   type="range"
                   min="0"
                   max={el === "Ni" || el === "Fe" || el === "Cr" ? "30" : "15"}
@@ -451,7 +451,7 @@ export function ICMEMultiScalePipelineStudio() {
                 <span className="text-slate-300 font-medium">Solidification Cooling Rate</span>
                 <span className="font-mono text-sky-400">10^{coolingRateLog.toFixed(2)} K/s</span>
               </div>
-              <input
+              <input aria-label="Solidification Cooling Rate"
                 type="range"
                 min="0.5"
                 max="6.0"
@@ -476,7 +476,7 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="grid grid-cols-2 gap-2 mt-1">
                 <div>
                   <label className="text-[10px] text-slate-400">Aging Temp (°C)</label>
-                  <input
+                  <input aria-label="Aging Temp (°C)"
                     type="number"
                     value={agingTemp}
                     onChange={(e) => setAgingTemp(parseFloat(e.target.value) || 0)}
@@ -485,7 +485,7 @@ export function ICMEMultiScalePipelineStudio() {
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-400">Aging Time (hours)</label>
-                  <input
+                  <input aria-label="Aging Time (hours)"
                     type="number"
                     value={agingTime}
                     onChange={(e) => setAgingTime(parseFloat(e.target.value) || 0)}

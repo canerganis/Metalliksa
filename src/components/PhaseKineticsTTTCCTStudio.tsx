@@ -220,7 +220,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
               1. Select Alloy System
             </label>
-            <select
+            <select aria-label="1. Select Alloy System"
               value={selectedAlloy}
               onChange={(e) => handleAlloyChange(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-amber-500"
@@ -260,7 +260,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 {coolingRate} °C/s
               </span>
             </div>
-            <input
+            <input aria-label="2. Continuous Cooling Rate"
               type="range"
               min="0.1"
               max="500"
@@ -304,7 +304,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <span className="text-slate-400">Austenitizing / Solution Temp ($T_\gamma$):</span>
                   <span className="text-white font-mono font-bold">{austTemp} °C</span>
                 </div>
-                <input
+                <input aria-label="Austenitizing / Solution Temp"
                   type="range"
                   min="400"
                   max="1200"
@@ -320,7 +320,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <span className="text-slate-400">Prior Grain Size ($d_\gamma$):</span>
                   <span className="text-white font-mono font-bold">{grainSize} µm</span>
                 </div>
-                <input
+                <input aria-label="Prior Grain Size"
                   type="range"
                   min="5"
                   max="100"
@@ -341,7 +341,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <span className="text-[10px] text-slate-400 block mb-1">Aging Temp (°C)</span>
-                <input
+                <input aria-label="Aging Temp (°C)"
                   type="number"
                   value={agingTemp}
                   onChange={(e) => setAgingTemp(parseFloat(e.target.value) || 200)}
@@ -350,7 +350,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 block mb-1">Aging Time (hours)</span>
-                <input
+                <input aria-label="Aging Time (hours)"
                   type="number"
                   value={agingTime}
                   onChange={(e) => setAgingTime(parseFloat(e.target.value) || 1)}

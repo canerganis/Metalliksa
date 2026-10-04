@@ -194,7 +194,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Specimen Name */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Specimen Name</label>
-                <input
+                <input aria-label="Specimen Name"
                   id="input-specimen-name"
                   type="text"
                   value={activeMaterialSpecimen.name}
@@ -207,7 +207,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Material Category */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Material Category</label>
-                <select
+                <select aria-label="Material Category"
                   id="select-specimen-category"
                   value={category}
                   onChange={(e) => updateMetadata({ category: e.target.value })}
@@ -220,7 +220,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Standard Designation */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Standard Designation / Ref</label>
-                <input
+                <input aria-label="Standard Designation / Ref"
                   id="input-specimen-standard"
                   type="text"
                   value={activeMaterialSpecimen.metadata?.standardDesignation || ""}
@@ -233,7 +233,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Manufacturing Route */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Manufacturing Route</label>
-                <select
+                <select aria-label="Manufacturing Route"
                   id="select-specimen-route"
                   value={manufacturingRoute}
                   onChange={(e) => updateMetadata({ manufacturingRoute: e.target.value })}
@@ -299,7 +299,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   </button>
                 )}
                 <div className="flex items-center gap-1.5">
-                  <select
+                  <select aria-label="Add element"
                     id="select-add-element"
                     value={selectedElementToAdd}
                     onChange={(e) => setSelectedElementToAdd(e.target.value)}
@@ -339,7 +339,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label={`${element} content`}
                         type="number"
                         step="0.1"
                         min="0"
@@ -360,7 +360,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Slider Control */}
-                  <input
+                  <input aria-label={`${element} content slider`}
                     type="range"
                     min="0"
                     max={element === activeMaterialSpecimen.metadata?.baseMetal ? 100 : 35}

@@ -397,7 +397,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
         <div className="flex items-center gap-2">
           <Database className="w-3.5 h-3.5 text-violet-400" />
           <span className="text-slate-400 font-medium">TDB Source:</span>
-          <select
+          <select aria-label="TDB Source"
             value={selectedDatabaseId}
             onChange={(e) => setSelectedDatabaseId(e.target.value)}
             className="bg-[#050810] border border-[#1e2d46] text-xs text-sky-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-violet-500 font-mono"
@@ -482,7 +482,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
 
             <div className="flex items-center gap-1 bg-[#050810] border border-[#1e2d46] rounded-lg px-2 py-0.5">
               <span className="text-[11px] text-slate-400">Step:</span>
-              <select
+              <select aria-label="Step"
                 disabled={!adaptiveGrid}
                 value={minRefineStep}
                 onChange={(e) => setMinRefineStep(parseFloat(e.target.value))}
@@ -672,7 +672,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                     <span className="font-bold text-slate-200">{el}</span>
                     <span className="text-violet-300 font-bold">{val}%</span>
                   </div>
-                  <input
+                  <input aria-label={`${el} content`}
                     type="range"
                     min="0"
                     max={el === "Ni" || el === "Ti" || el === "Fe" ? "90" : "25"}
@@ -813,7 +813,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             {/* Probe Slider */}
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-400">T Probe: <strong className="text-violet-300">{probeTemperatureC}°C</strong></span>
-              <input
+              <input aria-label="T Probe"
                 type="range"
                 min="500"
                 max="1450"
@@ -1283,7 +1283,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 </span>
               </div>
 
-              <textarea
+              <textarea aria-label="OpenCALPHAD Thermodynamic Database (.TDB) Script"
                 value={activeTdbContent}
                 onChange={(e) => setActiveTdbContent(e.target.value)}
                 className="w-full h-[320px] bg-[#050810] border border-[#162032] rounded-xl p-3 text-xs text-violet-300 font-mono focus:outline-none focus:border-violet-500 resize-none leading-relaxed"
