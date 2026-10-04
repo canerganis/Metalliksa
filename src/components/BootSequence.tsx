@@ -38,8 +38,9 @@ const WORDMARK = "METALLIKSA";
 const ORB_ROWS = Array.from({ length: 14 }, (_, i) => 167 - i * 7);
 
 /**
- * Decorative emblem, the brand mark at scale: a disc built bottom-up from scan vectors under a moving
- * beam, its open top drawn as a hairline, and the laser finishing the current layer. Reticle rings around.
+ * Decorative emblem, the brand mark at scale: a world built additively. The globe grows bottom-up from
+ * scan vectors under a sweeping beam, meridians cut through the finished layers, the unbuilt cap is a
+ * hairline graticule, and a laser from above finishes the current layer. Reticle rings around.
  */
 function BootEmblem() {
   return (
@@ -48,17 +49,35 @@ function BootEmblem() {
         <clipPath id="mk-boot-orb">
           <circle cx="100" cy="100" r="70" />
         </clipPath>
+        <clipPath id="mk-boot-built">
+          <rect x="20" y="72" width="160" height="110" />
+        </clipPath>
+        <linearGradient id="mk-boot-ray" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="66">
+          <stop offset="0" stopColor="var(--mk-laser)" stopOpacity="0" />
+          <stop offset="1" stopColor="var(--mk-laser)" stopOpacity="1" />
+        </linearGradient>
       </defs>
       <circle className="e-ring" cx="100" cy="100" r="96" pathLength="100" />
       <circle className="e-ticks" cx="100" cy="100" r="86" />
       <circle className="e-inner" cx="100" cy="100" r="70" pathLength="100" />
+      <g className="e-graticule">
+        <ellipse cx="100" cy="100" rx="26" ry="70" />
+        <ellipse cx="100" cy="100" rx="52" ry="70" />
+        <line x1="100" x2="100" y1="30" y2="170" />
+      </g>
       <g clipPath="url(#mk-boot-orb)">
         {ORB_ROWS.map((y, i) => (
           <line key={y} className="e-hatch" x1={i & 1 ? 172 : 28} x2={i & 1 ? 28 : 172} y1={y} y2={y} pathLength="100" style={{ "--i": i } as React.CSSProperties} />
         ))}
       </g>
+      <g className="e-meridians" clipPath="url(#mk-boot-built)">
+        <ellipse cx="100" cy="100" rx="26" ry="70" />
+        <ellipse cx="100" cy="100" rx="52" ry="70" />
+        <line x1="100" x2="100" y1="30" y2="170" />
+      </g>
       <line className="e-current" x1="37" x2="118" y1="69" y2="69" pathLength="100" />
       <line className="e-beam" x1="14" x2="186" y1="167" y2="167" />
+      <line className="e-ray" x1="118" x2="118" y1="0" y2="66" stroke="url(#mk-boot-ray)" />
       <circle className="e-spot" cx="118" cy="69" r="3.2" />
       <circle className="e-orbit" cx="100" cy="4" r="2.4" />
     </svg>

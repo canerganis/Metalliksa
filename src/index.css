@@ -191,8 +191,9 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   color: var(--mk-text-dim);
 }
 
-/* Brand mark: the layered orb. A disc built bottom-up from graphite layers, its open top drawn as a
- * hairline, and the laser finishing the current layer (ornament). Same drawing as the boot emblem. */
+/* Brand mark: a world built additively. A globe grown bottom-up from graphite layers, meridians cut
+ * through the finished layers, the unbuilt cap drawn as a hairline, and a laser from above finishing the
+ * current layer (ornament). Same drawing as the boot emblem and icon.svg. */
 .mk-brand-mark {
   position: relative;
   width: 38px;
@@ -205,6 +206,10 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   inset: 0;
   border-radius: 999px;
   border: 1px solid rgba(17, 22, 31, 0.42);
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(17, 22, 31, 0.22) 0 calc(50% + 0.5px), transparent 0),
+    radial-gradient(7px 18px at 50% 50%, transparent 90%, rgba(17, 22, 31, 0.22) 93% 97%, transparent 99%),
+    radial-gradient(14px 18px at 50% 50%, transparent 93%, rgba(17, 22, 31, 0.22) 95% 98%, transparent 100%);
 }
 .mk-brand-mark::after {
   content: "";
@@ -212,7 +217,10 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   inset: 0;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 38%, transparent 70%, rgba(255, 255, 255, 0.12)),
+    linear-gradient(90deg, transparent calc(50% - 0.6px), #f7f8fa 0 calc(50% + 0.6px), transparent 0),
+    radial-gradient(7px 19px at 50% 50%, transparent 86%, #f7f8fa 88% 97%, transparent 99%),
+    radial-gradient(14px 19px at 50% 50%, transparent 91%, #f7f8fa 93% 98%, transparent 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent 38%, transparent 70%, rgba(255, 255, 255, 0.12)),
     repeating-linear-gradient(0deg, var(--mk-text-strong) 0 2.6px, transparent 2.6px 3.8px);
   clip-path: inset(11.4px 0 0 0);
 }
@@ -226,6 +234,15 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   border-radius: 2px;
   background: linear-gradient(90deg, rgba(14, 17, 22, 0.85), var(--mk-laser));
   animation: mkLogoScan 4.8s var(--mk-ease-inout) infinite alternate;
+}
+.mk-brand-laser::before {
+  content: "";
+  position: absolute;
+  right: -0.75px;
+  bottom: 1px;
+  width: 1.5px;
+  height: 15px;
+  background: linear-gradient(180deg, rgba(255, 91, 31, 0), var(--mk-laser));
 }
 .mk-brand-laser::after {
   content: "";

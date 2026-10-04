@@ -1,15 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Metalliksa layered orb: a disc built bottom-up from layers, the laser finishing the current layer. -->
+  <!-- Metalliksa mark: a world built additively. Globe layers grown bottom-up, meridians through the
+       finished layers, a hairline cap still to build, and a laser from above finishing the current layer. -->
   <defs>
     <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f7f8fa" />
       <stop offset="1" stop-color="#e4e7ec" />
     </linearGradient>
+    <linearGradient id="ray" gradientUnits="userSpaceOnUse" x1="0" y1="4" x2="0" y2="66">
+      <stop offset="0" stop-color="#ff5b1f" stop-opacity="0" />
+      <stop offset="1" stop-color="#ff5b1f" />
+    </linearGradient>
     <clipPath id="orb"><circle cx="100" cy="100" r="70" /></clipPath>
+    <clipPath id="built"><rect x="20" y="72" width="160" height="110" /></clipPath>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#plate)" />
-  <g transform="translate(56 56) scale(2)">
+  <g transform="translate(56 64) scale(2)">
     <circle cx="100" cy="100" r="70" fill="none" stroke="#545b66" stroke-width="1.4" />
+    <g clip-path="url(#orb)">
+      <ellipse cx="100" cy="100" rx="26" ry="70" fill="none" stroke="#a3aab4" stroke-width="1" />
+      <ellipse cx="100" cy="100" rx="52" ry="70" fill="none" stroke="#a3aab4" stroke-width="1" />
+      <line x1="100" x2="100" y1="30" y2="170" stroke="#a3aab4" stroke-width="1" />
+    </g>
     <g clip-path="url(#orb)" stroke="#0e1116" stroke-width="4.8">
       <line x1="28" x2="172" y1="167" y2="167" />
       <line x1="28" x2="172" y1="160" y2="160" />
@@ -26,7 +37,13 @@
       <line x1="28" x2="172" y1="83" y2="83" />
       <line x1="28" x2="172" y1="76" y2="76" />
     </g>
+    <g clip-path="url(#built)">
+      <ellipse cx="100" cy="100" rx="26" ry="70" fill="none" stroke="#f7f8fa" stroke-width="1.8" />
+      <ellipse cx="100" cy="100" rx="52" ry="70" fill="none" stroke="#f7f8fa" stroke-width="1.8" />
+      <line x1="100" x2="100" y1="30" y2="170" stroke="#f7f8fa" stroke-width="1.8" />
+    </g>
     <line x1="37" x2="118" y1="69" y2="69" stroke="#0e1116" stroke-width="4.8" />
+    <line x1="118" x2="118" y1="4" y2="66" stroke="url(#ray)" stroke-width="2.4" />
     <circle cx="118" cy="69" r="9" fill="#ff5b1f" opacity="0.25" />
     <circle cx="118" cy="69" r="3.6" fill="#fff3e8" stroke="#ff5b1f" stroke-width="2" />
   </g>
