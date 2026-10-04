@@ -223,6 +223,10 @@
   .mk-boot-art .f-frame { top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; transform: none; }
 }
 
+@media (max-width: 30rem) {
+  .mk-boot-hero figcaption { top: var(--mk-space-2); right: var(--mk-space-3); font-size: 9px; letter-spacing: 0.06em; }
+}
+
 /* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
  * In-flow footer at the end of the shell, deliberately NOT sticky: module modals are not portalled
  * (fixed inset-0 z-50 inside the main row, which is positioned with z-index auto), so the strip stays
