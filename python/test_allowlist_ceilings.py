@@ -148,8 +148,9 @@ ORIGINAL_ENTRIES = {
 # Ceilings added after ORIGINAL_COMMIT are frozen by the sha256 of their current content
 # (CRLF normalised to LF): any change, including growth, needs an edit here.
 PINNED_CONTENT = {
-    # Fix round 2 (review item 5): orphans under src/features|utils|services|hooks.
-    "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": "19daf7b4ae01cf64299a64862bc8b3edd2439a613e332d8615cb5a8181384711",
+    # Fix round 2 (review item 5): orphans under src/features|utils|services|hooks. Shrunk in the
+    # p7 re-audit fix round (8 deleted-file slots removed).
+    "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": "ba1abc5ad86313779507ba04250389c22040d249c2dd845db2cc611af0b8ac32",
 }
 # Reviewed growth after ORIGINAL_COMMIT (slice-1 fix rounds). Nothing else may be added.
 DELIBERATE_DELTA = {
