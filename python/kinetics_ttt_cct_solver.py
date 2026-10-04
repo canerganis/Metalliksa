@@ -32,6 +32,64 @@ ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
 E140_NON_AUSTENITIC_STEEL_IDS = frozenset({"aisi4140", "aisi4340", "aisid2"})
 
 
+# The TTT/CCT/hardness model is a STEEL template (steel nose temperatures, Avrami constants,
+# a CCT phase-fraction/HRC lookup by cooling-rate band, Pearlite/Bainite/Martensite labels).
+# For the other alloy classes in the registry (Inconel 718, Ti-6Al-4V, Al 7075) none of it is
+# a model of that alloy, so every such output is None with an explicit status and this reason.
+STEEL_ONLY_REASON = "kinetics model is steel-only"
+STATUS_UNAVAILABLE_STEEL_ONLY = "unavailable-kinetics-model-steel-only"
+STATUS_UNAVAILABLE_PLACEHOLDER = "unavailable-registry-placeholder"
+STATUS_REGISTRY_VALUE = "registry-screening-value"
+STATUS_START_NO_ASYMPTOTE = "unavailable-ttt-incubation-law-no-ae3-asymptote"
+STATUS_LSW_ABOVE_SOLVUS = "unavailable-aging-temperature-at-or-above-solvus"
+STATUS_LSW_ILLUSTRATIVE = "generic-constants-illustrative"
+STATUS_START_ATHERMAL = "athermal-martensite-no-diffusional-start-above-ms"
+STATUS_STEEL_LOOKUP = "steel-lookup-by-ccr-band-not-computed"
+STATUS_STATIC_TEXT = "static-text-not-a-calphad-calculation"
+STATUS_STEEL_ILLUSTRATIVE = "steel-illustrative-correlation"
+NON_STEEL_MODEL_NOTE = (
+    "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants "
+    "(nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a "
+    "sourced model of this alloy, so they are not reported."
+)
+# TTT incubation law: t_start = max(TTT_INCUBATION_FLOOR_S, c * ...). The law has no Ae3
+# asymptote, so over most of the range it falls below the floor and the reported time is the
+# floor itself (audit D4: 32 of 40 TTT points for AISI 4140). Such a point is flagged floorHit.
+TTT_INCUBATION_FLOOR_S = 0.001
+TTT_FLOOR_NOTE = (
+    "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives "
+    "less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s "
+    "are derived from it."
+)
+# The law has no Ae3 asymptote and caps the undercooling term at max(10, dT): the Scheil sum reaches 1 at
+# the first step below Ae3 - 5 K with 1-10 ms incubation, whatever the floor or the time step. Every
+# diffusional CCT start of a steel is therefore not computed (audit D4; fx-kinetics review).
+CCT_NO_ASYMPTOTE_REASON = "incubation law has no Ae3 asymptote; start not computed"
+# Fixed steel text (not a CALPHAD result). D2 is a 12 % Cr ledeburitic steel: its equilibrium carbides are
+# M7C3/M23C6, not cementite.
+STEEL_EQUILIBRIUM_PHASES = "Ferrite + Cementite / Equilibrium intermetallics"
+D2_EQUILIBRIUM_PHASES = "Ferrite + alloy carbides (M7C3 / M23C6)"
+STEEL_NOTE = (
+    "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted "
+    "to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed."
+)
+LSW_NOTE = (
+    "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the "
+    "activation energy is per alloy; one molar volume serves both the matrix concentration and the "
+    "precipitate); the strengthening column is an unsourced screening curve."
+)
+
+
+def is_steel_alloy(alloy):
+    """Whether the kinetics descriptor 'type' of this alloy is a steel (the only modelled class)."""
+    return "Steel" in alloy["type"]
+
+
+def placeholder_keys(registry_id):
+    """Registry keys of this alloy that alloy_registry.KINETICS_PLACEHOLDERS flags as non-physical."""
+    return sorted(key for alloy_id, key in alloy_registry.KINETICS_PLACEHOLDERS if alloy_id == registry_id)
+
+
 def predicted_hardness_hv(hrc, registry_id):
     """(HV or None, status) for the solver's predicted HRC; see hardness_conversion_e140."""
     if registry_id not in E140_NON_AUSTENITIC_STEEL_IDS:
@@ -131,7 +189,9 @@ def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_typ
     diff_term = math.exp((q_act / r_gas) * (1.0 / t_k - 1.0 / (t_nose + ZERO_C_K)))
     
     # Incubation time for 1% transformed (start)
-    t_start_s = max(0.001, c_factor * tau_geom * diff_term * (100.0 / max(10.0, delta_t)) ** 1.2)
+    t_incubation_s = c_factor * tau_geom * diff_term * (100.0 / max(10.0, delta_t)) ** 1.2
+    floor_hit = t_incubation_s < TTT_INCUBATION_FLOOR_S
+    t_start_s = max(TTT_INCUBATION_FLOOR_S, t_incubation_s)
     
     # 50% transformed time: t_50 = t_start * [ ln(2) / -ln(0.99) ]^(1/n)
     ratio_50 = (math.log(2.0) / -math.log(0.99)) ** (1.0 / n_avrami)
@@ -148,7 +208,9 @@ def calculate_jmak_isothermal_kinetics(t_c, alloy_data, grain_size_um, phase_typ
         "t50_s": round(t_50_s, 4),
         "tFinish_s": round(t_finish_s, 4),
         "avramiExponent_n": n_avrami,
-        "drivingForce_DeltaT_C": round(delta_t, 1)
+        "drivingForce_DeltaT_C": round(delta_t, 1),
+        # True: tStart_s is the 1 ms floor (TTT_INCUBATION_FLOOR_S), not the law's value.
+        "floorHit": floor_hit,
     }
 
 def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s=10.0,
@@ -156,62 +218,107 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
                                        aging_time_h=8.0, aging_temp_c=720.0):
     """
     Solves TTT curves, CCT cooling trajectory via Scheil additivity, room temp phase constituents, and LSW coarsening.
+
+    The TTT/CCT/phase-fraction/hardness model is a steel template: for alloys whose registry class is
+    not a steel those outputs are None with an explicit status and the reason STEEL_ONLY_REASON
+    (see ``kineticsModel``). Registry parameters flagged in alloy_registry.KINETICS_PLACEHOLDERS are
+    never reported as results.
     """
     start_time = time.perf_counter()
-    
+
     registry_id, legacy_name, alloy = resolve_kinetics_alloy(alloy_name)
-    
+    steel = is_steel_alloy(alloy)
+    placeholders = placeholder_keys(registry_id)
+
     ae3 = alloy["Ae3_C"]
     ae1 = alloy["Ae1_C"]
     ms = alloy["Ms_C"]
     mf = alloy["Mf_C"]
     ccr = alloy["critical_cooling_rate_C_s"]
-    
-    # 1. GENERATE ISOTHERMAL TTT DIAGRAM CURVES
-    ttt_curves = []
+
+    # 1. GENERATE ISOTHERMAL TTT DIAGRAM CURVES (steel template only)
+    ttt_curves = [] if steel else None
     temp_steps = 45
     t_min = max(50.0, ms - 50.0)
     t_max = ae3 - 5.0
-    
-    for i in range(temp_steps + 1):
+
+    for i in range(temp_steps + 1 if steel else 0):
         tc = t_min + (t_max - t_min) * (i / temp_steps)
-        
+
         # Decide primary active transformation regime
         if tc >= ae1 - 30.0:
-            pt = "Ferrite" if "Steel" in alloy["type"] else "Equiaxed Alpha"
+            pt = "Ferrite"
         elif tc >= 480.0:
-            pt = "Pearlite" if "Steel" in alloy["type"] else "Gamma Prime"
+            pt = "Pearlite"
         elif tc >= ms:
-            pt = "Bainite" if "Steel" in alloy["type"] else "Delta"
+            pt = "Bainite"
         else:
             pt = "Sub-Ms"
-            
+
         if pt != "Sub-Ms":
             res = calculate_jmak_isothermal_kinetics(tc, alloy, grain_size_um, pt)
             if res and res["tStart_s"] < 1.0e6:
                 ttt_curves.append(res)
+
+    if steel:
+        floor_hits = sum(1 for point in ttt_curves if point["floorHit"])
+        ttt_floor = {
+            "status": "floor-hit-points-flagged" if floor_hits else "no-floor-hit-points",
+            "floorValue_s": TTT_INCUBATION_FLOOR_S,
+            "pointCount": len(ttt_curves),
+            "floorHitCount": floor_hits,
+            "note": TTT_FLOOR_NOTE,
+        }
+    else:
+        ttt_floor = {
+            "status": STATUS_UNAVAILABLE_STEEL_ONLY,
+            "floorValue_s": TTT_INCUBATION_FLOOR_S,
+            "pointCount": None,
+            "floorHitCount": None,
+            "note": NON_STEEL_MODEL_NOTE,
+        }
 
     # 2. CONTINUOUS COOLING TRANSFORMATION (CCT) & SCHEIL ADDITIVITY
     # Scheil integral: Sum( dt / tau(T) ) >= 1.0
     # Cooling path: T(t) = T_aust - cooling_rate * t
     cooling_rates_to_test = [0.05, 0.2, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 500.0, 2000.0]
     cct_transformation_map = []
-    
+
     for cr in cooling_rates_to_test:
+        if not steel:
+            cct_transformation_map.append({
+                "coolingRate_C_s": cr,
+                "transformedStartTemp_C": None,
+                "transformedStartTime_s": None,
+                "primaryMicrostructure": None,
+                "phaseFractions": {
+                    "Martensite_pct": None,
+                    "Bainite_pct": None,
+                    "Pearlite_Ferrite_pct": None,
+                    "RetainedAustenite_pct": None
+                },
+                "predictedHardness_HRC": None,
+                "predictedHardness_HV": None,
+                "predictedHardness_HV_status": hardness_conversion_e140.STATUS_UNAVAILABLE_ALLOY_CLASS,
+                "transformedStart_status": STATUS_UNAVAILABLE_STEEL_ONLY,
+                "phaseFractions_status": STATUS_UNAVAILABLE_STEEL_ONLY,
+                "predictedHardness_HRC_status": STATUS_UNAVAILABLE_STEEL_ONLY,
+                "unavailableReason": STEEL_ONLY_REASON,
+            })
+            continue
+
         curr_t = aust_temp_c
         dt = 0.05 / max(1.0, cr * 0.01)
         cum_time = 0.0
         scheil_sum = 0.0
         trans_start_temp = None
-        trans_start_time = None
-        trans_phase = "Martensite"
-        
+
         while curr_t > ms and curr_t > 50.0 and cum_time < 50000.0:
             cum_time += dt
             curr_t = aust_temp_c - cr * cum_time
             if curr_t < ms:
                 break
-                
+
             pt = "Pearlite" if curr_t > 520.0 else "Bainite"
             pt_kin = calculate_jmak_isothermal_kinetics(curr_t, alloy, grain_size_um, pt)
             if pt_kin:
@@ -219,9 +326,23 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
                 scheil_sum += dt / max(1e-4, tau_start)
                 if scheil_sum >= 1.0 and trans_start_temp is None:
                     trans_start_temp = curr_t
-                    trans_start_time = cum_time
-                    trans_phase = pt
                     break
+
+        # A diffusional start is never reported (audit D4: "Pearlite starts at ~770 C at every cooling
+        # rate"): the incubation law has no Ae3 asymptote, so the start is the first admissible step below
+        # Ae3 - 5 K, independent of the integration step. The model itself is not changed.
+        if trans_start_temp is None:
+            start_status = STATUS_START_ATHERMAL
+            row_start_temp = ms
+            row_start_time = round((aust_temp_c - ms)/cr, 2)
+            primary = "Martensite (Athermal)"
+            start_reason = None
+        else:
+            start_status = STATUS_START_NO_ASYMPTOTE
+            row_start_temp = None
+            row_start_time = None
+            primary = None
+            start_reason = CCT_NO_ASYMPTOTE_REASON
 
         # Calculate phase fractions at room temperature for this cooling rate
         if cr >= ccr * 1.5:
@@ -258,9 +379,9 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
         hard_hv, hard_hv_status = predicted_hardness_hv(hard_hrc, registry_id)
         cct_transformation_map.append({
             "coolingRate_C_s": cr,
-            "transformedStartTemp_C": round(trans_start_temp, 1) if trans_start_temp else ms,
-            "transformedStartTime_s": round(trans_start_time, 2) if trans_start_time else round((aust_temp_c - ms)/cr, 2),
-            "primaryMicrostructure": trans_phase if trans_start_temp else "Martensite (Athermal)",
+            "transformedStartTemp_C": row_start_temp,
+            "transformedStartTime_s": row_start_time,
+            "primaryMicrostructure": primary,
             "phaseFractions": {
                 "Martensite_pct": pct_martensite,
                 "Bainite_pct": pct_bainite,
@@ -271,32 +392,68 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
             # ASTM E140 Table 1 estimate (non-austenitic steels, HRC 20-68), else None.
             "predictedHardness_HV": hard_hv,
             "predictedHardness_HV_status": hard_hv_status,
+            # The fractions and HRC are a lookup by cooling-rate band (multiples of the registry
+            # critical cooling rate), not the result of the Scheil path above.
+            "transformedStart_status": start_status,
+            "phaseFractions_status": STATUS_STEEL_LOOKUP,
+            "predictedHardness_HRC_status": STATUS_STEEL_LOOKUP,
+            "unavailableReason": start_reason,
         })
 
     # 3. CURRENT EVALUATION AT USER-SELECTED COOLING RATE
     user_cr = float(cooling_rate_c_s)
     # Koistinen-Marburger Martensite Kinetics: f_M = 1 - exp( -alpha_KM * (Ms - T) )
     alpha_km = 0.011 # 1/K
-    martensite_fraction_at_rt = max(0.0, 1.0 - math.exp(-alpha_km * max(0.0, ms - 25.0))) if user_cr >= ccr * 0.8 else (user_cr / ccr) * 0.95
-    martensite_fraction_at_rt = min(0.99, max(0.0, martensite_fraction_at_rt))
-    
+    if steel:
+        martensite_fraction_at_rt = max(0.0, 1.0 - math.exp(-alpha_km * max(0.0, ms - 25.0))) if user_cr >= ccr * 0.8 else (user_cr / ccr) * 0.95
+        martensite_fraction_at_rt = min(0.99, max(0.0, martensite_fraction_at_rt))
+
     # 4. LIFSHITZ-SLYOZOV-WAGNER (LSW) PRECIPITATE COARSENING
     # r^3(t) - r_0^3 = K_LSW * t
-    # K_LSW = (8 * gamma * D * C_e * Vm^2) / (9 * R * T)
+    # K_LSW = (8 * gamma * D * C_e * Vm^2) / (9 * R * T)   [Lifshitz & Slyozov 1961, Wagner 1961]
+    # Units (SI): gamma J/m^2, D m^2/s, Vm m^3/mol, R*T J/mol and C_e the equilibrium solute
+    # concentration in mol/m^3 give K in m^3/s. The solver holds C_e as a mole fraction x_e, so
+    # C_e = x_e / Vm (before the fix x_e was used as C_e: K was too small by 1/Vm = 9.1e4).
+    # gamma, x_e, Vm and D0 are generic constants shared by every alloy (only Q is per alloy).
     aging_t_k = aging_temp_c + ZERO_C_K
     q_precip = alloy["Q_diff_kJ_mol"] * 1000.0
+    gamma_interface = 0.045   # J/m^2
+    x_e = 0.02                # mole fraction of the rate-limiting solute in equilibrium
+    v_molar = 1.1e-5          # m^3/mol
+    c_e_mol_m3 = x_e / v_molar
     d_diff = 1.2e-4 * math.exp(-q_precip / (R_GAS * aging_t_k))
-    k_lsw = (8.0 * 0.045 * d_diff * 0.02 * (1.1e-5 ** 2)) / (9.0 * R_GAS * aging_t_k) # m^3/s
+    k_lsw = (8.0 * gamma_interface * d_diff * c_e_mol_m3 * (v_molar ** 2)) / (9.0 * R_GAS * aging_t_k) # m^3/s
     k_lsw_nm3_h = k_lsw * (1e9 ** 3) * 3600.0 # nm^3/h
-    
+
     r0_nm = 1.5 # Initial nucleus radius
     aging_time_steps = [0.1, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 24.0, 48.0, 100.0]
     lsw_coarsening_profile = []
-    
+
+    # Above the registry solvus/transus (Ae3_C; for steels also Ae1_C) there is no precipitate population:
+    # the radius, strengthening and regime are not reported (e.g. Al 7075 at the former 720 C Studio
+    # default is above its liquidus).
+    lsw_limit = None
+    if aging_temp_c >= ae3:
+        lsw_limit = ("Ae3 (solvus/transus)", ae3)
+    elif steel and aging_temp_c >= ae1:
+        lsw_limit = ("Ae1", ae1)
+    lsw_reason = None if lsw_limit is None else (
+        f"aging temperature {aging_temp_c:g} C is at or above the registry {lsw_limit[0]} of "
+        f"{lsw_limit[1]:g} C: no precipitate population, so no coarsening or strengthening is reported")
+
     for t_h in aging_time_steps:
-        r_cube = (r0_nm ** 3) + max(1e-3, k_lsw_nm3_h) * t_h
+        if lsw_limit is not None:
+            lsw_coarsening_profile.append({
+                "agingTime_h": t_h,
+                "meanRadius_nm": None,
+                "precipitationHardening_MPa": None,
+                "strengtheningMechanism": None,
+                "status": STATUS_LSW_ABOVE_SOLVUS
+            })
+            continue
+        r_cube = (r0_nm ** 3) + k_lsw_nm3_h * t_h
         r_mean_nm = r_cube ** (1.0 / 3.0)
-        
+
         # Orowan looping strengthening contribution (MPa) vs Cutting
         # Cutting: Delta sigma ~ sqrt(r)
         # Orowan looping: Delta sigma ~ 1 / r
@@ -308,31 +465,85 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
         else:
             orowan_boost_mpa = 280.0 * (r_crit_nm / r_mean_nm)
             regime = "Orowan Dislocation Looping (Over-aged)"
-            
+
         lsw_coarsening_profile.append({
             "agingTime_h": t_h,
             "meanRadius_nm": round(r_mean_nm, 2),
             "precipitationHardening_MPa": round(orowan_boost_mpa, 1),
-            "strengtheningMechanism": regime
+            "strengtheningMechanism": regime,
+            "status": STATUS_LSW_ILLUSTRATIVE
         })
 
     # 5. CALPHAD (Equilibrium) vs KINETICS (Non-Equilibrium) Gap Metrics
-    calphad_vs_kinetics_gap = {
-        "equilibriumPrediction": {
-            "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
-            "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-            "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"
-        },
-        "kineticRealityAtSelectedCooling": {
-            "coolingRate_C_s": user_cr,
-            "criticalCoolingRate_C_s": ccr,
-            "isSuppressedEquilibrium": user_cr >= 2.0,
-            "predictedMartensite_pct": round(martensite_fraction_at_rt * 100.0, 1),
-            "diffusionSuppressionIndex": round(min(1.0, user_cr / max(1e-2, ccr)), 3),
-            "verdict": "Full Martensitic / Metastable Quench" if user_cr >= ccr else (
-                "Mixed Microstructure (Martensite + Bainite)" if user_cr >= ccr * 0.2 else "Diffusional Equilibrium Decomposition"
-            )
+    if steel:
+        calphad_vs_kinetics_gap = {
+            "equilibriumPrediction": {
+                "stablePhasesAtRT": D2_EQUILIBRIUM_PHASES if registry_id == "aisid2" else STEEL_EQUILIBRIUM_PHASES,
+                "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
+                "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
+                "status": STATUS_STATIC_TEXT,
+                "reason": "fixed steel text; no equilibrium (CALPHAD) calculation is performed here",
+            },
+            "kineticRealityAtSelectedCooling": {
+                "coolingRate_C_s": user_cr,
+                "criticalCoolingRate_C_s": ccr,
+                "isSuppressedEquilibrium": user_cr >= 2.0,
+                "predictedMartensite_pct": round(martensite_fraction_at_rt * 100.0, 1),
+                "diffusionSuppressionIndex": round(min(1.0, user_cr / max(1e-2, ccr)), 3),
+                "verdict": "Full Martensitic / Metastable Quench" if user_cr >= ccr else (
+                    "Mixed Microstructure (Martensite + Bainite)" if user_cr >= ccr * 0.2 else "Diffusional Equilibrium Decomposition"
+                ),
+                "status": STATUS_STEEL_ILLUSTRATIVE,
+                "reason": "steel template with unsourced registry critical cooling rate; screening only",
+            }
         }
+    else:
+        calphad_vs_kinetics_gap = {
+            "equilibriumPrediction": {
+                "stablePhasesAtRT": None,
+                "martensiteFraction": None,
+                "soluteSupersaturation": None,
+                "status": STATUS_UNAVAILABLE_STEEL_ONLY,
+                "reason": STEEL_ONLY_REASON,
+            },
+            "kineticRealityAtSelectedCooling": {
+                "coolingRate_C_s": user_cr,
+                "criticalCoolingRate_C_s": None,
+                "isSuppressedEquilibrium": None,
+                "predictedMartensite_pct": None,
+                "diffusionSuppressionIndex": None,
+                "verdict": None,
+                "status": STATUS_UNAVAILABLE_STEEL_ONLY,
+                "reason": STEEL_ONLY_REASON,
+            }
+        }
+
+    # Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS) are never reported as results.
+    alloy_out = dict(alloy)
+    for key in placeholders:
+        alloy_out[key] = None
+    if not steel:
+        # Steel-template parameters of a non-steel alloy (eutectoid Ae1, martensite critical cooling rate) are
+        # not published as alloy metadata either (they are null in criticalTransformationTemperatures).
+        alloy_out["Ae1_C"] = None
+        alloy_out["critical_cooling_rate_C_s"] = None
+
+    def critical_status(key):
+        return STATUS_UNAVAILABLE_PLACEHOLDER if key in placeholders else STATUS_REGISTRY_VALUE
+
+    kinetics_model = {
+        "status": "available" if steel else "unavailable",
+        "reason": None if steel else STEEL_ONLY_REASON,
+        "scope": "steel-only",
+        "registryAlloyId": registry_id,
+        "illustrativeOnly": True,
+        "note": STEEL_NOTE if steel else NON_STEEL_MODEL_NOTE,
+        "placeholderParameters": placeholders,
+        "lswPrecipitateCoarsening": {
+            "status": STATUS_LSW_ABOVE_SOLVUS if lsw_limit else STATUS_LSW_ILLUSTRATIVE,
+            "note": LSW_NOTE,
+            "reason": lsw_reason,
+        },
     }
 
     compute_time_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
@@ -342,7 +553,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
         "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
         "computeTimeMs": compute_time_ms,
         "alloy": alloy_name,
-        "alloyMetadata": alloy,
+        "alloyMetadata": alloy_out,
         "inputParameters": {
             "selectedCoolingRate_C_s": user_cr,
             "austSolutionTemp_C": aust_temp_c,
@@ -352,15 +563,21 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
         },
         "criticalTransformationTemperatures": {
             "Ae3_BetaTransus_GammaSolvus_C": ae3,
-            "Ae1_C": ae1,
-            "Ms_C": ms,
-            "Mf_C": mf,
-            "CriticalCoolingRate_CCR_C_s": ccr
+            "Ae1_C": ae1 if steel else None,
+            "Ms_C": None if "Ms_C" in placeholders else ms,
+            "Mf_C": None if "Mf_C" in placeholders else mf,
+            "CriticalCoolingRate_CCR_C_s": ccr if steel else None,
+            "Ae1_C_status": STATUS_REGISTRY_VALUE if steel else STATUS_UNAVAILABLE_STEEL_ONLY,
+            "Ms_C_status": critical_status("Ms_C"),
+            "Mf_C_status": critical_status("Mf_C"),
+            "CriticalCoolingRate_CCR_status": STATUS_REGISTRY_VALUE if steel else STATUS_UNAVAILABLE_STEEL_ONLY,
         },
         "tttIsothermalCurves": ttt_curves,
         "cctContinuousCoolingMap": cct_transformation_map,
         "lswPrecipitateCoarsening": lsw_coarsening_profile,
-        "calphadVsKineticsGap": calphad_vs_kinetics_gap
+        "calphadVsKineticsGap": calphad_vs_kinetics_gap,
+        "kineticsModel": kinetics_model,
+        "tttIncubationFloor": ttt_floor,
     }
 
 if __name__ == "__main__":

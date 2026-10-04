@@ -2,6 +2,42 @@
  "case": "aisi4140_ui_defaults",
  "driftVsBase": [
   {
+   "key": "calphadVsKineticsGap.equilibriumPrediction.reason",
+   "kind": "added",
+   "new": "fixed steel text; no equilibrium (CALPHAD) calculation is performed here",
+   "old": null
+  },
+  {
+   "key": "calphadVsKineticsGap.equilibriumPrediction.status",
+   "kind": "added",
+   "new": "static-text-not-a-calphad-calculation",
+   "old": null
+  },
+  {
+   "key": "calphadVsKineticsGap.kineticRealityAtSelectedCooling.reason",
+   "kind": "added",
+   "new": "steel template with unsourced registry critical cooling rate; screening only",
+   "old": null
+  },
+  {
+   "key": "calphadVsKineticsGap.kineticRealityAtSelectedCooling.status",
+   "kind": "added",
+   "new": "steel-illustrative-correlation",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[0].predictedHardness_HV",
    "kind": "changed",
    "new": null,
@@ -14,6 +50,48 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[0].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 775.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 1700.05
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[0].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[1].predictedHardness_HV",
    "kind": "changed",
    "new": null,
@@ -23,6 +101,48 @@
    "key": "cctContinuousCoolingMap[1].predictedHardness_HV_status",
    "kind": "added",
    "new": "unavailable-outside-e140-table1-hrc-20-68",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 775.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 425.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
    "old": null
   },
   {
@@ -40,6 +160,48 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[2].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 775.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 85.05
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[2].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "abs": -48.0,
    "key": "cctContinuousCoolingMap[3].predictedHardness_HV",
    "kind": "numeric",
@@ -51,6 +213,48 @@
    "key": "cctContinuousCoolingMap[3].predictedHardness_HV_status",
    "kind": "added",
    "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 775.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 17.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
    "old": null
   },
   {
@@ -68,6 +272,48 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[4].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 774.5
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 8.55
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[4].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "abs": -69.0,
    "key": "cctContinuousCoolingMap[5].predictedHardness_HV",
    "kind": "numeric",
@@ -79,6 +325,48 @@
    "key": "cctContinuousCoolingMap[5].predictedHardness_HV_status",
    "kind": "added",
    "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 773.8
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 3.45
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
    "old": null
   },
   {
@@ -96,6 +384,48 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[6].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 772.5
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 1.75
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[6].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "abs": 4.0,
    "key": "cctContinuousCoolingMap[7].predictedHardness_HV",
    "kind": "numeric",
@@ -107,6 +437,48 @@
    "key": "cctContinuousCoolingMap[7].predictedHardness_HV_status",
    "kind": "added",
    "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 770.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 0.9
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
    "old": null
   },
   {
@@ -124,6 +496,48 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[8].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 770.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 0.18
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[8].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].phaseFractions_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].predictedHardness_HRC_status",
+   "kind": "added",
+   "new": "steel-lookup-by-ccr-band-not-computed",
+   "old": null
+  },
+  {
    "abs": 4.0,
    "key": "cctContinuousCoolingMap[9].predictedHardness_HV",
    "kind": "numeric",
@@ -135,6 +549,406 @@
    "key": "cctContinuousCoolingMap[9].predictedHardness_HV_status",
    "kind": "added",
    "new": "converted-astm-e140-table1",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].primaryMicrostructure",
+   "kind": "changed",
+   "new": null,
+   "old": "Pearlite"
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].transformedStartTemp_C",
+   "kind": "changed",
+   "new": null,
+   "old": 765.0
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].transformedStartTime_s",
+   "kind": "changed",
+   "new": null,
+   "old": 0.05
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].transformedStart_status",
+   "kind": "added",
+   "new": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[9].unavailableReason",
+   "kind": "added",
+   "new": "incubation law has no Ae3 asymptote; start not computed",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Ae1_C_status",
+   "kind": "added",
+   "new": "registry-screening-value",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.CriticalCoolingRate_CCR_status",
+   "kind": "added",
+   "new": "registry-screening-value",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Mf_C_status",
+   "kind": "added",
+   "new": "registry-screening-value",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Ms_C_status",
+   "kind": "added",
+   "new": "registry-screening-value",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.illustrativeOnly",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.lswPrecipitateCoarsening.note",
+   "kind": "added",
+   "new": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.lswPrecipitateCoarsening.reason",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.lswPrecipitateCoarsening.status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.note",
+   "kind": "added",
+   "new": "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed.",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.placeholderParameters",
+   "kind": "added",
+   "new": [],
+   "old": null
+  },
+  {
+   "key": "kineticsModel.reason",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.registryAlloyId",
+   "kind": "added",
+   "new": "aisi4140",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.scope",
+   "kind": "added",
+   "new": "steel-only",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.status",
+   "kind": "added",
+   "new": "available",
+   "old": null
+  },
+  {
+   "abs": 0.9300000000000002,
+   "key": "lswPrecipitateCoarsening[0].meanRadius_nm",
+   "kind": "numeric",
+   "new": 2.43,
+   "old": 1.5,
+   "rel": 0.6200000000000001
+  },
+  {
+   "abs": 31.200000000000003,
+   "key": "lswPrecipitateCoarsening[0].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 145.5,
+   "old": 114.3,
+   "rel": 0.2729658792650919
+  },
+  {
+   "key": "lswPrecipitateCoarsening[0].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "abs": 2.38,
+   "key": "lswPrecipitateCoarsening[1].meanRadius_nm",
+   "kind": "numeric",
+   "new": 3.88,
+   "old": 1.5,
+   "rel": 1.5866666666666667
+  },
+  {
+   "abs": 69.50000000000001,
+   "key": "lswPrecipitateCoarsening[1].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 183.8,
+   "old": 114.3,
+   "rel": 0.6080489938757657
+  },
+  {
+   "key": "lswPrecipitateCoarsening[1].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "abs": 3.34,
+   "key": "lswPrecipitateCoarsening[2].meanRadius_nm",
+   "kind": "numeric",
+   "new": 4.84,
+   "old": 1.5,
+   "rel": 2.2266666666666666
+  },
+  {
+   "abs": 91.00000000000001,
+   "key": "lswPrecipitateCoarsening[2].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 205.3,
+   "old": 114.3,
+   "rel": 0.7961504811898514
+  },
+  {
+   "key": "lswPrecipitateCoarsening[2].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "abs": 4.56,
+   "key": "lswPrecipitateCoarsening[3].meanRadius_nm",
+   "kind": "numeric",
+   "new": 6.06,
+   "old": 1.5,
+   "rel": 3.0399999999999996
+  },
+  {
+   "abs": 115.50000000000001,
+   "key": "lswPrecipitateCoarsening[3].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 229.8,
+   "old": 114.3,
+   "rel": 1.010498687664042
+  },
+  {
+   "key": "lswPrecipitateCoarsening[3].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "abs": 6.12,
+   "key": "lswPrecipitateCoarsening[4].meanRadius_nm",
+   "kind": "numeric",
+   "new": 7.62,
+   "old": 1.5,
+   "rel": 4.08
+  },
+  {
+   "abs": 143.39999999999998,
+   "key": "lswPrecipitateCoarsening[4].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 257.7,
+   "old": 114.3,
+   "rel": 1.2545931758530182
+  },
+  {
+   "key": "lswPrecipitateCoarsening[4].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "abs": 8.09,
+   "key": "lswPrecipitateCoarsening[5].meanRadius_nm",
+   "kind": "numeric",
+   "new": 9.59,
+   "old": 1.5,
+   "rel": 5.3933333333333335
+  },
+  {
+   "abs": 148.4,
+   "key": "lswPrecipitateCoarsening[5].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 262.8,
+   "old": 114.4,
+   "rel": 1.2972027972027973
+  },
+  {
+   "key": "lswPrecipitateCoarsening[5].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "lswPrecipitateCoarsening[5].strengtheningMechanism",
+   "kind": "changed",
+   "new": "Orowan Dislocation Looping (Over-aged)",
+   "old": "Weak-Pair / Strong-Pair Cutting"
+  },
+  {
+   "abs": 10.57,
+   "key": "lswPrecipitateCoarsening[6].meanRadius_nm",
+   "kind": "numeric",
+   "new": 12.07,
+   "old": 1.5,
+   "rel": 7.046666666666667
+  },
+  {
+   "abs": 94.29999999999998,
+   "key": "lswPrecipitateCoarsening[6].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 208.7,
+   "old": 114.4,
+   "rel": 0.8243006993006992
+  },
+  {
+   "key": "lswPrecipitateCoarsening[6].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "lswPrecipitateCoarsening[6].strengtheningMechanism",
+   "kind": "changed",
+   "new": "Orowan Dislocation Looping (Over-aged)",
+   "old": "Weak-Pair / Strong-Pair Cutting"
+  },
+  {
+   "abs": 12.32,
+   "key": "lswPrecipitateCoarsening[7].meanRadius_nm",
+   "kind": "numeric",
+   "new": 13.82,
+   "old": 1.5,
+   "rel": 8.213333333333333
+  },
+  {
+   "abs": 67.9,
+   "key": "lswPrecipitateCoarsening[7].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 182.4,
+   "old": 114.5,
+   "rel": 0.5930131004366813
+  },
+  {
+   "key": "lswPrecipitateCoarsening[7].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "lswPrecipitateCoarsening[7].strengtheningMechanism",
+   "kind": "changed",
+   "new": "Orowan Dislocation Looping (Over-aged)",
+   "old": "Weak-Pair / Strong-Pair Cutting"
+  },
+  {
+   "abs": 15.9,
+   "key": "lswPrecipitateCoarsening[8].meanRadius_nm",
+   "kind": "numeric",
+   "new": 17.41,
+   "old": 1.51,
+   "rel": 10.529801324503312
+  },
+  {
+   "abs": 30.200000000000017,
+   "key": "lswPrecipitateCoarsening[8].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 144.8,
+   "old": 114.6,
+   "rel": 0.2635253054101223
+  },
+  {
+   "key": "lswPrecipitateCoarsening[8].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "lswPrecipitateCoarsening[8].strengtheningMechanism",
+   "kind": "changed",
+   "new": "Orowan Dislocation Looping (Over-aged)",
+   "old": "Weak-Pair / Strong-Pair Cutting"
+  },
+  {
+   "abs": 20.71,
+   "key": "lswPrecipitateCoarsening[9].meanRadius_nm",
+   "kind": "numeric",
+   "new": 22.23,
+   "old": 1.52,
+   "rel": 13.625
+  },
+  {
+   "abs": -1.5999999999999943,
+   "key": "lswPrecipitateCoarsening[9].precipitationHardening_MPa",
+   "kind": "numeric",
+   "new": 113.4,
+   "old": 115.0,
+   "rel": -0.01391304347826082
+  },
+  {
+   "key": "lswPrecipitateCoarsening[9].status",
+   "kind": "added",
+   "new": "generic-constants-illustrative",
+   "old": null
+  },
+  {
+   "key": "lswPrecipitateCoarsening[9].strengtheningMechanism",
+   "kind": "changed",
+   "new": "Orowan Dislocation Looping (Over-aged)",
+   "old": "Weak-Pair / Strong-Pair Cutting"
+  },
+  {
+   "key": "tttIncubationFloor.floorHitCount",
+   "kind": "added",
+   "new": 32,
+   "old": null
+  },
+  {
+   "key": "tttIncubationFloor.floorValue_s",
+   "kind": "added",
+   "new": 0.001,
+   "old": null
+  },
+  {
+   "key": "tttIncubationFloor.note",
+   "kind": "added",
+   "new": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it.",
+   "old": null
+  },
+  {
+   "key": "tttIncubationFloor.pointCount",
+   "kind": "added",
+   "new": 40,
+   "old": null
+  },
+  {
+   "key": "tttIncubationFloor.status",
+   "kind": "added",
+   "new": "floor-hit-points-flagged",
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[0].floorHit",
+   "kind": "added",
+   "new": false,
    "old": null
   },
   {
@@ -152,6 +966,72 @@
    "new": 2.2038,
    "old": 2.2045,
    "rel": -0.0003175323202538902
+  },
+  {
+   "key": "tttIsothermalCurves[10].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[11].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[12].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[13].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[14].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[15].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[16].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[17].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[18].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[19].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[1].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
   },
   {
    "abs": -9.999999999998899e-05,
@@ -178,16 +1058,184 @@
    "rel": -0.0028011204481793515
   },
   {
+   "key": "tttIsothermalCurves[20].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[21].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[22].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[23].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[24].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[25].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[26].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[27].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[28].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[29].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[2].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
    "abs": -0.0001000000000000445,
    "key": "tttIsothermalCurves[2].tFinish_s",
    "kind": "numeric",
    "new": 0.2815,
    "old": 0.2816,
    "rel": -0.00035511363636379434
+  },
+  {
+   "key": "tttIsothermalCurves[30].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[31].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[32].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[33].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[34].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[35].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[36].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[37].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[38].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[39].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[3].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[4].floorHit",
+   "kind": "added",
+   "new": false,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[5].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[6].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[7].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[8].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "tttIsothermalCurves[9].floorHit",
+   "kind": "added",
+   "new": true,
+   "old": null
   }
  ],
  "exitCode": 0,
- "gitHead": "f1df352062f10cd2c4ae1673ce9a3333f51e9af6",
+ "gitHead": "f4bc04b10402e8f8bdac23fa40778041c3144e54",
  "input": {
   "agingTemp_C": 720.0,
   "agingTime_h": 8.0,
@@ -228,7 +1276,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "4a999e944d10fad53484aa85fc7b1bdcddde20e410a78b4277c3ab1eebcc00d3",
+ "solverSha256": "2990cbe8ad4ad676b81ec78c9d60073142a03b510e63ad6d8c0de87c6dce0b9e",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -262,8 +1310,10 @@
   "calphadVsKineticsGap": {
    "equilibriumPrediction": {
     "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
+    "reason": "fixed steel text; no equilibrium (CALPHAD) calculation is performed here",
     "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
-    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics"
+    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
+    "status": "static-text-not-a-calphad-calculation"
    },
    "kineticRealityAtSelectedCooling": {
     "coolingRate_C_s": 10.0,
@@ -271,6 +1321,8 @@
     "diffusionSuppressionIndex": 0.222,
     "isSuppressedEquilibrium": true,
     "predictedMartensite_pct": 21.1,
+    "reason": "steel template with unsourced registry critical cooling rate; screening only",
+    "status": "steel-illustrative-correlation",
     "verdict": "Mixed Microstructure (Martensite + Bainite)"
    }
   },
@@ -283,12 +1335,16 @@
      "Pearlite_Ferrite_pct": 98.5,
      "RetainedAustenite_pct": 1.5
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 18.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": null,
     "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 775.0,
-    "transformedStartTime_s": 1700.05
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 0.2,
@@ -298,12 +1354,16 @@
      "Pearlite_Ferrite_pct": 98.5,
      "RetainedAustenite_pct": 1.5
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 18.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": null,
     "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 775.0,
-    "transformedStartTime_s": 425.0
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 1.0,
@@ -313,12 +1373,16 @@
      "Pearlite_Ferrite_pct": 78.0,
      "RetainedAustenite_pct": 2.0
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 28.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 286.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 775.0,
-    "transformedStartTime_s": 85.05
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 5.0,
@@ -328,12 +1392,16 @@
      "Pearlite_Ferrite_pct": 78.0,
      "RetainedAustenite_pct": 2.0
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 28.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 286.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 775.0,
-    "transformedStartTime_s": 17.0
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 10.0,
@@ -343,12 +1411,16 @@
      "Pearlite_Ferrite_pct": 18.0,
      "RetainedAustenite_pct": 2.0
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 42.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 412.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 774.5,
-    "transformedStartTime_s": 8.55
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 25.0,
@@ -358,12 +1430,16 @@
      "Pearlite_Ferrite_pct": 18.0,
      "RetainedAustenite_pct": 2.0
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 42.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 412.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 773.8,
-    "transformedStartTime_s": 3.45
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 50.0,
@@ -373,12 +1449,16 @@
      "Pearlite_Ferrite_pct": 2.0,
      "RetainedAustenite_pct": 1.0
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 54.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 577.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 772.5,
-    "transformedStartTime_s": 1.75
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 100.0,
@@ -388,12 +1468,16 @@
      "Pearlite_Ferrite_pct": 0.5,
      "RetainedAustenite_pct": 0.5
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 58.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 770.0,
-    "transformedStartTime_s": 0.9
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 500.0,
@@ -403,12 +1487,16 @@
      "Pearlite_Ferrite_pct": 0.5,
      "RetainedAustenite_pct": 0.5
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 58.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 770.0,
-    "transformedStartTime_s": 0.18
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 2000.0,
@@ -418,20 +1506,28 @@
      "Pearlite_Ferrite_pct": 0.5,
      "RetainedAustenite_pct": 0.5
     },
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HRC": 58.0,
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
     "predictedHardness_HV": 653.0,
     "predictedHardness_HV_status": "converted-astm-e140-table1",
-    "primaryMicrostructure": "Pearlite",
-    "transformedStartTemp_C": 765.0,
-    "transformedStartTime_s": 0.05
+    "primaryMicrostructure": null,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    }
   ],
   "criticalTransformationTemperatures": {
    "Ae1_C": 725.0,
+   "Ae1_C_status": "registry-screening-value",
    "Ae3_BetaTransus_GammaSolvus_C": 780.0,
    "CriticalCoolingRate_CCR_C_s": 45.0,
+   "CriticalCoolingRate_CCR_status": "registry-screening-value",
    "Mf_C": 180.0,
-   "Ms_C": 330.0
+   "Mf_C_status": "registry-screening-value",
+   "Ms_C": 330.0,
+   "Ms_C_status": "registry-screening-value"
   },
   "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
   "inputParameters": {
@@ -441,73 +1537,105 @@
    "priorGrainSize_um": 25.0,
    "selectedCoolingRate_C_s": 10.0
   },
+  "kineticsModel": {
+   "illustrativeOnly": true,
+   "lswPrecipitateCoarsening": {
+    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+    "reason": null,
+    "status": "generic-constants-illustrative"
+   },
+   "note": "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed.",
+   "placeholderParameters": [],
+   "reason": null,
+   "registryAlloyId": "aisi4140",
+   "scope": "steel-only",
+   "status": "available"
+  },
   "lswPrecipitateCoarsening": [
    {
     "agingTime_h": 0.1,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.3,
+    "meanRadius_nm": 2.43,
+    "precipitationHardening_MPa": 145.5,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 0.5,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.3,
+    "meanRadius_nm": 3.88,
+    "precipitationHardening_MPa": 183.8,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 1.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.3,
+    "meanRadius_nm": 4.84,
+    "precipitationHardening_MPa": 205.3,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 2.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.3,
+    "meanRadius_nm": 6.06,
+    "precipitationHardening_MPa": 229.8,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 4.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.3,
+    "meanRadius_nm": 7.62,
+    "precipitationHardening_MPa": 257.7,
+    "status": "generic-constants-illustrative",
     "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
    },
    {
     "agingTime_h": 8.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.4,
-    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+    "meanRadius_nm": 9.59,
+    "precipitationHardening_MPa": 262.8,
+    "status": "generic-constants-illustrative",
+    "strengtheningMechanism": "Orowan Dislocation Looping (Over-aged)"
    },
    {
     "agingTime_h": 16.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.4,
-    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+    "meanRadius_nm": 12.07,
+    "precipitationHardening_MPa": 208.7,
+    "status": "generic-constants-illustrative",
+    "strengtheningMechanism": "Orowan Dislocation Looping (Over-aged)"
    },
    {
     "agingTime_h": 24.0,
-    "meanRadius_nm": 1.5,
-    "precipitationHardening_MPa": 114.5,
-    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+    "meanRadius_nm": 13.82,
+    "precipitationHardening_MPa": 182.4,
+    "status": "generic-constants-illustrative",
+    "strengtheningMechanism": "Orowan Dislocation Looping (Over-aged)"
    },
    {
     "agingTime_h": 48.0,
-    "meanRadius_nm": 1.51,
-    "precipitationHardening_MPa": 114.6,
-    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+    "meanRadius_nm": 17.41,
+    "precipitationHardening_MPa": 144.8,
+    "status": "generic-constants-illustrative",
+    "strengtheningMechanism": "Orowan Dislocation Looping (Over-aged)"
    },
    {
     "agingTime_h": 100.0,
-    "meanRadius_nm": 1.52,
-    "precipitationHardening_MPa": 115.0,
-    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+    "meanRadius_nm": 22.23,
+    "precipitationHardening_MPa": 113.4,
+    "status": "generic-constants-illustrative",
+    "strengtheningMechanism": "Orowan Dislocation Looping (Over-aged)"
    }
   ],
   "success": true,
+  "tttIncubationFloor": {
+   "floorHitCount": 32,
+   "floorValue_s": 0.001,
+   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it.",
+   "pointCount": 40,
+   "status": "floor-hit-points-flagged"
+  },
   "tttIsothermalCurves": [
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 540.0,
+    "floorHit": false,
     "phase": "Bainite",
     "t50_s": 0.855,
     "tFinish_s": 2.2038,
@@ -517,6 +1645,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 529.0,
+    "floorHit": false,
     "phase": "Bainite",
     "t50_s": 0.296,
     "tFinish_s": 0.763,
@@ -526,6 +1655,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 518.0,
+    "floorHit": false,
     "phase": "Bainite",
     "t50_s": 0.1092,
     "tFinish_s": 0.2815,
@@ -535,6 +1665,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 507.0,
+    "floorHit": false,
     "phase": "Bainite",
     "t50_s": 0.0429,
     "tFinish_s": 0.1105,
@@ -544,6 +1675,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 496.0,
+    "floorHit": false,
     "phase": "Bainite",
     "t50_s": 0.0179,
     "tFinish_s": 0.0461,
@@ -553,6 +1685,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 485.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -562,6 +1695,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 474.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -571,6 +1705,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 463.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -580,6 +1715,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 452.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -589,6 +1725,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 441.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -598,6 +1735,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 430.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -607,6 +1745,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 419.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -616,6 +1755,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 408.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -625,6 +1765,7 @@
    {
     "avramiExponent_n": 2.0,
     "drivingForce_DeltaT_C": 397.0,
+    "floorHit": true,
     "phase": "Bainite",
     "t50_s": 0.0083,
     "tFinish_s": 0.0214,
@@ -634,6 +1775,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 291.0,
+    "floorHit": false,
     "phase": "Pearlite",
     "t50_s": 0.026,
     "tFinish_s": 0.0488,
@@ -643,6 +1785,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 280.0,
+    "floorHit": false,
     "phase": "Pearlite",
     "t50_s": 0.013,
     "tFinish_s": 0.0244,
@@ -652,6 +1795,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 269.0,
+    "floorHit": false,
     "phase": "Pearlite",
     "t50_s": 0.0068,
     "tFinish_s": 0.0129,
@@ -661,6 +1805,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 258.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -670,6 +1815,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 247.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -679,6 +1825,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 236.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -688,6 +1835,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 225.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -697,6 +1845,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 214.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -706,6 +1855,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 203.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -715,6 +1865,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 192.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -724,6 +1875,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 181.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -733,6 +1885,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 170.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -742,6 +1895,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 159.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -751,6 +1905,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 148.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -760,6 +1915,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 137.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -769,6 +1925,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 126.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -778,6 +1935,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 115.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -787,6 +1945,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 104.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -796,6 +1955,7 @@
    {
     "avramiExponent_n": 3.0,
     "drivingForce_DeltaT_C": 93.0,
+    "floorHit": true,
     "phase": "Pearlite",
     "t50_s": 0.0041,
     "tFinish_s": 0.0077,
@@ -805,6 +1965,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 82.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -814,6 +1975,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 71.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -823,6 +1985,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 60.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -832,6 +1995,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 49.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -841,6 +2005,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 38.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -850,6 +2015,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 27.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,
@@ -859,6 +2025,7 @@
    {
     "avramiExponent_n": 2.5,
     "drivingForce_DeltaT_C": 16.0,
+    "floorHit": true,
     "phase": "Ferrite",
     "t50_s": 0.0054,
     "tFinish_s": 0.0116,

@@ -49,7 +49,7 @@ from lpbf_part_porosity_aggregator import aggregate_part_porosity
 from lpbf_scanner_kinematics import calculate_scanner_kinematics
 from lpbf_solidification_microstructure import project_build_job_microstructure
 import alloy_registry
-from kinetics_ttt_cct_solver import resolve_kinetics_alloy, solve_phase_transformation_kinetics
+from kinetics_ttt_cct_solver import STEEL_ONLY_REASON, resolve_kinetics_alloy, solve_phase_transformation_kinetics
 
 # Hatch/layer used with literature-box mid P–v when LoF is the dominant gate.
 # Matches src/utils/lpbfDemoVectors.ts printable demos (inputs only).
@@ -164,11 +164,31 @@ def build_rate_martensite(registry_id, alloy_name, gap, cct_row):
     return out
 
 
+def _unavailable_kinetics_block(alloy_id, reason, reported, degenerate):
+    return {
+        "success": False,  # legacy envelope shape; "status" is authoritative
+        "status": "unavailable",
+        "reason": reason,
+        "alloyId": alloy_id,
+        "alloy": None,
+        "buildCoolingRate_C_s": None if degenerate else reported,
+        "reportedCoolingRate_K_s": reported,
+        "coolingRateSource": BUILD_JOB_KINETICS_COOLING_RATE_SOURCE,
+        "cctContinuousCoolingMap": None,
+        "calphadVsKineticsGap": None,
+        "buildCoolingRateCctRow": None,
+        "buildRateMartensite": None,
+    }
+
+
 def build_job_kinetics(alloy_id, thermal):
     """Kinetics block for a build job; unavailable (with reason) instead of a substitute alloy.
 
     ``status`` ("available" / "unavailable") is the field to trust. ``success: False`` on the
     unavailable block only keeps the solver-envelope shape; it does not mean the build job failed.
+    The kinetics model is steel-only (kinetics_ttt_cct_solver, ``kineticsModel``): for an alloy whose
+    solver result is not available (all four build-job alloys: none is a steel) the block is
+    unavailable with the solver's reason, never a steel-template result.
     """
     reported = _reported_cooling_rate(thermal)
     kinetics_alloy = BUILD_JOB_KINETICS_ALLOY.get(alloy_id)
@@ -181,22 +201,15 @@ def build_job_kinetics(alloy_id, thermal):
             reason = "the build thermal result reports no finite cooling rate"
         else:
             reason = DEGENERATE_FRONT_REASON
-        return {
-            "success": False,  # legacy envelope shape; "status" is authoritative
-            "status": "unavailable",
-            "reason": reason,
-            "alloyId": alloy_id,
-            "alloy": None,
-            "buildCoolingRate_C_s": None if degenerate else reported,
-            "reportedCoolingRate_K_s": reported,
-            "coolingRateSource": BUILD_JOB_KINETICS_COOLING_RATE_SOURCE,
-            "cctContinuousCoolingMap": None,
-            "calphadVsKineticsGap": None,
-            "buildCoolingRateCctRow": None,
-            "buildRateMartensite": None,
-        }
+        return _unavailable_kinetics_block(alloy_id, reason, reported, degenerate)
     registry_id = resolve_kinetics_alloy(kinetics_alloy)[0]
     block = solve_phase_transformation_kinetics(alloy_name=kinetics_alloy, cooling_rate_c_s=reported)
+    model = block.get("kineticsModel") or {}
+    if model.get("status") != "available":
+        # e.g. "kinetics model is steel-only: Inconel 718 is not a steel"
+        why = model.get("reason") or "the kinetics model has no result for this alloy"
+        suffix = f": {kinetics_alloy} is not a steel" if why == STEEL_ONLY_REASON else ""
+        return _unavailable_kinetics_block(alloy_id, why + suffix, reported, False)
     block["status"] = "available"
     block["alloyId"] = alloy_id
     block["buildCoolingRate_C_s"] = reported

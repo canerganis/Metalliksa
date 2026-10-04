@@ -21,6 +21,10 @@ const metric = (markup: string, label: string): string | null => {
   const values = [...m[1].matchAll(/<div[^>]*>([^<]*)<\/div>/g)].map((x) => x[1]);
   return values[1] ?? null; // [label, value, hint]
 };
+const hint = (markup: string, label: string): string | null => {
+  const m = new RegExp(`data-kinetics-metric="${label.replace(/[()]/g, "\\$&")}"[^>]*>(.*?)</div></div>`).exec(markup);
+  return m ? ([...m[1].matchAll(/<div[^>]*>([^<]*)/g)].map((x) => x[1])[2] ?? null) : null;
+};
 const NUMBER_TILES = ["Primary Phase", "Martensite", "Hardness (HRC)", "Hardness (HV)"];
 
 test("TS and Python build-job solver revisions are the same string", () => {
@@ -48,42 +52,44 @@ test("degenerate solidification front (1 K/s floor): Unavailable, never the 1 °
   assert.ok(!/Diffusional|Pearlite|CCT row 1 /.test(text(markup)));
 });
 
-test("IN718 / Ti-6Al-4V above the CCT map: tiles Unavailable, the range reason shown, no martensite or verdict", () => {
-  for (const [name, rate] of [["in718_above_map", "877254"], ["ti6al4v_above_map", "1089047"]]) {
+test("IN718 / Ti-6Al-4V (above the CCT map or in it): Unavailable, kinetics model is steel-only, no steel values", () => {
+  for (const [name, alloy] of [
+    ["in718_above_map", "Inconel 718"],
+    ["ti6al4v_above_map", "Ti-6Al-4V"],
+    ["in718_in_map_30", "Inconel 718"],
+    ["ti6al4v_in_map_30", "Ti-6Al-4V"],
+  ]) {
+    assert.equal(BLOCKS[name].status, "unavailable", name);
     const markup = html(name);
-    for (const tile of NUMBER_TILES) assert.equal(metric(markup, tile), "Unavailable", `${name} ${tile}`);
+    assert.equal(metric(markup, "Kinetics"), "Unavailable", name);
+    for (const tile of NUMBER_TILES) assert.equal(metric(markup, tile), null, `${name} renders ${tile}`);
     const t = text(markup);
-    assert.ok(
-      t.includes(`No CCT row: build cooling rate ${rate} °C/s is above the CCT map maximum 2000 °C/s; no row is extrapolated.`),
-      `${name}: ${t}`
-    );
-    assert.ok(t.includes("Martensite and verdict:"), name);
-    assert.ok(!/Full Martensitic|Pearlite|Bainite|\d%/.test(t), `${name}: ${t}`);
+    assert.ok(t.includes(`kinetics model is steel-only: ${alloy} is not a steel.`), `${name}: ${t}`);
+    assert.ok(!/Full Martensitic|Pearlite|Bainite|CCT row|\d%|null|NaN|undefined/.test(t), `${name}: ${t}`);
   }
-  assert.ok(text(html("in718_above_map")).includes("Ms of Inconel 718 is a non-physical placeholder"));
 });
 
-test("in-map rate: the Python-selected row (not row 0) with its rate; martensite only where Ms is physical", () => {
-  const ti = BLOCKS.ti6al4v_in_map_30;
-  const row = ti.cctContinuousCoolingMap[ti.buildCoolingRateCctRow.rowIndex];
+test("hypothetical steel in-map rate (no build-job alloy is a steel): the Python-selected row, martensite where Ms is physical", () => {
+  // The fixture maps AISI 4140 into the build job for this case only (python/test_lpbf_build_job.py), to keep the
+  // "selected row" display path under test.
+  const steel = BLOCKS.aisi4140_in_map_30_hypothetical;
+  assert.equal(steel.status, "available");
+  const row = steel.cctContinuousCoolingMap[steel.buildCoolingRateCctRow.rowIndex];
   assert.equal(row.coolingRate_C_s, 25);
-  assert.notEqual(ti.buildCoolingRateCctRow.rowIndex, 0);
-  const markup = html("ti6al4v_in_map_30");
-  assert.equal(metric(markup, "Primary Phase"), row.primaryMicrostructure);
+  assert.notEqual(steel.buildCoolingRateCctRow.rowIndex, 0);
+  const markup = html("aisi4140_in_map_30_hypothetical");
+  // The steel CCT start at 25 °C/s is floor/step-limited: primary phase is null -> Unavailable, never "null".
+  assert.equal(row.primaryMicrostructure, null);
+  assert.equal(metric(markup, "Primary Phase"), "Unavailable");
+  // the blank primary phase carries the solver's reason, not a bare "From the CCT row below"
+  assert.equal(hint(markup, "Primary Phase"), "incubation law has no Ae3 asymptote; start not computed.");
   assert.equal(metric(markup, "Hardness (HRC)"), String(row.predictedHardness_HRC));
-  assert.equal(metric(markup, "Martensite"), `${ti.buildRateMartensite.predictedMartensite_pct}%`);
+  assert.equal(metric(markup, "Martensite"), `${steel.buildRateMartensite.predictedMartensite_pct}%`);
   const t = text(markup);
   assert.ok(t.includes("CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s)."), t);
   assert.ok(t.includes("At build rate 30 °C/s"));
-  assert.ok(t.includes(ti.buildRateMartensite.verdict));
-
-  const in718 = BLOCKS.in718_in_map_30;
-  const inRow = in718.cctContinuousCoolingMap[in718.buildCoolingRateCctRow.rowIndex];
-  const m = html("in718_in_map_30");
-  assert.equal(metric(m, "Primary Phase"), inRow.primaryMicrostructure);
-  assert.equal(metric(m, "Martensite"), "Unavailable");
-  assert.ok(text(m).includes("non-physical placeholder"));
-  assert.ok(!text(m).includes(in718.calphadVsKineticsGap.kineticRealityAtSelectedCooling.verdict));
+  assert.ok(t.includes(steel.buildRateMartensite.verdict));
+  assert.ok(!/null|NaN|undefined/.test(t), t);
 });
 
 test("no kinetics block renders nothing", () => {

@@ -108,15 +108,19 @@ class KineticsSolverHardnessTest(unittest.TestCase):
                 with self.subTest(alloy=name, cr=row["coolingRate_C_s"]):
                     self.assertIsNone(row["predictedHardness_HV"])
                     self.assertEqual(row["predictedHardness_HV_status"], e140.STATUS_UNAVAILABLE_ALLOY_CLASS)
-                    # The predicted HRC itself is unchanged by this conversion fix.
-                    self.assertIn(row["predictedHardness_HRC"], (18.0, 28.0, 42.0, 54.0, 64.0))
+                    # fx-kinetics: the steel lookup HRC is not reported for non-steels either.
+                    self.assertIsNone(row["predictedHardness_HRC"])
+                    self.assertEqual(row["predictedHardness_HRC_status"], "unavailable-kinetics-model-steel-only")
 
     def test_old_formula_is_gone_and_key_order_is_kept(self):
         src = (Path(kin.__file__)).read_text(encoding="utf-8")
         self.assertNotIn("10.5 + 40", src)
         self.assertNotIn("* 10.5", src)
         keys = list(self._rows("AISI 4140")[0])
-        self.assertEqual(keys[-3:], ["predictedHardness_HRC", "predictedHardness_HV", "predictedHardness_HV_status"])
+        # the HV keys keep their place; fx-kinetics appended four status keys after them
+        self.assertEqual(keys[-7:], ["predictedHardness_HRC", "predictedHardness_HV", "predictedHardness_HV_status",
+                                     "transformedStart_status", "phaseFractions_status",
+                                     "predictedHardness_HRC_status", "unavailableReason"])
 
     def test_json_null_and_provenance(self):
         res = kin.solve_phase_transformation_kinetics("Ti-6Al-4V")

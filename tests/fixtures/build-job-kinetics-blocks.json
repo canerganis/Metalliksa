@@ -28,476 +28,32 @@
   "buildRateMartensite": null
  },
  "in718_above_map": {
-  "success": true,
-  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
-  "alloy": "Inconel 718",
-  "alloyMetadata": {
-   "type": "Precipitation-Hardenable Ni-Fe Superalloy",
-   "composition_wt": {
-    "Ni": 52.5,
-    "Cr": 19.0,
-    "Fe": 18.5,
-    "Nb": 5.1,
-    "Mo": 3.05,
-    "Ti": 0.9,
-    "Al": 0.55,
-    "C": 0.04
-   },
-   "Ae3_C": 1020.0,
-   "Ae1_C": 620.0,
-   "Ms_C": -50.0,
-   "Mf_C": -100.0,
-   "Q_diff_kJ_mol": 285.0,
-   "grain_size_d_um_default": 35.0,
-   "aust_temp_C_default": 980.0,
-   "phases": [
-    "Gamma Prime (Ni3Al,Ti)",
-    "Gamma Double Prime (Ni3Nb)",
-    "Delta (Ni3Nb orthorhombic)",
-    "Laves TCP"
-   ],
-   "critical_cooling_rate_C_s": 150.0,
-   "description": "Aerospace superalloy hardened by coherent metastable gamma double prime (bct-DO22)."
-  },
-  "inputParameters": {
-   "selectedCoolingRate_C_s": 877254.0,
-   "austSolutionTemp_C": 860.0,
-   "priorGrainSize_um": 25.0,
-   "agingTemp_C": 720.0,
-   "agingTime_h": 8.0
-  },
-  "criticalTransformationTemperatures": {
-   "Ae3_BetaTransus_GammaSolvus_C": 1020.0,
-   "Ae1_C": 620.0,
-   "Ms_C": -50.0,
-   "Mf_C": -100.0,
-   "CriticalCoolingRate_CCR_C_s": 150.0
-  },
-  "cctContinuousCoolingMap": [
-   {
-    "coolingRate_C_s": 0.05,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 0.2,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 1.0,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 5.0,
-    "transformedStartTemp_C": 859.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 10.0,
-    "transformedStartTemp_C": 859.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 25.0,
-    "transformedStartTemp_C": 858.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 50.0,
-    "transformedStartTemp_C": 857.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 100.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 500.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.01,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 98.0,
-     "Bainite_pct": 1.0,
-     "Pearlite_Ferrite_pct": 0.5,
-     "RetainedAustenite_pct": 0.5
-    },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 2000.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.0,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 98.0,
-     "Bainite_pct": 1.0,
-     "Pearlite_Ferrite_pct": 0.5,
-     "RetainedAustenite_pct": 0.5
-    },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   }
-  ],
-  "calphadVsKineticsGap": {
-   "equilibriumPrediction": {
-    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
-    "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"
-   },
-   "kineticRealityAtSelectedCooling": {
-    "coolingRate_C_s": 877254.0,
-    "criticalCoolingRate_C_s": 150.0,
-    "isSuppressedEquilibrium": true,
-    "predictedMartensite_pct": 0.0,
-    "diffusionSuppressionIndex": 1.0,
-    "verdict": "Full Martensitic / Metastable Quench"
-   }
-  },
-  "status": "available",
+  "success": false,
+  "status": "unavailable",
+  "reason": "kinetics model is steel-only: Inconel 718 is not a steel",
   "alloyId": "in718",
+  "alloy": null,
   "buildCoolingRate_C_s": 877254.0,
   "reportedCoolingRate_K_s": 877254.0,
   "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
-  "buildCoolingRateCctRow": {
-   "selection": "nearest-log10-cooling-rate-within-map-range",
-   "buildCoolingRate_C_s": 877254.0,
-   "mapRange_C_s": [
-    0.05,
-    2000.0
-   ],
-   "rowIndex": null,
-   "rowCoolingRate_C_s": null,
-   "status": "unavailable",
-   "reason": "build cooling rate 877254 °C/s is above the CCT map maximum 2000 °C/s; no row is extrapolated"
-  },
-  "buildRateMartensite": {
-   "status": "unavailable",
-   "reason": "the kinetics registry Ms of Inconel 718 is a non-physical placeholder (the alloy does not form martensite on quenching); no martensite fraction or martensite-based verdict is reported",
-   "predictedMartensite_pct": null,
-   "verdict": null,
-   "coolingRate_C_s": 877254.0
-  }
+  "cctContinuousCoolingMap": null,
+  "calphadVsKineticsGap": null,
+  "buildCoolingRateCctRow": null,
+  "buildRateMartensite": null
  },
  "ti6al4v_above_map": {
-  "success": true,
-  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
-  "alloy": "Ti-6Al-4V",
-  "alloyMetadata": {
-   "type": "Alpha-Beta Titanium Alloy",
-   "composition_wt": {
-    "Ti": 90.0,
-    "Al": 6.0,
-    "V": 4.0,
-    "Fe": 0.25,
-    "O": 0.18
-   },
-   "Ae3_C": 995.0,
-   "Ae1_C": 700.0,
-   "Ms_C": 800.0,
-   "Mf_C": 650.0,
-   "Q_diff_kJ_mol": 220.0,
-   "grain_size_d_um_default": 50.0,
-   "aust_temp_C_default": 1050.0,
-   "phases": [
-    "Equiaxed Alpha",
-    "Lamellar Alpha+Beta (Widmanstatten)",
-    "Alpha-Prime Martensite (HCP)"
-   ],
-   "critical_cooling_rate_C_s": 410.0,
-   "description": "Workhorse titanium alloy; transformation kinetics govern lamellar vs equiaxed microstructure."
-  },
-  "inputParameters": {
-   "selectedCoolingRate_C_s": 1089047.0,
-   "austSolutionTemp_C": 860.0,
-   "priorGrainSize_um": 25.0,
-   "agingTemp_C": 720.0,
-   "agingTime_h": 8.0
-  },
-  "criticalTransformationTemperatures": {
-   "Ae3_BetaTransus_GammaSolvus_C": 995.0,
-   "Ae1_C": 700.0,
-   "Ms_C": 800.0,
-   "Mf_C": 650.0,
-   "CriticalCoolingRate_CCR_C_s": 410.0
-  },
-  "cctContinuousCoolingMap": [
-   {
-    "coolingRate_C_s": 0.05,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 0.2,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 1.0,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 5.0,
-    "transformedStartTemp_C": 859.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 10.0,
-    "transformedStartTemp_C": 859.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 25.0,
-    "transformedStartTemp_C": 858.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 50.0,
-    "transformedStartTemp_C": 857.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 100.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 500.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.01,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 85.0,
-     "Bainite_pct": 12.0,
-     "Pearlite_Ferrite_pct": 2.0,
-     "RetainedAustenite_pct": 1.0
-    },
-    "predictedHardness_HRC": 54.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 2000.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.0,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 98.0,
-     "Bainite_pct": 1.0,
-     "Pearlite_Ferrite_pct": 0.5,
-     "RetainedAustenite_pct": 0.5
-    },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   }
-  ],
-  "calphadVsKineticsGap": {
-   "equilibriumPrediction": {
-    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
-    "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"
-   },
-   "kineticRealityAtSelectedCooling": {
-    "coolingRate_C_s": 1089047.0,
-    "criticalCoolingRate_C_s": 410.0,
-    "isSuppressedEquilibrium": true,
-    "predictedMartensite_pct": 99.0,
-    "diffusionSuppressionIndex": 1.0,
-    "verdict": "Full Martensitic / Metastable Quench"
-   }
-  },
-  "status": "available",
+  "success": false,
+  "status": "unavailable",
+  "reason": "kinetics model is steel-only: Ti-6Al-4V is not a steel",
   "alloyId": "ti6al4v",
+  "alloy": null,
   "buildCoolingRate_C_s": 1089047.0,
   "reportedCoolingRate_K_s": 1089047.0,
   "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
-  "buildCoolingRateCctRow": {
-   "selection": "nearest-log10-cooling-rate-within-map-range",
-   "buildCoolingRate_C_s": 1089047.0,
-   "mapRange_C_s": [
-    0.05,
-    2000.0
-   ],
-   "rowIndex": null,
-   "rowCoolingRate_C_s": null,
-   "status": "unavailable",
-   "reason": "build cooling rate 1089047 °C/s is above the CCT map maximum 2000 °C/s; no row is extrapolated"
-  },
-  "buildRateMartensite": {
-   "status": "unavailable",
-   "reason": "build cooling rate 1089047 °C/s is above the CCT map maximum 2000 °C/s; no row is extrapolated; the steel-type martensite fraction and verdict are not reported at this rate either",
-   "predictedMartensite_pct": null,
-   "verdict": null,
-   "coolingRate_C_s": 1089047.0
-  }
+  "cctContinuousCoolingMap": null,
+  "calphadVsKineticsGap": null,
+  "buildCoolingRateCctRow": null,
+  "buildRateMartensite": null
  },
  "in718_degenerate_floor": {
   "success": false,
@@ -514,32 +70,62 @@
   "buildRateMartensite": null
  },
  "ti6al4v_in_map_30": {
+  "success": false,
+  "status": "unavailable",
+  "reason": "kinetics model is steel-only: Ti-6Al-4V is not a steel",
+  "alloyId": "ti6al4v",
+  "alloy": null,
+  "buildCoolingRate_C_s": 30.0,
+  "reportedCoolingRate_K_s": 30.0,
+  "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
+  "cctContinuousCoolingMap": null,
+  "calphadVsKineticsGap": null,
+  "buildCoolingRateCctRow": null,
+  "buildRateMartensite": null
+ },
+ "in718_in_map_30": {
+  "success": false,
+  "status": "unavailable",
+  "reason": "kinetics model is steel-only: Inconel 718 is not a steel",
+  "alloyId": "in718",
+  "alloy": null,
+  "buildCoolingRate_C_s": 30.0,
+  "reportedCoolingRate_K_s": 30.0,
+  "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
+  "cctContinuousCoolingMap": null,
+  "calphadVsKineticsGap": null,
+  "buildCoolingRateCctRow": null,
+  "buildRateMartensite": null
+ },
+ "aisi4140_in_map_30_hypothetical": {
   "success": true,
   "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
-  "alloy": "Ti-6Al-4V",
+  "alloy": "AISI 4140",
   "alloyMetadata": {
-   "type": "Alpha-Beta Titanium Alloy",
+   "type": "Low-Alloy Steel",
    "composition_wt": {
-    "Ti": 90.0,
-    "Al": 6.0,
-    "V": 4.0,
-    "Fe": 0.25,
-    "O": 0.18
+    "Fe": 96.8,
+    "C": 0.4,
+    "Mn": 0.85,
+    "Cr": 1.0,
+    "Mo": 0.2,
+    "Si": 0.25
    },
-   "Ae3_C": 995.0,
-   "Ae1_C": 700.0,
-   "Ms_C": 800.0,
-   "Mf_C": 650.0,
-   "Q_diff_kJ_mol": 220.0,
-   "grain_size_d_um_default": 50.0,
-   "aust_temp_C_default": 1050.0,
+   "Ae3_C": 780.0,
+   "Ae1_C": 725.0,
+   "Ms_C": 330.0,
+   "Mf_C": 180.0,
+   "Q_diff_kJ_mol": 240.0,
+   "grain_size_d_um_default": 25.0,
+   "aust_temp_C_default": 860.0,
    "phases": [
-    "Equiaxed Alpha",
-    "Lamellar Alpha+Beta (Widmanstatten)",
-    "Alpha-Prime Martensite (HCP)"
+    "Ferrite",
+    "Pearlite",
+    "Bainite",
+    "Martensite"
    ],
-   "critical_cooling_rate_C_s": 410.0,
-   "description": "Workhorse titanium alloy; transformation kinetics govern lamellar vs equiaxed microstructure."
+   "critical_cooling_rate_C_s": 45.0,
+   "description": "Medium-carbon Cr-Mo through-hardening alloy steel for shafts and landing gears."
   },
   "inputParameters": {
    "selectedCoolingRate_C_s": 30.0,
@@ -549,18 +135,22 @@
    "agingTime_h": 8.0
   },
   "criticalTransformationTemperatures": {
-   "Ae3_BetaTransus_GammaSolvus_C": 995.0,
-   "Ae1_C": 700.0,
-   "Ms_C": 800.0,
-   "Mf_C": 650.0,
-   "CriticalCoolingRate_CCR_C_s": 410.0
+   "Ae3_BetaTransus_GammaSolvus_C": 780.0,
+   "Ae1_C": 725.0,
+   "Ms_C": 330.0,
+   "Mf_C": 180.0,
+   "CriticalCoolingRate_CCR_C_s": 45.0,
+   "Ae1_C_status": "registry-screening-value",
+   "Ms_C_status": "registry-screening-value",
+   "Mf_C_status": "registry-screening-value",
+   "CriticalCoolingRate_CCR_status": "registry-screening-value"
   },
   "cctContinuousCoolingMap": [
    {
     "coolingRate_C_s": 0.05,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 0.0,
      "Bainite_pct": 0.0,
@@ -569,13 +159,17 @@
     },
     "predictedHardness_HRC": 18.0,
     "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 0.2,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 0.0,
      "Bainite_pct": 0.0,
@@ -584,13 +178,17 @@
     },
     "predictedHardness_HRC": 18.0,
     "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV_status": "unavailable-outside-e140-table1-hrc-20-68",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 1.0,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 0.0,
      "Bainite_pct": 20.0,
@@ -598,14 +196,18 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV": 286.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 5.0,
-    "transformedStartTemp_C": 859.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 0.0,
      "Bainite_pct": 20.0,
@@ -613,59 +215,18 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV": 286.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
     "coolingRate_C_s": 10.0,
-    "transformedStartTemp_C": 859.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 25.0,
-    "transformedStartTemp_C": 858.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 50.0,
-    "transformedStartTemp_C": 857.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 100.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 25.0,
      "Bainite_pct": 55.0,
@@ -673,14 +234,37 @@
      "RetainedAustenite_pct": 2.0
     },
     "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV": 412.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
-    "coolingRate_C_s": 500.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.01,
-    "primaryMicrostructure": "Pearlite",
+    "coolingRate_C_s": 25.0,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
+    "phaseFractions": {
+     "Martensite_pct": 25.0,
+     "Bainite_pct": 55.0,
+     "Pearlite_Ferrite_pct": 18.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 42.0,
+    "predictedHardness_HV": 412.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
+   },
+   {
+    "coolingRate_C_s": 50.0,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 85.0,
      "Bainite_pct": 12.0,
@@ -688,42 +272,113 @@
      "RetainedAustenite_pct": 1.0
     },
     "predictedHardness_HRC": 54.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HV": 577.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    },
    {
-    "coolingRate_C_s": 2000.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.0,
-    "primaryMicrostructure": "Pearlite",
+    "coolingRate_C_s": 100.0,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
     "phaseFractions": {
      "Martensite_pct": 98.0,
      "Bainite_pct": 1.0,
      "Pearlite_Ferrite_pct": 0.5,
      "RetainedAustenite_pct": 0.5
     },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
+   },
+   {
+    "coolingRate_C_s": 500.0,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
+    "phaseFractions": {
+     "Martensite_pct": 98.0,
+     "Bainite_pct": 1.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
+   },
+   {
+    "coolingRate_C_s": 2000.0,
+    "transformedStartTemp_C": null,
+    "transformedStartTime_s": null,
+    "primaryMicrostructure": null,
+    "phaseFractions": {
+     "Martensite_pct": 98.0,
+     "Bainite_pct": 1.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 653.0,
+    "predictedHardness_HV_status": "converted-astm-e140-table1",
+    "transformedStart_status": "unavailable-ttt-incubation-law-no-ae3-asymptote",
+    "phaseFractions_status": "steel-lookup-by-ccr-band-not-computed",
+    "predictedHardness_HRC_status": "steel-lookup-by-ccr-band-not-computed",
+    "unavailableReason": "incubation law has no Ae3 asymptote; start not computed"
    }
   ],
   "calphadVsKineticsGap": {
    "equilibriumPrediction": {
     "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
     "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"
+    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
+    "status": "static-text-not-a-calphad-calculation",
+    "reason": "fixed steel text; no equilibrium (CALPHAD) calculation is performed here"
    },
    "kineticRealityAtSelectedCooling": {
     "coolingRate_C_s": 30.0,
-    "criticalCoolingRate_C_s": 410.0,
+    "criticalCoolingRate_C_s": 45.0,
     "isSuppressedEquilibrium": true,
-    "predictedMartensite_pct": 7.0,
-    "diffusionSuppressionIndex": 0.073,
-    "verdict": "Diffusional Equilibrium Decomposition"
+    "predictedMartensite_pct": 63.3,
+    "diffusionSuppressionIndex": 0.667,
+    "verdict": "Mixed Microstructure (Martensite + Bainite)",
+    "status": "steel-illustrative-correlation",
+    "reason": "steel template with unsourced registry critical cooling rate; screening only"
    }
   },
+  "kineticsModel": {
+   "status": "available",
+   "reason": null,
+   "scope": "steel-only",
+   "registryAlloyId": "aisi4140",
+   "illustrativeOnly": true,
+   "note": "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed.",
+   "placeholderParameters": [],
+   "lswPrecipitateCoarsening": {
+    "status": "generic-constants-illustrative",
+    "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
+    "reason": null
+   }
+  },
+  "tttIncubationFloor": {
+   "status": "floor-hit-points-flagged",
+   "floorValue_s": 0.001,
+   "pointCount": 40,
+   "floorHitCount": 32,
+   "note": "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s are derived from it."
+  },
   "status": "available",
-  "alloyId": "ti6al4v",
+  "alloyId": "aisi4140",
   "buildCoolingRate_C_s": 30.0,
   "reportedCoolingRate_K_s": 30.0,
   "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
@@ -742,246 +397,8 @@
   "buildRateMartensite": {
    "status": "available",
    "reason": null,
-   "predictedMartensite_pct": 7.0,
-   "verdict": "Diffusional Equilibrium Decomposition",
-   "coolingRate_C_s": 30.0
-  }
- },
- "in718_in_map_30": {
-  "success": true,
-  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
-  "alloy": "Inconel 718",
-  "alloyMetadata": {
-   "type": "Precipitation-Hardenable Ni-Fe Superalloy",
-   "composition_wt": {
-    "Ni": 52.5,
-    "Cr": 19.0,
-    "Fe": 18.5,
-    "Nb": 5.1,
-    "Mo": 3.05,
-    "Ti": 0.9,
-    "Al": 0.55,
-    "C": 0.04
-   },
-   "Ae3_C": 1020.0,
-   "Ae1_C": 620.0,
-   "Ms_C": -50.0,
-   "Mf_C": -100.0,
-   "Q_diff_kJ_mol": 285.0,
-   "grain_size_d_um_default": 35.0,
-   "aust_temp_C_default": 980.0,
-   "phases": [
-    "Gamma Prime (Ni3Al,Ti)",
-    "Gamma Double Prime (Ni3Nb)",
-    "Delta (Ni3Nb orthorhombic)",
-    "Laves TCP"
-   ],
-   "critical_cooling_rate_C_s": 150.0,
-   "description": "Aerospace superalloy hardened by coherent metastable gamma double prime (bct-DO22)."
-  },
-  "inputParameters": {
-   "selectedCoolingRate_C_s": 30.0,
-   "austSolutionTemp_C": 860.0,
-   "priorGrainSize_um": 25.0,
-   "agingTemp_C": 720.0,
-   "agingTime_h": 8.0
-  },
-  "criticalTransformationTemperatures": {
-   "Ae3_BetaTransus_GammaSolvus_C": 1020.0,
-   "Ae1_C": 620.0,
-   "Ms_C": -50.0,
-   "Mf_C": -100.0,
-   "CriticalCoolingRate_CCR_C_s": 150.0
-  },
-  "cctContinuousCoolingMap": [
-   {
-    "coolingRate_C_s": 0.05,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 0.2,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 0.0,
-     "Pearlite_Ferrite_pct": 98.5,
-     "RetainedAustenite_pct": 1.5
-    },
-    "predictedHardness_HRC": 18.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 1.0,
-    "transformedStartTemp_C": 860.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 5.0,
-    "transformedStartTemp_C": 859.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 10.0,
-    "transformedStartTemp_C": 859.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 0.0,
-     "Bainite_pct": 20.0,
-     "Pearlite_Ferrite_pct": 78.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 28.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 25.0,
-    "transformedStartTemp_C": 858.8,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 50.0,
-    "transformedStartTemp_C": 857.5,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 100.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.05,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 25.0,
-     "Bainite_pct": 55.0,
-     "Pearlite_Ferrite_pct": 18.0,
-     "RetainedAustenite_pct": 2.0
-    },
-    "predictedHardness_HRC": 42.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 500.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.01,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 98.0,
-     "Bainite_pct": 1.0,
-     "Pearlite_Ferrite_pct": 0.5,
-     "RetainedAustenite_pct": 0.5
-    },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   },
-   {
-    "coolingRate_C_s": 2000.0,
-    "transformedStartTemp_C": 855.0,
-    "transformedStartTime_s": 0.0,
-    "primaryMicrostructure": "Pearlite",
-    "phaseFractions": {
-     "Martensite_pct": 98.0,
-     "Bainite_pct": 1.0,
-     "Pearlite_Ferrite_pct": 0.5,
-     "RetainedAustenite_pct": 0.5
-    },
-    "predictedHardness_HRC": 64.0,
-    "predictedHardness_HV": null,
-    "predictedHardness_HV_status": "unavailable-no-verified-table-for-alloy-class"
-   }
-  ],
-  "calphadVsKineticsGap": {
-   "equilibriumPrediction": {
-    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics",
-    "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"
-   },
-   "kineticRealityAtSelectedCooling": {
-    "coolingRate_C_s": 30.0,
-    "criticalCoolingRate_C_s": 150.0,
-    "isSuppressedEquilibrium": true,
-    "predictedMartensite_pct": 19.0,
-    "diffusionSuppressionIndex": 0.2,
-    "verdict": "Mixed Microstructure (Martensite + Bainite)"
-   }
-  },
-  "status": "available",
-  "alloyId": "in718",
-  "buildCoolingRate_C_s": 30.0,
-  "reportedCoolingRate_K_s": 30.0,
-  "coolingRateSource": "thermal.solidificationKinetics.coolingRate_K_s",
-  "buildCoolingRateCctRow": {
-   "selection": "nearest-log10-cooling-rate-within-map-range",
-   "buildCoolingRate_C_s": 30.0,
-   "mapRange_C_s": [
-    0.05,
-    2000.0
-   ],
-   "rowIndex": 5,
-   "rowCoolingRate_C_s": 25.0,
-   "status": "selected",
-   "reason": null
-  },
-  "buildRateMartensite": {
-   "status": "unavailable",
-   "reason": "the kinetics registry Ms of Inconel 718 is a non-physical placeholder (the alloy does not form martensite on quenching); no martensite fraction or martensite-based verdict is reported",
-   "predictedMartensite_pct": null,
-   "verdict": null,
+   "predictedMartensite_pct": 63.3,
+   "verdict": "Mixed Microstructure (Martensite + Bainite)",
    "coolingRate_C_s": 30.0
   }
  }
