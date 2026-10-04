@@ -24,9 +24,6 @@ from input_validation import UNKNOWN_ALLOY, UNKNOWN_ELEMENT, ValidationError, re
 # 8.314462618 / 96485.33212; relative change 1.8e-11 / 3.4e-11).
 FARADAY_C_PER_MOL = physical_constants.FARADAY.value  # C / mol, exact
 SECONDS_PER_YEAR = 31557600.0     # 365.25 days * 86400 s/day
-ASTM_K1 = 3.27e-3                 # mm * g / (uA * cm * year)
-ASTM_K2 = 8.954e-3                # g / (m^2 * day * (uA / cm^2))
-ASTM_K_MPY = 0.129                # mils * g / (uA * cm * year) -> mpy = mm/yr * 39.3701
 R_GAS = physical_constants.GAS_CONSTANT_R.value  # J / (mol * K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
@@ -352,9 +349,9 @@ i_corr_A_cm2 = i_corr_uA_cm2 * 1e-6
 Rp = B / i_corr_A_cm2  # Ohm * cm^2
 
 # 2. Faraday Penetration Rate (ASTM G102)
-# Formula: CR (mm/yr) = 0.00327 * (i_corr * EW) / density
+# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F
 F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
-K1 = (1e-6 * 31557600.0 * 10.0) / F  # mm * g / (uA * cm * year), 0.0032707148
+K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
 cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
 cr_mpy = cr_mm_yr * 39.3701  # mils per year
 

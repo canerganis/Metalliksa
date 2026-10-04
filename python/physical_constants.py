@@ -14,7 +14,8 @@ Sources
 - 273.15 K is the exact offset of the Celsius scale (SI Brochure, 9th ed., 2019, 2.3.1).
 - Standard atomic weights: IUPAC CIAAW, "Standard atomic weights of the elements
   2021", Pure Appl. Chem. 94 (2022) 573-600, https://www.ciaaw.org . The value
-  used in calculations is the CIAAW abridged five-significant-figure value; the
+  used in calculations is the CIAAW abridged value (at most five significant figures,
+  fewer where the abridged table gives fewer, e.g. S 32.06, Pb 207.2); the
   standard interval or uncertainty range is kept for validation.
 
 Record metadata
@@ -45,7 +46,7 @@ from typing import Dict, Optional, Tuple
 
 CONSTANTS_VERSION = "physical-constants-1"
 SI_EXACT_SOURCE = "CODATA 2018 / SI 2019 exact"
-CIAAW_SOURCE = "IUPAC CIAAW standard atomic weights 2021 (abridged five-figure values)"
+CIAAW_SOURCE = "IUPAC CIAAW standard atomic weights 2021 (abridged values, at most five significant figures)"
 # Same vocabulary as alloy_registry.SOURCE_TYPES (kept local: this module is a leaf).
 SOURCE_TYPES = frozenset({"measured", "literature", "estimated", "computed", "synthetic"})
 DEFINED_CONSTANT_NOTE = (
@@ -118,7 +119,7 @@ class UnknownElementError(KeyError):
 class AtomicWeight:
     """CIAAW 2021 standard atomic weight.
 
-    ``value`` is the abridged five-significant-figure value used in calculations.
+    ``value`` is the CIAAW abridged value (at most five significant figures) used in calculations.
     ``interval`` is the CIAAW standard range: for single-valued elements it is
     value +/- the stated uncertainty; for interval elements it is the published
     [lower, upper] interval. ``interval`` is variability/uncertainty, not
@@ -179,7 +180,7 @@ STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
         _aw("Cu", 63.546, 63.543, 63.549),        # 63.546(3)
         _aw("Zn", 65.38, 65.36, 65.40),           # 65.38(2)
         _aw("Y", 88.906, 88.905836, 88.905840),   # 88.905838(2)
-        _aw("Zr", 91.224, 91.222, 91.226),        # 91.224(2)
+        _aw("Zr", 91.224, 91.222, 91.226),        # 91.224(2); CIAAW revised Zr in 2024 (not applied: this table is the 2021 edition)
         _aw("Nb", 92.906, 92.90636, 92.90638),    # 92.90637(1)
         _aw("Mo", 95.95, 95.94, 95.96),           # 95.95(1)
         _aw("Ru", 101.07, 101.05, 101.09),        # 101.07(2)

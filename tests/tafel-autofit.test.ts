@@ -75,9 +75,9 @@ test('autoFitTafel rejects datasets with too few points', () => {
   assert.throws(() => mod().autoFitTafel(data), /insufficient points/);
 });
 
-// Stays todo: TAFEL_BENCHMARK_DATASETS is empty since the fabricated (PRNG-noise) curves were removed with the BUG 1
-// fix, and no measured benchmark curves exist. The assertion below would fail on the empty list; it is not made vacuous.
-test('autoFitTafel fits every benchmark dataset without NaN or infinite outputs', { todo: 'no benchmark datasets: fabricated curves removed, no measured curves available' }, () => {
+// Todo until measured benchmark curves are added to TAFEL_BENCHMARK_DATASETS (it is empty since the PRNG-fabricated
+// curves were removed with the BUG 1 fix). The test asserts a non-empty list, so it cannot pass vacuously meanwhile.
+test('autoFitTafel fits every benchmark dataset without NaN or infinite outputs', { todo: 'waits for measured benchmark curves (TAFEL_BENCHMARK_DATASETS is empty)' }, () => {
   const datasets = mod().TAFEL_BENCHMARK_DATASETS;
   assert.ok(datasets.length > 0);
   for (const dataset of datasets) {
