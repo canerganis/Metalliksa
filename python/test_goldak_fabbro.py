@@ -162,9 +162,11 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
 class GoldakCpuFallbackTests(unittest.TestCase):
     """Pins the documented flat-plate fallback (forced, so it runs on every host).
 
-    The fallback width (117.4 um; 81.7 um with the v2 kernel) is 14% below the NIST value (136.3 um,
-    ratio 0.60) and outside the 0.70-1.40 band. It is NOT claimed to match NIST;
-    this test only pins what the CPU path reports and that it says so.
+    With the goldak-half-space-v3 kernel the fallback width (117.4 um) is 0.86x the NIST value
+    (136.3 um) and inside the 0.70-1.40 band (the retired v2 kernel gave 81.7 um, ratio 0.60,
+    outside the band). This test pins the CPU-fallback value only and does NOT claim a NIST
+    match: the GPU ray-traced path (102.2 um with v2) has not been re-run with v3. It also pins
+    that the fallback says so.
     """
 
     def test_fallback_is_labelled_and_pinned(self):
