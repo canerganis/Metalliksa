@@ -12,6 +12,7 @@ import { EvidenceBadge } from './components/sdk/EvidenceBadge';
 import { SilentBoundary } from './components/SilentBoundary';
 import { ModuleNav } from './components/ModuleNav';
 import { formatExactNumber } from './utils/numberFormat';
+import { paletteShortcutLabel, useCommandPaletteShortcut } from './hooks/useCommandPaletteShortcut';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
@@ -27,6 +28,10 @@ const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m =
 // Own chunk: the engine availability dialog is opened on demand from the header status button. A factory,
 // because React.lazy caches a rejected import: a retry after a failed chunk needs a new lazy component.
 const loadEngineStatusDialog = () => lazy(() => import('./components/EngineStatusDialog').then(m => ({ default: m.EngineStatusDialog })));
+// Own chunk: the command palette (Ctrl/Cmd+K or the header button) and its stylesheet load on first open. A factory
+// for the same reason as the engine dialog: Retry after a failed chunk needs a fresh lazy component.
+const loadCommandPalette = () => lazy(() => import('./components/CommandPaletteChunk').then(m => ({ default: m.CommandPalette })));
+const SHORTCUT_LABEL = paletteShortcutLabel(typeof navigator === 'undefined' ? '' : navigator.platform);
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
 const PocketCalculators = lazy(() => import("./components/PocketCalculators").then(m => ({ default: m.PocketCalculators })));
@@ -91,6 +96,11 @@ export default function App() {
   const [statusError, setStatusError] = useState<string | null>(null);
   const [dialogLoad, setDialogLoad] = useState(0);
   const EngineStatusDialog = useMemo(loadEngineStatusDialog, [dialogLoad]);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteLoad, setPaletteLoad] = useState(0);
+  const CommandPalette = useMemo(loadCommandPalette, [paletteLoad]);
+  const retryPalette = () => setPaletteLoad(n => n + 1);
+  useCommandPaletteShortcut(() => setPaletteOpen(true));
   // Chunk failure: Retry remounts the boundary with a fresh lazy import; Close also resets it so the next open retries.
   // Chrome keeps a failed module fetch for the page's lifetime (browser-checked: Retry did not refetch), so the
   // alert also offers a reload, as ModuleBoundary does.
@@ -191,7 +201,7 @@ export default function App() {
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden rounded-lg border border-cyan-400/30 bg-cyan-950/20 px-3 py-2 text-xs text-cyan-100">Modules</button><div className="mk-brand-mark" aria-label="Metalliksa logo"><span className="mk-brand-crown" aria-hidden="true" /><span className="mk-brand-wing left" aria-hidden="true" /><span className="mk-brand-wing right" aria-hidden="true" /><span className="mk-brand-laser" aria-hidden="true" /><span className="mk-brand-face" aria-hidden="true"><span className="mk-brand-visor" /><span className="mk-brand-core" /></span><span className="mk-brand-orbit orbit-one" aria-hidden="true" /><span className="mk-brand-orbit orbit-two" aria-hidden="true" /></div><div><h1 className="mk-brand-title text-lg font-semibold text-white">METALLIKSA</h1><p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100/80">Future materials command system</p></div></div>
-        <div className="flex items-center gap-3"><span className="mk-hud-chip hidden sm:inline">Local control plane</span><button onClick={() => setShowStatus(true)} className="mk-status px-3 py-2 text-xs text-cyan-100"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-300 animate-pulse' : status?.online ? 'bg-emerald-300' : 'bg-amber-300'}`}/>{checking ? 'Checking…' : status?.online ? 'Engine connected' : 'Engine unavailable'}</button></div>
+        <div className="flex items-center gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K" onClick={() => setPaletteOpen(true)} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs text-cyan-100"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px] text-cyan-100/80">{SHORTCUT_LABEL}</kbd></button><span className="mk-hud-chip hidden sm:inline">Local control plane</span><button onClick={() => setShowStatus(true)} className="mk-status px-3 py-2 text-xs text-cyan-100"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-300 animate-pulse' : status?.online ? 'bg-emerald-300' : 'bg-amber-300'}`}/>{checking ? 'Checking…' : status?.online ? 'Engine connected' : 'Engine unavailable'}</button></div>
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
@@ -220,6 +230,7 @@ export default function App() {
     </div>
     <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
     {showStatus && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
+    {paletteOpen && <SilentBoundary key={paletteLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Module search could not be loaded. <button onClick={retryPalette} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={() => { setPaletteOpen(false); retryPalette(); }} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><CommandPalette activeTab={activeTab} onNavigate={navigate} onClose={() => setPaletteOpen(false)} /></Suspense></SilentBoundary>}
   </div></>;
 }
 

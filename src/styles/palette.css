@@ -1,0 +1,149 @@
+/*
+ * Command palette (Phase 9 shell, DESIGN-9 section 3). Loaded with the lazy CommandPalette chunk.
+ * Colors come only from src/styles/tokens.css and the src/index.css base palette; text tokens are
+ * covered by tests/design-tokens-contrast.test.ts and tests/command-palette-a11y.test.tsx checks
+ * that only those tokens are used here. Badges keep their shared look (mk-scope-badge, mk-count-badge):
+ * nothing here lowers their opacity or contrast. Motion only when the user has not asked for less.
+ */
+
+.mk-palette-overlay {
+  align-items: flex-start;
+  padding: 12vh var(--mk-space-4) var(--mk-space-4);
+  background: var(--mk-fill-deep);
+}
+
+.mk-palette {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 42rem;
+  max-height: min(36rem, 76vh);
+  border: 1px solid var(--mk-border-strong);
+  border-radius: 12px;
+  background: var(--mk-surface-raised);
+  box-shadow: var(--mk-elev-3);
+  color: var(--mk-text-soft);
+  font-family: var(--mk-font-sans);
+  overflow: hidden;
+}
+
+.mk-palette-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-3) var(--mk-space-4) 0;
+}
+.mk-palette-title {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  letter-spacing: var(--mk-tracking-caps);
+  text-transform: uppercase;
+  color: var(--mk-ice);
+}
+.mk-palette-close {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-1) var(--mk-space-2);
+  border: 1px solid var(--mk-border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mk-text-soft);
+  font-size: var(--mk-fs-xs);
+}
+.mk-palette kbd {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  color: var(--mk-text-subtle);
+}
+
+.mk-palette-field {
+  position: relative;
+  margin: var(--mk-space-3) var(--mk-space-4) 0;
+}
+.mk-palette-icon {
+  position: absolute;
+  left: var(--mk-space-3);
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: var(--mk-ice);
+  pointer-events: none;
+}
+.mk-palette-input {
+  width: 100%;
+  padding: var(--mk-space-3) var(--mk-space-3) var(--mk-space-3) 40px;
+  border: 1px solid var(--mk-border-strong);
+  border-radius: 8px;
+  background: var(--mk-bg);
+  color: var(--mk-text-strong);
+  font-size: var(--mk-fs-md);
+}
+.mk-palette-input::placeholder { color: var(--mk-text-dim); }
+
+.mk-palette-hint {
+  margin: var(--mk-space-2) var(--mk-space-4) 0;
+  font-size: var(--mk-fs-2xs);
+  color: var(--mk-text-dim);
+}
+
+.mk-palette-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: var(--mk-space-3) 0 0;
+  padding: 0 var(--mk-space-2);
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid var(--mk-line-subtle);
+}
+.mk-palette-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-1) var(--mk-space-3);
+  margin-top: var(--mk-space-1);
+  padding: var(--mk-space-2) var(--mk-space-3);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+/* Active option: a 3:1 boundary plus an inset rail, so it does not depend on the fill alone. */
+.mk-palette-option[data-active="true"] {
+  border-color: var(--mk-border-strong);
+  background: var(--mk-surface);
+  box-shadow: inset 3px 0 0 var(--mk-focus-color);
+}
+.mk-palette-option-main { display: flex; flex-direction: column; min-width: 0; }
+.mk-palette-option-label { font-size: var(--mk-fs-sm); font-weight: 500; color: var(--mk-text-strong); }
+.mk-palette-option-workspace { font-size: var(--mk-fs-2xs); color: var(--mk-text-subtle); }
+.mk-palette-option-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mk-space-2); }
+
+.mk-palette-count {
+  padding: var(--mk-space-2) var(--mk-space-4);
+  border-top: 1px solid var(--mk-line-subtle);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-text-subtle);
+}
+
+.mk-palette-close:focus-visible,
+.mk-palette-input:focus-visible {
+  outline: var(--mk-focus-width) solid var(--mk-focus-color);
+  outline-offset: var(--mk-focus-offset);
+  box-shadow: var(--mk-focus-halo);
+}
+
+/* Entrance only; the panel is fully opaque and every label is present from the first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  .mk-palette { animation: mkPaletteIn var(--mk-dur-base) var(--mk-ease-out); }
+}
+@keyframes mkPaletteIn { from { transform: translateY(-6px) scale(0.99); } to { transform: none; } }
+
+@media (max-width: 639px) {
+  .mk-palette-overlay { padding-top: var(--mk-space-4); }
+  .mk-palette { max-height: calc(100vh - 2 * var(--mk-space-4)); }
+}
