@@ -54,8 +54,10 @@ class GoldenFilesTest(unittest.TestCase):
                              f"{solver}/{case}")
 
     def test_case_counts(self):
+        # battery_corrosion_eis_solver kept one case when its battery actions were deleted (2026-10-04).
+        minimum = {"battery_corrosion_eis_solver": 1}
         for solver, cases in golden.CASES.items():
-            self.assertGreaterEqual(len(cases), 3, solver)
+            self.assertGreaterEqual(len(cases), minimum.get(solver, 3), solver)
             self.assertLessEqual(len(cases), 5, solver)
 
     def test_golden_files_hold_no_volatile_keys(self):

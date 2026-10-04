@@ -29,12 +29,8 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
   }
 }
 
-// Battery & Corrosion EIS / DRT
+// Corrosion EIS & kinetics (corrosion_kinetics action)
 characterizationRouter.post("/api/python/battery-corrosion-eis", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/battery_corrosion_eis_solver.py", req.body, res);
-});
-
-characterizationRouter.post("/api/python/bisquert-tlm-identify", (req: Request, res: Response) => {
   return handlePythonDispatch("python/battery_corrosion_eis_solver.py", req.body, res);
 });
 

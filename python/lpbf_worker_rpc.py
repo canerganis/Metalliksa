@@ -5,7 +5,6 @@ from four_alloy_materials import resolve_alloy_id, thermal_props, THERMAL_NAME
 from lpbf_evidence import resource_estimate
 from lpbf_simulation import validate
 from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
-from lpbf_experimental_validation import validate_experiment
 from lpbf_fatigue_fracture import MurakamiFatigueEngine
 from lpbf_multilaser_plume import ShieldGasFlow, PlumeParameters, MultiLaserPlumeEngine
 from lpbf_optical_tomography import OpticalTomographySimulator
@@ -14,10 +13,8 @@ from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
 )
-from lpbf_support_optimization import SupportStructureOptimizer
 from lpbf_thermal_accumulation import AlloyThermalProperties, HatchProcessConfig, MultiTrackThermalEngine
 from lpbf_toolpath_kinematics import LPBFToolpathParser, GalvanometerKinematicsEngine, ScannerProfile
-from lpbf_transient_enthalpy_fdm import TransientEnthalpyFDMSolver
 from stl_voxelizer import STLVoxelizer
 
 
@@ -56,17 +53,6 @@ def _rpc_industrial_fatigue(request):
     layer = float(payload.get("layer_um", 30.0))
     hatch = float(payload.get("hatch_um", 100.0))
     data = run_industrial_fatigue_analysis(alloy, power, speed, layer, hatch)
-    return data
-
-
-def _rpc_experimental_validation(request):
-    # Phase 10
-    payload = request["payload"]
-    p = payload.get("params", {})
-    m = payload.get("material", {})
-    sim = payload.get("simulationResult", {})
-    exp = payload.get("experimentalData", {})
-    data = validate_experiment(p, m, sim, exp)
     return data
 
 
@@ -302,73 +288,6 @@ def _rpc_optical_tomography(request):
     return data
 
 
-def _rpc_support_optimization(request):
-    # Phase 20
-    payload = request["payload"]
-    opt = SupportStructureOptimizer(
-        E_modulus_Pa=float(payload.get("E_modulus_Pa", 110e9)),
-        cte_1_K=float(payload.get("cte_1_K", 9e-6)),
-        yield_strength_Pa=float(payload.get("yield_strength_Pa", 950e6)),
-        thermal_k_W_mK=float(payload.get("thermal_k_W_mK", 15.0)),
-        T_melt_K=float(payload.get("T_melt_K", 1928.0)),
-        T_preheat_K=float(payload.get("T_preheat_K", 353.15))
-    )
-    # Quick response bundling both thermal and mechanical requirements
-    heat_input = float(payload.get("heat_input_W", 280.0))
-    L_m = float(payload.get("support_length_m", 0.01))
-    area_m2 = float(payload.get("layer_area_m2", 0.0001))
-    data = {
-        "thermal_area_m2": opt.calculate_thermal_requirement(heat_input, L_m),
-        "mechanical_area_m2": opt.calculate_mechanical_requirement(area_m2)
-    }
-    return data
-
-
-def _rpc_bayesian_optimizer(request):
-    payload = request["payload"]
-    from lpbf_bayesian_optimizer import run_bayesian_optimization
-    data = run_bayesian_optimization(
-        alloy_id=payload.get("alloyId", "in718"),
-        param_bounds=payload.get("paramBounds"),
-        n_iter=payload.get("nIterations", 20),
-        n_warmup=payload.get("nWarmup", 5),
-        seed=payload.get("seed", 42)
-    )
-    return data
-
-
-def _rpc_transient_enthalpy_fdm(request):
-    # Phase 21
-    payload = request["payload"]
-    solver = TransientEnthalpyFDMSolver(
-        nx=int(payload.get("nx", 100)),
-        nz=int(payload.get("nz", 50)),
-        dx=float(payload.get("dx", 2e-6)),
-        dz=float(payload.get("dz", 2e-6))
-    )
-    # Using 2D method signature
-    data = solver.solve_meltpool_cross_section(
-        power_W=float(payload.get("power_W", 250.0)),
-        speed_m_s=float(payload.get("speed_m_s", 0.8)),
-        T_preheat_K=float(payload.get("T_preheat_K", 300.0)),
-        rho=float(payload.get("rho", 4420.0)),
-        cp=float(payload.get("cp", 670.0)),
-        k_solid=float(payload.get("k_solid", 15.0)),
-        k_liquid=float(payload.get("k_liquid", 25.0)),
-        latent_heat_J_kg=float(payload.get("latent_heat_J_kg", 2.9e5)),
-        T_solidus=float(payload.get("T_solidus", 1878.0)),
-        T_liquidus=float(payload.get("T_liquidus", 1928.0)),
-        sim_time_s=float(payload.get("sim_time_s", 5e-4)),
-        dt=float(payload.get("dt", 1e-6))
-    )
-    # Convert numpy arrays to lists for JSON serialization
-    if isinstance(data, dict):
-        for k, v in data.items():
-            if hasattr(v, 'tolist'):
-                data[k] = v.tolist()
-    return data
-
-
 def _rpc_transient_3d_gpu(request):
     # Phase 22
     from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
@@ -425,7 +344,6 @@ RESEARCH_HANDLERS = {
     "solidification-microstructure": _rpc_solidification_microstructure,
     "thermomechanical-distortion": _rpc_thermomechanical_distortion,
     "industrial-fatigue": _rpc_industrial_fatigue,
-    "experimental-validation": _rpc_experimental_validation,
     "modulus-fno": _rpc_modulus_fno,
     "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
@@ -436,9 +354,6 @@ RESEARCH_HANDLERS = {
     "thermal-accumulation": _rpc_thermal_accumulation,
     "powder-dem-compaction": _rpc_powder_dem_compaction,
     "optical-tomography": _rpc_optical_tomography,
-    "support-optimization": _rpc_support_optimization,
-    "bayesian-optimizer": _rpc_bayesian_optimizer,
-    "transient-enthalpy-fdm": _rpc_transient_enthalpy_fdm,
     "transient-3d-gpu": _rpc_transient_3d_gpu,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }

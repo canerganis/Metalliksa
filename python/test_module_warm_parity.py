@@ -23,11 +23,7 @@ PYTHON_DIR = Path(__file__).resolve().parent
 WARM_WITHOUT_REGISTRY_OPERATION = {
     "cnls_fitting_solver": "no python-ipc route since /api/python/cnls-* were removed; battery_corrosion_eis_solver imports its Lin-KK test",
     "xrd_peak_deconvolution": "/api/python/xrd-deconvolve has no caller in src/",
-    "inverse_alloy_optimizer": "/api/python/inverse-alloy-optimize has no caller in src/",
-    "marangoni_pore_instability_solver": "only the unreachable MarangoniPoreInstabilityLab calls it",
-    "part_scale_inherent_strain_solver": "/api/python/part-scale-inherent-strain has no caller in src/",
     "lpbf_build_job_solver": "build jobs go through the LPBF worker (/api/lpbf/jobs), not a python-ipc route",
-    "engine_dispatcher": "generic dispatcher, not a module script",
 }
 
 

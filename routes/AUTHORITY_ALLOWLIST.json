@@ -9,11 +9,6 @@
     "POST /api/python/ipc-warmup": "Infrastructure: IPC readiness probe.",
     "POST /api/calphad/minimize": "Alias of POST /api/python/calphad-minimize (phase-diagram calphad-minimize operation).",
     "GET /api/calphad/databases": "Alias of GET /api/python/calphad-databases (phase-diagram calphad-databases operation).",
-    "POST /api/python/lpbf-thermal": "Python lpbf_thermal_solver route; only pythonComputationService.solveLPBFThermal calls it, used by the unreachable EmbeddedPythonLPBFSimulator.",
-    "POST /api/python/marangoni-pore-instability": "Python marangoni solver route; only called by the unreachable MarangoniPoreInstabilityLab.",
-    "POST /api/python/part-scale-inherent-strain": "Python part-scale inherent strain route; no caller in src/.",
-    "POST /api/python/inverse-alloy-optimize": "Python inverse alloy optimizer route; the service method has no caller in src/.",
-    "POST /api/python/bisquert-tlm-identify": "Python EIS route; the service method has no caller in src/.",
     "POST /api/python/xrd-deconvolve": "Python XRD route; the service method has no caller in src/.",
     "POST /api/metallurgy/detect-sem-legend": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/analyze-sem": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
@@ -44,11 +39,7 @@
     "POST /api/lpbf/runs/bundles/imports/:bundleId/restore": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
     "GET /api/lpbf/runs/bundles/restores/:restoreId/runs": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
     "GET /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
-    "POST /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId/nist-comparison": "LPBF run bundle NIST comparison (node service over restored runs).",
-    "POST /api/python/lpbf-experimental-validation": "LPBF worker route; the service method computeExperimentalValidation has no caller (ExperimentalValidationLab reads source measurements instead).",
-    "POST /api/python/lpbf-support-optimization": "LPBF worker route; the service method has no caller in src/.",
-    "POST /api/python/lpbf-transient-enthalpy-fdm": "LPBF worker route; the service method has no caller in src/ (transient-3d-gpu calls the non-existent /api/python/transient-3d-gpu instead).",
-    "POST /api/python/lpbf-bayesian-optimization": "LPBF worker route; the UI calls the python-ipc /api/python/lpbf-bayesian-optimize instead."
+    "POST /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId/nist-comparison": "LPBF run bundle NIST comparison (node service over restored runs)."
   },
   "unclassified": {
     "USE /api/lpbf (routes/lpbfSimulation.ts#1)": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",

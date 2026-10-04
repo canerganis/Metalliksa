@@ -64,7 +64,7 @@ Background work: none; resources: fetch.
 - `python/lpbf_worker_rpc.py::dispatch`
 - `python/lpbf_worker_rpc.py::_rpc_optical_tomography`
 - `python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame`
-- `routes/lpbfSimulation.ts:40#/api/python/lpbf-optical-tomography`
+- `routes/lpbfSimulation.ts:39#/api/python/lpbf-optical-tomography`
 - `src/components/OpticalTomographyLab.tsx::OpticalTomographyLab`
 - `src/services/pythonComputationService.ts::simulateOpticalTomography`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography`

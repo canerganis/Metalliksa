@@ -29,7 +29,6 @@ for (const [method, route, rpc] of [
   ["post", "/api/python/lpbf-solidification-microstructure", "solidification-microstructure"],
   ["post", "/api/python/lpbf-thermomechanical-distortion", "thermomechanical-distortion"],
   ["post", "/api/python/lpbf-industrial-fatigue", "industrial-fatigue"],
-  ["post", "/api/python/lpbf-experimental-validation", "experimental-validation"],
   ["post", "/api/python/lpbf-modulus-fno", "modulus-fno"],
   ["post", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics"],
   ["post", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture"],
@@ -38,17 +37,14 @@ for (const [method, route, rpc] of [
   ["post", "/api/python/lpbf-multilaser-plume", "multilaser-plume"],
   ["post", "/api/python/lpbf-powder-dem-compaction", "powder-dem-compaction"],
   ["post", "/api/python/lpbf-optical-tomography", "optical-tomography"],
-  ["post", "/api/python/lpbf-support-optimization", "support-optimization"],
-  ["post", "/api/python/lpbf-transient-enthalpy-fdm", "transient-enthalpy-fdm"],
   ["post", "/api/python/lpbf-thermal-accumulation", "thermal-accumulation"],
   ["post", "/api/python/lpbf-keyhole-raytracing", "keyhole-raytracing"],
-  ["post", "/api/python/lpbf-bayesian-optimization", "bayesian-optimizer"],
   ["post", "/api/python/lpbf-toolpath-thermal-map", "toolpath-thermal-map"],
 ] as const) {
   lpbfSimulationRouter[method](route, async (req, res) => {
     try {
       if (rpc === "submit" && Buffer.byteLength(JSON.stringify(req.body)) > 50000000) return res.status(413).json({ error: "Simulation input too large" });
-      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "experimental-validation", "modulus-fno", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "powder-dem-compaction", "optical-tomography", "support-optimization", "transient-enthalpy-fdm", "thermal-accumulation", "keyhole-raytracing", "bayesian-optimizer", "toolpath-thermal-map"].includes(rpc);
+      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "modulus-fno", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "powder-dem-compaction", "optical-tomography", "thermal-accumulation", "keyhole-raytracing", "toolpath-thermal-map"].includes(rpc);
       const data = await lpbfWorker.request(rpc, passBody ? req.body : ("id" in req.params ? req.params.id : null));
       res.status(rpc === "submit" ? 202 : 200).json(data);
     } catch (e) { workerError(res, e, "Simulation request failed"); }

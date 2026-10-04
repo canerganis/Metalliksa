@@ -68,17 +68,9 @@ physicsRouter.post("/api/python/dft-properties", (req: Request, res: Response) =
   return handlePythonDispatch("python/dft_property_calculator.py", req.body, res);
 });
 
-// LPBF 3D Thermal Solvers
-physicsRouter.post("/api/python/lpbf-thermal", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/lpbf_thermal_solver.py", req.body, res);
-});
-
+// LPBF 3D Thermal Solver
 physicsRouter.post("/api/python/lpbf-thermal-solver", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_thermal_solver.py", req.body, res);
-});
-
-physicsRouter.post("/api/python/marangoni-pore-instability", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/marangoni_pore_instability_solver.py", req.body, res);
 });
 
 physicsRouter.post("/api/python/stl-slicer-build-time", (req: Request, res: Response) => {
@@ -90,15 +82,6 @@ physicsRouter.post("/api/python/stl-slicer-build-time", (req: Request, res: Resp
 // Phase 6: Bayesian Process Window Optimization
 physicsRouter.post("/api/python/lpbf-bayesian-optimize", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_bayesian_optimizer.py", req.body, res, 120000);
-});
-
-physicsRouter.post("/api/python/part-scale-inherent-strain", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/part_scale_inherent_strain_solver.py", req.body, res);
-});
-
-// Inverse Alloy Optimizer
-physicsRouter.post("/api/python/inverse-alloy-optimize", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/inverse_alloy_optimizer.py", req.body, res);
 });
 
 // Pourbaix Diagram

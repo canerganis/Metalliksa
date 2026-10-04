@@ -185,11 +185,7 @@ CEILING_SNAPSHOT = {
     "python/module_warm_parity.ceiling.json": {
         "names": [
             "cnls_fitting_solver",
-            "engine_dispatcher",
-            "inverse_alloy_optimizer",
             "lpbf_build_job_solver",
-            "marangoni_pore_instability_solver",
-            "part_scale_inherent_strain_solver",
             "xrd_peak_deconvolution",
         ],
     },
@@ -232,16 +228,7 @@ CEILING_SNAPSHOT = {
             "POST /api/metallurgy/detect-sem-legend",
             "POST /api/metallurgy/qualify-aerospace",
             "POST /api/orchestrator/collect-source",
-            "POST /api/python/bisquert-tlm-identify",
-            "POST /api/python/inverse-alloy-optimize",
             "POST /api/python/ipc-warmup",
-            "POST /api/python/lpbf-bayesian-optimization",
-            "POST /api/python/lpbf-experimental-validation",
-            "POST /api/python/lpbf-support-optimization",
-            "POST /api/python/lpbf-thermal",
-            "POST /api/python/lpbf-transient-enthalpy-fdm",
-            "POST /api/python/marangoni-pore-instability",
-            "POST /api/python/part-scale-inherent-strain",
             "POST /api/python/xrd-deconvolve",
         ],
         "unclassified": [
