@@ -8,6 +8,7 @@ import {
   convertSteelHardness as convert,
   hardnessInputForScale,
   hardnessMaterialClassOf,
+  interpolateSteelScaleFromHv,
 } from "../src/utils/hardnessConversion";
 import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
 import { HARDNESS_PRESETS } from "../src/utils/hardnessPresets";
@@ -88,8 +89,10 @@ test("forward and inverse are consistent: round trips stay within the display ro
     assert.ok(back !== null);
     worstHrc = Math.max(worstHrc, Math.abs(back - hrc));
   }
-  // HV is shown as an integer: +-0.5 HV is at most +-0.1 HRC (steepest step HRC 20->21 = 5 HV), plus 0.05 display rounding
-  assert.ok(worstHrc <= 0.15 + 1e-9, `worst HRC round trip ${worstHrc}`);
+  // HV is shown as an integer (+-0.5 HV is at most +-0.1 HRC; steepest step HRC 20->21 = 5 HV) and the converted HRC as
+  // a whole number (+-0.5), so a 0.1-step input comes back within 0.6 HRC; whole-number inputs come back exactly
+  assert.ok(worstHrc <= 0.6 + 1e-9, `worst HRC round trip ${worstHrc}`);
+  for (let hrc = 20; hrc <= 68; hrc++) assert.equal(convert(convert(hrc, "HRC").HV!, "HV").HRC, hrc);
 
   for (let hbw = 226; hbw <= 634; hbw++) {
     const hv = convert(hbw, "HBW").HV;
@@ -102,8 +105,8 @@ test("forward and inverse are consistent: round trips stay within the display ro
     const hv = convert(hrb, "HRB").HV;
     assert.ok(hv !== null);
     const back = convert(hv, "HV").HRB;
-    // steepest step HRB 55->56 = 1 HV, so the integer HV costs up to 0.5 HRB there
-    assert.ok(back !== null && Math.abs(back - hrb) <= 0.55 + 1e-9, `HRB ${hrb} -> HV ${hv} -> HRB ${back}`);
+    // steepest step HRB 55->56 = 1 HV, so the integer HV costs up to 0.5 HRB there, plus 0.5 for the whole-number HRB
+    assert.ok(back !== null && Math.abs(back - hrb) <= 1 + 1e-9, `HRB ${hrb} -> HV ${hv} -> HRB ${back}`);
   }
 });
 
@@ -173,7 +176,7 @@ test("tensile strength estimate reproduces ISO 18265 Table A.1 and stops at HV 8
 test("independent cross-check: ISO 18265 Table A.1 HRC values ([F]) agree with the E140 interpolation within 0.15 HRC", () => {
   const isoHvHrc: Array<[number, number]> = [[240, 20.3], [300, 29.8], [400, 40.8], [500, 49.1], [600, 55.2], [700, 60.1], [800, 64.0], [900, 67.0]];
   for (const [hv, hrcIso] of isoHvHrc) {
-    const got = convert(hv, "HV").HRC;
+    const got = interpolateSteelScaleFromHv("HRC", hv); // unrounded
     assert.ok(got !== null && Math.abs(got - hrcIso) <= 0.15, `HV ${hv}: ${got} vs ISO ${hrcIso}`);
   }
 });
@@ -252,4 +255,13 @@ test("scale switch keeps an in-range value and otherwise resets to the scale def
   assert.equal(hardnessInputForScale(200, "HBW"), 320);
   assert.equal(hardnessInputForScale(550, "HLD"), 550); // no verified HLD range: value kept
   assert.equal(hardnessInputForScale(Number.NaN, "HLD"), 600);
+});
+
+test("converted Rockwell values are whole numbers; the measured input keeps its decimal", () => {
+  assert.equal(convert(300, "HV").HRC, 30); // 29.75 interpolated
+  assert.equal(convert(238, "HV").HRB, 100); // 99.67 interpolated
+  assert.equal(convert(150, "HV").HRB, 80);
+  assert.equal(convert(34.5, "HRC").HRC, 34.5); // echo of the measured input
+  assert.equal(convert(34.5, "HRC").HV, 341); // 340.5 -> 341
+  assert.equal(interpolateSteelScaleFromHv("HRC", 300), 29.75);
 });

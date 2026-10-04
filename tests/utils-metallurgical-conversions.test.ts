@@ -304,7 +304,7 @@ test("HISTORICAL E112 FromG intercept before the fix: planimetric 1000/sqrt(2^(G
 test("hardness from HV 300: E140 Table 1 interpolation, ISO 18265 Rm, HRB unavailable (old: HRB 101.8, Rm 975)", () => {
   const r = convertSteelHardness(300, "HV");
   assert.equal(r.HV, 300);
-  assert.equal(r.HRC, 29.8); // between HRC 29 (294 HV) and 30 (302 HV)
+  assert.equal(r.HRC, 30); // 29.75 between HRC 29 (294 HV) and 30 (302 HV), reported as a whole number
   assert.equal(r.HBW, 284); // 279 + 7 * 6/8 = 284.25
   assert.equal(r.HK, 309); // 304 + 7 * 6/8 = 309.25
   assert.equal(r.HRB, null);
@@ -354,12 +354,12 @@ test("HV -> HRC matches the ASTM E140 Table 1 rows exactly (old code: clamp floo
   }
 });
 
-test("HRC -> HV -> HRC round trip returns the input within 0.15 HRC (integer HV display)", () => {
+test("HRC -> HV -> HRC round trip: whole HRC exact, 0.5 steps within 0.6 HRC (integer HV, whole-number HRC)", () => {
   for (const hrc of [20, 25, 30, 34, 40, 45.5, 50, 55, 60, 67.5, 68]) {
     const hv = convertSteelHardness(hrc, "HRC").HV;
     assert.ok(hv !== null);
     const back = convertSteelHardness(hv, "HV").HRC;
-    assert.ok(back !== null && Math.abs(back - hrc) <= 0.15, `HRC ${hrc} -> HV ${hv} -> HRC ${back}`);
+    assert.ok(back !== null && Math.abs(back - hrc) <= (Number.isInteger(hrc) ? 0 : 0.6), `HRC ${hrc} -> HV ${hv} -> HRC ${back}`);
   }
 });
 

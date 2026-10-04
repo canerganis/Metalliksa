@@ -122,6 +122,12 @@ function interpolate(x: number, xs: number[], ys: number[]): number | null {
   return ys[ys.length - 1];
 }
 
+/** Unrounded table interpolation HV -> scale (null outside the tabulated range); for cross-checks and tests. */
+export function interpolateSteelScaleFromHv(scale: "HRC" | "HRB" | "HBW" | "HK" | "Rm", hv: number): number | null {
+  const a = scale === "Rm" ? RM_ANCHORS : SCALE_ANCHORS[scale];
+  return interpolate(hv, a.hv, a.val);
+}
+
 /** Verified input range of each scale (the tabulated range). HV also accepts 80..100 for the Rm estimate only. */
 export const HARDNESS_VERIFIED_RANGES: Record<HardnessScale, { min: number; max: number } | null> = {
   HRC: { min: 20, max: 68 },
@@ -169,7 +175,10 @@ export interface SteelHardnessConversion {
 }
 
 const round = (v: number, decimals: number) => Number(v.toFixed(decimals));
-const DECIMALS: Record<HardnessScale, number> = { HV: 0, HRC: 1, HRB: 1, HBW: 0, HK: 0, HLD: 0 };
+// Converted values are reported as whole numbers on every scale (Rockwell included): the tables themselves list whole
+// HRC/HRB numbers. The measured input is echoed with one decimal (as entered, up to 0.1).
+const DECIMALS: Record<HardnessScale, number> = { HV: 0, HRC: 0, HRB: 0, HBW: 0, HK: 0, HLD: 0 };
+const INPUT_DECIMALS: Record<HardnessScale, number> = { HV: 1, HRC: 1, HRB: 1, HBW: 1, HK: 1, HLD: 1 };
 
 const rangeText = (scale: HardnessScale) => {
   const r = HARDNESS_VERIFIED_RANGES[scale];
@@ -192,7 +201,7 @@ export function convertSteelHardness(value: number, fromScale: HardnessScale): S
     unavailable: {},
     validRangeNote: HARDNESS_CONVERSION_DISCLAIMER,
   };
-  if (Number.isFinite(value)) out[fromScale] = round(value, DECIMALS[fromScale]);
+  if (Number.isFinite(value)) out[fromScale] = round(value, INPUT_DECIMALS[fromScale]);
 
   // 1. input -> HV (the pivot)
   let hv: number | null = null;
@@ -292,7 +301,7 @@ export function convertHardness(
     unavailable: {},
     validRangeNote: `${NO_TABLE_FOR_CLASS} (${hardnessMaterialClassLabel(materialClass)}). Only the measured ${fromScale} value is shown.`,
   };
-  if (Number.isFinite(value)) out[fromScale] = round(value, DECIMALS[fromScale]);
+  if (Number.isFinite(value)) out[fromScale] = round(value, INPUT_DECIMALS[fromScale]);
   for (const f of ["HV", "HRC", "HRB", "HBW", "HK", "HLD", "Rm"] as const) {
     if (f !== fromScale) out.unavailable[f] = NO_TABLE_FOR_CLASS;
   }
