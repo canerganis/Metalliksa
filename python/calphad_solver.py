@@ -48,18 +48,13 @@ except Exception as e:
     PYCALPHAD_VERSION = str(e)
 
 import physical_constants
-from alloy_data_calphad_battery_icme import (
-    CALPHAD_ELEMENTS,
-    CALPHAD_LEGACY_FALLBACK_NOTE,
-    CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL,
-    provenance as _domain_data_provenance,
-)
-from input_validation import ValidationError, validation_envelope
+from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
+from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
 
-# Phase 6a structural step (a): R and the Celsius offset come from physical_constants
-# but keep the CODATA printed truncation used before the migration (8.314462618), so
-# the output stays bit-identical. The switch to the exact SI product is step (b).
-GAS_CONSTANT_R = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol*K)
+# Phase 6a value step (b): R is the exact SI 2019 product N_A*k from
+# physical_constants (it replaced the CODATA printed truncation 8.314462618;
+# relative change 1.8e-11).
+GAS_CONSTANT_R = physical_constants.GAS_CONSTANT_R.value  # J / (mol*K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # Directory containing open-source TDB databases
@@ -68,27 +63,24 @@ DATABASES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databa
 # Global in-memory cache for loaded pycalphad Database objects
 _TDB_CACHE: Dict[str, Any] = {}
 
-# Standard atomic weights (g/mol): CIAAW 2021 abridged values from physical_constants
-# for the solver's element set (identical to the pre-migration literals). An element
-# outside this set keeps the LEGACY 50.0 g/mol fallback (see _atomic_weight).
-ATOMIC_WEIGHTS = {el: physical_constants.atomic_weight(el) for el in CALPHAD_ELEMENTS}
-
-
 def _atomic_weight(el: str) -> float:
-    """Atomic weight used by normalize_composition.
+    """CIAAW 2021 abridged standard atomic weight (physical_constants), in g/mol.
 
-    LEGACY FALLBACK (Phase 6a step (a), bit-identical to 7f3f803): an element outside
-    ATOMIC_WEIGHTS is weighted with CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL
-    (50.0 g/mol, not a real atomic weight). Scheduled for removal at design step (b)
-    together with real CIAAW weights. The elements that hit it are listed in the
-    output provenance (legacyAtomicWeightFallback).
+    Phase 6a value step (b): every real element in physical_constants gets its own
+    weight (P, S, Sn, Pb, Be, Sc ... no longer get the former 50.0 g/mol stand-in).
+    A symbol with no standard atomic weight there is refused with UNKNOWN_ELEMENT
+    (exit 2, HTTP 422); there is no fallback value.
     """
-    return ATOMIC_WEIGHTS.get(el, CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL)
-
-
-def legacy_fallback_elements(symbols) -> List[str]:
-    """Normalised element symbols that are weighted with the legacy 50.0 g/mol fallback."""
-    return [el for el in symbols if el not in ATOMIC_WEIGHTS]
+    try:
+        return physical_constants.atomic_weight(el)
+    except physical_constants.UnknownElementError:
+        raise ValidationError(
+            UNKNOWN_ELEMENT, f"elements.{el}",
+            f"Element {el!r} has no standard atomic weight in physical_constants "
+            f"(CIAAW 2021); it cannot be converted between wt% and at%.",
+            {"element": repr(el), "reason": "no-standard-atomic-weight",
+             "source": physical_constants.CIAAW_SOURCE},
+        ) from None
 
 # New-PHACOMP Electron Hole Numbers (N_v) and d-orbital energy levels (Md in eV)
 PHACOMP_DATA = {
@@ -1437,13 +1429,9 @@ def main():
             "gasConstantR_J_molK": GAS_CONSTANT_R,
             "atomicWeightsSource": physical_constants.CIAAW_SOURCE,
             **_domain_data_provenance(),
-            "constantsNote": "CODATA printed truncation of R (pre-migration value); "
-                             "the exact SI value is pending the Phase 6a value step.",
-            "legacyAtomicWeightFallback": {
-                "weight_g_mol": CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL,
-                "elements": legacy_fallback_elements(result.get("nominalComposition") or {}),
-                "note": CALPHAD_LEGACY_FALLBACK_NOTE,
-            },
+            "constantsNote": "Exact SI 2019 R = N_A*k (Phase 6a value step); it replaced the "
+                             "CODATA printed truncation 8.314462618. Atomic weights: CIAAW 2021 "
+                             "abridged for every element; unknown symbols are refused.",
         }
         print(json.dumps(result))
 

@@ -51,7 +51,6 @@ LEGACY_F_96485_33 = Constant(96485.33, "C/mol", f"{_CODATA} F, rounded to 2 deci
 # Where each truncated constant is used (solver file, function) -> (R, F) names.
 # "TRUNCATED_*" refers to physical_constants; None means the site uses no F.
 LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({
-    ("calphad_solver.py", "module GAS_CONSTANT_R"): ("TRUNCATED_GAS_CONSTANT_R", None),
     ("battery_corrosion_eis_solver.py", "simulate_p2d_continuum_profiles"):
         ("LEGACY_R_8_314", "LEGACY_F_96485_332"),
     ("battery_corrosion_eis_solver.py", "simulate_battery_degradation_and_eis"):
@@ -64,29 +63,11 @@ LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingPro
 })
 
 # --------------------------------------------------------------------------- calphad
-# Element set of calphad_solver.ATOMIC_WEIGHTS at BASE_REVISION (calphad_solver.py:59-64).
-# Its values equal physical_constants.STANDARD_ATOMIC_WEIGHTS (CIAAW 2021 abridged)
-# for every one of these symbols, so the solver reads them from there. Elements
-# outside this set (including P, S, Sn, Pb, Be and Sc, which UI specimens send at
-# positive amounts) keep the LEGACY silent fallback below in step (a), so the
-# output stays bit-identical; see CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL.
-CALPHAD_ELEMENTS: Tuple[str, ...] = (
-    "H", "B", "C", "N", "O", "Mg", "Al", "Si", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu",
-    "Zn", "Y", "Zr", "Nb", "Mo", "Ru", "Hf", "Ta", "W", "Re", "Pt", "Au",
-)
-
-# LEGACY FALLBACK, scheduled for removal at design step (b): calphad_solver.py:196-201
-# @7f3f803 weighted every element outside CALPHAD_ELEMENTS with 50.0 g/mol. It is not
-# an atomic weight of anything. Refusing these elements in step (a) made 14 of 34 UI
-# specimens (P/S steels, Sn/Pb/Be alloys) silently lose the Python engine, because
-# the UI treats any non-2xx as a cue for its client solver. Step (b) replaces it with
-# real CIAAW weights (physical_constants) and refuses only truly unknown symbols.
-CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL = 50.0
-CALPHAD_LEGACY_FALLBACK_NOTE = (
-    "LEGACY FALLBACK: elements outside the CALPHAD element set are weighted with 50.0 g/mol "
-    "(pre-migration behaviour, not a real atomic weight); scheduled for removal at Phase 6a "
-    "design step (b) together with real CIAAW weights."
-)
+# Design step (b): calphad_solver takes every atomic weight from
+# physical_constants.STANDARD_ATOMIC_WEIGHTS (CIAAW 2021 abridged) and refuses symbols
+# without one. Its former 28-symbol table (identical CIAAW values) and the 50.0 g/mol
+# stand-in for every other symbol were removed; the pre-migration table stays
+# snapshotted in golden/phase6a/calphad_solver/_source_tables.json.
 
 # --------------------------------------------------------------------------- icme
 DOMAIN_ICME = "icme"

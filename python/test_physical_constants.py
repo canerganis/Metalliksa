@@ -75,10 +75,9 @@ class ExactConstantsTest(unittest.TestCase):
         # Design step (b): tafel uses the exact SI products.
         self.assertEqual(tafel.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.FARADAY.value)
-        # calphad_solver (Phase 6a tranche 2a structural migration) takes R from this
-        # module, still as the truncated value.
+        # calphad_solver: design step (b) switched R to the exact SI product.
         import calphad_solver
-        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.TRUNCATED_GAS_CONSTANT_R)
+        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.GAS_CONSTANT_R.value)
         # pourbaix_solver: design step (b) switched R/F to the exact SI products.
         self.assertEqual(pourbaix_solver.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(pourbaix_solver.F_FARADAY, pc.FARADAY.value)
@@ -194,7 +193,8 @@ class AtomicWeightTest(unittest.TestCase):
         self.assertEqual(len(table), 28)
         for el, value in table.items():
             self.assertEqual(pc.atomic_weight(el), value, el)
-        self.assertEqual(calphad_solver.ATOMIC_WEIGHTS, table)
+            # Design step (b): calphad reads physical_constants directly.
+            self.assertEqual(calphad_solver._atomic_weight(el), value, el)
 
     def test_tafel_table_values_match_registry(self):
         # Snapshot of tafel ALLOY_LIBRARY at the pre-migration base revision.

@@ -90,19 +90,19 @@ class LegacyConstantTest(unittest.TestCase):
 
 
 class CalphadElementsTest(unittest.TestCase):
-    def test_element_set_and_values_equal_the_pre_migration_table(self):
+    def test_pre_migration_table_values_equal_physical_constants(self):
         old = _snapshot("calphad_solver")["ATOMIC_WEIGHTS"]
-        self.assertEqual(sorted(data.CALPHAD_ELEMENTS), sorted(old))
-        self.assertEqual(len(set(data.CALPHAD_ELEMENTS)), len(data.CALPHAD_ELEMENTS))
+        self.assertEqual(len(old), 28)
         for el, value in old.items():
             self.assertEqual(pc.atomic_weight(el), value, el)
 
-    def test_registry_knows_elements_the_solver_never_had(self):
-        # P, S and Sn are in physical_constants but were 50.0-fallback elements in
-        # calphad; step (a) keeps their legacy 50.0 g/mol fallback (fix round B1).
-        for el in ("P", "S", "Sn"):
-            self.assertTrue(pc.is_known_element(el))
-            self.assertNotIn(el, data.CALPHAD_ELEMENTS)
+    def test_calphad_table_and_legacy_fallback_are_gone(self):
+        # Design step (b): calphad reads physical_constants directly; the 28-symbol
+        # copy and the 50.0 g/mol stand-in no longer exist here.
+        for name in ("CALPHAD_ELEMENTS", "CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL",
+                     "CALPHAD_LEGACY_FALLBACK_NOTE"):
+            self.assertFalse(hasattr(data, name), name)
+        self.assertNotIn(("calphad_solver.py", "module GAS_CONSTANT_R"), data.LEGACY_CONSTANT_SITES)
 
 
 class IcmeDataTest(unittest.TestCase):
