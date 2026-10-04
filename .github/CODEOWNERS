@@ -24,3 +24,8 @@
 # parity goldens (never re-recorded during the bump); design 5c.
 /python/lpbf_implementation_fingerprint.expected @0000can0000
 /python/golden/lpbf_parity/ @0000can0000
+# Guards around the pin: pin test, pin parser, FORBIDDEN_MANIFEST_IMPORTS, manifest count.
+/python/test_lpbf_implementation_fingerprint_pin.py @0000can0000
+/python/lpbf_fingerprint_pin.py @0000can0000
+/python/test_lpbf_implementation_fingerprint.py @0000can0000
+/python/test_phase6a_leaf_modules.py @0000can0000

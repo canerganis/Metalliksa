@@ -35,6 +35,14 @@ PROTECTED_PATHS = (
     "tests/component-reachability.test.ts",
     # The LPBF implementation fingerprint pin (design 5c): it may change only at the planned bump.
     "python/lpbf_implementation_fingerprint.expected",
+    # ... and the guards around it (review N1, B5 step 2): the pin test, the one strict pin
+    # parser, FORBIDDEN_MANIFEST_IMPORTS (test_lpbf_implementation_fingerprint.py) and the
+    # manifest-count test (test_phase6a_leaf_modules.py). Weakening any of them would let a
+    # branch change manifest files with no trailer.
+    "python/test_lpbf_implementation_fingerprint_pin.py",
+    "python/lpbf_fingerprint_pin.py",
+    "python/test_lpbf_implementation_fingerprint.py",
+    "python/test_phase6a_leaf_modules.py",
 )
 
 
