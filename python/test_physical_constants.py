@@ -72,8 +72,9 @@ class ExactConstantsTest(unittest.TestCase):
     def test_solvers_still_use_the_truncated_values(self):
         import pourbaix_solver
         import tafel_corrosion_rate_solver as tafel
-        self.assertEqual(tafel.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.TRUNCATED_FARADAY)
+        # Design step (b): tafel uses the exact SI products.
+        self.assertEqual(tafel.R_GAS, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.FARADAY.value)
         # calphad_solver (Phase 6a tranche 2a structural migration) takes R from this
         # module, still as the truncated value.
         import calphad_solver

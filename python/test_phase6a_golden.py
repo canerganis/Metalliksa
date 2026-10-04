@@ -263,8 +263,9 @@ class ProvenanceTest(unittest.TestCase):
                 self.assertEqual(prov["registryVersion"], alloy_registry.REGISTRY_VERSION)
                 self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
                 self.assertEqual(prov["registryAlloyId"], registry_id)
-                self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
-                self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+                # Design step (b): exact SI 2019 products.
+                self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+                self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
 
     def test_pourbaix_provenance(self):
         import physical_constants as pc

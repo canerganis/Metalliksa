@@ -19,16 +19,15 @@ import physical_constants
 from input_validation import UNKNOWN_ALLOY, ValidationError, require_known_alloy, validation_envelope
 
 # Physical & Electrochemical Constants
-# Phase 6a structural step (a): R and F come from physical_constants but keep the
-# CODATA printed truncations used before the migration (8.314462618, 96485.33212),
-# so the output stays bit-identical. The switch to the exact SI products is the
-# separate value step (b).
-FARADAY_C_PER_MOL = physical_constants.TRUNCATED_FARADAY  # C / mol
+# Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
+# from physical_constants (they replaced the CODATA printed truncations
+# 8.314462618 / 96485.33212; relative change 1.8e-11 / 3.4e-11).
+FARADAY_C_PER_MOL = physical_constants.FARADAY.value  # C / mol, exact
 SECONDS_PER_YEAR = 31557600.0     # 365.25 days * 86400 s/day
 ASTM_K1 = 3.27e-3                 # mm * g / (uA * cm * year)
 ASTM_K2 = 8.954e-3                # g / (m^2 * day * (uA / cm^2))
 ASTM_K_MPY = 0.129                # mils * g / (uA * cm * year) -> mpy = mm/yr * 39.3701
-R_GAS = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol * K)
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J / (mol * K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # Alloy data (density, EW, composition, valencies, Ea, E0) lives in
@@ -123,8 +122,8 @@ def _provenance(preset: "_LazyPreset") -> dict:
         "registryAlloyId": preset.registry_id,
         "gasConstantR_J_molK": R_GAS,
         "faraday_C_mol": FARADAY_C_PER_MOL,
-        "constantsNote": "CODATA printed truncations of R and F (pre-migration values); "
-                         "exact SI values are pending the Phase 6a value step.",
+        "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e (Phase 6a value step); "
+                         "they replaced the CODATA printed truncations 8.314462618 / 96485.33212.",
     }
 
 def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weights: dict) -> float:
@@ -245,7 +244,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
 
     # 4. Faraday's Law Corrosion Rates (ASTM G102)
     # CR (mm/year) = [K1 * i_corr (uA/cm2) * EW] / density (g/cm3)
-    # Exact constant from CODATA: (1e-6 * 31557600 * 10) / 96485.33212 = 0.00327072
+    # K1 = (1e-6 * 31557600 * 10) / F = 0.0032707148 mm*g/(uA*cm*year) with the exact F
     exact_k1 = (1e-6 * SECONDS_PER_YEAR * 10.0) / FARADAY_C_PER_MOL
     cr_mm_yr = (exact_k1 * i_corr_ua_cm2 * ew) / density
     cr_mpy = cr_mm_yr * 39.37007874  # mils per year
@@ -338,7 +337,8 @@ Rp = B / i_corr_A_cm2  # Ohm * cm^2
 
 # 2. Faraday Penetration Rate (ASTM G102)
 # Formula: CR (mm/yr) = 0.00327 * (i_corr * EW) / density
-K1 = 0.00327072  # mm * g / (uA * cm * year)
+F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
+K1 = (1e-6 * 31557600.0 * 10.0) / F  # mm * g / (uA * cm * year), 0.0032707148
 cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
 cr_mpy = cr_mm_yr * 39.3701  # mils per year
 
