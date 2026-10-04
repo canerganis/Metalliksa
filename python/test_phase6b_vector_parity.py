@@ -44,7 +44,7 @@ BASE = cases.BASE_REVISION
 REL_TOL = 1e-9
 PARITY_MODE = {
     "cnls_fitting_solver": "tolerance",
-    "xrd_peak_deconvolution": "bit_exact",
+    "xrd_peak_deconvolution": "minimiser",
     "dft_property_calculator": "bit_exact",
 }
 # xrd: cases with no observations never reach the minimiser and must stay bit-exact.
@@ -263,6 +263,122 @@ class CnlsKernelParityTest(unittest.TestCase):
         self.assertTrue(any(r["key"].startswith("linKK.") for r in rows))
 
 
+class XrdParityTest(unittest.TestCase):
+    """xrd: coordinate search -> bounded scipy least_squares (different minimiser)."""
+
+    # (output section, key, decimals the old value was rounded to) for the 6 fitted parameters
+    PARAMS = (("ka1Peak", "twoTheta", 4), ("ka1Peak", "intensity", 1), ("ka1Peak", "fwhm_deg", 4),
+              ("ka1Peak", "shapeParameter", 3), ("background", "intercept", 2), ("background", "slope", 4))
+    NONLINEARITY_MARGIN = 1.10  # quadratic-model bound below, plus 10 %
+
+    @staticmethod
+    def _structure(doc):
+        return [(k, v) if not drift_report._is_number(v) else (k, type(v).__name__)
+                for k, v in drift_report.flatten(doc)]
+
+    @classmethod
+    def assert_minimiser_parity(cls, test, case, old, new):
+        # identical structure and non-numeric leaves; the observed profile is echoed unchanged
+        test.assertEqual(cls._structure(old), cls._structure(new))
+        for o, n in zip(old["deconvolutionProfile"], new["deconvolutionProfile"]):
+            test.assertEqual((o["twoTheta"], o["rawIntensity"]), (n["twoTheta"], n["rawIntensity"]))
+        # fit quality: never worse than the old coordinate search
+        test.assertLessEqual(new["goodnessOfFit"]["residualSumSquares"],
+                             old["goodnessOfFit"]["residualSumSquares"] * (1 + REL_TOL), case)
+        test.assertLessEqual(new["goodnessOfFit"]["r_wp_pct"], old["goodnessOfFit"]["r_wp_pct"], case)
+
+    def _fit(self, case):
+        """Run the case in-process, capturing the least-squares problem and solution."""
+        import xrd_peak_deconvolution as xrd
+        captured = {}
+        original = xrd._fit_profile_least_squares
+
+        def spy(*args):
+            captured["args"] = args
+            captured["x"] = original(*args)
+            return captured["x"]
+
+        with patch.object(xrd, "_fit_profile_least_squares", spy):
+            out = _in_process("xrd_peak_deconvolution", case)
+        return xrd, captured, out
+
+    @staticmethod
+    def _residual_fn(xrd, args):
+        tt, y, _x0, profile, ka2, ratio, fwhm_ratio, wl1, wl2 = args
+        tt, y = np.asarray(tt, dtype=float), np.asarray(y, dtype=float)
+
+        def res(v):
+            c1, i1, w1, s, b0, b1 = v
+            model = b0 + b1 * tt + xrd._profile_array(tt, c1, i1, w1, s, profile)
+            if ka2:
+                model = model + xrd._profile_array(tt, xrd.calculate_ka2_two_theta(c1, wl1, wl2), i1 * ratio,
+                                                   w1 * fwhm_ratio, s, profile)
+            return y - model
+        return res
+
+    def _sigma(self, res, x):
+        jac = np.empty((res(x).size, 6))
+        for k in range(6):
+            h = 1e-6 * max(1.0, abs(x[k]))
+            e = np.zeros(6)
+            e[k] = h
+            jac[:, k] = (res(x + e) - res(x - e)) / (2 * h)
+        rss = float(res(x) @ res(x))
+        s2 = rss / (res(x).size - 6)
+        return rss, s2, np.sqrt(np.diag(np.linalg.inv(jac.T @ jac)) * s2)
+
+    def test_solution_is_a_local_minimum_and_shifts_are_explained(self):
+        for case, payload in cases.CASES["xrd_peak_deconvolution"].items():
+            if case in XRD_BIT_EXACT_CASES:
+                continue
+            with self.subTest(case=case):
+                xrd, cap, out = self._fit(case)
+                res = self._residual_fn(xrd, cap["args"])
+                x = np.array(cap["x"])
+                rss, s2, sigma = self._sigma(res, x)
+                # the minimiser's answer was accepted and is what the output reports
+                self.assertLessEqual(abs(out["goodnessOfFit"]["residualSumSquares"] - rss), 0.0051)
+                # local minimum: +-5 % of one standard error in any free coordinate raises the SSR
+                lower, upper = (0.0, 1.0) if payload.get("profileType") == "pseudo-voigt" else (0.8, 10.0)
+                for k in range(6):
+                    for sign in (-1.0, 1.0):
+                        trial = x.copy()
+                        trial[k] += sign * 0.05 * sigma[k]
+                        if k == 3 and not lower <= trial[k] <= upper:
+                            continue
+                        self.assertGreater(float(res(trial) @ res(trial)), rss, (case, k, sign))
+                # Gauss-Newton bound: for SSR(x_old) - SSR* = s2 * d^2 every coordinate
+                # obeys |x_old_k - x*_k| <= sigma_k * d. The old point is rounded in the
+                # output, so add half a unit of its last decimal.
+                old = load("xrd_peak_deconvolution", case)["stdout"]
+                gain = old["goodnessOfFit"]["residualSumSquares"] - rss
+                self.assertGreaterEqual(gain, -1e-9 * rss)
+                d = math.sqrt(max(0.0, gain) / s2)
+                for k, (section, key, decimals) in enumerate(self.PARAMS):
+                    shift = abs(old[section][key] - x[k])
+                    bound = self.NONLINEARITY_MARGIN * sigma[k] * d + 0.5 * 10.0 ** -decimals
+                    self.assertLessEqual(shift, bound, (case, key, shift / sigma[k], d))
+
+    def test_mutation_truncated_minimiser_is_detected(self):
+        import scipy.optimize
+        original = scipy.optimize.least_squares
+        with patch.object(scipy.optimize, "least_squares", lambda *a, **k: original(*a, **dict(k, max_nfev=2))):
+            mutated = _in_process("xrd_peak_deconvolution", "pv_ka2_cu111")
+        old = load("xrd_peak_deconvolution", "pv_ka2_cu111")["stdout"]
+        with self.assertRaises(AssertionError):
+            self.assert_minimiser_parity(self, "pv_ka2_cu111", old, mutated)
+
+    def test_williamson_hall_and_empty_roi_do_not_import_scipy(self):
+        # Cold-spawn cost: scipy.optimize / numpy / input_validation load only for a fit.
+        import subprocess
+        probe = ("import json, sys; import xrd_peak_deconvolution as x; "
+                 "x.solve_williamson_hall([{'twoTheta': 43.3}, {'twoTheta': 50.4}]); "
+                 "x.deconvolve_peak_roi([], 43.68, 4000.0); "
+                 "print(json.dumps(sorted(m for m in ('numpy', 'scipy', 'input_validation') if m in sys.modules)))")
+        out = subprocess.run([sys.executable, "-B", "-c", probe], cwd=str(HERE), capture_output=True, check=True)
+        self.assertEqual(json.loads(out.stdout), [])
+
+
 class NewValidationTest(unittest.TestCase):
     """The LAPACK/scipy kernels cannot take non-finite input that the old loops turned
     into NaN-laden "successful" output. Those inputs are now typed validation errors
@@ -277,6 +393,22 @@ class NewValidationTest(unittest.TestCase):
         self.assertEqual(out["errorKind"], "validation")
         self.assertEqual(out["error"]["code"], "NON_FINITE")
         self.assertEqual(out["error"]["field"], field)
+
+    def test_xrd_non_finite_start_or_observation(self):
+        base = cases.CASES["xrd_peak_deconvolution"]["pv_ka2_cu111"]
+        for key in ("center", "intensity", "fwhm", "eta"):
+            for bad in (float("nan"), float("inf")):
+                if (key, bad) == ("center", float("inf")):
+                    continue  # pre-existing internal error, see below
+                with self.subTest(key=key, bad=bad):
+                    self._envelope("xrd_peak_deconvolution", dict(base, **{key: bad}), key)
+        # center=inf already failed before the minimiser (Ka2 angle: math domain error,
+        # exit 1) in faa6684; that pre-existing behaviour is unchanged.
+        fresh = golden.run_solver("xrd_peak_deconvolution", dict(base, center=float("inf")))
+        self.assertEqual((fresh["exitCode"], fresh["stdout"]), (1, {"error": "math domain error"}))
+        points = [dict(p) for p in base["points"]]
+        points[7]["sampleIntensity"] = float("nan")
+        self._envelope("xrd_peak_deconvolution", dict(base, points=points), "points[7].sampleIntensity")
 
     def test_cnls_non_finite_lin_kk_is_unchanged_nan(self):
         points = [dict(p) for p in cases._RANDLES_POINTS]
