@@ -6,20 +6,29 @@ IMPLEMENTATION_SOURCE_FILES, to the manifest itself or to VERSION changes the
 fingerprint and fails this test, so an unplanned bump can no longer slip through
 on the manual lane check alone.
 
-Procedure for the single planned bump (design 3.2, stage B6), and for nothing else:
+Procedure for the single planned bump (design 3.2/3.3, stage B), and for nothing else.
+All parity commands must run in the recorded environment (the reference machine and the
+locked .runtime/lpbf-win-py312 interpreter; tools/lpbf_parity_check.py skips, it does not
+pass, when the environment differs).
 1. Before any manifest edit, on the pre-bump commit:
-       python -B tools/lpbf_parity_check.py --check --slow      (all PASS)
+       python -B tools/lpbf_parity_check.py --check --slow                   (all PASS)
        python -B tools/lpbf_bump_record.py --out <scratch>/before.json
-2. Make the cleanup commits on the bump branch. After each one:
-       python -B tools/lpbf_parity_check.py --check             (fast cases PASS;
-   only the pin below fails, with the new value printed in its message)
+2. Make the cleanup commits B1-B5 on ONE bump branch. From the first B commit until
+   B6 THIS PIN TEST IS RED on that branch (the fingerprint has moved, the pin has not),
+   so Phase B lands on main only as ONE atomic merge after B6; no B commit is merged
+   alone. Gate every B commit with
+       python -B tools/lpbf_parity_check.py --check --expect-unpinned        (fast cases)
+   which treats only the pin mismatch as a warning; observation diffs and a result
+   implementationHash != implementation_fingerprint() still fail. Add --slow (G2,
+   real bare-plate fixture) at B1, B3, B4, B5 and B6.
 3. In the bookkeeping commit (B6) write the new value into
    lpbf_implementation_fingerprint.expected (one lowercase hex line), then run
-       python -B -m unittest test_lpbf_implementation_fingerprint_pin
-       python -B tools/lpbf_parity_check.py --check --slow      (all PASS; the
+       python -B -m unittest test_lpbf_implementation_fingerprint_pin       (green again)
+       python -B tools/lpbf_parity_check.py --check --slow                   (all PASS; the
    tool reports "implementationHash differs from the recording: bump")
-       python -B tools/lpbf_bump_record.py --from-revision <pre-bump sha> \
-           --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
+       python -B tools/lpbf_bump_record.py --from-revision <pre-bump sha>
+           --with-parity-check --slow --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
+   (one command line; all parity cases must report PASS, none SKIP)
 4. Never re-record the parity goldens in the bump: they are the pre-bump side of
    the proof. Never edit this file to make an unexplained fingerprint pass.
 """

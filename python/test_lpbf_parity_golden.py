@@ -157,6 +157,44 @@ class ParityHarnessTests(unittest.TestCase):
             outcome = parity.check_case(parity.CASE_BY_ID["g12_analytical_modules"], self.root)
         self.assertTrue(any("!= pinned" in p for p in outcome["problems"]), outcome["problems"])
 
+    def test_hash_only_bump_changes_no_result_or_artifact(self):
+        # Simulated bump: a different implementation_fingerprint() (and pin) with identical
+        # numerics must leave every observation of the solver cases bit-equal, so the
+        # fingerprint is carried only by provenance.implementationHash.
+        import lpbf_simulation
+        fake = "f" * 64
+        with patch.object(lpbf_simulation, "implementation_fingerprint", return_value=fake), \
+                patch.object(parity, "pinned_fingerprint", return_value=fake):
+            for case_id in ("g1_v1_60w_in718", "g3_powder_stripe_multilayer", "g4_layered_plate",
+                            "g8_observers"):
+                with self.subTest(case=case_id):
+                    outcome = parity.check_case(parity.CASE_BY_ID[case_id], self.root)
+                    self.assertEqual(outcome["problems"], [])
+                    self.assertEqual(outcome["implementationHashes"], [fake])
+
+    def test_expect_unpinned_turns_only_the_pin_mismatch_into_a_warning(self):
+        import lpbf_simulation
+        moved = "e" * 64
+        case = parity.CASE_BY_ID["g3_powder_island"]
+        with patch.object(lpbf_simulation, "implementation_fingerprint", return_value=moved):
+            strict = parity.check_case(case, self.root)
+            bump = parity.check_case(case, self.root, expect_unpinned=True)
+        self.assertTrue(any("!= pinned" in p for p in strict["problems"]), strict["problems"])
+        self.assertEqual(bump["problems"], [])
+        self.assertTrue(any("!= pinned" in w for w in bump["warnings"]), bump["warnings"])
+        # A stale result hash and observation diffs stay failures in bump-branch mode.
+        problems, _ = parity.check_implementation(case, ["a" * 64], parity.pinned_fingerprint(), moved,
+                                                  expect_unpinned=True)
+        self.assertTrue(any("provenance.implementationHash" in p for p in problems), problems)
+        directory = self._mutated_golden_dir(
+            "g12_analytical_modules", lambda observations: observations.update({"fabbro.depth": "0" * 64}))
+        with patch.object(parity, "GOLDEN_DIR", directory), \
+                patch.object(lpbf_simulation, "implementation_fingerprint", return_value=moved):
+            outcome = parity.check_case(parity.CASE_BY_ID["g12_analytical_modules"], self.root,
+                                        expect_unpinned=True)
+        self.assertEqual(len(outcome["problems"]), 1)
+        self.assertIn("changed fabbro.depth", outcome["problems"][0])
+
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):
             self.assertEqual(parity.main(["--record", "--case", "npz_determinism",

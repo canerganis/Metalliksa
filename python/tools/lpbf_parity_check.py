@@ -14,9 +14,12 @@ What "bit-equal" means (design 2.1):
   else is hashed as canonical JSON (sort_keys=True, allow_nan=False) AND as an
   insertion-ordered, type-tagged tree (int vs float, tuple vs list, exact float
   bits), so key order and Python types are pinned as well.
-- provenance.implementationHash is compared separately: it must equal the pinned
-  python/lpbf_implementation_fingerprint.expected value. It is the only value
-  that may differ from the golden, and only at the bump.
+- provenance.implementationHash is compared separately: it must equal the CURRENT
+  implementation_fingerprint(), which in turn must equal the pinned
+  python/lpbf_implementation_fingerprint.expected value. On the bump branch
+  (B1-B5, before B6 re-pins) pass --expect-unpinned: the pin mismatch is then a
+  warning, every other check still fails. The hash is the only value that may
+  differ from the golden, and only at the bump.
 - Every artifact file written by run() is compared by SHA-256; every NPZ is also
   compared array by array (dtype, shape, bytes).
 
@@ -26,7 +29,7 @@ opt-in (--slow or --case). Everything else runs in about one minute.
 
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_parity_check.py --list
-    python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...]
+    python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...] [--expect-unpinned]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
 
 --record refuses to overwrite an existing golden without --force, and refuses to
@@ -864,16 +867,36 @@ def diff_observations(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[
     return problems
 
 
-def check_implementation(case: Case, hashes: List[str], pinned: str, current: str) -> List[str]:
-    problems = []
+def pin_mismatch(pinned: str, current: str) -> Optional[str]:
+    """The pin comparison, reported separately from the result checks."""
     if current != pinned:
-        problems.append(f"implementation_fingerprint() {current} != pinned {pinned}")
+        return f"implementation_fingerprint() {current} != pinned {pinned}"
+    return None
+
+
+def check_implementation(case: Case, hashes: List[str], pinned: str, current: str,
+                         expect_unpinned: bool = False) -> Tuple[List[str], List[str]]:
+    """Return (problems, warnings).
+
+    A pin mismatch is a problem, except on a bump branch (--expect-unpinned), where every
+    B1-B5 commit legitimately changes the fingerprint before B6 re-pins it: there it is a
+    warning. A result whose provenance.implementationHash differs from the CURRENT
+    implementation_fingerprint() is always a problem, and so are observation diffs.
+    """
+    problems: List[str] = []
+    warnings: List[str] = []
+    mismatch = pin_mismatch(pinned, current)
+    if mismatch is not None:
+        (warnings if expect_unpinned else problems).append(
+            mismatch + (" (expected on the bump branch before B6)" if expect_unpinned else ""))
+    elif expect_unpinned:
+        warnings.append("--expect-unpinned given but the fingerprint still equals the pin")
     for value in hashes:
         if value != current:
             problems.append(f"result provenance.implementationHash {value} != implementation_fingerprint() {current}")
     if case.runs_solver and not hashes:
         problems.append("solver case produced no provenance.implementationHash")
-    return problems
+    return problems, warnings
 
 
 def selected_cases(args) -> List[Case]:
@@ -900,12 +923,12 @@ def command_record(args) -> int:
             failures += 1
             continue
         observations, hashes, elapsed = execute(case, Path(args.work_root))
-        problems = check_implementation(case, hashes, pinned, current)
+        problems, _ = check_implementation(case, hashes, pinned, current)
         runs = [round(elapsed, 1)]
         if args.twice:
             again, hashes_again, elapsed_again = execute(case, Path(args.work_root))
             runs.append(round(elapsed_again, 1))
-            problems += check_implementation(case, hashes_again, pinned, current)
+            problems += check_implementation(case, hashes_again, pinned, current)[0]
             problems += [f"run 2 differs: {p}" for p in diff_observations(observations, again)]
         if problems:
             failures += 1
@@ -927,11 +950,11 @@ def command_record(args) -> int:
     return 1 if failures else 0
 
 
-def check_case(case: Case, work_root: Path) -> Dict[str, Any]:
+def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Dict[str, Any]:
     """Run one case against its golden; returns problems, observations and timing."""
     from lpbf_simulation import implementation_fingerprint
     path = golden_path(case)
-    outcome: Dict[str, Any] = {"case": case.id, "problems": [], "elapsed_s": 0.0,
+    outcome: Dict[str, Any] = {"case": case.id, "problems": [], "warnings": [], "elapsed_s": 0.0,
                                "observations": {}, "golden": None}
     if not path.is_file():
         outcome["problems"] = [f"golden missing: {path}"]
@@ -943,12 +966,12 @@ def check_case(case: Case, work_root: Path) -> Dict[str, Any]:
         return outcome
     current, pinned = implementation_fingerprint(), pinned_fingerprint()
     observations, hashes, elapsed = execute(case, work_root)
-    problems = check_implementation(case, hashes, pinned, current)
+    problems, warnings = check_implementation(case, hashes, pinned, current, expect_unpinned)
     problems += diff_observations(golden["observations"], observations)
     recorded_env = golden.get("recordedEnvironment", {})
     if problems and recorded_env != environment():
         problems.append(f"note: environment differs from the recording {recorded_env} -> {environment()}")
-    outcome.update(problems=problems, elapsed_s=elapsed, observations=observations,
+    outcome.update(problems=problems, warnings=warnings, elapsed_s=elapsed, observations=observations,
                    implementationHashes=sorted(set(hashes)))
     return outcome
 
@@ -957,9 +980,12 @@ def command_check(args) -> int:
     from lpbf_simulation import implementation_fingerprint
     current, pinned = implementation_fingerprint(), pinned_fingerprint()
     print(f"implementation_fingerprint() = {current}  pinned = {pinned}")
+    if args.expect_unpinned:
+        print("bump-branch mode (--expect-unpinned): a pin mismatch is a WARNING; observation diffs and "
+              "result implementationHash != implementation_fingerprint() still FAIL")
     failures = 0
     for case in selected_cases(args):
-        outcome = check_case(case, Path(args.work_root))
+        outcome = check_case(case, Path(args.work_root), args.expect_unpinned)
         problems, golden = outcome["problems"], outcome["golden"] or {}
         recorded = golden.get("recordedImplementationHash")
         status = "PASS" if not problems else "FAIL"
@@ -967,6 +993,8 @@ def command_check(args) -> int:
                   if recorded not in (None, current) and not problems else "")
         print(f"{status} {case.id} [{case.group}] {len(outcome['observations'])} observations, "
               f"{outcome['elapsed_s']:.1f} s{suffix}")
+        for warning in outcome["warnings"]:
+            print(f"    WARNING {warning}")
         for problem in problems[:40]:
             print(f"    {problem}")
         if len(problems) > 40:
@@ -987,6 +1015,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--force", action="store_true", help="overwrite existing goldens when recording")
     parser.add_argument("--twice", action="store_true", help="record: run twice and require identical observations")
     parser.add_argument("--work-root", default=str(DEFAULT_WORK_ROOT), help="scratch root for artifacts")
+    parser.add_argument("--expect-unpinned", action="store_true",
+                        help="check: bump-branch mode (B1-B5), a fingerprint != pin mismatch is only a warning")
     args = parser.parse_args(argv)
     if args.list:
         for case in CASES:
