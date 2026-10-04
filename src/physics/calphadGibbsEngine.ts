@@ -3,7 +3,9 @@
 // Sublattice compound energy formalism, Common Tangent / Convex Hull Gibbs Free Energy Minimization,
 // and Scheil-Gulliver non-equilibrium solidification.
 
-export const GAS_CONSTANT_R = 8.314462618; // J / (mol·K)
+// Exact SI 2019 R (N_A*k), shared with the Python CALPHAD solver (Phase 6a step b).
+export { GAS_CONSTANT_R } from "../utils/physicalConstants";
+import { GAS_CONSTANT_R } from "../utils/physicalConstants";
 
 export interface PureElementSGTE {
   symbol: string;

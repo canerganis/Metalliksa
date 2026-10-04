@@ -14,7 +14,8 @@ Sources
 - 273.15 K is the exact offset of the Celsius scale (SI Brochure, 9th ed., 2019, 2.3.1).
 - Standard atomic weights: IUPAC CIAAW, "Standard atomic weights of the elements
   2021", Pure Appl. Chem. 94 (2022) 573-600, https://www.ciaaw.org . The value
-  used in calculations is the CIAAW abridged five-significant-figure value; the
+  used in calculations is the CIAAW abridged value (at most five significant figures,
+  fewer where the abridged table gives fewer, e.g. S 32.06, Pb 207.2); the
   standard interval or uncertainty range is kept for validation.
 
 Record metadata
@@ -31,11 +32,11 @@ kept separately in ``AtomicWeight.interval`` and ``validity`` stays None.
 Exact versus truncated R and F
 ------------------------------
 GAS_CONSTANT_R and FARADAY below are the full exact products N_A*k and N_A*e.
-The free solvers (tafel_corrosion_rate_solver, pourbaix_solver, calphad_solver)
-use the CODATA printed truncations 8.314462618 and 96485.33212. Those differ from
-the exact values by about 1.84e-11 (R) and 3.4e-11 (F) relative, so a structural
-migration step that swaps in these records cannot be bit-exact against golden
-outputs; test_physical_constants pins the deltas.
+Phase 6a design step (b) switched every migrated free solver (tafel, pourbaix,
+calphad, battery EIS, icme, kinetics, stochastic UQ) from its truncated/rounded
+printing (8.314462618, 8.31446, 8.314; 96485.33212, 96485.332, 96485.33) to these
+records and removed the TRUNCATED_* / LEGACY_* constants that step (a) had kept
+for bit-identical output. test_physical_constants pins the old-vs-exact deltas.
 """
 
 from __future__ import annotations
@@ -45,7 +46,7 @@ from typing import Dict, Optional, Tuple
 
 CONSTANTS_VERSION = "physical-constants-1"
 SI_EXACT_SOURCE = "CODATA 2018 / SI 2019 exact"
-CIAAW_SOURCE = "IUPAC CIAAW standard atomic weights 2021 (abridged five-figure values)"
+CIAAW_SOURCE = "IUPAC CIAAW standard atomic weights 2021 (abridged values, at most five significant figures)"
 # Same vocabulary as alloy_registry.SOURCE_TYPES (kept local: this module is a leaf).
 SOURCE_TYPES = frozenset({"measured", "literature", "estimated", "computed", "synthetic"})
 DEFINED_CONSTANT_NOTE = (
@@ -55,18 +56,6 @@ ATOMIC_WEIGHT_NOTE = (
     "CIAAW 2021 standard atomic weight for normal terrestrial material; tagged literature. "
     "The interval is isotopic variability, not an applicability validity range."
 )
-# CODATA printed truncations used by tafel/pourbaix/calphad today (not exact).
-TRUNCATED_GAS_CONSTANT_R = 8.314462618
-TRUNCATED_FARADAY = 96485.33212
-# ---- BEGIN phase6a-t2b block: legacy R of kinetics / stochastic UQ ----
-# 8.314 J/(mol*K) is the 4-significant-figure R hard-coded in kinetics_ttt_cct_solver
-# (:108, :306-307), stochastic_uq_mmpds_solver (:297), battery_corrosion_eis_solver
-# (:160, :621) and icme_multiscale_pipeline_solver (:202) at 7f3f803. Single authority:
-# alloy_data_calphad_battery_icme.LEGACY_R_8_314 wraps this value. Not exact:
-# (8.314 - GAS_CONSTANT_R) / GAS_CONSTANT_R is about -5.56e-5. Used only until
-# design step (b) switches those solvers to GAS_CONSTANT_R.
-LEGACY_GAS_CONSTANT_R_4SF = 8.314
-# ---- END phase6a-t2b block ----
 
 
 def _check_metadata(source_type: str, validity: object) -> None:
@@ -130,7 +119,7 @@ class UnknownElementError(KeyError):
 class AtomicWeight:
     """CIAAW 2021 standard atomic weight.
 
-    ``value`` is the abridged five-significant-figure value used in calculations.
+    ``value`` is the CIAAW abridged value (at most five significant figures) used in calculations.
     ``interval`` is the CIAAW standard range: for single-valued elements it is
     value +/- the stated uncertainty; for interval elements it is the published
     [lower, upper] interval. ``interval`` is variability/uncertainty, not
@@ -158,10 +147,18 @@ def _aw(symbol: str, abridged: float, lo: float, hi: float) -> AtomicWeight:
 # Every entry below is from the CIAAW 2021 table (Pure Appl. Chem. 94 (2022) 573).
 # Columns: abridged value, then the standard interval [lo, hi]. For single-valued
 # elements [lo, hi] = standard value -/+ its stated uncertainty, quoted in comments.
+# Phase 6a design step (b) added Li, Be, Ca, Sc, Pd, Ag, Sb, La, Ce, Nd, Pb and Bi
+# (UI specimens send Be, Sc, Pd and Pb; the others are common alloying additions), so
+# calphad_solver no longer needs its 50.0 g/mol stand-in for real elements. Values
+# checked on 2026-10-04 against https://www.ciaaw.org/atomic-weights.htm and
+# https://www.ciaaw.org/abridged-atomic-weights.htm (tables "based on Atomic Weights
+# 2021"; the 2024 revisions there concern Gd, Lu and Zr only, none of these twelve).
 STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
     a.symbol: a
     for a in (
         _aw("H", 1.008, 1.00784, 1.00811),        # interval [1.00784, 1.00811]
+        _aw("Li", 6.94, 6.938, 6.997),            # interval [6.938, 6.997]
+        _aw("Be", 9.0122, 9.0121826, 9.0121836),  # 9.0121831(5)
         _aw("B", 10.81, 10.806, 10.821),          # interval [10.806, 10.821]
         _aw("C", 12.011, 12.0096, 12.0116),       # interval [12.0096, 12.0116]
         _aw("N", 14.007, 14.00643, 14.00728),     # interval [14.00643, 14.00728]
@@ -171,6 +168,8 @@ STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
         _aw("Si", 28.085, 28.084, 28.086),        # interval [28.084, 28.086]
         _aw("P", 30.974, 30.973761993, 30.973762003),  # 30.973761998(5)
         _aw("S", 32.06, 32.059, 32.076),          # interval [32.059, 32.076]
+        _aw("Ca", 40.078, 40.074, 40.082),        # 40.078(4)
+        _aw("Sc", 44.956, 44.955903, 44.955911),  # 44.955907(4)
         _aw("Ti", 47.867, 47.866, 47.868),        # 47.867(1)
         _aw("V", 50.942, 50.9414, 50.9416),       # 50.9415(1)
         _aw("Cr", 51.996, 51.9955, 51.9967),      # 51.9961(6)
@@ -181,17 +180,25 @@ STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
         _aw("Cu", 63.546, 63.543, 63.549),        # 63.546(3)
         _aw("Zn", 65.38, 65.36, 65.40),           # 65.38(2)
         _aw("Y", 88.906, 88.905836, 88.905840),   # 88.905838(2)
-        _aw("Zr", 91.224, 91.222, 91.226),        # 91.224(2)
+        _aw("Zr", 91.224, 91.222, 91.226),        # 91.224(2); CIAAW revised Zr in 2024 (not applied: this table is the 2021 edition)
         _aw("Nb", 92.906, 92.90636, 92.90638),    # 92.90637(1)
         _aw("Mo", 95.95, 95.94, 95.96),           # 95.95(1)
         _aw("Ru", 101.07, 101.05, 101.09),        # 101.07(2)
+        _aw("Pd", 106.42, 106.41, 106.43),        # 106.42(1)
+        _aw("Ag", 107.87, 107.8680, 107.8684),    # 107.8682(2)
         _aw("Sn", 118.71, 118.703, 118.717),      # 118.710(7)
+        _aw("Sb", 121.76, 121.759, 121.761),      # 121.760(1)
+        _aw("La", 138.91, 138.90540, 138.90554),  # 138.90547(7)
+        _aw("Ce", 140.12, 140.115, 140.117),      # 140.116(1)
+        _aw("Nd", 144.24, 144.239, 144.245),      # 144.242(3)
         _aw("Hf", 178.49, 178.480, 178.492),      # 178.486(6)
         _aw("Ta", 180.95, 180.94786, 180.94790),  # 180.94788(2)
         _aw("W", 183.84, 183.83, 183.85),         # 183.84(1)
         _aw("Re", 186.21, 186.206, 186.208),      # 186.207(1)
         _aw("Pt", 195.08, 195.075, 195.093),      # 195.084(9)
         _aw("Au", 196.97, 196.966566, 196.966574),  # 196.966570(4)
+        _aw("Pb", 207.2, 206.14, 207.94),         # interval [206.14, 207.94] (abridged 207.2 +/- 1.1)
+        _aw("Bi", 208.98, 208.98039, 208.98041),  # 208.98040(1)
     )
 }
 

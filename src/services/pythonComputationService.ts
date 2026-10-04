@@ -17,6 +17,7 @@ import {
   TafelPythonCorrosionRateResult,
 } from "../types/tafel";
 import { createSeededRandom } from "../utils/seededRandom";
+import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 
 export interface PersistentIPCDiagnostics {
@@ -1055,6 +1056,7 @@ class PythonComputationService {
     minRefineStep = 0.5
   ): Promise<PythonCalphadSolveResult> {
     if (usePython) {
+      let validation: PythonValidationError | null = null;
       try {
         const res = await fetch("/api/python/calphad-minimize", {
           method: "POST",
@@ -1084,10 +1086,15 @@ class PythonComputationService {
               computeTimeMs: data.computeTimeMs || 12,
             };
           }
+        } else {
+          validation = await validationErrorFromResponse(res, "CALPHAD");
         }
       } catch (err) {
         console.warn("Python CALPHAD proxy call failed, falling back to TypeScript engine:", err);
       }
+      // Invalid input (e.g. an unknown element symbol): surface it; the caller decides
+      // whether to show the client solver instead. Network errors and 5xx still fall back.
+      if (validation) throw validation;
     }
 
     // Client-side TypeScript Fallback
@@ -2791,7 +2798,8 @@ export function fallbackClientTafelCorrosionRate(
   const betaA = Math.max(0.005, Math.abs(payload.betaA || 0.12));
   const betaC = Math.max(0.005, Math.abs(payload.betaC || 0.10));
   const density = Math.max(0.1, payload.density_g_cm3 || 7.98);
-  const ew = Math.max(1.0, payload.equivalentWeight || 25.68);
+  // 316L preset EW from python/alloy_registry.py (computed, Phase 6a step b; was 25.68).
+  const ew = Math.max(1.0, payload.equivalentWeight || 24.8205);
   const specimenArea = Math.max(1e-4, payload.specimenAreaCm2 || 1.0);
   const initialThickness = Math.max(0.1, payload.initialThicknessMm || 5.0);
   const allowableLoss = Math.max(0.01, payload.allowableLossMm || 1.5);
@@ -2806,13 +2814,14 @@ export function fallbackClientTafelCorrosionRate(
   const rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
 
   // Faraday penetration (ASTM G102)
-  const exactK1 = 0.00327072;
+  // Same K1/K2 as python/tafel_corrosion_rate_solver.py, from the exact F.
+  const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
   const cr_mm_yr = (exactK1 * iCorr_uA_cm2 * ew) / density;
   const cr_mpy = cr_mm_yr * 39.37007874;
   const cr_um_yr = cr_mm_yr * 1000.0;
   const cr_nm_hr = (cr_mm_yr * 1e6) / (365.25 * 24.0);
 
-  const exactK2 = 8.95473e-3;
+  const exactK2 = (1e-6 * 86400.0 * 1e4) / FARADAY_CONSTANT;
   const mass_loss_g_m2_day = exactK2 * iCorr_uA_cm2 * ew;
   const mass_loss_mdd = mass_loss_g_m2_day * 10.0;
   const mass_loss_kg_m2_yr = mass_loss_g_m2_day * 0.36525;
@@ -2839,7 +2848,7 @@ export function fallbackClientTafelCorrosionRate(
 
   // Temperature sensitivity (Arrhenius)
   const ea = payload.activationEnergyJ_mol || 32000.0;
-  const rGas = 8.314462618;
+  const rGas = GAS_CONSTANT_R;
   const tRefK = tempC + 273.15;
   const temperatureSensitivity = [5, 15, 25, 35, 45, 55, 65, 75, 85].map((t) => {
     const tK = t + 273.15;

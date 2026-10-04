@@ -17,6 +17,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import alloy_registry as reg
 import input_validation as iv
@@ -25,6 +26,8 @@ import lpbf_fatigue_fracture as ff
 import physical_constants as pc
 import stochastic_uq_mmpds_solver as uq
 from phase6a_test_support import require_git_revision
+
+sys.path.insert(0, str(Path(__file__).parent / "tools"))  # drift_report
 
 HERE = Path(__file__).parent
 BASE = "7f3f803"
@@ -71,13 +74,34 @@ OLD_FF = _base_module("lpbf_fatigue_fracture")
 class KineticsTest(unittest.TestCase):
     LEGACY = ("AISI 4140", "AISI 4340", "AISI D2", "Inconel 718", "Ti-6Al-4V", "Al 7075")
 
-    def test_every_alloy_equals_the_base_blob_including_key_order(self):
+    ARGS = ((), (0.3, 40.0, 900.0, 4.0, 650.0), (2000.0,))
+
+    def test_every_alloy_equals_the_base_blob_with_the_legacy_r_including_key_order(self):
+        # Design step (b) changed only R (8.314 -> exact). With R_GAS put back to 8.314
+        # the migrated solver must still reproduce the base blob bit for bit.
+        with mock.patch.object(kin, "R_GAS", 8.314):
+            for name in self.LEGACY:
+                for extra in self.ARGS:
+                    args = (name,) + extra
+                    with self.subTest(args=args):
+                        new = _strip(kin.solve_phase_transformation_kinetics(*args))
+                        old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
+                        self.assertEqual(json.dumps(new), json.dumps(old))
+
+    def test_exact_r_drift_is_numeric_and_bounded(self):
+        import drift_report
+        self.assertEqual(kin.R_GAS, pc.GAS_CONSTANT_R.value)
         for name in self.LEGACY:
-            for args in ((name,), (name, 0.3, 40.0, 900.0, 4.0, 650.0), (name, 2000.0)):
+            for extra in self.ARGS:
+                args = (name,) + extra
                 with self.subTest(args=args):
                     new = _strip(kin.solve_phase_transformation_kinetics(*args))
                     old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
-                    self.assertEqual(json.dumps(new), json.dumps(old))
+                    rows = drift_report.diff(old, new)
+                    self.assertTrue(all(r["kind"] == "numeric" for r in rows), drift_report.render(name, rows, 10))
+                    # Last printed digit of rounded Arrhenius outputs (largest seen: 6.7e-3,
+                    # AISI 4340 tStart_s 0.0149 -> 0.0148); unrounded change ~ (Q/RT)*5.6e-5.
+                    self.assertLessEqual(max([abs(r["rel"]) for r in rows if r["rel"] is not None] or [0.0]), 1e-2)
 
     def test_unknown_alloy_raises_instead_of_aisi4140(self):
         for name in ("Unobtainium XYZ", "", None, 4140, "4140", "Inconel"):
@@ -123,7 +147,7 @@ class KineticsTest(unittest.TestCase):
         self.assertEqual(prov["registryAlloyId"], "aisi4340")
         self.assertEqual(prov["registryVersion"], reg.REGISTRY_VERSION)
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
-        self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)  # design step (b)
 
 
 @require_git_revision(OLD_FF is not None, f"git revision {BASE} unavailable")
@@ -177,7 +201,10 @@ class StochasticTest(unittest.TestCase):
         code, out = _run("stochastic_uq_mmpds_solver.py", {"mcSamples": 500})
         self.assertEqual(code, 0)
         prov = out.pop("provenance")
-        self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
+        # Design step (b): exact R; the outputs below still equal the 8.314 base blob
+        # (the LSW radius sits on its 0.8 nm floor for these inputs).
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(uq.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["registryVersion"], reg.REGISTRY_VERSION)
         self.assertNotIn("registryAlloyId", prov)  # alloyName is a label, never resolved
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))

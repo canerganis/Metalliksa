@@ -14,12 +14,11 @@ import time
 import physical_constants
 from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
 
-# Phase 6a structural step (a): R, F and the Celsius offset come from
-# physical_constants but keep the CODATA printed truncations used before the
-# migration (8.314462618, 96485.33212) so the output stays bit-identical. The
-# switch to the exact SI products is the separate value step (b).
-R_GAS = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol * K)
-F_FARADAY = physical_constants.TRUNCATED_FARADAY  # C / mol
+# Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
+# from physical_constants (they replaced the CODATA printed truncations
+# 8.314462618 / 96485.33212; relative change 1.8e-11 / 3.4e-11).
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J / (mol * K), exact
+F_FARADAY = physical_constants.FARADAY.value  # C / mol, exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 # Not in physical_constants: its CIAAW abridged Cl value is not registered and
 # would be 35.45, not the 35.453 used here, so this stays local until step (b).
@@ -1083,8 +1082,8 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             "constantsVersion": physical_constants.CONSTANTS_VERSION,
             "gasConstantR_J_molK": R_GAS,
             "faraday_C_mol": F_FARADAY,
-            "constantsNote": "CODATA printed truncations of R and F (pre-migration values); "
-                             "exact SI values are pending the Phase 6a value step.",
+            "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e (Phase 6a value step); "
+                             "they replaced the CODATA printed truncations 8.314462618 / 96485.33212.",
         },
     }
 

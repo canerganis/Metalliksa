@@ -53,37 +53,69 @@ class ExactConstantsTest(unittest.TestCase):
         self.assertLessEqual(abs(pc.FARADAY.value - product) / product, 1e-15)
         self.assertEqual(pc.FARADAY.unit, "C/mol")
 
-    def test_exact_minus_truncated_drift_is_pinned(self):
-        # tafel_corrosion_rate_solver, pourbaix_solver and calphad_solver use the CODATA
-        # printed truncations 8.314462618 and 96485.33212, not the exact products. A
-        # structural migration step that swaps in these records therefore CANNOT be
-        # bit-exact against the golden outputs; it is a (tiny) value change.
-        self.assertEqual(pc.TRUNCATED_GAS_CONSTANT_R, 8.314462618)
-        self.assertEqual(pc.TRUNCATED_FARADAY, 96485.33212)
-        d_r = pc.GAS_CONSTANT_R.value - pc.TRUNCATED_GAS_CONSTANT_R
-        d_f = pc.FARADAY.value - pc.TRUNCATED_FARADAY
-        self.assertNotEqual(d_r, 0.0)
-        self.assertNotEqual(d_f, 0.0)
-        self.assertAlmostEqual(d_r, 1.5324e-10, delta=1e-13)
-        self.assertAlmostEqual(d_f, 3.3100e-6, delta=1e-9)
-        self.assertAlmostEqual(d_r / pc.GAS_CONSTANT_R.value, 1.84e-11, delta=0.01e-11)
-        self.assertAlmostEqual(d_f / pc.FARADAY.value, 3.43e-11, delta=0.01e-11)
+    # The printings the migrated solvers used before Phase 6a design step (b).
+    OLD_PRINTINGS_R = (8.314462618, 8.31446, 8.314)
+    OLD_PRINTINGS_F = (96485.33212, 96485.332, 96485.33)
 
-    def test_solvers_still_use_the_truncated_values(self):
-        import pourbaix_solver
-        import tafel_corrosion_rate_solver as tafel
-        self.assertEqual(tafel.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.TRUNCATED_FARADAY)
-        # calphad_solver (Phase 6a tranche 2a structural migration) takes R from this
-        # module, still as the truncated value.
+    def test_exact_minus_old_printings_is_pinned(self):
+        # Design step (b) replaced these truncated/rounded printings with the exact
+        # products; the relative changes are the drift recorded in the value commits.
+        r, f = pc.GAS_CONSTANT_R.value, pc.FARADAY.value
+        expected_rel_r = (1.84e-11, 3.15e-7, 5.56e-5)
+        expected_rel_f = (3.43e-11, 1.28e-9, 2.2e-8)
+        for old, rel in zip(self.OLD_PRINTINGS_R, expected_rel_r):
+            self.assertAlmostEqual((r - old) / old / rel, 1.0, delta=0.01, msg=old)
+        for old, rel in zip(self.OLD_PRINTINGS_F, expected_rel_f):
+            self.assertAlmostEqual((f - old) / old / rel, 1.0, delta=0.01, msg=old)
+        self.assertAlmostEqual(r - 8.314462618, 1.5324e-10, delta=1e-13)
+        self.assertAlmostEqual(f - 96485.33212, 3.3100e-6, delta=1e-9)
+
+    def test_truncated_and_legacy_constants_are_gone(self):
+        for name in ("TRUNCATED_GAS_CONSTANT_R", "TRUNCATED_FARADAY", "LEGACY_GAS_CONSTANT_R_4SF"):
+            self.assertFalse(hasattr(pc, name), name)
+
+    def test_migrated_solvers_use_the_exact_values(self):
+        import battery_corrosion_eis_solver as battery
         import calphad_solver
-        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.TRUNCATED_GAS_CONSTANT_R)
-        # pourbaix_solver (Phase 6a structural migration) takes R/F from this module,
-        # still as the truncated values.
-        self.assertEqual(pourbaix_solver.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(pourbaix_solver.F_FARADAY, pc.TRUNCATED_FARADAY)
+        import icme_multiscale_pipeline_solver as icme
+        import kinetics_ttt_cct_solver as kinetics
+        import pourbaix_solver
+        import stochastic_uq_mmpds_solver as uq
+        import tafel_corrosion_rate_solver as tafel
+        r, f = pc.GAS_CONSTANT_R.value, pc.FARADAY.value
+        for module, r_name, f_name in ((tafel, "R_GAS", "FARADAY_C_PER_MOL"),
+                                       (pourbaix_solver, "R_GAS", "F_FARADAY"),
+                                       (calphad_solver, "GAS_CONSTANT_R", None),
+                                       (battery, "R_GAS", "F_FARADAY"),
+                                       (icme, "R_GAS", None),
+                                       (kinetics, "R_GAS", None),
+                                       (uq, "R_GAS", None)):
+            with self.subTest(module=module.__name__):
+                self.assertEqual(getattr(module, r_name), r)
+                if f_name:
+                    self.assertEqual(getattr(module, f_name), f)
         self.assertEqual(pourbaix_solver.calculate_nernst_slope(25.0),
-                         (2.302585093 * 8.314462618 * 298.15) / 96485.33212)
+                         (2.302585093 * r * 298.15) / f)
+
+    def test_ts_constants_mirror_the_exact_values(self):
+        # src/utils/physicalConstants.ts feeds the client duplicates of the migrated
+        # solvers (tafelParser, the Tafel fallback, pourbaixThermodynamics, CALPHAD engines).
+        import re
+        src = HERE.parent / "src"
+        text = (src / "utils" / "physicalConstants.ts").read_text(encoding="utf-8")
+        r = float(re.search(r"export const GAS_CONSTANT_R = ([0-9.]+);", text).group(1))
+        f = float(re.search(r"export const FARADAY_CONSTANT = ([0-9.]+);", text).group(1))
+        self.assertEqual(r, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(f, pc.FARADAY.value)
+        literal = re.compile(r"(?<![\d.])(8\.314\d*|96485(\.\d+)?)(?![\d.])")
+        for rel in ("utils/tafelParser.ts", "utils/pourbaixThermodynamics.ts",
+                    "physics/calphadGibbsEngine.ts", "physics/calphadMultiComponentSolver.ts"):
+            code = [ln for ln in (src / rel).read_text(encoding="utf-8").splitlines()
+                    if not ln.lstrip().startswith("//")]
+            self.assertEqual([ln for ln in code if literal.search(ln)], [], rel)
+        service = (src / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
+        self.assertIn("const rGas = GAS_CONSTANT_R;", service)
+        self.assertIn("const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;", service)
 
     def test_constant_metadata_fields(self):
         for c in (pc.AVOGADRO, pc.BOLTZMANN, pc.ELEMENTARY_CHARGE, pc.GAS_CONSTANT_R,
@@ -131,6 +163,23 @@ class AtomicWeightTest(unittest.TestCase):
         self.assertEqual(pc.atomic_weight("Sn"), 118.71)
         self.assertEqual(pc.atomic_weight_record("Sn").interval, (118.703, 118.717))
 
+    def test_step_b_added_elements(self):
+        # Design step (b): CIAAW 2021 abridged value and standard interval for the
+        # elements UI specimens send (Be, Sc, Pd, Pb) and common alloying additions.
+        expected = {
+            "Li": (6.94, (6.938, 6.997)), "Be": (9.0122, (9.0121826, 9.0121836)),
+            "Ca": (40.078, (40.074, 40.082)), "Sc": (44.956, (44.955903, 44.955911)),
+            "Pd": (106.42, (106.41, 106.43)), "Ag": (107.87, (107.8680, 107.8684)),
+            "Sb": (121.76, (121.759, 121.761)), "La": (138.91, (138.90540, 138.90554)),
+            "Ce": (140.12, (140.115, 140.117)), "Nd": (144.24, (144.239, 144.245)),
+            "Pb": (207.2, (206.14, 207.94)), "Bi": (208.98, (208.98039, 208.98041)),
+        }
+        for el, (value, interval) in expected.items():
+            with self.subTest(el=el):
+                self.assertEqual(pc.atomic_weight(el), value)
+                self.assertEqual(pc.atomic_weight_record(el).interval, interval)
+                self.assertEqual(pc.atomic_weight(el.upper()), value)
+
     def test_atomic_weight_metadata_fields(self):
         for symbol, rec in pc.STANDARD_ATOMIC_WEIGHTS.items():
             self.assertEqual(rec.source_type, "literature", symbol)
@@ -177,7 +226,8 @@ class AtomicWeightTest(unittest.TestCase):
         self.assertEqual(len(table), 28)
         for el, value in table.items():
             self.assertEqual(pc.atomic_weight(el), value, el)
-        self.assertEqual(calphad_solver.ATOMIC_WEIGHTS, table)
+            # Design step (b): calphad reads physical_constants directly.
+            self.assertEqual(calphad_solver._atomic_weight(el), value, el)
 
     def test_tafel_table_values_match_registry(self):
         # Snapshot of tafel ALLOY_LIBRARY at the pre-migration base revision.

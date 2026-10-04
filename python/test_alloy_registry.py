@@ -4,6 +4,7 @@ from unittest import mock
 
 import alloy_registry as reg
 import four_alloy_materials as fam
+import physical_constants as pc
 
 # Strings the UI sends today (src/ at 01eb3f0), mapped to the expected registry id.
 UI_ALIASES = {
@@ -163,9 +164,57 @@ class CopiedTableDriftTest(unittest.TestCase):
         for aid, src_name in reg._CORROSION_SOURCE_NAME.items():
             src = library[src_name]
             table = reg.REGISTRY[aid].domains[reg.DOMAIN_CORROSION]
+            self.assertEqual(set(table), set(src) - {"name", "atomic_weights"}, aid)
             for key, rec in table.items():
+                if key == "ew":
+                    # Design step (b): computed; the stored value is kept as a record only.
+                    self.assertEqual(reg.CORROSION_STORED_EW_BEFORE_STEP_B[aid], src["ew"], aid)
+                    continue
                 value = dict(rec.value) if key in ("composition", "valencies") else rec.value
                 self.assertEqual(value, src[key], f"{aid}.{key}")
+
+    def test_corrosion_ew_is_computed_with_the_astm_g102_formula(self):
+        # Design step (b): EW = 1 / sum(f_i n_i / W_i), CIAAW weights, 4 decimals; the
+        # stored solver values disagreed with it (e.g. in718 26.45 vs 24.7436).
+        # ASTM G102 practice: elements >= 1 % by mass, renormalised fractions.
+        expected = {"ss316l": 24.8205, "ss304": 25.1088, "steel1018": 27.9225, "ti6al4v": 11.8715,
+                    "al7075": 9.5583, "al6061": 9.0179, "cu_c110": 31.773, "in718": 25.0598,
+                    "az31b": 12.101}
+        stored = {"ss316l": 25.68, "ss304": 25.12, "steel1018": 27.92, "ti6al4v": 11.97,
+                  "al7075": 9.15, "al6061": 9.02, "cu_c110": 31.77, "in718": 26.45, "az31b": 12.28}
+        self.assertEqual(dict(reg.CORROSION_STORED_EW_BEFORE_STEP_B), stored)
+        for aid, ew in expected.items():
+            with self.subTest(aid=aid):
+                rec = reg.REGISTRY[aid].get("ew", reg.DOMAIN_CORROSION)
+                self.assertEqual(rec.value, ew)
+                self.assertEqual(rec.source_type, "computed")
+                self.assertEqual(rec.unit, "g/equivalent")
+                self.assertIn("CIAAW", rec.source_ref)
+                comp = reg.REGISTRY[aid].value("composition", reg.DOMAIN_CORROSION)
+                val = reg.REGISTRY[aid].value("valencies", reg.DOMAIN_CORROSION)
+                total = sum(comp.values())
+                major = {el: f / total for el, f in comp.items() if f / total >= 0.01}
+                norm = sum(major.values())
+                denom = sum((f / norm) * val[el] / pc.atomic_weight(el) for el, f in major.items())
+                self.assertEqual(rec.value, round(1.0 / denom, 4))
+        # The convention reproduces these stored values to their printed digits.
+        for aid in ("steel1018", "al6061", "cu_c110"):
+            self.assertEqual(round(reg.REGISTRY[aid].value("ew", reg.DOMAIN_CORROSION), 2), stored[aid], aid)
+        self.assertIsNone(reg.astm_g102_equivalent_weight({"Xx": 1.0}, {}, {}))
+
+    def test_g102_convention_threshold_and_renormalisation(self):
+        g = reg.astm_g102_equivalent_weight
+        fe, mn = pc.atomic_weight("Fe"), pc.atomic_weight("Mn")
+        weights = {"Fe": fe, "Mn": mn, "C": pc.atomic_weight("C")}
+        val = {"Fe": 2, "Mn": 2, "C": 4}
+        # Below 1 %: ignored; the rest renormalised (also for a sum below 1).
+        self.assertEqual(g({"Fe": 0.985, "Mn": 0.008, "C": 0.007}, val, weights), round(fe / 2, 4))
+        self.assertEqual(g({"Fe": 0.90}, val, weights), round(fe / 2, 4))
+        # wt% and mass fractions give the same result.
+        self.assertEqual(g({"Fe": 90.0, "Mn": 10.0}, val, weights), g({"Fe": 0.9, "Mn": 0.1}, val, weights))
+        # Exactly 1 % is counted.
+        with_mn = g({"Fe": 0.99, "Mn": 0.01}, val, weights)
+        self.assertEqual(with_mn, round(1.0 / (0.99 * 2 / fe + 0.01 * 2 / mn), 4))
 
 
 class MetadataTest(unittest.TestCase):

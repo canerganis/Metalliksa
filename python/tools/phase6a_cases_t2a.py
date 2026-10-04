@@ -83,8 +83,8 @@ _RAW_CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
             "elements": {"al": 88.5, "SI": 10.0, "mg": 0.5, "Fe": 1.0, "Xx": 0},
             "tMin": 400.0, "tMax": 750.0, "tStep": 20.0,
         },
-        # Unknown "Xx" uses the LEGACY 50.0 g/mol fallback, kept in step (a)
-        # (fix round p6a-fix2, B1); bit-identical to the pre-migration output.
+        # Unknown "Xx": the pre-migration code (golden) weighted it with 50.0 g/mol;
+        # design step (b) refuses it (UNKNOWN_ELEMENT), see EXPECTED_BEHAVIOUR_CHANGES.
         "edge_unknown_element_xx": {
             "name": "Unknown element", "unit": "wt_pct",
             "elements": {"Ni": 70.0, "Cr": 20.0, "Xx": 10.0},
@@ -135,6 +135,8 @@ CASES: Dict[str, Dict[str, Dict[str, Any]]] = _key_sorted(_RAW_CASES)
 # (solver, case) -> expected validation code after the structural migration.
 EXPECTED_BEHAVIOUR_CHANGES = {
     ("icme_multiscale_pipeline_solver", "edge_unknown_solute_zr"): "UNKNOWN_ELEMENT",
+    # Design step (b): "Xx" has no standard atomic weight (was the 50.0 g/mol stand-in).
+    ("calphad_solver", "edge_unknown_element_xx"): "UNKNOWN_ELEMENT",
 }
 
 

@@ -3,23 +3,9 @@ import assert from "node:assert/strict";
 import { pythonComputationService } from "../src/services/pythonComputationService";
 import type { TafelDataset } from "../src/types/tafel";
 
-// tafelPythonService imports src/utils/tafelParser.ts, which throws at module load
-// (pre-existing BUG 1, see tests/tafel-autofit.test.ts). Only that exact signature is
-// tolerated: the two executePythonTafelFit tests are then marked todo.
-type TafelServiceModule = typeof import("../src/utils/tafelPythonService");
-let tafelService: TafelServiceModule | undefined;
-let bug1: Error | undefined;
-try {
-  tafelService = await import("../src/utils/tafelPythonService");
-} catch (error) {
-  if (error instanceof Error && /Fabrication of Tafel/.test(error.message)) bug1 = error;
-  else throw error;
-}
-const tafelTodo = bug1 ? "BLOCKED by BUG 1: tafelParser.ts throws on import (createBenchmarkDataset)" : false;
-const executePythonTafelFit: TafelServiceModule["executePythonTafelFit"] = (...args) => {
-  if (!tafelService) throw bug1;
-  return tafelService.executePythonTafelFit(...args);
-};
+// tafelPythonService imports src/utils/tafelParser.ts, which threw at module load until
+// BUG 1 was fixed (Phase 6a step b); it is imported directly now.
+import { executePythonTafelFit } from "../src/utils/tafelPythonService";
 import {
   PythonValidationError,
   isPythonValidationError,
@@ -161,7 +147,7 @@ const DATASET: TafelDataset = {
   },
 };
 
-test("executePythonTafelFit propagates a 422 instead of the local autoFit", { todo: tafelTodo }, async () => {
+test("executePythonTafelFit propagates a 422 instead of the local autoFit", async () => {
   stubFetch(422, TAFEL_ENVELOPE);
   await assert.rejects(executePythonTafelFit(DATASET, { alloyId: "duplex2205" }), (err: unknown) => {
     assert.ok(isPythonValidationError(err));
@@ -170,12 +156,45 @@ test("executePythonTafelFit propagates a 422 instead of the local autoFit", { to
   });
 });
 
-test("executePythonTafelFit still falls back to the local fit for 5xx and network errors", { todo: tafelTodo }, async () => {
+test("executePythonTafelFit still falls back to the local fit for 5xx and network errors", async () => {
   stubFetch(500, { error: "boom" });
   let res = await executePythonTafelFit(DATASET, { alloyId: "steel-316l" });
   assert.equal(res.isPythonEngine, false);
   assert.equal(res.pythonVersion, "Client Engine (Fallback)");
   stubNetworkError();
   res = await executePythonTafelFit(DATASET, { alloyId: "steel-316l" });
+  assert.equal(res.isPythonEngine, false);
+});
+
+const CALPHAD_ENVELOPE = {
+  success: false,
+  error: {
+    code: "UNKNOWN_ELEMENT",
+    field: "elements.RE",
+    message: "'RE' is ambiguous: it usually means rare earths (a mixture), not rhenium.",
+    detail: { reason: "ambiguous-rare-earth-label" },
+  },
+  errorKind: "validation",
+};
+const WE43 = { name: "WE43", elements: { Mg: 92.5, Y: 4.0, RE: 3.3, Zr: 0.45 }, unit: "wt_pct" } as any;
+const NI_AL = { name: "Ni-Al", elements: { Ni: 80, Al: 10, Cr: 10 }, unit: "wt_pct" } as any;
+
+test("solveCalphadEquilibrium throws the envelope message on 422 instead of the client solver", async () => {
+  stubFetch(422, CALPHAD_ENVELOPE);
+  await assert.rejects(pythonComputationService.solveCalphadEquilibrium(WE43, 500, 1450, 25, true), (err: unknown) => {
+    assert.ok(isPythonValidationError(err));
+    assert.match((err as Error).message, /^CALPHAD: 'RE' is ambiguous/);
+    assert.equal((err as PythonValidationError).field, "elements.RE");
+    return true;
+  });
+});
+
+test("solveCalphadEquilibrium still falls back to the client solver for 5xx and network errors", async () => {
+  stubFetch(500, { error: "boom" });
+  let res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
+  assert.equal(res.isPythonEngine, false);
+  assert.equal(res.engine, "MetalliX-Client-TS-Solver");
+  stubNetworkError();
+  res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
   assert.equal(res.isPythonEngine, false);
 });
