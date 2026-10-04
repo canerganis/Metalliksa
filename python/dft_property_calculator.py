@@ -237,6 +237,8 @@ AUTHENTIC_ELASTIC_BENCHMARKS = {
 
 
 _PIVOT_FLOOR = 1e-12
+# Relative eigenvalue floor for "all eigenvalues > 0" (Born positive definiteness).
+EIGENVALUE_POSITIVE_RTOL = 1e-10
 
 
 def _min_partial_pivot_exceeds_floor(c: np.ndarray) -> bool:
@@ -396,7 +398,10 @@ def evaluate_born_stability_criteria(c: list[list[float]], crystal_system: str) 
     # 1. Eigenvalue condition (universal necessary and sufficient: all eigenvalues > 0)
     eigenvalues = jacobi_eigenvalues_symmetric(c)
     min_eig = min(eigenvalues)
-    all_eig_positive = min_eig > 0.0
+    # Positive definite only above a relative floor: an exactly singular C_ij (e.g.
+    # c11 == c12) has a zero eigenvalue that LAPACK returns as +-1e-14-ish rounding
+    # noise, which must not count as positive (the former Jacobi loop returned 0.0).
+    all_eig_positive = min_eig > EIGENVALUE_POSITIVE_RTOL * max(abs(e) for e in eigenvalues)
     
     # Criteria evaluation by crystal symmetry
     if "cubic" in sys_lower or "fcc" in sys_lower or "bcc" in sys_lower:

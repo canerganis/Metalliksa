@@ -111,8 +111,9 @@ class GoldenFilesTest(unittest.TestCase):
     def test_case_counts(self):
         self.assertEqual(tuple(cases.CASES), cases.SOLVERS)
         self.assertEqual(set(PARITY_MODE), set(cases.SOLVERS))
-        for solver in cases.SOLVERS:
-            self.assertEqual(len(cases.CASES[solver]), 5, solver)
+        # dft gained tetragonal_c11_eq_c12_marginal in the review fix round
+        expected = {"cnls_fitting_solver": 5, "xrd_peak_deconvolution": 5, "dft_property_calculator": 6}
+        self.assertEqual({s: len(cases.CASES[s]) for s in cases.SOLVERS}, expected)
 
     def test_golden_files_hold_no_volatile_keys(self):
         for solver, case in iter_cases():
@@ -468,6 +469,73 @@ class DftKernelParityTest(unittest.TestCase):
                                                     dft.jacobi_eigenvalues_symmetric(c)), REL_TOL)
                 self.assertTrue(all(type(v) is float for row in new_inv for v in row))
         self.assertEqual(fallbacks, 3)
+
+    @staticmethod
+    def _marginal_payloads(count=300, seed=7):
+        """Tensors on the stability boundary (c11 == c12, or c12 == -c11 for the
+        hexagonal family) plus ordinary ones, over every crystal-system branch."""
+        import random
+        rng = random.Random(seed)
+        out = []
+        while len(out) < count:
+            system = rng.choice(["Cubic", "Hexagonal", "Tetragonal", "Orthorhombic", "Trigonal", "Isotropic"])
+            c11 = round(rng.uniform(50, 400), 1)
+            kind = rng.choice(["equal", "negative", "random"])
+            if kind == "negative" and system not in ("Hexagonal", "Trigonal"):
+                continue
+            c12 = c11 if kind == "equal" else (-c11 if kind == "negative" else round(rng.uniform(10, c11), 1))
+            out.append({"formula": "Zq", "crystal_system": system, "custom_c_ij": {
+                "c11": c11, "c12": c12, "c13": round(rng.uniform(10, 200), 1),
+                "c33": round(rng.uniform(50, 400), 1), "c44": round(rng.uniform(10, 150), 1)}})
+        return out
+
+    @staticmethod
+    def _exactly_positive_definite(c):
+        """Sylvester's criterion in exact rational arithmetic on the float matrix."""
+        from fractions import Fraction
+        a = [[Fraction(v) for v in row] for row in c]
+        n = len(a)
+        for k in range(n):  # Gaussian elimination without pivoting = leading minors ratio
+            if a[k][k] <= 0:
+                return False
+            for i in range(k + 1, n):
+                f = a[i][k] / a[k][k]
+                for j in range(k, n):
+                    a[i][j] -= f * a[k][j]
+        return True
+
+    def _verdicts(self, module):
+        """(payload, module verdict, exact verdict) with the exact eigenvalue test and
+        the module's own float Born checks."""
+        out = []
+        for payload in self._marginal_payloads():
+            born = module.calculate_dft_properties(payload)["bornStability"]
+            c = module.build_stiffness_matrix(payload["crystal_system"], 0, 0, "Zq", payload["custom_c_ij"])[0]
+            exact = self._exactly_positive_definite(c) and all(chk["passed"] for chk in born["criteriaChecks"])
+            out.append((payload, born["isMechanicallyStable"], exact))
+        return out
+
+    def test_stability_verdict_is_exact_on_marginal_tensors(self):
+        # A zero eigenvalue is not positive definite: eigvalsh rounding noise must not
+        # report "stable". (The faa6684 Jacobi loop got this wrong on some tensors too,
+        # see test_old_jacobi_misjudged_marginal_tensors.)
+        import dft_property_calculator as dft
+        wrong = [p for p, verdict, exact in self._verdicts(dft) if verdict != exact]
+        self.assertEqual(wrong, [])
+
+    def test_old_jacobi_misjudged_marginal_tensors(self):
+        # Documentation of the old behaviour, not a requirement on the new code: the
+        # faa6684 loop can leave +O(1e-15) noise on an exactly singular tensor and call
+        # it stable (1 of these 300 on the Windows capture machine; the count depends
+        # on the platform libm, so only its character is asserted here).
+        wrong = [p for p, verdict, exact in self._verdicts(blob_module("dft_property_calculator")) if verdict != exact]
+        self.assertTrue(all(p["custom_c_ij"]["c11"] == p["custom_c_ij"]["c12"] for p in wrong), wrong)
+
+    def test_mutation_zero_eigenvalue_tolerance_is_detected(self):
+        import dft_property_calculator as dft
+        with patch.object(dft, "EIGENVALUE_POSITIVE_RTOL", 0.0):
+            wrong = [p for p, verdict, exact in self._verdicts(dft) if verdict != exact]
+        self.assertGreater(len(wrong), 0)
 
     def test_common_path_does_not_import_scipy(self):
         # scipy.linalg (exact LU pivots) loads only when the det certificate fails.

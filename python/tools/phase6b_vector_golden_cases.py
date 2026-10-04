@@ -197,6 +197,14 @@ _DFT = {
         "formula": "Custom Singular", "crystal_system": "Cubic", "density": 7.0, "nsites": 1,
         "molar_mass": 50.0, "custom_c_ij": {"c11": 150.0, "c12": 150.0, "c44": 60.0},
     },
+    # Marginal tensor (review fix): c11 == c12 gives an exactly zero eigenvalue. The
+    # faa6684 Jacobi loop returned 0.0 (unstable); LAPACK eigvalsh returns rounding
+    # noise (+1.5e-13 on the capture machine), which must still be "not positive".
+    # The tetragonal branch has no Born checks of its own, so the eigenvalue decides.
+    "tetragonal_c11_eq_c12_marginal": {
+        "formula": "Custom Marginal", "crystal_system": "Tetragonal", "density": 6.0, "nsites": 2,
+        "molar_mass": 60.0, "custom_c_ij": {"c11": 210.0, "c12": 210.0, "c13": 80.0, "c33": 220.0, "c44": 60.0},
+    },
     # Silent defaults today: substring benchmark match, unknown crystal system, clamps.
     "edge_unknown_negative": {
         "formula": "Unobtainium-X", "crystal_system": "Klingon", "k_vrh": -50.0, "g_vrh": 0,
