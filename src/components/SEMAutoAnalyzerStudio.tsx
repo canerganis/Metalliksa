@@ -53,6 +53,7 @@ import {
   pixelsToMicrons,
   rgbToLuminance,
   segmentLengthPx,
+  SEM_HARDNESS_UNAVAILABLE_NOTE,
 } from "../utils/semAnalysis";
 import type { AutomatedCVResults, LegendDetectionData } from "../utils/semAnalysis";
 
@@ -749,7 +750,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
       body: [
         ["Inferred Yield Strength (Rp0.2)", `${cvResults?.estimatedYieldStrengthMpa || 1150} MPa`, "Hall-Petch Calculation (σ₀ + k_y·d⁻¹/²)"],
         ["Inferred Tensile Strength (Rm)", `${cvResults?.estimatedTensileStrengthMpa || 1380} MPa`, "ASTM E8/E8M"],
-        ["Vickers Hardness (HV)", `${cvResults?.estimatedHardnessHv || 420} HV`, "ASTM E384"],
+        ["Vickers Hardness (HV)", cvResults?.estimatedHardnessHv != null ? `${cvResults.estimatedHardnessHv} HV` : "Unavailable", cvResults?.estimatedHardnessNote ?? SEM_HARDNESS_UNAVAILABLE_NOTE],
         ["ASTM E562 95% Confidence Interval", `± ${cvResults?.pointCountStats.confidenceInterval95Pct || 1.1}%`, "Relative Accuracy: " + (cvResults?.pointCountStats.relativeAccuracyPct || 3.8) + "%"],
       ],
       theme: "grid",
@@ -1583,7 +1584,7 @@ export const SEMAutoAnalyzerStudio: React.FC = () => {
                   {cvResults?.estimatedYieldStrengthMpa ?? 1080} MPa
                 </div>
                 <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                  Hardness: ~{cvResults?.estimatedHardnessHv ?? 420} HV
+                  {cvResults?.estimatedHardnessHv != null ? `Hardness: ~${cvResults.estimatedHardnessHv} HV (estimate)` : "Hardness: Unavailable (no verified relation)"}
                 </div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import {
   pixelsToMicrons,
   rgbToLuminance,
   segmentLengthPx,
+  SEM_HARDNESS_UNAVAILABLE_NOTE,
   type SemAnalysisParams,
 } from "../src/utils/semAnalysis";
 
@@ -102,11 +103,14 @@ test("Hall-Petch style strength estimates follow the documented heuristic", () =
   // increment = round(180 / sqrt(5.56)) = 76; base 750 MPa (non-LPBF)
   assert.equal(r.estimatedYieldStrengthMpa, 826);
   assert.equal(r.estimatedTensileStrengthMpa, 1033); // round(826 * 1.25) = round(1032.5)
-  assert.equal(r.estimatedHardnessHv, 333); // round(1033 / 3.1)
+  // HV was round(UTS / 3.1) = 333 (unsourced, any alloy); now unavailable with the reason.
+  assert.equal(r.estimatedHardnessHv, null);
+  assert.equal(r.estimatedHardnessNote, SEM_HARDNESS_UNAVAILABLE_NOTE);
+  assert.match(r.estimatedHardnessNote, /^Unavailable: no verified hardness relation/);
   const lpbf = run(stripes, { selectedSample: lpbfSample }).results;
   assert.equal(lpbf.estimatedYieldStrengthMpa, 1026); // base 950 for LPBF
   assert.equal(lpbf.estimatedTensileStrengthMpa, 1283);
-  assert.equal(lpbf.estimatedHardnessHv, 414);
+  assert.equal(lpbf.estimatedHardnessHv, null); // was 414
 });
 
 test("calibration scales lengths and areas: doubling um/px doubles l_bar and lowers G by 2", () => {

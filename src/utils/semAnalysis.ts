@@ -4,6 +4,9 @@ import type { MicrographSample } from "../types";
 // Image-derived estimates (ASTM E2109 porosity, E112 line-intercept grain size, E562 point count);
 // heuristic screening values, not certified metallography.
 
+export const SEM_HARDNESS_UNAVAILABLE_NOTE =
+  "Unavailable: no verified hardness relation for an inferred strength of an unspecified alloy (the steel regression needs a known non-austenitic hypoeutectoid steel)";
+
 export interface SEMDefectBlob {
   id: number;
   x: number;
@@ -72,7 +75,9 @@ export interface AutomatedCVResults {
   inferredCoolingRateKs: number; // K/s
   estimatedYieldStrengthMpa: number;
   estimatedTensileStrengthMpa: number;
-  estimatedHardnessHv: number;
+  /** Always null: no defensible HV relation for an alloy-agnostic inferred strength (see SEM_HARDNESS_UNAVAILABLE_NOTE). */
+  estimatedHardnessHv: number | null;
+  estimatedHardnessNote: string;
   defects: SEMDefectBlob[];
   scaleMicronsPerPixel: number;
   totalAreaUm2: number;
@@ -484,7 +489,11 @@ export function analyzeSemImage(params: SemAnalysisParams): SemAnalysisOutput {
   const hpIncrement = Math.round(180 / Math.sqrt(Math.max(0.1, meanInterceptLengthUm)));
   const estimatedYieldStrengthMpa = baseYield + hpIncrement;
   const estimatedTensileStrengthMpa = Math.round(estimatedYieldStrengthMpa * 1.25);
-  const estimatedHardnessHv = Math.round(estimatedTensileStrengthMpa / 3.1);
+  // No HV from the inferred strength. The old HV = UTS/3.1 had no source; the verified steel regression (Pavlina &
+  // Van Tyne 2008) needs a known non-austenitic hypoeutectoid steel, and the sample record carries no composition
+  // while the Hall-Petch base yield above is not alloy-specific.
+  const estimatedHardnessHv: number | null = null;
+  const estimatedHardnessNote = SEM_HARDNESS_UNAVAILABLE_NOTE;
 
   const results: AutomatedCVResults = {
     totalPorosityPct,
@@ -507,6 +516,7 @@ export function analyzeSemImage(params: SemAnalysisParams): SemAnalysisOutput {
     estimatedYieldStrengthMpa,
     estimatedTensileStrengthMpa,
     estimatedHardnessHv,
+    estimatedHardnessNote,
     defects,
     scaleMicronsPerPixel,
     totalAreaUm2: Number(totalAreaUm2.toFixed(1)),
