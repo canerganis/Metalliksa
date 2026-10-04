@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ModuleNav, navTabStop } from "../src/components/ModuleNav";
+import { ModuleNav, navTabStop, syncNavFocus } from "../src/components/ModuleNav";
 import { MODULES } from "../src/data/workspaces";
 
 const mods = [
@@ -20,6 +20,15 @@ test("navTabStop: remembered entry only under the module it was focused with; el
   // A filter that hides the remembered entry and the active module falls back to the first visible one.
   assert.equal(navTabStop(mods.slice(2), { key: "a", tab: "a" }, "a"), "c");
   assert.equal(navTabStop([], { key: "", tab: "a" }, "a"), undefined);
+});
+
+test("syncNavFocus: A -> B -> A (back button) does not revive the entry remembered under A", () => {
+  let focus = { key: "c", tab: "a" }; // arrowed to c while a was active
+  assert.equal(syncNavFocus(focus, "a"), focus, "unchanged while a stays active (same object: no re-render)");
+  focus = syncNavFocus(focus, "b"); // hash change to b
+  assert.deepEqual(focus, { key: "", tab: "b" });
+  focus = syncNavFocus(focus, "a"); // back to a
+  assert.equal(navTabStop(mods, focus, "a"), "a", "the stop is the aria-current entry, not c");
 });
 
 test("rendered navigation has exactly one Tab stop, on the aria-current module", () => {

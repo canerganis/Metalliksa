@@ -12,6 +12,11 @@ export function navTabStop(modules: { id: string; workspace: string }[], focus: 
   return [focus.tab === activeTab ? focus.key : '', activeTab].find(shown) ?? modules[0]?.id;
 }
 
+/** Clears the remembered entry once the active module differs from the one it was focused under. */
+export function syncNavFocus(focus: { key: string; tab: string }, activeTab: string): { key: string; tab: string } {
+  return focus.tab === activeTab ? focus : { key: '', tab: activeTab };
+}
+
 /**
  * Sidebar module navigation as one Tab stop (roving tabindex). Its own component so that moving focus
  * between entries re-renders only the navigation, not App and the mounted module views.
@@ -21,8 +26,12 @@ export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
 }) {
   // The remembered entry is tied to the active module it was focused under: any navigation (hash change,
   // back button, Next link, navigate event) moves the Tab stop back to the aria-current entry.
-  const [focus, setFocus] = useState({ key: '', tab: activeTab });
-  const stop = navTabStop(modules, focus, activeTab);
+  const [focus, setFocus] = useState<{ key: string; tab: string }>({ key: '', tab: activeTab });
+  // Forget the remembered entry as soon as the active module changes, so going A -> B -> A (back button)
+  // does not revive an entry remembered under A. Render-time adjustment: re-renders only this component.
+  const synced = syncNavFocus(focus, activeTab);
+  if (synced !== focus) setFocus(synced);
+  const stop = navTabStop(modules, synced, activeTab);
   // Module entries are described by the hint and by their own description (hidden text below), so the
   // description a mouse user gets from `title` is not replaced by the hint for screen-reader users.
   const item = (key: string, described = '') => ({ tabIndex: key === stop ? 0 : -1, onFocus: () => setFocus({ key, tab: activeTab }), 'aria-describedby': 'module-nav-hint' + described });
