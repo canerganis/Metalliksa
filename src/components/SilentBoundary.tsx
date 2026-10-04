@@ -5,14 +5,15 @@ import React from "react";
  * chunk after a rebuild) or it throws, render nothing instead of unmounting the whole App.
  * There is no root boundary above App.
  */
-export class SilentBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+export class SilentBoundary extends React.Component<{ children: React.ReactNode; fallback?: React.ReactNode }, { failed: boolean }> {
   // Same pattern as ModuleBoundary: the project does not ship @types/react class members.
-  declare props: { children: React.ReactNode };
+  declare props: { children: React.ReactNode; fallback?: React.ReactNode };
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
+  /** `fallback` (default: nothing) replaces the children after a failure; remount with a new `key` to retry. */
   render() {
-    return this.state.failed ? null : this.props.children;
+    return this.state.failed ? (this.props.fallback ?? null) : this.props.children;
   }
 }

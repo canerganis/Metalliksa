@@ -33,6 +33,9 @@ export const useLpbfEngineeringStore = create<LpbfEngineeringState>(() => ({
 }));
 
 export const LPBF_ENGINEERING_JOB_STORAGE_KEY = "metalliksa.lpbf.engineering.job.v2";
+/** Per-viewer convenience: the thermal backend select only. Results and evidence are never stored here. */
+export const LPBF_BACKEND_PREFERENCE_KEY = "metalliksa.lpbf.thermal.backend.v1";
+const BACKENDS: SimulationInput["backend"][] = ["auto", "reference", "openfoam-thermal"];
 
 /** Restore evidence at app startup, including direct report/comparison routes. */
 export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem" | "setItem">): () => void {
@@ -48,6 +51,13 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
       saved = {id:value.id, signature:typeof value.signature === "string" ? value.signature : "", cacheHit:typeof value.cacheHit === "boolean" ? value.cacheHit : undefined, input:validInput ? input : undefined};
     }
   } catch { /* Invalid or disabled storage must not block a new simulation. */ }
+  try {
+    // Remembered backend select (unknown values ignored), restored when App starts this persistence (an App effect,
+    // so after App's first render). Views and the report read the store reactively and follow the restored value.
+    // A job restored below keeps its executed backend.
+    const backend = storage?.getItem(LPBF_BACKEND_PREFERENCE_KEY) as SimulationInput["backend"];
+    if (backend && BACKENDS.includes(backend) && backend !== useLpbfEngineeringStore.getState().settings.backend) useLpbfEngineeringStore.setState(s => ({settings: {...s.settings, backend}}));
+  } catch { /* Disabled storage: nothing is remembered. */ }
   const persist = (state: LpbfEngineeringState) => {
     if (!state.job) return;
     try {
@@ -55,6 +65,7 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
     } catch { /* The server job and in-memory evidence remain available. */ }
   };
   const unsubscribe = useLpbfEngineeringStore.subscribe((state, previous) => {
+    if (state.settings.backend !== previous.settings.backend && state.settings.backend) try { storage?.setItem(LPBF_BACKEND_PREFERENCE_KEY, state.settings.backend); } catch { /* Still applies for this page view. */ }
     if (state.job !== previous.job || state.submittedInput !== previous.submittedInput || state.submittedSignature !== previous.submittedSignature || state.busy) superseded = true;
     if (state.job !== previous.job || state.submittedInput !== previous.submittedInput || state.submittedSignature !== previous.submittedSignature) persist(state);
   });
