@@ -47,7 +47,7 @@ Output fields (no status key, so the output carries no evidence status): `status
 - Oracle: present, `python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts`
 - Oracle scope: It checks sampling and energy bookkeeping on a flat surface only.
 - Oracle in CI: Oracle not run in CI (requires Warp/GPU stack).
-- Note: Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack).
+- Note: Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is analytic: it compares the Monte Carlo result with the Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It checks sampling and energy bookkeeping on a flat surface only, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack).
 
 ## Validity domain
 
@@ -62,6 +62,7 @@ Background work: none; resources: raf, three, fetch.
 - The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter 40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; the contract records the authority's ranges.
 - Aborting the HTTP request discards a stale response but does not cancel the worker computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).
 - No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption).
+- python/lpbf_keyhole_raytracing.py imports warp (NVIDIA Warp) at module level: without Warp on the worker interpreter the operation fails; there is no non-Warp path.
 
 ## Source references
 

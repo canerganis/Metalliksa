@@ -59,6 +59,12 @@ class KeyholeContractScaffold(ContractScaffold, unittest.TestCase):
         self.assertEqual(fields["device"].enum, authority_devices())
         self.assertEqual(fields["device"].default, "cpu")
 
+    def test_warp_hard_import_is_recorded(self):
+        import module_registry as mr
+        self.assertIn("warp", mr._top_level_imports(SOLVER))
+        self.assertTrue(any("imports warp" in note and "no non-Warp path" in note
+                            for note in self.contract.legacy_notes))
+
     def test_transport_status_values_match_the_solver_return(self):
         tree = ast.parse(SOLVER.read_text(encoding="utf-8"))
         values = {node.values[i].value for node in ast.walk(tree) if isinstance(node, ast.Dict)

@@ -570,6 +570,21 @@ class ContractedRegistryTests(unittest.TestCase):
             if contract.migration_state == "legacy":
                 self.assertEqual(contract.seed_derived, mc.SEED_TEXT_FIELDS, contract.id)
 
+    def test_pilot_units_and_wording_are_consistent(self):
+        # One symbol per unit: µm (not um/micron), degC (not °C) for temperatures with an offset.
+        units = {f.unit for c in self.contracted.values() for op in c.operations for f in op.input if f.unit}
+        self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%"})
+        texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
+        texts += [n for c in self.contracted.values() for n in c.legacy_notes]
+        texts += [c.evidence.note for c in self.contracted.values()]
+        for text in texts:
+            with self.subTest(text=text[:40]):
+                self.assertNotRegex(text, r"\d\s?um\b|°C|micron")
+                self.assertNotIn("The oracle is numerical", text)
+        mc_samples = next(f for f in self.contracted["uq-lab"].operations[0].input if f.key == "mcSamples")
+        self.assertIn("declares [500, 10000]", mc_samples.note)
+        self.assertTrue(any(n.startswith("warm: true is the best case") for n in self.contracted["uq-lab"].legacy_notes))
+
     def test_pilot_authorities_match_the_legacy_binding(self):
         keyhole = self.contracted["keyhole-raytracing"].operations[0]
         self.assertEqual((keyhole.method, keyhole.route, keyhole.authority.worker_method, keyhole.authority.timeout_ms),

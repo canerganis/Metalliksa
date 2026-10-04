@@ -334,14 +334,19 @@ _KEYHOLE_OUTPUT = OutputSchema(
 # does not install; test_module_contract checks this note against the oracle's imports.
 _KEYHOLE_ORACLE_CI_NOTE = "Oracle not run in CI (requires Warp/GPU stack)."
 
+# Checked against the solver's top-level imports by test_contract_keyhole_raytracing.
+_KEYHOLE_WARP_NOTE = ("python/lpbf_keyhole_raytracing.py imports warp (NVIDIA Warp) at module level: without "
+                      "Warp on the worker interpreter the operation fails; there is no non-Warp path.")
+
 _KEYHOLE_EVIDENCE_NOTE = (
     "Emits no evidence status: the output has no status key ('status' is the transport value "
     "'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with "
     "an empirical angular absorption law, no material optical data and no experimental comparison "
-    "(python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an "
-    "independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in "
-    "python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, "
-    "and does not raise the ceiling. " + _KEYHOLE_ORACLE_CI_NOTE
+    "(python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is analytic: it compares "
+    "the Monte Carlo result with the Gaussian square-aperture integral and the flat-surface "
+    "normal-incidence fraction in python/test_keyhole_contract.py. It checks sampling and energy "
+    "bookkeeping on a flat surface only, not the physics, and does not raise the ceiling. "
+    + _KEYHOLE_ORACLE_CI_NOTE
 )
 
 _UQ_FIELDS = (
@@ -369,7 +374,8 @@ _UQ_FIELDS = (
     _num("specMinUTS_MPa", "Specification minimum UTS", "MPa", "stress", 1350.0),
     _num("specMinElongation_pct", "Specification minimum elongation", "%", "strain", 12.0),
     _num("mcSamples", "Sample count", "1", "count", 2500, 500, 10000, integer=True,
-         note="The authority clamps values outside [500, 10000] instead of rejecting them; the contract rejects."),
+         note="The authority clamps values outside [500, 10000] instead of rejecting them; the contract "
+              "declares [500, 10000] as its hard range."),
     _choice("samplingMethod", "Sampling method", "sampling-method", ("sobol_qmc",), "sobol_qmc",
             note="The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."),
     InputField(key="scramble", label="Random digital shift", unit=None, quantity_kind="flag", min=None, max=None,
@@ -393,6 +399,11 @@ _UQ_EVIDENCE_NOTE = (
     "cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon "
     "evidence or allowables."
 )
+
+_UQ_WARM_NOTE = ("warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver "
+                 "(WARM_MODULE_NAMES). When the IPC daemon is unreachable, server/processOrchestrator.ts "
+                 "falls back to a cold ad-hoc spawn; each attempt (socket, HTTP, spawn) gets the 25000 ms "
+                 "timeout separately, so the total wait can exceed it.")
 
 _PILOT_FORBIDDEN = FORBIDDEN_CLAIM_KEYS  # every claim key stays forbidden
 
@@ -425,6 +436,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).",
                       "No validity domain is declared: the module states no source-backed applicability range "
                       "(prescribed cavity, empirical absorption).",
+                      _KEYHOLE_WARP_NOTE,
                   ),
                   # Content-anchored: symbols, or line ranges that must still contain the quoted text.
                   sources=(
@@ -464,6 +476,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "an operation because the code declares no route or deadline for it.",
                       "No validity domain is declared: no source-backed applicability range exists for the "
                       "strengthening model or the input distributions.",
+                      _UQ_WARM_NOTE,
                   ),
                   # Content-anchored: symbols, or line ranges that must still contain the quoted text.
                   # pythonComputationService.ts is anchored by symbol because other lanes delete lines there.
@@ -475,6 +488,8 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
                       "python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL",
                       "routes/physics.ts::handlePythonDispatch",
+                      "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+                      "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
                       "routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py",
                       "src/components/UQLab.tsx::UQLab",
                       "src/components/UQLab.tsx::runQMCSolver",
@@ -583,7 +598,8 @@ def _ts_symbol_problem(text: str, symbol: str) -> str:
     owner, _, member = symbol.partition(".")
     name = member or owner
     declaration = re.compile(
-        rf"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\s*\*?\s*|class\s+|const\s+|let\s+|var\s+)?"
+        rf"^\s*(?:export\s+)?(?:default\s+)?(?:(?:public|private|protected|static|readonly)\s+)*(?:async\s+)?"
+        rf"(?:function\s*\*?\s*|class\s+|const\s+|let\s+|var\s+)?"
         rf"{re.escape(name)}\s*[(<=:]", re.MULTILINE)
     if not declaration.search(text):
         return f"{name} is not declared"

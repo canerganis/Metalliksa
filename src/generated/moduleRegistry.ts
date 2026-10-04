@@ -1724,7 +1724,7 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack)."
+        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is analytic: it compares the Monte Carlo result with the Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It checks sampling and energy bookkeeping on a flat surface only, not the physics, and does not raise the ceiling. Oracle not run in CI (requires Warp/GPU stack)."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -1748,7 +1748,8 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter 40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; the contract records the authority's ranges.",
         "Aborting the HTTP request discards a stale response but does not cancel the worker computation (comment in the effect cleanup of src/components/KeyholeRaytracingLab.tsx).",
-        "No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption)."
+        "No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption).",
+        "python/lpbf_keyhole_raytracing.py imports warp (NVIDIA Warp) at module level: without Warp on the worker interpreter the operation fails; there is no non-Warp path."
       ],
       "sourceRefs": [
         "python/lpbf_keyhole_raytracing.py:1-5#Seeded optics on a prescribed cavity",
@@ -3045,7 +3046,7 @@ export const MODULE_REGISTRY = {
               "default": 2500,
               "required": false,
               "enum": [],
-              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract rejects."
+              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range."
             },
             {
               "key": "samplingMethod",
@@ -3157,7 +3158,8 @@ export const MODULE_REGISTRY = {
         "More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.",
         "The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).",
         "Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as an operation because the code declares no route or deadline for it.",
-        "No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions."
+        "No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions.",
+        "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver (WARM_MODULE_NAMES). When the IPC daemon is unreachable, server/processOrchestrator.ts falls back to a cold ad-hoc spawn; each attempt (socket, HTTP, spawn) gets the 25000 ms timeout separately, so the total wait can exceed it."
       ],
       "sourceRefs": [
         "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
@@ -3167,6 +3169,8 @@ export const MODULE_REGISTRY = {
         "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
         "python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL",
         "routes/physics.ts::handlePythonDispatch",
+        "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
+        "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
         "routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py",
         "src/components/UQLab.tsx::UQLab",
         "src/components/UQLab.tsx::runQMCSolver",

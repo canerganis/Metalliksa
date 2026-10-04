@@ -32,7 +32,7 @@ Authority: python-ipc `python/stochastic_uq_mmpds_solver.py`; timeout 25000 ms; 
 | `specMinYield_MPa` | Specification minimum yield strength | number | MPa | — | — | — | 1100.0 | — |
 | `specMinUTS_MPa` | Specification minimum UTS | number | MPa | — | — | — | 1350.0 | — |
 | `specMinElongation_pct` | Specification minimum elongation | number | % | — | — | — | 12.0 | — |
-| `mcSamples` | Sample count | integer | 1 | 500 | 10000 | 1 | 2500 | The authority clamps values outside [500, 10000] instead of rejecting them; the contract rejects. |
+| `mcSamples` | Sample count | integer | 1 | 500 | 10000 | 1 | 2500 | The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range. |
 | `samplingMethod` | Sampling method | enum ['sobol_qmc'] | — | — | — | — | sobol_qmc | The authority rejects 'pseudo_mc' with a ValueError; the view still offers it. |
 | `scramble` | Random digital shift | boolean | — | — | — | — | true | The authority coerces with bool(); the contract accepts only booleans. |
 | `seed` | Random seed | integer | 1 | — | — | 1 | 42 | No bound is enforced (int() conversion). |
@@ -69,6 +69,7 @@ Background work: none; resources: fetch.
 - The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).
 - Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as an operation because the code declares no route or deadline for it.
 - No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions.
+- warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver (WARM_MODULE_NAMES). When the IPC daemon is unreachable, server/processOrchestrator.ts falls back to a cold ad-hoc spawn; each attempt (socket, HTTP, spawn) gets the 25000 ms timeout separately, so the total wait can exceed it.
 
 ## Source references
 
@@ -79,6 +80,8 @@ Background work: none; resources: fetch.
 - `python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants`
 - `python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL`
 - `routes/physics.ts::handlePythonDispatch`
+- `python/persistent_ipc_service.py::WARM_MODULE_NAMES`
+- `server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute`
 - `routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py`
 - `src/components/UQLab.tsx::UQLab`
 - `src/components/UQLab.tsx::runQMCSolver`
