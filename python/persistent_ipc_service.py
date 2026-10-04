@@ -77,15 +77,27 @@ WARM_MODULE_NAMES = [
     "engine_dispatcher",
 ]
 
-# Scripts the service may execute: the warm modules plus the scripts that routes/*.ts
-# dispatch through runPythonScript without keeping them warm. Anything else in python/
-# (tools, tests, this service itself) is refused. test_persistent_ipc_security checks
-# this list against the literal script paths in routes/*.ts.
-EXTRA_ALLOWED_SCRIPT_NAMES = [
-    "battery_corrosion_python_ingest",
+# Scripts the service may execute: exactly the scripts routes/*.ts dispatch through
+# runPythonScript. Warm-only modules (imported for speed, never dispatched), tools, tests and
+# this service itself are refused. test_persistent_ipc_security requires this set to equal the
+# literal script paths in routes/*.ts in both directions, so a stale entry fails the test.
+ALLOWED_SCRIPT_NAMES = frozenset({
+    "battery_corrosion_eis_solver",
+    "calphad_solver",
+    "dft_property_calculator",
+    "icme_multiscale_pipeline_solver",
+    "inverse_alloy_optimizer",
+    "kinetics_ttt_cct_solver",
     "lpbf_bayesian_optimizer",
-]
-ALLOWED_SCRIPT_NAMES = frozenset(WARM_MODULE_NAMES) | frozenset(EXTRA_ALLOWED_SCRIPT_NAMES)
+    "lpbf_thermal_solver",
+    "marangoni_pore_instability_solver",
+    "part_scale_inherent_strain_solver",
+    "pourbaix_solver",
+    "stl_slicer_build_time_solver",
+    "stochastic_uq_mmpds_solver",
+    "tafel_corrosion_rate_solver",
+    "xrd_peak_deconvolution",
+})
 
 _SCRIPT_FILE_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.py\Z")
 MAX_SCRIPT_ARGS = 64

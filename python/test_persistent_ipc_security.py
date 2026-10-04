@@ -135,53 +135,31 @@ class ResolveScriptPathTest(unittest.TestCase):
 
 
 class AllowlistTest(unittest.TestCase):
-    def test_every_route_dispatched_script_is_allowlisted_and_exists(self):
+    @staticmethod
+    def _route_scripts():
         found = set()
         for ts in sorted((REPO / "routes").glob("*.ts")):
             text = ts.read_text(encoding="utf-8")
             for match in re.finditer(r"(?:handlePythonDispatch|runPythonScript)\(\s*\"python/([A-Za-z0-9_]+)\.py\"", text):
                 found.add(match.group(1))
-        self.assertGreaterEqual(len(found), 15, found)  # guards against the scan silently matching nothing
-        self.assertEqual(found - ipc.ALLOWED_SCRIPT_NAMES, set())
+        return found
+
+    def test_allowlist_equals_route_dispatched_scripts(self):
+        found = self._route_scripts()
+        # The scan must see the real route table (15 scripts at the time of writing), so an
+        # empty or partial match can never make the equality below pass vacuously.
+        self.assertGreaterEqual(len(found), 15, found)
+        self.assertEqual(found - ipc.ALLOWED_SCRIPT_NAMES, set(), "route script missing from allowlist")
+        self.assertEqual(ipc.ALLOWED_SCRIPT_NAMES - found, set(), "stale allowlist entry (no route uses it)")
         for name in ipc.ALLOWED_SCRIPT_NAMES:
             self.assertTrue((HERE / f"{name}.py").is_file(), name)
             ipc.resolve_script_path(str(HERE), f"python/{name}.py")
 
-    def test_allowlist_is_warm_modules_plus_explicit_extras(self):
-        self.assertEqual(ipc.ALLOWED_SCRIPT_NAMES,
-                         frozenset(ipc.WARM_MODULE_NAMES) | frozenset(ipc.EXTRA_ALLOWED_SCRIPT_NAMES))
+    def test_warm_only_and_service_modules_are_not_executable(self):
         self.assertNotIn("persistent_ipc_service", ipc.ALLOWED_SCRIPT_NAMES)
-
-
-class ScriptExecOptInTest(unittest.TestCase):
-    """battery_corrosion_python_ingest is allowlisted (a route uses it) and can exec user code;
-    it honours the same METALLIKSA_ENABLE_SCRIPT_EXEC opt-in as routes/characterization.ts."""
-
-    SCRIPT = str(HERE / "battery_corrosion_python_ingest.py")
-
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp()
-        self.marker = os.path.join(self.tmp, "user-code-ran.txt")
-        self.payload = json.dumps({"action": "execute_python_script",
-                                   "scriptCode": f"open({self.marker!r}, 'w').write('x')"})
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
-
-    def test_disabled_by_default(self):
-        with mock.patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("METALLIKSA_ENABLE_SCRIPT_EXEC", None)
-            res = ipc._worker_run_script(self.SCRIPT, self.payload, [])
-        self.assertEqual(res["exitCode"], 1)
-        out = json.loads(res["stdout"])
-        self.assertFalse(out["success"])
-        self.assertIn("METALLIKSA_ENABLE_SCRIPT_EXEC", out["error"])
-        self.assertFalse(os.path.exists(self.marker))
-
-    def test_enabled_runs_user_code(self):
-        with mock.patch.dict(os.environ, {"METALLIKSA_ENABLE_SCRIPT_EXEC": "1"}):
-            ipc._worker_run_script(self.SCRIPT, self.payload, [])
-        self.assertTrue(os.path.exists(self.marker))
+        for name in set(ipc.WARM_MODULE_NAMES) - ipc.ALLOWED_SCRIPT_NAMES:
+            self.assertEqual(_status(ipc.resolve_script_path, str(HERE), f"python/{name}.py"),
+                             (403, "SCRIPT_NOT_ALLOWED"), name)
 
 
 class HeaderCheckTest(unittest.TestCase):
