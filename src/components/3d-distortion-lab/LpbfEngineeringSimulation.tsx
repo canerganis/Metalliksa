@@ -1,4 +1,5 @@
 import { canonicalLpbfMaterialName } from "../../utils/lpbfMaterialIdentity";
+import { isResultStale, resultSignatureOnSubmit } from "../../utils/lpbfResultStaleness";
 import { Badge, ResultHeader, StaleResultBanner, ThermalHistory, ConvergencePanel, MeasurementPanel, surface, number } from "./LpbfResultPresentation";
 import { LpbfPhysicsDiagnostics } from "./LpbfPhysicsDiagnostics";
 import { ResolvedThermalViewer } from "./ResolvedThermalViewer";
@@ -10,7 +11,7 @@ import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 
-import { LPBF_ENGINEERING_DEFAULTS as defaults, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
+import { LPBF_ENGINEERING_DEFAULTS as defaults, engineeringSignature, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
 const controls = [
   ["stripeWidth_um","Stripe width (µm)",20,3000], ["islandSize_um","Island size (µm)",50,3000],
   ["mesh_um","Mesh spacing (µm)",5,80], ["maxDt_s","Maximum timestep (s)",1e-9,1e-4],
@@ -505,12 +506,13 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
   const [measurements,setMeasurements] = useEngineeringField("measurements");
   const [specimen,setSpecimen]=useEngineeringField("specimen"); const [uncertainty,setUncertainty]=useEngineeringField("uncertainty"); const [holdout,setHoldout]=useEngineeringField("holdout");
   const [width,setWidth] = useEngineeringField("width"); const [depth,setDepth] = useEngineeringField("depth"); const [source,setSource] = useEngineeringField("source");
-  const signature = JSON.stringify([input,settings,mode,material,properties,measurements,width,depth,source,specimen,uncertainty,holdout,sharedStrategy]);
+  const signature = engineeringSignature(input,{settings,mode,material,properties,measurements,width,depth,source,specimen,uncertainty,holdout},sharedStrategy);
   const submittedSignature = useLpbfEngineeringStore(s=>s.submittedSignature);
   const canRepeatCurrentInput = job?.status === "completed" && submittedSignature === signature;
   const cancelledJob = useRef("");
   const [resultSignature] = useEngineeringField("resultSignature");
   const active = job?.status === "queued" || job?.status === "running";
+  const resultStale = isResultStale(resultSignature, signature);
   useEffect(()=>{setRepeatExecution(false);},[signature]);
   const elapsedStart=useRef(0);
   useEffect(()=>{if(!active)return;setElapsed(0);elapsedStart.current=Date.now();},[active,job?.id]);
@@ -592,7 +594,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
       if(invalidProcess||invalidControls)throw new Error("Correct the highlighted parameter ranges before running.");
       const p=payload(mode);
       p.measurements=measurementSubmission(p,measurements,{width,depth,source,specimen,uncertainty,holdout},resolvedStrategy);
-      const next=await simulationApi.submit(p,repeatExecution&&canRepeatCurrentInput?{executionScope:'repeat'}:undefined);useLpbfEngineeringStore.setState({job:next,submittedSignature:signature,submittedInput:p,resultSignature:next.status==="completed"?signature:""});setFieldTime(undefined);setRepeatExecution(false);resumeEngineeringJob();
+      const next=await simulationApi.submit(p,repeatExecution&&canRepeatCurrentInput?{executionScope:'repeat'}:undefined);useLpbfEngineeringStore.setState({job:next,submittedSignature:signature,submittedInput:p,resultSignature:resultSignatureOnSubmit(next.status,signature)});setFieldTime(undefined);setRepeatExecution(false);resumeEngineeringJob();
     }catch(e){setError(e instanceof Error?e.message:"Submission failed");}finally{setBusy(false);}
   };
   const download=()=>{if(!r)return;const url=URL.createObjectURL(new Blob([JSON.stringify(r,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=`lpbf-${job.id}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
@@ -601,7 +603,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] tracking-[.3em] uppercase text-slate-400">Metalliksa / Advanced manufacturing</p><h3 className="text-3xl font-medium tracking-tight mt-2">LPBF <span className="text-slate-400">/</span> Melt Pool</h3><p className="mt-2 text-sm text-slate-400">Thermal response, process screening and traceable evidence.</p></div><Badge tone={caps?.openfoamThermal?"active":"neutral"}>{caps?caps.openfoamThermal?"OpenFOAM thermal worker available":"Reference worker · OpenFOAM unavailable":"Connecting to worker…"}</Badge></header>
     <GpuThermalPilotPanel input={input} settings={settings} material={material||input.material} properties={properties} strategy={resolvedStrategy} caps={caps} blocked={busy||active||missingMaterial||invalidControls||invalidProcess}/>
     <In625BareplatePanel />
-    <ResultHeader job={job} material={material||input.material} availability={caps?`${caps.openfoamVersion||"Unavailable"} · free-surface ${caps.freeSurfaceSolver?"reported available":"unavailable"}`:"Checking…"} stale={resultSignature!==signature} elapsed={elapsed} cancel={cancel} cancelling={cancelling}/>
+    <ResultHeader job={job} material={material||input.material} availability={caps?`${caps.openfoamVersion||"Unavailable"} · free-surface ${caps.freeSurfaceSolver?"reported available":"unavailable"}`:"Checking…"} stale={resultStale} elapsed={elapsed} cancel={cancel} cancelling={cancelling}/>
     {active&&submittedSignature!==signature&&<p role="status" className="text-sm text-amber-200">Inputs changed — the running job uses submitted settings. Local changes apply to the next run.</p>}
     <CancelledRunNotice status={job?.status} />
     {(error||job?.error)&&<p role="alert" className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 text-sm text-red-200 whitespace-pre-wrap">{error||job?.error}</p>}
@@ -642,7 +644,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
     </div>
     {(mode==="standard"||mode==="calibration")&&<p className="text-xs text-slate-400" role="status">{estimateError||(estimate?`Preflight: ${fmt(estimate.cells)} cells · ${fmt(estimate.spacing_m*1e6)} µm · ~${fmt(estimate.minimumEstimatedSteps)} estimated steps · ~${fmt(estimate.workingMemoryEstimate_MB)} MB working arrays · ${estimate.runs} solve(s). ${estimate.exceedsCellBudget?"Cell budget exceeded.":estimate.exceedsStepBudget?"Requested timestep exceeds the 250,000-step budget. Increase timestep or shorten the process history.":estimate.runtimeEstimate}`:"Estimating resources…")}</p>}
     {r&&<>
-      {resultSignature!==signature&&<StaleResultBanner className="rounded-xl"/>}
+      {resultStale&&<StaleResultBanner className="rounded-xl"/>}
       {r.fallbackReason&&<p className="text-sm text-amber-200">{r.fallbackReason}</p>}
       <section aria-label="Melt pool geometry" className="space-y-4"><div className="flex flex-wrap justify-between gap-2"><h4 className="font-medium">Melt pool geometry</h4><Badge tone="neutral">{r.fieldSeries?"Resolved thermal cells":"Analytical screening geometry"}</Badge></div><p className="text-xs text-slate-400">{r.confidenceReason} Free-surface unresolved · Keyhole unresolved · Stress not solved.</p>
       {r.fieldSeries && <ResolvedThermalViewer jobId={job.id} result={r} onTimeChange={setFieldTime}/>}
