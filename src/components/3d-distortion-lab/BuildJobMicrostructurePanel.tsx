@@ -33,14 +33,17 @@ const MicroMetric: React.FC<{ label: string; value: string; hint?: string }> = (
   </div>
 );
 
-export const BuildJobMicrostructurePanel: React.FC<{ microstructure: BuildJobMicrostructureLike | null | undefined }> = ({ microstructure }) => {
-  if (!microstructure) return null;
-  const m = microstructure;
+const KNOWN_STATUS = ["available", "screening-fallback", "unavailable"];
+
+export const BuildJobMicrostructurePanel: React.FC<{ micro: BuildJobMicrostructureLike | null | undefined }> = ({ micro }) => {
+  if (!micro) return null;
+  // A block without a known status (an old worker's Rosenthal block) is never shown as available.
+  const known = typeof micro.status === "string" && KNOWN_STATUS.includes(micro.status);
+  const m: BuildJobMicrostructureLike = known ? micro : { status: "unavailable", reason: "legacy block without status" };
   const provenance = [m.modelId, m.gradientSource].filter(Boolean).join(" · ") || (m.source ?? "");
   const cellular = typeof m.morphology === "string" && m.morphology.startsWith("Cellular");
-  const gOverR = Number.isFinite(m.g_over_r_ratio)
-    ? (m.g_over_r_ratio as number)
-    : (m.G_K_m ?? NaN) / Math.max(1e-9, m.R_m_s ?? NaN);
+  // Python's own G/R (not recomputed in TS from rounded G and R).
+  const gOverR = typeof m.g_over_r_ratio === "number" && Number.isFinite(m.g_over_r_ratio) ? m.g_over_r_ratio.toExponential(1) : "—";
   return (
     <div className="space-y-2" data-micro-status={m.status ?? "unknown"}>
       <div className="flex items-center gap-2">
@@ -62,7 +65,7 @@ export const BuildJobMicrostructurePanel: React.FC<{ microstructure: BuildJobMic
               value={m.SDAS_um?.toFixed(2) ?? "—"}
               hint={cellular ? `cells have no secondary arms · Kirkwood 1985 · ${provenance}` : `Kirkwood 1985 · ${provenance}`}
             />
-            <MicroMetric label="Morphology" value={m.morphology ?? "—"} hint={`G/R = ${gOverR.toExponential(1)}`} />
+            <MicroMetric label="Morphology" value={m.morphology ?? "—"} hint={`G/R = ${gOverR}`} />
             <MicroMetric label="Cooling Rate" value={m.coolingRate_K_s?.toExponential(1) ?? "—"} hint="K/s" />
           </div>
           <p className="text-[9px] text-slate-500 mt-1">{m.disclaimer}</p>

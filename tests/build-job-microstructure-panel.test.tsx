@@ -10,7 +10,7 @@ import { BuildJobMicrostructurePanel } from "../src/components/3d-distortion-lab
 const BLOCKS = JSON.parse(readFileSync(new URL("./fixtures/build-job-microstructure-blocks.json", import.meta.url), "utf8"));
 const html = (name: string) => {
   assert.ok(BLOCKS[name], name);
-  return renderToStaticMarkup(<BuildJobMicrostructurePanel microstructure={BLOCKS[name]} />);
+  return renderToStaticMarkup(<BuildJobMicrostructurePanel micro={BLOCKS[name]} />);
 };
 const text = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&gt;/g, ">").replace(/\s+/g, " ");
 
@@ -48,6 +48,24 @@ test("unavailable: reason only, no numbers, no PDAS/SDAS tiles", () => {
   assert.doesNotMatch(markup, /data-micro-metric=/);
 });
 
+test("legacy block without status (old worker Rosenthal block) is not shown as available", () => {
+  const legacy = { source: "rosenthal-analytical-screening", G_K_m: 10000, R_m_s: 0.678823, coolingRate_K_s: 6788.23, PDAS_um: 0.881, SDAS_um: 3.508, morphology: "equiaxed", disclaimer: "old" };
+  const markup = renderToStaticMarkup(<BuildJobMicrostructurePanel micro={legacy} />);
+  const t = text(markup);
+  assert.match(markup, /data-micro-status="unavailable"/);
+  assert.ok(t.includes("Unavailable — legacy block without status"), t);
+  assert.doesNotMatch(markup, /data-micro-metric=/);
+  assert.ok(!t.includes("0.88") && !t.includes("equiaxed"), t);
+});
+
+test("G/R hint is Python's g_over_r_ratio, not recomputed from rounded G and R", () => {
+  // Recomputing G/R from the block's G and R would print 6.1e+8; the panel must print Python's value.
+  const block = { ...BLOCKS.available_in718_285_960, g_over_r_ratio: 1.23e9 };
+  const t = text(renderToStaticMarkup(<BuildJobMicrostructurePanel micro={block} />));
+  assert.ok(t.includes("G/R = 1.2e+9"), t);
+  assert.ok(!t.includes("6.1e+8"), t);
+});
+
 test("no microstructure block renders nothing", () => {
-  assert.equal(renderToStaticMarkup(<BuildJobMicrostructurePanel microstructure={undefined} />), "");
+  assert.equal(renderToStaticMarkup(<BuildJobMicrostructurePanel micro={undefined} />), "");
 });

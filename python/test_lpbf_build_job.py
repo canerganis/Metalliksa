@@ -275,7 +275,13 @@ def check_build_job_microstructure(job):
 
     for bad in ({}, {"solidificationKinetics": None}, {"solidificationKinetics": {}},
                 {"solidificationKinetics": {**kin, "thermalGradient_G_K_m": float("nan")}},
-                {"solidificationKinetics": {**kin, "solidificationRate_R_m_s": None}}):
+                {"solidificationKinetics": {**kin, "solidificationRate_R_m_s": None}},
+                # only the cooling rate is bad, with valid G/R: still unavailable
+                {"solidificationKinetics": {**kin, "coolingRate_K_s": float("inf")}},
+                {"solidificationKinetics": {**kin, "coolingRate_K_s": None}},
+                # bool is not a number (True == 1 must not pass as G or R)
+                {"solidificationKinetics": {**kin, "thermalGradient_G_K_m": True}},
+                {"solidificationKinetics": {**kin, "solidificationRate_R_m_s": True}}):
         unavailable = project_build_job_microstructure(bad)
         assert unavailable["status"] == "unavailable"
         assert unavailable["reason"] == "thermal.solidificationKinetics missing or non-finite"
