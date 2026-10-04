@@ -31,6 +31,7 @@ import { CandidateAlloySolution,InverseDesignTargets } from "../utils/inverseAll
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildGoldakCaeCard } from "../utils/goldakCaeCard";
+import { mapPhaseTemperaturesC } from "../utils/meltPoolMapAuthority";
 
 interface Props {
   candidate: CandidateAlloySolution;
@@ -188,15 +189,22 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
     setTimeStep((prev) => (prev + 1) % 120);
   }, isSimulating ? 40 : null);
 
-  // Fallback / Live Rosenthal temperature helper for client pixel sampling
+  // Liquidus / solidus (deg C) of the selected alloy from the Python material authority; null when the
+  // authority does not hold the alloy (the interpolated map is then not drawn; no fixed fallback values).
+  const phaseTemps = useMemo(() => mapPhaseTemperaturesC(selectedMaterial), [selectedMaterial]);
+  // Heat-source model reported by the Python result (the view sends no heatSource, so Python defaults to Rosenthal).
+  const heatSourceLabel = pyResult ? (pyResult.heatSourceModel ?? pyResult.modelId ?? "heat-source model not reported") : null;
+
+  // Illustrative TS interpolation of the Python pool extents (not a solved field), sampled per pixel.
   const calculateRosenthalPoint = useCallback(
     (x_um: number, y_um: number, z_um: number) => {
+      if (!phaseTemps) return null;
       const geom = pyResult?.meltPoolGeometry;
       const hydro = pyResult?.hydrodynamicsAndRecoil;
       const T0 = preheatTemp_C;
       const Tpeak = hydro?.peakTemperature_C || 2800;
-      const Tm = 1350; // liquidus approximation
-      const Ts = 1260; // solidus approximation
+      const Tm = phaseTemps.liquidus_C;
+      const Ts = phaseTemps.solidus_C;
       const af = geom?.goldakParameters?.semiAxis_af_front_um || (beamDiameter_um * 0.9);
       const ar = geom?.goldakParameters?.semiAxis_ar_rear_um || (beamDiameter_um * 2.8);
       const b = geom?.goldakParameters?.semiAxis_b_halfwidth_um || (beamDiameter_um * 0.7);
@@ -231,7 +239,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
         isVapor: temp >= 2850,
       };
     },
-    [pyResult, preheatTemp_C, beamDiameter_um, layerThickness_um, scanSpeed_mms]
+    [pyResult, phaseTemps, preheatTemp_C, beamDiameter_um, layerThickness_um, scanSpeed_mms]
   );
 
   // Canvas High-DPI Rendering
@@ -266,12 +274,12 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
 
     // Melt pool geometry boundaries from Python
     const geom = pyResult?.meltPoolGeometry;
-    const Tm = 1350;
-    const Ts = 1260;
+    const Tm = phaseTemps?.liquidus_C ?? 0;
+    const Ts = phaseTemps?.solidus_C ?? 0;
     const T0 = preheatTemp_C;
 
-    // Fast 2x2 grid rasterizer
-    for (let py = 0; py < height; py += 2) {
+    // Fast 2x2 grid rasterizer (skipped when the authority has no liquidus/solidus for the alloy)
+    for (let py = 0; phaseTemps && py < height; py += 2) {
       for (let px = 0; px < width; px += 2) {
         let x_um = 0;
         let y_um = 0;
@@ -293,6 +301,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
         }
 
         const pt = calculateRosenthalPoint(x_um, y_um, z_um);
+        if (!pt) continue;
         const temp = pt.temp;
         const coolingRate = pt.coolingRate;
         const gradient = pt.gradient;
@@ -363,7 +372,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
       }
     }
 
-    ctx.putImageData(imgData, 0, 0);
+    if (phaseTemps) ctx.putImageData(imgData, 0, 0);
 
     // Dynamic Visual Overlays & Vector Annotations
     ctx.save();
@@ -599,8 +608,16 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
     ctx.font = "10px ui-monospace, monospace";
     ctx.fillText(`${scaleBarUm} μm`, 20, height - 32);
 
+    if (!phaseTemps) {
+      ctx.font = "12px ui-monospace, monospace";
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillText(`map unavailable: no authority solidus/liquidus for ${selectedMaterial}`, 20, 28);
+    }
+
     ctx.restore();
   }, [
+    phaseTemps,
+    selectedMaterial,
     mapMode,
     viewAngle,
     timeStep,
@@ -669,21 +686,10 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
 
   // Active Probe Data
   const probeData = useMemo(() => {
-    if (!probePos) {
-      // Default to laser peak
-      return {
-        x_um: 0,
-        y_um: 0,
-        z_um: 0,
-        ...calculateRosenthalPoint(0, 0, 0),
-      };
-    }
-    return {
-      x_um: probePos.x_um,
-      y_um: probePos.y_um,
-      z_um: probePos.z_um,
-      ...calculateRosenthalPoint(probePos.x_um, probePos.y_um, probePos.z_um),
-    };
+    const at = probePos ?? { x_um: 0, y_um: 0, z_um: 0 }; // default to the laser peak
+    const point = calculateRosenthalPoint(at.x_um, at.y_um, at.z_um);
+    if (!point) return null; // no authority liquidus/solidus: no interpolated values
+    return { x_um: at.x_um, y_um: at.y_um, z_um: at.z_um, ...point };
   }, [probePos, calculateRosenthalPoint]);
 
   // Export Goldak FEA Card
@@ -721,7 +727,13 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Analytical screening: Goldak double-ellipsoid conduction field, Knight recoil estimate at the vapour temperature, Heiple–Roper Marangoni screening and geometric lack-of-fusion overlap. Not FEA, not CFD, not validated.
+                  Analytical screening: regularised Rosenthal point-source conduction field (Python, heatSourceModel from the result); the map is an illustrative TS interpolation of the Python pool extents, not a solved field. Knight recoil estimate at the vapour temperature, Heiple–Roper Marangoni screening, geometric lack-of-fusion overlap. Not FEA, not CFD, not validated.
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
+                  Heat source reported by Python: {heatSourceLabel ?? "no result yet"}
+                  {phaseTemps
+                    ? ` · map liquidus/solidus from the Python material authority: ${phaseTemps.liquidus_C} / ${phaseTemps.solidus_C} °C (${phaseTemps.quality})`
+                    : ` · map unavailable: no authority solidus/liquidus for ${selectedMaterial}`}
                 </p>
               </div>
             </div>
@@ -990,11 +1002,12 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                 className="w-full h-[400px] sm:h-[460px] object-cover cursor-crosshair block"
               />
 
-              {/* Floating Real-Time Probe Overlay */}
+              {/* Floating Real-Time Probe Overlay (values of the TS interpolation, not a solved field) */}
+              {probeData ? (
               <div className="absolute top-3 left-3 p-2.5 rounded-lg bg-[#0a1120]/90 backdrop-blur-md border border-slate-700/60 shadow-lg text-xs font-mono space-y-1 pointer-events-none">
                 <div className="flex items-center gap-1.5 text-sky-400 font-bold text-[11px]">
                   <Crosshair className="w-3.5 h-3.5 text-sky-400 animate-spin" />
-                  <span>Interactive Probe Coordinates</span>
+                  <span>Interactive Probe Coordinates (interpolation)</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-300">
                   <span>X: <strong className="text-white">{probeData.x_um} μm</strong></span>
@@ -1012,6 +1025,11 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                   </span>
                 </div>
               </div>
+              ) : (
+              <div className="absolute top-3 left-3 p-2.5 rounded-lg bg-[#0a1120]/90 border border-slate-700/60 text-[10px] font-mono text-amber-300 pointer-events-none">
+                map unavailable: no authority solidus/liquidus for {selectedMaterial}
+              </div>
+              )}
 
               {/* Floating Regime Indicator Badge */}
               {pyResult && (
@@ -1092,7 +1110,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
                 <h4 className="text-xs font-bold text-white font-mono">Ergiyik Havuzu Geometrisi</h4>
               </div>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Goldak 3D · screening
+                {heatSourceLabel ?? "heat source n/a"} · screening map (TS interpolation)
               </span>
             </div>
 
