@@ -172,7 +172,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
             {/* Metal Selection */}
             <div>
               <label className="text-[10px] text-slate-400 block mb-1">Substrate Alloy</label>
-              <select
+              <select aria-label="Substrate Alloy"
                 value={metalId}
                 onChange={(e) => {
                   const m = e.target.value;
@@ -197,7 +197,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Anodic Slope β_a (V/dec)</label>
-                <input
+                <input aria-label="Anodic Slope β_a (V/dec)"
                   type="number"
                   step="0.01"
                   value={betaA}
@@ -207,7 +207,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Cathodic Slope β_c (V/dec)</label>
-                <input
+                <input aria-label="Cathodic Slope β_c (V/dec)"
                   type="number"
                   step="0.01"
                   value={betaC}
@@ -223,7 +223,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 <span className="text-slate-400">Corrosion Current i_corr</span>
                 <span className="text-amber-400 font-bold font-mono">{i0Corr} µA/cm²</span>
               </div>
-              <input
+              <input aria-label="Corrosion Current i_corr"
                 type="range"
                 min={0.01}
                 max={10.0}
@@ -243,7 +243,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 </span>
                 <span className="text-sky-300 font-bold font-mono">{exposureDays} days</span>
               </div>
-              <input
+              <input aria-label="Electrolyte Exposure"
                 type="range"
                 min={0}
                 max={180}

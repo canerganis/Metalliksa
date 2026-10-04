@@ -750,7 +750,7 @@ export function DynamicPourbaixStudio() {
 
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">Standard Preset:</label>
-                <select
+                <select aria-label="Standard Preset"
                   value={selectedAlloyId}
                   onChange={(e) => {
                     setIsCustomMode(false);
@@ -790,7 +790,7 @@ export function DynamicPourbaixStudio() {
                   <span className="text-slate-400">Temperature (0°C to 300°C):</span>
                   <span className="text-amber-300 font-bold">{temperature_C} °C</span>
                 </div>
-                <input
+                <input aria-label="Temperature (0°C to 300°C)"
                   type="range"
                   min="0"
                   max="300"
@@ -818,7 +818,7 @@ export function DynamicPourbaixStudio() {
                     {chlorideActivity} M ({Math.round(chlorideActivity * 35453)} ppm)
                   </span>
                 </div>
-                <input
+                <input aria-label="Chloride Activity a(Cl⁻)"
                   type="range"
                   min="0.0001"
                   max="4.0"
@@ -838,7 +838,7 @@ export function DynamicPourbaixStudio() {
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
                   <label className="text-[10px] text-slate-400 font-mono block mb-1">Reference Scale:</label>
-                  <select
+                  <select aria-label="Reference Scale"
                     value={refElectrode}
                     onChange={(e) => setRefElectrode(e.target.value as ReferenceElectrode)}
                     className="w-full bg-[#060b13] border border-[#1a263c] rounded px-2 py-1.5 text-xs text-slate-200 font-mono"
@@ -852,7 +852,7 @@ export function DynamicPourbaixStudio() {
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-400 font-mono block mb-1">Metal Ion Activity a(M):</label>
-                  <select
+                  <select aria-label="Metal Ion Activity a(M)"
                     value={ionActivity}
                     onChange={(e) => setIonActivity(parseFloat(e.target.value))}
                     className="w-full bg-[#060b13] border border-[#1a263c] rounded px-2 py-1.5 text-xs text-slate-200 font-mono"
@@ -1234,7 +1234,7 @@ export function DynamicPourbaixStudio() {
                     <span className="text-sm font-bold text-white">{elem} (wt%)</span>
                     <span className="text-xs font-bold text-purple-300">{currentVal.toFixed(1)}%</span>
                   </div>
-                  <input
+                  <input aria-label={`${elem} (wt%)`}
                     type="range"
                     min="0"
                     max="100"
