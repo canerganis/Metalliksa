@@ -43,7 +43,9 @@ import {
   kineticsLabelText,
   kineticsLswAvailability,
   kineticsModelBanner,
+  kineticsNoseText,
   kineticsPhaseSlices,
+  kineticsPhaseStartsText,
   kineticsStatusNote,
   kineticsValueText,
   kineticsVerdictSentence,
@@ -130,7 +132,8 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
     runKineticsCalculation();
   }, [selectedAlloy]);
 
-  // Formatted TTT data for Recharts (Log10 time x-axis mapping)
+  // Formatted TTT data for Recharts (Log10 time x-axis mapping); one C-curve per phase (Li 1998: ferrite, pearlite,
+  // bainite), so the lines never jump from one phase's curve to another's.
   const formattedTTTData = useMemo(() => {
     if (!kineticsData?.tttIsothermalCurves) return [];
     return kineticsData.tttIsothermalCurves.map((pt) => ({
@@ -145,6 +148,19 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
       floorHit: pt.floorHit === true
     }));
   }, [kineticsData]);
+  const tttByPhase = useMemo(() => {
+    const groups: Array<{ phase: string; points: typeof formattedTTTData }> = [];
+    for (const pt of formattedTTTData) {
+      let group = groups.find((g) => g.phase === pt.phase);
+      if (!group) {
+        group = { phase: pt.phase, points: [] };
+        groups.push(group);
+      }
+      group.points.push(pt);
+    }
+    return groups;
+  }, [formattedTTTData]);
+  const phaseLineColors: Record<string, string> = { Ferrite: "#3b82f6", Pearlite: "#a855f7", Bainite: "#f59e0b" };
 
   // CCT cooling curve overlay path for the user-selected cooling rate
   const userCoolingTrajectory = useMemo(() => {
@@ -214,14 +230,14 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   TTT / CCT & Diffusion Phase Transformation Kinetics Studio
                 </h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  DICTRA / JMAK / LSW
+                  Li 1998 / Additivity / LSW
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   PYTHON 3.10 HPC
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Bridging the R&D Gap: <span className="text-sky-300">Thermodynamic Equilibrium (CALPHAD)</span> vs. <span className="text-amber-300">Non-Equilibrium Kinetics (Cooling Rate dT/dt, JMAK Nucleation & LSW Coarsening)</span>
+                Bridging the R&D Gap: <span className="text-sky-300">Thermodynamic Equilibrium (CALPHAD)</span> vs. <span className="text-amber-300">Non-Equilibrium Kinetics (Cooling Rate dT/dt, Li 1998 Start Curves & LSW Coarsening)</span>
               </p>
             </div>
           </div>
@@ -259,7 +275,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
         >
           <strong className={modelBanner.available ? "text-slate-200" : "text-red-300"}>
             {modelBanner.available
-              ? "Illustrative steel template."
+              ? modelBanner.headline
               : `Kinetics model unavailable for this alloy: ${modelBanner.reason}`}
           </strong>{" "}
           {modelBanner.caution}
@@ -427,14 +443,20 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-500">$A_&#123;e3&#125;$ / $\beta_&#123;transus&#125;$</div>
-                  <div className="text-sky-300 font-bold text-sm">
-                    {kineticsData.criticalTransformationTemperatures.Ae3_BetaTransus_GammaSolvus_C} °C
+                  <div className="text-sky-300 font-bold text-sm" title={kineticsStatusNote(criticalTemps?.Ae3_C_status)}>
+                    {kineticsValueText(kineticsData.criticalTransformationTemperatures.Ae3_BetaTransus_GammaSolvus_C, " °C")}
                   </div>
                 </div>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-500">$A_&#123;e1&#125;$ Eutectoid</div>
-                  <div className="text-slate-300 font-bold text-sm">
+                  <div className="text-slate-300 font-bold text-sm" title={kineticsStatusNote(criticalTemps?.Ae1_C_status)}>
                     {kineticsValueText(kineticsData.criticalTransformationTemperatures.Ae1_C, " °C")}
+                  </div>
+                </div>
+                <div className="p-2 rounded bg-slate-900/80 border border-slate-800 col-span-2">
+                  <div className="text-[10px] text-slate-500">Bainite Start ($B_s$)</div>
+                  <div className="text-amber-300 font-bold text-sm" title={kineticsStatusNote(criticalTemps?.Bs_C_status)}>
+                    {kineticsValueText(criticalTemps?.Bs_C, " °C")}
                   </div>
                 </div>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
@@ -491,23 +513,19 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <span>Time-Temperature-Transformation (TTT) Diagram</span>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30">
-                      JMAK Nucleation & Growth C-Curves
+                      Li et al. (1998) C-Curves
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Isothermal transformation kinetics: $X(t) = 1 - \exp(-k \cdot t^n)$
+                    Isothermal law: τ(X, T) = F(C, Mn, Si, Ni, Cr, Mo) · S(X) / (2^(n₁G) · ΔT^n₂ · exp(−Q/RT)); solid lines 1 % start, dashed 99 % of the reaction
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] font-mono">
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <span className="w-2.5 h-0.5 bg-emerald-400 inline-block"></span> 1% (Start)
-                  </span>
-                  <span className="flex items-center gap-1 text-amber-400">
-                    <span className="w-2.5 h-0.5 bg-amber-400 inline-block"></span> 50% Transformed
-                  </span>
-                  <span className="flex items-center gap-1 text-red-400">
-                    <span className="w-2.5 h-0.5 bg-red-400 inline-block"></span> 99% (Finish)
-                  </span>
+                  {tttByPhase.map((g) => (
+                    <span key={g.phase} className="flex items-center gap-1" style={{ color: phaseLineColors[g.phase] ?? "#94a3b8" }}>
+                      <span className="w-2.5 h-0.5 inline-block" style={{ backgroundColor: phaseLineColors[g.phase] ?? "#94a3b8" }}></span> {g.phase}
+                    </span>
+                  ))}
                 </div>
               </div>
 
@@ -531,7 +549,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <XAxis
                       type="number"
                       dataKey="log_tStart"
-                      domain={[-3, 5]}
+                      domain={[-2, 7]}
                       tickFormatter={(val) => `10^${val}s`}
                       label={{ value: "Time (seconds, Log Scale)", position: "insideBottom", offset: -10, fill: "#94a3b8", fontSize: 11 }}
                       stroke="#475569"
@@ -553,9 +571,6 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                               <div className="text-emerald-400">1% Start: {d.tStart_s} s</div>
                               <div className="text-amber-400">50% Trans: {d.t50_s} s</div>
                               <div className="text-red-400">99% Finish: {d.tFinish_s} s</div>
-                              {d.floorHit && (
-                                <div className="text-slate-400 mt-1">On the 1 ms incubation floor (not a model value)</div>
-                              )}
                             </div>
                           );
                         }
@@ -571,19 +586,22 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                         )}
                       </>
                     )}
-                    <Line type="monotone" dataKey="log_tStart" stroke="#10b981" strokeWidth={2} dot={false} name="1% Start" />
-                    <Line type="monotone" dataKey="log_t50" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 2" dot={false} name="50% Trans" />
-                    <Line type="monotone" dataKey="log_tFinish" stroke="#ef4444" strokeWidth={2} dot={false} name="99% Finish" />
+                    {tttByPhase.map((g) => (
+                      <Line key={`${g.phase}-start`} data={g.points} type="monotone" dataKey="log_tStart" stroke={phaseLineColors[g.phase] ?? "#94a3b8"} strokeWidth={2} dot={false} name={`${g.phase} 1% start`} />
+                    ))}
+                    {tttByPhase.map((g) => (
+                      <Line key={`${g.phase}-finish`} data={g.points} type="monotone" dataKey="log_tFinish" stroke={phaseLineColors[g.phase] ?? "#94a3b8"} strokeWidth={1.5} strokeDasharray="4 2" dot={false} name={`${g.phase} 99%`} />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs">
                 <span className="text-slate-400">
-                  Nose Temperature (Shortest Incubation): <strong className="text-amber-300">{modelBanner.available ? "~560 °C (Pearlite Nose) / ~420 °C (Bainite Nose)" : "Unavailable (kinetics model is steel-only)"}</strong>
+                  Shortest 1 % Start (Listed Points): <strong data-ttt-nose className="text-amber-300">{modelBanner.available ? (kineticsNoseText(kineticsData?.tttIsothermalCurves) || kineticsValueText(null)) : `Unavailable (${modelBanner.reason.replace(/\.$/, "")})`}</strong>
                 </span>
                 <span className="text-slate-400">
-                  Martensite Transformation: <strong className="text-red-400">{modelBanner.available ? "Athermal (Diffusionless, Koistinen-Marburger)" : "Unavailable (kinetics model is steel-only)"}</strong>
+                  Martensite Start: <strong className="text-red-400">{modelBanner.available ? `${kineticsValueText(criticalTemps?.Ms_C, " °C")} (athermal)` : `Unavailable (${modelBanner.reason.replace(/\.$/, "")})`}</strong>
                 </span>
               </div>
             </div>
@@ -597,11 +615,11 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <span>Continuous Cooling Transformation (CCT) Map</span>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                      Scheil Additivity Rule ∫ (dt / τ(T)) = 1
+                      Additivity Rule ∑ (dt / τ(T)) = 1
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Cooling rate dependency across quenching regimes from 0.05 °C/s to 2000 °C/s
+                    1 % start of each Li (1998) C-curve along linear cooling from the austenitizing temperature (phases integrated independently); 0.05 °C/s to 2000 °C/s
                   </p>
                 </div>
               </div>
@@ -614,7 +632,8 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                       <th className="p-2.5">Cooling Rate ($\dot&#123;T&#125;$)</th>
                       <th className="p-2.5">Start Temp</th>
                       <th className="p-2.5">Incubation Time</th>
-                      <th className="p-2.5">Microstructure Product</th>
+                      <th className="p-2.5">First Start Product</th>
+                      <th className="p-2.5">Phase Starts (1 %)</th>
                       <th className="p-2.5">Martensite %</th>
                       <th className="p-2.5">Hardness</th>
                     </tr>
@@ -647,6 +666,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                               {rowText.microstructure}
                             </span>
                           </td>
+                          <td className="p-2.5 text-slate-300" title={rowText.startNote}>{kineticsPhaseStartsText(row)}</td>
                           <td className="p-2.5 text-red-400 font-bold" title={rowText.fractionsNote}>{rowText.martensite}</td>
                           <td className="p-2.5 text-emerald-400 font-bold" title={hardness.note}>{hardness.hrc} ({hardness.hv})</td>
                         </tr>
@@ -715,7 +735,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                       KINETIC REALITY (dT/dt = {coolingRate} °C/s)
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                      JMAK & Scheil
+                      Li 1998 & Additivity
                     </span>
                   </div>
                   <div className="space-y-2 text-xs">
@@ -724,11 +744,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                       <span className="text-amber-300 font-mono font-bold">{coolingRate} °C/s</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Diffusion Suppression Index:</span>
+                      <span className="text-slate-400">Model Critical Cooling Rate:</span>
                       <span className="text-emerald-400 font-mono font-bold">
-                        {gap && typeof gap.kineticRealityAtSelectedCooling.diffusionSuppressionIndex === "number"
-                          ? `${gap.kineticRealityAtSelectedCooling.diffusionSuppressionIndex} (1.0 = Frozen)`
-                          : kineticsValueText(null)}
+                        {kineticsValueText(gap?.kineticRealityAtSelectedCooling.criticalCoolingRate_C_s, " °C/s")}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -749,7 +767,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   </p>
                   <div className="p-2.5 rounded bg-amber-950/40 border border-amber-500/20 text-[11px] text-amber-200">
                     <em data-verdict-sentence>
-                      {kineticsVerdictSentence(gap?.kineticRealityAtSelectedCooling.verdict, coolingRate, modelBanner.available)}
+                      {kineticsVerdictSentence(gap?.kineticRealityAtSelectedCooling.verdict, coolingRate, modelBanner.available, kineticsData?.kineticsModel?.reason ?? undefined)}
                     </em>
                   </div>
                 </div>

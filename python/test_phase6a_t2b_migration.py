@@ -180,9 +180,12 @@ class KineticsTest(unittest.TestCase):
         self.assertEqual(set(out), {"success", "error", "errorKind"})
         self.assertEqual(out["errorKind"], "validation")
         self.assertEqual(out["error"]["code"], "UNKNOWN_ALLOY")
-        code, out = _run("kinetics_ttt_cct_solver.py", {"alloy": "AISI 4140", "coolingRate_C_s": "fast"})
+        code, out = _run("kinetics_ttt_cct_solver.py", {"alloy": "Inconel 718", "coolingRate_C_s": "fast"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
+        # lane kin-li: the Li-model steels validate the cooling rate (NOT_A_NUMBER envelope, exit 2)
+        code, out = _run("kinetics_ttt_cct_solver.py", {"alloy": "AISI 4140", "coolingRate_C_s": "fast"})
+        self.assertEqual((code, out["errorKind"], out["error"]["field"]), (2, "validation", "coolingRate_C_s"))
         code, out = _run("kinetics_ttt_cct_solver.py", {"alloy": "AISI 4340"})
         self.assertEqual(code, 0)
         prov = out["provenance"]

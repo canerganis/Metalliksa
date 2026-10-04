@@ -21,10 +21,6 @@ const metric = (markup: string, label: string): string | null => {
   const values = [...m[1].matchAll(/<div[^>]*>([^<]*)<\/div>/g)].map((x) => x[1]);
   return values[1] ?? null; // [label, value, hint]
 };
-const hint = (markup: string, label: string): string | null => {
-  const m = new RegExp(`data-kinetics-metric="${label.replace(/[()]/g, "\\$&")}"[^>]*>(.*?)</div></div>`).exec(markup);
-  return m ? ([...m[1].matchAll(/<div[^>]*>([^<]*)/g)].map((x) => x[1])[2] ?? null) : null;
-};
 const NUMBER_TILES = ["Primary Phase", "Martensite", "Hardness (HRC)", "Hardness (HV)"];
 
 test("TS and Python build-job solver revisions are the same string", () => {
@@ -34,6 +30,7 @@ test("TS and Python build-job solver revisions are the same string", () => {
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-core-peak-field-v2");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-kinetics-same-alloy-v3");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-kinetics-steel-only-v4");
+  assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-microstructure-projection-v5");
 });
 
 test("316L and AlSi10Mg: one Unavailable tile with the reason, no numbers, no substituted alloy", () => {
@@ -80,12 +77,13 @@ test("hypothetical steel in-map rate (no build-job alloy is a steel): the Python
   assert.equal(row.coolingRate_C_s, 25);
   assert.notEqual(steel.buildCoolingRateCctRow.rowIndex, 0);
   const markup = html("aisi4140_in_map_30_hypothetical");
-  // The steel CCT start at 25 °C/s is floor/step-limited: primary phase is null -> Unavailable, never "null".
-  assert.equal(row.primaryMicrostructure, null);
-  assert.equal(metric(markup, "Primary Phase"), "Unavailable");
-  // the blank primary phase carries the solver's reason, not a bare "From the CCT row below"
-  assert.equal(hint(markup, "Primary Phase"), "incubation law has no Ae3 asymptote; start not computed.");
-  assert.equal(metric(markup, "Hardness (HRC)"), String(row.predictedHardness_HRC));
+  // Lane kin-li: at 25 °C/s the Li (1998) model reaches no diffusional start above Ms (AISI 4140 critical cooling
+  // rate 19.81 °C/s): the row is the athermal Ms row. Hardness is not computed by the Li model -> Unavailable.
+  assert.equal(row.primaryMicrostructure, "Martensite (Athermal)");
+  assert.equal(metric(markup, "Primary Phase"), "Martensite (Athermal)");
+  assert.equal(row.predictedHardness_HRC, null);
+  assert.equal(metric(markup, "Hardness (HRC)"), "Unavailable");
+  assert.equal(metric(markup, "Hardness (HV)"), "Unavailable");
   assert.equal(metric(markup, "Martensite"), `${steel.buildRateMartensite.predictedMartensite_pct}%`);
   const t = text(markup);
   assert.ok(t.includes("CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s)."), t);

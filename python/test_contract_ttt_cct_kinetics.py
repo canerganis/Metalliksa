@@ -46,18 +46,21 @@ class KineticsContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.T
         self.assertEqual(envelope["errorKind"], "validation")
         self.assertEqual((envelope["error"]["code"], envelope["error"]["field"]), ("UNKNOWN_ALLOY", "alloy"))
 
-    def test_recorded_gap_negative_grain_size_fails_only_for_the_steels(self):
-        # Known gap pinned as current behaviour: fixing it means updating the contract note and this test.
-        # No bound is enforced (none is declared). Only the steel JMAK branch uses the grain size.
+    def test_non_positive_grain_size_is_a_validation_error_for_the_modelled_steels(self):
+        # Lane kin-li: the former recorded gap (internal error, exit 1) is closed for the Li-model steels: a
+        # grain size <= 0 is rejected with NON_POSITIVE (exit 2). The contract declares no bound (the other
+        # alloys ignore the value), so the contract-level check stays empty.
         self.assertEqual(self.operation.input_problems({"grainSize_um": -5.0}), [])
-        exit_code, result = run_script(SCRIPT, {"grainSize_um": -5.0})  # default alloy AISI 4140 (steel)
-        self.assertEqual((exit_code, result.get("errorKind")), (1, "internal"))
-        exit_code, result = run_script(SCRIPT, {"alloy": "Inconel 718", "grainSize_um": -5.0})
-        self.assertEqual(exit_code, 0, result)
-        self.assertEqual(result["inputParameters"]["priorGrainSize_um"], -5.0)
+        exit_code, result = run_script(SCRIPT, {"grainSize_um": -5.0})  # default alloy AISI 4140 (Li model)
+        self.assertEqual((exit_code, result.get("errorKind")), (2, "validation"))
+        self.assertEqual((result["error"]["code"], result["error"]["field"]), ("NON_POSITIVE", "grainSize_um"))
+        for alloy in ("Inconel 718", "AISI D2"):
+            exit_code, result = run_script(SCRIPT, {"alloy": alloy, "grainSize_um": -5.0})
+            self.assertEqual(exit_code, 0, result)
+            self.assertEqual(result["inputParameters"]["priorGrainSize_um"], -5.0)
         note = next(f.note for f in self.operation.input if f.key == "grainSize_um")
-        self.assertIn("negative value fails", note)
-        self.assertIn("for Inconel 718, Ti-6Al-4V and Al 7075 it is ignored", note)
+        self.assertIn("rejected with input_validation NON_POSITIVE (exit 2)", note)
+        self.assertIn("Inconel 718, Ti-6Al-4V and Al 7075 it is ignored", note)
 
     def test_gap_closed_equilibrium_text_is_steel_text_only_for_the_steels(self):
         # The former gap (fixed steel text for every alloy) is closed by the fx-kinetics lane: the steels keep

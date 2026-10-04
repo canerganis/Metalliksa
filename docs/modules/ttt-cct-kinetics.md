@@ -19,9 +19,9 @@ Authority: python-ipc `python/kinetics_ttt_cct_solver.py`; timeout 25000 ms; GPU
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `alloy` | Alloy | enum ['AISI 4140', 'AISI 4340', 'AISI D2', 'Inconel 718', 'Ti-6Al-4V', 'Al 7075'] | — | — | — | — | AISI 4140 | The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers. |
-| `coolingRate_C_s` | Selected cooling rate | number | K/s | — | — | — | 10.0 | Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. No bound is enforced. |
-| `grainSize_um` | Prior austenite grain size | number | µm | — | — | — | 25.0 | Passed unconverted by the entry point; no bound is enforced. Only the steel branch of the JMAK expression uses it (AISI 4140, AISI 4340, AISI D2), where a negative value fails (internal error, exit 1); for Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0. |
-| `austTemp_C` | Austenitisation temperature | number | degC | — | — | — | 860.0 | Passed unconverted by the entry point; no bound is enforced. |
+| `coolingRate_C_s` | Selected cooling rate | number | K/s | — | — | — | 10.0 | Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); otherwise no bound is enforced. |
+| `grainSize_um` | Prior austenite grain size | number | µm | — | — | — | 25.0 | Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0. |
+| `austTemp_C` | Austenitisation temperature | number | degC | — | — | — | 860.0 | Passed unconverted by the entry point; no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed). |
 | `agingTemp_C` | Aging temperature | number | degC | — | — | — | 720.0 | Passed unconverted by the entry point; no bound is enforced. |
 | `agingTime_h` | Aging time | number | h | — | — | — | 8.0 | Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid. |
 
@@ -38,7 +38,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: Emits no evidence status: kineticsModel.status (available for the three steels, unavailable with the reason 'kinetics model is steel-only' for Inconel 718, Ti-6Al-4V and Al 7075) and the per-row *_status keys (e.g. cctContinuousCoolingMap[].predictedHardness_HV_status, a hardness-conversion applicability flag) record applicability and availability, not evidence. Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
+- Note: Emits no evidence status: kineticsModel.status (available for AISI 4140 and AISI 4340, unavailable for AISI D2 outside the Li model composition range and with the reason 'kinetics model is steel-only' for Inconel 718, Ti-6Al-4V and Al 7075), kineticsModel.validationStatus 'unvalidated' / evidenceLevel 'screening' and the per-row *_status keys record applicability and availability, not evidence. Transformation start times come from the Li et al. (1998) equations (python test_kinetics_li1998 reproduces the model author's AISI 4140 example and the Li-model CCT panels of Collins et al. 2023 within stated tolerances); no matched experimental TTT/CCT fixture is registered as the contract oracle. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
 
@@ -50,17 +50,18 @@ Background work: none; resources: fetch.
 
 ## Recorded notes
 
-- calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics'; 'Ferrite + alloy carbides (M7C3 / M23C6)' for AISI D2), status static-text-not-a-calphad-calculation; for Inconel 718, Ti-6Al-4V and Al 7075 it is null with status unavailable-kinetics-model-steel-only; no CALPHAD calculation runs in this operation.
-- The TTT/CCT/phase-fraction/hardness model is a steel template: for the non-steel alloys the TTT curves, CCT start, primary microstructure, phase fractions, HRC, martensite fraction, verdict, critical cooling rate and eutectoid Ae1 are null with the reason 'kinetics model is steel-only'. Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS: Inconel 718 and Al 7075 Ms/Mf) are null.
-- cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output (steels only). The diffusional CCT start of every steel row is null: the incubation law has no Ae3 asymptote and tttIsothermalCurves[].floorHit flags the points on the 1 ms floor (tttIncubationFloor).
+- calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics') for AISI 4140 and AISI 4340, status static-text-not-a-calphad-calculation; for AISI D2 it is null with status unavailable-composition-outside-li-model-range and for Inconel 718, Ti-6Al-4V and Al 7075 null with status unavailable-kinetics-model-steel-only; no CALPHAD calculation runs in this operation.
+- TTT/CCT model: Li, Niebuhr, Meekisho & Atteridge (1998) ferrite/pearlite/bainite start curves from composition and ASTM grain size (kineticsModel.sourceLabel, modelVersion li1998-additivity-v1), Grange Ae3/Ae1, Li Bs, Kung-Rayment Ms, CCT starts by the additivity rule per phase (no phase interaction). Reported only for a steel inside the composition range stated by M. Li (1996 thesis p. 86): AISI 4140 and AISI 4340; AISI D2 is outside it and Inconel 718, Ti-6Al-4V and Al 7075 are not steels, so their TTT curves, CCT starts, critical cooling rate and verdict are null with the reason (for the non-steels: 'kinetics model is steel-only'). Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS: Inconel 718 and Al 7075 Ms/Mf) are null.
+- cctContinuousCoolingMap[].phaseFractions, predictedHardness_HRC and predictedHardness_HV are null for every alloy (status unavailable-fractions-not-computed for the modelled steels): the Li model needs the equilibrium ferrite/pearlite amounts of a thermodynamic Fe-C-M model that is not implemented. calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct is given only when no diffusional start is reached above Ms (Koistinen-Marburger at 25 C).
 - The LSW coarsening profile (K = 8 gamma D C_e Vm^2 / (9 R T), C_e in mol/m^3) uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs. It is null at or above the registry Ae3 (steels: Ae1).
-- No validity domain is declared: no source-backed applicability range is established for the kinetic constants.
+- Validity domain (kineticsModel.validityDomain): 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mn+Ni+Cr+Mo<5 (printed as Mo+Ni+Cr+Mo; both sums are checked), 0.01<Al<0.05 wt% (M. Li 1996 thesis p. 86, stated as untested by the author); Al is not in the registry compositions and is reported unchecked.
 - warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt.
 
 ## Source references
 
 - `python/kinetics_ttt_cct_solver.py::solve_phase_transformation_kinetics`
-- `python/kinetics_ttt_cct_solver.py::calculate_jmak_isothermal_kinetics`
+- `python/kinetics_ttt_cct_solver.py::LiModel`
+- `python/kinetics_ttt_cct_solver.py::li_composition_check`
 - `python/kinetics_ttt_cct_solver.py::resolve_kinetics_alloy`
 - `python/kinetics_ttt_cct_solver.py::provenance`
 - `python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES`

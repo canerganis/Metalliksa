@@ -503,6 +503,11 @@ export interface PythonKineticsResult {
     agingTemp_C: number;
     agingTime_h: number;
   };
+  /**
+   * Li (1998) model steels (AISI 4140, AISI 4340): Grange Ae3/Ae1, Li Bs, Kung-Rayment Ms and the model critical
+   * cooling rate (statuses computed-*-screening); Mf null (not modelled). Other alloys: registry echoes with
+   * registry/placeholder statuses, Bs and the critical cooling rate null.
+   */
   criticalTransformationTemperatures: {
     Ae3_BetaTransus_GammaSolvus_C: number;
     /** null for non-steel alloys (Ae1_C_status "unavailable-kinetics-model-steel-only"). */
@@ -511,15 +516,19 @@ export interface PythonKineticsResult {
     /** null for a registry placeholder (Ms_C_status "unavailable-registry-placeholder"). */
     Ms_C: number | null;
     Mf_C: number | null;
-    /** null for non-steel alloys (the kinetics model is steel-only). */
+    /** null unless the Li model is available and the start is fully austenitic. */
     CriticalCoolingRate_CCR_C_s: number | null;
     Ms_C_status?: string;
     Mf_C_status?: string;
     CriticalCoolingRate_CCR_status?: string;
+    Ae3_C_status?: string;
+    Bs_C?: number | null;
+    Bs_C_status?: string;
   };
   /**
-   * Steel TTT points; null for non-steel alloys (kinetics model is steel-only). floorHit: tStart_s is the 1 ms
-   * incubation floor, not a model value.
+   * Li (1998) TTT points (ferrite, pearlite, bainite C-curves: 1 %, 50 %, 99 % of the isothermal reaction); null when
+   * the model is unavailable. avramiExponent_n is null (the Li law uses S(X), not an Avrami exponent); floorHit is
+   * always false (no floor).
    */
   tttIsothermalCurves: Array<{
     temperature_C: number;
@@ -527,13 +536,14 @@ export interface PythonKineticsResult {
     tStart_s: number;
     t50_s: number;
     tFinish_s: number;
-    avramiExponent_n: number;
+    avramiExponent_n: number | null;
     drivingForce_DeltaT_C: number;
     floorHit?: boolean;
   }> | null;
   /**
-   * The values below are null where unavailable: for every non-steel alloy (kinetics model is steel-only) and for a
-   * steel start the 1 ms TTT floor drives (see transformedStart_status / unavailableReason).
+   * CCT rows. Li-model steels: first diffusional 1 % start by the additivity rule (or the Ms row), the independent start
+   * of each phase in phaseStartTemps_C; phase fractions and hardness are null (not computed). Every value is null
+   * when the model is unavailable (see transformedStart_status / unavailableReason).
    */
   cctContinuousCoolingMap: Array<{
     coolingRate_C_s: number;
@@ -554,6 +564,8 @@ export interface PythonKineticsResult {
     phaseFractions_status?: string;
     predictedHardness_HRC_status?: string;
     unavailableReason?: string | null;
+    /** Independent 1 % start of each phase along this cooling path (null: not reached above Ms). */
+    phaseStartTemps_C?: { Ferrite: number | null; Pearlite: number | null; Bainite: number | null } | null;
   }>;
   /** Radius/strengthening/regime are null at or above the registry solvus (steels: Ae1): status says so. */
   lswPrecipitateCoarsening: Array<{
@@ -583,7 +595,10 @@ export interface PythonKineticsResult {
       reason?: string;
     };
   };
-  /** "unavailable" with reason "kinetics model is steel-only" for Inconel 718, Ti-6Al-4V and Al 7075. */
+  /**
+   * "available" for a steel inside the Li (1998) composition range (AISI 4140, AISI 4340); "unavailable" with the
+   * reason for AISI D2 (outside the range) and "kinetics model is steel-only" for Inconel 718, Ti-6Al-4V and Al 7075.
+   */
   kineticsModel?: {
     status: "available" | "unavailable";
     reason: string | null;
@@ -593,11 +608,27 @@ export interface PythonKineticsResult {
     note: string;
     placeholderParameters: string[];
     lswPrecipitateCoarsening?: { status: string; note: string; reason: string | null };
+    modelVersion?: string;
+    sourceLabel?: string;
+    validationStatus?: string;
+    evidenceLevel?: string;
+    validityDomain?: { status: string; source: string; violations: string[]; unchecked: string[] };
+    li1998?: {
+      astmGrainSize_G: number;
+      grainSizeDefinition: string;
+      activationEnergy_J_mol: number;
+      compositionFactors: Record<string, number>;
+      reactionIntegral_S: Record<string, number>;
+      startCriterion: string;
+      criticalCoolingRateDefinition: string;
+      fractionsComputed: boolean;
+      fractionsReason: string;
+    } | null;
   };
-  /** TTT incubation floor summary: points whose tStart_s is the 1 ms floor (floorHit). */
+  /** TTT time-floor summary; the Li law has no floor (floorValue_s null, floorHitCount 0). */
   tttIncubationFloor?: {
     status: string;
-    floorValue_s: number;
+    floorValue_s: number | null;
     pointCount: number | null;
     floorHitCount: number | null;
     note: string;
@@ -1455,7 +1486,7 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch Phase Transformation Kinetics (JMAK / TTT / CCT / LSW) Solver to Python
+   * Dispatch Phase Transformation Kinetics (Li 1998 TTT / additivity CCT / LSW) Solver to Python
    */
   async calculatePhaseKineticsTTTCCT(payload: {
     alloy?: string;

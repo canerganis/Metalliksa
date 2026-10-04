@@ -18,17 +18,23 @@ export const KINETICS_HV_STATUS_NOTES: Readonly<Record<string, string>> = {
     "HV unavailable: the predicted HRC is outside the ASTM E140 Table 1 range (HRC 20-68).",
   "unavailable-no-verified-table-for-alloy-class":
     "HV unavailable: no verified HRC-HV conversion table for this alloy class.",
+  "unavailable-no-predicted-hrc": "HV unavailable: no hardness is predicted (the Li model does not compute hardness).",
 };
 
 const finite = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
-// Status codes of the engine-fix kinetics solver (python/kinetics_ttt_cct_solver.py). The TTT/CCT/phase-fraction/
-// hardness model is a steel template: for the other alloy classes those values are null with the reason
-// "kinetics model is steel-only". A start temperature the 1 ms TTT incubation floor drives is null as well.
+// Status codes of the kinetics solver (python/kinetics_ttt_cct_solver.py, Li et al. 1998 model). The model is
+// reported only for a steel inside the Li composition range; other alloys get null values with the reason
+// ("kinetics model is steel-only" or "composition outside the Li (1998) model range: ...").
 export const KINETICS_STATUS_NOTES: Readonly<Record<string, string>> = {
   "unavailable-kinetics-model-steel-only": "Unavailable: kinetics model is steel-only.",
-  "unavailable-ttt-incubation-law-no-ae3-asymptote":
-    "Unavailable: incubation law has no Ae3 asymptote; start not computed.",
+  "unavailable-composition-outside-li-model-range":
+    "Unavailable: the composition is outside the range stated for the Li (1998) model.",
+  "unavailable-austenitizing-at-or-below-ae3":
+    "Unavailable: the austenitizing temperature is at or below the Grange Ae3 (the model assumes a fully austenitic start).",
+  "unavailable-fractions-not-computed":
+    "Unavailable: phase fractions and hardness are not computed (the Li model needs equilibrium ferrite/pearlite amounts from a thermodynamic model that is not implemented).",
+  "unavailable-not-modelled": "Unavailable: not modelled.",
   "unavailable-aging-temperature-at-or-above-solvus":
     "Unavailable: the aging temperature is at or above the registry solvus (steels: Ae1); no precipitate population.",
   "generic-constants-illustrative":
@@ -36,10 +42,15 @@ export const KINETICS_STATUS_NOTES: Readonly<Record<string, string>> = {
   "registry-screening-value": "Registry screening value (unsourced); not a measured or computed temperature.",
   "unavailable-registry-placeholder": "Unavailable: the registry value is a non-physical placeholder.",
   "athermal-martensite-no-diffusional-start-above-ms": "No diffusional start above Ms; the martensite start is Ms.",
-  "steel-lookup-by-ccr-band-not-computed":
-    "Steel lookup by cooling-rate band (multiples of the registry critical cooling rate), not computed; illustrative.",
+  "li1998-additivity-first-diffusional-start":
+    "First 1 % diffusional start by the additivity rule on the Li (1998) start curves; unvalidated screening value.",
+  "li1998-additivity-screening": "Li (1998) model with the additivity rule; unvalidated screening value.",
+  "computed-grange-1961-screening": "Grange (1961) equation from the composition; screening value.",
+  "computed-li-1998-screening": "Li et al. (1998) bainite-start equation from the composition; screening value.",
+  "computed-andrews-kung-rayment-1982-screening":
+    "Andrews linear Ms equation with the Kung-Rayment (1982) terms, from the composition; screening value.",
+  "no-floor-li-1998-law": "The Li (1998) start-time law has no time floor.",
   "static-text-not-a-calphad-calculation": "Fixed steel text; no equilibrium (CALPHAD) calculation is performed.",
-  "steel-illustrative-correlation": "Steel template with an unsourced critical cooling rate; screening only.",
 };
 
 /** "855 °C" / "98%" for a finite number, else "Unavailable"; never "null", "NaN" or "undefined". */
@@ -84,18 +95,61 @@ export function kineticsHardnessText(row: KineticsHardnessRow | null | undefined
 // ---------------------------------------------------------------------------------------------------------------
 // Phase Kinetics Studio: CCT rows, phase fractions, model status (python/kinetics_ttt_cct_solver.py).
 
-/** The verdict sentence under the CALPHAD-vs-kinetics tab: only the mechanism the solver's verdict supports. */
-export function kineticsVerdictSentence(verdict: unknown, coolingRate: number, modelAvailable: boolean): string {
-  if (!modelAvailable) return "Unavailable: kinetics model is steel-only.";
+/**
+ * The verdict sentence under the CALPHAD-vs-kinetics tab: only the mechanism the solver's verdict supports
+ * (python/kinetics_ttt_cct_solver.py: "No diffusional start above Ms ..." or "<Phase> start at T C ...").
+ */
+export function kineticsVerdictSentence(
+  verdict: unknown,
+  coolingRate: number,
+  modelAvailable: boolean,
+  unavailableReason = "kinetics model is steel-only"
+): string {
+  if (!modelAvailable) return `Unavailable: ${sentence(unavailableReason || "kinetics model unavailable")}`;
   const rate = finite(coolingRate) ? `${coolingRate} °C/s` : "the selected cooling rate";
   if (typeof verdict !== "string") return "";
-  if (verdict.startsWith("Full Martensitic")) {
-    return `At ${rate}, carbon and alloying atoms cannot diffuse across grain boundaries in time; austenite is forced to transform athermally via shear.`;
+  if (verdict.startsWith("No diffusional start")) {
+    return `At ${rate}, no ferrite, pearlite or bainite start is reached above Ms in the Li (1998) additivity model; the austenite transforms athermally (martensite).`;
   }
-  if (verdict.startsWith("Mixed")) {
-    return `At ${rate}, part of the austenite transforms by shear (martensite) and the rest by diffusion (bainite).`;
+  const m = /^(Ferrite|Pearlite|Bainite) start at /.exec(verdict);
+  if (m) {
+    return `At ${rate}, the Li (1998) additivity model reaches a ${m[1].toLowerCase()} start above Ms; the phase fractions are not computed.`;
   }
-  return `At ${rate}, diffusion has time to decompose the austenite; little or no martensite forms.`;
+  return "";
+}
+
+export interface TttPointLike {
+  temperature_C?: number | null;
+  phase?: string | null;
+  tStart_s?: number | null;
+}
+
+/**
+ * "Ferrite 607 °C (82 s) / Bainite 464 °C (4.6 s)": the solver point with the shortest 1 % start time per phase (the
+ * nose of the listed C-curve, a selection of Python's points, not a new calculation); "" when there are no points.
+ */
+export function kineticsNoseText(points: TttPointLike[] | null | undefined): string {
+  const best = new Map<string, { t: number; s: number }>();
+  for (const p of points ?? []) {
+    if (typeof p?.phase !== "string" || !finite(p.temperature_C) || !finite(p.tStart_s)) continue;
+    const prev = best.get(p.phase);
+    if (!prev || p.tStart_s < prev.s) best.set(p.phase, { t: p.temperature_C, s: p.tStart_s });
+  }
+  return [...best.entries()]
+    .map(([phase, v]) => `${phase} ${Math.round(v.t)} °C (${Number(v.s.toPrecision(2))} s)`)
+    .join(" / ");
+}
+
+export interface PhaseStartsLike {
+  phaseStartTemps_C?: { Ferrite?: number | null; Pearlite?: number | null; Bainite?: number | null } | null;
+}
+
+/** "F 721.3 / P 691.9 / B 531.6 °C" with "-" for a phase not reached above Ms; "Unavailable" without data. */
+export function kineticsPhaseStartsText(row: PhaseStartsLike | null | undefined): string {
+  const starts = row?.phaseStartTemps_C;
+  if (!starts) return UNAVAILABLE_TEXT;
+  const cell = (v: unknown) => (finite(v) ? String(v) : "-");
+  return `F ${cell(starts.Ferrite)} / P ${cell(starts.Pearlite)} / B ${cell(starts.Bainite)} °C`;
 }
 
 export interface LswRowLike {
@@ -186,6 +240,8 @@ export interface KineticsModelLike {
   status?: string | null;
   reason?: string | null;
   note?: string | null;
+  validationStatus?: string | null;
+  evidenceLevel?: string | null;
 }
 export interface TttIncubationFloorLike {
   status?: string | null;
@@ -196,6 +252,8 @@ export interface TttIncubationFloorLike {
 
 export interface KineticsModelBanner {
   available: boolean;
+  /** Headline when available: the model name with its evidence level and validation status. */
+  headline: string;
   /** Headline: the reason when unavailable, else "" */
   reason: string;
   /** The solver's caution about the model (illustrative steel template, or why non-steels are refused). */
@@ -211,8 +269,10 @@ export function kineticsModelBanner(
   const available = model?.status === "available";
   const hits = floor?.floorHitCount;
   const count = floor?.pointCount;
+  const labels = [model?.evidenceLevel, model?.validationStatus].filter((v): v is string => typeof v === "string" && !!v);
   return {
     available,
+    headline: available ? `Li et al. (1998) TTT/CCT model${labels.length ? ` (${labels.join(", ")})` : ""}.` : "",
     reason: available ? "" : sentence(model?.reason || "Kinetics model unavailable"),
     caution: typeof model?.note === "string" ? model.note : "",
     floorLine:

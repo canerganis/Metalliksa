@@ -49,7 +49,7 @@ def get_system_status():
             },
             "kinetics_ttt_cct_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "kinetics_ttt_cct_solver.py")),
-                "description": "Johnson-Mehl-Avrami-Kolmogorov (JMAK) TTT C-curves, Scheil CCT continuous cooling, LSW coarsening & CALPHAD vs Kinetics gap"
+                "description": "Li et al. (1998) TTT C-curves and additivity-rule CCT starts for low-alloy steels (screening, unvalidated), LSW coarsening & CALPHAD vs Kinetics gap"
             },
             "icme_multiscale_pipeline_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "icme_multiscale_pipeline_solver.py")),
