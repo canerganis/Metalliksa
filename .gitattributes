@@ -101,3 +101,6 @@
 # LPBF 5c implementation pin and parity goldens: identical LF bytes on every checkout.
 /python/lpbf_implementation_fingerprint.expected text eol=lf
 /python/golden/lpbf_parity/** text eol=lf
+
+# Pourbaix 25 C species table emitted by python/pourbaix_species_25c.py: identical LF bytes on every checkout.
+/src/generated/pourbaixSpecies25C.json text eol=lf
