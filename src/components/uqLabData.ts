@@ -451,10 +451,10 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
   },
   {
     id: "alsi10mg-lpbf-ams4215",
-    name: "AlSi10Mg Additive LPBF As-Built & SR (AMS 4215)",
+    name: "AlSi10Mg Additive LPBF As-Built & SR (ASTM F3318)",
     materialClass: "Additive Metal",
     baseMetal: "Al",
-    specification: "AMS 4215 / ASTM F3318",
+    specification: "ASTM F3318",
     mmpdsChapter: "Additive Qualification Protocol (MMPDS Sec. 9)",
     productForm: "Laser Powder Bed Fusion (LPBF) Additive Build Jobs",
     heatTreatment: "Stress Relief 300°C / 2h Air Cool (Retaining fine cellular Si-eutectic)",
