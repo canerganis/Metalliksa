@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Validity envelope of the LPBF enthalpy-FV reference transient (WP-N2).
 
-Sweeps alloy x mesh x absorbed-laser power with the standard-mode, reference
-backend, homogenised powder layer and records, per case, whether run() completes
+Sweeps alloy x mesh x nominal laser power power_W (absorbed = power_W x
+absorptivity) with the standard-mode, reference backend, homogenised powder
+layer and records, per case, whether run() completes
 or stops at the boiling validity stop, plus width/depth/length and peak cell
 temperature of completed cases.
 
