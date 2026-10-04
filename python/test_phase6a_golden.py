@@ -72,6 +72,9 @@ class GoldenRegressionTest(unittest.TestCase):
 
     def _check(self, solver: str, case: str):
         doc = golden.load_golden(solver, case)
+        # Design step (b): a re-blessed expectation (step_b/<case>.json) replaces the
+        # d33b6f5 golden for the comparison; StepBGoldenTest checks its recorded drift.
+        expected = golden.load_expected(solver, case)
         # Run the CASES payload, not doc["input"]: golden files store the input with
         # sorted keys, and key order is significant for some solvers (stochastic UQ maps
         # composition elements to Sobol dimensions in insertion order).
@@ -94,10 +97,10 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertIsNot(doc["stdout"].get("success"), False)
             self.assertNotIn("error", doc["stdout"])
             return
-        self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
-        rows = drift_report.diff(doc["stdout"], fresh["stdout"])
+        self.assertEqual(fresh["exitCode"], expected["exitCode"], fresh["stderr"])
+        rows = drift_report.diff(expected["stdout"], fresh["stdout"])
         self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
-        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(doc["stdout"]))
+        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(expected["stdout"]))
 
     def test_tafel_corrosion_rate_solver(self):
         for case in golden.CASES["tafel_corrosion_rate_solver"]:
@@ -182,6 +185,101 @@ class GoldenBindingTest(unittest.TestCase):
             golden.capture("pourbaix_solver", "cu_nochloride", force=True, from_revision="HEAD")
 
 
+class StepBGoldenTest(unittest.TestCase):
+    """Re-blessed expectations of design step (b) carry their full drift against d33b6f5."""
+
+    def _step_b_files(self):
+        return sorted(golden.GOLDEN_DIR.glob(f"*/{golden.STEP_B_DIR}/*.json"))
+
+    def test_every_step_b_file_belongs_to_a_known_case(self):
+        for path in self._step_b_files():
+            solver, case = path.parent.parent.name, path.stem
+            with self.subTest(file=f"{solver}/{case}"):
+                self.assertIn(solver, golden.CASES)
+                self.assertIn(case, golden.CASES[solver])
+                # A behaviour change (validation envelope or success-flag flip) is never a re-bless.
+                self.assertNotIn((solver, case), EXPECTED_BEHAVIOUR_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                self.assertNotIn((solver, case), golden.step_b_excluded_cases())
+
+    def test_excluded_cases_cover_every_behaviour_change(self):
+        excluded = golden.step_b_excluded_cases()
+        for key in (set(EXPECTED_BEHAVIOUR_CHANGES) | set(golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
+                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)):
+            self.assertIn(key, excluded)
+
+    def test_recorded_drift_is_a_bounded_value_change(self):
+        # Fix round item 7: numeric rows only (changed strings only under pythonCode),
+        # |rel| <= 1e-2, tafel <= 3 * |EW rel| + 1e-2 (see step_b_max_rel).
+        for path in self._step_b_files():
+            solver, case = path.parent.parent.name, path.stem
+            with self.subTest(file=f"{solver}/{case}"):
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"]), [])
+
+    def test_guard_rejects_structural_and_large_drift(self):
+        num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
+        self.assertEqual(golden.step_b_violations("kinetics_ttt_cct_solver", [num("x", 0.009)]), [])
+        self.assertTrue(golden.step_b_violations("kinetics_ttt_cct_solver", [num("x", 0.02)]))
+        self.assertTrue(golden.step_b_violations("icme_multiscale_pipeline_solver",
+                                                 [{"key": "a", "kind": "added", "old": None, "new": 1}]))
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver",
+                                                 [{"key": "alloyName", "kind": "changed", "old": "a", "new": "b"}]))
+        self.assertEqual(golden.step_b_violations("tafel_corrosion_rate_solver",
+                                                  [{"key": "pythonCode", "kind": "changed", "old": "a", "new": "b"}]), [])
+        rows = [num("equivalentWeight", 0.03), num("remainingPittingMm", -0.09)]
+        self.assertEqual(golden.step_b_violations("tafel_corrosion_rate_solver", rows), [])
+        self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", rows + [num("x", 0.2)]))
+
+    def test_recorded_solver_sha256_is_the_current_solver(self):
+        # A solver edit after a re-bless must come with a new re-bless (and drift table).
+        for path in self._step_b_files():
+            solver = path.parent.parent.name
+            with self.subTest(file=str(path.relative_to(golden.GOLDEN_DIR))):
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(doc["solverSha256"], golden.normalised_sha256(golden.solver_bytes(solver)))
+
+    def test_step_b_metadata_and_recorded_drift(self):
+        for path in self._step_b_files():
+            solver, case = path.parent.parent.name, path.stem
+            with self.subTest(file=f"{solver}/{case}"):
+                doc = json.loads(path.read_text(encoding="utf-8"))
+                base = golden.load_golden(solver, case)
+                self.assertEqual(doc["schema"], golden.STEP_B_SCHEMA)
+                self.assertEqual(doc["label"], golden.STEP_B_LABEL)
+                self.assertEqual((doc["solver"], doc["case"]), (solver, case))
+                self.assertEqual(doc["solverFile"], f"python/{solver}.py")
+                self.assertEqual(len(doc["solverSha256"]), 64)
+                self.assertEqual(golden.canonical(doc["input"]), golden.canonical(golden.CASES[solver][case]))
+                self.assertEqual(doc["exitCode"], base["exitCode"])
+                rows = drift_report.diff(base["stdout"], doc["stdout"])
+                # A re-bless exists only for a real drift, and the recorded table is complete.
+                self.assertTrue(rows)
+                self.assertEqual(golden.canonical(doc["driftVsBase"]), golden.canonical(rows))
+                self.assertTrue(text_ends_with_newline(path))
+
+    def test_load_expected_prefers_step_b(self):
+        for path in self._step_b_files():
+            solver, case = path.parent.parent.name, path.stem
+            self.assertEqual(golden.load_expected(solver, case)["label"], golden.STEP_B_LABEL)
+        solver, case = "pourbaix_solver", "cu_nochloride"
+        if not golden.step_b_path(solver, case).exists():
+            self.assertEqual(golden.load_expected(solver, case), golden.load_golden(solver, case))
+
+    def test_bless_dry_run_reports_no_drift_for_the_committed_state(self):
+        import bless_step_b
+        before = sorted(p.as_posix() for p in golden.GOLDEN_DIR.rglob("*.json"))
+        drift, log = bless_step_b.bless("pourbaix_solver", dry_run=True)
+        self.assertEqual([rows for _, rows in drift if rows], [])
+        self.assertTrue(any("behaviour change" in line for line in log))
+        self.assertEqual(sorted(p.as_posix() for p in golden.GOLDEN_DIR.rglob("*.json")), before)
+
+
+def text_ends_with_newline(path: Path) -> bool:
+    return path.read_text(encoding="utf-8").endswith("\n")
+
+
 class ProvenanceTest(unittest.TestCase):
     """Provenance is stripped from the bit-exact comparison, so pin it here."""
 
@@ -204,15 +302,17 @@ class ProvenanceTest(unittest.TestCase):
                 self.assertEqual(prov["registryVersion"], alloy_registry.REGISTRY_VERSION)
                 self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
                 self.assertEqual(prov["registryAlloyId"], registry_id)
-                self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
-                self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+                # Design step (b): exact SI 2019 products.
+                self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+                self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
 
     def test_pourbaix_provenance(self):
         import physical_constants as pc
         prov = self._fresh("pourbaix_solver", "fe_chloride_points")["provenance"]["provenance"]
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+        # Design step (b): exact SI 2019 products.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
 
     def test_validation_envelope_has_no_provenance(self):
         for solver, case in EXPECTED_BEHAVIOUR_CHANGES:

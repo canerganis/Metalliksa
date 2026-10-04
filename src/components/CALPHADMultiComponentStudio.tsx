@@ -58,6 +58,7 @@ import {
   PythonCalphadDatabaseEntry,
 } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
+import { isPythonValidationError } from "../utils/pythonValidationError";
 
 export const CALPHADMultiComponentStudio: React.FC = () => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
@@ -101,6 +102,8 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
   const [pythonStatus, setPythonStatus] = useState<PythonEngineStatus | null>(null);
   const [isSolving, setIsSolving] = useState<boolean>(false);
   const [asyncSolveResult, setAsyncSolveResult] = useState<PythonCalphadSolveResult | null>(null);
+  // Message of a Python 422 validation refusal (shown; the client solver result is used instead).
+  const [pythonValidationMessage, setPythonValidationMessage] = useState<string | null>(null);
 
   // Adaptive Temperature Grid State
   const [adaptiveGrid, setAdaptiveGrid] = useState<boolean>(true);
@@ -143,9 +146,26 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
         )
         .then((res) => {
           if (isMounted) {
+            setPythonValidationMessage(null);
             setAsyncSolveResult(res);
             setIsSolving(false);
           }
+        })
+        .catch((err) => {
+          if (isPythonValidationError(err)) {
+            // Python refused the input (HTTP 422): say so, then show the client solver result.
+            if (isMounted) setPythonValidationMessage(err.message);
+            return pythonComputationService
+              .solveCalphadEquilibrium(customAlloy, 500, 1450, 25, false)
+              .then((clientRes) => {
+                if (isMounted) {
+                  setAsyncSolveResult(clientRes);
+                  setIsSolving(false);
+                }
+              });
+          }
+          console.warn("Async solve error:", err);
+          if (isMounted) setIsSolving(false);
         })
         .catch((err) => {
           console.warn("Async solve error:", err);
@@ -368,6 +388,12 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {pythonValidationMessage && (
+        <div role="alert" className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs">
+          Python solver refused the input: {pythonValidationMessage}. Client-side solver result shown.
+        </div>
+      )}
 
       {/* Python HPC Telemetry & Execution Banner */}
       <div className="px-4 py-2.5 rounded-xl bg-[#060a14] border border-[#1a273e] flex flex-wrap items-center justify-between gap-3 text-xs">

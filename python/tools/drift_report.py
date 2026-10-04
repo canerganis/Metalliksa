@@ -2,8 +2,9 @@
 """
 Phase 6a drift report: per-key old / new / absolute delta / relative delta.
 
-Compares a golden baseline (python/golden/phase6a/<solver>/<case>.json) with a
-fresh run of the current solver, or two arbitrary JSON documents. Numeric leaves
+Compares the current golden expectation (python/golden/phase6a/<solver>/step_b/<case>.json
+when a design-step-(b) re-bless exists, else <solver>/<case>.json) with a fresh run of
+the current solver, or two arbitrary JSON documents. Numeric leaves
 are reported with abs = new - old and rel = (new - old) / |old| (None when old is
 0); non-numeric differences, missing and added keys are reported as such.
 
@@ -77,11 +78,12 @@ def diff(old: Any, new: Any) -> List[Dict[str, Any]]:
     return rows
 
 
-def _fmt(x: Any) -> str:
+def _fmt(x: Any, exact: bool = False) -> str:
     if x is None:
         return "-"
     if isinstance(x, float):
-        return f"{x:.6g}"
+        # old/new values are printed exactly (repr round-trips); deltas to 3 figures.
+        return repr(x) if exact else f"{x:.3g}"
     text = json.dumps(x, ensure_ascii=False) if not isinstance(x, str) else x
     return text if len(text) <= 48 else text[:45] + "..."
 
@@ -98,7 +100,7 @@ def render(title: str, rows: List[Dict[str, Any]], limit: Optional[int] = None) 
     lines.append("| key | old | new | abs | rel | kind |")
     lines.append("|---|---|---|---|---|---|")
     for r in rows[:limit] if limit else rows:
-        lines.append(f"| {r['key']} | {_fmt(r['old'])} | {_fmt(r['new'])} | "
+        lines.append(f"| {r['key']} | {_fmt(r['old'], True)} | {_fmt(r['new'], True)} | "
                      f"{_fmt(r.get('abs'))} | {_fmt(r.get('rel'))} | {r['kind']} |")
     if limit and len(rows) > limit:
         lines.append(f"| ... {len(rows) - limit} more | | | | | |")
@@ -111,8 +113,11 @@ def golden_vs_current(solver_filter: Optional[str] = None,
     for solver, case in golden.iter_golden_cases():
         if solver_filter and solver != solver_filter:
             continue
-        doc = golden.load_golden(solver, case)
-        fresh = golden.run_solver(solver, doc["input"], python=python)
+        # The current expectation (step_b re-bless if any, else the d33b6f5 golden), run
+        # with the CASES payload: the stored input has sorted keys, and key order matters
+        # for some solvers (see test_phase6a_golden.GoldenRegressionTest._check).
+        doc = golden.load_expected(solver, case)
+        fresh = golden.run_solver(solver, golden.CASES[solver][case], python=python)
         old = {"exitCode": doc["exitCode"], "stdout": doc["stdout"]}
         new = {"exitCode": fresh["exitCode"], "stdout": fresh["stdout"]}
         out.append((f"{solver}/{case}", diff(old, new)))

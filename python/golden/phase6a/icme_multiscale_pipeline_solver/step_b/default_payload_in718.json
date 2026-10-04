@@ -1,0 +1,1042 @@
+{
+ "case": "default_payload_in718",
+ "driftVsBase": [
+  {
+   "abs": -0.10000000000002274,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m",
+   "kind": "numeric",
+   "new": 740.6,
+   "old": 740.7,
+   "rel": -0.00013500742540842816
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.hollomon_K_MPa",
+   "kind": "numeric",
+   "new": 1771.2,
+   "old": 1771.1,
+   "rel": 5.646208570952314e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[10].trueStressMPa",
+   "kind": "numeric",
+   "new": 1563.0,
+   "old": 1562.9,
+   "rel": 6.398362019317233e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1505.1,
+   "old": 1505.0,
+   "rel": 6.644518272419206e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].trueStressMPa",
+   "kind": "numeric",
+   "new": 1567.9,
+   "old": 1567.8,
+   "rel": 6.378364587328513e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1504.4,
+   "old": 1504.3,
+   "rel": 6.647610184147871e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].trueStressMPa",
+   "kind": "numeric",
+   "new": 1572.4,
+   "old": 1572.3,
+   "rel": 6.360109393890252e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1503.4,
+   "old": 1503.3,
+   "rel": 6.652032195844903e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].trueStressMPa",
+   "kind": "numeric",
+   "new": 1576.6,
+   "old": 1576.5,
+   "rel": 6.343165239448718e-05
+  },
+  {
+   "abs": -0.001000000000000334,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[16].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 5.911,
+   "old": 5.912,
+   "rel": -0.00016914749661710657
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1497.1,
+   "old": 1497.0,
+   "rel": 6.680026720100805e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].trueStressMPa",
+   "kind": "numeric",
+   "new": 1590.8,
+   "old": 1590.7,
+   "rel": 6.286540516747913e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[18].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1495.1,
+   "old": 1495.0,
+   "rel": 6.688963210696257e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[19].trueStressMPa",
+   "kind": "numeric",
+   "new": 1596.8,
+   "old": 1596.7,
+   "rel": 6.262917266857208e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[1].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1432.7,
+   "old": 1432.6,
+   "rel": 6.980315510270588e-05
+  },
+  {
+   "abs": -0.001000000000000334,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 7.302,
+   "old": 7.303,
+   "rel": -0.00013693002875535176
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].trueStressMPa",
+   "kind": "numeric",
+   "new": 1599.6,
+   "old": 1599.5,
+   "rel": 6.251953735536671e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[21].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1488.4,
+   "old": 1488.3,
+   "rel": 6.719075455226529e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[22].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1486.0,
+   "old": 1485.9,
+   "rel": 6.729927989764389e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1483.5,
+   "old": 1483.4,
+   "rel": 6.741270055272283e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].trueStressMPa",
+   "kind": "numeric",
+   "new": 1607.3,
+   "old": 1607.2,
+   "rel": 6.222000995514501e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[25].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1478.3,
+   "old": 1478.2,
+   "rel": 6.764984440529634e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[26].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1475.6,
+   "old": 1475.5,
+   "rel": 6.777363605551275e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[28].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1470.1,
+   "old": 1470.0,
+   "rel": 6.802721088429187e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[30].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1464.4,
+   "old": 1464.3,
+   "rel": 6.829201666334524e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[31].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1461.5,
+   "old": 1461.4,
+   "rel": 6.842753524011841e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[32].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1458.6,
+   "old": 1458.5,
+   "rel": 6.856359273219681e-05
+  },
+  {
+   "abs": -0.0009999999999994458,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[35].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 12.518,
+   "old": 12.519,
+   "rel": -7.987858455143747e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[36].trueStressMPa",
+   "kind": "numeric",
+   "new": 1632.8,
+   "old": 1632.7,
+   "rel": 6.124823911306979e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1431.1,
+   "old": 1431.0,
+   "rel": 6.98812019566101e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].trueStressMPa",
+   "kind": "numeric",
+   "new": 1634.4,
+   "old": 1634.3,
+   "rel": 6.118827632633937e-05
+  },
+  {
+   "abs": -0.0009999999999994458,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 13.909,
+   "old": 13.91,
+   "rel": -7.189072609629373e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].trueStressMPa",
+   "kind": "numeric",
+   "new": 1637.5,
+   "old": 1637.4,
+   "rel": 6.107243190418288e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[3].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1482.7,
+   "old": 1482.6,
+   "rel": 6.744907594775154e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1288.9,
+   "old": 1288.8,
+   "rel": 7.759155803859127e-05
+  },
+  {
+   "abs": -9.999999999998899e-05,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].trueStrain",
+   "kind": "numeric",
+   "new": 0.1393,
+   "old": 0.1394,
+   "rel": -0.0007173601147775394
+  },
+  {
+   "abs": -0.0009999999999994458,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[43].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 15.3,
+   "old": 15.301,
+   "rel": -6.535520554208521e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[44].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1232.7,
+   "old": 1232.6,
+   "rel": 8.112932013640794e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[45].trueStressMPa",
+   "kind": "numeric",
+   "new": 1646.0,
+   "old": 1645.9,
+   "rel": 6.075703262647126e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[46].trueStressMPa",
+   "kind": "numeric",
+   "new": 1647.3,
+   "old": 1647.2,
+   "rel": 6.0709082078623755e-05
+  },
+  {
+   "abs": -0.0010000000000012221,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 16.691,
+   "old": 16.692,
+   "rel": -5.9908938413684524e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].trueStressMPa",
+   "kind": "numeric",
+   "new": 1648.6,
+   "old": 1648.5,
+   "rel": 6.0661207157967274e-05
+  },
+  {
+   "abs": -0.0009999999999976694,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[50].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 17.734,
+   "old": 17.735,
+   "rel": -5.6385678037646994e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[51].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1039.5,
+   "old": 1039.4,
+   "rel": 9.620935154888305e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[53].trueStressMPa",
+   "kind": "numeric",
+   "new": 1655.9,
+   "old": 1655.8,
+   "rel": 6.039376736329051e-05
+  },
+  {
+   "abs": -0.0010000000000012221,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[54].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 19.125,
+   "old": 19.126,
+   "rel": -5.228484785115665e-05
+  },
+  {
+   "abs": 0.10000000000002274,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[55].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 931.5,
+   "old": 931.4,
+   "rel": 0.00010736525660298769
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[56].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 904.8,
+   "old": 904.7,
+   "rel": 0.00011053387863370073
+  },
+  {
+   "abs": 0.10000000000002274,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[57].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 878.2,
+   "old": 878.1,
+   "rel": 0.00011388224575791224
+  },
+  {
+   "abs": -0.0010000000000012221,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 20.516,
+   "old": 20.517,
+   "rel": -4.8740069210957845e-05
+  },
+  {
+   "abs": 0.10000000000002274,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 851.7,
+   "old": 851.6,
+   "rel": 0.00011742602160641467
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[59].trueStressMPa",
+   "kind": "numeric",
+   "new": 1662.5,
+   "old": 1662.4,
+   "rel": 6.015399422516184e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[5].trueStressMPa",
+   "kind": "numeric",
+   "new": 1528.4,
+   "old": 1528.3,
+   "rel": 6.543217954598994e-05
+  },
+  {
+   "abs": -9.99999999999994e-05,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[6].trueStrain",
+   "kind": "numeric",
+   "new": 0.024,
+   "old": 0.0241,
+   "rel": -0.004149377593360971
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[7].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1503.2,
+   "old": 1503.1,
+   "rel": 6.652917304246985e-05
+  },
+  {
+   "abs": 0.10000000000013642,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[8].trueStressMPa",
+   "kind": "numeric",
+   "new": 1551.7,
+   "old": 1551.6,
+   "rel": 6.444960041256537e-05
+  },
+  {
+   "abs": 0.09999999999990905,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[9].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 1505.3,
+   "old": 1505.2,
+   "rel": 6.643635397283355e-05
+  },
+  {
+   "abs": -0.00999999999999801,
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm",
+   "kind": "numeric",
+   "new": 61.46,
+   "old": 61.47,
+   "rel": -0.0001626809825931025
+  }
+ ],
+ "exitCode": 0,
+ "gitHead": "5391bdd54af980305545d5b93c5381030cc8adf1",
+ "input": {},
+ "invocation": "python -B icme_multiscale_pipeline_solver.py < input (cwd python/)",
+ "label": "phase6a-step-b",
+ "provenance": {
+  "provenance": {
+   "atomicWeightsSource": "IUPAC CIAAW standard atomic weights 2021 (abridged five-figure values)",
+   "constantsNote": "Exact SI 2019 R = N_A*k and CIAAW 2021 abridged atomic weights (Phase 6a value step); they replaced R = 8.314 and rounded weights.",
+   "constantsVersion": "physical-constants-1",
+   "domainDataBaseRevision": "7f3f803",
+   "domainDataVersion": "alloy-data-calphad-battery-icme-2",
+   "gasConstantR_J_molK": 8.31446261815324,
+   "registryVersion": "alloy-registry-2"
+  }
+ },
+ "schema": "phase6a-step-b-golden-1",
+ "solver": "icme_multiscale_pipeline_solver",
+ "solverFile": "python/icme_multiscale_pipeline_solver.py",
+ "solverSha256": "699dc45f6c0fc77f6e08fa0427233e59685f2ca1559071492b3be416d96738e8",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "caeExportCards": {
+   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for Inconel 718\n*MATERIAL, NAME=INCONEL_718\n*DENSITY\n8190.00\n*ELASTIC, TYPE=ISOTROPIC\n223867.64, 0.3100\n*PLASTIC\n1192.0, 0.0000\n1584.2, 0.0500\n1621.2, 0.1000\n1655.3, 0.1800\n*RATE DEPENDENT\n0.01400, 0.001\n*TENSILE FAILURE\n0.1812, 0.0, 0.0",
+   "ansys": "! ANSYS APDL Material Card: Inconel 718\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,223867.64\nMPDATA,PRXY,1,,0.3100\nMPDATA,DENS,1,,8.1900e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1192.0\nTBPT,,0.05,1584.2\nTBPT,,0.10,1621.2\nTBPT,,0.20,1661.7",
+   "lsDyna": "$*LS-DYNA MATERIAL DECK: Inconel 718\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  8.190e-03  223867.6   0.3100  1192.0       0.0  0.1812       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0140       0.0         0         0       0.0"
+  },
+  "engine": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)",
+  "inputParameters": {
+   "agingTemp_C": 720.0,
+   "agingTime_h": 8.0,
+   "alloyName": "Inconel 718",
+   "baseMetal": "Ni",
+   "componentType": "turbine_blade_root",
+   "coolingRate_C_s": 150000.0,
+   "crystalSystem": "FCC",
+   "grainSize_um": 1.6920127332110155
+  },
+  "scale0_dftAtomistic": {
+   "burgersVector_b_nm": 0.2535,
+   "elasticTensor_Cij_GPa": {
+    "C11": 247.0,
+    "C12": 147.0,
+    "C44": 125.0
+   },
+   "homogenizedModuli": {
+    "bulkModulus_B_GPa": 180.3,
+    "cauchyPressure_GPa": 22.0,
+    "ductilityVerdict": "Ductile (Pugh B/G > 1.75)",
+    "poissonsRatio": 0.31,
+    "pughRatio_B_over_G": 2.083,
+    "shearModulus_G_GPa": 86.6,
+    "youngsModulus_E_GPa": 223.9
+   },
+   "latticeParameter_a0_Angstrom": 3.585,
+   "peierlsNabarroLatticeFriction": {
+    "sigma_0_friction_stress_MPa": 226.3,
+    "tau_PN_MPa": 148.08,
+    "taylorFactor_M": 3.06
+   },
+   "slipPlane_dhkl_nm": 0.207
+  },
+  "scale1_calphadSoluteMisfit": {
+   "atomicFractions": {
+    "Al": 1.07,
+    "C": 0.24,
+    "Cr": 21.12,
+    "Fe": 18.63,
+    "Mn": 0.21,
+    "Mo": 1.81,
+    "Nb": 3.17,
+    "Ni": 52.25,
+    "Si": 0.41,
+    "Ti": 1.09
+   },
+   "soluteBreakdown": {
+    "Al": {
+     "at_frac": 1.07,
+     "modulusMisfit": 0.658,
+     "sizeMisfit": 0.153,
+     "strengthContribution_MPa": 12.7,
+     "wt_pct": 0.5
+    },
+    "C": {
+     "at_frac": 0.24,
+     "modulusMisfit": 1.632,
+     "sizeMisfit": 0.379,
+     "strengthContribution_MPa": 35.8,
+     "wt_pct": 0.05
+    },
+    "Cr": {
+     "at_frac": 21.12,
+     "modulusMisfit": 0.513,
+     "sizeMisfit": 0.032,
+     "strengthContribution_MPa": 41.4,
+     "wt_pct": 19.0
+    },
+    "Fe": {
+     "at_frac": 18.63,
+     "modulusMisfit": 0.079,
+     "sizeMisfit": 0.0,
+     "strengthContribution_MPa": 27.6,
+     "wt_pct": 18.0
+    },
+    "Mn": {
+     "at_frac": 0.21,
+     "modulusMisfit": 0.053,
+     "sizeMisfit": 0.024,
+     "strengthContribution_MPa": 5.4,
+     "wt_pct": 0.2
+    },
+    "Mo": {
+     "at_frac": 1.81,
+     "modulusMisfit": 0.658,
+     "sizeMisfit": 0.121,
+     "strengthContribution_MPa": 48.5,
+     "wt_pct": 3.0
+    },
+    "Nb": {
+     "at_frac": 3.17,
+     "modulusMisfit": 0.5,
+     "sizeMisfit": 0.177,
+     "strengthContribution_MPa": 85.8,
+     "wt_pct": 5.1
+    },
+    "Si": {
+     "at_frac": 0.41,
+     "modulusMisfit": 0.474,
+     "sizeMisfit": 0.048,
+     "strengthContribution_MPa": 7.2,
+     "wt_pct": 0.2
+    },
+    "Ti": {
+     "at_frac": 1.09,
+     "modulusMisfit": 0.421,
+     "sizeMisfit": 0.169,
+     "strengthContribution_MPa": 20.9,
+     "wt_pct": 0.9
+    }
+   },
+   "totalSolidSolutionStrengthening_MPa": 285.2
+  },
+  "scale2_microstructureKinetics": {
+   "computedSDAS_um": 0.94,
+   "coolingRate_C_s": 150000.0,
+   "dislocationDensity_rho_m2": "9.84e+13",
+   "grainSize_d_um": 1.69,
+   "hallPetchStrengthening_MPa": 322.9,
+   "precipitationKinetics": {
+    "activeMechanism": "Dislocation Particle Shearing (Friedel-Gere Cutting)",
+    "agingTemp_C": 720.0,
+    "agingTime_h": 8.0,
+    "effectivePrecipitationStrengthening_MPa": 222.6,
+    "interparticleSpacing_nm": 3.2,
+    "meanPrecipitateRadius_nm": 1.85,
+    "orowanStrength_MPa": 900.0,
+    "shearingStrength_MPa": 222.6,
+    "volumeFractionPct": 15.0
+   },
+   "taylorDislocationStrengthening_MPa": 213.1
+  },
+  "scale3_continuumPlasticity": {
+   "johnsonCookParameters": {
+    "A_MPa": 1192,
+    "B_MPa": 579,
+    "C": 0.014,
+    "T_melt_C": 1350.0,
+    "m": 1.15,
+    "n": 0.13
+   },
+   "mechanicalProperties": {
+    "fractureToughness_K1c_MPa_sqrt_m": 740.6,
+    "hollomon_K_MPa": 1771.2,
+    "hollomon_n": 0.13,
+    "totalElongationPct": 19.9,
+    "ultimateTensileStrength_UTS_MPa": 1191.8,
+    "uniformElongationPct": 13.0,
+    "yieldStrength_Rp02_MPa": 1191.8
+   },
+   "strengtheningContributions_MPa": {
+    "deltaSigma_Disloc_Forest": 213.1,
+    "deltaSigma_HP_GrainBoundary": 322.9,
+    "deltaSigma_Precip_OrowanCutting": 222.6,
+    "deltaSigma_SS_SolidSolution": 285.2,
+    "sigma_0_LatticeFriction": 226.3
+   },
+   "stressStrainCurve": [
+    {
+     "engineeringStrainPct": 0.348,
+     "engineeringStressMPa": 778.5,
+     "trueStrain": 0.0035,
+     "trueStressMPa": 778.5
+    },
+    {
+     "engineeringStrainPct": 0.695,
+     "engineeringStressMPa": 1432.7,
+     "trueStrain": 0.0069,
+     "trueStressMPa": 1442.6
+    },
+    {
+     "engineeringStrainPct": 1.043,
+     "engineeringStressMPa": 1467.6,
+     "trueStrain": 0.0104,
+     "trueStressMPa": 1482.9
+    },
+    {
+     "engineeringStrainPct": 1.391,
+     "engineeringStressMPa": 1482.7,
+     "trueStrain": 0.0138,
+     "trueStressMPa": 1503.3
+    },
+    {
+     "engineeringStrainPct": 1.739,
+     "engineeringStressMPa": 1491.5,
+     "trueStrain": 0.0172,
+     "trueStressMPa": 1517.4
+    },
+    {
+     "engineeringStrainPct": 2.086,
+     "engineeringStressMPa": 1497.1,
+     "trueStrain": 0.0206,
+     "trueStressMPa": 1528.4
+    },
+    {
+     "engineeringStrainPct": 2.434,
+     "engineeringStressMPa": 1500.8,
+     "trueStrain": 0.024,
+     "trueStressMPa": 1537.3
+    },
+    {
+     "engineeringStrainPct": 2.782,
+     "engineeringStressMPa": 1503.2,
+     "trueStrain": 0.0274,
+     "trueStressMPa": 1545.0
+    },
+    {
+     "engineeringStrainPct": 3.13,
+     "engineeringStressMPa": 1504.6,
+     "trueStrain": 0.0308,
+     "trueStressMPa": 1551.7
+    },
+    {
+     "engineeringStrainPct": 3.477,
+     "engineeringStressMPa": 1505.3,
+     "trueStrain": 0.0342,
+     "trueStressMPa": 1557.6
+    },
+    {
+     "engineeringStrainPct": 3.825,
+     "engineeringStressMPa": 1505.4,
+     "trueStrain": 0.0375,
+     "trueStressMPa": 1563.0
+    },
+    {
+     "engineeringStrainPct": 4.173,
+     "engineeringStressMPa": 1505.1,
+     "trueStrain": 0.0409,
+     "trueStressMPa": 1567.9
+    },
+    {
+     "engineeringStrainPct": 4.521,
+     "engineeringStressMPa": 1504.4,
+     "trueStrain": 0.0442,
+     "trueStressMPa": 1572.4
+    },
+    {
+     "engineeringStrainPct": 4.868,
+     "engineeringStressMPa": 1503.4,
+     "trueStrain": 0.0475,
+     "trueStressMPa": 1576.6
+    },
+    {
+     "engineeringStrainPct": 5.216,
+     "engineeringStressMPa": 1502.1,
+     "trueStrain": 0.0508,
+     "trueStressMPa": 1580.4
+    },
+    {
+     "engineeringStrainPct": 5.564,
+     "engineeringStressMPa": 1500.6,
+     "trueStrain": 0.0541,
+     "trueStressMPa": 1584.1
+    },
+    {
+     "engineeringStrainPct": 5.911,
+     "engineeringStressMPa": 1498.9,
+     "trueStrain": 0.0574,
+     "trueStressMPa": 1587.5
+    },
+    {
+     "engineeringStrainPct": 6.259,
+     "engineeringStressMPa": 1497.1,
+     "trueStrain": 0.0607,
+     "trueStressMPa": 1590.8
+    },
+    {
+     "engineeringStrainPct": 6.607,
+     "engineeringStressMPa": 1495.1,
+     "trueStrain": 0.064,
+     "trueStressMPa": 1593.8
+    },
+    {
+     "engineeringStrainPct": 6.955,
+     "engineeringStressMPa": 1492.9,
+     "trueStrain": 0.0672,
+     "trueStressMPa": 1596.8
+    },
+    {
+     "engineeringStrainPct": 7.302,
+     "engineeringStressMPa": 1490.7,
+     "trueStrain": 0.0705,
+     "trueStressMPa": 1599.6
+    },
+    {
+     "engineeringStrainPct": 7.65,
+     "engineeringStressMPa": 1488.4,
+     "trueStrain": 0.0737,
+     "trueStressMPa": 1602.2
+    },
+    {
+     "engineeringStrainPct": 7.998,
+     "engineeringStressMPa": 1486.0,
+     "trueStrain": 0.0769,
+     "trueStressMPa": 1604.8
+    },
+    {
+     "engineeringStrainPct": 8.346,
+     "engineeringStressMPa": 1483.5,
+     "trueStrain": 0.0802,
+     "trueStressMPa": 1607.3
+    },
+    {
+     "engineeringStrainPct": 8.693,
+     "engineeringStressMPa": 1480.9,
+     "trueStrain": 0.0834,
+     "trueStressMPa": 1609.6
+    },
+    {
+     "engineeringStrainPct": 9.041,
+     "engineeringStressMPa": 1478.3,
+     "trueStrain": 0.0866,
+     "trueStressMPa": 1611.9
+    },
+    {
+     "engineeringStrainPct": 9.389,
+     "engineeringStressMPa": 1475.6,
+     "trueStrain": 0.0897,
+     "trueStressMPa": 1614.1
+    },
+    {
+     "engineeringStrainPct": 9.737,
+     "engineeringStressMPa": 1472.8,
+     "trueStrain": 0.0929,
+     "trueStressMPa": 1616.2
+    },
+    {
+     "engineeringStrainPct": 10.084,
+     "engineeringStressMPa": 1470.1,
+     "trueStrain": 0.0961,
+     "trueStressMPa": 1618.3
+    },
+    {
+     "engineeringStrainPct": 10.432,
+     "engineeringStressMPa": 1467.2,
+     "trueStrain": 0.0992,
+     "trueStressMPa": 1620.3
+    },
+    {
+     "engineeringStrainPct": 10.78,
+     "engineeringStressMPa": 1464.4,
+     "trueStrain": 0.1024,
+     "trueStressMPa": 1622.2
+    },
+    {
+     "engineeringStrainPct": 11.128,
+     "engineeringStressMPa": 1461.5,
+     "trueStrain": 0.1055,
+     "trueStressMPa": 1624.1
+    },
+    {
+     "engineeringStrainPct": 11.475,
+     "engineeringStressMPa": 1458.6,
+     "trueStrain": 0.1086,
+     "trueStressMPa": 1625.9
+    },
+    {
+     "engineeringStrainPct": 11.823,
+     "engineeringStressMPa": 1455.6,
+     "trueStrain": 0.1117,
+     "trueStressMPa": 1627.7
+    },
+    {
+     "engineeringStrainPct": 12.171,
+     "engineeringStressMPa": 1452.6,
+     "trueStrain": 0.1149,
+     "trueStressMPa": 1629.4
+    },
+    {
+     "engineeringStrainPct": 12.518,
+     "engineeringStressMPa": 1449.6,
+     "trueStrain": 0.1179,
+     "trueStressMPa": 1631.1
+    },
+    {
+     "engineeringStrainPct": 12.866,
+     "engineeringStressMPa": 1446.6,
+     "trueStrain": 0.121,
+     "trueStressMPa": 1632.8
+    },
+    {
+     "engineeringStrainPct": 13.214,
+     "engineeringStressMPa": 1431.1,
+     "trueStrain": 0.1241,
+     "trueStressMPa": 1634.4
+    },
+    {
+     "engineeringStrainPct": 13.562,
+     "engineeringStressMPa": 1402.4,
+     "trueStrain": 0.1272,
+     "trueStressMPa": 1635.9
+    },
+    {
+     "engineeringStrainPct": 13.909,
+     "engineeringStressMPa": 1373.9,
+     "trueStrain": 0.1302,
+     "trueStressMPa": 1637.5
+    },
+    {
+     "engineeringStrainPct": 14.257,
+     "engineeringStressMPa": 1345.4,
+     "trueStrain": 0.1333,
+     "trueStressMPa": 1638.9
+    },
+    {
+     "engineeringStrainPct": 14.605,
+     "engineeringStressMPa": 1317.1,
+     "trueStrain": 0.1363,
+     "trueStressMPa": 1640.4
+    },
+    {
+     "engineeringStrainPct": 14.953,
+     "engineeringStressMPa": 1288.9,
+     "trueStrain": 0.1393,
+     "trueStressMPa": 1641.8
+    },
+    {
+     "engineeringStrainPct": 15.3,
+     "engineeringStressMPa": 1260.7,
+     "trueStrain": 0.1424,
+     "trueStressMPa": 1643.2
+    },
+    {
+     "engineeringStrainPct": 15.648,
+     "engineeringStressMPa": 1232.7,
+     "trueStrain": 0.1454,
+     "trueStressMPa": 1644.6
+    },
+    {
+     "engineeringStrainPct": 15.996,
+     "engineeringStressMPa": 1204.7,
+     "trueStrain": 0.1484,
+     "trueStressMPa": 1646.0
+    },
+    {
+     "engineeringStrainPct": 16.344,
+     "engineeringStressMPa": 1176.9,
+     "trueStrain": 0.1514,
+     "trueStressMPa": 1647.3
+    },
+    {
+     "engineeringStrainPct": 16.691,
+     "engineeringStressMPa": 1149.2,
+     "trueStrain": 0.1544,
+     "trueStressMPa": 1648.6
+    },
+    {
+     "engineeringStrainPct": 17.039,
+     "engineeringStressMPa": 1121.6,
+     "trueStrain": 0.1573,
+     "trueStressMPa": 1649.8
+    },
+    {
+     "engineeringStrainPct": 17.387,
+     "engineeringStressMPa": 1094.1,
+     "trueStrain": 0.1603,
+     "trueStressMPa": 1651.1
+    },
+    {
+     "engineeringStrainPct": 17.734,
+     "engineeringStressMPa": 1066.7,
+     "trueStrain": 0.1633,
+     "trueStressMPa": 1652.3
+    },
+    {
+     "engineeringStrainPct": 18.082,
+     "engineeringStressMPa": 1039.5,
+     "trueStrain": 0.1662,
+     "trueStressMPa": 1653.5
+    },
+    {
+     "engineeringStrainPct": 18.43,
+     "engineeringStressMPa": 1012.3,
+     "trueStrain": 0.1692,
+     "trueStressMPa": 1654.7
+    },
+    {
+     "engineeringStrainPct": 18.778,
+     "engineeringStressMPa": 985.2,
+     "trueStrain": 0.1721,
+     "trueStressMPa": 1655.9
+    },
+    {
+     "engineeringStrainPct": 19.125,
+     "engineeringStressMPa": 958.3,
+     "trueStrain": 0.175,
+     "trueStressMPa": 1657.0
+    },
+    {
+     "engineeringStrainPct": 19.473,
+     "engineeringStressMPa": 931.5,
+     "trueStrain": 0.1779,
+     "trueStressMPa": 1658.1
+    },
+    {
+     "engineeringStrainPct": 19.821,
+     "engineeringStressMPa": 904.8,
+     "trueStrain": 0.1808,
+     "trueStressMPa": 1659.2
+    },
+    {
+     "engineeringStrainPct": 20.169,
+     "engineeringStressMPa": 878.2,
+     "trueStrain": 0.1837,
+     "trueStressMPa": 1660.3
+    },
+    {
+     "engineeringStrainPct": 20.516,
+     "engineeringStressMPa": 851.7,
+     "trueStrain": 0.1866,
+     "trueStressMPa": 1661.4
+    },
+    {
+     "engineeringStrainPct": 20.864,
+     "engineeringStressMPa": 825.3,
+     "trueStrain": 0.1895,
+     "trueStressMPa": 1662.5
+    }
+   ]
+  },
+  "scale4_macroComponentFEA": {
+   "actualSafetyFactor": 1.59,
+   "appliedStress_MPa": 750.0,
+   "componentName": "High-Pressure Gas Turbine Blade Fir-Tree Root",
+   "criticalSectionArea_mm2": 320.0,
+   "lefmDamageTolerance": {
+    "criticalFlawSize_ac_mm": 247.47,
+    "inspectionNDICapability": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)",
+    "plasticZoneRadius_rp_mm": 61.46
+   },
+   "requiredSafetyFactor": 1.25,
+   "structuralVerdict": "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
+  },
+  "success": true
+ },
+ "supersedes": "default_payload_in718.json (d33b6f5)",
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

@@ -83,10 +83,12 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertEqual(golden.canonical(fresh["stdout"]),
                              golden.canonical({**doc["stdout"], "success": False}))
             return
-        self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
-        rows = drift_report.diff(doc["stdout"], fresh["stdout"])
+        # Design step (b): compare with the re-blessed expectation when one exists.
+        expected = golden.load_expected(solver, case)
+        self.assertEqual(fresh["exitCode"], expected["exitCode"], fresh["stderr"])
+        rows = drift_report.diff(expected["stdout"], fresh["stdout"])
         self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
-        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(doc["stdout"]))
+        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(expected["stdout"]))
 
     def test_case_counts(self):
         for solver in SOLVERS:
@@ -123,7 +125,6 @@ class BaseBlobTest(unittest.TestCase):
         "battery_corrosion_eis_solver": [
             {"action": "bernardi_thermal", "cellFormat": "4680-tabless", "nominalCapAh": 22.0,
              "cRate": 2.0, "coolingType": "bottom_cold_plate", "tempAmbientC": 30.0},
-            {"action": "corrosion_kinetics", "metalId": "al-7075", "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66},
             {"action": "lli_lam_deconvolution", "chemistryId": "nmc811", "initialCapAh": 5.0, "degradedCapAh": 4.2},
             {"action": "drt", "frequencies": cases._EIS_F, "zReal": cases._EIS_ZR, "zImag": cases._EIS_ZI},
             {"action": "p2d_continuum", "chemistryId": "lfp", "cRate": 0.5, "tempC": 45.0, "soc": 0.2},
@@ -133,12 +134,16 @@ class BaseBlobTest(unittest.TestCase):
             {"elements": {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}, "tMin": 900.0, "tMax": 1500.0, "tStep": 40.0},
             {"elements": {"Al": 50.0, "Ni": 50.0}, "unit": "at_pct", "tMin": 900.0, "tMax": 1700.0, "tStep": 50.0},
             {"elements": {"Cu": 70.0, "Zn": 30.0}, "tMin": 700.0, "tMax": 1100.0, "tStep": 25.0},
-            # Legacy 50.0 g/mol fallback kept in step (a) (fix round B1): unknown elements
-            # with positive amounts must give the pre-migration output, in both units.
-            {"elements": {"Fe": 90.0, "P": 5.0, "Sn": 5.0}},
-            {"elements": {"Cu": 83.0, "Sn": 7.0, "Pb": 7.0, "Zn": 3.0}, "unit": "at_pct",
-             "tMin": 700.0, "tMax": 1200.0, "tStep": 50.0},
-            {"elements": {"Ni": 70.0, "Xx": 30.0}, "customTdbText": "ELEMENT XX BLANK 0 0 0 !"},
+        ],
+    }
+    # Design step (b) value change: these payloads drift on purpose against the base blob
+    # (icme: exact R and CIAAW weights). The check keeps the output structure and exit
+    # code identical and bounds the numeric drift; the full rows are in the commit body.
+    VALUE_STEP_DRIFT = {
+        # Fix round item 6: the ASTM G102 K1 of the battery corrosion path is derived from
+        # the exact F (0.00327 -> 0.0032707148, +2.19e-4).
+        "battery_corrosion_eis_solver": [
+            {"action": "corrosion_kinetics", "metalId": "al-7075", "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66},
         ],
         "icme_multiscale_pipeline_solver": [
             {"baseMetal": "Fe", "composition_wt": {"C": 0.2, "Cr": 12.0, "Mo": 1.0, "V": 0.3, "W": 0.5},
@@ -148,6 +153,8 @@ class BaseBlobTest(unittest.TestCase):
              "agingTemp_C": 850, "agingTime_h": 24, "serviceTemp_C": 650},
         ],
     }
+    # Largest |relative| drift seen on the payloads above is 2.7e-3 (last printed digit).
+    VALUE_STEP_MAX_REL = 1e-2
 
     def _base(self, solver, payload):
         with tempfile.TemporaryDirectory() as tmp:
@@ -172,10 +179,29 @@ class BaseBlobTest(unittest.TestCase):
                     rows = drift_report.diff(old["stdout"], new["stdout"])
                     self.assertEqual(rows, [], drift_report.render(solver, rows, 10))
 
+    def test_value_step_payloads_drift_only_numerically_and_boundedly(self):
+        for solver, payloads in self.VALUE_STEP_DRIFT.items():
+            for payload in payloads:
+                with self.subTest(solver=solver, payload=payload):
+                    old = self._base(solver, payload)
+                    new = golden.run_solver(solver, payload)
+                    self.assertEqual(new["exitCode"], old["exitCode"], new["stderr"])
+                    rows = drift_report.diff(old["stdout"], new["stdout"])
+                    self.assertTrue(rows)  # the value change is visible here
+                    self.assertEqual({r["kind"] for r in rows}, {"numeric"},
+                                     drift_report.render(solver, rows, 10))
+                    worst = max(abs(r["rel"]) for r in rows if r["rel"] is not None)
+                    self.assertLessEqual(worst, self.VALUE_STEP_MAX_REL)
+
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
             ("icme_multiscale_pipeline_solver", {"baseMetal": "Co", "composition_wt": {"Cr": 20.0}}),
             ("icme_multiscale_pipeline_solver", {"baseMetal": "Ni", "composition_wt": {"cr": 19.0}}),
+            # Design step (b): calphad refuses symbols without a standard atomic weight
+            # (before: 50.0 g/mol stand-in), also with a custom TDB.
+            ("calphad_solver", {"elements": {"Ni": 70.0, "Xx": 30.0},
+                                "customTdbText": "ELEMENT XX BLANK 0 0 0 !"}),
+            ("calphad_solver", {"elements": {"Ni": 70.0, "Cr": 20.0, "Xx": 10.0}, "unit": "at_pct"}),
         ]
         for solver, payload in changed:
             with self.subTest(solver=solver, payload=payload):
@@ -185,6 +211,19 @@ class BaseBlobTest(unittest.TestCase):
                 new = golden.run_solver(solver, payload)
                 self.assertEqual(new["exitCode"], 2)
                 self.assertEqual(new["stdout"]["error"]["code"], "UNKNOWN_ELEMENT")
+
+    def test_real_elements_now_use_ciaaw_weights_instead_of_50(self):
+        # Design step (b): P, Sn, Pb are weighted with their CIAAW values; the base
+        # blob used 50.0 g/mol. Both succeed; the at%/wt% conversion differs.
+        for payload in ({"elements": {"Fe": 90.0, "P": 5.0, "Sn": 5.0}},
+                        {"elements": {"Cu": 83.0, "Sn": 7.0, "Pb": 7.0, "Zn": 3.0}, "unit": "at_pct",
+                         "tMin": 700.0, "tMax": 1200.0, "tStep": 50.0}):
+            with self.subTest(payload=payload):
+                old = self._base("calphad_solver", payload)
+                new = golden.run_solver("calphad_solver", payload)
+                self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
+                self.assertIs(new["stdout"]["success"], True)
+                self.assertNotEqual(golden.canonical(old["stdout"]), golden.canonical(new["stdout"]))
 
     def test_source_tables_are_bound_to_the_base_blob(self):
         for solver in cases.SOURCE_TABLES:
@@ -196,54 +235,117 @@ class BaseBlobTest(unittest.TestCase):
             self.assertEqual(golden.canonical(values), golden.canonical(doc["values"]))
 
 
-# src/data/materialsDatabase.ts:10 and :111 (AISI 1018-type and AISI 4140-type
-# specimens): P and S at positive amounts, sent as-is by CALPHADMultiComponentStudio.
-P_S_SPECIMENS = (
-    {"C": 0.18, "Mn": 0.75, "P": 0.04, "S": 0.05, "Fe": 98.98},
-    {"C": 0.40, "Cr": 1.00, "Mo": 0.20, "Mn": 0.85, "Si": 0.25, "P": 0.035, "S": 0.04, "Fe": 97.225},
-)
+MATERIALS_DATABASE_TS = HERE.parent / "src" / "data" / "materialsDatabase.ts"
+
+
+def _ui_specimen_compositions():
+    """Every `composition: { El: value, ... }` literal of src/data/materialsDatabase.ts.
+
+    CALPHADMultiComponentStudio sends these as-is (activeSpecimen.composition)."""
+    import re
+    text = MATERIALS_DATABASE_TS.read_text(encoding="utf-8")
+    out = []
+    for body in re.findall(r"composition:\s*\{([^}]*)\}", text):
+        pairs = re.findall(r"\b([A-Za-z]+)\s*:\s*([0-9.]+)", body)
+        out.append({el: float(v) for el, v in pairs})
+    return out
+
+
+# The UI specimens with P, S, Sn, Pb or Be (14 of the 33 compositions): before design
+# step (b) these elements got the 50.0 g/mol stand-in; now their CIAAW weights.
+UI_SPECIMENS_P_S_SN_PB_BE = tuple(
+    c for c in _ui_specimen_compositions() if set(c) & {"P", "S", "Sn", "Pb", "Be"})
 
 
 class CalphadElementTest(unittest.TestCase):
-    def test_unknown_elements_use_the_legacy_fallback(self):
-        # Fix round B1: refusing these made UI specimens lose the Python engine.
-        self.assertEqual(data.CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL, 50.0)
-        for elements in ({"Ni": 70, "Xx": 30}, {"Fe": 95, "P": 5}, {"Ti": 90, "Sn": 10},
-                         {"Ni": 90, "": 10}, {"Cu": 60, "Pb": 40}):
+    def test_real_elements_get_their_ciaaw_weight(self):
+        # Design step (b): no 50.0 g/mol stand-in; P, S, Sn, Pb, Be, Sc have real weights.
+        expected = {"P": 30.974, "S": 32.06, "Sn": 118.71, "Pb": 207.2, "Be": 9.0122,
+                    "Sc": 44.956, "Pd": 106.42, "Fe": 55.845}
+        for el, value in expected.items():
+            self.assertEqual(calphad_solver._atomic_weight(el), value, el)
+        wt, at = calphad_solver.normalize_composition({"Fe": 95.0, "P": 5.0}, "wt_pct")
+        moles = {"Fe": 0.95 / 55.845, "P": 0.05 / 30.974}
+        total = sum(moles.values())
+        for el in moles:
+            self.assertAlmostEqual(at[el], moles[el] / total, places=15)
+        wt, at = calphad_solver.normalize_composition({"Cu": 60.0, "Pb": 40.0}, "at_pct")
+        mw = 0.6 * 63.546 + 0.4 * 207.2
+        self.assertAlmostEqual(wt["Cu"], 0.6 * 63.546 / mw * 100.0, places=12)
+        self.assertAlmostEqual(wt["Pb"], 0.4 * 207.2 / mw * 100.0, places=12)
+
+    def test_unknown_symbols_are_refused_in_both_units(self):
+        for elements, field in (({"Ni": 70, "Xx": 30}, "elements.Xx"), ({"Ni": 90, "": 10}, "elements."),
+                                ({"Ni": 90, "Qq": 10, "Cr": 5}, "elements.Qq")):
             for unit in ("wt_pct", "at_pct"):
                 with self.subTest(elements=elements, unit=unit):
-                    wt, at = calphad_solver.normalize_composition(elements, unit)
-                    self.assertEqual(len(wt), 2)
-                    self.assertAlmostEqual(sum(at.values()), 1.0, places=12)
-        self.assertEqual(calphad_solver._atomic_weight("P"), 50.0)
-        self.assertEqual(calphad_solver._atomic_weight("Fe"), 55.845)
-        self.assertEqual(calphad_solver.legacy_fallback_elements(["Fe", "P", "S", "C"]), ["P", "S"])
+                    with self.assertRaises(iv.ValidationError) as ctx:
+                        calphad_solver.normalize_composition(elements, unit)
+                    self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
+                    self.assertEqual(ctx.exception.field, field)
+                    self.assertEqual(ctx.exception.detail["reason"], "no-standard-atomic-weight")
 
-    def test_p_and_s_specimens_get_a_normal_python_result(self):
-        for elements in P_S_SPECIMENS:
+    def test_ui_specimen_compositions_normalise_except_the_re_label(self):
+        compositions = _ui_specimen_compositions()
+        self.assertEqual(len(compositions), 33)
+        refused = []
+        for comp in compositions:
+            for unit in ("wt_pct", "at_pct"):
+                with self.subTest(comp=comp, unit=unit):
+                    try:
+                        wt, at = calphad_solver.normalize_composition(comp, unit)
+                    except iv.ValidationError as exc:
+                        refused.append((comp, exc.field))
+                        continue
+                    # Keys are normalised ("RE" in the WE43 entry becomes "Re", rhenium:
+                    # a pre-existing reading of the rare-earth label, see the handoff).
+                    self.assertEqual(len(wt), len([v for v in comp.values() if v > 0]))
+                    self.assertAlmostEqual(sum(at.values()), 1.0, places=12)
+        # Fix round: the wc-co specimen is written as W/C/Co (WC decomposed) and normalises;
+        # the WE43 "RE" (rare earths) label is refused instead of being read as rhenium.
+        self.assertEqual(refused, [({"Mg": 92.5, "Y": 4.0, "RE": 3.3, "Zr": 0.45}, "elements.RE")] * 2)
+        self.assertIn({"W": 88.235, "C": 5.765, "Co": 6.0}, compositions)
+
+    def test_re_label_is_refused_but_rhenium_is_accepted(self):
+        with self.assertRaises(iv.ValidationError) as ctx:
+            calphad_solver.normalize_composition({"Mg": 92.5, "RE": 3.3})
+        self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
+        self.assertEqual(ctx.exception.field, "elements.RE")
+        self.assertEqual(ctx.exception.detail["reason"], "ambiguous-rare-earth-label")
+        self.assertIn("rare earths", str(ctx.exception))
+        wt, _ = calphad_solver.normalize_composition({"Ni": 94.0, "Re": 6.0})
+        self.assertEqual(set(wt), {"Ni", "Re"})
+
+    def test_wc_co_specimen_gets_a_normal_python_result(self):
+        code, out = _run("calphad_solver.py", {"name": "wc-co", "elements": {"W": 88.235, "C": 5.765, "Co": 6.0},
+                                               "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
+        self.assertEqual(code, 0, out)
+        self.assertIs(out["success"], True)
+        self.assertTrue(out["equilibriumProfile"])
+
+    def test_p_s_sn_pb_be_specimens_get_a_normal_python_result(self):
+        # The 14 UI specimens that hit the 50.0 g/mol stand-in before design step (b)
+        # must keep the Python engine (exit 0, success, non-empty equilibriumProfile).
+        self.assertEqual(len(UI_SPECIMENS_P_S_SN_PB_BE), 14)
+        for elements in UI_SPECIMENS_P_S_SN_PB_BE:
             with self.subTest(elements=elements):
-                code, out = _run("calphad_solver.py", {"name": "steel", "elements": elements,
+                code, out = _run("calphad_solver.py", {"name": "specimen", "elements": elements,
                                                        "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
-                self.assertEqual(code, 0)
+                self.assertEqual(code, 0, out)
                 self.assertIs(out["success"], True)
                 self.assertTrue(out["equilibriumProfile"])  # what the UI requires
                 self.assertNotIn("errorKind", out)
                 self.assertEqual(out["engine"], "subregular-adaptive-minimizer")
-                fallback = out["provenance"]["legacyAtomicWeightFallback"]
-                self.assertEqual(fallback["elements"], ["P", "S"])
-                self.assertEqual(fallback["weight_g_mol"], 50.0)
-                self.assertIn("step (b)", fallback["note"])
+                self.assertNotIn("legacyAtomicWeightFallback", out["provenance"])
+                self.assertEqual(out["provenance"]["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
 
-    def test_custom_tdb_text_is_not_refused(self):
+    def test_custom_tdb_text_with_an_unknown_symbol_is_refused(self):
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 70.0, "Xx": 30.0},
                                                "customTdbText": "ELEMENT XX BLANK 0 0 0 !"})
-        self.assertEqual(code, 0)
-        self.assertIs(out["success"], True)
-        self.assertEqual(out["provenance"]["legacyAtomicWeightFallback"]["elements"], ["Xx"])
-
-    def test_known_elements_report_no_fallback(self):
-        fresh = golden.run_solver("calphad_solver", cases.CASES["calphad_solver"]["in718_wt_pct"])
-        self.assertEqual(fresh["provenance"]["provenance"]["legacyAtomicWeightFallback"]["elements"], [])
+        self.assertEqual(code, 2)
+        self.assertEqual(out["errorKind"], "validation")
+        self.assertEqual(out["error"]["code"], "UNKNOWN_ELEMENT")
+        self.assertEqual(out["error"]["field"], "elements.Xx")
 
     def test_case_variants_and_zero_amounts_are_unchanged(self):
         wt, at = calphad_solver.normalize_composition({"ni": 50.0, "CR": 50.0, "Xx": 0, "Yy": None})
@@ -253,8 +355,9 @@ class CalphadElementTest(unittest.TestCase):
         self.assertEqual(wt, {"Ni": 80.0, "Al": 10.0, "Cr": 10.0})
 
     def test_atomic_weights_and_r(self):
-        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(list(calphad_solver.ATOMIC_WEIGHTS), list(data.CALPHAD_ELEMENTS))
+        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.GAS_CONSTANT_R.value)
+        self.assertFalse(hasattr(calphad_solver, "ATOMIC_WEIGHTS"))
+        self.assertFalse(hasattr(calphad_solver, "legacy_fallback_elements"))
 
 
 class IcmeElementTest(unittest.TestCase):
@@ -293,7 +396,6 @@ class IcmeElementTest(unittest.TestCase):
 
 class EnvelopeAndProvenanceTest(unittest.TestCase):
     def test_calphad_internal_error(self):
-        # calphad has no validation refusal in step (a) (legacy element fallback kept).
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 80}, "tMin": "cold"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
@@ -340,15 +442,30 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
     def test_provenance(self):
         fresh = golden.run_solver("calphad_solver", cases.CASES["calphad_solver"]["in718_wt_pct"])
         prov = fresh["provenance"]["provenance"]
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("icme_multiscale_pipeline_solver", {})
         prov = fresh["provenance"]["provenance"]
-        self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
+        # Design step (b): exact R and CIAAW weights.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["atomicWeightsSource"], pc.CIAAW_SOURCE)
+        self.assertEqual(icme.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("battery_corrosion_eis_solver", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
-        self.assertEqual(fresh["provenance"]["provenance"]["constantsVersion"], pc.CONSTANTS_VERSION)
+        prov = fresh["provenance"]["provenance"]
+        self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
+        # Design step (b): one exact R/F for all four battery sites.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
+
+    def test_battery_sites_use_the_exact_constants(self):
+        import battery_corrosion_eis_solver as battery
+        self.assertEqual(battery.R_GAS, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(battery.F_FARADAY, pc.FARADAY.value)
+        src = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
+        for name in ("LEGACY_R_", "LEGACY_F_", "TRUNCATED_"):
+            self.assertNotIn(name, src)
 
 
 class PersistentIpcRelayTest(unittest.TestCase):
@@ -412,11 +529,11 @@ class SourceGuardTest(unittest.TestCase):
         src = (HERE / "icme_multiscale_pipeline_solver.py").read_text(encoding="utf-8")
         for pattern in ("atomic_weights.get(", "atomic_weights = {"):
             self.assertNotIn(pattern, src)
-        # calphad keeps exactly one, named, legacy fallback (fix round B1).
+        # Design step (b): calphad has no atomic-weight fallback at all.
         src = (HERE / "calphad_solver.py").read_text(encoding="utf-8")
-        self.assertEqual(src.count("ATOMIC_WEIGHTS.get("), 1)
-        self.assertIn("ATOMIC_WEIGHTS.get(el, CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL)", src)
-        self.assertNotIn("50.0)", src.split("def _atomic_weight", 1)[1].split("def legacy_fallback_elements", 1)[0])
+        self.assertNotIn("ATOMIC_WEIGHTS", src)
+        self.assertNotIn("CALPHAD_LEGACY", src)
+        self.assertIn("physical_constants.atomic_weight(el)", src)
 
     def test_no_table_fallback_pattern_in_calphad_and_icme(self):
         # battery_corrosion_eis_solver keeps ELECTROLYTE_FORMULATIONS.get(id, TABLE[...]) and

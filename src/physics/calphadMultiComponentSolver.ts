@@ -6,7 +6,9 @@
 
 import { ParsedTDBDatabase, parseTDBFile, PRELOADED_MULTI_COMPONENT_TDB } from "./tdbParser";
 
-export const GAS_CONSTANT_R = 8.314462618; // J/(mol*K)
+// Exact SI 2019 R (N_A*k), shared with the Python CALPHAD solver (Phase 6a step b).
+export { GAS_CONSTANT_R } from "../utils/physicalConstants";
+import { GAS_CONSTANT_R } from "../utils/physicalConstants";
 
 export interface MultiComponentAlloyComposition {
   name: string;

@@ -51,7 +51,99 @@ class TafelPresetTest(unittest.TestCase):
             with self.subTest(alloy=tafel_id):
                 new = tafel.corrosion_preset(tafel_id)
                 new.pop("registry_id")
+                # Design step (b): "ew" is computed from the preset's own composition
+                # (see test_preset_ew_equals_the_custom_composition_path); the rest is unchanged.
+                self.assertEqual(new.pop("ew"), tafel.calculate_equivalent_weight(
+                    old["composition"], old["valencies"], old["atomic_weights"]))
+                old = {k: v for k, v in old.items() if k != "ew"}
                 self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
+
+    def test_preset_ew_equals_the_custom_composition_path(self):
+        # Design step (b): one source. A preset alloyId, and the same alloyId with its own
+        # composition sent as customComposition, give the same EW and the same output.
+        library = _snapshot("tafel_corrosion_rate_solver")
+        for tafel_id in library:
+            with self.subTest(alloy=tafel_id):
+                preset = tafel.corrosion_preset(tafel_id)
+                by_id = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId=tafel_id))
+                by_comp = tafel.solve_tafel_corrosion_rate(
+                    dict(SOLVE_BASE, alloyId=tafel_id, customComposition=preset["composition"]))
+                self.assertEqual(by_id["equivalentWeight"], preset["ew"])
+                self.assertEqual(by_comp["equivalentWeight"], preset["ew"])
+                for doc in (by_id, by_comp):
+                    for key in ("durationMs", "timestamp"):
+                        doc.pop(key)
+                self.assertEqual(json.dumps(by_id, sort_keys=True), json.dumps(by_comp, sort_keys=True))
+
+    def test_ts_common_alloys_mirror_the_registry(self):
+        # Design step (b): src/utils/tafelParser.ts COMMON_ALLOYS density and EW are the
+        # registry values (one source); duplex2205 has no registry data and must stay so.
+        import re
+        text = (HERE.parent / "src" / "utils" / "tafelParser.ts").read_text(encoding="utf-8")
+        block = text.split("export const COMMON_ALLOYS", 1)[1].split("];", 1)[0]
+        rows = re.findall(r'id: "([^"]+)".*?density: ([0-9.]+), equivalentWeight: ([0-9.]+)', block)
+        self.assertEqual(len(rows), 10)
+        for ui_id, density, ew in rows:
+            with self.subTest(ui_id=ui_id):
+                if ui_id == "duplex2205":
+                    with self.assertRaises(iv.ValidationError) as ctx:
+                        tafel.corrosion_preset(ui_id)
+                    self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
+                    continue
+                preset = tafel.corrosion_preset(ui_id)
+                self.assertEqual(float(density), preset["density_g_cm3"])
+                self.assertEqual(float(ew), preset["ew"])
+        # The client fallbacks default to the 316L preset values, not their own copies.
+        self.assertIn("dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight", text)
+        self.assertIn("dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density", text)
+        service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
+        self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
+
+    def test_custom_composition_without_ew_data_is_refused_not_27(self):
+        # Fix round item 5: no silent 27.0 g/equivalent when no counted element is known.
+        for comp, field in (({"Xx": 0.9, "Yy": 0.1}, "customComposition.Xx"),
+                            ({"Fe": 0.5, "Cr": 0.5}, "customComposition.Cr"),  # 1018 preset has no Cr
+                            ({"Fe": 0.0}, "customComposition")):
+            with self.subTest(comp=comp):
+                with self.assertRaises(iv.ValidationError) as ctx:
+                    tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId="steel-1018", customComposition=comp))
+                self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
+                self.assertEqual(ctx.exception.field, field)
+                self.assertEqual(ctx.exception.detail["reason"], "no-equivalent-weight-data")
+        # Below-1 % unknown traces are not counted, so they do not block the solve.
+        out = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId="steel-1018",
+                                                    customComposition={"Fe": 0.995, "Xx": 0.005}))
+        self.assertEqual(out["equivalentWeight"], 27.9225)
+        # Caller-supplied valences/weights make an element usable.
+        out = tafel.solve_tafel_corrosion_rate(dict(
+            SOLVE_BASE, alloyId="steel-1018", customComposition={"Fe": 0.5, "Cr": 0.5},
+            customValencies={"Fe": 2, "Cr": 3}, customAtomicWeights={"Fe": 55.845, "Cr": 51.996}))
+        self.assertEqual(out["equivalentWeight"], round(1 / (0.5 * 2 / 55.845 + 0.5 * 3 / 51.996), 4))
+        code, out = _run("tafel_corrosion_rate_solver.py", dict(SOLVE_BASE, alloyId="steel-1018",
+                                                                 customComposition={"Xx": 1.0}))
+        self.assertEqual(code, 2)
+        self.assertEqual(out["error"]["code"], "UNKNOWN_ELEMENT")
+
+    def test_ui_preset_tables_read_common_alloys(self):
+        # Fix round item 2: PythonAnnualCorrosionRateModule and TafelPolarizationLab take
+        # density/EW from COMMON_ALLOYS (the registry mirror), not from their own copies.
+        import re
+        comp = HERE.parent / "src" / "components"
+        annual = (comp / "PythonAnnualCorrosionRateModule.tsx").read_text(encoding="utf-8")
+        block = annual.split("const ALLOY_PRESET_IDS", 1)[1].split("];", 1)[0]
+        pairs = re.findall(r'id: "([^"]+)", common: "([^"]+)"', block)
+        self.assertEqual(len(pairs), 9)
+        self.assertNotRegex(block, r"density:|ew:")  # no numeric copy left
+        for solver_id, common_id in pairs:
+            with self.subTest(solver_id=solver_id):
+                self.assertEqual(tafel.corrosion_preset(solver_id), tafel.corrosion_preset(common_id))
+        self.assertIn("density: row.density, ew: row.equivalentWeight", annual)
+        lab = (comp / "TafelPolarizationLab.tsx").read_text(encoding="utf-8")
+        for text in (annual, lab):
+            self.assertNotRegex(text, r"useState<number>\((25\.68|8\.00?|7\.98)\)")
+            self.assertNotRegex(text, r"\|\| (25\.68|8\.0|8\.00|7\.98)\)")
+        self.assertIn("useState<number>(COMMON_ALLOYS[0].density)", lab)
+        self.assertIn("useState<number>(COMMON_ALLOYS[0].equivalentWeight)", lab)
 
     def test_ui_ids_now_resolve_to_their_own_preset(self):
         # TafelPolarizationLab sends src/utils/tafelParser.ts COMMON_ALLOYS ids; before
@@ -112,7 +204,9 @@ class TafelPresetTest(unittest.TestCase):
                      "ti64_ams4928", "TI6AL4V"):
             with self.subTest(accepted=name):
                 preset = tafel.corrosion_preset(name.lower())
-                self.assertEqual(preset["ew"], library["ti-6al-4v"]["ew"])
+                self.assertEqual(preset["composition"], library["ti-6al-4v"]["composition"])
+                self.assertEqual(preset["density_g_cm3"], library["ti-6al-4v"]["density_g_cm3"])
+                self.assertEqual(preset["ew"], 11.8715)  # computed (design step (b)); stored was 11.97
         for name in ("Ti-6Al-4V ELI", "ti-6al-4v eli", "Ti-6Al-4V ELI Grade 23", "Ti6Al4V ELI"):
             with self.subTest(rejected=name):
                 with self.assertRaises(iv.ValidationError) as ctx:

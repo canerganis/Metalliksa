@@ -22,7 +22,8 @@ LEAF_MODULES = ("physical_constants", "alloy_registry", "input_validation",
 ALLOWED_LOCAL_IMPORTS = {
     "physical_constants": set(),
     "alloy_registry": {"four_alloy_materials",
-                       "alloy_data_kinetics_uq_fatigue"},  # phase6a-t2b block
+                       "alloy_data_kinetics_uq_fatigue",  # phase6a-t2b block
+                       "physical_constants"},  # design step (b): computed corrosion EW
     "alloy_data_kinetics_uq_fatigue": set(),  # phase6a-t2b
     "input_validation": {"alloy_registry", "physical_constants"},
 }

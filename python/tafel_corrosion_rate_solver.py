@@ -16,19 +16,15 @@ import time
 
 import alloy_registry
 import physical_constants
-from input_validation import UNKNOWN_ALLOY, ValidationError, require_known_alloy, validation_envelope
+from input_validation import UNKNOWN_ALLOY, UNKNOWN_ELEMENT, ValidationError, require_known_alloy, validation_envelope
 
 # Physical & Electrochemical Constants
-# Phase 6a structural step (a): R and F come from physical_constants but keep the
-# CODATA printed truncations used before the migration (8.314462618, 96485.33212),
-# so the output stays bit-identical. The switch to the exact SI products is the
-# separate value step (b).
-FARADAY_C_PER_MOL = physical_constants.TRUNCATED_FARADAY  # C / mol
+# Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
+# from physical_constants (they replaced the CODATA printed truncations
+# 8.314462618 / 96485.33212; relative change 1.8e-11 / 3.4e-11).
+FARADAY_C_PER_MOL = physical_constants.FARADAY.value  # C / mol, exact
 SECONDS_PER_YEAR = 31557600.0     # 365.25 days * 86400 s/day
-ASTM_K1 = 3.27e-3                 # mm * g / (uA * cm * year)
-ASTM_K2 = 8.954e-3                # g / (m^2 * day * (uA / cm^2))
-ASTM_K_MPY = 0.129                # mils * g / (uA * cm * year) -> mpy = mm/yr * 39.3701
-R_GAS = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol * K)
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J / (mol * K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # Alloy data (density, EW, composition, valencies, Ea, E0) lives in
@@ -123,8 +119,8 @@ def _provenance(preset: "_LazyPreset") -> dict:
         "registryAlloyId": preset.registry_id,
         "gasConstantR_J_molK": R_GAS,
         "faraday_C_mol": FARADAY_C_PER_MOL,
-        "constantsNote": "CODATA printed truncations of R and F (pre-migration values); "
-                         "exact SI values are pending the Phase 6a value step.",
+        "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e (Phase 6a value step); "
+                         "they replaced the CODATA printed truncations 8.314462618 / 96485.33212.",
     }
 
 def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weights: dict) -> float:
@@ -132,19 +128,35 @@ def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weigh
     Computes ASTM G102 Equivalent Weight (EW):
     EW = ( sum_i [ (f_i * n_i) / W_i ] )^(-1)
     where:
-    f_i = mass fraction of element i
+    f_i = mass fraction of element i, counting only elements present at >= 1 % by
+          mass, renormalised over those elements (ASTM G102 practice)
     n_i = valence (oxidation state)
     W_i = atomic weight in g/mol
+
+    Phase 6a design step (b): the formula lives in alloy_registry.astm_g102_equivalent_weight,
+    which also computes every preset "ew", so a preset alloyId and the same composition sent
+    as customComposition give the same EW. A counted element (>= 1 % by mass) without a
+    valence or an atomic weight, or a composition with no counted element, raises
+    ValidationError(UNKNOWN_ELEMENT); the former silent 27.0 g/equivalent fallback is gone.
     """
-    denom = 0.0
-    for el, mass_frac in composition.items():
-        if el in valencies and el in atomic_weights:
-            n = valencies[el]
-            w = atomic_weights[el]
-            denom += (mass_frac * n) / w
-    if denom <= 1e-12:
-        return 27.0
-    return round(1.0 / denom, 4)
+    counted = alloy_registry.astm_g102_counted_elements(composition)
+    missing = [el for el in counted if el not in valencies or el not in atomic_weights]
+    if missing or not counted:
+        field = f"customComposition.{missing[0]}" if missing else "customComposition"
+        raise ValidationError(
+            UNKNOWN_ELEMENT, field,
+            ("customComposition element(s) " + ", ".join(repr(el) for el in missing) +
+             " (>= 1 % by mass) have no valence or atomic weight; send customValencies and "
+             "customAtomicWeights for them." if missing else
+             "customComposition has no element with a positive amount; the equivalent weight "
+             "cannot be computed."),
+            {"missing": missing, "counted": counted, "reason": "no-equivalent-weight-data"},
+        )
+    ew = alloy_registry.astm_g102_equivalent_weight(composition, valencies, atomic_weights)
+    if ew is None:  # unreachable after the checks above; kept explicit, never a default
+        raise ValidationError(UNKNOWN_ELEMENT, "customComposition", "equivalent weight not computable",
+                              {"reason": "no-equivalent-weight-data"})
+    return ew
 
 def classify_corrosion_severity(cr_mm_yr: float) -> dict:
     """
@@ -245,7 +257,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
 
     # 4. Faraday's Law Corrosion Rates (ASTM G102)
     # CR (mm/year) = [K1 * i_corr (uA/cm2) * EW] / density (g/cm3)
-    # Exact constant from CODATA: (1e-6 * 31557600 * 10) / 96485.33212 = 0.00327072
+    # K1 = (1e-6 * 31557600 * 10) / F = 0.0032707148 mm*g/(uA*cm*year) with the exact F
     exact_k1 = (1e-6 * SECONDS_PER_YEAR * 10.0) / FARADAY_C_PER_MOL
     cr_mm_yr = (exact_k1 * i_corr_ua_cm2 * ew) / density
     cr_mpy = cr_mm_yr * 39.37007874  # mils per year
@@ -337,8 +349,9 @@ i_corr_A_cm2 = i_corr_uA_cm2 * 1e-6
 Rp = B / i_corr_A_cm2  # Ohm * cm^2
 
 # 2. Faraday Penetration Rate (ASTM G102)
-# Formula: CR (mm/yr) = 0.00327 * (i_corr * EW) / density
-K1 = 0.00327072  # mm * g / (uA * cm * year)
+# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F
+F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
+K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
 cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
 cr_mpy = cr_mm_yr * 39.3701  # mils per year
 

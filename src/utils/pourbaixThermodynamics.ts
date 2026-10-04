@@ -12,8 +12,11 @@ import {
   GridPointThermodynamicState,
 } from "../types/pourbaix";
 
-export const GAS_CONSTANT_R = 8.314462618; // J/(mol*K)
-export const FARADAY_CONSTANT_F = 96485.33212; // C/mol
+// Exact SI 2019 R (N_A*k) and F (N_A*e), shared with the Python Pourbaix solver
+// (Phase 6a step b); they replaced the printed truncations 8.314462618 / 96485.33212.
+export { GAS_CONSTANT_R } from "./physicalConstants";
+export { FARADAY_CONSTANT as FARADAY_CONSTANT_F } from "./physicalConstants";
+import { GAS_CONSTANT_R, FARADAY_CONSTANT as FARADAY_CONSTANT_F } from "./physicalConstants";
 
 // =========================================================================
 // 1. THERMODYNAMIC DATABASE FOR KEY ENGINEERING ELEMENTS
