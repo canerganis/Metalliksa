@@ -15,11 +15,13 @@ export type LifecycleResource = "raf" | "interval" | "three" | "fetch";
 export type OracleState = "present" | "pending";
 export type MigrationState = "legacy" | "contracted";
 
+export type FieldValueType = "number" | "integer" | "boolean" | "enum";
 export interface ContractField {
-  readonly key: string; readonly label: string; readonly unit: string;
+  readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;
   readonly displayUnits: readonly string[]; readonly quantityKind: string;
-  readonly min: number; readonly max: number; readonly step: number | null;
+  readonly min: number | null; readonly max: number | null; readonly step: number | null;
   readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];
+  readonly note: string | null;
 }
 export interface ContractAuthority {
   readonly kind: AuthorityKind; readonly script: string | null; readonly workerMethod: string | null;
@@ -29,7 +31,8 @@ export interface ContractOperation {
   readonly id: string; readonly method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | null; readonly route: string | null;
   readonly authority: ContractAuthority;
   readonly input: readonly ContractField[];
-  readonly output: { readonly fields: readonly string[]; readonly statusKey: string } | null;
+  readonly undeclaredInput: readonly string[];
+  readonly output: { readonly fields: readonly string[]; readonly statusKey: string | null } | null;
 }
 export interface ContractValidityDomain {
   readonly ranges: readonly { readonly key: string; readonly min: number; readonly max: number; readonly unit: string }[];
@@ -53,6 +56,7 @@ export interface ModuleContract {
   };
   readonly migrationState: MigrationState;
   readonly legacyNotes: readonly string[];
+  readonly sourceRefs: readonly string[];
 }
 export interface ModuleRegistryDocument {
   readonly schemaVersion: number; readonly generatedBy: string;
@@ -149,6 +153,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -165,6 +170,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -181,6 +187,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -197,6 +204,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -213,6 +221,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -229,6 +238,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -245,6 +255,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -261,6 +272,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -277,6 +289,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -293,6 +306,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -309,6 +323,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -336,7 +351,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "lpbf-optimizer",
@@ -368,6 +384,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -395,7 +412,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "solidification-microstructure",
@@ -427,6 +445,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -454,7 +473,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "thermomechanical-distortion",
@@ -486,6 +506,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -513,7 +534,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "experimental-validation",
@@ -545,6 +567,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -572,7 +595,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "modulus-fno-lab",
@@ -604,6 +628,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -631,7 +656,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "toolpath-studio",
@@ -663,6 +689,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -690,7 +717,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "toolpath-thermal-map",
@@ -722,6 +750,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -749,7 +778,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "industrial-certification",
@@ -781,6 +811,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -808,7 +839,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "murakami-fatigue",
@@ -840,6 +872,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -867,7 +900,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "defect-twin",
@@ -899,6 +933,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -926,7 +961,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "adaptive-mitigation",
@@ -958,6 +994,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -985,7 +1022,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "multilaser-plume",
@@ -1017,6 +1055,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1044,7 +1083,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "thermal-accumulation",
@@ -1076,6 +1116,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1103,7 +1144,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "powder-compaction",
@@ -1135,6 +1177,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1162,7 +1205,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "optical-tomography",
@@ -1194,6 +1238,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1221,7 +1266,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "transient-3d-gpu",
@@ -1265,12 +1311,13 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "The view calls POST /api/python/transient-3d-gpu, which no server route handles; no authority exists for this module."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "keyhole-raytracing",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "lpbf workspace",
       "workspace": "lpbf",
       "label": "Keyhole Ray Tracing",
       "description": "Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.",
@@ -1292,12 +1339,232 @@ export const MODULE_REGISTRY = {
             "script": null,
             "workerMethod": "keyhole-raytracing",
             "timeoutMs": 20000,
-            "gpu": "none",
+            "gpu": "optional",
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "output": null
+          "input": [
+            {
+              "key": "nx",
+              "label": "Mesh nodes (x)",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 2,
+              "max": 256,
+              "step": 1,
+              "default": 64,
+              "required": false,
+              "enum": [],
+              "note": "Not sent by the view; the authority default applies."
+            },
+            {
+              "key": "ny",
+              "label": "Mesh nodes (y)",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 2,
+              "max": 256,
+              "step": 1,
+              "default": 64,
+              "required": false,
+              "enum": [],
+              "note": "Not sent by the view; the authority default applies."
+            },
+            {
+              "key": "dx",
+              "label": "Mesh spacing (x)",
+              "valueType": "number",
+              "unit": "m",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 1e-09,
+              "max": 0.001,
+              "step": null,
+              "default": 2e-06,
+              "required": false,
+              "enum": [],
+              "note": "Not sent by the view; the authority default applies."
+            },
+            {
+              "key": "dy",
+              "label": "Mesh spacing (y)",
+              "valueType": "number",
+              "unit": "m",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 1e-09,
+              "max": 0.001,
+              "step": null,
+              "default": 2e-06,
+              "required": false,
+              "enum": [],
+              "note": "Not sent by the view; the authority default applies."
+            },
+            {
+              "key": "power_W",
+              "label": "Laser power",
+              "valueType": "number",
+              "unit": "W",
+              "displayUnits": [],
+              "quantityKind": "power",
+              "min": 0,
+              "max": 1000000.0,
+              "step": null,
+              "default": 250,
+              "required": false,
+              "enum": [],
+              "note": "The view sends the shared LPBF process laserPower_W."
+            },
+            {
+              "key": "beam_radius_um",
+              "label": "Beam radius (1/e² intensity)",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 0.01,
+              "max": 10000,
+              "step": null,
+              "default": 50,
+              "required": false,
+              "enum": [],
+              "note": "The view sends the shared beamDiameter_um / 2."
+            },
+            {
+              "key": "base_absorption",
+              "label": "Base absorption",
+              "valueType": "number",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "absorptivity",
+              "min": 0,
+              "max": 1,
+              "step": null,
+              "default": 0.3,
+              "required": false,
+              "enum": [],
+              "note": "Empirical angular law input, not complex-index Fresnel optics."
+            },
+            {
+              "key": "keyhole_depth_um",
+              "label": "Prescribed cavity depth",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 0,
+              "max": 10000,
+              "step": null,
+              "default": 100,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "max_bounces",
+              "label": "Maximum bounces",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 1,
+              "max": 32,
+              "step": 1,
+              "default": 5,
+              "required": false,
+              "enum": [],
+              "note": "Power still in flight at the limit is reported as bounce-limited (truncated), not escaped."
+            },
+            {
+              "key": "num_rays",
+              "label": "Rays",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 32,
+              "max": 100000,
+              "step": 1,
+              "default": 10000,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "seed",
+              "label": "Random seed",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "rng-seed",
+              "min": 0,
+              "max": 4294967295,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "ui_ray_limit",
+              "label": "Returned ray paths",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 0,
+              "max": 1000,
+              "step": 1,
+              "default": 1000,
+              "required": false,
+              "enum": [],
+              "note": "Display subset only; drawn from a separate generator and never changes the physics samples. The view sends 150."
+            },
+            {
+              "key": "device",
+              "label": "Backend",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "compute-device",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "cpu",
+              "required": false,
+              "enum": [
+                "cpu",
+                "cuda:0"
+              ],
+              "note": "No silent backend substitution: any other value is rejected."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "status",
+              "model_id",
+              "device",
+              "warp_version",
+              "solve_time_ms",
+              "total_input_W",
+              "total_absorbed_W",
+              "total_escaped_W",
+              "total_truncated_W",
+              "energy_balance_relative_error",
+              "absorption_efficiency",
+              "sampling",
+              "inputs",
+              "limitations",
+              "mesh",
+              "ray_paths"
+            ],
+            "statusKey": null
+          }
         }
       ],
       "validityDomain": null,
@@ -1312,19 +1579,41 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key ('status' is the transport value 'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with an empirical angular absorption law, no material optical data and no experimental comparison (python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, and does not raise the ceiling."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "raf",
+          "three",
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_keyhole_raytracing.py",
         "oracle": {
-          "status": "pending",
-          "ref": null
+          "status": "present",
+          "ref": "python/test_keyhole_contract.py::KeyholeContract.test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"
         },
-        "docs": null
+        "docs": "docs/modules/keyhole-raytracing.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": []
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter 40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; the contract records the authority's ranges.",
+        "Aborting the HTTP request discards a stale response but does not cancel the worker computation (src/components/KeyholeRaytracingLab.tsx:56-57).",
+        "No validity domain is declared: the module states no source-backed applicability range (prescribed cavity, empirical absorption)."
+      ],
+      "sourceRefs": [
+        "python/lpbf_keyhole_raytracing.py:1-5",
+        "python/lpbf_keyhole_raytracing.py:60-90",
+        "python/lpbf_keyhole_raytracing.py:137-160",
+        "python/lpbf_worker_rpc.py:408-412",
+        "routes/lpbfSimulation.ts:44",
+        "server/lpbfWorkerBridge.ts:58",
+        "src/components/KeyholeRaytracingLab.tsx:26-59",
+        "src/components/KeyholeRaytracingLab.tsx:116-127",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:40"
+      ]
     },
     {
       "id": "database",
@@ -1356,6 +1645,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": "Recorded debt (single-authority rule): material records are read from the bundled src/data/materialsDatabase.ts in the browser."
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1383,7 +1673,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "alloy-builder",
@@ -1415,6 +1706,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1442,7 +1734,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "phase-diagram",
@@ -1474,6 +1767,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1490,6 +1784,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1506,6 +1801,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1533,7 +1829,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "ttt-cct-kinetics",
@@ -1565,6 +1862,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1592,7 +1890,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "micrograph",
@@ -1624,6 +1923,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1640,6 +1940,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1669,7 +1970,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "eds-lab",
@@ -1701,6 +2003,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1728,7 +2031,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "electrochem-suite",
@@ -1760,6 +2064,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1776,6 +2081,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1792,6 +2098,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1819,7 +2126,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "icme-motor",
@@ -1851,6 +2159,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1878,7 +2187,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "materials-project",
@@ -1910,6 +2220,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -1926,6 +2237,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -1955,7 +2267,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "calculators",
@@ -1987,6 +2300,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": "Recorded debt (single-authority rule): unit-aware engineering correlations are evaluated in the browser."
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2014,7 +2328,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "research-hub",
@@ -2046,6 +2361,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -2062,6 +2378,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         },
         {
@@ -2078,6 +2395,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2105,7 +2423,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "experimental-data",
@@ -2149,7 +2468,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "digital-twin",
@@ -2181,6 +2501,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2208,12 +2529,13 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "uq-lab",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "evidence workspace",
       "workspace": "evidence",
       "label": "Uncertainty & Coupons",
       "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
@@ -2239,8 +2561,308 @@ export const MODULE_REGISTRY = {
             "warm": true,
             "exceptionReason": null
           },
-          "input": [],
-          "output": null
+          "input": [
+            {
+              "key": "baseMetal",
+              "label": "Base metal",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "element",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "Ni",
+              "required": false,
+              "enum": [
+                "Ni",
+                "Fe",
+                "Ti",
+                "Al"
+              ],
+              "note": "The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; the contract accepts only the four tabulated keys."
+            },
+            {
+              "key": "coolingRate_nominal",
+              "label": "Nominal cooling rate",
+              "valueType": "number",
+              "unit": "K/s",
+              "displayUnits": [],
+              "quantityKind": "cooling-rate",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 150000.0,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound)."
+            },
+            {
+              "key": "coolingRate_cov",
+              "label": "Cooling-rate coefficient of variation",
+              "valueType": "number",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "coefficient-of-variation",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.25,
+              "required": false,
+              "enum": [],
+              "note": "Fraction (0.25 = 25 %); no bound is enforced."
+            },
+            {
+              "key": "agingTemp_nominal",
+              "label": "Nominal aging temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 720.0,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced; each draw is floored at 200 degC."
+            },
+            {
+              "key": "agingTemp_stdDev",
+              "label": "Aging temperature standard deviation",
+              "valueType": "number",
+              "unit": "K",
+              "displayUnits": [],
+              "quantityKind": "temperature-difference",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 7.5,
+              "required": false,
+              "enum": [],
+              "note": "Temperature difference (no offset); no bound is enforced."
+            },
+            {
+              "key": "agingTime_nominal",
+              "label": "Nominal aging time",
+              "valueType": "number",
+              "unit": "h",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 8.0,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced; each draw is floored at 0.2 h."
+            },
+            {
+              "key": "agingTime_stdDev",
+              "label": "Aging time standard deviation",
+              "valueType": "number",
+              "unit": "h",
+              "displayUnits": [],
+              "quantityKind": "time",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.25,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "serviceStress_nominal",
+              "label": "Nominal service stress",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "stress",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 720.0,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced; each draw is floored at 50 MPa."
+            },
+            {
+              "key": "serviceStress_cov",
+              "label": "Service-stress coefficient of variation",
+              "valueType": "number",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "coefficient-of-variation",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.08,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "initialFlawSize_um_mean",
+              "label": "Initial flaw size mean",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 45.0,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced; each draw is floored at 5 µm."
+            },
+            {
+              "key": "initialFlawSize_um_std",
+              "label": "Initial flaw size standard deviation",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 15.0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "specMinYield_MPa",
+              "label": "Specification minimum yield strength",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "stress",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1100.0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "specMinUTS_MPa",
+              "label": "Specification minimum UTS",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "stress",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1350.0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "specMinElongation_pct",
+              "label": "Specification minimum elongation",
+              "valueType": "number",
+              "unit": "%",
+              "displayUnits": [],
+              "quantityKind": "strain",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 12.0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "mcSamples",
+              "label": "Sample count",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 500,
+              "max": 10000,
+              "step": 1,
+              "default": 2500,
+              "required": false,
+              "enum": [],
+              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract rejects."
+            },
+            {
+              "key": "samplingMethod",
+              "label": "Sampling method",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "sampling-method",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "sobol_qmc",
+              "required": false,
+              "enum": [
+                "sobol_qmc"
+              ],
+              "note": "The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."
+            },
+            {
+              "key": "scramble",
+              "label": "Random digital shift",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": true,
+              "required": false,
+              "enum": [],
+              "note": "The authority coerces with bool(); the contract accepts only booleans."
+            },
+            {
+              "key": "seed",
+              "label": "Random seed",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "rng-seed",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 42,
+              "required": false,
+              "enum": [],
+              "note": "No bound is enforced (int() conversion)."
+            }
+          ],
+          "undeclaredInput": [
+            "alloyName",
+            "standardSpec",
+            "composition_wt",
+            "composition_tolerances"
+          ],
+          "output": {
+            "fields": [
+              "success",
+              "engine",
+              "computeTimeMs",
+              "sampleSizeN",
+              "samplingMetadata",
+              "alloyMetadata",
+              "inputUncertainties",
+              "stochasticProperties",
+              "sobolSensitivityAnalysis",
+              "sensitivityMetadata",
+              "aerospaceReliability",
+              "provenance"
+            ],
+            "statusKey": null
+          }
         }
       ],
       "validityDomain": null,
@@ -2255,19 +2877,47 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: the output has no status key. aerospaceReliability.qualificationStatus is the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is 'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon evidence or allowables."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_uq_lab.py",
         "oracle": {
           "status": "pending",
           "ref": null
         },
-        "docs": null
+        "docs": "docs/modules/uq-lab.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": []
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "alloyName and standardSpec are free-text labels echoed in alloyMetadata; composition_wt and composition_tolerances are element -> wt% maps (a missing tolerance defaults to 10 % of the nominal). The Field schema cannot describe them, so they are recorded as undeclaredInput.",
+        "More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.",
+        "The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).",
+        "Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as an operation because the code declares no route or deadline for it.",
+        "No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions."
+      ],
+      "sourceRefs": [
+        "python/stochastic_uq_mmpds_solver.py:336-372",
+        "python/stochastic_uq_mmpds_solver.py:389-398",
+        "python/stochastic_uq_mmpds_solver.py:584-587",
+        "python/stochastic_uq_mmpds_solver.py:638-706",
+        "python/stochastic_uq_mmpds_solver.py:720-742",
+        "python/alloy_data_kinetics_uq_fatigue.py:166-193",
+        "python/alloy_data_kinetics_uq_fatigue.py:206-223",
+        "routes/physics.ts:11",
+        "routes/physics.ts:120-122",
+        "src/components/UQLab.tsx:90-94",
+        "src/components/UQLab.tsx:155-175",
+        "src/components/UQLab.tsx:529-585",
+        "src/components/uqLabData.ts:155",
+        "src/services/pythonComputationService.ts:1579-1614",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:77"
+      ]
     },
     {
       "id": "qualification",
@@ -2299,6 +2949,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": "Recorded debt (single-authority rule): protocol screening and coupon statistics are computed in the browser."
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2328,7 +2979,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "aerospace-pdf-audit",
@@ -2360,6 +3012,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": "Recorded debt (single-authority rule): demonstration report templates are assembled in the browser."
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2389,7 +3042,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "traceability",
@@ -2433,7 +3087,8 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [
         "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
-      ]
+      ],
+      "sourceRefs": []
     },
     {
       "id": "copilot",
@@ -2465,6 +3120,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2492,7 +3148,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     },
     {
       "id": "ai-orchestrator",
@@ -2524,6 +3181,7 @@ export const MODULE_REGISTRY = {
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [],
           "output": null
         }
       ],
@@ -2551,7 +3209,8 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [],
+      "sourceRefs": []
     }
   ]
 } as const satisfies ModuleRegistryDocument;

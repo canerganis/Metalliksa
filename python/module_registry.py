@@ -33,8 +33,8 @@ from typing import Dict, List, Tuple
 from module_contract import (
     ALWAYS_FORBIDDEN_CLAIMS, AUTHORITY_KINDS, BACKGROUND_WORK, EVIDENCE_STATUSES, EVIDENCE_TYPES,
     FORBIDDEN_CLAIM_KEYS, GPU_MODES, HTTP_METHODS, LIFECYCLE_RESOURCES, MATURITY, MIGRATION_STATES, NAVIGATION,
-    ORACLE_STATES, PENDING_ORACLE_CEILING, RUN_STATES, TODO_MARKER, WORKSPACES,
-    Authority, Evidence, ModuleContract, Operation, Oracle, TestRefs, View,
+    ORACLE_STATES, PENDING_ORACLE_CEILING, RUN_STATES, TODO_MARKER, VALUE_TYPES, WORKSPACES,
+    Authority, Evidence, InputField, Lifecycle, ModuleContract, Operation, Oracle, OutputSchema, TestRefs, View,
 )
 
 PYTHON_DIR = Path(__file__).resolve().parent
@@ -187,7 +187,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "powder-compaction": (_worker_op("powder-dem-compaction"),),
     "optical-tomography": (_worker_op("optical-tomography"),),
     "transient-3d-gpu": (),
-    "keyhole-raytracing": (_worker_op("keyhole-raytracing"),),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -232,10 +231,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     ),
     "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
-    "uq-lab": (
-        _op("stochastic-uq-mmpds", "POST", "/api/python/stochastic-uq-mmpds",
-            _py("stochastic_uq_mmpds_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
-    ),
     "qualification": (
         _local("coupon-statistics", "protocol screening and coupon statistics are computed in the browser."),
     ),
@@ -269,6 +264,232 @@ LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
 }
 
 
+# --- Contracted modules (Phase 7 wave 1 pilot) --------------------------------
+#
+# Every field, bound, default, output key and note below is read from the cited
+# source lines (``source_refs``). A bound the authority does not enforce is left
+# None; nothing is completed from another module or a guess. All request keys
+# are optional at the authority (it applies the listed default when a key is
+# absent), so ``required`` is False throughout.
+
+CONTRACT_VERSION = "0.1.0"
+_MICRO = "µm"
+
+
+def _num(key: str, label: str, unit: str, kind: str, default, lo=None, hi=None,
+         integer: bool = False, note: str = None) -> InputField:
+    return InputField(key=key, label=label, unit=unit, quantity_kind=kind, min=lo, max=hi, default=default,
+                      required=False, step=1 if integer else None,
+                      value_type="integer" if integer else "number", note=note)
+
+
+def _choice(key: str, label: str, kind: str, values: Tuple[str, ...], default: str, note: str = None) -> InputField:
+    return InputField(key=key, label=label, unit=None, quantity_kind=kind, min=None, max=None, default=default,
+                      required=False, enum=values, value_type="enum", note=note)
+
+
+# keyhole-raytracing: bounds are the _number(key, default, lower, upper, integer)
+# calls in python/lpbf_keyhole_raytracing.py:76-90 (the authority rejects outside them).
+_KEYHOLE_FIELDS = (
+    _num("nx", "Mesh nodes (x)", "1", "count", 64, 2, 256, integer=True,
+         note="Not sent by the view; the authority default applies."),
+    _num("ny", "Mesh nodes (y)", "1", "count", 64, 2, 256, integer=True,
+         note="Not sent by the view; the authority default applies."),
+    _num("dx", "Mesh spacing (x)", "m", "length", 2e-6, 1e-9, 1e-3,
+         note="Not sent by the view; the authority default applies."),
+    _num("dy", "Mesh spacing (y)", "m", "length", 2e-6, 1e-9, 1e-3,
+         note="Not sent by the view; the authority default applies."),
+    _num("power_W", "Laser power", "W", "power", 250, 0, 1e6,
+         note="The view sends the shared LPBF process laserPower_W."),
+    _num("beam_radius_um", "Beam radius (1/e² intensity)", _MICRO, "length", 50, 0.01, 10000,
+         note="The view sends the shared beamDiameter_um / 2."),
+    _num("base_absorption", "Base absorption", "1", "absorptivity", 0.3, 0, 1,
+         note="Empirical angular law input, not complex-index Fresnel optics."),
+    _num("keyhole_depth_um", "Prescribed cavity depth", _MICRO, "length", 100, 0, 10000),
+    _num("max_bounces", "Maximum bounces", "1", "count", 5, 1, 32, integer=True,
+         note="Power still in flight at the limit is reported as bounce-limited (truncated), not escaped."),
+    _num("num_rays", "Rays", "1", "count", 10000, 32, 100000, integer=True),
+    _num("seed", "Random seed", "1", "rng-seed", 0, 0, 2 ** 32 - 1, integer=True),
+    _num("ui_ray_limit", "Returned ray paths", "1", "count", 1000, 0, 1000, integer=True,
+         note="Display subset only; drawn from a separate generator and never changes the physics samples. "
+              "The view sends 150."),
+    _choice("device", "Backend", "compute-device", ("cpu", "cuda:0"), "cpu",
+            note="No silent backend substitution: any other value is rejected."),
+)
+
+_KEYHOLE_OUTPUT = OutputSchema(
+    fields=("status", "model_id", "device", "warp_version", "solve_time_ms", "total_input_W",
+            "total_absorbed_W", "total_escaped_W", "total_truncated_W", "energy_balance_relative_error",
+            "absorption_efficiency", "sampling", "inputs", "limitations", "mesh", "ray_paths"),
+    status_key=None,
+)
+
+_KEYHOLE_EVIDENCE_NOTE = (
+    "Emits no evidence status: the output has no status key ('status' is the transport value "
+    "'success'). Ceiling screening-only: a prescribed Gaussian cavity (not a solved free surface) with "
+    "an empirical angular absorption law, no material optical data and no experimental comparison "
+    "(python/lpbf_keyhole_raytracing.py docstring and 'limitations'). The oracle is numerical: an "
+    "independent Gaussian square-aperture integral and the flat-surface normal-incidence fraction in "
+    "python/test_keyhole_contract.py. It verifies the sampling and energy bookkeeping, not the physics, "
+    "and does not raise the ceiling."
+)
+
+_UQ_FIELDS = (
+    _choice("baseMetal", "Base metal", "element", ("Ni", "Fe", "Ti", "Al"), "Ni",
+            note="The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; "
+                 "the contract accepts only the four tabulated keys."),
+    _num("coolingRate_nominal", "Nominal cooling rate", "K/s", "cooling-rate", 150000.0,
+         note="No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound)."),
+    _num("coolingRate_cov", "Cooling-rate coefficient of variation", "1", "coefficient-of-variation", 0.25,
+         note="Fraction (0.25 = 25 %); no bound is enforced."),
+    _num("agingTemp_nominal", "Nominal aging temperature", "degC", "temperature", 720.0,
+         note="No bound is enforced; each draw is floored at 200 degC."),
+    _num("agingTemp_stdDev", "Aging temperature standard deviation", "K", "temperature-difference", 7.5,
+         note="Temperature difference (no offset); no bound is enforced."),
+    _num("agingTime_nominal", "Nominal aging time", "h", "time", 8.0,
+         note="No bound is enforced; each draw is floored at 0.2 h."),
+    _num("agingTime_stdDev", "Aging time standard deviation", "h", "time", 0.25),
+    _num("serviceStress_nominal", "Nominal service stress", "MPa", "stress", 720.0,
+         note="No bound is enforced; each draw is floored at 50 MPa."),
+    _num("serviceStress_cov", "Service-stress coefficient of variation", "1", "coefficient-of-variation", 0.08),
+    _num("initialFlawSize_um_mean", "Initial flaw size mean", _MICRO, "length", 45.0,
+         note="No bound is enforced; each draw is floored at 5 µm."),
+    _num("initialFlawSize_um_std", "Initial flaw size standard deviation", _MICRO, "length", 15.0),
+    _num("specMinYield_MPa", "Specification minimum yield strength", "MPa", "stress", 1100.0),
+    _num("specMinUTS_MPa", "Specification minimum UTS", "MPa", "stress", 1350.0),
+    _num("specMinElongation_pct", "Specification minimum elongation", "%", "strain", 12.0),
+    _num("mcSamples", "Sample count", "1", "count", 2500, 500, 10000, integer=True,
+         note="The authority clamps values outside [500, 10000] instead of rejecting them; the contract rejects."),
+    _choice("samplingMethod", "Sampling method", "sampling-method", ("sobol_qmc",), "sobol_qmc",
+            note="The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."),
+    InputField(key="scramble", label="Random digital shift", unit=None, quantity_kind="flag", min=None, max=None,
+               default=True, required=False, value_type="boolean",
+               note="The authority coerces with bool(); the contract accepts only booleans."),
+    _num("seed", "Random seed", "1", "rng-seed", 42, integer=True,
+         note="No bound is enforced (int() conversion)."),
+)
+
+_UQ_OUTPUT = OutputSchema(
+    fields=("success", "engine", "computeTimeMs", "sampleSizeN", "samplingMetadata", "alloyMetadata",
+            "inputUncertainties", "stochasticProperties", "sobolSensitivityAnalysis", "sensitivityMetadata",
+            "aerospaceReliability", "provenance"),
+    status_key=None,
+)
+
+_UQ_EVIDENCE_NOTE = (
+    "Emits no evidence status: the output has no status key. aerospaceReliability.qualificationStatus is "
+    "the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is "
+    "'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle "
+    "cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon "
+    "evidence or allowables."
+)
+
+_PILOT_FORBIDDEN = FORBIDDEN_CLAIM_KEYS  # every claim key stays forbidden
+
+
+def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = Operation(
+        id="keyhole-raytracing", method="POST", route="/api/python/lpbf-keyhole-raytracing",
+        authority=Authority(kind="lpbf-worker", worker_method="keyhole-raytracing",
+                            timeout_ms=_WORKER_TIMEOUT_MS, gpu="optional"),
+        input=_KEYHOLE_FIELDS, output=_KEYHOLE_OUTPUT,
+    )
+    return _pilot(row, owner="lpbf workspace", operation=operation,
+                  evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
+                                    note=_KEYHOLE_EVIDENCE_NOTE),
+                  oracle=Oracle(status="present", ref="python/test_keyhole_contract.py::KeyholeContract."
+                                                      "test_gaussian_aperture_matches_independent_integral_at_three_sample_counts"),
+                  lifecycle=Lifecycle(background_work="none", resources=("raf", "three", "fetch")),
+                  notes=(
+                      "The view's number inputs use narrower UI bounds (laser power 0-1000 W, beam diameter "
+                      "40-300 µm, cavity depth 0-300 µm, rays step 256) than the authority's hard ranges; "
+                      "the contract records the authority's ranges.",
+                      "Aborting the HTTP request discards a stale response but does not cancel the worker "
+                      "computation (src/components/KeyholeRaytracingLab.tsx:56-57).",
+                      "No validity domain is declared: the module states no source-backed applicability range "
+                      "(prescribed cavity, empirical absorption).",
+                  ),
+                  sources=(
+                      "python/lpbf_keyhole_raytracing.py:1-5",
+                      "python/lpbf_keyhole_raytracing.py:60-90",
+                      "python/lpbf_keyhole_raytracing.py:137-160",
+                      "python/lpbf_worker_rpc.py:408-412",
+                      "routes/lpbfSimulation.ts:44",
+                      "server/lpbfWorkerBridge.ts:58",
+                      "src/components/KeyholeRaytracingLab.tsx:26-59",
+                      "src/components/KeyholeRaytracingLab.tsx:116-127",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:40",
+                  ))
+
+
+def _uq_contract(row: Dict[str, str]) -> ModuleContract:
+    operation = Operation(
+        id="stochastic-uq-mmpds", method="POST", route="/api/python/stochastic-uq-mmpds",
+        authority=_py("stochastic_uq_mmpds_solver", _PHYSICS_TIMEOUT_MS, warm=True),
+        input=_UQ_FIELDS, output=_UQ_OUTPUT,
+        undeclared_input=("alloyName", "standardSpec", "composition_wt", "composition_tolerances"),
+    )
+    return _pilot(row, owner="evidence workspace", operation=operation,
+                  evidence=Evidence(emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=_PILOT_FORBIDDEN,
+                                    note=_UQ_EVIDENCE_NOTE),
+                  oracle=Oracle(status="pending"),
+                  lifecycle=Lifecycle(background_work="none", resources=("fetch",)),
+                  notes=(
+                      "alloyName and standardSpec are free-text labels echoed in alloyMetadata; composition_wt and "
+                      "composition_tolerances are element -> wt% maps (a missing tolerance defaults to 10 % of the "
+                      "nominal). The Field schema cannot describe them, so they are recorded as undeclaredInput.",
+                      "More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity "
+                      "pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.",
+                      "The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py "
+                      "still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).",
+                      "Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in "
+                      "src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as "
+                      "an operation because the code declares no route or deadline for it.",
+                      "No validity domain is declared: no source-backed applicability range exists for the "
+                      "strengthening model or the input distributions.",
+                  ),
+                  sources=(
+                      "python/stochastic_uq_mmpds_solver.py:336-372",
+                      "python/stochastic_uq_mmpds_solver.py:389-398",
+                      "python/stochastic_uq_mmpds_solver.py:584-587",
+                      "python/stochastic_uq_mmpds_solver.py:638-706",
+                      "python/stochastic_uq_mmpds_solver.py:720-742",
+                      "python/alloy_data_kinetics_uq_fatigue.py:166-193",
+                      "python/alloy_data_kinetics_uq_fatigue.py:206-223",
+                      "routes/physics.ts:11",
+                      "routes/physics.ts:120-122",
+                      "src/components/UQLab.tsx:90-94",
+                      "src/components/UQLab.tsx:155-175",
+                      "src/components/UQLab.tsx:529-585",
+                      "src/components/uqLabData.ts:155",
+                      "src/services/pythonComputationService.ts:1579-1614",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:77",
+                  ))
+
+
+def _pilot(row, *, owner, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
+    slug = row["id"].replace("-", "_")
+    return ModuleContract(
+        id=row["id"], version=CONTRACT_VERSION, owner=owner, workspace=row["workspace"], label=row["label"],
+        description=row["description"], next=row["next"], maturity=row["scope"], navigation="listed",
+        view=View(component=row["viewComponent"], export=row["viewExport"]),
+        evidence=evidence,
+        tests=TestRefs(oracle=oracle, schema=f"python/test_contract_{slug}.py", docs=module_doc_path(row["id"])),
+        migration_state="contracted", operations=(operation,), lifecycle=lifecycle,
+        legacy_notes=notes, source_refs=sources,
+    )
+
+
+def module_doc_path(module_id: str) -> str:
+    return f"docs/modules/{module_id}.md"
+
+
+CONTRACTED_BUILDERS = {
+    "keyhole-raytracing": _keyhole_contract,
+    "uq-lab": _uq_contract,
+}
+
+
 # --- Registry ---------------------------------------------------------------
 
 def legacy_contract(row: Dict[str, str]) -> ModuleContract:
@@ -299,20 +520,83 @@ def legacy_contract(row: Dict[str, str]) -> ModuleContract:
     )
 
 
-def build_registry(seed: List[Dict[str, str]] = None) -> Tuple[ModuleContract, ...]:
+_LINE_REF = re.compile(r"^(?P<path>[^:]+?)(?::(?P<start>\d+)(?:-(?P<end>\d+))?)?$")
+_SYMBOL_REF = re.compile(r"^(?P<path>[^:]+)::(?P<symbol>[A-Za-z_][\w.]*)$")
+
+
+def contract_refs(contract: ModuleContract) -> List[str]:
+    """Every repository reference a contract makes (view, scripts, tests, docs, sources)."""
+    refs = [contract.view.component]
+    refs += [op.authority.script for op in contract.operations if op.authority.script]
+    refs += [r for r in (contract.tests.schema, contract.tests.docs, contract.tests.oracle.ref) if r]
+    refs += list(contract.source_refs)
+    if contract.validity_domain:
+        refs += list(contract.validity_domain.source_refs)
+    return refs
+
+
+def ref_problem(ref: str, root: Path = REPO_ROOT, generated: frozenset = frozenset()) -> str:
+    """Why ``ref`` does not resolve in the repository, or '' when it does.
+
+    Forms: ``path``, ``path:line``, ``path:start-end`` (lines must exist) and
+    ``path::Class.method`` (the last name must be defined in the file). Paths in
+    ``generated`` are emitter outputs; their presence is checked by ``stale_outputs``.
+    """
+    symbol = _SYMBOL_REF.match(ref)
+    match = symbol or _LINE_REF.match(ref)
+    if not match:
+        return f"{ref}: unrecognised reference form"
+    rel = match.group("path")
+    if rel in generated:
+        return ""
+    path = (root / rel)
+    if rel.startswith(("/", "\\")) or ".." in Path(rel).parts or not path.is_file():
+        return f"{ref}: {rel} does not exist"
+    text = path.read_text(encoding="utf-8")
+    if symbol:
+        name = symbol.group("symbol").split(".")[-1]
+        if not re.search(rf"^\s*(?:async\s+)?(?:def|class)\s+{re.escape(name)}\b", text, re.MULTILINE):
+            return f"{ref}: {name} is not defined in {rel}"
+        return ""
+    if match.group("start"):
+        start = int(match.group("start"))
+        end = int(match.group("end") or start)
+        lines = len(text.splitlines())
+        if not 1 <= start <= end <= lines:
+            return f"{ref}: lines {start}-{end} outside {rel} ({lines} lines)"
+    return ""
+
+
+def contract_ref_problems(contract: ModuleContract, root: Path = REPO_ROOT,
+                          generated: frozenset = frozenset()) -> List[str]:
+    return [p for p in (ref_problem(ref, root, generated) for ref in contract_refs(contract)) if p]
+
+
+def build_registry(seed: List[Dict[str, str]] = None, builders: Dict = None) -> Tuple[ModuleContract, ...]:
     rows = load_seed() if seed is None else seed
-    contracts = tuple(legacy_contract(row) for row in rows)
+    builders = CONTRACTED_BUILDERS if builders is None else builders
+    contracts = tuple(builders[row["id"]](row) if row["id"] in builders else legacy_contract(row) for row in rows)
     ids = [c.id for c in contracts]
     if len(set(ids)) != len(ids):
         raise ValueError("duplicate module ids in registry")
     known = set(ids)
-    for table, name in ((LEGACY_OPERATIONS, "LEGACY_OPERATIONS"), (LEGACY_NOTES, "LEGACY_NOTES")):
+    for table, name in ((LEGACY_OPERATIONS, "LEGACY_OPERATIONS"), (LEGACY_NOTES, "LEGACY_NOTES"),
+                        (builders, "CONTRACTED_BUILDERS")):
         unknown = set(table) - known
         if unknown:
             raise ValueError(f"{name} names unregistered modules: {sorted(unknown)}")
+    both = set(LEGACY_OPERATIONS) & set(builders)
+    if both:
+        raise ValueError(f"contracted modules still listed in LEGACY_OPERATIONS: {sorted(both)}")
+    generated = frozenset(module_doc_path(c.id) for c in contracts if c.migration_state == "contracted")
     for contract in contracts:
         if contract.next not in known:
             raise ValueError(f"{contract.id}: next {contract.next!r} is not a registered module")
+        if contract.migration_state == "contracted":
+            # A contracted module's references must all resolve (design 8: refs must exist).
+            problems = contract_ref_problems(contract, generated=generated)
+            if problems:
+                raise ValueError(f"{contract.id}: unresolved references: {problems}")
     return contracts
 
 
@@ -365,11 +649,13 @@ def render_ts(document: dict) -> str:
         f"export type OracleState = {_union(ORACLE_STATES)};",
         f"export type MigrationState = {_union(MIGRATION_STATES)};",
         "",
+        f"export type FieldValueType = {_union(VALUE_TYPES)};",
         "export interface ContractField {",
-        "  readonly key: string; readonly label: string; readonly unit: string;",
+        "  readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;",
         "  readonly displayUnits: readonly string[]; readonly quantityKind: string;",
-        "  readonly min: number; readonly max: number; readonly step: number | null;",
+        "  readonly min: number | null; readonly max: number | null; readonly step: number | null;",
         "  readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];",
+        "  readonly note: string | null;",
         "}",
         "export interface ContractAuthority {",
         "  readonly kind: AuthorityKind; readonly script: string | null; readonly workerMethod: string | null;",
@@ -379,7 +665,8 @@ def render_ts(document: dict) -> str:
         f"  readonly id: string; readonly method: {_union(HTTP_METHODS)} | null; readonly route: string | null;",
         "  readonly authority: ContractAuthority;",
         "  readonly input: readonly ContractField[];",
-        "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string } | null;",
+        "  readonly undeclaredInput: readonly string[];",
+        "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string | null } | null;",
         "}",
         "export interface ContractValidityDomain {",
         "  readonly ranges: readonly { readonly key: string; readonly min: number; readonly max: number; readonly unit: string }[];",
@@ -403,6 +690,7 @@ def render_ts(document: dict) -> str:
         "  };",
         "  readonly migrationState: MigrationState;",
         "  readonly legacyNotes: readonly string[];",
+        "  readonly sourceRefs: readonly string[];",
         "}",
         "export interface ModuleRegistryDocument {",
         "  readonly schemaVersion: number; readonly generatedBy: string;",
@@ -416,9 +704,107 @@ def render_ts(document: dict) -> str:
     return "\n".join(lines)
 
 
+def _cell(value) -> str:
+    if value is None or value == [] or value == ():
+        return "—"
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+    return text.replace("|", "\\|")
+
+
+def render_module_doc(contract: ModuleContract) -> str:
+    """Generated reference page for a contracted module (docs/modules/<id>.md)."""
+    c = contract
+    lines = [
+        f"# {c.label} (`{c.id}`)",
+        "",
+        "> Generated by `python/module_registry.py` from the module contract. Do not edit by hand: edit the",
+        "> contract and run `python -m module_contract emit` from `python/`. This page restates the contract;",
+        "> it is not a validation report.",
+        "",
+        f"- Migration state: {c.migration_state}; contract version {c.version}",
+        f"- Maturity: {c.maturity} (product maturity, not the evidence status of a result)",
+        f"- Workspace: {c.workspace}; owner: {c.owner}",
+        f"- View: `{c.view.component}` (`{c.view.export}`)",
+        "",
+        "## Operations",
+    ]
+    for op in c.operations:
+        a = op.authority
+        target = a.script or a.worker_method or a.kind
+        lines += [
+            "",
+            f"### `{op.id}`: `{op.method} {op.route}`",
+            "",
+            f"Authority: {a.kind} `{target}`; timeout {a.timeout_ms} ms; GPU {a.gpu}; warm {str(a.warm).lower()}.",
+            "",
+            "| Key | Label | Type | Unit | Min | Max | Step | Default | Note |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        ]
+        for f in op.input:
+            kind = f"enum {list(f.enum)}" if f.enum else f.value_type
+            lines.append("| " + " | ".join(_cell(v) for v in (
+                f"`{f.key}`", f.label, kind, f.unit, f.min, f.max, f.step, f.default, f.note)) + " |")
+        lines += [
+            "",
+            "— = not established from the authority code or a source; the contract states no bound.",
+            "All keys are optional at the authority, which applies the listed default when a key is absent."
+            if not any(f.required for f in op.input) else "Required keys are marked in the contract JSON.",
+        ]
+        if op.undeclared_input:
+            lines += ["", "Undeclared input keys (read by the authority, not describable by the Field schema): "
+                      + ", ".join(f"`{k}`" for k in op.undeclared_input) + "."]
+        if op.output:
+            status = (f"evidence status key `{op.output.status_key}`" if op.output.status_key
+                      else "no status key, so the output carries no evidence status")
+            lines += ["", f"Output fields ({status}): " + ", ".join(f"`{k}`" for k in op.output.fields) + "."]
+    e = c.evidence
+    oracle = (f"present, `{c.tests.oracle.ref}`" if c.tests.oracle.status == "present"
+              else f"pending (ceiling capped at {PENDING_ORACLE_CEILING})")
+    lines += [
+        "",
+        "## Evidence",
+        "",
+        f"- Ceiling: {e.ceiling} (the strongest class this module may claim; not a result status)",
+        f"- Emits: {', '.join(e.emits) if e.emits else 'none'}",
+        f"- Forbidden claims: {', '.join(e.forbidden_claims)}",
+        f"- Oracle: {oracle}",
+        f"- Note: {e.note}" if e.note else "- Note: none",
+        "",
+        "## Validity domain",
+        "",
+    ]
+    if c.validity_domain:
+        vd = c.validity_domain
+        lines += [f"- `{r.key}`: {r.min} to {r.max} {r.unit}" for r in vd.ranges]
+        lines += [f"- Source: {ref}" for ref in vd.source_refs]
+    else:
+        lines.append("None declared: no source-backed applicability range is established.")
+    lc = c.lifecycle
+    lines += [
+        "",
+        "## Lifecycle",
+        "",
+        f"Background work: {lc.background_work}; resources: {', '.join(lc.resources) or 'none'}." if lc
+        else "Not declared.",
+        "",
+        "## Recorded notes",
+        "",
+    ]
+    lines += [f"- {note}" for note in c.legacy_notes] or ["None."]
+    lines += ["", "## Source references", ""]
+    lines += [f"- `{ref}`" for ref in c.source_refs]
+    lines += ["", "## Tests", "", f"- Contract scaffold: `{c.tests.schema}`", ""]
+    return "\n".join(lines)
+
+
 def rendered_outputs() -> Dict[Path, str]:
-    document = registry_document(build_registry())
-    return {GENERATED_JSON: render_json(document), GENERATED_TS: render_ts(document)}
+    contracts = build_registry()
+    document = registry_document(contracts)
+    outputs = {GENERATED_JSON: render_json(document), GENERATED_TS: render_ts(document)}
+    for contract in contracts:
+        if contract.migration_state == "contracted":
+            outputs[REPO_ROOT / module_doc_path(contract.id)] = render_module_doc(contract)
+    return outputs
 
 
 def _normalized(text: str) -> str:
