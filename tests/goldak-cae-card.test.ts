@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { buildGoldakCaeCard, goldakAbsorbedPower_W, goldakFrontRearFractions, type GoldakCaeCardInput } from "../src/utils/goldakCaeCard";
 
 // Solver-producible keyhole state: IN718, 285 W / 960 mm/s, beam 80 um, layer 40 um, hatch 110 um
@@ -55,6 +57,8 @@ test("Q equals laserPower_W * effectiveAbsorptivity (not halved)", () => {
     assert.equal(fields[5], eta);
   }
   assert.equal(goldakAbsorbedPower_W(140, 0.4), 56);
+  assert.equal(200 * 0.357, 71.39999999999999, "raw product carries float noise");
+  assert.equal(goldakAbsorbedPower_W(200, 0.357), 71.4, "noise removed by the 15-digit rounding");
   assert.equal(goldakAbsorbedPower_W(285, 0.887), 252.795);
 });
 
@@ -111,6 +115,18 @@ test("card states that axes and Q are NOT a calibrated pair and prints eta_cond*
   }
 });
 
+test("keyhole fixture prints both eta_eff (0.887, in Q) and conductionAbsorptivity (0.38) with the not-a-calibrated-pair statement", () => {
+  const { text } = buildGoldakCaeCard(input());
+  const lines = text.split("\n");
+  const dataFields = dataLine(text).trim().split(",").map((f) => f.trim());
+  assert.equal(dataFields[5], "0.887");
+  assert.equal(dataFields[4], "252.795");
+  assert.ok(lines.some((l) => l.startsWith("** conductionAbsorptivity (") && l.endsWith("): 0.38")));
+  assert.ok(lines.some((l) => l.startsWith("** axes and Q are NOT a calibrated pair")));
+  assert.ok(lines.some((l) => l.includes("eta_eff/eta_cond = 2.33")));
+  assert.notEqual(dataFields[5], "0.38", "Q keeps eta_eff, not conductionAbsorptivity");
+});
+
 test("conductionAbsorptivity lines are omitted when the result lacks it, the not-calibrated line stays", () => {
   const { text } = buildGoldakCaeCard(input({ conductionAbsorptivity: undefined }));
   assert.ok(!text.includes("conduction-field absorbed power before the Stefan factor"));
@@ -150,4 +166,27 @@ test("unchanged card lines stay verbatim; only the enthalpy line differs by vari
   assert.ok(map.includes("** Parameters in meters (SI Units):"));
   assert.ok(cross.includes("** Normalized Enthalpy (ΔH/hs): 30.8 (Keyhole Mode)"));
   assert.ok(cross.includes("** Semi-Axes in meters (SI Units):"));
+});
+
+const source = (relative: string) => readFileSync(resolve(process.cwd(), relative), "utf8").replace(/\r\n/g, "\n");
+
+test("call sites pass the correct card variant (a swap must fail)", () => {
+  const thermalMap = source("src/components/LaserMeltPoolThermalMap.tsx");
+  const crossSection = source("src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx");
+  const calls = (text: string) => [...text.matchAll(/buildGoldakCaeCard\(([^)]*)\)/g)].map((m) => m[1].replace(/\s+/g, ""));
+  assert.deepEqual(calls(thermalMap), ["pyResult,\"thermal-map\""]);
+  assert.deepEqual(calls(crossSection), ["pyResult,\"cross-section\""]);
+  assert.ok(thermalMap.includes('import { buildGoldakCaeCard } from "../utils/goldakCaeCard";'));
+  assert.ok(crossSection.includes('import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";'));
+});
+
+test("thermal-map header states the Rosenthal / TS-interpolation wording and no longer claims high fidelity", () => {
+  const thermalMap = source("src/components/LaserMeltPoolThermalMap.tsx");
+  assert.ok(!/high[- ]fidelity/i.test(thermalMap), "no High-fidelity wording");
+  assert.ok(!thermalMap.includes("Goldak 3D · screening"), "no fixed Goldak chip");
+  assert.ok(thermalMap.includes("Analytical screening: regularised Rosenthal point-source conduction field"));
+  assert.ok(thermalMap.includes("illustrative TS interpolation of the Python pool extents, not a solved field"));
+  assert.ok(thermalMap.includes("Not FEA, not CFD, not validated."));
+  assert.ok(thermalMap.includes("screening map (TS interpolation)"));
+  assert.ok(!/const (Tm|Ts) = 1350|const (Tm|Ts) = 1260/.test(thermalMap), "no hard-coded liquidus/solidus");
 });
