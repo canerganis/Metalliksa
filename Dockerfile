@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
-# DRAFT / UNVERIFIED: this file has never been built. Docker was not run.
-# Requires python/requirements-lpbf-linux-py312.lock, which does NOT exist yet
-# (the committed lock is Windows-only). It must be generated and committed first.
+# DRAFT / UNVERIFIED: this file has never been built (Docker Desktop's engine was not running when checked).
+# python/requirements-lpbf-linux-py312.lock now exists (uv, manylinux_2_28, CPython 3.12.15) and was install-checked with --require-hashes
+# in WSL Ubuntu 22.04 (LPBF engineering 40 OK + 1 skip, build-job PASS, CMU 8 OK, Phase 6a golden tests OK, fingerprint unchanged).
 # See docs/APPLICATION_PACKAGING_NOTES.md.
 
 FROM node:24-bookworm-slim AS node-src

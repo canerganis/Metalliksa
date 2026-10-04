@@ -2112,9 +2112,9 @@ if __name__ == "__main__":
             
         elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
         res["pythonDurationMs"] = elapsed_ms
-        # Pre-existing behaviour kept in Phase 6a step (a): success is set to True even
-        # when res carries an "error" (e.g. an unknown action).
-        res["success"] = True
+        # An error return (unknown action, insufficient points, ...) is reported as
+        # success:false with the unchanged error message. Successful outputs are unchanged.
+        res["success"] = "error" not in res
         if "error" not in res:
             # Phase 6a provenance (constants version and domain-data version)
             res["provenance"] = {

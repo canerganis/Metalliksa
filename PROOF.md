@@ -3037,3 +3037,8 @@ Recorded fixed-scan widths at 20/10/5 µm: 72.46245576/74.36212556/77.70163613 �
 - **Kanıtlanan:** `6b2bded` kaynak arşivi kilitli bağımlılıklarla kurulur, tip denetimini geçer, tam tsx paketini geçer (529 test: 511 geçti, 0 başarısız, 1 atlandı, 17 todo) ve üretim derlemesi paket tabanı içinde kalır (yalnız Windows). `066b6b9`'da gerçek tarayıcı + gerçek worker ile IN718 60 W / 1200 mm/s tek-iz vakası için yeni koşu → provenance → arşiv; dışa aktarma/doğrulama/geri yükleme HTTP ile aynı sunucuda yapıldı. Giriş formu düzeltmesi `6b2bded` temiz derlemesinde doğrulandı.
 - **Kanıtlanmayan:** sayısal yakınsama, deneysel geçerlilik, herhangi bir fiziksel sayının doğruluğu, Table 4 vaka 0 (kaynama sınırında kapalı-başarısız), bağımsız replikalar, Linux/Docker/CI yeniden üretimi, çökme-toparlanma, dosya-seçici içe aktarma, izole geri yükleme, GPU yolları, görsel/yerleşim kalitesi.
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated`.
+
+## Temizlik dalgası (Phase 5a) — 2026-10-04
+
+- **Kapsam:** menüden erişilemeyen ~25,8 bin satır (lab/stüdyo bileşenleri, EIS/CNLS zinciri, kök çöp betikleri, `src/physics/lpbfBuildJob.ts`) ve yalnız onlara hizmet eden testler silindi; ayrıntı `STATUS.md` "Temizlik dalgası".
+- **Etki:** Yukarıdaki eski kanıt girdilerinin (örn. Proof Entry 008 `lpbfBuildJob.ts`; `LPBFGroundTruthDataLab`, `LpbfBuildJobRail` anmaları) atıf yaptığı modüller artık depoda yoktur; o girdiler tarihsel kayıt olarak kalır, güncel kabul kanıtı sayılmaz. LPBF uygulama parmak izi değişmedi.

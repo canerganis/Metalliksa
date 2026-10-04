@@ -1,0 +1,19 @@
+{
+  "description": "Immutable initial allowance (Phase 7 slice 1, fix round 2) for src/UNREACHABLE_SUPPORT_BASELINE.json. Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and this file's content is pinned by sha256 in python/test_allowlist_ceilings.py.",
+  "paths": [
+    "src/hooks/usePythonAnalysis.ts",
+    "src/hooks/useVisibleAbortSignal.ts",
+    "src/services/pythonAnalysis.ts",
+    "src/utils/cnlsOptimizer.ts",
+    "src/utils/ebsdParser.ts",
+    "src/utils/eisAgingCampaigns.ts",
+    "src/utils/eisFileParser.ts",
+    "src/utils/monteCarloEngine.ts",
+    "src/utils/pythonCnlsReport.ts",
+    "src/utils/savitzkyGolay.ts",
+    "src/utils/seededRandom.ts",
+    "src/utils/syntheticEISNoiseGenerator.ts",
+    "src/utils/xrdParser.ts",
+    "src/utils/xrdProfileFitting.ts"
+  ]
+}

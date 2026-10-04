@@ -245,13 +245,18 @@ class PersistentIpcRelayTest(unittest.TestCase):
 
     def test_real_process_pool_path(self):
         import persistent_ipc_service as ipc
-        res = ipc.registry.execute_script("python/tafel_corrosion_rate_solver.py",
-                                          {"alloyId": "unobtainium-x"}, [], 60000)
-        self.assertEqual(res["concurrency"], "process_pool")
-        self._assert_envelope(res, "UNKNOWN_ALLOY")
-        res = ipc.registry.execute_script("python/pourbaix_solver.py", {"element": "Xx"}, [], 60000)
-        self.assertEqual(res["concurrency"], "process_pool")
-        self._assert_envelope(res, "UNKNOWN_ELEMENT")
+        # Own registry: another test module may already have shut the global pool down.
+        own = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
+        try:
+            res = own.execute_script("python/tafel_corrosion_rate_solver.py",
+                                     {"alloyId": "unobtainium-x"}, [], 60000)
+            self.assertEqual(res["concurrency"], "process_pool")
+            self._assert_envelope(res, "UNKNOWN_ALLOY")
+            res = own.execute_script("python/pourbaix_solver.py", {"element": "Xx"}, [], 60000)
+            self.assertEqual(res["concurrency"], "process_pool")
+            self._assert_envelope(res, "UNKNOWN_ELEMENT")
+        finally:
+            own.shutdown()
 
     def _assert_envelope(self, res, code):
         self.assertEqual(res["exitCode"], 2, res.get("stderr"))

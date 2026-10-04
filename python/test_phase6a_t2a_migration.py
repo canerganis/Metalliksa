@@ -5,7 +5,7 @@ pre-migration blob on extra payloads, the calphad legacy 50.0 g/mol element
 fallback kept in step (a) (fix round B1), the icme validation errors that replace the
 silent element/base-metal defaults (and only those), the stdout envelope + exit
 code 2 (also through the persistent IPC runner), provenance, the pinned
-pre-existing battery success:true masking, and a source guard.
+battery error returns now reporting success:false (formerly masked as true), and a source guard.
 """
 
 import ast
@@ -73,6 +73,15 @@ class GoldenRegressionTest(unittest.TestCase):
             # The old golden is the record of the silent default.
             self.assertEqual(doc["exitCode"], 0)
             self.assertIs(doc["stdout"].get("success"), True)
+            return
+        if (solver, case) in cases.EXPECTED_SUCCESS_FLAG_CHANGES:
+            # The old golden records success:true next to an error; only that flag flips.
+            self.assertIs(doc["stdout"]["success"], True)
+            self.assertIn("error", doc["stdout"])
+            self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
+            self.assertIs(fresh["stdout"]["success"], False)
+            self.assertEqual(golden.canonical(fresh["stdout"]),
+                             golden.canonical({**doc["stdout"], "success": False}))
             return
         # Design step (b): compare with the re-blessed expectation when one exists.
         expected = golden.load_expected(solver, case)
@@ -379,16 +388,35 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
 
-    def test_battery_internal_error_and_pinned_success_masking(self):
+    def test_battery_internal_error_and_error_returns_report_success_false(self):
         code, out = _run("battery_corrosion_eis_solver.py", {"action": "p2d_continuum", "tempC": "warm"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
-        # Pre-existing masking, deliberately unchanged in step (a).
-        code, out = _run("battery_corrosion_eis_solver.py", {"action": "no_such_action"})
+        # V1 follow-up: the former success:true masking (pinned here until now) is gone.
+        # Error returns keep exit code 0 and the same message, but report success:false.
+        few = {"frequencies": [1000.0, 100.0, 10.0], "zReal": [1.0, 1.1, 1.2], "zImag": [-0.1, -0.2, -0.3]}
+        expected = [
+            ({"action": "no_such_action"}, "Unknown action 'no_such_action'"),
+            ({"action": "drt", **few}, "Insufficient frequency points for DRT"),
+            ({"action": "analyze_uploaded_eis", **few}, "At least 4 frequency points are required for EIS analysis."),
+            ({"action": "identify_bisquert_tlm", **few},
+             "At least 4 frequency points are required for Bisquert TLM component identification."),
+            ({"action": "analyze_uploaded_eis", "frequencies": [1.0, 2.0, 3.0, 4.0], "zReal": [float("nan")] * 4,
+              "zImag": [0.0] * 4}, "No valid numeric impedance data found."),
+        ]
+        for payload, message in expected:
+            with self.subTest(action=payload["action"], message=message):
+                code, out = _run("battery_corrosion_eis_solver.py", payload)
+                self.assertEqual(code, 0)
+                self.assertIs(out["success"], False)
+                self.assertEqual(out["error"], message)
+                self.assertNotIn("provenance", out)
+        # Successful outputs still say success:true and carry provenance.
+        code, out = _run("battery_corrosion_eis_solver.py", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
         self.assertEqual(code, 0)
         self.assertIs(out["success"], True)
-        self.assertIn("Unknown action", out["error"])
-        self.assertNotIn("provenance", out)
+        self.assertNotIn("error", out)
+        self.assertIn("provenance", out)
 
     def test_provenance(self):
         fresh = golden.run_solver("calphad_solver", cases.CASES["calphad_solver"]["in718_wt_pct"])
