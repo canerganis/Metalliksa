@@ -17,6 +17,9 @@ export function toActionableHeadline(headline: string): string {
 }
 
 export function toActionableReason(line: string): string {
+  // Unresolved-geometry and geometry-independent notes are shown verbatim: the LoF / balling
+  // advice below would otherwise be attached to numbers Python declared unavailable.
+  if (/not resolved/i.test(line) || /^Geometry-independent gate/i.test(line)) return line;
   if (/Lack of fusion/i.test(line) || (/W\/h/i.test(line) && /D\/t/i.test(line))) {
     if (/marginal/i.test(line)) {
       return `${line} Action: reduce hatch h or layer t, or raise P / lower v so W and D grow.`;

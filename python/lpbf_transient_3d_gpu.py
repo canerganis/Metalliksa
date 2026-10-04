@@ -1304,12 +1304,25 @@ class TransientEnthalpy3DGPU:
         self.dx, self.dy, self.dz = dx, dy, dz
         self.device = "cuda:0" if wp.get_cuda_device_count() > 0 else "cpu"
         
-    def solve_toolpath(self, toolpath, T_preheat_K=300.0,
-              rho=4420.0, L_f=2.9e5, T_solidus=1878.0, T_liquidus=1928.0,
-              P0=101325.0, Lv=9.7e6, Rs=173.93, Tv=3533.0,
-              cp_solid=670.0, cp_liquid=730.0, k_solid=15.0, k_liquid=25.0,
+    def solve_toolpath(self, toolpath, T_preheat_K=300.0, *,
+              rho, L_f, T_solidus, T_liquidus, Lv, Rs, Tv,
+              cp_solid, cp_liquid, k_solid, k_liquid,
+              P0=101325.0,
               mu=0.005, d_gamma_dT=-0.0003, beta=1e-4,
               include_diagnostic_fields=False, include_energy_ledger=False):
+        """Run the Phase 22 toolpath solve.
+
+        Alloy data (rho, L_f, T_solidus, T_liquidus, Lv, Rs, Tv, cp_solid, cp_liquid,
+        k_solid, k_liquid) are keyword-only and REQUIRED: there is no default alloy.
+        The caller must take them from four_alloy_materials (the material authority);
+        units are kg/m3, J/kg, K, K, J/kg, J/(kg K) (specific gas constant R/M), K,
+        J/(kg K), J/(kg K), W/(m K), W/(m K).
+
+        P0 (ambient pressure), mu, d_gamma_dT and beta are model constants of this
+        solver, not alloy data, and keep their defaults. They are NOT the authority's
+        per-alloy viscosity / d(gamma)/dT / thermal expansion; this solver does not
+        read those.
+        """
 
         if type(include_diagnostic_fields) is not bool or type(include_energy_ledger) is not bool:
             raise ValueError("diagnostic options must be booleans")
@@ -1742,6 +1755,16 @@ if __name__ == "__main__":
     }
     
     print("Running square hatch toolpath simulation with full fluid mechanics...")
-    res = solver.solve_toolpath(toolpath=toolpath)
+    from four_alloy_materials import thermal_props
+    _m = thermal_props("ti6al4v")  # demo alloy; the material authority supplies every value
+    res = solver.solve_toolpath(
+        toolpath=toolpath,
+        rho=_m["density_kg_m3"], L_f=_m["latent_heat_fusion_J_kg"],
+        T_solidus=_m["solidus_C"] + 273.15, T_liquidus=_m["liquidus_C"] + 273.15,
+        Lv=_m["latent_heat_vap_J_kg"], Rs=8.314462618 / _m["M_molar_kg_mol"],
+        Tv=_m["boiling_C"] + 273.15,
+        cp_solid=_m["specific_heat_J_kgK"], cp_liquid=_m["specific_heat_liquid_J_kgK"],
+        k_solid=_m["thermal_conductivity_W_mK"], k_liquid=_m["thermal_conductivity_liquid_W_mK"],
+    )
     print(f"Results: {res}")
     print(f"RUN COMPLETE; pressure-projection status={res['pressure_projection_status']}.")

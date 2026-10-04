@@ -9,7 +9,8 @@ import {
 } from "../data/lpbfReferenceDatasets";
 import type { BaseMetalType } from "../store/useMaterialSpecimenStore";
 
-export type PrintVerdict = "printable" | "risky" | "do-not-print";
+/** "inconclusive": melt-pool geometry not resolved (extentStatus !== "computed"); no print / do-not-print claim. */
+export type PrintVerdict = "printable" | "risky" | "do-not-print" | "inconclusive";
 
 export interface SolverMaterialMap {
   pythonThermal: string;

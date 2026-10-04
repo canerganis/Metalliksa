@@ -35,8 +35,8 @@ PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a7
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
 # The goldens are recorded at this implementation (after the 5c bump, B5 step 2), and
 # GOLDEN_REVISION is a main commit carrying it: the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e"
-GOLDEN_REVISION = "6dd5b73508151f0af1561387a0df509ec78a06c9"
+GOLDEN_FINGERPRINT = "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359"
+GOLDEN_REVISION = "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -97,8 +97,11 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertTrue(observations["result.material.materialRevisionSha256"].startswith("5c9179e9"))
         self.assertEqual(observations["result.validationStatus"], "unvalidated")
         self.assertIs(observations["result.productionReady"], False)
-        self.assertIs(observations["v1Archive.strippedResultEqual"], True)
-        self.assertEqual(observations["result.canonicalSha256"], parity.V1_ARCHIVED_RESULT_STRIPPED_SHA256)
+        # Corrected-physics bump: only analyticalComparison.goldak differs from the archived V1 run.
+        self.assertIs(observations["v1Archive.strippedResultEqual"], False)
+        self.assertNotEqual(observations["result.canonicalSha256"], parity.V1_ARCHIVED_RESULT_STRIPPED_SHA256)
+        self.assertEqual(observations["result.canonicalSha256"],
+                         "6a5e59bec2d296b4decdffcae4aab13c64eb84e02f1f7af80d83b17a057c81e9")
         self.assertEqual(observations["result.implementationHashOccurrencesAfterStrip"], 0)
         self.assertEqual(observations["result.artifactsImplementationHashOccurrences"], 0)
         bare = json.loads(parity.golden_path(
@@ -118,14 +121,14 @@ class ParityHarnessTests(unittest.TestCase):
                 observations = json.loads(parity.golden_path(parity.CASE_BY_ID[case_id]).read_text(
                     encoding="utf-8"))["observations"]
                 self.assertGreater(observations["evaporation.inversionCalls"], 0)
-                self.assertEqual(observations["evaporation.latentHeatVapUsed_J_kg"], [[6.4e6, (6.4e6).hex()]])
+                self.assertEqual(observations["evaporation.latentHeatVapUsed_J_kg"], [[value, value.hex()]])
                 self.assertEqual(observations["evaporation.authorityLatentHeatVap_J_kg"], [value, value.hex()])
                 self.assertIs(observations["evaporation.materialSnapshotHasLatentHeatVap"], False)
                 self.assertIs(observations["evaporation.authorityProbe.resultCanonicalEqual"], True)
         in625 = json.loads(parity.golden_path(parity.CASE_BY_ID["g18_in625_latent_heat"]).read_text(
             encoding="utf-8"))["observations"]
         self.assertEqual([in625[f"meltpool.in625.equalWithLatentHeatFusion.{v}"] for v in ("227000", "260000", "290000")],
-                         [False, True, False])
+                         [False, False, True])
         self.assertEqual(in625["in625.snapshot.latentHeat_J_kg"][0], 290000.0)
         self.assertEqual(in625["in625.transientSpecification.latentHeat_J_kg"][0], 227000.0)
         emissivity = json.loads(parity.golden_path(parity.CASE_BY_ID["g19_emissivity_echo"]).read_text(
@@ -373,7 +376,7 @@ class ParityHarnessTests(unittest.TestCase):
             self.assertIn("DRIFT g18_in625_latent_heat", output)
             self.assertIn("PASS g12_analytical_modules", output)
             self.assertIn("DRIFT meltpool.in625.table.latent_heat_fusion_J_kg: 250000.0 (0x1.e848000000000p+17)"
-                          " -> 260000.0 (0x1.fbd0000000000p+17)", output)
+                          " -> 290000.0 (0x1.1b34000000000p+18)", output)
             self.assertIn("RESULT: PASS (planned drift in g18_in625_latent_heat)", output)
 
     def test_expect_drift_with_a_wrong_allowlist_fails(self):
@@ -442,23 +445,138 @@ class ParityHarnessTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "empty case or key"):
             parity.parse_expect_drift(["g18_in625_latent_heat:"])
 
+    def test_expect_drift_refuses_globs_for_reference_cases_but_accepts_exact_keys(self):
+        # Review pb-r2 S5: g1/g2/g4 take exact observation keys only; CASE:* and every other
+        # fnmatch pattern is refused at parse time, whatever the pattern looks like.
+        for case_id in ("g1_v1_60w_in718", "g2_bare_plate_100w_corridor", "g4_layered_plate"):
+            for pattern in ("*", "result.*", "result.key.?etrics", "result.key.[m]etrics", "*.key.settings"):
+                with self.subTest(case=case_id, pattern=pattern):
+                    with self.assertRaisesRegex(SystemExit, "glob character.*exact observation keys"):
+                        parity.parse_expect_drift([f"{case_id}:{pattern}"])
+            entries = parity.parse_expect_drift([f"{case_id}:result.key.analyticalComparison"])
+            self.assertEqual([(e.case_id, e.pattern) for e in entries],
+                             [(case_id, "result.key.analyticalComparison")])
+        # Non-reference cases keep their globs (G6 sub-runs are named by exact key at the next bump).
+        entries = parity.parse_expect_drift(["g6_screening_and_fallback:*.key.metrics", "g3_powder_island"])
+        self.assertEqual([e.text for e in entries], ["g6_screening_and_fallback:*.key.metrics", "g3_powder_island"])
+
+    @staticmethod
+    def _synthetic_outcome(before, after):
+        return {"golden": {"observations": before}, "observations": after, "problems": [],
+                "implementationProblems": [], "observationDiffs": ["changed"], "rawValues": {}}
+
+    def test_expect_drift_protects_reference_numerics_beyond_the_original_list(self):
+        keys = ("peakInterpolatedMeltPool", "midTrackCrossSection", "midTrackInterpolatedCrossSection",
+                "massBalance", "numericalDiagnostics", "phaseAudit", "settings", "discretization", "scanPath")
+        for case_id in parity.REFERENCE_CASES:
+            for name in keys:
+                with self.subTest(case=case_id, key=name):
+                    key = f"result.key.{name}"
+                    case = parity.CASE_BY_ID[case_id]
+                    # Even an exact entry for the key does not let a reference numeric drift.
+                    entries = parity.parse_expect_drift([f"{case_id}:{key}"])
+                    result = parity.evaluate_drift(case, self._synthetic_outcome({key: "0" * 64}, {key: "1" * 64}),
+                                                   entries)
+                    self.assertEqual(result["status"], "FAIL")
+                    self.assertIn(f"changed {key}: reference-case numerics never drift under --expect-drift",
+                                  result["problems"])
+        # The same key in a NON-reference case is an ordinary allowed observation.
+        case = parity.CASE_BY_ID["g3_powder_island"]
+        entries = parity.parse_expect_drift(["g3_powder_island:result.key.settings"])
+        result = parity.evaluate_drift(
+            case, self._synthetic_outcome({"result.key.settings": "0" * 64}, {"result.key.settings": "1" * 64}), entries)
+        self.assertEqual((result["status"], result["problems"]), ("DRIFT", []))
+
+    def test_expect_drift_never_lets_an_honesty_observation_drift_in_any_case(self):
+        names = ("validationStatus", "productionReady", "confidence", "effectiveMode")
+        keys = [f"result.{name}" for name in names] + [f"result.key.{name}" for name in names]
+        keys.append("result.coreContract.solverId")
+        for case_id in ("g3_powder_island", "g5_evaporation", "g6_screening_and_fallback"):
+            for key in keys:
+                with self.subTest(case=case_id, key=key):
+                    case = parity.CASE_BY_ID[case_id]
+                    drifted = self._synthetic_outcome({key: "unvalidated", "other": 1}, {key: "validated", "other": 2})
+                    for allow in (case_id, f"{case_id}:*", f"{case_id}:{key}"):
+                        result = parity.evaluate_drift(case, drifted, parity.parse_expect_drift([allow]))
+                        self.assertEqual(result["status"], "FAIL", allow)
+                        self.assertIn(f"changed {key}: honesty observation never drifts under --expect-drift",
+                                      result["problems"])
+        # A changed validationStatus in a non-reference case stays refused even with CASE:*; the other
+        # drifted observation in the same case is still reported as allowed.
+        case = parity.CASE_BY_ID["g12_analytical_modules"]
+        outcome = self._synthetic_outcome({"validationStatus": "unvalidated", "goldak.field": "0" * 64},
+                                          {"validationStatus": "validated", "goldak.field": "1" * 64})
+        result = parity.evaluate_drift(case, outcome, parity.parse_expect_drift(["g12_analytical_modules:*"]))
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("changed validationStatus: honesty observation never drifts under --expect-drift",
+                      result["problems"])
+        self.assertEqual([record["key"] for record in result["drift"]], ["goldak.field"])
+
+    def test_expect_drift_refuses_the_widened_honesty_observations_in_any_case(self):
+        # Review rr2 S2: the evidence-honesty flags (and the G9 IN625 admission verdict) are protected
+        # like validationStatus: CASE, CASE:* and the exact CASE:<key> entry all fail, in every case.
+        patterns = ("*.experimentalValidation", "*.key.experimentalValidation",
+                    "*.experimentalComparison", "*.key.experimentalComparison",
+                    "*.unresolvedPhysics", "*.key.unresolvedPhysics",
+                    "*.opticalOperatorMatched", "*.key.opticalOperatorMatched",
+                    "in625.validateScreeningAdmission",
+                    "experimentalValidation", "experimentalComparison",
+                    "unresolvedPhysics", "opticalOperatorMatched")
+        for pattern in patterns:
+            self.assertIn(pattern, parity.HONESTY_PATTERNS)
+            # Concrete observation keys this pattern covers (fnmatch '*' also spans dots).
+            keys = ([pattern] if "*" not in pattern else [pattern.replace("*", "result", 1), pattern.replace("*", "a.b", 1)])
+            for key in keys:
+                for case_id in ("g3_powder_island", "g9_material_snapshots", "g14_calibration_measurements",
+                                "g15_bare_plate_square_optical_observer"):
+                    with self.subTest(pattern=pattern, case=case_id, key=key):
+                        case = parity.CASE_BY_ID[case_id]
+                        drifted = self._synthetic_outcome({key: "0" * 64, "other": 1}, {key: "1" * 64, "other": 2})
+                        for allow in (case_id, f"{case_id}:*", f"{case_id}:{key}"):
+                            result = parity.evaluate_drift(case, drifted, parity.parse_expect_drift([allow]))
+                            self.assertEqual(result["status"], "FAIL", allow)
+                            self.assertIn(f"changed {key}: honesty observation never drifts under --expect-drift",
+                                          result["problems"])
+        # The patterns are exact names, not substrings: an unrelated observation that merely contains the
+        # word stays an ordinary allowed observation.
+        case = parity.CASE_BY_ID["g12_analytical_modules"]
+        outcome = self._synthetic_outcome({"goldak.experimentalValidationNote": "0" * 64},
+                                          {"goldak.experimentalValidationNote": "1" * 64})
+        result = parity.evaluate_drift(case, outcome, parity.parse_expect_drift(["g12_analytical_modules:*"]))
+        self.assertEqual((result["status"], result["problems"]), ("DRIFT", []))
+
+    def test_checked_in_drift_allowlist_names_no_honesty_or_identity_observation(self):
+        import fnmatch
+        allowlist = HERE.parent / "docs" / "LPBF_IMPLEMENTATION_BUMP_2026-10-04_corrected-physics.expect-drift.txt"
+        entries = [line.strip() for line in allowlist.read_text(encoding="utf-8").splitlines() if line.strip()]
+        self.assertGreater(len(entries), 0)
+        for entry in entries:
+            case_id, separator, key = entry.partition(":")
+            with self.subTest(entry=entry):
+                self.assertTrue(separator and key, "every entry names CASE:KEY")
+                self.assertIn(case_id, parity.CASE_BY_ID)
+                for pattern in parity.HONESTY_PATTERNS:
+                    self.assertFalse(fnmatch.fnmatchcase(key, pattern), f"{entry} matches honesty pattern {pattern}")
+                for pattern in parity.IDENTITY_PATTERNS:
+                    self.assertFalse(fnmatch.fnmatchcase(key, pattern), f"{entry} matches identity pattern {pattern}")
+
     def test_expect_drift_on_g1_allows_only_named_non_numeric_observations(self):
         def reviewer(observations):  # review b5g S1: result digest + material revision + V1 equality
             observations["result.canonicalSha256"] = "0" * 64
             observations["result.material.materialRevisionSha256"] = "1" * 64
-            observations["v1Archive.strippedResultEqual"] = False
+            observations["v1Archive.strippedResultEqual"] = True
         g1 = ["--case", "g1_v1_60w_in718"]
         with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", reviewer)):
             code, output = self._check(*g1, "--expect-drift",
-                                       "g1_v1_60w_in718:result.canonicalSha256,g1_v1_60w_in718:v1Archive.*,"
-                                       "g1_v1_60w_in718:result.*")
+                                       "g1_v1_60w_in718:result.canonicalSha256,"
+                                       "g1_v1_60w_in718:v1Archive.strippedResultEqual")
         self.assertEqual(code, 1, output)
         self.assertIn("changed result.material.materialRevisionSha256: identity observation", output)
 
         def planned(observations):  # the four G1 observations a corrected bump may name
             for key in ("result.key.analyticalComparison", "result.canonicalSha256", "result.orderedTypedSha256"):
                 observations[key] = "0" * 64
-            observations["v1Archive.strippedResultEqual"] = False
+            observations["v1Archive.strippedResultEqual"] = True
         allow = ("g1_v1_60w_in718:result.key.analyticalComparison,g1_v1_60w_in718:result.canonicalSha256,"
                  "g1_v1_60w_in718:result.orderedTypedSha256,g1_v1_60w_in718:v1Archive.strippedResultEqual")
         with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", planned)):
@@ -571,7 +689,7 @@ class ParityHarnessTests(unittest.TestCase):
         record = planned["g18_in625_latent_heat"]["drift"][0]
         self.assertEqual(record["key"], "meltpool.in625.table.latent_heat_fusion_J_kg")
         self.assertEqual(record["before"], [250000.0, (250000.0).hex()])
-        self.assertEqual(record["after"], [260000.0, (260000.0).hex()])
+        self.assertEqual(record["after"], [290000.0, (290000.0).hex()])
         self.assertEqual(stale["g12_analytical_modules"]["status"], "FAIL")
 
     def test_require_parity_turns_a_not_verified_skip_into_a_failure(self):

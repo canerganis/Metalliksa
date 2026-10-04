@@ -2,12 +2,23 @@
 """
 Eagar–Tsai 3D traveling Gaussian heat source (Welding Journal, Dec 1983, 346-s–354-s).
 
-Quasi-steady temperature on a semi-infinite solid. The dimensionless integral
-matches METALLURGY_VALIDATION.md §2.3 with the LPBF 1/e² beam radius r0
-(q = 2 ηP / (π r0²) exp(−2 r²/r0²); σ = r0/2).
+Quasi-steady temperature on a semi-infinite solid with an adiabatic free surface
+(image-source factor 2), conduction only. Absorbed power P_eff is spread as the
+surface intensity I(r) = 2 P_eff /(π r0²) · exp(−2 r²/r0²): r0 is the 1/e² beam
+radius, σ = r0/2 is the Gaussian standard deviation.
 
-Conduction only: no Marangoni advection, no recoil keyhole. Finite peak T
-and explicit spot-size dependence are the physical gains over a point source.
+Dimensionless form used here (X = x/σ, Y = y/σ, Z = z/σ, U = v σ/(2α), τ = 4 α t'/(2 σ²)):
+
+    ΔT = P_eff /(2π √(2π) k σ) · ∫₀^∞ dτ τ^{-1/2} (1+τ)^{-1}
+         exp(−((X + U τ)² + Y²)/(2(1+τ)) − Z²/(2τ))
+
+With τ = u² the integrand becomes 2/(1+u²) · exp(…), bounded on [0, ∞). Checks the
+implementation must satisfy (test_eagar_tsai.py): static centre ΔT(0) = P_eff/(√(2π) k r0);
+r0 → 0 recovers the Rosenthal point source; the independent dimensional integral at
+reference points within 0.5 %.
+
+No Marangoni advection, no recoil keyhole; finite peak T and explicit spot-size
+dependence are the physical gains over a point source.
 """
 
 from __future__ import annotations
@@ -17,15 +28,44 @@ import math
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 
-MODEL_ID = "eagar-tsai-v1"
+MODEL_ID = "eagar-tsai-v2"
 
-# Gauss–Legendre nodes on [−1, 1]; mapped to u ∈ [0, u_max], τ = u².
-_GL_N = 64
-_GL_XI, _GL_W = leggauss(_GL_N)
+# Composite Gauss–Legendre in u = √τ: a first panel [0, u0], geometric panels (×2) while their
+# width stays below the wake-pulse scale du = KAPPA/(√2 U), then uniform panels of width du up to
+# u_max. The far-wake pulse of a point X < 0 sits at u_p = √(|X|/U) with standard deviation
+# 1/(√2 U) in u at every distance, so uniform-in-u panels resolve it at any distance Péclet
+# number (geometric panels alone lost 0.6 % at 3 m/s near the window edge).
+_GL_GEOMETRIC_N = 16
+_GL_UNIFORM_N = 8
+_PULSE_PANEL_SIGMAS = 1.5
+# Wake window (laser frame, x < 0) the quadrature is sized for at bind time; temperature_C widens
+# it on demand, so no point is ever evaluated with a truncated quadrature (never silently zero).
+WAKE_LENGTH_M = 1.5e-3
+# exp(−E_CUT) is the truncation level of the x-Gaussian tail beyond the far-wake pulse.
+_E_CUT = 9.0
 
 
 def _as_float64(value):
     return np.asarray(value, dtype=np.float64)
+
+
+def _composite_nodes(u_max: float, du: float, u0: float = 0.05):
+    xi_g, w_g = leggauss(_GL_GEOMETRIC_N)
+    xi_u, w_u = leggauss(_GL_UNIFORM_N)
+    edges = [0.0, u0]
+    while edges[-1] < du and edges[-1] * 2.0 < u_max:
+        edges.append(edges[-1] * 2.0)
+    us, ws = [], []
+    for a, b in zip(edges[:-1], edges[1:]):
+        us.append(0.5 * (b - a) * (xi_g + 1.0) + a)
+        ws.append(w_g * (0.5 * (b - a)))
+    lo = edges[-1]
+    while lo < u_max:
+        hi = lo + du if lo + du < u_max else u_max
+        us.append(0.5 * (hi - lo) * (xi_u + 1.0) + lo)
+        ws.append(w_u * (0.5 * (hi - lo)))
+        lo = hi
+    return np.concatenate(us), np.concatenate(ws)
 
 
 class EagarTsaiField:
@@ -37,73 +77,61 @@ class EagarTsaiField:
         self.k_th = max(1e-6, float(k_th))
         self.alpha_th = max(1e-12, float(alpha_th))
         self.r0_m = max(1e-7, float(r0_m))
-        # n* uses an arbitrary ΔT scale that cancels when converting θ → T.
-        self._dT_ref = 1.0
-        self.n_star = self.P_eff / (math.pi * self.k_th * self.r0_m * self._dT_ref)
-        self.v_star = 0.0  # set in bind_speed
+        self.sigma_m = 0.5 * self.r0_m
+        self._pref = self.P_eff / (2.0 * math.pi * math.sqrt(2.0 * math.pi) * self.k_th * self.sigma_m)
+        self.v_star = 0.0  # U = v σ /(2 α), set in bind_speed
         self._u = None
         self._w = None
-        self._tau = None
+        self._u2 = None
         self._den = None
-        self._pref = self.n_star / math.sqrt(2.0 * math.pi)
 
     def bind_speed(self, v_scan_m_s: float) -> "EagarTsaiField":
         v = max(1e-6, float(v_scan_m_s))
-        self.v_star = v * self.r0_m / (2.0 * self.alpha_th)
-        # Wake length in the moving frame (x < 0). τ ~ |x*| / v* with x* = √2 x / r0.
-        wake_m = 0.0012
-        x_span = math.sqrt(2.0) * wake_m / self.r0_m
-        tau_wake = x_span / max(self.v_star, 0.05) + 10.0
-        tau_max = max(24.0, 16.0 / max(self.v_star, 0.08), tau_wake)
-        u_max = math.sqrt(tau_max)
-        # Map ξ ∈ [−1, 1] → u ∈ [0, u_max]
-        self._u = 0.5 * u_max * (_GL_XI + 1.0)
-        self._w = _GL_W * (0.5 * u_max)
-        self._tau = self._u * self._u
-        self._den = self._tau + 1.0
+        self.v_star = v * self.sigma_m / (2.0 * self.alpha_th)
+        self._build(WAKE_LENGTH_M)
         return self
+
+    def _build(self, wake_m: float) -> None:
+        """Quadrature nodes for points down to x = -wake_m behind the source."""
+        U = self.v_star
+        X_wake = wake_m / self.sigma_m
+        # Far-wake pulse centre u_p² = X_wake/U; its half-width in Uu² is √(2(1+u_p²)) per e-fold.
+        u_p2 = X_wake / U
+        u_max = max(math.sqrt(2.0 * _E_CUT) / U,
+                    math.sqrt((X_wake + _E_CUT * math.sqrt(2.0 * (1.0 + u_p2)) + _E_CUT) / U)) + 1.0
+        du = _PULSE_PANEL_SIGMAS / (math.sqrt(2.0) * U)
+        self._u, self._w = _composite_nodes(u_max, du)
+        self._u2 = self._u * self._u
+        self._den = self._u2 + 1.0
+        self._wake_m = wake_m
 
     def temperature_C(self, x_m, y_m, z_m):
         """Scalar or numpy array temperature in °C. z ≥ 0 is depth into the solid."""
-        if self._tau is None:
+        if self._u is None:
             raise RuntimeError("EagarTsaiField.bind_speed() must be called first.")
         x = _as_float64(x_m)
         y = _as_float64(y_m)
         z = _as_float64(np.abs(z_m))
         scalar = x.ndim == 0 and y.ndim == 0 and z.ndim == 0
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-        z = np.atleast_1d(z)
-        # Broadcast to a common point cloud.
-        x, y, z = np.broadcast_arrays(x, y, z)
+        x, y, z = np.broadcast_arrays(np.atleast_1d(x), np.atleast_1d(y), np.atleast_1d(z))
         shape = x.shape
-        x = x.reshape(-1)
-        y = y.reshape(-1)
-        z = z.reshape(-1)
+        x_min = float(x.min())
+        if -x_min > self._wake_m:
+            # Adaptive wake window (never silently truncated); the window only grows.
+            self._build(1.25 * -x_min)
+        X = x.reshape(-1) / self.sigma_m
+        Y = y.reshape(-1) / self.sigma_m
+        Z = z.reshape(-1) / self.sigma_m
 
-        s2 = math.sqrt(2.0)
-        x_s = s2 * x / self.r0_m
-        y_s = s2 * y / self.r0_m
-        z_s = s2 * z / self.r0_m
-
-        tau = self._tau[:, None]
+        u2 = self._u2[:, None]
         den = self._den[:, None]
-        u = self._u[:, None]
         w = self._w[:, None]
-
-        # +x is travel (same as Rosenthal). Past source → x + v t', so x* + v* τ.
-        dx = x_s[None, :] + self.v_star * tau
-        # τ = u², dτ = 2u du → τ^{−1/2} dτ = 2 du, integrand becomes 2/(τ+1) exp(...)
-        z2 = z_s[None, :] ** 2
-        u2 = u * u
-        z_term = z2 / (2.0 * np.maximum(u2, 1e-18))
-        z_term = np.where((u2 <= 1e-18) & (z2 > 0.0), 1.0e6, z_term)
-        z_term = np.where((u2 <= 1e-18) & (z2 <= 0.0), 0.0, z_term)
-        expo = -((dx * dx + (y_s[None, :] ** 2)) / (2.0 * den)) - z_term
-        expo = np.clip(expo, -60.0, 20.0)
-        integrand = (2.0 / den) * np.exp(expo)
-        theta = self._pref * np.sum(w * integrand, axis=0)
-        T = self.T0_C + theta * self._dT_ref
+        # Past source position in the laser frame: X + U τ (wake at x < 0).
+        dx = X[None, :] + self.v_star * u2
+        z_term = (Z[None, :] ** 2) / (2.0 * u2)  # u > 0 at every Gauss node
+        expo = -((dx * dx + Y[None, :] ** 2) / (2.0 * den)) - z_term
+        integrand = (2.0 / den) * np.exp(np.clip(expo, -700.0, 0.0))
+        T = self.T0_C + self._pref * np.sum(w * integrand, axis=0)
         T = T.reshape(shape)
         if scalar:
             return float(T.reshape(-1)[0])
