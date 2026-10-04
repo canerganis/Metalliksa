@@ -4,9 +4,9 @@
  "group": "G4",
  "description": "layered-plate-enthalpy-v1 with SS304 support",
  "slow": false,
- "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "c76092c861268120ee583a9dad0128a3cff66e0a",
+ "recordedGitHead": "6dd5b73508151f0af1561387a0df509ec78a06c9",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  5.1,
-  5.8
+  8.8,
+  10.8
  ],
  "recordedTwice": true,
  "observations": {
