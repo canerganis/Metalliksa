@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Activity, Flame, Layers, Play } from 'lucide-react';
 import { pythonComputationService } from '../services/pythonComputationService';
-import { transientGpuMaterialInputs, type AuthorityAlloyId } from '../data/lpbfMaterialAuthority';
+import type { AuthorityAlloyId } from '../data/lpbfMaterialAuthority';
 
 type SlotProps = { children: React.ReactNode; className?: string };
 const Card = ({ children, className = '' }: SlotProps) => <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>{children}</section>;
@@ -13,8 +13,8 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {..
 const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => <select {...props} className={`w-full rounded border border-slate-300 px-2 py-1.5 text-sm bg-white ${props.className ?? ''}`} />;
 const Label = ({ children }: SlotProps) => <span className="block text-xs text-slate-500">{children}</span>;
 
-// Dropdown label -> alloy id. Material inputs come from the Python authority
-// (src/generated/lpbfMaterialAuthority.json); no alloy numbers here. Pinned by tests/lpbf-material-authority.test.ts.
+// Dropdown label -> alloy id. The request carries only the alloy id; Python resolves every
+// material property from four_alloy_materials (no alloy numbers here). Pinned by tests/lpbf-material-authority.test.ts.
 export const GPU_LAB_MATERIALS = {
   "Ti-6Al-4V": "ti6al4v",
   "IN718": "in718",
@@ -31,7 +31,7 @@ export interface GpuLabParams {
   material: GpuLabMaterialLabel;
 }
 
-/** The exact payload the lab hands to computeTransient3DGPU: authority inputs passed through unchanged (K). */
+/** The exact payload the lab hands to computeTransient3DGPU: alloy identity, no material numbers. */
 export function transientGpuRequest(params: GpuLabParams): Parameters<typeof pythonComputationService.computeTransient3DGPU>[0] {
   const alloyId = GPU_LAB_MATERIALS[params.material];
   if (!alloyId) throw new Error(`Unknown material preset "${String(params.material)}"; no surrogate alloy is substituted.`);
@@ -39,6 +39,7 @@ export function transientGpuRequest(params: GpuLabParams): Parameters<typeof pyt
   const dy_m = params.dy * 1e-6;
   const dz_m = params.dz * 1e-6;
   return {
+    alloyId,
     nx: params.nx, ny: params.ny, nz: params.nz,
     dx: dx_m, dy: dy_m, dz: dz_m,
     power_W: params.power_W,
@@ -49,7 +50,6 @@ export function transientGpuRequest(params: GpuLabParams): Parameters<typeof pyt
       y: [params.ny * dy_m * 0.5, params.ny * dy_m * 0.5],
       p: [params.power_W, params.power_W]
     },
-    ...transientGpuMaterialInputs(alloyId),
   };
 }
 

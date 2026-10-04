@@ -866,14 +866,8 @@ class PythonComputationService {
     power_W: number;
     T_preheat_K: number;
     toolpath?: { t: number[]; x: number[]; y: number[]; p: number[] };
-    rho?: number;
-    L_f?: number;
-    T_solidus?: number;
-    T_liquidus?: number;
-    cp_solid?: number;
-    cp_liquid?: number;
-    k_solid?: number;
-    k_liquid?: number;
+    /** Material identity only; Python resolves every property from four_alloy_materials. */
+    alloyId: string;
   }): Promise<any> {
     const res = await fetch("/api/python/transient-3d-gpu", {
       method: "POST",

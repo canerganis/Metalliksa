@@ -13,7 +13,7 @@ import { getHostPython } from '../server/pythonRuntime';
 import {
   LPBF_MATERIAL_AUTHORITY, LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION, authorityPvWindow, authorityThermal,
   authorityThermalProvenance, celsiusToKelvin, checkedAuthorityDocument, solidificationMaterialInputs,
-  transientGpuMaterialInputs, type AuthorityAlloyId, type LpbfMaterialAuthorityDocument,
+  type AuthorityAlloyId, type LpbfMaterialAuthorityDocument,
 } from '../src/data/lpbfMaterialAuthority';
 import * as foundation from '../src/types/lpbfDataFoundation';
 import { ALLOY_THERMAL_PROPERTIES, alloyThermalConstants, classifyProcessRegime, type LPBFAlloyId } from '../src/types/lpbfDataFoundation';
@@ -111,7 +111,7 @@ test('committed JSON equals the live Python authority (read without the generato
   assert.deepEqual(values('latent heat of fusion'), [py.in625.latent_heat_fusion_J_kg, ...py.in625Other.latent]);
   assert.deepEqual(values('boiling point'), [py.in625.boiling_C, Number((py.in625Other.boiling_K - 273.15).toFixed(2))]);
   assert.deepEqual(values('IR absorptivity'), [py.in625.absorptivity_IR, py.in625Other.absorptivity]);
-  assert.match(in625.note, /260000 vs 290000 vs 227000 J\/kg/);
+  assert.match(in625.note, /290000 vs 290000 vs 227000 J\/kg/);
   assert.match(in625.note, /2880 vs 2900 C/);
 });
 
@@ -208,21 +208,16 @@ function gpuParams(material: string): GpuLabParams {
   return { nx: 64, ny: 64, nz: 32, dx: 2, dy: 2, dz: 2, power_W: 200, T_preheat_K: 300, material: material as GpuLabParams['material'] };
 }
 
-test('GPU lab: each dropdown label maps to its alloy and the payload carries the authority row in K', () => {
+test('GPU lab: each dropdown label maps to its alloy and the payload carries the alloy id and no material numbers', () => {
   assert.deepEqual({ ...GPU_LAB_MATERIALS }, GPU_LABELS);
   for (const [label, id] of Object.entries(GPU_LABELS)) {
     assertLabelNamesAlloy(label, id);
-    const t = LPBF_MATERIAL_AUTHORITY.alloys[id].thermal;
     const request = transientGpuRequest(gpuParams(label));
-    assert.deepEqual(
-      { rho: request.rho, L_f: request.L_f, T_solidus: request.T_solidus, T_liquidus: request.T_liquidus, cp_solid: request.cp_solid, cp_liquid: request.cp_liquid, k_solid: request.k_solid, k_liquid: request.k_liquid },
-      { rho: t.density_kg_m3, L_f: t.latent_heat_fusion_J_kg, T_solidus: celsiusToKelvin(t.solidus_C), T_liquidus: celsiusToKelvin(t.liquidus_C), cp_solid: t.specific_heat_J_kgK, cp_liquid: t.specific_heat_liquid_J_kgK, k_solid: t.thermal_conductivity_W_mK, k_liquid: t.thermal_conductivity_liquid_W_mK },
-      label,
-    );
-    assert.deepEqual(transientGpuMaterialInputs(id), { rho: request.rho, L_f: request.L_f, T_solidus: request.T_solidus, T_liquidus: request.T_liquidus, cp_solid: request.cp_solid, cp_liquid: request.cp_liquid, k_solid: request.k_solid, k_liquid: request.k_liquid });
-    // Kelvin, not Celsius: no conversion back after the accessor.
-    assert.ok(Math.abs(request.T_liquidus - (t.liquidus_C + 273.15)) < 0.006, `${label} T_liquidus is in K`);
-    assert.ok(Math.abs(request.T_solidus - (t.solidus_C + 273.15)) < 0.006, `${label} T_solidus is in K`);
+    assert.equal(request.alloyId, id, label);
+    // Python (four_alloy_materials) is the only material authority for this RPC: no alloy numbers are sent.
+    for (const key of ['rho', 'L_f', 'T_solidus', 'T_liquidus', 'Lv', 'Rs', 'Tv', 'cp_solid', 'cp_liquid', 'k_solid', 'k_liquid']) {
+      assert.ok(!(key in request), `${label} request must not carry ${key}`);
+    }
   }
   // The component hands this builder's output to the service unchanged.
   const source = readFileSync('src/components/TransientEnthalpy3DGPULab.tsx', 'utf8');

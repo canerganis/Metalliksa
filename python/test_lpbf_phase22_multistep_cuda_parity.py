@@ -11,6 +11,7 @@ import numpy as np
 import warp as wp
 
 from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
+from phase22_legacy_test_material import LEGACY_SOLVER_TEST_MATERIAL
 
 
 # Frozen inputs: small 5^3 mesh, 10 um spacing, 6 us duration, solid initial
@@ -49,7 +50,7 @@ def _run(device):
     solver.device = device
     result = solver.solve_toolpath(
         CASE["toolpath"], T_preheat_K=CASE["initial_temperature_K"],
-        include_energy_ledger=True,
+        include_energy_ledger=True, **LEGACY_SOLVER_TEST_MATERIAL,
     )
     return result
 
