@@ -51,16 +51,23 @@ KINETICS_FIXTURE_CASES = (
     ("in718_degenerate_floor", "in718", 1.0),
     ("ti6al4v_in_map_30", "ti6al4v", 30.0),
     ("in718_in_map_30", "in718", 30.0),
+    # HYPOTHETICAL: no build-job alloy is a steel (the kinetics model is steel-only), so the "selected row"
+    # display path is exercised with AISI 4140 mapped in for this fixture only (see kinetics_fixture_blocks).
+    ("aisi4140_in_map_30_hypothetical", "aisi4140", 30.0),
 )
 _KINETICS_FIXTURE_DROP = ("tttIsothermalCurves", "lswPrecipitateCoarsening", "computeTimeMs")
 
 
 def kinetics_fixture_blocks():
-    from lpbf_build_job_solver import build_job_kinetics
+    from unittest import mock
+
+    import lpbf_build_job_solver as bj
 
     out = {}
     for name, alloy_id, rate in KINETICS_FIXTURE_CASES:
-        block = build_job_kinetics(alloy_id, {"solidificationKinetics": {"coolingRate_K_s": rate}})
+        extra = {"aisi4140": "AISI 4140"} if alloy_id == "aisi4140" else {}
+        with mock.patch.dict(bj.BUILD_JOB_KINETICS_ALLOY, extra):
+            block = bj.build_job_kinetics(alloy_id, {"solidificationKinetics": {"coolingRate_K_s": rate}})
         out[name] = {k: v for k, v in block.items() if k not in _KINETICS_FIXTURE_DROP}
     return out
 
@@ -88,31 +95,33 @@ def check_build_job_kinetics(ti):
     assert BUILD_JOB_KINETICS_ALLOY == {"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}
     kin = ti["kinetics"]
     rate = ti["thermal"]["solidificationKinetics"]["coolingRate_K_s"]
-    assert kin["status"] == "available" and kin["success"] is True
-    assert kin["alloy"] == "Ti-6Al-4V" and kin["alloyId"] == "ti6al4v"
-    assert kin["buildCoolingRate_C_s"] == float(rate) == kin["reportedCoolingRate_K_s"]
-    assert kin["inputParameters"]["selectedCoolingRate_C_s"] == float(rate)
-    assert kin["coolingRateSource"] == "thermal.solidificationKinetics.coolingRate_K_s"
-    # The solver output itself is unchanged; only build-job metadata keys are added.
-    reference = solve_phase_transformation_kinetics(alloy_name="Ti-6Al-4V", cooling_rate_c_s=float(rate))
-    added = {"status", "alloyId", "buildCoolingRate_C_s", "reportedCoolingRate_K_s", "coolingRateSource",
-             "buildCoolingRateCctRow", "buildRateMartensite"}
-    assert set(kin) == set(reference) | added
-    for key in set(reference) - {"computeTimeMs"}:
-        assert kin[key] == reference[key], key
-    # This non-degenerate build rate (~1e6 K/s) is above the 0.05-2000 °C/s CCT map: no row is
-    # extrapolated, and the steel-type martensite fraction / verdict are withheld with it.
-    sel = kin["buildCoolingRateCctRow"]
     assert rate > 2000.0, rate
+    # Kinetics model is steel-only (kinetics_ttt_cct_solver kineticsModel): Ti-6Al-4V is not a steel, so
+    # the whole block is unavailable with the solver's reason and no steel-template value.
+    reference = solve_phase_transformation_kinetics(alloy_name="Ti-6Al-4V", cooling_rate_c_s=float(rate))
+    assert reference["kineticsModel"]["status"] == "unavailable"
+    assert kin["status"] == "unavailable" and kin["success"] is False
+    assert kin["reason"] == "kinetics model is steel-only: Ti-6Al-4V is not a steel", kin["reason"]
+    assert kin["alloy"] is None and kin["alloyId"] == "ti6al4v"
+    assert kin["buildCoolingRate_C_s"] == float(rate) == kin["reportedCoolingRate_K_s"]
+    assert kin["coolingRateSource"] == "thermal.solidificationKinetics.coolingRate_K_s"
+    assert kin["cctContinuousCoolingMap"] is None and kin["calphadVsKineticsGap"] is None
+    assert kin["buildCoolingRateCctRow"] is None and kin["buildRateMartensite"] is None
+    assert "Pearlite" not in json.dumps(kin) and "Martensite_pct" not in json.dumps(kin)
+
+    # The CCT row selection and martensite helpers stay tested on a real CCT map (AISI 4140; the steel
+    # template is the only one the solver reports).
+    steel = solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s=30.0)
+    sel = build_cooling_rate_cct_row(steel["cctContinuousCoolingMap"], rate)
     assert sel["status"] == "unavailable" and sel["rowIndex"] is None and sel["rowCoolingRate_C_s"] is None
     assert sel["mapRange_C_s"] == [0.05, 2000.0]
     assert sel["reason"] == (f"build cooling rate {int(rate)} °C/s is above the CCT map maximum 2000 °C/s; "
                              "no row is extrapolated"), sel["reason"]
-    mart = kin["buildRateMartensite"]
+    mart = build_rate_martensite("aisi4140", "AISI 4140", steel["calphadVsKineticsGap"], sel)
     assert mart["status"] == "unavailable" and mart["predictedMartensite_pct"] is None and mart["verdict"] is None
     assert mart["reason"].startswith(sel["reason"] + "; the steel-type martensite fraction and verdict")
 
-    cct = kin["cctContinuousCoolingMap"]
+    cct = steel["cctContinuousCoolingMap"]
     inside = build_cooling_rate_cct_row(cct, 30.0)  # log10 nearest: 25 (|0.079|) beats 50 (|0.222|)
     assert inside["status"] == "selected" and inside["rowCoolingRate_C_s"] == 25.0
     assert cct[inside["rowIndex"]]["coolingRate_C_s"] == 25.0 and inside["reason"] is None
@@ -154,24 +163,30 @@ def check_build_job_kinetics(ti):
         assert floor["status"] == "unavailable" and floor["reason"] == DEGENERATE_FRONT_REASON, floor
         assert floor["buildCoolingRate_C_s"] is None and floor["reportedCoolingRate_K_s"] == float(floor_rate)
         assert floor["cctContinuousCoolingMap"] is None and floor["buildRateMartensite"] is None
-    assert build_job_kinetics("ti6al4v", {"solidificationKinetics": {"coolingRate_K_s": 1.0000001}})["status"] == "available"
+    above_floor = build_job_kinetics("ti6al4v", {"solidificationKinetics": {"coolingRate_K_s": 1.0000001}})
+    assert above_floor["reason"] != DEGENERATE_FRONT_REASON and above_floor["buildCoolingRate_C_s"] == 1.0000001
 
-    # In-map rate (synthetic; real builds report ~1e5-1e6 K/s): IN718 row selected, but its registry
-    # Ms is a non-physical placeholder, so no martensite fraction or verdict.
-    good = build_job_kinetics("in718", {"solidificationKinetics": {"coolingRate_K_s": 30.0}})
-    assert good["alloy"] == "Inconel 718" and good["buildCoolingRateCctRow"]["rowCoolingRate_C_s"] == 25.0
-    assert math.isclose(good["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]["coolingRate_C_s"], 30.0)
-    assert good["buildRateMartensite"]["status"] == "unavailable"
-    assert "non-physical placeholder" in good["buildRateMartensite"]["reason"]
-    assert good["buildRateMartensite"]["predictedMartensite_pct"] is None
-    # Ti-6Al-4V Ms is not flagged: with a selected row the fraction and verdict are reported.
-    ti_in = build_job_kinetics("ti6al4v", {"solidificationKinetics": {"coolingRate_K_s": 30.0}})
-    m = ti_in["buildRateMartensite"]
-    reality = ti_in["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]
+    # In-map rate (synthetic; real builds report ~1e5-1e6 K/s): still unavailable, the model is steel-only.
+    for alloy_id, name in (("in718", "Inconel 718"), ("ti6al4v", "Ti-6Al-4V")):
+        good = build_job_kinetics(alloy_id, {"solidificationKinetics": {"coolingRate_K_s": 30.0}})
+        assert good["status"] == "unavailable", good
+        assert good["reason"] == f"kinetics model is steel-only: {name} is not a steel", good["reason"]
+        assert good["buildCoolingRate_C_s"] == 30.0 and good["buildCoolingRateCctRow"] is None
+    # With a steel the fraction and verdict are reported for a selected row (hypothetical mapping, as in the fixture).
+    from unittest import mock
+    with mock.patch.dict(BUILD_JOB_KINETICS_ALLOY, {"aisi4140": "AISI 4140"}):
+        steel_job = build_job_kinetics("aisi4140", {"solidificationKinetics": {"coolingRate_K_s": 30.0}})
+    assert steel_job["status"] == "available" and steel_job["buildCoolingRateCctRow"]["rowCoolingRate_C_s"] == 25.0
+    m = steel_job["buildRateMartensite"]
+    reality = steel_job["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]
     assert m["status"] == "available" and m["reason"] is None
     assert m["predictedMartensite_pct"] == reality["predictedMartensite_pct"] and m["verdict"] == reality["verdict"]
+    assert math.isclose(reality["coolingRate_C_s"], 30.0)
     nonfinite_gap = {"kineticRealityAtSelectedCooling": {"predictedMartensite_pct": None, "verdict": "x"}}
     assert build_rate_martensite("ti6al4v", "Ti-6Al-4V", nonfinite_gap, {"status": "selected"})["status"] == "unavailable"
+    # The registry placeholder Ms of IN718 is still withheld by the helper (defence in depth).
+    placeholder = build_rate_martensite("in718", "Inconel 718", steel["calphadVsKineticsGap"], {"status": "selected"})
+    assert placeholder["status"] == "unavailable" and "non-physical placeholder" in placeholder["reason"]
 
     # Real degenerate-front build (B1 regression): IN718 150 W / 1500 mm/s reports the 1 K/s floor.
     fast = run_job({"alloyId": "in718", "laserPower_W": 150, "scanSpeed_mm_s": 1500, "beamDiameter_um": 80,
@@ -179,13 +194,13 @@ def check_build_job_kinetics(ti):
     assert fast["thermal"]["solidificationKinetics"]["coolingRate_K_s"] == 1.0
     assert fast["kinetics"]["status"] == "unavailable" and fast["kinetics"]["reason"] == DEGENERATE_FRONT_REASON
     assert fast["kinetics"]["buildCoolingRateCctRow"] is None
-    # A non-degenerate IN718 build stays available with the rate out of the map range.
+    # A non-degenerate IN718 build: unavailable because the kinetics model is steel-only.
     slow = run_job({"alloyId": "in718", "laserPower_W": 220, "scanSpeed_mm_s": 900, "beamDiameter_um": 80,
                     "layerThickness_um": 30, "hatchSpacing_um": 100, "bypassCache": True})
     assert slow["thermal"]["solidificationKinetics"]["coolingRate_K_s"] > 2000.0
-    assert slow["kinetics"]["status"] == "available"
-    assert slow["kinetics"]["buildCoolingRateCctRow"]["status"] == "unavailable"
-    assert "non-physical placeholder" in slow["kinetics"]["buildRateMartensite"]["reason"]
+    assert slow["kinetics"]["status"] == "unavailable"
+    assert slow["kinetics"]["reason"] == "kinetics model is steel-only: Inconel 718 is not a steel"
+    assert slow["kinetics"]["buildCoolingRateCctRow"] is None and slow["kinetics"]["buildRateMartensite"] is None
 
     for alloy_id, name, power, speed in (("ss316l", "316L Stainless Steel", 200, 800),
                                          ("alsi10mg", "AlSi10Mg", 330, 1100)):

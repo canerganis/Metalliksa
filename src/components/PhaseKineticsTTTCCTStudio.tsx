@@ -37,7 +37,15 @@ import {
   Area
 } from "recharts";
 import { pythonComputationService, PythonKineticsResult } from "../services/pythonComputationService";
-import { kineticsHardnessText } from "../utils/kineticsHardnessDisplay";
+import {
+  kineticsCctRowText,
+  kineticsHardnessText,
+  kineticsLabelText,
+  kineticsModelBanner,
+  kineticsPhaseSlices,
+  kineticsStatusNote,
+  kineticsValueText,
+} from "../utils/kineticsHardnessDisplay";
 
 interface PhaseKineticsTTTCCTStudioProps {
   initialAlloy?: string;
@@ -113,7 +121,8 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
       log_tFinish: Math.log10(Math.max(0.0003, pt.tFinish_s)),
       tStart_s: pt.tStart_s,
       t50_s: pt.t50_s,
-      tFinish_s: pt.tFinish_s
+      tFinish_s: pt.tFinish_s,
+      floorHit: pt.floorHit === true
     }));
   }, [kineticsData]);
 
@@ -156,16 +165,15 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
   // No invented fallback: without a solver row the card shows "Unavailable".
   const currentHardness = kineticsHardnessText(currentCCTMatch);
 
-  const pieData = useMemo(() => {
-    if (!currentCCTMatch) return [];
-    const pf = currentCCTMatch.phaseFractions;
-    return [
-      { name: "Martensite", value: pf.Martensite_pct, color: phaseColors.Martensite },
-      { name: "Bainite", value: pf.Bainite_pct, color: phaseColors.Bainite },
-      { name: "Pearlite / Ferrite", value: pf.Pearlite_Ferrite_pct, color: phaseColors.Pearlite_Ferrite },
-      { name: "Retained Austenite", value: pf.RetainedAustenite_pct, color: phaseColors.RetainedAustenite }
-    ].filter(d => d.value > 0);
-  }, [currentCCTMatch]);
+  // Null fractions (non-steel alloys: kinetics model is steel-only) give no slices and a reason, never null%.
+  const phaseSlices = useMemo(() => kineticsPhaseSlices(currentCCTMatch), [currentCCTMatch]);
+  const pieData = useMemo(
+    () => phaseSlices.slices.map((s) => ({ name: s.name, value: s.value, color: phaseColors[s.key] })),
+    [phaseSlices]
+  );
+  const modelBanner = kineticsModelBanner(kineticsData?.kineticsModel, kineticsData?.tttIncubationFloor);
+  const gap = kineticsData?.calphadVsKineticsGap;
+  const criticalTemps = kineticsData?.criticalTransformationTemperatures;
 
   return (
     <div className="w-full bg-[#070e1a] text-slate-100 min-h-screen p-4 md:p-6 font-sans">
@@ -215,6 +223,25 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
         </div>
       </div>
 
+      {/* Kinetics model status: the TTT/CCT/phase-fraction/hardness model is a steel template */}
+      {kineticsData && (
+        <div
+          data-kinetics-model-status={modelBanner.available ? "available" : "unavailable"}
+          className={`mt-3 p-3.5 rounded-xl border text-xs leading-relaxed ${
+            modelBanner.available
+              ? "bg-slate-900/70 border-slate-700 text-slate-300"
+              : "bg-red-950/30 border-red-500/40 text-red-200"
+          }`}
+        >
+          <strong className={modelBanner.available ? "text-slate-200" : "text-red-300"}>
+            {modelBanner.available
+              ? "Illustrative steel template."
+              : `Kinetics model unavailable for this alloy: ${modelBanner.reason}`}
+          </strong>{" "}
+          {modelBanner.caution}
+        </div>
+      )}
+
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
         {/* Left Column: Kinetic Controls (4 cols) */}
@@ -248,7 +275,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 </div>
                 <div className="text-slate-400 flex justify-between">
                   <span>Critical Cooling Rate ($v_&#123;crit&#125;$):</span>
-                  <span className="text-emerald-400 font-mono font-bold">{kineticsData.alloyMetadata.critical_cooling_rate_C_s} °C/s</span>
+                  <span className="text-emerald-400 font-mono font-bold" title={kineticsStatusNote(criticalTemps?.CriticalCoolingRate_CCR_status)}>
+                    {kineticsValueText(criticalTemps?.CriticalCoolingRate_CCR_C_s, " °C/s")}
+                  </span>
                 </div>
               </div>
             )}
@@ -386,14 +415,14 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 </div>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-500">Martensite Start ($M_s$)</div>
-                  <div className="text-red-400 font-bold text-sm">
-                    {kineticsData.criticalTransformationTemperatures.Ms_C} °C
+                  <div className="text-red-400 font-bold text-sm" title={kineticsStatusNote(criticalTemps?.Ms_C_status)}>
+                    {kineticsValueText(kineticsData.criticalTransformationTemperatures.Ms_C, " °C")}
                   </div>
                 </div>
                 <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
                   <div className="text-[10px] text-slate-500">Martensite Finish ($M_f$)</div>
-                  <div className="text-red-500 font-bold text-sm">
-                    {kineticsData.criticalTransformationTemperatures.Mf_C} °C
+                  <div className="text-red-500 font-bold text-sm" title={kineticsStatusNote(criticalTemps?.Mf_C_status)}>
+                    {kineticsValueText(kineticsData.criticalTransformationTemperatures.Mf_C, " °C")}
                   </div>
                 </div>
               </div>
@@ -458,8 +487,16 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 </div>
               </div>
 
-              {/* TTT Chart */}
-              <div className="h-[420px] w-full pt-2">
+              {/* TTT Chart (no data: kinetics model is steel-only for the non-steel alloy classes) */}
+              {formattedTTTData.length === 0 && kineticsData && (
+                <div data-ttt-unavailable className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300">
+                  TTT curves unavailable: {modelBanner.reason || "no TTT points were computed."}
+                </div>
+              )}
+              {formattedTTTData.length > 0 && modelBanner.floorLine && (
+                <p data-ttt-floor className="text-[11px] text-amber-300">{modelBanner.floorLine}</p>
+              )}
+              <div className={formattedTTTData.length === 0 ? "hidden" : "h-[420px] w-full pt-2"}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={formattedTTTData}
@@ -492,6 +529,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                               <div className="text-emerald-400">1% Start: {d.tStart_s} s</div>
                               <div className="text-amber-400">50% Trans: {d.t50_s} s</div>
                               <div className="text-red-400">99% Finish: {d.tFinish_s} s</div>
+                              {d.floorHit && (
+                                <div className="text-slate-400 mt-1">On the 1 ms incubation floor (not a model value)</div>
+                              )}
                             </div>
                           );
                         }
@@ -502,7 +542,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     {kineticsData && (
                       <>
                         <ReferenceLine y={kineticsData.criticalTransformationTemperatures.Ae3_BetaTransus_GammaSolvus_C} stroke="#38bdf8" strokeDasharray="4 4" label={{ value: "Ae3", fill: "#38bdf8", fontSize: 10 }} />
-                        <ReferenceLine y={kineticsData.criticalTransformationTemperatures.Ms_C} stroke="#f87171" strokeDasharray="4 4" label={{ value: "Ms", fill: "#f87171", fontSize: 10 }} />
+                        {typeof kineticsData.criticalTransformationTemperatures.Ms_C === "number" && (
+                          <ReferenceLine y={kineticsData.criticalTransformationTemperatures.Ms_C} stroke="#f87171" strokeDasharray="4 4" label={{ value: "Ms", fill: "#f87171", fontSize: 10 }} />
+                        )}
                       </>
                     )}
                     <Line type="monotone" dataKey="log_tStart" stroke="#10b981" strokeWidth={2} dot={false} name="1% Start" />
@@ -514,10 +556,10 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs">
                 <span className="text-slate-400">
-                  Nose Temperature (Shortest Incubation): <strong className="text-amber-300">~560 °C (Pearlite Nose) / ~420 °C (Bainite Nose)</strong>
+                  Nose Temperature (Shortest Incubation): <strong className="text-amber-300">{modelBanner.available ? "~560 °C (Pearlite Nose) / ~420 °C (Bainite Nose)" : "Unavailable (kinetics model is steel-only)"}</strong>
                 </span>
                 <span className="text-slate-400">
-                  Martensite Transformation: <strong className="text-red-400">Athermal (Diffusionless, Koistinen-Marburger)</strong>
+                  Martensite Transformation: <strong className="text-red-400">{modelBanner.available ? "Athermal (Diffusionless, Koistinen-Marburger)" : "Unavailable (kinetics model is steel-only)"}</strong>
                 </span>
               </div>
             </div>
@@ -557,6 +599,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     {kineticsData?.cctContinuousCoolingMap.map((row, idx) => {
                       const isSelected = Math.abs(row.coolingRate_C_s - coolingRate) < 1.0;
                       const hardness = kineticsHardnessText(row);
+                      const rowText = kineticsCctRowText(row);
                       return (
                         <tr
                           key={idx}
@@ -567,20 +610,20 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                           } transition-all`}
                         >
                           <td className="p-2.5 text-amber-300">{row.coolingRate_C_s} °C/s</td>
-                          <td className="p-2.5 text-slate-200">{row.transformedStartTemp_C} °C</td>
-                          <td className="p-2.5 text-slate-300">{row.transformedStartTime_s} s</td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 text-slate-200" title={rowText.startNote}>{rowText.startTemp}</td>
+                          <td className="p-2.5 text-slate-300" title={rowText.startNote}>{rowText.startTime}</td>
+                          <td className="p-2.5" title={rowText.startNote}>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                              row.primaryMicrostructure === "Martensite" || row.primaryMicrostructure.includes("Martensite")
+                              row.primaryMicrostructure === "Martensite" || row.primaryMicrostructure?.includes("Martensite")
                                 ? "bg-red-500/20 text-red-300 border border-red-500/30"
                                 : row.primaryMicrostructure === "Bainite"
                                 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                                 : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                             }`}>
-                              {row.primaryMicrostructure}
+                              {rowText.microstructure}
                             </span>
                           </td>
-                          <td className="p-2.5 text-red-400 font-bold">{row.phaseFractions.Martensite_pct}%</td>
+                          <td className="p-2.5 text-red-400 font-bold" title={rowText.fractionsNote}>{rowText.martensite}</td>
                           <td className="p-2.5 text-emerald-400 font-bold" title={hardness.note}>{hardness.hrc} ({hardness.hv})</td>
                         </tr>
                       );
@@ -622,17 +665,20 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Predicted RT Phases:</span>
-                      <span className="text-white font-medium">Ferrite + Cementite / Equilibrium Phase</span>
+                      <span className="text-white font-medium">{kineticsLabelText(gap?.equilibriumPrediction.stablePhasesAtRT)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Martensite Fraction:</span>
-                      <span className="text-red-400 font-mono font-bold">0.0% (Thermodynamically Forbidden)</span>
+                      <span className="text-red-400 font-mono font-bold">{kineticsLabelText(gap?.equilibriumPrediction.martensiteFraction)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Solute Supersaturation:</span>
-                      <span className="text-slate-300 font-mono">0.00% (Complete Partitioning)</span>
+                      <span className="text-slate-300 font-mono">{kineticsLabelText(gap?.equilibriumPrediction.soluteSupersaturation)}</span>
                     </div>
                   </div>
+                  <p data-gap-status="equilibrium" className="text-[10px] text-slate-500">
+                    {kineticsStatusNote(gap?.equilibriumPrediction.status) || gap?.equilibriumPrediction.reason || ""}
+                  </p>
                   <div className="p-2.5 rounded bg-sky-950/40 border border-sky-500/20 text-[11px] text-sky-200">
                     💡 <em>CALPHAD computes the ground-state global minimum of the Gibbs energy surface, completely ignoring diffusion time scales.</em>
                   </div>
@@ -656,24 +702,33 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Diffusion Suppression Index:</span>
                       <span className="text-emerald-400 font-mono font-bold">
-                        {kineticsData?.calphadVsKineticsGap.kineticRealityAtSelectedCooling.diffusionSuppressionIndex} (1.0 = Frozen)
+                        {gap && typeof gap.kineticRealityAtSelectedCooling.diffusionSuppressionIndex === "number"
+                          ? `${gap.kineticRealityAtSelectedCooling.diffusionSuppressionIndex} (1.0 = Frozen)`
+                          : kineticsValueText(null)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Actual Martensite Formed:</span>
                       <span className="text-red-400 font-mono font-bold">
-                        {kineticsData?.calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct}%
+                        {kineticsValueText(gap?.kineticRealityAtSelectedCooling.predictedMartensite_pct, "%")}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Microstructural Verdict:</span>
                       <span className="text-amber-300 font-semibold">
-                        {kineticsData?.calphadVsKineticsGap.kineticRealityAtSelectedCooling.verdict}
+                        {kineticsLabelText(gap?.kineticRealityAtSelectedCooling.verdict)}
                       </span>
                     </div>
                   </div>
+                  <p data-gap-status="kinetic" className="text-[10px] text-slate-500">
+                    {kineticsStatusNote(gap?.kineticRealityAtSelectedCooling.status) || gap?.kineticRealityAtSelectedCooling.reason || ""}
+                  </p>
                   <div className="p-2.5 rounded bg-amber-950/40 border border-amber-500/20 text-[11px] text-amber-200">
-                    ⚡ <em>At {coolingRate} °C/s, carbon and alloying atoms cannot diffuse across grain boundaries in time; austenite is forced to transform athermally via shear.</em>
+                    {modelBanner.available ? (
+                      <>⚡ <em>At {coolingRate} °C/s, carbon and alloying atoms cannot diffuse across grain boundaries in time; austenite is forced to transform athermally via shear.</em></>
+                    ) : (
+                      <em>Unavailable: kinetics model is steel-only.</em>
+                    )}
                   </div>
                 </div>
               </div>
@@ -742,6 +797,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              {kineticsData?.kineticsModel?.lswPrecipitateCoarsening?.note && (
+                <p data-lsw-note className="text-[11px] text-slate-400">{kineticsData.kineticsModel.lswPrecipitateCoarsening.note}</p>
+              )}
             </div>
           )}
 
@@ -796,6 +854,11 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     </div>
                   </div>
 
+                  {phaseSlices.reason ? (
+                    <p data-phase-fractions-note className="text-[11px] text-slate-400">
+                      Phase fractions: {phaseSlices.reason}
+                    </p>
+                  ) : null}
                   <div className="space-y-1.5 text-xs font-mono">
                     {pieData.map((p) => (
                       <div key={p.name} className="flex items-center justify-between p-2 rounded bg-slate-900/40">

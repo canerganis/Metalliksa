@@ -172,7 +172,7 @@
     "workspace": "materials",
     "label": "TTT / CCT",
     "scope": "Research",
-    "description": "Transformation kinetics depend on supplied material parameters.",
+    "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
     "next": "micrograph"
   },
   {

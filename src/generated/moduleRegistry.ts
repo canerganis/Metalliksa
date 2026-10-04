@@ -2014,7 +2014,7 @@ export const MODULE_REGISTRY = {
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "materials",
       "label": "TTT / CCT",
-      "description": "Transformation kinetics depend on supplied material parameters.",
+      "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
       "next": "micrograph",
       "maturity": "Research",
       "navigation": "listed",

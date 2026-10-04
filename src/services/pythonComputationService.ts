@@ -416,8 +416,9 @@ export interface PythonKineticsResult {
     composition_wt: Record<string, number>;
     Ae3_C: number;
     Ae1_C: number;
-    Ms_C: number;
-    Mf_C: number;
+    /** null where the registry value is a non-physical placeholder (alloy_registry.KINETICS_PLACEHOLDERS). */
+    Ms_C: number | null;
+    Mf_C: number | null;
     Q_diff_kJ_mol: number;
     grain_size_d_um_default: number;
     aust_temp_C_default: number;
@@ -435,10 +436,19 @@ export interface PythonKineticsResult {
   criticalTransformationTemperatures: {
     Ae3_BetaTransus_GammaSolvus_C: number;
     Ae1_C: number;
-    Ms_C: number;
-    Mf_C: number;
-    CriticalCoolingRate_CCR_C_s: number;
+    /** null for a registry placeholder (Ms_C_status "unavailable-registry-placeholder"). */
+    Ms_C: number | null;
+    Mf_C: number | null;
+    /** null for non-steel alloys (the kinetics model is steel-only). */
+    CriticalCoolingRate_CCR_C_s: number | null;
+    Ms_C_status?: string;
+    Mf_C_status?: string;
+    CriticalCoolingRate_CCR_status?: string;
   };
+  /**
+   * Steel TTT points; null for non-steel alloys (kinetics model is steel-only). floorHit: tStart_s is the 1 ms
+   * incubation floor, not a model value.
+   */
   tttIsothermalCurves: Array<{
     temperature_C: number;
     phase: string;
@@ -447,22 +457,31 @@ export interface PythonKineticsResult {
     tFinish_s: number;
     avramiExponent_n: number;
     drivingForce_DeltaT_C: number;
-  }>;
+    floorHit?: boolean;
+  }> | null;
+  /**
+   * The values below are null where unavailable: for every non-steel alloy (kinetics model is steel-only) and for a
+   * steel start the 1 ms TTT floor drives (see transformedStart_status / unavailableReason).
+   */
   cctContinuousCoolingMap: Array<{
     coolingRate_C_s: number;
-    transformedStartTemp_C: number;
-    transformedStartTime_s: number;
-    primaryMicrostructure: string;
+    transformedStartTemp_C: number | null;
+    transformedStartTime_s: number | null;
+    primaryMicrostructure: string | null;
     phaseFractions: {
-      Martensite_pct: number;
-      Bainite_pct: number;
-      Pearlite_Ferrite_pct: number;
-      RetainedAustenite_pct: number;
+      Martensite_pct: number | null;
+      Bainite_pct: number | null;
+      Pearlite_Ferrite_pct: number | null;
+      RetainedAustenite_pct: number | null;
     };
-    predictedHardness_HRC: number;
+    predictedHardness_HRC: number | null;
     /** ASTM E140 Table 1 conversion of the predicted HRC (non-austenitic steels, HRC 20-68); null otherwise. */
     predictedHardness_HV: number | null;
     predictedHardness_HV_status?: string;
+    transformedStart_status?: string;
+    phaseFractions_status?: string;
+    predictedHardness_HRC_status?: string;
+    unavailableReason?: string | null;
   }>;
   lswPrecipitateCoarsening: Array<{
     agingTime_h: number;
@@ -472,18 +491,42 @@ export interface PythonKineticsResult {
   }>;
   calphadVsKineticsGap: {
     equilibriumPrediction: {
-      stablePhasesAtRT: string;
-      martensiteFraction: string;
-      soluteSupersaturation: string;
+      /** null for non-steel alloys; for steels a fixed text (status "static-text-not-a-calphad-calculation"). */
+      stablePhasesAtRT: string | null;
+      martensiteFraction: string | null;
+      soluteSupersaturation: string | null;
+      status?: string;
+      reason?: string;
     };
     kineticRealityAtSelectedCooling: {
       coolingRate_C_s: number;
-      criticalCoolingRate_C_s: number;
-      isSuppressedEquilibrium: boolean;
-      predictedMartensite_pct: number;
-      diffusionSuppressionIndex: number;
-      verdict: string;
+      criticalCoolingRate_C_s: number | null;
+      isSuppressedEquilibrium: boolean | null;
+      predictedMartensite_pct: number | null;
+      diffusionSuppressionIndex: number | null;
+      verdict: string | null;
+      status?: string;
+      reason?: string;
     };
+  };
+  /** "unavailable" with reason "kinetics model is steel-only" for Inconel 718, Ti-6Al-4V and Al 7075. */
+  kineticsModel?: {
+    status: "available" | "unavailable";
+    reason: string | null;
+    scope: string;
+    registryAlloyId: string;
+    illustrativeOnly: boolean;
+    note: string;
+    placeholderParameters: string[];
+    lswPrecipitateCoarsening?: { status: string; note: string };
+  };
+  /** TTT incubation floor summary: points whose tStart_s is the 1 ms floor (floorHit). */
+  tttIncubationFloor?: {
+    status: string;
+    floorValue_s: number;
+    pointCount: number | null;
+    floorHitCount: number | null;
+    note: string;
   };
 }
 
