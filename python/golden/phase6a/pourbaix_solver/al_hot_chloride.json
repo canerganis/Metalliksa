@@ -1,0 +1,3022 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "al_hot_chloride",
+ "exitCode": 0,
+ "input": {
+  "chloride_ppm": 200,
+  "element": "Al",
+  "experimentalPoints": [
+   {
+    "ph": 3,
+    "potential_V": -1.0
+   },
+   {
+    "ph": 9,
+    "potential_V": -0.5,
+    "refElectrode": "MMS"
+   }
+  ],
+  "ionActivity_log10": -4,
+  "temperature_C": 60
+ },
+ "invocation": "python -B pourbaix_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "pourbaix_solver",
+ "stdout": {
+  "analyticalBoundaries": [
+   {
+    "boundaryType": "Immunity / Acid Active",
+    "equation": "Al(s) ⇌ Al³⁺ + 3e⁻",
+    "id": "al_imm_act",
+    "name": "Al / Al³⁺",
+    "points": [
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": -1.7942,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Al(s)",
+    "speciesB": "Al³⁺ (aq)"
+   },
+   {
+    "boundaryType": "Acid Active / Passivation",
+    "equation": "2Al³⁺ + 3H₂O ⇌ Al₂O₃(s) + 6H⁺",
+    "id": "al_act_pass",
+    "name": "2Al³⁺ + 3H₂O / Al₂O₃",
+    "points": [
+     {
+      "E_V_SHE": -2.0,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": -1.5,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": -1.0,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": -0.5,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": 0.0,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": 0.5,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": 1.0,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": 1.5,
+      "pH": 3.9
+     },
+     {
+      "E_V_SHE": 2.0,
+      "pH": 3.9
+     }
+    ],
+    "speciesA": "Al³⁺ (aq)",
+    "speciesB": "Al₂O₃·3H₂O (Bayerite)"
+   },
+   {
+    "boundaryType": "Passivity / Alkaline Aluminate Dissolution",
+    "equation": "Al₂O₃(s) + 2OH⁻ ⇌ 2AlO₂⁻ + H₂O",
+    "id": "al_pass_alkaline",
+    "name": "Al₂O₃ + 2OH⁻ / 2AlO₂⁻",
+    "points": [
+     {
+      "E_V_SHE": -2.0,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": -1.5,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": -1.0,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": -0.5,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": 0.0,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": 0.5,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": 1.0,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": 1.5,
+      "pH": 8.8
+     },
+     {
+      "E_V_SHE": 2.0,
+      "pH": 8.8
+     }
+    ],
+    "speciesA": "Al₂O₃",
+    "speciesB": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)"
+   }
+  ],
+  "chloridePittingBoundary": {
+   "chloride_Molar": 0.00564,
+   "chloride_ppm": 200.0,
+   "nominal_Epit_V_SHE": -0.54,
+   "pittingActive": true,
+   "pittingThresholdLine": [
+    {
+     "E_V_SHE": -0.54,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": -0.56,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": -0.58,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": -0.6,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": -0.62,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": -0.64,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": -0.66,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": -0.68,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": -0.7,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": -0.72,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": -0.74,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": -0.76,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": -0.78,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": -0.8,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": -0.82,
+     "pH": 14.0
+    }
+   ]
+  },
+  "element": "Al",
+  "engine": "MetalliX-Python-HPC-Pourbaix-v3.10",
+  "experimentalOverlay": {
+   "overallTrajectoryDiagnosis": "ACTIVE DISSOLUTION DETECTED: 2 test point(s) (Test Point #1, Test Point #2) are located in the active acid corrosion domain with rapid uniform metal loss driven by cathodic depolarization.",
+   "points": [
+    {
+     "color": "#ef4444",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 0.75,
+     "deltaE_Pitting_V": 0.46,
+     "depolarizer": "H⁺ (HER)",
+     "dominantSpecies": "Al³⁺ (aq)",
+     "engineeringMitigations": [
+      "Apply Cathodic Protection (CP) to depress potential below immunity boundary (E < -1.75 V vs SHE).",
+      "Add anodic passivation inhibitors (e.g. chromates, nitrites, molybdates) or neutralizers to shift pH > 7.0."
+     ],
+     "id": "exp_pt_1",
+     "isInsideWaterStability": false,
+     "mechanismDetails": "Al → Al³⁺ + 3e⁻ active dissolution. Rapid hydrogen gas evolution (H⁺ (HER)).",
+     "mechanismId": "acid_aluminate_corrosion",
+     "mechanismTitle": "Acidic Active Dissolution",
+     "name": "Test Point #1",
+     "notes": "",
+     "pH": 3.0,
+     "potential_Input_V": -1.0,
+     "potential_V_SHE": -1.0,
+     "refElectrode": "SHE",
+     "regime": "Active Acid Corrosion",
+     "riskLevel": "Severe Corrosion",
+     "stageName": "Stage 1",
+     "timeHours": null
+    },
+    {
+     "color": "#f97316",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 1.89,
+     "deltaE_Pitting_V": -0.68,
+     "depolarizer": "O₂ (ORR)",
+     "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+     "engineeringMitigations": [
+      "Buffer pH down to neutral regime (pH 6 - 9) to prevent amphoteric/caustic dissolution.",
+      "Inspect for Caustic Stress Corrosion Cracking (SCC) in weld heat-affected zones."
+     ],
+     "id": "exp_pt_2",
+     "isInsideWaterStability": true,
+     "mechanismDetails": "Hydroxide ions dissolve the alumina passive film: Al + 4OH⁻ → Al(OH)₄⁻ + 3e⁻.",
+     "mechanismId": "amphoteric_caustic_attack",
+     "mechanismTitle": "Amphoteric Caustic Dissolution",
+     "name": "Test Point #2",
+     "notes": "",
+     "pH": 9.0,
+     "potential_Input_V": -0.5,
+     "potential_V_SHE": 0.14,
+     "refElectrode": "MMS",
+     "regime": "Alkaline Corrosion (Amphoteric Dissolution)",
+     "riskLevel": "Severe Corrosion",
+     "stageName": "Stage 2",
+     "timeHours": null
+    }
+   ],
+   "riskBreakdown": {
+    "Caution": 0,
+    "High Risk": 0,
+    "Immune": 0,
+    "Pitting Hazard": 0,
+    "Severe Corrosion": 2,
+    "Stable Passivity": 0
+   },
+   "totalPointsCount": 2
+  },
+  "parameters": {
+   "chlorideConcentration_ppm": 200.0,
+   "chloride_Molar": 0.00564,
+   "ionActivity_log10": -4.0,
+   "nernstSlope_V_pH": 0.0661,
+   "pittingPotential_V_SHE": -0.54,
+   "pittingRisk": "Moderate Localized Attack",
+   "temperature_C": 60.0
+  },
+  "speciesInventory": {
+   "corrosion_acid": [
+    "Al³⁺(aq)",
+    "AlOH²⁺(aq)"
+   ],
+   "corrosion_alkaline": [
+    "AlO₂⁻(aq)",
+    "Al(OH)₄⁻(aq) (Aluminate)"
+   ],
+   "immunity": [
+    "Al(s)"
+   ],
+   "passivation": [
+    "Al₂O₃·3H₂O (Bayerite/Boehmite Barrier Oxide)"
+   ]
+  },
+  "stabilityFieldGrid": [
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 0.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 1.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 2.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Al³⁺ (aq)",
+    "mechanismTitle": "Acidic Active Dissolution",
+    "pH": 3.0,
+    "regime": "Active Acid Corrosion"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 4.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 5.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 6.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 7.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Al₂O₃·3H₂O (Bayerite/Boehmite)",
+    "mechanismTitle": "Dense Barrier Alumina Passive Film",
+    "pH": 8.0,
+    "regime": "Passivation (Al₂O₃ Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Al³⁺ (Pits) + Al₂O₃·3H₂O",
+    "mechanismTitle": "Severe Chloride Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 9.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 10.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 11.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 12.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 13.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Al(s)",
+    "mechanismTitle": "Cathodic Immunity",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "AlO₂⁻ / Al(OH)₄⁻ (Aluminate)",
+    "mechanismTitle": "Amphoteric Caustic Dissolution",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion (Amphoteric Dissolution)"
+   }
+  ],
+  "success": true,
+  "systemName": "Aluminum (Al-H₂O Amphoteric System)",
+  "waterStabilityLines": {
+   "e0_OER": 1.1994,
+   "equation_HER": "E = 0.000 - 0.0661·pH (Line a: 2H⁺ + 2e⁻ ⇌ H₂)",
+   "equation_OER": "E = 1.199 - 0.0661·pH (Line b: O₂ + 4H⁺ + 4e⁻ ⇌ 2H₂O)",
+   "line_a_hydrogen_HER": [
+    {
+     "E_V_SHE": 0.0,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": -0.0661,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": -0.1322,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": -0.1983,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": -0.2644,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": -0.3305,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": -0.3966,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": -0.4627,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": -0.5288,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": -0.5949,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": -0.661,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": -0.7271,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": -0.7932,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": -0.8594,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": -0.9255,
+     "pH": 14.0
+    },
+    {
+     "E_V_SHE": -0.9916,
+     "pH": 15.0
+    }
+   ],
+   "line_b_oxygen_OER": [
+    {
+     "E_V_SHE": 1.1994,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": 1.1333,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": 1.0672,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": 1.0011,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": 0.935,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": 0.8689,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": 0.8028,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": 0.7367,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": 0.6706,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": 0.6045,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": 0.5384,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": 0.4723,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": 0.4062,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": 0.3401,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": 0.274,
+     "pH": 14.0
+    },
+    {
+     "E_V_SHE": 0.2079,
+     "pH": 15.0
+    }
+   ],
+   "nernstSlope": 0.0661
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

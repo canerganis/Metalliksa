@@ -1,0 +1,48 @@
+{
+ "baseRevision": "d33b6f5",
+ "schema": "phase6a-golden-1",
+ "solver": "pourbaix_solver",
+ "table": "POURBAIX_ELEMENT_SYSTEMS",
+ "values": {
+  "Al": {
+   "atomicMass": 26.982,
+   "name": "Aluminum (Al-H₂O Amphoteric System)",
+   "standardE0_V": -1.662
+  },
+  "Cr": {
+   "atomicMass": 51.996,
+   "name": "Chromium (Cr-H₂O System)",
+   "standardE0_V": -0.913
+  },
+  "Cu": {
+   "atomicMass": 63.546,
+   "name": "Copper (Cu-H₂O System)",
+   "standardE0_V": 0.342
+  },
+  "Fe": {
+   "atomicMass": 55.845,
+   "name": "Iron (Fe-H₂O System)",
+   "standardE0_V": -0.44
+  },
+  "Mg": {
+   "atomicMass": 24.305,
+   "name": "Magnesium (Mg-H₂O System)",
+   "standardE0_V": -2.372
+  },
+  "Ni": {
+   "atomicMass": 58.693,
+   "name": "Nickel (Ni-H₂O System)",
+   "standardE0_V": -0.257
+  },
+  "Ti": {
+   "atomicMass": 47.867,
+   "name": "Titanium (Ti-H₂O System)",
+   "standardE0_V": -1.63
+  },
+  "Zn": {
+   "atomicMass": 65.38,
+   "name": "Zinc (Zn-H₂O System Amphoteric)",
+   "standardE0_V": -0.763
+  }
+ }
+}

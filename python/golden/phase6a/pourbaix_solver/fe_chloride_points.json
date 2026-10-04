@@ -1,0 +1,3352 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "fe_chloride_points",
+ "exitCode": 0,
+ "input": {
+  "chloride_ppm": 1000,
+  "element": "Fe",
+  "experimentalPoints": [
+   {
+    "id": "p1",
+    "name": "Acid",
+    "ph": 2,
+    "potential_V": -0.2,
+    "refElectrode": "SCE"
+   },
+   {
+    "id": "p2",
+    "name": "Neutral",
+    "ph": 7,
+    "potential_V": 0.1,
+    "refElectrode": "Ag/AgCl (3M KCl)"
+   },
+   {
+    "id": "p3",
+    "name": "Alkaline",
+    "ph": 12,
+    "potential_V": 0.3,
+    "refElectrode": "SHE"
+   },
+   {
+    "id": "p4",
+    "name": "Cathodic",
+    "ph": 7,
+    "potential_V": -0.9,
+    "refElectrode": "CSE"
+   }
+  ],
+  "ionActivity_log10": -6,
+  "temperature_C": 25
+ },
+ "invocation": "python -B pourbaix_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "pourbaix_solver",
+ "stdout": {
+  "analyticalBoundaries": [
+   {
+    "boundaryType": "Immunity / Active Dissolution",
+    "equation": "Fe(s) ⇌ Fe²⁺ + 2e⁻",
+    "id": "fe_imm_act",
+    "name": "Fe / Fe²⁺",
+    "points": [
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": -0.6175,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe (Metallic Immunity)",
+    "speciesB": "Fe²⁺ (aq)"
+   },
+   {
+    "boundaryType": "Acid Redox Fe(II)/Fe(III)",
+    "equation": "Fe²⁺ ⇌ Fe³⁺ + e⁻",
+    "id": "fe_act_fe3",
+    "name": "Fe²⁺ / Fe³⁺",
+    "points": [
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": 0.5935,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe²⁺ (aq)",
+    "speciesB": "Fe³⁺ (aq)"
+   },
+   {
+    "boundaryType": "Active Dissolution / Passivation",
+    "equation": "2Fe²⁺ + 3H₂O ⇌ Fe₂O₃(s) + 6H⁺ + 2e⁻",
+    "id": "fe_act_pass",
+    "name": "2Fe²⁺ + 3H₂O / Fe₂O₃",
+    "points": [
+     {
+      "E_V_SHE": 0.728,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": 0.5507,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": 0.3734,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": 0.1961,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": 0.0188,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": -0.1585,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": -0.3358,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": -0.5131,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": -0.6904,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": -0.8677,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": -1.045,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": -1.2223,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": -1.3996,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": -1.5769,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": -1.7542,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe²⁺ (aq)",
+    "speciesB": "Fe₂O₃ (Hematite Passive)"
+   },
+   {
+    "boundaryType": "Immunity / Magnetite Passivation",
+    "equation": "3Fe(s) + 4H₂O ⇌ Fe₃O₄(s) + 8H⁺ + 8e⁻",
+    "id": "fe_imm_magnetite",
+    "name": "3Fe + 4H₂O / Fe₃O₄",
+    "points": [
+     {
+      "E_V_SHE": -0.085,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": -0.1442,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": -0.2034,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": -0.2626,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": -0.3218,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": -0.381,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": -0.4402,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": -0.4994,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": -0.5586,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": -0.6178,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": -0.677,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": -0.7362,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": -0.7954,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": -0.8546,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": -0.9138,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe(s)",
+    "speciesB": "Fe₃O₄ (Magnetite)"
+   },
+   {
+    "boundaryType": "Passivation / Transpassive Dissolution",
+    "equation": "Fe₂O₃(s) + 5H₂O ⇌ 2FeO₄²⁻ + 10H⁺ + 6e⁻",
+    "id": "fe_pass_trans",
+    "name": "Fe₂O₃ + 5H₂O / 2FeO₄²⁻",
+    "points": [
+     {
+      "E_V_SHE": 2.2,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": 2.1014,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": 2.0028,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": 1.9042,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": 1.8056,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": 1.707,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": 1.6084,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": 1.5098,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": 1.4112,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": 1.3126,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": 1.214,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": 1.1154,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": 1.0168,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": 0.9182,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": 0.8196,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe₂O₃",
+    "speciesB": "FeO₄²⁻ (Ferryl Anion)"
+   },
+   {
+    "boundaryType": "Alkaline Caustic Dissolution",
+    "equation": "Fe(s) + 2H₂O ⇌ HFeO₂⁻ + 3H⁺ + 2e⁻",
+    "id": "fe_alkaline",
+    "name": "Fe + 2H₂O / HFeO₂⁻",
+    "points": [
+     {
+      "E_V_SHE": 0.493,
+      "pH": 0.0
+     },
+     {
+      "E_V_SHE": 0.4044,
+      "pH": 1.0
+     },
+     {
+      "E_V_SHE": 0.3158,
+      "pH": 2.0
+     },
+     {
+      "E_V_SHE": 0.2272,
+      "pH": 3.0
+     },
+     {
+      "E_V_SHE": 0.1386,
+      "pH": 4.0
+     },
+     {
+      "E_V_SHE": 0.05,
+      "pH": 5.0
+     },
+     {
+      "E_V_SHE": -0.0386,
+      "pH": 6.0
+     },
+     {
+      "E_V_SHE": -0.1272,
+      "pH": 7.0
+     },
+     {
+      "E_V_SHE": -0.2158,
+      "pH": 8.0
+     },
+     {
+      "E_V_SHE": -0.3044,
+      "pH": 9.0
+     },
+     {
+      "E_V_SHE": -0.393,
+      "pH": 10.0
+     },
+     {
+      "E_V_SHE": -0.4816,
+      "pH": 11.0
+     },
+     {
+      "E_V_SHE": -0.5702,
+      "pH": 12.0
+     },
+     {
+      "E_V_SHE": -0.6588,
+      "pH": 13.0
+     },
+     {
+      "E_V_SHE": -0.7474,
+      "pH": 14.0
+     }
+    ],
+    "speciesA": "Fe₃O₄",
+    "speciesB": "HFeO₂⁻ (Hypoferrite)"
+   }
+  ],
+  "chloridePittingBoundary": {
+   "chloride_Molar": 0.02821,
+   "chloride_ppm": 1000.0,
+   "nominal_Epit_V_SHE": 0.322,
+   "pittingActive": true,
+   "pittingThresholdLine": [
+    {
+     "E_V_SHE": 0.322,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": 0.302,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": 0.282,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": 0.262,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": 0.242,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": 0.222,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": 0.202,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": 0.182,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": 0.162,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": 0.142,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": 0.122,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": 0.102,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": 0.082,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": 0.062,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": 0.042,
+     "pH": 14.0
+    }
+   ]
+  },
+  "element": "Fe",
+  "engine": "MetalliX-Python-HPC-Pourbaix-v3.10",
+  "experimentalOverlay": {
+   "overallTrajectoryDiagnosis": "ACTIVE DISSOLUTION DETECTED: 1 test point(s) (Acid) are located in the active acid corrosion domain with rapid uniform metal loss driven by cathodic depolarization.",
+   "points": [
+    {
+     "color": "#ef4444",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 0.658,
+     "deltaE_Pitting_V": 0.281,
+     "depolarizer": "O₂ (ORR)",
+     "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+     "engineeringMitigations": [
+      "Conditions maintain a stable passive barrier. Monitor pH and chloride levels to avoid sudden local acidification."
+     ],
+     "id": "p1",
+     "isInsideWaterStability": true,
+     "mechanismDetails": "Spontaneous anodic oxidation: Fe → Fe²⁺ + 2e⁻ driven by O₂ (ORR) depolarization.",
+     "mechanismId": "active_acid_attack",
+     "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+     "name": "Acid",
+     "notes": "",
+     "pH": 2.0,
+     "potential_Input_V": -0.2,
+     "potential_V_SHE": 0.041,
+     "refElectrode": "SCE",
+     "regime": "Active Corrosion (Acid Dissolution)",
+     "riskLevel": "Severe Corrosion",
+     "stageName": "Stage 1",
+     "timeHours": null
+    },
+    {
+     "color": "#10b981",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 0.924,
+     "deltaE_Pitting_V": 0.015,
+     "depolarizer": "O₂ (ORR)",
+     "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+     "engineeringMitigations": [
+      "Conditions maintain a stable passive barrier. Monitor pH and chloride levels to avoid sudden local acidification."
+     ],
+     "id": "p2",
+     "isInsideWaterStability": true,
+     "mechanismDetails": "Spontaneous formation of dense, protective Fe₂O₃/Fe₃O₄ barrier film. Corrosion rate is stifled to negligible passivation current density.",
+     "mechanismId": "stable_passivation",
+     "mechanismTitle": "Protective Passive Oxide Film",
+     "name": "Neutral",
+     "notes": "",
+     "pH": 7.0,
+     "potential_Input_V": 0.1,
+     "potential_V_SHE": 0.307,
+     "refElectrode": "Ag/AgCl (3M KCl)",
+     "regime": "Passivation (Oxide Barrier)",
+     "riskLevel": "Stable Passivity",
+     "stageName": "Stage 2",
+     "timeHours": null
+    },
+    {
+     "color": "#10b981",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 0.917,
+     "deltaE_Pitting_V": 0.022,
+     "depolarizer": "O₂ (ORR)",
+     "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+     "engineeringMitigations": [
+      "Conditions maintain a stable passive barrier. Monitor pH and chloride levels to avoid sudden local acidification."
+     ],
+     "id": "p3",
+     "isInsideWaterStability": true,
+     "mechanismDetails": "Spontaneous formation of dense, protective Fe₂O₃/Fe₃O₄ barrier film. Corrosion rate is stifled to negligible passivation current density.",
+     "mechanismId": "stable_passivation",
+     "mechanismTitle": "Protective Passive Oxide Film",
+     "name": "Alkaline",
+     "notes": "",
+     "pH": 12.0,
+     "potential_Input_V": 0.3,
+     "potential_V_SHE": 0.3,
+     "refElectrode": "SHE",
+     "regime": "Passivation (Oxide Barrier)",
+     "riskLevel": "Stable Passivity",
+     "stageName": "Stage 3",
+     "timeHours": null
+    },
+    {
+     "color": "#10b981",
+     "currentDensity_uA_cm2": null,
+     "deltaE_Immunity_V": 0.033,
+     "deltaE_Pitting_V": 0.906,
+     "depolarizer": "H⁺ (HER)",
+     "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+     "engineeringMitigations": [
+      "Conditions maintain a stable passive barrier. Monitor pH and chloride levels to avoid sudden local acidification."
+     ],
+     "id": "p4",
+     "isInsideWaterStability": false,
+     "mechanismDetails": "Spontaneous formation of dense, protective Fe₂O₃/Fe₃O₄ barrier film. Corrosion rate is stifled to negligible passivation current density.",
+     "mechanismId": "stable_passivation",
+     "mechanismTitle": "Protective Passive Oxide Film",
+     "name": "Cathodic",
+     "notes": "",
+     "pH": 7.0,
+     "potential_Input_V": -0.9,
+     "potential_V_SHE": -0.584,
+     "refElectrode": "CSE",
+     "regime": "Passivation (Oxide Barrier)",
+     "riskLevel": "Stable Passivity",
+     "stageName": "Stage 4",
+     "timeHours": null
+    }
+   ],
+   "riskBreakdown": {
+    "Caution": 0,
+    "High Risk": 0,
+    "Immune": 0,
+    "Pitting Hazard": 0,
+    "Severe Corrosion": 1,
+    "Stable Passivity": 3
+   },
+   "totalPointsCount": 4
+  },
+  "parameters": {
+   "chlorideConcentration_ppm": 1000.0,
+   "chloride_Molar": 0.02821,
+   "ionActivity_log10": -6.0,
+   "nernstSlope_V_pH": 0.05916,
+   "pittingPotential_V_SHE": 0.322,
+   "pittingRisk": "High Pitting Risk",
+   "temperature_C": 25.0
+  },
+  "speciesInventory": {
+   "corrosion_acid": [
+    "Fe²⁺(aq)",
+    "Fe³⁺(aq)",
+    "FeOH²⁺(aq)"
+   ],
+   "corrosion_alkaline": [
+    "HFeO₂⁻(aq) (Bihypoferrite)",
+    "FeO₄²⁻(aq) (Ferryl VI)"
+   ],
+   "immunity": [
+    "Fe(s) (Metallic Zero-Valence)"
+   ],
+   "passivation": [
+    "Fe₂O₃(s) (Hematite)",
+    "Fe₃O₄(s) (Magnetite)",
+    "FeOOH(s) (Goethite)"
+   ]
+  },
+  "stabilityFieldGrid": [
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 0.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 0.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 0.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 0.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 1.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 1.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 1.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 1.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 2.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 2.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 2.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 2.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 3.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#ef4444",
+    "dominantSpecies": "Fe²⁺ / Fe³⁺ (aq)",
+    "mechanismTitle": "Active Acid Corrosion (Uniform Rusting)",
+    "pH": 3.0,
+    "regime": "Active Corrosion (Acid Dissolution)"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 3.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 3.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 4.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 4.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 4.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 4.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 4.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 4.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 4.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 4.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 4.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 4.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 5.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 5.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 5.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 5.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 5.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 5.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 5.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 5.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 5.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 5.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 6.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 6.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 6.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 6.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 6.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 6.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 6.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 6.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 6.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 6.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 7.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 7.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 7.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 7.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 7.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 7.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 7.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 7.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 7.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 7.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 7.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 8.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 8.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 8.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 8.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 8.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 8.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 8.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 8.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 8.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 8.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 8.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 9.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 9.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 9.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 9.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 9.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 9.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 9.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 9.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 9.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 9.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 9.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 9.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 9.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 9.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 9.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 10.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 10.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 10.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 10.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 10.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 10.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 10.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 10.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 10.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 10.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 10.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 10.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 10.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 10.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 10.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 11.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 11.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 11.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 11.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 11.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 11.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 11.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 11.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 11.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 11.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 11.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 11.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 11.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 11.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 11.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 12.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 12.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 12.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 12.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 12.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 12.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 12.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 12.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 12.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 12.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 12.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 12.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 12.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 12.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 12.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 13.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 13.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 13.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 13.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 13.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#dc2626",
+    "dominantSpecies": "Fe²⁺ (Local Pit Anode) + Fe₂O₃ (Cathode Matrix)",
+    "mechanismTitle": "Chloride-Induced Localized Pitting Attack",
+    "pH": 13.0,
+    "regime": "Chloride Pitting Breakdown"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 13.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 13.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 13.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 13.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#e11d48",
+    "dominantSpecies": "FeO₄²⁻ (Ferryl VI Oxyanion)",
+    "mechanismTitle": "Transpassive Anodic Dissolution",
+    "pH": 13.0,
+    "regime": "Transpassive Dissolution"
+   },
+   {
+    "E_V_SHE": -2.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.8,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.6,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.4,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.2,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -1.0,
+    "color": "#0284c7",
+    "dominantSpecies": "Fe(s) (Zero-Valence Metal)",
+    "mechanismTitle": "Cathodic Immunity Protection",
+    "pH": 14.0,
+    "regime": "Immunity"
+   },
+   {
+    "E_V_SHE": -0.8,
+    "color": "#10b981",
+    "dominantSpecies": "Fe₂O₃ (Hematite) / Fe₃O₄ (Magnetite)",
+    "mechanismTitle": "Protective Passive Oxide Film",
+    "pH": 14.0,
+    "regime": "Passivation (Oxide Barrier)"
+   },
+   {
+    "E_V_SHE": -0.6,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": -0.4,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": -0.2,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 0.0,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 0.2,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 0.4,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 0.6,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 0.8,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 1.0,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 1.2,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 1.4,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 1.6,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 1.8,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   },
+   {
+    "E_V_SHE": 2.0,
+    "color": "#f97316",
+    "dominantSpecies": "HFeO₂⁻ (Hypoferrite Anion)",
+    "mechanismTitle": "Alkaline Caustic Etching / Caustic Embrittlement",
+    "pH": 14.0,
+    "regime": "Alkaline Corrosion"
+   }
+  ],
+  "success": true,
+  "systemName": "Iron (Fe-H₂O System)",
+  "waterStabilityLines": {
+   "e0_OER": 1.229,
+   "equation_HER": "E = 0.000 - 0.0592·pH (Line a: 2H⁺ + 2e⁻ ⇌ H₂)",
+   "equation_OER": "E = 1.229 - 0.0592·pH (Line b: O₂ + 4H⁺ + 4e⁻ ⇌ 2H₂O)",
+   "line_a_hydrogen_HER": [
+    {
+     "E_V_SHE": 0.0,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": -0.0592,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": -0.1183,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": -0.1775,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": -0.2366,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": -0.2958,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": -0.355,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": -0.4141,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": -0.4733,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": -0.5324,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": -0.5916,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": -0.6508,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": -0.7099,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": -0.7691,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": -0.8282,
+     "pH": 14.0
+    },
+    {
+     "E_V_SHE": -0.8874,
+     "pH": 15.0
+    }
+   ],
+   "line_b_oxygen_OER": [
+    {
+     "E_V_SHE": 1.229,
+     "pH": 0.0
+    },
+    {
+     "E_V_SHE": 1.1698,
+     "pH": 1.0
+    },
+    {
+     "E_V_SHE": 1.1107,
+     "pH": 2.0
+    },
+    {
+     "E_V_SHE": 1.0515,
+     "pH": 3.0
+    },
+    {
+     "E_V_SHE": 0.9924,
+     "pH": 4.0
+    },
+    {
+     "E_V_SHE": 0.9332,
+     "pH": 5.0
+    },
+    {
+     "E_V_SHE": 0.874,
+     "pH": 6.0
+    },
+    {
+     "E_V_SHE": 0.8149,
+     "pH": 7.0
+    },
+    {
+     "E_V_SHE": 0.7557,
+     "pH": 8.0
+    },
+    {
+     "E_V_SHE": 0.6966,
+     "pH": 9.0
+    },
+    {
+     "E_V_SHE": 0.6374,
+     "pH": 10.0
+    },
+    {
+     "E_V_SHE": 0.5782,
+     "pH": 11.0
+    },
+    {
+     "E_V_SHE": 0.5191,
+     "pH": 12.0
+    },
+    {
+     "E_V_SHE": 0.4599,
+     "pH": 13.0
+    },
+    {
+     "E_V_SHE": 0.4008,
+     "pH": 14.0
+    },
+    {
+     "E_V_SHE": 0.3416,
+     "pH": 15.0
+    }
+   ],
+   "nernstSlope": 0.05916
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
