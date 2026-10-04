@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 /**
@@ -28,6 +29,7 @@ const EXCLUSIONS: Record<string, string> = {
   "src/components/PowderDEMCompactionLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
   "src/components/TransientEnthalpy3DGPULab.tsx": "wrapper-only Input/Select; call sites wrapped by <label>",
 };
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
 const MAX_EXCLUSIONS = 16; // the list may shrink, never grow silently
 
 // Files labelled in Phase 8 batches 1 and 2; independent of the automatic scan.
@@ -83,17 +85,61 @@ const PINNED_GUARDED = [
   "src/components/WebGLEDSHyperMapCanvas.tsx",
 ];
 
+// The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
+const PINNED_EXCLUDED = [
+  "src/components/AdvancedBatteryPhysicsStudio.tsx",
+  "src/components/BatteryEISDegradationStudio.tsx",
+  "src/components/CNLSFittingStudio.tsx",
+  "src/components/CircuitLibraryModal.tsx",
+  "src/components/EISLabDataUploader.tsx",
+  "src/components/EISUploadInsightsStudio.tsx",
+  "src/components/EquivalentCircuitBuilder.tsx",
+  "src/components/OpticalTomographyLab.tsx",
+  "src/components/PowderDEMCompactionLab.tsx",
+  "src/components/PresetCircuitLibraryPanel.tsx",
+  "src/components/PythonBatteryCorrosionUploadStudio.tsx",
+  "src/components/SavitzkyGolayFilterControls.tsx",
+  "src/components/StochasticUQMMPDSStudio.tsx",
+  "src/components/SyntheticNoiseStressStudio.tsx",
+  "src/components/TransientEnthalpy3DGPULab.tsx",
+  "src/components/TransportKineticsLab.tsx",
+];
+
 const MAX_LABEL_LENGTH = 80;
 
+export interface MaskStats {
+  /** form-control openings hidden inside comments (genuine: commented-out code) */
+  comment: number;
+  /** form-control openings hidden inside string/template/regex literals (suspicious: heuristic may be off) */
+  literal: number;
+  /** a block comment, template or string that never closed */
+  unterminated: number;
+}
+
+const CONTROL_OPEN = /<(?:input|select|textarea)\b/g;
+// A quote or "/" opens a literal only in code position: after one of these characters, "=>" or a keyword.
+const CODE_POSITION_CHARS = "=(,:?[{|&+!;\n";
+const CODE_POSITION_KEYWORDS = /(?:^|[^\w$])(?:return|case|in|of|typeof|else|yield|await|void|delete|throw)$/;
+
 /**
- * Replace comments and string/template literals by spaces (newlines kept) so JSX tags inside them are ignored.
- * A quote only opens a string in code position (after = ( , : ? [ { | & + ! ; or line start), so apostrophes in
- * JSX text ("Young's") do not swallow code. Quoted strings end at the line end.
+ * Replace comments and string/template/regex literals by spaces (newlines kept) so JSX tags inside them are ignored.
+ * A quote or regex slash only opens a literal in code position (after = ( , : ? [ { | & + ! ; "=>" , a keyword such as
+ * return/case/in/of, or line start), so apostrophes in JSX text ("Young's") do not swallow code. Quoted strings and
+ * regexes end at the line end. Optional `stats` records what was hidden so callers can sanity-check the heuristic.
  */
-export function maskNonCode(src: string): string {
+export function maskNonCode(src: string, stats?: MaskStats): string {
   const out = src.split("");
-  const blank = (a: number, b: number) => {
+  const blank = (a: number, b: number, kind: "comment" | "literal") => {
+    if (stats) stats[kind] += (src.slice(a, b).match(CONTROL_OPEN) ?? []).length;
     for (let k = a; k < b; k += 1) if (out[k] !== "\n") out[k] = " ";
+  };
+  const inCodePosition = (i: number): boolean => {
+    let p = i - 1;
+    while (p >= 0 && (src[p] === " " || src[p] === "\t")) p -= 1;
+    if (p < 0) return true;
+    if (CODE_POSITION_CHARS.includes(src[p])) return true;
+    if (src[p] === ">" && src[p - 1] === "=") return true; // arrow function
+    return CODE_POSITION_KEYWORDS.test(src.slice(Math.max(0, p - 10), p + 1));
   };
   let i = 0;
   while (i < src.length) {
@@ -101,26 +147,38 @@ export function maskNonCode(src: string): string {
     const n = src[i + 1];
     if (c === "/" && n === "*") {
       const e = src.indexOf("*/", i + 2);
+      if (e < 0 && stats) stats.unterminated += 1;
       const stop = e < 0 ? src.length : e + 2;
-      blank(i, stop);
+      blank(i, stop, "comment");
       i = stop;
     } else if (c === "/" && n === "/" && src[i - 1] !== ":") {
       let e = src.indexOf("\n", i);
       if (e < 0) e = src.length;
-      blank(i, e);
+      blank(i, e, "comment");
       i = e;
     } else if (c === "`") {
       let j = i + 1;
       while (j < src.length && src[j] !== "`") j += src[j] === "\\" ? 2 : 1;
-      blank(i, j + 1);
+      if (j >= src.length && stats) stats.unterminated += 1;
+      blank(i, j + 1, "literal");
       i = j + 1;
-    } else if (c === '"' || c === "'") {
-      let p = i - 1;
-      while (p >= 0 && (src[p] === " " || src[p] === "\t")) p -= 1;
-      if (p < 0 || "=(,:?[{|&+!;\n".includes(src[p])) {
-        let j = i + 1;
-        while (j < src.length && src[j] !== c && src[j] !== "\n") j += src[j] === "\\" ? 2 : 1;
-        blank(i, j + 1);
+    } else if ((c === '"' || c === "'") && inCodePosition(i)) {
+      let j = i + 1;
+      while (j < src.length && src[j] !== c && src[j] !== "\n") j += src[j] === "\\" ? 2 : 1;
+      blank(i, j + 1, "literal");
+      i = j + 1;
+    } else if (c === "/" && n !== "/" && n !== "*" && n !== ">" && inCodePosition(i)) {
+      // regex literal: ends at an unescaped "/" outside a [...] class, on the same line
+      let j = i + 1;
+      let inClass = false;
+      while (j < src.length && src[j] !== "\n" && (inClass || src[j] !== "/")) {
+        if (src[j] === "\\") j += 1;
+        else if (src[j] === "[") inClass = true;
+        else if (src[j] === "]") inClass = false;
+        j += 1;
+      }
+      if (src[j] === "/") {
+        blank(i, j + 1, "literal");
         i = j + 1;
       } else i += 1;
     } else i += 1;
@@ -221,7 +279,7 @@ export function rawUnitInterpolations(source: string): number[] {
 const RAW_UNIT_ALLOWED = new Set(["src/components/SEMAutoAnalyzerStudio.tsx"]);
 
 function listTsx(dir: string): string[] {
-  return (readdirSync(resolve(process.cwd(), dir), { recursive: true }) as string[])
+  return (readdirSync(resolve(ROOT, dir), { recursive: true }) as string[])
     .map((p) => `${dir}/${p.replace(/\\/g, "/")}`)
     .filter((p) => p.endsWith(".tsx"))
     .sort();
@@ -272,6 +330,27 @@ test("raw unit-key interpolation in aria-label is detected", () => {
   assert.deepEqual(rawUnitInterpolations("<input aria-label={`Value in ${hardnessScale}`} />"), []);
 });
 
+test("masking: keywords, arrows and regexes open literals; JSX apostrophes do not", () => {
+  assert.deepEqual(unlabelledControls("function f(){ return '<input />'; }\n<input />"), [2]);
+  assert.deepEqual(unlabelledControls("switch (x) { case '<select>': break; }\n<input />"), [2]);
+  assert.deepEqual(unlabelledControls("const g = () => '<textarea />';\n<input />"), [2]);
+  assert.deepEqual(unlabelledControls("const r = /`/;\n<input />"), [2]);
+  assert.deepEqual(unlabelledControls("const r = /<input\\//g;\n<input />"), [2]);
+  assert.deepEqual(unlabelledControls("<p>it's</p>\n<input />"), [2]);
+});
+
+test("mask stats: hidden controls and unterminated comments/templates are reported", () => {
+  const s = { comment: 0, literal: 0, unterminated: 0 };
+  maskNonCode("/* <input /> */ const a = '<select>'; <input />", s);
+  assert.deepEqual(s, { comment: 1, literal: 1, unterminated: 0 });
+  const u = { comment: 0, literal: 0, unterminated: 0 };
+  maskNonCode("/* never closed\n<input />", u);
+  assert.equal(u.unterminated, 1);
+  const v = { comment: 0, literal: 0, unterminated: 0 };
+  maskNonCode("const t = `never closed\n<input />", v);
+  assert.equal(v.unterminated, 1);
+});
+
 test("weak labels: too long or equal to the placeholder are rejected", () => {
   assert.deepEqual(weakLabels('<input aria-label="Filter lots" placeholder="Filter lots" />'), [1]);
   assert.deepEqual(weakLabels('<input aria-label="filter LOTS" placeholder="Filter lots" />'), [1]);
@@ -285,14 +364,15 @@ test("scan covers all src tsx files; exclusions are bounded, existing and justif
   const all = listTsx("src");
   assert.ok(all.length > 50, "src scan found suspiciously few files");
   assert.ok(Object.keys(EXCLUSIONS).length <= MAX_EXCLUSIONS, "EXCLUSIONS may not grow");
+  assert.deepEqual(Object.keys(EXCLUSIONS).sort(), [...PINNED_EXCLUDED].sort(), "exclusion set changed: update PINNED_EXCLUDED deliberately");
   for (const [rel, reason] of Object.entries(EXCLUSIONS)) {
     assert.ok(reason.trim().length > 0, `${rel} needs a reason`);
-    assert.ok(existsSync(resolve(process.cwd(), rel)), `${rel} no longer exists: remove it from EXCLUSIONS`);
+    assert.ok(existsSync(resolve(ROOT, rel)), `${rel} no longer exists: remove it from EXCLUSIONS`);
   }
   for (const rel of PINNED_GUARDED) {
     assert.ok(all.includes(rel), `${rel} is missing from the src scan`);
     assert.ok(!(rel in EXCLUSIONS), `${rel} is pinned as guarded and cannot be excluded`);
-    assert.match(readFileSync(resolve(process.cwd(), rel), "utf8"), /<(input|select|textarea)\b/, `${rel} has no form controls`);
+    assert.match(readFileSync(resolve(ROOT, rel), "utf8"), /<(input|select|textarea)\b/, `${rel} has no form controls`);
   }
   assert.equal(new Set(PINNED_GUARDED).size, PINNED_GUARDED.length);
 });
@@ -300,7 +380,15 @@ test("scan covers all src tsx files; exclusions are bounded, existing and justif
 for (const rel of listTsx("src")) {
   if (rel in EXCLUSIONS) continue;
   test(`${rel}: form controls have accessible names and non-weak labels`, () => {
-    const src = readFileSync(resolve(process.cwd(), rel), "utf8");
+    const src = readFileSync(resolve(ROOT, rel), "utf8");
+    // Safety net: the masker must not have swallowed real controls (unpaired backtick or /* hides the rest of a file).
+    const stats = { comment: 0, literal: 0, unterminated: 0 };
+    const masked = maskNonCode(src.replace(/\r/g, ""), stats);
+    const raw = (src.match(/<(?:input|select|textarea)\b/g) ?? []).length;
+    const found = (masked.match(/<(?:input|select|textarea)\b/g) ?? []).length;
+    assert.equal(stats.unterminated, 0, "unterminated comment/template: masking would hide the rest of the file");
+    assert.equal(stats.literal, 0, "controls found inside string/template/regex literals: check the masker");
+    assert.ok(found >= raw - stats.comment, `masker hid ${raw - stats.comment - found} control(s)`);
     const offenders = unlabelledControls(src);
     assert.deepEqual(offenders, [], `unlabelled controls at lines ${offenders.join(", ")}`);
     if (!RAW_UNIT_ALLOWED.has(rel)) {
