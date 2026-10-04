@@ -61,9 +61,9 @@ async function addV2Campaign(f: any) {
   await f.runStore.putFile(sectionJob, sectionArtifact.relativePath, sectionArtifact);
   for (const id of ['b'.repeat(32), 'c'.repeat(32), 'd'.repeat(32)]) {
     const document = structuredClone(f.record.document); document.runId = id; document.sources.push(sourceLink);
-    const settings = { backend: 'auto', power_W: 500, speed_mm_s: 1000, beamDiameter_um: 67, preheat_C: 23.5,
+    const settings = { backend: 'auto', power_W: 285, speed_mm_s: 960, beamDiameter_um: 67, preheat_C: 23.5,
       surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0, mesh_um: 1000 };
-    const material = { materialId: 'in718', materialRevisionSha256: sha(`proxy-material-revision-${id}`),
+    const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision-shared'),
       name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture', liquidus_K: 1600 };
     const inputJson = JSON.stringify(settings), materialJson = JSON.stringify(material);
     const result = { ...JSON.parse(f.record.document.capture.resultJson), schemaVersion: 1, runKind: 'transient-thermal',
@@ -82,7 +82,7 @@ async function addV2Campaign(f: any) {
           internalLength: 'm', time: 's', energy: 'J', beamDiameter: '1/e2-intensity' },
         resolvedPhysics: { conduction: true, transient: true, latentHeat: true, momentum: false, freeSurface: false, evaporation: false },
         evidenceClass: 'unvalidated-model' },
-      scanPath: [{ start: [-.005, 0], end: [.005, 0], start_s: 0, end_s: .01 }],
+      scanPath: [{ start: [-.005, 0], end: [.005, 0], start_s: 0, end_s: 10 / settings.speed_mm_s }],
       barePlateSectionObservations: sectionFixture.observations };
     document.capture = { schemaVersion: 1, jobId: id, resultJson: JSON.stringify(result), inputJson, materialJson,
       contractStatus: 'core-v1-bound', runKind: 'transient-thermal' };
@@ -106,6 +106,37 @@ async function addV2Campaign(f: any) {
       expectedTrackCount: 3, expectedObservationCount: 6,
       replicateSemantics: 'reproducibility-evidence-not-independent-replicates' }, tracks };
   f.runs.saveProxyCampaign(campaign);
+}
+
+function mutateExportedCapture(bundlePath: string, setting: string, value: unknown) {
+  const db = new DatabaseSync(path.join(bundlePath, 'runs.sqlite'));
+  const campaignRow = db.prepare('SELECT campaign_id, document_json FROM lpbf_proxy_campaigns').all()
+    .map(value => ({ campaignId: String(value.campaign_id), document: JSON.parse(String(value.document_json)) }))
+    .find(value => value.document.schemaVersion === 2)!;
+  const track = campaignRow.document.tracks[0], runRow = db.prepare('SELECT run_id, document_json FROM lpbf_runs WHERE run_id=?').get(track.runIdentity.runId)!;
+  const run = JSON.parse(String(runRow.document_json)), result = JSON.parse(run.capture.resultJson);
+  if (setting.startsWith('scanPath.')) result.scanPath[0][setting.slice('scanPath.'.length)] = value;
+  else {
+    result.settings[setting] = value;
+    const input = JSON.parse(run.capture.inputJson); input[setting] = value;
+    run.capture.inputJson = JSON.stringify(input); result.coreContract.inputSha256 = sha(run.capture.inputJson);
+  }
+  run.capture.resultJson = JSON.stringify(result);
+  const runJson = JSON.stringify(run), runDocumentSha256 = sha(runJson);
+  db.prepare('UPDATE lpbf_runs SET document_json=?, document_sha256=? WHERE run_id=?').run(runJson, runDocumentSha256, String(runRow.run_id));
+  track.runIdentity.runDocumentSha256 = runDocumentSha256;
+  track.runIdentity.resultArtifact = { path: 'capture/result.json', sha256: sha(run.capture.resultJson), size_bytes: Buffer.byteLength(run.capture.resultJson) };
+  track.runIdentity.inputSha256 = result.coreContract.inputSha256;
+  track.runIdentity.executedSettings = structuredClone(result.settings);
+  for (const observation of track.observations) observation.provenance.runIdentity = structuredClone(track.runIdentity);
+  const campaignJson = JSON.stringify(campaignRow.document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(campaignJson, sha(campaignJson), campaignRow.campaignId);
+  db.close();
+  const manifestPath = path.join(bundlePath, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(bundlePath, 'runs.sqlite'));
+  manifest.metadata = { sha256: sha(metadata), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 }
 
 async function fixture(t: TestContext) {
@@ -253,7 +284,7 @@ test('HTTP verify, restore and portable import reject forged claims and run prov
       document.tracks[0].runIdentity.resultArtifact.sha256 = '0'.repeat(64);
       for (const observation of document.tracks[0].observations) observation.provenance.runIdentity = structuredClone(document.tracks[0].runIdentity);
     }, /execution provenance verification failed/i],
-    ['captured geometry', document => { document.tracks[0].observations[0].geometry.width_um += 1; }, /section evidence verification failed/i],
+    ['captured geometry', document => { document.tracks[0].observations[0].geometry.width_um += 1; }, /execution provenance verification failed/i],
   ];
   for (const [label, mutate, errorPattern] of mutants) {
     const f = await fixture(t); await addV2Campaign(f);
@@ -289,6 +320,71 @@ test('HTTP verify, restore and portable import reject forged claims and run prov
     assert.equal(response.status, 409, label);
     assert.match((await response.json()).error, errorPattern, label);
     assert.deepEqual(readdirSync(path.join(f.bundleRoot, 'imports')), [], label);
+  }
+});
+
+test('HTTP sanitizes the Table 4 source binding verification failure branch', async t => {
+  const f = await fixture(t); await addV2Campaign(f);
+  const exported = await f.bundles.export();
+  const bundlePath = path.join(f.bundleRoot, 'exports', exported.bundleId);
+  const db = new DatabaseSync(path.join(bundlePath, 'runs.sqlite'));
+  const row = db.prepare('SELECT campaign_id, document_json FROM lpbf_proxy_campaigns').all()
+    .map(value => ({ campaignId: String(value.campaign_id), document: JSON.parse(String(value.document_json)) }))
+    .find(value => value.document.schemaVersion === 2)!;
+  row.document.sourceBinding.revision = 99;
+  row.document.beamInputDeclaration.sourceBinding.revision = 99;
+  for (const track of row.document.tracks) for (const observation of track.observations)
+    observation.provenance.sourceBinding.revision = 99;
+  row.document.campaignId = sha(JSON.stringify({ schemaVersion: 2,
+    runIds: row.document.tracks.map((track: any) => track.runIdentity.runId), caseNumber: row.document.caseNumber,
+    revision: row.document.sourceBinding.revision, doc: row.document.sourceBinding.documentSha256 })).slice(0, 32);
+  const documentJson = JSON.stringify(row.document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET campaign_id=?, document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(row.document.campaignId, documentJson, sha(documentJson), row.campaignId);
+  db.close();
+  const manifestPath = path.join(bundlePath, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(bundlePath, 'runs.sqlite'));
+  manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  const verified = await f.post(`${exported.bundleId}/verify`);
+  assert.equal(verified.status, 409);
+  assert.equal(verified.body.error, 'Run bundle campaign source binding verification failed.');
+  assert.equal(JSON.stringify(verified.body).includes(f.root), false);
+
+  const restored = await f.post(`${exported.bundleId}/restore`);
+  assert.equal(restored.status, 409);
+  assert.equal(restored.body.error, 'Run bundle campaign source binding verification failed.');
+  assert.equal(JSON.stringify(restored.body).includes(f.root), false);
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of await createRunBundleTar(bundlePath)) chunks.push(Buffer.from(chunk));
+  const imported = await fetch(`${f.endpoint}/import`, { method: 'POST',
+    headers: { 'Content-Type': 'application/x-tar' }, body: Buffer.concat(chunks) });
+  assert.equal(imported.status, 409);
+  const importFailure = await imported.json();
+  assert.equal(importFailure.error, 'Run bundle campaign source binding verification failed.');
+  assert.equal(JSON.stringify(importFailure).includes(f.root), false);
+});
+
+test('HTTP bundle actions reject coherently rehashed captures outside Table 4 case 0', async t => {
+  for (const [setting, value] of [
+    ['beamDiameter_um', 68], ['power_W', 286], ['speed_mm_s', 961], ['preheat_C', 25],
+    ['scanPath.start', [0, 0]], ['scanPath.end', [0.006, 0]],
+  ] as const) {
+    const f = await fixture(t); await addV2Campaign(f);
+    const exported = await f.bundles.export(), bundlePath = path.join(f.bundleRoot, 'exports', exported.bundleId);
+    mutateExportedCapture(bundlePath, setting, value);
+    const expected = 'Run bundle campaign execution eligibility verification failed.';
+    const verified = await f.post(`${exported.bundleId}/verify`);
+    assert.equal(verified.status, 409, setting); assert.equal(verified.body.error, expected, setting);
+    const restored = await f.post(`${exported.bundleId}/restore`);
+    assert.equal(restored.status, 409, setting); assert.equal(restored.body.error, expected, setting);
+    const chunks: Buffer[] = [];
+    for await (const chunk of await createRunBundleTar(bundlePath)) chunks.push(Buffer.from(chunk));
+    const imported = await fetch(`${f.endpoint}/import`, { method: 'POST',
+      headers: { 'Content-Type': 'application/x-tar' }, body: Buffer.concat(chunks) });
+    assert.equal(imported.status, 409, setting);
+    assert.equal((await imported.json()).error, expected, setting);
   }
 });
 

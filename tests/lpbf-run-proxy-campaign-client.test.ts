@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { createNistProxyCampaign, listNistProxyCampaigns, previewNistProxyCampaign } from '../src/services/lpbfRunArchiveClient';
 
@@ -28,14 +31,34 @@ function campaignDocument() {
       observations: [
         { sectionId: 'x-4p9mm', coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: 4.9,
           surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100 + index, depth_um: 50 + index },
-          operator: { sectionOperatorId: 'section-v1', interpolationOperatorId: 'linear-v1', contourOperatorId: 'crossing-v1', evidenceClass: 'thermal-proxy-only' },
+          operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+            interpolationOperatorId: 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+            contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
           provenance: { sourceBinding: sourceBinding(), runIdentity: identity(runId, index) } },
         { sectionId: 'x-6p0mm', coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: 6,
           surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 101 + index, depth_um: 51 + index },
-          operator: { sectionOperatorId: 'section-v1', interpolationOperatorId: 'linear-v1', contourOperatorId: 'crossing-v1', evidenceClass: 'thermal-proxy-only' },
+          operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+            interpolationOperatorId: 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+            contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
           provenance: { sourceBinding: sourceBinding(), runIdentity: identity(runId, index) } },
       ] })),
   };
+}
+
+function producerValidation(campaign: ReturnType<typeof campaignDocument>) {
+  const pythonRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
+  const script = [
+    'import json,sys',
+    `sys.path.insert(0, ${JSON.stringify(pythonRoot)})`,
+    'from lpbf_nist_proxy_campaign import validate_proxy_campaign',
+    'payload=json.load(sys.stdin)',
+    'print(json.dumps(validate_proxy_campaign(payload["campaign"], payload["sourceBinding"], 67), allow_nan=False))',
+  ].join('\n');
+  const report = JSON.parse(execFileSync('python', ['-B', '-c', script], {
+    cwd: pythonRoot, input: JSON.stringify({ campaign, sourceBinding: campaign.sourceBinding }), encoding: 'utf8',
+  }));
+  assert.equal(report.status, 'proxy-screening-only', 'fixture must pass the real Python campaign validator');
+  return report;
 }
 
 function v2CampaignDocument() {
@@ -55,19 +78,32 @@ function v2CampaignDocument() {
   }) };
 }
 
-const validation = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
-  status: 'proxy-screening-only', validationStatus: 'unvalidated', experimentalValidation: false,
-  numericalConvergenceStatus: 'not-evaluated', comparisonResiduals: null, observationCount: 6, reasons: [] };
+const validation = producerValidation(campaignDocument());
 
 test('proxy campaign preview sends only three archived IDs and case and accepts no residual output', async t => {
   const campaign = campaignDocument();
+  const report = producerValidation(campaign);
+  assert.equal(report.campaignId, campaign.campaignId);
   const fetchMock = t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ campaign,
-    validation, previewSha256 })));
+    validation: report, previewSha256 })));
   const result = await previewNistProxyCampaign(runIds, '0', signal);
   assert.equal(result.campaign?.tracks.length, 3);
   const [url, init] = fetchMock.mock.calls[0].arguments as [string, RequestInit];
   assert.equal(url, '/api/lpbf/runs/proxy-campaigns/preview');
   assert.deepEqual(JSON.parse(init.body as string), { runIds, caseNumber: '0' });
+});
+
+test('proxy campaign client binds producer report campaignId to its campaign', async t => {
+  const campaign = campaignDocument();
+  const report = producerValidation(campaign);
+  for (const validation of [
+    { ...report, campaignId: 'f'.repeat(32) },
+    Object.fromEntries(Object.entries(report).filter(([key]) => key !== 'campaignId')),
+  ]) {
+    t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ campaign, validation, previewSha256 })));
+    await assert.rejects(previewNistProxyCampaign(runIds, '0', signal), /invalid/i);
+    t.mock.restoreAll();
+  }
 });
 
 test('proxy campaign save requires exact preview hash and immutable record identity', async t => {
@@ -155,7 +191,7 @@ test('proxy campaign client rejects residuals, validation claims, and untrusted 
 test('unavailable proxy campaign retains reasons and disables the create contract', async t => {
   const body = { campaign: null, validation: { schemaVersion: 1,
     kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation', status: 'unavailable',
-    validationStatus: 'unvalidated', experimentalValidation: false, numericalConvergenceStatus: 'not-evaluated',
+    campaignId: null, validationStatus: 'unvalidated', experimentalValidation: false, numericalConvergenceStatus: 'not-evaluated',
     comparisonResiduals: null, observationCount: null, reasons: ['The archived source binding is unavailable.'] } };
   t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(body)));
   const result = await previewNistProxyCampaign(runIds, '0', signal);

@@ -219,7 +219,7 @@ test('saved proxy campaigns list in creation order and reject broken archived re
     tracks: runs.map(run => ({ runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
   repository.saveProxyCampaign(campaign);
   const v2 = v2Campaign(runs.map(run => ({ runId: run.document.runId, documentSha256: run.documentSha256 })), v2SourceBinding);
-  assert.throws(() => repository.saveProxyCampaign(v2), /provenance or section binding/i,
+  assert.throws(() => repository.saveProxyCampaign(v2), /Table 4 case-0 execution settings/i,
     'v2 campaign save rejects fabricated identities that do not match captured run evidence');
   for (const mutate of [
     (doc: any) => { doc.beamInputDeclaration.value_um = 72; },

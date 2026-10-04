@@ -19,7 +19,8 @@ function overlaps(a: string, b: string): boolean {
 function safeBundleError(error: unknown, action: 'verify' | 'restore' | 'import'): string {
   const message = error instanceof Error ? error.message : '';
   if (/Campaign Table 4 source artifact binding mismatch/.test(message)) return 'Run bundle campaign source binding verification failed.';
-  if (/Campaign archived run provenance binding mismatch/.test(message)) return 'Run bundle campaign execution provenance verification failed.';
+  if (/Proxy campaign archived run eligibility integrity failed|Campaign execution eligibility verification failed/.test(message)) return 'Run bundle campaign execution eligibility verification failed.';
+  if (/Campaign archived run provenance binding mismatch|Proxy campaign archived run provenance integrity failed/.test(message)) return 'Run bundle campaign execution provenance verification failed.';
   if (/Campaign captured section geometry or observations binding mismatch|Campaign captured section artifact verification failed/.test(message)) {
     return 'Run bundle campaign section evidence verification failed.';
   }

@@ -13,7 +13,7 @@ import { importRun } from '../server/lpbfRunImport';
 import { backupRunBundle, restoreRunBundle, verifyRunBundle } from '../server/lpbfRunBundle';
 import { createRunBundleTar } from '../server/lpbfRunBundleTar';
 import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
-import { deriveProxyCampaignRunBinding } from '../server/lpbfProxyCampaignBinding';
+import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure, validateArchivedProxySections } from '../server/lpbfProxyCampaignBinding';
 import { getHostPython } from '../server/pythonRuntime';
 
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
@@ -123,9 +123,9 @@ async function addV2Campaign(f: Awaited<ReturnType<typeof fixture>>, alterSource
     const document = structuredClone(f.record.document);
     document.runId = document.capture.jobId = id;
     document.sources.push(table4Link);
-    const settings = { backend: 'auto', power_W: 500, speed_mm_s: 1000, beamDiameter_um: 67, preheat_C: 23.5,
+    const settings = { backend: 'auto', power_W: 285, speed_mm_s: 960, beamDiameter_um: 67, preheat_C: 23.5,
       surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0, mesh_um: 1000 };
-    const material = { materialId: 'in718', materialRevisionSha256: sha(`proxy-material-revision-${id}`),
+    const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision-shared'),
       name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture', liquidus_K: 1600 };
     const inputJson = JSON.stringify(settings), materialJson = JSON.stringify(material);
     const result = { ...JSON.parse(f.record.document.capture.resultJson), schemaVersion: 1, runKind: 'transient-thermal',
@@ -146,7 +146,7 @@ async function addV2Campaign(f: Awaited<ReturnType<typeof fixture>>, alterSource
           internalLength: 'm', time: 's', energy: 'J', beamDiameter: '1/e2-intensity' },
         resolvedPhysics: { conduction: true, transient: true, latentHeat: true, momentum: false, freeSurface: false, evaporation: false },
         evidenceClass: 'unvalidated-model' },
-      scanPath: [{ start: [-.005, 0], end: [.005, 0], start_s: 0, end_s: .01 }],
+      scanPath: [{ start: [-.005, 0], end: [.005, 0], start_s: 0, end_s: 10 / settings.speed_mm_s }],
       barePlateSectionObservations: sectionFixture.observations };
     document.capture = { schemaVersion: 1, jobId: id, resultJson: JSON.stringify(result), inputJson, materialJson,
       contractStatus: 'core-v1-bound', runKind: 'transient-thermal' };
@@ -179,6 +179,58 @@ function mutateBundledV2Campaign(bundle: string, mutate: (document: any) => void
   const manifestPath = path.join(bundle, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   const metadata = readFileSync(path.join(bundle, 'runs.sqlite'));
   manifest.metadata = { sha256: createHash('sha256').update(metadata).digest('hex'), byteSize: metadata.length };
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+}
+
+function mutateBundledCapturedSettings(bundle: string, setting: string, value: unknown) {
+  const db = new DatabaseSync(path.join(bundle, 'runs.sqlite'));
+  const campaignRow = db.prepare('SELECT campaign_id, document_json FROM lpbf_proxy_campaigns').all()
+    .map(item => ({ campaignId: String(item.campaign_id), document: JSON.parse(String(item.document_json)) }))
+    .find(item => item.document.schemaVersion === 2)!;
+  const document = campaignRow.document;
+  const track = document.tracks[0];
+  const runRow = db.prepare('SELECT run_id, document_json FROM lpbf_runs WHERE run_id=?').get(track.runIdentity.runId)!;
+  const runDocument = JSON.parse(String(runRow.document_json));
+  const result = JSON.parse(runDocument.capture.resultJson);
+  if (setting === 'scanPath.start' || setting === 'scanPath.end') result.scanPath[0][setting.split('.')[1]] = value;
+  else if (setting.startsWith('barePlateSectionObservations.')) {
+    const [, index, field] = setting.split('.');
+    result.barePlateSectionObservations[Number(index)][field] = value;
+  }
+  else if (setting === 'material.materialRevisionSha256') {
+    result.material.materialRevisionSha256 = value;
+    runDocument.capture.materialJson = JSON.stringify(result.material);
+    result.coreContract.materialSha256 = sha(runDocument.capture.materialJson);
+  } else {
+    result.settings[setting] = value;
+    const input = JSON.parse(runDocument.capture.inputJson);
+    input[setting] = value;
+    runDocument.capture.inputJson = JSON.stringify(input);
+    result.coreContract.inputSha256 = sha(runDocument.capture.inputJson);
+  }
+  runDocument.capture.resultJson = JSON.stringify(result);
+  const runJson = JSON.stringify(runDocument), runDocumentSha256 = sha(runJson);
+  db.prepare('UPDATE lpbf_runs SET document_json=?, document_sha256=? WHERE run_id=?')
+    .run(runJson, runDocumentSha256, String(runRow.run_id));
+  track.runIdentity.runDocumentSha256 = runDocumentSha256;
+  track.runIdentity.resultArtifact.sha256 = sha(runDocument.capture.resultJson);
+  track.runIdentity.resultArtifact.size_bytes = Buffer.byteLength(runDocument.capture.resultJson);
+  track.runIdentity.inputSha256 = result.coreContract.inputSha256;
+  track.runIdentity.materialSha256 = result.coreContract.materialSha256;
+  track.runIdentity.materialRevisionSha256 = result.material.materialRevisionSha256;
+  track.runIdentity.executedSettings = structuredClone(result.settings);
+  if (setting.startsWith('barePlateSectionObservations.')) {
+    const [, index, field] = setting.split('.');
+    track.observations[Number(index)].geometry[field === 'width_um' ? 'width_um' : 'depth_um'] = value;
+  }
+  for (const observation of track.observations) observation.provenance.runIdentity = structuredClone(track.runIdentity);
+  const campaignJson = JSON.stringify(document);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?')
+    .run(campaignJson, sha(campaignJson), campaignRow.campaignId);
+  db.close();
+  const manifestPath = path.join(bundle, 'bundle.json'), manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  const metadata = readFileSync(path.join(bundle, 'runs.sqlite'));
+  manifest.metadata = { sha256: sha(metadata), byteSize: metadata.length };
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 }
 
@@ -253,17 +305,33 @@ test('bundle snapshots and restores immutable six-proxy campaign run references'
 });
 
 test('recomputed v2 campaign and bundle hashes cannot conceal forged claims or incomplete nested data', async t => {
+  const mutateIdentityAndProvenance = (document: any, mutate: (identity: any) => void) => {
+    const identity = document.tracks[0].runIdentity;
+    mutate(identity);
+    for (const observation of document.tracks[0].observations) observation.provenance.runIdentity = structuredClone(identity);
+  };
   const cases: Array<[string, (document: any) => void]> = [
     ['true evidence flags', document => { document.claimBoundary.experimentalValidation = true; }],
     ['validated label', document => { document.claimBoundary.validationStatus = 'validated'; }],
     ['optical operator claim', document => { document.claimBoundary.opticalOperatorMatched = true; }],
     ['missing observations', document => { delete document.tracks[0].observations; }],
     ['extra nested field', document => { document.tracks[0].observations[0].geometry.clientNote = 'forged'; }],
-    ['forged result artifact identity', document => {
-      document.tracks[0].runIdentity.resultArtifact.sha256 = sha('forged result');
-      for (const observation of document.tracks[0].observations) observation.provenance.runIdentity = structuredClone(document.tracks[0].runIdentity);
+    ['forged result artifact sha', document => mutateIdentityAndProvenance(document, identity => { identity.resultArtifact.sha256 = sha('forged result'); })],
+    ['forged result artifact size', document => mutateIdentityAndProvenance(document, identity => { identity.resultArtifact.size_bytes++; })],
+    ['forged input sha', document => mutateIdentityAndProvenance(document, identity => { identity.inputSha256 = sha('forged input'); })],
+    ['forged material sha', document => mutateIdentityAndProvenance(document, identity => { identity.materialSha256 = sha('forged material'); })],
+    ['forged material revision', document => mutateIdentityAndProvenance(document, identity => { identity.materialRevisionSha256 = sha('forged revision'); })],
+    ['forged model and backend', document => mutateIdentityAndProvenance(document, identity => {
+      identity.coreContract.modelId = 'forged-model'; identity.coreContract.actualBackend = 'forged-backend';
+    })],
+    ['forged core contract', document => mutateIdentityAndProvenance(document, identity => { identity.coreContract.solverId = 'forged-solver'; })],
+    ['forged executed settings', document => mutateIdentityAndProvenance(document, identity => { identity.executedSettings.beamDiameter_um = 68; })],
+    ['forged source artifact size', document => {
+      document.sourceBinding.artifactSizeBytes++;
+      document.beamInputDeclaration.sourceBinding.artifactSizeBytes++;
+      for (const track of document.tracks) for (const observation of track.observations)
+        observation.provenance.sourceBinding.artifactSizeBytes++;
     }],
-    ['forged executed settings', document => { document.tracks[0].runIdentity.executedSettings.beamDiameter_um = 68; }],
     ['forged captured geometry', document => { document.tracks[0].observations[0].geometry.width_um += 1; }],
   ];
   for (const [label, mutate] of cases) {
@@ -299,6 +367,112 @@ test('no-op rehashed v2 bundle mutation remains verifiable and restorable', asyn
   const destination = path.join(f.root, 'no-op-restored');
   await restoreRunBundle(f.bundle, destination);
   const restored = new LpbfRunRepository(path.join(destination, 'runs.sqlite'), { readOnly: true });
+  try { assert.equal([...restored.allProxyCampaigns()].filter(item => item.document.schemaVersion === 2).length, 1); }
+  finally { restored.close(); }
+});
+
+test('shared eligibility rejects captured case-0 settings drift and heterogeneous run identities', async t => {
+  const f = await fixture(t); await addV2Campaign(f);
+  const records = ['b'.repeat(32), 'c'.repeat(32), 'd'.repeat(32)].map(id => f.runs.get(id)!);
+  for (const [key, value] of [['beamDiameter_um', 68], ['power_W', 499], ['speed_mm_s', 999], ['preheat_C', 25]] as const) {
+    const mutant = structuredClone(records);
+    const result = JSON.parse(mutant[0].document.capture.resultJson);
+    result.settings[key] = value;
+    mutant[0].document.capture.resultJson = JSON.stringify(result);
+    assert.match(proxyCampaignEligibilityFailure(mutant) ?? '', /Table 4 case-0 execution settings/);
+  }
+  for (const endpoint of ['start', 'end'] as const) {
+    const mutant = structuredClone(records), result = JSON.parse(mutant[0].document.capture.resultJson);
+    result.scanPath[0][endpoint] = [0, 0];
+    mutant[0].document.capture.resultJson = JSON.stringify(result);
+    assert.match(proxyCampaignEligibilityFailure(mutant) ?? '', /Table 4 case-0 execution settings/);
+  }
+  const heterogeneous = structuredClone(records), second = JSON.parse(heterogeneous[1].document.capture.resultJson);
+  second.material.materialRevisionSha256 = sha('other revision');
+  heterogeneous[1].document.capture.resultJson = JSON.stringify(second);
+  assert.match(proxyCampaignEligibilityFailure(heterogeneous) ?? '', /do not share one exact input/);
+});
+
+test('rehashes cannot hide case-0 captured settings drift across verify, restore and portable import', async t => {
+  for (const [setting, value] of [
+    ['beamDiameter_um', 68], ['power_W', 286], ['speed_mm_s', 961], ['preheat_C', 25],
+    ['scanPath.start', [0, 0]], ['scanPath.end', [0.006, 0]],
+  ] as const) {
+    const f = await fixture(t); await addV2Campaign(f); await f.backup();
+    mutateBundledCapturedSettings(f.bundle, setting, value);
+    await assert.rejects(verifyRunBundle(f.bundle), /archived run eligibility integrity failed.*Table 4 case-0 execution settings/i, setting);
+    await assert.rejects(restoreRunBundle(f.bundle, path.join(f.root, 'rejected-restore')),
+      /archived run eligibility integrity failed.*Table 4 case-0 execution settings/i, setting);
+    const service = new LpbfRunBundleService(path.join(f.root, 'live-runs'), path.join(f.root, 'live-sources'), path.join(f.root, 'imports'));
+    await assert.rejects(service.importPortable(await createRunBundleTar(f.bundle)),
+      /campaign execution eligibility verification failed/i, setting);
+  }
+});
+
+test('repository save rejects an observation-only mutation with captured identity untouched', async t => {
+  const f = await fixture(t), campaign = await addV2Campaign(f);
+  const previous = f.sources.revision(campaign.sourceBinding.datasetId, campaign.sourceBinding.revision)!;
+  const nextRevision = f.sources.save(previous.document, previous.revision);
+  const sourceBinding = { ...campaign.sourceBinding, revision: nextRevision.revision,
+    documentSha256: nextRevision.documentSha256 };
+  const candidate = structuredClone(campaign);
+  candidate.sourceBinding = sourceBinding;
+  candidate.beamInputDeclaration.sourceBinding = structuredClone(sourceBinding);
+  for (let index = 0; index < candidate.tracks.length; index++) {
+    const record = f.runs.get(candidate.tracks[index].runIdentity.runId)!;
+    const derived = deriveProxyCampaignRunBinding(record, sourceBinding)!;
+    candidate.tracks[index].observations = structuredClone(derived.observations);
+  }
+  candidate.campaignId = sha(JSON.stringify({ schemaVersion: 2,
+    runIds: candidate.tracks.map((track: any) => track.runIdentity.runId), caseNumber: candidate.caseNumber,
+    revision: sourceBinding.revision, doc: sourceBinding.documentSha256 })).slice(0, 32);
+  candidate.tracks[0].observations[0].geometry.width_um += 1;
+  assert.throws(() => f.runs.saveProxyCampaign(candidate), /provenance or section binding mismatch/i);
+});
+
+test('heterogeneous archived material revisions fail before campaign provenance binding', async t => {
+  const f = await fixture(t); await addV2Campaign(f); await f.backup();
+  mutateBundledCapturedSettings(f.bundle, 'material.materialRevisionSha256', sha('different-revision'));
+  await assert.rejects(verifyRunBundle(f.bundle), /do not share one exact input, material revision/i);
+  await assert.rejects(restoreRunBundle(f.bundle, path.join(f.root, 'heterogeneous-restore')),
+    /do not share one exact input, material revision/i);
+  const service = new LpbfRunBundleService(path.join(f.root, 'live-runs'), path.join(f.root, 'live-sources'), path.join(f.root, 'imports'));
+  await assert.rejects(service.importPortable(await createRunBundleTar(f.bundle)), /campaign execution eligibility verification failed/i);
+});
+
+test('bundle verification reaches NPZ re-derivation for a coherently rebound captured-section mismatch', async t => {
+  const f = await fixture(t); await addV2Campaign(f); await f.backup();
+  mutateBundledCapturedSettings(f.bundle, 'barePlateSectionObservations.0.width_um', 141);
+  await assert.rejects(verifyRunBundle(f.bundle), /Campaign captured section artifact verification failed/);
+});
+
+test('post-verification NPZ read failures use a fixed path-free error', async () => {
+  const missingPath = path.join(tmpdir(), 'private-absolute-section-artifact.npz');
+  const store = { verify: async () => ({ path: missingPath }) } as unknown as LpbfArtifactStore;
+  const failure = await validateArchivedProxySections({
+    barePlateSectionFieldArtifact: { schemaVersion: 1, status: 'captured',
+      path: 'rectangular-corridor-section-fields.npz', binding: 'accepted-step-maximum-per-source-X-plane' },
+    artifacts: [{ path: 'rectangular-corridor-section-fields.npz', sha256: sha('bytes'), size_bytes: 5 }],
+  }, store);
+  assert.equal(failure, 'Archived section-field artifact verification failed after store verification.');
+  assert.equal(failure?.includes(missingPath), false);
+});
+
+test('historical v2 campaign rows without executedSettings remain bound and restorable', async t => {
+  const f = await fixture(t); await addV2Campaign(f); await f.backup();
+  mutateBundledV2Campaign(f.bundle, document => {
+    for (const track of document.tracks) {
+      delete track.runIdentity.executedSettings;
+      for (const observation of track.observations) delete observation.provenance.runIdentity.executedSettings;
+    }
+  });
+  const legacy = new LpbfRunRepository(path.join(f.bundle, 'runs.sqlite'), { readOnly: true });
+  try { assert.equal([...legacy.allProxyCampaigns()].filter(item => item.document.schemaVersion === 2).length, 1); }
+  finally { legacy.close(); }
+  await verifyRunBundle(f.bundle);
+  const restoredPath = path.join(f.root, 'historical-v2-restored');
+  await restoreRunBundle(f.bundle, restoredPath);
+  const restored = new LpbfRunRepository(path.join(restoredPath, 'runs.sqlite'), { readOnly: true });
   try { assert.equal([...restored.allProxyCampaigns()].filter(item => item.document.schemaVersion === 2).length, 1); }
   finally { restored.close(); }
 });

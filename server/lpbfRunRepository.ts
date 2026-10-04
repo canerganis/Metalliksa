@@ -9,7 +9,7 @@ import { artifactRelativePath } from './lpbfArtifactStore';
 import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
 import { strictJsonEqual } from './lpbfBoundJson';
 import { validateGpuPilotArchiveMetadata } from './lpbfGpuRunArchive';
-import { deriveProxyCampaignRunBinding } from './lpbfProxyCampaignBinding';
+import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure } from './lpbfProxyCampaignBinding';
 
 export interface RunCapture {
   schemaVersion: 1; jobId: string; resultJson: string; inputJson: string; materialJson: string;
@@ -172,7 +172,7 @@ function decode(row: any): RunRecord {
   } catch { throw new Error('Run metadata integrity failed; existing records preserved'); }
 }
 
-function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
+function validateProxyCampaignDocument(raw: unknown, allowHistoricalExecutedSettingsOmission = false): Record<string, any> {
   let document: any;
   try {
     const json = JSON.stringify(raw);
@@ -253,17 +253,19 @@ function validateProxyCampaignDocument(raw: unknown): Record<string, any> {
         schemaError(`track ${trackIndex} identity or reproducibility kind`);
       }
       const identity = track.runIdentity;
-      try { keys(identity, ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'executedSettings', 'materialSha256',
-        'materialId', 'materialRevisionSha256', 'coreContract']); }
+      const historicalMissingSettings = allowHistoricalExecutedSettingsOmission && !Object.hasOwn(identity, 'executedSettings');
+      try { keys(identity, historicalMissingSettings
+        ? ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'materialSha256', 'materialId', 'materialRevisionSha256', 'coreContract']
+        : ['runId', 'runDocumentSha256', 'resultArtifact', 'inputSha256', 'executedSettings', 'materialSha256', 'materialId', 'materialRevisionSha256', 'coreContract']); }
       catch { schemaError(`track ${trackIndex} run identity fields`); }
       if (track.simulatedTrackId !== `sim-${identity.runId}`) schemaError(`track ${trackIndex} simulated track binding`);
       try { keys(identity.resultArtifact, ['path', 'sha256', 'size_bytes']); }
       catch { schemaError(`track ${trackIndex} result artifact fields`); }
       if (identity.resultArtifact.path !== 'capture/result.json' || !hash(identity.resultArtifact.sha256)
         || !Number.isSafeInteger(identity.resultArtifact.size_bytes) || identity.resultArtifact.size_bytes <= 0
-        || !hash(identity.inputSha256) || !identity.executedSettings || typeof identity.executedSettings !== 'object'
+        || !hash(identity.inputSha256) || (!historicalMissingSettings && (!identity.executedSettings || typeof identity.executedSettings !== 'object'
         || Array.isArray(identity.executedSettings) || !Number.isFinite(identity.executedSettings.beamDiameter_um)
-        || identity.executedSettings.beamDiameter_um <= 0 || !hash(identity.materialSha256)
+        || identity.executedSettings.beamDiameter_um <= 0)) || !hash(identity.materialSha256)
         || typeof identity.materialId !== 'string' || !identity.materialId.trim()
         || !hash(identity.materialRevisionSha256)) schemaError(`track ${trackIndex} run identity values`);
       try { keys(identity.coreContract, ['schemaVersion', 'modelId', 'solverId', 'actualBackend']); }
@@ -315,10 +317,22 @@ function decodeProxyCampaign(row: any): ProxyCampaignRecord {
     if (typeof row.document_json !== 'string' || Buffer.byteLength(row.document_json) > MAX_BYTES
       || digest(row.document_json) !== row.document_sha256 || typeof row.created_at !== 'string'
       || !Number.isFinite(Date.parse(row.created_at))) throw new Error('Invalid row');
-    const document = validateProxyCampaignDocument(JSON.parse(row.document_json));
+    const document = validateProxyCampaignDocument(JSON.parse(row.document_json), true);
     if (document.campaignId !== row.campaign_id) throw new Error('Identity mismatch');
     return { campaignId: row.campaign_id, document, documentSha256: row.document_sha256, createdAt: row.created_at };
   } catch { throw new Error('Proxy campaign metadata integrity failed; existing records preserved'); }
+}
+
+function campaignIdentityMatchesCapture(identity: any, observations: any[], derived: { runIdentity: Record<string, any>; observations: any[] }): boolean {
+  const expectedIdentity = structuredClone(derived.runIdentity);
+  const historicalMissingSettings = !Object.hasOwn(identity, 'executedSettings');
+  if (historicalMissingSettings) delete expectedIdentity.executedSettings;
+  if (!isDeepStrictEqual(identity, expectedIdentity)) return false;
+  const expectedObservations = structuredClone(derived.observations);
+  if (historicalMissingSettings) for (const observation of expectedObservations) {
+    observation.provenance.runIdentity = structuredClone(identity);
+  }
+  return isDeepStrictEqual(expectedObservations, observations);
 }
 
 export class LpbfRunRepository {
@@ -369,11 +383,38 @@ export class LpbfRunRepository {
     if (!/^[a-f0-9]{32}$/.test(campaignId)) throw new Error('Invalid campaign id');
     if (Number(this.db.prepare('PRAGMA user_version').get()!.user_version) < 2) return null;
     const row = this.db.prepare('SELECT * FROM lpbf_proxy_campaigns WHERE campaign_id=?').get(campaignId);
-    return row ? decodeProxyCampaign(row) : null;
+    if (!row) return null;
+    const campaign = decodeProxyCampaign(row);
+    this.verifyProxyCampaignRunBindings(campaign.document);
+    return campaign;
   }
   *allProxyCampaigns(): Generator<ProxyCampaignRecord> {
     if (Number(this.db.prepare('PRAGMA user_version').get()!.user_version) < 2) return;
-    for (const row of this.db.prepare('SELECT * FROM lpbf_proxy_campaigns ORDER BY campaign_id').iterate()) yield decodeProxyCampaign(row);
+    const rows = [...this.db.prepare('SELECT * FROM lpbf_proxy_campaigns ORDER BY campaign_id').iterate()];
+    for (const row of rows) {
+      const campaign = decodeProxyCampaign(row);
+      this.verifyProxyCampaignRunBindings(campaign.document);
+      yield campaign;
+    }
+  }
+  private verifyProxyCampaignRunBindings(document: Record<string, any>): void {
+    if (document.schemaVersion !== 2) return;
+    const records: RunRecord[] = [];
+    for (const track of document.tracks) {
+      const record = this.get(track.runIdentity.runId);
+      if (!record || record.documentSha256 !== track.runIdentity.runDocumentSha256) {
+        throw new Error('Proxy campaign archived run reference integrity failed');
+      }
+      records.push(record);
+    }
+    const eligibilityFailure = proxyCampaignEligibilityFailure(records);
+    if (eligibilityFailure) throw new Error(`Proxy campaign archived run eligibility integrity failed: ${eligibilityFailure}`);
+    for (const [index, track] of document.tracks.entries()) {
+      const derived = deriveProxyCampaignRunBinding(records[index], document.sourceBinding);
+      if (!derived || !campaignIdentityMatchesCapture(track.runIdentity, track.observations, derived)) {
+        throw new Error('Proxy campaign archived run provenance integrity failed');
+      }
+    }
   }
   saveProxyCampaign(raw: unknown): ProxyCampaignRecord {
     if (this.backingUp) throw new Error('Run backup in progress');
@@ -382,6 +423,13 @@ export class LpbfRunRepository {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       if (this.getProxyCampaign(document.campaignId)) throw new Error('Campaign identity conflict; immutable record already exists');
+      if (document.schemaVersion === 2) {
+        const records = document.tracks.map((track: any) => this.get(track.runIdentity.runId));
+        const eligibilityFailure = records.some((record: RunRecord | null) => !record)
+          ? 'Campaign archived run reference mismatch'
+          : proxyCampaignEligibilityFailure(records as RunRecord[]);
+        if (eligibilityFailure) throw new Error(eligibilityFailure);
+      }
       for (const track of document.tracks) {
         const identity = track.runIdentity;
         const run = this.get(identity.runId);

@@ -99,6 +99,7 @@ export interface NistProxyRunIdentityV2 extends NistProxyRunIdentity {
 export interface NistProxyCampaignValidation {
   schemaVersion: 1;
   kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation';
+  campaignId: string | null;
   status: 'unavailable' | 'proxy-screening-only';
   validationStatus: 'unvalidated';
   experimentalValidation: false;
@@ -418,7 +419,8 @@ function proxyRunIdentity(value: unknown, expectedRunId: string, schemaVersion: 
 
 function proxyCampaignValidation(value: unknown): asserts value is NistProxyCampaignValidation {
   if (!object(value) || value.schemaVersion !== 1 || value.kind !== 'lpbf-nist-amb2022-03-proxy-campaign-validation'
-    || Object.keys(value).sort().join(',') !== 'comparisonResiduals,experimentalValidation,kind,numericalConvergenceStatus,observationCount,reasons,schemaVersion,status,validationStatus'
+    || Object.keys(value).sort().join(',') !== 'campaignId,comparisonResiduals,experimentalValidation,kind,numericalConvergenceStatus,observationCount,reasons,schemaVersion,status,validationStatus'
+    || (value.campaignId !== null && !campaignId(value.campaignId))
     || !['unavailable', 'proxy-screening-only'].includes(value.status as string)
     || value.validationStatus !== 'unvalidated' || value.experimentalValidation !== false
     || value.numericalConvergenceStatus !== 'not-evaluated' || value.comparisonResiduals !== null
@@ -505,10 +507,11 @@ function proxyCampaignPreview(value: unknown, expectedRunIds: string[], expected
   if (!object(value)) throw invalid();
   proxyCampaignValidation(value.validation);
   if (value.campaign === null) {
-    if (value.validation.status !== 'unavailable' || value.previewSha256 !== undefined) throw invalid();
+    if (value.validation.status !== 'unavailable' || value.validation.campaignId !== null || value.previewSha256 !== undefined) throw invalid();
     return;
   }
-  if (value.validation.status !== 'proxy-screening-only' || !sha(value.previewSha256)) throw invalid();
+  if (value.validation.status !== 'proxy-screening-only' || value.validation.campaignId !== value.campaign.campaignId
+    || !sha(value.previewSha256)) throw invalid();
   proxyCampaign(value.campaign, expectedRunIds, expectedCase);
 }
 

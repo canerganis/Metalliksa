@@ -8,6 +8,7 @@ from lpbf_nist_proxy_campaign import (
     SECTION_IDS,
     SECTION_OPERATOR,
     SOURCE_DATASET_ID,
+    _is_json_safe,
     validate_proxy_campaign,
 )
 
@@ -138,6 +139,12 @@ def _campaign_v2():
 
 
 class TestNistProxyCampaign(unittest.TestCase):
+    def test_json_safety_rejects_nan_and_non_json_objects(self):
+        self.assertFalse(_is_json_safe(float("nan")))
+        self.assertFalse(_is_json_safe({"nested": [1.0, float("nan")]}))
+        self.assertFalse(_is_json_safe(object()))
+        self.assertFalse(_is_json_safe((1, 2)))
+
     def test_complete_campaign_is_proxy_screening_only(self):
         report = validate_proxy_campaign(_campaign(), _source_binding())
         self.assertEqual(report["status"], "proxy-screening-only")

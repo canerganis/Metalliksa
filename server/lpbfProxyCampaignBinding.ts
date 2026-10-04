@@ -19,6 +19,49 @@ const MAX_SECTION_FIELD_BYTES = 32 * 1024 * 1024;
 const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 
+/** Shared case-0 execution gate used at campaign creation and every archive boundary. */
+export function proxyCampaignEligibilityFailure(records: readonly RunRecord[], expectedCase0 = {
+  beamDiameter_um: 67, power_W: 285, speed_mm_s: 960,
+}): string | null {
+  if (!Array.isArray(records) || ![1, 3].includes(records.length)) return 'A proxy campaign requires eligible archived runs.';
+  let sharedIdentity: string | null = null;
+  for (const record of records) {
+    const capture = record?.document?.capture;
+    let result: any;
+    try { result = JSON.parse(capture?.resultJson ?? ''); } catch { return 'An archived run has invalid captured result data.'; }
+    const settings = result?.settings, core = result?.coreContract;
+    const expectedEnd = settings && Number.isFinite(settings.speed_mm_s) ? 10 / settings.speed_mm_s : NaN;
+    if (record.runKind !== 'transient-thermal' || capture?.contractStatus !== 'core-v1-bound'
+      || core?.modelId !== 'stationary-enthalpy-conduction-v1' || core?.actualBackend !== 'numpy-reference'
+      || result?.effectiveMode !== 'standard' || result?.material?.materialId !== 'in718'
+      || settings?.surfaceMode !== 'bare-plate' || settings?.tracks !== 1 || settings?.layers !== 1
+      || settings?.trackLength_um !== 10000 || settings?.scanAngle_deg !== 0
+      || settings?.beamDiameter_um !== expectedCase0.beamDiameter_um
+      || settings?.power_W !== expectedCase0.power_W || settings?.speed_mm_s !== expectedCase0.speed_mm_s
+      || !Number.isFinite(settings?.preheat_C) || settings.preheat_C < 22.5 || settings.preheat_C > 24.5
+      || !Array.isArray(result?.scanPath) || result.scanPath.length !== 1
+      || JSON.stringify(result.scanPath[0]?.start) !== JSON.stringify([-0.005, 0])
+      || JSON.stringify(result.scanPath[0]?.end) !== JSON.stringify([0.005, 0])
+      || result.scanPath[0]?.start_s !== 0 || !Number.isFinite(result.scanPath[0]?.end_s)
+      || Math.abs(result.scanPath[0].end_s - expectedEnd) > 1e-12
+      || !Array.isArray(result?.barePlateSectionObservations)) {
+      return 'An archived run does not match the required Table 4 case-0 execution settings.';
+    }
+    const identity = JSON.stringify({ inputSha256: core.inputSha256, materialSha256: core.materialSha256,
+      materialId: result.material.materialId, materialRevisionSha256: result.material.materialRevisionSha256,
+      coreContract: { schemaVersion: core.schemaVersion, modelId: core.modelId, solverId: core.solverId,
+        actualBackend: core.actualBackend } });
+    if (!core.inputSha256 || !core.materialSha256 || !result.material.materialRevisionSha256) {
+      return 'An archived run lacks complete input, material, revision, or core identity.';
+    }
+    if (sharedIdentity !== null && sharedIdentity !== identity) {
+      return 'The three computational runs do not share one exact input, material revision, and executed core identity.';
+    }
+    sharedIdentity = identity;
+  }
+  return null;
+}
+
 export function rederiveProxyCampaignSections(result: unknown, bytes: Buffer): Promise<any> {
   return new Promise((resolve, reject) => {
     let python;
@@ -84,14 +127,14 @@ export async function validateArchivedProxySections(result: any, store: LpbfArti
     }
     return null;
   } catch (error) {
-    return error instanceof Error && error.message ? `Archived section-field artifact verification failed: ${error.message}`
-      : 'Archived section-field artifact verification failed with a non-Error exception.';
+    return 'Archived section-field artifact verification failed after store verification.';
   }
 }
 
 export function deriveProxyCampaignRunBinding(record: RunRecord, sourceBinding: unknown): {
   runIdentity: Record<string, any>; observations: any[];
 } | null {
+  if (proxyCampaignEligibilityFailure([record]) !== null) return null;
   const capture = record?.document?.capture;
   if (!capture || capture.contractStatus !== 'core-v1-bound' || record.runKind !== 'transient-thermal') return null;
   let result: any;
@@ -104,7 +147,7 @@ export function deriveProxyCampaignRunBinding(record: RunRecord, sourceBinding: 
     || core.actualBackend !== 'numpy-reference' || result.effectiveMode !== 'standard'
     || material.materialId !== 'in718' || settings.surfaceMode !== 'bare-plate' || settings.tracks !== 1
     || settings.layers !== 1 || settings.trackLength_um !== 10000 || settings.scanAngle_deg !== 0
-    || !Number.isFinite(settings.beamDiameter_um) || !Array.isArray(result.scanPath)
+    || !Array.isArray(result.scanPath)
     || !Array.isArray(result.barePlateSectionObservations)) return null;
   const derived = runCampaignIdentity(record, result, result.barePlateSectionObservations, sourceBinding);
   return derived;

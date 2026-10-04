@@ -9,7 +9,8 @@ import { LpbfRunArchiveError } from './lpbfRunArchiveService';
 import { LpbfRunRepository, type ProxyCampaignRecord, type RunRecord } from './lpbfRunRepository';
 import { runArtifacts } from './lpbfRunImport';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
-import { deriveProxyCampaignRunBinding, rederiveProxyCampaignSections, validateArchivedProxySections } from './lpbfProxyCampaignBinding';
+import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure, rederiveProxyCampaignSections,
+  validateArchivedProxySections } from './lpbfProxyCampaignBinding';
 import { getHostPython } from './pythonRuntime';
 
 const DATASET_ID = 'nist-amb2022-03-optical-table4-local-v1';
@@ -22,7 +23,7 @@ const SECTION_DISTANCES = [4.9, 6.0];
 const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
-  status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
+  campaignId: null, status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
   numericalConvergenceStatus: 'not-evaluated', comparisonResiduals: null, observationCount: null, reasons });
 
 function validatePython(campaign: unknown, source: unknown, expectedBeamDiameterUm: number): Promise<any> {
@@ -131,6 +132,19 @@ export class LpbfNistProxyCampaignService {
         artifactPath: artifact.relativePath, artifactSha256: artifact.sha256, artifactSizeBytes: artifact.byteSize, caseNumber };
       const table = JSON.parse(bytes.toString('utf8')), row = exactCase(table, caseNumber);
       if (!row) return { campaign: null, validation: unavailable(['Selected Table 4 case is absent or ambiguous in the verified source.']) };
+
+      const gpuPilot = records.find(record => record.runKind === 'gpu-thermal-pilot');
+      if (gpuPilot) {
+        return { campaign: null, validation: unavailable([
+          `Archived GPU pilot ${gpuPilot.document.runId} is separate from CPU-core proxy eligibility.`,
+        ]) };
+      }
+      const eligibilityFailure = proxyCampaignEligibilityFailure(records, {
+        beamDiameter_um: row.beamDiameterD4sigma_um,
+        power_W: row.laserPower_W,
+        speed_mm_s: row.scanSpeed_mm_s,
+      });
+      if (eligibilityFailure) return { campaign: null, validation: unavailable([eligibilityFailure]) };
 
       const tracks = [];
       let sharedRunIdentity: any = null;

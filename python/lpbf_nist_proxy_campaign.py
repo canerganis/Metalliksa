@@ -323,11 +323,7 @@ def validate_proxy_campaign(campaign, expected_source_binding=None, expected_bea
                     track_ids.add(track_id)
 
                 experimental_id = track.get("experimentalTrackId")
-                trusted_ids = (expected_source_binding.get("experimentalTrackIds", [])
-                               if _is_record(expected_source_binding) else [])
-                if not isinstance(trusted_ids, list):
-                    trusted_ids = []
-                if experimental_id is not None and experimental_id not in trusted_ids:
+                if experimental_id is not None:
                     reasons.append(f"{label}.experimentalTrackId is not supplied by the trusted source revision.")
                 expected_replicate_kind = ("reproducibility-execution"
                                            if schema_version == CAMPAIGN_SCHEMA_VERSION
