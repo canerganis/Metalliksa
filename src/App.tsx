@@ -11,6 +11,7 @@ import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore'
 import { ScientificContextPanel } from './components/ScientificContextPanel';
 import { SilentBoundary } from './components/SilentBoundary';
 import { ModuleNav } from './components/ModuleNav';
+import { formatExactNumber } from './utils/numberFormat';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
@@ -194,7 +195,7 @@ export default function App() {
       <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
         <div className="mk-content-header mb-5 border-b pb-5 pl-4"><p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-cyan-200">{activeWorkspace.label} / Active surface</p><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-semibold text-white">{activeModule.label}</h2><span title="Module maturity; this is not a validation claim for any result." className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span></div><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-200">{activeModule.description}</p></div>
         <details className="mb-5 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-3 text-xs">
-          <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {specimen.lpbf.laserPower_W} W / {specimen.lpbf.scanSpeed_mms} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
+          <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {formatExactNumber(specimen.lpbf.laserPower_W)} W / {formatExactNumber(specimen.lpbf.scanSpeed_mms)} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
         </details>
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
