@@ -59,7 +59,7 @@ export function createDebouncedLatestTask(options: {
       stopUnfinished();
       doneSignature = null;
       activeSignature = signature;
-      timer = setTimeout(() => start(signature), options.delayMs);
+      timer = setTimeout(() => start(signature), typeof options.delayMs === "function" ? options.delayMs() : options.delayMs);
     },
     runNow(signature) {
       stopUnfinished();
