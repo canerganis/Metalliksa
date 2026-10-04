@@ -45,14 +45,6 @@
     "label": "Toolpath & Kinematics",
     "scope": "Research",
     "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-    "next": "toolpath-thermal-map"
-  },
-  {
-    "id": "toolpath-thermal-map",
-    "workspace": "lpbf",
-    "label": "Toolpath Thermal Map",
-    "scope": "Preview",
-    "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
     "next": "industrial-certification"
   },
   {
@@ -85,14 +77,6 @@
     "label": "Multi-Laser Plume",
     "scope": "Research",
     "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-    "next": "thermal-accumulation"
-  },
-  {
-    "id": "thermal-accumulation",
-    "workspace": "lpbf",
-    "label": "Thermal Accumulation",
-    "scope": "Research",
-    "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
     "next": "keyhole-raytracing"
   },
   {

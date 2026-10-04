@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 25
+LEGACY_CEILING = 23
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
               "keyhole-raytracing", "ttt-cct-kinetics", "icme-motor", "uq-lab")

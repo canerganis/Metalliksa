@@ -191,7 +191,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-      "next": "toolpath-thermal-map",
+      "next": "industrial-certification",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -200,32 +200,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "LpbfToolpathStudioLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "toolpath-thermal-map",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Toolpath Thermal Map",
-      "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-      "next": "industrial-certification",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ToolpathThermalMapLab.tsx",
-        "export": "ToolpathThermalMapLab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -321,39 +295,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Multi-Laser Plume",
       "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-      "next": "thermal-accumulation",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/MultiLaserPlumeLab.tsx",
         "export": "MultiLaserPlumeLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "thermal-accumulation",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Thermal Accumulation",
-      "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiTrackThermalLab.tsx",
-        "export": "MultiTrackThermalLab"
       },
       "migrationState": "legacy",
       "evidence": {

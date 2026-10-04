@@ -55,19 +55,9 @@
     "label": "Toolpath & Kinematics",
     "scope": "Research",
     "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-    "next": "toolpath-thermal-map",
+    "next": "industrial-certification",
     "viewComponent": "src/components/LpbfToolpathStudioLab.tsx",
     "viewExport": "LpbfToolpathStudioLab"
-  },
-  {
-    "id": "toolpath-thermal-map",
-    "workspace": "lpbf",
-    "label": "Toolpath Thermal Map",
-    "scope": "Preview",
-    "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-    "next": "industrial-certification",
-    "viewComponent": "src/components/ToolpathThermalMapLab.tsx",
-    "viewExport": "ToolpathThermalMapLab"
   },
   {
     "id": "industrial-certification",
@@ -105,19 +95,9 @@
     "label": "Multi-Laser Plume",
     "scope": "Research",
     "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-    "next": "thermal-accumulation",
+    "next": "keyhole-raytracing",
     "viewComponent": "src/components/MultiLaserPlumeLab.tsx",
     "viewExport": "MultiLaserPlumeLab"
-  },
-  {
-    "id": "thermal-accumulation",
-    "workspace": "lpbf",
-    "label": "Thermal Accumulation",
-    "scope": "Research",
-    "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-    "next": "keyhole-raytracing",
-    "viewComponent": "src/components/MultiTrackThermalLab.tsx",
-    "viewExport": "MultiTrackThermalLab"
   },
   {
     "id": "keyhole-raytracing",

@@ -57,8 +57,8 @@ test('label prefix outranks word start, inner substring, id, workspace and descr
 });
 
 test('every token must match (AND); scattered letters match the label only, ranked below exact matches', () => {
-  assert.equal(ids('thermal map')[0], 'toolpath-thermal-map');
-  assert.ok(ids('thermal map').every(id => scorePaletteEntry(ENTRIES.find(e => e.id === id)!, 'map') !== null));
+  assert.equal(ids('ray tracing')[0], 'keyhole-raytracing');
+  assert.ok(ids('ray tracing').every(id => scorePaletteEntry(ENTRIES.find(e => e.id === id)!, 'tracing') !== null));
   assert.equal(ids('kyhl')[0], 'keyhole-raytracing', 'fuzzy subsequence on the label');
   assert.equal(scorePaletteEntry(entry('Keyhole'), 'kyhl')! < scorePaletteEntry(entry('Other', { description: 'kyhl' }), 'kyhl')!, true);
   assert.deepEqual(ids('zzqqxx'), []);
@@ -114,7 +114,7 @@ test('scattered matches are capped below every exact field match', () => {
 
 test('punctuation and symbols separate tokens; a query of only symbols lists everything', () => {
   assert.deepEqual(ids('ebsd/ct'), ids('ebsd ct'));
-  assert.equal(ids('thermal-map')[0], 'toolpath-thermal-map');
+  assert.equal(ids('ray-tracing')[0], 'keyhole-raytracing');
   assert.deepEqual(ids('&'), MODULES.map(module => module.id));
   assert.deepEqual(ids('кейхол'), [], 'letters outside the labels match nothing');
 });

@@ -179,10 +179,8 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
-    "toolpath-thermal-map": (_worker_op("toolpath-thermal-map"),),
     "industrial-certification": (_worker_op("industrial-fatigue"),),
     "multilaser-plume": (_worker_op("multilaser-plume"),),
-    "thermal-accumulation": (_worker_op("thermal-accumulation"),),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -424,7 +422,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "python/lpbf_keyhole_raytracing.py::_number",
                       "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
                       "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-                      "routes/lpbfSimulation.ts:37#/api/python/lpbf-keyhole-raytracing",
+                      "routes/lpbfSimulation.ts:36#/api/python/lpbf-keyhole-raytracing",
                       "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
                       "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
                       "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing",

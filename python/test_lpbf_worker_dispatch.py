@@ -6,8 +6,8 @@ import lpbf_worker_rpc
 
 # The method names served by the original if/elif chain in lpbf_worker.py (frozen literal; 29
 # until 2026-10-04, when experimental-validation, support-optimization, bayesian-optimizer,
-# transient-enthalpy-fdm, modulus-fno, powder-dem-compaction, transient-3d-gpu, stl-voxelize and
-# optical-tomography were deleted
+# transient-enthalpy-fdm, modulus-fno, powder-dem-compaction, transient-3d-gpu, stl-voxelize,
+# optical-tomography, toolpath-thermal-map and thermal-accumulation were deleted
 # with their routes/views).
 ORIGINAL_METHOD_NAMES = (
     "capabilities",
@@ -24,10 +24,8 @@ ORIGINAL_METHOD_NAMES = (
     "industrial-fatigue",
     "toolpath-kinematics",
     "fatigue-fracture",
-    "toolpath-thermal-map",
     "adaptive-feedforward",
     "multilaser-plume",
-    "thermal-accumulation",
     "keyhole-raytracing",
     "purge-unverified-artifacts",
 )
@@ -40,7 +38,7 @@ def original_method_names():
 class WorkerDispatchTest(unittest.TestCase):
     def test_original_method_list_is_complete(self):
         names = original_method_names()
-        self.assertEqual(len(names), 20)
+        self.assertEqual(len(names), 18)
         self.assertEqual(len(names), len(set(names)))
 
     def test_every_original_method_has_a_handler(self):

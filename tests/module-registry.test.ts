@@ -12,7 +12,7 @@ const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistr
 
 // Ratchet: Phase 7 step 0 generated one legacy contract per listed module. Migration may only
 // lower this number. Raising it needs an explicit edit here and maintainer review.
-const LEGACY_CEILING = 25;
+const LEGACY_CEILING = 23;
 
 test('contracts cover exactly the modules listed in workspaces.ts and legacy never grows', () => {
   const legacy = registry.contracts.filter(contract => contract.migrationState === 'legacy');

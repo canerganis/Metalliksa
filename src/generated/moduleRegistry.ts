@@ -649,7 +649,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-      "next": "toolpath-thermal-map",
+      "next": "industrial-certification",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -894,75 +894,6 @@ export const MODULE_REGISTRY = {
         "src/services/pythonComputationService.ts::simulateToolpathKinematics",
         "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "toolpath-thermal-map",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Toolpath Thermal Map",
-      "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-      "next": "industrial-certification",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ToolpathThermalMapLab.tsx",
-        "export": "ToolpathThermalMapLab"
-      },
-      "operations": [
-        {
-          "id": "toolpath-thermal-map",
-          "method": "POST",
-          "route": "/api/python/lpbf-toolpath-thermal-map",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "toolpath-thermal-map",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",
@@ -1444,7 +1375,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Multi-Laser Plume",
       "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-      "next": "thermal-accumulation",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1461,75 +1392,6 @@ export const MODULE_REGISTRY = {
             "kind": "lpbf-worker",
             "script": null,
             "workerMethod": "multilaser-plume",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "thermal-accumulation",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Thermal Accumulation",
-      "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiTrackThermalLab.tsx",
-        "export": "MultiTrackThermalLab"
-      },
-      "operations": [
-        {
-          "id": "thermal-accumulation",
-          "method": "POST",
-          "route": "/api/python/lpbf-thermal-accumulation",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "thermal-accumulation",
             "timeoutMs": 20000,
             "gpu": "none",
             "warm": false,
@@ -1877,7 +1739,7 @@ export const MODULE_REGISTRY = {
         "python/lpbf_keyhole_raytracing.py::_number",
         "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
         "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-        "routes/lpbfSimulation.ts:37#/api/python/lpbf-keyhole-raytracing",
+        "routes/lpbfSimulation.ts:36#/api/python/lpbf-keyhole-raytracing",
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
         "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
         "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing"

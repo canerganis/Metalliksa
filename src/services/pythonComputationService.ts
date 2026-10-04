@@ -675,31 +675,6 @@ class PythonComputationService {
     return res.json();
   }
 
-  // Phase 17: Multi-Track Thermal Accumulation & Inter-Pass Drift
-  async simulateThermalAccumulation(data: {
-    material: { name: string };
-    config?: {
-      laserPower_W?: number;
-      scanVelocity_mms?: number;
-      beamDiameter_um?: number;
-      hatchSpacing_um?: number;
-      trackLength_mm?: number;
-      numTracks?: number;
-      bedTemperature_K?: number;
-      turnaroundDelay_ms?: number;
-    };
-    mode?: "simulate" | "optimize";
-    maxAllowableDrift_K?: number;
-  }): Promise<any> {
-    const res = await fetch("/api/python/lpbf-thermal-accumulation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
   /**
    * Check whether the configured Python runtime is reachable
    */

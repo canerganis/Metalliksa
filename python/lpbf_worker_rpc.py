@@ -1,6 +1,5 @@
 """RPC dispatch table for the LPBF worker (method name -> handler)."""
 
-from four_alloy_materials import resolve_alloy_id, thermal_props, THERMAL_NAME
 from lpbf_evidence import resource_estimate
 from lpbf_simulation import validate
 from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
@@ -10,7 +9,6 @@ from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
 )
-from lpbf_thermal_accumulation import AlloyThermalProperties, HatchProcessConfig, MultiTrackThermalEngine
 from lpbf_toolpath_kinematics import LPBFToolpathParser, GalvanometerKinematicsEngine, ScannerProfile
 
 
@@ -105,21 +103,6 @@ def _rpc_fatigue_fracture(request):
     return data
 
 
-def _rpc_toolpath_thermal_map(request):
-    # Option 1 Toolpath 3D Viz
-    payload = request["payload"]
-    from lpbf_toolpath_thermal_api import generate_toolpath_thermal_map
-    alloy = payload.get("alloy", "IN718")
-    power = float(payload.get("power_W", 250))
-    speed = float(payload.get("speed_mms", 1000))
-    strategy = payload.get("strategy", "chessboard")
-    hatch = float(payload.get("hatch_um", 100))
-    angle = float(payload.get("angle_deg", 45))
-    island = float(payload.get("island_size_mm", 5.0))
-    data = generate_toolpath_thermal_map(alloy, power, speed, strategy, hatch, angle, island)
-    return data
-
-
 def _rpc_adaptive_feedforward(request):
     # Phase 15
     payload = request["payload"]
@@ -177,46 +160,6 @@ def _rpc_multilaser_plume(request):
     return data
 
 
-def _rpc_thermal_accumulation(request):
-    # Phase 17
-    payload = request["payload"]
-    mat_cfg = payload.get("material", {})
-    alloy_name = mat_cfg.get("name")
-    alloy_id = resolve_alloy_id(alloy_name)
-    if alloy_id is None:
-        raise ValueError("Unknown or missing alloy for thermal accumulation")
-    # Shared screening constants; this model uses IR absorptivity.
-    props = thermal_props(alloy_id)
-    mat = AlloyThermalProperties(
-        name=THERMAL_NAME[alloy_id],
-        density_kg_m3=props["density_kg_m3"],
-        specific_heat_J_kgK=props["specific_heat_J_kgK"],
-        thermal_conductivity_W_mK=props["thermal_conductivity_W_mK"],
-        absorptivity=props["absorptivity_IR"],
-        melting_temp_K=props["liquidus_C"] + 273.15,
-        boiling_temp_K=props["boiling_C"] + 273.15
-    )
-    hatch_cfg = payload.get("config", {})
-    cfg = HatchProcessConfig(
-        laser_power_W=float(hatch_cfg.get("laserPower_W", 280.0)),
-        scan_velocity_mm_s=float(hatch_cfg.get("scanVelocity_mms", 1000.0)),
-        beam_diameter_um=float(hatch_cfg.get("beamDiameter_um", 80.0)),
-        hatch_spacing_um=float(hatch_cfg.get("hatchSpacing_um", 100.0)),
-        track_length_mm=float(hatch_cfg.get("trackLength_mm", 10.0)),
-        num_tracks=int(hatch_cfg.get("numTracks", 10)),
-        bed_temperature_K=float(hatch_cfg.get("bedTemperature_K", 353.15)),
-        turnaround_delay_ms=float(hatch_cfg.get("turnaroundDelay_ms", 0.5))
-    )
-    engine = MultiTrackThermalEngine(mat)
-    mode = payload.get("mode", "simulate")
-    if mode == "optimize":
-        allowable_drift = float(payload.get("maxAllowableDrift_K", 120.0))
-        data = engine.optimize_dwell_delays(cfg, max_allowable_drift_K=allowable_drift)
-    else:
-        data = engine.simulate_hatch_sequence(cfg)
-    return data
-
-
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -231,10 +174,8 @@ RESEARCH_HANDLERS = {
     "industrial-fatigue": _rpc_industrial_fatigue,
     "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
-    "toolpath-thermal-map": _rpc_toolpath_thermal_map,
     "adaptive-feedforward": _rpc_adaptive_feedforward,
     "multilaser-plume": _rpc_multilaser_plume,
-    "thermal-accumulation": _rpc_thermal_accumulation,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }
 
