@@ -57,8 +57,8 @@ Coverage includes a no-op rehashed positive control; distinct forged validation,
 | `git diff --check -- server/lpbfRunRepository.ts server/lpbfRunBundle.ts server/lpbfRunBundleService.ts server/lpbfNistProxyCampaignService.ts server/lpbfProxyCampaignBinding.ts src/services/lpbfRunArchiveClient.ts python/lpbf_nist_proxy_campaign.py python/test_lpbf_nist_proxy_campaign.py tests/lpbf-run-repository.test.ts tests/lpbf-run-bundle.test.ts tests/lpbf-run-bundle-api.test.ts tests/lpbf-nist-comparison-api.test.ts tests/lpbf-run-proxy-campaign-client.test.ts` | `67d4a4acb6c4e09c0b25700281538e6ad3a10e81` | 0; no whitespace errors |
 | `git diff --cached --check` (before implementation commit 1) | `67d4a4acb6c4e09c0b25700281538e6ad3a10e81` | 0; no output |
 | `git diff --cached --check` (before implementation commit 2) | `5a1dffde07ef729367005a9f8d02d1876be64ab1` | 0; no output |
-| `git diff --check -- .orchestra/HANDOFF-contract-fix3.md` | `01eb3f0` (outer workspace repo) | 0; no output |
-| `git diff --cached --check` (handoff commit) | `01eb3f0` (outer workspace repo) | 0; no output |
+| `git diff --check -- .orchestra/HANDOFF-contract-fix3.md` | `01eb3f0f4c7a24aeff9b2177632cf28884323bbc` (outer workspace repo) | 0; no output |
+| `git diff --cached --check` (handoff commit) | `01eb3f0f4c7a24aeff9b2177632cf28884323bbc` (outer workspace repo) | 0; no output |
 
 ### Post-commit acceptance
 
