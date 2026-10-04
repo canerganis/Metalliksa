@@ -1,6 +1,6 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useEscapeToClose } from "./AccessibleModal";
+import { AccessibleModal } from "./AccessibleModal";
 import {
   Upload,
   FileText,
@@ -136,7 +136,6 @@ export function EISUploadInsightsStudio({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
-  useEscapeToClose(isPasteModalOpen, () => setIsPasteModalOpen(false));
   const [pastedText, setPastedText] = useState<string>("");
   const [pastedFilename, setPastedFilename] = useState<string>("clipboard_eis.csv");
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
@@ -1494,8 +1493,13 @@ ${(analysisResult.engineeringInsights || [])
 
       {/* 5. Paste Raw Data Modal */}
       {isPasteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div role="dialog" aria-modal="true" aria-label="Paste impedance data" className="bg-[#0b1320] border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+        <AccessibleModal
+          open
+          onClose={() => setIsPasteModalOpen(false)}
+          label="Paste impedance data"
+          overlayClassName="bg-black/80 backdrop-blur-sm p-4"
+          panelClassName="bg-[#0b1320] border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl"
+        >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-mono font-bold text-white flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-400" />
@@ -1552,8 +1556,7 @@ ${(analysisResult.engineeringInsights || [])
                 Parse &amp; Analyze Dataset
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

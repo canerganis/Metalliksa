@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
-import { useEscapeToClose } from "./AccessibleModal";
+import { AccessibleModal } from "./AccessibleModal";
 import {
   Upload,
   FileText,
@@ -60,7 +60,6 @@ export function EISLabDataUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [isPasteOpen, setIsPasteOpen] = useState<boolean>(false);
-  useEscapeToClose(isPasteOpen, () => setIsPasteOpen(false));
   const [pastedText, setPastedText] = useState<string>("");
   const [pastedName, setPastedName] = useState<string>(`${domain}_lab_eis.csv`);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -505,8 +504,13 @@ export function EISLabDataUploader({
 
       {/* Paste Modal */}
       {isPasteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div role="dialog" aria-modal="true" aria-label="Paste impedance data" className="bg-[#090e18] border border-[#1e2d46] rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-2xl">
+        <AccessibleModal
+          open
+          onClose={() => setIsPasteOpen(false)}
+          label="Paste impedance data"
+          overlayClassName="p-4 bg-black/80 backdrop-blur-sm"
+          panelClassName="bg-[#090e18] border border-[#1e2d46] rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-2xl"
+        >
             <div className="flex items-center justify-between border-b border-[#162032] pb-3">
               <div className="flex items-center gap-2">
                 <Clipboard className="w-4 h-4 text-sky-400" />
@@ -566,8 +570,7 @@ export function EISLabDataUploader({
                 <span>Parse &amp; Ingest</span>
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );
