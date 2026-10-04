@@ -69,7 +69,6 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         lpbf.layer_um,
         {
           peakIntensity_MW_cm2: thermal?.processParameters.peakIntensity_MW_cm2,
-          normalizedEnthalpy: thermal?.processParameters.normalizedEnthalpy,
           beamDiameter_um: lpbf.beamDiameter_um,
         }
       ),
@@ -81,7 +80,6 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
       lpbf.layer_um,
       lpbf.beamDiameter_um,
       thermal?.processParameters.peakIntensity_MW_cm2,
-      thermal?.processParameters.normalizedEnthalpy,
     ]
   );
 

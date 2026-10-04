@@ -111,9 +111,14 @@ export interface LiteratureMatch {
   distance: number;
 }
 
+/**
+ * Live quantities used to rank literature records. Normalized enthalpy is deliberately absent:
+ * the live ΔH/h_s is Python's (rho Cp (T_liq - T_preheat), powder-bed absorptivity) and records
+ * carry no comparable Python value, so mixing the two in one distance is not done (B5 step 1).
+ * Peak intensity has the same definition on both sides (8P/(pi d^2)).
+ */
 export interface LiteratureLiveDerived {
   peakIntensity_MW_cm2?: number;
-  normalizedEnthalpy?: number;
   beamDiameter_um?: number;
 }
 
@@ -180,7 +185,6 @@ function nearestInPool(
   live?: LiteratureLiveDerived
 ): LiteratureMatch | null {
   const liveI0 = livePeakIntensity(power_W, live);
-  const liveDh = live?.normalizedEnthalpy;
   let best: LiteratureMatch | null = null;
   for (const record of pool) {
     const p = record.params;
@@ -193,10 +197,6 @@ function nearestInPool(
     const recI0 = p.derived?.peakLaserIntensity_MW_cm2;
     if (liveI0 != null && recI0 != null && recI0 > 0) {
       distance += Math.abs(recI0 - liveI0) / Math.max(1, liveI0);
-    }
-    const recDh = p.derived?.normalizedEnthalpy_dH_hs;
-    if (liveDh != null && recDh != null && recDh > 0) {
-      distance += Math.abs(recDh - liveDh) / Math.max(1, liveDh);
     }
 
     if (!best || distance < best.distance) {
