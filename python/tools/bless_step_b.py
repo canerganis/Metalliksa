@@ -9,8 +9,8 @@ solver into ``python/golden/phase6a/<solver>/step_b/<case>.json``:
 
 - the case is run from the working tree exactly like the regression test does
   (capture_phase6a_golden.run_solver with the CASES payload);
-- behaviour-change cases (EXPECTED_BEHAVIOUR_CHANGES, EXPECTED_SUCCESS_FLAG_CHANGES)
-  and cases that now give the validation envelope (exit 2) are skipped;
+- behaviour-change cases (EXPECTED_BEHAVIOUR_CHANGES, EXPECTED_SUCCESS_FLAG_CHANGES,
+  EXPECTED_UNAVAILABLE_CHANGES) and cases that now give the validation envelope (exit 2) are skipped;
 - the drift against the d33b6f5 golden must pass capture_phase6a_golden.step_b_violations
   (numeric rows only, plus changed pythonCode strings; |rel| bounded per solver; rows
   listed in EXPECTED_DOCUMENTED_VALUE_CHANGES are instead checked exactly against the
@@ -56,7 +56,7 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
     for case, payload in golden.CASES[solver].items():
         if (solver, case) in excluded:
             log.append(f"skip {solver}/{case}: behaviour change (EXPECTED_BEHAVIOUR_CHANGES / "
-                       f"EXPECTED_SUCCESS_FLAG_CHANGES), never re-blessed")
+                       f"EXPECTED_SUCCESS_FLAG_CHANGES / EXPECTED_UNAVAILABLE_CHANGES), never re-blessed")
             continue
         base = golden.load_golden(solver, case)
         previous = golden.load_expected(solver, case)

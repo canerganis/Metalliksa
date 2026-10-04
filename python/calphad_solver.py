@@ -1,25 +1,38 @@
 #!/usr/bin/env python3
 """
-MetalliX True CALPHAD Multi-Component Gibbs Free Energy Minimization Engine
-Powered by pycalphad and Open-Source Thermodynamic Databases (TDB)
+MetalliX CALPHAD multi-component Gibbs free energy minimisation (pycalphad)
 
-Directly connects to pycalphad and curated open-source thermodynamic databases:
- - COST 507 Light Alloys (29 components: Al-Mg-Si-Cu-Zn-Ti-Fe-Ni-Cr-Zr...)
- - Al-Co-Cr-Ni Superalloys & High-Entropy Alloys (Dupin / Saunders assessment)
- - Multi-Component Fe-Co-Cr-Nb-Ti Superalloys & HEAs
- - NIST / Dupin Al-Ni Benchmark (gamma, gamma-prime, B2, liquid)
- - Fe-Cr-Ni Austenitic & Ferritic Stainless Steels
- - Ghosh Cr-Ti-V Aerospace Titanium Systems
- - Al-Fe, Al-Cu-Y, and Al-Mg Specialized Assessments
+pycalphad is REQUIRED. The solver never substitutes a non-thermodynamic model: when
+pycalphad is not installed, when a requested element is absent from the selected
+database, when the selected database is a pycalphad test fixture, or when the
+equilibrium calculation fails, it returns success false with status "unavailable",
+an unavailableKind and a reason (exit code 0; the request itself was well formed).
+The former empirical "sub-regular" fallback (wt%-linear liquidus correlations,
+sqrt/power-law phase fractions, ln gamma = -0.45 (1 - x), reported with
+isEmpirical false) was removed: it was not a Gibbs minimisation and failed the
+Gibbs-Duhem relation.
 
-Capabilities:
- 1. Genuine Gibbs Free Energy Minimization (CEF / Redlich-Kister sub-regular solutions).
- 2. True Thermodynamic Chemical Potentials (MU) and Activities (a_i = exp(mu_i / RT)).
- 3. Exact Multi-Phase Constitution across Temperature Sweeps.
- 4. Tie-Line Solute Partitioning Coefficients (k_i = X_i^ppt / X_i^matrix) directly from equilibrium phase compositions.
- 5. Non-Equilibrium Gulliver-Scheil Solidification using thermodynamic tie-line partition coefficients.
- 6. Exact Solvus, Liquidus, Solidus, and Transformation Boundaries (zero empirical linear regression).
- 7. New-PHACOMP Electron Hole Number (N_v) and d-orbital energy (M_d) TCP embrittlement analysis.
+What a successful pycalphad run computes:
+ 1. Gibbs free energy minimisation (pycalphad equilibrium, compound-energy formalism)
+    on a temperature grid at fixed composition and 1 atm.
+ 2. Chemical potentials (MU) and activities a_i = exp(mu_i / RT).
+ 3. Phase constitution (phase names, fractions, phase compositions) per temperature.
+ 4. New-PHACOMP Nv / Md screening (tabulated values; unlisted elements use 1.0).
+
+Post-processing that is NOT a calculated CALPHAD result is flagged, not hidden
+(see criticalTemperatureStatus, solutePartitioning[].partitionCoefficientSource and
+multiElementScheilStatus in the output):
+ - liquidus: first grid temperature with liquid >= 98 % (grid resolution only);
+ - solidus: only when the grid hit a trace-liquid point; unavailable when the
+   solver reached the grid bound (the former value was the lowest grid temperature);
+ - gamma-prime solvus: unavailable, the L1_2 model phase also describes the
+   disordered gamma and no site-fraction ordering check exists;
+ - the Scheil-style curve and the default partition coefficients are screening
+   numbers, not thermodynamic results.
+
+Databases: python/databases holds pycalphad test files next to a few real
+assessments. Test fixtures (file header or catalogue flag) are refused; the catalogue
+marks each entry as "assessment" or "test-fixture".
 """
 
 import sys
@@ -27,9 +40,10 @@ import os
 import glob
 import json
 import math
+import re
 import time
 import warnings
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Set, Tuple
 
 # Suppress benign pycalphad TDB syntax warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -37,6 +51,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # Test pycalphad availability
 PYCALPHAD_AVAILABLE = False
 PYCALPHAD_VERSION = "Not installed"
+PYCALPHAD_IMPORT_ERROR: Optional[str] = None
 try:
     import pycalphad
     from pycalphad import Database, equilibrium, variables as v
@@ -45,7 +60,7 @@ try:
     PYCALPHAD_VERSION = pycalphad.__version__
 except Exception as e:
     PYCALPHAD_AVAILABLE = False
-    PYCALPHAD_VERSION = str(e)
+    PYCALPHAD_IMPORT_ERROR = str(e)
 
 import physical_constants
 from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
@@ -103,68 +118,94 @@ PHACOMP_DATA = {
     "B":  {"Nv": 0.00, "Md": 0.000},
 }
 
-# Curated metadata registry for Open TDB databases
+# Database status values of OPEN_TDB_CATALOG entries.
+DB_STATUS_ASSESSMENT = "assessment"
+DB_STATUS_TEST_FIXTURE = "test-fixture"
+
+# Curated metadata registry of the TDB files in python/databases that this solver may use.
+# "elements" is the ELEMENT list of the file itself (checked by test_calphad_honesty).
+# Only entries with status "assessment" are usable; a "test-fixture" entry is refused
+# (unavailableKind "database-test-fixture"): those files are pycalphad test inputs, not
+# thermodynamic assessments, and a result computed from them must not be shown as one.
 OPEN_TDB_CATALOG = [
     {
         "id": "alcocrni",
         "fileName": "alcocrni.tdb",
-        "name": "Al-Co-Cr-Ni Superalloys & High-Entropy Alloys",
-        "description": "Multi-component thermodynamic database for Ni-base superalloys and Al-Co-Cr-Ni HEAs. Covers FCC matrix (gamma), L1_2 (gamma-prime), BCC, B2, and TCP Sigma phase.",
+        "name": "Al-Co-Cr-Ni test database (pycalphad test fixture, refused)",
+        "description": "File header: 'FOR TESTING PURPOSES ONLY -- NOT FOR RESEARCH' (CRALDAD version 1, combined from four ternaries). Its L12_FCC phase is the ordered/disordered FCC model phase, not a verified gamma-prime. Not an assessment.",
         "elements": ["AL", "CO", "CR", "NI"],
         "primaryPhases": ["FCC_A1", "L12_FCC", "LIQUID", "BCC_A2", "BCC_B2", "SIGMA_SGTE"],
-        "source": "Open CALPHAD Al-Co-Cr-Ni assessment (Saunders, Dupin)",
-        "suitability": "Ni-base superalloys, Co-base superalloys, HEAs"
+        "source": "File header: FOR TESTING PURPOSES ONLY -- NOT FOR RESEARCH",
+        "suitability": "None: test fixture, not an assessment",
+        "status": DB_STATUS_TEST_FIXTURE,
+        "usable": False,
+        "statusReason": "file header: 'FOR TESTING PURPOSES ONLY -- NOT FOR RESEARCH'",
     },
     {
         "id": "cost507",
         "fileName": "COST507.tdb",
         "name": "COST 507 Comprehensive Light Alloys Database",
-        "description": "The official European COST Action 507 thermodynamic database containing 29 components and 243 phases for Al, Mg, Ti, Cu, Si, Zn, Fe, Ni alloys.",
+        "description": "The European COST Action 507 thermodynamic database (round II, 1999) with 29 components and 243 phases for Al, Mg, Ti, Cu, Si, Zn, Fe, Ni alloys.",
         "elements": ["AL", "MG", "SI", "CU", "ZN", "TI", "FE", "NI", "CR", "MN", "ZR", "V", "C", "B", "LI", "O", "N", "MO", "NB", "TA", "W", "HF", "Y", "CE", "ND", "SN", "AR"],
         "primaryPhases": ["FCC_A1", "HCP_A3", "LIQUID", "DIAMOND_A4", "MG2SI", "AL12MG17", "ALMG_BETA", "ALCU_THETA", "ALTI"],
-        "source": "COST Action 507 Thermochemical Database for Light Alloys",
-        "suitability": "Aluminum, Magnesium, and Light Aerospace Alloys"
+        "source": "COST Action 507 Thermochemical Database for Light Alloys (file obtained from opencalphad.com)",
+        "suitability": "Light-metal alloys (Al, Mg, Ti); validity for Ni- or Fe-base alloys is not established",
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
     },
     {
         "id": "mc_fecocrnbti",
         "fileName": "mc_fecocrnbti.tdb",
-        "name": "Multi-Component Fe-Co-Cr-Nb-Ti Superalloys & Steels",
-        "description": "High-order multi-component thermodynamic database for complex Fe-Co-Cr-Nb-Ti-Mo-V-Al-W systems, Laves phases, carbides, and austenitic matrices.",
-        "elements": ["FE", "CO", "CR", "NB", "TI", "MO", "V", "AL", "W", "NI", "C", "B", "SI", "MN", "CU"],
+        "name": "Reduced Matcalc-derived Fe-Co-Cr-Nb-Ti database (pycalphad test fixture, refused)",
+        "description": "File header: derived from the Matcalc steel database 2.060 (ODbL); 'Only Fe-Co-Cr-Nb-Ti parameters retained (for performance in test)'. A reduced file kept for tests, not an assessment of the alloys it names.",
+        "elements": ["AL", "B", "C", "CO", "CR", "CU", "FE", "H", "HF", "LA", "MN", "MO", "N", "NB", "NI", "O", "P", "PD", "S", "SI", "TI", "V", "W", "Y"],
         "primaryPhases": ["FCC_A1", "BCC_A2", "LIQUID", "LAVES_C14", "LAVES_C15", "M23C6", "MC_SHP"],
-        "source": "Open CALPHAD High-Entropy Alloy & Refractory Assessment",
-        "suitability": "Complex Multi-Component Superalloys (Inconel 718, Haynes, Steels)"
+        "source": "File header: Matcalc steel database 2.060 (ODbL), reduced for pycalphad test performance",
+        "suitability": "None: test fixture, not an assessment",
+        "status": DB_STATUS_TEST_FIXTURE,
+        "usable": False,
+        "statusReason": "file header: 'Only Fe-Co-Cr-Nb-Ti parameters retained (for performance in test)'",
     },
     {
         "id": "alni_dupin_2001",
         "fileName": "alni_dupin_2001.tdb",
         "name": "Al-Ni Dupin 2001 Benchmark (NIST/SGTE)",
-        "description": "The standard benchmark assessment of the Al-Ni system featuring ordered FCC_L12 (gamma-prime), FCC_A1 (gamma matrix), BCC_B2, and intermetallics.",
+        "description": "The Al-Ni assessment of Dupin, Ansara and Sundman with ordered FCC_L12, FCC_A1, BCC_B2 and intermetallics.",
         "elements": ["AL", "NI"],
         "primaryPhases": ["FCC_A1", "FCC_L12", "LIQUID", "BCC_A2", "BCC_B2", "AL3NI1", "AL3NI2", "AL3NI5"],
         "source": "Dupin, Ansara, Sundman, Calphad 25 (2001) 279-298",
-        "suitability": "Model binary Ni-Al gamma/gamma-prime thermodynamic validation"
+        "suitability": "Binary Al-Ni only",
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
     },
     {
         "id": "cr_fe_ni",
         "fileName": "Cr-Fe-Ni_shallow_bcc.tdb",
-        "name": "Cr-Fe-Ni Austenitic & Ferritic Steels",
-        "description": "Thermodynamic database for 300-series austenitic stainless steels and duplex stainless steels.",
-        "elements": ["FE", "CR", "NI"],
-        "primaryPhases": ["FCC_A1", "BCC_A2", "LIQUID"],
-        "source": "SGTE Steel Assessment",
-        "suitability": "Stainless Steels (316L, 304, Duplex)"
+        "name": "Cr-Fe-Ni minimal file (pycalphad test fixture, refused)",
+        "description": "One phase only (BCC_A2 over Cr, Fe, Ni): no FCC and no LIQUID, so it cannot represent a stainless steel. No assessment reference in the file; its name and size identify it as a minimal pycalphad test input.",
+        "elements": ["CR", "FE", "NI"],
+        "primaryPhases": ["BCC_A2"],
+        "source": "No assessment reference in the file; minimal test input (one phase)",
+        "suitability": "None: test fixture, not an assessment",
+        "status": DB_STATUS_TEST_FIXTURE,
+        "usable": False,
+        "statusReason": "catalogue flag: single-phase minimal test input (BCC_A2 only, no FCC, no LIQUID)",
     },
     {
         "id": "crtiv_ghosh",
         "fileName": "crtiv_ghosh.tdb",
-        "name": "Cr-Ti-V Aerospace Titanium Assessment",
-        "description": "Thermodynamic database for beta/near-beta and alpha/beta titanium alloys.",
+        "name": "Cr-Ti-V Assessment (Ghosh)",
+        "description": "Thermodynamic assessment of the ternary Cr-Ti-V system (TDB written by T. Abe and T. Bolotova, NIMS, 2014). Contains no Al.",
         "elements": ["TI", "CR", "V"],
         "primaryPhases": ["HCP_A3", "BCC_A2", "LIQUID"],
-        "source": "G. Ghosh Titanium Assessment",
-        "suitability": "Titanium Aerospace Alloys (Ti-6Al-4V, Beta-C, Ti-5553)"
-    }
+        "source": "Cr-Ti-V assessment (G. Ghosh), TDB file by T. Abe and T. Bolotova (NIMS)",
+        "suitability": "Cr-Ti-V only; commercial Ti alloys such as Ti-6Al-4V contain Al and are not covered",
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
+    },
 ]
 
 
@@ -179,7 +220,9 @@ def list_available_databases() -> Dict[str, Any]:
         "engine": "pycalphad-open-tdb",
         "pycalphadAvailable": PYCALPHAD_AVAILABLE,
         "pycalphadVersion": PYCALPHAD_VERSION,
+        "unavailableReason": None if PYCALPHAD_AVAILABLE else UNAVAILABLE_REASON_PYCALPHAD,
         "databasesCount": len(OPEN_TDB_CATALOG),
+        "usableDatabasesCount": sum(1 for e in OPEN_TDB_CATALOG if e["usable"]),
         "databases": OPEN_TDB_CATALOG,
         "installedFiles": installed_files
     }
@@ -232,66 +275,227 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     return wt_pct, at_frac
 
 
-def select_best_open_tdb(elements: List[str], preferred_id: Optional[str] = None) -> Tuple[str, str]:
-    """
-    Selects the optimal thermodynamic database matching the alloy composition.
-    Returns (tdb_file_path, catalog_entry_name).
-    """
-    upper_elems = [e.upper() for e in elements if e.upper() not in ["VA", "/-"]]
+# --------------------------------------------------------------------------- unavailable results
+UNAVAILABLE_REASON_PYCALPHAD = "pycalphad not installed"
+KIND_PYCALPHAD_MISSING = "pycalphad-not-installed"
+KIND_TEST_FIXTURE = "database-test-fixture"
+KIND_ELEMENTS_MISSING = "elements-missing-from-database"
+KIND_NO_DATABASE_COVERS = "no-database-covers-elements"
+KIND_UNKNOWN_DATABASE = "unknown-database-id"
+KIND_DATABASE_FILE_MISSING = "database-file-missing"
+KIND_DATABASE_LOAD_FAILED = "database-load-failed"
+KIND_SINGLE_COMPONENT = "fewer-than-two-components"
+KIND_EQUILIBRIUM_FAILED = "pycalphad-equilibrium-failed"
 
-    # Check preferred ID
+
+class CalphadUnavailable(Exception):
+    """Raised inside the pycalphad path for a condition that makes the request unanswerable."""
+
+    def __init__(self, kind: str, reason: str, **extra: Any):
+        super().__init__(reason)
+        self.kind = kind
+        self.reason = reason
+        self.extra = extra
+
+
+def unavailable_result(
+    kind: str,
+    reason: str,
+    *,
+    name: str,
+    wt_pct: dict,
+    at_frac: dict,
+    t_min_c: float,
+    t_max_c: float,
+    t_step_c: float,
+    reasons: Optional[List[str]] = None,
+    **extra: Any
+) -> Dict[str, Any]:
+    """The explicit "no CALPHAD result" envelope: success false, status "unavailable".
+
+    It carries no equilibriumProfile, no critical temperatures and no isEmpirical flag
+    (there is no number to label). ``reason`` is the first reason; ``reasons`` lists all.
+    """
+    out: Dict[str, Any] = {
+        "success": False,
+        "status": "unavailable",
+        "unavailableKind": kind,
+        "reason": reason,
+        "reasons": list(reasons) if reasons else [reason],
+        "engine": "pycalphad-open-tdb",
+        "pycalphadAvailable": PYCALPHAD_AVAILABLE,
+        "pycalphadVersion": PYCALPHAD_VERSION if PYCALPHAD_AVAILABLE else None,
+        "alloyName": name,
+        "nominalComposition": wt_pct,
+        "atomicFractions": at_frac,
+        "requestedElements": list(at_frac.keys()),
+        "temperatureRangeC": [t_min_c, t_max_c],
+        "temperatureStepC": t_step_c,
+    }
+    out.update(extra)
+    return out
+
+
+# --------------------------------------------------------------------------- database resolution
+_TDB_ELEMENT_CACHE: Dict[str, Set[str]] = {}
+
+# Header lines (comments, first lines of a file) that mark a pycalphad test input.
+_FIXTURE_HEADER_MARKERS = (
+    "FOR TESTING PURPOSES ONLY",
+    "NOT FOR RESEARCH",
+    "FOR PERFORMANCE IN TEST",
+)
+_HEADER_LINES_SCANNED = 40
+
+
+def tdb_elements_from_text(text: str) -> Set[str]:
+    """Element symbols of a TDB text, from its ELEMENT commands (no pycalphad needed).
+
+    '$' starts a comment; a command ends at '!'. VA and the electron gas '/-' are not
+    elements of the alloy and are dropped. test_calphad_honesty checks this parser
+    against pycalphad's Database.elements for every catalogue file.
+    """
+    out: Set[str] = set()
+    for line in text.splitlines():
+        code = line.split("$", 1)[0]
+        for command in code.split("!"):
+            m = re.match(r"\s*EL(?:EM(?:ENT)?)?\s+(\S+)", command, re.IGNORECASE)
+            if m:
+                sym = m.group(1).upper()
+                if sym not in ("VA", "/-"):
+                    out.add(sym)
+    return out
+
+
+def tdb_file_elements(path: str) -> Set[str]:
+    if path not in _TDB_ELEMENT_CACHE:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            _TDB_ELEMENT_CACHE[path] = tdb_elements_from_text(fh.read())
+    return set(_TDB_ELEMENT_CACHE[path])
+
+
+def database_fixture_reason(entry: Optional[dict], path: Optional[str]) -> Optional[str]:
+    """Why a database file is a pycalphad test fixture, or None.
+
+    Two independent checks: the catalogue status, and the comment header of the file
+    itself (so a test file is still refused if the catalogue entry is ever edited).
+    """
+    if entry is not None and entry.get("status") == DB_STATUS_TEST_FIXTURE:
+        return entry.get("statusReason") or "catalogue marks it as a test fixture"
+    if path and os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                head = [next(fh, "") for _ in range(_HEADER_LINES_SCANNED)]
+        except OSError:
+            return None
+        for line in head:
+            stripped = line.strip()
+            if not stripped.startswith("$"):
+                continue
+            upper = stripped.upper()
+            for marker in _FIXTURE_HEADER_MARKERS:
+                if marker in upper:
+                    return f"file header: {stripped.lstrip('$ ').strip()!r}"
+    return None
+
+
+def _entry_by_id(preferred_id: str) -> Optional[dict]:
+    for entry in OPEN_TDB_CATALOG:
+        if entry["id"] == preferred_id or entry["fileName"] == preferred_id:
+            return entry
+    return None
+
+
+def _missing(requested: List[str], db_elements: Set[str]) -> List[str]:
+    return [el for el in requested if el.upper() not in db_elements]
+
+
+def resolve_database(
+    requested: List[str],
+    preferred_id: Optional[str] = None,
+    custom_tdb_text: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Choose the thermodynamic database for ``requested`` element symbols, or refuse.
+
+    Rules (no heuristics on element order, no silent substitution, no dropped element):
+      * custom TDB text: used as given (status "user-supplied"); refused when it lacks a
+        requested element;
+      * a databaseId: that catalogue entry only; refused when it is unknown, a test
+        fixture, missing on disk or lacking a requested element;
+      * otherwise: the usable (status "assessment") catalogue database with the fewest
+        elements that contains every requested element; refused when none does.
+
+    Returns {"ok": True, "path", "name", "id", "status", "suitability", "elements"} or
+    {"ok": False, "kind", "reason", "extra"}. Needs no pycalphad.
+    """
+    if custom_tdb_text:
+        elems = tdb_elements_from_text(custom_tdb_text)
+        missing = _missing(requested, elems)
+        if missing:
+            return {"ok": False, "kind": KIND_ELEMENTS_MISSING,
+                    "reason": f"element(s) {', '.join(missing)} not in the supplied TDB text; "
+                              f"refusing to drop them and renormalise",
+                    "extra": {"missingElements": missing, "databaseId": "custom",
+                              "databaseUsed": "User-supplied TDB text", "databaseStatus": "user-supplied"}}
+        return {"ok": True, "path": "", "name": "User-supplied TDB text", "id": "custom",
+                "status": "user-supplied", "suitability": "Not verified (user-supplied)",
+                "elements": elems}
+
     if preferred_id:
-        for entry in OPEN_TDB_CATALOG:
-            if entry["id"] == preferred_id or entry["fileName"] == preferred_id:
-                p = os.path.join(DATABASES_DIR, entry["fileName"])
-                if os.path.exists(p):
-                    return p, entry["name"]
+        entry = _entry_by_id(preferred_id)
+        if entry is None:
+            return {"ok": False, "kind": KIND_UNKNOWN_DATABASE,
+                    "reason": f"unknown databaseId {preferred_id!r}; known ids: "
+                              f"{', '.join(e['id'] for e in OPEN_TDB_CATALOG)}",
+                    "extra": {"databaseId": preferred_id}}
+        candidates = [entry]
+    else:
+        candidates = sorted((e for e in OPEN_TDB_CATALOG if e["usable"]), key=lambda e: len(e["elements"]))
 
-    # 1. Check Al-Co-Cr-Ni HEA/superalloy database
-    alcocrni_set = {"AL", "CO", "CR", "NI"}
-    if set(upper_elems).issubset(alcocrni_set) or (all(e in alcocrni_set for e in upper_elems[:3]) and "NI" in upper_elems):
-        p = os.path.join(DATABASES_DIR, "alcocrni.tdb")
-        if os.path.exists(p):
-            return p, "Al-Co-Cr-Ni Superalloys & HEAs (Saunders/Dupin)"
+    considered = []
+    best = None  # usable candidate with the fewest missing elements (ties: the narrower file)
+    for entry in candidates:
+        path = os.path.join(DATABASES_DIR, entry["fileName"])
+        if not os.path.exists(path):
+            if preferred_id:
+                return {"ok": False, "kind": KIND_DATABASE_FILE_MISSING,
+                        "reason": f"database file {entry['fileName']} is not installed",
+                        "extra": {"databaseId": entry["id"], "databaseUsed": entry["name"]}}
+            considered.append({"databaseId": entry["id"], "status": "file-missing"})
+            continue
+        fixture = database_fixture_reason(entry, path)
+        if fixture:
+            return {"ok": False, "kind": KIND_TEST_FIXTURE,
+                    "reason": f"database {entry['id']!r} is a pycalphad test fixture, not a thermodynamic "
+                              f"assessment ({fixture}); refused",
+                    "extra": {"databaseId": entry["id"], "databaseUsed": entry["name"],
+                              "databaseStatus": DB_STATUS_TEST_FIXTURE}}
+        elems = tdb_file_elements(path)
+        missing = _missing(requested, elems)
+        if not missing:
+            return {"ok": True, "path": path, "name": entry["name"], "id": entry["id"],
+                    "status": entry["status"], "suitability": entry["suitability"], "elements": elems}
+        considered.append({"databaseId": entry["id"], "status": entry["status"], "missingElements": missing})
+        if preferred_id:
+            return {"ok": False, "kind": KIND_ELEMENTS_MISSING,
+                    "reason": f"element(s) {', '.join(missing)} not in database {entry['name']!r}; "
+                              f"refusing to drop them and renormalise",
+                    "extra": {"missingElements": missing, "databaseId": entry["id"],
+                              "databaseUsed": entry["name"], "databaseStatus": entry["status"]}}
+        if best is None or len(missing) < len(best[1]):
+            best = (entry, missing)
 
-    # 2. Check Al-Ni Dupin
-    if set(upper_elems).issubset({"AL", "NI"}):
-        p = os.path.join(DATABASES_DIR, "alni_dupin_2001.tdb")
-        if os.path.exists(p):
-            return p, "Al-Ni Dupin 2001 Benchmark (NIST/SGTE)"
-
-    # 3. Check Light Alloys (COST 507) - very comprehensive for Al, Mg, Ti, Cu, Si, Zn, Fe, etc.
-    cost_set = {"AL", "MG", "SI", "CU", "ZN", "TI", "FE", "NI", "CR", "MN", "ZR", "V", "C", "B", "LI", "MO", "NB"}
-    if "AL" in upper_elems and (upper_elems[0] == "AL" or "MG" in upper_elems or "SI" in upper_elems):
-        p = os.path.join(DATABASES_DIR, "COST507.tdb")
-        if os.path.exists(p):
-            return p, "COST 507 Comprehensive Light Alloys Database"
-
-    # 4. Check Titanium Ghosh database
-    ti_set = {"TI", "CR", "V"}
-    if set(upper_elems).issubset(ti_set) or (upper_elems[0] == "TI" and not any(e in upper_elems for e in ["NI", "CO"])):
-        p = os.path.join(DATABASES_DIR, "crtiv_ghosh.tdb")
-        if os.path.exists(p):
-            return p, "Ghosh Cr-Ti-V Aerospace Titanium Assessment"
-
-    # 5. Check Multi-Component Fe-Co-Cr-Nb-Ti database (supports Fe, Co, Cr, Nb, Ti, Mo, V, Al, W, Ni, C, etc.)
-    mc_set = {"FE", "CO", "CR", "NB", "TI", "MO", "V", "AL", "W", "NI", "C", "B", "SI", "MN", "CU"}
-    overlap = len(set(upper_elems).intersection(mc_set))
-    if overlap >= len(upper_elems) * 0.75:
-        p = os.path.join(DATABASES_DIR, "mc_fecocrnbti.tdb")
-        if os.path.exists(p):
-            return p, "Multi-Component Fe-Co-Cr-Nb-Ti Superalloys & Steels"
-
-    # 6. Fallback to COST 507 or Al-Co-Cr-Ni
-    p_cost = os.path.join(DATABASES_DIR, "COST507.tdb")
-    if os.path.exists(p_cost):
-        return p_cost, "COST 507 Comprehensive Light Alloys Database"
-
-    p_al = os.path.join(DATABASES_DIR, "alcocrni.tdb")
-    if os.path.exists(p_al):
-        return p_al, "Al-Co-Cr-Ni Superalloys & HEAs"
-
-    return "", "Generic Multi-Component Database"
+    if best is None:
+        return {"ok": False, "kind": KIND_NO_DATABASE_COVERS,
+                "reason": "no usable thermodynamic database is installed",
+                "extra": {"databasesConsidered": considered}}
+    entry, missing = best
+    return {"ok": False, "kind": KIND_NO_DATABASE_COVERS,
+            "reason": f"no usable thermodynamic database contains all requested elements "
+                      f"({', '.join(requested)}); the closest, {entry['name']!r}, lacks "
+                      f"{', '.join(missing)}. Test-fixture databases are never used",
+            "extra": {"missingElements": missing, "databaseId": entry["id"], "databaseUsed": entry["name"],
+                      "databaseStatus": entry["status"], "databasesConsidered": considered}}
 
 
 def load_pycalphad_database(tdb_path_or_text: str, is_raw_text: bool = False) -> Any:
@@ -342,6 +546,104 @@ def calculate_phacomp(at_frac: dict) -> dict:
     }
 
 
+def derive_critical_temperatures(
+    equilibrium_profile: List[Dict[str, Any]],
+    l12_by_name_max_c: Optional[float],
+    beta_transus_c: Optional[float],
+    sigma_phase_solvus_c: Optional[float],
+    phacomp_sigma_c: Optional[float],
+) -> Tuple[Dict[str, Optional[float]], Dict[str, Dict[str, Any]]]:
+    """Critical temperatures from a computed grid, with a status per field.
+
+    Returns (criticalTemperatures, criticalTemperatureStatus). Only what the grid
+    supports is a number; everything else is None with a reason (never a default):
+      * liquidus: the first grid temperature with liquid >= 98 %; None when that is the
+        lowest grid temperature (grid bound) or the liquid never gets there;
+      * solidus: the highest grid temperature with a trace of liquid (0.1-1 %); None
+        when there is none, or it is the lowest grid temperature, or it lies above the
+        liquidus (the former value was the lowest grid temperature, 600 degC in the audit);
+      * gamma-prime solvus: always None, phase name L1_2 is not proof of ordering;
+      * beta transus / sigma: flagged phase-name heuristics.
+    Pure function of the profile: testable without pycalphad.
+    """
+    grid_min_c = equilibrium_profile[0]["temperatureC"]
+    status: Dict[str, Dict[str, Any]] = {}
+
+    def _unavailable(reason: str, **more: Any) -> Dict[str, Any]:
+        return {"status": "unavailable", "reason": reason, **more}
+
+    liquid_temps = [p["temperatureC"] for p in equilibrium_profile if any("LIQUID" in ph["phaseId"] and ph["fraction"] >= 0.98 for ph in p["phases"])]
+    solid_temps = [p["temperatureC"] for p in equilibrium_profile if any("LIQUID" in ph["phaseId"] and ph["fraction"] <= 0.01 for ph in p["phases"])]
+
+    if liquid_temps and min(liquid_temps) > grid_min_c:
+        liquidus_c: Optional[float] = min(liquid_temps)
+        status["liquidusC"] = {"status": "computed-grid-resolution",
+                               "note": "first grid temperature with liquid >= 98 %; resolution is the grid spacing"}
+    else:
+        liquidus_c = None
+        status["liquidusC"] = _unavailable(
+            "liquid is already >= 98 % at the lowest grid temperature, so the liquidus is at or below the grid"
+            if liquid_temps else
+            "liquid never reaches 98 % inside the temperature grid, so the liquidus is above the grid "
+            "(the former t_max - 50 default was fabricated)")
+
+    if solid_temps and max(solid_temps) > grid_min_c and (liquidus_c is None or max(solid_temps) <= liquidus_c):
+        solidus_c: Optional[float] = max(solid_temps)
+        status["solidusC"] = {"status": "computed-grid-resolution",
+                              "note": "highest grid temperature with a trace of liquid (0.1-1 %); resolution is the grid spacing"}
+    else:
+        solidus_c = None
+        if not solid_temps:
+            why = ("no grid temperature with a trace of liquid (0.1-1 %) brackets the solidus; the solver reached "
+                   "the grid bound (the former value, the lowest grid temperature, was not a solidus)")
+        elif max(solid_temps) <= grid_min_c:
+            why = "the only trace-liquid point is the lowest grid temperature (grid bound), not a solidus"
+        else:
+            why = "the trace-liquid point lies above the liquidus; the solidus is not identified"
+        status["solidusC"] = _unavailable(why)
+
+    if l12_by_name_max_c is None:
+        status["gammaPrimeSolvusC"] = _unavailable("no phase named L1_2 appeared on the grid")
+    else:
+        status["gammaPrimeSolvusC"] = _unavailable(
+            "gamma-prime was identified by phase name only: the L1_2 model phase also describes the disordered "
+            "gamma matrix, and no site-fraction ordering check is implemented, so a gamma-prime solvus is not stated",
+            observedByNameOnly={"phaseNameContains": "L12", "highestGridTemperatureC": round(l12_by_name_max_c, 1)})
+
+    status["betaTransusC"] = (
+        {"status": "heuristic-phase-name",
+         "note": "highest grid temperature with HCP_A3 > 1 %; grid resolution; meaningful for Ti alloys only"}
+        if beta_transus_c else _unavailable("no HCP_A3 phase above 1 % on the grid"))
+    if sigma_phase_solvus_c:
+        status["tcpSigmaRiskTemperatureC"] = {"status": "heuristic-phase-name",
+                                              "note": "highest grid temperature with a phase named SIGMA > 0.5 %"}
+    elif phacomp_sigma_c is not None:
+        status["tcpSigmaRiskTemperatureC"] = {"status": "screening-constant",
+                                              "note": "New-PHACOMP risk-class constant, not a calculated solvus"}
+    else:
+        status["tcpSigmaRiskTemperatureC"] = _unavailable("no sigma phase on the grid and PHACOMP risk is Low")
+    for key in ("gammaDoublePrimeSolvusC", "deltaSolvusC", "carbidePrecipitationC"):
+        status[key] = _unavailable("not computed by this engine")
+
+    status["freezingRangeC"] = (
+        {"status": "computed-grid-resolution", "note": "liquidus - solidus, both from the grid"}
+        if liquidus_c is not None and solidus_c is not None
+        else _unavailable("needs both the liquidus and the solidus"))
+
+    values: Dict[str, Optional[float]] = {
+        "liquidusC": round(liquidus_c, 1) if liquidus_c is not None else None,
+        "solidusC": round(solidus_c, 1) if solidus_c is not None else None,
+        "freezingRangeC": round(liquidus_c - solidus_c, 1) if liquidus_c is not None and solidus_c is not None else None,
+        "gammaPrimeSolvusC": None,
+        "gammaDoublePrimeSolvusC": None,
+        "deltaSolvusC": None,
+        "betaTransusC": round(beta_transus_c, 1) if beta_transus_c else None,
+        "carbidePrecipitationC": None,
+        "tcpSigmaRiskTemperatureC": round(sigma_phase_solvus_c, 1) if sigma_phase_solvus_c else phacomp_sigma_c,
+    }
+    return values, status
+
+
 def solve_pycalphad_equilibrium(
     alloy_name: str,
     wt_pct: dict,
@@ -354,36 +656,43 @@ def solve_pycalphad_equilibrium(
     custom_tdb_text: Optional[str] = None,
     adaptive_grid: bool = True,
     boundary_refinement: bool = True,
-    min_refine_step_c: float = 0.5
+    min_refine_step_c: float = 0.5,
+    db_id: str = "",
+    db_status: str = "",
+    db_suitability: str = ""
 ) -> Dict[str, Any]:
     """
-    Executes true Gibbs Free Energy Minimization using pycalphad and an open TDB database.
+    Gibbs free energy minimisation with pycalphad on a database already chosen by
+    resolve_database. Raises CalphadUnavailable when the request cannot be answered
+    (database not loadable, element absent from the database, fewer than two components);
+    elements are never dropped or renormalised.
     """
     start_time = time.perf_counter()
 
     dbf = load_pycalphad_database(custom_tdb_text if custom_tdb_text else tdb_path, is_raw_text=bool(custom_tdb_text))
     if dbf is None:
-        raise RuntimeError("Failed to load thermodynamic database.")
+        raise CalphadUnavailable(KIND_DATABASE_LOAD_FAILED, "pycalphad could not load the thermodynamic database")
 
     db_elements = [e.upper() for e in dbf.elements if e.upper() not in ["VA", "/-"]]
 
-    # Filter elements present in database
-    available_comps = []
-    unsupported_elems = []
-    for el in at_frac:
-        el_up = el.upper()
-        if el_up in db_elements:
-            available_comps.append(el_up)
-        else:
-            unsupported_elems.append(el)
-
+    # Every requested element must be in the database. Nothing is dropped and the
+    # composition is not renormalised (the former code silently removed e.g. Al from
+    # Ti-6Al-4V and renormalised the rest).
+    missing = [el for el in at_frac if el.upper() not in db_elements]
+    if missing:
+        raise CalphadUnavailable(
+            KIND_ELEMENTS_MISSING,
+            f"element(s) {', '.join(missing)} not in database {db_name!r}; refusing to drop them and renormalise",
+            missingElements=missing,
+        )
+    available_comps = [el.upper() for el in at_frac]
+    unsupported_elems: List[str] = []
     if len(available_comps) < 2:
-        raise ValueError(f"Selected TDB database does not contain enough elements of this alloy ({list(at_frac.keys())}). Available in database: {db_elements}")
-
-    # Renormalize at_frac for components active in the database
-    sub_moles = {el: at_frac[el] for el in at_frac if el.upper() in available_comps}
-    tot_sub = sum(sub_moles.values())
-    active_at_frac = {el.upper(): sub_moles[el] / tot_sub for el in sub_moles}
+        raise CalphadUnavailable(
+            KIND_SINGLE_COMPONENT,
+            f"pycalphad equilibrium needs at least two components; got {list(at_frac.keys())}",
+        )
+    active_at_frac = {el.upper(): float(val) for el, val in at_frac.items()}
 
     # Reference dependent component (usually base element with highest fraction)
     sorted_comps = sorted(available_comps, key=lambda c: active_at_frac[c], reverse=True)
@@ -409,9 +718,12 @@ def solve_pycalphad_equilibrium(
         v.P: 101325.0,
         v.T: temp_grid_k,
     }
+    composition_adjustments: Dict[str, Dict[str, float]] = {}
     for comp in indep_comps:
-        # Bound fraction to avoid extreme boundary degeneracies
+        # Bound fraction to avoid extreme boundary degeneracies (reported, not silent)
         val = max(1e-5, min(0.999, active_at_frac[comp]))
+        if val != active_at_frac[comp]:
+            composition_adjustments[comp] = {"requestedMoleFraction": active_at_frac[comp], "usedMoleFraction": val}
         conditions[v.X(comp)] = val
 
     # Execute pycalphad equilibrium
@@ -423,11 +735,9 @@ def solve_pycalphad_equilibrium(
     
     equilibrium_profile = []
     all_phases_observed = set()
-    liquidus_c = None
-    solidus_c = None
-    gamma_prime_solvus_c = None
     beta_transus_c = None
     sigma_phase_solvus_c = None
+    l12_by_name_max_c = None  # highest grid T with a phase NAMED L1_2 (not a verified gamma-prime)
 
     # Track tie-line partition coefficients from two-phase regions
     tie_line_partitioning = {c: [] for c in eq_comps}
@@ -507,7 +817,7 @@ def solve_pycalphad_equilibrium(
             if phase_str in ["FCC_A1", "GAMMA"]:
                 friendly_name = "γ-Matrix (FCC_A1 solid solution)"
             elif phase_str in ["FCC_L12", "L12_FCC"]:
-                friendly_name = "γ'-Precipitate (Ni3Al-ordered L1_2)"
+                friendly_name = "L1_2 phase (γ' only if ordered; ordering not verified)"
             elif phase_str in ["BCC_A2"]:
                 friendly_name = "α-Ferrite / β-Titanium (BCC_A2)"
             elif phase_str in ["BCC_B2"]:
@@ -568,14 +878,10 @@ def solve_pycalphad_equilibrium(
         except Exception:
             pass
 
-        # Identify critical temperatures from phase transitions
-        if liq_fraction >= 0.999 and liquidus_c is None:
-            # First temperature from bottom where liquid fraction is complete
-            liquidus_c = t_c
-        if liq_fraction <= 0.001 and solidus_c is None:
-            solidus_c = t_c
+        # Phase-name based observations; the critical temperatures are assembled
+        # after the loop (liquidus / solidus / gamma-prime are checked there).
         if gamma_prime_frac > 0.01:
-            gamma_prime_solvus_c = max(gamma_prime_solvus_c or 0.0, t_c)
+            l12_by_name_max_c = max(l12_by_name_max_c or 0.0, t_c)
         if hcp_frac > 0.01:
             beta_transus_c = max(beta_transus_c or 0.0, t_c)
         if sigma_frac > 0.005:
@@ -590,19 +896,13 @@ def solve_pycalphad_equilibrium(
             "thermodynamicActivities": activities
         })
 
-    # Liquidus and Solidus refinement from equilibrium profile
-    liquid_temps = [p["temperatureC"] for p in equilibrium_profile if any("LIQUID" in ph["phaseId"] and ph["fraction"] >= 0.98 for ph in p["phases"])]
-    solid_temps = [p["temperatureC"] for p in equilibrium_profile if any("LIQUID" in ph["phaseId"] and ph["fraction"] <= 0.01 for ph in p["phases"])]
+    phacomp = calculate_phacomp(at_frac)
+    phacomp_sigma_c = phacomp["tcpSigmaRiskTemperatureC"]
 
-    if liquid_temps:
-        liquidus_c = min(liquid_temps)
-    elif not liquidus_c:
-        liquidus_c = t_max_c - 50.0
-
-    if solid_temps:
-        solidus_c = max(solid_temps)
-    elif not solidus_c:
-        solidus_c = max(t_min_c, liquidus_c - 110.0)
+    critical_temperatures, status = derive_critical_temperatures(
+        equilibrium_profile, l12_by_name_max_c, beta_transus_c, sigma_phase_solvus_c, phacomp_sigma_c)
+    liquidus_c = critical_temperatures["liquidusC"]
+    solidus_c = critical_temperatures["solidusC"]
 
     # Calculate average partition coefficients from tie-lines
     partitioning_table = []
@@ -610,11 +910,13 @@ def solve_pycalphad_equilibrium(
         k_vals = tie_line_partitioning.get(c, [])
         # Find nominal wt% case-insensitively
         elem_wt = next((wt_pct[k] for k in wt_pct if k.upper() == c.upper()), 0.0)
-        
+
         if k_vals:
             k_avg = float(np.mean(k_vals))
+            k_source = "tie-line"
         else:
-            # Physical thermodynamic default if single phase throughout range
+            # Screening default (not thermodynamic): used when no two-phase tie-line exists
+            k_source = "default-table-not-thermodynamic"
             if c in ["AL", "TI", "TA"]:
                 k_avg = 3.2
             elif c in ["NB", "V"]:
@@ -634,7 +936,7 @@ def solve_pycalphad_equilibrium(
         else:
             role = "Neutral / Solid-Solution Element"
 
-        # Material balance: X_tot = f_mat * X_mat + f_ppt * X_ppt
+        # Material balance: X_tot = f_mat * X_mat + f_ppt * X_ppt, with an ASSUMED f_ppt
         f_ppt_est = 0.30
         c_mat = elem_wt / ((1.0 - f_ppt_est) + f_ppt_est * k_avg) if (1.0 - f_ppt_est + f_ppt_est * k_avg) > 0 else elem_wt
         c_ppt = k_avg * c_mat
@@ -642,23 +944,32 @@ def solve_pycalphad_equilibrium(
         partitioning_table.append({
             "element": c,
             "partitionCoefficient_k": round(k_avg, 3),
+            "partitionCoefficientSource": k_source,
+            "assumedPrecipitateFraction": f_ppt_est,
             "matrixFraction_pct": round(c_mat, 2),
             "precipitateFraction_pct": round(c_ppt, 2),
             "role": role,
-            "source": f"Derived from thermodynamic tie-line equilibria in {db_name}"
+            "source": (f"Mean of tie-line composition ratios from pycalphad equilibria in {db_name}; "
+                       f"matrix/precipitate wt% use an assumed precipitate fraction of {f_ppt_est}"
+                       if k_source == "tie-line" else
+                       "Default screening value (no tie-line in this calculation); NOT a CALPHAD result; "
+                       f"matrix/precipitate wt% use an assumed precipitate fraction of {f_ppt_est}")
         })
 
-    # Multi-element Scheil-Gulliver solidification using thermodynamic k_i values
+    # Scheil-style segregation curve from the k values. NOT a Scheil-Gulliver calculation:
+    # the temperature axis is an ad hoc power law between liquidus and solidus, and it is
+    # left null when either critical temperature is unavailable.
     scheil_points = []
-    # Build k-dict
     k_dict = {row["element"]: row["partitionCoefficient_k"] for row in partitioning_table}
-    
+    curve_available = liquidus_c is not None and solidus_c is not None
+
     for step in range(21):
         fs = step * 0.048  # 0.0 to ~0.96
-        # Solidification temperature curve
-        delta_t = max(15.0, liquidus_c - solidus_c)
-        t_scheil = liquidus_c - delta_t * (math.pow(max(0.005, 1.0 - fs), -0.28) - 1.0)
-        t_scheil = max(solidus_c - 140.0, min(liquidus_c, t_scheil))
+        t_scheil: Optional[float] = None
+        if curve_available:
+            delta_t = max(15.0, liquidus_c - solidus_c)
+            t_scheil = liquidus_c - delta_t * (math.pow(max(0.005, 1.0 - fs), -0.28) - 1.0)
+            t_scheil = max(solidus_c - 140.0, min(liquidus_c, t_scheil))
 
         liq_comp = {}
         sol_comp = {}
@@ -671,12 +982,11 @@ def solve_pycalphad_equilibrium(
 
         scheil_points.append({
             "fractionSolid": round(fs, 3),
-            "temperatureC": round(t_scheil, 1),
+            "temperatureC": round(t_scheil, 1) if t_scheil is not None else None,
             "liquidCompositions": liq_comp,
             "solidCompositions": sol_comp
         })
 
-    phacomp = calculate_phacomp(at_frac)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
 
     return {
@@ -684,8 +994,11 @@ def solve_pycalphad_equilibrium(
         "engine": "pycalphad-open-tdb",
         "pycalphadVersion": PYCALPHAD_VERSION,
         "databaseUsed": db_name,
+        "databaseId": db_id,
+        "databaseStatus": db_status,
+        "databaseSuitability": db_suitability,
         "databasePath": tdb_path,
-        "thermodynamicModel": "Sub-regular Solution / Compound Energy Formalism (CEF) Gibbs Minimization",
+        "thermodynamicModel": "Compound Energy Formalism (CEF) Gibbs minimisation (pycalphad equilibrium)",
         "isEmpirical": False,
         "computeTimeMs": elapsed_ms,
         "iterations": num_steps * len(phases),
@@ -694,23 +1007,19 @@ def solve_pycalphad_equilibrium(
         "atomicFractions": at_frac,
         "activeComponents": available_comps,
         "unsupportedElements": unsupported_elems,
+        "compositionAdjustments": composition_adjustments,
         "temperatureRangeC": [t_min_c, t_max_c],
         "temperatureStepC": t_step_c,
         "equilibriumProfile": equilibrium_profile,
-        "criticalTemperatures": {
-            "liquidusC": round(liquidus_c, 1) if liquidus_c else None,
-            "solidusC": round(solidus_c, 1) if solidus_c else None,
-            "freezingRangeC": round(liquidus_c - solidus_c, 1) if liquidus_c and solidus_c else None,
-            "gammaPrimeSolvusC": round(gamma_prime_solvus_c, 1) if gamma_prime_solvus_c else None,
-            "gammaDoublePrimeSolvusC": None,
-            "deltaSolvusC": None,
-            "betaTransusC": round(beta_transus_c, 1) if beta_transus_c else None,
-            "carbidePrecipitationC": None,
-            "tcpSigmaRiskTemperatureC": round(sigma_phase_solvus_c, 1) if sigma_phase_solvus_c else phacomp["tcpSigmaRiskTemperatureC"],
-        },
+        "criticalTemperatures": critical_temperatures,
+        "criticalTemperatureStatus": status,
         "phacompAnalysis": phacomp,
         "solutePartitioning": partitioning_table,
         "multiElementScheil": scheil_points,
+        "multiElementScheilStatus": "screening-curve-not-thermodynamic",
+        "multiElementScheilNote": ("Compositions follow the Scheil equation C_L = C0 (1 - fs)^(k - 1) with the k values "
+                                   "above; the temperature axis is an ad hoc curve between liquidus and solidus, "
+                                   "not a Scheil-Gulliver calculation, and is null when either is unavailable."),
         "thermodynamicStabilityIndex": phacomp["thermodynamicStabilityIndex"],
         "tcpEmbrittlementRisk": phacomp["tcpEmbrittlementRisk"]
     }
@@ -730,648 +1039,54 @@ def compute_multi_component_equilibrium(
     min_refine_step_c: float = 0.5
 ) -> Dict[str, Any]:
     """
-    Main entry point for CALPHAD minimization.
-    Selects open TDB, invokes pycalphad Gibbs minimization (or adaptive subregular fallback),
-    and provides full thermodynamic guarantees with adaptive transition refinement.
+    Main entry point. Resolves the database, then runs the pycalphad Gibbs minimisation.
+
+    There is no fallback model: every condition that stops a real CALPHAD result
+    (database refused or incomplete, pycalphad missing or failing) returns the
+    unavailable envelope (see unavailable_result) with a reason.
     """
     wt_pct, at_frac = normalize_composition(elements, unit)
-    elem_list = list(wt_pct.keys())
+    requested = list(at_frac.keys())
+    base = dict(name=name, wt_pct=wt_pct, at_frac=at_frac,
+                t_min_c=t_min_c, t_max_c=t_max_c, t_step_c=t_step_c)
 
-    # Resolve database
-    tdb_path, db_name = select_best_open_tdb(elem_list, database_id)
+    resolved = resolve_database(requested, database_id, custom_tdb_text)
+    if not resolved["ok"]:
+        reasons = [resolved["reason"]]
+        if not PYCALPHAD_AVAILABLE:
+            reasons.append(UNAVAILABLE_REASON_PYCALPHAD)
+        return unavailable_result(resolved["kind"], resolved["reason"], reasons=reasons,
+                                  **base, **resolved["extra"])
 
-    if PYCALPHAD_AVAILABLE and (tdb_path or custom_tdb_text):
-        try:
-            return solve_pycalphad_equilibrium(
-                alloy_name=name,
-                wt_pct=wt_pct,
-                at_frac=at_frac,
-                t_min_c=t_min_c,
-                t_max_c=t_max_c,
-                t_step_c=t_step_c,
-                tdb_path=tdb_path,
-                db_name=db_name,
-                custom_tdb_text=custom_tdb_text,
-                adaptive_grid=adaptive_grid,
-                boundary_refinement=boundary_refinement,
-                min_refine_step_c=min_refine_step_c
-            )
-        except Exception as pycal_err:
-            sys.stderr.write(f"[pycalphad] Warning: Direct equilibrium failed ({pycal_err}), falling back to adaptive sub-regular solution minimization\n")
+    db_extra = {"databaseId": resolved["id"], "databaseUsed": resolved["name"],
+                "databaseStatus": resolved["status"]}
+    if not PYCALPHAD_AVAILABLE:
+        return unavailable_result(KIND_PYCALPHAD_MISSING, UNAVAILABLE_REASON_PYCALPHAD, **base, **db_extra)
 
-    # Fallback to subregular thermodynamic model with adaptive grid and boundary refinement
-    return fallback_subregular_minimization(
-        name=name,
-        wt_pct=wt_pct,
-        at_frac=at_frac,
-        t_min_c=t_min_c,
-        t_max_c=t_max_c,
-        t_step_c=t_step_c,
-        db_name=db_name,
-        adaptive_grid=adaptive_grid,
-        boundary_refinement=boundary_refinement,
-        min_refine_step_c=min_refine_step_c
-    )
-
-
-def calculate_alloy_critical_boundaries(at_frac: dict, wt_pct: dict) -> Dict[str, Any]:
-    """
-    Computes physically grounded, composition-dependent critical phase transformation
-    temperatures for multi-component nickel, titanium, iron, aluminum, and cobalt alloys.
-    """
-    base_elem = max(at_frac, key=lambda e: at_frac[e])
-
-    # Defaults
-    t_liq_c = 1350.0
-    t_sol_c = 1260.0
-    gamma_prime_solvus_c = None
-    gamma_double_prime_solvus_c = None
-    delta_solvus_c = None
-    beta_transus_c = None
-    sigma_phase_solvus_c = None
-    carbide_c = None
-
-    if base_elem == "Ni":
-        t_m_base = 1455.0
-        # Liquidus depression from alloying additions
-        dep = (
-            wt_pct.get("Cr", 0.0) * 3.2 +
-            wt_pct.get("Fe", 0.0) * 2.1 +
-            wt_pct.get("Nb", 0.0) * 16.5 +
-            wt_pct.get("Mo", 0.0) * 1.8 +
-            wt_pct.get("Ti", 0.0) * 11.5 +
-            wt_pct.get("Al", 0.0) * 6.5 +
-            wt_pct.get("C", 0.0) * 65.0 +
-            wt_pct.get("B", 0.0) * 90.0 +
-            wt_pct.get("Si", 0.0) * 28.0 +
-            wt_pct.get("W", 0.0) * 1.2 +
-            wt_pct.get("Ta", 0.0) * 2.5
+    try:
+        return solve_pycalphad_equilibrium(
+            alloy_name=name,
+            wt_pct=wt_pct,
+            at_frac=at_frac,
+            t_min_c=t_min_c,
+            t_max_c=t_max_c,
+            t_step_c=t_step_c,
+            tdb_path=resolved["path"],
+            db_name=resolved["name"],
+            custom_tdb_text=custom_tdb_text,
+            adaptive_grid=adaptive_grid,
+            boundary_refinement=boundary_refinement,
+            min_refine_step_c=min_refine_step_c,
+            db_id=resolved["id"],
+            db_status=resolved["status"],
+            db_suitability=resolved["suitability"],
         )
-        t_liq_c = max(1180.0, min(1440.0, t_m_base - dep))
-        fr_range = (
-            35.0 +
-            wt_pct.get("Nb", 0.0) * 7.5 +
-            wt_pct.get("Ti", 0.0) * 3.0 +
-            wt_pct.get("Mo", 0.0) * 1.5 +
-            wt_pct.get("C", 0.0) * 25.0 +
-            wt_pct.get("Si", 0.0) * 4.0
-        )
-        t_sol_c = max(1080.0, t_liq_c - fr_range)
-
-        # Gamma-prime solvus (Ni3(Al, Ti, Ta))
-        al_ti = wt_pct.get("Al", 0.0) + 1.2 * wt_pct.get("Ti", 0.0) + 0.4 * wt_pct.get("Ta", 0.0)
-        if al_ti > 0.4:
-            gamma_prime_solvus_c = min(t_sol_c - 35.0, 780.0 + 52.0 * al_ti)
-
-        # Delta phase (Ni3Nb) & Gamma-double-prime (Ni3Nb BCT)
-        if wt_pct.get("Nb", 0.0) >= 2.5:
-            delta_solvus_c = min(t_sol_c - 40.0, 915.0 + 18.0 * wt_pct.get("Nb", 0.0))
-            gamma_double_prime_solvus_c = min(delta_solvus_c - 90.0, 895.0)
-
-        # Carbides (MC / M23C6)
-        if wt_pct.get("C", 0.0) > 0.01:
-            carbide_c = min(t_sol_c - 20.0, 960.0 + 120.0 * math.sqrt(wt_pct.get("C", 0.0)))
-
-    elif base_elem == "Ti":
-        t_m_base = 1668.0
-        dep = (
-            wt_pct.get("V", 0.0) * 8.0 +
-            wt_pct.get("Mo", 0.0) * 6.0 +
-            wt_pct.get("Cr", 0.0) * 7.0 +
-            wt_pct.get("Fe", 0.0) * 9.0 -
-            wt_pct.get("Al", 0.0) * 5.0
-        )
-        t_liq_c = max(1520.0, t_m_base - dep)
-        t_sol_c = t_liq_c - 45.0
-        beta_transus_c = max(
-            750.0,
-            882.0 +
-            14.5 * wt_pct.get("Al", 0.0) -
-            15.0 * wt_pct.get("V", 0.0) -
-            13.0 * wt_pct.get("Mo", 0.0) -
-            11.0 * wt_pct.get("Cr", 0.0)
-        )
-
-    elif base_elem == "Fe":
-        t_m_base = 1538.0
-        dep = (
-            wt_pct.get("Cr", 0.0) * 4.5 +
-            wt_pct.get("Ni", 0.0) * 4.0 +
-            wt_pct.get("Mo", 0.0) * 2.5 +
-            wt_pct.get("C", 0.0) * 75.0 +
-            wt_pct.get("Si", 0.0) * 20.0
-        )
-        t_liq_c = max(1360.0, t_m_base - dep)
-        t_sol_c = t_liq_c - (32.0 + wt_pct.get("C", 0.0) * 20.0 + wt_pct.get("Mo", 0.0) * 2.0)
-
-        # Sigma phase in stainless steels
-        if wt_pct.get("Cr", 0.0) >= 17.0 and wt_pct.get("Mo", 0.0) >= 1.5:
-            sigma_phase_solvus_c = 840.0
-
-    elif base_elem == "Al":
-        t_m_base = 660.0
-        dep = (
-            wt_pct.get("Si", 0.0) * 11.5 +
-            wt_pct.get("Mg", 0.0) * 8.0 +
-            wt_pct.get("Cu", 0.0) * 6.5 +
-            wt_pct.get("Zn", 0.0) * 4.0
-        )
-        t_liq_c = max(580.0, t_m_base - dep)
-        t_sol_c = max(520.0, t_liq_c - 55.0)
-
-    elif base_elem == "Co":
-        t_m_base = 1495.0
-        dep = wt_pct.get("Cr", 0.0) * 3.5 + wt_pct.get("Ni", 0.0) * 2.0 + wt_pct.get("Mo", 0.0) * 2.0
-        t_liq_c = max(1300.0, t_m_base - dep)
-        t_sol_c = t_liq_c - 50.0
-
-    else:
-        t_liq_c = 1380.0
-        t_sol_c = 1290.0
-
-    return {
-        "baseElement": base_elem,
-        "liquidusC": round(t_liq_c, 1),
-        "solidusC": round(t_sol_c, 1),
-        "freezingRangeC": round(t_liq_c - t_sol_c, 1),
-        "gammaPrimeSolvusC": round(gamma_prime_solvus_c, 1) if gamma_prime_solvus_c else None,
-        "gammaDoublePrimeSolvusC": round(gamma_double_prime_solvus_c, 1) if gamma_double_prime_solvus_c else None,
-        "deltaSolvusC": round(delta_solvus_c, 1) if delta_solvus_c else None,
-        "betaTransusC": round(beta_transus_c, 1) if beta_transus_c else None,
-        "sigmaPhaseSolvusC": round(sigma_phase_solvus_c, 1) if sigma_phase_solvus_c else None,
-        "carbideC": round(carbide_c, 1) if carbide_c else None,
-    }
-
-
-def evaluate_subregular_thermodynamic_state(
-    t_c: float,
-    at_frac: dict,
-    wt_pct: dict,
-    boundaries: dict,
-    base_elem: str
-) -> Dict[str, Any]:
-    """
-    Evaluates exact thermodynamic phase constitution, Gibbs energy, activities,
-    and chemical potentials at a single temperature point.
-    """
-    t_k = t_c + ZERO_CELSIUS_K
-    t_liq_c = boundaries["liquidusC"]
-    t_sol_c = boundaries["solidusC"]
-    gamma_prime_solvus_c = boundaries["gammaPrimeSolvusC"]
-    delta_solvus_c = boundaries["deltaSolvusC"]
-    beta_transus_c = boundaries["betaTransusC"]
-    sigma_phase_solvus_c = boundaries["sigmaPhaseSolvusC"]
-
-    # Redlich-Kister sub-regular solution free energy
-    s_ideal = -GAS_CONSTANT_R * sum(x * math.log(max(1e-6, x)) for x in at_frac.values())
-    
-    # Binary interaction enthalpies (J/mol)
-    h_mix = (
-        -25000.0 * at_frac.get("Al", 0.0) * at_frac.get("Ni", 0.0) +
-        -18000.0 * at_frac.get("Ti", 0.0) * at_frac.get("Ni", 0.0) +
-        -32000.0 * at_frac.get("Nb", 0.0) * at_frac.get("Ni", 0.0) +
-        -4000.0 * at_frac.get("Cr", 0.0) * at_frac.get("Ni", 0.0) +
-        -15000.0 * at_frac.get("Al", 0.0) * at_frac.get("Ti", 0.0)
-    )
-    gm_kj = round((h_mix - t_k * s_ideal) / 1000.0, 3)
-
-    # Chemical potentials (J/mol) & activities
-    chem_pot = {}
-    activities = {}
-    rt = GAS_CONSTANT_R * t_k
-    for el, x_i in at_frac.items():
-        # Sub-regular partial molar excess
-        mu_ideal = rt * math.log(max(1e-5, x_i))
-        gamma_excess = math.exp(-0.45 * (1.0 - x_i))
-        mu_total = mu_ideal + rt * math.log(max(1e-4, gamma_excess))
-        chem_pot[el] = round(mu_total, 1)
-        activities[el] = round(float(x_i * gamma_excess), 5)
-
-    phases = []
-    if t_c >= t_liq_c:
-        phases.append({
-            "phaseId": "LIQUID",
-            "phaseName": "Liquid Phase",
-            "fraction": 1.0,
-            "color": "#0284c7",
-            "isPrimary": True,
-            "majorElements": list(at_frac.keys())[:3]
-        })
-    elif t_c > t_sol_c:
-        # Mushy zone (Scheil-like non-linear fraction solid)
-        f_liq = math.pow((t_c - t_sol_c) / (t_liq_c - t_sol_c), 1.35)
-        f_liq = max(0.001, min(0.999, f_liq))
-        f_mat = round(1.0 - f_liq, 4)
-        phases.append({
-            "phaseId": "LIQUID",
-            "phaseName": "Liquid Phase",
-            "fraction": round(f_liq, 4),
-            "color": "#0284c7",
-            "isPrimary": True,
-            "majorElements": list(at_frac.keys())[:3]
-        })
-        matrix_id = "BCC_A2" if base_elem == "Ti" else ("HCP_A3" if base_elem == "Mg" else "FCC_A1")
-        matrix_name = "β-Matrix (BCC)" if base_elem == "Ti" else ("α-Matrix (HCP)" if base_elem == "Mg" else "γ-Matrix (FCC)")
-        phases.append({
-            "phaseId": matrix_id,
-            "phaseName": matrix_name,
-            "fraction": f_mat,
-            "color": "#38bdf8",
-            "isPrimary": True,
-            "majorElements": [base_elem]
-        })
-    else:
-        # Fully solid state
-        f_rem = 1.0
-        ppts = []
-
-        # Delta phase (Ni3Nb)
-        if delta_solvus_c and t_c < delta_solvus_c:
-            f_delta = round(0.06 * math.sqrt(max(0.0, 1.0 - (t_c / delta_solvus_c)**2)), 4)
-            if f_delta > 0.001:
-                ppts.append({
-                    "phaseId": "DELTA_NI3NB",
-                    "phaseName": "δ-Phase (Ni_3Nb)",
-                    "fraction": f_delta,
-                    "color": "#f97316",
-                    "isPrecipitate": True,
-                    "majorElements": ["Ni", "Nb"]
-                })
-                f_rem -= f_delta
-
-        # Gamma-prime precipitate (Ni3(Al,Ti))
-        if gamma_prime_solvus_c and t_c < gamma_prime_solvus_c:
-            al_ti = wt_pct.get("Al", 0.0) + wt_pct.get("Ti", 0.0)
-            max_gp = min(0.65, 0.08 + 0.04 * al_ti)
-            f_gp = round(max_gp * math.sqrt(max(0.0, 1.0 - (t_c / gamma_prime_solvus_c)**2)), 4)
-            if f_gp > 0.001:
-                ppts.append({
-                    "phaseId": "FCC_L12",
-                    "phaseName": "γ'-Precipitate (L1_2)",
-                    "fraction": f_gp,
-                    "color": "#a855f7",
-                    "isPrecipitate": True,
-                    "majorElements": ["Ni", "Al", "Ti"]
-                })
-                f_rem -= f_gp
-
-        # Titanium alpha phase below beta transus
-        if base_elem == "Ti" and beta_transus_c:
-            if t_c < beta_transus_c:
-                f_alpha = round(0.92 * math.sqrt(max(0.0, 1.0 - (t_c / beta_transus_c)**3)), 4)
-                f_beta = round(max(0.02, 1.0 - f_alpha), 4)
-                phases.append({
-                    "phaseId": "HCP_A3",
-                    "phaseName": "α-Phase (HCP)",
-                    "fraction": f_alpha,
-                    "color": "#6366f1",
-                    "isPrimary": True,
-                    "majorElements": ["Ti", "Al"]
-                })
-                phases.append({
-                    "phaseId": "BCC_A2",
-                    "phaseName": "β-Phase (BCC)",
-                    "fraction": f_beta,
-                    "color": "#10b981",
-                    "isPrecipitate": True,
-                    "majorElements": ["Ti", "V", "Mo"]
-                })
-                f_rem = 0.0
-            else:
-                phases.append({
-                    "phaseId": "BCC_A2",
-                    "phaseName": "β-Matrix (BCC)",
-                    "fraction": 1.0,
-                    "color": "#10b981",
-                    "isPrimary": True,
-                    "majorElements": ["Ti"]
-                })
-                f_rem = 0.0
-
-        # Sigma phase TCP
-        if sigma_phase_solvus_c and t_c < sigma_phase_solvus_c and t_c > 600.0:
-            f_sig = round(0.07 * math.exp(-((t_c - 750.0) / 80.0)**2), 4)
-            if f_sig > 0.001:
-                ppts.append({
-                    "phaseId": "SIGMA_SGTE",
-                    "phaseName": "σ-Phase (TCP Intermetallic)",
-                    "fraction": f_sig,
-                    "color": "#ef4444",
-                    "isPrecipitate": True,
-                    "majorElements": ["Cr", "Mo", "Fe"]
-                })
-                f_rem -= f_sig
-
-        if f_rem > 0.0:
-            matrix_id = "BCC_A2" if base_elem in ["Fe", "Cr", "Mo"] else "FCC_A1"
-            matrix_name = "α-Ferrite (BCC)" if base_elem in ["Fe", "Cr"] else "γ-Matrix (FCC)"
-            phases.append({
-                "phaseId": matrix_id,
-                "phaseName": matrix_name,
-                "fraction": round(max(0.01, f_rem), 4),
-                "color": "#38bdf8",
-                "isPrimary": True,
-                "majorElements": [base_elem]
-            })
-
-        phases.extend(ppts)
-
-    return {
-        "temperatureC": t_c,
-        "temperatureK": round(t_k, 2),
-        "phases": phases,
-        "totalGibbsEnergy_kJ_mol": gm_kj,
-        "chemicalPotentials_J_mol": chem_pot,
-        "thermodynamicActivities": activities
-    }
-
-
-def run_adaptive_temperature_sweep(
-    t_min_c: float,
-    t_max_c: float,
-    t_step_c: float,
-    eval_fn,
-    adaptive_grid: bool = True,
-    boundary_refinement: bool = True,
-    min_refine_step_c: float = 0.5,
-    bisection_tol_c: float = 0.15
-) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """
-    Two-pass adaptive temperature grid engine with transition boundary refinement:
-     1. Coarse scouting sweep across temperature window.
-     2. Transition zone detection (phase set differences, mushy zone crossing, solvus dissolution).
-     3. Bisection root-finding to pinpoint exact transition boundaries down to ±0.15°C.
-     4. Localized cluster sampling around critical points and fine sub-interval refinement.
-     5. Strictly sorted, deduplicated profile assembly.
-    """
-    coarse_step = max(15.0, min(50.0, t_step_c))
-    
-    # 1. Pass 1: Coarse Grid
-    coarse_temps = []
-    t = t_min_c
-    while t <= t_max_c + 1e-4:
-        coarse_temps.append(round(t, 2))
-        t += coarse_step
-
-    # Ensure max temperature is included
-    if coarse_temps[-1] < t_max_c - 1e-4:
-        coarse_temps.append(round(t_max_c, 2))
-
-    cache = {temp: eval_fn(temp) for temp in coarse_temps}
-    refined_points = set(coarse_temps)
-    detected_zones = []
-
-    if adaptive_grid:
-        # 2. Pass 2: Transition Boundary Detection
-        for i in range(len(coarse_temps) - 1):
-            t_a, t_b = coarse_temps[i], coarse_temps[i + 1]
-            s_a, s_b = cache[t_a], cache[t_b]
-
-            phases_a = set(p["phaseId"] for p in s_a["phases"] if p["fraction"] > 0.001)
-            phases_b = set(p["phaseId"] for p in s_b["phases"] if p["fraction"] > 0.001)
-
-            liq_a = next((p["fraction"] for p in s_a["phases"] if p["phaseId"] == "LIQUID"), 0.0)
-            liq_b = next((p["fraction"] for p in s_b["phases"] if p["phaseId"] == "LIQUID"), 0.0)
-
-            is_transition = False
-            zone_desc = ""
-
-            # Check solidus / liquidus boundary
-            if (liq_a <= 0.001 and liq_b > 0.001) or (liq_a < 0.999 and liq_b >= 0.999) or (0.001 < liq_a < 0.999) or (0.001 < liq_b < 0.999):
-                is_transition = True
-                zone_desc = "Solidification / Liquidus-Solidus Boundary"
-            # Check solvus or phase constitution change
-            elif phases_a != phases_b:
-                is_transition = True
-                diff = phases_a.symmetric_difference(phases_b)
-                zone_desc = f"Phase Dissolution / Solvus Boundary ({', '.join(diff)})"
-
-            if is_transition and boundary_refinement:
-                detected_zones.append({
-                    "description": zone_desc,
-                    "intervalC": [t_a, t_b]
-                })
-
-                # Bisection root-finding to pinpoint boundary
-                low, high = t_a, t_b
-                for _ in range(8):
-                    mid = round(0.5 * (low + high), 2)
-                    s_mid = eval_fn(mid)
-                    cache[mid] = s_mid
-                    refined_points.add(mid)
-
-                    if "Solidification" in zone_desc:
-                        mid_liq = next((p["fraction"] for p in s_mid["phases"] if p["phaseId"] == "LIQUID"), 0.0)
-                        if mid_liq > 0.001:
-                            high = mid
-                        else:
-                            low = mid
-                    else:
-                        mid_phases = set(p["phaseId"] for p in s_mid["phases"] if p["fraction"] > 0.001)
-                        if mid_phases != phases_a:
-                            high = mid
-                        else:
-                            low = mid
-
-                    if high - low <= bisection_tol_c:
-                        break
-
-                t_crit = round(0.5 * (low + high), 2)
-
-                # Clustered nodes around critical transition
-                for offset in [-2.0, -1.0, -0.5, -0.2, 0.0, 0.2, 0.5, 1.0, 2.0]:
-                    pt = round(t_crit + offset, 2)
-                    if t_a <= pt <= t_b:
-                        refined_points.add(pt)
-                        if pt not in cache:
-                            cache[pt] = eval_fn(pt)
-
-                # Sub-interval stepping if wide mushy zone
-                sub_step = max(min_refine_step_c, (t_b - t_a) / 8.0)
-                sub_t = t_a + sub_step
-                while sub_t < t_b:
-                    sub_r = round(sub_t, 2)
-                    refined_points.add(sub_r)
-                    if sub_r not in cache:
-                        cache[sub_r] = eval_fn(sub_r)
-                    sub_t += sub_step
-
-    # 3. Pass 3: Precision Assembly & Deduplication
-    sorted_temps = sorted(list(refined_points))
-    deduped_temps = []
-    for temp in sorted_temps:
-        if not deduped_temps or abs(temp - deduped_temps[-1]) >= 0.04:
-            deduped_temps.append(temp)
-
-    final_profile = []
-    for temp in deduped_temps:
-        if temp not in cache:
-            cache[temp] = eval_fn(temp)
-        final_profile.append(cache[temp])
-
-    # Telemetry
-    total_evals = len(final_profile)
-    coarse_count = len(coarse_temps)
-    refined_count = total_evals - coarse_count
-    equivalent_uniform = int((t_max_c - t_min_c) / max(0.2, min_refine_step_c)) + 1
-    speedup = round(equivalent_uniform / max(1, total_evals), 1)
-
-    telemetry = {
-        "isAdaptive": adaptive_grid,
-        "coarseStepsCount": coarse_count,
-        "refinedStepsCount": refined_count,
-        "totalEvaluations": total_evals,
-        "equivalentUniformSteps": equivalent_uniform,
-        "speedupFactor": speedup,
-        "minRefineStepC": min_refine_step_c,
-        "boundaryToleranceC": bisection_tol_c,
-        "transitionZones": detected_zones
-    }
-
-    return final_profile, telemetry
-
-
-def fallback_subregular_minimization(
-    name: str,
-    wt_pct: dict,
-    at_frac: dict,
-    t_min_c: float,
-    t_max_c: float,
-    t_step_c: float,
-    db_name: str,
-    adaptive_grid: bool = True,
-    boundary_refinement: bool = True,
-    min_refine_step_c: float = 0.5
-) -> Dict[str, Any]:
-    """
-    Sub-regular solution common-tangent Gibbs energy minimizer equipped with
-    an Adaptive Temperature Grid and Transition Boundary Refinement.
-    """
-    start_time = time.perf_counter()
-    boundaries = calculate_alloy_critical_boundaries(at_frac, wt_pct)
-    base_elem = boundaries["baseElement"]
-
-    # Closure for state evaluation at temperature t_c
-    def eval_at_temp(t_c: float):
-        return evaluate_subregular_thermodynamic_state(t_c, at_frac, wt_pct, boundaries, base_elem)
-
-    # Execute adaptive grid sweep
-    profile, telemetry = run_adaptive_temperature_sweep(
-        t_min_c=t_min_c,
-        t_max_c=t_max_c,
-        t_step_c=t_step_c,
-        eval_fn=eval_at_temp,
-        adaptive_grid=adaptive_grid,
-        boundary_refinement=boundary_refinement,
-        min_refine_step_c=min_refine_step_c
-    )
-
-    # Pinpoint refined critical temperatures directly from profile
-    liquidus_c = boundaries["liquidusC"]
-    solidus_c = boundaries["solidusC"]
-    gamma_prime_solvus_c = boundaries["gammaPrimeSolvusC"]
-    gamma_double_prime_solvus_c = boundaries["gammaDoublePrimeSolvusC"]
-    delta_solvus_c = boundaries["deltaSolvusC"]
-    beta_transus_c = boundaries["betaTransusC"]
-    sigma_phase_solvus_c = boundaries["sigmaPhaseSolvusC"]
-    carbide_c = boundaries["carbideC"]
-
-    # Build solute partitioning table
-    partitioning_table = []
-    for elem, c0 in wt_pct.items():
-        if elem == base_elem:
-            k_val = 1.0
-            role = "Matrix Base"
-        elif elem in ["Nb", "Ti", "Ta"]:
-            k_val = 0.45 if elem == "Nb" else 0.65
-            role = "γ' / γ'' / δ Stabilizer (Segregates to Interdendritic Liquid)"
-        elif elem in ["Mo", "W"]:
-            k_val = 0.82
-            role = "Solid Solution Strengthener"
-        elif elem in ["Cr", "Fe"]:
-            k_val = 0.95
-            role = "Oxidation & Matrix Strengthener"
-        elif elem in ["C", "B"]:
-            k_val = 0.18
-            role = "Grain Boundary & Carbide Former"
-        elif elem == "Al":
-            k_val = 0.92
-            role = "γ' Precipitate Former"
-        else:
-            k_val = 0.90
-            role = "Alloying Solute"
-
-        partitioning_table.append({
-            "element": elem,
-            "partitionCoefficient_k": k_val,
-            "nominalWeightPct": round(c0, 2),
-            "soluteRole": role,
-            "isSegregating": k_val < 0.90
-        })
-
-    # Multi-element Scheil-Gulliver solidification curve
-    scheil_points = []
-    delta_t = max(15.0, liquidus_c - solidus_c)
-    for step in range(21):
-        fs = step * 0.048  # 0.0 to ~0.96
-        t_scheil = liquidus_c - delta_t * (math.pow(max(0.005, 1.0 - fs), -0.28) - 1.0)
-        t_scheil = max(solidus_c - 140.0, min(liquidus_c, t_scheil))
-
-        liq_comp = {}
-        sol_comp = {}
-        for row in partitioning_table:
-            elem = row["element"]
-            c0 = row["nominalWeightPct"]
-            k_p = row["partitionCoefficient_k"]
-            cl = c0 * math.pow(max(0.02, 1.0 - fs), k_p - 1.0)
-            cs = k_p * cl
-            liq_comp[elem] = round(cl, 2)
-            sol_comp[elem] = round(cs, 2)
-
-        scheil_points.append({
-            "fractionSolid": round(fs, 3),
-            "temperatureC": round(t_scheil, 1),
-            "liquidCompositions": liq_comp,
-            "solidCompositions": sol_comp
-        })
-
-    phacomp = calculate_phacomp(at_frac)
-    elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-
-    return {
-        "success": True,
-        "engine": "subregular-adaptive-minimizer",
-        "pycalphadVersion": PYCALPHAD_VERSION,
-        "databaseUsed": db_name,
-        "thermodynamicModel": "Adaptive Multi-Component Redlich-Kister Sub-regular Gibbs Minimizer",
-        "isEmpirical": False,
-        "computeTimeMs": elapsed_ms,
-        "iterations": telemetry["totalEvaluations"],
-        "alloyName": name,
-        "nominalComposition": wt_pct,
-        "atomicFractions": at_frac,
-        "temperatureRangeC": [t_min_c, t_max_c],
-        "temperatureStepC": t_step_c,
-        "adaptiveGrid": True,
-        "adaptiveTelemetry": telemetry,
-        "equilibriumProfile": profile,
-        "criticalTemperatures": {
-            "liquidusC": round(liquidus_c, 1),
-            "solidusC": round(solidus_c, 1),
-            "freezingRangeC": round(liquidus_c - solidus_c, 1),
-            "gammaPrimeSolvusC": round(gamma_prime_solvus_c, 1) if gamma_prime_solvus_c else None,
-            "gammaDoublePrimeSolvusC": round(gamma_double_prime_solvus_c, 1) if gamma_double_prime_solvus_c else None,
-            "deltaSolvusC": round(delta_solvus_c, 1) if delta_solvus_c else None,
-            "betaTransusC": round(beta_transus_c, 1) if beta_transus_c else None,
-            "carbidePrecipitationC": round(carbide_c, 1) if carbide_c else None,
-            "tcpSigmaRiskTemperatureC": round(sigma_phase_solvus_c, 1) if sigma_phase_solvus_c else phacomp["tcpSigmaRiskTemperatureC"],
-        },
-        "phacompAnalysis": phacomp,
-        "solutePartitioning": partitioning_table,
-        "multiElementScheil": scheil_points,
-        "thermodynamicStabilityIndex": phacomp["thermodynamicStabilityIndex"],
-        "tcpEmbrittlementRisk": phacomp["tcpEmbrittlementRisk"]
-    }
+    except CalphadUnavailable as exc:
+        return unavailable_result(exc.kind, exc.reason, **base, **db_extra, **exc.extra)
+    except Exception as err:
+        sys.stderr.write(f"[pycalphad] equilibrium failed: {err}\n")
+        return unavailable_result(KIND_EQUILIBRIUM_FAILED, f"pycalphad equilibrium failed: {err}",
+                                  **base, **db_extra)
 
 
 def main():

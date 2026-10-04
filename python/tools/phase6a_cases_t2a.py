@@ -12,8 +12,11 @@ base), so the harness's d33b6f5 blob binding applies unchanged; test_phase6a_t2a
 asserts that identity. None of the three uses an RNG.
 
 calphad_solver: pycalphad is not installed in the locked test environment, so the
-captured path is the sub-regular fallback minimiser (engine
-"subregular-adaptive-minimizer"); the pycalphad path is not covered here.
+captured (d33b6f5) path is the sub-regular fallback minimiser (engine
+"subregular-adaptive-minimizer", isEmpirical false); the pycalphad path is not
+covered here. The fallback was removed (fx-calphad lane): the four success cases are
+now the explicit "unavailable" envelope (EXPECTED_UNAVAILABLE_CHANGES below); the old
+goldens stay on disk as the record of the removed non-thermodynamic output.
 """
 
 from __future__ import annotations
@@ -145,6 +148,33 @@ EXPECTED_BEHAVIOUR_CHANGES = {
 # the same stdout with "success": false; exit code and error message are unchanged.
 EXPECTED_SUCCESS_FLAG_CHANGES = {
     ("battery_corrosion_eis_solver", "edge_unknown_action_success_masking"),
+}
+
+
+# (solver, case) -> exact fields of the "unavailable" envelope that replaces the removed
+# calphad fallback on an interpreter WITHOUT pycalphad (the locked one). The old golden
+# stays on disk (exit 0, success true, engine "subregular-adaptive-minimizer",
+# isEmpirical false). Four exact matches, nothing is accepted by tolerance; a case is
+# never re-blessed into step_b (step_b_excluded_cases). Not checked when pycalphad is
+# importable: that run takes the real path, which these goldens do not cover.
+# Every case resolves to COST 507: it is the narrowest installed assessment that
+# contains all requested elements (Al-Ni Dupin is binary, Cr-Ti-V lacks Al/Fe/Ni).
+_UNAVAILABLE_PYCALPHAD_MISSING = {
+    "success": False,
+    "status": "unavailable",
+    "unavailableKind": "pycalphad-not-installed",
+    "reason": "pycalphad not installed",
+    "reasons": ["pycalphad not installed"],
+    "engine": "pycalphad-open-tdb",
+    "pycalphadAvailable": False,
+    "pycalphadVersion": None,
+    "databaseId": "cost507",
+    "databaseUsed": "COST 507 Comprehensive Light Alloys Database",
+    "databaseStatus": "assessment",
+}
+EXPECTED_UNAVAILABLE_CHANGES = {
+    ("calphad_solver", case): dict(_UNAVAILABLE_PYCALPHAD_MISSING)
+    for case in ("in718_wt_pct", "ti64_at_pct", "ss316l_fixed_grid", "alsi10mg_case_variants_zero_unknown")
 }
 
 

@@ -74,6 +74,31 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertEqual(doc["exitCode"], 0)
             self.assertIs(doc["stdout"].get("success"), True)
             return
+        expected_unavailable = cases.EXPECTED_UNAVAILABLE_CHANGES.get((solver, case))
+        if expected_unavailable is not None:
+            # fx-calphad: the removed non-thermodynamic fallback. The old golden stays as the
+            # record (exit 0, success true, engine "subregular-adaptive-minimizer", isEmpirical false).
+            self.assertEqual(doc["exitCode"], 0)
+            self.assertIs(doc["stdout"]["success"], True)
+            self.assertEqual(doc["stdout"]["engine"], "subregular-adaptive-minimizer")
+            self.assertIs(doc["stdout"]["isEmpirical"], False)
+            if calphad_solver.PYCALPHAD_AVAILABLE:
+                self.skipTest("pycalphad is importable: this interpreter takes the real path; the golden "
+                              "freezes the no-pycalphad 'unavailable' envelope of the locked interpreter")
+            self.assertEqual(fresh["exitCode"], 0, fresh["stderr"])
+            out = fresh["stdout"]
+            for key, value in expected_unavailable.items():
+                self.assertEqual(out[key], value, key)
+            # no number of any kind: nothing to mistake for a CALPHAD result
+            for absent in ("equilibriumProfile", "criticalTemperatures", "isEmpirical", "multiElementScheil",
+                           "solutePartitioning", "phacompAnalysis"):
+                self.assertNotIn(absent, out)
+            self.assertEqual(out["nominalComposition"], doc["stdout"]["nominalComposition"])
+            self.assertEqual(out["atomicFractions"], doc["stdout"]["atomicFractions"])
+            self.assertEqual(set(out), set(expected_unavailable) | {
+                "alloyName", "nominalComposition", "atomicFractions", "requestedElements",
+                "temperatureRangeC", "temperatureStepC"})
+            return
         if (solver, case) in cases.EXPECTED_SUCCESS_FLAG_CHANGES:
             # The old golden records success:true next to an error; only that flag flips.
             self.assertIs(doc["stdout"]["success"], True)
@@ -129,13 +154,11 @@ class BaseBlobTest(unittest.TestCase):
             {"action": "drt", "frequencies": cases._EIS_F, "zReal": cases._EIS_ZR, "zImag": cases._EIS_ZI},
             {"action": "p2d_continuum", "chemistryId": "lfp", "cRate": 0.5, "tempC": 45.0, "soc": 0.2},
         ],
-        "calphad_solver": [
-            {"action": "list_databases"},
-            {"elements": {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}, "tMin": 900.0, "tMax": 1500.0, "tStep": 40.0},
-            {"elements": {"Al": 50.0, "Ni": 50.0}, "unit": "at_pct", "tMin": 900.0, "tMax": 1700.0, "tStep": 50.0},
-            {"elements": {"Cu": 70.0, "Zn": 30.0}, "tMin": 700.0, "tMax": 1100.0, "tStep": 25.0},
-        ],
     }
+    # calphad_solver left PARITY with the fallback removal (fx-calphad): its success output no
+    # longer exists on the locked interpreter. What is still comparable (the wt%/at%
+    # composition, the element refusal) is checked against the same base blob in
+    # test_calphad_composition_still_matches_the_base_blob_apart_from_the_weights.
     # Design step (b) value change: these payloads drift on purpose against the base blob
     # (icme: exact R and CIAAW weights). The check keeps the output structure and exit
     # code identical and bounds the numeric drift; the full rows are in the commit body.
@@ -214,7 +237,8 @@ class BaseBlobTest(unittest.TestCase):
 
     def test_real_elements_now_use_ciaaw_weights_instead_of_50(self):
         # Design step (b): P, Sn, Pb are weighted with their CIAAW values; the base
-        # blob used 50.0 g/mol. Both succeed; the at%/wt% conversion differs.
+        # blob used 50.0 g/mol. The at%/wt% conversion differs. (fx-calphad: the new run is
+        # the unavailable envelope on the locked interpreter, which carries the composition.)
         for payload in ({"elements": {"Fe": 90.0, "P": 5.0, "Sn": 5.0}},
                         {"elements": {"Cu": 83.0, "Sn": 7.0, "Pb": 7.0, "Zn": 3.0}, "unit": "at_pct",
                          "tMin": 700.0, "tMax": 1200.0, "tStep": 50.0}):
@@ -222,8 +246,26 @@ class BaseBlobTest(unittest.TestCase):
                 old = self._base("calphad_solver", payload)
                 new = golden.run_solver("calphad_solver", payload)
                 self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
-                self.assertIs(new["stdout"]["success"], True)
-                self.assertNotEqual(golden.canonical(old["stdout"]), golden.canonical(new["stdout"]))
+                self.assertIs(old["stdout"]["success"], True)
+                # wt% input keeps nominalComposition, at% input keeps atomicFractions: the other differs
+                self.assertNotEqual(golden.canonical([old["stdout"]["nominalComposition"], old["stdout"]["atomicFractions"]]),
+                                    golden.canonical([new["stdout"]["nominalComposition"], new["stdout"]["atomicFractions"]]))
+
+    def test_calphad_composition_still_matches_the_base_blob_apart_from_the_weights(self):
+        # Payloads whose elements all have a weight in the base blob's 28-symbol table:
+        # wt%/at% are bit-identical to the base blob except for the CIAAW value step, which
+        # is bounded. The base blob's profile (the removed fallback) is not compared.
+        for payload in ({"elements": {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}},
+                        {"elements": {"Al": 50.0, "Ni": 50.0}, "unit": "at_pct"},
+                        {"elements": {"Cu": 70.0, "Zn": 30.0}}):
+            with self.subTest(payload=payload):
+                old = self._base("calphad_solver", payload)
+                new = golden.run_solver("calphad_solver", payload)
+                self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
+                for key in ("nominalComposition", "atomicFractions"):
+                    rows = drift_report.diff(old["stdout"][key], new["stdout"][key])
+                    self.assertTrue(all(r["kind"] == "numeric" and abs(r["rel"]) < 1e-2 for r in rows),
+                                    drift_report.render(key, rows, 10))
 
     def test_source_tables_are_bound_to_the_base_blob(self):
         for solver in cases.SOURCE_TABLES:
@@ -316,28 +358,40 @@ class CalphadElementTest(unittest.TestCase):
         wt, _ = calphad_solver.normalize_composition({"Ni": 94.0, "Re": 6.0})
         self.assertEqual(set(wt), {"Ni", "Re"})
 
-    def test_wc_co_specimen_gets_a_normal_python_result(self):
+    def test_wc_co_specimen_is_not_refused_as_invalid_input(self):
+        # fx-calphad: without pycalphad the answer is the explicit unavailable envelope (exit 0,
+        # no errorKind), never a made-up profile; with pycalphad the real path runs (WC-Co is
+        # in no usable database, so it is unavailable for the missing elements there too).
         code, out = _run("calphad_solver.py", {"name": "wc-co", "elements": {"W": 88.235, "C": 5.765, "Co": 6.0},
                                                "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
         self.assertEqual(code, 0, out)
-        self.assertIs(out["success"], True)
-        self.assertTrue(out["equilibriumProfile"])
+        self.assertIs(out["success"], False)
+        self.assertEqual(out["status"], "unavailable")
+        self.assertNotIn("errorKind", out)
+        self.assertNotIn("equilibriumProfile", out)
+        self.assertEqual(out["unavailableKind"], "no-database-covers-elements")  # COST 507 has no Co
+        self.assertEqual(out["missingElements"], ["Co"])
 
-    def test_p_s_sn_pb_be_specimens_get_a_normal_python_result(self):
-        # The 14 UI specimens that hit the 50.0 g/mol stand-in before design step (b)
-        # must keep the Python engine (exit 0, success, non-empty equilibriumProfile).
+    @unittest.skipIf(calphad_solver.PYCALPHAD_AVAILABLE, "pycalphad is importable: the real path runs here; this checks the no-pycalphad envelope")
+    def test_p_s_sn_pb_be_specimens_are_normalised_then_answered_explicitly(self):
+        # The 14 UI specimens that hit the 50.0 g/mol stand-in before design step (b) still
+        # normalise with CIAAW weights (provenance carried). fx-calphad: the answer is a valid
+        # envelope with a reason, never a fabricated profile: either the explicit unavailable
+        # status (database lacks an element / pycalphad missing) with no numbers.
         self.assertEqual(len(UI_SPECIMENS_P_S_SN_PB_BE), 14)
         for elements in UI_SPECIMENS_P_S_SN_PB_BE:
             with self.subTest(elements=elements):
                 code, out = _run("calphad_solver.py", {"name": "specimen", "elements": elements,
                                                        "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
                 self.assertEqual(code, 0, out)
-                self.assertIs(out["success"], True)
-                self.assertTrue(out["equilibriumProfile"])  # what the UI requires
+                self.assertIs(out["success"], False)
+                self.assertEqual(out["status"], "unavailable")
+                self.assertTrue(out["reason"])
                 self.assertNotIn("errorKind", out)
-                self.assertEqual(out["engine"], "subregular-adaptive-minimizer")
+                self.assertNotIn("equilibriumProfile", out)
                 self.assertNotIn("legacyAtomicWeightFallback", out["provenance"])
                 self.assertEqual(out["provenance"]["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+                self.assertAlmostEqual(sum(out["atomicFractions"].values()), 1.0, places=12)
 
     def test_custom_tdb_text_with_an_unknown_symbol_is_refused(self):
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 70.0, "Xx": 30.0},

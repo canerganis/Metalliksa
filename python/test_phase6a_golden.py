@@ -201,12 +201,14 @@ class StepBGoldenTest(unittest.TestCase):
                 self.assertNotIn((solver, case), EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)
                 self.assertNotIn((solver, case), golden.step_b_excluded_cases())
 
     def test_excluded_cases_cover_every_behaviour_change(self):
         excluded = golden.step_b_excluded_cases()
         for key in (set(EXPECTED_BEHAVIOUR_CHANGES) | set(golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
-                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)):
+                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                    | set(golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)):
             self.assertIn(key, excluded)
 
     def test_recorded_drift_is_a_bounded_value_change(self):
