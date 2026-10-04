@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
+import { existsSync } from 'node:fs';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +23,13 @@ import { getHostPython } from '../server/pythonRuntime';
 const python = getHostPython();
 const exists = (file: string) => access(file).then(() => true, () => false);
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+async function until(condition: () => boolean, what: string, timeoutMs = 10000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    if (Date.now() > deadline) assert.fail(`timed out waiting for: ${what}`);
+    await sleep(25);
+  }
+}
 const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
 test('a worker SIGKILLed mid-job restarts with the job failed, partial files unpresented, and archive refusing it', { timeout: 120000 }, async t => {
@@ -85,7 +93,7 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
   const json = async (method: string, url: string, body?: unknown) => {
     const response = await fetch(`${baseUrl}${url}`, { method, headers: { 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
     const text = await response.text();
-    assert.ok(!text.includes(root), `no local path in ${text}`);
+    assert.ok(!text.includes(root) && !text.includes(JSON.stringify(root).slice(1, -1)), `no local path in ${text}`);
     let parsed: any; try { parsed = JSON.parse(text); } catch { parsed = text; }
     return { status: response.status, body: parsed };
   };
@@ -110,7 +118,13 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
     const exited = once(crashed, 'exit');
     crashed.kill('SIGKILL');
     await exited;
-    assert.ok(crashed.signalCode === 'SIGKILL' || crashed.exitCode !== 0, 'worker did not exit cleanly');
+    // Node reports a kill() it issued as signalCode SIGKILL (also on Windows, where it is TerminateProcess) with no exit code.
+    assert.equal(crashed.signalCode, 'SIGKILL');
+    assert.equal(crashed.exitCode, null);
+    // Windows: the solver child lives in a KILL_ON_JOB_CLOSE Job Object owned by the worker (python/lpbf_worker.py,
+    // _spawn_windows_job_child), so killing the worker kills it too. POSIX has no such owner in this fixture (the
+    // stub is not run in --execute mode, which is what installs the parent-death monitor); the child is reaped in cleanup.
+    if (process.platform === 'win32') await until(() => !alive(stubPids[0]), 'stub solver child killed with the worker (Job Object)');
     // Nothing could publish a result.
     assert.equal(await exists(path.join(folder, 'result.json')), false);
 
@@ -133,7 +147,9 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
     assert.equal('result' in job, false, 'no result for a crashed job');
     assert.ok(job.progress < 1, `progress ${job.progress}`);
     assert.deepEqual(job.partialArtifacts, { status: 'retained-unverified', fileCount: 2, totalBytes: 'partial-unverified'.length + 'partial-unverified-2'.length });
-    for (const name of ['field-frame-000.bin', 'temperature-slice.svg', 'result.tmp', 'result.json', 'stub.pid']) {
+    // The real partial files are still on disk, so the refusals below are due to the job state, not to absence.
+    for (const name of ['field-frame-000.bin', 'peak-field.npz', 'result.tmp']) assert.equal(await exists(path.join(folder, name)), true, name);
+    for (const name of ['field-frame-000.bin', 'peak-field.npz', 'temperature-slice.svg', 'result.tmp', 'result.json', 'stub.pid']) {
       const artifact = await json('GET', `/api/lpbf/jobs/${jobId}/artifacts/${name}`);
       assert.equal(artifact.status, 400, `${name}: ${JSON.stringify(artifact.body)}`);
       assert.equal(artifact.body.error, 'Artifact unavailable');
@@ -153,8 +169,15 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
     assert.notEqual(again.body.id, jobId);
     assert.notEqual(again.body.status, 'completed');
     assert.notEqual(again.body.cacheHit, true);
+    const againFolder = path.join(jobRoot, again.body.id);
+    await until(() => existsSync(path.join(againFolder, 'stub.pid')), 'second stub solver child started');
+    const secondPid = Number((await readFile(path.join(againFolder, 'stub.pid'), 'utf8')).trim());
+    stubPids.push(secondPid);
     const cancelled = await json('DELETE', `/api/lpbf/jobs/${again.body.id}`);
     assert.equal(cancelled.status, 200);
+    assert.equal(cancelled.body.id, again.body.id);
+    assert.equal(cancelled.body.status, 'cancelled');
+    assert.equal(alive(secondPid), false, 'cancel reaped the second stub child');
     assert.equal((await json('GET', `/api/lpbf/jobs/${jobId}`)).body.status, 'failed', 'the crashed job stays failed');
   } finally {
     server.closeAllConnections();
@@ -167,8 +190,11 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
         child.kill();
         await closed;
       }));
-      // The stub solver child may outlive a SIGKILLed worker on platforms without a Job Object; never leak it.
-      for (const pid of stubPids) { if (alive(pid)) { try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ } } }
+      // POSIX only: the stub solver child may outlive a SIGKILLed worker; never leak it. Not done on Windows, where the
+      // Job Object already killed it (asserted above) and a recycled PID could belong to an unrelated process.
+      if (process.platform !== 'win32') {
+        for (const pid of stubPids) { if (alive(pid)) { try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ } } }
+      }
       await sleep(200);
     } finally {
       if (priorJobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
