@@ -23,6 +23,8 @@ ALLOWED_LOCAL_IMPORTS = {
     "alloy_registry": {"four_alloy_materials"},
     "input_validation": {"alloy_registry", "physical_constants"},
 }
+# Phase 6a tranche 2a domain-data leaf (its own guard: test_alloy_data_calphad_battery_icme).
+ALLOWED_LOCAL_IMPORTS["alloy_registry"].add("alloy_data_calphad_battery_icme")
 
 
 def _imported_modules(path: Path):

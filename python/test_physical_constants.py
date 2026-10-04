@@ -74,8 +74,10 @@ class ExactConstantsTest(unittest.TestCase):
         import tafel_corrosion_rate_solver as tafel
         self.assertEqual(tafel.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
         self.assertEqual(tafel.FARADAY_C_PER_MOL, pc.TRUNCATED_FARADAY)
-        calphad = (HERE / "calphad_solver.py").read_text(encoding="utf-8")
-        self.assertIn("GAS_CONSTANT_R = 8.314462618 ", calphad)
+        # calphad_solver (Phase 6a tranche 2a structural migration) takes R from this
+        # module, still as the truncated value.
+        import calphad_solver
+        self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.TRUNCATED_GAS_CONSTANT_R)
         # pourbaix_solver (Phase 6a structural migration) takes R/F from this module,
         # still as the truncated values.
         self.assertEqual(pourbaix_solver.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
@@ -168,9 +170,14 @@ class AtomicWeightTest(unittest.TestCase):
 
     def test_calphad_table_values_match_registry(self):
         # Step 3 of the migration must be bit-identical for the atomic weights.
-        table = _literal_dict(HERE / "calphad_solver.py", "ATOMIC_WEIGHTS")
+        # Snapshot of calphad ATOMIC_WEIGHTS at the pre-migration base revision.
+        import calphad_solver
+        snapshot = HERE / "golden" / "phase6a" / "calphad_solver" / "_source_tables.json"
+        table = json.loads(snapshot.read_text(encoding="utf-8"))["values"]["ATOMIC_WEIGHTS"]
+        self.assertEqual(len(table), 28)
         for el, value in table.items():
             self.assertEqual(pc.atomic_weight(el), value, el)
+        self.assertEqual(calphad_solver.ATOMIC_WEIGHTS, table)
 
     def test_tafel_table_values_match_registry(self):
         # Snapshot of tafel ALLOY_LIBRARY at the pre-migration base revision.

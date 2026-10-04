@@ -17,6 +17,38 @@ import json
 import math
 import time
 
+import alloy_registry
+import physical_constants
+from alloy_data_calphad_battery_icme import (
+    ICME_DEFAULT_ALLOY_ID,
+    ICME_JOHNSON_COOK_T_MELT_C,
+    LEGACY_R_8_314,
+    UnsupportedElementError,
+    icme_atomic_weight,
+    icme_base_metal,
+    provenance as _domain_data_provenance,
+)
+from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+
+# Phase 6a structural step (a): constants and tables come from physical_constants /
+# alloy_data_calphad_battery_icme / alloy_registry with their pre-migration values
+# (R = 8.314, legacy rounded atomic weights), so the output stays bit-identical.
+# Exact R and CIAAW atomic weights are the value step (b).
+ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
+
+
+def _default_composition_wt() -> dict:
+    """Inconel 718 solute wt% used when the payload has no composition_wt."""
+    record = alloy_registry.REGISTRY[ICME_DEFAULT_ALLOY_ID]
+    return dict(record.value("default_solute_composition_wt", alloy_registry.DOMAIN_ICME))
+
+
+def _unknown_element(field: str, exc: UnsupportedElementError, reason: str) -> ValidationError:
+    return ValidationError(UNKNOWN_ELEMENT, field, str(exc),
+                           {"element": repr(exc.element), "supported": list(exc.supported),
+                            "reason": reason})
+
+
 def solve_multiscale_pipeline(params: dict) -> dict:
     t_start = time.time()
 
@@ -25,9 +57,7 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     base_metal = params.get("baseMetal", "Ni")  # Ni, Fe, Ti, Al
     crystal_system = params.get("crystalSystem", "FCC" if base_metal in ["Ni", "Al"] else "BCC" if base_metal == "Fe" else "HCP")
     
-    comp_wt = params.get("composition_wt", {
-        "Cr": 19.0, "Fe": 18.0, "Nb": 5.1, "Mo": 3.0, "Ti": 0.9, "Al": 0.5, "C": 0.05, "Si": 0.2, "Mn": 0.2
-    })
+    comp_wt = params.get("composition_wt", _default_composition_wt())
     
     cooling_rate_C_s = float(params.get("coolingRate_C_s", 150000.0))  # 1.5e5 K/s for LPBF AM
     grain_size_override = params.get("grainSize_um", None)
@@ -36,6 +66,13 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     strain_rate_s_inv = float(params.get("strainRate_s_inv", 0.001))
     service_temp_C = float(params.get("serviceTemp_C", 25.0))
     component_type = params.get("componentType", "turbine_blade_root")
+
+    # Phase 6a: a base metal without a data branch (anything but Ni/Fe/Ti) was solved
+    # silently with the Al data; only Ni, Fe, Ti and Al are accepted now.
+    try:
+        icme_base_metal(base_metal)
+    except UnsupportedElementError as exc:
+        raise _unknown_element("baseMetal", exc, "no-icme-base-data") from exc
 
     # =========================================================================
     # SCALE 0: DFT ATOMISTIC SCALE (10^-10 m / Ångström)
@@ -114,22 +151,21 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     base_radius = element_radii_nm.get(base_metal, 0.124)
     base_G = element_G_GPa.get(base_metal, 76.0)
 
-    # Convert wt% to atomic fraction x_i & calculate Labusch-Fleischer solute misfit
-    atomic_weights = {
-        "Ni": 58.69, "Fe": 55.85, "Cr": 52.00, "Mo": 95.95, "Nb": 92.91,
-        "Ti": 47.87, "Al": 26.98, "C": 12.01, "Si": 28.09, "Mn": 54.94,
-        "V": 50.94, "W": 183.84, "Co": 58.93, "Cu": 63.55, "Mg": 24.31, "Zn": 65.38
-    }
-
+    # Convert wt% to atomic fraction x_i & calculate Labusch-Fleischer solute misfit.
+    # Legacy rounded atomic weights (alloy_data_calphad_battery_icme.ICME_ATOMIC_WEIGHTS);
+    # an element outside that table used a silent 55.0 g/mol and is now refused.
     moles = {}
     for el, wt in comp_wt.items():
         if wt > 0:
-            aw = atomic_weights.get(el, 55.0)
+            try:
+                aw = icme_atomic_weight(el)
+            except UnsupportedElementError as exc:
+                raise _unknown_element(f"composition_wt.{el}", exc, "no-icme-atomic-weight") from exc
             moles[el] = wt / aw
     
     sum_wt = sum(comp_wt.values())
     base_wt = max(0.0, 100.0 - sum_wt)
-    moles[base_metal] = moles.get(base_metal, 0.0) + (base_wt / atomic_weights.get(base_metal, 58.69))
+    moles[base_metal] = moles.get(base_metal, 0.0) + (base_wt / icme_atomic_weight(base_metal))
     total_moles = sum(moles.values())
     atomic_fractions = {el: mol / total_moles for el, mol in moles.items()}
 
@@ -199,8 +235,8 @@ def solve_multiscale_pipeline(params: dict) -> dict:
 
     # LSW Precipitation Kinetics & Orowan / Particle Shearing
     Q_diff_kJ_mol = 275.0 if base_metal == "Ni" else 130.0 if base_metal == "Al" else 240.0
-    R_gas = 8.314
-    T_aging_K = aging_temp_C + 273.15
+    R_gas = LEGACY_R_8_314.value  # 8.314 (pre-migration value)
+    T_aging_K = aging_temp_C + ZERO_CELSIUS_K
     k_LSW = 1.2e14 * math.exp(-(Q_diff_kJ_mol * 1000.0) / (R_gas * T_aging_K))
     mean_precip_radius_nm = max(1.5, math.pow(k_LSW * aging_time_h + 3.0, 1.0 / 3.0))
 
@@ -289,7 +325,7 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     jcn = round(n_hollomon, 3)
     jcC = 0.014 if base_metal == "Ni" else 0.015 if base_metal == "Fe" else 0.028
     jcm = 1.15 if base_metal == "Ni" else 1.03 if base_metal == "Fe" else 0.90
-    t_melt_C = 1350.0 if base_metal == "Ni" else 1450.0 if base_metal == "Fe" else 1650.0 if base_metal == "Ti" else 660.0
+    t_melt_C = ICME_JOHNSON_COOK_T_MELT_C[base_metal]
 
     # =========================================================================
     # SCALE 4: MACRO STRUCTURAL LOAD & COMPONENT LIMIT (10^-1 m / dm-m)
@@ -494,12 +530,26 @@ def main():
             params = {}
 
         result = solve_multiscale_pipeline(params)
+        # Phase 6a provenance (constants and domain-data versions, the R actually used)
+        result["provenance"] = {
+            "registryVersion": alloy_registry.REGISTRY_VERSION,
+            "constantsVersion": physical_constants.CONSTANTS_VERSION,
+            "gasConstantR_J_molK": LEGACY_R_8_314.value,
+            **_domain_data_provenance(),
+            "constantsNote": "Rounded R = 8.314 and legacy rounded atomic weights (pre-migration "
+                             "values); exact SI R and CIAAW weights are pending the Phase 6a value step.",
+        }
         print(json.dumps(result, indent=2))
+    except ValidationError as e:
+        # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+        print(json.dumps(validation_envelope(e)))
+        sys.exit(2)
     except Exception as e:
         err_res = {
             "success": False,
             "error": str(e),
-            "engine": "MetalliX ICME Multi-Scale Pipeline Solver"
+            "engine": "MetalliX ICME Multi-Scale Pipeline Solver",
+            "errorKind": "internal",
         }
         print(json.dumps(err_res, indent=2))
         sys.exit(1)

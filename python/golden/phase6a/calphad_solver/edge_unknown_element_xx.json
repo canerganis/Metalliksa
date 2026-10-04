@@ -1,0 +1,1542 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "edge_unknown_element_xx",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "elements": {
+   "Cr": 20.0,
+   "Ni": 70.0,
+   "Xx": 10.0
+  },
+  "name": "Unknown element",
+  "tMax": 1500.0,
+  "tMin": 800.0,
+  "tStep": 50.0,
+  "unit": "wt_pct"
+ },
+ "invocation": "python -B calphad_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "calphad_solver",
+ "solverFile": "python/calphad_solver.py",
+ "solverSha256": "d54acda6ad93212367de84fd759d1e5df992730f0d47d26189de363683fd8a24",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "adaptiveGrid": true,
+  "adaptiveTelemetry": {
+   "boundaryToleranceC": 0.15,
+   "coarseStepsCount": 15,
+   "equivalentUniformSteps": 1401,
+   "isAdaptive": true,
+   "minRefineStepC": 0.5,
+   "refinedStepsCount": 21,
+   "speedupFactor": 38.9,
+   "totalEvaluations": 36,
+   "transitionZones": [
+    {
+     "description": "Solidification / Liquidus-Solidus Boundary",
+     "intervalC": [
+      1350.0,
+      1400.0
+     ]
+    }
+   ]
+  },
+  "alloyName": "Unknown element",
+  "atomicFractions": {
+   "Cr": 0.21642200076821586,
+   "Ni": 0.6710472157123427,
+   "Xx": 0.11253078351944151
+  },
+  "criticalTemperatures": {
+   "betaTransusC": null,
+   "carbidePrecipitationC": null,
+   "deltaSolvusC": null,
+   "freezingRangeC": 35.0,
+   "gammaDoublePrimeSolvusC": null,
+   "gammaPrimeSolvusC": null,
+   "liquidusC": 1391.0,
+   "solidusC": 1356.0,
+   "tcpSigmaRiskTemperatureC": null
+  },
+  "databaseUsed": "COST 507 Comprehensive Light Alloys Database",
+  "engine": "subregular-adaptive-minimizer",
+  "equilibriumProfile": [
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -16802.6,
+     "Ni": -4880.2,
+     "Xx": -23055.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 800.0,
+    "temperatureK": 1073.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -8.118
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -17585.4,
+     "Ni": -5107.6,
+     "Xx": -24129.4
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 850.0,
+    "temperatureK": 1123.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -8.47
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -18368.3,
+     "Ni": -5335.0,
+     "Xx": -25203.5
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 900.0,
+    "temperatureK": 1173.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -8.821
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -19151.2,
+     "Ni": -5562.3,
+     "Xx": -26277.7
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 950.0,
+    "temperatureK": 1223.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -9.172
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -19934.0,
+     "Ni": -5789.7,
+     "Xx": -27351.9
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1000.0,
+    "temperatureK": 1273.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -9.523
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -20716.9,
+     "Ni": -6017.1,
+     "Xx": -28426.1
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1050.0,
+    "temperatureK": 1323.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -9.874
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -21499.8,
+     "Ni": -6244.5,
+     "Xx": -29500.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1100.0,
+    "temperatureK": 1373.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -10.226
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -22282.6,
+     "Ni": -6471.8,
+     "Xx": -30574.5
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1150.0,
+    "temperatureK": 1423.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -10.577
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -23065.5,
+     "Ni": -6699.2,
+     "Xx": -31648.6
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1200.0,
+    "temperatureK": 1473.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -10.928
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -23848.4,
+     "Ni": -6926.6,
+     "Xx": -32722.8
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1250.0,
+    "temperatureK": 1523.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -11.279
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -24631.2,
+     "Ni": -7154.0,
+     "Xx": -33797.0
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1300.0,
+    "temperatureK": 1573.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -11.63
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25414.1,
+     "Ni": -7381.4,
+     "Xx": -34871.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1350.0,
+    "temperatureK": 1623.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -11.981
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25462.9,
+     "Ni": -7395.5,
+     "Xx": -34938.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1353.12,
+    "temperatureK": 1626.27,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.003
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25479.1,
+     "Ni": -7400.2,
+     "Xx": -34960.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1354.15,
+    "temperatureK": 1627.3,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.011
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25487.4,
+     "Ni": -7402.6,
+     "Xx": -34971.7
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1354.68,
+    "temperatureK": 1627.83,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.014
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25494.7,
+     "Ni": -7404.8,
+     "Xx": -34981.8
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1355.15,
+    "temperatureK": 1628.3,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.018
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25499.7,
+     "Ni": -7406.2,
+     "Xx": -34988.7
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1355.47,
+    "temperatureK": 1628.62,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.02
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25502.5,
+     "Ni": -7407.0,
+     "Xx": -34992.6
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1355.65,
+    "temperatureK": 1628.8,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.021
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25505.8,
+     "Ni": -7408.0,
+     "Xx": -34997.1
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1355.86,
+    "temperatureK": 1629.01,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.023
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25507.2,
+     "Ni": -7408.4,
+     "Xx": -34999.0
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1355.95,
+    "temperatureK": 1629.1,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.023
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25508.8,
+     "Ni": -7408.9,
+     "Xx": -35001.2
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1356.05,
+    "temperatureK": 1629.2,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.024
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25510.4,
+     "Ni": -7409.3,
+     "Xx": -35003.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.001,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.999,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1356.15,
+    "temperatureK": 1629.3,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.025
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25511.9,
+     "Ni": -7409.8,
+     "Xx": -35005.5
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0013,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9987,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1356.25,
+    "temperatureK": 1629.4,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.025
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25513.5,
+     "Ni": -7410.2,
+     "Xx": -35007.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.002,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.998,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1356.35,
+    "temperatureK": 1629.5,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.026
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25518.2,
+     "Ni": -7411.6,
+     "Xx": -35014.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0046,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9954,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1356.65,
+    "temperatureK": 1629.8,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.028
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25526.0,
+     "Ni": -7413.9,
+     "Xx": -35024.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0099,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9901,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1357.15,
+    "temperatureK": 1630.3,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.032
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25541.7,
+     "Ni": -7418.4,
+     "Xx": -35046.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.0231,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9769,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1358.15,
+    "temperatureK": 1631.3,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.039
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25609.8,
+     "Ni": -7438.2,
+     "Xx": -35139.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.103,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.897,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1362.5,
+    "temperatureK": 1635.65,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.069
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25707.7,
+     "Ni": -7466.6,
+     "Xx": -35274.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.2558,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.7442,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1368.75,
+    "temperatureK": 1641.9,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.113
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25805.5,
+     "Ni": -7495.0,
+     "Xx": -35408.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.4384,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.5616,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1375.0,
+    "temperatureK": 1648.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.157
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -25903.4,
+     "Ni": -7523.5,
+     "Xx": -35542.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.6435,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.3565,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1381.25,
+    "temperatureK": 1654.4,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.201
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -26001.2,
+     "Ni": -7551.9,
+     "Xx": -35676.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 0.8674,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     },
+     {
+      "color": "#38bdf8",
+      "fraction": 0.1326,
+      "isPrimary": true,
+      "majorElements": [
+       "Ni"
+      ],
+      "phaseId": "FCC_A1",
+      "phaseName": "γ-Matrix (FCC)"
+     }
+    ],
+    "temperatureC": 1387.5,
+    "temperatureK": 1660.65,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.245
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -26099.1,
+     "Ni": -7580.3,
+     "Xx": -35811.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1393.75,
+    "temperatureK": 1666.9,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.289
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -26196.9,
+     "Ni": -7608.7,
+     "Xx": -35945.4
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1400.0,
+    "temperatureK": 1673.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.333
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -26979.8,
+     "Ni": -7836.1,
+     "Xx": -37019.6
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1450.0,
+    "temperatureK": 1723.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -12.684
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "Cr": -27762.7,
+     "Ni": -8063.5,
+     "Xx": -38093.7
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Cr",
+       "Ni",
+       "Xx"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1500.0,
+    "temperatureK": 1773.15,
+    "thermodynamicActivities": {
+     "Cr": 0.15211,
+     "Ni": 0.57872,
+     "Xx": 0.07548
+    },
+    "totalGibbsEnergy_kJ_mol": -13.035
+   }
+  ],
+  "isEmpirical": false,
+  "iterations": 36,
+  "multiElementScheil": [
+   {
+    "fractionSolid": 0.0,
+    "liquidCompositions": {
+     "Cr": 20.0,
+     "Ni": 70.0,
+     "Xx": 10.0
+    },
+    "solidCompositions": {
+     "Cr": 19.0,
+     "Ni": 70.0,
+     "Xx": 9.0
+    },
+    "temperatureC": 1391.0
+   },
+   {
+    "fractionSolid": 0.048,
+    "liquidCompositions": {
+     "Cr": 20.05,
+     "Ni": 70.0,
+     "Xx": 10.05
+    },
+    "solidCompositions": {
+     "Cr": 19.05,
+     "Ni": 70.0,
+     "Xx": 9.04
+    },
+    "temperatureC": 1390.5
+   },
+   {
+    "fractionSolid": 0.096,
+    "liquidCompositions": {
+     "Cr": 20.1,
+     "Ni": 70.0,
+     "Xx": 10.1
+    },
+    "solidCompositions": {
+     "Cr": 19.1,
+     "Ni": 70.0,
+     "Xx": 9.09
+    },
+    "temperatureC": 1390.0
+   },
+   {
+    "fractionSolid": 0.144,
+    "liquidCompositions": {
+     "Cr": 20.16,
+     "Ni": 70.0,
+     "Xx": 10.16
+    },
+    "solidCompositions": {
+     "Cr": 19.15,
+     "Ni": 70.0,
+     "Xx": 9.14
+    },
+    "temperatureC": 1389.4
+   },
+   {
+    "fractionSolid": 0.192,
+    "liquidCompositions": {
+     "Cr": 20.21,
+     "Ni": 70.0,
+     "Xx": 10.22
+    },
+    "solidCompositions": {
+     "Cr": 19.2,
+     "Ni": 70.0,
+     "Xx": 9.19
+    },
+    "temperatureC": 1388.8
+   },
+   {
+    "fractionSolid": 0.24,
+    "liquidCompositions": {
+     "Cr": 20.28,
+     "Ni": 70.0,
+     "Xx": 10.28
+    },
+    "solidCompositions": {
+     "Cr": 19.26,
+     "Ni": 70.0,
+     "Xx": 9.25
+    },
+    "temperatureC": 1388.2
+   },
+   {
+    "fractionSolid": 0.288,
+    "liquidCompositions": {
+     "Cr": 20.34,
+     "Ni": 70.0,
+     "Xx": 10.35
+    },
+    "solidCompositions": {
+     "Cr": 19.33,
+     "Ni": 70.0,
+     "Xx": 9.31
+    },
+    "temperatureC": 1387.5
+   },
+   {
+    "fractionSolid": 0.336,
+    "liquidCompositions": {
+     "Cr": 20.41,
+     "Ni": 70.0,
+     "Xx": 10.42
+    },
+    "solidCompositions": {
+     "Cr": 19.39,
+     "Ni": 70.0,
+     "Xx": 9.38
+    },
+    "temperatureC": 1386.7
+   },
+   {
+    "fractionSolid": 0.384,
+    "liquidCompositions": {
+     "Cr": 20.49,
+     "Ni": 70.0,
+     "Xx": 10.5
+    },
+    "solidCompositions": {
+     "Cr": 19.47,
+     "Ni": 70.0,
+     "Xx": 9.45
+    },
+    "temperatureC": 1385.9
+   },
+   {
+    "fractionSolid": 0.432,
+    "liquidCompositions": {
+     "Cr": 20.57,
+     "Ni": 70.0,
+     "Xx": 10.58
+    },
+    "solidCompositions": {
+     "Cr": 19.55,
+     "Ni": 70.0,
+     "Xx": 9.52
+    },
+    "temperatureC": 1385.0
+   },
+   {
+    "fractionSolid": 0.48,
+    "liquidCompositions": {
+     "Cr": 20.66,
+     "Ni": 70.0,
+     "Xx": 10.68
+    },
+    "solidCompositions": {
+     "Cr": 19.63,
+     "Ni": 70.0,
+     "Xx": 9.61
+    },
+    "temperatureC": 1384.0
+   },
+   {
+    "fractionSolid": 0.528,
+    "liquidCompositions": {
+     "Cr": 20.77,
+     "Ni": 70.0,
+     "Xx": 10.78
+    },
+    "solidCompositions": {
+     "Cr": 19.73,
+     "Ni": 70.0,
+     "Xx": 9.7
+    },
+    "temperatureC": 1382.8
+   },
+   {
+    "fractionSolid": 0.576,
+    "liquidCompositions": {
+     "Cr": 20.88,
+     "Ni": 70.0,
+     "Xx": 10.9
+    },
+    "solidCompositions": {
+     "Cr": 19.83,
+     "Ni": 70.0,
+     "Xx": 9.81
+    },
+    "temperatureC": 1381.5
+   },
+   {
+    "fractionSolid": 0.624,
+    "liquidCompositions": {
+     "Cr": 21.0,
+     "Ni": 70.0,
+     "Xx": 11.03
+    },
+    "solidCompositions": {
+     "Cr": 19.95,
+     "Ni": 70.0,
+     "Xx": 9.92
+    },
+    "temperatureC": 1380.0
+   },
+   {
+    "fractionSolid": 0.672,
+    "liquidCompositions": {
+     "Cr": 21.15,
+     "Ni": 70.0,
+     "Xx": 11.18
+    },
+    "solidCompositions": {
+     "Cr": 20.09,
+     "Ni": 70.0,
+     "Xx": 10.06
+    },
+    "temperatureC": 1378.2
+   },
+   {
+    "fractionSolid": 0.72,
+    "liquidCompositions": {
+     "Cr": 21.31,
+     "Ni": 70.0,
+     "Xx": 11.36
+    },
+    "solidCompositions": {
+     "Cr": 20.25,
+     "Ni": 70.0,
+     "Xx": 10.22
+    },
+    "temperatureC": 1376.0
+   },
+   {
+    "fractionSolid": 0.768,
+    "liquidCompositions": {
+     "Cr": 21.52,
+     "Ni": 70.0,
+     "Xx": 11.57
+    },
+    "solidCompositions": {
+     "Cr": 20.44,
+     "Ni": 70.0,
+     "Xx": 10.42
+    },
+    "temperatureC": 1373.3
+   },
+   {
+    "fractionSolid": 0.816,
+    "liquidCompositions": {
+     "Cr": 21.77,
+     "Ni": 70.0,
+     "Xx": 11.84
+    },
+    "solidCompositions": {
+     "Cr": 20.68,
+     "Ni": 70.0,
+     "Xx": 10.66
+    },
+    "temperatureC": 1369.8
+   },
+   {
+    "fractionSolid": 0.864,
+    "liquidCompositions": {
+     "Cr": 22.1,
+     "Ni": 70.0,
+     "Xx": 12.21
+    },
+    "solidCompositions": {
+     "Cr": 20.99,
+     "Ni": 70.0,
+     "Xx": 10.99
+    },
+    "temperatureC": 1364.8
+   },
+   {
+    "fractionSolid": 0.912,
+    "liquidCompositions": {
+     "Cr": 22.58,
+     "Ni": 70.0,
+     "Xx": 12.75
+    },
+    "solidCompositions": {
+     "Cr": 21.46,
+     "Ni": 70.0,
+     "Xx": 11.48
+    },
+    "temperatureC": 1356.9
+   },
+   {
+    "fractionSolid": 0.96,
+    "liquidCompositions": {
+     "Cr": 23.49,
+     "Ni": 70.0,
+     "Xx": 13.8
+    },
+    "solidCompositions": {
+     "Cr": 22.32,
+     "Ni": 70.0,
+     "Xx": 12.42
+    },
+    "temperatureC": 1339.8
+   }
+  ],
+  "nominalComposition": {
+   "Cr": 20.0,
+   "Ni": 70.0,
+   "Xx": 10.0
+  },
+  "phacompAnalysis": {
+   "m_d_bar": 0.9157,
+   "n_v_bar": 1.5639,
+   "tcpEmbrittlementRisk": "Low",
+   "tcpSigmaRiskTemperatureC": null,
+   "thermodynamicStabilityIndex": 100.0
+  },
+  "pycalphadVersion": "No module named 'pycalphad'",
+  "solutePartitioning": [
+   {
+    "element": "Cr",
+    "isSegregating": false,
+    "nominalWeightPct": 20.0,
+    "partitionCoefficient_k": 0.95,
+    "soluteRole": "Oxidation & Matrix Strengthener"
+   },
+   {
+    "element": "Ni",
+    "isSegregating": false,
+    "nominalWeightPct": 70.0,
+    "partitionCoefficient_k": 1.0,
+    "soluteRole": "Matrix Base"
+   },
+   {
+    "element": "Xx",
+    "isSegregating": false,
+    "nominalWeightPct": 10.0,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   }
+  ],
+  "success": true,
+  "tcpEmbrittlementRisk": "Low",
+  "temperatureRangeC": [
+   800.0,
+   1500.0
+  ],
+  "temperatureStepC": 50.0,
+  "thermodynamicModel": "Adaptive Multi-Component Redlich-Kister Sub-regular Gibbs Minimizer",
+  "thermodynamicStabilityIndex": 100.0
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
