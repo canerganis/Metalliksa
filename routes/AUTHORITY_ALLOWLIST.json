@@ -68,6 +68,7 @@
     "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",
     "POST /api/metallurgy/qualify-aerospace": "Always returns qualified: true with constant findings. Known offender (design 7).",
     "GET /api/materials-project/search": "Serves a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without any authority. Real offender; deletion/follow-up candidate.",
+    "GET /api/health": "server.ts liveness: 'hasApiKey: AIRGAPPED ? false : <runtime check>' trips the ternary-of-literals rule. Transport metadata, not a result; heuristic false positive kept visible.",
     "GET /api/orchestrator/approved-sources": "Static configuration descriptor (automaticCollection/modelTraining flags), not a computed result. Heuristic false positive kept visible."
   }
 }

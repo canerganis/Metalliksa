@@ -31,7 +31,7 @@ export function tsFiles(dir: string): string[] {
 // Scope: routes/** (nested included), server/** and server.ts. Binding, canned and
 // unclassified checks all apply to every scanned file.
 export const SCANNED_FILES = [...tsFiles('routes'), ...tsFiles('server'), 'server.ts'];
-const handlers = SCANNED_FILES.flatMap(file => routeHandlers(file, read(file)));
+const handlers = SCANNED_FILES.flatMap(file => routeHandlers(file, read(file), path.join(repoRoot, file)));
 const serverHandlers: RouteHandler[] = [];
 const allowlist = JSON.parse(read('routes/AUTHORITY_ALLOWLIST.json')) as Allowlist;
 const ceiling: AllowlistCeiling = readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline', 'unclassified');
@@ -128,6 +128,88 @@ test('canned-result heuristic needs a recognised authority and follows variables
     'POST /api/strings': false, 'POST /api/opaque': 'unclassified',
     'UNRESOLVED sample.ts: router.get(computePath(), (req, res) => res.json({ a: 1 }))': 'unclassified',
     'GET /api/catalog': true, 'DELETE /api/ack': false,
+  });
+});
+
+const cannedOf = (sample: string, absPath: string | null = null) =>
+  Object.fromEntries(routeHandlers('sample.ts', sample, absPath).map(handler => [handler.key, handler.canned]));
+
+test('mutation: every literal-hiding form is still canned', () => {
+  const sample = [
+    "const RESULT = { v: 1 }; const CATALOG = [{ id: 'x', gap: 1.2 }]; const TABLE = { gap: 1.2 };",
+    "function canned() { return { margin: 18.5 }; } const make = () => ({ q: true });",
+    "router.post('/api/ack-number', (req, res) => res.json({ success: 1 }));",
+    "router.post('/api/ack-boolean', (req, res) => res.json({ success: true, ok: false }));",
+    "router.post('/api/error-null', (req, res) => res.json({ error: null, qualified: true }));",
+    "router.post('/api/error-undefined', (req, res) => res.json({ error: undefined, v: 1 }));",
+    "router.post('/api/error-real', (req, res) => res.status(500).json({ error: String(req.body), v: 1 }));",
+    "router.post('/api/end-stringify', (req, res) => res.end(JSON.stringify({ qualified: true })));",
+    "router.post('/api/send-stringify-const', (req, res) => res.send(JSON.stringify(RESULT)));",
+    "router.post('/api/jsonp', (req, res) => res.jsonp({ v: 1 }));",
+    "router.post('/api/ternary', (req, res) => res.json({ v: req.body.x ? 1 : 2 }));",
+    "router.post('/api/nullish', (req, res) => res.json({ v: req.body.x ?? 1 }));",
+    "router.post('/api/or', (req, res) => res.json({ v: req.body.x || true }));",
+    "router.post('/api/helper-fn', (req, res) => res.json(canned()));",
+    "router.post('/api/helper-arrow', (req, res) => res.json(make()));",
+    "router.post('/api/assign', (req, res) => res.json(Object.assign({}, { v: 1 })));",
+    "router.post('/api/index', (req, res) => res.json(CATALOG[0]));",
+    "router.post('/api/field', (req, res) => res.json({ gap: TABLE.gap }));",
+    "router.post('/api/filter', (req, res) => res.json({ data: CATALOG.filter(row => row.id === req.query.id) }));",
+    "router.post('/api/arithmetic', (req, res) => res.json({ limit: 16 * 1024 }));",
+    "router.post('/api/runtime', (req, res) => res.json({ count: req.body.items.length, value: req.body.x * 2 }));",
+  ].join('\n');
+  assert.deepEqual(cannedOf(sample), {
+    'POST /api/ack-number': true, 'POST /api/ack-boolean': false, 'POST /api/error-null': true,
+    'POST /api/error-undefined': true, 'POST /api/error-real': false, 'POST /api/end-stringify': true,
+    'POST /api/send-stringify-const': true, 'POST /api/jsonp': true, 'POST /api/ternary': true, 'POST /api/nullish': true,
+    'POST /api/or': true, 'POST /api/helper-fn': true, 'POST /api/helper-arrow': true, 'POST /api/assign': true,
+    'POST /api/index': true, 'POST /api/field': true, 'POST /api/filter': true, 'POST /api/arithmetic': true,
+    'POST /api/runtime': false,
+  });
+});
+
+test('mutation: literals moved into an imported module are still canned', () => {
+  const sample = [
+    "import { CANNED_RESULT, CANNED_LIMIT, cannedHelper } from './route-canned-module';",
+    "router.post('/api/imported-const', (req, res) => res.json(CANNED_RESULT));",
+    "router.post('/api/imported-arith', (req, res) => res.json({ limit: CANNED_LIMIT }));",
+    "router.post('/api/imported-helper', (req, res) => res.json(cannedHelper()));",
+  ].join('\n');
+  assert.deepEqual(cannedOf(sample, path.join(repoRoot, 'tests/fixtures/sample-route.ts')), {
+    'POST /api/imported-const': true, 'POST /api/imported-arith': true, 'POST /api/imported-helper': true,
+  });
+});
+
+test('mutation: look-alike authorities do not count; recognised imports and injected services do', () => {
+  const spoofed = [
+    "const lpbfWorker = { request: async () => ({}) };",
+    "function handlePythonDispatch() { return 1; }",
+    "const service = { list: () => [] };",
+    "router.post('/api/fake-worker', async (req, res) => { await lpbfWorker.request('x'); res.json({ v: 1 }); });",
+    "router.post('/api/fake-dispatch', (req, res) => { handlePythonDispatch(); res.json({ v: 1 }); });",
+    "router.post('/api/fake-service', (req, res) => { service.list(); res.json({ v: 1 }); });",
+    "router.post('/api/bare-fetch', async (req, res) => { await fetch('https://example.invalid'); res.json({ v: 1 }); });",
+    "router.post('/api/any-registry', (req, res) => { registry.save(); res.json({ v: 1 }); });",
+  ].join('\n');
+  assert.deepEqual(cannedOf(spoofed), {
+    'POST /api/fake-worker': true, 'POST /api/fake-dispatch': true, 'POST /api/fake-service': true,
+    'POST /api/bare-fetch': true, 'POST /api/any-registry': true,
+  });
+  const genuine = [
+    "import { lpbfWorker } from '../server/lpbfWorkerBridge';",
+    "import { runPythonScript } from '../server/processOrchestrator.ts';",
+    "import { LpbfRunArchiveService } from '../server/lpbfRunArchiveService';",
+    "import { researchSearchUrl } from '../server/researchSearch';",
+    "const deps = { runPythonScript };",
+    "async function handlePythonDispatch(script, res) { const out = await deps.runPythonScript(script, {}); res.json(out); }",
+    "router.post('/api/worker', async (req, res) => { const data = await lpbfWorker.request('x'); res.json({ v: 1, data }); });",
+    "router.post('/api/deps', async (req, res) => { await deps.runPythonScript('x', {}); res.json({ v: 1 }); });",
+    "router.post('/api/dispatch', (req, res) => { handlePythonDispatch('x', res); res.json({ v: 1 }); });",
+    "export function create(service = new LpbfRunArchiveService()) { const router = Router(); router.get('/api/archive', async (req, res) => { await service.list(); res.json({ v: 1 }); }); }",
+    "router.get('/api/search', async (req, res) => { const url = researchSearchUrl(req.query.q); await fetch(url); res.json({ v: 1 }); });",
+  ].join('\n');
+  assert.deepEqual(cannedOf(genuine), {
+    'POST /api/worker': false, 'POST /api/deps': false, 'POST /api/dispatch': false, 'GET /api/archive': false, 'GET /api/search': false,
   });
 });
 

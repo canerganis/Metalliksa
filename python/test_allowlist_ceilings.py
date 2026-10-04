@@ -43,6 +43,8 @@ DELIBERATE_DELTA = {
         # b5d6ba8: the canned Materials Project search was unbound from the registry (review item 4).
         # Fix round 2 widened discovery to server.ts: its three infrastructure handlers.
         "unbound": {"GET /api/materials-project/search", "GET /api/health", "GET /api/runtime-config", "ALL /api/*"},
+        # Fix round 2, stricter canned rules (ternary of literals): the server.ts liveness flag.
+        "cannedBaseline": {"GET /api/health"},
     },
 }
 IGNORED_DIRS = {"node_modules", ".git", "dist", "graft", ".runtime"}
