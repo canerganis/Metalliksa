@@ -101,7 +101,8 @@ export function resumeEngineeringJob(): void {
       const next = await simulationApi.get(id);
       const current = useLpbfEngineeringStore.getState();
       if (current.job?.id !== id || !["queued", "running"].includes(current.job.status)) {if (pollingId === id) pollingId = undefined;return;}
-      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(resultSignatureOnPoll(next.status, current.submittedSignature) !== undefined ? {resultSignature: current.submittedSignature} : {}) });
+      const ownedSignature = resultSignatureOnPoll(next.status, current.submittedSignature);
+      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(ownedSignature !== undefined ? {resultSignature: ownedSignature} : {}) });
     } catch (error) {
       if (useLpbfEngineeringStore.getState().job?.id === id) useLpbfEngineeringStore.setState({error: error instanceof Error ? error.message : "Worker connection failed"});
     }
@@ -112,6 +113,8 @@ export function resumeEngineeringJob(): void {
   setTimeout(poll, 500);
 }
 
-export function engineeringSignature(input: SimulationInput, state: LpbfEngineeringState, strategy: string): string {
+/** Signature of the draft inputs; the engineering view and the qualification report both build it here. */
+export type EngineeringSignatureFields = Pick<LpbfEngineeringState, "settings" | "mode" | "material" | "properties" | "measurements" | "width" | "depth" | "source" | "specimen" | "uncertainty" | "holdout">;
+export function engineeringSignature(input: SimulationInput, state: EngineeringSignatureFields, strategy: string): string {
   return JSON.stringify([input,state.settings,state.mode,state.material,state.properties,state.measurements,state.width,state.depth,state.source,state.specimen,state.uncertainty,state.holdout,strategy]);
 }

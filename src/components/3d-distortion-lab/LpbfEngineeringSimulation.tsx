@@ -11,7 +11,7 @@ import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 
-import { LPBF_ENGINEERING_DEFAULTS as defaults, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
+import { LPBF_ENGINEERING_DEFAULTS as defaults, engineeringSignature, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
 const controls = [
   ["stripeWidth_um","Stripe width (µm)",20,3000], ["islandSize_um","Island size (µm)",50,3000],
   ["mesh_um","Mesh spacing (µm)",5,80], ["maxDt_s","Maximum timestep (s)",1e-9,1e-4],
@@ -506,7 +506,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
   const [measurements,setMeasurements] = useEngineeringField("measurements");
   const [specimen,setSpecimen]=useEngineeringField("specimen"); const [uncertainty,setUncertainty]=useEngineeringField("uncertainty"); const [holdout,setHoldout]=useEngineeringField("holdout");
   const [width,setWidth] = useEngineeringField("width"); const [depth,setDepth] = useEngineeringField("depth"); const [source,setSource] = useEngineeringField("source");
-  const signature = JSON.stringify([input,settings,mode,material,properties,measurements,width,depth,source,specimen,uncertainty,holdout,sharedStrategy]);
+  const signature = engineeringSignature(input,{settings,mode,material,properties,measurements,width,depth,source,specimen,uncertainty,holdout},sharedStrategy);
   const submittedSignature = useLpbfEngineeringStore(s=>s.submittedSignature);
   const canRepeatCurrentInput = job?.status === "completed" && submittedSignature === signature;
   const cancelledJob = useRef("");

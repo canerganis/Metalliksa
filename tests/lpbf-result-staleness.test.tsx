@@ -23,7 +23,7 @@ function completedJob(id = "a".repeat(32)): SimulationJob {
   return { id, status: "completed", progress: 1, log: "fixture", error: null, result };
 }
 const specimen = () => useMaterialSpecimenStore.getState().activeSpecimen;
-/** Signature of the current draft: the same function the engineering view and the report use. */
+/** Signature of the current draft: engineeringSignature() is what LpbfEngineeringSimulation (its `signature`) and the qualification report both call. */
 const draft = () => engineeringSignature(sharedSimulationInput(specimen()), useLpbfEngineeringStore.getState(), specimen().lpbf.scanStrategy);
 const stale = () => {
   const state = useLpbfEngineeringStore.getState();
@@ -31,7 +31,27 @@ const stale = () => {
 };
 const reportMatches = () => createLpbfQualificationReport(specimen(), useLpbfWorkflowStore.getState().context, useLpbfEngineeringStore.getState(), null).resultMatchesCurrentInputs;
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+/** Polls until the condition holds (the store polls the worker on a 500 ms timer); fails with `what` after the deadline. */
+async function until(condition: () => boolean, what: string, timeoutMs = 10000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    if (Date.now() > deadline) assert.fail(`timed out waiting for: ${what}`);
+    await wait(25);
+  }
+}
 const snapshot = () => ({ ...useLpbfEngineeringStore.getState() });
+/** Every test restores the shared stores it touched (specimen incl. preset/process edits, engineering store, worker api). */
+const isolate = async (body: () => Promise<void>) => {
+  const engineering = snapshot();
+  const specimenState = useMaterialSpecimenStore.getState().activeSpecimen;
+  const previousGet = simulationApi.get;
+  try { await body(); }
+  finally {
+    simulationApi.get = previousGet;
+    useMaterialSpecimenStore.setState({ activeSpecimen: specimenState });
+    useLpbfEngineeringStore.setState(engineering);
+  }
+};
 const editPower = (power: number) => useMaterialSpecimenStore.getState().updateLpbfProcess({ laserPower_W: power });
 /** What LpbfEngineeringSimulation.submit() records for a submitted job. */
 const submit = (job: SimulationJob) => {
@@ -39,6 +59,15 @@ const submit = (job: SimulationJob) => {
   useLpbfEngineeringStore.setState({ job, submittedSignature: signature, submittedInput: sharedSimulationInput(specimen()), resultSignature: resultSignatureOnSubmit(job.status, signature) });
   return signature;
 };
+
+test("the component's draft signature is the shared engineeringSignature (same bytes as the former inline JSON.stringify)", () => {
+  const input = sharedSimulationInput(specimen());
+  const fields = { settings: { mesh_um: 25 }, mode: "standard" as const, material: "Inconel 718", properties: "p", measurements: "m", width: "1", depth: "2", source: "s", specimen: "sp", uncertainty: "u", holdout: "unknown" };
+  assert.equal(engineeringSignature(input, fields, "meander"),
+    JSON.stringify([input, fields.settings, fields.mode, fields.material, fields.properties, fields.measurements, fields.width, fields.depth, fields.source, fields.specimen, fields.uncertainty, fields.holdout, "meander"]));
+  const source = readFileSync(new URL("../src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx", import.meta.url), "utf8");
+  assert.match(source, /const signature = engineeringSignature\(input,\{settings,mode,material,properties,measurements,width,depth,source,specimen,uncertainty,holdout\},sharedStrategy\);/);
+});
 
 test("pure staleness decision", () => {
   assert.equal(isResultStale("s1", "s1"), false);
@@ -56,11 +85,8 @@ test("pure staleness decision", () => {
   assert.equal(resultSignatureOnRestore("completed", undefined), "");
 });
 
-test("completion, input edit, edit back, cached completion and edit during execution", async () => {
-  const initial = snapshot();
-  const initialProcess = specimen().lpbf;
-  const previousGet = simulationApi.get;
-  try {
+test("completion, input edit, edit back, cached completion and edit during execution", () => isolate(async () => {
+  {
     useMaterialSpecimenStore.getState().loadPreset("inconel-718");
     editPower(250);
     useLpbfEngineeringStore.setState({ job: undefined, submittedSignature: "", resultSignature: "", submittedInput: undefined, busy: false });
@@ -74,8 +100,7 @@ test("completion, input edit, edit back, cached completion and edit during execu
     const done = completedJob();
     simulationApi.get = async () => done;
     resumeEngineeringJob();
-    await wait(700);
-    assert.equal(useLpbfEngineeringStore.getState().job?.status, "completed");
+    await until(() => useLpbfEngineeringStore.getState().job?.status === "completed", "polled completion");
     assert.equal(useLpbfEngineeringStore.getState().resultSignature, submitted);
     assert.equal(stale(), false);
     assert.equal(reportMatches(), true);
@@ -113,24 +138,17 @@ test("completion, input edit, edit back, cached completion and edit during execu
     assert.equal(stale(), false, "no result is shown while running, so nothing to mark");
     simulationApi.get = async () => ({ ...completedJob(runningId), result: { ...completedJob(runningId).result!, settings: { ...completedJob(runningId).result!.settings, power_W: 250 } } });
     resumeEngineeringJob();
-    await wait(700);
-    assert.equal(useLpbfEngineeringStore.getState().job?.status, "completed");
+    await until(() => useLpbfEngineeringStore.getState().job?.status === "completed", "polled completion of the edited-during-run job");
     assert.equal(useLpbfEngineeringStore.getState().resultSignature, submittedDuring, "bound to the submitted signature, not the edited draft");
     assert.notEqual(draft(), submittedDuring);
     assert.equal(stale(), true);
     assert.equal(reportMatches(), false);
     editPower(250);
     assert.equal(stale(), false, "restoring the submitted inputs makes the result current again");
-  } finally {
-    simulationApi.get = previousGet;
-    useMaterialSpecimenStore.setState({ activeSpecimen: { ...specimen(), lpbf: initialProcess } });
-    useLpbfEngineeringStore.setState(initial);
   }
-});
+}));
 
-test("restoration after reload is stale unless the current draft equals the saved executed signature", async () => {
-  const initial = snapshot();
-  const previousGet = simulationApi.get;
+test("restoration after reload is stale unless the current draft equals the saved executed signature", () => isolate(async () => {
   let stop = () => {};
   try {
     editPower(260);
@@ -142,7 +160,7 @@ test("restoration after reload is stale unless the current draft equals the save
     useLpbfEngineeringStore.setState({ job: undefined, busy: false, submittedInput: undefined, submittedSignature: "", resultSignature: "" });
     simulationApi.get = async () => job;
     stop = startEngineeringJobPersistence(storage);
-    await wait(10);
+    await until(() => useLpbfEngineeringStore.getState().job?.id === job.id, "restored job");
     assert.equal(useLpbfEngineeringStore.getState().resultSignature, executed);
     assert.equal(stale(), false);
     // Restored while the controls differ: stale.
@@ -153,16 +171,14 @@ test("restoration after reload is stale unless the current draft equals the save
     useLpbfEngineeringStore.setState({ job: undefined, busy: false, submittedInput: undefined, submittedSignature: "", resultSignature: "" });
     simulationApi.get = async () => ({ ...job, status: "failed", result: undefined });
     stop = startEngineeringJobPersistence(storage);
-    await wait(10);
+    await until(() => useLpbfEngineeringStore.getState().job?.status === "failed", "restored failed job");
     assert.equal(useLpbfEngineeringStore.getState().job?.status, "failed");
     assert.equal(useLpbfEngineeringStore.getState().resultSignature, "");
     assert.equal(reportMatches(), null);
   } finally {
     stop();
-    simulationApi.get = previousGet;
-    useLpbfEngineeringStore.setState(initial);
   }
-});
+}));
 
 // ---- Rendering: evidence labels are never inside a dimmed ancestor -------------------------
 const VOID = new Set(["input", "br", "hr", "img", "meta", "link"]);
