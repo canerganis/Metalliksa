@@ -143,6 +143,9 @@ _THERMAL_SOLVER = _op("lpbf-thermal-solver", "/api/python/lpbf-thermal-solver",
 _AI_CONSULT = _op("ai-consult", "/api/consult", _NODE)
 _BUILD_JOB_SUBMIT = _op("lpbf-job-submit", "/api/lpbf/jobs", _worker("submit"))
 _BUILD_JOB_STATUS = _op("lpbf-job-status", "/api/lpbf/jobs/:id", _worker("get"))
+_EVIDENCE_READS_ONLY = ("EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and "
+                        "useLpbfEngineeringStore; it dispatches no server request (build jobs are "
+                        "submitted from 3d-distortion-lab), so no operation is bound.")
 _CANNED_QUALIFY = ("POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) "
                    "without calling any authority; not bound as an operation.")
 
@@ -212,7 +215,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
             _py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "materials-project": (
-        _op("materials-project-search", "/api/materials-project/search", _NODE),
         _op("dft-properties", "/api/python/dft-properties", _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("metallurgy-consult", "/api/metallurgy/consult", _NODE),
     ),
@@ -223,7 +225,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("research-registry", "/api/research/registry", _NODE),
         _op("research-search", "/api/research/search", _NODE),
     ),
-    "experimental-data": (_BUILD_JOB_SUBMIT, _BUILD_JOB_STATUS),
+    "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
     "uq-lab": (
         _op("stochastic-uq-mmpds", "/api/python/stochastic-uq-mmpds",
@@ -235,7 +237,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "aerospace-pdf-audit": (
         _op("report-template", None, _browser("demonstration report templates are assembled in the browser.")),
     ),
-    "traceability": (_BUILD_JOB_SUBMIT, _BUILD_JOB_STATUS),
+    "traceability": (),
     "copilot": (_op("metallurgy-consult", "/api/metallurgy/consult", _NODE),),
     "ai-orchestrator": (_op("dataset-plan", "/api/orchestrator/dataset-plan", _NODE),),
 }
@@ -251,6 +253,14 @@ LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
     ),
     "qualification": (_CANNED_QUALIFY,),
     "aerospace-pdf-audit": (_CANNED_QUALIFY,),
+    "materials-project": (
+        "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts "
+        "MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference "
+        "Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up "
+        "candidate).",
+    ),
+    "experimental-data": (_EVIDENCE_READS_ONLY,),
+    "traceability": (_EVIDENCE_READS_ONLY,),
 }
 
 

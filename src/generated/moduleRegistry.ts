@@ -1856,21 +1856,6 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "materials-project-search",
-          "route": "/api/materials-project/search",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "output": null
-        },
-        {
           "id": "dft-properties",
           "route": "/api/python/dft-properties",
           "authority": {
@@ -1925,7 +1910,9 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [
+        "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
+      ]
     },
     {
       "id": "calculators",
@@ -2073,38 +2060,7 @@ export const MODULE_REGISTRY = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "operations": [
-        {
-          "id": "lpbf-job-submit",
-          "route": "/api/lpbf/jobs",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "submit",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "output": null
-        },
-        {
-          "id": "lpbf-job-status",
-          "route": "/api/lpbf/jobs/:id",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "get",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "output": null
-        }
-      ],
+      "operations": [],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -2129,7 +2085,9 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [
+        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+      ]
     },
     {
       "id": "digital-twin",
@@ -2382,38 +2340,7 @@ export const MODULE_REGISTRY = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "operations": [
-        {
-          "id": "lpbf-job-submit",
-          "route": "/api/lpbf/jobs",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "submit",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "output": null
-        },
-        {
-          "id": "lpbf-job-status",
-          "route": "/api/lpbf/jobs/:id",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "get",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "output": null
-        }
-      ],
+      "operations": [],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -2438,7 +2365,9 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": []
+      "legacyNotes": [
+        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+      ]
     },
     {
       "id": "copilot",

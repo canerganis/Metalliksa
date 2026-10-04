@@ -22,6 +22,7 @@
     "POST /api/metallurgy/detect-sem-legend": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/analyze-sem": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "POST /api/metallurgy/qualify-aerospace": "Canned constant response with qualified: true (see cannedBaseline); recorded as a qualification/aerospace-pdf-audit legacyNote, not bound.",
+    "GET /api/materials-project/search": "Canned hard-coded record list (see cannedBaseline); recorded as a materials-project legacyNote, not bound.",
     "GET /api/orchestrator/approved-sources": "Static approved-host configuration; no UI caller in src/.",
     "POST /api/orchestrator/collect-source": "Approved-source collection; no UI caller in src/.",
     "GET /api/research/registry/history": "Research registry sub-resource of the research-hub research-registry operation.",
@@ -58,7 +59,7 @@
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
     "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",
     "POST /api/metallurgy/qualify-aerospace": "Always returns qualified: true with constant findings. Known offender (design 7).",
-    "GET /api/materials-project/search": "Filters a bundled static catalog in Node; the literals are success/airgapped flags, not computed results. Heuristic false positive kept visible.",
+    "GET /api/materials-project/search": "Serves a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without any authority. Real offender; deletion/follow-up candidate.",
     "GET /api/orchestrator/approved-sources": "Static configuration descriptor (automaticCollection/modelTraining flags), not a computed result. Heuristic false positive kept visible."
   }
 }

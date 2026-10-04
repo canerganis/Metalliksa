@@ -1,5 +1,5 @@
 {
-  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review.",
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation).",
   "unbound": [
     "DELETE /api/python/battery-corrosion-upload/:id?",
     "GET /api/calphad/databases",
@@ -11,6 +11,7 @@
     "GET /api/lpbf/sources/:datasetId",
     "GET /api/lpbf/sources/:datasetId/revisions",
     "GET /api/lpbf/sources/:datasetId/revisions/:revision",
+    "GET /api/materials-project/search",
     "GET /api/orchestrator/approved-sources",
     "GET /api/python/battery-corrosion-upload/recent",
     "GET /api/python/ipc-status",

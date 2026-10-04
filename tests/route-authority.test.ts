@@ -287,6 +287,13 @@ test('every registry operation route is served by a routes/*.ts handler', () => 
   assert.deepEqual(dangling, [], `Registry operation route(s) without a handler: ${dangling.join(', ')}`);
 });
 
+test('no registry operation is bound to a canned-result handler', () => {
+  const boundCanned = [...handlers, ...serverHandlers].filter(handler => handler.canned && operationRoutes.has(routeOf(handler.key))).map(where);
+  assert.deepEqual(boundCanned, [], `Canned handler(s) ${boundCanned.join(', ')} must not back a registry operation: record them as legacyNotes.`);
+  const evidence = MODULE_CONTRACTS.filter(contract => ['experimental-data', 'traceability'].includes(contract.id));
+  assert.deepEqual(evidence.map(contract => contract.operations.length), [0, 0], 'EvidenceWorkspace dispatches no request; record store reads as legacyNotes');
+});
+
 test('canned-result handlers never grow beyond the ratcheted baseline', () => {
   console.log(`Canned-result baseline (${Object.keys(allowlist.cannedBaseline).length}):\n${Object.entries(allowlist.cannedBaseline).map(([key, reason]) => `  ${key} - ${reason}`).join('\n')}`);
   assert.deepEqual(decision.grownCanned, [], `New canned-result handler(s) ${decision.grownCanned.join(', ')}: call an authority (python runner, worker, provider) instead of returning literals.`);
