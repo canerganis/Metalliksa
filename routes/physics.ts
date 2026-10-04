@@ -1,12 +1,16 @@
 import { pythonStatusResponse } from "../server/pythonStatus.ts";
 import { Router, Request, Response } from "express";
 import { runPythonScript, pythonIPCSupervisor } from "../server/processOrchestrator.ts";
+import { pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
 
 export const physicsRouter = Router();
 
+// Overridable runner so route tests can exercise the status mapping without spawning Python.
+export const physicsDeps = { runPythonScript };
+
 async function handlePythonDispatch(scriptPath: string, payload: any, res: Response, timeoutMs: number = 25000) {
   try {
-    const pyRes = await runPythonScript(scriptPath, payload, [], timeoutMs);
+    const pyRes = await physicsDeps.runPythonScript(scriptPath, payload, [], timeoutMs);
     if (!pyRes.stdout && pyRes.stderr) {
       console.warn(`[Python stderr: ${scriptPath}]`, pyRes.stderr);
     }
@@ -24,7 +28,7 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
     } catch {
       parsed = { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
     }
-    return res.json(parsed);
+    return res.status(pythonDispatchStatus(parsed, pyRes.exitCode)).json(parsed);
   } catch (err: any) {
     console.error(`[Python error: ${scriptPath}]`, err);
     return res.status(500).json({
