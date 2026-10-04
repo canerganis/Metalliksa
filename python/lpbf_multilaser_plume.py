@@ -42,17 +42,6 @@ class ShieldGasFlow:
 
 
 @dataclass
-class LaserSourceConfig:
-    """Individual scanner / laser configuration in a multi-beam system."""
-    laser_id: int
-    center_x_mm: float
-    center_y_mm: float
-    nominal_power_W: float = 300.0
-    beam_diameter_um: float = 80.0
-    wavelength_nm: float = 1070.0      # Yb-fiber laser typ. 1070 nm
-
-
-@dataclass
 class PlumeParameters:
     """Aerosol / vapor plume physics parameters based on Bidare & Ladewig."""
     sigma_plume_mm: float = 2.5        # Lateral Gaussian standard deviation (mm)
