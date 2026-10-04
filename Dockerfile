@@ -3,10 +3,12 @@
 # `docker build --target verify` is GREEN: npm ci, pip --require-hashes from python/requirements-lpbf-linux-py312.lock,
 # 'npm run lint', unit tests (tests/*.test.ts(x) minus scripts/ci-unit-tests.txt, guarded below), 'npm run build',
 # and the three CPU meltpool scripts. python/test_goldak_fabbro.py skips its NIST width check here (it needs the GPU warp
-# ray tracer; the CPU flat-plate fallback gives 81.7 um vs NIST 136.3 um) and pins the fallback instead.
-# The runtime image starts (branch orch/prod-start-fix): `docker run -p 38080:3000` answered /api/health from the host,
-# returned 401 for an unauthenticated /api/lpbf/capabilities, printed the one-time login link in `docker logs`, and the
-# HEALTHCHECK reported healthy. Not GitHub CI; `docker compose up` not run. See docs/APPLICATION_PACKAGING_NOTES.md.
+# ray tracer; the CPU flat-plate fallback gives 81.7 um vs NIST 136.3 um) and pins the fallback instead. The image is
+# CPU-only, so Goldak results served by it always use the flat-plate width.
+# Runtime image checked on 2026-10-04 at commit 9ea3493 (`docker run --cap-drop ALL --security-opt no-new-privileges
+# -p 127.0.0.1:38080:3000`): /api/health 200 from the host, unauthenticated /api/lpbf/capabilities 401, absolute-form
+# request target 400, one-time login link in `docker logs`, login 303, HEALTHCHECK healthy, no writes outside /tmp and
+# /data. Not GitHub CI; `docker compose up` not run. See docs/APPLICATION_PACKAGING_NOTES.md.
 
 FROM node:24-bookworm-slim AS node-src
 

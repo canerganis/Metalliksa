@@ -73,7 +73,7 @@ $env:METALLIX_PYTHON = 'C:/verified-environment/Scripts/python.exe'
 npm start
 ```
 
-Run `npm start` from the application root. The server resolves `python/`, `dist/` and the default data directories against the working directory (`server/pythonRoot.ts`, `server/processOrchestrator.ts`, `server.ts`).
+Run `npm start` from the application root. The server resolves `python/`, `dist/` and the default data directories against the working directory (`server/pythonRoot.ts`, `server/processOrchestrator.ts`, `server.ts`). Started elsewhere, it exits with a message naming the missing `python/persistent_ipc_service.py` or, in production, `dist/index.html` (`server/startupGuard.ts`).
 
 Read `/api/python/status` on the application port. Require the expected interpreter version, `online: true`, and an active transport. On Windows the Python daemon binds HTTP and skips UNIX sockets. `warmModules` records imports only; `subsystemStatus: unverified` explicitly withholds solver availability. `/api/python/ipc-warmup` reports readiness and returns 503 before the daemon is ready; it does not run solver validation.
 
