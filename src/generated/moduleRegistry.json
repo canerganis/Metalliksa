@@ -1559,17 +1559,17 @@
       },
       "operations": [
         {
-          "id": "lpbf-thermal-solver",
-          "method": "POST",
-          "route": "/api/python/lpbf-thermal-solver",
+          "id": "specimen-editor",
+          "method": null,
+          "route": null,
           "authority": {
-            "kind": "python-ipc",
-            "script": "python/lpbf_thermal_solver.py",
+            "kind": "browser-local",
+            "script": null,
             "workerMethod": null,
-            "timeoutMs": 25000,
+            "timeoutMs": null,
             "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): the composition/specimen editor writes the shared active specimen in the browser."
           },
           "input": [],
           "undeclaredInput": [],

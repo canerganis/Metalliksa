@@ -1,5 +1,4 @@
 import { MaterialSpec } from "../types";
-import type { CandidateAlloySolution } from "./inverseAlloyOptimizer";
 import { MaterialThermalProfile, ThermalStage, HardnessAlloyPreset } from "../types/thermalKinetic";
 import { convertSteelHardness, hardnessMaterialClassOf } from "./hardnessConversion";
 import { estimateSteelHvFromYield, HV_FROM_YIELD_ESTIMATE_NOTE } from "./hardnessStrengthEstimate";
@@ -710,76 +709,6 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
     poissonsRatio: mat.poissonRatio || (baseMetal === "Al" ? 0.33 : baseMetal === "Ti" ? 0.34 : 0.29),
     thermalConductivity: mat.thermalConductivity,
     microstructure: mat.microstructure,
-    kineticProfile,
-    suggestedThermalCycle,
-    hardnessProfile,
-    xrdProfile,
-    icmeProfile: icme,
-  };
-}
-
-// Convert Synthesized Candidate Alloy (from Inverse Alloy Studio) into Pipeline Payload
-export function createPipelinePayloadFromCandidate(
-  candidate: Pick<CandidateAlloySolution, "name" | "compositionWt" | "yieldStrength_25C_MPa" | "uts_25C_MPa" | "density_gcm3" | "youngsModulus_GPa" | "elongation_pct">
-    & Partial<Pick<CandidateAlloySolution, "matrixPhase">>,
-  sourceModule = "Alloy Formulator & Inverse Studio"
-): PipelineMaterialPayload {
-  const comp = { ...candidate.compositionWt };
-  if (!Object.keys(comp).length || !Object.values(comp).every(v => Number.isFinite(v) && v >= 0)
-    || Object.values(comp).reduce((sum, v) => sum + v, 0) <= 0) {
-    throw new Error("Candidate composition must contain finite nonnegative weight percentages");
-  }
-  for (const field of ["yieldStrength_25C_MPa", "uts_25C_MPa", "density_gcm3", "youngsModulus_GPa", "elongation_pct"] as const) {
-    if (!Number.isFinite(candidate[field]) || candidate[field] < 0) throw new Error(`Invalid candidate ${field}`);
-  }
-  const name = candidate.name;
-  const baseMetal = detectBaseMetal("", comp);
-  const yieldStrength = candidate.yieldStrength_25C_MPa;
-  const tensileStrength = candidate.uts_25C_MPa;
-  const density = candidate.density_gcm3;
-  const youngsModulus = candidate.youngsModulus_GPa;
-  const elongation = candidate.elongation_pct;
-
-  const { profile: kineticProfile, stages: suggestedThermalCycle, icme } = deriveKineticProfile(name, baseMetal, comp, yieldStrength);
-  // The candidate has no hardness of its own: HV is estimated from its predicted yield strength for non-austenitic
-  // hypoeutectoid steels only (flagged "estimate-predicted"), else unavailable. The old rule HV ~ YS/3 + 30 had no source.
-  const { hardnessProfile, hardnessHV, hardnessHVSource, hardnessHRC } = deriveHardnessProfile(
-    name,
-    `${baseMetal} Formulated Alloy`,
-    baseMetal,
-    yieldStrength,
-    tensileStrength,
-    youngsModulus,
-    elongation,
-    "",
-    // An FCC/austenitic matrix excludes the non-austenitic steel relation.
-    candidate.matrixPhase === "FCC" || candidate.matrixPhase === "Austenitic" ? "austenitic (FCC) matrix" : candidate.matrixPhase,
-    true,
-    comp
-  );
-  const xrdProfile = deriveXRDProfile(name, baseMetal, comp);
-
-  return {
-    id: `custom_${Date.now()}`,
-    name,
-    category: `${baseMetal === "Ni" ? "Nickel Superalloy" : baseMetal === "Ti" ? "Titanium Alloy" : baseMetal === "Al" ? "Aluminum Alloy" : "Advanced Steel"}`,
-    standard: "Inverse CALPHAD Synthesis Spec",
-    sourceModule,
-    timestamp: Date.now(),
-    composition: comp,
-    compositionUnit: "wt_pct",
-    compositionInterpretation: "nominal",
-    baseMetal,
-    yieldStrength,
-    tensileStrength,
-    youngsModulus,
-    density,
-    elongation,
-    hardness: hardnessHV === null ? "Unavailable (no verified hardness-strength relation for this candidate)" : `${hardnessHV} HV (estimate from predicted yield strength, not measured)`,
-    hardnessHV,
-    hardnessHVSource,
-    hardnessHRC,
-    poissonsRatio: baseMetal === "Al" ? 0.33 : baseMetal === "Ti" ? 0.34 : 0.29,
     kineticProfile,
     suggestedThermalCycle,
     hardnessProfile,

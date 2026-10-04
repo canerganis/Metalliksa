@@ -179,7 +179,10 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
-    "alloy-builder": (_THERMAL_SOLVER,),
+    # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
+    "alloy-builder": (
+        _local("specimen-editor", "the composition/specimen editor writes the shared active specimen in the browser."),
+    ),
     "phase-diagram": (
         _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
         _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
