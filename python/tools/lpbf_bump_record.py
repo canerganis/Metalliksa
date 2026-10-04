@@ -194,7 +194,9 @@ def build_record(from_revision: Optional[str], with_parity: bool, slow: bool) ->
         "commits": {"fromRevision": before["revision"], "toRevision": _git("rev-parse", "HEAD"),
                     "worktreeDirty": bool(_git("status", "--porcelain", "--", "python"))},
         "parityAfter": parity_after(slow) if with_parity else None,
-        "todo": [] if with_parity else ["parityAfter (rerun with --with-parity-check --slow)"],
+        "todo": ([] if with_parity and slow else
+                 ["parityAfter.g2 (rerun with --with-parity-check --slow)"] if with_parity else
+                 ["parityAfter (rerun with --with-parity-check --slow)"]),
     })
     return record
 
