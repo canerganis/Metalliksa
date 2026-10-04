@@ -53,6 +53,16 @@ import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbaixRequest";
 
 
+/** Accessible solver-failure line; shows the existing error text only. */
+export function PourbaixSolveError({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-mono text-red-300">
+      {message}
+    </p>
+  );
+}
+
 export function DynamicPourbaixStudio() {
   // Selected Alloy Preset & Custom Elements
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>("carbon-steel");
@@ -973,6 +983,8 @@ export function DynamicPourbaixStudio() {
                   </span>
                 </div>
               </div>
+
+              <PourbaixSolveError message={pythonSolveError} />
 
               {/* Overlay Toggle Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono bg-[#060b13] p-2.5 rounded-xl border border-[#162032]">
