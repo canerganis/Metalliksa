@@ -8,7 +8,7 @@
     "python": "3.12.10",
     "numpy": "2.2.6",
     "platform": "Windows-11-10.0.26300-SP0",
-    "gitHead": "3d1578b6834d4bfdff3423a4c73f2e831304dbf6",
+    "gitHead": "61c9683e022ff9628ec5bf3ebd917f5dab503f70",
     "implementationFingerprint": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e"
   },
   "cases": [
@@ -443,6 +443,68 @@
       },
       "implementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
       "inputHash": "f9846ae79bc7cf2ae9ae958d20f339a4b045177729b88871d27d993b7b5f1511",
+      "label": "Unvalidated transient thermal",
+      "validationStatus": "unvalidated"
+    },
+    {
+      "alloy": "Inconel 718",
+      "mesh_um": 10.0,
+      "power_W": 50.0,
+      "input": {
+        "mode": "standard",
+        "material": "Inconel 718",
+        "power_W": 50.0,
+        "speed_mm_s": 800.0,
+        "beamDiameter_um": 80.0,
+        "preheat_C": 80.0,
+        "layer_um": 40.0,
+        "hatch_um": 100.0,
+        "mesh_um": 10.0,
+        "maxDt_s": 1e-06,
+        "trackLength_um": 600.0,
+        "tracks": 1,
+        "layers": 1,
+        "dwell_s": 0.0002,
+        "cooling_s": 0.0005,
+        "scanAngle_deg": 0.0,
+        "layerRotation_deg": 67.0,
+        "strategy": "meander",
+        "stripeWidth_um": 500.0,
+        "islandSize_um": 200.0,
+        "packingFraction": 0.55,
+        "powderConductivityRatio": 0.12,
+        "convection_W_m2K": 20.0,
+        "timeout_s": 300.0,
+        "study": "none",
+        "backend": "reference",
+        "surfaceMode": "powder-layer",
+        "sourcePenetration_um": null,
+        "barePlateGeometry": "square",
+        "evaporationModel": false,
+        "marangoniMultiplier": 2.2,
+        "opticalObserver": null
+      },
+      "status": "completed",
+      "wall_s": 494.214,
+      "width_um": 79.99999999999997,
+      "depth_um": 30.00000000000001,
+      "length_um": 259.99999999999994,
+      "peakTemperature_K": 3044.123105275445,
+      "thermalGradient_K_m": 8570930.214863367,
+      "coolingRate_K_s": 570695.2350763935,
+      "energyBalanceRelativeError": 2.312964634635732e-15,
+      "numericalDiagnosticsSummary": {
+        "peakMeltCellCount": 478,
+        "peakMeltTime_s": 0.0006808994654278288,
+        "peakMeltStep": 3771,
+        "meltPoolObservedSteps": 4900,
+        "minimumCapturedSourceFraction": 0.9999999990190409,
+        "maximumEnthalpyIncrement_K": 23.853363475528877,
+        "maximumTimestep_s": 1e-06,
+        "sourceTimestepRetries": 4223
+      },
+      "implementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+      "inputHash": "a24d94841730e6b25e5cab85f591b725185522ce597be32301fb2bde4cfc7974",
       "label": "Unvalidated transient thermal",
       "validationStatus": "unvalidated"
     },
@@ -1745,12 +1807,12 @@
     {
       "alloy": "Inconel 718",
       "mesh_um": 10.0,
-      "highestCompletedPower_W": 40.0,
+      "highestCompletedPower_W": 50.0,
       "firstBoilingStopPower_W": 60.0,
-      "peakTemperature_K": 2617.396183312659,
+      "peakTemperature_K": 3044.123105275445,
       "width_um": 79.99999999999997,
       "depth_um": 30.00000000000001,
-      "length_um": 199.99999999999994,
+      "length_um": 259.99999999999994,
       "notRunBudget": [],
       "otherErrors": []
     },
@@ -1791,5 +1853,5 @@
       "otherErrors": []
     }
   ],
-  "totalCaseWall_s": 705.7
+  "totalCaseWall_s": 1199.9
 }
