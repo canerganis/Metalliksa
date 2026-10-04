@@ -143,10 +143,44 @@
   animation: mkSweep 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
-.mk-shell > *:not(.mk-grid-overlay):not(.mk-scanline) {
-  position: relative;
-  z-index: 1;
+/* Shell children paint above the fixed decorative layers (z-index 0, earlier in the DOM) by being
+ * positioned. Layered, so Tailwind utilities on a child win: the header keeps `sticky top-0 z-40` and
+ * the engine-status AccessibleModal keeps `fixed inset-0 z-50`. No z-index here: a z-index would make
+ * the main row a stacking context and trap its module modals (fixed z-50) below the z-40 header. */
+@layer components {
+  .mk-shell > *:not(.mk-grid-overlay):not(.mk-scanline) {
+    position: relative;
+  }
 }
+
+/* Skip link: first Tab stop, off-screen until focused. Colors are contrast-tested tokens. */
+.mk-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 1rem;
+  z-index: 60;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--mk-focus-color);
+  border-radius: 0.5rem;
+  background: var(--mk-surface-raised);
+  color: var(--mk-ice);
+  font-size: 0.875rem;
+  transform: translateY(-200%);
+}
+.mk-skip-link:focus { transform: none; }
+/* Skip target: focus lands on <main> without a ring around the whole page. */
+#main-content:focus { outline: none; }
+
+/* Sticky header height, one variable for three uses: the page scroll padding (a focused element or the
+ * skip target is never scrolled under the header, WCAG 2.4.11), the header's own min-height at lg, and
+ * the sidebar's sticky offset/height at lg. Below lg the header wraps (about 85px at 375px wide), so the
+ * variable is an upper bound there; at lg it is the exact header height. */
+:root { --mk-header-h: 5.5rem; }
+@media (min-width: 64rem) {
+  :root { --mk-header-h: 4.75rem; }
+  .mk-header { min-height: var(--mk-header-h); }
+}
+html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
 
 .mk-header {
   background:

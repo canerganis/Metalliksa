@@ -119,6 +119,25 @@ test("focus memory is captured once per open, before later focus moves (child au
   assert.equal(takeFocusMemory(memory), "second-trigger");
 });
 
+test("StrictMode effect re-run: the opener is re-captured, so the real close still restores it", () => {
+  // Mirrors the focus effect: remember (render) -> effect: remember, focus panel -> simulated unmount:
+  // cleanup restores + clears -> effect again: remember with the restored opener -> real close.
+  const memory: FocusMemory<string> = { opened: false, previous: null };
+  let active = "status-button";
+  rememberFocusOnOpen(memory, true, active); // render phase
+  rememberFocusOnOpen(memory, true, active); // effect 1 (no-op)
+  active = "close-button"; // effect focuses the first tabbable in the panel
+  active = takeFocusMemory(memory) ?? active; // StrictMode cleanup restores the opener and clears the memory
+  assert.equal(active, "status-button");
+  rememberFocusOnOpen(memory, true, active); // effect 2: captured again (before the fix it stayed empty)
+  active = "close-button";
+  assert.equal(takeFocusMemory(memory), "status-button", "real close returns focus to the opener");
+  const source = readFileSync(resolve(process.cwd(), "src/components/AccessibleModal.tsx"), "utf8").replace(/\r/g, "");
+  const effect = source.slice(source.indexOf("useEffect(() => {\n    if (!open) return undefined;\n    const memory = focusMemory.current;"));
+  assert.match(effect.slice(0, 700), /const memory = focusMemory\.current;[\s\S]*?rememberFocusOnOpen\(memory, true, document\.activeElement instanceof HTMLElement \? document\.activeElement : null\);\n {4}const panel = panelRef\.current;/,
+    "the focus effect re-captures the opener before moving focus into the panel");
+});
+
 test("backdrop closes only for a primary click that started and ended on the overlay", () => {
   const ok = { pressStartedOnOverlay: true, targetIsOverlay: true, button: 0 };
   assert.equal(shouldCloseOnBackdropClick(ok), true);

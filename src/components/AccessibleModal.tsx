@@ -251,6 +251,10 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
   useEffect(() => {
     if (!open) return undefined;
     const memory = focusMemory.current;
+    // A no-op when the render already recorded the opener. It matters when the effect runs again without a
+    // new render (React StrictMode's dev re-run): the cleanup below has just restored focus to the opener
+    // and cleared the memory, so the opener is captured again here and focus is restored on the real close.
+    rememberFocusOnOpen(memory, true, document.activeElement instanceof HTMLElement ? document.activeElement : null);
     const panel = panelRef.current;
     if (panel && !panel.contains(document.activeElement)) {
       const first = getTabbableElements(panel)[0];

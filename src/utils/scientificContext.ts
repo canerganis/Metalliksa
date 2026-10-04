@@ -1,5 +1,6 @@
 import type { ActiveSpecimenState } from '../store/useMaterialSpecimenStore';
 import type { ModuleId } from '../data/workspaces';
+import { formatDisplayNumber } from './numberFormat';
 
 export interface ScientificContext {
   title: string;
@@ -10,7 +11,8 @@ export interface ScientificContext {
   limitation: string;
 }
 
-const format = (value: number, digits = 1) => value.toLocaleString(undefined, { maximumFractionDigits: digits });
+// Browser-locale formatting showed "1.200 mm/s" and "31,25 J/mm³" in a Turkish browser; same rounding, fixed locale.
+const format = formatDisplayNumber;
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
   const { lpbf } = specimen;
