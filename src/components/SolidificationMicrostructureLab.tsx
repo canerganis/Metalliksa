@@ -12,13 +12,38 @@ import {
 } from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
 import type { SolidificationMicrostructureResult } from '../services/pythonComputationService';
+import {
+  authorityThermalProvenance, solidificationMaterialInputs, type AuthorityAlloyId, type SolidificationMaterialInputs,
+} from '../data/lpbfMaterialAuthority';
 
-const ALLOY_DEFAULTS: Record<string, { k_WmK: number; liquidus_K: number; absorptivity: number }> = {
-  'Inconel 718': { k_WmK: 14.7, liquidus_K: 1609, absorptivity: 0.35 },
-  'Ti-6Al-4V': { k_WmK: 7.0, liquidus_K: 1933, absorptivity: 0.40 },
-  'AlSi10Mg': { k_WmK: 160.0, liquidus_K: 850, absorptivity: 0.09 },
-  '316L SS': { k_WmK: 16.0, liquidus_K: 1727, absorptivity: 0.35 },
-};
+// Preset label -> alloy id. Presets read the Python authority (src/generated/lpbfMaterialAuthority.json):
+// solid k, liquidus, IR absorptivity. No alloy numbers here. Pinned by tests/lpbf-material-authority.test.ts.
+export const SOLIDIFICATION_PRESETS = {
+  'Inconel 718': 'in718',
+  'Ti-6Al-4V': 'ti6al4v',
+  'AlSi10Mg': 'alsi10mg',
+  '316L SS': 'ss316l',
+} as const satisfies Record<string, AuthorityAlloyId>;
+
+/** Inputs for a preset label; an unknown label throws (no surrogate alloy). */
+export function solidificationPresetInputs(label: string): SolidificationMaterialInputs {
+  if (!Object.prototype.hasOwnProperty.call(SOLIDIFICATION_PRESETS, label)) {
+    throw new Error(`Unknown material preset "${label}"; no surrogate alloy is substituted.`);
+  }
+  return solidificationMaterialInputs(SOLIDIFICATION_PRESETS[label as keyof typeof SOLIDIFICATION_PRESETS]);
+}
+
+/** The exact payload the lab hands to computeSolidificationMicrostructure. */
+export function solidificationRequest(
+  label: string,
+  process: { power_W: number; speed_mm_s: number; hatch_um: number; layerThickness_um: number },
+): { params: Record<string, number>; material: Record<string, number> } {
+  const inputs = solidificationPresetInputs(label);
+  return {
+    params: { ...process },
+    material: { k_WmK: inputs.k_WmK, liquidus_K: inputs.liquidus_K, absorptivity: inputs.absorptivity },
+  };
+}
 
 const MORPHOLOGY_COLORS: Record<string, string> = {
   columnar: '#75b8ff', equiaxed: '#70d8b0', mixed: '#f0bd73',
@@ -64,7 +89,8 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ChartTab>('gr-map');
 
-  const alloyProps = ALLOY_DEFAULTS[selectedAlloy] ?? ALLOY_DEFAULTS['Inconel 718'];
+  const alloyProps = solidificationPresetInputs(selectedAlloy);
+  const alloyQuality = authorityThermalProvenance(SOLIDIFICATION_PRESETS[selectedAlloy as keyof typeof SOLIDIFICATION_PRESETS]).quality;
   const invalidateResult = () => {
     setResult(null);
     setError(null);
@@ -75,26 +101,19 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
     setError(null);
     setResult(null);
     try {
-      const res = await pythonComputationService.computeSolidificationMicrostructure({
-        params: {
-          power_W: laserPower,
-          speed_mm_s: scanSpeed,
-          hatch_um: hatch,
-          layerThickness_um: layerThickness,
-        },
-        material: {
-          k_WmK: alloyProps.k_WmK,
-          liquidus_K: alloyProps.liquidus_K,
-          absorptivity: alloyProps.absorptivity,
-        },
-      });
+      const res = await pythonComputationService.computeSolidificationMicrostructure(solidificationRequest(selectedAlloy, {
+        power_W: laserPower,
+        speed_mm_s: scanSpeed,
+        hatch_um: hatch,
+        layerThickness_um: layerThickness,
+      }));
       setResult(res);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Computation failed. Check the service and try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [laserPower, scanSpeed, hatch, layerThickness, alloyProps]);
+  }, [laserPower, scanSpeed, hatch, layerThickness, selectedAlloy]);
 
   const grPoint = result ? [{ R_ms: result.R_m_s, G_K_m: result.G_K_m }] : [];
   const spacingData = result ? [
@@ -204,7 +223,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
               value={selectedAlloy}
               onChange={event => { setSelectedAlloy(event.target.value); invalidateResult(); }}
             >
-              {Object.keys(ALLOY_DEFAULTS).map(alloy => <option key={alloy} value={alloy}>{alloy}</option>)}
+              {Object.keys(SOLIDIFICATION_PRESETS).map(alloy => <option key={alloy} value={alloy}>{alloy}</option>)}
             </select>
             <span className="mt-1.5 block text-[10px] text-slate-500">Preset supplies k, liquidus and absorptivity</span>
           </label>
@@ -215,7 +234,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
         </div>
 
         <div className="mt-5 flex flex-col-reverse gap-3 border-t border-white/[.07] pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[11px] leading-5 text-slate-500">Model properties: <span className="font-mono text-slate-400">k {alloyProps.k_WmK} W/m·K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">Tₗ {alloyProps.liquidus_K} K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">A {alloyProps.absorptivity}</span></p>
+          <p className="text-[11px] leading-5 text-slate-500">Model properties: <span className="font-mono text-slate-400">k {alloyProps.k_WmK} W/m·K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">Tₗ {Math.round(alloyProps.liquidus_K)} K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">A {alloyProps.absorptivity}</span><span className="mx-2 text-slate-700">·</span><span className="text-slate-500">{alloyQuality}</span></p>
           <button
             type="button" onClick={handleCompute} disabled={isLoading}
             className="group inline-flex min-h-11 items-center justify-center gap-3 rounded-lg border border-cyan-100/20 bg-gradient-to-r from-cyan-200/15 to-blue-300/10 px-5 text-sm font-semibold text-cyan-50 shadow-[0_8px_24px_rgba(26,156,180,.08)] transition hover:border-cyan-100/40 hover:from-cyan-200/20 hover:to-blue-300/15 disabled:cursor-wait disabled:opacity-60"
