@@ -1,5 +1,5 @@
-# DRAFT / UNVERIFIED: `docker compose` was never run. The runtime image builds, but its server crashes at start
-# (see docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification").
+# DRAFT: `docker compose up` was never run (only `docker compose config`). The same runtime image was started with
+# `docker run` and served /api/health; see docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification".
 services:
   app:
     build:
@@ -8,6 +8,10 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Bind all container interfaces so the published port is reachable (the image default too). This turns the
+      # login flow ON: open the one-time link from `docker compose logs app` (replace its port with the host port),
+      # or set METALLIKSA_TOKEN. Every /api route except /api/health needs login.
+      METALLIKSA_HOST: "0.0.0.0"
       AIRGAPPED: "1"
       METALLIKSA_LPBF_SOURCE_ROOT: /data/lpbf-sources
       METALLIKSA_LPBF_RUN_ROOT: /data/lpbf-runs
@@ -17,7 +21,8 @@ services:
     volumes:
       - metalliksa-data:/data
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/python/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      # /api/health is unauthenticated, so the check works in login mode (/api/python/status would answer 401).
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 5

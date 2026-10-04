@@ -1,11 +1,12 @@
 # syntax=docker/dockerfile:1.7
-# PARTIALLY VERIFIED on 2026-10-04 (Docker Desktop 4.91.0 / Engine 29.8.0, linux/amd64, Windows host; branch orch/docker-verify):
+# PARTIALLY VERIFIED on 2026-10-04 (Docker Desktop 4.91.0 / Engine 29.8.0, linux/amd64, Windows host):
 # `docker build --target verify` is GREEN: npm ci, pip --require-hashes from python/requirements-lpbf-linux-py312.lock,
-# 'npm run lint', unit tests (114 of 115 files; 717 tests: 697 pass, 0 fail, 1 skipped, 19 todo), 'npm run build',
+# 'npm run lint', unit tests (tests/*.test.ts(x) minus scripts/ci-unit-tests.txt, guarded below), 'npm run build',
 # and the three CPU meltpool scripts. python/test_goldak_fabbro.py skips its NIST width check here (it needs the GPU warp
 # ray tracer; the CPU flat-plate fallback gives 81.7 um vs NIST 136.3 um) and pins the fallback instead.
-# The runtime image builds but the server CRASHES at start ('node dist/server.cjs': fileURLToPath(import.meta.url) is
-# undefined in the esbuild CJS bundle), so it does not serve /api/health. Not GitHub CI. See docs/APPLICATION_PACKAGING_NOTES.md.
+# The runtime image starts (branch orch/prod-start-fix): `docker run -p 38080:3000` answered /api/health from the host,
+# returned 401 for an unauthenticated /api/lpbf/capabilities, printed the one-time login link in `docker logs`, and the
+# HEALTHCHECK reported healthy. Not GitHub CI; `docker compose up` not run. See docs/APPLICATION_PACKAGING_NOTES.md.
 
 FROM node:24-bookworm-slim AS node-src
 
@@ -44,6 +45,13 @@ RUN <<'EOF' bash -e
 npm run lint
 excluded="$(grep -v '^#' scripts/ci-unit-tests.txt | grep -v '^$' || true)"
 files="$(ls tests/*.test.ts tests/*.test.tsx | { grep -vxF "$excluded" || true; })"
+# Guard (same as ci.yml): every listed exclusion must exist and be absent from the run list. A CRLF copy of the
+# list makes the grep above exclude nothing; this re-reads the list with CRs stripped and fails instead.
+for ex in $(grep -v '^#' scripts/ci-unit-tests.txt | tr -d '\r' | grep -v '^$' || true); do
+  [ -f "$ex" ] || { echo "scripts/ci-unit-tests.txt lists a missing file: $ex" >&2; exit 1; }
+  if printf '%s\n' "$files" | grep -qxF "$ex"; then echo "scripts/ci-unit-tests.txt exclusion not applied: $ex" >&2; exit 1; fi
+done
+echo "Running $(printf '%s\n' "$files" | wc -l) test files"
 node_modules/.bin/tsx --test $files
 npm run build
 /opt/venv/bin/python python/test_eagar_tsai.py
@@ -61,7 +69,13 @@ RUN npm ci --omit=dev
 # environment variables or is a WORKDIR-relative default that is created and chowned
 # below, so the defaults also work when the variables are unset.
 FROM base AS runtime
+# METALLIKSA_HOST=0.0.0.0: the server binds 127.0.0.1 by default (server/security.ts resolveBindConfig), which a
+# published port cannot reach. A non-loopback bind turns the login flow ON (the intended secure default): without
+# METALLIKSA_TOKEN a random one-time login link is printed at start (`docker logs <container>`; it shows
+# http://localhost:3000/..., so replace the port with the published host port). With METALLIKSA_TOKEN set, API clients
+# send 'Authorization: Bearer <token>' and browsers enter it on /login. Every /api route except /api/health needs login.
 ENV NODE_ENV=production \
+    METALLIKSA_HOST=0.0.0.0 \
     PORT=3000 \
     AIRGAPPED=1 \
     METALLIX_PYTHON=/opt/venv/bin/python \
@@ -95,4 +109,10 @@ COPY --chown=metalliksa .lpbf-surrogates ./.lpbf-surrogates
 USER metalliksa
 VOLUME ["/data"]
 EXPOSE 3000
+# /api/health is the only unauthenticated /api route (server/security.ts tokenAuth), so this check works in login mode
+# without a credential. It connects over container loopback, which a 0.0.0.0 bind accepts; override it if
+# METALLIKSA_HOST is set to one specific interface address. It does not probe the Python worker
+# (/api/python/status needs login).
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
 CMD ["node", "dist/server.cjs"]
