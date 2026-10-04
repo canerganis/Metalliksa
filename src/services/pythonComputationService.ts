@@ -43,6 +43,8 @@ export interface PythonEngineStatus {
   warm?: boolean;
   channel?: string;
   ipcDaemon?: PersistentIPCDiagnostics;
+  /** Server-side qualifier sent instead of a per-subsystem map (currently "unverified"). */
+  subsystemStatus?: string;
   subsystems?: {
     calphad_solver?: { available: boolean; description?: string };
     dft_property_calculator?: { available: boolean; description?: string };
@@ -946,6 +948,7 @@ class PythonComputationService {
         channel: data.channel ?? undefined,
         ipcDaemon: data.ipcDaemon,
         subsystems: data.subsystems,
+        subsystemStatus: typeof data.subsystemStatus === "string" ? data.subsystemStatus : undefined,
       };
       this.lastCheckTime = now;
       return this.statusCache;

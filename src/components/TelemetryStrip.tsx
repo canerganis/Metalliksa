@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchRuntimeConfig, runtimeConfigProbe, useAccessRequired, type RuntimeConfig } from "./AirgapBanner";
 import { useBootSnapshot } from "./BootSequence";
-import { subsystemCount } from "../services/bootSteps";
+import { subsystemCount, subsystemQualifier } from "../services/bootSteps";
 import type { PythonEngineStatus } from "../services/pythonComputationService";
 import type { BootStepState } from "../utils/bootSequence";
 
@@ -72,13 +72,14 @@ export function telemetryCells(input: TelemetryInputs): TelemetryCell[] {
       value: subsystems
         ? `${subsystems.available}/${subsystems.total}`
         : engine?.online
-          ? "not reported"
+          ? subsystemQualifier(engine)
           : input.engineChecking && !engine
             ? "checking"
             : "unavailable",
+      // A server qualifier such as "unverified" is not a fault the user can clear: neutral, not amber.
       tone: subsystems
         ? subsystems.available === subsystems.total ? "ok" : "warn"
-        : engine?.online ? "warn" : input.engineChecking && !engine ? "neutral" : "fail",
+        : engine?.online || (input.engineChecking && !engine) ? "neutral" : "fail",
     },
     {
       label: "Modules",

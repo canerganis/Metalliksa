@@ -30,16 +30,26 @@ export function subsystemCount(status: PythonEngineStatus | null | undefined): {
   return { available: entries.filter((s) => s?.available === true).length, total: entries.length };
 }
 
+/**
+ * Subsystem wording when the engine sent no per-subsystem map. The server currently sends
+ * subsystemStatus "unverified"; that is reported verbatim as "unverified (server)", in a neutral
+ * tone, and never turned into a count.
+ */
+export function subsystemQualifier(status: PythonEngineStatus): string {
+  return status.subsystemStatus ? `${status.subsystemStatus} (server)` : "not reported";
+}
+
 export function describeEngine(status: PythonEngineStatus): BootOutcome {
   if (!status.online) {
     const reason = status.status === "client_fallback" ? "status request failed" : `status: ${status.status}`;
     return { state: "unavailable", detail: `Engine unavailable (${reason}); continuing in limited mode` };
   }
+  // "online" comes only from the status call; subsystems never upgrade or downgrade it unless counted.
   const counts = subsystemCount(status);
   const version = status.pythonVersion ? `Python ${status.pythonVersion}` : "Python version not reported";
-  const subsystems = counts ? `${counts.available}/${counts.total} subsystems available` : "subsystems not reported";
-  const full = counts !== null && counts.available === counts.total;
-  return { state: full ? "ok" : "limited", detail: `Python engine online · ${version} · ${subsystems}` };
+  const subsystems = counts ? `${counts.available}/${counts.total} subsystems available` : `subsystems: ${subsystemQualifier(status)}`;
+  const missing = counts !== null && counts.available < counts.total;
+  return { state: missing ? "limited" : "ok", detail: `Python engine online · ${version} · ${subsystems}` };
 }
 
 export function buildBootSteps(deps: BootStepDeps): BootStep[] {
@@ -82,11 +92,14 @@ export function buildBootSteps(deps: BootStepDeps): BootStep[] {
       run: async () => describeEngine(await deps.engineStatus()),
     },
     {
+      // Not a probe: the registry is bundled with the app, so this row only reports that it loaded and
+      // its size. DESIGN-9 also proposed preloading the first module chunk here; that check was dropped
+      // (it would delay boot and module chunk errors are already caught by ModuleBoundary).
       id: "modules",
       label: "Module registry",
       run: async () => {
         const n = deps.moduleCount();
-        return n > 0 ? { state: "ok", detail: `${n} modules registered` } : { state: "unavailable", detail: "No modules registered" };
+        return n > 0 ? { state: "ok", detail: `Registry loaded · ${n} modules` } : { state: "unavailable", detail: "Registry empty" };
       },
     },
   ];

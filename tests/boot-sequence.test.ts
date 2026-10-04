@@ -12,6 +12,7 @@ import {
 } from "../src/utils/bootSequence";
 import { buildBootSteps, describeEngine, type BootStepDeps } from "../src/services/bootSteps";
 import { telemetryCells, type TelemetryInputs } from "../src/components/TelemetryStrip";
+import { pythonComputationService } from "../src/services/pythonComputationService";
 
 // setImmediate is not faked, so this drains pending promise callbacks between timer ticks.
 const flush = async () => {
@@ -183,7 +184,6 @@ test("real steps: order and honest wording when every source answers", async () 
   assert.deepEqual(snap.rows.map((r) => r.id), ["runtime-config", "access", "airgap", "engine", "modules"]);
   assert.deepEqual(snap.rows.map((r) => r.state), ["ok", "ok", "ok", "ok", "ok"]);
   assert.equal(snap.rows[3].detail, "Python engine online · Python 3.12.10 · 2/2 subsystems available");
-  assert.equal(snap.rows[4].detail, "37 modules registered");
   for (const row of snap.rows) assert.doesNotMatch(row.detail, /validat|ready|certif/i, `${row.id} must not claim validation or readiness`);
 });
 
@@ -228,8 +228,36 @@ test("engine wording: 'online' only when the status call says so", () => {
   assert.equal(partial.state, "limited");
   assert.match(partial.detail, /Python version not reported · 1\/2 subsystems available/);
   const bare = describeEngine({ online: true, status: "online", pythonVersion: "3.12.1" });
-  assert.equal(bare.state, "limited", "unreported subsystems are not counted as available");
-  assert.match(bare.detail, /subsystems not reported/);
+  assert.equal(bare.state, "ok", "online comes from the status call; missing subsystems are not a fault");
+  assert.equal(bare.detail, "Python engine online · Python 3.12.1 · subsystems: not reported");
+  // What the live server sends today: subsystemStatus "unverified" and no map. Never a count.
+  const live = describeEngine({ online: true, status: "online", pythonVersion: "3.14.5", subsystemStatus: "unverified" });
+  assert.equal(live.state, "ok");
+  assert.equal(live.detail, "Python engine online · Python 3.14.5 · subsystems: unverified (server)");
+  assert.doesNotMatch(live.detail, /\d+\/\d+/);
+});
+
+test("the status service passes the server's subsystemStatus through (and only a string)", async () => {
+  const realFetch = globalThis.fetch;
+  const reply = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200 })) as typeof fetch;
+  try {
+    globalThis.fetch = reply({ status: "online", pythonVersion: "3.14.5", subsystemStatus: "unverified" });
+    const s = await pythonComputationService.checkEngineStatus(true);
+    assert.equal(s.online, true);
+    assert.equal(s.subsystemStatus, "unverified");
+    assert.equal(s.subsystems, undefined);
+    globalThis.fetch = reply({ status: "online", subsystemStatus: { odd: true } });
+    assert.equal((await pythonComputationService.checkEngineStatus(true)).subsystemStatus, undefined);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("module registry row reports the bundled registry, not a probe", async () => {
+  const snap = await runAll(deps());
+  assert.equal(snap.rows[4].detail, "Registry loaded · 37 modules");
+  const empty = await runAll(deps({ moduleCount: () => 0 }));
+  assert.deepEqual([empty.rows[4].state, empty.rows[4].detail], ["unavailable", "Registry empty"]);
 });
 
 // --- Telemetry strip mapping ------------------------------------------------------------------
@@ -275,8 +303,13 @@ test("telemetry cells read 'unavailable' with no data and never show placeholder
   assert.equal(pending.Engine, "checking|neutral");
   assert.equal(pending.Subsystems, "checking|neutral");
   assert.equal(cellMap({ ...baseInputs, accessRequired: true }).Access, "sign-in required|fail");
-  // The live server sends subsystemStatus "unverified" and no subsystems map: never invent a count.
-  assert.equal(cellMap({ ...baseInputs, engine: { online: true, status: "online", pythonVersion: "3.12.10" } }).Subsystems, "not reported|warn");
+  // The live server sends subsystemStatus "unverified" and no subsystems map: never invent a count,
+  // and do not show an amber that can never clear.
+  assert.equal(cellMap({ ...baseInputs, engine: { online: true, status: "online", pythonVersion: "3.12.10" } }).Subsystems, "not reported|neutral");
+  assert.equal(
+    cellMap({ ...baseInputs, engine: { online: true, status: "online", pythonVersion: "3.14.5", subsystemStatus: "unverified" } }).Subsystems,
+    "unverified (server)|neutral",
+  );
   assert.equal(cellMap({ ...baseInputs, config: { airgapped: true, blockedServices: ["x", "y"], allowedLocal: [] } })["Air-gap"], "ON · 2 cut|warn");
 });
 
