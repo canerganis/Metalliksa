@@ -26,17 +26,17 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
       "ASTM E21 governs elevated temperature tension testing; ASTM E8M standardizes SI metric testing protocols.",
   },
   hardness: {
-    standardCode: "ASTM E140-23",
+    standardCode: "ASTM E140",
     secondaryCodes: ["ISO 18265:2013", "ASTM E18", "ASTM E92", "ASTM E10", "DIN 50150"],
     title: "Standard Hardness Conversion Tables for Metals",
     governingBody: "ASTM Committee E28 / ISO TC 164/SC 3 Hardness Testing",
     methodology:
-      "Statistically calibrated empirical cross-conversion tables between Rockwell C (HRC, 120° diamond spheroconical indenter, 150 kgf load) and Vickers (HV, 136° diamond pyramid indenter, DPH). Computes equivalent Brinell (HBW 10/3000) and approximate tensile strength Rm.",
+      "Linear interpolation between the published conversion numbers of ASTM E140 Table 1 (Rockwell C range) and Table 2 (Rockwell B range) for non-austenitic steels: HRC, HRB, Vickers HV, Brinell HBW (10 mm carbide ball, 3000 kgf) and Knoop HK, with HV as the pivot. Tensile strength Rm is estimated from HV by interpolation in ISO 18265 Table A.1 (unalloyed and low-alloy steels). Outside the tabulated range a value is reported as unavailable; nothing is extrapolated or clamped.",
     equations:
-      "HRC ⇄ HV via ASTM E140 Table 1 regression | Approximate Rm ≈ 3.45 × HBW (for non-austenitic steels)",
-    validRange: "HRC: 20 to 70 HRC | Vickers: 80 to 1050 HV | Brinell: 80 to 650 HBW",
+      "Piecewise-linear interpolation between tabulated rows (no fitted formula) | Rm from HV per ISO 18265 Table A.1",
+    validRange: "HRC 20-68 (HV 238-940) | HRB 55-100 (HV 100-240) | HBW 226-634 (HV 238-674) | HK 112-920 | Rm: HV 80-650 | Leeb HLD: not converted",
     criticalNotes:
-      "Conversions are fundamentally empirical; ASTM E140 Table 1 is standard for non-austenitic carbon & alloy steels. For austenitic stainless or nickel-base alloys, conversion scatter increases up to ±2 HRC.",
+      "Approximate conversion for non-austenitic steels per ASTM E140 / ISO 18265 tables; not a substitute for direct testing. The tables used here are for non-austenitic steels only; converted values are estimates, not measurements.",
   },
   temperature: {
     standardCode: "ITS-90 / NIST SP 811",

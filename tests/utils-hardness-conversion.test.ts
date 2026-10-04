@@ -5,6 +5,7 @@ import {
   HARDNESS_VERIFIED_RANGES,
   convertSteelHardness as convert,
 } from "../src/utils/hardnessConversion";
+import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
 
 // Reference values, read from the public reproductions cited in src/utils/hardnessConversion.ts:
 //   ASTM E140 Table 1 (non-austenitic steels): [A] labtesting.com chart-hardness-c.pdf, [B] andersonlabs.com Rockwell C
@@ -178,4 +179,13 @@ test("the result carries the approximate-conversion disclaimer", () => {
     "Approximate conversion for non-austenitic steels per ASTM E140 / ISO 18265 tables; not a substitute for direct testing."
   );
   assert.equal(convert(40, "HRC").validRangeNote, HARDNESS_CONVERSION_DISCLAIMER);
+});
+
+test("the hardness info pop-over describes the table interpolation, not the removed formulas", () => {
+  const info = METALLURGICAL_STANDARDS.hardness;
+  const text = [info.methodology, info.equations, info.validRange, info.criticalNotes].join(" ");
+  assert.doesNotMatch(text, /3\.45|3\.25|regression|±2 HRC/);
+  assert.match(info.validRange!, /HRC 20-68 \(HV 238-940\)/);
+  assert.match(info.validRange!, /Rm: HV 80-650/);
+  assert.match(info.criticalNotes!, /not a substitute for direct testing/);
 });
