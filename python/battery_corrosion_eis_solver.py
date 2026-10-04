@@ -15,6 +15,8 @@ import time
 
 import physical_constants
 from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
+from input_validation import ValidationError, validation_envelope
+from tafel_corrosion_rate_solver import corrosion_preset as _corrosion_preset
 
 # Phase 6a value step (b): every R/F site uses the exact SI 2019 products N_A*k and
 # N_A*e. Before, the four sites used four different printings: p2d 8.314/96485.332,
@@ -765,7 +767,17 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     """
     Simulates electrochemical corrosion polarization resistance (ASTM G59),
     Faraday penetration rate (ASTM G102), and protective coating EIS water uptake.
+
+    The substrate is resolved exactly through alloy_registry (domain "corrosion"), the same
+    resolution and the same computed ASTM G102 equivalent weight (elements >= 1 wt %,
+    renormalised) the Tafel solver uses. An unknown alloy raises ValidationError(UNKNOWN_ALLOY);
+    the former substring match ("al" in the id -> aluminium, "ti" -> titanium, anything else
+    -> steel EW 27.9 / 7.87 g/cm3) is gone.
     """
+    try:
+        preset = _corrosion_preset(metal_id)
+    except ValidationError as exc:  # same refusal, reported against the field this action receives
+        raise ValidationError(exc.code, "metalId", exc.message, exc.detail) from exc
     # Stern-Geary constant B (V)
     # B = (beta_a * beta_c) / (2.303 * (beta_a + beta_c))
     b_val = (beta_a * beta_c) / (2.303 * (beta_a + beta_c) + 1e-12)
@@ -777,16 +789,10 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     
     # Faraday's Law Corrosion Penetration Rate (ASTM G102)
     # CR (mm/year) = K1 * (i_corr_uA_cm2 * EW) / density_g_cm3, K1 = 0.0032707148 (exact F)
-    # Approximating EW and density for standard alloys
-    ew = 27.9 # g/eq (steel approx)
-    density = 7.87 # g/cm3
-    if "al" in metal_id.lower():
-        ew = 9.0; density = 2.81
-    elif "ti" in metal_id.lower():
-        ew = 11.97; density = 4.43
-    elif "ni" in metal_id.lower():
-        ew = 29.35; density = 8.90
-        
+    # EW and density come from the registry record the metal id resolved to (see docstring)
+    ew = preset["ew"]  # g/eq
+    density = preset["density_g_cm3"]  # g/cm3
+
     cr_mm_per_year = (ASTM_G102_K1_MM_G_UA_CM_YR * i0_corr_ua_cm2 * ew) / density
     cr_mpy = cr_mm_per_year * 39.37 # mils per year
     
@@ -868,6 +874,12 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
         
     return {
         "metalId": metal_id,
+        "alloyId": preset["registry_id"],
+        "equivalentWeight_g_eq": ew,
+        "density_g_cm3": density,
+        "equivalentWeightNote": ("ASTM G102 EW computed in alloy_registry (corrosion domain) from the alloy "
+                                 "composition: elements >= 1 wt % counted, mass fractions renormalised, "
+                                 "in-house valences (no per-value citation)."),
         "sternGeary_B_V": round(b_val, 4),
         "polarizationResistance_Rp_Ohm_cm2": round(r_p_ohm_cm2, 1),
         "corrosionRate_mm_yr": round(cr_mm_per_year, 5),
@@ -2131,6 +2143,10 @@ if __name__ == "__main__":
             }
         print(json.dumps(res))
         
+    except ValidationError as e:
+        # Phase 6a envelope: invalid input (e.g. unknown alloy), not a solver failure (HTTP 422).
+        print(json.dumps(validation_envelope(e)))
+        sys.exit(2)
     except Exception as e:
         print(json.dumps({"error": str(e), "success": False, "errorKind": "internal"}))
         sys.exit(1)
