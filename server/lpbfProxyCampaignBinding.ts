@@ -3,9 +3,9 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { LpbfArtifactStore } from './lpbfArtifactStore';
 import type { RunRecord } from './lpbfRunRepository';
+import { resolvePythonRoot } from './pythonRoot';
 import { getHostPython } from './pythonRuntime';
 
 const SECTION_IDS = ['x-4p9mm', 'x-6p0mm'];
@@ -16,7 +16,6 @@ const CONTOUR_OPERATOR = 'linear-liquidus-crossings-between-cell-centers-v1';
 const SECTION_FIELD_PATH = 'rectangular-corridor-section-fields.npz';
 const SECTION_FIELD_BINDING = 'accepted-step-maximum-per-source-X-plane';
 const MAX_SECTION_FIELD_BYTES = 32 * 1024 * 1024;
-const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 
 /** Shared case-0 execution gate used at campaign creation and every archive boundary. */
@@ -69,7 +68,7 @@ export function rederiveProxyCampaignSections(result: unknown, bytes: Buffer): P
     catch { reject(new Error('Host Python is unavailable for NPZ re-derivation.')); return; }
     const code = [
       'import json,sys',
-      `sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)})`,
+      `sys.path.insert(0,${JSON.stringify(resolvePythonRoot())})`,
       'try:',
       ' from lpbf_nist_proxy_sections import rederive_rectangular_corridor_sections',
       ' from lpbf_nist_proxy_sections import SectionArtifactError',
