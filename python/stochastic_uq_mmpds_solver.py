@@ -20,7 +20,8 @@ import physical_constants
 
 # Phase 6a structural migration (design step (a)): constants come from
 # physical_constants / alloy_data_kinetics_uq_fatigue with unchanged values.
-R_GAS = physical_constants.LEGACY_GAS_CONSTANT_R_4SF  # 8.314, exact R is step (b)
+# Phase 6a value step (b): exact SI 2019 R = N_A*k (was the 4-significant-figure 8.314).
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
 
 def norm_cdf(x: float) -> float:
@@ -710,7 +711,8 @@ def provenance() -> dict:
         "registryVersion": alloy_registry.REGISTRY_VERSION,
         "constantsVersion": physical_constants.CONSTANTS_VERSION,
         "gasConstantR_J_molK": R_GAS,
-        "constantsNote": "Legacy 4-significant-figure R (8.314); exact CODATA R is design step (b).",
+        "constantsNote": "Exact SI 2019 R = N_A*k (Phase 6a value step); it replaced the "
+                         "4-significant-figure R = 8.314.",
     }
     out.update(_uq_data.provenance())
     return out

@@ -201,7 +201,10 @@ class StochasticTest(unittest.TestCase):
         code, out = _run("stochastic_uq_mmpds_solver.py", {"mcSamples": 500})
         self.assertEqual(code, 0)
         prov = out.pop("provenance")
-        self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
+        # Design step (b): exact R; the outputs below still equal the 8.314 base blob
+        # (the LSW radius sits on its 0.8 nm floor for these inputs).
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(uq.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["registryVersion"], reg.REGISTRY_VERSION)
         self.assertNotIn("registryAlloyId", prov)  # alloyName is a label, never resolved
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
