@@ -143,9 +143,9 @@ export default function App() {
     activate(id);
     if (window.location.hash !== moduleHash(id)) window.location.hash = moduleHash(id);
   }
+  function showHome() { setHome(true); setNavigationOpen(false); }
   function goHome() {
-    setHome(true);
-    setNavigationOpen(false);
+    showHome();
     if (window.location.hash !== '#/home') window.location.hash = '#/home';
   }
   async function refreshStatus(force = true) {
@@ -156,7 +156,7 @@ export default function App() {
   }
   useEffect(() => {
     void refreshStatus(false);
-    const onHash = () => isHome(window.location.hash) ? setHome(true) : activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
+    const onHash = () => isHome(window.location.hash) ? showHome() : activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
     const onNavigate = (event: Event) => {
       const id = (event as CustomEvent<{ tabId?: string }>).detail?.tabId;
       if (id) navigate(id);

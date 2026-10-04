@@ -10,7 +10,7 @@ export function ScientificContextPanel({ moduleId, specimen }: { moduleId: Modul
   const context = buildScientificContext(moduleId, specimen);
   return <section aria-labelledby="scientific-context-title" className="mk-dossier mk-hud">
     <div className="flex items-start gap-4">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-700 bg-[var(--mk-paper)] text-slate-300"><BookOpen className="h-4 w-4" aria-hidden="true" /></div>
+      <div className="hidden sm:grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-700 bg-[var(--mk-paper)] text-slate-300"><BookOpen className="h-4 w-4" aria-hidden="true" /></div>
       <div className="min-w-0 flex-1"><p className="mk-kicker">Scientific context · live interpretation</p><h2 id="scientific-context-title" className="mt-1.5 text-lg font-light text-slate-200">{context.title}</h2><p className="mt-2 max-w-4xl text-[13px] leading-relaxed text-slate-300">{context.observation}</p></div>
     </div>
     <div className="mk-dossier-grid">

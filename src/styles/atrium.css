@@ -2,7 +2,17 @@
  * Atrium (start page). Loaded with the lazy Atrium chunk. Porcelain tokens only; the laser colour is
  * ornament. Motion (scan, orbits, glints, tilt) runs only when the user has not asked for less.
  */
-.mk-atrium { position: relative; padding-bottom: var(--mk-space-6); }
+.mk-atrium { position: relative; isolation: isolate; padding-bottom: var(--mk-space-6); }
+/* Pointer light (ornament): a soft white bloom with a faint cobalt rim that follows the mouse. */
+.mk-atrium::before {
+  content: "";
+  position: absolute;
+  inset: -2rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(26rem 26rem at calc(var(--mx, 70%) + 2rem) calc(var(--my, 22rem) + 2rem), rgba(255, 255, 255, 0.9), rgba(214, 222, 240, 0.35) 45%, transparent 70%);
+  transition: background-position 120ms linear;
+}
 
 /* Hero */
 .mk-at-hero {

@@ -481,6 +481,7 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   box-shadow: var(--mk-elev-1);
   backdrop-filter: blur(10px);
 }
+@media (max-width: 639px) { .mk-dossier { padding: 1rem; } }
 .mk-dossier-grid { display: grid; gap: 1px; margin-top: 1.2rem; overflow: hidden; border: 1px solid var(--mk-border); border-radius: 12px; background: var(--mk-border); }
 @media (min-width: 64rem) { .mk-dossier-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .mk-dossier-cell { padding: 1rem 1.1rem; background: var(--mk-paper-2); font-size: 12.5px; line-height: 1.6; color: var(--mk-text-subtle); }

@@ -101,13 +101,20 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
     event.currentTarget.style.setProperty('--rx', `${((event.clientY - box.top) / box.height - 0.5) * -5}deg`);
     event.currentTarget.style.setProperty('--ry', `${((event.clientX - box.left) / box.width - 0.5) * 7}deg`);
   };
+  // Ambient light follows the pointer across the page (visual only).
+  const spot = (event: React.PointerEvent<HTMLElement>) => {
+    if (!motion || event.pointerType !== 'mouse') return;
+    const box = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty('--mx', `${event.clientX - box.left}px`);
+    event.currentTarget.style.setProperty('--my', `${event.clientY - box.top}px`);
+  };
   const untilt = (event: React.PointerEvent<HTMLElement>) => {
     event.currentTarget.style.removeProperty('--rx');
     event.currentTarget.style.removeProperty('--ry');
   };
 
   return (
-    <section className="mk-atrium" aria-labelledby="atrium-title" data-motion={String(motion)}>
+    <section className="mk-atrium" aria-labelledby="atrium-title" data-motion={String(motion)} onPointerMove={spot}>
       <div className="mk-at-hero">
         <div className="mk-at-copy">
           <p className="mk-at-kicker">Local research workstation · Laser powder-bed fusion</p>
