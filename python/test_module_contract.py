@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # one legacy contract per listed module. Migration may only lower this number.
 LEGACY_CEILING = 25
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
-CONTRACTED = ("toolpath-studio", "murakami-fatigue", "defect-twin", "adaptive-mitigation", "optical-tomography",
+CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
               "keyhole-raytracing", "ttt-cct-kinetics", "icme-motor", "uq-lab")
 
 
@@ -603,11 +603,8 @@ class ContractedRegistryTests(unittest.TestCase):
         expected = {
             "toolpath-studio": ("toolpath-kinematics", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics") + worker,
             "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
-            "defect-twin": ("stl-voxelize", "/api/python/lpbf-stl-voxelize", "stl-voxelize") + worker,
             "adaptive-mitigation": ("adaptive-feedforward", "/api/python/lpbf-adaptive-feedforward",
                                     "adaptive-feedforward") + worker,
-            "optical-tomography": ("optical-tomography", "/api/python/lpbf-optical-tomography",
-                                   "optical-tomography") + worker,
             "ttt-cct-kinetics": ("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct",
                                  "python/kinetics_ttt_cct_solver.py", "python-ipc", 25000, True),
             "icme-motor": ("icme-multiscale-pipeline", "/api/python/icme-multiscale-pipeline",

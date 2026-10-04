@@ -269,39 +269,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-      "next": "defect-twin",
+      "next": "adaptive-mitigation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/MurakamiFatigueLab.tsx",
         "export": "MurakamiFatigueLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "defect-twin",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Spatial Defect Twin",
-      "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-      "next": "adaptive-mitigation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfDefectTwinLab.tsx",
-        "export": "LpbfDefectTwinLab"
       },
       "migrationState": "contracted",
       "evidence": {
@@ -373,7 +347,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Thermal Accumulation",
       "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "optical-tomography",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -382,32 +356,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "MultiTrackThermalLab"
       },
       "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "optical-tomography",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Optical Tomography",
-      "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/OpticalTomographyLab.tsx",
-        "export": "OpticalTomographyLab"
-      },
-      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

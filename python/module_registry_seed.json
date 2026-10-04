@@ -85,19 +85,9 @@
     "label": "Fatigue & Fracture Lab",
     "scope": "Research",
     "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-    "next": "defect-twin",
+    "next": "adaptive-mitigation",
     "viewComponent": "src/components/MurakamiFatigueLab.tsx",
     "viewExport": "MurakamiFatigueLab"
-  },
-  {
-    "id": "defect-twin",
-    "workspace": "lpbf",
-    "label": "Spatial Defect Twin",
-    "scope": "Research",
-    "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-    "next": "adaptive-mitigation",
-    "viewComponent": "src/components/LpbfDefectTwinLab.tsx",
-    "viewExport": "LpbfDefectTwinLab"
   },
   {
     "id": "adaptive-mitigation",
@@ -125,19 +115,9 @@
     "label": "Thermal Accumulation",
     "scope": "Research",
     "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-    "next": "optical-tomography",
+    "next": "keyhole-raytracing",
     "viewComponent": "src/components/MultiTrackThermalLab.tsx",
     "viewExport": "MultiTrackThermalLab"
-  },
-  {
-    "id": "optical-tomography",
-    "workspace": "lpbf",
-    "label": "Optical Tomography",
-    "scope": "Research",
-    "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-    "next": "keyhole-raytracing",
-    "viewComponent": "src/components/OpticalTomographyLab.tsx",
-    "viewExport": "OpticalTomographyLab"
   },
   {
     "id": "keyhole-raytracing",

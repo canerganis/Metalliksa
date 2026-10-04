@@ -632,21 +632,6 @@ class PythonComputationService {
     return res.json();
   }
 
-  // Phase 14: STL Voxelization & Spatial Defect Mapping
-  async voxelizeSTLDefects(data: {
-    stlContent: string;
-    resolution?: number;
-    defects?: Array<{ x?: number; y?: number; z?: number; type: string; diameter_um: number }>;
-  }): Promise<any> {
-    const res = await fetch("/api/python/lpbf-stl-voxelize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
   // Phase 15: Closed-Loop Feed-Forward Mitigation
   async processAdaptiveFeedforward(data: {
     content: string;
@@ -707,24 +692,6 @@ class PythonComputationService {
     maxAllowableDrift_K?: number;
   }): Promise<any> {
     const res = await fetch("/api/python/lpbf-thermal-accumulation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-    return res.json();
-  }
-
-  // Phase 19: Optical Tomography
-  async simulateOpticalTomography(data: {
-    laser_power_W: number;
-    scan_speed_mm_s: number;
-    material_k: number;
-    material_alpha: number;
-    sensor_resolution?: [number, number];
-    fov_um?: number;
-  }): Promise<any> {
-    const res = await fetch("/api/python/lpbf-optical-tomography", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

@@ -11,10 +11,10 @@ import { test } from "node:test";
  */
 const EXCLUSIONS: Record<string, string> = {
   // Thin wrappers: the <input>/<select> is a pass-through element; every call site is wrapped by <label>.
-  "src/components/OpticalTomographyLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
+  // (empty since 2026-10-04: the three wrapper-only labs were deleted)
 };
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
-const MAX_EXCLUSIONS = 1; // the list may shrink, never grow silently (3 -> 1: two excluded labs deleted 2026-10-04)
+const MAX_EXCLUSIONS = 0; // the list may shrink, never grow silently (3 -> 0: the three excluded labs were deleted 2026-10-04)
 
 // Files labelled in Phase 8 batches 1 and 2; independent of the automatic scan.
 const PINNED_GUARDED = [
@@ -46,7 +46,6 @@ const PINNED_GUARDED = [
   "src/components/HeatTreatmentAgingSimulator.tsx",
   "src/components/ICMEMultiScalePipelineStudio.tsx",
   "src/components/IndustrialCertificationLab.tsx",
-  "src/components/LpbfDefectTwinLab.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsProjectExplorer.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
@@ -66,9 +65,7 @@ const PINNED_GUARDED = [
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
-const PINNED_EXCLUDED = [
-  "src/components/OpticalTomographyLab.tsx",
-];
+const PINNED_EXCLUDED: string[] = [];
 
 const MAX_LABEL_LENGTH = 80;
 

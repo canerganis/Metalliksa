@@ -1046,7 +1046,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-      "next": "defect-twin",
+      "next": "adaptive-mitigation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1217,131 +1217,6 @@ export const MODULE_REGISTRY = {
         "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
         "src/services/pythonComputationService.ts::computeMurakamiFatigue",
         "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` / Fatigue & Fracture Lab"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "defect-twin",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Spatial Defect Twin",
-      "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-      "next": "adaptive-mitigation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfDefectTwinLab.tsx",
-        "export": "LpbfDefectTwinLab"
-      },
-      "operations": [
-        {
-          "id": "stl-voxelize",
-          "method": "POST",
-          "route": "/api/python/lpbf-stl-voxelize",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "stl-voxelize",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "resolution",
-              "label": "Grid divisions per axis",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 32,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced (0 divides by zero)."
-            }
-          ],
-          "undeclaredInput": [
-            "stlContent",
-            "defects"
-          ],
-          "output": {
-            "fields": [
-              "num_triangles",
-              "bounds",
-              "grid_resolution",
-              "voxel_size_mm",
-              "part_volume_mm3",
-              "total_defects_count",
-              "total_pore_volume_mm3",
-              "relative_density_pct",
-              "defects",
-              "sample_surface_voxels"
-            ],
-            "statusKey": null,
-            "transportValues": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with the summed sphere volumes of the defects supplied in the request; the defects are inputs, not detections. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_defect_twin.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/defect-twin.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
-        "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct 100; with the 8 synthesized defects the view always sends it reports about 94.95 against that fictitious volume (observed in Phase 7 wave 2).",
-        "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed 8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count proxy, orders of magnitude below the enclosed volume.",
-        "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
-        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
-        "No validity domain is declared: no source-backed applicability range is established."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
-        "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
-        "python/stl_voxelizer.py::STLVoxelizer.voxelize",
-        "routes/lpbfSimulation.ts:34#/api/python/lpbf-stl-voxelize",
-        "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
-        "src/services/pythonComputationService.ts::voxelizeSTLDefects",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin"
       ],
       "seedDerived": [
         "label",
@@ -1550,7 +1425,7 @@ export const MODULE_REGISTRY = {
         "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
         "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
         "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
-        "routes/lpbfSimulation.ts:35#/api/python/lpbf-adaptive-feedforward",
+        "routes/lpbfSimulation.ts:34#/api/python/lpbf-adaptive-feedforward",
         "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
         "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
         "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation"
@@ -1638,7 +1513,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Thermal Accumulation",
       "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "optical-tomography",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1693,240 +1568,6 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [],
       "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "optical-tomography",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Optical Tomography",
-      "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/OpticalTomographyLab.tsx",
-        "export": "OpticalTomographyLab"
-      },
-      "operations": [
-        {
-          "id": "optical-tomography",
-          "method": "POST",
-          "route": "/api/python/lpbf-optical-tomography",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "optical-tomography",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "res_x",
-              "label": "Sensor pixels (x)",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 64,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop runs res_x * res_y times with no limit below the 20000 ms worker timeout."
-            },
-            {
-              "key": "res_y",
-              "label": "Sensor pixels (y)",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 64,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."
-            },
-            {
-              "key": "fov_um",
-              "label": "Field of view",
-              "valueType": "number",
-              "unit": "µm",
-              "displayUnits": [],
-              "quantityKind": "length",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 1000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "emissivity",
-              "label": "Emissivity",
-              "valueType": "number",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "emissivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 0.35,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "laserPower_W",
-              "label": "Laser power",
-              "valueType": "number",
-              "unit": "W",
-              "displayUnits": [],
-              "quantityKind": "power",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 280.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "scanSpeed_mms",
-              "label": "Scan speed",
-              "valueType": "number",
-              "unit": "mm/s",
-              "displayUnits": [],
-              "quantityKind": "speed",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 1000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "material_k",
-              "label": "Thermal conductivity",
-              "valueType": "number",
-              "unit": "W/(m*K)",
-              "displayUnits": [],
-              "quantityKind": "thermal-conductivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 15.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "material_alpha",
-              "label": "Thermal diffusivity",
-              "valueType": "number",
-              "unit": "m^2/s",
-              "displayUnits": [],
-              "quantityKind": "thermal-diffusivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 5e-06,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."
-            },
-            {
-              "key": "T0_K",
-              "label": "Ambient temperature",
-              "valueType": "number",
-              "unit": "K",
-              "displayUnits": [],
-              "quantityKind": "temperature",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 300.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            }
-          ],
-          "undeclaredInput": [],
-          "output": {
-            "fields": [
-              "resolution",
-              "fov_um",
-              "max_expected_intensity",
-              "pixels_1d",
-              "pixels_noise_sigma"
-            ],
-            "statusKey": null,
-            "transportValues": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; the noise value is the square root of that signal. No sensor calibration or measured frame is involved. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_optical_tomography.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/optical-tomography.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.",
-        "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD (noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, not a temperature-domain noise bound.",
-        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
-        "No validity domain is declared: no source-backed applicability range is established."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
-        "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
-        "routes/lpbfSimulation.ts:37#/api/python/lpbf-optical-tomography",
-        "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
-        "src/services/pythonComputationService.ts::simulateOpticalTomography",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography"
-      ],
       "seedDerived": [
         "label",
         "description",
@@ -2236,7 +1877,7 @@ export const MODULE_REGISTRY = {
         "python/lpbf_keyhole_raytracing.py::_number",
         "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
         "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-        "routes/lpbfSimulation.ts:39#/api/python/lpbf-keyhole-raytracing",
+        "routes/lpbfSimulation.ts:37#/api/python/lpbf-keyhole-raytracing",
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
         "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
         "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing"

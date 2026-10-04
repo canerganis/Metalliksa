@@ -31,10 +31,8 @@ for (const [method, route, rpc] of [
   ["post", "/api/python/lpbf-industrial-fatigue", "industrial-fatigue"],
   ["post", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics"],
   ["post", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture"],
-  ["post", "/api/python/lpbf-stl-voxelize", "stl-voxelize"],
   ["post", "/api/python/lpbf-adaptive-feedforward", "adaptive-feedforward"],
   ["post", "/api/python/lpbf-multilaser-plume", "multilaser-plume"],
-  ["post", "/api/python/lpbf-optical-tomography", "optical-tomography"],
   ["post", "/api/python/lpbf-thermal-accumulation", "thermal-accumulation"],
   ["post", "/api/python/lpbf-keyhole-raytracing", "keyhole-raytracing"],
   ["post", "/api/python/lpbf-toolpath-thermal-map", "toolpath-thermal-map"],
@@ -42,7 +40,7 @@ for (const [method, route, rpc] of [
   lpbfSimulationRouter[method](route, async (req, res) => {
     try {
       if (rpc === "submit" && Buffer.byteLength(JSON.stringify(req.body)) > 50000000) return res.status(413).json({ error: "Simulation input too large" });
-      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "toolpath-kinematics", "fatigue-fracture", "stl-voxelize", "adaptive-feedforward", "multilaser-plume", "optical-tomography", "thermal-accumulation", "keyhole-raytracing", "toolpath-thermal-map"].includes(rpc);
+      const passBody = ["submit", "estimate", "solidification-microstructure", "thermomechanical-distortion", "industrial-fatigue", "toolpath-kinematics", "fatigue-fracture", "adaptive-feedforward", "multilaser-plume", "thermal-accumulation", "keyhole-raytracing", "toolpath-thermal-map"].includes(rpc);
       const data = await lpbfWorker.request(rpc, passBody ? req.body : ("id" in req.params ? req.params.id : null));
       res.status(rpc === "submit" ? 202 : 200).json(data);
     } catch (e) { workerError(res, e, "Simulation request failed"); }

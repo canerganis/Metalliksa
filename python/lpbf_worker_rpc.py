@@ -1,5 +1,4 @@
 """RPC dispatch table for the LPBF worker (method name -> handler)."""
-import base64
 
 from four_alloy_materials import resolve_alloy_id, thermal_props, THERMAL_NAME
 from lpbf_evidence import resource_estimate
@@ -7,14 +6,12 @@ from lpbf_simulation import validate
 from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
 from lpbf_fatigue_fracture import MurakamiFatigueEngine
 from lpbf_multilaser_plume import ShieldGasFlow, PlumeParameters, MultiLaserPlumeEngine
-from lpbf_optical_tomography import OpticalTomographySimulator
 from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
 )
 from lpbf_thermal_accumulation import AlloyThermalProperties, HatchProcessConfig, MultiTrackThermalEngine
 from lpbf_toolpath_kinematics import LPBFToolpathParser, GalvanometerKinematicsEngine, ScannerProfile
-from stl_voxelizer import STLVoxelizer
 
 
 def _rpc_solidification_microstructure(request):
@@ -123,26 +120,6 @@ def _rpc_toolpath_thermal_map(request):
     return data
 
 
-def _rpc_stl_voxelize(request):
-    # Phase 14
-    payload = request["payload"]
-    stl_text = payload.get("stlContent", "")
-    resolution = int(payload.get("resolution", 32))
-    defects = payload.get("defects", [])
-
-    if stl_text.strip().startswith("solid"):
-        triangles = STLVoxelizer.parse_ascii_stl(stl_text)
-    else:
-        try:
-            raw_bytes = base64.b64decode(stl_text)
-            triangles = STLVoxelizer.parse_binary_stl(raw_bytes)
-        except Exception:
-            triangles = STLVoxelizer.parse_ascii_stl(stl_text)
-
-    data = STLVoxelizer.voxelize(triangles, resolution=resolution, detected_defects=defects)
-    return data
-
-
 def _rpc_adaptive_feedforward(request):
     # Phase 15
     payload = request["payload"]
@@ -240,24 +217,6 @@ def _rpc_thermal_accumulation(request):
     return data
 
 
-def _rpc_optical_tomography(request):
-    # Phase 19
-    payload = request["payload"]
-    sim = OpticalTomographySimulator(
-        sensor_resolution=(int(payload.get("res_x", 64)), int(payload.get("res_y", 64))),
-        fov_um=float(payload.get("fov_um", 1000.0)),
-        emissivity=float(payload.get("emissivity", 0.35))
-    )
-    data = sim.simulate_sensor_frame(
-        laser_power_W=float(payload.get("laserPower_W", 280.0)),
-        scan_speed_mm_s=float(payload.get("scanSpeed_mms", 1000.0)),
-        material_k=float(payload.get("material_k", 15.0)),
-        material_alpha=float(payload.get("material_alpha", 5e-6)),
-        T0_K=float(payload.get("T0_K", 300.0))
-    )
-    return data
-
-
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -273,11 +232,9 @@ RESEARCH_HANDLERS = {
     "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
     "toolpath-thermal-map": _rpc_toolpath_thermal_map,
-    "stl-voxelize": _rpc_stl_voxelize,
     "adaptive-feedforward": _rpc_adaptive_feedforward,
     "multilaser-plume": _rpc_multilaser_plume,
     "thermal-accumulation": _rpc_thermal_accumulation,
-    "optical-tomography": _rpc_optical_tomography,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }
 

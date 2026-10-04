@@ -56,11 +56,9 @@ const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudio
 const ToolpathThermalMapLab = lazy(() => import("./components/ToolpathThermalMapLab").then(m => ({ default: m.ToolpathThermalMapLab }))); // Phase 12+17
 const IndustrialCertificationLab = lazy(() => import("./components/IndustrialCertificationLab").then(m => ({ default: m.IndustrialCertificationLab }))); // Phase 9 & 10
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
-const LpbfDefectTwinLab = lazy(() => import("./components/LpbfDefectTwinLab").then(m => ({ default: m.LpbfDefectTwinLab }))); // Phase 14
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const MultiLaserPlumeLab = lazy(() => import("./components/MultiLaserPlumeLab").then(m => ({ default: m.MultiLaserPlumeLab }))); // Phase 16
 const MultiTrackThermalLab = lazy(() => import("./components/MultiTrackThermalLab").then(m => ({ default: m.MultiTrackThermalLab }))); // Phase 17
-const OpticalTomographyLab = lazy(() => import("./components/OpticalTomographyLab").then(m => ({ default: m.OpticalTomographyLab }))); // Phase 19
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 
 const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
@@ -166,11 +164,9 @@ export default function App() {
       case 'toolpath-thermal-map': return <ToolpathThermalMapLab />; // Phase 12+17
       case 'industrial-certification': return <IndustrialCertificationLab />; // Phase 9 & 10
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
-      case 'defect-twin': return <LpbfDefectTwinLab />; // Phase 14
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'multilaser-plume': return <MultiLaserPlumeLab />; // Phase 16
       case 'thermal-accumulation': return <MultiTrackThermalLab />; // Phase 17
-      case 'optical-tomography': return <OpticalTomographyLab />; // Phase 19
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;

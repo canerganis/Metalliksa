@@ -424,7 +424,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "python/lpbf_keyhole_raytracing.py::_number",
                       "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
                       "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-                      "routes/lpbfSimulation.ts:39#/api/python/lpbf-keyhole-raytracing",
+                      "routes/lpbfSimulation.ts:37#/api/python/lpbf-keyhole-raytracing",
                       "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
                       "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
                       "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing",
@@ -743,59 +743,6 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
         ))
 
 
-# optical-tomography: keys and defaults of _rpc_optical_tomography in python/lpbf_worker_rpc.py.
-_OPTICAL_FIELDS = (
-    _num("res_x", "Sensor pixels (x)", "1", "count", 64, integer=True,
-         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop "
-              "runs res_x * res_y times with no limit below the 20000 ms worker timeout."),
-    _num("res_y", "Sensor pixels (y)", "1", "count", 64, integer=True,
-         note="Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."),
-    _num("fov_um", "Field of view", _MICRO, "length", 1000.0, note="Converted with float(); no bound is enforced."),
-    _num("emissivity", "Emissivity", "1", "emissivity", 0.35, note="Converted with float(); no bound is enforced."),
-    _num("laserPower_W", "Laser power", "W", "power", 280.0, note="Converted with float(); no bound is enforced."),
-    _num("scanSpeed_mms", "Scan speed", "mm/s", "speed", 1000.0, note="Converted with float(); no bound is enforced."),
-    _num("material_k", "Thermal conductivity", "W/(m*K)", "thermal-conductivity", 15.0,
-         note="Converted with float(); no bound is enforced."),
-    _num("material_alpha", "Thermal diffusivity", "m^2/s", "thermal-diffusivity", 5e-6,
-         note="Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."),
-    _num("T0_K", "Ambient temperature", "K", "temperature", 300.0, note="Converted with float(); no bound is enforced."),
-)
-
-
-def _optical_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = _worker_contract_op(
-        "optical-tomography", _OPTICAL_FIELDS,
-        OutputSchema(fields=("resolution", "fov_um", "max_expected_intensity", "pixels_1d", "pixels_noise_sigma"),
-                     status_key=None))
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source "
-            "temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; "
-            "the noise value is the square root of that signal. No sensor calibration or measured frame is "
-            "involved. " + _PENDING_CAP),
-        notes=(
-            "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read "
-            "(it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are "
-            "ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in "
-            "practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in "
-            "Phase 7 wave 2; the view is not changed here.",
-            "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD "
-            "(noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, "
-            "not a temperature-domain noise bound.",
-            _WORKER_NO_VALIDATION,
-            "No validity domain is declared: no source-backed applicability range is established.",
-        ),
-        sources=_WORKER_SOURCES + (
-            "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
-            "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
-            "routes/lpbfSimulation.ts:37#/api/python/lpbf-optical-tomography",
-            "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
-            "src/services/pythonComputationService.ts::simulateOpticalTomography",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography",
-        ))
-
-
 # toolpath-studio and adaptive-mitigation share the G-code/CLI parser (lpbf_toolpath_kinematics).
 _TOOLPATH_FORMAT = _choice("format", "Toolpath format", "toolpath-format", ("gcode", "cli"), "gcode",
                            note="The authority lower-cases the value and parses anything other than 'cli' as G-code.")
@@ -894,52 +841,10 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
             "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
-            "routes/lpbfSimulation.ts:35#/api/python/lpbf-adaptive-feedforward",
+            "routes/lpbfSimulation.ts:34#/api/python/lpbf-adaptive-feedforward",
             "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
             "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
             "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation",
-        ))
-
-
-def _defect_twin_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = _worker_contract_op(
-        "stl-voxelize",
-        (_num("resolution", "Grid divisions per axis", "1", "count", 32, integer=True,
-              note="Converted with int(); no bound is enforced (0 divides by zero)."),),
-        OutputSchema(fields=("num_triangles", "bounds", "grid_resolution", "voxel_size_mm", "part_volume_mm3",
-                             "total_defects_count", "total_pore_volume_mm3", "relative_density_pct", "defects",
-                             "sample_surface_voxels"), status_key=None),
-        undeclared=("stlContent", "defects"))
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) "
-            "times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with "
-            "the summed sphere volumes of the defects supplied in the request; the defects are inputs, not "
-            "detections. " + _PENDING_CAP),
-        notes=(
-            "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} "
-            "objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
-            "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero "
-            "triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct "
-            "100; with the 8 synthesized defects the view always sends it reports about 94.95 against that "
-            "fictitious volume (observed in Phase 7 wave 2).",
-            "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed "
-            "8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count "
-            "proxy, orders of magnitude below the enclosed volume.",
-            "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the "
-            "Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
-            _WORKER_NO_VALIDATION,
-            "No validity domain is declared: no source-backed applicability range is established.",
-        ),
-        sources=_WORKER_SOURCES + (
-            "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
-            "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
-            "python/stl_voxelizer.py::STLVoxelizer.voxelize",
-            "routes/lpbfSimulation.ts:34#/api/python/lpbf-stl-voxelize",
-            "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
-            "src/services/pythonComputationService.ts::voxelizeSTLDefects",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin",
         ))
 
 
@@ -975,10 +880,8 @@ CONTRACTED_BUILDERS = {
     "ttt-cct-kinetics": _kinetics_contract,
     "icme-motor": _icme_contract,
     "murakami-fatigue": _fatigue_contract,
-    "optical-tomography": _optical_contract,
     "toolpath-studio": _toolpath_contract,
     "adaptive-mitigation": _adaptive_contract,
-    "defect-twin": _defect_twin_contract,
 }
 
 
