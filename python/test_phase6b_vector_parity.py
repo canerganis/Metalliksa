@@ -54,6 +54,57 @@ PARITY_MODE = {
 VALIDATION_CHANGES = {("xrd_peak_deconvolution", "edge_missing_points"): ("OUT_OF_RANGE", "points")}
 # The only differences the minimiser rule tolerates besides numbers: the engine
 # string (version bump) and the additive fitDiagnostics block with exactly these keys.
+XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.0"
+XRD_DIAGNOSTIC_KEYS = {"minimiser", "start", "status", "message", "nfev", "dof", "accepted"}
+
+
+def load(solver, case):
+    with open(golden.phase6b_vector_golden_path(solver, case), "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def iter_cases():
+    for solver, table in cases.CASES.items():
+        for case in table:
+            yield solver, case
+
+
+def as_stdout(result):
+    """In-process result -> the parsed, volatile-stripped stdout the golden holds."""
+    return golden.strip_volatile(json.loads(json.dumps(result)))
+
+
+def _display_unit(value):
+    """10**-d when ``value`` was evidently rounded for display (repr has d <= 6
+    fractional digits, no exponent), else None."""
+    text = repr(value)
+    if "e" in text or "E" in text or "." not in text:
+        return None
+    digits = len(text.split(".")[1])
+    return 10.0 ** -digits if digits <= 6 else None
+
+
+def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
+    """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
+
+    display_unit=True (only for spawn runs compared with the committed goldens,
+    which CI repeats on other platforms/BLAS builds): a leaf that was rounded for
+    display (round(x, d) with d <= 6) may also differ by one unit in its last
+    decimal, the size of a rounding flip caused by ulp-level differences. The
+    in-process kernel comparisons (old blob vs new on the same machine) never
+    use this allowance."""
+    bad = []
+    for row in drift_report.diff(old, new):
+        if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
+            if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
+                continue
+            unit = _display_unit(row["old"]) if display_unit else None
+            if unit is not None and abs(row["abs"]) <= unit * (1 + 1e-9):
+                continue
+        bad.append(row)
+    return bad
+
+
 # Elasticity honesty lane (dft_property_calculator v4.0 -> v4.1; AUDIT-engines-nonlpbf-opus.md D7).
 # The faa6684 goldens stay bound to the base blob; the changes below are the ONLY differences the
 # "tolerance" rule accepts for dft, each pinned to an exact old/new pair or a stated code:
@@ -299,57 +350,6 @@ def dft_unexplained(case, rows):
                 bad.append(row)
     required = {r[0] for r in rules} | ({"ni3al.sourced-constants"} if case == "ni3al_cubic_benchmark" else set())
     return bad, sorted(required - hit)
-
-
-XRD_ENGINE_OLD, XRD_ENGINE_NEW = "MetalliX-Python-HPC-XRD-v3.10", "MetalliX-Python-HPC-XRD-v4.0"
-XRD_DIAGNOSTIC_KEYS = {"minimiser", "start", "status", "message", "nfev", "dof", "accepted"}
-
-
-def load(solver, case):
-    with open(golden.phase6b_vector_golden_path(solver, case), "r", encoding="utf-8") as fh:
-        return json.load(fh)
-
-
-def iter_cases():
-    for solver, table in cases.CASES.items():
-        for case in table:
-            yield solver, case
-
-
-def as_stdout(result):
-    """In-process result -> the parsed, volatile-stripped stdout the golden holds."""
-    return golden.strip_volatile(json.loads(json.dumps(result)))
-
-
-def _display_unit(value):
-    """10**-d when ``value`` was evidently rounded for display (repr has d <= 6
-    fractional digits, no exponent), else None."""
-    text = repr(value)
-    if "e" in text or "E" in text or "." not in text:
-        return None
-    digits = len(text.split(".")[1])
-    return 10.0 ** -digits if digits <= 6 else None
-
-
-def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
-    """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
-
-    display_unit=True (only for spawn runs compared with the committed goldens,
-    which CI repeats on other platforms/BLAS builds): a leaf that was rounded for
-    display (round(x, d) with d <= 6) may also differ by one unit in its last
-    decimal, the size of a rounding flip caused by ulp-level differences. The
-    in-process kernel comparisons (old blob vs new on the same machine) never
-    use this allowance."""
-    bad = []
-    for row in drift_report.diff(old, new):
-        if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
-            if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
-                continue
-            unit = _display_unit(row["old"]) if display_unit else None
-            if unit is not None and abs(row["abs"]) <= unit * (1 + 1e-9):
-                continue
-        bad.append(row)
-    return bad
 
 
 def _git_available() -> bool:
