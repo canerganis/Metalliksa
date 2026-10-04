@@ -302,6 +302,15 @@ class StepBGoldenTest(unittest.TestCase):
         ndi = "scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability"
         bad = [
             mutated(uts, old=1000.0),                          # old UTS was not the old yield strength
+            # free-text claims: only the exact pinned texts are accepted (review S2)
+            mutated("modelStatusNote", new=fresh["modelStatusNote"] + " Validated against FEA and CALPHAD."),
+            mutated("modelParts[3]", new="validated FEA component limit"),
+            mutated("scale4_macroComponentFEA.structuralVerdictBasis",
+                    new=fresh["scale4_macroComponentFEA"]["structuralVerdictBasis"] + " Certified to ASME."),
+            mutated("engine", new="MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; DFT-validated"),
+            mutated("scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status", new="unavailable: DFT-validated"),
+            mutated("scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status", new="unavailable: certified"),
+            mutated("scale4_macroComponentFEA.lefmDamageTolerance.status", new="unavailable: FEA-validated"),
             mutated(uts, new=1191.8),                          # UTS must be null, not a number
             mutated(k1c, new=100.0),
             mutated(ac, new=1.0),
@@ -316,6 +325,26 @@ class StepBGoldenTest(unittest.TestCase):
         for i, variant in enumerate(bad):
             with self.subTest(mutation=i):
                 self.assertTrue(golden.step_b_violations(solver, variant, fresh))
+        # review S1: every documented rule must occur and the unavailable values must be null.
+        # Mutant: UTS and K_Ic put back to the old value (== yield) -> no UTS/K_Ic drift rows.
+        import copy
+        reverted = copy.deepcopy(fresh)
+        mech = reverted["scale3_continuumPlasticity"]["mechanicalProperties"]
+        mech["ultimateTensileStrength_UTS_MPa"] = base["scale3_continuumPlasticity"]["mechanicalProperties"][
+            "ultimateTensileStrength_UTS_MPa"]
+        mech.pop("ultimateTensileStrength_UTS_status")
+        rows_reverted = drift_report.diff(base, reverted)
+        self.assertNotIn(uts, [r["key"] for r in rows_reverted])
+        self.assertTrue(golden.step_b_violations(solver, rows_reverted, reverted))
+        # a documented row dropped from an otherwise valid table, with the value still null in the document
+        for dropped in (uts, verdict, "modelStatus", "caeExportCards.lsDyna", "modelParts[2]"):
+            with self.subTest(dropped=dropped):
+                partial = [r for r in rows if r["key"] != dropped]
+                self.assertTrue(golden.step_b_violations(solver, partial, fresh))
+        # a unavailable value that is not null in the re-blessed document
+        not_null = copy.deepcopy(fresh)
+        not_null["scale3_continuumPlasticity"]["mechanicalProperties"]["fractureToughness_K1c_MPa_sqrt_m"] = 100.0
+        self.assertTrue(golden.step_b_violations(solver, rows, not_null))
         # the exception is per solver: the same row under another solver is structural
         self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", [rows[0]], fresh))
         # an undocumented non-numeric row of the same solver still fails

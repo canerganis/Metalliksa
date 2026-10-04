@@ -328,6 +328,70 @@ _ICME_OLD_NDI = frozenset({
     "High-Resolution Eddy Current / Computed Tomography Required (Sub-mm Flaw)",
 })
 _ICME_NEW_NDI = "Unavailable (no critical flaw size without K_Ic)"
+# Fixed texts of the illustrative ICME engine, pinned literally (independent of the solver constants):
+# a re-bless may only record exactly these (fx-icme fix round, review S2).
+_ICME_EXACT_TEXT = {
+    'modelStatusNote':
+        'Illustrative closed-form estimate; it is not calibrated to measurements or validated. '
+        "Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table of "
+        'elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a '
+        "Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of "
+        'atomic radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no '
+        'thermodynamic calculation is run, and the size and modulus misfit values are reported but '
+        'do not enter the strength. The microstructure scale uses empirical SDAS, Hall-Petch, '
+        'Taylor and LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and '
+        'CAE-card parameters come from a schematic hardening law with a placeholder '
+        "strain-hardening exponent n. The 'macro FEA' scale is a yield-only comparison of Rp0.2 "
+        'with a fixed catalogue stress, not a finite-element analysis. The model is '
+        'room-temperature only: serviceTemp_C does not change any value and strainRate_s_inv only '
+        'appears in a card line. Ultimate tensile strength and fracture toughness (K_Ic, critical '
+        'flaw size, plastic zone radius) are unavailable; see the status fields next to them.',
+    'engine':
+        'MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no '
+        'DFT/CALPHAD/FEA run)',
+    'scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status':
+        'unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was '
+        'set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n '
+        'would only return the yield strength; an independent measured n and K are required',
+    'scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status':
+        'unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not '
+        'MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; '
+        'supply a measured K_Ic',
+    'scale4_macroComponentFEA.structuralVerdictBasis':
+        'Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa '
+        'against requiredSafetyFactor. No creep, fatigue, fracture, buckling or '
+        'service-temperature check exists.',
+    'scale4_macroComponentFEA.lefmDamageTolerance.status':
+        'unavailable: the critical flaw size and the plastic zone radius need a fracture toughness '
+        'K_Ic, which this model does not provide',
+    'modelParts[0]':
+        'scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)',
+    'modelParts[1]':
+        'scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no '
+        'CALPHAD)',
+    'modelParts[2]':
+        'scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations',
+    'modelParts[3]':
+        'scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with '
+        'placeholder n',
+    'modelParts[4]':
+        'scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)',
+    'modelParts[5]':
+        'caeExportCards: uncalibrated illustrative cards',
+}
+_ICME_DOCUMENTED_KEYS = frozenset(_ICME_EXACT_TEXT) | frozenset({
+    'modelStatus',
+    'scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa',
+    'scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m',
+    'scale4_macroComponentFEA.structuralVerdict',
+    'scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm',
+    'scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm',
+    'scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability',
+    'caeExportCards.abaqus',
+    'caeExportCards.lsDyna',
+    'caeExportCards.ansys',
+})
+
 _ICME_MECH = "scale3_continuumPlasticity.mechanicalProperties."
 _ICME_LEFM = "scale4_macroComponentFEA.lefmDamageTolerance."
 _ICME_CARD_ROW = re.compile(r"caeExportCards\.(abaqus|lsDyna|ansys)")
@@ -352,9 +416,9 @@ def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str
     key, kind, old, new = row["key"], row["kind"], row["old"], row["new"]
     is_num = lambda v: type(v) is float  # noqa: E731
 
-    def added(check):
-        if kind != "added" or not isinstance(new, str) or not check(new):
-            return f"{key}: expected an added text of the documented shape, got {kind} {new!r}"
+    def exact_added():
+        if kind != "added" or new != _ICME_EXACT_TEXT.get(key):
+            return f"{key}: expected the pinned text as an added row, got {kind} {new!r}"
         return None
 
     def nulled(label):
@@ -365,12 +429,11 @@ def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str
     if key == "modelStatus":
         return None if (kind == "added" and new == "illustrative") else f"{key}: expected added 'illustrative'"
     if key == "modelStatusNote":
-        return added(lambda t: t.startswith("Illustrative") and "no DFT is run" in t and "unavailable" in t)
+        return exact_added()
     if re.fullmatch(r"modelParts\[\d+\]", key):
-        return added(lambda t: bool(t))
+        return exact_added()
     if key == "engine":
-        if kind != "changed" or old != _ICME_OLD_ENGINE or not str(new).startswith(
-                "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative"):
+        if kind != "changed" or old != _ICME_OLD_ENGINE or new != _ICME_EXACT_TEXT["engine"]:
             return f"{key}: not the documented engine relabel ({old!r} -> {new!r})"
         return None
     if key == _ICME_MECH + "ultimateTensileStrength_UTS_MPa":
@@ -386,17 +449,17 @@ def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str
             return f"{key}: old UTS {old!r} is not the old yield strength {old_yield!r}"
         return None
     if key == _ICME_MECH + "ultimateTensileStrength_UTS_status":
-        return added(lambda t: t.startswith("unavailable:") and "Considere" in t)
+        return exact_added()
     if key == _ICME_MECH + "fractureToughness_K1c_MPa_sqrt_m":
         return nulled("K_Ic")
     if key == _ICME_MECH + "fractureToughness_K1c_status":
-        return added(lambda t: t.startswith("unavailable:") and "MPa*sqrt(m)" in t)
+        return exact_added()
     if key == "scale4_macroComponentFEA.structuralVerdict":
         if kind != "changed" or old not in _ICME_OLD_VERDICT or new != _ICME_OLD_VERDICT[old] or "Creep" in new:
             return f"{key}: not the documented verdict relabel ({old!r} -> {new!r})"
         return None
     if key == "scale4_macroComponentFEA.structuralVerdictBasis":
-        return added(lambda t: t.startswith("Yield-only check") and "No creep" in t)
+        return exact_added()
     if key in (_ICME_LEFM + "criticalFlawSize_ac_mm", _ICME_LEFM + "plasticZoneRadius_rp_mm"):
         return nulled("LEFM value")
     if key == _ICME_LEFM + "inspectionNDICapability":
@@ -404,7 +467,7 @@ def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str
             return f"{key}: not the documented NDI text change ({old!r} -> {new!r})"
         return None
     if key == _ICME_LEFM + "status":
-        return added(lambda t: t.startswith("unavailable:") and "K_Ic" in t)
+        return exact_added()
     card = _ICME_CARD_ROW.fullmatch(key)
     if card:
         if kind != "changed" or not isinstance(old, str) or not isinstance(new, str):
@@ -423,6 +486,29 @@ def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str
             return f"{key}: {name} card differs from the old card by more than one inserted comment line"
         return None
     return f"{key}: no documented-change check for this row"
+
+
+def _icme_missing_rule_violations(rows: List[Dict[str, Any]],
+                                  new_stdout: Optional[Dict[str, Any]]) -> List[str]:
+    """Every documented icme rule must occur in the drift table, and the unavailable values must
+    be null in the re-blessed document (so reverting UTS/K_Ic to the old value cannot re-bless)."""
+    present = {r["key"] for r in rows}
+    out = [f"{key}: documented icme change missing from the drift table"
+           for key in sorted(_ICME_DOCUMENTED_KEYS - present)]
+    if new_stdout is None:
+        return out + ["icme: the re-blessed document is needed to verify the unavailable values"]
+    try:
+        mech = new_stdout["scale3_continuumPlasticity"]["mechanicalProperties"]
+        lefm = new_stdout["scale4_macroComponentFEA"]["lefmDamageTolerance"]
+        values = {"ultimateTensileStrength_UTS_MPa": mech["ultimateTensileStrength_UTS_MPa"],
+                  "fractureToughness_K1c_MPa_sqrt_m": mech["fractureToughness_K1c_MPa_sqrt_m"],
+                  "criticalFlawSize_ac_mm": lefm["criticalFlawSize_ac_mm"],
+                  "plasticZoneRadius_rp_mm": lefm["plasticZoneRadius_rp_mm"]}
+    except (KeyError, TypeError):
+        return out + ["icme: re-blessed document lacks the unavailable-value keys"]
+    out += [f"{name}: must be null (unavailable) in the re-blessed document, got {value!r}"
+            for name, value in values.items() if value is not None]
+    return out
 
 
 def documented_change_violation(solver: str, row: Dict[str, Any],
@@ -498,6 +584,8 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
         elif not (r["kind"] == "changed" and leaf in STEP_B_ALLOWED_STRING_KEYS
                   and isinstance(r["old"], str) and isinstance(r["new"], str)):
             out.append(f"{r['key']}: {r['kind']} row is not a value drift")
+    if solver == "icme_multiscale_pipeline_solver":
+        out += _icme_missing_rule_violations(rows, new_stdout)
     return out
 
 
