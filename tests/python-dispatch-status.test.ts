@@ -93,12 +93,17 @@ async function withRunners(reply: Reply, fn: (h: Harness, seen: string[]) => Pro
   }
 }
 
+// Every python dispatch route that stays after the dead-surface removal (p7 re-audit fix round):
+// pourbaix/tafel plus battery-corrosion-eis, bisquert-tlm-identify and xrd-deconvolve.
 const ROUTES = [
   ["/api/python/pourbaix-diagram", "python/pourbaix_solver.py"],
   ["/api/python/tafel-corrosion-rate", "python/tafel_corrosion_rate_solver.py"],
+  ["/api/python/battery-corrosion-eis", "python/battery_corrosion_eis_solver.py"],
+  ["/api/python/bisquert-tlm-identify", "python/battery_corrosion_eis_solver.py"],
+  ["/api/python/xrd-deconvolve", "python/xrd_peak_deconvolution.py"],
 ] as const;
 
-test("validation envelope (exit 2) is relayed as HTTP 422 by both route handlers", async () => {
+test("validation envelope (exit 2) is relayed as HTTP 422 by every route handler", async () => {
   await withRunners({ stdout: JSON.stringify(ENVELOPE) + "\n", exitCode: 2 }, async (h, seen) => {
     for (const [route, script] of ROUTES) {
       const r = await post(h, route, { element: "Xx" });
@@ -142,4 +147,57 @@ test("successful solver output is still HTTP 200 and unchanged", async () => {
       assert.deepEqual(r.json, ok, route);
     }
   });
+});
+
+test("every route hands the request body to its own script unchanged", async () => {
+  const h = await start();
+  const seen: Array<{ script: string; payload: unknown }> = [];
+  const fake = (async (script: string, payload: unknown) => {
+    seen.push({ script, payload });
+    return { stdout: JSON.stringify({ success: true }), stderr: "", exitCode: 0, durationMs: 1 };
+  }) as any;
+  const originalPhysics = physicsDeps.runPythonScript;
+  const originalCharacterization = characterizationDeps.runPythonScript;
+  physicsDeps.runPythonScript = fake;
+  characterizationDeps.runPythonScript = fake;
+  try {
+    for (const [route, script] of ROUTES) {
+      const body = { action: "probe", route, values: [1, 2.5], nested: { a: null } };
+      assert.equal((await post(h, route, body)).status, 200, route);
+      assert.deepEqual(seen.at(-1), { script, payload: body }, route);
+    }
+    assert.equal(seen.length, ROUTES.length);
+  } finally {
+    physicsDeps.runPythonScript = originalPhysics;
+    characterizationDeps.runPythonScript = originalCharacterization;
+    await h.close();
+  }
+});
+
+test("non-JSON solver output and runner failures stay visible (rawOutput 200, error 500)", async () => {
+  await withRunners({ stdout: "Traceback: not json", exitCode: 1 }, async (h) => {
+    for (const [route] of ROUTES) {
+      const r = await post(h, route, {});
+      assert.equal(r.status, 200, route);
+      assert.equal(r.json.rawOutput, "Traceback: not json", route);
+    }
+  });
+  const h = await start();
+  const failing = (async () => { throw new Error("spawn failed"); }) as any;
+  const originalPhysics = physicsDeps.runPythonScript;
+  const originalCharacterization = characterizationDeps.runPythonScript;
+  physicsDeps.runPythonScript = failing;
+  characterizationDeps.runPythonScript = failing;
+  try {
+    for (const [route, script] of ROUTES) {
+      const r = await post(h, route, {});
+      assert.equal(r.status, 500, route);
+      assert.equal(r.json.error, "spawn failed", route);
+      assert.equal(r.json.script, script, route);
+    }
+  } finally {
+    physicsDeps.runPythonScript = originalPhysics;
+    characterizationDeps.runPythonScript = originalCharacterization;
+    await h.close();
+  }
 });
