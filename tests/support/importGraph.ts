@@ -28,15 +28,34 @@ export function rel(file: string): string {
   return path.relative(repoRoot, file).split(path.sep).join('/');
 }
 
-/** Module specifiers a source file depends on (static, re-export and literal dynamic imports). */
-export function importSpecifiers(file: string): string[] {
-  const text = readFileSync(file, 'utf8');
+/**
+ * True for declarations erased at compile time: `import type ...`, `export type ... from`, and
+ * imports/re-exports whose every named binding is marked `type` (with no default binding).
+ * Side-effect imports (`import './x'`) are kept. Imports used only in type positions without the
+ * `type` keyword are not detected.
+ */
+export function isTypeOnly(node: ts.ImportDeclaration | ts.ExportDeclaration): boolean {
+  if (ts.isExportDeclaration(node)) {
+    if (node.isTypeOnly) return true;
+    return !!node.exportClause && ts.isNamedExports(node.exportClause) && node.exportClause.elements.length > 0
+      && node.exportClause.elements.every(element => element.isTypeOnly);
+  }
+  const clause = node.importClause;
+  if (!clause) return false;
+  if (clause.isTypeOnly) return true;
+  if (clause.name) return false;
+  const bindings = clause.namedBindings;
+  return !!bindings && ts.isNamedImports(bindings) && bindings.elements.length > 0 && bindings.elements.every(element => element.isTypeOnly);
+}
+
+/** Module specifiers a source file depends on at runtime (static, re-export and literal dynamic imports). */
+export function importSpecifiers(file: string, text: string = readFileSync(file, 'utf8')): string[] {
   const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : file.endsWith('.ts') ? ts.ScriptKind.TS : ts.ScriptKind.JS;
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.ES2022, true, kind);
   const specifiers: string[] = [];
   const visit = (node: ts.Node) => {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      specifiers.push(node.moduleSpecifier.text);
+      if (!isTypeOnly(node)) specifiers.push(node.moduleSpecifier.text);
     } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
       const [argument] = node.arguments;
       if (argument && (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))) specifiers.push(argument.text);

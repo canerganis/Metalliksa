@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { MODULE_CONTRACTS } from '../src/modules/registry';
-import { reachableFrom, rel, repoRoot } from './support/importGraph';
+import { importSpecifiers, reachableFrom, rel, repoRoot } from './support/importGraph';
 import { beyondCeiling, readCeiling } from './support/ceiling';
 
 // Phase 7 slice 1: every file under src/components/** must be reachable through static or
@@ -60,8 +60,29 @@ test('the import graph follows lazy view imports from App.tsx and registered vie
   // Lazy-only target of App.tsx and a static child of a registered view.
   assert.ok(fromApp.has('src/components/LpbfEngineeringWorkspace.tsx'));
   assert.ok(fromApp.has('src/components/WorkspaceVisibility.tsx'));
-  for (const contract of MODULE_CONTRACTS) assert.ok(reachable.has(contract.view.component), contract.id);
   assert.ok(components.length > 50, 'expected the component tree to be scanned');
+});
+
+test('every registered view is reachable from the app entry alone, not only as its own root', () => {
+  const fromEntry = new Set([...reachableFrom(ENTRY_POINTS)].map(rel));
+  const missing = MODULE_CONTRACTS.filter(contract => !fromEntry.has(contract.view.component)).map(contract => `${contract.id}: ${contract.view.component}`);
+  assert.deepEqual(missing, [], `Registered view(s) not imported from src/main.tsx or src/App.tsx: ${missing.join(', ')}`);
+});
+
+test('type-only and erased imports are not runtime edges', () => {
+  const sample = [
+    "import type { A } from './typeOnly';",
+    "import { type B, type C } from './allTypeSpecifiers';",
+    "import { type D, value } from './mixed';",
+    "import Default, { type E } from './defaultPlusType';",
+    "import './sideEffect';",
+    "export type { F } from './reexportType';",
+    "export { type G } from './reexportTypeSpecifier';",
+    "export { H } from './reexportValue';",
+    "const Lazy = lazy(() => import('./lazyTarget'));",
+  ].join('\n');
+  assert.deepEqual(importSpecifiers('sample.tsx', sample),
+    ['./mixed', './defaultPlusType', './sideEffect', './reexportValue', './lazyTarget']);
 });
 
 test('SHARED.json entries exist and carry an owner and a reason', () => {
