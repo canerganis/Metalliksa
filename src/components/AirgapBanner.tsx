@@ -15,6 +15,7 @@ const FALLBACK: RuntimeConfig = {
 
 let cached: RuntimeConfig | null = null;
 let accessRequired = false;
+let lastFailure: string | null = null;
 const accessListeners = new Set<(v: boolean) => void>();
 let nativeFetch: typeof fetch | null = null;
 
@@ -24,17 +25,39 @@ function setAccessRequired(v: boolean) {
   accessListeners.forEach((l) => l(v));
 }
 
-export async function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
-  if (cached && !force) return cached;
+let inflight: Promise<RuntimeConfig> | null = null;
+
+/** Non-forced callers share one in-flight request (banner, boot check and telemetry start together). */
+export function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
+  if (cached && !force) return Promise.resolve(cached);
+  if (inflight && !force) return inflight;
+  const request = requestRuntimeConfig().finally(() => {
+    if (inflight === request) inflight = null;
+  });
+  inflight = request;
+  return request;
+}
+
+async function requestRuntimeConfig(): Promise<RuntimeConfig> {
   try {
     const res = await (nativeFetch ?? fetch)("/api/runtime-config");
     setAccessRequired(res.status === 401);
-    if (!res.ok) return cached ?? FALLBACK;
+    if (!res.ok) {
+      lastFailure = `HTTP ${res.status}`;
+      return cached ?? FALLBACK;
+    }
     cached = (await res.json()) as RuntimeConfig;
+    lastFailure = null;
     return cached;
-  } catch {
+  } catch (error) {
+    lastFailure = error instanceof Error && error.message ? error.message : "request failed";
     return cached ?? FALLBACK;
   }
+}
+
+/** What the last runtime-config request established (read-only; FALLBACK values are never reported as loaded). */
+export function runtimeConfigProbe(): { loaded: boolean; accessRequired: boolean; failure: string | null } {
+  return { loaded: cached !== null, accessRequired, failure: lastFailure };
 }
 
 /** Re-check access after any /api call returned 401 (expired session, server restart). */
@@ -82,7 +105,7 @@ export function useRuntimeConfig(): RuntimeConfig {
   return cfg;
 }
 
-function useAccessRequired(): boolean {
+export function useAccessRequired(): boolean {
   const [required, setRequired] = useState(accessRequired);
   useEffect(() => {
     accessListeners.add(setRequired);

@@ -6,9 +6,10 @@ Author: MetalliX Computational Materials Science Suite
 Scientific Scope:
 - Crystal-symmetry-governed 6x6 Elastic Stiffness Tensor (C_ij) construction across crystal systems
   (Cubic, Hexagonal, Tetragonal, Orthorhombic, Trigonal, and Isotropic).
-- Rigorous matrix inversion via Gauss-Jordan elimination for Compliance Tensor (S_ij = C_ij^-1).
+- Matrix inversion (LAPACK LU with partial pivoting, numpy.linalg.inv) for the Compliance
+  Tensor (S_ij = C_ij^-1), with the near-singular diagonal fallback.
 - Born Mechanical Stability Criteria validation (Mouhat & Coudert, Phys. Rev. B 2014) with
-  exact Jacobi eigenvalue determination.
+  eigenvalues from the LAPACK symmetric eigensolver (numpy.linalg.eigvalsh).
 - Voigt, Reuss, and Hill (VRH) bounds for bulk (K) and shear (G) moduli.
 - Ranganathan-Ostoja-Starzewski Universal Elastic Anisotropy Index (A^U) and Zener anisotropy (A_Z).
 - Crystallographic directional Young's modulus E(hkl) via generalized direction-cosine tensor contraction.
@@ -21,6 +22,9 @@ import sys
 import json
 import math
 import time
+import warnings
+
+import numpy as np
 
 # Fundamental Physical Constants (CODATA 2018)
 PLANCK_CONSTANT_H = 6.62607015e-34  # J*s
@@ -232,97 +236,57 @@ AUTHENTIC_ELASTIC_BENCHMARKS = {
 }
 
 
+_PIVOT_FLOOR = 1e-12
+# Relative eigenvalue floor for "all eigenvalues > 0" (Born positive definiteness).
+EIGENVALUE_POSITIVE_RTOL = 1e-10
+
+
+def _min_partial_pivot_exceeds_floor(c: np.ndarray) -> bool:
+    """True when every partial-pivoting LU pivot of ``c`` is >= 1e-12 in magnitude.
+
+    Cheap certificate first: the pivots multiply to |det C| and partial pivoting
+    bounds the k-th pivot by 2^k * max|C_ij|, so
+    min pivot >= |det C| / (2^15 * max|C_ij|^5). Only when that bound does not
+    clear the floor (near-singular input) are the actual pivots computed with
+    LAPACK getrf (scipy.linalg.lu_factor, imported lazily to keep the common
+    path free of the scipy import cost).
+    """
+    if not np.all(np.isfinite(c)):
+        return True  # as before: non-finite input propagates through the inverse
+    scale = float(np.max(np.abs(c)))
+    if scale == 0.0:
+        return False
+    sign, logdet = np.linalg.slogdet(c)
+    if sign != 0 and logdet - 15.0 * math.log(2.0) - 5.0 * math.log(scale) > math.log(_PIVOT_FLOOR) + 1e-6:
+        return True
+    from scipy.linalg import LinAlgWarning, lu_factor
+    with warnings.catch_warnings():
+        # An exactly singular C_ij takes the fallback; do not warn on stderr.
+        warnings.simplefilter("ignore", LinAlgWarning)
+        lu, _ = lu_factor(c, check_finite=False)
+    return bool(np.min(np.abs(np.diag(lu))) >= _PIVOT_FLOOR)
+
+
 def invert_6x6_matrix(matrix: list[list[float]]) -> list[list[float]]:
-    """Invert 6x6 stiffness matrix C_ij using Gauss-Jordan elimination with partial pivoting."""
-    n = 6
-    augmented = [row[:] + [1.0 if i == j else 0.0 for j in range(n)] for i, row in enumerate(matrix)]
-    
-    for i in range(n):
-        # Find pivot
-        max_val = abs(augmented[i][i])
-        max_row = i
-        for k in range(i + 1, n):
-            if abs(augmented[k][i]) > max_val:
-                max_val = abs(augmented[k][i])
-                max_row = k
-                
-        if max_val < 1e-12:
-            # Fallback for ill-conditioned or near-singular matrices
-            diag_inv = [[0.0] * 6 for _ in range(6)]
-            for d in range(6):
-                diag_inv[d][d] = 1.0 / max(1e-4, matrix[d][d])
-            return diag_inv
-            
-        # Swap rows
-        if max_row != i:
-            augmented[i], augmented[max_row] = augmented[max_row], augmented[i]
-            
-        pivot = augmented[i][i]
-        for j in range(2 * n):
-            augmented[i][j] /= pivot
-            
-        for k in range(n):
-            if k != i:
-                factor = augmented[k][i]
-                if abs(factor) > 1e-15:
-                    for j in range(2 * n):
-                        augmented[k][j] -= factor * augmented[i][j]
-                        
-    inv = [[augmented[i][j + n] for j in range(n)] for i in range(n)]
-    return inv
+    """Invert the 6x6 stiffness matrix C_ij (numpy.linalg.inv, LAPACK LU with
+    partial pivoting).
+
+    Near-singular fallback (unchanged): when a partial-pivoting pivot falls below
+    1e-12 the diagonal reciprocal 1/max(1e-4, C_ii) is returned instead. These are
+    the pivots the former Gauss-Jordan elimination tested.
+    """
+    c = np.asarray(matrix, dtype=np.float64)
+    if not _min_partial_pivot_exceeds_floor(c):
+        # Fallback for ill-conditioned or near-singular matrices
+        return np.diag(1.0 / np.maximum(1e-4, np.diag(c))).tolist()
+    return np.linalg.inv(c).tolist()
 
 
 def jacobi_eigenvalues_symmetric(matrix: list[list[float]], max_iter: int = 100) -> list[float]:
-    """Compute eigenvalues of a real symmetric 6x6 matrix using the classical Jacobi rotation method."""
-    n = len(matrix)
-    # Copy matrix
-    a = [row[:] for row in matrix]
-    
-    for _ in range(max_iter):
-        # Find largest off-diagonal element
-        max_val = 0.0
-        p, q = 0, 1
-        for i in range(n):
-            for j in range(i + 1, n):
-                if abs(a[i][j]) > max_val:
-                    max_val = abs(a[i][j])
-                    p, q = i, j
-                    
-        if max_val < 1e-10:
-            break
-            
-        app = a[p][p]
-        aqq = a[q][q]
-        apq = a[p][q]
-        
-        # Compute Jacobi rotation angle
-        if abs(app - aqq) < 1e-12:
-            theta = math.pi / 4.0 if apq > 0 else -math.pi / 4.0
-        else:
-            theta = 0.5 * math.atan2(2.0 * apq, app - aqq)
-            
-        c = math.cos(theta)
-        s = math.sin(theta)
-        
-        # Rotate rows and columns p and q
-        for k in range(n):
-            if k != p and k != q:
-                akp = a[k][p]
-                akq = a[k][q]
-                a[k][p] = c * akp + s * akq
-                a[p][k] = a[k][p]
-                a[k][q] = -s * akp + c * akq
-                a[q][k] = a[k][q]
-                
-        app_new = c * c * app + 2.0 * s * c * apq + s * s * aqq
-        aqq_new = s * s * app - 2.0 * s * c * apq + c * c * aqq
-        a[p][p] = app_new
-        a[q][q] = aqq_new
-        a[p][q] = 0.0
-        a[q][p] = 0.0
-        
-    eigenvalues = sorted([a[i][i] for i in range(n)])
-    return eigenvalues
+    """Eigenvalues of the real symmetric 6x6 matrix in ascending order (LAPACK
+    symmetric eigensolver, numpy.linalg.eigvalsh). The name is kept for callers;
+    ``max_iter`` belonged to the former Jacobi rotation loop and is ignored."""
+    return np.linalg.eigvalsh(np.asarray(matrix, dtype=np.float64)).tolist()
 
 
 def build_stiffness_matrix(crystal_system: str, k_vrh: float, g_vrh: float, formula: str = "", user_c_ij: dict = None) -> tuple[list[list[float]], str]:
@@ -434,7 +398,10 @@ def evaluate_born_stability_criteria(c: list[list[float]], crystal_system: str) 
     # 1. Eigenvalue condition (universal necessary and sufficient: all eigenvalues > 0)
     eigenvalues = jacobi_eigenvalues_symmetric(c)
     min_eig = min(eigenvalues)
-    all_eig_positive = min_eig > 0.0
+    # Positive definite only above a relative floor: an exactly singular C_ij (e.g.
+    # c11 == c12) has a zero eigenvalue that LAPACK returns as +-1e-14-ish rounding
+    # noise, which must not count as positive (the former Jacobi loop returned 0.0).
+    all_eig_positive = min_eig > EIGENVALUE_POSITIVE_RTOL * max(abs(e) for e in eigenvalues)
     
     # Criteria evaluation by crystal symmetry
     if "cubic" in sys_lower or "fcc" in sys_lower or "bcc" in sys_lower:
@@ -603,6 +570,23 @@ def calculate_directional_youngs_modulus_general(s: list[list[float]], direction
     return 1.0 / inv_e
 
 
+def _require_finite_stiffness(c_matrix, source_notes: str, k_vrh: float, g_vrh: float) -> None:
+    """LAPACK eigen/inverse routines need finite C_ij (the former Jacobi/Gauss-Jordan
+    loops silently returned NaN/inf-laden results). A non-finite custom_c_ij entry,
+    or an infinite k_vrh/g_vrh on the isotropic branch, raises
+    input_validation.ValidationError (NON_FINITE)."""
+    if all(math.isfinite(v) for row in c_matrix for v in row):
+        return
+    import input_validation
+    if source_notes == "Custom User Elastic Constants":
+        field = "custom_c_ij"
+    else:
+        field = "k_vrh" if not math.isfinite(k_vrh) else "g_vrh"
+    raise input_validation.ValidationError(
+        input_validation.NON_FINITE, field, "elastic stiffness constants must be finite",
+        {"source": source_notes})
+
+
 def calculate_dft_properties(payload: dict) -> dict:
     """Execute complete continuum elasticity, Born stability, and acoustic property calculations."""
     start_time = time.time()
@@ -624,7 +608,8 @@ def calculate_dft_properties(payload: dict) -> dict:
 
     # 1. Build 6x6 Elastic Stiffness Tensor C_ij (GPa) respecting crystal symmetry
     c_matrix, source_notes = build_stiffness_matrix(crystal_system, k_vrh, g_vrh, formula, user_c_ij)
-    
+    _require_finite_stiffness(c_matrix, source_notes, k_vrh, g_vrh)
+
     # 2. Invert to 6x6 Compliance Tensor S_ij (1/GPa)
     s_matrix = invert_6x6_matrix(c_matrix)
 
@@ -820,6 +805,11 @@ def main():
         result = calculate_dft_properties(payload)
         print(json.dumps(result))
     except Exception as e:
+        validation = sys.modules.get("input_validation")
+        if validation is not None and isinstance(e, validation.ValidationError):
+            # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+            print(json.dumps(validation.validation_envelope(e)))
+            sys.exit(2)
         sys.stderr.write(f"Elasticity Calculator Error: {str(e)}\n")
         print(json.dumps({
             "success": False,

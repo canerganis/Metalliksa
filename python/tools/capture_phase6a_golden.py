@@ -291,12 +291,15 @@ def _binding(solver: str, label: str, from_revision: Optional[str]) -> Tuple[Dic
 
 
 def capture(solver: str, case: str, force: bool, label: str = BASE_REVISION,
-            from_revision: Optional[str] = None) -> str:
-    path = golden_path(solver, case)
+            from_revision: Optional[str] = None, cases: Optional[Dict[str, Dict[str, Any]]] = None,
+            path: Optional[Path] = None) -> str:
+    # ``cases``/``path`` default to the Phase 6a set; other case sets (the phase6b
+    # block below) pass their own table, label and golden path.
+    path = golden_path(solver, case) if path is None else path
     if path.exists() and not force:
         return f"skip {solver}/{case} (exists; use --force to re-bless)"
     meta, source = _binding(solver, label, from_revision)
-    payload = CASES[solver][case]
+    payload = (CASES if cases is None else cases)[solver][case]
     with tempfile.TemporaryDirectory() as tmp:
         script = None
         if from_revision is not None:
@@ -393,14 +396,52 @@ def capture_source_tables(force: bool, label: str = BASE_REVISION,  # noqa: F811
 # ---- END Phase 6a tranche 2a ----
 
 
+# ---- BEGIN phase6b-vector block: cnls / xrd / dft-named cases (base faa6684) ----
+# The Phase 6b NumPy/SciPy rewrite of these three solvers is compared against goldens
+# captured from the faa6684 blobs (not the d33b6f5 label above). They live in
+# golden/phase6b/ and in their own case table, so the Phase 6a bit-exact tests never
+# iterate them; test_phase6b_vector_parity.py applies the stated tolerances.
+# Capture: python -B tools/capture_phase6a_golden.py --phase6b-vector [--force]
+#          [--solver NAME] [--from-revision faa6684]
+import phase6b_vector_golden_cases as _p6b_vector  # noqa: E402
+
+PHASE6B_VECTOR_DIR = PYTHON_DIR / "golden" / _p6b_vector.GOLDEN_SUBDIR
+
+
+def phase6b_vector_golden_path(solver: str, case: str) -> Path:
+    return PHASE6B_VECTOR_DIR / solver / f"{case}.json"
+
+
+def capture_phase6b_vector(solver: str, case: str, force: bool,
+                           from_revision: Optional[str] = None) -> str:
+    return capture(solver, case, force, label=_p6b_vector.BASE_REVISION, from_revision=from_revision,
+                   cases=_p6b_vector.CASES, path=phase6b_vector_golden_path(solver, case))
+# ---- END phase6b-vector block ----
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--force", action="store_true", help="overwrite existing golden files")
-    parser.add_argument("--solver", choices=sorted(CASES), help="capture one solver only")
+    parser.add_argument("--solver", choices=sorted(set(CASES) | set(_p6b_vector.CASES)),
+                        help="capture one solver only")
     parser.add_argument("--from-revision", metavar="REV",
                         help=f"run the solver blob from git REV instead of the working tree "
-                             f"(it must equal the {BASE_REVISION} blob)")
+                             f"(it must equal the {BASE_REVISION} blob; "
+                             f"{_p6b_vector.BASE_REVISION} with --phase6b-vector)")
+    parser.add_argument("--phase6b-vector", action="store_true",
+                        help=f"capture the phase6b vectorisation cases (bound to {_p6b_vector.BASE_REVISION})")
     args = parser.parse_args(argv)
+    if args.phase6b_vector:
+        try:
+            for solver, cases in _p6b_vector.CASES.items():
+                if args.solver and solver != args.solver:
+                    continue
+                for case in cases:
+                    print(capture_phase6b_vector(solver, case, args.force, from_revision=args.from_revision))
+        except CaptureRefused as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        return 0
     try:
         for solver, case in iter_golden_cases():
             if args.solver and solver != args.solver:
