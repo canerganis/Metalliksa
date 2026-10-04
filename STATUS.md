@@ -2,6 +2,30 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## V1 kabul kaydı — 2026-10-04 (kod revizyonu `6b2bded`, yerel; push yok)
+
+**Sonuç: V1 çıkışı henüz TEK revizyonda kabul edilmedi.** Kanıt `066b6b9` → `6b2bded` arasında birikti; kapılar aşağıda ayrı ayrı kaydedildi. Bu bölüm geçici bir kayıttır; ayrıntılı komut çıktıları yerel/izlenmeyen `.orchestra/PHASE1-RECORD.md`, `PHASE2-RECORD.md`, `PHASE3-RECORD.md` dosyalarındadır ve kalıcı sürüm kanıtı yerine geçmez. Bu boşluklarla "kabul" ilanı, ROADMAP'teki "aynı sürüm revizyonu" çıkış ölçütünden **vazgeçmek** (kapsam değişikliği) anlamına gelir; karar kullanıcıya aittir. Önceki 2026-10-03 özeti aşağıda tarihsel kayıt olarak durur; "üç gerçek koşu" ve "token-mode giriş sürüyor" maddeleri bu bölümle **geçersiz kılınmıştır**.
+
+| V1 çıkış kapısı | Durum | Kanıt ve sınır |
+|---|---|---|
+| Sayısal oracle / Python paketi | Windows kilitli ortamda geçti (**`f56382e` arşivi + sonradan birleşen test düzeltmeleri** üzerinde, `6b2bded` arşivinde değil) | `test_lpbf_engineering.py` 40 test OK, 1 görünür atlama (derlenmiş OpenFOAM yok); `test_lpbf_build_job` PASS; CMU içe aktarma 8 OK. Kök `python -m unittest` keşfi minimal kilitli ortamda geçmez (warp vb. ister): **atlanmış/çalıştırılmamış kontrol** |
+| Temiz kurulum (`git archive 6b2bded`, SHA-256 `3c0f59605468b48364fec4613c83dbd1ddd3e2393cc0ced4c8fca5af823a513c`) | **Yalnız Windows geçti** | `npm ci`, `tsc`, tam tsx paketi (529 test: 511 geçti, 0 başarısız, 1 atlandı, 17 todo), `vite build`, paket boyutu: exit 0. Linux Python kilidi **üretilmedi** (Dockerfile Python 3.12 ister, WSL 3.10); `docker build` **çalıştırılmadı**; GitHub CI **çalıştırılmadı**; belgelenen CPU runtime smoke kontrolü ayrıca koşturulmadı (yalnız yukarıdaki Python paketleri) |
+| Akış tekrarı (IN718 60 W / 1200 mm/s / 80 µm, tek iz) | `066b6b9`'da **yeni koşu + arşiv** (iş `318937f610074c1b8d43ea93273b87eb`, 12,6 s); önceden arşivlenmiş bir kaydın yeniden oynatılması değildir | PHASE2-RECORD; sonraki revizyonda yinelenmedi |
+| Uçtan uca tarayıcı/arşiv turu | `066b6b9`'da adım 1–10 notlarla geçti; adım 11 kısmi (arşiv bütünlüğü geçti, **çökme-toparlanma çalıştırılmadı**); adım 12 (giriş) başta başarısız (D1). Kaynak içe aktarma, `.tar` indirme, portable içe aktarma, doğrula/geri yükle **HTTP/curl ile**, aynı sunucuda ve yerinde (izole geri yükleme değil) yapıldı; dosya-seçici hiç kullanılmadı. Kaynak revizyon 1 `nist-amb2022-03-optical-table4-local-v1` (doc SHA-256 `6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0`); bundle `3540bedc1be547fd8175ec0621e0fad9`; TAR SHA-256 `7a215b5790aa3f4e1f5fd379c62589f4345af3ca7c23a119618f7cf8722d95a4` | `6b2bded` temiz derlemesinde yalnız **giriş formu** yeniden doğrulandı (düğme sayfa betiğiyle tıklandı: POST /login 303, API 200, `document.referrer` yalnız origin, kötü kod 401); LAN IP / HTTPS / vekil sunucu denenmedi. ROADMAP'in tarayıcı/izole geri yükleme kapısı **tamamlanmış sayılmaz** |
+| Kritik hata/toparlanma | İptal (kuyruk + çalışan), 7 bozuk bundle reddi (409), arşiv bütünlüğü geçti | Çökme-toparlanma **çalıştırılmadı** |
+
+**Bu dönemde bulunan ve düzeltilen kusurlar** (birleştirme commit'leri ve yerel inceleme dosyalarına göre Opus + Sol 6.1 incelemeli; kampanya v2 `066b6b9` önceki bir dönemdir): kampanya sözleşmesi v2; gerçek bare-plate sonucunun arşive alınamaması (503; null alanlar yalnızca `surfaceMode=bare-plate` iken kabul); giriş formu 403 (D1); bayat sonucun "tamamlandı" görünmesi (D4); tamamlanmamış işi arşivleme 503 → 409/404/400 (D9); `.git` olmayan arşivde şişen CSS; temiz kurulumda düşen 3 mühendislik testi. **Çalışma zamanı kanıtı sınırı:** D4, D9 ve bare-plate arşiv düzeltmesi birim testi + incelemeye dayanır; düzeltmeden sonra gerçek bir bare-plate koşusu arşivlenmedi, tarayıcıda yalnız D1 yeniden doğrulandı.
+
+**Table 4 vaka 0:** önceden kayıtlı doğrulama-durdurma kaydına (2026-09-24, 480 µm koridor) ve bu dönemdeki 402 µm denemesine göre kaynama sınırında kapalı-başarısız oldu; girdi/sınır gevşetilmedi. Üç gerçek koşu + kampanya **yapılmadı**. NPZ okuyucusu gerçek bir 100 W bare-plate çıktısında kabul etti (kampanya değil). ROADMAP yalnız NIST residual'ını V1 şartı dışında sayar; vaka 0'ın V1 şartı olmadığı bizim çıkarımımızdır.
+
+**Açık / bilinen:** bayat sonuç için tam entegrasyon testi (tamamlandı → girdi düzenle → geri al); D2 (alan değerleri sıfır civarı kayan-nokta kalıntısı gibi görünür, µm etiketiyle; metre→µm gösterim hatası şüphesi ve tek iz koşusunda "Overlap index 2" doğrulanmadı, düzeltme yok); D3 (karışık yerel ayar); D5 (backend seçimi yenilemede kalıcı değil); D7 (atlama bağlantısı/landmark); D8 (geri yüklemede manifest hash'i değişir; yeniden kurulum, tasarım gereği ama belgelenmedi); izlenen 18 `__pycache__` dosyası.
+
+**Bilimsel durum (değişmedi):** NIST optik residual `unavailable` (null); senaryo yakınsaması `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`). Yazılım kontrolleri bilimsel doğrulama değildir.
+
+**Sıradaki:** kullanıcı ya kapsam değişikliğiyle kabul eder ya da Linux kilidi + final-revizyon tam tarayıcı turu (dosya-seçici, izole geri yükleme, çökme-toparlanma dahil) istenir; kabulden önce manifestli LPBF dosyalarına dokunulmaz. Manifest dışı işler (temizlik, Python sabit/alaşım altyapısı, Modül SDK, a11y, arayüz) sürer.
+
+> **Aşağıdaki 2026-10-03 özeti tarihsel kayıttır; yukarıdaki V1 kabul kaydı güncel durumu gösterir.**
+
 ## Güncel durum özeti (2026-10-03)
 
 - **Birleşim:** `81694c3` (`orch/integration`) security hardening, airgap guards, a11y statik düzeltmeleri, bundle chunking, CI/packaging taslakları, genişletilmiş TypeScript kapsamı ve ESLint baseline'ını birleştirdi. V1 NPZ yeniden türetim kapısı `a72b2da` ile eklendi, `1cf1067` ile testleri sertleştirildi.
