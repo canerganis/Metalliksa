@@ -89,6 +89,22 @@ class EvidenceIntegrity(unittest.TestCase):
             with self.assertRaises(ValueError):
                 analyze_eis_data(payload)
 
+    def test_ingestion_has_no_user_script_execution(self):
+        # The exec-script HTTP route was removed; the module must not execute caller code.
+        import json
+        import subprocess
+        import sys
+        from pathlib import Path
+        import battery_corrosion_python_ingest as ingest
+        self.assertFalse(hasattr(ingest, "execute_user_python_script"))
+        script = Path(ingest.__file__).resolve()
+        payload = json.dumps({"action": "execute_python_script", "scriptCode": "print('ran')"})
+        done = subprocess.run([sys.executable, "-B", str(script)], input=payload, capture_output=True,
+                              text=True, cwd=script.parent, timeout=60)
+        out = json.loads(done.stdout)  # JSON only: the script's print() never ran
+        self.assertFalse(out["success"])
+        self.assertIn("Unknown action", out["error"])
+
     def test_ocp_preserves_actual_samples(self):
         result = analyze_ocp_data({"time_s": [0, 60, 120, 180, 240, 300],
                                    "potential_V": [-.2, -.19, -.18, -.17, -.16, -.15]})

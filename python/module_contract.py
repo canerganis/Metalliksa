@@ -85,8 +85,15 @@ LIFECYCLE_RESOURCES = ("raf", "interval", "three", "fetch")
 ORACLE_STATES = ("present", "pending")
 MIGRATION_STATES = ("legacy", "contracted")
 HTTP_METHODS = ("GET", "POST", "PUT", "DELETE", "PATCH")
+# Field value types. number/integer carry a canonical unit; boolean/enum carry none.
+VALUE_TYPES = ("number", "integer", "boolean", "enum")
 
 TODO_MARKER = "TODO(maintainer-review)"
+# Explicit owner marker: no person or team has been assigned by a maintainer yet.
+OWNER_UNASSIGNED = "unassigned (needs maintainer)"
+# Identity text that originates in python/module_registry_seed.json (copied from the old UI
+# list without review). A contract lists which of these it still inherits unreviewed.
+SEED_TEXT_FIELDS = ("label", "description", "next", "maturity")
 
 _SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 _MODULE_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -136,45 +143,92 @@ def within_ceiling(status: str, ceiling: str) -> bool:
 
 # --- Building blocks -------------------------------------------------------
 
+def _is_integer(value: Any) -> bool:
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value) and float(value).is_integer())
+
+
 @dataclass(frozen=True)
 class InputField:
+    """One request key of an operation, in the canonical unit the authority expects.
+
+    ``min``/``max`` are hard bounds (outside -> reject). A bound is None when no
+    limit is established from the authority code or a source; it is never guessed.
+    """
     key: str
     label: str
-    unit: str  # canonical unit sent to the authority
+    unit: Optional[str]  # canonical unit sent to the authority (number/integer only)
     quantity_kind: str
-    min: float
-    max: float
+    min: Optional[float]
+    max: Optional[float]
     default: Scalar
     required: bool = True
     step: Optional[float] = None
     display_units: Tuple[str, ...] = ()
     enum: Tuple[str, ...] = ()
+    value_type: str = "number"
+    # Recorded fact about how the authority treats this key (e.g. clamps instead of rejecting).
+    note: Optional[str] = None
 
     def __post_init__(self) -> None:
         _require(isinstance(self.key, str) and bool(_KEY.match(self.key)), f"invalid field key {self.key!r}")
         _text(self.label, f"{self.key}.label")
-        _text(self.unit, f"{self.key}.unit")
         _text(self.quantity_kind, f"{self.key}.quantityKind")
-        _finite(self.min, f"{self.key}.min")
-        _finite(self.max, f"{self.key}.max")
-        _require(self.min <= self.max, f"{self.key}: min must not exceed max")
-        if self.step is not None:
-            _finite(self.step, f"{self.key}.step")
-            _require(self.step > 0, f"{self.key}.step must be positive")
+        _one_of(self.value_type, VALUE_TYPES, f"{self.key}.valueType")
+        _require(isinstance(self.required, bool), f"{self.key}.required must be a boolean")
         _unique(self.display_units, f"{self.key}.displayUnits")
-        if self.enum:
-            _unique(self.enum, f"{self.key}.enum")
-            _require(self.default in self.enum, f"{self.key}: default must be one of enum")
+        if self.note is not None:
+            _text(self.note, f"{self.key}.note")
+        numeric = self.value_type in ("number", "integer")
+        if numeric:
+            _text(self.unit, f"{self.key}.unit")
+            for bound in ("min", "max"):
+                if getattr(self, bound) is not None:
+                    _finite(getattr(self, bound), f"{self.key}.{bound}")
+            if self.min is not None and self.max is not None:
+                _require(self.min <= self.max, f"{self.key}: min must not exceed max")
+            if self.step is not None:
+                _finite(self.step, f"{self.key}.step")
+                _require(self.step > 0, f"{self.key}.step must be positive")
+            _require(not self.enum, f"{self.key}: enum applies only to valueType 'enum'")
         else:
-            _finite(self.default, f"{self.key}.default")
-            _require(self.min <= self.default <= self.max, f"{self.key}: default outside hard range")
+            _require(self.unit is None and self.min is None and self.max is None and self.step is None
+                     and not self.display_units,
+                     f"{self.key}: {self.value_type} fields carry no unit, bounds or step")
+        if self.value_type == "enum":
+            _require(len(self.enum) > 0, f"{self.key}: enum fields need values")
+            _unique(self.enum, f"{self.key}.enum")
+            for value in self.enum:
+                _text(value, f"{self.key}.enum")
+        else:
+            _require(not self.enum, f"{self.key}: enum applies only to valueType 'enum'")
+        problem = self.value_problem(self.default)
+        _require(problem is None, f"{self.key}: default {problem}")
+        if self.value_type == "integer" and self.step is not None:
+            _require(_is_integer(self.step), f"{self.key}.step must be an integer")
+
+    def value_problem(self, value: Any) -> Optional[str]:
+        """Why ``value`` is not acceptable for this field, or None. Hard bounds reject."""
+        if self.value_type == "boolean":
+            return None if isinstance(value, bool) else "must be a boolean"
+        if self.value_type == "enum":
+            return None if isinstance(value, str) and value in self.enum else f"must be one of {list(self.enum)}"
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            return "must be a finite number"
+        if self.value_type == "integer" and not _is_integer(value):
+            return "must be an integer"
+        if self.min is not None and value < self.min:
+            return f"must be >= {self.min}"
+        if self.max is not None and value > self.max:
+            return f"must be <= {self.max}"
+        return None
 
     def to_dict(self) -> dict:
         return {
-            "key": self.key, "label": self.label, "unit": self.unit,
+            "key": self.key, "label": self.label, "valueType": self.value_type, "unit": self.unit,
             "displayUnits": list(self.display_units), "quantityKind": self.quantity_kind,
             "min": self.min, "max": self.max, "step": self.step, "default": self.default,
-            "required": self.required, "enum": list(self.enum),
+            "required": self.required, "enum": list(self.enum), "note": self.note,
         }
 
 
@@ -216,16 +270,46 @@ class Authority:
         }
 
 
+def looks_like_status_key(key: str) -> bool:
+    """Output keys a reader could take for a result/evidence status (case and '_' ignored)."""
+    norm = key.replace("_", "").lower()
+    return norm.endswith("status") or norm.startswith("evidence")
+
+
 @dataclass(frozen=True)
 class OutputSchema:
     fields: Tuple[str, ...]
-    status_key: str = "evidenceStatus"
+    # Top-level key carrying the run's evidence status. None records that the
+    # authority's output carries no evidence status at all (then emits is empty).
+    status_key: Optional[str] = "evidenceStatus"
+    # Status-like fields that are transport values, with every value the authority
+    # can put there (e.g. ("status", ("success",))). None of them may be an evidence
+    # status or a claim; any other status-like field is rejected.
+    transport_values: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
 
     def __post_init__(self) -> None:
         _require(len(self.fields) > 0, "output.fields must not be empty")
         _unique(self.fields, "output.fields")
         for key in self.fields:
             _require(key not in FORBIDDEN_CLAIM_KEYS, f"output field {key!r} is a forbidden claim key")
+        transport = dict(self.transport_values)
+        _require(len(transport) == len(self.transport_values), "output.transportValues keys must be unique")
+        for key, values in transport.items():
+            _require(key in self.fields, f"output.transportValues key {key!r} is not an output field")
+            _require(key != self.status_key, f"output.transportValues cannot describe the status key {key!r}")
+            _require(len(values) > 0, f"output.transportValues[{key!r}] needs values")
+            _unique(values, f"output.transportValues[{key!r}]")
+            for value in values:
+                _text(value, f"output.transportValues[{key!r}]")
+                _require(value not in EVIDENCE_STATUSES and value not in FORBIDDEN_CLAIM_KEYS,
+                         f"output.transportValues[{key!r}] value {value!r} is an evidence status or claim")
+        for key in self.fields:
+            if key != self.status_key and looks_like_status_key(key):
+                # Without this, a contract with statusKey None could hide a real status field.
+                _require(key in transport, f"output field {key!r} looks like a status key; declare it as the "
+                                           "statusKey or list its transport values")
+        if self.status_key is None:
+            return
         _text(self.status_key, "output.statusKey")
         # The status key is reserved by the same claim names as the fields.
         _require(self.status_key not in FORBIDDEN_CLAIM_KEYS,
@@ -234,7 +318,8 @@ class OutputSchema:
                  f"output.statusKey {self.status_key!r} collides with an output field")
 
     def to_dict(self) -> dict:
-        return {"fields": list(self.fields), "statusKey": self.status_key}
+        return {"fields": list(self.fields), "statusKey": self.status_key,
+                "transportValues": {key: list(values) for key, values in self.transport_values}}
 
 
 @dataclass(frozen=True)
@@ -248,6 +333,9 @@ class Operation:
     output: Optional[OutputSchema] = None
     # HTTP method of the route; required with a route, absent without one.
     method: Optional[str] = None
+    # Request keys the authority reads that the Field schema cannot describe
+    # (free-text labels, element maps). Recorded so they are not silently missing.
+    undeclared_input: Tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid operation id {self.id!r}")
@@ -258,13 +346,42 @@ class Operation:
             _require(isinstance(self.route, str) and self.route.startswith("/api/"), "operation.route must start with /api/")
             _one_of(self.method, HTTP_METHODS, f"{self.id}.method")
         _unique(tuple(f.key for f in self.input), f"{self.id}.input keys")
+        _unique(self.undeclared_input, f"{self.id}.undeclaredInput")
+        for key in self.undeclared_input:
+            _require(isinstance(key, str) and bool(_KEY.match(key)), f"{self.id}: invalid undeclared key {key!r}")
+        _require(not set(self.undeclared_input) & {f.key for f in self.input},
+                 f"{self.id}: a key cannot be both declared and undeclared")
 
     def to_dict(self) -> dict:
         return {
             "id": self.id, "method": self.method, "route": self.route, "authority": self.authority.to_dict(),
             "input": [f.to_dict() for f in self.input],
+            "undeclaredInput": list(self.undeclared_input),
             "output": self.output.to_dict() if self.output else None,
         }
+
+    def input_problems(self, payload: Any) -> list:
+        """Contract-side request check: required keys, types, hard ranges, unknown keys.
+
+        Pure; never coerces or clamps. Undeclared-but-recorded keys are passed through
+        unchecked because the schema cannot describe them.
+        """
+        if not isinstance(payload, dict):
+            return ["payload must be an object"]
+        problems = []
+        fields = {f.key: f for f in self.input}
+        for key, spec in fields.items():
+            if key not in payload:
+                if spec.required:
+                    problems.append(f"{key}: required")
+                continue
+            problem = spec.value_problem(payload[key])
+            if problem:
+                problems.append(f"{key}: {problem}")
+        for key in payload:
+            if key not in fields and key not in self.undeclared_input:
+                problems.append(f"{key}: not declared by the contract")
+        return problems
 
 
 @dataclass(frozen=True)
@@ -309,14 +426,25 @@ class ValidityDomain:
 class Oracle:
     status: str = "pending"
     ref: Optional[str] = None
+    # Recorded gap when a present oracle cannot run in CI (its imports are outside the
+    # CI CPU lock). Must also appear in evidence.note; checked against the oracle's imports.
+    ci_note: Optional[str] = None
+    # User-facing sentence on what a present oracle checks (shown with the evidence badge).
+    scope: Optional[str] = None
 
     def __post_init__(self) -> None:
         _one_of(self.status, ORACLE_STATES, "oracle.status")
         if self.status == "present":
             _text(self.ref, "oracle.ref")
+            _text(self.scope, "oracle.scope")
+        else:
+            _require(self.scope is None, "oracle.scope applies only to a present oracle")
+        if self.ci_note is not None:
+            _require(self.status == "present", "oracle.ciNote applies only to a present oracle")
+            _text(self.ci_note, "oracle.ciNote")
 
     def to_dict(self) -> dict:
-        return {"status": self.status, "ref": self.ref}
+        return {"status": self.status, "ref": self.ref, "ciNote": self.ci_note, "scope": self.scope}
 
 
 @dataclass(frozen=True)
@@ -416,6 +544,11 @@ class ModuleContract:
     # Recorded facts about missing or non-authoritative behaviour (e.g. a route the
     # view calls that no server handles). Notes never raise a claim.
     legacy_notes: Tuple[str, ...] = ()
+    # Repository files (optionally ``path:line`` or ``path:start-end``) the contract's
+    # fields, limits and outputs were read from. Required once contracted; each must exist.
+    source_refs: Tuple[str, ...] = ()
+    # SEED_TEXT_FIELDS still copied unreviewed from the seed (all of them for legacy contracts).
+    seed_derived: Tuple[str, ...] = SEED_TEXT_FIELDS
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid module id {self.id!r}")
@@ -447,10 +580,31 @@ class ModuleContract:
             # a contracted operation must state the deadline it runs under.
             _require(all(op.authority.timeout_ms is not None for op in self.operations),
                      f"{self.id}: contracted operations must declare authority.timeoutMs")
-            _require(len(self.evidence.emits) > 0, f"{self.id}: contracted modules must declare emits")
+            # emits lists only statuses the code really emits: an output without a
+            # status key emits none, and an output with one must declare what it emits.
+            carries_status = any(op.output.status_key is not None for op in self.operations)
+            if carries_status:
+                _require(len(self.evidence.emits) > 0, f"{self.id}: contracted modules must declare emits")
+            else:
+                _require(len(self.evidence.emits) == 0,
+                         f"{self.id}: emits must be empty when no operation output carries a status key")
+                _text(self.evidence.note, f"{self.id}.evidence.note")
             _require(self.lifecycle is not None, f"{self.id}: contracted modules need a lifecycle")
+            if self.tests.oracle.ci_note:
+                _require(self.tests.oracle.ci_note in (self.evidence.note or ""),
+                         f"{self.id}: evidence.note must state the oracle CI gap")
             _text(self.tests.schema, f"{self.id}.tests.schema")
-            _require(TODO_MARKER not in self.owner, f"{self.id}: contracted modules need a reviewed owner")
+            _text(self.tests.docs, f"{self.id}.tests.docs")
+            _require(len(self.source_refs) > 0, f"{self.id}: contracted modules need sourceRefs")
+            # Never a placeholder, never a claimed person: the explicit unassigned marker or a team id.
+            _require(self.owner == OWNER_UNASSIGNED or self.owner.startswith("team:"),
+                     f"{self.id}: contracted owner must be {OWNER_UNASSIGNED!r} or a 'team:' id")
+        _unique(self.source_refs, f"{self.id}.sourceRefs")
+        _unique(self.seed_derived, f"{self.id}.seedDerived")
+        for name in self.seed_derived:
+            _one_of(name, SEED_TEXT_FIELDS, f"{self.id}.seedDerived")
+        for ref in self.source_refs:
+            _text(ref, f"{self.id}.sourceRefs")
 
     def to_dict(self) -> dict:
         return {
@@ -463,8 +617,56 @@ class ModuleContract:
             "evidence": self.evidence.to_dict(),
             "lifecycle": self.lifecycle.to_dict() if self.lifecycle else None,
             "tests": self.tests.to_dict(), "migrationState": self.migration_state,
-            "legacyNotes": list(self.legacy_notes),
+            "legacyNotes": list(self.legacy_notes), "sourceRefs": list(self.source_refs),
+            "seedDerived": list(self.seed_derived),
         }
+
+
+# --- Round trip (generated JSON -> contract) ----------------------------------
+
+def _field_from_dict(d: dict) -> InputField:
+    return InputField(key=d["key"], label=d["label"], unit=d["unit"], quantity_kind=d["quantityKind"],
+                      min=d["min"], max=d["max"], default=d["default"], required=d["required"],
+                      step=d["step"], display_units=tuple(d["displayUnits"]), enum=tuple(d["enum"]),
+                      value_type=d["valueType"], note=d["note"])
+
+
+def _operation_from_dict(d: dict) -> Operation:
+    a = d["authority"]
+    authority = Authority(kind=a["kind"], timeout_ms=a["timeoutMs"], gpu=a["gpu"], warm=a["warm"],
+                          script=a["script"], worker_method=a["workerMethod"], exception_reason=a["exceptionReason"])
+    out = d["output"]
+    return Operation(id=d["id"], route=d["route"], method=d["method"], authority=authority,
+                     input=tuple(_field_from_dict(f) for f in d["input"]),
+                     undeclared_input=tuple(d["undeclaredInput"]),
+                     output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
+                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()))
+                     if out else None)
+
+
+def contract_from_dict(d: dict) -> ModuleContract:
+    """Rebuild (and so re-validate) a contract from its emitted dictionary."""
+    vd = d["validityDomain"]
+    lc = d["lifecycle"]
+    t = d["tests"]
+    ev = d["evidence"]
+    return ModuleContract(
+        id=d["id"], version=d["version"], owner=d["owner"], workspace=d["workspace"], label=d["label"],
+        description=d["description"], next=d["next"], maturity=d["maturity"], navigation=d["navigation"],
+        hidden_reason=d["hiddenReason"], view=View(component=d["view"]["component"], export=d["view"]["export"]),
+        operations=tuple(_operation_from_dict(op) for op in d["operations"]),
+        validity_domain=ValidityDomain(
+            ranges=tuple(FieldRange(**r) for r in vd["ranges"]), source_refs=tuple(vd["sourceRefs"]),
+            materials=tuple(vd["materials"]), regime_notes=tuple(vd["regimeNotes"])) if vd else None,
+        evidence=Evidence(emits=tuple(ev["emits"]), ceiling=ev["ceiling"],
+                          forbidden_claims=tuple(ev["forbiddenClaims"]), note=ev["note"]),
+        lifecycle=Lifecycle(background_work=lc["backgroundWork"], resources=tuple(lc["resources"])) if lc else None,
+        tests=TestRefs(oracle=Oracle(status=t["oracle"]["status"], ref=t["oracle"]["ref"],
+                                     ci_note=t["oracle"]["ciNote"], scope=t["oracle"]["scope"]),
+                       schema=t["schema"], docs=t["docs"]),
+        migration_state=d["migrationState"], legacy_notes=tuple(d["legacyNotes"]),
+        source_refs=tuple(d["sourceRefs"]), seed_derived=tuple(d["seedDerived"]),
+    )
 
 
 if __name__ == "__main__":

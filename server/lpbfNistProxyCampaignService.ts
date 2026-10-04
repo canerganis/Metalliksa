@@ -3,7 +3,6 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfRunArchiveError } from './lpbfRunArchiveService';
 import { LpbfRunRepository, type ProxyCampaignRecord, type RunRecord } from './lpbfRunRepository';
@@ -11,6 +10,7 @@ import { runArtifacts } from './lpbfRunImport';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
 import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure, rederiveProxyCampaignSections,
   validateArchivedProxySections } from './lpbfProxyCampaignBinding';
+import { resolvePythonRoot } from './pythonRoot';
 import { getHostPython } from './pythonRuntime';
 
 const DATASET_ID = 'nist-amb2022-03-optical-table4-local-v1';
@@ -20,7 +20,6 @@ const TABLE_BYTES = 4321;
 const TABLE_PATH = 'table4-aggregate-v2.json';
 const RESULTS_URL = 'https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10';
 const SECTION_DISTANCES = [4.9, 6.0];
-const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
   campaignId: null, status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
@@ -29,7 +28,7 @@ const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist
 function validatePython(campaign: unknown, source: unknown, expectedBeamDiameterUm: number): Promise<any> {
   return new Promise((resolve, reject) => {
     const python = getHostPython();
-    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"], q["expectedBeamDiameterUm"]), allow_nan=False))`;
+    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(resolvePythonRoot())}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"], q["expectedBeamDiameterUm"]), allow_nan=False))`;
     const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
     let stdout = '', stderr = '', done = false;
     const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };

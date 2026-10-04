@@ -1,6 +1,8 @@
 // Static import graph over repository TypeScript sources, built with the TypeScript compiler
 // (Phase 7 slice 1). Follows `import`, `export ... from`, `import type` and string-literal
 // dynamic `import()`/`lazy(() => import(...))`; resolution uses the tsconfig module options.
+// A binding counts as a runtime use in any value position, including `class X extends Base`;
+// type positions (implements, interface extends, type arguments, typeof in types) are erased.
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +64,15 @@ function valueReferences(source: ts.SourceFile): Set<string> {
   };
   const visit = (node: ts.Node, inType: boolean) => {
     if (ts.isImportDeclaration(node)) return;
+    // `class A extends Base<T>` (declaration or expression): Base is evaluated at runtime even
+    // though the parser models it as an ExpressionWithTypeArguments (a type node); only the
+    // type arguments are erased. Interface `extends` stays erased via the interface itself.
+    if (ts.isExpressionWithTypeArguments(node) && ts.isHeritageClause(node.parent) && node.parent.token === ts.SyntaxKind.ExtendsKeyword
+      && (ts.isClassDeclaration(node.parent.parent) || ts.isClassExpression(node.parent.parent))) {
+      visit(node.expression, inType);
+      node.typeArguments?.forEach(argument => visit(argument, true));
+      return;
+    }
     // Type positions are erased; `typeof X` in a type is erased too.
     const typePosition = inType || ts.isTypeNode(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)
       || (ts.isHeritageClause(node) && node.token === ts.SyntaxKind.ImplementsKeyword);
