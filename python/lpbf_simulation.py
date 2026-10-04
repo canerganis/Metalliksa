@@ -50,7 +50,6 @@ IMPLEMENTATION_SOURCE_FILES = (
     "in625_thermal_material.py",
     "lpbf_core_contract.py",
     "lpbf_core_physics.py",
-    "lpbf_cfd.py",
     "lpbf_defect_diagnostics.py",
     "lpbf_evidence.py",
     "lpbf_evaporation_marangoni.py",
@@ -880,17 +879,10 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
     analytical = None if bare else screening(p, m)
     fallback = p["mode"] == "high-fidelity"
     use_foam = p["backend"] == "openfoam-thermal" or (p["backend"] == "auto" and (capabilities or {}).get("openfoamThermal"))
-    use_cfd = p["backend"] == "openfoam-cfd"
-    if use_cfd:
-        fallback = False
-        p["mode"] = "high-fidelity"
     thermal_solver = transient
     if use_foam:
         from lpbf_openfoam import thermal
         thermal_solver = thermal
-    elif use_cfd:
-        from lpbf_cfd import cfd_multiphysics
-        thermal_solver = cfd_multiphysics
     validate_cpu_progress(run_progress, p)
     if run_progress is not None and thermal_solver is not transient:
         raise ValueError("Run progress supports standard reference CPU runs without a study only")
