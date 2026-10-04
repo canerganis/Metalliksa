@@ -97,6 +97,26 @@ class ExactConstantsTest(unittest.TestCase):
         self.assertEqual(pourbaix_solver.calculate_nernst_slope(25.0),
                          (2.302585093 * r * 298.15) / f)
 
+    def test_ts_constants_mirror_the_exact_values(self):
+        # src/utils/physicalConstants.ts feeds the client duplicates of the migrated
+        # solvers (tafelParser, the Tafel fallback, pourbaixThermodynamics, CALPHAD engines).
+        import re
+        src = HERE.parent / "src"
+        text = (src / "utils" / "physicalConstants.ts").read_text(encoding="utf-8")
+        r = float(re.search(r"export const GAS_CONSTANT_R = ([0-9.]+);", text).group(1))
+        f = float(re.search(r"export const FARADAY_CONSTANT = ([0-9.]+);", text).group(1))
+        self.assertEqual(r, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(f, pc.FARADAY.value)
+        literal = re.compile(r"(?<![\d.])(8\.314\d*|96485(\.\d+)?)(?![\d.])")
+        for rel in ("utils/tafelParser.ts", "utils/pourbaixThermodynamics.ts",
+                    "physics/calphadGibbsEngine.ts", "physics/calphadMultiComponentSolver.ts"):
+            code = [ln for ln in (src / rel).read_text(encoding="utf-8").splitlines()
+                    if not ln.lstrip().startswith("//")]
+            self.assertEqual([ln for ln in code if literal.search(ln)], [], rel)
+        service = (src / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
+        self.assertIn("const rGas = GAS_CONSTANT_R;", service)
+        self.assertIn("const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;", service)
+
     def test_constant_metadata_fields(self):
         for c in (pc.AVOGADRO, pc.BOLTZMANN, pc.ELEMENTARY_CHARGE, pc.GAS_CONSTANT_R,
                   pc.FARADAY, pc.ZERO_CELSIUS_K):

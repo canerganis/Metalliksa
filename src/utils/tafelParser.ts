@@ -1,4 +1,5 @@
 import { TafelDataset, TafelFitResult, TafelRawPoint, ReferenceElectrodeType } from "../types/tafel";
+import { FARADAY_CONSTANT } from "./physicalConstants";
 
 export const REFERENCE_ELECTRODES: Record<ReferenceElectrodeType, { name: string; offsetVsSHE: number }> = {
   SHE: { name: "Standard Hydrogen Electrode (SHE)", offsetVsSHE: 0.000 },
@@ -17,16 +18,22 @@ export interface AlloyMaterialPreset {
   atomicMass: number;
 }
 
+// density and equivalentWeight mirror python/alloy_registry.py (domain "corrosion"; EW is
+// computed there with ASTM G102 from composition, valencies and CIAAW 2021 atomic weights,
+// Phase 6a step b). python/test_phase6a_migration.py checks every row against the registry.
+// duplex2205 has NO registry record: its numbers are unsourced UI defaults that reach the
+// Python solver only as caller-supplied metadata (an unknown alloyId without them is a 422).
+// valency and atomicMass are display-only and not read by any calculation.
 export const COMMON_ALLOYS: AlloyMaterialPreset[] = [
-  { id: "ss316l", name: "AISI 316L Stainless Steel", density: 8.00, equivalentWeight: 25.68, valency: 2.16, atomicMass: 55.47 },
-  { id: "ss304", name: "AISI 304 Stainless Steel", density: 7.93, equivalentWeight: 25.12, valency: 2.21, atomicMass: 55.51 },
-  { id: "steel1018", name: "AISI 1018 Carbon Steel", density: 7.87, equivalentWeight: 27.92, valency: 2.00, atomicMass: 55.85 },
-  { id: "ti64", name: "Ti-6Al-4V Grade 5 Titanium", density: 4.43, equivalentWeight: 11.97, valency: 4.00, atomicMass: 47.88 },
-  { id: "al7075", name: "Al 7075-T6 Aerospace Aluminum", density: 2.81, equivalentWeight: 9.00, valency: 3.00, atomicMass: 26.98 },
-  { id: "al6061", name: "Al 6061-T6 Structural Aluminum", density: 2.70, equivalentWeight: 9.00, valency: 3.00, atomicMass: 26.98 },
-  { id: "cu_c110", name: "C11000 Electrolytic Tough Pitch Copper", density: 8.96, equivalentWeight: 31.77, valency: 2.00, atomicMass: 63.55 },
-  { id: "inconel718", name: "Inconel 718 Superalloy", density: 8.19, equivalentWeight: 25.32, valency: 2.30, atomicMass: 58.23 },
-  { id: "az31b", name: "AZ31B Magnesium Alloy", density: 1.74, equivalentWeight: 12.16, valency: 2.00, atomicMass: 24.31 },
+  { id: "ss316l", name: "AISI 316L Stainless Steel", density: 7.98, equivalentWeight: 24.8205, valency: 2.16, atomicMass: 55.47 },
+  { id: "ss304", name: "AISI 304 Stainless Steel", density: 7.93, equivalentWeight: 25.1088, valency: 2.21, atomicMass: 55.51 },
+  { id: "steel1018", name: "AISI 1018 Carbon Steel", density: 7.87, equivalentWeight: 27.0668, valency: 2.00, atomicMass: 55.85 },
+  { id: "ti64", name: "Ti-6Al-4V Grade 5 Titanium", density: 4.43, equivalentWeight: 11.8715, valency: 4.00, atomicMass: 47.88 },
+  { id: "al7075", name: "Al 7075-T6 Aerospace Aluminum", density: 2.81, equivalentWeight: 9.6007, valency: 3.00, atomicMass: 26.98 },
+  { id: "al6061", name: "Al 6061-T6 Structural Aluminum", density: 2.70, equivalentWeight: 9.0919, valency: 3.00, atomicMass: 26.98 },
+  { id: "cu_c110", name: "C11000 Electrolytic Tough Pitch Copper", density: 8.94, equivalentWeight: 31.8048, valency: 2.00, atomicMass: 63.55 },
+  { id: "inconel718", name: "Inconel 718 Superalloy", density: 8.19, equivalentWeight: 24.7436, valency: 2.30, atomicMass: 58.23 },
+  { id: "az31b", name: "AZ31B Magnesium Alloy", density: 1.77, equivalentWeight: 12.101, valency: 2.00, atomicMass: 24.31 },
   { id: "duplex2205", name: "2205 Duplex Stainless Steel", density: 7.80, equivalentWeight: 25.40, valency: 2.18, atomicMass: 55.37 },
 ];
 
@@ -501,17 +508,20 @@ export function autoFitTafel(
   const rp_ohm_cm2 = sternGearyB_V / iCorr_A_cm2;
 
   // 6. Faraday's Law Corrosion Penetration Rate (ASTM G102)
-  // CR (mm/year) = (0.00327 * i_corr (µA/cm²) * EW) / density (g/cm³)
-  const EW = dataset.metadata.equivalentWeight || 25.68;
-  const density = dataset.metadata.density_g_cm3 || 8.00;
+  // CR (mm/year) = (K1 * i_corr (µA/cm²) * EW) / density (g/cm³), K1 = 1e-6 * s/yr * 10 / F
+  // (0.0032707148 with the exact F; the Python solver uses the same K1). Missing metadata
+  // falls back to the 316L preset (COMMON_ALLOYS[0], registry values).
+  const EW = dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight;
+  const density = dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density;
   const area = dataset.metadata.electrodeAreaCm2 || 1.0;
 
-  const cr_mm_yr = (0.00327 * extrapolatedIcorr_uA_cm2 * EW) / density;
+  const K1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
+  const cr_mm_yr = (K1 * extrapolatedIcorr_uA_cm2 * EW) / density;
   const cr_mpy = cr_mm_yr * 39.3701; // mils per year
 
   // Mass loss: g / (m² · day)
   // i_corr in A/m² = (i_corr in A/cm²) * 10^4
-  const massLoss_g_m2_day = (iCorr_A_cm2 * 10000 * EW * 86400) / 96485.3;
+  const massLoss_g_m2_day = (iCorr_A_cm2 * 10000 * EW * 86400) / FARADAY_CONSTANT;
 
   // 7. Potential vs SHE
   const refOffset = dataset.metadata.refOffsetVsSHE || 0.241;

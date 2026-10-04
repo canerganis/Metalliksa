@@ -75,6 +75,30 @@ class TafelPresetTest(unittest.TestCase):
                         doc.pop(key)
                 self.assertEqual(json.dumps(by_id, sort_keys=True), json.dumps(by_comp, sort_keys=True))
 
+    def test_ts_common_alloys_mirror_the_registry(self):
+        # Design step (b): src/utils/tafelParser.ts COMMON_ALLOYS density and EW are the
+        # registry values (one source); duplex2205 has no registry data and must stay so.
+        import re
+        text = (HERE.parent / "src" / "utils" / "tafelParser.ts").read_text(encoding="utf-8")
+        block = text.split("export const COMMON_ALLOYS", 1)[1].split("];", 1)[0]
+        rows = re.findall(r'id: "([^"]+)".*?density: ([0-9.]+), equivalentWeight: ([0-9.]+)', block)
+        self.assertEqual(len(rows), 10)
+        for ui_id, density, ew in rows:
+            with self.subTest(ui_id=ui_id):
+                if ui_id == "duplex2205":
+                    with self.assertRaises(iv.ValidationError) as ctx:
+                        tafel.corrosion_preset(ui_id)
+                    self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
+                    continue
+                preset = tafel.corrosion_preset(ui_id)
+                self.assertEqual(float(density), preset["density_g_cm3"])
+                self.assertEqual(float(ew), preset["ew"])
+        # The client fallbacks default to the 316L preset values, not their own copies.
+        self.assertIn("dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight", text)
+        self.assertIn("dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density", text)
+        service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
+        self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
+
     def test_ui_ids_now_resolve_to_their_own_preset(self):
         # TafelPolarizationLab sends src/utils/tafelParser.ts COMMON_ALLOYS ids; before
         # the migration none of them matched and all silently became AISI 316L.
