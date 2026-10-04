@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Activity, Flame, Layers, Play } from 'lucide-react';
 import { pythonComputationService } from '../services/pythonComputationService';
+import { transientGpuMaterialInputs, type AuthorityAlloyId } from '../data/lpbfMaterialAuthority';
 
 type SlotProps = { children: React.ReactNode; className?: string };
 const Card = ({ children, className = '' }: SlotProps) => <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>{children}</section>;
@@ -12,12 +13,13 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {..
 const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => <select {...props} className={`w-full rounded border border-slate-300 px-2 py-1.5 text-sm bg-white ${props.className ?? ''}`} />;
 const Label = ({ children }: SlotProps) => <span className="block text-xs text-slate-500">{children}</span>;
 
+// Material inputs come from the Python authority (src/generated/lpbfMaterialAuthority.json); no alloy numbers here.
 const MATERIALS = {
-  "Ti-6Al-4V": { rho: 4420.0, L_f: 2.9e5, T_solidus: 1878.0, T_liquidus: 1928.0, cp_solid: 670.0, cp_liquid: 730.0, k_solid: 15.0, k_liquid: 25.0 },
-  "IN718": { rho: 8190.0, L_f: 2.1e5, T_solidus: 1533.0, T_liquidus: 1609.0, cp_solid: 435.0, cp_liquid: 550.0, k_solid: 11.4, k_liquid: 28.0 },
-  "316L": { rho: 7950.0, L_f: 2.7e5, T_solidus: 1650.0, T_liquidus: 1700.0, cp_solid: 500.0, cp_liquid: 600.0, k_solid: 16.3, k_liquid: 22.0 },
-  "AlSi10Mg": { rho: 2680.0, L_f: 3.9e5, T_solidus: 831.0, T_liquidus: 868.0, cp_solid: 900.0, cp_liquid: 1050.0, k_solid: 113.0, k_liquid: 85.0 }
-};
+  "Ti-6Al-4V": "ti6al4v",
+  "IN718": "in718",
+  "316L": "ss316l",
+  "AlSi10Mg": "alsi10mg",
+} as const satisfies Record<string, AuthorityAlloyId>;
 
 export function TransientEnthalpy3DGPULab() {
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ export function TransientEnthalpy3DGPULab() {
   const handleSimulate = async () => {
     setLoading(true);
     try {
-      const mat = MATERIALS[params.material];
+      const mat = transientGpuMaterialInputs(MATERIALS[params.material]);
       const dx_m = params.dx * 1e-6;
       const dy_m = params.dy * 1e-6;
       const dz_m = params.dz * 1e-6;

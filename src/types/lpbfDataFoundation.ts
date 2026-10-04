@@ -11,6 +11,8 @@
  * 
  * Fully documents and calculates the recognized physical limitations of VED.
  */
+import { authorityThermal } from "../data/lpbfMaterialAuthority";
+
 export type LPBFAlloyId = "ti6al4v" | "ss316l" | "alsi10mg" | "in718" | "in625";
 export type ProcessRegime = 
   | "Lack of Fusion (LoF)"
@@ -149,63 +151,57 @@ export interface AlloyThermalConstants {
   keyholeVedThreshold_J_mm3: number;
 }
 
-export const ALLOY_THERMAL_PROPERTIES: Record<LPBFAlloyId, AlloyThermalConstants> = {
-  ti6al4v: {
-    meltingPoint_C: 1660,
-    density_kg_m3: 4430,
-    specificHeat_J_kgK: 526,
-    thermalConductivity_W_mK: 6.7,
-    thermalDiffusivity_m2_s: 2.87e-6,
-    enthalpyOfMelting_hs_J_m3: 3.86e9,
-    defaultAbsorptivity: 0.42,
-    lofVedThreshold_J_mm3: 48,
-    keyholeVedThreshold_J_mm3: 110,
-  },
-  ss316l: {
-    meltingPoint_C: 1420,
-    density_kg_m3: 7950,
-    specificHeat_J_kgK: 500,
-    thermalConductivity_W_mK: 15.0,
-    thermalDiffusivity_m2_s: 3.77e-6,
-    enthalpyOfMelting_hs_J_m3: 5.64e9,
-    defaultAbsorptivity: 0.53,
-    lofVedThreshold_J_mm3: 55,
-    keyholeVedThreshold_J_mm3: 135,
-  },
-  alsi10mg: {
-    meltingPoint_C: 600,
-    density_kg_m3: 2680,
-    specificHeat_J_kgK: 910,
-    thermalConductivity_W_mK: 130.0,
-    thermalDiffusivity_m2_s: 5.33e-5,
-    enthalpyOfMelting_hs_J_m3: 1.46e9,
-    defaultAbsorptivity: 0.22, // Low optical absorption in powder bed at 1064nm
-    lofVedThreshold_J_mm3: 40,
-    keyholeVedThreshold_J_mm3: 95,
-  },
-  in718: {
-    meltingPoint_C: 1336,
-    density_kg_m3: 8190,
-    specificHeat_J_kgK: 435,
-    thermalConductivity_W_mK: 11.4,
-    thermalDiffusivity_m2_s: 3.20e-6,
-    enthalpyOfMelting_hs_J_m3: 4.75e9,
-    defaultAbsorptivity: 0.55,
-    lofVedThreshold_J_mm3: 52,
-    keyholeVedThreshold_J_mm3: 125,
-  },
-  in625: {
-    meltingPoint_C: 1350,
-    density_kg_m3: 8440,
-    specificHeat_J_kgK: 410,
-    thermalConductivity_W_mK: 9.8,
-    thermalDiffusivity_m2_s: 2.83e-6,
-    enthalpyOfMelting_hs_J_m3: 2.4e9,
-    defaultAbsorptivity: 0.35,
-    lofVedThreshold_J_mm3: 50,
-    keyholeVedThreshold_J_mm3: 110,
-  },
+/**
+ * TS-local, not authority: VED regime thresholds used only by classifyProcessRegime.
+ * The Python material authority has no counterpart for these values.
+ */
+const VED_REGIME_THRESHOLDS_TS_LOCAL: Record<LPBFAlloyId, { lof_J_mm3: number; keyhole_J_mm3: number }> = {
+  ti6al4v: { lof_J_mm3: 48, keyhole_J_mm3: 110 },
+  ss316l: { lof_J_mm3: 55, keyhole_J_mm3: 135 },
+  alsi10mg: { lof_J_mm3: 40, keyhole_J_mm3: 95 },
+  in718: { lof_J_mm3: 52, keyhole_J_mm3: 125 },
+  in625: { lof_J_mm3: 50, keyhole_J_mm3: 110 },
 };
+
+/**
+ * Material constants read from the Python authority (src/generated/lpbfMaterialAuthority.json):
+ * Tm = liquidus_C, rho, Cp and k are the solid rows, defaultAbsorptivity = absorptivity_IR.
+ * alpha = k / (rho Cp) and h_s = rho Cp Tm are derived here from those values; no alloy number is held in TS.
+ */
+function alloyThermalConstantsFromAuthority(alloyId: LPBFAlloyId): AlloyThermalConstants {
+  const t = authorityThermal(alloyId);
+  const rho = t.density_kg_m3;
+  const cp = t.specific_heat_J_kgK;
+  const k = t.thermal_conductivity_W_mK;
+  const thresholds = VED_REGIME_THRESHOLDS_TS_LOCAL[alloyId];
+  return {
+    meltingPoint_C: t.liquidus_C,
+    density_kg_m3: rho,
+    specificHeat_J_kgK: cp,
+    thermalConductivity_W_mK: k,
+    thermalDiffusivity_m2_s: k / (rho * cp),
+    enthalpyOfMelting_hs_J_m3: rho * cp * t.liquidus_C,
+    defaultAbsorptivity: t.absorptivity_IR,
+    lofVedThreshold_J_mm3: thresholds.lof_J_mm3,
+    keyholeVedThreshold_J_mm3: thresholds.keyhole_J_mm3,
+  };
+}
+
+export const ALLOY_THERMAL_PROPERTIES: Readonly<Record<LPBFAlloyId, AlloyThermalConstants>> = Object.freeze({
+  ti6al4v: alloyThermalConstantsFromAuthority("ti6al4v"),
+  ss316l: alloyThermalConstantsFromAuthority("ss316l"),
+  alsi10mg: alloyThermalConstantsFromAuthority("alsi10mg"),
+  in718: alloyThermalConstantsFromAuthority("in718"),
+  in625: alloyThermalConstantsFromAuthority("in625"),
+});
+
+/** Constants for a known alloy id; an unknown id throws (no surrogate alloy is substituted). */
+export function alloyThermalConstants(alloyId: LPBFAlloyId): AlloyThermalConstants {
+  if (!Object.prototype.hasOwnProperty.call(ALLOY_THERMAL_PROPERTIES, alloyId)) {
+    throw new Error(`Unknown LPBF alloy "${String(alloyId)}": thermal constants unavailable; no surrogate alloy is substituted.`);
+  }
+  return ALLOY_THERMAL_PROPERTIES[alloyId];
+}
 
 /**
  * Standard Derived Energy Quantities
@@ -250,7 +246,12 @@ export function calculatePeakLaserIntensity(power_W: number, beamDiameter_um: nu
   return Number(((2 * power_MW) / area_cm2).toFixed(3));
 }
 
-/** Normalized Enthalpy (King / Gouge / Scime criterion): ΔH / h_s */
+/**
+ * Normalized Enthalpy (King / Gouge / Scime criterion): ΔH / h_s
+ * Constants come from the Python authority; an unknown alloy throws. This annotation uses
+ * h_s = rho Cp Tm(°C); python/lpbf_thermal_solver.py uses rho Cp max(50, T_liq - T_preheat)
+ * with a powder-bed absorptivity, so the two are not the same number.
+ */
 export function calculateNormalizedEnthalpy(
   power_W: number,
   scanSpeed_mm_s: number,
@@ -258,7 +259,7 @@ export function calculateNormalizedEnthalpy(
   alloyId: LPBFAlloyId,
   absorptivity?: number
 ): number {
-  const alloy = ALLOY_THERMAL_PROPERTIES[alloyId] || ALLOY_THERMAL_PROPERTIES.ti6al4v;
+  const alloy = alloyThermalConstants(alloyId);
   const eta = absorptivity !== undefined ? absorptivity : alloy.defaultAbsorptivity;
   const v_m_s = scanSpeed_mm_s * 1e-3;
   const sigma_m = (beamDiameter_um / 2) * 1e-6; // beam radius in meters
@@ -281,7 +282,7 @@ export function classifyProcessRegime(
   scanSpeed_mm_s: number,
   alloyId: LPBFAlloyId
 ): ProcessRegime {
-  const alloy = ALLOY_THERMAL_PROPERTIES[alloyId] || ALLOY_THERMAL_PROPERTIES.ti6al4v;
+  const alloy = alloyThermalConstants(alloyId);
 
   // Balling occurs when scan speed is excessively high with insufficient linear density
   const linearDensity = power_W / Math.max(1, scanSpeed_mm_s);

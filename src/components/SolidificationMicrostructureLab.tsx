@@ -12,13 +12,20 @@ import {
 } from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
 import type { SolidificationMicrostructureResult } from '../services/pythonComputationService';
+import {
+  solidificationMaterialInputs, type AuthorityAlloyId, type SolidificationMaterialInputs,
+} from '../data/lpbfMaterialAuthority';
 
-const ALLOY_DEFAULTS: Record<string, { k_WmK: number; liquidus_K: number; absorptivity: number }> = {
-  'Inconel 718': { k_WmK: 14.7, liquidus_K: 1609, absorptivity: 0.35 },
-  'Ti-6Al-4V': { k_WmK: 7.0, liquidus_K: 1933, absorptivity: 0.40 },
-  'AlSi10Mg': { k_WmK: 160.0, liquidus_K: 850, absorptivity: 0.09 },
-  '316L SS': { k_WmK: 16.0, liquidus_K: 1727, absorptivity: 0.35 },
+// Presets read the Python authority (src/generated/lpbfMaterialAuthority.json): solid k, liquidus, IR absorptivity.
+const ALLOY_PRESET_IDS: Record<string, AuthorityAlloyId> = {
+  'Inconel 718': 'in718',
+  'Ti-6Al-4V': 'ti6al4v',
+  'AlSi10Mg': 'alsi10mg',
+  '316L SS': 'ss316l',
 };
+const ALLOY_DEFAULTS: Record<string, SolidificationMaterialInputs> = Object.fromEntries(
+  Object.entries(ALLOY_PRESET_IDS).map(([label, alloyId]) => [label, solidificationMaterialInputs(alloyId)]),
+);
 
 const MORPHOLOGY_COLORS: Record<string, string> = {
   columnar: '#75b8ff', equiaxed: '#70d8b0', mixed: '#f0bd73',
