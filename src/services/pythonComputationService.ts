@@ -1596,7 +1596,7 @@ class PythonComputationService {
     specMinUTS_MPa?: number;
     specMinElongation_pct?: number;
     mcSamples?: number;
-    samplingMethod?: "sobol_qmc" | "pseudo_mc";
+    samplingMethod?: "sobol_qmc";
     scramble?: boolean;
     seed?: number;
   }): Promise<PythonStochasticUQResult> {
@@ -2280,7 +2280,7 @@ export interface PythonStochasticUQResult {
   proxyRoundtripMs?: number;
   sampleSizeN: number;
   samplingMetadata?: {
-    samplingMethod: "sobol_qmc" | "pseudo_mc";
+    samplingMethod: "sobol_qmc";
     scrambled: boolean;
     sobolDimensions: number;
     qmcAccelerationFactor: number | null;
