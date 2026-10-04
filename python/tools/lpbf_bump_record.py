@@ -15,7 +15,7 @@ after-digests are recorded next to the golden (before) digests.
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_bump_record.py [--out FILE]
     python -B tools/lpbf_bump_record.py --from-revision <pre-bump sha> \
-        --with-parity-check [--slow] --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
+        --with-parity-check [--slow] [--expect-drift CASE[:KEY_GLOB][,...]]         --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
 
 Identity note: raw file SHA-256 depends on the checkout's line endings
 (core.autocrlf); the canonical SHA-256 (CRLF -> LF for registered text sources,
@@ -131,21 +131,30 @@ def _parity_module():
     return module
 
 
-def parity_after(slow: bool) -> Dict[str, Any]:
+def parity_after(slow: bool, expect_drift: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Per-case parity result after the bump. expect_drift uses exactly the --check semantics
+    (tools/lpbf_parity_check.py --expect-drift): allowed drift is status DRIFT and carries
+    before -> after records (observation values, raw values and leaf-level raw changes)."""
     parity = _parity_module()
+    entries = parity.parse_expect_drift(expect_drift)
     after: Dict[str, Any] = {}
     for case in parity.CASES:
         if case.slow and not slow:
             after[case.id] = {"status": "not-run (slow; pass --slow)"}
+            if any(entry.case_id == case.id for entry in entries):
+                after[case.id] = {"status": "FAIL", "problems": [
+                    "named in --expect-drift but not run (slow; pass --slow)"]}
             continue
         outcome = parity.check_case(case, parity.DEFAULT_WORK_ROOT)
         if outcome["skipped"] is not None:
             after[case.id] = {"status": "SKIPPED", "reason": outcome["skipped"]}
             continue
         observations = outcome["observations"]
+        verdict = parity.evaluate_drift(case, outcome, entries)
         after[case.id] = {
-            "status": "PASS" if not outcome["problems"] else "FAIL",
-            "problems": outcome["problems"],
+            "status": verdict["status"],
+            "problems": verdict["problems"],
+            "drift": verdict["drift"],
             "elapsed_s": round(outcome["elapsed_s"], 1),
             "implementationHashes": outcome.get("implementationHashes", []),
             "observationsSha256": hashlib.sha256(json.dumps(
@@ -165,7 +174,7 @@ def _require_goldens_recorded_at(from_hash: str, goldens: Dict[str, Any]) -> Non
 
 
 def build_record(from_revision: Optional[str], with_parity: bool, slow: bool,
-                 allow_same_hash: bool = False) -> Dict[str, Any]:
+                 allow_same_hash: bool = False, expect_drift: Optional[List[str]] = None) -> Dict[str, Any]:
     import numpy
     current = worktree_side()
     pinned = read_pinned_fingerprint()
@@ -215,7 +224,8 @@ def build_record(from_revision: Optional[str], with_parity: bool, slow: bool,
         },
         "commits": {"fromRevision": before["revision"], "toRevision": _git("rev-parse", "HEAD"),
                     "worktreeDirty": bool(_git("status", "--porcelain", "--", "python"))},
-        "parityAfter": parity_after(slow) if with_parity else None,
+        "expectDrift": list(expect_drift or []),
+        "parityAfter": parity_after(slow, expect_drift) if with_parity else None,
         "todo": ([] if with_parity and slow else
                  ["parityAfter.g2 (rerun with --with-parity-check --slow)"] if with_parity else
                  ["parityAfter (rerun with --with-parity-check --slow)"]),
@@ -231,10 +241,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--out", help="write the record here instead of stdout")
     parser.add_argument("--allow-same-hash", action="store_true",
                         help="bump mode dry run: allow toHash == fromHash (never for the real record)")
+    parser.add_argument("--expect-drift", action="append", metavar="CASE[:KEY_GLOB][,...]",
+                        help="planned drift, exactly as tools/lpbf_parity_check.py --check --expect-drift; "
+                             "drifted cases are recorded as DRIFT with before -> after values")
     args = parser.parse_args(argv)
     if args.with_parity_check and not args.from_revision:
         parser.error("--with-parity-check needs --from-revision")
-    record = build_record(args.from_revision, args.with_parity_check, args.slow, args.allow_same_hash)
+    if args.expect_drift and not args.with_parity_check:
+        parser.error("--expect-drift needs --with-parity-check")
+    record = build_record(args.from_revision, args.with_parity_check, args.slow, args.allow_same_hash,
+                          args.expect_drift)
     text = json.dumps(record, indent=1, allow_nan=False) + "\n"
     if args.out:
         Path(args.out).write_text(text, encoding="utf-8", newline="\n")

@@ -509,7 +509,26 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
   - G19 the registry emissivity literal 0.35 echoed into `p`/`m` for every alloy, the override
     bounds, and the core-contract rejection of a 0.36 override after the solve.
   - The silent `resolve_alloy_id(...) or "in718"` P-v fallback stays pinned by G9.
-  None of the NOT COVERED items below was closed by these cases.
+  None of the NOT COVERED items below was closed by these cases. `recordedGitHead` is the
+  HEAD at recording time; for goldens recorded from a working tree it may predate the case
+  code (G17-G19 were re-checked bit-equal at their committing HEAD).
+- Planned drift (for the corrected-physics bump): `--check --expect-drift ENTRY[,ENTRY...]`
+  and `tools/lpbf_bump_record.py ... --expect-drift` (same semantics). ENTRY is `CASE` or
+  `CASE:KEY_GLOB` (fnmatch on the observation key).
+  - Only matched observations may drift (status DRIFT, before -> after values, and leaf-level
+    raw values from the golden's `rawValues`, the pre-hash value of small digest observations;
+    never compared). Every other diff fails; pin, implementationHash and golden problems fail.
+  - An entry that matches no drifted observation, or names a case that is not run, is stale
+    and fails.
+  - Identity digests (`*materialRevisionSha256*`, `*materialSha256*`, `*inputSha256*`) fail in
+    every case unless an entry names that exact key.
+  - G1, G2 and G4 (reference transients) are refused as whole cases; their numerics (metrics,
+    thermalHistory, energyBalance, field*, artifacts, NPZ, fixture equality) fail whatever
+    the allowlist. Named G1 observations such as `result.key.analyticalComparison`, the two
+    whole-result digests and `v1Archive.strippedResultEqual` can be allowed one by one.
+  - With `--allow-environment-mismatch` a drift run ends DIAGNOSTIC (exit 3), never PASS.
+  - After the merge, the drifted goldens are re-recorded at the new fingerprint in a commit
+    of their own.
 - Valid only in the recorded environment (Python, numpy, OS, locked runtime, CPU brand,
   numpy SIMD dispatch, BLAS); elsewhere every case is SKIP and `--check` exits 3. Not in CI.
   CI runs `test_lpbf_implementation_fingerprint_pin`, `test_lpbf_implementation_fingerprint`
@@ -526,4 +545,4 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
     azimuth.
   - Worker-side consumers of `opticalObserver` / NIST section operators (not in the manifest).
   - `CpuRunProgress` source-work budget failures.
-  - G11 when `warp` is installed: it is skipped.
+  - G11 and G18 when `warp` is installed: they are skipped.

@@ -19,6 +19,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -37,6 +38,16 @@ PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
 GOLDEN_FINGERPRINT = "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e"
 GOLDEN_REVISION = "6dd5b73508151f0af1561387a0df509ec78a06c9"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
+# Off the reference machine every case test is skipped (the goldens are bit-exact for one
+# environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
+# so a gate run that is meant to be the reference proof cannot pass on skips.
+REQUIRE_PARITY = os.environ.get("METALLIKSA_REQUIRE_PARITY") == "1"
+
+
+def skip_or_fail(test, reason):
+    if REQUIRE_PARITY:
+        test.fail(f"METALLIKSA_REQUIRE_PARITY=1 and not verified: {reason}")
+    test.skipTest(reason)
 
 
 class ParityGoldenCaseTests(unittest.TestCase):
@@ -49,7 +60,7 @@ def _case_test(case):
             self.skipTest("slow case: set LPBF_PARITY_SLOW=1 (G2 bare plate, ~106-140 s)")
         outcome = parity.check_case(case, parity.DEFAULT_WORK_ROOT)
         if outcome["skipped"] is not None:
-            self.skipTest(f"NOT VERIFIED: {outcome['skipped']}")
+            skip_or_fail(self, f"NOT VERIFIED: {outcome['skipped']}")
         self.assertEqual(outcome["problems"], [], f"{case.id} differs from its golden")
     test.__doc__ = f"{case.group}: {case.description}"
     return test
@@ -314,7 +325,7 @@ class ParityHarnessTests(unittest.TestCase):
             before = bump.revision_side(PRE_BUMP_REVISION)
             recorded = bump.revision_side(GOLDEN_REVISION)
         except subprocess.CalledProcessError:
-            self.skipTest(f"revision {PRE_BUMP_REVISION[:12]} or {GOLDEN_REVISION[:12]} is not in this clone")
+            skip_or_fail(self, f"revision {PRE_BUMP_REVISION[:12]} or {GOLDEN_REVISION[:12]} is not in this clone")
         self.assertEqual(before["implementationHash"], PRE_BUMP_FINGERPRINT)
         self.assertEqual(before["manifestCount"], 37)
         self.assertEqual(recorded["implementationHash"], GOLDEN_FINGERPRINT)
@@ -408,10 +419,169 @@ class ParityHarnessTests(unittest.TestCase):
         with patch.dict(in718, {"absorptivity_IR": in718["absorptivity_IR"] + 1e-15}):
             code, output = self._check("--case", "g3_powder_island")
             self.assertEqual(code, 1, output)
+            # The material identity moved too: naming the case alone is not enough.
             code, output = self._check("--case", "g3_powder_island", "--expect-drift", "g3_powder_island")
+            self.assertEqual(code, 1, output)
+            self.assertIn("identity observation", output)
+            code, output = self._check(
+                "--case", "g3_powder_island", "--expect-drift",
+                "g3_powder_island,g3_powder_island:result.coreContract.materialSha256,"
+                "g3_powder_island:result.coreContract.inputSha256,"
+                "g3_powder_island:result.material.materialRevisionSha256")
         self.assertEqual(code, 0, output)
         self.assertIn("DRIFT g3_powder_island", output)
         self.assertIn("DRIFT result.canonicalSha256: sha256 ", output)
+
+    def test_expect_drift_refuses_reference_cases_as_a_whole(self):
+        for case_id in ("g1_v1_60w_in718", "g2_bare_plate_100w_corridor", "g4_layered_plate"):
+            with self.subTest(case=case_id):
+                with self.assertRaisesRegex(SystemExit, "reference transient case"):
+                    parity.parse_expect_drift([case_id])
+                self.assertEqual([e.text for e in parity.parse_expect_drift([f"{case_id}:result.key.metrics"])],
+                                 [f"{case_id}:result.key.metrics"])
+        with self.assertRaisesRegex(SystemExit, "empty case or key"):
+            parity.parse_expect_drift(["g18_in625_latent_heat:"])
+
+    def test_expect_drift_on_g1_allows_only_named_non_numeric_observations(self):
+        def reviewer(observations):  # review b5g S1: result digest + material revision + V1 equality
+            observations["result.canonicalSha256"] = "0" * 64
+            observations["result.material.materialRevisionSha256"] = "1" * 64
+            observations["v1Archive.strippedResultEqual"] = False
+        g1 = ["--case", "g1_v1_60w_in718"]
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", reviewer)):
+            code, output = self._check(*g1, "--expect-drift",
+                                       "g1_v1_60w_in718:result.canonicalSha256,g1_v1_60w_in718:v1Archive.*,"
+                                       "g1_v1_60w_in718:result.*")
+        self.assertEqual(code, 1, output)
+        self.assertIn("changed result.material.materialRevisionSha256: identity observation", output)
+
+        def planned(observations):  # the four G1 observations a corrected bump may name
+            for key in ("result.key.analyticalComparison", "result.canonicalSha256", "result.orderedTypedSha256"):
+                observations[key] = "0" * 64
+            observations["v1Archive.strippedResultEqual"] = False
+        allow = ("g1_v1_60w_in718:result.key.analyticalComparison,g1_v1_60w_in718:result.canonicalSha256,"
+                 "g1_v1_60w_in718:result.orderedTypedSha256,g1_v1_60w_in718:v1Archive.strippedResultEqual")
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", planned)):
+            code, output = self._check(*g1, "--expect-drift", allow)
+        self.assertEqual(code, 0, output)
+        self.assertIn("DRIFT g1_v1_60w_in718", output)
+        self.assertIn("4 observation(s) drifted", output)
+
+        def numerics(observations):
+            observations["result.key.metrics"] = "0" * 64
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g1_v1_60w_in718", numerics)):
+            code, output = self._check(*g1, "--expect-drift", "g1_v1_60w_in718:result.key.metrics")
+        self.assertEqual(code, 1, output)
+        self.assertIn("reference-case numerics never drift", output)
+
+    def test_expect_drift_identity_keys_need_the_exact_key_and_unlisted_keys_fail(self):
+        def identity(observations):
+            observations["result.coreContract.materialSha256"] = "2" * 64
+        island = ["--case", "g3_powder_island"]
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g3_powder_island", identity)):
+            code, output = self._check(*island, "--expect-drift", "g3_powder_island")
+            self.assertEqual(code, 1, output)
+            self.assertIn("identity observation", output)
+            code, output = self._check(*island, "--expect-drift", "g3_powder_island:result.coreContract.*")
+            self.assertEqual(code, 1, output)
+            code, output = self._check(*island, "--expect-drift",
+                                       "g3_powder_island:result.coreContract.materialSha256")
+            self.assertEqual(code, 0, output)
+
+        def two(observations):
+            observations["meltpool.in625.table.latent_heat_fusion_J_kg"] = [250000.0, (250000.0).hex()]
+            observations["in625.snapshot.latentHeat_J_kg"] = [280000.0, (280000.0).hex()]
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g18_in625_latent_heat", two)):
+            code, output = self._check("--case", "g18_in625_latent_heat", "--expect-drift",
+                                       "g18_in625_latent_heat:meltpool.in625.table.*")
+        self.assertEqual(code, 1, output)
+        self.assertIn("changed in625.snapshot.latentHeat_J_kg: not named by --expect-drift", output)
+        self.assertNotIn("allowed by --expect-drift", output)
+
+    def test_drift_report_prints_raw_before_and_after_values(self):
+        case = parity.CASE_BY_ID["g12_analytical_modules"]
+        parity.execute(case, self.root)
+        raw = copy.deepcopy(parity.LAST_RAW_VALUES["goldak.field"])
+        before = copy.deepcopy(raw)
+        before["q"] = raw["q"] * 0.5
+
+        def mutate(observations):
+            observations["goldak.field"] = "0" * 64
+        directory = self._mutated_golden_dir("g12_analytical_modules", mutate)
+        target = directory / "g12_analytical_modules.json"
+        golden = json.loads(target.read_text(encoding="utf-8"))
+        golden["rawValues"] = {"goldak.field": before}
+        target.write_text(json.dumps(golden), encoding="utf-8")
+        with patch.object(parity, "GOLDEN_DIR", directory):
+            code, output = self._check("--case", case.id, "--expect-drift", f"{case.id}:goldak.*")
+        self.assertEqual(code, 0, output)
+        self.assertIn(f"raw q: {before['q']!r} ({before['q'].hex()}) -> {raw['q']!r} ({raw['q'].hex()})", output)
+
+    def test_expect_drift_fails_on_a_result_implementation_hash_mismatch(self):
+        original = parity.result_observations
+
+        def stale_hash(*args, **kwargs):
+            observations, _ = original(*args, **kwargs)
+            return observations, "a" * 64
+
+        def mutate(observations):
+            observations["result.key.metrics"] = "0" * 64
+        with patch.object(parity, "GOLDEN_DIR", self._mutated_golden_dir("g3_powder_island", mutate)), \
+                patch.object(parity, "result_observations", stale_hash):
+            code, output = self._check("--case", "g3_powder_island", "--expect-drift", "g3_powder_island")
+        self.assertEqual(code, 1, output)
+        self.assertIn("result provenance.implementationHash " + "a" * 64, output)
+        self.assertNotIn("allowed by --expect-drift", output)
+
+    def test_expect_drift_wrong_schema_golden_has_no_stale_line(self):
+        directory = self._mutated_golden_dir("g18_in625_latent_heat", lambda observations: None)
+        target = directory / "g18_in625_latent_heat.json"
+        golden = json.loads(target.read_text(encoding="utf-8"))
+        golden["case"] = "something-else"
+        target.write_text(json.dumps(golden), encoding="utf-8")
+        with patch.object(parity, "GOLDEN_DIR", directory):
+            code, output = self._check("--case", "g18_in625_latent_heat", "--expect-drift", "g18_in625_latent_heat")
+        self.assertEqual(code, 1, output)
+        self.assertIn("wrong schema or case id", output)
+        self.assertNotIn("stale", output)
+
+    def test_expect_drift_off_the_reference_environment_is_diagnostic_not_pass(self):
+        other = dict(parity.environment(), cpu="Some Other CPU")
+        with patch.object(parity, "GOLDEN_DIR", self._synthetic_drift_dir()), \
+                patch.object(parity, "environment", return_value=other):
+            code, output = self._check("--case", "g18_in625_latent_heat", "--allow-environment-mismatch",
+                                       "--expect-drift", "g18_in625_latent_heat")
+        self.assertEqual(code, 3, output)
+        self.assertIn("RESULT: DIAGNOSTIC", output)
+
+    def test_bump_record_parity_after_uses_the_same_drift_allowlist(self):
+        spec = importlib.util.spec_from_file_location("lpbf_bump_record", HERE / "tools" / "lpbf_bump_record.py")
+        bump = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bump)
+        subset = (parity.CASE_BY_ID["g18_in625_latent_heat"], parity.CASE_BY_ID["g12_analytical_modules"])
+        with patch.object(parity, "GOLDEN_DIR", self._synthetic_drift_dir()), \
+                patch.object(parity, "CASES", subset), \
+                patch.object(bump, "_parity_module", return_value=parity):
+            strict = bump.parity_after(False)
+            planned = bump.parity_after(False, ["g18_in625_latent_heat"])
+            stale = bump.parity_after(False, ["g18_in625_latent_heat", "g12_analytical_modules"])
+        self.assertEqual(strict["g18_in625_latent_heat"]["status"], "FAIL")
+        self.assertEqual(planned["g18_in625_latent_heat"]["status"], "DRIFT")
+        self.assertEqual(planned["g12_analytical_modules"]["status"], "PASS")
+        record = planned["g18_in625_latent_heat"]["drift"][0]
+        self.assertEqual(record["key"], "meltpool.in625.table.latent_heat_fusion_J_kg")
+        self.assertEqual(record["before"], [250000.0, (250000.0).hex()])
+        self.assertEqual(record["after"], [260000.0, (260000.0).hex()])
+        self.assertEqual(stale["g12_analytical_modules"]["status"], "FAIL")
+
+    def test_require_parity_turns_a_not_verified_skip_into_a_failure(self):
+        module = sys.modules[__name__]
+        with patch.object(module, "REQUIRE_PARITY", True):
+            with self.assertRaises(self.failureException):
+                skip_or_fail(self, "NOT VERIFIED: environment differs")
+        with patch.object(module, "REQUIRE_PARITY", False):
+            with self.assertRaises(unittest.SkipTest):
+                skip_or_fail(self, "NOT VERIFIED: environment differs")
 
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):

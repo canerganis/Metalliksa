@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """LPBF 5c parity harness: bit-equality goldens for the planned fingerprint bump.
 
-Design: docs/LPBF_5C_FINGERPRINT_BUMP_DESIGN_2026-10-04.md, section 2 and stage P
-(P2 parity harness, P3 material and case-generation goldens). The goldens are
-recorded ONCE at the pre-bump implementation (fingerprint 7482697c...). After
-every bump commit, ``--check`` must stay green: the cleanup is accepted only if
-every observation below is bit-equal.
+Design: docs/LPBF_5C_FINGERPRINT_BUMP_DESIGN_2026-10-04.md, section 2, stage P (P2 parity
+harness, P3 material and case-generation goldens) and section 8. The goldens were first
+recorded at 7482697c... (before the 5c bump) and re-recorded, observations unchanged, at
+edddf0dc... (B5 step 2); they are the "before" side of the next bump and are never
+re-recorded in the same commit as a manifest edit. After every bump commit ``--check``
+must stay green: bit-equal, or drifting only where --expect-drift allows it.
 
 What "bit-equal" means (design 2.1):
 - A run() result is compared after removing provenance.createdAt, runtime_s
@@ -35,11 +36,19 @@ Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
         [--expect-drift CASE[,CASE...]]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
 
---expect-drift (corrected-physics bump): the named cases may differ from their goldens
-and are reported as DRIFT with a before -> after line per changed observation (floats
-with float.hex()); they still fail on implementation-hash or pin problems. Any diff in
-an unnamed case fails, and a named case that does not drift, or is not selected, fails
-too (stale allowlist).
+--expect-drift (corrected-physics bump), entries CASE or CASE:KEY_GLOB (fnmatch on the
+observation key), comma-separated or repeated:
+- Only matched observations may differ; they are reported as DRIFT with a before -> after
+  line (floats with float.hex()) plus leaf-level raw before -> after values when the golden
+  recorded them (rawValues: the pre-hash value of small digest observations).
+- Any other diff fails; implementation-hash, pin and golden problems always fail; an entry
+  that matches no drifted observation, or a case that is not selected, fails (stale).
+- Identity digests (*materialRevisionSha256*, *materialSha256*, *inputSha256*) fail in
+  every case unless an entry names that exact key.
+- The reference transient cases g1/g2/g4 are refused as whole cases (CASE:KEY_GLOB only),
+  and their numerics (metrics, thermalHistory, energyBalance, field*, artifacts, NPZ,
+  fixture equality) fail whatever the allowlist.
+- With --allow-environment-mismatch a drift run ends DIAGNOSTIC (exit 3), never PASS.
 
 --record refuses to overwrite an existing golden without --force, and refuses to
 record at all unless implementation_fingerprint() equals the pinned .expected
@@ -62,6 +71,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import fnmatch
 import hashlib
 import io
 import json
@@ -90,6 +100,11 @@ GOLDEN_SCHEMA = "lpbf-parity-golden-1"
 FIXTURE_CAPTURE = REPO_ROOT / "tests" / "fixtures" / "lpbf-real-bare-plate-100W-capture.json"
 FIXTURE_NPZ = REPO_ROOT / "tests" / "fixtures" / "lpbf-real-bare-plate-100W-section-fields.npz"
 CORRIDOR_NPZ = "rectangular-corridor-section-fields.npz"
+# Raw pre-hash values (drift-report context, never compared): collected by remember_raw()
+# while execute() runs a case, up to RAW_VALUE_LIMIT characters of JSON per observation.
+RAW_VALUE_LIMIT = 4096
+_RAW_SINK: Optional[Dict[str, Any]] = None
+LAST_RAW_VALUES: Dict[str, Any] = {}
 # Artifact entries added by the worker (lpbf_worker.py), never by run() itself.
 WORKER_ONLY_ARTIFACTS = ("capabilities.json", "input.json")
 
@@ -203,6 +218,8 @@ def capture_call(function: Callable[[], Any]) -> Tuple[str, Any]:
 def observe_value(observations: Dict[str, Any], key: str, function: Callable[[], Any]) -> None:
     status, value = capture_call(function)
     observations[key] = typed_sha256(value) if status == "ok" else {"error": value}
+    if status == "ok":
+        remember_raw(key, value)
 
 
 def each(function: Callable[[Any], Any], items) -> List[Any]:
@@ -265,6 +282,7 @@ def result_observations(result: Dict[str, Any], artifact_dir: Optional[Path],
     }
     for key, value in stripped.items():
         observations[f"{prefix}.key.{key}"] = canonical_json_sha256(value)
+        remember_raw(f"{prefix}.key.{key}", value)
     contract = stripped.get("coreContract")
     if isinstance(contract, dict):
         for key in ("inputSha256", "materialSha256", "solverId", "modelId"):
@@ -632,6 +650,8 @@ def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
     status, plain = capture_call(lambda: calculate_meltpool_physics(**IN625_MELTPOOL_PAYLOAD))
     observations["meltpool.in625"] = typed_sha256(plain) if status == "ok" else {"error": plain}
     if status == "ok":
+        remember_raw("meltpool.in625", plain)
+    if status == "ok":
         observations["meltpool.in625.materialEvidence"] = plain.get("materialEvidence")
     # prop_overrides merge onto the resolved table: the result is bit-equal to the plain run
     # exactly for the latent heat the path already uses, and differs for the others.
@@ -726,6 +746,8 @@ def case_g13_source_quadrature_refinement(ctx: CaseContext) -> Dict[str, Any]:
                       lambda dt=dt: core.source_time_quadrature(segment, dt, 40e-6))
         observations[f"{key}.orders"] = orders
         observations[key] = typed_sha256(value) if status == "ok" else {"error": value}
+        if status == "ok":
+            remember_raw(key, value)
     observations["integratedSource.refinementReached"] = any(
         len(v) > 1 for k, v in observations.items() if k.endswith(".orders"))
     return observations
@@ -1019,6 +1041,7 @@ def case_g11_build_job_meltpool(ctx: CaseContext) -> Dict[str, Any]:
         if status == "ok":
             observations[f"meltpool.{index}.typedSha256"] = typed_sha256(value)
             observations[f"meltpool.{index}.canonicalSha256"] = canonical_json_sha256(value)
+            remember_raw(f"meltpool.{index}.typedSha256", value)
         else:
             observations[f"meltpool.{index}"] = {"error": value}
     observe_value(observations, "thermalSolver.THERMOPHYSICAL_DB", lambda: THERMOPHYSICAL_DB)
@@ -1186,7 +1209,7 @@ NOT_COVERED = (
     "Worker-side consumers of opticalObserver / NIST section operators (lpbf_worker.py, "
     "lpbf_nist_*; not in the manifest); G15 pins only that the setting passes through run()",
     "CpuRunProgress source-work budget failures (maximum_source_evaluations / _cell_steps)",
-    "G11 with warp installed (skipped, see case_g11_build_job_meltpool)",
+    "G11 and G18 with warp installed (skipped, see case_g11_build_job_meltpool)",
 )
 
 
@@ -1260,17 +1283,30 @@ def environment_mismatch(recorded: Dict[str, Any]) -> Optional[str]:
 
 
 def execute(case: Case, work_root: Path) -> Tuple[Dict[str, Any], List[str], float]:
+    """Run one case; returns (observations, implementation hashes, seconds).
+
+    The raw pre-hash values of the digest observations (when small, see remember_raw) are
+    left in LAST_RAW_VALUES for the caller: they are recorded next to the observations so a
+    drift report can print before -> after numbers, and are never compared.
+    """
+    global _RAW_SINK
     work_root.mkdir(parents=True, exist_ok=True)
     work_dir = Path(tempfile.mkdtemp(prefix=f"{case.id}-", dir=str(work_root)))
     ctx = CaseContext(work_dir)
+    raw: Dict[str, Any] = {}
+    LAST_RAW_VALUES.clear()
     started = time.perf_counter()
+    _RAW_SINK = raw
     try:
         observations = case.function(ctx)
     finally:
+        _RAW_SINK = None
         elapsed = time.perf_counter() - started
         shutil.rmtree(work_dir, ignore_errors=True)
     # Round-trip through JSON so record and check compare the same value domain.
     observations = json.loads(json.dumps(observations, allow_nan=False))
+    LAST_RAW_VALUES.update({key: value for key, value in sorted(raw.items())
+                            if key in observations and observations[key] != value})
     return observations, ctx.implementation_hashes, elapsed
 
 
@@ -1278,14 +1314,19 @@ def golden_path(case: Case) -> Path:
     return GOLDEN_DIR / f"{case.id}.json"
 
 
+def diff_keys(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
+    return [key for key in sorted(set(expected) | set(actual))
+            if key not in expected or key not in actual or expected[key] != actual[key]]
+
+
 def diff_observations(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
     problems = []
-    for key in sorted(set(expected) | set(actual)):
+    for key in diff_keys(expected, actual):
         if key not in actual:
             problems.append(f"missing observation {key}")
         elif key not in expected:
             problems.append(f"unexpected new observation {key}")
-        elif expected[key] != actual[key]:
+        else:
             problems.append(f"changed {key}: expected {json.dumps(expected[key])[:160]} "
                             f"got {json.dumps(actual[key])[:160]}")
     return problems
@@ -1348,6 +1389,7 @@ def command_record(args) -> int:
             continue
         try:
             observations, hashes, elapsed = execute(case, Path(args.work_root))
+            raw_values = dict(LAST_RAW_VALUES)
         except CaseSkipped as skipped:
             print(f"{case.id}: NOT RECORDED (skipped: {skipped})")
             failures += 1
@@ -1359,6 +1401,7 @@ def command_record(args) -> int:
             runs.append(round(elapsed_again, 1))
             problems += check_implementation(case, hashes_again, pinned, current)[0]
             problems += [f"run 2 differs: {p}" for p in diff_observations(observations, again)]
+            problems += [f"run 2 raw value differs: {key}" for key in diff_keys(raw_values, LAST_RAW_VALUES)]
         if problems:
             failures += 1
             print(f"{case.id}: NOT RECORDED")
@@ -1372,6 +1415,9 @@ def command_record(args) -> int:
             "recordedGitHead": _git_head(), "recordedEnvironment": environment(),
             "recordedRuns_s": runs, "recordedTwice": bool(args.twice),
             "observations": observations,
+            # Raw pre-hash values of small digest observations: drift-report context only,
+            # never compared (the observations above are the evidence).
+            "rawValues": raw_values,
         }
         path.write_text(json.dumps(golden, indent=1, sort_keys=False, allow_nan=False) + "\n",
                         encoding="utf-8", newline="\n")
@@ -1385,7 +1431,8 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
     from lpbf_simulation import implementation_fingerprint
     path = golden_path(case)
     outcome: Dict[str, Any] = {"case": case.id, "problems": [], "warnings": [], "elapsed_s": 0.0,
-                               "observations": {}, "golden": None, "skipped": None}
+                               "observations": {}, "rawValues": {}, "golden": None, "skipped": None,
+                               "comparedDespiteEnvironment": False}
     if not path.is_file():
         outcome["problems"] = [f"golden missing: {path}"]
         return outcome
@@ -1411,9 +1458,103 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
     if mismatch is not None:
         warnings.append(f"compared despite: {mismatch}")
     outcome.update(problems=problems, warnings=warnings, elapsed_s=elapsed, observations=observations,
-                   implementationHashes=sorted(set(hashes)),
-                   implementationProblems=implementation_problems, observationDiffs=diffs)
+                   rawValues=dict(LAST_RAW_VALUES), implementationHashes=sorted(set(hashes)),
+                   implementationProblems=implementation_problems, observationDiffs=diffs,
+                   comparedDespiteEnvironment=mismatch is not None)
     return outcome
+
+
+# --------------------------------------------------------------------------- planned drift
+
+# Reference transient cases (V1 replay, real bare-plate fixture, layered plate): never named
+# as a whole in --expect-drift; only CASE:KEY entries, and never for their numerics below.
+REFERENCE_CASES = ("g1_v1_60w_in718", "g2_bare_plate_100w_corridor", "g4_layered_plate")
+# Identity observations: a change fails in EVERY case unless an entry names that exact key.
+IDENTITY_PATTERNS = ("*materialRevisionSha256*", "*materialSha256*", "*inputSha256*")
+# Reference numerics: a change in a REFERENCE_CASES case always fails, whatever the allowlist.
+REFERENCE_NUMERICS_PATTERNS = (
+    "*.key.metrics", "*.key.thermalHistory", "*.key.energyBalance", "*.key.field*",
+    "*.key.artifacts", "artifact.*", "artifacts.*", "npz.*", "*.artifact.*", "*.artifacts*",
+    "*.npz.*", "fixture.*")
+
+
+class DriftEntry:
+    """One --expect-drift entry: a whole case, or CASE:KEY_GLOB (fnmatch on observation keys)."""
+
+    def __init__(self, case_id: str, pattern: Optional[str]):
+        self.case_id, self.pattern = case_id, pattern
+
+    @property
+    def text(self) -> str:
+        return self.case_id if self.pattern is None else f"{self.case_id}:{self.pattern}"
+
+    def matches(self, key: str) -> bool:
+        return self.pattern is None or fnmatch.fnmatchcase(key, self.pattern)
+
+
+def parse_expect_drift(values: Optional[List[str]]) -> List[DriftEntry]:
+    """--expect-drift a,b:KEY --expect-drift c -> entries; unknown, empty or refused names error."""
+    entries: List[DriftEntry] = []
+    for value in values or []:
+        for item in value.split(","):
+            item = item.strip()
+            case_id, separator, pattern = item.partition(":")
+            if not case_id or (separator and not pattern):
+                raise SystemExit(f"--expect-drift: empty case or key in {item!r}")
+            if case_id not in CASE_BY_ID:
+                raise SystemExit(f"--expect-drift: unknown case {case_id}")
+            if not separator and case_id in REFERENCE_CASES:
+                raise SystemExit(f"--expect-drift: {case_id} is a reference transient case; name the "
+                                 f"observations that may drift ({case_id}:KEY_GLOB), never the whole case")
+            if all(e.text != item for e in entries):
+                entries.append(DriftEntry(case_id, pattern if separator else None))
+    return entries
+
+
+def _protected_reason(case_id: str, key: str, entries: List[DriftEntry]) -> Optional[str]:
+    if case_id in REFERENCE_CASES and any(fnmatch.fnmatchcase(key, p) for p in REFERENCE_NUMERICS_PATTERNS):
+        return "reference-case numerics never drift under --expect-drift"
+    if any(fnmatch.fnmatchcase(key, p) for p in IDENTITY_PATTERNS) and not any(e.pattern == key for e in entries):
+        return "identity observation: allowed only by an entry naming this exact key"
+    return None
+
+
+def jsonable(value: Any) -> Any:
+    """Plain JSON form of a raw observed value (numpy and tuples converted); TypeError if none."""
+    if value is None or type(value) in (bool, int, float, str):
+        return value
+    if isinstance(value, np.ndarray):
+        return jsonable(value.tolist())
+    if isinstance(value, np.generic):
+        return jsonable(value.item())
+    if isinstance(value, (dict, types.MappingProxyType)):
+        return {str(k): jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [jsonable(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((jsonable(v) for v in value), key=lambda item: json.dumps(item, sort_keys=True))
+    if isinstance(value, bool):
+        return bool(value)
+    if isinstance(value, int):
+        return int(value)
+    if isinstance(value, float):
+        return float(value)
+    if isinstance(value, str):
+        return str(value)
+    raise TypeError(type(value).__name__)
+
+
+def remember_raw(key: str, value: Any) -> None:
+    """Keep the raw value behind a digest observation when it is small (<= RAW_VALUE_LIMIT
+    characters of JSON), for drift reports. Never part of the comparison."""
+    if _RAW_SINK is None:
+        return
+    try:
+        text = json.dumps(jsonable(value), allow_nan=False)
+    except (TypeError, ValueError):
+        return
+    if len(text) <= RAW_VALUE_LIMIT:
+        _RAW_SINK[key] = json.loads(text)
 
 
 def describe_value(value: Any) -> str:
@@ -1431,32 +1572,84 @@ def describe_value(value: Any) -> str:
     return text if len(text) <= 160 else text[:157] + "..."
 
 
-def drift_summary(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
-    """One line per drifted observation: before -> after, value level (hex for floats)."""
-    lines = []
-    for key in sorted(set(expected) | set(actual)):
-        if key not in actual:
-            lines.append(f"{key}: {describe_value(expected[key])} -> <missing>")
-        elif key not in expected:
-            lines.append(f"{key}: <new> -> {describe_value(actual[key])}")
-        elif expected[key] != actual[key]:
-            lines.append(f"{key}: {describe_value(expected[key])} -> {describe_value(actual[key])}")
+def raw_changes(before: Any, after: Any, path: str = "", limit: int = 24) -> List[str]:
+    """Leaf-level before -> after lines between two raw values (dict keys / list indices)."""
+    lines: List[str] = []
+
+    def walk(b: Any, a: Any, where: str) -> None:
+        if len(lines) >= limit or b == a and type(b) is type(a):
+            return
+        if isinstance(b, dict) and isinstance(a, dict):
+            for k in list(b) + [k for k in a if k not in b]:
+                walk(b.get(k, "<absent>"), a.get(k, "<absent>"), f"{where}.{k}" if where else str(k))
+        elif isinstance(b, list) and isinstance(a, list) and len(b) == len(a):
+            for i, (x, y) in enumerate(zip(b, a)):
+                walk(x, y, f"{where}[{i}]")
+        else:
+            lines.append(f"{where or '<value>'}: {describe_value(b)} -> {describe_value(a)}")
+
+    walk(before, after, path)
+    if len(lines) >= limit:
+        lines.append("... (more raw changes)")
     return lines
 
 
-def parse_expect_drift(values: Optional[List[str]]) -> List[str]:
-    """--expect-drift a,b --expect-drift c -> [a, b, c]; unknown or empty names are an error."""
-    names: List[str] = []
-    for value in values or []:
-        for name in value.split(","):
-            name = name.strip()
-            if not name:
-                raise SystemExit("--expect-drift: empty case name")
-            if name not in CASE_BY_ID:
-                raise SystemExit(f"--expect-drift: unknown case {name}")
-            if name not in names:
-                names.append(name)
-    return names
+def drift_records(golden: Dict[str, Any], outcome: Dict[str, Any], keys: List[str]) -> List[Dict[str, Any]]:
+    """Machine-readable drift report: before/after observation and, when recorded, raw values."""
+    expected, actual = golden.get("observations", {}), outcome["observations"]
+    raw_before, raw_after = golden.get("rawValues", {}), outcome.get("rawValues", {})
+    records = []
+    for key in keys:
+        record: Dict[str, Any] = {"key": key, "before": expected.get(key, "<missing>"),
+                                  "after": actual.get(key, "<missing>")}
+        if key in raw_before or key in raw_after:
+            record["rawBefore"] = raw_before.get(key, "<not recorded>")
+            record["rawAfter"] = raw_after.get(key, "<not recorded>")
+            record["rawChanges"] = raw_changes(record["rawBefore"], record["rawAfter"])
+        records.append(record)
+    return records
+
+
+def drift_lines(records: List[Dict[str, Any]]) -> List[str]:
+    lines = []
+    for record in records:
+        lines.append(f"{record['key']}: {describe_value(record['before'])} -> {describe_value(record['after'])}")
+        lines.extend(f"    raw {line}" for line in record.get("rawChanges", []))
+    return lines
+
+
+def evaluate_drift(case: Case, outcome: Dict[str, Any], entries: List[DriftEntry]) -> Dict[str, Any]:
+    """Apply the --expect-drift entries for one checked case.
+
+    Returns {"status": PASS|DRIFT|FAIL, "problems": [...], "drift": [records]}. Without an
+    entry for the case this is the plain check. With entries, only observation diffs that an
+    entry matches and that are not protected may drift; implementation, pin and golden
+    problems always fail; an entry that matches no drifted observation is stale.
+    """
+    mine = [entry for entry in entries if entry.case_id == case.id]
+    if not mine:
+        return {"status": "FAIL" if outcome["problems"] else "PASS", "problems": list(outcome["problems"]),
+                "drift": []}
+    if "observationDiffs" not in outcome:  # missing or wrong golden: nothing was compared
+        return {"status": "FAIL", "problems": list(outcome["problems"]), "drift": []}
+    golden = outcome["golden"]
+    problems = list(outcome["implementationProblems"])
+    allowed: List[str] = []
+    for key in diff_keys(golden["observations"], outcome["observations"]):
+        reason = _protected_reason(case.id, key, mine)
+        if reason is not None:
+            problems.append(f"changed {key}: {reason}")
+        elif not any(entry.matches(key) for entry in mine):
+            problems.append(f"changed {key}: not named by --expect-drift "
+                            f"({', '.join(entry.text for entry in mine)})")
+        else:
+            allowed.append(key)
+    for entry in mine:
+        if not any(entry.matches(key) for key in allowed):
+            problems.append(f"stale --expect-drift entry {entry.text}: no allowed observation drifted")
+    records = drift_records(golden, outcome, allowed)
+    return {"status": "FAIL" if problems else ("DRIFT" if records else "PASS"), "problems": problems,
+            "drift": records}
 
 
 def command_check(args) -> int:
@@ -1466,14 +1659,17 @@ def command_check(args) -> int:
     if args.expect_unpinned:
         print("bump-branch mode (--expect-unpinned): a pin mismatch is a WARNING; observation diffs and "
               "result implementationHash != implementation_fingerprint() still FAIL")
-    expect_drift = parse_expect_drift(args.expect_drift)
+    entries = parse_expect_drift(args.expect_drift)
     cases = selected_cases(args)
     failures = skips = 0
     drifted: List[str] = []
-    if expect_drift:
-        print(f"planned-drift mode (--expect-drift): only {', '.join(expect_drift)} may differ from their "
-              "goldens; any other diff, an implementation problem, or a named case without drift FAILS")
-        not_run = [name for name in expect_drift if name not in {case.id for case in cases}]
+    off_reference = False
+    if entries:
+        print(f"planned-drift mode (--expect-drift): only {', '.join(e.text for e in entries)} may differ "
+              "from the goldens; any other diff, identity or reference-case numerics, an implementation "
+              "problem, or an entry without drift FAILS")
+        selected = {case.id for case in cases}
+        not_run = sorted({e.case_id for e in entries if e.case_id not in selected})
         for name in not_run:
             print(f"FAIL {name}: named in --expect-drift but not selected (add --slow or --case {name})")
         failures += len(not_run)
@@ -1484,24 +1680,15 @@ def command_check(args) -> int:
             skips += 1
             print(f"SKIP {case.id} [{case.group}] NOT VERIFIED: {outcome['skipped']}")
             continue
-        problems, golden = outcome["problems"], outcome["golden"] or {}
-        drift_lines: List[str] = []
-        if case.id in expect_drift:
-            # Only observation diffs are allowed; a missing golden or a hash problem still fails.
-            diffs = outcome.get("observationDiffs") or []
-            problems = list(outcome.get("implementationProblems", problems))
-            if golden.get("observations") is None:
-                problems = outcome["problems"]
-            elif not diffs:
-                problems.append("stale --expect-drift entry: the case did NOT drift from its golden")
-            else:
-                drift_lines = drift_summary(golden["observations"], outcome["observations"])
+        verdict = evaluate_drift(case, outcome, entries)
+        problems, status = verdict["problems"], verdict["status"]
+        lines = drift_lines(verdict["drift"])
+        golden = outcome["golden"] or {}
         recorded = golden.get("recordedImplementationHash")
-        status = "FAIL" if problems else ("DRIFT" if drift_lines else "PASS")
         suffix = (f" (implementationHash differs from the recording {str(recorded)[:12]}: bump)"
                   if recorded not in (None, current) and not problems else "")
-        if drift_lines:
-            suffix += f" ({len(drift_lines)} observation(s) drifted, allowed by --expect-drift)"
+        if status == "DRIFT":
+            suffix += f" ({len(verdict['drift'])} observation(s) drifted, allowed by --expect-drift)"
         print(f"{status} {case.id} [{case.group}] {len(outcome['observations'])} observations, "
               f"{outcome['elapsed_s']:.1f} s{suffix}")
         for warning in outcome["warnings"]:
@@ -1510,17 +1697,23 @@ def command_check(args) -> int:
             print(f"    {problem}")
         if len(problems) > 40:
             print(f"    ... {len(problems) - 40} more")
-        for line in drift_lines:
+        for line in lines:
             print(f"    DRIFT {line}")
-        if drift_lines and not problems:
+        if status == "DRIFT":
             drifted.append(case.id)
-        failures += bool(problems)
+        off_reference |= bool(outcome.get("comparedDespiteEnvironment"))
+        failures += status == "FAIL"
     if failures:
         print(f"RESULT: FAIL ({failures} case(s))" + (f", {skips} skipped" if skips else ""))
         return 1
     if skips:
         # A skipped case proves nothing: exit 3 so a gate never mistakes it for a pass.
         print(f"RESULT: INCOMPLETE ({skips} case(s) skipped, not verified)")
+        return 3
+    if drifted and off_reference:
+        # A drift report from another environment is a diagnostic, never bump evidence.
+        print(f"RESULT: DIAGNOSTIC (planned drift in {', '.join(drifted)} compared off the reference "
+              "environment; not evidence)")
         return 3
     print("RESULT: PASS" + (f" (planned drift in {', '.join(drifted)})" if drifted else ""))
     return 0
@@ -1542,10 +1735,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                              "(diagnostics only; a PASS there is not the reference-machine proof)")
     parser.add_argument("--expect-unpinned", action="store_true",
                         help="check: bump-branch mode (B1-B5), a fingerprint != pin mismatch is only a warning")
-    parser.add_argument("--expect-drift", action="append", metavar="CASE[,CASE...]",
-                        help="check: planned-drift allowlist; only these cases may differ from their goldens "
-                             "(reported as DRIFT with a value-level summary); any other diff fails, and so "
-                             "does a named case that does not drift (stale allowlist)")
+    parser.add_argument("--expect-drift", action="append", metavar="CASE[:KEY_GLOB][,...]",
+                        help="check: planned-drift allowlist; only these cases (or, with :KEY_GLOB, only "
+                             "these observations) may differ from their goldens, reported as DRIFT with "
+                             "before -> after values; any other diff fails, identity digests and "
+                             "reference-case numerics stay protected, and an entry without drift fails; "
+                             "g1/g2/g4 accept only CASE:KEY_GLOB entries")
     args = parser.parse_args(argv)
     if args.expect_drift and not args.check:
         parser.error("--expect-drift is only valid with --check")
