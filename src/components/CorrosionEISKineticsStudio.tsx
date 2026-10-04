@@ -1,5 +1,6 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect } from "react";
+import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -49,11 +50,12 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"coating_nyquist" | "water_uptake" | "pore_decay" | "python_code">("coating_nyquist");
 
-  const runPythonSimulation = async () => {
+  const runPythonSimulation = async (signal?: AbortSignal): Promise<boolean> => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
       const response = await fetch("/api/python/battery-corrosion-eis", {
+        signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,18 +78,26 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
       if (data.error) {
         throw new Error(data.error);
       }
+      if (signal?.aborted) return false;
       setSimResult(data);
+      return true;
     } catch (err: any) {
+      if (signal?.aborted) return false;
       console.error("Corrosion EIS simulation error:", err);
       setErrorMsg(err.message || "Failed to execute Python corrosion kinetics solver.");
+      return false;
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
   };
 
+  // Debounced, visibility-gated and abortable. coatingType is not part of the request body, so it is not
+  // part of the input signature (changing it never produced a different request).
+  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, e0, exposureDays]);
   useEffect(() => {
-    runPythonSimulation();
-  }, [metalId, betaA, betaC, i0Corr, ePit, e0, exposureDays, coatingType]);
+    setSimResult(null);
+  }, [corrosionInputSignature]);
+  const { runNow: runPythonSimulationNow } = useDebouncedLatestTask(corrosionInputSignature, (_signature, signal) => runPythonSimulation(signal), 200);
 
   const currentCoatingStage = simResult?.coatingTimeline?.slice(-1)[0];
 
@@ -139,7 +149,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
 
           <button
             type="button"
-            onClick={runPythonSimulation}
+            onClick={() => runPythonSimulationNow()}
             disabled={isLoading}
             className="px-3 py-1.5 rounded-xl bg-[#050810] border border-[#1e2d46] hover:border-amber-500 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all"
           >

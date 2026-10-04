@@ -49,6 +49,7 @@ import {
   REF_OFFSETS_VS_SHE,
 } from "../utils/experimentalPourbaixOverlay";
 import { pythonComputationService } from "../services/pythonComputationService";
+import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 
 
 export function DynamicPourbaixStudio() {
@@ -175,11 +176,12 @@ export function DynamicPourbaixStudio() {
   // -------------------------------------------------------------
   // ASYNC PYTHON POURBAIX EQUILIBRIUM SOLVER DISPATCH
   // -------------------------------------------------------------
-  useEffect(() => {
-    let isCancelled = false;
+  // Debounced, visibility-gated and abortable; an unchanged input is not re-solved when the module is shown again.
+  const pourbaixInputSignature = JSON.stringify([primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints.length]);
+  useDebouncedLatestTask(pourbaixInputSignature, async (_signature, signal): Promise<boolean> => {
     const chloride_ppm = Math.round(chlorideActivity * 35453); // Convert Molar to ppm Cl-
 
-    async function dispatchPythonSolver() {
+    async function dispatchPythonSolver(): Promise<boolean> {
       try {
         setIsPythonSolving(true);
         setPythonSolveError(null);
@@ -190,9 +192,9 @@ export function DynamicPourbaixStudio() {
           ionActivity_log10: Math.log10(ionActivity),
           chloride_ppm,
           experimentalPoints: experimentalPoints.length > 0 ? experimentalPoints : undefined,
-        });
+        }, signal);
 
-        if (!isCancelled && result.success) {
+        if (!signal.aborted && result.success) {
           setPythonPourbaixData(result);
 
           // Update experimental points with enriched mechanism identification from Python
@@ -208,27 +210,23 @@ export function DynamicPourbaixStudio() {
               });
             });
           }
+          return true;
         }
+        return false;
       } catch (err: any) {
-        if (!isCancelled) {
+        if (!signal.aborted) {
           setPythonSolveError(err.message || "Failed to reach Python Pourbaix solver.");
         }
+        return false;
       } finally {
-        if (!isCancelled) {
+        if (!signal.aborted) {
           setIsPythonSolving(false);
         }
       }
     }
 
-    const timer = setTimeout(() => {
-      dispatchPythonSolver();
-    }, 150);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints.length]);
+    return dispatchPythonSolver();
+  }, 150);
 
   // -------------------------------------------------------------
   // CANVAS RENDERING ENGINE WITH EXPERIMENTAL OVERLAY

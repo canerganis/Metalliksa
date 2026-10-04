@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { CandidateAlloySolution, InverseDesignTargets } from "../utils/inverseAlloyOptimizer";
 import { pythonComputationService, PythonLPBFResult } from "../services/pythonComputationService";
+import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 
 interface Props {
   candidate: CandidateAlloySolution;
@@ -122,7 +123,9 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
   }, [initialHatchSpacing]);
 
   // Execute Python LPBF Solver
-  const runPythonSolver = useCallback(async () => {
+  const onParametersChangeRef = useRef(onParametersChange);
+  onParametersChangeRef.current = onParametersChange;
+  const runPythonSolver = useCallback(async (signal?: AbortSignal): Promise<boolean> => {
     setIsSolving(true);
     setSolverError(null);
     try {
@@ -135,10 +138,12 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
         layerThickness_um,
         hatchSpacing_um,
         laserWavelength,
-      });
+      }, signal);
+      if (signal?.aborted) return false;
       setPyResult(res);
-      if (onParametersChange) {
-        onParametersChange({
+      const notifyParametersChange = onParametersChangeRef.current;
+      if (notifyParametersChange) {
+        notifyParametersChange({
           laserPower_W,
           scanSpeed_mms,
           beamDiameter_um,
@@ -147,11 +152,14 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           hatchSpacing_um,
         });
       }
+      return true;
     } catch (err: any) {
+      if (signal?.aborted) return false;
       console.warn("Python LPBF solver error:", err);
       setSolverError(err.message || "Failed to solve LPBF thermal fields.");
+      return false;
     } finally {
-      setIsSolving(false);
+      if (!signal?.aborted) setIsSolving(false);
     }
   }, [
     selectedMaterial,
@@ -162,16 +170,15 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
     layerThickness_um,
     hatchSpacing_um,
     laserWavelength,
-    onParametersChange,
   ]);
 
-  // Run on mount or when key parameters change with debounce
+  // Run on mount or when key parameters change with debounce. The parent callback is read through a ref so
+  // its (inline, per-render) identity cannot retrigger the solver; superseded/hidden requests are aborted.
+  const thermalInputSignature = JSON.stringify([selectedMaterial, laserPower_W, scanSpeed_mms, beamDiameter_um, preheatTemp_C, layerThickness_um, hatchSpacing_um, laserWavelength]);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      runPythonSolver();
-    }, 180);
-    return () => clearTimeout(timer);
-  }, [runPythonSolver]);
+    setPyResult(null);
+  }, [thermalInputSignature]);
+  const { runNow: runPythonSolverNow } = useDebouncedLatestTask(thermalInputSignature, (_signature, signal) => runPythonSolver(signal), 180);
 
   // Animation Loop for Laser Motion
   useEffect(() => {
@@ -746,7 +753,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={runPythonSolver}
+              onClick={() => runPythonSolverNow()}
               disabled={isSolving}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-mono font-bold transition shadow-sm disabled:opacity-50"
             >
