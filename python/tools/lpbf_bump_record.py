@@ -41,6 +41,8 @@ REPO_ROOT = PYTHON_DIR.parent
 if str(PYTHON_DIR) not in sys.path:
     sys.path.insert(0, str(PYTHON_DIR))
 
+from lpbf_fingerprint_pin import read_pinned_fingerprint  # noqa: E402
+
 RECORD_SCHEMA = "lpbf-implementation-bump-record-1"
 GOLDEN_DIR = PYTHON_DIR / "golden" / "lpbf_parity"
 DESIGN = "docs/LPBF_5C_FINGERPRINT_BUMP_DESIGN_2026-10-04.md"
@@ -137,6 +139,9 @@ def parity_after(slow: bool) -> Dict[str, Any]:
             after[case.id] = {"status": "not-run (slow; pass --slow)"}
             continue
         outcome = parity.check_case(case, parity.DEFAULT_WORK_ROOT)
+        if outcome["skipped"] is not None:
+            after[case.id] = {"status": "SKIPPED", "reason": outcome["skipped"]}
+            continue
         observations = outcome["observations"]
         after[case.id] = {
             "status": "PASS" if not outcome["problems"] else "FAIL",
@@ -149,10 +154,21 @@ def parity_after(slow: bool) -> Dict[str, Any]:
     return after
 
 
-def build_record(from_revision: Optional[str], with_parity: bool, slow: bool) -> Dict[str, Any]:
+def _require_goldens_recorded_at(from_hash: str, goldens: Dict[str, Any]) -> None:
+    """Every parity golden is the pre-bump side of the proof: it must carry fromHash."""
+    if not goldens:
+        raise SystemExit("refused: no parity goldens found")
+    wrong = {case: value["recordedImplementationHash"] for case, value in goldens.items()
+             if value["recordedImplementationHash"] != from_hash}
+    if wrong:
+        raise SystemExit(f"refused: goldens not recorded at fromHash {from_hash}: {wrong}")
+
+
+def build_record(from_revision: Optional[str], with_parity: bool, slow: bool,
+                 allow_same_hash: bool = False) -> Dict[str, Any]:
     import numpy
     current = worktree_side()
-    pinned = (PYTHON_DIR / "lpbf_implementation_fingerprint.expected").read_text(encoding="ascii").strip()
+    pinned = read_pinned_fingerprint()
     record: Dict[str, Any] = {
         "schema": RECORD_SCHEMA, "design": DESIGN,
         "environment": {"python": platform.python_version(), "numpy": numpy.__version__,
@@ -167,6 +183,7 @@ def build_record(from_revision: Optional[str], with_parity: bool, slow: bool) ->
         if current["implementationHash"] != pinned:
             raise SystemExit(f"skeleton refused: worktree fingerprint {current['implementationHash']} "
                              f"!= pinned {pinned}")
+        _require_goldens_recorded_at(current["implementationHash"], record["parityGoldens"])
         record.update({
             "from": current, "to": None, "fromHash": current["implementationHash"], "toHash": None,
             "versionUnchanged": None, "manifestDiff": None,
@@ -177,10 +194,15 @@ def build_record(from_revision: Optional[str], with_parity: bool, slow: bool) ->
         })
         return record
     before = revision_side(from_revision)
+    _require_goldens_recorded_at(before["implementationHash"], record["parityGoldens"])
+    if current["implementationHash"] == before["implementationHash"] and not allow_same_hash:
+        raise SystemExit(f"refused: toHash equals fromHash {before['implementationHash']}; a bump record "
+                         "needs a changed fingerprint (use --allow-same-hash only for a dry run)")
     old_files, new_files = before["files"], current["files"]
     record.update({
         "from": before, "to": current,
         "fromHash": before["implementationHash"], "toHash": current["implementationHash"],
+        "dryRunSameHash": current["implementationHash"] == before["implementationHash"],
         "versionUnchanged": before["version"] == current["version"],
         "pinMatchesToHash": pinned == current["implementationHash"],
         "manifestDiff": {
@@ -207,18 +229,22 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--with-parity-check", action="store_true", help="run the parity harness (bump mode)")
     parser.add_argument("--slow", action="store_true", help="include slow parity cases (G2, ~106 s)")
     parser.add_argument("--out", help="write the record here instead of stdout")
+    parser.add_argument("--allow-same-hash", action="store_true",
+                        help="bump mode dry run: allow toHash == fromHash (never for the real record)")
     args = parser.parse_args(argv)
     if args.with_parity_check and not args.from_revision:
         parser.error("--with-parity-check needs --from-revision")
-    record = build_record(args.from_revision, args.with_parity_check, args.slow)
+    record = build_record(args.from_revision, args.with_parity_check, args.slow, args.allow_same_hash)
     text = json.dumps(record, indent=1, allow_nan=False) + "\n"
     if args.out:
         Path(args.out).write_text(text, encoding="utf-8", newline="\n")
         print(f"wrote {args.out}: fromHash {record['fromHash']} toHash {record['toHash']}")
     else:
         sys.stdout.write(text)
-    failed = [case for case, value in (record.get("parityAfter") or {}).items() if value.get("status") == "FAIL"]
-    return 1 if failed else 0
+    statuses = [value.get("status") for value in (record.get("parityAfter") or {}).values()]
+    if "FAIL" in statuses:
+        return 1
+    return 3 if "SKIPPED" in statuses else 0
 
 
 if __name__ == "__main__":

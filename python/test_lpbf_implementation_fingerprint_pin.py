@@ -33,28 +33,48 @@ pass, when the environment differs).
    the proof. Never edit this file to make an unexplained fingerprint pass.
 """
 
-import re
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from lpbf_fingerprint_pin import EXPECTED_FINGERPRINT_FILE, read_pinned_fingerprint
 from lpbf_simulation import IMPLEMENTATION_SOURCE_FILES, VERSION, implementation_fingerprint
 
 HERE = Path(__file__).resolve().parent
-EXPECTED_FILE = HERE / "lpbf_implementation_fingerprint.expected"
 
 
 def pinned_fingerprint():
-    text = EXPECTED_FILE.read_bytes().decode("ascii")
-    match = re.fullmatch(r"([0-9a-f]{64})\r?\n", text)
-    if match is None:
-        raise ValueError(f"{EXPECTED_FILE.name} must contain exactly one lowercase sha256 hex line")
-    return match.group(1)
+    # The one strict parser, shared with tools/lpbf_parity_check.py and tools/lpbf_bump_record.py.
+    return read_pinned_fingerprint(EXPECTED_FINGERPRINT_FILE)
 
 
 class ImplementationFingerprintPinTests(unittest.TestCase):
     def test_expected_file_is_one_lowercase_sha256_line(self):
         self.assertRegex(pinned_fingerprint(), r"^[0-9a-f]{64}$")
+
+    def test_strict_parser_rejects_anything_but_one_hex_line(self):
+        good = "a" * 64
+        cases = ((good + "\n", True), (good + "\r\n", True), (good, False),
+                 (good.upper() + "\n", False), (" " + good + "\n", False),
+                 (good + "\n\n", False), ("a" * 63 + "\n", False),
+                 (good + "\n" + good + "\n", False), ("\ufeff" + good + "\n", False))
+        base = HERE.parent / ".tmp-lpbf-pin-parser"
+        base.mkdir(exist_ok=True)
+        try:
+            with tempfile.TemporaryDirectory(dir=base) as directory:
+                path = Path(directory) / "pin.expected"
+                for content, ok in cases:
+                    with self.subTest(content=content):
+                        path.write_bytes(content.encode("utf-8"))
+                        if ok:
+                            self.assertEqual(read_pinned_fingerprint(path), good)
+                        else:
+                            with self.assertRaises(ValueError):
+                                read_pinned_fingerprint(path)
+        finally:
+            shutil.rmtree(base, ignore_errors=True)
 
     def test_current_implementation_matches_the_pin(self):
         current = implementation_fingerprint()

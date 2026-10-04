@@ -68,9 +68,9 @@ if str(PYTHON_DIR) not in sys.path:
     sys.path.insert(0, str(PYTHON_DIR))
 
 import numpy as np  # noqa: E402
+from lpbf_fingerprint_pin import EXPECTED_FINGERPRINT_FILE, read_pinned_fingerprint  # noqa: E402
 
 GOLDEN_DIR = PYTHON_DIR / "golden" / "lpbf_parity"
-EXPECTED_FINGERPRINT_FILE = PYTHON_DIR / "lpbf_implementation_fingerprint.expected"
 DEFAULT_WORK_ROOT = PYTHON_DIR / ".tmp-lpbf-parity"  # ignored by /python/.tmp-*/
 GOLDEN_SCHEMA = "lpbf-parity-golden-1"
 FIXTURE_CAPTURE = REPO_ROOT / "tests" / "fixtures" / "lpbf-real-bare-plate-100W-capture.json"
@@ -283,6 +283,10 @@ def result_observations(result: Dict[str, Any], artifact_dir: Optional[Path],
 
 
 # --------------------------------------------------------------------------- case context
+
+class CaseSkipped(Exception):
+    """A case that cannot be checked here; reported as SKIP with its reason, never as PASS."""
+
 
 class CaseContext:
     def __init__(self, work_dir: Path):
@@ -595,7 +599,9 @@ def _cfd_case_module():
     try:
         import lpbf_cfd_cases as module  # type: ignore[import-not-found]
         return module
-    except ImportError:
+    except ModuleNotFoundError as exc:
+        if exc.name != "lpbf_cfd_cases":
+            raise  # a broken lpbf_cfd_cases (missing dependency) must not fall back silently
         import lpbf_cfd as module
         return module
 
@@ -675,6 +681,12 @@ G11_PAYLOADS = (
 
 
 def case_g11_build_job_meltpool(ctx: CaseContext) -> Dict[str, Any]:
+    import importlib.util
+    if importlib.util.find_spec("warp") is not None:
+        # calculate_meltpool_physics tries the Warp powder-bed ray tracer and the Warp thermal
+        # slice first; the goldens were recorded on their CPU fallback ("No module named 'warp'").
+        raise CaseSkipped("warp is importable here: calculate_meltpool_physics would take the GPU "
+                          "ray-tracing path; the G11 golden pins the CPU fallback without warp")
     from lpbf_thermal_solver import calculate_meltpool_physics, classify_enthalpy_regime, THERMOPHYSICAL_DB
 
     observations: Dict[str, Any] = {}
@@ -816,10 +828,8 @@ CASE_BY_ID = {case.id: case for case in CASES}
 # --------------------------------------------------------------------------- record / check
 
 def pinned_fingerprint() -> str:
-    text = EXPECTED_FINGERPRINT_FILE.read_text(encoding="ascii").strip()
-    if len(text) != 64 or any(c not in "0123456789abcdef" for c in text):
-        raise ValueError(f"{EXPECTED_FINGERPRINT_FILE.name} must hold one lowercase sha256 hex line")
-    return text
+    """The one strict pin parser shared with the pin test and the bump record."""
+    return read_pinned_fingerprint(EXPECTED_FINGERPRINT_FILE)
 
 
 def _git_head() -> Optional[str]:
@@ -922,7 +932,12 @@ def command_record(args) -> int:
             print(f"{case.id}: golden exists; use --force to overwrite")
             failures += 1
             continue
-        observations, hashes, elapsed = execute(case, Path(args.work_root))
+        try:
+            observations, hashes, elapsed = execute(case, Path(args.work_root))
+        except CaseSkipped as skipped:
+            print(f"{case.id}: NOT RECORDED (skipped: {skipped})")
+            failures += 1
+            continue
         problems, _ = check_implementation(case, hashes, pinned, current)
         runs = [round(elapsed, 1)]
         if args.twice:
@@ -955,7 +970,7 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Di
     from lpbf_simulation import implementation_fingerprint
     path = golden_path(case)
     outcome: Dict[str, Any] = {"case": case.id, "problems": [], "warnings": [], "elapsed_s": 0.0,
-                               "observations": {}, "golden": None}
+                               "observations": {}, "golden": None, "skipped": None}
     if not path.is_file():
         outcome["problems"] = [f"golden missing: {path}"]
         return outcome
@@ -965,7 +980,11 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Di
         outcome["problems"] = [f"golden {path.name} has the wrong schema or case id"]
         return outcome
     current, pinned = implementation_fingerprint(), pinned_fingerprint()
-    observations, hashes, elapsed = execute(case, work_root)
+    try:
+        observations, hashes, elapsed = execute(case, work_root)
+    except CaseSkipped as skipped:
+        outcome["skipped"] = str(skipped)
+        return outcome
     problems, warnings = check_implementation(case, hashes, pinned, current, expect_unpinned)
     problems += diff_observations(golden["observations"], observations)
     recorded_env = golden.get("recordedEnvironment", {})
@@ -983,9 +1002,13 @@ def command_check(args) -> int:
     if args.expect_unpinned:
         print("bump-branch mode (--expect-unpinned): a pin mismatch is a WARNING; observation diffs and "
               "result implementationHash != implementation_fingerprint() still FAIL")
-    failures = 0
+    failures = skips = 0
     for case in selected_cases(args):
         outcome = check_case(case, Path(args.work_root), args.expect_unpinned)
+        if outcome["skipped"] is not None:
+            skips += 1
+            print(f"SKIP {case.id} [{case.group}] NOT VERIFIED: {outcome['skipped']}")
+            continue
         problems, golden = outcome["problems"], outcome["golden"] or {}
         recorded = golden.get("recordedImplementationHash")
         status = "PASS" if not problems else "FAIL"
@@ -1000,8 +1023,15 @@ def command_check(args) -> int:
         if len(problems) > 40:
             print(f"    ... {len(problems) - 40} more")
         failures += bool(problems)
-    print("RESULT:", "PASS" if not failures else f"FAIL ({failures} case(s))")
-    return 1 if failures else 0
+    if failures:
+        print(f"RESULT: FAIL ({failures} case(s))" + (f", {skips} skipped" if skips else ""))
+        return 1
+    if skips:
+        # A skipped case proves nothing: exit 3 so a gate never mistakes it for a pass.
+        print(f"RESULT: INCOMPLETE ({skips} case(s) skipped, not verified)")
+        return 3
+    print("RESULT: PASS")
+    return 0
 
 
 def main(argv: Optional[List[str]] = None) -> int:

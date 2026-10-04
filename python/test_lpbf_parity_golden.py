@@ -37,6 +37,8 @@ def _case_test(case):
         if case.slow and not SLOW:
             self.skipTest("slow case: set LPBF_PARITY_SLOW=1 (G2 bare plate, ~106-140 s)")
         outcome = parity.check_case(case, parity.DEFAULT_WORK_ROOT)
+        if outcome["skipped"] is not None:
+            self.skipTest(f"NOT VERIFIED: {outcome['skipped']}")
         self.assertEqual(outcome["problems"], [], f"{case.id} differs from its golden")
     test.__doc__ = f"{case.group}: {case.description}"
     return test
@@ -194,6 +196,54 @@ class ParityHarnessTests(unittest.TestCase):
                                         expect_unpinned=True)
         self.assertEqual(len(outcome["problems"]), 1)
         self.assertIn("changed fabbro.depth", outcome["problems"][0])
+
+    def test_g11_is_skipped_not_passed_when_warp_is_importable(self):
+        import importlib.util
+        original = importlib.util.find_spec
+
+        def find_spec(name, *args, **kwargs):
+            return object() if name == "warp" else original(name, *args, **kwargs)
+
+        with patch.object(importlib.util, "find_spec", find_spec):
+            outcome = parity.check_case(parity.CASE_BY_ID["g11_build_job_meltpool"], self.root)
+            self.assertIn("warp is importable", outcome["skipped"])
+            self.assertEqual(parity.main(["--check", "--case", "g11_build_job_meltpool",
+                                          "--work-root", str(self.root)]), 3)
+
+    def test_cfd_case_module_falls_back_only_when_lpbf_cfd_cases_itself_is_missing(self):
+        import sys
+        with patch.dict(sys.modules, {"lpbf_cfd_cases": None}):
+            self.assertEqual(parity._cfd_case_module().__name__, "lpbf_cfd")
+        directory = Path(tempfile.mkdtemp(dir=self.root))
+        (directory / "lpbf_cfd_cases.py").write_text("import lpbf_missing_dependency_for_test\n",
+                                                     encoding="utf-8")
+        sys.modules.pop("lpbf_cfd_cases", None)
+        with patch.object(sys, "path", [str(directory), *sys.path]):
+            with self.assertRaises(ModuleNotFoundError) as raised:
+                parity._cfd_case_module()
+        sys.modules.pop("lpbf_cfd_cases", None)
+        self.assertEqual(raised.exception.name, "lpbf_missing_dependency_for_test")
+
+    def test_bump_record_refuses_same_hash_and_foreign_goldens(self):
+        spec = importlib.util.spec_from_file_location("lpbf_bump_record", HERE / "tools" / "lpbf_bump_record.py")
+        bump = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bump)
+        skeleton = bump.build_record(None, False, False)
+        self.assertEqual(skeleton["fromHash"], PRE_BUMP_FINGERPRINT)
+        self.assertEqual(skeleton["from"]["manifestCount"], 37)
+        self.assertIsNone(skeleton["toHash"])
+        with self.assertRaisesRegex(SystemExit, "toHash equals fromHash"):
+            bump.build_record("HEAD", False, False)
+        dry = bump.build_record("HEAD", False, False, allow_same_hash=True)
+        self.assertTrue(dry["dryRunSameHash"])
+        directory = self._mutated_golden_dir("npz_determinism", lambda observations: None)
+        target = directory / "npz_determinism.json"
+        golden = json.loads(target.read_text(encoding="utf-8"))
+        golden["recordedImplementationHash"] = "b" * 64
+        target.write_text(json.dumps(golden), encoding="utf-8")
+        with patch.object(bump, "GOLDEN_DIR", directory):
+            with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
+                bump.build_record(None, False, False)
 
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):
