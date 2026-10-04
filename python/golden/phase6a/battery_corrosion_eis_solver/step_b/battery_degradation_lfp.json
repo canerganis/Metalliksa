@@ -467,7 +467,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "ed805268f2c844eb99868e313375b45703ff9a91",
+ "gitHead": "348ed5c05b4cd38c32caaf7329dd861acc84dbf2",
  "input": {
   "action": "battery_degradation",
   "chargeCRate": 1.5,
@@ -490,7 +490,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "battery_corrosion_eis_solver",
  "solverFile": "python/battery_corrosion_eis_solver.py",
- "solverSha256": "f6ddfa214c5e536d78e966c51b8c4d3e574a54a4bfd4ac5df08329dcb6fa7e2a",
+ "solverSha256": "3c430a767a484785696605996d5459926b9be2a584ba92432c336ec649159029",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
