@@ -53,7 +53,18 @@ import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { buildPourbaixRequest, pourbaixRequestSignature } from "../utils/pourbaixRequest";
 
 
-export function DynamicPourbaixStudio() {
+/** Accessible solver-failure line; shows the existing error text only. */
+export function PourbaixSolveError({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-mono text-red-300">
+      {message}
+    </p>
+  );
+}
+
+/** `initialSolveError` is a render-test seam only (the solver effect resets it before every dispatch). */
+export function DynamicPourbaixStudio({ initialSolveError = null }: { initialSolveError?: string | null } = {}) {
   // Selected Alloy Preset & Custom Elements
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>("carbon-steel");
   const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
@@ -94,7 +105,7 @@ export function DynamicPourbaixStudio() {
   // Python Backend Computation State
   const [pythonPourbaixData, setPythonPourbaixData] = useState<PythonPourbaixResult | null>(null);
   const [isPythonSolving, setIsPythonSolving] = useState<boolean>(false);
-  const [pythonSolveError, setPythonSolveError] = useState<string | null>(null);
+  const [pythonSolveError, setPythonSolveError] = useState<string | null>(initialSolveError);
 
   // Interactive Crosshair Probe
   const [probePH, setProbePH] = useState<number>(7.0);
@@ -973,6 +984,8 @@ export function DynamicPourbaixStudio() {
                   </span>
                 </div>
               </div>
+
+              <PourbaixSolveError message={pythonSolveError} />
 
               {/* Overlay Toggle Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono bg-[#060b13] p-2.5 rounded-xl border border-[#162032]">

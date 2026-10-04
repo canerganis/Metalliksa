@@ -106,8 +106,8 @@ _RAW_CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
                                            "zReal": _EIS_ZR, "zImag": _EIS_ZI,
                                            "applicationDomain": "battery", "cellTemperatureC": 30.0,
                                            "nominalCapacityAh": 4.8},
-        # Pre-existing masking (kept unchanged): an unknown action still returns
-        # {"error": ..., "success": true} with exit code 0.
+        # Recorded as the pre-migration success:true masking; since the V1 follow-up the
+        # solver reports success:false for it (see EXPECTED_SUCCESS_FLAG_CHANGES).
         "edge_unknown_action_success_masking": {"action": "no_such_action"},
     },
     "icme_multiscale_pipeline_solver": {
@@ -135,6 +135,14 @@ CASES: Dict[str, Dict[str, Dict[str, Any]]] = _key_sorted(_RAW_CASES)
 # (solver, case) -> expected validation code after the structural migration.
 EXPECTED_BEHAVIOUR_CHANGES = {
     ("icme_multiscale_pipeline_solver", "edge_unknown_solute_zr"): "UNKNOWN_ELEMENT",
+}
+
+
+# (solver, case) -> the old golden stays on disk as the record of the old behaviour
+# (exit code 0, stdout carried "success": true next to "error"). The solver now returns
+# the same stdout with "success": false; exit code and error message are unchanged.
+EXPECTED_SUCCESS_FLAG_CHANGES = {
+    ("battery_corrosion_eis_solver", "edge_unknown_action_success_masking"),
 }
 
 
