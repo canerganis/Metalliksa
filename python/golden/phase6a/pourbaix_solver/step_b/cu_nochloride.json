@@ -14225,7 +14225,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "f77de3bddb25e589ca69caeaf22fa04db88eeaba",
+ "gitHead": "c981a711748610dc309b71839f0d7af0d611413b",
  "input": {
   "chloride_ppm": 0,
   "element": "Cu",
@@ -14252,7 +14252,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "pourbaix_solver",
  "solverFile": "python/pourbaix_solver.py",
- "solverSha256": "bedd091d7226fca2cb90bfb296385c034aeead2b447a88991d7a01b6b2eca3f3",
+ "solverSha256": "159f49f4379eb11a99f8eb11deceac381fe7404917f040496e05d5ed44c045b7",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

@@ -840,7 +840,9 @@ if __name__ == "__main__":
 
     try:
         # UTF-8 explicitly: the locale code page (cp1254 on Turkish Windows) would garble notes such as "Fe²⁺"
-        raw_input = sys.stdin.buffer.read().decode("utf-8")
+        # (the persistent IPC relay replaces sys.stdin by a text stream without .buffer: use it as is)
+        stdin_bytes = getattr(sys.stdin, "buffer", None)
+        raw_input = stdin_bytes.read().decode("utf-8") if stdin_bytes is not None else sys.stdin.read()
         if not raw_input.strip():
             print(json.dumps({"error": "Empty stdin payload", "errorKind": "internal"}))
             sys.exit(1)
