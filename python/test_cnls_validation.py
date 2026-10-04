@@ -70,20 +70,48 @@ class WarburgConventionTests(unittest.TestCase):
 
     def test_alias_groups_follow_the_boundary_type(self):
         params = {"r": 55.0, "tau": 2.0}
-        wo = solver.evaluate_element_impedance("Wo", params, OMEGA)
-        ws = solver.evaluate_element_impedance("Ws", params, OMEGA)
-        for name in ("ReflectiveWarburg", "FiniteWarburg"):
-            np.testing.assert_array_equal(solver.evaluate_element_impedance(name, params, OMEGA), wo)
-        np.testing.assert_array_equal(solver.evaluate_element_impedance("NernstDiffusion", params, OMEGA), ws)
+        wo = impedance_py_wo(55.0, 2.0, OMEGA)
+        ws = impedance_py_ws(55.0, 2.0, OMEGA)
+        # reflective = blocking = open terminus (coth, impedance.py Wo)
+        np.testing.assert_allclose(solver.evaluate_element_impedance("ReflectiveWarburg", params, OMEGA), wo, rtol=1e-9)
+        # finite-length / transmissive = short terminus (tanh, impedance.py Ws: "short (finite-length)")
+        for name in ("FiniteWarburg", "NernstDiffusion"):
+            np.testing.assert_allclose(solver.evaluate_element_impedance(name, params, OMEGA), ws, rtol=1e-9)
         self.assertGreater(np.max(np.abs(wo - ws)), 1.0)
 
-    def test_reflective_preset_keeps_its_coth_physics(self):
+    def test_extract_puts_each_alias_in_the_table_of_the_element_it_evaluates_as(self):
+        def params_of(el_type):
+            topology = {"branches": [{"connection": "series", "elements": [
+                {"id": "w", "name": "W1", "type": el_type, "value": 80.0, "exponent": 1.2}]}]}
+            return solver.extract_topology_parameters(topology)
+
+        # same parameter table within a boundary group; evaluating the custom topology agrees
+        for el_type in ("OpenWarburg", "ReflectiveWarburg"):
+            self.assertEqual(params_of(el_type), params_of("Wo"))
+        for el_type in ("ShortWarburg", "FiniteWarburg", "NernstDiffusion"):
+            self.assertEqual(params_of(el_type), params_of("Ws"))
+        self.assertEqual(params_of("BisquertTrans"), params_of("TLM_short"))
+        self.assertEqual(params_of("BisquertOpen"), params_of("TLM_open"))
+        self.assertEqual(len(params_of("BisquertTrans")), 4)  # Rion, Rct, Qd, alpha: a real table, not nothing
+
+    def test_bisquert_trans_evaluates_as_tlm_short(self):
+        params = {"value": 40.0, "rct": 150.0, "qd": 2e-4, "exponent": 0.9}
+        np.testing.assert_array_equal(solver.evaluate_element_impedance("BisquertTrans", params, OMEGA),
+                                      solver.evaluate_element_impedance("TLM_short", params, OMEGA))
+
+    def test_reflective_presets_keep_their_coth_physics(self):
         params = {"Rs": 5.0, "Rct": 50.0, "Qdl": 2e-5, "ndl": 0.9, "Rd": 80.0, "tau_d": 1.2}
-        got = solver.evaluate_circuit_impedance("finite_reflective_warburg", params, OMEGA)
         z_f = 50.0 + impedance_py_wo(80.0, 1.2, OMEGA)
         z_cpe = 1.0 / (2e-5 * OMEGA ** 0.9 * np.exp(1j * 0.9 * np.pi / 2.0))
         expected = 5.0 + z_f * z_cpe / (z_f + z_cpe)
-        np.testing.assert_allclose(got, expected, rtol=1e-9)
+        # ws_reflective is the legacy id of the same open/reflective circuit (not the tanh Ws element)
+        for topology_id in ("finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective"):
+            with self.subTest(topology=topology_id):
+                np.testing.assert_allclose(solver.evaluate_circuit_impedance(topology_id, params, OMEGA),
+                                           expected, rtol=1e-9)
+        z_tanh = 50.0 + impedance_py_ws(80.0, 1.2, OMEGA)
+        wrong = 5.0 + z_tanh * z_cpe / (z_tanh + z_cpe)
+        self.assertGreater(np.max(np.abs(wrong - expected)), 1.0)
 
 
 class UnknownElementTests(unittest.TestCase):
@@ -152,6 +180,20 @@ class UnknownTopologyTests(unittest.TestCase):
         # a known preset with no default parameter table is refused too, not given Rs/Rct
         with self.assertRaises(input_validation.ValidationError):
             solver.extract_topology_parameters("gerischer")
+
+    def test_preset_aliases_get_the_parameter_table_of_the_circuit_they_evaluate_as(self):
+        pairs = (("rs_rcpe", "randles_cpe"), ("cpe_randles", "randles_cpe"),
+                 ("coated_metal", "two_time_constants"), ("oxide_coating", "two_time_constants"),
+                 ("tlm", "bisquert_open"), ("tlm_open", "bisquert_open"), ("porous_electrode", "bisquert_open"),
+                 ("transmission_line", "bisquert_open"), ("warburg", "randles_warburg"), ("rc_parallel", "standard_randles"))
+        for alias, base in pairs:
+            with self.subTest(alias=alias):
+                table = solver.extract_topology_parameters(alias)
+                self.assertEqual(table, solver.extract_topology_parameters(base))
+                self.assertGreaterEqual(len(table), 3)  # a real table, not the old two-resistor fallback
+                values = {row["paramName"]: row["value"] for row in table}
+                np.testing.assert_allclose(solver.evaluate_circuit_impedance(alias, values, OMEGA),
+                                           solver.evaluate_circuit_impedance(base, values, OMEGA), rtol=1e-12)
 
     def test_every_preset_id_evaluates_finite_and_scalar_matches_array(self):
         for topology_id in solver.PRESET_TOPOLOGY_IDS:

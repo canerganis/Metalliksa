@@ -44,8 +44,8 @@ def _validation_error(code, field, message, detail):
 # a silent 1 Ohm for an unknown element.
 ELEMENT_TYPES = (
     "R", "Resistor", "C", "Capacitor", "CPE", "ConstantPhaseElement", "Q", "W", "Warburg",
-    "Wo", "OpenWarburg", "ReflectiveWarburg", "FiniteWarburg",
-    "Ws", "ShortWarburg", "NernstDiffusion",
+    "Wo", "OpenWarburg", "ReflectiveWarburg",
+    "Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion",
     "G", "Gerischer", "CC", "ColeCole", "HN", "HavriliakNegami",
     "TLM_open", "BisquertOpen", "TLM_short", "BisquertShort", "BisquertTrans", "L", "Inductor",
 )
@@ -61,7 +61,7 @@ PRESET_TOPOLOGY_IDS = (
     "bisquert_short", "tlm_short", "dssc_tlm", "porous_catalytic",
     "gerischer", "gerischer_diffusion", "sofc_cathode",
     "havriliak_negami", "hn_dielectric", "solid_polymer_electrolyte",
-    "finite_reflective_warburg", "intercalation_warburg", "ws_reflective",
+    "finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective",
 )
 
 
@@ -103,7 +103,10 @@ def evaluate_element_impedance(el_type, params, omega):
       Z = Rd*tanh(sqrt(j*w*tau))/sqrt(j*w*tau)  (ZView / impedance.py "Ws")
     (impedance.py elements.py: Wo = Z0/(sqrt(j w tau) tanh(...)) = coth form, Ws = tanh form;
     before this fix the two names were swapped here.)
-    - ReflectiveWarburg / FiniteWarburg alias Wo (coth); NernstDiffusion aliases Ws (tanh).
+    - Aliases: ReflectiveWarburg = Wo (reflective = blocking = open terminus, coth).
+      FiniteWarburg and NernstDiffusion = Ws (finite-length / transmissive terminus, tanh);
+      impedance.py calls the tanh element "short (finite-length) Warburg". FiniteWarburg
+      used to return coth (the open form) here, which contradicted that naming.
     - G / Gerischer: Chemical reaction coupled with diffusion
     - CC / ColeCole: Cole-Cole dielectric relaxation
     - HN / HavriliakNegami: Havriliak-Negami asymmetric dielectric relaxation
@@ -136,7 +139,7 @@ def evaluate_element_impedance(el_type, params, omega):
         val = sigma / sqrt_w
         return val * (1.0 - 1j) if is_arr else complex(val, -val)
     
-    elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg", "FiniteWarburg"]:
+    elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg"]:
         # Open (reflective / blocking) terminus, impedance.py Wo: Z = Rd * coth(sqrt(j*w*tau)) / sqrt(j*w*tau)
         r = max(1e-6, params.get("value", params.get("resistance", params.get("r", 100.0))))
         t = max(1e-6, params.get("exponent", params.get("timeConstant", params.get("tau", 0.5))))
@@ -156,7 +159,7 @@ def evaluate_element_impedance(el_type, params, omega):
                 return complex(1e12, 0.0)
             return (r / arg) * (1.0 / tanh_val)
 
-    elif el_type in ["Ws", "ShortWarburg", "NernstDiffusion"]:
+    elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion"]:
         # Short (transmissive) terminus, impedance.py Ws: Z = Rd * tanh(sqrt(j*w*tau)) / sqrt(j*w*tau)
         r = max(1e-6, params.get("value", params.get("resistance", params.get("r", 100.0))))
         t = max(1e-6, params.get("exponent", params.get("timeConstant", params.get("tau", 0.5))))
@@ -450,8 +453,11 @@ def evaluate_circuit_impedance(topology_data, params_dict, omega):
         el_hn = {"r0": r0, "tau": tau, "alpha": alpha, "beta": beta}
         return rs + evaluate_element_impedance("HN", el_hn, omega)
 
-    # Finite Reflective Warburg (Thin-Film Intercalation)
-    elif topology_id in ["finite_reflective_warburg", "intercalation_warburg", "ws_reflective"]:
+    # Finite Reflective Warburg (Thin-Film Intercalation): reflective = blocking = open terminus
+    # = coth = impedance.py Wo. "wo_reflective" is the ZView/impedance.py-consistent id;
+    # "ws_reflective" is the legacy id from the pre-fix mnemonic (where "Ws" meant coth) and
+    # is kept only so existing callers keep their numbers: it is NOT the tanh Ws element.
+    elif topology_id in ["finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective"]:
         rs = params_dict.get("Rs", 5.0)
         rct = params_dict.get("Rct", 50.0)
         qdl = params_dict.get("Qdl", 2e-5)
@@ -599,7 +605,7 @@ def extract_topology_parameters(topology_data):
                         "max": 1e7,
                         "isFixed": is_fixed,
                     })
-                elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg", "FiniteWarburg"]:
+                elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg"]:
                     params.append({
                         "paramName": f"Rd_{el_name}",
                         "elementId": el_id,
@@ -622,7 +628,7 @@ def extract_topology_parameters(topology_data):
                         "max": 1e4,
                         "isFixed": is_fixed,
                     })
-                elif el_type in ["Ws", "ShortWarburg", "NernstDiffusion"]:
+                elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion"]:
                     params.append({
                         "paramName": f"Rd_{el_name}",
                         "elementId": el_id,
@@ -1431,9 +1437,12 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1
     Computes true effective double-layer and film capacitances (C_eff) from Constant Phase Elements (CPE, Q, n)
     using the Brug (2D surface distribution) and Hsu-Mansfeld (peak-frequency) models.
     The former "Hirschorn" value was algebraically identical to Hsu-Mansfeld
-    (Q^(1/n) R^((1-n)/n) = (Q R^(1-n))^(1/n)); it is removed. The real Hirschorn power-law
-    (normal-distribution) capacitance, Hirschorn et al., Electrochim. Acta 55 (2010) 6218,
-    needs the film thickness and resistivity, which are not inputs here, so it is not computed.
+    (Q^(1/n) R^((1-n)/n) = (Q R^(1-n))^(1/n), verified numerically); it is removed.
+    Hirschorn et al., Electrochim. Acta 55 (2010) 6218, whose abstract (the only part
+    read) states that the effective-capacitance formula must match the type of
+    time-constant distribution (surface or normal), is not otherwise implemented here: no
+    separate normal-distribution formula is computed, and which inputs it would need
+    was not verified.
     """
     cpe_results = []
     area = max(1e-6, float(electrode_area or 1.0))

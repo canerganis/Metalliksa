@@ -22,6 +22,7 @@ detects a perturbed kernel.
 """
 
 import json
+import re
 import math
 import sys
 import tempfile
@@ -88,13 +89,18 @@ def _display_unit(value):
 
 # Documented change (cnls_fitting_solver, fx-xrd lane): the faa6684 "Hirschorn" capacitance
 # was algebraically identical to the Hsu-Mansfeld one, so cHirschorn_F / cHirschorn_uF are
-# removed. A removal is tolerated ONLY for these two leaves, and only when the old golden
-# value equals its sibling Hsu-Mansfeld value to 1e-12 relative (the duplicate claim holds on
-# the data).
+# removed. A removal is tolerated ONLY for these two leaves, ONLY for the cnls_fitting_solver
+# (the caller passes solver=), ONLY at the cnls row path [physicalValidation.]cpeCapacitances[i].<leaf>,
+# and only when the old golden value equals its sibling Hsu-Mansfeld value to 1e-12 relative
+# (the duplicate claim holds on the data).
+HIRSCHORN_SOLVER = "cnls_fitting_solver"
+HIRSCHORN_PATH = re.compile(r"^(?:physicalValidation\.)?cpeCapacitances\[\d+\]\.(cHirschorn_F|cHirschorn_uF)$")
 HIRSCHORN_REMOVED_LEAVES = {"cHirschorn_F": "cHsuMansfeld_F", "cHirschorn_uF": "cHsuMansfeld_uF"}
 
 
-def _is_documented_hirschorn_removal(row, old_flat):
+def _is_documented_hirschorn_removal(row, old_flat, solver=None):
+    if solver != HIRSCHORN_SOLVER or not HIRSCHORN_PATH.match(row["key"]):
+        return False
     leaf = row["key"].rsplit(".", 1)[-1]
     sibling = HIRSCHORN_REMOVED_LEAVES.get(leaf)
     if sibling is None:
@@ -105,7 +111,7 @@ def _is_documented_hirschorn_removal(row, old_flat):
             and abs(old_flat[sibling_key] - row["old"]) <= 1e-12 * abs(row["old"]))
 
 
-def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
+def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False, solver=None):
     """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
 
     display_unit=True (only for spawn runs compared with the committed goldens,
@@ -117,7 +123,7 @@ def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
     bad = []
     old_flat = dict(drift_report.flatten(old))
     for row in drift_report.diff(old, new):
-        if row["kind"] == "removed" and _is_documented_hirschorn_removal(row, old_flat):
+        if row["kind"] == "removed" and _is_documented_hirschorn_removal(row, old_flat, solver):
             continue
         if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
             if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
@@ -270,7 +276,7 @@ class GoldenParityTest(unittest.TestCase):
                 if mode == "minimiser":
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
                     continue
-                rows = (tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True) if mode == "tolerance"
+                rows = (tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True, solver=solver) if mode == "tolerance"
                         else drift_report.diff(doc["stdout"], fresh["stdout"]))
                 self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
 
@@ -292,22 +298,44 @@ def _in_process(solver, case_or_payload, module=None):
 
 class HirschornRemovalGuardTest(unittest.TestCase):
     """The documented cHirschorn_* removal is tolerated exactly, nothing more."""
+    CNLS = "cnls_fitting_solver"
 
-    def test_documented_removal_is_tolerated(self):
-        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHirschorn_uF": 1.5, "cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15),
-                      "cHsuMansfeld_uF": 1.5}]}
-        new = {"c": [{"cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15), "cHsuMansfeld_uF": 1.5}]}
-        self.assertEqual(tolerance_violations(old, new), [])
+    @staticmethod
+    def rows(values, prefix="physicalValidation"):
+        return {prefix: {"cpeCapacitances": [values]}}
+
+    def test_documented_removal_is_tolerated_for_the_cnls_solver_at_its_path(self):
+        old = self.rows({"cHirschorn_F": 1.5e-6, "cHirschorn_uF": 1.5, "cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15),
+                         "cHsuMansfeld_uF": 1.5})
+        new = self.rows({"cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15), "cHsuMansfeld_uF": 1.5})
+        self.assertEqual(tolerance_violations(old, new, solver=self.CNLS), [])
+        # the validate_dataset action has no physicalValidation wrapper
+        self.assertEqual(tolerance_violations({"cpeCapacitances": old["physicalValidation"]["cpeCapacitances"]},
+                                              {"cpeCapacitances": new["physicalValidation"]["cpeCapacitances"]},
+                                              solver=self.CNLS), [])
+
+    def test_removal_is_refused_for_other_solvers_and_other_paths(self):
+        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6})
+        new = self.rows({"cHsuMansfeld_F": 1.5e-6})
+        self.assertEqual(len(tolerance_violations(old, new)), 1)  # no solver
+        self.assertEqual(len(tolerance_violations(old, new, solver="xrd_peak_deconvolution")), 1)
+        self.assertEqual(len(tolerance_violations(old, new, solver="dft_property_calculator")), 1)
+        elsewhere = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}
+        self.assertEqual(len(tolerance_violations(elsewhere, {"c": [{"cHsuMansfeld_F": 1.5e-6}]}, solver=self.CNLS)), 1)
+        deeper = {"x": {"cpeCapacitances": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}}
+        self.assertEqual(len(tolerance_violations(deeper, {"x": {"cpeCapacitances": [{"cHsuMansfeld_F": 1.5e-6}]}},
+                                                  solver=self.CNLS)), 1)
 
     def test_removal_is_refused_when_the_values_are_not_duplicates(self):
-        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.6e-6}]}
-        self.assertEqual(len(tolerance_violations(old, {"c": [{"cHsuMansfeld_F": 1.6e-6}]})), 1)
+        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.6e-6})
+        self.assertEqual(len(tolerance_violations(old, self.rows({"cHsuMansfeld_F": 1.6e-6}), solver=self.CNLS)), 1)
 
     def test_other_removed_keys_and_changed_values_are_still_violations(self):
-        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.0e-6}]}
-        self.assertEqual(len(tolerance_violations(old, {"c": [{"cHsuMansfeld_F": 1.5e-6}]})), 1)
-        changed = {"c": [{"cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.1e-6}]}
-        self.assertEqual([r["key"] for r in tolerance_violations(old, changed)], ["c[0].cBrug_F"])
+        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.0e-6})
+        self.assertEqual(len(tolerance_violations(old, self.rows({"cHsuMansfeld_F": 1.5e-6}), solver=self.CNLS)), 1)
+        changed = self.rows({"cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.1e-6})
+        self.assertEqual([r["key"] for r in tolerance_violations(old, changed, solver=self.CNLS)],
+                         ["physicalValidation.cpeCapacitances[0].cBrug_F"])
 
 
 @require_git_revision(GIT, f"git or revision {BASE} unavailable")
@@ -328,7 +356,7 @@ class CnlsKernelParityTest(unittest.TestCase):
             with self.subTest(case=case):
                 old = _in_process("cnls_fitting_solver", payload, old_module)
                 new = _in_process("cnls_fitting_solver", payload)
-                rows = tolerance_violations(old, new)
+                rows = tolerance_violations(old, new, solver="cnls_fitting_solver")
                 self.assertEqual(rows, [], drift_report.render(case, rows, 20))
 
     @staticmethod

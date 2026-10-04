@@ -223,10 +223,10 @@ export interface PythonXRDResult {
   williamsonHall: {
     linear_slope_4_epsilon: number;
     intercept_K_lambda_over_D: number;
-    microstrain_epsilon: number;
-    microstrain_percent: number;
-    crystallite_size_nm: number;
-    dislocation_density_m_minus_2: number;
+    microstrain_epsilon: number | null;
+    microstrain_percent: number | null;
+    crystallite_size_nm: number | null;
+    dislocation_density_m_minus_2: number | null;
     r_squared: number;
   };
 }

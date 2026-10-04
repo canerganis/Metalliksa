@@ -6,6 +6,7 @@ only, not experimental validation.
 """
 import math
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from scipy import integrate
@@ -78,21 +79,59 @@ class WilliamsonHallTests(unittest.TestCase):
             out.append({"twoTheta": two_theta, "fwhm": math.degrees(beta), "instrumentalBroadening": 0.0})
         return out
 
-    def test_dislocation_density_is_the_williamson_smallman_value(self):
-        # rho = 2*sqrt(3) * eps / (D * b), SI units; independent hand value for
-        # D = 40 nm, eps = 1.5e-3, b = 0.25 nm: 2*1.7320508*1.5e-3 / (40e-9 * 0.25e-9)
-        expected = 2.0 * math.sqrt(3.0) * 1.5e-3 / (40e-9 * 0.25e-9)
-        self.assertAlmostEqual(expected / 5.196152e14, 1.0, places=6)
+    def test_dislocation_density_uses_the_rms_strain_under_the_gaussian_assumption(self):
+        # rho = 2*sqrt(3) * <eps^2>^(1/2) / (D * b), SI units. The Williamson-Hall slope is the
+        # apparent (Stokes-Wilson) strain e; rms = e / sqrt(2 ln 2) = 0.8493 e (Gaussian strain,
+        # FWHM breadth). Hand value for D = 40 nm, e = 1.5e-3, b = 0.25 nm:
+        # 2*1.7320508*(1.5e-3*0.8493218) / (40e-9 * 0.25e-9) = 4.4132e14 m^-2
+        rms = 1.5e-3 / math.sqrt(2.0 * math.log(2.0))
+        self.assertAlmostEqual(rms / (1.5e-3 * 0.8493218), 1.0, places=6)
+        expected = 2.0 * math.sqrt(3.0) * rms / (40e-9 * 0.25e-9)
+        self.assertAlmostEqual(expected / 4.4132e14, 1.0, delta=2e-5)
         result = xrd.solve_williamson_hall(self.peaks(40.0, 1.5e-3))
         self.assertAlmostEqual(result["crystalliteSize_nm"], 40.0, delta=0.01)
-        self.assertAlmostEqual(result["microstrain_epsilon"], 1.5e-3, delta=1e-6)
+        self.assertAlmostEqual(result["microstrain_epsilon"], 1.5e-3, delta=1e-6)  # apparent strain kept
+        self.assertAlmostEqual(result["microstrainRms_epsilon"], rms, delta=1e-6)
         self.assertAlmostEqual(result["dislocationDensity_m2"] / expected, 1.0, delta=1e-3)
-        self.assertAlmostEqual(result["dislocationDensity_x10_14_m2"], 5.196, delta=0.005)
+        self.assertAlmostEqual(result["dislocationDensity_x10_14_m2"], 4.413, delta=0.005)
         self.assertEqual(result["microstrainStatus"], "resolved")
         self.assertEqual(result["crystalliteSizeStatus"], "resolved")
-        self.assertEqual(result["dislocationDensityStatus"], "computed-williamson-smallman-2sqrt3")
-        # the pre-fix value (factor sqrt(3), i.e. half) must be rejected
-        self.assertGreater(abs(result["dislocationDensity_m2"] / (expected / 2.0) - 1.0), 0.9)
+        self.assertEqual(result["dislocationDensityStatus"],
+                         "computed-williamson-smallman-2sqrt3-rms-strain-gaussian-assumption")
+        self.assertIn("apparent (Stokes-Wilson)", result["strainDefinition"])
+        self.assertIn("Gaussian", result["strainDefinition"])
+        self.assertEqual(result["williamsonHallStatus"], "ok")
+        # rejected: the sqrt(3) factor (half), the 2*sqrt(3) on the apparent strain (+17.7 %)
+        apparent_based = 2.0 * math.sqrt(3.0) * 1.5e-3 / (40e-9 * 0.25e-9)
+        for wrong in (expected / 2.0, apparent_based):
+            self.assertGreater(abs(result["dislocationDensity_m2"] / wrong - 1.0), 0.1)
+        self.assertAlmostEqual(apparent_based / expected, 1.1774100, places=6)
+
+    def test_instrumental_width_not_below_observed_is_excluded_not_invented(self):
+        good = self.peaks(40.0, 1.5e-3)
+        reference = xrd.solve_williamson_hall(good)
+        # a peak whose observed width equals / is below the instrumental one (old code: 0.0316 deg)
+        bad = [{"twoTheta": 51.0, "fwhm": 0.05, "instrumentalBroadening": 0.06},
+               {"twoTheta": 90.0, "fwhm": 0.06, "instrumentalBroadening": 0.06}]
+        mixed = xrd.solve_williamson_hall(good + bad)
+        self.assertEqual(mixed["excludedPeakCount"], 2)
+        rows = {row["twoTheta"]: row for row in mixed["whRegressionPoints"]}
+        for two_theta in (51.0, 90.0):
+            self.assertIsNone(rows[two_theta]["fwhm_phys_deg"])
+            self.assertIsNone(rows[two_theta]["y_betaCosTheta"])
+            self.assertEqual(rows[two_theta]["status"], "excluded-instrumental-width-not-below-observed")
+        # the regression is exactly the one without the excluded peaks
+        for key in ("slope", "intercept", "crystalliteSize_nm", "microstrain_epsilon", "dislocationDensity_m2"):
+            self.assertEqual(mixed[key], reference[key], key)
+
+    def test_fewer_than_two_resolvable_peaks_gives_unavailable_everything(self):
+        peaks = self.peaks(40.0, 1.5e-3)[:1] + [{"twoTheta": 51.0, "fwhm": 0.05, "instrumentalBroadening": 0.06}]
+        result = xrd.solve_williamson_hall(peaks)
+        self.assertTrue(result["success"])
+        self.assertEqual(result["williamsonHallStatus"], "unavailable-fewer-than-2-peaks-wider-than-instrumental")
+        for key in ("crystalliteSize_nm", "microstrain_epsilon", "microstrainRms_epsilon",
+                    "dislocationDensity_m2", "slope", "intercept", "rSquared"):
+            self.assertIsNone(result[key], key)
 
     def test_nonpositive_slope_is_unavailable_not_clamped(self):
         # FWHM shrinking with 2theta: negative slope (no strain broadening resolved)
@@ -145,6 +184,51 @@ class RwpReportingTests(unittest.TestCase):
         self.assertAlmostEqual(reported, independent, delta=0.05)
         self.assertTrue(out["fitDiagnostics"]["poorFit"])
         self.assertEqual(out["fitDiagnostics"]["rWpPoorFitThresholdPct"], 15.0)
+
+    def test_non_converged_fit_is_flagged_even_with_a_small_residual(self):
+        original = xrd._fit_profile_least_squares
+
+        def not_converged(*args, **kwargs):
+            solution, info = original(*args, **kwargs)
+            return solution, dict(info, status=0)  # scipy status 0 = evaluation budget exhausted
+
+        with patch.object(xrd, "_fit_profile_least_squares", not_converged):
+            out = xrd.deconvolve_peak_roi(self.noisy_points(1.0), 43.5, 150.0, 0.2, enable_ka2=False)
+        self.assertLess(out["goodnessOfFit"]["r_wp_pct"], 2.0)
+        self.assertEqual(out["fitDiagnostics"]["status"], 0)
+        self.assertTrue(out["fitDiagnostics"]["poorFit"])
+
+    def test_r_wp_has_no_denominator_clamp(self):
+        # intensities far below 1 count: sum(y^2) << 1, where the old max(1.0, .) understated r_wp
+        rng = np.random.RandomState(7)
+        tt = np.linspace(42.0, 45.0, 121)
+        y = 0.01 + 0.03 / (1.0 + ((tt - 43.5) / 0.1) ** 2) + rng.normal(0.0, 0.002, tt.size)
+        points = [{"twoTheta": float(a), "sampleIntensity": float(b)} for a, b in zip(tt, y)]
+        original = xrd._fit_profile_least_squares
+        captured = {}
+
+        def spy(*args, **kwargs):
+            captured["x"], info = original(*args, **kwargs)
+            return captured["x"], info
+
+        with patch.object(xrd, "_fit_profile_least_squares", spy):
+            out = xrd.deconvolve_peak_roi(points, 43.5, 0.03, 0.2, enable_ka2=False)
+        self.assertTrue(out["fitDiagnostics"]["accepted"])
+        c1, i1, w1, shape, b0, b1 = captured["x"]
+        model = b0 + b1 * tt + xrd._profile_array(tt, c1, i1, w1, shape, "pseudo-voigt")
+        sse = float(np.sum((y - model) ** 2))
+        self.assertLess(float(y @ y), 0.5)
+        independent = 100.0 * math.sqrt(sse / float(y @ y))
+        self.assertAlmostEqual(out["goodnessOfFit"]["r_wp_pct"], independent, delta=0.01)
+        clamped = 100.0 * math.sqrt(sse / 1.0)
+        self.assertGreater(independent / clamped, 2.0)  # the old clamp understated it more than 2x
+
+    def test_all_zero_intensities_give_unavailable_r_wp(self):
+        tt = np.linspace(42.0, 45.0, 21)
+        points = [{"twoTheta": float(a), "sampleIntensity": 0.0} for a in tt]
+        out = xrd.deconvolve_peak_roi(points, 43.5, 10.0, 0.2, enable_ka2=False)
+        self.assertIsNone(out["goodnessOfFit"]["r_wp_pct"])
+        self.assertTrue(out["fitDiagnostics"]["poorFit"])
 
     def test_good_fit_is_not_flagged(self):
         out = xrd.deconvolve_peak_roi(self.noisy_points(1.0), 43.5, 150.0, 0.2, enable_ka2=False)

@@ -188,6 +188,16 @@ XRD_ENGINE = "MetalliX-Python-HPC-XRD-v4.1"  # v4.0 = scipy fit; v3.10 = faa6684
 # reported r_wp_pct before v4.1; it is now only a flag (fitDiagnostics.poorFit) and the
 # reported value is never clipped.
 R_WP_POOR_FIT_PCT = 15.0
+WH_ENGINE = "MetalliX-Python-HPC-WilliamsonHall-v3.12"
+# The Williamson-Hall slope of beta*cos(theta) vs 4*sin(theta) with beta = FWHM is the
+# Stokes-Wilson apparent (upper-limit) strain e = beta/(4 tan(theta)). The Williamson-Smallman
+# relation needs the rms strain <eps^2>^(1/2). For a Gaussian strain distribution the FWHM of
+# the 2theta profile is 4*sqrt(2 ln 2)*<eps^2>^(1/2)*tan(theta), hence e = sqrt(2 ln 2) * rms
+# (Gaussian assumption; for Lorentzian strain broadening the rms strain does not exist).
+GAUSSIAN_RMS_FROM_FWHM_STRAIN = 1.0 / math.sqrt(2.0 * math.log(2.0))
+WH_STRAIN_DEFINITION = ("microstrain_epsilon = apparent (Stokes-Wilson) strain from the FWHM Williamson-Hall slope; "
+                        "microstrainRms_epsilon = rms strain assumed Gaussian: e/sqrt(2 ln 2) = 0.8493 e; "
+                        "dislocation density uses the rms strain")
 R_WP_DEFINITION = "100*sqrt(sum((y_obs - y_fit)^2) / sum(y_obs^2)); unweighted, not the Rietveld Rwp"
 FREE_PARAMETERS = 6  # center, intensity, fwhm, eta|m, background intercept, slope
 MINIMISER = "scipy.optimize.least_squares (trf, bounded; guess and data-driven starts)"
@@ -359,7 +369,10 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         })
 
     compute_time_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-    r_wp_pct = math.sqrt(current_loss / max(1.0, sum(p['sampleIntensity'] ** 2 for p in points))) * 100.0
+    # Unweighted relative residual. No denominator clamp: if the observed intensities are all
+    # zero the quantity is undefined and reported as null (never an understated value).
+    intensity_sq = sum(p['sampleIntensity'] ** 2 for p in points)
+    r_wp_pct = math.sqrt(current_loss / intensity_sq) * 100.0 if intensity_sq > 0.0 else None
 
     return {
         "success": True,
@@ -385,7 +398,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         },
         "goodnessOfFit": {
             "residualSumSquares": round(current_loss, 2),
-            "r_wp_pct": round(r_wp_pct, 2)
+            "r_wp_pct": round(r_wp_pct, 2) if r_wp_pct is not None else None
         },
         "deconvolutionProfile": fitted_curve_profile,
         # Additive (v4.0): how the minimiser ended. status/message/nfev are scipy's
@@ -400,7 +413,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
             "accepted": accepted,
             "rWpDefinition": R_WP_DEFINITION,
             "rWpPoorFitThresholdPct": R_WP_POOR_FIT_PCT,
-            "poorFit": r_wp_pct > R_WP_POOR_FIT_PCT or fit_info["status"] == 0,
+            "poorFit": r_wp_pct is None or r_wp_pct > R_WP_POOR_FIT_PCT or fit_info["status"] == 0,
         }
     }
 
@@ -420,7 +433,8 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
     x_pts = [] # 4 * sin(theta)
     y_pts = [] # beta_rad * cos(theta)
     table_data = []
-    
+    excluded_peaks = 0
+
     for p in peaks:
         tt_deg = float(p.get("twoTheta", 40.0))
         theta_rad = math.radians(tt_deg / 2.0)
@@ -429,21 +443,38 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
         fwhm_deg = float(p.get("fwhm_deconvoluted", p.get("fwhm", 0.25)))
         inst_broadening_deg = float(p.get("instrumentalBroadening", 0.06))
         
-        # Correct for instrumental broadening: beta_phys^2 = beta_obs^2 - beta_inst^2
-        fwhm_phys_deg = math.sqrt(max(0.001, fwhm_deg ** 2 - inst_broadening_deg ** 2))
-        beta_rad = math.radians(fwhm_phys_deg)
-        
         sin_t = math.sin(theta_rad)
         cos_t = math.cos(theta_rad)
-        
+        d_spacing_A = wavelength_A / (2.0 * max(1e-6, sin_t))
+
+        # Correct for instrumental broadening in quadrature (exact only when both profiles are
+        # Gaussian): beta_phys^2 = beta_obs^2 - beta_inst^2. If the instrumental width is not
+        # smaller than the observed width there is no resolvable physical broadening: the
+        # peak is excluded from the regression and reported as unavailable (it used to be
+        # replaced by an invented 0.0316 deg width).
+        phys_sq = fwhm_deg ** 2 - inst_broadening_deg ** 2
+        if not phys_sq > 0.0:
+            excluded_peaks += 1
+            table_data.append({
+                "twoTheta": tt_deg,
+                "hkl": p.get("hkl", "(hkl)"),
+                "fwhm_obs_deg": round(fwhm_deg, 4),
+                "fwhm_phys_deg": None,
+                "d_spacing_A": round(d_spacing_A, 4),
+                "x_4sinTheta": None,
+                "y_betaCosTheta": None,
+                "status": "excluded-instrumental-width-not-below-observed"
+            })
+            continue
+        fwhm_phys_deg = math.sqrt(phys_sq)
+        beta_rad = math.radians(fwhm_phys_deg)
+
         x_val = 4.0 * sin_t
         y_val = beta_rad * cos_t
-        
-        d_spacing_A = wavelength_A / (2.0 * max(1e-6, sin_t))
-        
+
         x_pts.append(x_val)
         y_pts.append(y_val)
-        
+
         table_data.append({
             "twoTheta": tt_deg,
             "hkl": p.get("hkl", "(hkl)"),
@@ -451,8 +482,30 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
             "fwhm_phys_deg": round(fwhm_phys_deg, 4),
             "d_spacing_A": round(d_spacing_A, 4),
             "x_4sinTheta": round(x_val, 5),
-            "y_betaCosTheta": round(y_val, 6)
+            "y_betaCosTheta": round(y_val, 6),
+            "status": "used"
         })
+
+    if len(x_pts) < 2:
+        # Fewer than two peaks with a resolvable physical width: nothing is regressed.
+        return {
+            "success": True,
+            "engine": WH_ENGINE,
+            "computeTimeMs": round((time.perf_counter() - start_time) * 1000.0, 2),
+            "williamsonHallStatus": "unavailable-fewer-than-2-peaks-wider-than-instrumental",
+            "excludedPeakCount": excluded_peaks,
+            "crystalliteSize_nm": None, "crystalliteSize_A": None,
+            "crystalliteSizeStatus": "unavailable-no-regression",
+            "microstrain_epsilon": None, "microstrain_percent": None,
+            "microstrainRms_epsilon": None,
+            "microstrainStatus": "unavailable-no-regression",
+            "strainDefinition": WH_STRAIN_DEFINITION,
+            "dislocationDensity_m2": None, "dislocationDensity_x10_14_m2": None,
+            "dislocationDensityStatus": "unavailable-no-regression",
+            "rSquared": None, "slope": None, "intercept": None,
+            "whRegressionPoints": table_data,
+            "fitLine": []
+        }
         
     # Linear Regression: y = slope * x + intercept
     n = len(x_pts)
@@ -496,18 +549,25 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
     #     rho = 2*sqrt(3) * <epsilon^2>^(1/2) / (D * b)
     # (G. K. Williamson and R. E. Smallman, Phil. Mag. 1 (1956) 34-46, "Dislocation densities
     # in some annealed and cold-worked metals from measurements on the X-ray Debye-Scherrer
-    # spectrum"; D = crystallite size, b = Burgers vector). Before v3.11 the factor was
-    # sqrt(3), i.e. half of this relation. ASSUMPTION: the Williamson-Hall slope is used
-    # for the rms strain <epsilon^2>^(1/2) without a strain-definition conversion, so rho
-    # is an order-of-magnitude screening value, not a line-profile (Warren-Averbach /
-    # CMWP) dislocation density. Needs a resolved strain and size, else unavailable.
+    # spectrum"; R. E. Smallman and K. H. Westmacott, Phil. Mag. 2 (1957) 669; the 2*sqrt(3)
+    # rms form as quoted by Zhao et al., Acta Mater. 52 (2004) 4589, sec. 3.3.5; D =
+    # crystallite size, b = Burgers vector). Before v3.11 the factor was sqrt(3), i.e. half.
+    # The relation needs the RMS strain, but the Williamson-Hall slope is the apparent
+    # (Stokes-Wilson) strain; it is converted with the Gaussian-strain factor
+    # 1/sqrt(2 ln 2) (see GAUSSIAN_RMS_FROM_FWHM_STRAIN; with the integral breadth instead of
+    # the FWHM the factor would be sqrt(2/pi), Balzar, J. Res. NIST 98 (1993) 321, eq. 49).
+    # rho is therefore a screening value under a stated Gaussian-strain assumption, not a
+    # line-profile (Warren-Averbach / CMWP) dislocation density. The apparent strain stays
+    # in the output as microstrain_epsilon. Needs a resolved strain and size, else unavailable.
     if microstrain_epsilon is not None and crystallite_size_nm is not None:
+        microstrain_rms = microstrain_epsilon * GAUSSIAN_RMS_FROM_FWHM_STRAIN
         b_m = burgers_vector_nm * 1e-9
         d_m = crystallite_size_nm * 1e-9
-        dislocation_density_m2 = (2.0 * math.sqrt(3.0) * microstrain_epsilon) / (d_m * b_m)
+        dislocation_density_m2 = (2.0 * math.sqrt(3.0) * microstrain_rms) / (d_m * b_m)
         dislocation_density_x10_14 = dislocation_density_m2 / 1e14
-        dislocation_density_status = "computed-williamson-smallman-2sqrt3"
+        dislocation_density_status = "computed-williamson-smallman-2sqrt3-rms-strain-gaussian-assumption"
     else:
+        microstrain_rms = None
         dislocation_density_m2 = None
         dislocation_density_x10_14 = None
         dislocation_density_status = "unavailable-needs-positive-slope-and-intercept"
@@ -527,14 +587,18 @@ def solve_williamson_hall(peaks, wavelength_A=1.540598, shape_factor_K=0.94, bur
     
     return {
         "success": True,
-        "engine": "MetalliX-Python-HPC-WilliamsonHall-v3.11",
+        "engine": WH_ENGINE,
         "computeTimeMs": compute_time_ms,
+        "williamsonHallStatus": "ok",
+        "excludedPeakCount": excluded_peaks,
         "crystalliteSize_nm": _round(crystallite_size_nm, 2),
         "crystalliteSize_A": _round(crystallite_size_A, 2),
         "crystalliteSizeStatus": crystallite_size_status,
         "microstrain_epsilon": _round(microstrain_epsilon, 6),
         "microstrain_percent": _round(microstrain_pct, 4),
         "microstrainStatus": microstrain_status,
+        "microstrainRms_epsilon": _round(microstrain_rms, 6),
+        "strainDefinition": WH_STRAIN_DEFINITION,
         "dislocationDensity_m2": _round(dislocation_density_m2, 2),
         "dislocationDensity_x10_14_m2": _round(dislocation_density_x10_14, 3),
         "dislocationDensityStatus": dislocation_density_status,
