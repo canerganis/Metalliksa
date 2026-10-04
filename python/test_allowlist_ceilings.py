@@ -506,7 +506,8 @@ class GuardWiringTests(unittest.TestCase):
     def test_codeowners_lists_every_guard_and_ceiling(self):
         owners = {line.split()[0] for line in (REPO_ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8").splitlines()
                   if line.strip() and not line.startswith("#")}
-        missing = [path for path in review.PROTECTED_PATHS if f"/{path}" not in owners]
+        missing = [path for path in (*review.PROTECTED_PATHS, *review.PROTECTED_PREFIXES)
+                   if f"/{path}" not in owners]
         self.assertEqual(missing, [])
         self.assertIn("*.ceiling.json", owners)
 
@@ -577,7 +578,11 @@ class CeilingReviewTrailerTests(unittest.TestCase):
             "tests/route-authority.test.ts", "tests/component-reachability.test.ts",
             "python/lpbf_implementation_fingerprint.expected",
             "python/test_lpbf_implementation_fingerprint_pin.py", "python/lpbf_fingerprint_pin.py",
-            "python/test_lpbf_implementation_fingerprint.py", "python/test_phase6a_leaf_modules.py"})
+            "python/test_lpbf_implementation_fingerprint.py", "python/test_phase6a_leaf_modules.py",
+            "python/tools/lpbf_parity_check.py"})
+        self.assertEqual(set(review.PROTECTED_PREFIXES), {"python/golden/lpbf_parity/"})
+        for prefix in review.PROTECTED_PREFIXES:
+            self.assertTrue((REPO_ROOT / prefix).is_dir(), f"protected prefix {prefix} does not exist")
         for guard in review.PROTECTED_PATHS:
             self.assertTrue((REPO_ROOT / guard).is_file(), f"protected path {guard} does not exist")
         for guard in review.PROTECTED_PATHS:
@@ -591,6 +596,24 @@ class CeilingReviewTrailerTests(unittest.TestCase):
                 self.assertEqual(review.unreviewed_ceiling_changes(start, cwd=self.repo), [])
                 self._commit(guard, f"weakened again {guard}\n", "weaken it after review")
                 self.assertEqual(len(review.unreviewed_ceiling_changes(start, cwd=self.repo)), 1)
+
+    def test_protected_prefix_reviews_added_changed_and_removed_files(self):
+        golden = f"{review.PROTECTED_PREFIXES[0]}g99_example.json"
+        start = self._rev()
+        self._commit(golden, "{}\n", "add a golden without review")  # new below the prefix
+        problems = review.unreviewed_ceiling_changes(start, cwd=self.repo)
+        self.assertEqual(len(problems), 1)
+        self.assertIn(golden, problems[0])
+        self._commit(golden, "{}\n\n", "re-record\n\nCeiling-Review: deliberate parity golden re-record")
+        self.assertEqual(review.unreviewed_ceiling_changes(start, cwd=self.repo), [])
+        middle = self._rev()
+        subprocess.run(["git", "rm", "-q", golden], cwd=self.repo, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-q", "-m", "drop a golden"], cwd=self.repo, check=True, capture_output=True)
+        problems = review.unreviewed_ceiling_changes(middle, cwd=self.repo)
+        self.assertEqual(len(problems), 1)
+        self.assertIn(golden, problems[0])
+        self.assertFalse(review.is_protected("python/golden/other/x.json"))
+        self.assertFalse(review.is_protected("python/golden/lpbf_parity"))
 
     def test_merge_taking_the_reviewed_branch_version_is_not_the_last_change(self):
         def run(*args):
