@@ -32,7 +32,7 @@ from typing import Dict, List, Tuple
 
 from module_contract import (
     ALWAYS_FORBIDDEN_CLAIMS, AUTHORITY_KINDS, BACKGROUND_WORK, EVIDENCE_STATUSES, EVIDENCE_TYPES,
-    FORBIDDEN_CLAIM_KEYS, GPU_MODES, LIFECYCLE_RESOURCES, MATURITY, MIGRATION_STATES, NAVIGATION,
+    FORBIDDEN_CLAIM_KEYS, GPU_MODES, HTTP_METHODS, LIFECYCLE_RESOURCES, MATURITY, MIGRATION_STATES, NAVIGATION,
     ORACLE_STATES, PENDING_ORACLE_CEILING, RUN_STATES, TODO_MARKER, WORKSPACES,
     Authority, Evidence, ModuleContract, Operation, Oracle, TestRefs, View,
 )
@@ -130,19 +130,21 @@ def _browser(reason: str) -> Authority:
     return Authority(kind="browser-local", exception_reason=f"Recorded debt (single-authority rule): {reason}")
 
 
-def _op(op_id: str, route, authority: Authority) -> Operation:
-    return Operation(id=op_id, route=route, authority=authority)
+def _op(op_id: str, method, route, authority: Authority) -> Operation:
+    return Operation(id=op_id, method=method, route=route, authority=authority)
+
+
+def _local(op_id: str, reason: str) -> Operation:
+    return Operation(id=op_id, route=None, authority=_browser(reason))
 
 
 def _worker_op(method: str) -> Operation:
-    return _op(method, f"/api/python/lpbf-{method}", _worker(method))
+    return _op(method, "POST", f"/api/python/lpbf-{method}", _worker(method))
 
 
-_THERMAL_SOLVER = _op("lpbf-thermal-solver", "/api/python/lpbf-thermal-solver",
+_THERMAL_SOLVER = _op("lpbf-thermal-solver", "POST", "/api/python/lpbf-thermal-solver",
                       _py("lpbf_thermal_solver", _PHYSICS_TIMEOUT_MS, warm=True))
-_AI_CONSULT = _op("ai-consult", "/api/consult", _NODE)
-_BUILD_JOB_SUBMIT = _op("lpbf-job-submit", "/api/lpbf/jobs", _worker("submit"))
-_BUILD_JOB_STATUS = _op("lpbf-job-status", "/api/lpbf/jobs/:id", _worker("get"))
+_AI_CONSULT = _op("ai-consult", "POST", "/api/consult", _NODE)
 _EVIDENCE_READS_ONLY = ("EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and "
                         "useLpbfEngineeringStore; it dispatches no server request (build jobs are "
                         "submitted from 3d-distortion-lab), so no operation is bound.")
@@ -151,27 +153,27 @@ _CANNED_QUALIFY = ("POST /api/metallurgy/qualify-aerospace returns constant valu
 
 LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "3d-distortion-lab": (
-        _op("lpbf-capabilities", "/api/lpbf/capabilities", _worker("capabilities")),
-        _op("lpbf-estimate", "/api/lpbf/estimate", _worker("estimate")),
-        _BUILD_JOB_SUBMIT,
-        _op("lpbf-job-repeat", "/api/lpbf/jobs/repeat", _worker("submit-repeat")),
-        _BUILD_JOB_STATUS,
-        _op("lpbf-job-cancel", "/api/lpbf/jobs/:id", _worker("cancel")),
-        _op("lpbf-job-artifact", "/api/lpbf/jobs/:id/artifacts/:name", _worker("artifact")),
+        _op("lpbf-capabilities", "GET", "/api/lpbf/capabilities", _worker("capabilities")),
+        _op("lpbf-estimate", "POST", "/api/lpbf/estimate", _worker("estimate")),
+        _op("lpbf-job-submit", "POST", "/api/lpbf/jobs", _worker("submit")),
+        _op("lpbf-job-repeat", "POST", "/api/lpbf/jobs/repeat", _worker("submit-repeat")),
+        _op("lpbf-job-status", "GET", "/api/lpbf/jobs/:id", _worker("get")),
+        _op("lpbf-job-cancel", "DELETE", "/api/lpbf/jobs/:id", _worker("cancel")),
+        _op("lpbf-job-artifact", "GET", "/api/lpbf/jobs/:id/artifacts/:name", _worker("artifact")),
         _THERMAL_SOLVER,
-        _op("stl-slicer-build-time", "/api/python/stl-slicer-build-time",
+        _op("stl-slicer-build-time", "POST", "/api/python/stl-slicer-build-time",
             _py("stl_slicer_build_time_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
-        _op("lpbf-source-catalog", "/api/lpbf/sources", _NODE),
-        _op("lpbf-run-archive", "/api/lpbf/runs", _NODE),
+        _op("lpbf-source-catalog", "GET", "/api/lpbf/sources", _NODE),
+        _op("lpbf-run-archive", "GET", "/api/lpbf/runs", _NODE),
     ),
     "lpbf-optimizer": (
-        _op("bayesian-optimize", "/api/python/lpbf-bayesian-optimize",
+        _op("bayesian-optimize", "POST", "/api/python/lpbf-bayesian-optimize",
             _py("lpbf_bayesian_optimizer", 120000, warm=False)),
     ),
     "solidification-microstructure": (_worker_op("solidification-microstructure"),),
     "thermomechanical-distortion": (_worker_op("thermomechanical-distortion"),),
     "experimental-validation": (
-        _op("lpbf-source-measurements", "/api/lpbf/sources/:datasetId/measurements", _NODE),
+        _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
     "modulus-fno-lab": (_worker_op("modulus-fno"),),
     "toolpath-studio": (_worker_op("toolpath-kinematics"),),
@@ -187,59 +189,62 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "transient-3d-gpu": (),
     "keyhole-raytracing": (_worker_op("keyhole-raytracing"),),
     "database": (
-        _op("catalog-lookup", None, _browser("material records are read from the bundled src/data/materialsDatabase.ts in the browser.")),
+        _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
     "alloy-builder": (_THERMAL_SOLVER,),
     "phase-diagram": (
-        _op("calphad-databases", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
-        _op("calphad-minimize", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
+        _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
+        _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
         _AI_CONSULT,
     ),
     "ttt-cct-kinetics": (
-        _op("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct", _py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("kinetics-ttt-cct", "POST", "/api/python/kinetics-ttt-cct",
+            _py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "micrograph": (
-        _op("diagnose-micrograph", "/api/metallurgy/diagnose-micrograph", _NODE),
+        _op("diagnose-micrograph", "POST", "/api/metallurgy/diagnose-micrograph", _NODE),
         _AI_CONSULT,
     ),
     "eds-lab": (_AI_CONSULT,),
     "electrochem-suite": (
-        _op("pourbaix-diagram", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
-        _op("tafel-corrosion-rate", "/api/python/tafel-corrosion-rate",
+        _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("tafel-corrosion-rate", "POST", "/api/python/tafel-corrosion-rate",
             _py("tafel_corrosion_rate_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
-        _op("battery-corrosion-eis", "/api/python/battery-corrosion-eis",
+        _op("battery-corrosion-eis", "POST", "/api/python/battery-corrosion-eis",
             _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
     ),
     "icme-motor": (
-        _op("icme-multiscale-pipeline", "/api/python/icme-multiscale-pipeline",
+        _op("icme-multiscale-pipeline", "POST", "/api/python/icme-multiscale-pipeline",
             _py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "materials-project": (
-        _op("dft-properties", "/api/python/dft-properties", _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
-        _op("metallurgy-consult", "/api/metallurgy/consult", _NODE),
+        _op("dft-properties", "POST", "/api/python/dft-properties",
+            _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
+        _op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),
     ),
     "calculators": (
-        _op("engineering-correlations", None, _browser("unit-aware engineering correlations are evaluated in the browser.")),
+        _local("engineering-correlations", "unit-aware engineering correlations are evaluated in the browser."),
     ),
     "research-hub": (
-        _op("research-registry", "/api/research/registry", _NODE),
-        _op("research-search", "/api/research/search", _NODE),
+        _op("research-registry", "GET", "/api/research/registry", _NODE),
+        _op("research-registry-save", "PUT", "/api/research/registry", _NODE),
+        _op("research-search", "GET", "/api/research/search", _NODE),
     ),
     "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
     "uq-lab": (
-        _op("stochastic-uq-mmpds", "/api/python/stochastic-uq-mmpds",
+        _op("stochastic-uq-mmpds", "POST", "/api/python/stochastic-uq-mmpds",
             _py("stochastic_uq_mmpds_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "qualification": (
-        _op("coupon-statistics", None, _browser("protocol screening and coupon statistics are computed in the browser.")),
+        _local("coupon-statistics", "protocol screening and coupon statistics are computed in the browser."),
     ),
     "aerospace-pdf-audit": (
-        _op("report-template", None, _browser("demonstration report templates are assembled in the browser.")),
+        _local("report-template", "demonstration report templates are assembled in the browser."),
     ),
     "traceability": (),
-    "copilot": (_op("metallurgy-consult", "/api/metallurgy/consult", _NODE),),
-    "ai-orchestrator": (_op("dataset-plan", "/api/orchestrator/dataset-plan", _NODE),),
+    "copilot": (_op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),),
+    "ai-orchestrator": (_op("dataset-plan", "POST", "/api/orchestrator/dataset-plan", _NODE),),
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
@@ -371,7 +376,8 @@ def render_ts(document: dict) -> str:
         "  readonly timeoutMs: number | null; readonly gpu: GpuMode; readonly warm: boolean; readonly exceptionReason: string | null;",
         "}",
         "export interface ContractOperation {",
-        "  readonly id: string; readonly route: string | null; readonly authority: ContractAuthority;",
+        f"  readonly id: string; readonly method: {_union(HTTP_METHODS)} | null; readonly route: string | null;",
+        "  readonly authority: ContractAuthority;",
         "  readonly input: readonly ContractField[];",
         "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string } | null;",
         "}",

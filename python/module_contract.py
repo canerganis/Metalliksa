@@ -84,6 +84,7 @@ BACKGROUND_WORK = ("none", "pausable", "server-job")
 LIFECYCLE_RESOURCES = ("raf", "interval", "three", "fetch")
 ORACLE_STATES = ("present", "pending")
 MIGRATION_STATES = ("legacy", "contracted")
+HTTP_METHODS = ("GET", "POST", "PUT", "DELETE", "PATCH")
 
 TODO_MARKER = "TODO(maintainer-review)"
 
@@ -245,18 +246,22 @@ class Operation:
     input: Tuple[InputField, ...] = ()
     # None = output schema not yet declared (legacy contracts only; see ModuleContract).
     output: Optional[OutputSchema] = None
+    # HTTP method of the route; required with a route, absent without one.
+    method: Optional[str] = None
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid operation id {self.id!r}")
         if self.route is None:
             _require(self.authority.kind == "browser-local", f"{self.id}: only browser-local operations may omit a route")
+            _require(self.method is None, f"{self.id}: an operation without a route has no HTTP method")
         else:
             _require(isinstance(self.route, str) and self.route.startswith("/api/"), "operation.route must start with /api/")
+            _one_of(self.method, HTTP_METHODS, f"{self.id}.method")
         _unique(tuple(f.key for f in self.input), f"{self.id}.input keys")
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id, "route": self.route, "authority": self.authority.to_dict(),
+            "id": self.id, "method": self.method, "route": self.route, "authority": self.authority.to_dict(),
             "input": [f.to_dict() for f in self.input],
             "output": self.output.to_dict() if self.output else None,
         }
@@ -438,6 +443,10 @@ class ModuleContract:
             _require(len(self.operations) > 0, f"{self.id}: contracted modules need operations")
             _require(all(op.output is not None for op in self.operations),
                      f"{self.id}: contracted operations must declare an output schema")
+            # Legacy node-provider/browser-local authorities may leave the timeout undeclared;
+            # a contracted operation must state the deadline it runs under.
+            _require(all(op.authority.timeout_ms is not None for op in self.operations),
+                     f"{self.id}: contracted operations must declare authority.timeoutMs")
             _require(len(self.evidence.emits) > 0, f"{self.id}: contracted modules must declare emits")
             _require(self.lifecycle is not None, f"{self.id}: contracted modules need a lifecycle")
             _text(self.tests.schema, f"{self.id}.tests.schema")

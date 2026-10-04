@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import { MODULE_CONTRACTS } from '../src/modules/registry';
+import { MODULE_CONTRACTS, type ContractOperation } from '../src/modules/registry';
 import { repoRoot } from './support/importGraph';
 import { beyondCeiling, readCeiling } from './support/ceiling';
 
@@ -187,8 +187,9 @@ const handlers = routeFiles.flatMap(name => routeHandlers(`routes/${name}`, read
 const serverHandlers = routeHandlers('server.ts', read('server.ts'));
 const allowlist = JSON.parse(read('routes/AUTHORITY_ALLOWLIST.json')) as Allowlist;
 const ceiling: AllowlistCeiling = readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline', 'unclassified');
-const operationRoutes = new Set(MODULE_CONTRACTS.flatMap(contract => contract.operations.map(operation => operation.route)).filter(Boolean) as string[]);
-const routeOf = (key: string) => key.slice(key.indexOf(' ') + 1);
+// Method-aware binding keys, e.g. 'DELETE /api/lpbf/jobs/:id' (same shape as RouteHandler.key).
+const operationRoutes = new Set(MODULE_CONTRACTS.flatMap(contract => (contract.operations as readonly ContractOperation[])
+  .flatMap(operation => operation.route === null ? [] : [`${operation.method} ${operation.route}`])));
 const where = (handler: RouteHandler) => `${handler.key} (${handler.file}:${handler.line})`;
 
 /** Pure allowlist decision over parsed handlers; every list must come back empty. */
@@ -198,8 +199,8 @@ export function allowlistDecision(found: RouteHandler[], scanned: RouteHandler[]
   const cannedKeys = new Set(all.filter(handler => handler.canned).map(handler => handler.key));
   const unclassifiedKeys = new Set(all.filter(handler => handler.unclassified).map(handler => handler.key));
   return {
-    missingUnbound: found.filter(handler => !handler.unclassified && !bound.has(routeOf(handler.key)) && !live.unbound[handler.key]?.trim()).map(where),
-    staleUnbound: Object.keys(live.unbound).filter(key => !keys.has(key) || bound.has(routeOf(key))),
+    missingUnbound: found.filter(handler => !handler.unclassified && !bound.has(handler.key) && !live.unbound[handler.key]?.trim()).map(where),
+    staleUnbound: Object.keys(live.unbound).filter(key => !keys.has(key) || bound.has(key)),
     grownCanned: all.filter(handler => handler.canned && !live.cannedBaseline[handler.key]?.trim()).map(where),
     staleCanned: Object.keys(live.cannedBaseline).filter(key => !cannedKeys.has(key)),
     unclassified: all.filter(handler => handler.unclassified && !live.unclassified[handler.key]?.trim()).map(where),
@@ -282,13 +283,13 @@ test('every routes/*.ts handler is bound to a registry operation or allowlisted 
 });
 
 test('every registry operation route is served by a routes/*.ts handler', () => {
-  const served = new Set(handlers.map(handler => routeOf(handler.key)));
+  const served = new Set(handlers.map(handler => handler.key));
   const dangling = [...operationRoutes].filter(route => !served.has(route));
   assert.deepEqual(dangling, [], `Registry operation route(s) without a handler: ${dangling.join(', ')}`);
 });
 
 test('no registry operation is bound to a canned-result handler', () => {
-  const boundCanned = [...handlers, ...serverHandlers].filter(handler => handler.canned && operationRoutes.has(routeOf(handler.key))).map(where);
+  const boundCanned = [...handlers, ...serverHandlers].filter(handler => handler.canned && operationRoutes.has(handler.key)).map(where);
   assert.deepEqual(boundCanned, [], `Canned handler(s) ${boundCanned.join(', ')} must not back a registry operation: record them as legacyNotes.`);
   const evidence = MODULE_CONTRACTS.filter(contract => ['experimental-data', 'traceability'].includes(contract.id));
   assert.deepEqual(evidence.map(contract => contract.operations.length), [0, 0], 'EvidenceWorkspace dispatches no request; record store reads as legacyNotes');

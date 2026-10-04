@@ -26,7 +26,8 @@ export interface ContractAuthority {
   readonly timeoutMs: number | null; readonly gpu: GpuMode; readonly warm: boolean; readonly exceptionReason: string | null;
 }
 export interface ContractOperation {
-  readonly id: string; readonly route: string | null; readonly authority: ContractAuthority;
+  readonly id: string; readonly method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | null; readonly route: string | null;
+  readonly authority: ContractAuthority;
   readonly input: readonly ContractField[];
   readonly output: { readonly fields: readonly string[]; readonly statusKey: string } | null;
 }
@@ -136,6 +137,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "lpbf-capabilities",
+          "method": "GET",
           "route": "/api/lpbf/capabilities",
           "authority": {
             "kind": "lpbf-worker",
@@ -151,6 +153,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-estimate",
+          "method": "POST",
           "route": "/api/lpbf/estimate",
           "authority": {
             "kind": "lpbf-worker",
@@ -166,6 +169,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-job-submit",
+          "method": "POST",
           "route": "/api/lpbf/jobs",
           "authority": {
             "kind": "lpbf-worker",
@@ -181,6 +185,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-job-repeat",
+          "method": "POST",
           "route": "/api/lpbf/jobs/repeat",
           "authority": {
             "kind": "lpbf-worker",
@@ -196,6 +201,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-job-status",
+          "method": "GET",
           "route": "/api/lpbf/jobs/:id",
           "authority": {
             "kind": "lpbf-worker",
@@ -211,6 +217,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-job-cancel",
+          "method": "DELETE",
           "route": "/api/lpbf/jobs/:id",
           "authority": {
             "kind": "lpbf-worker",
@@ -226,6 +233,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-job-artifact",
+          "method": "GET",
           "route": "/api/lpbf/jobs/:id/artifacts/:name",
           "authority": {
             "kind": "lpbf-worker",
@@ -241,6 +249,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-thermal-solver",
+          "method": "POST",
           "route": "/api/python/lpbf-thermal-solver",
           "authority": {
             "kind": "python-ipc",
@@ -256,6 +265,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "stl-slicer-build-time",
+          "method": "POST",
           "route": "/api/python/stl-slicer-build-time",
           "authority": {
             "kind": "python-ipc",
@@ -271,6 +281,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-source-catalog",
+          "method": "GET",
           "route": "/api/lpbf/sources",
           "authority": {
             "kind": "node-provider",
@@ -286,6 +297,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "lpbf-run-archive",
+          "method": "GET",
           "route": "/api/lpbf/runs",
           "authority": {
             "kind": "node-provider",
@@ -344,6 +356,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "bayesian-optimize",
+          "method": "POST",
           "route": "/api/python/lpbf-bayesian-optimize",
           "authority": {
             "kind": "python-ipc",
@@ -402,6 +415,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "solidification-microstructure",
+          "method": "POST",
           "route": "/api/python/lpbf-solidification-microstructure",
           "authority": {
             "kind": "lpbf-worker",
@@ -460,6 +474,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "thermomechanical-distortion",
+          "method": "POST",
           "route": "/api/python/lpbf-thermomechanical-distortion",
           "authority": {
             "kind": "lpbf-worker",
@@ -518,6 +533,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "lpbf-source-measurements",
+          "method": "GET",
           "route": "/api/lpbf/sources/:datasetId/measurements",
           "authority": {
             "kind": "node-provider",
@@ -576,6 +592,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "modulus-fno",
+          "method": "POST",
           "route": "/api/python/lpbf-modulus-fno",
           "authority": {
             "kind": "lpbf-worker",
@@ -634,6 +651,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "toolpath-kinematics",
+          "method": "POST",
           "route": "/api/python/lpbf-toolpath-kinematics",
           "authority": {
             "kind": "lpbf-worker",
@@ -692,6 +710,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "toolpath-thermal-map",
+          "method": "POST",
           "route": "/api/python/lpbf-toolpath-thermal-map",
           "authority": {
             "kind": "lpbf-worker",
@@ -750,6 +769,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "industrial-fatigue",
+          "method": "POST",
           "route": "/api/python/lpbf-industrial-fatigue",
           "authority": {
             "kind": "lpbf-worker",
@@ -808,6 +828,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "fatigue-fracture",
+          "method": "POST",
           "route": "/api/python/lpbf-fatigue-fracture",
           "authority": {
             "kind": "lpbf-worker",
@@ -866,6 +887,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "stl-voxelize",
+          "method": "POST",
           "route": "/api/python/lpbf-stl-voxelize",
           "authority": {
             "kind": "lpbf-worker",
@@ -924,6 +946,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "adaptive-feedforward",
+          "method": "POST",
           "route": "/api/python/lpbf-adaptive-feedforward",
           "authority": {
             "kind": "lpbf-worker",
@@ -982,6 +1005,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "multilaser-plume",
+          "method": "POST",
           "route": "/api/python/lpbf-multilaser-plume",
           "authority": {
             "kind": "lpbf-worker",
@@ -1040,6 +1064,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "thermal-accumulation",
+          "method": "POST",
           "route": "/api/python/lpbf-thermal-accumulation",
           "authority": {
             "kind": "lpbf-worker",
@@ -1098,6 +1123,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "powder-dem-compaction",
+          "method": "POST",
           "route": "/api/python/lpbf-powder-dem-compaction",
           "authority": {
             "kind": "lpbf-worker",
@@ -1156,6 +1182,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "optical-tomography",
+          "method": "POST",
           "route": "/api/python/lpbf-optical-tomography",
           "authority": {
             "kind": "lpbf-worker",
@@ -1258,6 +1285,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "keyhole-raytracing",
+          "method": "POST",
           "route": "/api/python/lpbf-keyhole-raytracing",
           "authority": {
             "kind": "lpbf-worker",
@@ -1316,6 +1344,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "catalog-lookup",
+          "method": null,
           "route": null,
           "authority": {
             "kind": "browser-local",
@@ -1374,6 +1403,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "lpbf-thermal-solver",
+          "method": "POST",
           "route": "/api/python/lpbf-thermal-solver",
           "authority": {
             "kind": "python-ipc",
@@ -1432,6 +1462,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "calphad-databases",
+          "method": "GET",
           "route": "/api/python/calphad-databases",
           "authority": {
             "kind": "python-ipc",
@@ -1447,6 +1478,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "calphad-minimize",
+          "method": "POST",
           "route": "/api/python/calphad-minimize",
           "authority": {
             "kind": "python-ipc",
@@ -1462,6 +1494,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "ai-consult",
+          "method": "POST",
           "route": "/api/consult",
           "authority": {
             "kind": "node-provider",
@@ -1520,6 +1553,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "kinetics-ttt-cct",
+          "method": "POST",
           "route": "/api/python/kinetics-ttt-cct",
           "authority": {
             "kind": "python-ipc",
@@ -1578,6 +1612,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "diagnose-micrograph",
+          "method": "POST",
           "route": "/api/metallurgy/diagnose-micrograph",
           "authority": {
             "kind": "node-provider",
@@ -1593,6 +1628,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "ai-consult",
+          "method": "POST",
           "route": "/api/consult",
           "authority": {
             "kind": "node-provider",
@@ -1653,6 +1689,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "ai-consult",
+          "method": "POST",
           "route": "/api/consult",
           "authority": {
             "kind": "node-provider",
@@ -1711,6 +1748,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "pourbaix-diagram",
+          "method": "POST",
           "route": "/api/python/pourbaix-diagram",
           "authority": {
             "kind": "python-ipc",
@@ -1726,6 +1764,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "tafel-corrosion-rate",
+          "method": "POST",
           "route": "/api/python/tafel-corrosion-rate",
           "authority": {
             "kind": "python-ipc",
@@ -1741,6 +1780,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "battery-corrosion-eis",
+          "method": "POST",
           "route": "/api/python/battery-corrosion-eis",
           "authority": {
             "kind": "python-ipc",
@@ -1799,6 +1839,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "icme-multiscale-pipeline",
+          "method": "POST",
           "route": "/api/python/icme-multiscale-pipeline",
           "authority": {
             "kind": "python-ipc",
@@ -1857,6 +1898,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "dft-properties",
+          "method": "POST",
           "route": "/api/python/dft-properties",
           "authority": {
             "kind": "python-ipc",
@@ -1872,6 +1914,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "metallurgy-consult",
+          "method": "POST",
           "route": "/api/metallurgy/consult",
           "authority": {
             "kind": "node-provider",
@@ -1932,6 +1975,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "engineering-correlations",
+          "method": null,
           "route": null,
           "authority": {
             "kind": "browser-local",
@@ -1990,6 +2034,23 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "research-registry",
+          "method": "GET",
+          "route": "/api/research/registry",
+          "authority": {
+            "kind": "node-provider",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "output": null
+        },
+        {
+          "id": "research-registry-save",
+          "method": "PUT",
           "route": "/api/research/registry",
           "authority": {
             "kind": "node-provider",
@@ -2005,6 +2066,7 @@ export const MODULE_REGISTRY = {
         },
         {
           "id": "research-search",
+          "method": "GET",
           "route": "/api/research/search",
           "authority": {
             "kind": "node-provider",
@@ -2107,6 +2169,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "ai-consult",
+          "method": "POST",
           "route": "/api/consult",
           "authority": {
             "kind": "node-provider",
@@ -2165,6 +2228,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "stochastic-uq-mmpds",
+          "method": "POST",
           "route": "/api/python/stochastic-uq-mmpds",
           "authority": {
             "kind": "python-ipc",
@@ -2223,6 +2287,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "coupon-statistics",
+          "method": null,
           "route": null,
           "authority": {
             "kind": "browser-local",
@@ -2283,6 +2348,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "report-template",
+          "method": null,
           "route": null,
           "authority": {
             "kind": "browser-local",
@@ -2387,6 +2453,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "metallurgy-consult",
+          "method": "POST",
           "route": "/api/metallurgy/consult",
           "authority": {
             "kind": "node-provider",
@@ -2445,6 +2512,7 @@ export const MODULE_REGISTRY = {
       "operations": [
         {
           "id": "dataset-plan",
+          "method": "POST",
           "route": "/api/orchestrator/dataset-plan",
           "authority": {
             "kind": "node-provider",

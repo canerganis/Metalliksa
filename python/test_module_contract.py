@@ -32,7 +32,7 @@ def _field(**overrides):
 def _operation(**authority_overrides):
     authority = dict(kind="python-ipc", script="uq_lab.py", timeout_ms=30000)
     authority.update(authority_overrides)
-    return mc.Operation(id="run", route="/api/uq/run", authority=mc.Authority(**authority),
+    return mc.Operation(id="run", method="POST", route="/api/uq/run", authority=mc.Authority(**authority),
                         input=(_field(),), output=mc.OutputSchema(fields=("samples",)))
 
 
@@ -159,12 +159,35 @@ class FieldAndAuthorityTests(unittest.TestCase):
         with self.assertRaises(mc.ContractError):
             mc.Operation(id="remote", route=None, authority=mc.Authority(kind="node-provider"))
 
+    def test_routed_operations_need_an_http_method(self):
+        node = mc.Authority(kind="node-provider")
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", route="/api/x", authority=node)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", method="FETCH", route="/api/x", authority=node)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="local", method="GET", route=None,
+                         authority=mc.Authority(kind="browser-local", exception_reason="recorded debt"))
+        self.assertEqual(mc.Operation(id="remote", method="GET", route="/api/x", authority=node).to_dict()["method"], "GET")
+
     def test_contracted_operations_must_declare_output(self):
-        undeclared = mc.Operation(id="run", route="/api/uq/run",
+        undeclared = mc.Operation(id="run", method="POST", route="/api/uq/run",
                                   authority=mc.Authority(kind="python-ipc", script="uq_lab.py", timeout_ms=1))
         with self.assertRaises(mc.ContractError):
             _contract(operations=(undeclared,))
         self.assertIsNone(undeclared.to_dict()["output"])
+
+    def test_contracted_operations_must_declare_a_timeout(self):
+        for authority in (mc.Authority(kind="node-provider"),
+                          mc.Authority(kind="browser-local", exception_reason="recorded debt")):
+            operation = mc.Operation(id="run", method="POST", route="/api/uq/run", authority=authority,
+                                     output=mc.OutputSchema(fields=("samples",)))
+            with self.subTest(kind=authority.kind), self.assertRaises(mc.ContractError):
+                _contract(operations=(operation,))
+        timed = mc.Operation(id="run", method="POST", route="/api/uq/run",
+                             authority=mc.Authority(kind="node-provider", timeout_ms=12000),
+                             output=mc.OutputSchema(fields=("samples",)))
+        self.assertEqual(_contract(operations=(timed,)).operations[0].authority.timeout_ms, 12000)
 
     def test_legacy_notes_are_unique_text(self):
         with self.assertRaises(mc.ContractError):
@@ -174,7 +197,7 @@ class FieldAndAuthorityTests(unittest.TestCase):
 
     def test_route_must_be_api(self):
         with self.assertRaises(mc.ContractError):
-            mc.Operation(id="run", route="uq/run", authority=mc.Authority(kind="node-provider", timeout_ms=1),
+            mc.Operation(id="run", method="POST", route="uq/run", authority=mc.Authority(kind="node-provider", timeout_ms=1),
                          input=(), output=mc.OutputSchema(fields=("x",)))
 
     def test_validity_domain_requires_sources(self):
