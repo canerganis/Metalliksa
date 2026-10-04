@@ -6,6 +6,27 @@ from typing import Dict, Any
 from phase9_surrogate import predict_surrogate
 from murakami_fatigue_screening import evaluate_murakami_block
 
+# fx-icme (backlog lane 9): honesty labels. The defects are SAMPLED from a normal distribution of
+# the surrogate melt-pool depth with rough lack-of-fusion / keyhole rules; they are not measured.
+MODEL_STATUS = "illustrative"
+MODEL_STATUS_NOTE = (
+    "Illustrative screening estimate. Defect sizes are sampled (5000 draws, fixed seed 42) from a "
+    "normal distribution around the surrogate melt-pool depth with rough lack-of-fusion "
+    "(depth < 1.5 x layer) and keyhole (depth > 4 x layer) rules; they are not measured defects. "
+    "The fatigue limit is the Murakami sqrt(area) screening limit and the design limit is a fixed "
+    "0.85 knockdown of it, not a statistical survival bound. When the sampled population contains "
+    "no defect, no defect size is invented and the fatigue limits are unavailable."
+)
+DESIGN_LIMIT_KNOCKDOWN = 0.85
+DESIGN_LIMIT_BASIS = (
+    "illustrative: fixed 0.85 knockdown of the Murakami internal-defect screening limit; "
+    "not a statistical 99 % survival bound"
+)
+NO_DEFECT_STATUS = (
+    "unavailable: the sampled population contains no defect above 5 um, and a Murakami sqrt(area) "
+    "limit needs a defect size; none is assumed"
+)
+
 def run_industrial_fatigue_analysis(alloy_name: str, laser_power_W: float, scan_speed_mm_s: float, 
                                     layer_thickness_um: float = 30.0, hatch_spacing_um: float = 100.0) -> Dict[str, Any]:
     
@@ -41,8 +62,29 @@ def run_industrial_fatigue_analysis(alloy_name: str, laser_power_W: float, scan_
                 defect_sizes_um.append(defect_size)
 
     if not defect_sizes_um:
-        # Eğer hiç hata oluşmadıysa (mükemmel parametre), temsili bir ufak hata koyalım ki formül patlamasın.
-        defect_sizes_um.append(10.0)
+        # Hata oluşmadıysa temsili hata UYDURULMAZ (önceden 10 um enjekte ediliyordu): Murakami
+        # sqrt(area) sınırı bir hata boyutu gerektirir; sonuç 'unavailable' olarak raporlanır.
+        return {
+            "modelStatus": MODEL_STATUS,
+            "modelStatusNote": MODEL_STATUS_NOTE,
+            "AI_Meltpool": {
+                "Mean_Depth_um": round(mean_depth, 2),
+                "Uncertainty_Std_um": round(std_depth, 2),
+                "Confidence_Pct": round(surrogate_res["error_budget"]["confidence_pct"], 1)
+            },
+            "Defect_Simulation": {
+                "Total_Defects_Found": 0,
+                "Max_Simulated_Defect_um": None,
+                "Gumbel_Predicted_Largest_Defect_um": None,
+                "Status": NO_DEFECT_STATUS
+            },
+            "Certification_Limits": {
+                "Expected_Fatigue_Limit_MPa": None,
+                "Design_Limit_MPa": None,
+                "Hardness_Used_HV": None,
+                "Status": NO_DEFECT_STATUS
+            }
+        }
 
     # 3. Murakami & Gumbel Olasılıksal Analizi
     # evaluate_murakami_block fonksiyonunu kullanarak havacılık standartlarında rapor çekiyoruz.
@@ -60,10 +102,13 @@ def run_industrial_fatigue_analysis(alloy_name: str, laser_power_W: float, scan_
     
     internal_fatigue = murakami_res.get("fatigueLimit_internal_MPa", 0)
     
-    # %99 Survival Limit (Kaba tahmin: Gumbel standart sapmasını fatigue'e yansıtma)
-    survival_99_limit = internal_fatigue * 0.85 # Hata bütçesine göre %15 düşürülmüş güvenli tasarım sınırı
+    # Tasarım sınırı: sabit 0.85 katsayısı (istatistiksel %99 hayatta kalma sınırı DEĞİL; önceki
+    # anahtar adı 99_Percent_Survival_Design_Limit_MPa bunu yanlış ifade ediyordu).
+    design_limit = internal_fatigue * DESIGN_LIMIT_KNOCKDOWN
 
     report = {
+        "modelStatus": MODEL_STATUS,
+        "modelStatusNote": MODEL_STATUS_NOTE,
         "AI_Meltpool": {
             "Mean_Depth_um": round(mean_depth, 2),
             "Uncertainty_Std_um": round(std_depth, 2),
@@ -76,7 +121,8 @@ def run_industrial_fatigue_analysis(alloy_name: str, laser_power_W: float, scan_
         },
         "Certification_Limits": {
             "Expected_Fatigue_Limit_MPa": internal_fatigue,
-            "99_Percent_Survival_Design_Limit_MPa": round(survival_99_limit, 2),
+            "Design_Limit_MPa": round(design_limit, 2),
+            "Design_Limit_Basis": DESIGN_LIMIT_BASIS,
             "Hardness_Used_HV": murakami_res.get("hardness_HV", 0)
         }
     }
