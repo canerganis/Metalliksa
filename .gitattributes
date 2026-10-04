@@ -97,3 +97,7 @@
 /Dockerfile text eol=lf
 /.dockerignore text eol=lf
 /scripts/ci-unit-tests.txt text eol=lf
+
+# LPBF 5c implementation pin and parity goldens: identical LF bytes on every checkout.
+/python/lpbf_implementation_fingerprint.expected text eol=lf
+/python/golden/lpbf_parity/** text eol=lf

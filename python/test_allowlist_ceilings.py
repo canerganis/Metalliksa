@@ -574,7 +574,8 @@ class CeilingReviewTrailerTests(unittest.TestCase):
         self.assertEqual(set(review.PROTECTED_PATHS), {
             "scripts/check_ceiling_review.py", "python/test_allowlist_ceilings.py", ".github/workflows/ci.yml",
             ".github/CODEOWNERS", "tests/support/ceiling.ts", "tests/support/routeScan.ts", "tests/support/importGraph.ts",
-            "tests/route-authority.test.ts", "tests/component-reachability.test.ts"})
+            "tests/route-authority.test.ts", "tests/component-reachability.test.ts",
+            "python/lpbf_implementation_fingerprint.expected"})
         for guard in review.PROTECTED_PATHS:
             self.assertTrue((REPO_ROOT / guard).is_file(), f"protected path {guard} does not exist")
         for guard in review.PROTECTED_PATHS:
