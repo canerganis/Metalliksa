@@ -1171,7 +1171,7 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced. A negative value fails in the Paris integration (math domain error)."
+              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422)."
             },
             {
               "key": "location",
@@ -1190,7 +1190,7 @@ export const MODULE_REGISTRY = {
                 "sub-surface",
                 "internal"
               ],
-              "note": "The authority matches substrings ('surface' without 'sub', then 'sub', else internal) and accepts any text; the contract accepts the view's three values."
+              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values."
             },
             {
               "key": "stressRatio_R",
@@ -1205,7 +1205,7 @@ export const MODULE_REGISTRY = {
               "default": -1.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced. The fatigue-limit correction caps R at 0.99, but the Paris integration divides by (1 - R), so R = 1 fails (ZeroDivisionError); R > 1 runs with a negative maximum stress. State at main f41e316; another lane may fix the R = 1 crash later."
+              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."
             },
             {
               "key": "stressAmplitude_MPa",
@@ -1220,7 +1220,7 @@ export const MODULE_REGISTRY = {
               "default": 220.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced. 0 fails in the Paris integration (ZeroDivisionError)."
+              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."
             }
           ],
           "undeclaredInput": [
@@ -1271,7 +1271,7 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
         "No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.",
-        "UNKNOWN_ALLOY reaches the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError); the arithmetic failures noted on the fields reach it as HTTP 400."
+        "UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError)."
       ],
       "sourceRefs": [
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
