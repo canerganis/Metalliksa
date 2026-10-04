@@ -254,6 +254,31 @@ def iter_golden_cases():
             yield solver, case
 
 
+# ---- Phase 6a value step (b): re-blessed expectations ----
+# The d33b6f5 goldens above stay on disk unchanged as the pre-migration record (the
+# binding tests keep re-capturing them from the immutable blobs). A value commit of
+# design step (b) that changes a solver output re-blesses the case into
+# <solver>/step_b/<case>.json (tools/bless_step_b.py), which records the drift
+# against the d33b6f5 golden key by key; the regression tests then compare against
+# that file. Cases whose output did not change keep no step_b file.
+STEP_B_DIR = "step_b"
+STEP_B_SCHEMA = "phase6a-step-b-golden-1"
+STEP_B_LABEL = "phase6a-step-b"
+
+
+def step_b_path(solver: str, case: str) -> Path:
+    return GOLDEN_DIR / solver / STEP_B_DIR / f"{case}.json"
+
+
+def load_expected(solver: str, case: str) -> Dict[str, Any]:
+    """The current expectation: the step-(b) re-blessed golden if present, else the d33b6f5 golden."""
+    path = step_b_path(solver, case)
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    return load_golden(solver, case)
+
+
 def _write(path: Path, doc: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as fh:

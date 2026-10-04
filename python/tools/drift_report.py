@@ -2,8 +2,9 @@
 """
 Phase 6a drift report: per-key old / new / absolute delta / relative delta.
 
-Compares a golden baseline (python/golden/phase6a/<solver>/<case>.json) with a
-fresh run of the current solver, or two arbitrary JSON documents. Numeric leaves
+Compares the current golden expectation (python/golden/phase6a/<solver>/step_b/<case>.json
+when a design-step-(b) re-bless exists, else <solver>/<case>.json) with a fresh run of
+the current solver, or two arbitrary JSON documents. Numeric leaves
 are reported with abs = new - old and rel = (new - old) / |old| (None when old is
 0); non-numeric differences, missing and added keys are reported as such.
 
@@ -111,8 +112,11 @@ def golden_vs_current(solver_filter: Optional[str] = None,
     for solver, case in golden.iter_golden_cases():
         if solver_filter and solver != solver_filter:
             continue
-        doc = golden.load_golden(solver, case)
-        fresh = golden.run_solver(solver, doc["input"], python=python)
+        # The current expectation (step_b re-bless if any, else the d33b6f5 golden), run
+        # with the CASES payload: the stored input has sorted keys, and key order matters
+        # for some solvers (see test_phase6a_golden.GoldenRegressionTest._check).
+        doc = golden.load_expected(solver, case)
+        fresh = golden.run_solver(solver, golden.CASES[solver][case], python=python)
         old = {"exitCode": doc["exitCode"], "stdout": doc["stdout"]}
         new = {"exitCode": fresh["exitCode"], "stdout": fresh["stdout"]}
         out.append((f"{solver}/{case}", diff(old, new)))

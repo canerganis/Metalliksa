@@ -74,10 +74,12 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertEqual(doc["exitCode"], 0)
             self.assertIs(doc["stdout"].get("success"), True)
             return
-        self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
-        rows = drift_report.diff(doc["stdout"], fresh["stdout"])
+        # Design step (b): compare with the re-blessed expectation when one exists.
+        expected = golden.load_expected(solver, case)
+        self.assertEqual(fresh["exitCode"], expected["exitCode"], fresh["stderr"])
+        rows = drift_report.diff(expected["stdout"], fresh["stdout"])
         self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
-        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(doc["stdout"]))
+        self.assertEqual(golden.canonical(fresh["stdout"]), golden.canonical(expected["stdout"]))
 
     def test_case_counts(self):
         for solver in SOLVERS:
