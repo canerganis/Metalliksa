@@ -1,6 +1,7 @@
 import { MaterialSpec } from "../types";
 import type { CandidateAlloySolution } from "./inverseAlloyOptimizer";
 import { MaterialThermalProfile, ThermalStage, HardnessAlloyPreset } from "../types/thermalKinetic";
+import { convertSteelHardness } from "./hardnessConversion";
 
 export type ModuleTargetId =
   | "thermal-scheduler"
@@ -41,6 +42,8 @@ export interface PipelineMaterialPayload {
   elongation: number;
   hardness: string;
   hardnessHV: number;
+  /** Where hardnessHV comes from: the hardness string, an ASTM E140 conversion of a reported HRC, or an estimate. */
+  hardnessHVSource?: HardnessHVSource;
   hardnessHRC?: number;
   poissonsRatio: number;
   thermalConductivity?: number;
@@ -440,6 +443,16 @@ export function deriveKineticProfile(
   return { profile, stages, icme };
 }
 
+export type HardnessHVSource = "reported" | "converted-astm-e140" | "estimate-from-yield" | "estimate-predicted";
+
+/**
+ * HRC <-> HV conversion only applies to non-austenitic steels (ASTM E140 Table 1). An Fe-base material whose name,
+ * category or microstructure mentions austenite (austenitic or duplex stainless) is not converted.
+ */
+export function isNonAusteniticSteel(baseMetal: string, ...descriptors: Array<string | undefined>): boolean {
+  return baseMetal === "Fe" && !descriptors.some((d) => d !== undefined && /austenit/i.test(d));
+}
+
 // Generate Hardness Preset & Mechanical Constitutive Parameters
 export function deriveHardnessProfile(
   matName: string,
@@ -449,24 +462,41 @@ export function deriveHardnessProfile(
   tensileStrength: number,
   youngsModulus: number,
   elongation: number,
-  hardnessStr: string
-): { hardnessProfile: HardnessAlloyPreset; hardnessHV: number; hardnessHRC?: number } {
-  // Estimate HV from Yield / Tensile
+  hardnessStr: string,
+  microstructure?: string,
+  /** true when hardnessStr itself is a prediction (e.g. a synthesized candidate), not a reported value */
+  hardnessStrIsEstimate = false
+): { hardnessProfile: HardnessAlloyPreset; hardnessHV: number; hardnessHVSource: HardnessHVSource; hardnessHRC?: number } {
+  // Fallback when no usable hardness is reported: an UNVERIFIED rule of thumb HV ~ YS/3 + 35 (no source); it is
+  // labelled as an estimate in hardnessHVSource and in the profile description.
   let hv = Math.round(yieldStrength / 3.0 + 35);
+  let hvSource: HardnessHVSource = "estimate-from-yield";
   let hrc: number | undefined = undefined;
+  const steel = isNonAusteniticSteel(baseMetal, matName, category, microstructure);
 
-  // Try extracting from hardness string
+  // Try extracting from hardness string. HRC <-> HV uses the ASTM E140 Table 1 interpolation, steels only.
   const hrcMatch = hardnessStr.match(/(\d+(\.\d+)?)\s*HRC/i);
   if (hrcMatch) {
     hrc = parseFloat(hrcMatch[1]);
-    hv = Math.round(80 + hrc * 14.5);
+    const convertedHV = steel ? convertSteelHardness(hrc, "HRC").HV : null;
+    if (convertedHV !== null) {
+      hv = convertedHV;
+      hvSource = "converted-astm-e140";
+    }
   } else {
     const hvMatch = hardnessStr.match(/(\d+(\.\d+)?)\s*HV/i);
     if (hvMatch) {
       hv = parseFloat(hvMatch[1]);
-      if (hv >= 240) hrc = Math.round((hv - 80) / 14.5);
+      hvSource = hardnessStrIsEstimate ? "estimate-predicted" : "reported";
+      if (steel) hrc = convertSteelHardness(hv, "HV").HRC ?? undefined;
     }
   }
+  const hvSourceText: Record<HardnessHVSource, string> = {
+    reported: `HV ${hv} as reported`,
+    "converted-astm-e140": `HV ${hv} converted from ${hrc} HRC per ASTM E140 Table 1 (approximate)`,
+    "estimate-from-yield": `HV ${hv} is an unverified estimate from yield strength (HV ~ YS/3 + 35)`,
+    "estimate-predicted": `HV ${hv} is a predicted value, not a measurement`,
+  };
 
   const n_hollomon = Math.min(0.28, Math.max(0.08, parseFloat((0.45 * Math.pow(elongation / 100, 0.5)).toFixed(3))));
   const K_hollomon = Math.round(tensileStrength * Math.pow(Math.E / n_hollomon, n_hollomon));
@@ -500,10 +530,12 @@ export function deriveHardnessProfile(
       LT: { yieldFactor: 0.96, utsFactor: 0.97, elongFactor: 0.88, k1cFactor: 0.91 },
       ST: { yieldFactor: 0.91, utsFactor: 0.93, elongFactor: 0.72, k1cFactor: 0.82 },
     },
-    description: `Calibrated from ${matName} with experimental hardness ${hardnessStr || `${hv} HV`}.`,
+    description: hardnessStr && !hardnessStrIsEstimate
+      ? `Calibrated from ${matName} with reported hardness ${hardnessStr}; ${hvSourceText[hvSource]}.`
+      : `Calibrated from ${matName}; ${hvSourceText[hvSource]}.`,
   };
 
-  return { hardnessProfile: hardnessProfile as any, hardnessHV: hv, hardnessHRC: hrc };
+  return { hardnessProfile: hardnessProfile as any, hardnessHV: hv, hardnessHVSource: hvSource, hardnessHRC: hrc };
 }
 
 // Generate XRD Profile with characteristic Bragg Peaks (Cu-Kα = 1.5406 Å)
@@ -582,7 +614,7 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
   const normComp = normalizeComposition(mat.composition);
   const baseMetal = detectBaseMetal(mat.category, normComp);
   const { profile: kineticProfile, stages: suggestedThermalCycle, icme } = deriveKineticProfile(mat.name, baseMetal, normComp, mat.yieldStrength);
-  const { hardnessProfile, hardnessHV, hardnessHRC } = deriveHardnessProfile(
+  const { hardnessProfile, hardnessHV, hardnessHVSource, hardnessHRC } = deriveHardnessProfile(
     mat.name,
     mat.category,
     baseMetal,
@@ -590,7 +622,8 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
     mat.tensileStrength,
     mat.youngsModulus,
     mat.elongation,
-    mat.hardness
+    mat.hardness,
+    mat.microstructure
   );
   const xrdProfile = deriveXRDProfile(mat.name, baseMetal, normComp);
 
@@ -613,6 +646,7 @@ export function createPipelinePayloadFromMaterialSpec(mat: MaterialSpec, sourceM
     elongation: mat.elongation,
     hardness: mat.hardness,
     hardnessHV,
+    hardnessHVSource,
     hardnessHRC,
     poissonsRatio: mat.poissonRatio || (baseMetal === "Al" ? 0.33 : baseMetal === "Ti" ? 0.34 : 0.29),
     thermalConductivity: mat.thermalConductivity,
@@ -647,7 +681,8 @@ export function createPipelinePayloadFromCandidate(
   const elongation = candidate.elongation_pct;
 
   const { profile: kineticProfile, stages: suggestedThermalCycle, icme } = deriveKineticProfile(name, baseMetal, comp, yieldStrength);
-  const { hardnessProfile, hardnessHV, hardnessHRC } = deriveHardnessProfile(
+  // The candidate's hardness is itself a prediction (unverified rule of thumb HV ~ YS/3 + 30), flagged as such.
+  const { hardnessProfile, hardnessHV, hardnessHVSource, hardnessHRC } = deriveHardnessProfile(
     name,
     `${baseMetal} Formulated Alloy`,
     baseMetal,
@@ -655,7 +690,9 @@ export function createPipelinePayloadFromCandidate(
     tensileStrength,
     youngsModulus,
     elongation,
-    `${Math.round(yieldStrength / 3 + 30)} HV`
+    `${Math.round(yieldStrength / 3 + 30)} HV`,
+    undefined,
+    true
   );
   const xrdProfile = deriveXRDProfile(name, baseMetal, comp);
 
@@ -677,6 +714,7 @@ export function createPipelinePayloadFromCandidate(
     elongation,
     hardness: `${hardnessHV} HV (Predicted)`,
     hardnessHV,
+    hardnessHVSource,
     hardnessHRC,
     poissonsRatio: baseMetal === "Al" ? 0.33 : baseMetal === "Ti" ? 0.34 : 0.29,
     kineticProfile,

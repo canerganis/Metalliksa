@@ -612,8 +612,10 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             youngsModulus: nextSpecimen.youngsModulus_GPa,
             density: nextSpecimen.density_gcm3,
             elongation: nextSpecimen.elongation_pct,
-            hardness: `${Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1)} HV`,
+            // Unverified rule of thumb HV ~ YS/3.1 (no source): labelled as an estimate, not a measured hardness.
+            hardness: `${Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1)} HV (estimate from yield strength, not measured)`,
             hardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
+            hardnessHVSource: "estimate-from-yield",
             poissonsRatio: 0.31,
             thermalConductivity: nextSpecimen.lpbf.thermalConductivity_k_WmK,
             kineticProfile: {
@@ -640,6 +642,7 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
                 ? nextSpecimen.category
                 : "Nickel Superalloy") as any,
               crystalStructure: nextSpecimen.xrd.crystalSystem as any,
+              // estimate (HV ~ YS/3.1, unverified), see hardnessHVSource above
               defaultHardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
               hardnessHV: Math.round(nextSpecimen.yieldStrength_25C_MPa / 3.1),
               measuredYield_MPa: nextSpecimen.yieldStrength_25C_MPa,
