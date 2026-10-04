@@ -7,6 +7,12 @@ import type { MicrographSample } from "../types";
 export const SEM_HARDNESS_UNAVAILABLE_NOTE =
   "Unavailable: no verified hardness relation for an inferred strength of an unspecified alloy (the steel regression needs a known non-austenitic hypoeutectoid steel)";
 
+/** Shown instead of the former invented 1150 / 1380 MPa (and 1080 MPa card) values before an analysis has run. */
+export const SEM_NO_ANALYSIS_TEXT = "Unavailable (no analysis run)";
+
+/** Basis of the inferred Rm: an unsourced 1.25 x yield ratio, not an ASTM E8/E8M tensile test (the old label). */
+export const SEM_TENSILE_BASIS_TEXT = "Screening estimate: 1.25 × inferred yield strength (unsourced ratio); not an ASTM E8/E8M test";
+
 export interface SEMDefectBlob {
   id: number;
   x: number;

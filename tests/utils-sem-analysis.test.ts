@@ -9,6 +9,8 @@ import {
   rgbToLuminance,
   segmentLengthPx,
   SEM_HARDNESS_UNAVAILABLE_NOTE,
+  SEM_NO_ANALYSIS_TEXT,
+  SEM_TENSILE_BASIS_TEXT,
   type SemAnalysisParams,
 } from "../src/utils/semAnalysis";
 
@@ -111,6 +113,9 @@ test("Hall-Petch style strength estimates follow the documented heuristic", () =
   assert.equal(lpbf.estimatedYieldStrengthMpa, 1026); // base 950 for LPBF
   assert.equal(lpbf.estimatedTensileStrengthMpa, 1283);
   assert.equal(lpbf.estimatedHardnessHv, null); // was 414
+  // Studio/PDF texts that replaced the invented 1150 / 1380 / 1080 MPa fallbacks and the "ASTM E8/E8M" basis
+  assert.equal(SEM_NO_ANALYSIS_TEXT, "Unavailable (no analysis run)");
+  assert.match(SEM_TENSILE_BASIS_TEXT, /1\.25 × inferred yield strength \(unsourced ratio\); not an ASTM E8\/E8M test/);
 });
 
 test("calibration scales lengths and areas: doubling um/px doubles l_bar and lowers G by 2", () => {

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import {
   generateAerospaceCoCPDF,
+  coCHardnessText,
   AerospaceAuditReportData,
   LabMultiTestData,
 } from "../utils/exportAerospaceCoC";
@@ -83,15 +84,8 @@ const GENERIC_SCREENING_PRESET: AerospacePreset = {
   densityGcm3: 4.43,
   youngsModulusGpa: 114,
   labData: {
-    taborTest: {
-      measuredHardnessHV: 320,
-      predictedYieldMpa: 875,
-      predictedUtsMpa: 945,
-      strainHardeningExponentN: 0.13,
-      fractureToughnessKic: 55,
-      correlationConfidencePct: 80,
-      indentationStandard: "ASTM E384 (screening estimate)",
-    },
+    // No hardness test entered: the former 320 HV "measured" value and its Ti hardness-to-strength prediction (80 %
+    // "correlation confidence") had no source.
     xrdAnalysis: {
       primaryPhase: "HCP α-Ti (example)",
       secondaryPhaseFractionPct: 8.0,
@@ -148,13 +142,8 @@ const DEMO_SCENARIO_PRESETS: AerospacePreset[] = [
     youngsModulusGpa: 114,
     labData: {
       taborTest: {
-        measuredHardnessHV: 338,
-        predictedYieldMpa: 932,
-        predictedUtsMpa: 1012,
-        strainHardeningExponentN: 0.138,
-        fractureToughnessKic: 68.4,
-        correlationConfidencePct: 99.4,
-        indentationStandard: "ASTM E8 / ASTM E384 Micro-indentation",
+        illustrativeHardnessHV: 338,
+        indentationStandard: "ASTM E384 method (illustrative demo value)",
       },
       xrdAnalysis: {
         primaryPhase: "HCP α-Ti (Alpha Matrix)",
@@ -209,13 +198,8 @@ const DEMO_SCENARIO_PRESETS: AerospacePreset[] = [
     youngsModulusGpa: 204,
     labData: {
       taborTest: {
-        measuredHardnessHV: 446,
-        predictedYieldMpa: 1180,
-        predictedUtsMpa: 1390,
-        strainHardeningExponentN: 0.162,
-        fractureToughnessKic: 86.2,
-        correlationConfidencePct: 98.9,
-        indentationStandard: "ASTM E8 / Tabor-Cahoon Indentation",
+        illustrativeHardnessHV: 446,
+        indentationStandard: "ASTM E384 method (illustrative demo value)",
       },
       xrdAnalysis: {
         primaryPhase: "FCC γ-Ni Matrix",
@@ -270,13 +254,8 @@ const DEMO_SCENARIO_PRESETS: AerospacePreset[] = [
     youngsModulusGpa: 71.7,
     labData: {
       taborTest: {
-        measuredHardnessHV: 162,
-        predictedYieldMpa: 472,
-        predictedUtsMpa: 538,
-        strainHardeningExponentN: 0.118,
-        fractureToughnessKic: 37.4,
-        correlationConfidencePct: 99.1,
-        indentationStandard: "ASTM E8 / Tabor-Cahoon Indentation",
+        illustrativeHardnessHV: 162,
+        indentationStandard: "ASTM E384 method (illustrative demo value)",
       },
       xrdAnalysis: {
         primaryPhase: "FCC α-Al Matrix",
@@ -331,13 +310,8 @@ const DEMO_SCENARIO_PRESETS: AerospacePreset[] = [
     youngsModulusGpa: 200,
     labData: {
       taborTest: {
-        measuredHardnessHV: 575,
-        predictedYieldMpa: 1715,
-        predictedUtsMpa: 2075,
-        strainHardeningExponentN: 0.088,
-        fractureToughnessKic: 58.6,
-        correlationConfidencePct: 98.7,
-        indentationStandard: "ASTM E8 / ASTM E18 Hardness",
+        illustrativeHardnessHV: 575,
+        indentationStandard: "ASTM E384 method (illustrative demo value)",
       },
       xrdAnalysis: {
         primaryPhase: "Tempered Martensite (BCT α')",
@@ -1013,11 +987,10 @@ export function AerospaceAuditReportGenerator() {
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="p-2 bg-slate-900/70 border border-slate-800 rounded">
                     <span className="text-[10px] font-bold text-sky-300 flex items-center gap-1">
-                      <Gauge className="w-3 h-3" /> Tabor-Cahoon Indentation
+                      <Gauge className="w-3 h-3" /> Indentation Hardness
                     </span>
                     <div className="text-slate-300 text-[10px] mt-1">
-                      Predicted Yield: <strong>{labData.taborTest?.predictedYieldMpa ?? meanYieldMpa} MPa</strong> | UTS:{" "}
-                      <strong>{labData.taborTest?.predictedUtsMpa ?? meanTensileMpa} MPa</strong> (n={labData.taborTest?.strainHardeningExponentN ?? 0.14})
+                      <strong>{coCHardnessText(labData.taborTest)}</strong>; no hardness-strength relation applied.
                     </div>
                   </div>
                   <div className="p-2 bg-slate-900/70 border border-slate-800 rounded">
