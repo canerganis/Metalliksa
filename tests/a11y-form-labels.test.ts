@@ -204,6 +204,22 @@ export function weakLabels(source: string): number[] {
   return lines;
 }
 
+/** Lines where an aria-label template interpolates a *Unit variable directly (raw keys like "MPa_m05" leak into names). */
+export function rawUnitInterpolations(source: string): number[] {
+  const lines: number[] = [];
+  source
+    .replace(/\r/g, "")
+    .split("\n")
+    .forEach((line, i) => {
+      for (const m of line.matchAll(/aria-label=\{`([^`]*)`\}/g)) {
+        if (/\$\{\s*\w*Unit\s*\}/.test(m[1])) lines.push(i + 1); // bare variable only; mapped expressions are fine
+      }
+    });
+  return lines;
+}
+// Option values are already the display text there (µm/nm/mm), so interpolating the state is safe.
+const RAW_UNIT_ALLOWED = new Set(["src/components/SEMAutoAnalyzerStudio.tsx"]);
+
 function listTsx(dir: string): string[] {
   return (readdirSync(resolve(process.cwd(), dir), { recursive: true }) as string[])
     .map((p) => `${dir}/${p.replace(/\\/g, "/")}`)
@@ -250,6 +266,12 @@ test("negative fixtures: <label in comments/strings and self-closing labels neve
   assert.deepEqual(unlabelledControls("<label />\n<label>A<input /></label>"), []);
 });
 
+test("raw unit-key interpolation in aria-label is detected", () => {
+  assert.deepEqual(rawUnitInterpolations("<input aria-label={`Value (${tempUnit})`} />"), [1]);
+  assert.deepEqual(rawUnitInterpolations('<input aria-label={withUnit("Value", tempUnit)} />'), []);
+  assert.deepEqual(rawUnitInterpolations("<input aria-label={`Value in ${hardnessScale}`} />"), []);
+});
+
 test("weak labels: too long or equal to the placeholder are rejected", () => {
   assert.deepEqual(weakLabels('<input aria-label="Filter lots" placeholder="Filter lots" />'), [1]);
   assert.deepEqual(weakLabels('<input aria-label="filter LOTS" placeholder="Filter lots" />'), [1]);
@@ -281,6 +303,9 @@ for (const rel of listTsx("src")) {
     const src = readFileSync(resolve(process.cwd(), rel), "utf8");
     const offenders = unlabelledControls(src);
     assert.deepEqual(offenders, [], `unlabelled controls at lines ${offenders.join(", ")}`);
+    if (!RAW_UNIT_ALLOWED.has(rel)) {
+      assert.deepEqual(rawUnitInterpolations(src), [], "aria-label interpolates a raw *Unit key; use a display lookup");
+    }
     const weak = weakLabels(src);
     assert.deepEqual(weak, [], `labels too long (>${MAX_LABEL_LENGTH}) or equal to the placeholder at lines ${weak.join(", ")}`);
   });

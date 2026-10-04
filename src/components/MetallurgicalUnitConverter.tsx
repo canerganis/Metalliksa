@@ -42,6 +42,17 @@ import {
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
+// Display text of each unit <option> below, for accessible names (state holds raw keys such as "MPa_m05").
+const UNIT_DISPLAY: Record<string, string> = {
+  MPa: "MPa", ksi: "ksi", GPa: "GPa", psi: "psi", bar: "bar", kgf_mm2: "kgf/mm²",
+  C: "°C", K: "K", F: "°F", R: "°R",
+  MPa_m05: "MPa·√m", ksi_in05: "ksi·√in", N_mm15: "N·mm⁻³/²",
+  J: "J", ft_lbf: "ft·lbf", kgf_m: "kgf·m", J_cm2: "J/cm²",
+  angstrom: "Å", nm: "nm", um: "µm", mm: "mm", mil: "mil", in: "in",
+  mpy: "mpy", mm_yr: "mm/year", um_yr: "µm/year", g_m2_day: "g/(m²·day)",
+};
+const withUnit = (name: string, unit: string): string => (UNIT_DISPLAY[unit] ? `${name} (${UNIT_DISPLAY[unit]})` : name);
+
 export const MetallurgicalUnitConverter: React.FC = () => {
   const { activeMaterialSpecimen } = useMaterialStore();
 
@@ -321,7 +332,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label={`Stress Magnitude (${stressUnit})`}
+                <input aria-label={withUnit("Stress Magnitude", stressUnit)}
                   type="number"
                   inputMode="decimal"
                   value={stressInput}
@@ -342,7 +353,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label={`Stress Magnitude slider (${stressUnit})`}
+              <input aria-label={withUnit("Stress Magnitude slider", stressUnit)}
                 type="range"
                 min={stressUnit === "GPa" ? 10 : stressUnit === "ksi" ? 5 : 50}
                 max={stressUnit === "GPa" ? 450 : stressUnit === "ksi" ? 350 : 2500}
@@ -717,7 +728,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label={`Temperature Value (${tempUnit})`}
+                <input aria-label={withUnit("Temperature Value", tempUnit)}
                   type="number"
                   inputMode="decimal"
                   value={tempInput}
@@ -736,7 +747,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label={`Temperature Value slider (${tempUnit})`}
+              <input aria-label={withUnit("Temperature Value slider", tempUnit)}
                 type="range"
                 min={tempUnit === "C" ? -200 : tempUnit === "K" ? 70 : -320}
                 max={tempUnit === "C" ? 1600 : tempUnit === "K" ? 1873 : 2900}
@@ -916,7 +927,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 <span className="text-[10px] font-mono text-sky-400">{kicUnit}</span>
               </label>
               <div className="flex gap-2">
-                <input aria-label={`Fracture toughness Value (${kicUnit})`}
+                <input aria-label={withUnit("Fracture toughness Value", kicUnit)}
                   type="number"
                   inputMode="decimal"
                   value={kicInput}
@@ -971,7 +982,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 <span className="text-[10px] font-mono text-emerald-400">{cvnUnit}</span>
               </label>
               <div className="flex gap-2">
-                <input aria-label={`Energy Input (${cvnUnit})`}
+                <input aria-label={withUnit("Energy Input", cvnUnit)}
                   type="number"
                   inputMode="decimal"
                   value={cvnInput}
@@ -1117,7 +1128,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
             </div>
 
             <div className="flex gap-2">
-              <input aria-label={`Micro Length Scale Converter value (${lengthUnit})`}
+              <input aria-label={withUnit("Micro Length Scale Converter value", lengthUnit)}
                 type="number"
                 inputMode="decimal"
                 value={lengthInput}
@@ -1192,7 +1203,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               </label>
 
               <div className="flex gap-2">
-                <input aria-label={`Corrosion Rate Magnitude (${crUnit})`}
+                <input aria-label={withUnit("Corrosion Rate Magnitude", crUnit)}
                   type="number"
                   inputMode="decimal"
                   value={crInput}
@@ -1211,7 +1222,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 </select>
               </div>
 
-              <input aria-label={`Corrosion Rate Magnitude slider (${crUnit})`}
+              <input aria-label={withUnit("Corrosion Rate Magnitude slider", crUnit)}
                 type="range"
                 min={crUnit === "mm_yr" ? 0.01 : 0.2}
                 max={crUnit === "mm_yr" ? 1.5 : 50}
