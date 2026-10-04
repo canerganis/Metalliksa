@@ -39,7 +39,7 @@ export function Badge({ children, tone = "warning" }: { children: React.ReactNod
 }
 export const STALE_RESULT_MESSAGE = "Stale: inputs changed since this result. The values shown were computed for an earlier process vector; run again to evaluate the current inputs.";
 /** De-emphasis for numbers that belong to a result computed for earlier inputs (evidence labels stay at full emphasis). */
-export const staleValueClass = (stale: boolean) => stale ? "opacity-50" : "";
+export const staleValueClass = (stale: boolean) => stale ? "opacity-75" : "";
 /** Prominent stale-result banner; rendered at the top of every panel that still shows an earlier result. */
 export function StaleResultBanner({ className = "" }: { className?: string }) {
   return <p role="status" data-stale-result="true" className={`border border-amber-300/50 bg-amber-400/15 px-6 py-3 text-sm font-medium text-amber-100 ${className}`}>{STALE_RESULT_MESSAGE}</p>;

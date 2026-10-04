@@ -552,7 +552,7 @@ test("GET /login without a code serves an accessible sign-in form with status 20
   assert.equal(res.headers["set-cookie"], undefined);
 });
 
-// The login pages deliberately use LOGIN_REFERRER_POLICY ("same-origin") instead of "no-referrer":
+// The login pages deliberately use LOGIN_REFERRER_POLICY ("strict-origin") instead of "no-referrer":
 // under "no-referrer" browsers send "Origin: null" on the same-origin sign-in form POST (Phase 2 D1).
 test("every /login response is no-store and carries the login referrer policy (success, failure, throttled, GET, HEAD)", () => {
   const auth = new LoginAuth({ token: "s3cret", loginLimit: 3 });
@@ -920,6 +920,10 @@ test("D1 real HTTP: Origin null is accepted only with browser proof (Sec-Fetch-S
     assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor() })).status, 403, "logout without Origin");
     assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null" })).status, 403);
     assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null", "sec-fetch-site": "cross-site" })).status, 403);
+    for (const site of ["same-site", "cross-site"]) {
+      const sameOriginHeader = `http://127.0.0.1:${port}`;
+      assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: sameOriginHeader, "sec-fetch-site": site })).status, 403, `logout with ${site} metadata`);
+    }
     assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null", "sec-fetch-site": "same-origin" })).status, 200);
   });
 });

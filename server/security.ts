@@ -384,10 +384,10 @@ function sessionCookie(req: Request, value: string, maxAgeSeconds: number): stri
 /**
  * Referrer policy for /login and /logout. Not "no-referrer": under that policy browsers serialise the
  * Origin of a same-origin form POST as the literal "null", so the sign-in form could never pass the
- * Origin check (Phase 2 defect D1). "same-origin" still sends nothing to any other origin, and these
- * pages load no cross-origin resources, so the one-time code in the URL cannot leak off-site.
+ * Origin check (Phase 2 defect D1). "strict-origin" still makes browsers send the real Origin but never the
+ * path or query, so the one-time code in the URL cannot leak through Referer (same-site or off-site).
  */
-export const LOGIN_REFERRER_POLICY = "same-origin";
+export const LOGIN_REFERRER_POLICY = "strict-origin";
 
 /**
  * Browser proof for an "Origin: null" request: Sec-Fetch-Site is a forbidden header that only the

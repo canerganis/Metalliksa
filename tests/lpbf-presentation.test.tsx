@@ -19,7 +19,7 @@ assert.match(render({...job, cacheHit:true}), /Cached · completed/);
 {
   const fresh = render(job);
   assert.doesNotMatch(fresh, /Stale/);
-  assert.doesNotMatch(fresh, /opacity-50/);
+  assert.doesNotMatch(fresh, /opacity-75/);
   assert.match(fresh, />completed</);
   for (const staleJob of [job, { ...job, cacheHit: true }]) {
     const html = render(staleJob, true);
@@ -35,11 +35,11 @@ assert.match(render({...job, cacheHit:true}), /Cached · completed/);
     assert.match(html, /Completed for earlier inputs · 100% reported/);
     assert.match(html, /Stale simulation result/);
     // Old numbers are de-emphasised.
-    for (const value of ["321", "123", "45"]) assert.match(html, new RegExp(`<dd class="[^"]*opacity-50[^"]*">${value} `), value);
-    assert.match(html, /<p class="mt-2 text-sm leading-6 opacity-50">Reduce hatch spacing/);
+    for (const value of ["321", "123", "45"]) assert.match(html, new RegExp(`<dd class="[^"]*opacity-75[^"]*">${value} `), value);
+    assert.match(html, /<p class="mt-2 text-sm leading-6 opacity-75">Reduce hatch spacing/);
     // Evidence and limitation labels stay at full emphasis.
     for (const label of [">Experimental validation pending<", ">Calibration incomplete<", "Goldak · analytical liquidus extent", "Regime · conduction assumption", "Confidence</dt><dd class=\"mt-1.5 break-words text-sm\">low · model evidence limited"]) assert.ok(html.includes(label), label);
-    assert.doesNotMatch(html, /opacity-50[^"]*">(Experimental validation pending|Calibration incomplete|Goldak)/);
+    assert.doesNotMatch(html, /opacity-75[^"]*">(Experimental validation pending|Calibration incomplete|Goldak)/);
   }
   // A non-completed job never shows the stale banner (there is no result to mark).
   assert.doesNotMatch(render({ ...job, status: "failed", progress: .5 }, true), /Stale: inputs changed/);
