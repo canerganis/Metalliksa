@@ -182,6 +182,24 @@ class Verification(unittest.TestCase):
             with self.subTest(validity=invalid), self.assertRaises(ValueError):
                 material("Inconel 718", bad)
 
+    def test_supplied_identity_is_rederived_but_authority_claims_are_rejected(self):
+        canonical = copy.deepcopy(material("Inconel 718"))
+        for key in ("materialAuthority", "materialAuthorityRevisionSha256"):
+            supplied = copy.deepcopy(canonical)
+            for identity in ("materialId", "provenanceClass", "materialIdentitySchemaVersion", "materialRevisionSha256",
+                             "materialAuthority", "materialAuthorityRevisionSha256"):
+                supplied.pop(identity)
+            supplied["source"] = "Unit-test source record"
+            supplied[key] = canonical[key]
+            with self.subTest(claim=key), self.assertRaisesRegex(ValueError, "Unknown material property fields"):
+                material("Inconel 718", supplied)
+        tolerated = copy.deepcopy(canonical)
+        for identity in ("materialAuthority", "materialAuthorityRevisionSha256"):
+            tolerated.pop(identity)
+        tolerated["source"] = "Unit-test source record"
+        tolerated["materialRevisionSha256"] = "0" * 64  # copied identity metadata must be recomputed, never trusted
+        self.assertNotEqual(material("Inconel 718", tolerated)["materialRevisionSha256"], "0" * 64)
+
     def test_supplied_data_for_additional_alloy(self):
         # Synthetic table exercises schema only; explicitly marked synthetic source.
         supplied = copy.deepcopy(material("Inconel 718"))
