@@ -325,6 +325,8 @@ _KEYHOLE_OUTPUT = OutputSchema(
             "total_absorbed_W", "total_escaped_W", "total_truncated_W", "energy_balance_relative_error",
             "absorption_efficiency", "sampling", "inputs", "limitations", "mesh", "ray_paths"),
     status_key=None,
+    # The solver returns the literal "success"; failures raise and reach the route as errors.
+    transport_values=(("status", ("success",)),),
 )
 
 _KEYHOLE_EVIDENCE_NOTE = (
@@ -666,7 +668,10 @@ def render_ts(document: dict) -> str:
         "  readonly authority: ContractAuthority;",
         "  readonly input: readonly ContractField[];",
         "  readonly undeclaredInput: readonly string[];",
-        "  readonly output: { readonly fields: readonly string[]; readonly statusKey: string | null } | null;",
+        "  readonly output: {",
+        "    readonly fields: readonly string[]; readonly statusKey: string | null;",
+        "    readonly transportValues: Readonly<Record<string, readonly string[]>>;",
+        "  } | null;",
         "}",
         "export interface ContractValidityDomain {",
         "  readonly ranges: readonly { readonly key: string; readonly min: number; readonly max: number; readonly unit: string }[];",
@@ -757,6 +762,9 @@ def render_module_doc(contract: ModuleContract) -> str:
             status = (f"evidence status key `{op.output.status_key}`" if op.output.status_key
                       else "no status key, so the output carries no evidence status")
             lines += ["", f"Output fields ({status}): " + ", ".join(f"`{k}`" for k in op.output.fields) + "."]
+            for key, values in op.output.transport_values:
+                lines += ["", f"`{key}` is a transport field, not an evidence status; values: "
+                          + ", ".join(f"`{v}`" for v in values) + "."]
     e = c.evidence
     oracle = (f"present, `{c.tests.oracle.ref}`" if c.tests.oracle.status == "present"
               else f"pending (ceiling capped at {PENDING_ORACLE_CEILING})")

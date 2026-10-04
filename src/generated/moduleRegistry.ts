@@ -29,7 +29,10 @@ export interface ContractOperation {
   readonly authority: ContractAuthority;
   readonly input: readonly ContractField[];
   readonly undeclaredInput: readonly string[];
-  readonly output: { readonly fields: readonly string[]; readonly statusKey: string | null } | null;
+  readonly output: {
+    readonly fields: readonly string[]; readonly statusKey: string | null;
+    readonly transportValues: Readonly<Record<string, readonly string[]>>;
+  } | null;
 }
 export interface ContractValidityDomain {
   readonly ranges: readonly { readonly key: string; readonly min: number; readonly max: number; readonly unit: string }[];
@@ -1560,7 +1563,12 @@ export const MODULE_REGISTRY = {
               "mesh",
               "ray_paths"
             ],
-            "statusKey": null
+            "statusKey": null,
+            "transportValues": {
+              "status": [
+                "success"
+              ]
+            }
           }
         }
       ],
@@ -2858,7 +2866,8 @@ export const MODULE_REGISTRY = {
               "aerospaceReliability",
               "provenance"
             ],
-            "statusKey": null
+            "statusKey": null,
+            "transportValues": {}
           }
         }
       ],

@@ -265,18 +265,44 @@ class Authority:
         }
 
 
+def looks_like_status_key(key: str) -> bool:
+    """Output keys a reader could take for a result/evidence status (case and '_' ignored)."""
+    norm = key.replace("_", "").lower()
+    return norm.endswith("status") or norm.startswith("evidence")
+
+
 @dataclass(frozen=True)
 class OutputSchema:
     fields: Tuple[str, ...]
     # Top-level key carrying the run's evidence status. None records that the
     # authority's output carries no evidence status at all (then emits is empty).
     status_key: Optional[str] = "evidenceStatus"
+    # Status-like fields that are transport values, with every value the authority
+    # can put there (e.g. ("status", ("success",))). None of them may be an evidence
+    # status or a claim; any other status-like field is rejected.
+    transport_values: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
 
     def __post_init__(self) -> None:
         _require(len(self.fields) > 0, "output.fields must not be empty")
         _unique(self.fields, "output.fields")
         for key in self.fields:
             _require(key not in FORBIDDEN_CLAIM_KEYS, f"output field {key!r} is a forbidden claim key")
+        transport = dict(self.transport_values)
+        _require(len(transport) == len(self.transport_values), "output.transportValues keys must be unique")
+        for key, values in transport.items():
+            _require(key in self.fields, f"output.transportValues key {key!r} is not an output field")
+            _require(key != self.status_key, f"output.transportValues cannot describe the status key {key!r}")
+            _require(len(values) > 0, f"output.transportValues[{key!r}] needs values")
+            _unique(values, f"output.transportValues[{key!r}]")
+            for value in values:
+                _text(value, f"output.transportValues[{key!r}]")
+                _require(value not in EVIDENCE_STATUSES and value not in FORBIDDEN_CLAIM_KEYS,
+                         f"output.transportValues[{key!r}] value {value!r} is an evidence status or claim")
+        for key in self.fields:
+            if key != self.status_key and looks_like_status_key(key):
+                # Without this, a contract with statusKey None could hide a real status field.
+                _require(key in transport, f"output field {key!r} looks like a status key; declare it as the "
+                                           "statusKey or list its transport values")
         if self.status_key is None:
             return
         _text(self.status_key, "output.statusKey")
@@ -287,7 +313,8 @@ class OutputSchema:
                  f"output.statusKey {self.status_key!r} collides with an output field")
 
     def to_dict(self) -> dict:
-        return {"fields": list(self.fields), "statusKey": self.status_key}
+        return {"fields": list(self.fields), "statusKey": self.status_key,
+                "transportValues": {key: list(values) for key, values in self.transport_values}}
 
 
 @dataclass(frozen=True)
@@ -585,7 +612,9 @@ def _operation_from_dict(d: dict) -> Operation:
     return Operation(id=d["id"], route=d["route"], method=d["method"], authority=authority,
                      input=tuple(_field_from_dict(f) for f in d["input"]),
                      undeclared_input=tuple(d["undeclaredInput"]),
-                     output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"]) if out else None)
+                     output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
+                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()))
+                     if out else None)
 
 
 def contract_from_dict(d: dict) -> ModuleContract:

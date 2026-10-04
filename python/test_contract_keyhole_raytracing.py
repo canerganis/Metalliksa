@@ -59,6 +59,13 @@ class KeyholeContractScaffold(ContractScaffold, unittest.TestCase):
         self.assertEqual(fields["device"].enum, authority_devices())
         self.assertEqual(fields["device"].default, "cpu")
 
+    def test_transport_status_values_match_the_solver_return(self):
+        tree = ast.parse(SOLVER.read_text(encoding="utf-8"))
+        values = {node.values[i].value for node in ast.walk(tree) if isinstance(node, ast.Dict)
+                  for i, key in enumerate(node.keys)
+                  if isinstance(key, ast.Constant) and key.value == "status" and isinstance(node.values[i], ast.Constant)}
+        self.assertEqual(values, set(dict(self.operation().output.transport_values)["status"]))
+
     @unittest.skipUnless(WARP, "NVIDIA Warp is not installed on this interpreter")
     def test_authority_rejects_what_the_contract_rejects(self):
         from lpbf_keyhole_raytracing import compute_keyhole_raytracing

@@ -1497,7 +1497,12 @@
               "mesh",
               "ray_paths"
             ],
-            "statusKey": null
+            "statusKey": null,
+            "transportValues": {
+              "status": [
+                "success"
+              ]
+            }
           }
         }
       ],
@@ -2795,7 +2800,8 @@
               "aerospaceReliability",
               "provenance"
             ],
-            "statusKey": null
+            "statusKey": null,
+            "transportValues": {}
           }
         }
       ],

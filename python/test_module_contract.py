@@ -327,6 +327,24 @@ class ForbiddenClaimTests(unittest.TestCase):
         with self.assertRaises(mc.ContractError):
             _contract(tests=mc.TestRefs(schema="python/test_contract_uq_lab.py"))
 
+    def test_status_like_fields_need_a_status_key_or_transport_values(self):
+        # With statusKey None, a field that reads like a status must be declared transport-only.
+        for key in ("status", "evidenceStatus", "evidence_status", "runStatus", "qualificationStatus", "evidenceLevel"):
+            with self.subTest(key=key), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("value", key), status_key=None)
+        ok = mc.OutputSchema(fields=("value", "status"), status_key=None, transport_values=(("status", ("success",)),))
+        self.assertEqual(ok.to_dict()["transportValues"], {"status": ["success"]})
+        for values in (("screening-only",), ("unvalidated",), ("qualified",), ()):
+            with self.subTest(values=values), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("value", "status"), status_key=None, transport_values=(("status", values),))
+        with self.assertRaises(mc.ContractError):  # transport key must be an output field
+            mc.OutputSchema(fields=("value",), status_key=None, transport_values=(("status", ("success",)),))
+        with self.assertRaises(mc.ContractError):  # the status key itself is not a transport field
+            mc.OutputSchema(fields=("value",), status_key="status", transport_values=(("status", ("success",)),))
+        with self.assertRaises(mc.ContractError):  # a second status-like field next to the status key
+            mc.OutputSchema(fields=("value", "runStatus"))
+        self.assertEqual(mc.OutputSchema(fields=("value", "success")).status_key, "evidenceStatus")
+
     def test_emits_follow_the_output_status_key(self):
         # An output without a status key emits nothing; declaring emits then is a false claim.
         silent = mc.Operation(id="run", method="POST", route="/api/uq/run",
