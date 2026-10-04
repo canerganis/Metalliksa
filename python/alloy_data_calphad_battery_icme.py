@@ -50,15 +50,8 @@ LEGACY_F_96485_33 = Constant(96485.33, "C/mol", f"{_CODATA} F, rounded to 2 deci
 
 # Where each truncated constant is used (solver file, function) -> (R, F) names.
 # "TRUNCATED_*" refers to physical_constants; None means the site uses no F.
+# Design step (b) removed the calphad and battery_corrosion_eis_solver sites (exact SI R/F).
 LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({
-    ("battery_corrosion_eis_solver.py", "simulate_p2d_continuum_profiles"):
-        ("LEGACY_R_8_314", "LEGACY_F_96485_332"),
-    ("battery_corrosion_eis_solver.py", "simulate_battery_degradation_and_eis"):
-        ("LEGACY_R_8_314", None),
-    ("battery_corrosion_eis_solver.py", "simulate_nernst_planck_poisson_transport"):
-        ("TRUNCATED_GAS_CONSTANT_R", "TRUNCATED_FARADAY"),
-    ("battery_corrosion_eis_solver.py", "analyze_uploaded_eis_dataset"):
-        ("LEGACY_R_8_31446", "LEGACY_F_96485_33"),
     ("icme_multiscale_pipeline_solver.py", "solve_multiscale_pipeline"): ("LEGACY_R_8_314", None),
 })
 

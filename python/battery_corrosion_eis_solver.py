@@ -14,18 +14,14 @@ import cmath
 import time
 
 import physical_constants
-from alloy_data_calphad_battery_icme import (
-    LEGACY_F_96485_33,
-    LEGACY_F_96485_332,
-    LEGACY_R_8_314,
-    LEGACY_R_8_31446,
-    provenance as _domain_data_provenance,
-)
+from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
 
-# Phase 6a structural step (a): every R/F site keeps the exact number it used before
-# the migration (8.314, 8.31446, 8.314462618; 96485.332, 96485.33, 96485.33212), now
-# named in alloy_data_calphad_battery_icme / physical_constants, so the output stays
-# bit-identical. The switch to the exact SI products is the value step (b).
+# Phase 6a value step (b): every R/F site uses the exact SI 2019 products N_A*k and
+# N_A*e. Before, the four sites used four different printings: p2d 8.314/96485.332,
+# degradation 8.314, Nernst-Planck-Poisson 8.314462618/96485.33212 and uploaded EIS
+# 8.31446/96485.33.
+R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
+F_FARADAY = physical_constants.FARADAY.value  # C/mol, exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # ==========================================
@@ -171,8 +167,8 @@ def simulate_p2d_continuum_profiles(chemistry_id, c_rate, temp_c, soc=0.5, custo
         custom_params = {}
         
     t_k = temp_c + ZERO_CELSIUS_K
-    f_const = LEGACY_F_96485_332.value # C/mol (96485.332)
-    r_gas = LEGACY_R_8_314.value # J/(mol*K) (8.314)
+    f_const = F_FARADAY # C/mol, exact (was 96485.332)
+    r_gas = R_GAS # J/(mol*K), exact (was 8.314)
     
     # Standard cell geometry (microns)
     l_neg = custom_params.get("l_neg_um", 85.0) # Anode thickness
@@ -633,7 +629,7 @@ def simulate_battery_degradation_and_eis(chemistry_id, initial_params, cycles, t
     and fast-charging lithium plating risk over cycling.
     """
     t_kelvin = temp_c + ZERO_CELSIUS_K
-    r_gas = LEGACY_R_8_314.value # J/(mol*K) (8.314)
+    r_gas = R_GAS # J/(mol*K), exact (was 8.314)
     
     # Baseline Parameters
     r0_base = initial_params.get("r0_ohm", 0.12)
@@ -972,8 +968,8 @@ def simulate_nernst_planck_poisson_transport(formulation_id="lipf6_ec_emc", curr
     form = ELECTROLYTE_FORMULATIONS.get(formulation_id, ELECTROLYTE_FORMULATIONS["lipf6_ec_emc"])
     
     # Constants
-    F = physical_constants.TRUNCATED_FARADAY # C/mol (96485.33212)
-    R = physical_constants.TRUNCATED_GAS_CONSTANT_R # J/(mol*K) (8.314462618)
+    F = F_FARADAY # C/mol, exact (was 96485.33212)
+    R = R_GAS # J/(mol*K), exact (was 8.314462618)
     T = temp_c + ZERO_CELSIUS_K # Kelvin
     EPS_0 = 8.8541878128e-12 # F/m
     
@@ -1766,8 +1762,8 @@ def analyze_uploaded_eis_dataset(frequencies, z_real, z_imag, application_domain
     
     # 3. Exchange Current Density I_0
     # I_0 = (R * T) / (n * F * R_ct)
-    R_gas = LEGACY_R_8_31446.value  # 8.31446
-    F_const = LEGACY_F_96485_33.value  # 96485.33
+    R_gas = R_GAS  # exact (was 8.31446)
+    F_const = F_FARADAY  # exact (was 96485.33)
     T_kelvin = cell_temperature_c + ZERO_CELSIUS_K
     i_0_A = (R_gas * T_kelvin) / (1.0 * F_const * max(1e-6, r_ct_ohm))
     
@@ -2124,8 +2120,11 @@ if __name__ == "__main__":
             res["provenance"] = {
                 "constantsVersion": physical_constants.CONSTANTS_VERSION,
                 **_domain_data_provenance(),
-                "constantsNote": "Per-site rounded/truncated R and F (pre-migration values); "
-                                 "exact SI values are pending the Phase 6a value step.",
+                "gasConstantR_J_molK": R_GAS,
+                "faraday_C_mol": F_FARADAY,
+                "constantsNote": "Exact SI 2019 R = N_A*k and F = N_A*e at every site (Phase 6a "
+                                 "value step); they replaced the per-site printings 8.314, "
+                                 "8.31446, 8.314462618 / 96485.332, 96485.33, 96485.33212.",
             }
         print(json.dumps(res))
         

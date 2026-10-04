@@ -380,7 +380,19 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(prov["gasConstantR_J_molK"], 8.314)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("battery_corrosion_eis_solver", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
-        self.assertEqual(fresh["provenance"]["provenance"]["constantsVersion"], pc.CONSTANTS_VERSION)
+        prov = fresh["provenance"]["provenance"]
+        self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
+        # Design step (b): one exact R/F for all four battery sites.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
+
+    def test_battery_sites_use_the_exact_constants(self):
+        import battery_corrosion_eis_solver as battery
+        self.assertEqual(battery.R_GAS, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(battery.F_FARADAY, pc.FARADAY.value)
+        src = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
+        for name in ("LEGACY_R_", "LEGACY_F_", "TRUNCATED_"):
+            self.assertNotIn(name, src)
 
 
 class PersistentIpcRelayTest(unittest.TestCase):
