@@ -404,6 +404,21 @@ def liquidus_crossing_sums(old, new, active, dx, dt, liquidus):
             float(cooling[good].sum()), int(good.sum())]
 
 
+def _require_reference_powder_observer(p, message, thermal_solver=None):
+    """Shared gate of the final-state, selected-time and local-history observers.
+
+    They support standard reference powder-layer runs only: no study and not the
+    layered-plate model. run() also passes its selected thermal_solver, which must be
+    the NumPy transient. Raises ValueError(message); same clauses and order as the
+    former inline copies (design 5c, B3).
+    """
+    if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
+            or p["surfaceMode"] != "powder-layer"
+            or (thermal_solver is not None and thermal_solver is not transient)
+            or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
+        raise ValueError(message)
+
+
 @track_cpu_progress
 def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_observer=None,
               selected_time_observer=None, selected_time_s=None,
@@ -411,18 +426,12 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer"
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Final state capture supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Final state capture supports standard reference powder-layer runs only")
     segments, end = scan_segments(p)
     if selected_time_observer is not None:
         if not callable(selected_time_observer):
             raise ValueError("Selected-time observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer"
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Selected-time capture supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Selected-time capture supports standard reference powder-layer runs only")
         if (isinstance(selected_time_s, bool) or not isinstance(selected_time_s, (int, float))
                 or not math.isfinite(selected_time_s) or selected_time_s <= 0
                 or not any(selected_time_s == segment["end_s"] for segment in segments)):
@@ -436,10 +445,7 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
     else:
         if not callable(local_history_observer):
             raise ValueError("Local history observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer"
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Local history supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Local history supports standard reference powder-layer runs only")
         if (not isinstance(local_history_indices_ijk, (tuple, list))
                 or not 1 <= len(local_history_indices_ijk) <= 32):
             raise ValueError("Local history needs 1 to 32 selected cell indices")
@@ -889,17 +895,11 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
     if final_state_observer is not None:
         if not callable(final_state_observer):
             raise ValueError("Final state observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Final state capture supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Final state capture supports standard reference powder-layer runs only", thermal_solver)
     if selected_time_observer is not None:
         if not callable(selected_time_observer):
             raise ValueError("Selected-time observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Selected-time capture supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Selected-time capture supports standard reference powder-layer runs only", thermal_solver)
         segments, _ = scan_segments(p)
         if (isinstance(selected_time_s, bool) or not isinstance(selected_time_s, (int, float))
                 or not math.isfinite(selected_time_s) or selected_time_s <= 0
@@ -910,10 +910,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
     if local_history_observer is not None or local_history_indices_ijk is not None:
         if local_history_observer is None or not callable(local_history_observer):
             raise ValueError("Local history observer must be callable")
-        if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
-                or p["surfaceMode"] != "powder-layer" or thermal_solver is not transient
-                or p.get("thermalModelId") == "layered-plate-enthalpy-v1"):
-            raise ValueError("Local history supports standard reference powder-layer runs only")
+        _require_reference_powder_observer(p, "Local history supports standard reference powder-layer runs only", thermal_solver)
     result = dict(schemaVersion=1, requestedMode=p["mode"], effectiveMode="screening" if fallback else p["mode"],
                   solver=dict(id=("layered-enthalpy-fv-1" if p.get("thermalModelId") == "layered-plate-enthalpy-v1"
                                   else "rosenthal+goldak" if p["mode"] == "screening" or fallback else VERSION),
