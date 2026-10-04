@@ -2,40 +2,12 @@
   "description": "Ratchet baseline (Phase 7 slice 1, fix round 2): files under src/features, src/utils, src/services and src/hooks that no runtime import path reaches from src/main.tsx, src/App.tsx or a registered module view. The set may only shrink; entries must stay within src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json. Nothing is deleted automatically (user approval).",
   "files": [
     {
-      "path": "src/hooks/usePythonAnalysis.ts",
-      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
-    },
-    {
       "path": "src/hooks/useVisibleAbortSignal.ts",
       "note": "Shared visibility lifecycle hook (Phase 5b helper) not adopted by a view yet; covered by tests/visibility-hooks.test.tsx."
     },
     {
-      "path": "src/services/pythonAnalysis.ts",
-      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
-    },
-    {
-      "path": "src/utils/cnlsOptimizer.ts",
-      "note": "Deletion manifest follow-on orphan of the EIS cluster (Phase 5a); needs user approval."
-    },
-    {
       "path": "src/utils/ebsdParser.ts",
       "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
-    },
-    {
-      "path": "src/utils/eisAgingCampaigns.ts",
-      "note": "Deletion manifest follow-on orphan of the EIS cluster (Phase 5a); needs user approval."
-    },
-    {
-      "path": "src/utils/eisFileParser.ts",
-      "note": "Deletion manifest follow-on orphan of the EIS cluster (Phase 5a); needs user approval."
-    },
-    {
-      "path": "src/utils/monteCarloEngine.ts",
-      "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
-    },
-    {
-      "path": "src/utils/pythonCnlsReport.ts",
-      "note": "Deletion manifest follow-on orphan of the EIS cluster (Phase 5a); needs user approval."
     },
     {
       "path": "src/utils/savitzkyGolay.ts",
@@ -44,10 +16,6 @@
     {
       "path": "src/utils/seededRandom.ts",
       "note": "Not in the deletion manifest; found by this test. No importer reachable from the app entry or a registered view."
-    },
-    {
-      "path": "src/utils/syntheticEISNoiseGenerator.ts",
-      "note": "Deletion manifest follow-on orphan of the EIS cluster (Phase 5a); needs user approval."
     },
     {
       "path": "src/utils/xrdParser.ts",

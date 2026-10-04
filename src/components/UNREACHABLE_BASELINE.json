@@ -1,28 +1,4 @@
 {
-  "description": "Ratchet baseline (Phase 7 slice 1, base 464806f): files under src/components/** that no import path reaches from src/main.tsx, src/App.tsx or any registered module view. The set may only shrink. Nothing here is deleted automatically: deletion needs user approval (see .orchestra/DELETION-MANIFEST.md, Phase 5a, verdicts NUA / NUA+TM). When a file is deleted or becomes reachable, remove its entry.",
-  "files": [
-    { "path": "src/components/3d-distortion-lab/EmbeddedPythonLPBFSimulator.tsx", "note": "Deletion manifest: NUA." },
-    { "path": "src/components/3d-distortion-lab/index.ts", "note": "Deletion manifest: NUA (unused barrel; App imports LpbfEngineeringWorkspace directly)." },
-    { "path": "src/components/3d-distortion-lab/LPBFGroundTruthDataLab.tsx", "note": "Deletion manifest: NUA+TM (tests/contracts-browser.tsx imports it)." },
-    { "path": "src/components/3d-distortion-lab/MarangoniPoreInstabilityLab.tsx", "note": "Deletion manifest: NUA." },
-    { "path": "src/components/AdvancedBatteryPhysicsStudio.tsx", "note": "Deletion manifest: NUA (EIS/battery cluster)." },
-    { "path": "src/components/BatteryEISDegradationStudio.tsx", "note": "Deletion manifest: NUA (EIS/battery cluster)." },
-    { "path": "src/components/CircuitLibraryModal.tsx", "note": "Deletion manifest: NUA (EIS cluster)." },
-    { "path": "src/components/CNLSFittingStudio.tsx", "note": "Deletion manifest: NUA+TM (EIS cluster)." },
-    { "path": "src/components/EISLabDataUploader.tsx", "note": "Deletion manifest: NUA (EIS cluster)." },
-    { "path": "src/components/EISUploadInsightsStudio.tsx", "note": "Deletion manifest: NUA+TM (EIS cluster)." },
-    { "path": "src/components/EquivalentCircuitBuilder.tsx", "note": "Deletion manifest: NUA+TM (EIS cluster; shared types/utils must be re-homed first)." },
-    { "path": "src/components/GrainEvolutionD3Chart.tsx", "note": "Deletion manifest: NUA." },
-    { "path": "src/components/LpbfBuildJobRail.tsx", "note": "Not in the deletion manifest; found by this test. No importer in src or tests." },
-    { "path": "src/components/MonteCarloUncertaintyCard.tsx", "note": "Deletion manifest: NUA (UQ)." },
-    { "path": "src/components/PhysicalValidationStudio.tsx", "note": "Deletion manifest: NUA+TM (EIS cluster)." },
-    { "path": "src/components/PlotlyEISViewer.tsx", "note": "Deletion manifest: NUA (EIS cluster)." },
-    { "path": "src/components/PresetCircuitLibraryPanel.tsx", "note": "Deletion manifest: NUA (EIS cluster)." },
-    { "path": "src/components/PythonBatteryCorrosionUploadStudio.tsx", "note": "Deletion manifest: NUA (EIS/battery cluster)." },
-    { "path": "src/components/SavitzkyGolayFilterControls.tsx", "note": "Deletion manifest: NUA." },
-    { "path": "src/components/StochasticUQMMPDSStudio.tsx", "note": "Deletion manifest: NUA (UQ)." },
-    { "path": "src/components/SyntheticNoiseStressStudio.tsx", "note": "Deletion manifest: NUA+TM (EIS cluster)." },
-    { "path": "src/components/TransportKineticsLab.tsx", "note": "Deletion manifest: NUA (only imported by AdvancedBatteryPhysicsStudio)." },
-    { "path": "src/components/WebGLEBSDMapCanvas.tsx", "note": "Deletion manifest: NUA." }
-  ]
+  "description": "Ratchet baseline (Phase 7 slice 1, base 464806f): files under src/components/** that no import path reaches from src/main.tsx, src/App.tsx or any registered module view. The set may only shrink. Phase 5a deleted all 23 original entries (merge fd4ad3c lineage); the list is now empty. Nothing here is deleted automatically: deletion needs user approval (see .orchestra/DELETION-MANIFEST.md, Phase 5a, verdicts NUA / NUA+TM). When a file is deleted or becomes reachable, remove its entry.",
+  "files": []
 }
