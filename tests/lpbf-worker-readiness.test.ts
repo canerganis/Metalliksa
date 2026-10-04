@@ -139,7 +139,12 @@ test('a failed actual WSL command falls back once to the host command', { timeou
 });
 
 test('bounded background readiness failure can be retried by a later caller', { timeout: 10000 }, async () => {
-  const instance = fixture({ startupTimeoutMs: 500, command: (_fallback, launches) => ({
+  // The startup bound applies to every launch. The never-ready launch is rejected by it at any value, but the
+  // retry launch is a cold Node start whose handshake must also finish inside it: with 500 ms it failed under
+  // full-suite load with "LPBF worker RPC timeout" from the startup capabilities RPC. Use the fixture's cold-start
+  // bound (3000 ms) and keep the caller deadline above it, so the first caller observes the bounded startup
+  // failure itself rather than its own deadline ("still starting").
+  const instance = fixture({ startupTimeoutMs: 3000, requestTimeoutMs: 6000, command: (_fallback, launches) => ({
     cmd: 'native-python', mode: launches === 0 ? 'never-ready' : 'normal',
   }) });
   try {
