@@ -214,10 +214,24 @@ class StochasticTest(unittest.TestCase):
             self.assertEqual(repr(uq.solve_single_realization(*args)),
                              repr(OLD_UQ.solve_single_realization(*args)), repr(base))
 
-    def test_request_defaults_unchanged(self):
-        new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
+    def test_request_defaults_equal_the_base_blob_with_the_legacy_norm_ppf(self):
+        # The norm_ppf sign fix (audit D1) is the only change to the sampled output: with the
+        # base blob's quantile function put back, the migrated solver reproduces d33b6f5 bit for bit.
+        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf):
+            new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
         self.assertEqual(json.dumps(new), json.dumps(old))
+
+    def test_norm_ppf_fix_changes_only_sampled_statistics(self):
+        new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
+        old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
+        self.assertNotEqual(json.dumps(new), json.dumps(old))
+        for key in ("success", "engine", "sampleSizeN", "samplingMetadata", "alloyMetadata", "inputUncertainties"):
+            self.assertEqual(json.dumps(new[key]), json.dumps(old[key]), key)
+        # the corrected normal inputs have sigma 1: the yield spread grows by about 1 / 0.776
+        ratio = (new["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"]
+                 / old["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"])
+        self.assertAlmostEqual(ratio, 1.0 / 0.776, delta=0.05)
 
     def test_main_adds_provenance_only(self):
         code, out = _run("stochastic_uq_mmpds_solver.py", {"mcSamples": 500})
@@ -229,8 +243,10 @@ class StochasticTest(unittest.TestCase):
         self.assertEqual(uq.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["registryVersion"], reg.REGISTRY_VERSION)
         self.assertNotIn("registryAlloyId", prov)  # alloyName is a label, never resolved
-        old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
-        self.assertEqual(json.dumps(_strip(out), sort_keys=True), json.dumps(old, sort_keys=True))
+        self.assertIn("Illustrative, not calibrated", prov["modelStatus"])
+        # Design step (b) R and the norm_ppf fix: the script output equals the in-process solver.
+        new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
+        self.assertEqual(json.dumps(_strip(out), sort_keys=True), json.dumps(new, sort_keys=True))
 
 
 class PersistentIpcRelayTest(unittest.TestCase):
