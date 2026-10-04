@@ -4,10 +4,15 @@ Phase 6b vectorisation lane: before/after timing of cnls_fitting_solver,
 xrd_peak_deconvolution and dft_property_calculator.
 
 "before" is the faa6684 blob (git show, executed from a temp module), "after" is
-the working tree. Two measurements per case, each the median of --repeat runs:
+the working tree. Three measurements per case, each the median of --repeat runs:
   * kernel: the solver function called in-process (imports already done);
-  * spawn:  the app's ad-hoc spawn path, ``python -B <solver>.py`` with the JSON
-            payload on stdin (interpreter start + imports + solve + JSON).
+  * warm:   the persistent IPC daemon path: persistent_ipc_service's own
+            _worker_init / _worker_run_script (extracted with ast, so importing the
+            service and its process pool is avoided) execute the pre-compiled
+            script with the JSON on stdin after the modules were pre-imported;
+            socket/HTTP transport is not included;
+  * spawn:  the app's ad-hoc spawn fallback, ``python -B <solver>.py`` with the
+            JSON payload on stdin (interpreter start + imports + solve + JSON).
 Besides the golden payloads a few larger synthetic payloads show how the
 vectorised kernels scale with the number of frequencies / parameters.
 
@@ -69,6 +74,21 @@ def dispatch(module: types.ModuleType, solver: str, data: Dict[str, Any]) -> Any
     raise KeyError(solver)
 
 
+def load_ipc_worker() -> Dict[str, Any]:
+    """_worker_init and _worker_run_script from persistent_ipc_service.py, executed
+    without the module's import-time side effects (registry + process pool)."""
+    import ast
+    path = PYTHON_DIR / "persistent_ipc_service.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    keep = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in ("_worker_init", "_worker_run_script")]
+    if len(keep) != 2:
+        raise RuntimeError("persistent_ipc_service worker functions not found")
+    namespace: Dict[str, Any] = {"__name__": "_phase6b_ipc_worker"}
+    exec("import io, os, sys, traceback; from typing import Any, Dict", namespace)
+    exec(compile(ast.Module(body=keep, type_ignores=[]), str(path), "exec"), namespace)
+    return namespace
+
+
 def median_seconds(fn: Callable[[], Any], repeat: int) -> float:
     samples = []
     for _ in range(repeat):
@@ -107,6 +127,8 @@ def run(repeat: int) -> Dict[str, Any]:
                     "numpy": __import__("numpy").__version__, "scipy": __import__("scipy").__version__},
         "repeat": repeat, "statistic": "median", "rows": []}
     large = _large_payloads()
+    ipc = load_ipc_worker()
+    ipc["_worker_init"](str(PYTHON_DIR), list(cases.SOLVERS))
     with tempfile.TemporaryDirectory() as tmp:
         for solver in cases.SOLVERS:
             before_mod = load_blob_module(solver)
@@ -121,9 +143,14 @@ def run(repeat: int) -> Dict[str, Any]:
                 row = {"solver": solver, "case": case}
                 row["kernelBeforeMs"] = 1e3 * median_seconds(lambda: dispatch(before_mod, solver, payload), repeat)
                 row["kernelAfterMs"] = 1e3 * median_seconds(lambda: dispatch(after_mod, solver, payload), repeat)
+                text = json.dumps(payload)
+                for label, path in (("warmBeforeMs", blob), ("warmAfterMs", PYTHON_DIR / f"{solver}.py")):
+                    ipc["_worker_run_script"](str(path), text, [])  # first call compiles; not timed
+                    row[label] = 1e3 * median_seconds(lambda: ipc["_worker_run_script"](str(path), text, []), repeat)
                 row["spawnBeforeMs"] = 1e3 * spawn_seconds(solver, payload, repeat, script=blob)
                 row["spawnAfterMs"] = 1e3 * spawn_seconds(solver, payload, repeat)
                 row["kernelSpeedup"] = row["kernelBeforeMs"] / row["kernelAfterMs"]
+                row["warmSpeedup"] = row["warmBeforeMs"] / row["warmAfterMs"]
                 row["spawnSpeedup"] = row["spawnBeforeMs"] / row["spawnAfterMs"]
                 report["rows"].append(row)
     return report
@@ -133,11 +160,13 @@ def render(report: Dict[str, Any]) -> str:
     m = report["machine"]
     lines = [f"machine: {m['platform']} | {m['processor']} | {m['cpuCount']} logical CPUs | "
              f"Python {m['python']} numpy {m['numpy']} scipy {m['scipy']} | median of {report['repeat']}",
-             "| solver | case | kernel before ms | kernel after ms | kernel x | spawn before ms | spawn after ms | spawn x |",
-             "|---|---|---|---|---|---|---|---|"]
+             "| solver | case | kernel before ms | kernel after ms | kernel x | warm before ms | warm after ms | warm x "
+             "| spawn before ms | spawn after ms | spawn x |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in report["rows"]:
         lines.append(f"| {r['solver']} | {r['case']} | {r['kernelBeforeMs']:.3f} | {r['kernelAfterMs']:.3f} | "
-                     f"{r['kernelSpeedup']:.2f} | {r['spawnBeforeMs']:.0f} | {r['spawnAfterMs']:.0f} | "
+                     f"{r['kernelSpeedup']:.2f} | {r['warmBeforeMs']:.3f} | {r['warmAfterMs']:.3f} | "
+                     f"{r['warmSpeedup']:.2f} | {r['spawnBeforeMs']:.0f} | {r['spawnAfterMs']:.0f} | "
                      f"{r['spawnSpeedup']:.2f} |")
     return "\n".join(lines)
 
