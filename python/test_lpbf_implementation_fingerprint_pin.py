@@ -6,7 +6,8 @@ IMPLEMENTATION_SOURCE_FILES, to the manifest itself or to VERSION changes the
 fingerprint and fails this test, so an unplanned bump can no longer slip through
 on the manual lane check alone.
 
-Procedure for the single planned bump (design 3.2/3.3, stage B), and for nothing else.
+Procedure for a planned bump (design 3.2/3.3, stage B; section 8 for planned drift), and
+for nothing else.
 All parity commands must run in the recorded environment (the reference machine and the
 locked .runtime/lpbf-win-py312 interpreter; tools/lpbf_parity_check.py skips, it does not
 pass, when the environment differs).
@@ -20,17 +21,28 @@ pass, when the environment differs).
        python -B tools/lpbf_parity_check.py --check --expect-unpinned        (fast cases)
    which treats only the pin mismatch as a warning; observation diffs and a result
    implementationHash != implementation_fingerprint() still fail. Add --slow (G2,
-   real bare-plate fixture) at B1, B3, B4, B5 and B6.
+   real bare-plate fixture) at B1, B3, B4, B5 and B6. A corrected-physics bump that is
+   MEANT to change results adds --expect-drift with the narrowest allowlist
+   (CASE:KEY_GLOB entries; whole cases only outside g1/g2/g4): every other diff, every
+   identity digest and all g1/g2/g4 numerics still fail, and an entry without drift
+   fails as stale.
 3. In the bookkeeping commit (B6) write the new value into
    lpbf_implementation_fingerprint.expected (one lowercase hex line), then run
        python -B -m unittest test_lpbf_implementation_fingerprint_pin       (green again)
-       python -B tools/lpbf_parity_check.py --check --slow                   (all PASS; the
-   tool reports "implementationHash differs from the recording: bump")
+       python -B tools/lpbf_parity_check.py --check --slow [--expect-drift ...]
+   (all PASS, or DRIFT only where allowed; the tool reports "implementationHash
+   differs from the recording: bump")
        python -B tools/lpbf_bump_record.py --from-revision <pre-bump sha>
-           --with-parity-check --slow --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
-   (one command line; all parity cases must report PASS, none SKIP)
+           --with-parity-check --slow [--expect-drift ...]
+           --out ../docs/LPBF_IMPLEMENTATION_BUMP_<date>.json
+   (one command line, the same allowlist; every case PASS or DRIFT, none SKIP; the
+   record carries each drifted observation's before -> after and raw values: that is
+   the numeric drift report)
 4. Never re-record the parity goldens in the bump: they are the pre-bump side of
-   the proof. Never edit this file to make an unexplained fingerprint pass.
+   the proof. After the atomic merge, re-record the goldens at the new fingerprint in
+   a separate commit of their own (record twice; only the drifted observations and
+   the recording metadata may change), as B5 step 2 did for edddf0dc. Never edit this
+   file to make an unexplained fingerprint pass.
 """
 
 import shutil

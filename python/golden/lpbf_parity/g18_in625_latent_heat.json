@@ -1,0 +1,117 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g18_in625_latent_heat",
+ "group": "G18",
+ "description": "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
+ "slow": false,
+ "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  0.1,
+  0.1
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "meltpool.in625": "b5773275d729fd34c377c324476ef348a298583f7786f55f404033d6c3b6918a",
+  "meltpool.in625.materialEvidence": {
+   "propertySource": "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB.Inconel 625",
+   "provenanceClass": "legacy-estimated-secondary",
+   "validationStatus": "unvalidated",
+   "scope": "direct-meltpool-screening",
+   "usesBoundedIN625Snapshot": false
+  },
+  "meltpool.in625.equalWithLatentHeatFusion.227000": false,
+  "meltpool.in625.equalWithLatentHeatFusion.260000": true,
+  "meltpool.in625.equalWithLatentHeatFusion.290000": false,
+  "meltpool.in625.table.latent_heat_fusion_J_kg": [
+   260000.0,
+   "0x1.fbd0000000000p+17"
+  ],
+  "meltpool.in625.table.latent_heat_vap_J_kg": [
+   6300000.0,
+   "0x1.8085800000000p+22"
+  ],
+  "buildJob.resolveAlloyId.Inconel 625": null,
+  "thermalScreening.Inconel 625.latentHeat_J_kg": [
+   290000.0,
+   "0x1.1b34000000000p+18"
+  ],
+  "thermalScreening.IN625.latentHeat_J_kg": [
+   290000.0,
+   "0x1.1b34000000000p+18"
+  ],
+  "in625.snapshot.latentHeat_J_kg": [
+   290000.0,
+   "0x1.1b34000000000p+18"
+  ],
+  "in625.transientSpecification.latentHeat_J_kg": [
+   227000.0,
+   "0x1.bb5c000000000p+17"
+  ],
+  "registry.material.Inconel 625": {
+   "error": "ValueError: Inconel 625: thermophysical data missing; supply sourced properties"
+  }
+ },
+ "rawValues": {}
+}

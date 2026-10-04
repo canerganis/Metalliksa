@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """LPBF 5c parity harness: bit-equality goldens for the planned fingerprint bump.
 
-Design: docs/LPBF_5C_FINGERPRINT_BUMP_DESIGN_2026-10-04.md, section 2 and stage P
-(P2 parity harness, P3 material and case-generation goldens). The goldens are
-recorded ONCE at the pre-bump implementation (fingerprint 7482697c...). After
-every bump commit, ``--check`` must stay green: the cleanup is accepted only if
-every observation below is bit-equal.
+Design: docs/LPBF_5C_FINGERPRINT_BUMP_DESIGN_2026-10-04.md, section 2, stage P (P2 parity
+harness, P3 material and case-generation goldens) and section 8. The goldens were first
+recorded at 7482697c... (before the 5c bump) and re-recorded, observations unchanged, at
+edddf0dc... (B5 step 2); they are the "before" side of the next bump and are never
+re-recorded in the same commit as a manifest edit. After every bump commit ``--check``
+must stay green: bit-equal, or drifting only where --expect-drift allows it.
 
 What "bit-equal" means (design 2.1):
 - A run() result is compared after removing provenance.createdAt, runtime_s
@@ -23,14 +24,31 @@ What "bit-equal" means (design 2.1):
 - Every artifact file written by run() is compared by SHA-256; every NPZ is also
   compared array by array (dtype, shape, bytes).
 
-Cases (design 2.3 matrix): G1..G12 plus an NPZ determinism check. G2 (the in-repo
+Cases (design 2.3 matrix): G1..G16 plus an NPZ determinism check; G17-G19 (B5 step 2)
+document today's non-IN718 evaporation L_v, IN625 latent heats and the emissivity echo
+so the corrected-physics bump has measurable drift. G2 (the in-repo
 real bare-plate 100 W fixture) takes about 106 s on the reference machine and is
 opt-in (--slow or --case). Everything else runs in about one minute.
 
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_parity_check.py --list
     python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...] [--expect-unpinned]
+        [--expect-drift CASE[,CASE...]]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
+
+--expect-drift (corrected-physics bump), entries CASE or CASE:KEY_GLOB (fnmatch on the
+observation key), comma-separated or repeated:
+- Only matched observations may differ; they are reported as DRIFT with a before -> after
+  line (floats with float.hex()) plus leaf-level raw before -> after values when the golden
+  recorded them (rawValues: the pre-hash value of small digest observations).
+- Any other diff fails; implementation-hash, pin and golden problems always fail; an entry
+  that matches no drifted observation, or a case that is not selected, fails (stale).
+- Identity digests (*materialRevisionSha256*, *materialSha256*, *inputSha256*) fail in
+  every case unless an entry names that exact key.
+- The reference transient cases g1/g2/g4 are refused as whole cases (CASE:KEY_GLOB only),
+  and their numerics (metrics, thermalHistory, energyBalance, field*, artifacts, NPZ,
+  fixture equality) fail whatever the allowlist.
+- With --allow-environment-mismatch a drift run ends DIAGNOSTIC (exit 3), never PASS.
 
 --record refuses to overwrite an existing golden without --force, and refuses to
 record at all unless implementation_fingerprint() equals the pinned .expected
@@ -53,6 +71,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import fnmatch
 import hashlib
 import io
 import json
@@ -81,6 +100,11 @@ GOLDEN_SCHEMA = "lpbf-parity-golden-1"
 FIXTURE_CAPTURE = REPO_ROOT / "tests" / "fixtures" / "lpbf-real-bare-plate-100W-capture.json"
 FIXTURE_NPZ = REPO_ROOT / "tests" / "fixtures" / "lpbf-real-bare-plate-100W-section-fields.npz"
 CORRIDOR_NPZ = "rectangular-corridor-section-fields.npz"
+# Raw pre-hash values (drift-report context, never compared): collected by remember_raw()
+# while execute() runs a case, up to RAW_VALUE_LIMIT characters of JSON per observation.
+RAW_VALUE_LIMIT = 4096
+_RAW_SINK: Optional[Dict[str, Any]] = None
+LAST_RAW_VALUES: Dict[str, Any] = {}
 # Artifact entries added by the worker (lpbf_worker.py), never by run() itself.
 WORKER_ONLY_ARTIFACTS = ("capabilities.json", "input.json")
 
@@ -194,6 +218,8 @@ def capture_call(function: Callable[[], Any]) -> Tuple[str, Any]:
 def observe_value(observations: Dict[str, Any], key: str, function: Callable[[], Any]) -> None:
     status, value = capture_call(function)
     observations[key] = typed_sha256(value) if status == "ok" else {"error": value}
+    if status == "ok":
+        remember_raw(key, value)
 
 
 def each(function: Callable[[Any], Any], items) -> List[Any]:
@@ -256,6 +282,7 @@ def result_observations(result: Dict[str, Any], artifact_dir: Optional[Path],
     }
     for key, value in stripped.items():
         observations[f"{prefix}.key.{key}"] = canonical_json_sha256(value)
+        remember_raw(f"{prefix}.key.{key}", value)
     contract = stripped.get("coreContract")
     if isinstance(contract, dict):
         for key in ("inputSha256", "materialSha256", "solverId", "modelId"):
@@ -479,6 +506,214 @@ def case_g16_non_in718_transient(ctx: CaseContext) -> Dict[str, Any]:
     return observations
 
 
+def value_hex(value: Any) -> Any:
+    """Value-level observation: floats as [value, float.hex()] so a drift report shows both."""
+    if type(value) is float:
+        return [value, value.hex()]
+    return value
+
+
+# Non-IN718 evaporationModel=True cases (B5 step 2). They document TODAY's behaviour so the
+# corrected-physics bump has measurable drift: lpbf_simulation passes
+# m.get("latent_heat_vap_J_kg", 6.4e6) to the enthalpy inversion, and material() never
+# carries that key, so every alloy uses IN718's 6.4e6 J/kg (FABLE-B5-OPINION D1).
+# All three use the default Marangoni multiplier (2.2) and speed. AlSi10Mg needs 500 W to
+# reach its boiling enthalpy on the SMALL grid (400 W: no inversion call; 600 W saturates the
+# vapour fraction at 1.0 for both L_v values, 500 W does not, so its maxVaporFraction stays
+# sensitive to L_v).
+EVAPORATION_CASES = {
+    "ti6al4v": ("Ti-6Al-4V", {**SMALL, "material": "Ti-6Al-4V", "power_W": 80, "evaporationModel": True}),
+    "ss316l": ("316L Stainless Steel", {**SMALL, "material": "316L Stainless Steel", "power_W": 80,
+                                         "evaporationModel": True}),
+    "alsi10mg": ("AlSi10Mg", {**SMALL, "material": "AlSi10Mg", "power_W": 500, "evaporationModel": True}),
+}
+
+
+def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str,
+                              substitute_latent_heat_vap: Optional[float] = None):
+    """Run with the evaporation inversion wrapped: record the L_v it receives, change nothing
+    (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe).
+
+    The wrapper knows today's call shape (L_v as 5th positional or latent_heat_vap_j_kg
+    keyword). Any other shape is recorded as a readable note, so a changed call drifts these
+    observations instead of aborting the whole --check run; the bump that changes the call
+    must update this wrapper in the same branch."""
+    import lpbf_evaporation_marangoni as evaporation
+    calls: List[Tuple[Any, Any]] = []
+    original = evaporation.invert_enthalpy_with_evaporation
+    keyword = "latent_heat_vap_j_kg"
+
+    def recording(*args, **kwargs):
+        args = list(args)
+        known = len(args) > 4 or keyword in kwargs
+        if substitute_latent_heat_vap is not None and known:
+            if len(args) > 4:
+                args[4] = substitute_latent_heat_vap
+            else:
+                kwargs[keyword] = substitute_latent_heat_vap
+        result = original(*args, **kwargs)
+        if not known:
+            used: Any = (f"unrecognised call shape: {len(args)} positional, "
+                         f"keywords {sorted(kwargs)}")
+        else:
+            used = float(args[4] if len(args) > 4 else kwargs[keyword])
+        try:
+            temperature, vapor_fraction = result
+            fraction: Any = float(np.max(vapor_fraction))
+        except (TypeError, ValueError):
+            fraction = f"unrecognised return shape: {type(result).__name__}"
+        calls.append((used, fraction))
+        return result
+
+    evaporation.invert_enthalpy_with_evaporation = recording
+    try:
+        _, observations = ctx.run_case(raw, artifacts=True, prefix=prefix)
+    finally:
+        evaporation.invert_enthalpy_with_evaporation = original
+    return observations, calls
+
+
+def _distinct(values) -> List[Any]:
+    """Distinct values, floats first (sorted, as [value, hex]), then notes (sorted text)."""
+    values = set(values)
+    floats = sorted(v for v in values if type(v) is float)
+    return [value_hex(v) for v in floats] + sorted(str(v) for v in values if type(v) is not float)
+
+
+def _maximum(values) -> Any:
+    values = list(values)
+    floats = [v for v in values if type(v) is float]
+    if len(floats) != len(values):
+        return sorted({str(v) for v in values if type(v) is not float})
+    return value_hex(max(floats, default=None))
+
+
+def _evaporation_case(ctx: CaseContext, key: str) -> Dict[str, Any]:
+    import four_alloy_materials as fam
+    import lpbf_material_registry as registry
+    name, raw = EVAPORATION_CASES[key]
+    observations, calls = _recorded_evaporation_run(ctx, raw, "result")
+    authority = fam.thermal_props(name)["latent_heat_vap_J_kg"]
+    observations["evaporation.inversionCalls"] = len(calls)
+    observations["evaporation.latentHeatVapUsed_J_kg"] = _distinct(c[0] for c in calls)
+    observations["evaporation.maxVaporFraction"] = _maximum(c[1] for c in calls)
+    observations["evaporation.authorityLatentHeatVap_J_kg"] = value_hex(float(authority))
+    observations["evaporation.materialSnapshotHasLatentHeatVap"] = "latent_heat_vap_J_kg" in registry.material(name)
+    # Harness-side probe (no implementation change): the same run with the authority L_v
+    # substituted. Equal digests mean today's result does not depend on L_v (the inversion's
+    # vapour fraction is discarded); the corrected bump may legitimately change that.
+    probe, probe_calls = _recorded_evaporation_run(ctx, raw, "authorityLatentHeatVap",
+                                                   substitute_latent_heat_vap=float(authority))
+    observations["evaporation.authorityProbe.latentHeatVapUsed_J_kg"] = _distinct(c[0] for c in probe_calls)
+    observations["evaporation.authorityProbe.maxVaporFraction"] = _maximum(c[1] for c in probe_calls)
+    observations["evaporation.authorityProbe.resultCanonicalEqual"] = (
+        probe["authorityLatentHeatVap.canonicalSha256"] == observations["result.canonicalSha256"])
+    observations["evaporation.authorityProbe.artifactsEqual"] = all(
+        probe.get(f"authorityLatentHeatVap.{k}") == v for k, v in observations.items()
+        if k.startswith(("artifact.", "npz.")))
+    return observations
+
+
+def case_g17_evaporation_ti6al4v(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "ti6al4v")
+
+
+def case_g17_evaporation_316l(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "ss316l")
+
+
+def case_g17_evaporation_alsi10mg(ctx: CaseContext) -> Dict[str, Any]:
+    return _evaporation_case(ctx, "alsi10mg")
+
+
+IN625_MELTPOOL_PAYLOAD = dict(material_name="Inconel 625", laser_power_W=200.0, scan_speed_mm_s=800.0,
+                              beam_diameter_um=80.0, preheat_temp_C=80.0, layer_thickness_um=40.0,
+                              hatch_spacing_um=100.0, heat_source="rosenthal")
+# The three IN625 fusion latent heats in the code base (FABLE-B5-OPINION D5): 227 kJ/kg
+# (Mills, transient specification), 260 kJ/kg (lpbf_thermal_solver secondary table,
+# Rosenthal melt-pool path), 290 kJ/kg (Sabau, bounded thermal screening snapshot).
+IN625_LATENT_HEAT_CANDIDATES = (227000.0, 260000.0, 290000.0)
+
+
+def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
+    """Which IN625 fusion latent heat each path uses today (value level)."""
+    import importlib.util
+    if importlib.util.find_spec("warp") is not None:
+        raise CaseSkipped("warp is importable here: calculate_meltpool_physics would take the GPU "
+                          "ray-tracing path; the G18 golden pins the CPU fallback without warp")
+    import lpbf_material_registry as registry
+    import in625_thermal_material as in625
+    from lpbf_thermal_solver import calculate_meltpool_physics, SECONDARY_THERMOPHYSICAL_DB
+    from four_alloy_materials import resolve_alloy_id
+
+    observations: Dict[str, Any] = {}
+    status, plain = capture_call(lambda: calculate_meltpool_physics(**IN625_MELTPOOL_PAYLOAD))
+    observations["meltpool.in625"] = typed_sha256(plain) if status == "ok" else {"error": plain}
+    if status == "ok":
+        remember_raw("meltpool.in625", plain)
+    if status == "ok":
+        observations["meltpool.in625.materialEvidence"] = plain.get("materialEvidence")
+    # prop_overrides merge onto the resolved table: the result is bit-equal to the plain run
+    # exactly for the latent heat the path already uses, and differs for the others.
+    for value in IN625_LATENT_HEAT_CANDIDATES:
+        status_o, overridden = capture_call(lambda value=value: calculate_meltpool_physics(
+            **IN625_MELTPOOL_PAYLOAD, prop_overrides={"latent_heat_fusion_J_kg": value}))
+        observations[f"meltpool.in625.equalWithLatentHeatFusion.{value:.0f}"] = (
+            typed_sha256(overridden) == observations["meltpool.in625"] if status_o == "ok"
+            else {"error": overridden})
+    table = SECONDARY_THERMOPHYSICAL_DB["Inconel 625"]
+    observations["meltpool.in625.table.latent_heat_fusion_J_kg"] = value_hex(table["latent_heat_fusion_J_kg"])
+    observations["meltpool.in625.table.latent_heat_vap_J_kg"] = value_hex(table["latent_heat_vap_J_kg"])
+    status_b, value_b = capture_call(lambda: resolve_alloy_id("Inconel 625"))
+    observations["buildJob.resolveAlloyId.Inconel 625"] = value_b if status_b == "ok" else {"error": value_b}
+    for name in ("Inconel 625", "IN625"):
+        status_s, screening = capture_call(lambda name=name: registry.thermal_screening_material(name))
+        observations[f"thermalScreening.{name}.latentHeat_J_kg"] = (
+            value_hex(screening["latentHeat_J_kg"]) if status_s == "ok" else {"error": screening})
+    observations["in625.snapshot.latentHeat_J_kg"] = value_hex(in625.in625_lpbf_thermal_snapshot()["latentHeat_J_kg"])
+    observations["in625.transientSpecification.latentHeat_J_kg"] = value_hex(
+        in625.in625_transient_material_specification()["latentHeat_J_kg"])
+    status_r, value_r = capture_call(lambda: registry.material("Inconel 625"))
+    observations["registry.material.Inconel 625"] = (
+        value_hex(value_r.get("latentHeat_J_kg")) if status_r == "ok" else {"error": value_r})
+    return observations
+
+
+def case_g19_emissivity_echo(ctx: CaseContext) -> Dict[str, Any]:
+    """Emissivity: one registry literal (0.35) for every alloy, echoed into p and used in the
+    top-surface radiation term (lpbf_simulation reference transient); FABLE-B5-OPINION D6."""
+    import lpbf_material_registry as registry
+    from lpbf_simulation import validate
+
+    observations: Dict[str, Any] = {}
+    names = [item["name"] for item in registry.catalog()]
+    for name in names:
+        status, value = capture_call(lambda name=name: registry.material(name)["emissivity"])
+        observations[f"registry.material.{name}.emissivity"] = value_hex(value) if status == "ok" else {"error": value}
+        status, value = capture_call(lambda name=name: validate({"mode": "standard", "material": name}))
+        observations[f"validate.{name}.emissivity"] = (
+            [value_hex(value[0]["emissivity"]), value_hex(value[1]["emissivity"])] if status == "ok"
+            else {"error": value})
+    for override in (0.35, 0.5, 0, 1, 1.5, True):
+        status, value = capture_call(lambda override=override: validate(
+            {"mode": "standard", "material": "Inconel 718", "emissivity": override}))
+        observations[f"validate.override.{override!r}.emissivity"] = (
+            [value_hex(value[0]["emissivity"]), value_hex(value[1]["emissivity"])] if status == "ok"
+            else {"error": value})
+    _, implicit = ctx.run_case(SMALL, prefix="implicit")
+    observations.update(implicit)
+    _, explicit = ctx.run_case({**SMALL, "emissivity": 0.35}, prefix="explicit")
+    observations["explicit0.35.canonicalEqualsImplicit"] = (
+        explicit["explicit.canonicalSha256"] == implicit["implicit.canonicalSha256"])
+    # A different user emissivity changes the material dict but not its revision identity:
+    # the core contract rejects the run after the solve (fail closed), pinned here.
+    rejected = 0.36  # the key carries the value, so a different override changes the golden
+    status, value = capture_call(lambda: ctx.run_case({**SMALL, "emissivity": rejected}, prefix="override")[1])
+    observations[f"run.override{rejected!r}"] = (value["override.canonicalSha256"] if status == "ok"
+                                                 else {"error": value})
+    return observations
+
+
 def case_g13_source_quadrature_refinement(ctx: CaseContext) -> Dict[str, Any]:
     """Direct integrated_source calls with long intervals: the N-vs-2N refinement branch.
 
@@ -511,6 +746,8 @@ def case_g13_source_quadrature_refinement(ctx: CaseContext) -> Dict[str, Any]:
                       lambda dt=dt: core.source_time_quadrature(segment, dt, 40e-6))
         observations[f"{key}.orders"] = orders
         observations[key] = typed_sha256(value) if status == "ok" else {"error": value}
+        if status == "ok":
+            remember_raw(key, value)
     observations["integratedSource.refinementReached"] = any(
         len(v) > 1 for k, v in observations.items() if k.endswith(".orders"))
     return observations
@@ -804,6 +1041,7 @@ def case_g11_build_job_meltpool(ctx: CaseContext) -> Dict[str, Any]:
         if status == "ok":
             observations[f"meltpool.{index}.typedSha256"] = typed_sha256(value)
             observations[f"meltpool.{index}.canonicalSha256"] = canonical_json_sha256(value)
+            remember_raw(f"meltpool.{index}.typedSha256", value)
         else:
             observations[f"meltpool.{index}"] = {"error": value}
     observe_value(observations, "thermalSolver.THERMOPHYSICAL_DB", lambda: THERMOPHYSICAL_DB)
@@ -930,6 +1168,17 @@ CASES: Tuple[Case, ...] = (
          "Square bare plate with opticalObserver='nist-six-section', all artifacts"),
     Case("g16_non_in718_transient", "G16", case_g16_non_in718_transient,
          "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg"),
+    Case("g17_evaporation_ti6al4v", "G17", case_g17_evaporation_ti6al4v,
+         "evaporationModel=True Ti-6Al-4V 80 W: L_v passed to the inversion (today IN718's 6.4e6)"),
+    Case("g17_evaporation_316l", "G17", case_g17_evaporation_316l,
+         "evaporationModel=True 316L 80 W: L_v passed to the inversion (today IN718's 6.4e6)"),
+    Case("g17_evaporation_alsi10mg", "G17", case_g17_evaporation_alsi10mg,
+         "evaporationModel=True AlSi10Mg 500 W: L_v passed to the inversion (today IN718's 6.4e6)"),
+    Case("g18_in625_latent_heat", "G18", case_g18_in625_latent_heat,
+         "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
+         runs_solver=False),
+    Case("g19_emissivity_echo", "G19", case_g19_emissivity_echo,
+         "Registry emissivity literal 0.35 echoed into p/m per alloy; overrides; 0.36 override rejected"),
     Case("g8_observers", "G8", case_g8_observers,
          "final-state, selected-time, local-history observers and CpuRunProgress; rejection messages"),
     Case("g9_material_snapshots", "G9", case_g9_material_snapshots,
@@ -960,7 +1209,7 @@ NOT_COVERED = (
     "Worker-side consumers of opticalObserver / NIST section operators (lpbf_worker.py, "
     "lpbf_nist_*; not in the manifest); G15 pins only that the setting passes through run()",
     "CpuRunProgress source-work budget failures (maximum_source_evaluations / _cell_steps)",
-    "G11 with warp installed (skipped, see case_g11_build_job_meltpool)",
+    "G11 and G18 with warp installed (skipped, see case_g11_build_job_meltpool)",
 )
 
 
@@ -1034,17 +1283,30 @@ def environment_mismatch(recorded: Dict[str, Any]) -> Optional[str]:
 
 
 def execute(case: Case, work_root: Path) -> Tuple[Dict[str, Any], List[str], float]:
+    """Run one case; returns (observations, implementation hashes, seconds).
+
+    The raw pre-hash values of the digest observations (when small, see remember_raw) are
+    left in LAST_RAW_VALUES for the caller: they are recorded next to the observations so a
+    drift report can print before -> after numbers, and are never compared.
+    """
+    global _RAW_SINK
     work_root.mkdir(parents=True, exist_ok=True)
     work_dir = Path(tempfile.mkdtemp(prefix=f"{case.id}-", dir=str(work_root)))
     ctx = CaseContext(work_dir)
+    raw: Dict[str, Any] = {}
+    LAST_RAW_VALUES.clear()
     started = time.perf_counter()
+    _RAW_SINK = raw
     try:
         observations = case.function(ctx)
     finally:
+        _RAW_SINK = None
         elapsed = time.perf_counter() - started
         shutil.rmtree(work_dir, ignore_errors=True)
     # Round-trip through JSON so record and check compare the same value domain.
     observations = json.loads(json.dumps(observations, allow_nan=False))
+    LAST_RAW_VALUES.update({key: value for key, value in sorted(raw.items())
+                            if key in observations and observations[key] != value})
     return observations, ctx.implementation_hashes, elapsed
 
 
@@ -1052,14 +1314,19 @@ def golden_path(case: Case) -> Path:
     return GOLDEN_DIR / f"{case.id}.json"
 
 
+def diff_keys(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
+    return [key for key in sorted(set(expected) | set(actual))
+            if key not in expected or key not in actual or expected[key] != actual[key]]
+
+
 def diff_observations(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
     problems = []
-    for key in sorted(set(expected) | set(actual)):
+    for key in diff_keys(expected, actual):
         if key not in actual:
             problems.append(f"missing observation {key}")
         elif key not in expected:
             problems.append(f"unexpected new observation {key}")
-        elif expected[key] != actual[key]:
+        else:
             problems.append(f"changed {key}: expected {json.dumps(expected[key])[:160]} "
                             f"got {json.dumps(actual[key])[:160]}")
     return problems
@@ -1122,6 +1389,7 @@ def command_record(args) -> int:
             continue
         try:
             observations, hashes, elapsed = execute(case, Path(args.work_root))
+            raw_values = dict(LAST_RAW_VALUES)
         except CaseSkipped as skipped:
             print(f"{case.id}: NOT RECORDED (skipped: {skipped})")
             failures += 1
@@ -1133,6 +1401,7 @@ def command_record(args) -> int:
             runs.append(round(elapsed_again, 1))
             problems += check_implementation(case, hashes_again, pinned, current)[0]
             problems += [f"run 2 differs: {p}" for p in diff_observations(observations, again)]
+            problems += [f"run 2 raw value differs: {key}" for key in diff_keys(raw_values, LAST_RAW_VALUES)]
         if problems:
             failures += 1
             print(f"{case.id}: NOT RECORDED")
@@ -1146,6 +1415,9 @@ def command_record(args) -> int:
             "recordedGitHead": _git_head(), "recordedEnvironment": environment(),
             "recordedRuns_s": runs, "recordedTwice": bool(args.twice),
             "observations": observations,
+            # Raw pre-hash values of small digest observations: drift-report context only,
+            # never compared (the observations above are the evidence).
+            "rawValues": raw_values,
         }
         path.write_text(json.dumps(golden, indent=1, sort_keys=False, allow_nan=False) + "\n",
                         encoding="utf-8", newline="\n")
@@ -1159,7 +1431,8 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
     from lpbf_simulation import implementation_fingerprint
     path = golden_path(case)
     outcome: Dict[str, Any] = {"case": case.id, "problems": [], "warnings": [], "elapsed_s": 0.0,
-                               "observations": {}, "golden": None, "skipped": None}
+                               "observations": {}, "rawValues": {}, "golden": None, "skipped": None,
+                               "comparedDespiteEnvironment": False}
     if not path.is_file():
         outcome["problems"] = [f"golden missing: {path}"]
         return outcome
@@ -1179,12 +1452,204 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
         outcome["skipped"] = str(skipped)
         return outcome
     problems, warnings = check_implementation(case, hashes, pinned, current, expect_unpinned)
-    problems += diff_observations(golden["observations"], observations)
+    implementation_problems = list(problems)
+    diffs = diff_observations(golden["observations"], observations)
+    problems += diffs
     if mismatch is not None:
         warnings.append(f"compared despite: {mismatch}")
     outcome.update(problems=problems, warnings=warnings, elapsed_s=elapsed, observations=observations,
-                   implementationHashes=sorted(set(hashes)))
+                   rawValues=dict(LAST_RAW_VALUES), implementationHashes=sorted(set(hashes)),
+                   implementationProblems=implementation_problems, observationDiffs=diffs,
+                   comparedDespiteEnvironment=mismatch is not None)
     return outcome
+
+
+# --------------------------------------------------------------------------- planned drift
+
+# Reference transient cases (V1 replay, real bare-plate fixture, layered plate): never named
+# as a whole in --expect-drift; only CASE:KEY entries, and never for their numerics below.
+REFERENCE_CASES = ("g1_v1_60w_in718", "g2_bare_plate_100w_corridor", "g4_layered_plate")
+# Identity observations: a change fails in EVERY case unless an entry names that exact key.
+IDENTITY_PATTERNS = ("*materialRevisionSha256*", "*materialSha256*", "*inputSha256*")
+# Reference numerics: a change in a REFERENCE_CASES case always fails, whatever the allowlist.
+REFERENCE_NUMERICS_PATTERNS = (
+    "*.key.metrics", "*.key.thermalHistory", "*.key.energyBalance", "*.key.field*",
+    "*.key.artifacts", "artifact.*", "artifacts.*", "npz.*", "*.artifact.*", "*.artifacts*",
+    "*.npz.*", "fixture.*")
+
+
+class DriftEntry:
+    """One --expect-drift entry: a whole case, or CASE:KEY_GLOB (fnmatch on observation keys)."""
+
+    def __init__(self, case_id: str, pattern: Optional[str]):
+        self.case_id, self.pattern = case_id, pattern
+
+    @property
+    def text(self) -> str:
+        return self.case_id if self.pattern is None else f"{self.case_id}:{self.pattern}"
+
+    def matches(self, key: str) -> bool:
+        return self.pattern is None or fnmatch.fnmatchcase(key, self.pattern)
+
+
+def parse_expect_drift(values: Optional[List[str]]) -> List[DriftEntry]:
+    """--expect-drift a,b:KEY --expect-drift c -> entries; unknown, empty or refused names error."""
+    entries: List[DriftEntry] = []
+    for value in values or []:
+        for item in value.split(","):
+            item = item.strip()
+            case_id, separator, pattern = item.partition(":")
+            if not case_id or (separator and not pattern):
+                raise SystemExit(f"--expect-drift: empty case or key in {item!r}")
+            if case_id not in CASE_BY_ID:
+                raise SystemExit(f"--expect-drift: unknown case {case_id}")
+            if not separator and case_id in REFERENCE_CASES:
+                raise SystemExit(f"--expect-drift: {case_id} is a reference transient case; name the "
+                                 f"observations that may drift ({case_id}:KEY_GLOB), never the whole case")
+            if all(e.text != item for e in entries):
+                entries.append(DriftEntry(case_id, pattern if separator else None))
+    return entries
+
+
+def _protected_reason(case_id: str, key: str, entries: List[DriftEntry]) -> Optional[str]:
+    if case_id in REFERENCE_CASES and any(fnmatch.fnmatchcase(key, p) for p in REFERENCE_NUMERICS_PATTERNS):
+        return "reference-case numerics never drift under --expect-drift"
+    if any(fnmatch.fnmatchcase(key, p) for p in IDENTITY_PATTERNS) and not any(e.pattern == key for e in entries):
+        return "identity observation: allowed only by an entry naming this exact key"
+    return None
+
+
+def jsonable(value: Any) -> Any:
+    """Plain JSON form of a raw observed value (numpy and tuples converted); TypeError if none."""
+    if value is None or type(value) in (bool, int, float, str):
+        return value
+    if isinstance(value, np.ndarray):
+        return jsonable(value.tolist())
+    if isinstance(value, np.generic):
+        return jsonable(value.item())
+    if isinstance(value, (dict, types.MappingProxyType)):
+        return {str(k): jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [jsonable(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((jsonable(v) for v in value), key=lambda item: json.dumps(item, sort_keys=True))
+    if isinstance(value, bool):
+        return bool(value)
+    if isinstance(value, int):
+        return int(value)
+    if isinstance(value, float):
+        return float(value)
+    if isinstance(value, str):
+        return str(value)
+    raise TypeError(type(value).__name__)
+
+
+def remember_raw(key: str, value: Any) -> None:
+    """Keep the raw value behind a digest observation when it is small (<= RAW_VALUE_LIMIT
+    characters of JSON), for drift reports. Never part of the comparison."""
+    if _RAW_SINK is None:
+        return
+    try:
+        text = json.dumps(jsonable(value), allow_nan=False)
+    except (TypeError, ValueError):
+        return
+    if len(text) <= RAW_VALUE_LIMIT:
+        _RAW_SINK[key] = json.loads(text)
+
+
+def describe_value(value: Any) -> str:
+    """Short value-level rendering for drift reports: floats with float.hex(), digests shortened."""
+    if type(value) is float:
+        return f"{value!r} ({value.hex()})"
+    if isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value):
+        return f"sha256 {value[:16]}"
+    if (isinstance(value, list) and len(value) == 2 and type(value[0]) is float
+            and isinstance(value[1], str) and value[1].startswith(("0x", "-0x"))):
+        return f"{value[0]!r} ({value[1]})"
+    if isinstance(value, list):
+        return "[" + ", ".join(describe_value(item) for item in value[:8]) + (", ..." if len(value) > 8 else "") + "]"
+    text = json.dumps(value, allow_nan=False)
+    return text if len(text) <= 160 else text[:157] + "..."
+
+
+def raw_changes(before: Any, after: Any, path: str = "", limit: int = 24) -> List[str]:
+    """Leaf-level before -> after lines between two raw values (dict keys / list indices)."""
+    lines: List[str] = []
+
+    def walk(b: Any, a: Any, where: str) -> None:
+        if len(lines) >= limit or b == a and type(b) is type(a):
+            return
+        if isinstance(b, dict) and isinstance(a, dict):
+            for k in list(b) + [k for k in a if k not in b]:
+                walk(b.get(k, "<absent>"), a.get(k, "<absent>"), f"{where}.{k}" if where else str(k))
+        elif isinstance(b, list) and isinstance(a, list) and len(b) == len(a):
+            for i, (x, y) in enumerate(zip(b, a)):
+                walk(x, y, f"{where}[{i}]")
+        else:
+            lines.append(f"{where or '<value>'}: {describe_value(b)} -> {describe_value(a)}")
+
+    walk(before, after, path)
+    if len(lines) >= limit:
+        lines.append("... (more raw changes)")
+    return lines
+
+
+def drift_records(golden: Dict[str, Any], outcome: Dict[str, Any], keys: List[str]) -> List[Dict[str, Any]]:
+    """Machine-readable drift report: before/after observation and, when recorded, raw values."""
+    expected, actual = golden.get("observations", {}), outcome["observations"]
+    raw_before, raw_after = golden.get("rawValues", {}), outcome.get("rawValues", {})
+    records = []
+    for key in keys:
+        record: Dict[str, Any] = {"key": key, "before": expected.get(key, "<missing>"),
+                                  "after": actual.get(key, "<missing>")}
+        if key in raw_before or key in raw_after:
+            record["rawBefore"] = raw_before.get(key, "<not recorded>")
+            record["rawAfter"] = raw_after.get(key, "<not recorded>")
+            record["rawChanges"] = raw_changes(record["rawBefore"], record["rawAfter"])
+        records.append(record)
+    return records
+
+
+def drift_lines(records: List[Dict[str, Any]]) -> List[str]:
+    lines = []
+    for record in records:
+        lines.append(f"{record['key']}: {describe_value(record['before'])} -> {describe_value(record['after'])}")
+        lines.extend(f"    raw {line}" for line in record.get("rawChanges", []))
+    return lines
+
+
+def evaluate_drift(case: Case, outcome: Dict[str, Any], entries: List[DriftEntry]) -> Dict[str, Any]:
+    """Apply the --expect-drift entries for one checked case.
+
+    Returns {"status": PASS|DRIFT|FAIL, "problems": [...], "drift": [records]}. Without an
+    entry for the case this is the plain check. With entries, only observation diffs that an
+    entry matches and that are not protected may drift; implementation, pin and golden
+    problems always fail; an entry that matches no drifted observation is stale.
+    """
+    mine = [entry for entry in entries if entry.case_id == case.id]
+    if not mine:
+        return {"status": "FAIL" if outcome["problems"] else "PASS", "problems": list(outcome["problems"]),
+                "drift": []}
+    if "observationDiffs" not in outcome:  # missing or wrong golden: nothing was compared
+        return {"status": "FAIL", "problems": list(outcome["problems"]), "drift": []}
+    golden = outcome["golden"]
+    problems = list(outcome["implementationProblems"])
+    allowed: List[str] = []
+    for key in diff_keys(golden["observations"], outcome["observations"]):
+        reason = _protected_reason(case.id, key, mine)
+        if reason is not None:
+            problems.append(f"changed {key}: {reason}")
+        elif not any(entry.matches(key) for entry in mine):
+            problems.append(f"changed {key}: not named by --expect-drift "
+                            f"({', '.join(entry.text for entry in mine)})")
+        else:
+            allowed.append(key)
+    for entry in mine:
+        if not any(entry.matches(key) for key in allowed):
+            problems.append(f"stale --expect-drift entry {entry.text}: no allowed observation drifted")
+    records = drift_records(golden, outcome, allowed)
+    return {"status": "FAIL" if problems else ("DRIFT" if records else "PASS"), "problems": problems,
+            "drift": records}
 
 
 def command_check(args) -> int:
@@ -1194,19 +1659,36 @@ def command_check(args) -> int:
     if args.expect_unpinned:
         print("bump-branch mode (--expect-unpinned): a pin mismatch is a WARNING; observation diffs and "
               "result implementationHash != implementation_fingerprint() still FAIL")
+    entries = parse_expect_drift(args.expect_drift)
+    cases = selected_cases(args)
     failures = skips = 0
-    for case in selected_cases(args):
+    drifted: List[str] = []
+    off_reference = False
+    if entries:
+        print(f"planned-drift mode (--expect-drift): only {', '.join(e.text for e in entries)} may differ "
+              "from the goldens; any other diff, identity or reference-case numerics, an implementation "
+              "problem, or an entry without drift FAILS")
+        selected = {case.id for case in cases}
+        not_run = sorted({e.case_id for e in entries if e.case_id not in selected})
+        for name in not_run:
+            print(f"FAIL {name}: named in --expect-drift but not selected (add --slow or --case {name})")
+        failures += len(not_run)
+    for case in cases:
         outcome = check_case(case, Path(args.work_root), args.expect_unpinned,
                              args.allow_environment_mismatch)
         if outcome["skipped"] is not None:
             skips += 1
             print(f"SKIP {case.id} [{case.group}] NOT VERIFIED: {outcome['skipped']}")
             continue
-        problems, golden = outcome["problems"], outcome["golden"] or {}
+        verdict = evaluate_drift(case, outcome, entries)
+        problems, status = verdict["problems"], verdict["status"]
+        lines = drift_lines(verdict["drift"])
+        golden = outcome["golden"] or {}
         recorded = golden.get("recordedImplementationHash")
-        status = "PASS" if not problems else "FAIL"
         suffix = (f" (implementationHash differs from the recording {str(recorded)[:12]}: bump)"
                   if recorded not in (None, current) and not problems else "")
+        if status == "DRIFT":
+            suffix += f" ({len(verdict['drift'])} observation(s) drifted, allowed by --expect-drift)"
         print(f"{status} {case.id} [{case.group}] {len(outcome['observations'])} observations, "
               f"{outcome['elapsed_s']:.1f} s{suffix}")
         for warning in outcome["warnings"]:
@@ -1215,7 +1697,12 @@ def command_check(args) -> int:
             print(f"    {problem}")
         if len(problems) > 40:
             print(f"    ... {len(problems) - 40} more")
-        failures += bool(problems)
+        for line in lines:
+            print(f"    DRIFT {line}")
+        if status == "DRIFT":
+            drifted.append(case.id)
+        off_reference |= bool(outcome.get("comparedDespiteEnvironment"))
+        failures += status == "FAIL"
     if failures:
         print(f"RESULT: FAIL ({failures} case(s))" + (f", {skips} skipped" if skips else ""))
         return 1
@@ -1223,7 +1710,12 @@ def command_check(args) -> int:
         # A skipped case proves nothing: exit 3 so a gate never mistakes it for a pass.
         print(f"RESULT: INCOMPLETE ({skips} case(s) skipped, not verified)")
         return 3
-    print("RESULT: PASS")
+    if drifted and off_reference:
+        # A drift report from another environment is a diagnostic, never bump evidence.
+        print(f"RESULT: DIAGNOSTIC (planned drift in {', '.join(drifted)} compared off the reference "
+              "environment; not evidence)")
+        return 3
+    print("RESULT: PASS" + (f" (planned drift in {', '.join(drifted)})" if drifted else ""))
     return 0
 
 
@@ -1243,7 +1735,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                              "(diagnostics only; a PASS there is not the reference-machine proof)")
     parser.add_argument("--expect-unpinned", action="store_true",
                         help="check: bump-branch mode (B1-B5), a fingerprint != pin mismatch is only a warning")
+    parser.add_argument("--expect-drift", action="append", metavar="CASE[:KEY_GLOB][,...]",
+                        help="check: planned-drift allowlist; only these cases (or, with :KEY_GLOB, only "
+                             "these observations) may differ from their goldens, reported as DRIFT with "
+                             "before -> after values; any other diff fails, identity digests and "
+                             "reference-case numerics stay protected, and an entry without drift fails; "
+                             "g1/g2/g4 accept only CASE:KEY_GLOB entries")
     args = parser.parse_args(argv)
+    if args.expect_drift and not args.check:
+        parser.error("--expect-drift is only valid with --check")
     if args.list:
         for case in CASES:
             print(f"{case.id:40s} {case.group:4s} {'slow' if case.slow else 'fast'}  {case.description}")
