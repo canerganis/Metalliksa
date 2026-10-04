@@ -45,7 +45,7 @@ REL_TOL = 1e-9
 PARITY_MODE = {
     "cnls_fitting_solver": "tolerance",
     "xrd_peak_deconvolution": "minimiser",
-    "dft_property_calculator": "bit_exact",
+    "dft_property_calculator": "tolerance",
 }
 # xrd: cases with no observations never reach the minimiser and must stay bit-exact.
 XRD_BIT_EXACT_CASES = {"edge_missing_points"}
@@ -410,12 +410,92 @@ class NewValidationTest(unittest.TestCase):
         points[7]["sampleIntensity"] = float("nan")
         self._envelope("xrd_peak_deconvolution", dict(base, points=points), "points[7].sampleIntensity")
 
+    def test_dft_non_finite_stiffness(self):
+        custom = {"formula": "X", "crystal_system": "Cubic", "custom_c_ij": {"c11": float("nan"), "c12": 100.0, "c44": 50.0}}
+        self._envelope("dft_property_calculator", custom, "custom_c_ij")
+        iso = {"formula": "Zz", "crystal_system": "Isotropic", "k_vrh": float("inf"), "g_vrh": 50.0}
+        self._envelope("dft_property_calculator", iso, "k_vrh")
+
     def test_cnls_non_finite_lin_kk_is_unchanged_nan(self):
         points = [dict(p) for p in cases._RANDLES_POINTS]
         points[5]["zReal"] = float("nan")
         fresh = golden.run_solver("cnls_fitting_solver", {"action": "validate_dataset", "points": points})
         self.assertEqual((fresh["exitCode"], fresh["stderr"]), (0, ""))
         self.assertTrue(math.isnan(fresh["stdout"]["linKK"]["kkChiSquare"]))
+
+
+@require_git_revision(GIT, f"git or revision {BASE} unavailable")
+class DftKernelParityTest(unittest.TestCase):
+    """numpy/scipy inverse and eigenvalues against the faa6684 Gauss-Jordan / Jacobi."""
+
+    def _matrices(self):
+        import dft_property_calculator as dft
+        out = []
+        for bench_key, data in dft.AUTHENTIC_ELASTIC_BENCHMARKS.items():
+            for system in ("Cubic", "Hexagonal", "Tetragonal", "Orthorhombic", "Trigonal", "Isotropic"):
+                out.append((f"{bench_key}/{system}", dft.build_stiffness_matrix(system, 100.0, 50.0, data["formula"])[0]))
+        rng = np.random.default_rng(6)
+        for i in range(20):
+            a = rng.normal(size=(6, 6))
+            out.append((f"random_spd_{i}", (a @ a.T + 6 * np.eye(6)).tolist()))
+        for system in ("Cubic", "Isotropic"):  # singular normal block (C11 == C12)
+            out.append((f"singular/{system}", dft.build_stiffness_matrix(
+                system, 0, 0, "", {"c11": 150.0, "c12": 150.0, "c44": 60.0})[0]))
+        # near-singular: smallest pivot ~5.6e-17 (> 0, < 1e-12) -> still the fallback
+        out.append(("singular/near_cubic", dft.build_stiffness_matrix(
+            "Cubic", 0, 0, "", {"c11": 0.1 + 0.2, "c12": 0.3, "c44": 60.0})[0]))
+        return out
+
+    @staticmethod
+    def _normwise(a, b):
+        a, b = np.asarray(a), np.asarray(b)
+        return float(np.max(np.abs(a - b)) / np.max(np.abs(a)))
+
+    def test_inverse_and_eigenvalues_match_old_loops(self):
+        import dft_property_calculator as dft
+        old = blob_module("dft_property_calculator")
+        fallbacks = 0
+        for name, c in self._matrices():
+            with self.subTest(matrix=name):
+                old_inv, new_inv = old.invert_6x6_matrix(c), dft.invert_6x6_matrix(c)
+                old_fb = all(old_inv[i][j] == 0.0 for i in range(6) for j in range(6) if i != j)
+                new_fb = all(new_inv[i][j] == 0.0 for i in range(6) for j in range(6) if i != j)
+                if name.startswith("singular"):
+                    fallbacks += 1
+                    self.assertTrue(old_fb and new_fb)
+                    self.assertEqual(old_inv, new_inv)  # same diagonal fallback, bit-identical
+                self.assertLessEqual(self._normwise(old_inv, new_inv), REL_TOL)
+                self.assertLessEqual(self._normwise(old.jacobi_eigenvalues_symmetric(c),
+                                                    dft.jacobi_eigenvalues_symmetric(c)), REL_TOL)
+                self.assertTrue(all(type(v) is float for row in new_inv for v in row))
+        self.assertEqual(fallbacks, 3)
+
+    def test_common_path_does_not_import_scipy(self):
+        # scipy.linalg (exact LU pivots) loads only when the det certificate fails.
+        import subprocess
+        probe = ("import json, sys; import dft_property_calculator as d; "
+                 "d.calculate_dft_properties({}); d.calculate_dft_properties({'formula': 'Ni3Al', 'crystal_system': 'Cubic'}); "
+                 "a = sorted(m for m in ('scipy', 'input_validation') if m in sys.modules); "
+                 "d.invert_6x6_matrix(d.build_stiffness_matrix('Cubic', 0, 0, '', {'c11': 150.0, 'c12': 150.0, 'c44': 60.0})[0]); "
+                 "print(json.dumps([a, 'scipy' in sys.modules]))")
+        out = subprocess.run([sys.executable, "-B", "-c", probe], cwd=str(HERE), capture_output=True, check=True)
+        self.assertEqual(json.loads(out.stdout), [[], True])
+
+    def test_mutation_perturbed_inverse_is_detected(self):
+        import dft_property_calculator as dft
+        old = blob_module("dft_property_calculator")
+        c = dft.build_stiffness_matrix("Cubic", 0, 0, "Ni3Al")[0]
+        inv = np.linalg.inv
+        with patch.object(dft.np.linalg, "inv", lambda a: inv(a) * (1 + 1e-6)):
+            self.assertGreater(self._normwise(old.invert_6x6_matrix(c), dft.invert_6x6_matrix(c)), REL_TOL)
+
+    def test_mutation_perturbed_eigenvalues_is_detected(self):
+        import dft_property_calculator as dft
+        eigvalsh = np.linalg.eigvalsh
+        with patch.object(dft.np.linalg, "eigvalsh", lambda a: eigvalsh(a) + 0.01):
+            mutated = _in_process("dft_property_calculator", "ni3al_cubic_benchmark")
+        rows = tolerance_violations(load("dft_property_calculator", "ni3al_cubic_benchmark")["stdout"], mutated)
+        self.assertTrue(any(r["key"].startswith("bornStability.allEigenvaluesGPa") for r in rows))
 
 
 if __name__ == "__main__":
