@@ -1,4 +1,12 @@
-import { TafelDataset, TafelFitResult, TafelRawPoint, ReferenceElectrodeType } from "../types/tafel";
+import {
+  TafelDataset,
+  TafelFitComplete,
+  TafelFitCompleteKeys,
+  TafelFitResult,
+  TafelRawPoint,
+  ReferenceElectrodeType,
+} from "../types/tafel";
+import { fmtTafelNumber, fmtTafelQuantity, tafelUnavailableReason } from "./tafelDisplay";
 import { FARADAY_CONSTANT } from "./physicalConstants";
 
 export const REFERENCE_ELECTRODES: Record<ReferenceElectrodeType, { name: string; offsetVsSHE: number }> = {
@@ -363,13 +371,79 @@ export function linearRegression(xArr: number[], yArr: number[]): { m: number; b
   return { m, b, r2 };
 }
 
+/** Fewest data points a Tafel branch window must hold for a fit (same rule as python/tafel_corrosion_rate_solver.py). */
+export const MIN_TAFEL_BRANCH_POINTS = 3;
+
+/** Why a Tafel branch cannot be fitted, or null when it can. Mirrors the Python engine's reasons. */
+export function tafelBranchUnavailableReason(
+  branch: "Anodic" | "Cathodic",
+  window: [number, number],
+  pointCount: number,
+  slope: number
+): string | null {
+  const lo = Math.min(window[0], window[1]);
+  const hi = Math.max(window[0], window[1]);
+  if (pointCount < MIN_TAFEL_BRANCH_POINTS) {
+    return (
+      `${branch} branch unavailable: ${pointCount} data point(s) in the fit window ` +
+      `[${lo.toFixed(3)}, ${hi.toFixed(3)}] V (at least ${MIN_TAFEL_BRANCH_POINTS} are required)`
+    );
+  }
+  if (branch === "Anodic" && slope <= 0) {
+    return (
+      `Anodic branch unavailable: the fitted log i vs E slope is ${slope.toFixed(3)} (not > 0), ` +
+      `so the data in the window do not show anodic Tafel behaviour`
+    );
+  }
+  if (branch === "Cathodic" && slope >= 0) {
+    return (
+      `Cathodic branch unavailable: the fitted log i vs E slope is ${slope.toFixed(3)} (not < 0), ` +
+      `so the data in the window do not show cathodic Tafel behaviour`
+    );
+  }
+  return null;
+}
+
+/** The fit values a complete Tafel fit carries (see TafelFitComplete). */
+export const TAFEL_COMPLETE_KEYS: readonly TafelFitCompleteKeys[] = [
+  "eCorr", "eCorrSHE", "iCorr_uA_cm2", "logIcorr", "totalCurrentIcorr_uA",
+  "betaA_V_dec", "betaA_mV_dec", "betaC_V_dec", "betaC_mV_dec", "sternGearyB_V", "rp_ohm_cm2",
+  "corrosionRateMmYr", "corrosionRateMpy", "massLoss_g_m2_day",
+  "cathodicR2", "anodicR2", "cathodicSlope_m", "cathodicIntercept_b", "anodicSlope_m", "anodicIntercept_b",
+  "severity", "astmClassification",
+];
+
+/** True when every value of a complete fit is present (both branches fitted, i_corr and the substrate known). */
+export function isTafelFitComplete(fit: TafelFitResult | null | undefined): fit is TafelFitComplete {
+  if (!fit || fit.fitStatus === "unavailable") return false;
+  return TAFEL_COMPLETE_KEYS.every((k) => fit[k] !== null && fit[k] !== undefined);
+}
+
+/** Thrown by autoFitTafel when the fit is unavailable; `fit` carries the partial result and the reasons. */
+export class TafelFitUnavailableError extends Error {
+  readonly fit: TafelFitResult;
+  constructor(fit: TafelFitResult) {
+    super(fit.unavailableReason || "Tafel fit unavailable");
+    this.name = "TafelFitUnavailableError";
+    this.fit = fit;
+  }
+}
+
 /**
  * Automatic Tafel Extrapolation & Kinetics Solver (ASTM G102 & G59).
  * Detects the minimum current valley ($E_{corr}^{valley}$), fits linear Tafel lines
  * on the cathodic and anodic branches, solves for their intersection $(E_{corr}, I_{corr})$,
  * and calculates all Stern-Geary and Faraday corrosion rates.
+ *
+ * A branch whose window holds fewer than 3 points, or whose slope has the wrong sign, is
+ * unavailable: its slope, beta and R2 are null (never an assumed 100 mV/dec with R2 0.85), and
+ * without both branches there is no Evans intersection, so Ecorr/icorr, Stern-Geary, Rp, the
+ * Faraday rate and the severity are null too (fitStatus "unavailable" with the reasons), unless
+ * the caller supplies manual Ecorr / icorr overrides. A missing substrate (equivalent weight or
+ * density <= 0) makes the Faraday rate unavailable instead of substituting the 316L preset.
+ * Same rules as python/tafel_corrosion_rate_solver.py fit_tafel_curve.
  */
-export function autoFitTafel(
+export function tryAutoFitTafel(
   dataset: TafelDataset,
   customCathodicRange?: [number, number],
   customAnodicRange?: [number, number],
@@ -438,50 +512,42 @@ export function autoFitTafel(
   // 3. Fit Linear Slopes: log(i) = m * E + b
   // Note: For anodic, m > 0 (as E increases, i increases), so betaA = 1 / m (V/dec)
   // For cathodic, m < 0 (as E decreases below Ecorr, i increases), so betaC = -1 / m (V/dec)
-  let cathFit = linearRegression(
+  const cathRegression = linearRegression(
     cathPoints.map((p) => p.potential),
     cathPoints.map((p) => p.logCurrentDensity)
   );
 
-  let anodFit = linearRegression(
+  const anodRegression = linearRegression(
     anodPoints.map((p) => p.potential),
     anodPoints.map((p) => p.logCurrentDensity)
   );
 
-  // Guard: Ensure slope directions are physically sound
-  // Cathodic slope should be negative: d(log i)/dE < 0
-  if (cathFit.m >= 0 || cathPoints.length < 3) {
-    // Fallback standard cathodic slope: 100 mV/dec -> m = -10.0
-    const mFall = -8.33; // 120 mV/dec
-    const bFall = (points[minIdx]?.logCurrentDensity || 0) - mFall * rawEcorr + 0.5;
-    cathFit = { m: mFall, b: bFall, r2: 0.85 };
-  }
+  // Branch validity: an unusable branch is unavailable, never replaced by an assumed slope or R2.
+  const cathReason = tafelBranchUnavailableReason("Cathodic", [cathMinE, cathMaxE], cathPoints.length, cathRegression.m);
+  const anodReason = tafelBranchUnavailableReason("Anodic", [anodMinE, anodMaxE], anodPoints.length, anodRegression.m);
+  const cathFit = cathReason ? null : cathRegression;
+  const anodFit = anodReason ? null : anodRegression;
+  const bothBranches = cathFit !== null && anodFit !== null;
 
-  // Anodic slope should be positive: d(log i)/dE > 0
-  if (anodFit.m <= 0 || anodPoints.length < 3) {
-    // Fallback standard anodic slope: 100 mV/dec -> m = +10.0
-    const mFall = 10.0; // 100 mV/dec
-    const bFall = (points[minIdx]?.logCurrentDensity || 0) - mFall * rawEcorr + 0.5;
-    anodFit = { m: mFall, b: bFall, r2: 0.85 };
-  }
-
-  // 4. Solve for Intersection: (Ecorr, log(Icorr))
+  // 4. Solve for Intersection: (Ecorr, log(Icorr)); needs both branches
   // log(i) = m_c * E + b_c
   // log(i) = m_a * E + b_a
   // m_c * E + b_c = m_a * E + b_a => E_intersect = (b_c - b_a) / (m_a - m_c)
-  let extrapolatedEcorr = rawEcorr;
-  let extrapolatedLogIcorr = Math.log10(rawIcorr);
+  let extrapolatedEcorr: number | null = null;
+  let extrapolatedLogIcorr: number | null = null;
 
-  const denom = anodFit.m - cathFit.m;
-  if (Math.abs(denom) > 1e-6) {
-    const eInter = (cathFit.b - anodFit.b) / denom;
-    // Keep within reasonable range of the raw minimum
-    if (Math.abs(eInter - rawEcorr) <= 0.15) {
-      extrapolatedEcorr = eInter;
+  if (cathFit && anodFit) {
+    extrapolatedEcorr = rawEcorr;
+    const denom = anodFit.m - cathFit.m;
+    if (Math.abs(denom) > 1e-6) {
+      const eInter = (cathFit.b - anodFit.b) / denom;
+      // Keep within reasonable range of the raw minimum
+      if (Math.abs(eInter - rawEcorr) <= 0.15) {
+        extrapolatedEcorr = eInter;
+      }
     }
+    extrapolatedLogIcorr = anodFit.m * extrapolatedEcorr + anodFit.b;
   }
-
-  extrapolatedLogIcorr = anodFit.m * extrapolatedEcorr + anodFit.b;
 
   // Manual Overrides if provided
   if (typeof manualEcorrOverride === "number") {
@@ -491,108 +557,116 @@ export function autoFitTafel(
     extrapolatedLogIcorr = Math.log10(Math.max(1e-9, manualIcorrOverride));
   }
 
-  const extrapolatedIcorr_uA_cm2 = Math.pow(10, extrapolatedLogIcorr);
+  const extrapolatedIcorr_uA_cm2 = extrapolatedLogIcorr === null ? null : Math.pow(10, extrapolatedLogIcorr);
 
   // Tafel Slopes
   // betaA (V/dec) = 1 / m_a
   // betaC (V/dec) = -1 / m_c
-  const betaA_V_dec = Math.abs(1 / anodFit.m);
-  const betaC_V_dec = Math.abs(1 / cathFit.m);
-  const betaA_mV_dec = betaA_V_dec * 1000;
-  const betaC_mV_dec = betaC_V_dec * 1000;
+  const betaA_V_dec = anodFit ? Math.abs(1 / anodFit.m) : null;
+  const betaC_V_dec = cathFit ? Math.abs(1 / cathFit.m) : null;
+  const betaA_mV_dec = betaA_V_dec === null ? null : betaA_V_dec * 1000;
+  const betaC_mV_dec = betaC_V_dec === null ? null : betaC_V_dec * 1000;
 
-  // 5. Stern-Geary Polarization Resistance (ASTM G59)
+  // 5. Stern-Geary Polarization Resistance (ASTM G59): needs both slopes and i_corr
   // B = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))
-  const sternGearyB_V = (betaA_V_dec * betaC_V_dec) / (2.302585 * (betaA_V_dec + betaC_V_dec));
   // i_corr in A/cm2 = extrapolatedIcorr_uA_cm2 * 1e-6
-  const iCorr_A_cm2 = extrapolatedIcorr_uA_cm2 * 1e-6;
-  const rp_ohm_cm2 = sternGearyB_V / iCorr_A_cm2;
+  let sternGearyB_V: number | null = null;
+  let rp_ohm_cm2: number | null = null;
+  if (betaA_V_dec !== null && betaC_V_dec !== null && extrapolatedIcorr_uA_cm2 !== null) {
+    sternGearyB_V = (betaA_V_dec * betaC_V_dec) / (2.302585 * (betaA_V_dec + betaC_V_dec));
+    rp_ohm_cm2 = sternGearyB_V / (extrapolatedIcorr_uA_cm2 * 1e-6);
+  }
 
-  // 6. Faraday's Law Corrosion Penetration Rate (ASTM G102)
+  // 6. Faraday's Law Corrosion Penetration Rate (ASTM G102): needs i_corr and the substrate
   // CR (mm/year) = (K1 * i_corr (µA/cm²) * EW) / density (g/cm³), K1 = 1e-6 * s/yr * 10 / F
-  // (0.0032707148 with the exact F; the Python solver uses the same K1). Missing metadata
-  // falls back to the 316L preset (COMMON_ALLOYS[0], registry values).
-  const EW = dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight;
-  const density = dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density;
+  // (0.0032707148 with the exact F; the Python solver uses the same K1). The substrate comes from
+  // the dataset metadata only: a missing equivalent weight or density is unavailable, never the 316L preset.
+  const EW = dataset.metadata.equivalentWeight;
+  const density = dataset.metadata.density_g_cm3;
   const area = dataset.metadata.electrodeAreaCm2 || 1.0;
+  const substrateKnown = typeof EW === "number" && EW > 0 && typeof density === "number" && density > 0;
 
-  const K1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
-  const cr_mm_yr = (K1 * extrapolatedIcorr_uA_cm2 * EW) / density;
-  const cr_mpy = cr_mm_yr * 39.3701; // mils per year
-
-  // Mass loss: g / (m² · day)
-  // i_corr in A/m² = (i_corr in A/cm²) * 10^4
-  const massLoss_g_m2_day = (iCorr_A_cm2 * 10000 * EW * 86400) / FARADAY_CONSTANT;
+  let cr_mm_yr: number | null = null;
+  let cr_mpy: number | null = null;
+  let massLoss_g_m2_day: number | null = null;
+  if (extrapolatedIcorr_uA_cm2 !== null && substrateKnown) {
+    const K1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;
+    cr_mm_yr = (K1 * extrapolatedIcorr_uA_cm2 * EW) / density;
+    cr_mpy = cr_mm_yr * 39.3701; // mils per year
+    // Mass loss: g / (m² · day); i_corr in A/m² = (i_corr in A/cm²) * 10^4
+    massLoss_g_m2_day = (extrapolatedIcorr_uA_cm2 * 1e-6 * 10000 * EW * 86400) / FARADAY_CONSTANT;
+  }
 
   // 7. Potential vs SHE
   const refOffset = dataset.metadata.refOffsetVsSHE || 0.241;
-  const eCorrSHE = extrapolatedEcorr + refOffset;
+  const eCorrSHE = extrapolatedEcorr === null ? null : extrapolatedEcorr + refOffset;
 
-  // 8. Generate Tangent Extrapolation Lines for Charting
+  // 8. Generate Tangent Extrapolation Lines for Charting (only for the branches that were fitted)
   // Extend across the scan window
-  const eMinPlot = Math.min(minScanE, extrapolatedEcorr - 0.35);
-  const eMaxPlot = Math.max(maxScanE, extrapolatedEcorr + 0.35);
+  const refE = extrapolatedEcorr ?? rawEcorr;
+  const eMinPlot = Math.min(minScanE, refE - 0.35);
+  const eMaxPlot = Math.max(maxScanE, refE + 0.35);
   const nTangentSteps = 50;
   const tangentLines: TafelFitResult["tangentLines"] = [];
 
   for (let i = 0; i <= nTangentSteps; i++) {
     const e = eMinPlot + (eMaxPlot - eMinPlot) * (i / nTangentSteps);
-    // Anodic tangent line: log(i) = m_a * e + b_a
-    // Cathodic tangent line: log(i) = m_c * e + b_c
-    const logIa = anodFit.m * e + anodFit.b;
-    const logIc = cathFit.m * e + cathFit.b;
-
     // Show anodic line in its upper half (down to ~20mV below Ecorr)
-    const showAnodic = e >= extrapolatedEcorr - 0.03 && e <= anodMaxE + 0.15;
+    const showAnodic = anodFit !== null && e >= refE - 0.03 && e <= anodMaxE + 0.15;
     // Show cathodic line in its lower half (up to ~20mV above Ecorr)
-    const showCathodic = e <= extrapolatedEcorr + 0.03 && e >= cathMinE - 0.15;
+    const showCathodic = cathFit !== null && e <= refE + 0.03 && e >= cathMinE - 0.15;
 
     tangentLines.push({
       potential: parseFloat(e.toFixed(4)),
-      logI_anodic: showAnodic ? parseFloat(logIa.toFixed(3)) : null,
-      logI_cathodic: showCathodic ? parseFloat(logIc.toFixed(3)) : null,
+      // Anodic tangent line: log(i) = m_a * e + b_a; cathodic: log(i) = m_c * e + b_c
+      logI_anodic: showAnodic && anodFit ? parseFloat((anodFit.m * e + anodFit.b).toFixed(3)) : null,
+      logI_cathodic: showCathodic && cathFit ? parseFloat((cathFit.m * e + cathFit.b).toFixed(3)) : null,
     });
   }
 
-  // 9. Reconstruct Synthetic Butler-Volmer Curve
+  // 9. Reconstruct Synthetic Butler-Volmer Curve (needs both slopes, Ecorr and i_corr)
   // i_BV(E) = i_corr * | 10^((E - Ecorr) / betaA) - 10^(-(E - Ecorr) / betaC) |
   const syntheticButlerVolmer: TafelFitResult["syntheticButlerVolmer"] = [];
-  for (let i = 0; i <= 60; i++) {
-    const e = eMinPlot + (eMaxPlot - eMinPlot) * (i / 60);
-    const overpotential = e - extrapolatedEcorr;
-    const iA = Math.pow(10, overpotential / betaA_V_dec);
-    const iC = Math.pow(10, -overpotential / betaC_V_dec);
-    const netI = Math.abs(iA - iC);
-    const totalCurrentDensity = extrapolatedIcorr_uA_cm2 * netI;
-    const logVal = Math.log10(Math.max(1e-6, totalCurrentDensity));
+  if (betaA_V_dec !== null && betaC_V_dec !== null && extrapolatedEcorr !== null && extrapolatedIcorr_uA_cm2 !== null) {
+    for (let i = 0; i <= 60; i++) {
+      const e = eMinPlot + (eMaxPlot - eMinPlot) * (i / 60);
+      const overpotential = e - extrapolatedEcorr;
+      const iA = Math.pow(10, overpotential / betaA_V_dec);
+      const iC = Math.pow(10, -overpotential / betaC_V_dec);
+      const netI = Math.abs(iA - iC);
+      const totalCurrentDensity = extrapolatedIcorr_uA_cm2 * netI;
+      const logVal = Math.log10(Math.max(1e-6, totalCurrentDensity));
 
-    syntheticButlerVolmer.push({
-      potential: parseFloat(e.toFixed(4)),
-      logI_model: parseFloat(logVal.toFixed(3)),
-    });
+      syntheticButlerVolmer.push({
+        potential: parseFloat(e.toFixed(4)),
+        logI_model: parseFloat(logVal.toFixed(3)),
+      });
+    }
   }
 
-  // 10. Severity Classification
-  let severity: TafelFitResult["severity"] = "Passivated / Good";
-  let astmClassification = "Passivated Stable Barrier";
+  // 10. Severity Classification (needs a corrosion rate)
+  let severity: TafelFitResult["severity"] = null;
+  let astmClassification: string | null = null;
 
-  if (cr_mm_yr < 0.02) {
-    severity = "Immune / Highly Resistant";
-    astmClassification = "Immune / Outstanding Corrosion Resistance (CR < 0.02 mm/yr)";
-  } else if (cr_mm_yr < 0.10) {
-    severity = "Passivated / Good";
-    astmClassification = "Passivated Stable Barrier (0.02 - 0.10 mm/yr)";
-  } else if (cr_mm_yr < 0.50) {
-    severity = "Moderate (Caution)";
-    astmClassification = "Moderate Dissolution (0.10 - 0.50 mm/yr - Sacrificial/Protection Required)";
-  } else {
-    severity = "Severe Rapid Corrosion";
-    astmClassification = "Severe Rapid Degradation (CR > 0.50 mm/yr - Immediate Failure Hazard)";
+  if (cr_mm_yr !== null) {
+    if (cr_mm_yr < 0.02) {
+      severity = "Immune / Highly Resistant";
+      astmClassification = "Immune / Outstanding Corrosion Resistance (CR < 0.02 mm/yr)";
+    } else if (cr_mm_yr < 0.10) {
+      severity = "Passivated / Good";
+      astmClassification = "Passivated Stable Barrier (0.02 - 0.10 mm/yr)";
+    } else if (cr_mm_yr < 0.50) {
+      severity = "Moderate (Caution)";
+      astmClassification = "Moderate Dissolution (0.10 - 0.50 mm/yr - Sacrificial/Protection Required)";
+    } else {
+      severity = "Severe Rapid Corrosion";
+      astmClassification = "Severe Rapid Degradation (CR > 0.50 mm/yr - Immediate Failure Hazard)";
+    }
   }
 
   // Pitting detection in anodic branch
   let pittingPotentialEpit: number | null = null;
-  const highAnodicPoints = points.filter((p) => p.potential > extrapolatedEcorr + 0.15);
+  const highAnodicPoints = points.filter((p) => p.potential > refE + 0.15);
   for (let i = 1; i < highAnodicPoints.length; i++) {
     const dLogI = highAnodicPoints[i].logCurrentDensity - highAnodicPoints[i - 1].logCurrentDensity;
     const dE = highAnodicPoints[i].potential - highAnodicPoints[i - 1].potential;
@@ -602,32 +676,34 @@ export function autoFitTafel(
     }
   }
 
-  return {
-    eCorr: parseFloat(extrapolatedEcorr.toFixed(4)),
-    eCorrSHE: parseFloat(eCorrSHE.toFixed(4)),
-    iCorr_uA_cm2: parseFloat(extrapolatedIcorr_uA_cm2.toFixed(4)),
-    logIcorr: parseFloat(extrapolatedLogIcorr.toFixed(3)),
-    totalCurrentIcorr_uA: parseFloat((extrapolatedIcorr_uA_cm2 * area).toFixed(4)),
+  const round = (v: number | null, digits: number): number | null => (v === null ? null : parseFloat(v.toFixed(digits)));
 
-    betaA_V_dec: parseFloat(betaA_V_dec.toFixed(4)),
-    betaA_mV_dec: parseFloat(betaA_mV_dec.toFixed(1)),
-    betaC_V_dec: parseFloat(betaC_V_dec.toFixed(4)),
-    betaC_mV_dec: parseFloat(betaC_mV_dec.toFixed(1)),
-    sternGearyB_V: parseFloat(sternGearyB_V.toFixed(4)),
-    rp_ohm_cm2: parseFloat(rp_ohm_cm2.toFixed(1)),
+  const result: TafelFitResult = {
+    eCorr: round(extrapolatedEcorr, 4),
+    eCorrSHE: round(eCorrSHE, 4),
+    iCorr_uA_cm2: round(extrapolatedIcorr_uA_cm2, 4),
+    logIcorr: round(extrapolatedLogIcorr, 3),
+    totalCurrentIcorr_uA: extrapolatedIcorr_uA_cm2 === null ? null : parseFloat((extrapolatedIcorr_uA_cm2 * area).toFixed(4)),
 
-    corrosionRateMmYr: parseFloat(cr_mm_yr.toFixed(5)),
-    corrosionRateMpy: parseFloat(cr_mpy.toFixed(3)),
-    massLoss_g_m2_day: parseFloat(massLoss_g_m2_day.toFixed(4)),
+    betaA_V_dec: round(betaA_V_dec, 4),
+    betaA_mV_dec: round(betaA_mV_dec, 1),
+    betaC_V_dec: round(betaC_V_dec, 4),
+    betaC_mV_dec: round(betaC_mV_dec, 1),
+    sternGearyB_V: round(sternGearyB_V, 4),
+    rp_ohm_cm2: round(rp_ohm_cm2, 1),
+
+    corrosionRateMmYr: round(cr_mm_yr, 5),
+    corrosionRateMpy: round(cr_mpy, 3),
+    massLoss_g_m2_day: round(massLoss_g_m2_day, 4),
 
     cathodicRange: [parseFloat(cathMinE.toFixed(3)), parseFloat(cathMaxE.toFixed(3))],
     anodicRange: [parseFloat(anodMinE.toFixed(3)), parseFloat(anodMaxE.toFixed(3))],
-    cathodicR2: parseFloat(cathFit.r2.toFixed(4)),
-    anodicR2: parseFloat(anodFit.r2.toFixed(4)),
-    cathodicSlope_m: parseFloat(cathFit.m.toFixed(3)),
-    cathodicIntercept_b: parseFloat(cathFit.b.toFixed(3)),
-    anodicSlope_m: parseFloat(anodFit.m.toFixed(3)),
-    anodicIntercept_b: parseFloat(anodFit.b.toFixed(3)),
+    cathodicR2: cathFit ? parseFloat(cathFit.r2.toFixed(4)) : null,
+    anodicR2: anodFit ? parseFloat(anodFit.r2.toFixed(4)) : null,
+    cathodicSlope_m: cathFit ? parseFloat(cathFit.m.toFixed(3)) : null,
+    cathodicIntercept_b: cathFit ? parseFloat(cathFit.b.toFixed(3)) : null,
+    anodicSlope_m: anodFit ? parseFloat(anodFit.m.toFixed(3)) : null,
+    anodicIntercept_b: anodFit ? parseFloat(anodFit.b.toFixed(3)) : null,
 
     rawEcorrValley: parseFloat(rawEcorr.toFixed(4)),
     rawIcorrValley: parseFloat(rawIcorr.toFixed(4)),
@@ -639,6 +715,41 @@ export function autoFitTafel(
     severity,
     astmClassification,
   };
+
+  const reasons: NonNullable<TafelFitResult["unavailable"]> = {};
+  if (anodReason) reasons.anodicBranch = anodReason;
+  if (cathReason) reasons.cathodicBranch = cathReason;
+  if (!bothBranches && extrapolatedIcorr_uA_cm2 === null) {
+    reasons.iCorr_uA_cm2 =
+      "the Evans intersection needs both Tafel branches; no corrosion current density is invented " +
+      "(use the manual i_corr override to enter a known value)";
+  }
+  if (extrapolatedIcorr_uA_cm2 !== null && !substrateKnown) {
+    reasons.substrate =
+      "the dataset has no equivalent weight / density, so the Faraday rate is unavailable (no alloy is substituted)";
+  }
+  if (Object.keys(reasons).length > 0) {
+    result.fitStatus = "unavailable";
+    result.unavailable = reasons;
+    result.unavailableReason = Object.values(reasons).join("; ");
+  }
+  return result;
+}
+
+/**
+ * Complete Tafel fit or an error: returns the fit only when every value is available, otherwise throws
+ * TafelFitUnavailableError (its `fit` holds the partial result). Use tryAutoFitTafel to show partial results.
+ */
+export function autoFitTafel(
+  dataset: TafelDataset,
+  customCathodicRange?: [number, number],
+  customAnodicRange?: [number, number],
+  manualEcorrOverride?: number,
+  manualIcorrOverride?: number
+): TafelFitComplete {
+  const fit = tryAutoFitTafel(dataset, customCathodicRange, customAnodicRange, manualEcorrOverride, manualIcorrOverride);
+  if (!isTafelFitComplete(fit)) throw new TafelFitUnavailableError(fit);
+  return fit;
 }
 
 /**
@@ -689,16 +800,17 @@ export function exportTafelToCSV(dataset: TafelDataset, fitResult: TafelFitResul
     `# Temperature: ${meta.temperatureC} °C`,
     `# `,
     `# TAFEL EXTRAPOLATION KINETIC RESULTS:`,
-    `# Corrosion Potential (E_corr): ${fitResult.eCorr} V vs ${meta.referenceElectrode} (${fitResult.eCorrSHE} V vs SHE)`,
-    `# Corrosion Current Density (i_corr): ${fitResult.iCorr_uA_cm2} uA/cm2 (log10 = ${fitResult.logIcorr})`,
-    `# Total Corrosion Current (I_corr): ${fitResult.totalCurrentIcorr_uA} uA`,
-    `# Anodic Tafel Slope (Beta_a): ${fitResult.betaA_mV_dec} mV/decade (R2: ${fitResult.anodicR2})`,
-    `# Cathodic Tafel Slope (Beta_c): ${fitResult.betaC_mV_dec} mV/decade (R2: ${fitResult.cathodicR2})`,
-    `# Stern-Geary B Constant: ${fitResult.sternGearyB_V} V`,
-    `# Polarization Resistance (R_p): ${fitResult.rp_ohm_cm2} Ohm*cm2`,
-    `# Faraday Penetration Rate: ${fitResult.corrosionRateMmYr} mm/year (${fitResult.corrosionRateMpy} mpy)`,
-    `# Daily Mass Loss: ${fitResult.massLoss_g_m2_day} g/(m2*day)`,
-    `# Classification: ${fitResult.astmClassification}`,
+    `# Corrosion Potential (E_corr): ${fmtTafelQuantity(fitResult.eCorr, "V")} vs ${meta.referenceElectrode} (${fmtTafelQuantity(fitResult.eCorrSHE, "V")} vs SHE)`,
+    `# Corrosion Current Density (i_corr): ${fmtTafelQuantity(fitResult.iCorr_uA_cm2, "uA/cm2")} (log10 = ${fmtTafelNumber(fitResult.logIcorr)})`,
+    `# Total Corrosion Current (I_corr): ${fmtTafelQuantity(fitResult.totalCurrentIcorr_uA, "uA")}`,
+    `# Anodic Tafel Slope (Beta_a): ${fmtTafelQuantity(fitResult.betaA_mV_dec, "mV/decade")} (R2: ${fmtTafelNumber(fitResult.anodicR2)})`,
+    `# Cathodic Tafel Slope (Beta_c): ${fmtTafelQuantity(fitResult.betaC_mV_dec, "mV/decade")} (R2: ${fmtTafelNumber(fitResult.cathodicR2)})`,
+    `# Stern-Geary B Constant: ${fmtTafelQuantity(fitResult.sternGearyB_V, "V")}`,
+    `# Polarization Resistance (R_p): ${fmtTafelQuantity(fitResult.rp_ohm_cm2, "Ohm*cm2")}`,
+    `# Faraday Penetration Rate: ${fmtTafelQuantity(fitResult.corrosionRateMmYr, "mm/year")} (${fmtTafelQuantity(fitResult.corrosionRateMpy, "mpy")})`,
+    `# Daily Mass Loss: ${fmtTafelQuantity(fitResult.massLoss_g_m2_day, "g/(m2*day)")}`,
+    `# Classification: ${fitResult.astmClassification ?? fmtTafelNumber(null)}`,
+    ...(tafelUnavailableReason(fitResult) ? [`# Unavailable: ${tafelUnavailableReason(fitResult)}`] : []),
     `# =========================================================================`,
     `Potential_V,Potential_SHE_V,CurrentDensity_uA_cm2,log10_CurrentDensity,SignedCurrentDensity_uA_cm2`,
   ].join("\n");

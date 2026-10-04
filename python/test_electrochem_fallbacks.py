@@ -306,6 +306,20 @@ class CorrosionEISEquivalentWeightTest(unittest.TestCase):
         self.assertTrue(out["success"])
         self.assertEqual(out["equivalentWeight_g_eq"], 12.101)
 
+    def test_every_substrate_option_of_the_corrosion_eis_studio_resolves_exactly(self):
+        """The studio sends the option value as metalId: "mg-az31b" and "ti-6al4v" used to reach the
+        substring match; they must now be ids the registry resolves (or the UI would show an error)."""
+        import re
+        studio = (HERE.parent / "src" / "components" / "CorrosionEISKineticsStudio.tsx").read_text(encoding="utf-8")
+        select = studio[studio.index('aria-label="Substrate Alloy"'):]
+        select = select[:select.index("</select>")]
+        values = re.findall(r'<option value="([^"]+)"', select)
+        self.assertGreaterEqual(len(values), 5)
+        for value in values:
+            with self.subTest(option=value):
+                self.assertIsNotNone(tafel.corrosion_preset(value)["ew"])
+                self.assertEqual(self.run_kinetics(value)["alloyId"], tafel.corrosion_preset(value)["registry_id"])
+
     def test_source_has_no_substring_alloy_match_left(self):
         source = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
         for pattern in ('"al" in metal_id', '"ti" in metal_id', '"ni" in metal_id', "ew = 27.9"):

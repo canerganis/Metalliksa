@@ -2587,6 +2587,58 @@ export async function identifyBisquertTLMCircuitComponents(
   return pythonComputationService.identifyBisquertTLMCircuit(payload);
 }
 
+function unavailableTafelCorrosionRate(
+  payload: TafelPythonCorrosionRateInput,
+  alloyId: string,
+  alloyName: string,
+  eCorr_V: number | null,
+  specimenAreaCm2: number,
+  temperatureC: number,
+  initialThicknessMm: number,
+  allowableLossMm: number,
+  unavailable: Record<string, string>
+): TafelPythonCorrosionRateResult {
+  return {
+    success: true,
+    status: "unavailable",
+    unavailable,
+    unavailableReason: "Corrosion rate unavailable: " + Object.values(unavailable).join("; ") + ".",
+    isPythonEngine: false,
+    pythonVersion: "3.10 (Client Dual-Engine)",
+    standards: ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169"],
+    durationMs: 0.5,
+    timestamp: new Date().toISOString(),
+    corrosionRateMmYr: null,
+    corrosionRateMpy: null,
+    corrosionRateUmYr: null,
+    corrosionRateNmHr: null,
+    massLoss_g_m2_day: null,
+    massLoss_mdd: null,
+    massLoss_kg_m2_yr: null,
+    sternGearyB_V: null,
+    rp_ohm_cm2: null,
+    rp_apparent_ohm: null,
+    alloyId,
+    alloyName,
+    density_g_cm3: payload.density_g_cm3 ?? 0,
+    equivalentWeight: payload.equivalentWeight ?? 0,
+    iCorr_uA_cm2: null,
+    eCorr_V,
+    betaA: typeof payload.betaA === "number" ? payload.betaA : null,
+    betaC: typeof payload.betaC === "number" ? payload.betaC : null,
+    specimenAreaCm2,
+    temperatureC,
+    initialThicknessMm,
+    allowableLossMm,
+    rulUniformYears: null,
+    rulPittingYears: null,
+    severity: null,
+    timelineProjections: [],
+    temperatureSensitivity: [],
+    pythonCode: null,
+  };
+}
+
 /**
  * Pure TypeScript fallback for ASTM G102 / G59 Annual Corrosion Rate solver
  * providing parity with python/tafel_corrosion_rate_solver.py
@@ -2594,25 +2646,56 @@ export async function identifyBisquertTLMCircuitComponents(
 export function fallbackClientTafelCorrosionRate(
   payload: TafelPythonCorrosionRateInput
 ): TafelPythonCorrosionRateResult {
-  const iCorr_uA_cm2 = Math.max(1e-9, Math.abs(payload.iCorr_uA_cm2 || 1.25));
-  const eCorr_V = payload.eCorr_V ?? -0.35;
-  const betaA = Math.max(0.005, Math.abs(payload.betaA || 0.12));
-  const betaC = Math.max(0.005, Math.abs(payload.betaC || 0.10));
-  const density = Math.max(0.1, payload.density_g_cm3 || 7.98);
-  // 316L preset EW from python/alloy_registry.py (computed, Phase 6a step b; was 25.68).
-  const ew = Math.max(1.0, payload.equivalentWeight || 24.8205);
+  // Same rules as the Python engine: the corrosion current density is a required measurement, the slopes are
+  // required only for Stern-Geary B and Rp, and the substrate (density, equivalent weight) must be supplied because
+  // this client formula cannot resolve alloy presets. Nothing is defaulted: no 1.25 uA/cm2, no 0.12 / 0.10 V/dec
+  // slopes, no 316L substrate.
+  const positive = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
+  const iCorrIn = positive(payload.iCorr_uA_cm2);
+  const betaAIn = positive(payload.betaA);
+  const betaCIn = positive(payload.betaC);
+  const densityIn = positive(payload.density_g_cm3);
+  const ewIn = positive(payload.equivalentWeight);
+  const eCorr_V = typeof payload.eCorr_V === "number" && Number.isFinite(payload.eCorr_V) ? payload.eCorr_V : null;
   const specimenArea = Math.max(1e-4, payload.specimenAreaCm2 || 1.0);
   const initialThickness = Math.max(0.1, payload.initialThicknessMm || 5.0);
   const allowableLoss = Math.max(0.01, payload.allowableLossMm || 1.5);
   const tempC = payload.temperatureC ?? 25.0;
-  const alloyName = payload.alloyName || "AISI 316L Stainless Steel";
-  const alloyId = payload.alloyId || "steel-316l";
+  const alloyName = payload.alloyName || payload.alloyId || "Unspecified substrate";
+  const alloyId = payload.alloyId || "";
 
-  // Stern-Geary kinetics
-  const sternGearyB = (betaA * betaC) / (2.302585 * (betaA + betaC));
-  const iCorr_A_cm2 = iCorr_uA_cm2 * 1e-6;
-  const rp_ohm_cm2 = sternGearyB / iCorr_A_cm2;
-  const rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
+  const unavailable: Record<string, string> = {};
+  if (iCorrIn === null) {
+    unavailable.iCorr_uA_cm2 =
+      payload.iCorr_uA_cm2 === undefined || payload.iCorr_uA_cm2 === null
+        ? "iCorr_uA_cm2 was not supplied"
+        : `iCorr_uA_cm2 must be a finite number > 0 (received ${String(payload.iCorr_uA_cm2)})`;
+  }
+  if (densityIn === null || ewIn === null) {
+    unavailable.substrate =
+      "density_g_cm3 and equivalentWeight must be supplied: the client formula cannot resolve an alloy preset";
+  }
+  if (iCorrIn === null || densityIn === null || ewIn === null) {
+    return unavailableTafelCorrosionRate(payload, alloyId, alloyName, eCorr_V, specimenArea, tempC, initialThickness, allowableLoss, unavailable);
+  }
+
+  const iCorr_uA_cm2 = Math.max(1e-9, iCorrIn);
+  const density = Math.max(0.1, densityIn);
+  const ew = Math.max(1.0, ewIn);
+  const betaA = betaAIn === null ? null : Math.max(0.005, betaAIn);
+  const betaC = betaCIn === null ? null : Math.max(0.005, betaCIn);
+  if (betaA === null) unavailable.betaA = "betaA was not supplied";
+  if (betaC === null) unavailable.betaC = "betaC was not supplied";
+
+  // Stern-Geary kinetics (need both slopes)
+  let sternGearyB: number | null = null;
+  let rp_ohm_cm2: number | null = null;
+  let rp_apparent_ohm: number | null = null;
+  if (betaA !== null && betaC !== null) {
+    sternGearyB = (betaA * betaC) / (2.302585 * (betaA + betaC));
+    rp_ohm_cm2 = sternGearyB / (iCorr_uA_cm2 * 1e-6);
+    rp_apparent_ohm = rp_ohm_cm2 / specimenArea;
+  }
 
   // Faraday penetration (ASTM G102)
   // Same K1/K2 as python/tafel_corrosion_rate_solver.py, from the exact F.
@@ -2648,12 +2731,14 @@ export function fallbackClientTafelCorrosionRate(
   const rulPittingYears = +(allowableLoss / (cr_mm_yr * pittingFactor)).toFixed(2);
 
   // Temperature sensitivity (Arrhenius)
-  const ea = payload.activationEnergyJ_mol || 32000.0;
+  // No registry in the browser: without a caller-supplied activation energy the 32 kJ/mol stand-in of the old
+  // fallback would be an invented number, so the Arrhenius table is left empty instead.
+  const ea = payload.activationEnergyJ_mol || null;
   const rGas = GAS_CONSTANT_R;
   const tRefK = tempC + 273.15;
-  const temperatureSensitivity = [5, 15, 25, 35, 45, 55, 65, 75, 85].map((t) => {
+  const temperatureSensitivity = (ea === null ? [] : [5, 15, 25, 35, 45, 55, 65, 75, 85]).map((t) => {
     const tK = t + 273.15;
-    const exp = (-ea / rGas) * (1 / tK - 1 / tRefK);
+    const exp = (-(ea as number) / rGas) * (1 / tK - 1 / tRefK);
     const factor = Math.exp(Math.max(-10, Math.min(10, exp)));
     const iT = iCorr_uA_cm2 * factor;
     const crT = (exactK1 * iT * ew) / density;
@@ -2734,9 +2819,9 @@ print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
     massLoss_g_m2_day: +mass_loss_g_m2_day.toFixed(4),
     massLoss_mdd: +mass_loss_mdd.toFixed(3),
     massLoss_kg_m2_yr: +mass_loss_kg_m2_yr.toFixed(4),
-    sternGearyB_V: +sternGearyB.toFixed(5),
-    rp_ohm_cm2: +rp_ohm_cm2.toFixed(1),
-    rp_apparent_ohm: +rp_apparent_ohm.toFixed(2),
+    sternGearyB_V: sternGearyB === null ? null : +sternGearyB.toFixed(5),
+    rp_ohm_cm2: rp_ohm_cm2 === null ? null : +rp_ohm_cm2.toFixed(1),
+    rp_apparent_ohm: rp_apparent_ohm === null ? null : +rp_apparent_ohm.toFixed(2),
     alloyId,
     alloyName,
     density_g_cm3: density,
@@ -2745,6 +2830,14 @@ print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
     eCorr_V,
     betaA,
     betaC,
+    ...(Object.keys(unavailable).length > 0
+      ? {
+          status: "partial" as const,
+          unavailable,
+          unavailableReason:
+            "Stern-Geary B and polarization resistance unavailable: " + Object.values(unavailable).join("; ") + ".",
+        }
+      : {}),
     specimenAreaCm2: specimenArea,
     temperatureC: tempC,
     initialThicknessMm: initialThickness,

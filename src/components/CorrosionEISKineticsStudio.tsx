@@ -1,6 +1,7 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect } from "react";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
+import { isPythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -66,6 +67,9 @@ export function CorrosionEISKineticsStudio() {
       });
 
       if (!response.ok) {
+        // An unknown substrate id is refused by the engine (HTTP 422): show its message, never a guessed alloy.
+        const validation = await validationErrorFromResponse(response, "Corrosion EIS");
+        if (validation) throw validation;
         throw new Error(`Python solver HTTP error: ${response.statusText}`);
       }
 
@@ -79,6 +83,7 @@ export function CorrosionEISKineticsStudio() {
     } catch (err: any) {
       if (signal?.aborted) return false;
       console.error("Corrosion EIS simulation error:", err);
+      if (isPythonValidationError(err)) setSimResult(null);
       setErrorMsg(err.message || "Failed to execute Python corrosion kinetics solver.");
       return false;
     } finally {
@@ -132,6 +137,12 @@ export function CorrosionEISKineticsStudio() {
         </div>
       </div>
 
+      {errorMsg && (
+        <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-mono">
+          {errorMsg}
+        </div>
+      )}
+
       {/* Grid: Controls & Output */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column Controls */}
@@ -152,16 +163,16 @@ export function CorrosionEISKineticsStudio() {
                   setMetalId(m);
                   if (m === "steel-316l") { setEPit(0.45); setE0(0.08); setI0Corr(0.12); }
                   else if (m === "al-7075") { setEPit(-0.68); setE0(-1.66); setI0Corr(1.85); }
-                  else if (m === "mg-az31b") { setEPit(-1.42); setE0(-2.37); setI0Corr(6.5); }
-                  else if (m === "ti-6al4v") { setEPit(1.80); setE0(0.20); setI0Corr(0.01); }
+                  else if (m === "az31b") { setEPit(-1.42); setE0(-2.37); setI0Corr(6.5); }
+                  else if (m === "ti-6al-4v") { setEPit(1.80); setE0(0.20); setI0Corr(0.01); }
                   else if (m === "steel-1018") { setEPit(-0.15); setE0(-0.44); setI0Corr(4.2); }
                 }}
                 className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
               >
                 <option value="steel-316l">Stainless Steel 316L (Cr-Ni-Mo)</option>
                 <option value="al-7075">Aerospace Aluminum 7075-T6 (Al-Zn-Mg)</option>
-                <option value="mg-az31b">Magnesium AZ31B (Sacrificial/Active)</option>
-                <option value="ti-6al4v">Titanium Ti-6Al-4V (Self-Healing TiO₂)</option>
+                <option value="az31b">Magnesium AZ31B (Sacrificial/Active)</option>
+                <option value="ti-6al-4v">Titanium Ti-6Al-4V (Self-Healing TiO₂)</option>
                 <option value="steel-1018">Carbon Steel AISI 1018 (Uniform Rust)</option>
               </select>
             </div>
@@ -242,6 +253,11 @@ export function CorrosionEISKineticsStudio() {
                 <span className="text-[9px] text-slate-400 block">Penetration Rate (CR)</span>
                 <span className="text-base font-bold text-rose-400 font-mono">{simResult.corrosionRate_mm_yr} mm/yr</span>
                 <span className="text-[9px] text-slate-500 block">({simResult.corrosionRate_mpy} mpy)</span>
+                {simResult.equivalentWeight_g_eq !== undefined && (
+                  <span className="text-[9px] text-slate-500 block" title={simResult.equivalentWeightNote}>
+                    EW {simResult.equivalentWeight_g_eq} g/eq, ρ {simResult.density_g_cm3} g/cm³ ({simResult.alloyId})
+                  </span>
+                )}
               </div>
             </div>
           )}
