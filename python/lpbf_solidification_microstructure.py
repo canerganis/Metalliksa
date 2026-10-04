@@ -7,8 +7,9 @@ Provides:
   compute_screening_field_microstructure(params)
     → RPC route "solidification-microstructure" when no CFD result is supplied.
       Runs lpbf_thermal_solver.calculate_meltpool_physics for the named material
-      and projects thermal["solidificationKinetics"] (the same numbers the Build
-      Job projects). Missing/unknown inputs give status "unavailable": no
+      and projects thermal["solidificationKinetics"] (for heatSource=rosenthal and
+      the Build Job's inputs, the same numbers the Build Job projects). Missing,
+      unknown or physically impossible inputs give status "unavailable": no
       defaults, no surrogate alloy.
   compute_solidification_microstructure(params, material, cfd_result)
     → RPC route "solidification-microstructure". Uses the CFD
@@ -113,6 +114,17 @@ _FALLBACK_REASON = (
     "not the liquidus field map; treat G/R/PDAS/SDAS as screening only"
 )
 
+# solidification_front.evaluate_solidification clamps R to >= 1e-4 m/s and the cooling rate to >= 1 K/s when
+# every rear liquidus sample has a non-positive scan-direction normal (n_x <= 0). A value on those floors is a
+# clamp, not a computed field value. solidification_front.py is frozen; the projection detects the floors.
+R_FLOOR_M_S = 1.0e-4
+COOLING_FLOOR_K_S = 1.0
+
+_DEGENERATE_FLOOR_REASON = (
+    "solidification front degenerate: floor-clamped R/cooling "
+    "(R <= 1e-4 m/s or cooling <= 1 K/s), not a computed value"
+)
+
 _KEYHOLE_REGIME_NOTE = "Keyhole Mode: outside the conduction regime of the G/R field"
 
 _MICROSTRUCTURE_DISCLAIMER = (
@@ -126,7 +138,19 @@ def _finite_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
-def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
+_BUILD_JOB_PROJECTION_NOTE = (
+    "Build-job microstructure is a projection of the thermal block's "
+    "conduction-field G/R; no second estimate."
+)
+
+_SCREENING_PROJECTION_NOTE = (
+    "Screening-field projection of python/lpbf_thermal_solver solidificationKinetics for the selected "
+    "heat source and the inputs sent here; no second estimate. It equals the Build Job projection only "
+    "for heatSource=rosenthal with the Build Job's inputs."
+)
+
+
+def project_build_job_microstructure(thermal: Dict[str, Any], *, note: str = _BUILD_JOB_PROJECTION_NOTE) -> Dict[str, Any]:
     """
     Project thermal["solidificationKinetics"] into the build-job microstructure block.
 
@@ -141,6 +165,15 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
                            "tail-length-fallback" (G = ΔT/x_rear, R = v·cosθ
                            heuristic); the numbers are still copied, never
                            recomputed, and carry the reason.
+      "degenerate-floor"   usedFieldMap is True but R <= 1e-4 m/s or cooling
+                           <= 1 K/s: the frozen front mapper clamped R and the
+                           cooling rate to their floors (no rear liquidus sample
+                           with a positive scan-direction normal). The numbers
+                           (and the PDAS/SDAS/morphology derived from the floors)
+                           are copied but are not a computed result; consumers
+                           must render this like "unavailable" and show the reason.
+                           Detection uses R_mm_s/1e3, which thermal rounds to 0.1 mm/s,
+                           so R up to about 1.5e-4 m/s is indistinguishable from the floor.
     R is taken from solidificationRate_R_mm_s / 1e3 when present (the thermal
     block rounds R_m_s to 3 decimals, about 1 % at 0.03 m/s); this is a unit
     conversion of the same thermal value, not a second estimate.
@@ -153,21 +186,21 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
         and _finite_number(kin.get("coolingRate_K_s"))
     ):
         base_disclaimer = kin.get("disclaimer") or ""
-        note = (
-            "Build-job microstructure is a projection of the thermal block's "
-            "conduction-field G/R; no second estimate."
-        )
         gradient_source = kin.get("gradientSource")
         used_field_map = kin.get("usedFieldMap")
         is_fallback = used_field_map is not True or gradient_source == "tail-length-fallback"
         r_mm_s = kin.get("solidificationRate_R_mm_s")
         r_m_s = r_mm_s / 1.0e3 if _finite_number(r_mm_s) else kin["solidificationRate_R_m_s"]
+        is_degenerate = (
+            not is_fallback
+            and (r_m_s <= R_FLOOR_M_S * (1.0 + 1.0e-9) or kin["coolingRate_K_s"] <= COOLING_FLOOR_K_S)
+        )
         geometry = thermal.get("meltPoolGeometry") if isinstance(thermal.get("meltPoolGeometry"), dict) else {}
         params = thermal.get("processParameters") if isinstance(thermal.get("processParameters"), dict) else {}
         regime = geometry.get("regime")
         regime_note = _KEYHOLE_REGIME_NOTE if isinstance(regime, str) and regime.startswith("Keyhole") else None
         block = {
-            "status": "screening-fallback" if is_fallback else "available",
+            "status": "screening-fallback" if is_fallback else ("degenerate-floor" if is_degenerate else "available"),
             "source": "thermal.solidificationKinetics",
             "modelId": kin.get("modelId"),
             "gradientSource": gradient_source,
@@ -192,6 +225,13 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
                 + " This operating point used the tail-length heuristic, not the liquidus field map "
                 "(see reason): the G,R wording above does not apply."
             ).strip()
+        if is_degenerate:
+            block["reason"] = _DEGENERATE_FLOOR_REASON
+            block["disclaimer"] = (
+                block["disclaimer"]
+                + " R and the cooling rate sit on the solver clamp floors (see reason): the values above, "
+                "and the PDAS/SDAS/morphology derived from them, are not a computed result."
+            ).strip()
         return block
     return {
         "status": "unavailable",
@@ -206,9 +246,12 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
 
 
 SCREENING_FIELD_SCOPE = (
-    "Rosenthal (or selected) screening-field G/R from python/lpbf_thermal_solver; "
-    "same numbers the Build Job projects; not in-situ tracking; not validated"
+    "Screening-field G/R from python/lpbf_thermal_solver for the selected heat source. With heatSource=rosenthal "
+    "and the Build Job's inputs these are the same numbers the Build Job projects; Goldak/Eagar-Tsai fields give "
+    "different G/R. Not in-situ tracking; not validated"
 )
+
+ABSOLUTE_ZERO_C = -273.15
 
 # (payload key, calculate_meltpool_physics argument) in call order.
 _SCREENING_INPUTS = (
@@ -252,12 +295,15 @@ def compute_screening_field_microstructure(params: Any) -> Dict[str, Any]:
     params: materialName (THERMOPHYSICAL_DB / four-alloy thermal name, e.g.
     "Inconel 718"), power_W, speed_mm_s, beamDiameter_um, preheat_C,
     layerThickness_um, hatch_um and optional heatSource ("rosenthal" when
-    absent; "eagar-tsai" or "goldak"). Every input is required (no defaults).
+    absent; "eagar-tsai" or "goldak"). Every input is required (no defaults);
+    power, speed, beam, layer and hatch must be > 0 and preheat_C must be above
+    -273.15 C and below the alloy liquidus (otherwise status "unavailable").
 
     The numbers are thermal["solidificationKinetics"] from
     lpbf_thermal_solver.calculate_meltpool_physics, projected by
     project_build_job_microstructure (status "available" for the liquidus field
-    map, "screening-fallback" for the tail-length heuristic). Nothing is
+    map, "screening-fallback" for the tail-length heuristic, "degenerate-floor"
+    when R/cooling sit on the solver clamp floors). Nothing is
     estimated here. Missing or unusable inputs return status "unavailable" with
     a reason instead of raising.
     """
@@ -276,7 +322,22 @@ def compute_screening_field_microstructure(params: Any) -> Dict[str, Any]:
             return _unavailable_screening(f"{key} missing or not a finite number: no default is used", heat_source)
         values[key] = float(value)
 
-    from lpbf_thermal_solver import calculate_meltpool_physics
+    from lpbf_thermal_solver import SECONDARY_THERMOPHYSICAL_DB, calculate_meltpool_physics
+    from four_alloy_materials import thermal_props
+
+    # Physical input checks (the UI bounds are not the contract): every geometry/process input > 0 and the
+    # preheat above absolute zero and below the alloy liquidus.
+    for key in ("power_W", "speed_mm_s", "beamDiameter_um", "layerThickness_um", "hatch_um"):
+        if values[key] <= 0.0:
+            return _unavailable_screening(f"{key} must be finite and positive (got {values[key]:g})", heat_source)
+    if values["preheat_C"] <= ABSOLUTE_ZERO_C:
+        return _unavailable_screening(
+            f"preheat_C must be above absolute zero ({ABSOLUTE_ZERO_C} C) (got {values['preheat_C']:g})", heat_source)
+    props = thermal_props(material_name) or SECONDARY_THERMOPHYSICAL_DB.get(material_name)
+    liquidus_c = props.get("liquidus_C") if isinstance(props, dict) else None
+    if _finite_number(liquidus_c) and values["preheat_C"] >= liquidus_c:
+        return _unavailable_screening(
+            f"preheat_C must be below the alloy liquidus ({liquidus_c:g} C) (got {values['preheat_C']:g})", heat_source)
 
     try:
         thermal = calculate_meltpool_physics(
@@ -298,7 +359,7 @@ def compute_screening_field_microstructure(params: Any) -> Dict[str, Any]:
         G_OVER_R_PLANAR as _FRONT_PLANAR,
     )
 
-    block = project_build_job_microstructure(thermal)
+    block = project_build_job_microstructure(thermal, note=_SCREENING_PROJECTION_NOTE)
     process = thermal.get("processParameters") if isinstance(thermal.get("processParameters"), dict) else {}
     block.update({
         "heatSourceModel": thermal.get("heatSourceModel"),

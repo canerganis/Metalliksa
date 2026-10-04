@@ -75,9 +75,11 @@ def microstructure_fixture_blocks():
     common = {"beamDiameter_um": 80, "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True}
     available = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **common})
     fallback = run_job({"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000, **common})
+    degenerate = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 1200, **common})
     return {
         "available_in718_285_960": available["microstructure"],
         "screening_fallback_in718_60_2000": fallback["microstructure"],
+        "degenerate_floor_in718_285_1200": degenerate["microstructure"],
         "unavailable_no_kinetics": project_build_job_microstructure({}),
     }
 
@@ -329,6 +331,47 @@ def check_build_job_microstructure_fallback():
               "G", micro["G_K_m"], "R", micro["R_m_s"], "PDAS", micro["PDAS_um"], micro["status"], micro["gradientSource"])
 
 
+DEGENERATE_FLOOR_REASON = (
+    "solidification front degenerate: floor-clamped R/cooling "
+    "(R <= 1e-4 m/s or cooling <= 1 K/s), not a computed value"
+)
+
+
+def check_build_job_microstructure_degenerate_floor():
+    """IN718 285 W / 1200 mm/s: the frozen front mapper clamps R and cooling to their floors."""
+    job = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 1200, "beamDiameter_um": 80,
+                   "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True})
+    kin = job["thermal"]["solidificationKinetics"]
+    micro = job["microstructure"]
+    # The mapper reports usedFieldMap True, yet R and cooling are the 1e-4 m/s and 1 K/s clamp floors.
+    assert kin["usedFieldMap"] is True and kin["gradientSource"] != "tail-length-fallback", kin
+    assert kin["solidificationRate_R_mm_s"] <= 0.1 and kin["coolingRate_K_s"] <= 1.0, kin
+    assert micro["status"] == "degenerate-floor", micro["status"]
+    assert micro["reason"] == DEGENERATE_FLOOR_REASON
+    assert micro["usedFieldMap"] is True
+    # Numbers are still copied, never recomputed.
+    assert micro["R_m_s"] == kin["solidificationRate_R_mm_s"] / 1.0e3 <= 1.0e-4 * (1.0 + 1.0e-9)
+    assert micro["coolingRate_K_s"] == kin["coolingRate_K_s"] == 1.0
+    assert micro["G_K_m"] == kin["thermalGradient_G_K_m"]
+    assert micro["PDAS_um"] == kin["primaryDendriteArmSpacing_PDAS_um"]
+    assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
+    assert micro["morphology"] == kin["microstructureMorphology"]
+    assert "not a computed result" in micro["disclaimer"]
+    print("  degenerate-floor in718 285 W / 1200 mm/s:", "R", micro["R_m_s"], "cooling", micro["coolingRate_K_s"],
+          "G", micro["G_K_m"], "PDAS", micro["PDAS_um"], "SDAS", micro["SDAS_um"], micro["morphology"], micro["status"])
+
+    # Synthetic: field map used, R above the floor but cooling on its floor, and vice versa.
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+
+    good = {"solidificationKinetics": {**kin, "solidificationRate_R_mm_s": 30.3, "solidificationRate_R_m_s": 0.0303,
+                                       "coolingRate_K_s": 5.5e5}}
+    assert project_build_job_microstructure(good)["status"] == "available"
+    for patch in ({"coolingRate_K_s": 1.0}, {"solidificationRate_R_mm_s": 0.1, "solidificationRate_R_m_s": 0.0}):
+        degenerate = project_build_job_microstructure({"solidificationKinetics": {**good["solidificationKinetics"], **patch}})
+        assert degenerate["status"] == "degenerate-floor", patch
+        assert degenerate["reason"] == DEGENERATE_FLOOR_REASON
+
+
 def main():
     from lpbf_job_cache import clear_cache
     from murakami_fatigue_screening import parse_defect_sqrt_areas_text
@@ -473,6 +516,7 @@ def main():
     assert b["materialPropertySha256"] == a["materialPropertySha256"]
     check_build_job_microstructure(a)
     check_build_job_microstructure_fallback()
+    check_build_job_microstructure_degenerate_floor()
     check_microstructure_fixture()
 
     # The effective thermal input is frozen once per request and changes cache identity.
