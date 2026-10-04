@@ -177,6 +177,7 @@ export const LaserMeltPoolThermalMap: React.FC<Props> = ({
   const thermalInputSignature = JSON.stringify([selectedMaterial, laserPower_W, scanSpeed_mms, beamDiameter_um, preheatTemp_C, layerThickness_um, hatchSpacing_um, laserWavelength]);
   useEffect(() => {
     setPyResult(null);
+    setSolverError(null);
   }, [thermalInputSignature]);
   const { runNow: runPythonSolverNow } = useDebouncedLatestTask(thermalInputSignature, (_signature, signal) => runPythonSolver(signal), 180);
 
