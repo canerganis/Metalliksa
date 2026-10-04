@@ -31,6 +31,7 @@ import json
 import multiprocessing
 import os
 import platform
+import queue as queue_module
 import subprocess
 import sys
 import time
@@ -140,19 +141,40 @@ def _worker(raw: Dict[str, Any], queue: Any) -> None:  # runs in a spawned proce
     queue.put(run_case(raw, run, validate))
 
 
+POLL_S = 0.5
+
+
+def collect_outcome(queue: Any, process: Any, budget_s: float, started: float,
+                    poll_s: float = POLL_S) -> Dict[str, Any]:
+    """Wait for the worker's outcome. A worker that exits without reporting (segfault, OOM kill) is
+    recorded at once as other-error with its exit code; only a real timeout is not-run (budget)."""
+    deadline = started + budget_s
+    while True:
+        remaining = deadline - time.perf_counter()
+        if remaining <= 0:
+            process.terminate()
+            process.join(30)
+            return dict(status=NOT_RUN_BUDGET, wall_s=round(time.perf_counter() - started, 3),
+                        message=f"stopped after the {budget_s:g} s per-case budget")
+        try:
+            return queue.get(timeout=min(poll_s, remaining))
+        except queue_module.Empty:
+            pass
+        if process.exitcode is not None:
+            try:  # the result may have been queued just before the worker exited
+                return queue.get(timeout=1.0)
+            except queue_module.Empty:
+                return dict(status=OTHER_ERROR, wall_s=round(time.perf_counter() - started, 3),
+                            message=f"worker process exited with code {process.exitcode} before reporting a result")
+
+
 def run_case_with_budget(raw: Dict[str, Any], budget_s: float) -> Dict[str, Any]:
     ctx = multiprocessing.get_context("spawn")
     queue = ctx.Queue()
     process = ctx.Process(target=_worker, args=(raw, queue))
     started = time.perf_counter()
     process.start()
-    try:
-        outcome = queue.get(timeout=budget_s)
-    except Exception:
-        process.terminate()
-        process.join(30)
-        return dict(status=NOT_RUN_BUDGET, wall_s=round(time.perf_counter() - started, 3),
-                    message=f"stopped after the {budget_s:g} s per-case budget")
+    outcome = collect_outcome(queue, process, budget_s, started)
     process.join(60)
     return outcome
 
@@ -170,10 +192,22 @@ def _git_head(repo: Path) -> Optional[str]:
         return None
 
 
+def _tree_dirty(repo: Path) -> Optional[bool]:
+    """True if the python/ tree (tracked changes or untracked files) differs from HEAD; None if unknown."""
+    try:
+        out = subprocess.run(["git", "status", "--porcelain", "--", "."], cwd=str(repo), capture_output=True,
+                             text=True, timeout=30, check=True)
+        return bool(out.stdout.strip())
+    except Exception:
+        return None
+
+
 def environment_record(fingerprint: Optional[str]) -> Dict[str, Any]:
     import numpy
+    python_dir = Path(__file__).resolve().parent.parent
     return dict(python=sys.version.split()[0], numpy=numpy.__version__, platform=platform.platform(),
-                gitHead=_git_head(Path(__file__).resolve().parent), implementationFingerprint=fingerprint)
+                gitHead=_git_head(python_dir), treeDirty=_tree_dirty(python_dir),
+                implementationFingerprint=fingerprint)
 
 
 def load_existing(path: Path) -> Dict[str, Any]:
@@ -202,8 +236,12 @@ def new_document(environment: Dict[str, Any], budget_s: float) -> Dict[str, Any]
 def sweep(plan: Sequence[Tuple[str, float, Sequence[float]]], defaults: Dict[str, Any],
           document: Dict[str, Any], out_path: Optional[Path],
           case_runner: Callable[[Dict[str, Any]], Dict[str, Any]], rerun: bool = False,
-          log: Callable[[str], None] = lambda s: None) -> Dict[str, Any]:
-    """Run the plan, rewriting out_path after each case. Resumes from document['cases']."""
+          log: Callable[[str], None] = lambda s: None, fingerprint: Optional[str] = None) -> Dict[str, Any]:
+    """Run the plan, rewriting out_path after each case. Resumes from document['cases'].
+
+    A cached case is reused only if its input is equal and, when a fingerprint is given, its
+    implementationHash is absent or equal to it; otherwise it is recomputed. Cases recomputed with a
+    fingerprint carry that implementationHash (also boiling stops, which have no solver provenance)."""
     existing = {case_key(c["alloy"], c["mesh_um"], c["power_W"]): c for c in document.get("cases", [])}
     cases: List[Dict[str, Any]] = []
     for alloy, mesh, powers in plan:
@@ -215,13 +253,17 @@ def sweep(plan: Sequence[Tuple[str, float, Sequence[float]]], defaults: Dict[str
             if consecutive >= CONSECUTIVE_BOILING_STOP:
                 record = dict(alloy=alloy, mesh_um=float(mesh), power_W=float(power), input=raw,
                               status=NOT_RUN_MONOTONE, wall_s=0.0)
-            elif prior is not None and not rerun and prior.get("input") == raw and prior.get("status") != NOT_RUN_MONOTONE:
+            elif (prior is not None and not rerun and prior.get("input") == raw
+                  and prior.get("status") != NOT_RUN_MONOTONE
+                  and (fingerprint is None or prior.get("implementationHash") in (None, fingerprint))):
                 record = prior
                 log(f"reuse {key}: {record['status']}")
             else:
                 outcome = case_runner(raw)
                 record = dict(alloy=alloy, mesh_um=float(mesh), power_W=float(power), input=raw)
                 record.update(outcome)
+                if fingerprint is not None:
+                    record.setdefault("implementationHash", fingerprint)
                 log(f"{key}: {record['status']} ({record.get('wall_s')} s)")
             if record["status"] == BOILING_STOP:
                 consecutive += 1
@@ -293,7 +335,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     started = time.perf_counter()
     sweep(plan, dict(DEFAULTS), document, out_path,
           lambda raw: run_case_with_budget(raw, args.budget_s), rerun=args.rerun,
-          log=lambda s: print(s, flush=True))
+          log=lambda s: print(s, flush=True), fingerprint=environment["implementationFingerprint"])
     print(f"wrote {out_path} in {time.perf_counter() - started:.1f} s this session; "
           f"cumulative case wall time {document['totalCaseWall_s']} s")
     return 0

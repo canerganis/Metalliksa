@@ -2,6 +2,9 @@
 
 import importlib.util
 import json
+import queue
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +17,8 @@ _SPEC.loader.exec_module(envelope)
 DEFAULTS = dict(mode="screening", material="Inconel 718", power_W=200., speed_mm_s=800., mesh_um=20., backend="auto")
 BOILING = ("Thermal model validity exceeded at or above the material boiling limit "
            "(specific enthalpy 1 J/kg); evaporation/free-surface CFD required")
+
+METRICS = dict(width_um=80., depth_um=20., length_um=200., peakTemperature_K=2500.)
 
 
 def fake_result(power):
@@ -87,6 +92,7 @@ class SweepTest(unittest.TestCase):
             document = envelope.new_document(dict(python="x"), 900.)
             envelope.sweep([("Inconel 718", 20., envelope.POWERS_20)], DEFAULTS, document, out, runner)
             self.assertEqual(calls, [40., 60., 80., 100., 120.])  # two consecutive stops, then skipped
+            self.assertNotIn(b"\r\n", out.read_bytes())  # LF on every platform (.gitattributes eol=lf)
             written = json.loads(out.read_text(encoding="utf-8"))
             self.assertEqual(written["schema"], "lpbf-validity-envelope-1")
             self.assertIn("not a process window, not experimental validation", written["scope"])
@@ -103,6 +109,149 @@ class SweepTest(unittest.TestCase):
             calls.clear()
             envelope.sweep([("Inconel 718", 20., envelope.POWERS_20)], DEFAULTS, written, out, runner)
             self.assertEqual(calls, [])
+
+    def test_completed_case_resets_consecutive_stop_counter(self):
+        status_by_power = {40.: "boiling-stop", 60.: "completed", 80.: "boiling-stop", 100.: "completed",
+                           120.: "boiling-stop", 150.: "completed", 200.: "boiling-stop"}
+        calls = []
+
+        def runner(raw):
+            calls.append(raw["power_W"])
+            return dict(status=status_by_power[raw["power_W"]], wall_s=0., **METRICS)
+
+        document = envelope.new_document(dict(python="x"), 900.)
+        envelope.sweep([("Inconel 718", 20., envelope.POWERS_20)], DEFAULTS, document, None, runner)
+        self.assertEqual(calls, list(envelope.POWERS_20))  # never two stops in a row: nothing skipped
+
+    def test_writer_rejects_nan_and_leaves_no_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "env.json"
+            with self.assertRaises(ValueError):
+                envelope.write_document(out, dict(schema=envelope.SCHEMA, value=float("nan")))
+            self.assertFalse(out.exists())
+
+    def test_resume_reuses_only_identical_input_and_matching_implementation_hash(self):
+        calls = []
+
+        def runner(raw):
+            calls.append(raw["power_W"])
+            return dict(status="completed", wall_s=1., implementationHash="current", **METRICS)
+
+        plan = [("Inconel 718", 20., (40., 60., 80., 100.))]
+
+        def cached(power, **changes):
+            raw = envelope.build_raw(DEFAULTS, "Inconel 718", power, 20.)
+            record = dict(alloy="Inconel 718", mesh_um=20., power_W=power, input=raw,
+                          status="completed", wall_s=1., implementationHash="current", **METRICS)
+            record.update(changes)
+            return record
+
+        stale_input = cached(60.)
+        stale_input["input"] = dict(stale_input["input"], speed_mm_s=999.)
+        document = envelope.new_document(dict(python="x"), 900.)
+        document["cases"] = [
+            cached(40.),                                         # identical: reused
+            stale_input,                                         # different input: recomputed
+            cached(80., implementationHash="old-solver"),        # different hash: recomputed
+            cached(100., implementationHash=None),               # no recorded hash: reused
+        ]
+        envelope.sweep(plan, DEFAULTS, document, None, runner, fingerprint="current")
+        self.assertEqual(calls, [60., 80.])
+        by_power = {c["power_W"]: c for c in document["cases"]}
+        self.assertEqual(by_power[80.]["implementationHash"], "current")
+
+        # Without a fingerprint only the input is compared (stub runs without provenance).
+        calls.clear()
+        document["cases"] = [cached(40., implementationHash="whatever")]
+        envelope.sweep([("Inconel 718", 20., (40.,))], DEFAULTS, document, None, runner)
+        self.assertEqual(calls, [])
+
+    def test_recomputed_boiling_stop_carries_the_fingerprint(self):
+        document = envelope.new_document(dict(python="x"), 900.)
+        envelope.sweep([("Inconel 718", 20., (40.,))], DEFAULTS, document, None,
+                       lambda raw: dict(status="boiling-stop", wall_s=0.), fingerprint="current")
+        self.assertEqual(document["cases"][0]["implementationHash"], "current")
+
+
+class _FakeProcess:
+    def __init__(self, exitcode=None):
+        self.exitcode = exitcode
+        self.terminated = False
+
+    def terminate(self):
+        self.terminated = True
+
+    def join(self, timeout=None):
+        return None
+
+
+class _FakeQueue:
+    def __init__(self, items=()):
+        self.items = list(items)
+
+    def get(self, timeout=None):
+        if self.items:
+            return self.items.pop(0)
+        raise queue.Empty
+
+
+class BudgetTest(unittest.TestCase):
+    def test_returns_reported_outcome(self):
+        outcome = envelope.collect_outcome(_FakeQueue([dict(status="completed")]), _FakeProcess(),
+                                           5., envelope.time.perf_counter(), poll_s=0.01)
+        self.assertEqual(outcome["status"], "completed")
+
+    def test_child_crash_is_other_error_with_exit_code_not_budget(self):
+        process = _FakeProcess(exitcode=-11)
+        started = envelope.time.perf_counter()
+        outcome = envelope.collect_outcome(_FakeQueue(), process, 600., started, poll_s=0.01)
+        self.assertEqual(outcome["status"], "other-error")
+        self.assertIn("-11", outcome["message"])
+        self.assertFalse(process.terminated)
+        self.assertLess(envelope.time.perf_counter() - started, 30.)  # returns at once, not after 600 s
+
+    def test_result_queued_just_before_exit_is_not_a_crash(self):
+        class LateQueue(_FakeQueue):
+            def __init__(self):
+                super().__init__()
+                self.calls = 0
+
+            def get(self, timeout=None):
+                self.calls += 1
+                if self.calls == 2:
+                    return dict(status="completed")
+                raise queue.Empty
+        outcome = envelope.collect_outcome(LateQueue(), _FakeProcess(exitcode=0), 5.,
+                                           envelope.time.perf_counter(), poll_s=0.01)
+        self.assertEqual(outcome["status"], "completed")
+
+    def test_true_timeout_is_not_run_budget_and_terminates_the_child(self):
+        process = _FakeProcess(exitcode=None)
+        outcome = envelope.collect_outcome(_FakeQueue(), process, 0.05, envelope.time.perf_counter(), poll_s=0.01)
+        self.assertEqual(outcome["status"], "not-run (budget)")
+        self.assertTrue(process.terminated)
+
+
+class EnvironmentTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("git"), "git not available")
+    def test_tree_dirty_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+
+            def git(*args):
+                subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", *args],
+                               cwd=str(repo), check=True, capture_output=True)
+            git("init")
+            (repo / "a.py").write_text("x = 1\n", encoding="utf-8")
+            git("add", "a.py")
+            git("commit", "-m", "init")
+            self.assertIs(envelope._tree_dirty(repo), False)
+            (repo / "a.py").write_text("x = 2\n", encoding="utf-8")
+            self.assertIs(envelope._tree_dirty(repo), True)
+            git("checkout", "--", "a.py")
+            (repo / "new.py").write_text("y = 1\n", encoding="utf-8")  # untracked counts as dirty
+            self.assertIs(envelope._tree_dirty(repo), True)
+        self.assertIsNone(envelope._tree_dirty(Path(tmp) / "does-not-exist"))
 
 
 if __name__ == "__main__":
