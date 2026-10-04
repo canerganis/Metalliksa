@@ -85,7 +85,7 @@
 .mk-at-note { margin-top: 0.6rem; font-size: 12px; color: var(--mk-text-dim); }
 
 /* Build chamber art */
-.mk-at-art { width: 100%; max-width: 30rem; max-height: 30rem; overflow: visible; color: var(--mk-laser); justify-self: center; }
+.mk-at-art { width: 100%; max-width: 36rem; max-height: 34rem; overflow: visible; color: var(--mk-laser); justify-self: center; }
 .mk-at-art .a-layer { fill: rgba(255, 255, 255, 0.85); stroke: rgba(17, 22, 31, 0.28); stroke-width: 0.8; }
 .mk-at-art .a-top { fill: var(--mk-paper); stroke: rgba(17, 22, 31, 0.55); filter: drop-shadow(0 18px 24px rgba(16, 24, 40, 0.18)); }
 .mk-at-art .a-side { fill: #d9dde3; stroke: rgba(17, 22, 31, 0.4); stroke-width: 0.6; }

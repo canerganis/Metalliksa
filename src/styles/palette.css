@@ -20,7 +20,7 @@
   max-height: min(36rem, 76vh);
   max-height: min(36rem, 76dvh); /* dynamic viewport: shrinks with the on-screen keyboard */
   border: 1px solid var(--mk-border-strong);
-  border-radius: 12px;
+  border-radius: 18px;
   background: var(--mk-surface-raised);
   box-shadow: var(--mk-elev-3);
   color: var(--mk-text-soft);

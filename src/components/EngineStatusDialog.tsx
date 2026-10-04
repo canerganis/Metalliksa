@@ -19,6 +19,6 @@ export function EngineStatusDialog({ status, statusError, checking, onClose, onR
         <p className="text-sm mb-3">{status?.online ? `Python ${status.pythonVersion ?? 'version unavailable'} · ${status.status}` : 'Python backend unavailable. Check the local server and Python runtime.'}</p>
         <dl className="divide-y divide-slate-800">{(Object.entries(status?.subsystems ?? {}) as [string, { available: boolean }][]).map(([name, subsystem]) => <div key={name} className="py-2 flex justify-between gap-3 text-xs"><dt>{name.replaceAll('_', ' ')}</dt><dd className={subsystem.available ? 'text-sky-300' : 'text-amber-300'}>{subsystem.available ? 'Available' : 'Unavailable'}</dd></div>)}</dl>
         {!status?.subsystems && <p className="text-xs text-slate-500">Subsystems: {status?.online ? subsystemQualifier(status) : 'unavailable'}</p>}
-        <button disabled={checking} onClick={onRefresh} className="mt-4 rounded-lg bg-sky-600 px-4 py-2 text-sm disabled:opacity-50">{checking ? 'Checking…' : 'Refresh status'}</button>
+        <button disabled={checking} onClick={onRefresh} className="mk-btn-ink mt-4">{checking ? 'Checking…' : 'Refresh status'}</button>
     </AccessibleModal>;
 }

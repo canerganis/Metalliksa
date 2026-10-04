@@ -183,7 +183,7 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   border-color: var(--mk-border);
   backdrop-filter: blur(14px);
 }
-.mk-side-kicker {
+.mk-shell .mk-side-kicker {
   font-family: var(--mk-font-mono);
   font-size: 10px;
   letter-spacing: 0.22em;
@@ -191,53 +191,63 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   color: var(--mk-text-dim);
 }
 
-/* Brand mark: a polished chrome lens crossed by a laser line, with one tilted orbit. */
+/* Brand mark: the layered orb. A disc built bottom-up from graphite layers, its open top drawn as a
+ * hairline, and the laser finishing the current layer (ornament). Same drawing as the boot emblem. */
 .mk-brand-mark {
   position: relative;
-  display: grid;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 38px;
+  height: 38px;
   flex: none;
-  place-items: center;
 }
 .mk-brand-mark::before {
   content: "";
   position: absolute;
-  inset: 0.3rem;
+  inset: 0;
   border-radius: 999px;
-  background: radial-gradient(circle at 34% 28%, #ffffff 0 12%, #eef0f3 30%, #c3c9d2 66%, #8c95a1 100%);
-  box-shadow: inset 0 -3px 6px rgba(16, 24, 40, 0.25), inset 0 2px 2px rgba(255, 255, 255, 0.9), 0 4px 12px -4px rgba(16, 24, 40, 0.35);
+  border: 1px solid rgba(17, 22, 31, 0.42);
 }
 .mk-brand-mark::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  border: 1px solid rgba(17, 22, 31, 0.3);
-  transform: rotate(-24deg) scaleY(0.42);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 38%, transparent 70%, rgba(255, 255, 255, 0.12)),
+    repeating-linear-gradient(0deg, var(--mk-text-strong) 0 2.6px, transparent 2.6px 3.8px);
+  clip-path: inset(11.4px 0 0 0);
 }
 .mk-brand-laser {
   position: absolute;
   z-index: 1;
-  top: 50%;
-  left: -0.2rem;
-  right: -0.2rem;
-  height: 2px;
-  margin-top: -1px;
+  top: 9.2px;
+  left: 4px;
+  width: 20px;
+  height: 2.2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, var(--mk-laser) 40%, #fff6ec 50%, var(--mk-laser) 60%, transparent);
-  box-shadow: 0 0 10px rgba(255, 91, 31, 0.55);
-  animation: mkLogoLaser 3.2s ease-in-out infinite;
+  background: linear-gradient(90deg, rgba(14, 17, 22, 0.85), var(--mk-laser));
+  animation: mkLogoScan 4.8s var(--mk-ease-inout) infinite alternate;
+}
+.mk-brand-laser::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 999px;
+  background: #fff3e8;
+  box-shadow: 0 0 0 1px var(--mk-laser), 0 0 6px 1px rgba(255, 91, 31, 0.7);
 }
 
-.mk-brand-title {
+.mk-shell .mk-brand-title {
   font-family: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
   font-size: 0.98rem;
   letter-spacing: 0.36em;
   color: var(--mk-text);
 }
-.mk-brand-tag {
+.mk-shell .mk-brand-tag {
   margin-top: 2px;
   font-family: var(--mk-font-mono);
   font-size: 10px;
@@ -306,10 +316,10 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(16, 24, 40, 0.06);
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
-.mk-status { white-space: nowrap; }
+.mk-status, .mk-status > span, .mk-hud-chip { white-space: nowrap; }
 @media (max-width: 639px) {
   .mk-header > div { flex-wrap: wrap; row-gap: 0.5rem; }
-  .mk-brand-title { letter-spacing: 0.24em; }
+  .mk-shell .mk-brand-title { letter-spacing: 0.24em; }
 }
 .mk-status:hover {
   border-color: var(--mk-border-strong);
@@ -419,7 +429,7 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   letter-spacing: -0.015em;
   color: var(--mk-text);
 }
-.mk-kicker {
+.mk-shell .mk-kicker {
   font-family: var(--mk-font-mono);
   font-size: 10.5px;
   letter-spacing: 0.22em;
@@ -477,6 +487,11 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
 .mk-dossier-cell h3 { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-family: var(--mk-font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mk-text-strong); }
 .mk-dossier-cell.is-limit { background: #fffaf3; }
 .mk-dossier-limit { margin-top: 0.7rem; padding-top: 0.6rem; border-top: 1px solid rgba(143, 67, 0, 0.18); color: var(--mk-amber); }
+
+/* Primary action: an ink pill with a laser dot (engine dialog, atrium). */
+.mk-btn-ink { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.55rem 1.1rem; border-radius: 999px; background: var(--mk-text-strong); color: #ffffff; font-size: 0.875rem; box-shadow: 0 10px 24px -14px rgba(14, 17, 22, 0.8); }
+.mk-btn-ink::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--mk-laser); box-shadow: 0 0 8px var(--mk-laser); }
+.mk-btn-ink:disabled { opacity: 0.6; }
 
 /* Shared plates (shared-material drawer, module footer). */
 .mk-plate {
@@ -566,10 +581,7 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   100% { background-position: 130% 0; }
 }
 
-@keyframes mkLogoLaser {
-  0%, 100% { opacity: 0.55; transform: scaleX(0.82); }
-  50% { opacity: 1; transform: scaleX(1); }
-}
+@keyframes mkLogoScan { from { width: 13px; } to { width: 26px; } }
 
 @keyframes laserScan {
   0% {

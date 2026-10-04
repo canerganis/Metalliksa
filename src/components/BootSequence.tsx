@@ -34,28 +34,32 @@ export const BOOT_INTRO_MS = 2800;
 /** Overlay fade-out length (matches --mk-dur-slow in boot.css). */
 const BOOT_FADE_MS = 420;
 const WORDMARK = "METALLIKSA";
-// Hatch rows of the monogram (one scan vector every 4 units, bottom to top), serpentine like a stripe scan.
-const HATCH_ROWS = Array.from({ length: 21 }, (_, i) => 140 - i * 4);
+// Layers of the orb (one scan vector every 7 units, bottom to top), serpentine like a stripe scan.
+const ORB_ROWS = Array.from({ length: 14 }, (_, i) => 167 - i * 7);
 
-/** Decorative emblem: a monogram filled row by row by scan vectors, a beam, and a reticle ring. */
+/**
+ * Decorative emblem, the brand mark at scale: a disc built bottom-up from scan vectors under a moving
+ * beam, its open top drawn as a hairline, and the laser finishing the current layer. Reticle rings around.
+ */
 function BootEmblem() {
   return (
     <svg className="mk-boot-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
       <defs>
-        <clipPath id="mk-boot-glyph">
-          <path d="M58 142V58h20l22 38 22-38h20v84h-18V92l-18 32h-12L76 92v50z" />
+        <clipPath id="mk-boot-orb">
+          <circle cx="100" cy="100" r="70" />
         </clipPath>
       </defs>
       <circle className="e-ring" cx="100" cy="100" r="96" pathLength="100" />
       <circle className="e-ticks" cx="100" cy="100" r="86" />
-      <circle className="e-inner" cx="100" cy="100" r="74" pathLength="100" />
-      <g clipPath="url(#mk-boot-glyph)">
-        {HATCH_ROWS.map((y, i) => (
-          <line key={y} className="e-hatch" x1={i & 1 ? 144 : 56} x2={i & 1 ? 56 : 144} y1={y} y2={y} pathLength="100" style={{ "--i": i } as React.CSSProperties} />
+      <circle className="e-inner" cx="100" cy="100" r="70" pathLength="100" />
+      <g clipPath="url(#mk-boot-orb)">
+        {ORB_ROWS.map((y, i) => (
+          <line key={y} className="e-hatch" x1={i & 1 ? 172 : 28} x2={i & 1 ? 28 : 172} y1={y} y2={y} pathLength="100" style={{ "--i": i } as React.CSSProperties} />
         ))}
       </g>
-      <path className="e-glyph" d="M58 142V58h20l22 38 22-38h20v84h-18V92l-18 32h-12L76 92v50z" pathLength="100" />
-      <line className="e-beam" x1="20" x2="180" y1="140" y2="140" />
+      <line className="e-current" x1="37" x2="118" y1="69" y2="69" pathLength="100" />
+      <line className="e-beam" x1="14" x2="186" y1="167" y2="167" />
+      <circle className="e-spot" cx="118" cy="69" r="3.2" />
       <circle className="e-orbit" cx="100" cy="4" r="2.4" />
     </svg>
   );
