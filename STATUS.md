@@ -2,6 +2,28 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## V1 kabul kaydı — 2026-10-04 (revizyon `6b2bded`, yerel; push yok)
+
+**Sonuç: V1 çıkışı henüz TEK revizyonda kabul edilmedi.** Kanıt, `066b6b9` → `6b2bded` arasında birikti; aşağıdaki kapılar ayrı ayrı ve dürüstçe kaydedildi. Kabul ilanı kullanıcının kararıdır.
+
+| V1 çıkış kapısı | Durum | Kanıt |
+|---|---|---|
+| Sayısal oracle paketi (ayrı) | Windows kilitli ortamda geçti | `test_lpbf_engineering.py` 40 test OK, 1 görünür atlama (derlenmiş OpenFOAM yok); `test_lpbf_build_job` PASS; CMU içe aktarma 8 OK; tsx tam paket 529 test / 511 geçti / 0 başarısız / 1 atlandı / 17 todo |
+| Temiz kurulum (kaynak arşivi) | **Yalnız Windows geçti** | `git archive 6b2bded` → `npm ci`, `tsc`, tam unit, `vite build`, paket boyutu: hepsi exit 0 (`.orchestra/PHASE3-RECORD.md`). Linux Python kilidi **üretilmedi** (Dockerfile Python 3.12 ister, makinede WSL 3.10); `docker build` **çalıştırılmadı**; GitHub CI **çalıştırılmadı** |
+| Arşivlenmiş iş akışı vakasının tekrarı (IN718 60 W / 1200 mm/s / 80 µm, tek iz) | Gerçek tarayıcı + gerçek worker ile `066b6b9`’da yapıldı (iş 12,6 s) | `.orchestra/PHASE2-RECORD.md`; sonraki revizyonda yeniden koşturulmadı |
+| Uçtan uca tarayıcı/arşiv turu | 11/12 adım `066b6b9`’da geçti; giriş formu (D1) düzeltilip `6b2bded` temiz derlemesinde gerçek tarayıcıda yeniden doğrulandı (POST /login 303, API 200, Referer yalnız origin, kötü kod 401) | PHASE2-RECORD, PHASE3-RECORD ek bölümü; LAN IP / HTTPS / vekil sunucu denenmedi |
+| Kritik hata/toparlanma | İptal (kuyruk + çalışan), 7 bozuk bundle reddi, arşiv bütünlüğü geçti; **çökme-toparlanma çalıştırılmadı** | PHASE2-RECORD |
+
+**Bu dönemde bulunan ve düzeltilen kusurlar** (hepsi Opus + Sol 6.1 çift incelemeli, yerel merge): kampanya sözleşmesi v2 (sunucu-türevli huzme beyanı, sahte kanıt reddi, v1 okunur); gerçek bare-plate sonucunun arşive alınamaması (503; `analyticalComparison`/`fieldOverlapDiagnostics`/`geometricDefectScreen` null yalnızca `surfaceMode=bare-plate` iken kabul); giriş formu 403 (D1); bayat sonucun "tamamlandı" görünmesi (D4); tamamlanmamış işi arşivleme 503 → 409/404/400 (D9); `.git` olmayan kaynak arşivinde şişen CSS (Tailwind kaynakları sabitlendi); temiz kurulumda düşen 3 mühendislik testi (materialAuthority alanları).
+
+**Üç koşu (Table 4 vaka 0) sonucu: tamamlanamaz.** Vaka 0 kaynama sınırında kapalı-başarısız olur (önceden kayıtlı, 2026-09-24); girdi/sınır gevşetilmedi. Üç gerçek koşu + kampanya bu yüzden **yapılmadı**; NPZ yeniden türetme okuyucusu ise gerçek bir 100 W bare-plate çıktısında kabul etti (kampanya değil, yalnız okuyucu kabulü). ROADMAP’e göre vaka 0 V1 şartı değildir.
+
+**Açık / bilinen:** bayat sonuç için tam entegrasyon testi (tamamlandı → girdi düzenle → geri al); D2 (sıfırın kayan-nokta kalıntıları µm etiketiyle görünür), D3 (karışık yerel ayar), D5 (backend seçimi yenilemede kalıcı değil), D7 (atlama bağlantısı/landmark), D8 (geri yüklemede manifest hash'i yeniden kurulduğu için değişir; tasarım gereği); izlenen 18 `__pycache__` dosyası.
+
+**Bilimsel durum (değişmedi):** NIST optik residual `unavailable` (null); senaryo yakınsaması `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`). Yazılım kontrolleri bilimsel doğrulama değildir.
+
+**Sıradaki:** (1) kullanıcı V1’i bu boşluklarla kabul eder ya da Linux kilidi + final-revizyon tam tarayıcı turu istenir; (2) kabulden önce manifestli LPBF dosyalarına dokunulmaz; manifest dışı işler (temizlik, Python sabit/alaşım altyapısı, Modül SDK, a11y, arayüz) sürer.
+
 ## Güncel durum özeti (2026-10-03)
 
 - **Birleşim:** `81694c3` (`orch/integration`) security hardening, airgap guards, a11y statik düzeltmeleri, bundle chunking, CI/packaging taslakları, genişletilmiş TypeScript kapsamı ve ESLint baseline'ını birleştirdi. V1 NPZ yeniden türetim kapısı `a72b2da` ile eklendi, `1cf1067` ile testleri sertleştirildi.

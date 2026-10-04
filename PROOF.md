@@ -3023,3 +3023,10 @@ Recorded fixed-scan widths at 20/10/5 µm: 72.46245576/74.36212556/77.70163613 �
   - **Kuantizasyon Sınırı:** 40 µm hücrede genişlik 40 µm, derinlik 40 µm (1 hücre); 40 µm tolerans %100 hücre boyutuna denktir.
 - **P4 Preflight Regression İzolasyonu:** Canlı ağaçtaki delil dosyaları korundu; `test_lpbf_p4_fixed_scan_coarse_v2.py`: **6/6 PASS**.
 - **Doğrulama Özeti:** Python testleri: **33/33 PASS**, Vitest/tsx testleri: **17/17 PASS**, `npx tsc --noEmit`: **PASS**.
+
+## V1 kabul kaydı — 2026-10-04 (revizyon `6b2bded`)
+
+- **Kapsam:** Yazılım/arşiv/yeniden üretilebilirlik kanıtı; bilimsel doğrulama değildir. Ayrıntı ve komut çıktıları: `.orchestra/PHASE1-RECORD.md`, `PHASE2-RECORD.md`, `PHASE3-RECORD.md` (yerel ajan durumu, izlenmez); özet tablo `STATUS.md` başındaki "V1 kabul kaydı" bölümündedir.
+- **Kanıtlanan:** `6b2bded` kaynak arşivi kilitli bağımlılıklarla kurulur, tip denetimini geçer, tam unit paketini (529 test, 0 başarısız) geçer ve üretim derlemesi paket tabanı içinde kalır (Windows). Gerçek tarayıcıda gerçek worker ile (`066b6b9`) IN718 60 W / 1200 mm/s tek-iz vakası için yapılandır → koş → provenance → arşivle → dışa aktar → doğrula/geri yükle → yenile akışı çalıştı; giriş formu düzeltmesi `6b2bded` temiz derlemesinde doğrulandı.
+- **Kanıtlanmayan:** sayısal yakınsama, deneysel geçerlilik, herhangi bir fiziksel sayının doğruluğu, Table 4 vaka 0 (kaynama sınırında kapalı-başarısız), bağımsız replikalar, Linux/Docker/CI yeniden üretimi, çökme-toparlanma, GPU yolları, görsel/yerleşim kalitesi.
+- **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated`.
