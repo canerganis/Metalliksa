@@ -5,3 +5,12 @@ export const CANNED_LIMIT = 16 * 1024;
 export function cannedHelper() {
   return { grainSizeUm: 14.8 };
 }
+// Helper object methods (`H.make()`) and a default export alias (p7 re-audit follow-up).
+export const CANNED_HELPERS = {
+  make: () => ({ qualified: true }),
+  build() {
+    return { porosityPct: 0.042 };
+  },
+};
+const cannedDefault = () => ({ confidence: 0.94 });
+export default cannedDefault;
