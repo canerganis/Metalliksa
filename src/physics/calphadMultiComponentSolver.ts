@@ -43,15 +43,17 @@ export interface MultiComponentSolveResult {
   temperatureStepC: number;
   equilibriumProfile: PhaseEquilibriumPoint[];
   criticalTemperatures: {
-    liquidusC: number;
-    solidusC: number;
-    freezingRangeC: number;
-    gammaPrimeSolvusC?: number;
-    gammaDoublePrimeSolvusC?: number;
-    deltaSolvusC?: number;
-    betaTransusC?: number;
-    carbidePrecipitationC?: number;
-    tcpSigmaRiskTemperatureC?: number;
+    // null = unavailable (the Python CALPHAD engine refuses to invent a value; see
+    // PythonCalphadSolveResult.criticalTemperatureStatus for the reason).
+    liquidusC: number | null;
+    solidusC: number | null;
+    freezingRangeC: number | null;
+    gammaPrimeSolvusC?: number | null;
+    gammaDoublePrimeSolvusC?: number | null;
+    deltaSolvusC?: number | null;
+    betaTransusC?: number | null;
+    carbidePrecipitationC?: number | null;
+    tcpSigmaRiskTemperatureC?: number | null;
   };
   solutePartitioning: {
     element: string;
@@ -62,7 +64,7 @@ export interface MultiComponentSolveResult {
   }[];
   multiElementScheil: {
     fractionSolid: number;
-    temperatureC: number;
+    temperatureC: number | null; // null when the liquidus or solidus is unavailable
     liquidCompositions: { [element: string]: number };
     solidCompositions: { [element: string]: number };
   }[];

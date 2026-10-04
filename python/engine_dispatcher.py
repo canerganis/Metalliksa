@@ -17,7 +17,7 @@ def get_system_status():
         "subsystems": {
             "calphad_solver": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "calphad_solver.py")),
-                "description": "Multi-component CALPHAD Gibbs free energy minimizer, Scheil-Gulliver & New-PHACOMP solver"
+                "description": "pycalphad Gibbs free energy minimisation (needs pycalphad and an assessed database; answers unavailable otherwise, no fallback model) with New-PHACOMP screening"
             },
             "dft_property_calculator": {
                 "available": os.path.exists(os.path.join(os.path.dirname(__file__), "dft_property_calculator.py")),

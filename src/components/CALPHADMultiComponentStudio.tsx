@@ -59,6 +59,15 @@ import {
 } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { isPythonValidationError } from "../utils/pythonValidationError";
+import {
+  CLIENT_DATABASE_LABEL,
+  CLIENT_MODEL_LABEL,
+  calphadProvenanceLabels,
+  formatCalphadUnavailable,
+  formatCriticalTemperature,
+  formatFreezingRange,
+  partitionSourceNote,
+} from "../utils/calphadDisplay";
 
 export const CALPHADMultiComponentStudio: React.FC = () => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
@@ -231,9 +240,12 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
     engine: "MetalliX-Client-WASM/TS",
     computeTimeMs: 4,
     isPythonEngine: false,
-    databaseUsed: "Built-in Standard TDB Model",
-    thermodynamicModel: "Client-side Simplified Solvus Minimizer",
+    isEmpirical: true,
+    databaseUsed: CLIENT_DATABASE_LABEL,
+    thermodynamicModel: CLIENT_MODEL_LABEL,
   };
+  const provenanceLabels = calphadProvenanceLabels(solveResult);
+  const criticalStatus = solveResult.criticalTemperatureStatus ?? {};
 
   // Active components list for activities and chemical potentials
   const activeComponentsList = useMemo(() => {
@@ -395,6 +407,16 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
         </div>
       )}
 
+      {solveResult.pythonUnavailable && (
+        <div role="alert" className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-0.5">
+          <div>{formatCalphadUnavailable(solveResult.pythonUnavailable)}</div>
+          {solveResult.pythonUnavailable.missingElements && solveResult.pythonUnavailable.missingElements.length > 0 && (
+            <div>Elements missing from the database: {solveResult.pythonUnavailable.missingElements.join(", ")}.</div>
+          )}
+          <div>The numbers below come from the client-side screening model, not from CALPHAD.</div>
+        </div>
+      )}
+
       {/* Python HPC Telemetry & Execution Banner */}
       <div className="px-4 py-2.5 rounded-xl bg-[#060a14] border border-[#1a273e] flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -410,7 +432,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            Database: <strong className="text-violet-300">{solveResult.databaseUsed || "Open TDB Assessment"}</strong>
+            Database: <strong className="text-violet-300">{provenanceLabels.database}</strong>
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
@@ -430,18 +452,15 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
           >
             <option value="auto">⚡ Auto-Detect Database (Composition Match)</option>
             {availableDatabases.map((db) => (
-              <option key={db.id} value={db.id}>
-                {db.name} ({db.elements.slice(0, 5).join("-")}...)
+              <option key={db.id} value={db.id} disabled={db.usable === false}>
+                {db.name} ({db.elements.slice(0, 5).join("-")}...){db.usable === false ? " - test fixture, refused" : ""}
               </option>
             ))}
             {availableDatabases.length === 0 && (
               <>
-                <option value="alcocrni">Al-Co-Cr-Ni Superalloys & HEAs (Dupin/Saunders)</option>
                 <option value="cost507">COST 507 Light Alloys (29 Elements Al-Mg-Ti...)</option>
-                <option value="mc_fecocrnbti">MC-FeCoCrNbTi Superalloys & Steels</option>
                 <option value="alni_dupin_2001">Al-Ni Dupin 2001 NIST Benchmark</option>
-                <option value="cr_fe_ni">Cr-Fe-Ni Austenitic & Ferritic Steels</option>
-                <option value="crtiv_ghosh">Ghosh Cr-Ti-V Aerospace Titanium</option>
+                <option value="crtiv_ghosh">Cr-Ti-V Assessment (Ghosh), no Al</option>
               </>
             )}
           </select>
@@ -733,18 +752,18 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.liquidusC, criticalStatus.liquidusC).title}>
                 <div className="text-[10px] text-slate-400">Liquidus (T_liq):</div>
-                <div className="text-sm font-bold text-sky-300">{solveResult.criticalTemperatures.liquidusC}°C</div>
+                <div className="text-sm font-bold text-sky-300">{formatCriticalTemperature(solveResult.criticalTemperatures.liquidusC, criticalStatus.liquidusC).text}</div>
               </div>
-              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.solidusC, criticalStatus.solidusC).title}>
                 <div className="text-[10px] text-slate-400">Solidus (T_sol):</div>
-                <div className="text-sm font-bold text-emerald-300">{solveResult.criticalTemperatures.solidusC}°C</div>
+                <div className="text-sm font-bold text-emerald-300">{formatCriticalTemperature(solveResult.criticalTemperatures.solidusC, criticalStatus.solidusC).text}</div>
               </div>
-              {solveResult.criticalTemperatures.gammaPrimeSolvusC && (
-                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              {(solveResult.criticalTemperatures.gammaPrimeSolvusC || criticalStatus.gammaPrimeSolvusC) && (
+                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.gammaPrimeSolvusC, criticalStatus.gammaPrimeSolvusC).title}>
                   <div className="text-[10px] text-slate-400">γ' Solvus:</div>
-                  <div className="text-sm font-bold text-purple-300">{solveResult.criticalTemperatures.gammaPrimeSolvusC}°C</div>
+                  <div className="text-sm font-bold text-purple-300">{formatCriticalTemperature(solveResult.criticalTemperatures.gammaPrimeSolvusC, criticalStatus.gammaPrimeSolvusC).text}</div>
                 </div>
               )}
               {solveResult.criticalTemperatures.gammaDoublePrimeSolvusC && (
@@ -960,10 +979,10 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 <div>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-400" />
-                    <span>True CALPHAD Gibbs Free Energy & Solute Activities</span>
+                    <span>{provenanceLabels.isPycalphad ? "CALPHAD Gibbs Free Energy & Solute Activities" : "Screening-model Gibbs energy & activities (not CALPHAD)"}</span>
                   </span>
                   <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                    Model: <strong className="text-violet-300">{solveResult.thermodynamicModel || "pycalphad CEF / Sub-regular Solution Minimizer"}</strong>
+                    Model: <strong className="text-violet-300">{provenanceLabels.model}</strong>
                   </p>
                 </div>
 
@@ -1186,10 +1205,12 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-1 text-slate-300">
                     <p className="font-bold text-white">
-                      Rigorous Thermodynamic Trust Guarantee:
+                      {provenanceLabels.isPycalphad ? "Provenance of these numbers:" : "These numbers are not CALPHAD results:"}
                     </p>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      All calculations are performed via <strong>Gibbs Free Energy Global Minimization</strong> using the open-source <strong>pycalphad</strong> engine and assessed Open TDB databases (COST 507 / Al-Co-Cr-Ni / MC-FeCoCrNbTi). Chemical potentials are equalized across all active phases (μ_i^α = μ_i^β = μ_i^γ), ensuring 100% physically valid phase boundaries without linear regression approximations.
+                      {provenanceLabels.isPycalphad
+                        ? "Phase constitution, Gibbs energy, chemical potentials and activities come from a pycalphad Gibbs energy minimisation with the database named above (assessments only; test-fixture databases are refused). Liquidus and solidus are read off the temperature grid and are null when the grid cannot support them; the gamma-prime solvus is not stated because the L1_2 phase name does not prove ordering. The partition matrix and the Scheil-style curve are screening aids, flagged where they use default values."
+                        : "The Python CALPHAD engine did not return a result (it has no fallback model). The curves shown come from a simplified client-side screening model with hard-coded relations; they are not a Gibbs energy minimisation and carry no CALPHAD validity."}
                     </p>
                   </div>
                 </div>
@@ -1235,7 +1256,12 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                             k = {sp.partitionCoefficient_k.toFixed(2)}
                           </span>
                         </td>
-                        <td className="py-2.5 text-right text-[11px] text-slate-400">{sp.role}</td>
+                        <td className="py-2.5 text-right text-[11px] text-slate-400">
+                          {sp.role}
+                          {partitionSourceNote((sp as { partitionCoefficientSource?: string }).partitionCoefficientSource) && (
+                            <span className="block text-amber-300">{partitionSourceNote((sp as { partitionCoefficientSource?: string }).partitionCoefficientSource)}</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1250,10 +1276,10 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Flame className="w-4 h-4 text-amber-400" />
-                  <span>Multi-Element Scheil-Gulliver Non-Equilibrium Microsegregation</span>
+                  <span>Solidification screening curve (Scheil-style segregation, not a CALPHAD Scheil calculation)</span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
-                  Freezing Range ΔT = {solveResult.criticalTemperatures.freezingRangeC} K
+                  Freezing Range ΔT = {formatFreezingRange(solveResult.criticalTemperatures.freezingRangeC)}
                 </span>
               </div>
 

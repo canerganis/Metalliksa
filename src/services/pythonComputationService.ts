@@ -19,6 +19,13 @@ import {
 import { createSeededRandom } from "../utils/seededRandom";
 import { FARADAY_CONSTANT, GAS_CONSTANT_R } from "../utils/physicalConstants";
 import { PythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
+import {
+  CLIENT_DATABASE_LABEL,
+  CLIENT_MODEL_LABEL,
+  parseCalphadUnavailable,
+  type CalphadFieldStatus,
+  type CalphadUnavailable,
+} from "../utils/calphadDisplay";
 
 export interface PersistentIPCDiagnostics {
   success: boolean;
@@ -69,6 +76,10 @@ export interface PythonCalphadDatabaseEntry {
   primaryPhases: string[];
   source: string;
   suitability: string;
+  /** "assessment" or "test-fixture"; a test fixture is refused by the solver. */
+  status?: "assessment" | "test-fixture";
+  usable?: boolean;
+  statusReason?: string | null;
 }
 
 export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
@@ -82,6 +93,14 @@ export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   databasePath?: string;
   thermodynamicModel?: string;
   isEmpirical?: boolean;
+  databaseId?: string;
+  databaseStatus?: string;
+  /** Per critical-temperature field: computed, heuristic or unavailable with a reason. */
+  criticalTemperatureStatus?: Record<string, CalphadFieldStatus>;
+  multiElementScheilStatus?: string;
+  multiElementScheilNote?: string;
+  /** Set when the Python CALPHAD engine answered "unavailable"; the numbers are then the client screening model's. */
+  pythonUnavailable?: CalphadUnavailable;
   activeComponents?: string[];
   unsupportedElements?: string[];
   adaptiveGrid?: boolean;
@@ -1028,6 +1047,7 @@ class PythonComputationService {
     boundaryRefinement = true,
     minRefineStep = 0.5
   ): Promise<PythonCalphadSolveResult> {
+    let pythonUnavailable: CalphadUnavailable | null = null;
     if (usePython) {
       let validation: PythonValidationError | null = null;
       try {
@@ -1059,6 +1079,8 @@ class PythonComputationService {
               computeTimeMs: data.computeTimeMs || 12,
             };
           }
+          // The Python engine has no fallback model: it says "unavailable" and why.
+          pythonUnavailable = parseCalphadUnavailable(data);
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
         }
@@ -1079,12 +1101,17 @@ class PythonComputationService {
     const clientResult = solveMultiComponentEquilibrium(alloy, fallbackTdb, tMin, tMax, tStep);
     const elapsed = Math.round(performance.now() - startTime);
 
+    // Client screening numbers: labelled as such, never as a pycalphad/CALPHAD result.
     return {
       ...clientResult,
       engine: "MetalliX-Client-TS-Solver",
       computeTimeMs: elapsed,
       isPythonEngine: false,
+      isEmpirical: true,
+      thermodynamicModel: CLIENT_MODEL_LABEL,
+      databaseUsed: CLIENT_DATABASE_LABEL,
       iterations: (tMax - tMin) / tStep,
+      ...(pythonUnavailable ? { pythonUnavailable } : {}),
     };
   }
 
