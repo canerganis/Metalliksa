@@ -490,8 +490,10 @@ export interface AstmGrainSizeResult {
 
 export function calculateAstmE112FromG(g: number): AstmGrainSizeResult {
   const gClamped = Math.max(-3, Math.min(16, g));
-  // Metric intercept diameter: d = 1000 / sqrt(2^(G+3)) um
-  const meanInterceptUm = 1000 / Math.sqrt(Math.pow(2, gClamped + 3));
+  // Mean lineal intercept, the exact inverse of the E112 intercept relation used by calculateAstmE112FromDiameterUm:
+  // G = -6.643856 * log10(l_mm) - 3.288  =>  l_mm = 10^(-(G + 3.288) / 6.643856)
+  // (Until 2026-10 this was 1000 / sqrt(2^(G+3)) um, a planimetric diameter, so G -> l -> G did not round-trip.)
+  const meanInterceptUm = 1000 * Math.pow(10, -(gClamped + 3.288) / 6.643856);
   const grainsPerSqInch100x = Math.pow(2, gClamped - 1);
   const grainsPerMm2 = Math.round(grainsPerSqInch100x * 15.5);
 

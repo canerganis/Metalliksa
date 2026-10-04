@@ -194,7 +194,7 @@ test("E112: grain number G=8 -> 128 grains/in2 at 100x and 1984 grains/mm2", () 
   const g8 = calculateAstmE112FromG(8);
   assert.equal(g8.grainsPerSqInch100x, 128); // N_AE = 2^(G-1)
   assert.equal(g8.grainsPerMm2, 1984); // 128 * 15.5
-  assert.equal(g8.meanInterceptUm, 22.1); // 1000 / sqrt(2^(G+3))
+  assert.equal(g8.meanInterceptUm, 20); // l = 10^(-(8 + 3.288)/6.643856) mm = 0.01999 mm (E112 intercept relation)
   assert.match(g8.classification, /^Standard Fine Grain/);
   assert.match(calculateAstmE112FromG(4.9).classification, /^Coarse Grain/);
   assert.match(calculateAstmE112FromG(5).classification, /^Standard Fine Grain/);
@@ -220,26 +220,54 @@ test("E112: from intercept diameter uses G = -6.643856 log10(d_mm) - 3.288", () 
   assert.equal(calculateAstmE112FromDiameterUm(0).gNumber, calculateAstmE112FromDiameterUm(0.5).gNumber); // clamped to 0.5 um
 });
 
-// FORMULA INCONSISTENCY (reported, NOT fixed): calculateAstmE112FromG labels 1000/sqrt(2^(G+3)) as the "mean intercept"
-// (G=8 -> 22.1 um), but that is the E112 mean planimetric grain *diameter* (N_A = 2^(G+3)/mm2). The mean lineal
-// intercept for G=8 is ~19.9 um (E112 G = -6.643856 log10(l_mm) - 3.288), which is what calculateAstmE112FromDiameterUm
-// inverts. Feeding the displayed value back in therefore does not return the same G: 8 -> 22.1 um -> G 7.7.
-// The component's own default input (22.4 um) maps to G 7.7, not the default G 8.
-test(
-  "E112 round trip G -> intercept -> G is the identity",
-  { todo: "BUG: FromG returns the planimetric diameter labelled as intercept; FromDiameter inverts the intercept relation (G 8 -> 22.1 um -> 7.7)" },
-  () => {
-    for (const g of [3, 5, 8, 10, 12]) {
-      const d = calculateAstmE112FromG(g).meanInterceptUm;
-      const back = calculateAstmE112FromDiameterUm(d).gNumber;
-      assert.ok(Math.abs(back - g) <= 0.1, `G ${g} -> ${d} um -> G ${back}`);
-    }
+// FIXED (2026-10): calculateAstmE112FromG returned 1000/sqrt(2^(G+3)) um, a planimetric diameter (with 16 instead of
+// E112's 15.5 grains/mm^2 per grain/in^2-at-100x), and labelled it "Mean Intercept (d)", while
+// calculateAstmE112FromDiameterUm (input labelled "Mean Intercept Diameter (µm)") inverted the intercept relation
+// G = -6.643856 log10(l_mm) - 3.288. Both directions now use that intercept relation, so the labels are true and
+// G -> l -> G is the identity. No UI wording changed.
+test("E112 round trip G -> intercept -> G is the identity over the whole clamp range", () => {
+  for (let i = -30; i <= 160; i++) {
+    const g = i / 10;
+    const r = calculateAstmE112FromG(g);
+    // displayed (rounded to 0.01 um) intercept fed back returns the same displayed G
+    // (+ 0 folds -0, which toFixed(1) yields for G = -0.00001; React renders both as "0")
+    assert.equal(calculateAstmE112FromDiameterUm(r.meanInterceptUm).gNumber + 0, r.gNumber + 0, `G ${g} -> ${r.meanInterceptUm} um`);
+    // unrounded: the forward map is the algebraic inverse of G = -6.643856 log10(l_mm) - 3.288
+    const lMm = Math.pow(10, -(g + 3.288) / 6.643856);
+    assert.ok(Math.abs(-6.643856 * Math.log10(lMm) - 3.288 - g) < 1e-12);
+    assert.equal(r.meanInterceptUm, Number((lMm * 1000).toFixed(2)));
   }
-);
+  // and intercept -> G -> intercept returns the input inside the un-clamped range
+  for (const d of [2, 5, 10, 20, 22.4, 50, 100, 250, 500, 900]) {
+    assert.equal(calculateAstmE112FromDiameterUm(d).meanInterceptUm, d, `d ${d}`);
+  }
+});
 
-test("E112 pins today's inconsistent round trip (documentation of the behaviour until the formula is approved for change)", () => {
-  assert.equal(calculateAstmE112FromDiameterUm(calculateAstmE112FromG(8).meanInterceptUm).gNumber, 7.7);
+test("E112 intercept table: l = 320 um / sqrt(2)^G (E112 intercept relation, G 0 -> 320 um, G 8 -> 20 um)", () => {
+  for (const g of [0, 2, 4, 6, 8, 10, 12]) {
+    const expected = 320 / Math.SQRT2 ** g;
+    assert.ok(Math.abs(calculateAstmE112FromG(g).meanInterceptUm - expected) <= 0.005 + expected * 1e-4, `G ${g}`);
+  }
+});
+
+// HISTORICAL (pre-fix "Mean Intercept (d)" values, pinned so reviewers see the delta).
+test("HISTORICAL E112 FromG intercept before the fix: planimetric 1000/sqrt(2^(G+3)), round trip 8 -> 22.1 um -> 7.7", () => {
+  const oldIntercept = (g: number) => Number((1000 / Math.sqrt(Math.pow(2, g + 3))).toFixed(2));
+  assert.deepEqual(
+    [4, 6, 8, 10, 12, 14].map((g) => [g, oldIntercept(g), calculateAstmE112FromG(g).meanInterceptUm]),
+    [
+      [4, 88.39, 79.99],
+      [6, 44.19, 40],
+      [8, 22.1, 20],
+      [10, 11.05, 10],
+      [12, 5.52, 5],
+      [14, 2.76, 2.5],
+    ]
+  );
+  assert.equal(calculateAstmE112FromDiameterUm(oldIntercept(8)).gNumber, 7.7); // the old inconsistency
+  // G from a typed intercept is unchanged by the fix (22.4 um -> 7.7); only the echoed intercept changed (24.75 -> 22.4)
   assert.equal(calculateAstmE112FromDiameterUm(22.4).gNumber, 7.7);
+  assert.equal(calculateAstmE112FromDiameterUm(22.4).meanInterceptUm, 22.4);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
