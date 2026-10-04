@@ -195,7 +195,10 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
         _AI_CONSULT,
     ),
-    "eds-lab": (_AI_CONSULT,),
+    "eds-lab": (
+        _local("eds-peak-id", "SNIP background, 3 sqrt(background) peak search and cited line-table matching "
+               "(src/utils/edsPeakId.ts) and vendor quantification import run in the browser."),
+    ),
     "electrochem-suite": (
         _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("tafel-corrosion-rate", "POST", "/api/python/tafel-corrosion-rate",

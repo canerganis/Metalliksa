@@ -3295,17 +3295,17 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
+          "id": "eds-peak-id",
+          "method": null,
+          "route": null,
           "authority": {
-            "kind": "node-provider",
+            "kind": "browser-local",
             "script": null,
             "workerMethod": null,
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": null
+            "exceptionReason": "Recorded debt (single-authority rule): SNIP background, 3 sqrt(background) peak search and cited line-table matching (src/utils/edsPeakId.ts) and vendor quantification import run in the browser."
           },
           "input": [],
           "undeclaredInput": [],
