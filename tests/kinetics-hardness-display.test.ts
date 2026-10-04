@@ -8,6 +8,7 @@ import {
   KINETICS_HV_STATUS_NOTES,
   buildJobCctRow,
   buildJobKineticsAvailability,
+  buildJobMartensiteText,
   formatCoolingRate,
   kineticsHardnessText,
 } from "../src/utils/kineticsHardnessDisplay";
@@ -129,73 +130,67 @@ test("consumers: no invented hardness fallbacks, null HV goes through the displa
   assert.ok(!/\{row\.predictedHardness_HV\}/.test(studio));
   assert.match(studio, /kineticsHardnessText\(row\)/);
   assert.match(studio, /kineticsHardnessText\(currentCCTMatch\)/);
+  // The Decision Lab delegates the build-job kinetics block to the panel (render-tested in
+  // tests/build-job-kinetics-panel.test.tsx); it reads no kinetics field itself.
   const lab = readFileSync(join(ROOT, "src", "components", "3d-distortion-lab", "IndustrialLPBFDecisionLab.tsx"), "utf8");
-  assert.ok(!/predictedHardness_H(RC|V)\s*\?\?/.test(lab));
-  // Hardness/primary phase come from the CCT row Python selected for the build cooling rate, never row 0.
-  assert.match(lab, /kineticsHardnessText\(kineticsCct\.row\)/);
-  assert.match(lab, /buildJobCctRow\(job\?\.kinetics\)/);
-  assert.match(lab, /buildJobKineticsAvailability\(job\?\.kinetics\)/);
-  assert.ok(!/cctContinuousCoolingMap\?\.\[0\]/.test(lab));
+  assert.match(lab, /<BuildJobKineticsPanel kinetics=\{job\?\.kinetics\} \/>/);
+  assert.ok(!/cctContinuousCoolingMap|calphadVsKineticsGap|predictedMartensite_pct|predictedHardness_H/.test(lab));
 });
 
-test("build-job kinetics: unavailable block (316L / AlSi10Mg) shows the reason, never a substituted alloy", () => {
-  const unavailable = {
-    success: false,
-    status: "unavailable",
-    reason: "no kinetics model for 316L Stainless Steel",
-    alloyId: "ss316l",
-    alloy: null,
-    buildCoolingRate_C_s: 1205584,
-    cctContinuousCoolingMap: null,
-    calphadVsKineticsGap: null,
-    buildCoolingRateCctRow: null,
-  };
-  assert.deepEqual(buildJobKineticsAvailability(unavailable), {
-    available: false,
-    reason: "no kinetics model for 316L Stainless Steel",
-  });
-  const sel = buildJobCctRow(unavailable);
-  assert.equal(sel.row, null);
-  assert.equal(kineticsHardnessText(sel.row).hrcValue, "Unavailable");
-  assert.equal(buildJobKineticsAvailability(null).available, false);
-  assert.equal(buildJobKineticsAvailability({ status: "available", calphadVsKineticsGap: null }).available, false);
-});
-
-test("build-job kinetics: the Python-selected CCT row is shown with its cooling rate; none outside the map", () => {
-  const { rows } = goldenRows("in718_lpbf_quench.json");
-  const gap = { kineticRealityAtSelectedCooling: { predictedMartensite_pct: 0, verdict: "x" } };
-  const index = rows.findIndex((r) => r.coolingRate_C_s === 25);
-  const inside = {
-    status: "available",
-    buildCoolingRate_C_s: 30,
-    cctContinuousCoolingMap: rows,
-    calphadVsKineticsGap: gap,
-    buildCoolingRateCctRow: { status: "selected", rowIndex: index, rowCoolingRate_C_s: 25, buildCoolingRate_C_s: 30 },
-  };
-  assert.equal(buildJobKineticsAvailability(inside).available, true);
-  const sel = buildJobCctRow(inside);
-  assert.equal(sel.row, rows[index]);
-  assert.notEqual(index, 0);
-  assert.equal(sel.label, "CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s).");
-
-  const above = {
-    ...inside,
-    buildCoolingRate_C_s: 1089047,
-    buildCoolingRateCctRow: {
-      status: "unavailable",
-      rowIndex: null,
-      reason: "build cooling rate 1.09e+06 C/s is above the CCT map range 0.05-2000 C/s; no row is extrapolated",
-    },
-  };
-  const none = buildJobCctRow(above);
-  assert.equal(none.row, null);
-  assert.equal(
-    none.label,
-    "No CCT row: build cooling rate 1.09e+06 C/s is above the CCT map range 0.05-2000 C/s; no row is extrapolated."
+test("build-job kinetics: availability follows Python's status, not the legacy success flag", () => {
+  assert.deepEqual(
+    buildJobKineticsAvailability({ status: "unavailable", reason: "no kinetics model for 316L Stainless Steel" }),
+    { available: false, reason: "no kinetics model for 316L Stainless Steel." }
   );
-  assert.equal(kineticsHardnessText(none.row).hvValue, "Unavailable");
-  // A selection that does not point at a real row is not trusted.
-  assert.equal(buildJobCctRow({ ...inside, buildCoolingRateCctRow: { status: "selected", rowIndex: 99 } }).row, null);
+  assert.equal(buildJobKineticsAvailability(null).available, false);
+  assert.equal(buildJobKineticsAvailability({}).available, false); // a pre-status payload is not trusted
+  assert.equal(buildJobKineticsAvailability({ status: "available" }).available, true);
+});
+
+test("build-job kinetics: a CCT selection is trusted only when it matches its map row", () => {
+  const rows = [{ coolingRate_C_s: 0.05 }, { coolingRate_C_s: 25, primaryMicrostructure: "Bainite" }];
+  const base = { status: "available", cctContinuousCoolingMap: rows };
+  const sel = { status: "selected", rowIndex: 1, rowCoolingRate_C_s: 25, buildCoolingRate_C_s: 30 };
+  const ok = buildJobCctRow({ ...base, buildCoolingRateCctRow: sel });
+  assert.equal(ok.row, rows[1]);
+  assert.equal(ok.label, "CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s).");
+  for (const bad of [
+    { ...sel, rowIndex: 99 },
+    { ...sel, rowIndex: 0 }, // index points at a row whose rate differs from rowCoolingRate_C_s
+    { ...sel, rowCoolingRate_C_s: 50 },
+    { ...sel, buildCoolingRate_C_s: null },
+    { ...sel, status: "unavailable" },
+  ]) {
+    assert.equal(buildJobCctRow({ ...base, buildCoolingRateCctRow: bad }).row, null, JSON.stringify(bad));
+  }
+  assert.equal(
+    buildJobCctRow({ ...base, buildCoolingRateCctRow: { status: "unavailable", reason: "r" } }).label,
+    "No CCT row: r."
+  );
+});
+
+test("build-job kinetics: martensite text never renders null% and never shows a withheld verdict", () => {
+  assert.deepEqual(
+    buildJobMartensiteText({ buildRateMartensite: { status: "available", predictedMartensite_pct: 7, verdict: "V", coolingRate_C_s: 30 } }),
+    { value: "7%", verdict: "V", reason: "", hint: "At build rate 30 °C/s" }
+  );
+  for (const m of [
+    { status: "available", predictedMartensite_pct: null, verdict: "V" },
+    { status: "available", predictedMartensite_pct: Number.NaN, verdict: "V" },
+    { status: "unavailable", predictedMartensite_pct: 7, verdict: "V", reason: "withheld" },
+    null,
+  ]) {
+    const t = buildJobMartensiteText({ buildRateMartensite: m });
+    assert.equal(t.value, "Unavailable");
+    assert.equal(t.verdict, null);
+    assert.ok(!/null|NaN|undefined/.test(`${t.value} ${t.reason} ${t.hint}`), JSON.stringify(t));
+  }
+});
+
+test("formatCoolingRate: short, never a long float", () => {
   assert.equal(formatCoolingRate(2000), "2000");
-  assert.equal(formatCoolingRate(1089047), "1.1e+6");
+  assert.equal(formatCoolingRate(0.05), "0.05");
+  assert.equal(formatCoolingRate(1523.456789123), "1523");
+  assert.equal(formatCoolingRate(30.123456), "30.12");
+  assert.equal(formatCoolingRate(1089047), "1.09e+6");
 });

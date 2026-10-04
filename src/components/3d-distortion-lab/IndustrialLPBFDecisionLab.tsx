@@ -29,13 +29,7 @@ import { mapActionableReasons, modelHonestyLine, toActionableHeadline } from "..
 import { heatTreatmentCohorts, orientationCohorts } from "../../utils/lpbfFourAlloySchema";
 import type { PythonLpbfScreeningGate } from "../../services/pythonComputationService";
 import { LPBF_DEMO_VECTORS } from "../../utils/lpbfDemoVectors";
-import {
-  buildJobCctRow,
-  buildJobKineticsAvailability,
-  formatCoolingRate,
-  kineticsHardnessText,
-} from "../../utils/kineticsHardnessDisplay";
-import { UNAVAILABLE_TEXT } from "../../utils/hardnessConversion";
+import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -61,13 +55,6 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
   const thermal = job?.thermal ?? null;
   const slicer = job?.slicer ?? null;
   const decision = job?.verdict ?? null;
-  // Kinetics: alloys without their own kinetics model carry status "unavailable" (no substituted alloy). The CCT row
-  // is the one Python selected for the build cooling rate (never row 0, never extrapolated); no row, or a null HV
-  // (non-steel, or HRC outside E140 20-68) -> "Unavailable".
-  const kineticsAvailability = buildJobKineticsAvailability(job?.kinetics);
-  const kineticsCct = buildJobCctRow(job?.kinetics);
-  const kineticsHardness = kineticsHardnessText(kineticsCct.row);
-  const kineticsBuildRate: unknown = job?.kinetics?.buildCoolingRate_C_s;
   const litWindow = job?.verdict?.literatureWindow;
   const htCohorts = useMemo(() => heatTreatmentCohorts(materials.alloyId), [materials.alloyId]);
   const oriCohorts = useMemo(() => orientationCohorts(materials.alloyId), [materials.alloyId]);
@@ -658,57 +645,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               <p className="text-[9px] text-slate-500 mt-1">{job.microstructure.disclaimer}</p>
             </div>
           )}
-          {job?.kinetics && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-rose-400" />
-                <h3 className="text-xs font-bold text-white">Phase Transformation Kinetics</h3>
-              </div>
-              {kineticsAvailability.available ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Metric
-                      label="Primary Phase"
-                      value={kineticsCct.row?.primaryMicrostructure ?? UNAVAILABLE_TEXT}
-                      hint={kineticsCct.row ? "From the CCT row below" : "No CCT row selected"}
-                    />
-                    <Metric
-                      label="Martensite"
-                      value={`${job.kinetics.calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct}%`}
-                      hint={
-                        typeof kineticsBuildRate === "number" && Number.isFinite(kineticsBuildRate)
-                          ? `At build rate ${formatCoolingRate(kineticsBuildRate)} °C/s`
-                          : "Metastable fraction"
-                      }
-                    />
-                    <Metric
-                      label="Hardness (HRC)"
-                      value={kineticsHardness.hrcValue}
-                      hint={kineticsCct.row ? "Predicted at RT" : "No CCT row selected"}
-                    />
-                    <Metric
-                      label="Hardness (HV)"
-                      value={kineticsHardness.hvValue}
-                      hint={
-                        !kineticsCct.row
-                          ? "No CCT row selected"
-                          : kineticsHardness.hvValue === UNAVAILABLE_TEXT
-                            ? "No verified HV conversion"
-                            : "ASTM E140 from HRC"
-                      }
-                    />
-                  </div>
-                  <p className="text-[9px] text-slate-400 mt-1">{kineticsCct.label}</p>
-                  <p className="text-[9px] text-slate-500 mt-1">{job.kinetics.calphadVsKineticsGap.kineticRealityAtSelectedCooling.verdict}</p>
-                </>
-              ) : (
-                <>
-                  <Metric label="Kinetics" value={UNAVAILABLE_TEXT} hint="Reason below; no other alloy substituted" />
-                  <p className="text-[9px] text-slate-400 mt-1">{kineticsAvailability.reason}</p>
-                </>
-              )}
-            </div>
-          )}
+          <BuildJobKineticsPanel kinetics={job?.kinetics} />
         </div>
       )}
 
