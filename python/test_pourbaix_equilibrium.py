@@ -117,10 +117,14 @@ class FeSpecNumbersTest(unittest.TestCase):
 
 class OtherElementPinsTest(unittest.TestCase):
     def test_ni(self):
-        _sloped(self, "Ni", "Ni", "Ni2+", -0.4275, 0.0)
-        _vertical(self, "Ni", "Ni2+", "Ni(OH)2", 9.088)
-        _vertical(self, "Ni", "Ni(OH)2", "HNiO2-", 12.204)
-        _sloped(self, "Ni", "Ni", "Ni(OH)2", 0.1101, -0.0592)
+        # NEA-TDB set E (Gamsjager 2005; S1 of REVIEW-pbx-sci): the atlas pins of the spec (-0.4275, pH 9.088,
+        # 12.204, 0.1101) are superseded; the oracle (tools/pourbaix_oracle.py DATA["Ni"]) carries the new numbers.
+        _sloped(self, "Ni", "Ni", "Ni2+", -0.4147, 0.0)
+        _vertical(self, "Ni", "Ni2+", "Ni(OH)2", 8.514)
+        _vertical(self, "Ni", "Ni(OH)2", "HNiO2-", 12.171)
+        _sloped(self, "Ni", "Ni", "Ni(OH)2", 0.0890, -0.0592)
+        _sloped(self, "Ni", "Ni", "Ni2+", -0.2372, 0.0, log_a=0.0)
+        _vertical(self, "Ni", "Ni2+", "Ni(OH)2", 5.514, log_a=0.0)
 
     def test_cu(self):
         _sloped(self, "Cu", "Cu", "Cu2+", 0.1619, 0.0)
@@ -290,6 +294,57 @@ class AluminiumSetOTest(unittest.TestCase):
         self.assertIn("-7.16", table.ELEMENT_SET["Al"][2])
 
 
+class NickelSetETest(unittest.TestCase):
+    """Ni from ONE set (E: NEA-TDB, Gamsjager et al. 2005) with CODATA water; open-database cross checks."""
+
+    def rows(self):
+        return {r["id"]: r["dfG_kJ_mol"] for r in table.species_rows("Ni")}
+
+    def test_set_values_and_water(self):
+        g = self.rows()
+        self.assertAlmostEqual(table.water_dfg_kj_mol("Ni"), -237.140, delta=1e-9)
+        self.assertAlmostEqual(g["Ni2+"], -45.773, delta=1e-9)
+        self.assertAlmostEqual(g["Ni(OH)2"], -457.100, delta=1e-9)
+        self.assertAlmostEqual(g["HNiO2-"], -590.519 + 237.140, delta=1e-9)  # Ni(OH)3- - H2O
+        self.assertEqual({table.ELEMENT_SET["Ni"][0]} | {r["source"] for r in table.species_rows("Ni")[1:]}, {"E"})
+
+    def test_reaction_constants_reproduce_the_nea_selection(self):
+        g, w = self.rows(), table.water_dfg_kj_mol("Ni")
+        log_ks0 = -(g["Ni2+"] + 2 * w - g["Ni(OH)2"]) / KJ_PER_LOG_K          # Ni(OH)2 + 2H+ = Ni2+ + 2H2O
+        log_b3 = -((g["HNiO2-"] + w) - g["Ni2+"] - 3 * w) / KJ_PER_LOG_K     # Ni2+ + 3H2O = Ni(OH)3- + 3H+
+        self.assertAlmostEqual(log_ks0, 11.02, delta=0.01)   # NEA / PSI-Nagra TDB 12/07 selection (+/- 0.20)
+        self.assertAlmostEqual(log_b3, -29.2, delta=0.01)    # NEA selection (+/- 1.7)
+
+    def test_open_database_cross_checks(self):
+        g, w = self.rows(), table.water_dfg_kj_mol("Ni")
+        log_ks0 = -(g["Ni2+"] + 2 * w - g["Ni(OH)2"]) / KJ_PER_LOG_K
+        combined = -((g["HNiO2-"] + w) - g["Ni(OH)2"] - w) / KJ_PER_LOG_K     # Ni(OH)2 + H2O = Ni(OH)3- + H+
+        # CHNOSZ OBIGT (SH88) Ni+2 -10900 cal: V1 (0.5 kJ/mol)
+        self.assertAlmostEqual(g["Ni2+"], -10900 * 4.184 / 1000.0, delta=0.5)
+        # wateq4f.dat (Nordstrom 1990) Ni(OH)2 solubility 10.8: independent value within 2.5 kJ/mol
+        self.assertLess(abs(log_ks0 - 10.8) * KJ_PER_LOG_K, 2.5)
+        # llnl.dat: 12.7485 - 30.9852 = -18.2367 for Ni(OH)2 + H2O = Ni(OH)3- + H+ (0.3 kJ/mol)
+        self.assertAlmostEqual(combined, 12.7485 - 30.9852, delta=0.5 / KJ_PER_LOG_K)
+        # the data spread is real and stated: llnl.dat Ni(OH)2 alone is 9.9 kJ/mol away
+        self.assertGreater(abs(log_ks0 - 12.7485) * KJ_PER_LOG_K, 9.0)
+        rows = {r["id"]: r for r in table.species_rows("Ni")}
+        self.assertIn("12.75", rows["Ni(OH)2"]["evidence"])
+        # the old atlas constant (12.17) is 6.6 kJ/mol from the NEA value: the module's own 2.5 kJ limit
+        self.assertGreater(abs(12.17 - log_ks0) * KJ_PER_LOG_K, 6.0)
+
+    def test_boundary_moves_from_atlas_to_nea(self):
+        # Ni2+/Ni(OH)2 at a = 1e-6: atlas 9.09 -> NEA 8.51 (review pbx-sci S1)
+        self.assertAlmostEqual(solver.boundary_line("Ni", "Ni2+", "Ni(OH)2", -6.0)["pH"], (11.02 + 6.0) / 2, delta=0.01)
+
+    def test_nio2_is_an_anchored_estimate(self):
+        row = next(r for r in table.species_rows("Ni") if r["id"] == "NiO2")
+        self.assertIn("ESTIMATE", row["evidence"])
+        self.assertAlmostEqual(solver.boundary_line("Ni", "Ni2+", "NiO2", 0.0)["E_V_SHE_at_pH0"], 1.593, delta=1e-9)
+        # it lies above the O2 line at every pH (no domain inside the water window)
+        for ph in range(-2, 17):
+            self.assertNotEqual(oracle.dominant("Ni", float(ph), 1.2288 - K * ph - 0.001), "NiO2")
+
+
 class StandardPotentialCrossCheckTest(unittest.TestCase):
     """Unit-activity E0 from the table vs independent published values (10 mV; Mg2+/Mg 20 mV)."""
 
@@ -297,11 +352,11 @@ class StandardPotentialCrossCheckTest(unittest.TestCase):
             ("Fe", "Fe", "Fe3O4", -0.085, 0.010), ("Fe", "Fe3O4", "Fe2O3", 0.22, 0.010),
             ("Fe", "Fe2+", "Fe2O3", 0.728, 0.010), ("Fe", "Fe2+", "Fe3O4", 0.98, 0.010),
             ("Fe", "Fe3+", "FeO4^2-", 2.20, 0.010),
-            ("Ni", "Ni", "Ni2+", -0.257, 0.010), ("Ni", "Ni2+", "NiO2", 1.593, 0.010),
+            ("Ni", "Ni2+", "NiO2", 1.593, 0.010),
             ("Cu", "Cu", "Cu2+", 0.3419, 0.010), ("Cu", "Cu", "Cu+", 0.521, 0.010),
             ("Cu", "Cu+", "Cu2+", 0.153, 0.010), ("Zn", "Zn", "Zn2+", -0.7618, 0.010),
             ("Mg", "Mg", "Mg2+", -2.372, 0.020))
-    ALKALINE = (("Ni", "Ni", "Ni(OH)2", -0.72), ("Cu", "Cu", "Cu2O", -0.36),
+    ALKALINE = (("Cu", "Cu", "Cu2O", -0.36),
                 ("Zn", "Zn", "ZnO2^2-", -1.199), ("Mg", "Mg", "Mg(OH)2", -2.69))
 
     def test_acid_couples(self):
@@ -315,6 +370,25 @@ class StandardPotentialCrossCheckTest(unittest.TestCase):
             with self.subTest(couple=f"{el} {a}/{b}"):
                 line = solver.boundary_line(el, a, b, 0.0)
                 self.assertAlmostEqual(line["E_V_SHE_at_pH0"] + 14.0 * line["slope_V_per_pH"], ref, delta=0.010)
+
+    def test_nickel_exceptions_are_documented_and_bounded(self):
+        # NEA-TDB (calorimetric / solubility based) vs the older electrochemical CRC values:
+        # Ni2+/Ni -0.2372 vs -0.257 V, Ni(OH)2/Ni (1 M OH-) -0.739 vs -0.72 V. Both are 19-20 mV off,
+        # outside the 10 mV V2 test, inside 25 mV; the rows' evidence records them.
+        e0 = solver.boundary_line("Ni", "Ni", "Ni2+", 0.0)["E_V_SHE_at_pH0"]
+        line = solver.boundary_line("Ni", "Ni", "Ni(OH)2", 0.0)
+        alk = line["E_V_SHE_at_pH0"] + 14.0 * line["slope_V_per_pH"]
+        self.assertAlmostEqual(e0, -0.2372, delta=1e-3)
+        self.assertAlmostEqual(alk, -0.7393, delta=1e-3)
+        self.assertGreater(abs(e0 - -0.257), 0.010)
+        self.assertGreater(abs(alk - -0.72), 0.010)
+        self.assertLess(abs(e0 - -0.257), 0.025)
+        self.assertLess(abs(alk - -0.72), 0.025)
+        rows = {r["id"]: r for r in table.species_rows("Ni")}
+        self.assertIn("-0.257", rows["Ni2+"]["evidence"])
+        self.assertIn("-0.72", rows["Ni(OH)2"]["evidence"])
+        self.assertIn("documented exception", rows["Ni2+"]["evidence"])
+        self.assertIn("documented exception", rows["Ni(OH)2"]["evidence"])
 
     def test_table_values_for_documented_deltas(self):
         self.assertAlmostEqual(solver.boundary_line("Fe", "Fe", "Fe2+", 0.0)["E_V_SHE_at_pH0"], -0.4401, delta=1e-3)
@@ -660,8 +734,7 @@ class GeneratedSpeciesFileTest(unittest.TestCase):
     def test_spec_values_in_kj(self):
         # SPEC section 2 prints these to 2 decimals; the table keeps the exact cal x 4.184 products
         expected = {("Fe", "Fe2+"): -84.94, ("Fe", "Fe3+"): -10.59, ("Fe", "HFeO2-"): -379.18,
-                    ("Fe", "Fe3O4"): -1014.20, ("Fe", "Fe2O3"): -740.99, ("Ni", "Ni2+"): -48.24,
-                    ("Ni", "HNiO2-"): -349.22, ("Ni", "Ni(OH)2"): -453.13, ("Ni", "NiO2"): -215.14}
+                    ("Fe", "Fe3O4"): -1014.20, ("Fe", "Fe2O3"): -740.99}
         for (el, sid), kj in expected.items():
             row = next(r for r in table.species_rows(el) if r["id"] == sid)
             self.assertAlmostEqual(row["dfG_kJ_mol"], kj, delta=0.006, msg=(el, sid))

@@ -160,9 +160,9 @@
     "Ni": {
       "name": "Nickel (Ni-H₂O System)",
       "available": true,
-      "sourceSet": "A",
-      "sourceSetNote": "Atlas set (Pourbaix 1974)",
-      "waterDfG_kJ_mol": -237.19096000000002,
+      "sourceSet": "E",
+      "sourceSetNote": "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with CODATA water; NiO2 is an estimate anchored to Ni2+ (see its row). Ni3O4 and Ni2O3 are withheld atlas rows",
+      "waterDfG_kJ_mol": -237.14,
       "referenceCation": "Ni2+",
       "species": [
         {
@@ -188,11 +188,11 @@
           "h": 0,
           "z": 2,
           "phase": "aq",
-          "dfG_kJ_mol": -48.24152,
+          "dfG_kJ_mol": -45.773,
           "role": "cation",
-          "source": "A",
-          "verification": "V2",
-          "evidence": "E0(Ni2+/Ni) table -0.2500 V vs -0.257 V (Wikipedia data page / CRC): +7 mV",
+          "source": "E",
+          "verification": "V1",
+          "evidence": "NEA-TDB (Gamsjaeger 2005) -45.773 +/- 0.771 kJ/mol; CHNOSZ OBIGT (SH88) Ni+2 -10900 cal = -45.606 kJ/mol (delta 0.17 kJ/mol). E0(Ni2+/Ni) = -0.2372 V; the older electrochemical value -0.257 V (CRC / Wikipedia data page) is 20 mV lower: documented exception, the calorimetric NEA/NBS value is used",
           "category": "Corrosion (acid)"
         },
         {
@@ -203,11 +203,11 @@
           "h": 2,
           "z": 0,
           "phase": "s",
-          "dfG_kJ_mol": -453.1272,
+          "dfG_kJ_mol": -457.1,
           "role": "oxide",
-          "source": "A",
+          "source": "E",
           "verification": "V2",
-          "evidence": "E0(Ni(OH)2/Ni, alkaline) table -0.718 V vs -0.72 V (Wikipedia data page)",
+          "evidence": "beta-Ni(OH)2(cr) + 2H+ = Ni2+ + 2H2O: table log K 11.02 = NEA-TDB selection (+/- 0.20, from Gamsjaeger et al. 2002 solubility measurements; PSI/Nagra TM-44-14-05 adopts the same value); wateq4f.dat (Nordstrom 1990) 10.8 (delta 1.3 kJ/mol). Open databases spread 10.8 to 12.7 (llnl.dat 12.75: 9.9 kJ/mol above NEA). E0(Ni(OH)2/Ni, alkaline) -0.739 V vs -0.72 V (CRC, older solubility constants): documented exception",
           "category": "Passivation (thermodynamic, film-forming)"
         },
         {
@@ -218,11 +218,11 @@
           "h": 0,
           "z": 0,
           "phase": "s",
-          "dfG_kJ_mol": -215.14128,
+          "dfG_kJ_mol": -212.65073185513432,
           "role": "oxide",
-          "source": "A",
+          "source": "E",
           "verification": "V2",
-          "evidence": "E0(NiO2/Ni2+, acid) table 1.593 V vs 1.593 V (CRC) / 1.59 V (Wikipedia data page); the atlas calls the higher nickel oxides uncertain",
+          "evidence": "ESTIMATE anchored to Ni2+: E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one lineage, not independent); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher nickel oxides uncertain. The domain lies above the O2 line (about 5 mV) at every pH",
           "category": "Passivation (thermodynamic, film-forming)"
         },
         {
@@ -233,11 +233,11 @@
           "h": 1,
           "z": -1,
           "phase": "aq",
-          "dfG_kJ_mol": -349.21756,
+          "dfG_kJ_mol": -353.379,
           "role": "anion_low",
-          "source": "A",
+          "source": "E",
           "verification": "V2",
-          "evidence": "Ni(OH)2(s) + H2O = Ni(OH)3- + H+ (Ni(OH)3- = HNiO2- + H2O): table log K -18.20; NEA TDB (Gamsjaeger 2005, via PSI/Nagra TM-44-14-05) 11.02 - 29.2 = -18.18 +/- 1.7",
+          "evidence": "Ni(OH)2(cr) + H2O = Ni(OH)3- + H+ (Ni(OH)3- = HNiO2- + H2O): table log K 11.02 - 29.2 = -18.18 (NEA log *beta3 -29.2 +/- 1.7); llnl.dat 12.7485 - 30.9852 = -18.24 (delta 0.3 kJ/mol); wateq4f.dat 10.8 - 30 = -19.2 (outside 2.5 kJ/mol: the data spread is real)",
           "category": "Corrosion (alkaline)"
         }
       ],
@@ -254,7 +254,7 @@
           "role": "oxide",
           "source": "A",
           "verification": "V3",
-          "evidence": "no open source found for the atlas value, which the atlas itself calls uncertain; not used. Withholding Ni3O4 and Ni2O3 changes the category (Ni2+ or HNiO2- instead of Passivation) of about 4 % of the Ni cells inside the water window relative to the spec map",
+          "evidence": "no open source found for the atlas value, which the atlas itself calls uncertain; not used. Withholding Ni3O4 and Ni2O3 changes the category (Ni2+ or HNiO2- instead of Passivation) of about 2 % of the Ni cells inside the water window (4 % on the atlas set, measured with the atlas rows anchored to the NEA Ni2+ and CODATA water). The value shown is the atlas one",
           "category": "Passivation (thermodynamic, film-forming)"
         },
         {

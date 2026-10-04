@@ -39,6 +39,7 @@ _FEO4 = atlas(-2530) + 4 * _FE_H2O_KJ + 3 * F * 2.20 / 1000.0  # Latimer E0 = 2.
 # Al: CHNOSZ OBIGT rows (cal/mol: Al+3 and Al(OH)4- from Tagirov & Schott 2001; H2O is the
 # SUPCRT92 value -56687 cal) and gibbsite from Robie, Hemingway & Fisher 1978 (J/mol).
 _AL_H2O_KJ = -56687 * CAL / 1000.0
+_NI_H2O_KJ = -237.140  # NEA-TDB water used with the Ni set
 
 # Species used by the engine (verified rows only).
 DATA = {
@@ -51,12 +52,14 @@ DATA = {
         "HFeO2-": (1, 2, 1, -1, atlas(-90627), "aq", "anion_low"),
         "FeO4^2-": (1, 4, 0, -2, _FEO4, "aq", "anion_high"),
     }},
-    "Ni": {"H2O": _FE_H2O_KJ, "sp": {
+    # Ni: NEA-TDB (Gamsjager et al. 2005, Table III-1), CODATA water; NiO2 anchored to Ni2+ by
+    # E0(NiO2/Ni2+) = 1.593 V (typed here again, not read from the engine).
+    "Ni": {"H2O": _NI_H2O_KJ, "sp": {
         "Ni": (1, 0, 0, 0, 0.0, "s", "metal"),
-        "Ni2+": (1, 0, 0, 2, atlas(-11530), "aq", "cation"),
-        "Ni(OH)2": (1, 2, 2, 0, atlas(-108300), "s", "oxide"),
-        "NiO2": (1, 2, 0, 0, atlas(-51420), "s", "oxide"),
-        "HNiO2-": (1, 2, 1, -1, atlas(-83465), "aq", "anion_low"),
+        "Ni2+": (1, 0, 0, 2, -45.773, "aq", "cation"),
+        "Ni(OH)2": (1, 2, 2, 0, -457.100, "s", "oxide"),
+        "NiO2": (1, 2, 0, 0, -45.773 + 2 * _NI_H2O_KJ + 2 * F * 1.593 / 1000.0, "s", "oxide"),
+        "HNiO2-": (1, 2, 1, -1, -590.519 - _NI_H2O_KJ, "aq", "anion_low"),
     }},
     "Cu": {"H2O": -237.129, "sp": {
         "Cu": (1, 0, 0, 0, 0.0, "s", "metal"),
@@ -101,9 +104,14 @@ AL_HYDROLYSIS_OMITTED = {
 }
 
 # Rows withheld from the engine (unverified V3). Kept so the effect of withholding can be measured.
+# Ni3O4 / Ni2O3 are atlas rows; they are transferred to the NEA Ni set by keeping their atlas energy
+# relative to the atlas Ni2+ (-11530 cal) and atlas water (-56690 cal), so that the withholding effect
+# is measured on the same footing as the served map.
+_NI_SHIFT_PER_NI = -45.773 - atlas(-11530)
+_NI_SHIFT_PER_O = _NI_H2O_KJ - _FE_H2O_KJ
 WITHHELD = {
-    "Ni": {"Ni3O4": (3, 4, 0, 0, atlas(-170150), "s", "oxide"),
-           "Ni2O3": (2, 3, 0, 0, atlas(-112270), "s", "oxide")},
+    "Ni": {"Ni3O4": (3, 4, 0, 0, atlas(-170150) + 3 * _NI_SHIFT_PER_NI + 4 * _NI_SHIFT_PER_O, "s", "oxide"),
+           "Ni2O3": (2, 3, 0, 0, atlas(-112270) + 2 * _NI_SHIFT_PER_NI + 3 * _NI_SHIFT_PER_O, "s", "oxide")},
     "Al": {"H2O": _FE_H2O_KJ, "sp": {
         "Al": (1, 0, 0, 0, 0.0, "s", "metal"),
         "Al3+": (1, 0, 0, 3, atlas(-115000), "aq", "cation"),

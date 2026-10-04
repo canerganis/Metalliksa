@@ -160,10 +160,11 @@ test("Fe boundary lines match the spec oracle (intercepts +/-1 mV, slopes +/-0.0
 });
 
 test("other elements: regression pins of the spec", () => {
-  sloped("Ni", "Ni", "Ni2+", -0.4275, 0);
-  vertical("Ni", "Ni2+", "Ni(OH)2", 9.088);
-  vertical("Ni", "Ni(OH)2", "HNiO2-", 12.204);
-  sloped("Ni", "Ni", "Ni(OH)2", 0.1101, -0.0592);
+  // Ni: NEA-TDB set (Gamsjager 2005); the atlas pins of the spec (-0.4275, 9.088, 12.204, 0.1101) are superseded
+  sloped("Ni", "Ni", "Ni2+", -0.4147, 0);
+  vertical("Ni", "Ni2+", "Ni(OH)2", 8.514);
+  vertical("Ni", "Ni(OH)2", "HNiO2-", 12.171);
+  sloped("Ni", "Ni", "Ni(OH)2", 0.0890, -0.0592);
   sloped("Cu", "Cu", "Cu2+", 0.1619, 0);
   vertical("Cu", "Cu2+", "CuO", 6.674);
   sloped("Cu", "Cu", "Cu2O", 0.4722, -0.0592);

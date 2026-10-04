@@ -12,6 +12,9 @@ Source sets (one primary set per element, each with its own H2O value):
      NACE/CEBELCOR 1974: mu0 in cal/mol, converted with 4.184 J/cal (H2O -56690 cal).
   N  Wagman et al., NBS tables, J. Phys. Chem. Ref. Data 11, Suppl. 2 (1982) (H2O -237.129).
   L  Latimer, Oxidation Potentials (1952): E0(FeO4 2-/Fe3+) = 2.20 V (derived row).
+  E  NEA-TDB, Gamsjager et al., Chemical Thermodynamics of Nickel, OECD NEA vol. 6 (2005), Table III-1
+     (open PDF oecd-nea.org/dbtdb/pubs/vol6-nickel.pdf; same selection in PSI/Nagra TM-44-14-05):
+     Ni2+ -45.773, beta-Ni(OH)2(cr) -457.100, Ni(OH)3- -590.519 kJ/mol, H2O(l) -237.140 kJ/mol.
   O  CHNOSZ OBIGT database (github.com/jedick/CHNOSZ, GPL-3; only the cited numbers are used):
      Al3+ and Al(OH)4- from Tagirov & Schott, Geochim. Cosmochim. Acta 65 (2001) 3965 (cal/mol),
      gibbsite from Robie, Hemingway & Fisher, USGS Bull. 1452 (1978) (J/mol); H2O is the SUPCRT92
@@ -76,6 +79,16 @@ def _obigt_cal(cal_per_mol):
 _FE_H2O = _atlas(-56690.0)
 _FEO4_DFG = _atlas(-2530.0) + 4.0 * _FE_H2O + 3.0 * physical_constants.FARADAY.value * 2.20 / 1000.0
 
+# Ni set E: NEA-TDB (CODATA) water used with the Gamsjager et al. 2005 Ni species.
+_NI_H2O = -237.140
+_NI2P = -45.773           # Ni2+
+_NI_OH2 = -457.100        # beta-Ni(OH)2(cr); = Ni2+ + 2 H2O + RT ln10 * 11.02 (log *Ks,0) within 0.05 kJ/mol
+_NI_OH3M = -590.519       # Ni(OH)3-; = Ni2+ + 3 H2O + RT ln10 * 29.2 (log *beta3 = -29.2 +/- 1.7)
+_NI_HNIO2M = _NI_OH3M - _NI_H2O   # HNiO2- = Ni(OH)3- - H2O
+# NiO2: not in the NEA volume. Anchored to Ni2+ through E0(NiO2 + 4H+ + 2e- = Ni2+ + 2H2O) = 1.593 V
+# (atlas / CRC value), so that couple stays where it was relative to Ni2+.
+_NI_NIO2 = _NI2P + 2.0 * _NI_H2O + 2.0 * physical_constants.FARADAY.value * 1.593 / 1000.0
+
 # Al set O: SUPCRT92 water used with the Tagirov & Schott 2001 aqueous species.
 _AL_H2O = _obigt_cal(-56687.0)
 
@@ -104,16 +117,24 @@ _ROWS = {
     ),
     "Ni": (
         ("Ni", "Ni", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
-        ("Ni2+", "Ni²⁺", 1, 0, 0, 2, "aq", _atlas(-11530.0), "cation", "A", "V2",
-         "E0(Ni2+/Ni) table -0.2500 V vs -0.257 V (Wikipedia data page / CRC): +7 mV"),
-        ("Ni(OH)2", "Ni(OH)₂", 1, 2, 2, 0, "s", _atlas(-108300.0), "oxide", "A", "V2",
-         "E0(Ni(OH)2/Ni, alkaline) table -0.718 V vs -0.72 V (Wikipedia data page)"),
-        ("NiO2", "NiO₂", 1, 2, 0, 0, "s", _atlas(-51420.0), "oxide", "A", "V2",
-         "E0(NiO2/Ni2+, acid) table 1.593 V vs 1.593 V (CRC) / 1.59 V (Wikipedia data page); "
-         "the atlas calls the higher nickel oxides uncertain"),
-        ("HNiO2-", "HNiO₂⁻", 1, 2, 1, -1, "aq", _atlas(-83465.0), "anion_low", "A", "V2",
-         "Ni(OH)2(s) + H2O = Ni(OH)3- + H+ (Ni(OH)3- = HNiO2- + H2O): table log K -18.20; "
-         "NEA TDB (Gamsjaeger 2005, via PSI/Nagra TM-44-14-05) 11.02 - 29.2 = -18.18 +/- 1.7"),
+        ("Ni2+", "Ni²⁺", 1, 0, 0, 2, "aq", _NI2P, "cation", "E", "V1",
+         "NEA-TDB (Gamsjaeger 2005) -45.773 +/- 0.771 kJ/mol; CHNOSZ OBIGT (SH88) Ni+2 -10900 cal = -45.606 "
+         "kJ/mol (delta 0.17 kJ/mol). E0(Ni2+/Ni) = -0.2372 V; the older electrochemical value -0.257 V "
+         "(CRC / Wikipedia data page) is 20 mV lower: documented exception, the calorimetric NEA/NBS value is used"),
+        ("Ni(OH)2", "Ni(OH)₂", 1, 2, 2, 0, "s", _NI_OH2, "oxide", "E", "V2",
+         "beta-Ni(OH)2(cr) + 2H+ = Ni2+ + 2H2O: table log K 11.02 = NEA-TDB selection (+/- 0.20, from "
+         "Gamsjaeger et al. 2002 solubility measurements; PSI/Nagra TM-44-14-05 adopts the same value); "
+         "wateq4f.dat (Nordstrom 1990) 10.8 (delta 1.3 kJ/mol). Open databases spread 10.8 to 12.7 "
+         "(llnl.dat 12.75: 9.9 kJ/mol above NEA). E0(Ni(OH)2/Ni, alkaline) -0.739 V vs -0.72 V (CRC, "
+         "older solubility constants): documented exception"),
+        ("NiO2", "NiO₂", 1, 2, 0, 0, "s", _NI_NIO2, "oxide", "E", "V2",
+         "ESTIMATE anchored to Ni2+: E0(NiO2/Ni2+, acid) = 1.593 V (atlas / CRC / Wikipedia data page: one "
+         "lineage, not independent); the NEA volume has no Ni(III/IV) oxide and the atlas calls the higher "
+         "nickel oxides uncertain. The domain lies above the O2 line (about 5 mV) at every pH"),
+        ("HNiO2-", "HNiO₂⁻", 1, 2, 1, -1, "aq", _NI_HNIO2M, "anion_low", "E", "V2",
+         "Ni(OH)2(cr) + H2O = Ni(OH)3- + H+ (Ni(OH)3- = HNiO2- + H2O): table log K 11.02 - 29.2 = -18.18 "
+         "(NEA log *beta3 -29.2 +/- 1.7); llnl.dat 12.7485 - 30.9852 = -18.24 (delta 0.3 kJ/mol); "
+         "wateq4f.dat 10.8 - 30 = -19.2 (outside 2.5 kJ/mol: the data spread is real)"),
     ),
     "Cu": (
         ("Cu", "Cu", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
@@ -179,7 +200,9 @@ _ROWS = {
 
 ELEMENT_SET = {
     "Fe": ("A", _FE_H2O, "Atlas set (Pourbaix 1974); FeO4 2- derived from Latimer E0 (L)"),
-    "Ni": ("A", _FE_H2O, "Atlas set (Pourbaix 1974)"),
+    "Ni": ("E", _NI_H2O, "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with "
+                         "CODATA water; NiO2 is an estimate anchored to Ni2+ (see its row). Ni3O4 and Ni2O3 are "
+                         "withheld atlas rows"),
     "Cu": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
     "Zn": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982), ZnO see row evidence"),
     "Mg": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982)"),
@@ -207,7 +230,8 @@ WITHHELD_SPECIES = {
         ("Ni3O4", "Ni₃O₄", 3, 4, 0, 0, "s", _atlas(-170150.0), "oxide", "A", "V3",
          "no open source found for the atlas value, which the atlas itself calls uncertain; not used. "
          "Withholding Ni3O4 and Ni2O3 changes the category (Ni2+ or HNiO2- instead of Passivation) of "
-         "about 4 % of the Ni cells inside the water window relative to the spec map"),
+         "about 2 % of the Ni cells inside the water window (4 % on the atlas set, measured with the atlas rows "
+         "anchored to the NEA Ni2+ and CODATA water). The value shown is the atlas one"),
         ("Ni2O3", "Ni₂O₃", 2, 3, 0, 0, "s", _atlas(-112270.0), "oxide", "A", "V3",
          "no open source found for the atlas value (an E0 of 1.753 V is only reproduced by the same "
          "table); the atlas calls it uncertain; not used"),
