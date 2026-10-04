@@ -38,7 +38,9 @@ import {
   HARDNESS_VERIFIED_RANGES,
   HardnessMaterialClass,
   TENSILE_ESTIMATE_NOTE,
+  UNAVAILABLE_TEXT,
   convertHardness,
+  hardnessInputForScale,
 } from "../utils/hardnessConversion";
 import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
@@ -314,10 +316,7 @@ export const PocketCalculators: React.FC = () => {
                   key={s}
                   onClick={() => {
                     setHardnessScale(s);
-                    if (s === "HRC" && (hardnessVal > 68 || hardnessVal < 20)) setHardnessVal(32);
-                    if (s === "HRB" && (hardnessVal > 100 || hardnessVal < 55)) setHardnessVal(85);
-                    if (s === "HV" && hardnessVal < 100) setHardnessVal(320);
-                    if (s === "HBW" && (hardnessVal > 634 || hardnessVal < 226)) setHardnessVal(320);
+                    setHardnessVal(hardnessInputForScale(hardnessVal, s));
                   }}
                   className={`py-1.5 text-xs font-mono font-bold rounded border transition ${
                     hardnessScale === s
@@ -411,7 +410,7 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Vickers (HV)</span>
                 <div className="text-2xl font-black font-mono text-cyan-400 mt-1">
-                  {hardnessResult.HV ?? "N/A"} <span className="text-xs font-normal text-slate-500">HV</span>
+                  {hardnessResult.HV ?? UNAVAILABLE_TEXT} <span className="text-xs font-normal text-slate-500">HV</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">Diamond 136° indenter</div>
               </div>
@@ -419,7 +418,7 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Rockwell C (HRC)</span>
                 <div className="text-2xl font-black font-mono text-sky-400 mt-1">
-                  {hardnessResult.HRC ?? "N/A"}{" "}
+                  {hardnessResult.HRC ?? UNAVAILABLE_TEXT}{" "}
                   <span className="text-xs font-normal text-slate-500">HRC</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">120° Brale Diamond Cone</div>
@@ -428,7 +427,7 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Brinell (HBW)</span>
                 <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
-                  {hardnessResult.HBW ?? "N/A"} <span className="text-xs font-normal text-slate-500">HBW</span>
+                  {hardnessResult.HBW ?? UNAVAILABLE_TEXT} <span className="text-xs font-normal text-slate-500">HBW</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">10mm WC Ball (3000kgf)</div>
               </div>
@@ -436,7 +435,7 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Rockwell B (HRB)</span>
                 <div className="text-2xl font-black font-mono text-indigo-300 mt-1">
-                  {hardnessResult.HRB ?? "N/A"}{" "}
+                  {hardnessResult.HRB ?? UNAVAILABLE_TEXT}{" "}
                   <span className="text-xs font-normal text-slate-500">HRB</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">1/16" ball (100kgf)</div>
@@ -448,7 +447,7 @@ export const PocketCalculators: React.FC = () => {
                     <span className="text-xs text-slate-400 font-mono">Estimated Tensile Strength (Rm)</span>
                     <div className="text-2xl font-black font-mono text-white mt-0.5">
                       {hardnessResult.tensileRm_MPa === null ? (
-                        <span className="text-sm font-mono text-slate-500">N/A ({hardnessResult.unavailable.Rm})</span>
+                        <span className="text-sm font-mono text-slate-500">{UNAVAILABLE_TEXT} ({hardnessResult.unavailable.Rm})</span>
                       ) : (
                         <>
                           ≈ {hardnessResult.tensileRm_MPa} <span className="text-xs font-normal text-slate-400">MPa</span>

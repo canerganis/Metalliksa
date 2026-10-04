@@ -132,6 +132,26 @@ export const HARDNESS_VERIFIED_RANGES: Record<HardnessScale, { min: number; max:
   HLD: null,
 };
 
+/** Default input when the user switches to a scale and the current value lies outside that scale's verified range. */
+export const HARDNESS_SCALE_DEFAULT_INPUT: Record<HardnessScale, number> = {
+  HRC: 35,
+  HRB: 85,
+  HV: 350,
+  HBW: 320,
+  HK: 350,
+  HLD: 600,
+};
+
+/** Value to keep after switching the input scale: unchanged when inside the new scale's range, else that scale's default. */
+export function hardnessInputForScale(current: number, scale: HardnessScale): number {
+  const r = HARDNESS_VERIFIED_RANGES[scale];
+  if (r === null) return Number.isFinite(current) ? current : HARDNESS_SCALE_DEFAULT_INPUT[scale];
+  return Number.isFinite(current) && current >= r.min && current <= r.max ? current : HARDNESS_SCALE_DEFAULT_INPUT[scale];
+}
+
+/** One wording for every surface when a converted value is missing. */
+export const UNAVAILABLE_TEXT = "Unavailable";
+
 export interface SteelHardnessConversion {
   inputScale: HardnessScale;
   inputValue: number;

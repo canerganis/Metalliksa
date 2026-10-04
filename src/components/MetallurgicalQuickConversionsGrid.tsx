@@ -26,6 +26,7 @@ import {
   HARDNESS_CONVERSION_DISCLAIMER,
   HARDNESS_MATERIAL_CLASSES,
   HardnessMaterialClass,
+  UNAVAILABLE_TEXT,
   convertHardness,
   hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
@@ -578,7 +579,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                     <div className="text-right">
                       <span className="text-[10px] font-mono font-bold text-emerald-400">
                         {hardnessConversions.tensileRm_MPa === null
-                          ? "Rm: N/A"
+                          ? `Rm: ${UNAVAILABLE_TEXT}`
                           : `Rm ≈ ${hardnessConversions.tensileRm_MPa} MPa`}
                       </span>
                     </div>
@@ -620,12 +621,12 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           min={20}
                           max={68}
                           value={hardnessInputScale === "HRC" ? hardnessValHrc : hardnessConversions.HRC ?? ""}
-                          placeholder={hardnessConversions.HRC === null ? "N/A" : ""}
+                          placeholder={hardnessConversions.HRC === null ? UNAVAILABLE_TEXT : ""}
                           onChange={(e) => handleHrcChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2.5 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-sm text-emerald-400 focus:outline-none focus:border-emerald-400"
                         />
                         <button
-                          onClick={() => handleCopy(hardnessConversions.HRC ?? "N/A", "quick-hrc")}
+                          onClick={() => handleCopy(hardnessConversions.HRC ?? UNAVAILABLE_TEXT, "quick-hrc")}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-emerald-300"
                           title="Copy HRC"
                         >
@@ -655,12 +656,12 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           min={80}
                           max={940}
                           value={hardnessInputScale === "HV" ? hardnessValHv : hardnessConversions.HV ?? ""}
-                          placeholder={hardnessConversions.HV === null ? "N/A" : ""}
+                          placeholder={hardnessConversions.HV === null ? UNAVAILABLE_TEXT : ""}
                           onChange={(e) => handleHvChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2.5 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-sm text-cyan-400 focus:outline-none focus:border-cyan-400"
                         />
                         <button
-                          onClick={() => handleCopy(hardnessConversions.HV ?? "N/A", "quick-hv")}
+                          onClick={() => handleCopy(hardnessConversions.HV ?? UNAVAILABLE_TEXT, "quick-hv")}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-300"
                           title="Copy HV"
                         >
@@ -678,7 +679,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                   <div className="mt-2.5">
                     <input aria-label="Vickers (HV) slider"
                       type="range"
-                      min={100}
+                      min={80}
                       max={940}
                       step={5}
                       value={hardnessConversions.HV ?? hardnessValHv}
@@ -691,18 +692,18 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                   <div className="grid grid-cols-3 gap-1.5 mt-2.5 p-2 bg-[#090e18] rounded-lg border border-[#162032] text-center font-mono">
                     <div>
                       <div className="text-[9px] text-slate-500">Brinell HBW</div>
-                      <div className="text-xs font-bold text-slate-200">{hardnessConversions.HBW ?? "N/A"}</div>
+                      <div className="text-xs font-bold text-slate-200">{hardnessConversions.HBW ?? UNAVAILABLE_TEXT}</div>
                     </div>
                     <div>
                       <div className="text-[9px] text-slate-500">Rockwell B</div>
                       <div className="text-xs font-bold text-slate-200">
-                        {hardnessConversions.HRB ?? "N/A"}
+                        {hardnessConversions.HRB ?? UNAVAILABLE_TEXT}
                       </div>
                     </div>
                     <div>
                       <div className="text-[9px] text-slate-500">Tensile Rm</div>
                       <div className="text-xs font-bold text-emerald-300">
-                        {hardnessConversions.tensileRm_ksi === null ? "N/A" : `≈ ${hardnessConversions.tensileRm_ksi} ksi`}
+                        {hardnessConversions.tensileRm_ksi === null ? UNAVAILABLE_TEXT : `≈ ${hardnessConversions.tensileRm_ksi} ksi`}
                       </div>
                     </div>
                   </div>

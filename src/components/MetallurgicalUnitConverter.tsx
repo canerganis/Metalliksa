@@ -45,7 +45,9 @@ import {
   HARDNESS_MATERIAL_CLASSES,
   HARDNESS_VERIFIED_RANGES,
   TENSILE_ESTIMATE_NOTE,
+  UNAVAILABLE_TEXT,
   convertHardness,
+  hardnessInputForScale,
   hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
 import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
@@ -79,7 +81,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   };
   // Converted hardness values are table estimates; null means outside the verified table range.
   const hardnessValue = (v: number | null) =>
-    v === null ? <span className="text-slate-600 text-sm">Unavailable</span> : v;
+    v === null ? <span className="text-slate-600 text-sm">{UNAVAILABLE_TEXT}</span> : v;
 
   // -------------------------------------------------------------
   // 1. STRESS / STRENGTH STATE
@@ -535,10 +537,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                   key={s}
                   onClick={() => {
                     setHardnessScale(s);
-                    if (s === "HRC" && (hardnessInput > 68 || hardnessInput < 20)) setHardnessInput(35);
-                    if (s === "HRB" && (hardnessInput > 100 || hardnessInput < 55)) setHardnessInput(85);
-                    if (s === "HV" && hardnessInput < 100) setHardnessInput(350);
-                    if (s === "HBW" && (hardnessInput > 634 || hardnessInput < 226)) setHardnessInput(320);
+                    setHardnessInput(hardnessInputForScale(hardnessInput, s));
                   }}
                   className={`py-1.5 text-xs font-mono font-bold rounded-lg border transition ${
                     hardnessScale === s
@@ -581,15 +580,19 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 />
               </div>
 
-              <input aria-label={`Value in ${hardnessScale} slider`}
-                type="range"
-                min={HARDNESS_VERIFIED_RANGES[hardnessScale]?.min ?? 80}
-                max={HARDNESS_VERIFIED_RANGES[hardnessScale]?.max ?? 1200}
-                step={hardnessScale === "HRC" || hardnessScale === "HRB" ? 0.5 : 5}
-                value={hardnessInput}
-                onChange={(e) => setHardnessInput(parseFloat(e.target.value) || 0)}
-                className="w-full accent-sky-400 bg-[#0c1322] cursor-pointer"
-              />
+              {HARDNESS_VERIFIED_RANGES[hardnessScale] ? (
+                <input aria-label={`Value in ${hardnessScale} slider`}
+                  type="range"
+                  min={HARDNESS_VERIFIED_RANGES[hardnessScale]!.min}
+                  max={HARDNESS_VERIFIED_RANGES[hardnessScale]!.max}
+                  step={hardnessScale === "HRC" || hardnessScale === "HRB" ? 0.5 : 5}
+                  value={hardnessInput}
+                  onChange={(e) => setHardnessInput(parseFloat(e.target.value) || 0)}
+                  className="w-full accent-sky-400 bg-[#0c1322] cursor-pointer"
+                />
+              ) : (
+                <p className="text-[10px] text-slate-500 font-mono">No verified conversion range for {hardnessScale}; slider disabled.</p>
+              )}
             </div>
 
             {/* Presets */}
@@ -630,7 +633,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="p-3 rounded-xl bg-sky-950/20 border border-sky-500/40 shadow-sm relative group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Vickers (HV / DPH)</span>
-                  <button onClick={() => handleCopy(hardnessState.HV ?? "N/A", "h-hv")} className="text-slate-500 hover:text-sky-300">
+                  <button onClick={() => handleCopy(hardnessState.HV ?? UNAVAILABLE_TEXT, "h-hv")} className="text-slate-500 hover:text-sky-300">
                     {copiedId === "h-hv" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -642,7 +645,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032] relative group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Rockwell C (HRC)</span>
-                  <button onClick={() => handleCopy(hardnessState.HRC ?? "N/A", "h-hrc")} className="text-slate-500 hover:text-sky-300">
+                  <button onClick={() => handleCopy(hardnessState.HRC ?? UNAVAILABLE_TEXT, "h-hrc")} className="text-slate-500 hover:text-sky-300">
                     {copiedId === "h-hrc" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -656,7 +659,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032] relative group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Rockwell B (HRB)</span>
-                  <button onClick={() => handleCopy(hardnessState.HRB ?? "N/A", "h-hrb")} className="text-slate-500 hover:text-sky-300">
+                  <button onClick={() => handleCopy(hardnessState.HRB ?? UNAVAILABLE_TEXT, "h-hrb")} className="text-slate-500 hover:text-sky-300">
                     {copiedId === "h-hrb" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>

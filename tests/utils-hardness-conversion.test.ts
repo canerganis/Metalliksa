@@ -6,6 +6,7 @@ import {
   NO_TABLE_FOR_CLASS,
   convertHardness,
   convertSteelHardness as convert,
+  hardnessInputForScale,
   hardnessMaterialClassOf,
 } from "../src/utils/hardnessConversion";
 import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
@@ -238,4 +239,17 @@ test("hardness presets: steel presets lie inside the verified range, others are 
   }
   // the removed out-of-scope presets stay removed (WC 1550 HV, nitrided 880/950 HV)
   assert.ok(!HARDNESS_PRESETS.some((p) => /carbide|nitrid/i.test(p.name)));
+});
+
+test("scale switch keeps an in-range value and otherwise resets to the scale default (incl. HK, HLD)", () => {
+  assert.equal(hardnessInputForScale(32, "HK"), 350); // old: HRC 32 -> "32 HK" kept
+  assert.equal(hardnessInputForScale(400, "HK"), 400);
+  assert.equal(hardnessInputForScale(90, "HV"), 90); // HV range starts at 80 (Rm only below 100); old threshold was 100
+  assert.equal(hardnessInputForScale(79, "HV"), 350);
+  assert.equal(hardnessInputForScale(32, "HRC"), 32);
+  assert.equal(hardnessInputForScale(350, "HRC"), 35);
+  assert.equal(hardnessInputForScale(54, "HRB"), 85);
+  assert.equal(hardnessInputForScale(200, "HBW"), 320);
+  assert.equal(hardnessInputForScale(550, "HLD"), 550); // no verified HLD range: value kept
+  assert.equal(hardnessInputForScale(Number.NaN, "HLD"), 600);
 });
