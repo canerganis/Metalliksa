@@ -23,7 +23,9 @@ export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
   // back button, Next link, navigate event) moves the Tab stop back to the aria-current entry.
   const [focus, setFocus] = useState({ key: '', tab: activeTab });
   const stop = navTabStop(modules, focus, activeTab);
-  const item = (key: string) => ({ tabIndex: key === stop ? 0 : -1, onFocus: () => setFocus({ key, tab: activeTab }), 'aria-describedby': 'module-nav-hint' });
+  // Module entries are described by the hint and by their own description (hidden text below), so the
+  // description a mouse user gets from `title` is not replaced by the hint for screen-reader users.
+  const item = (key: string, described = '') => ({ tabIndex: key === stop ? 0 : -1, onFocus: () => setFocus({ key, tab: activeTab }), 'aria-describedby': 'module-nav-hint' + described });
   function onKey(event: React.KeyboardEvent<HTMLElement>) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     // Every button in the navigation is a navigation entry (workspace headings and modules).
@@ -39,8 +41,9 @@ export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
       const Icon = workspace.id === 'lpbf' ? Flame : workspace.id === 'materials' ? Layers : workspace.id === 'orchestration' ? Network : BookOpen;
       const entries = modules.filter(m => m.workspace === workspace.id);
       if (!entries.length) return null;
-      return <div key={workspace.id} className="mb-5"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => <button key={module.id} {...item(module.id)} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => onNavigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
+      return <div key={workspace.id} className="mb-5"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => <button key={module.id} {...item(module.id, ' nav-desc-' + module.id)} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => onNavigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
     })}
+    <div hidden>{modules.map(module => <span key={module.id} id={'nav-desc-' + module.id}>{module.description}</span>)}</div>
     {!modules.length && <p role="status" className="text-sm text-slate-400">No matching modules. Try a material, method or workflow name.</p>}
   </nav>;
 }

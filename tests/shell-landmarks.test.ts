@@ -50,7 +50,7 @@ test("module navigation is its own component (focus moves do not re-render App),
   assert.match(nav, /tabIndex: key === stop \? 0 : -1/);
   assert.match(nav, /if \(event\.ctrlKey \|\| event\.altKey \|\| event\.metaKey\) return;/, "modifier shortcuts are left to the browser");
   assert.match(nav, /<button \{\.\.\.item\('ws:' \+ workspace\.id\)\}/, "workspace headings join the roving group");
-  assert.match(nav, /<button key=\{module\.id\} \{\.\.\.item\(module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
+  assert.match(nav, /<button key=\{module\.id\} \{\.\.\.item\(module\.id, ' nav-desc-' \+ module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
 });
 
 test("rovingIndex: Up/Down wrap, Home/End jump, other keys are ignored", () => {
