@@ -6,7 +6,7 @@
   "numpy": "2.2.6",
   "platform": "Windows-11-10.0.26300-SP0"
  },
- "pinnedExpectedFingerprint": "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782",
+ "pinnedExpectedFingerprint": "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b",
  "parityGoldens": {
   "g10_openfoam_case_generation": {
    "group": "G10",
@@ -3427,7 +3427,7 @@
   "revision": "worktree",
   "version": "enthalpy-fv-6",
   "fingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
-  "implementationHash": "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782",
+  "implementationHash": "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b",
   "manifestCount": 36,
   "manifest": [
    "four_alloy_materials.py",
@@ -3469,10 +3469,10 @@
   ],
   "files": {
    "eagar_tsai_solver.py": {
-    "canonicalSha256": "5f76115272ae0e75dcc0fb593e1077de7416d1924d75c22cc61154daece4b8c6",
-    "canonicalBytes": 5148,
-    "rawSha256": "0a6eb9c4e78e59dae95549f913ca900da5d90ce84ac0fadeac621301e3ea9028",
-    "rawBytes": 5271
+    "canonicalSha256": "b725b5da84466772cf63f3db474bc9bbff1519e917c19fccd1a7822ab8b51e26",
+    "canonicalBytes": 6141,
+    "rawSha256": "265a98dd89c2e1def49656ff3f1fa0ffc12ce9edb04de8d92cd8f4009a608477",
+    "rawBytes": 6284
    },
    "fabbro_keyhole.py": {
     "canonicalSha256": "5cd98dcd123c98e70b39776f4683d823a373201b02255593da854ce387ce3301",
@@ -3487,10 +3487,10 @@
     "rawBytes": 15654
    },
    "goldak_solver.py": {
-    "canonicalSha256": "a5db033f1ef77dda4fafad880ce342a0537aaa5225c413930f44aa8ad0420fb3",
-    "canonicalBytes": 5267,
-    "rawSha256": "b87323d37bcabec7d1634aeb00eacced80b5a1dac9d69c5f3a5df39108805eae",
-    "rawBytes": 5407
+    "canonicalSha256": "9c88476f030e6980c6dba0c1047b74188ea8ad06074029c3688001e71e585136",
+    "canonicalBytes": 7992,
+    "rawSha256": "6b9a118e7be41eb7cbc66ad4c09b86f856b42a28de2097d864268055a361bedf",
+    "rawBytes": 8182
    },
    "in625_gpu_thermal_material.py": {
     "canonicalSha256": "6643f7b14aab57e78c4ac545ca23ad38fad4dc52fc6ee567ba225b03687d25d4",
@@ -3601,10 +3601,10 @@
     "rawBytes": 8757
    },
    "lpbf_simulation.py": {
-    "canonicalSha256": "413a9047fdf88b70dc02475486d3b518d4dbd7698ff53f0d70c86777a688259f",
-    "canonicalBytes": 74461,
-    "rawSha256": "413a9047fdf88b70dc02475486d3b518d4dbd7698ff53f0d70c86777a688259f",
-    "rawBytes": 74461
+    "canonicalSha256": "a432bb6057591668c0327dd8b9b8ca4707433327e79977a8e45c396cb656e1ef",
+    "canonicalBytes": 74766,
+    "rawSha256": "a432bb6057591668c0327dd8b9b8ca4707433327e79977a8e45c396cb656e1ef",
+    "rawBytes": 74766
    },
    "lpbf_source_identity.py": {
     "canonicalSha256": "1634f93e385ca6d20108116e4c9d32a4f0a6da659f3a54dd906b4d40784d107c",
@@ -3619,10 +3619,10 @@
     "rawBytes": 5205
    },
    "lpbf_thermal_solver.py": {
-    "canonicalSha256": "c7e67e2344f4869d6a1ca782cfc51c61b71b7054b4b6bfa3ea9c6060d0dd5583",
-    "canonicalBytes": 39031,
-    "rawSha256": "ff45c8f92e493503a76e4270ca4b719854a0aa8164956aa73cb6cbd6dde09665",
-    "rawBytes": 39941
+    "canonicalSha256": "6de8379e0ddc3c35bedecda809f104985fb15017b89f4af90b16957f82dfb435",
+    "canonicalBytes": 40398,
+    "rawSha256": "8152e906d4cb91f89eb10d388cb85f6c158ae464eac276153b62865938b81c80",
+    "rawBytes": 41326
    },
    "lpbf_transient_3d_gpu.py": {
     "canonicalSha256": "62d030baa95c819e4e6d73eddd6227130c302e7ef323973c8f909160527d4308",
@@ -3686,10 +3686,10 @@
    }
   },
   "rawSchema": "lpbf-thermal-implementation-manifest-v2",
-  "rawByteImplementationHash": "389f456e790638bb46446faddd83f916dc7f99ceb14f3e03e8693c5d8be6b7c5"
+  "rawByteImplementationHash": "d106803036f834fa50f5a23efd093ac21f33ba7c8c9e976cd66d81563b68fd61"
  },
  "fromHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
- "toHash": "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782",
+ "toHash": "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b",
  "dryRunSameHash": false,
  "versionUnchanged": true,
  "pinMatchesToHash": true,
@@ -3739,7 +3739,7 @@
  },
  "commits": {
   "fromRevision": "fbf310b07362a31b7b99cf2c955cefc7d8c55e28",
-  "toRevision": "3aa8ae1be09449ab0a99e07d46f12d1b47722cbf",
+  "toRevision": "bffcf3c2f34e5e6f1f7c1d68fc12b13c5e7e6b89",
   "worktreeDirty": false
  },
  "expectDrift": [
@@ -3763,6 +3763,7 @@
   "g8_observers:result.canonicalSha256",
   "g8_observers:result.orderedTypedSha256",
   "g8_observers:plain.canonicalSha256",
+  "g8_observers:plain.key.analyticalComparison",
   "g14_calibration_measurements:matched.key.analyticalComparison",
   "g14_calibration_measurements:matched.canonicalSha256",
   "g14_calibration_measurements:matched.orderedTypedSha256",
@@ -3816,23 +3817,54 @@
   "g17_evaporation_alsi10mg:result.orderedTypedSha256",
   "g17_evaporation_alsi10mg:evaporation.latentHeatVapUsed_J_kg",
   "g17_evaporation_alsi10mg:evaporation.maxVaporFraction",
-  "g6_screening_and_fallback:*.key.metrics",
-  "g6_screening_and_fallback:*.key.analyticalComparison",
-  "g6_screening_and_fallback:*.key.geometricDefectScreen",
-  "g6_screening_and_fallback:*.key.mainRisk",
-  "g6_screening_and_fallback:*.key.recommendation",
-  "g6_screening_and_fallback:*.canonicalSha256",
-  "g6_screening_and_fallback:*.orderedTypedSha256",
+  "g6_screening_and_fallback:screening.key.metrics",
+  "g6_screening_and_fallback:screening.key.analyticalComparison",
+  "g6_screening_and_fallback:screening.key.geometricDefectScreen",
+  "g6_screening_and_fallback:screening.key.mainRisk",
+  "g6_screening_and_fallback:screening.key.recommendation",
+  "g6_screening_and_fallback:screening.canonicalSha256",
+  "g6_screening_and_fallback:screening.orderedTypedSha256",
+  "g6_screening_and_fallback:highFidelityFallback.key.metrics",
+  "g6_screening_and_fallback:highFidelityFallback.key.analyticalComparison",
+  "g6_screening_and_fallback:highFidelityFallback.key.geometricDefectScreen",
+  "g6_screening_and_fallback:highFidelityFallback.key.mainRisk",
+  "g6_screening_and_fallback:highFidelityFallback.key.recommendation",
+  "g6_screening_and_fallback:highFidelityFallback.canonicalSha256",
+  "g6_screening_and_fallback:highFidelityFallback.orderedTypedSha256",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.key.metrics",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.key.analyticalComparison",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.key.geometricDefectScreen",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.key.mainRisk",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.key.recommendation",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.canonicalSha256",
+  "g6_screening_and_fallback:highFidelityFallbackWithOpenfoam.orderedTypedSha256",
+  "g6_screening_and_fallback:screeningTi64.key.metrics",
+  "g6_screening_and_fallback:screeningTi64.key.analyticalComparison",
+  "g6_screening_and_fallback:screeningTi64.key.geometricDefectScreen",
+  "g6_screening_and_fallback:screeningTi64.key.mainRisk",
+  "g6_screening_and_fallback:screeningTi64.key.recommendation",
+  "g6_screening_and_fallback:screeningTi64.canonicalSha256",
+  "g6_screening_and_fallback:screeningTi64.orderedTypedSha256",
+  "g11_build_job_meltpool:meltpool.0.canonicalSha256",
+  "g11_build_job_meltpool:meltpool.0.typedSha256",
+  "g11_build_job_meltpool:meltpool.0.geometry_um",
+  "g11_build_job_meltpool:meltpool.0.peakTemperature_C",
   "g11_build_job_meltpool:meltpool.1.canonicalSha256",
   "g11_build_job_meltpool:meltpool.1.typedSha256",
+  "g11_build_job_meltpool:meltpool.1.geometry_um",
+  "g11_build_job_meltpool:meltpool.1.peakTemperature_C",
   "g11_build_job_meltpool:meltpool.2.canonicalSha256",
   "g11_build_job_meltpool:meltpool.2.typedSha256",
+  "g11_build_job_meltpool:meltpool.2.geometry_um",
+  "g11_build_job_meltpool:meltpool.2.peakTemperature_C",
   "g11_build_job_meltpool:thermalSolver.THERMOPHYSICAL_DB",
+  "g11_build_job_meltpool:thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg",
   "g12_analytical_modules:eagarTsai.temperature",
   "g12_analytical_modules:goldak.field",
   "g12_analytical_modules:solidification.evaluate",
   "g9_material_snapshots:fam.evaluate_literature_pv.unknownDefaultsToIn718",
   "g18_in625_latent_heat:meltpool.in625",
+  "g18_in625_latent_heat:meltpool.in625.geometry_um",
   "g18_in625_latent_heat:meltpool.in625.equalWithLatentHeatFusion.260000",
   "g18_in625_latent_heat:meltpool.in625.equalWithLatentHeatFusion.290000",
   "g18_in625_latent_heat:meltpool.in625.table.latent_heat_fusion_J_kg"
@@ -3916,9 +3948,9 @@
      "after": false
     }
    ],
-   "elapsed_s": 10.5,
+   "elapsed_s": 19.8,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "3572d3ed296e4533f3c8c7cffeb9553f6618a50c6988c434dbd55c3afb7e3a03"
   },
@@ -3926,9 +3958,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 63.7,
+   "elapsed_s": 84.5,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "43a0dbf8ae46b24d77aa224699a44e9b0207919b00ffc47540801e148111ae7f"
   },
@@ -4005,9 +4037,9 @@
      "after": "e2d0efcdcc1e049b414512e8fa90e1d84c3715e39523c2e4852e6f0dbb8baa74"
     }
    ],
-   "elapsed_s": 2.1,
+   "elapsed_s": 4.5,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "23c7ae2570af666508fbc9f4dea2d8436cb670fe60595a0b35ef5dfe3a484305"
   },
@@ -4084,9 +4116,9 @@
      "after": "4df8d6651c4623ca54d832d287950c51863773ddfd859ba90c41c60830a80a4f"
     }
    ],
-   "elapsed_s": 1.4,
+   "elapsed_s": 3.5,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "28d26495a7d2851eda248e18e9f60376a641c2185320f0f145e3859c2e168c1f"
   },
@@ -4094,9 +4126,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 4.3,
+   "elapsed_s": 5.1,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "98562457468d05be380b760a474c7356baf7e83546f3f748386a89f4d34d6d04"
   },
@@ -4107,7 +4139,7 @@
     {
      "key": "result.canonicalSha256",
      "before": "65bb6329dee5885a4c44aec8e7d160c976608b3dceac92469e6d1c74f28d7f79",
-     "after": "3905c7deaaf3ffc6ca693e5faf534288631395a1cca5ddce3cde15f8c7f2245a"
+     "after": "cb81400dce802148b62e241602c70499eddec9ac9f94781e727f4cac72920720"
     },
     {
      "key": "result.key.analyticalComparison",
@@ -4204,7 +4236,7 @@
     {
      "key": "result.key.boilingCap",
      "before": "<missing>",
-     "after": "7d0d0e3b3adaf2509930e215714a088bf0ffec5c892c14c14fbf7c4150de9723",
+     "after": "19f89492e10d5a438309bee3d2daf85b921c65fb60992199398de95f00e505b8",
      "rawBefore": "<not recorded>",
      "rawAfter": {
       "modelId": "boiling-cap-v1",
@@ -4214,6 +4246,8 @@
       "maxVaporFractionProxy": 0.08129951161336656,
       "latentHeatVap_J_kg": 6400000.0,
       "energyLeavesDomain": false,
+      "isReferenceSolution": false,
+      "isEvaporationModel": false,
       "note": "Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is not conserved. Not an evaporation model."
      },
      "rawChanges": [
@@ -4238,7 +4272,7 @@
     {
      "key": "result.orderedTypedSha256",
      "before": "be93f695383704b071e0b9853ba5ed849d1dcb181b3196497dd96d094713fd96",
-     "after": "5d6ac02c4dd9d90cdb519960128cf093f5131db2cdf4e4a4bd22f77ce43a4882"
+     "after": "676998553549144de11d155872b7a79088f3295dd330e05077c5b736948c014a"
     },
     {
      "key": "result.topLevelKeys",
@@ -4329,11 +4363,11 @@
      ]
     }
    ],
-   "elapsed_s": 2.7,
+   "elapsed_s": 7.2,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
-   "observationsSha256": "3a680d7039a161c75a83b9b69f844d0934a61a12a9ebf005d2b4f21c4ab407a3"
+   "observationsSha256": "48251bf4a2e294d24cb0dbe1b55a54fdf13f1575d8961290d90b974e8627ede5"
   },
   "g6_screening_and_fallback": {
    "status": "DRIFT",
@@ -5326,9 +5360,9 @@
      "after": "9a460e870ab8f415888d0f39b48c34a6568aaace2d627a1e23348be61a73a4af"
     }
    ],
-   "elapsed_s": 3.5,
+   "elapsed_s": 12.6,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "8eb126d5a3e1fc5fd4a819c510693cf3d0fc88c812e3ecc18fa175a97532154f"
   },
@@ -5336,9 +5370,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 2.6,
+   "elapsed_s": 4.5,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "25a713282049efef88051de804d72114ba8d6aa7b94471184e1c9c48df1cb482"
   },
@@ -5346,9 +5380,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 1.2,
+   "elapsed_s": 3.0,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "fa6c290383f3f19fab21f942b5ecd1154d7ce5f270608b0afd9e9cbf2c3f8193"
   },
@@ -5493,9 +5527,9 @@
      "after": "700b5bbb8931327b7dcbc744f960e63a1b4fd2df95b554dbe916d21e66c53ea9"
     }
    ],
-   "elapsed_s": 2.7,
+   "elapsed_s": 6.4,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "cfad11ea988cec9b02fa751a3c770578fdc2c4a824348ab12f3280048924d88c"
   },
@@ -5648,9 +5682,9 @@
      "after": "908215b46c2e4009ae66136ad374ce0ba4398ea832d8f2f5cd76b9bd04e60912"
     }
    ],
-   "elapsed_s": 2.3,
+   "elapsed_s": 5.8,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "6c37c5d1170d8f2eb3f4a3baeafd83ecdd453c9f85f46591af937ad1595f1336"
   },
@@ -5658,9 +5692,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 0.6,
+   "elapsed_s": 0.7,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "6939ea83fbe63f175666fb171965d180bfa33142dea8b350c33aab3e3c400c6d"
   },
@@ -5805,9 +5839,9 @@
      "after": "9c3a302296cc6e9b635e91854af41f170f9dae166b793feb0e61aac0bc93e9e2"
     }
    ],
-   "elapsed_s": 3.8,
+   "elapsed_s": 8.1,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "40b898fe5fa99a9f005c121bca9e526fe8e0c8097d8812d250aa4a53124b94c0"
   },
@@ -5844,7 +5878,7 @@
     {
      "key": "result.canonicalSha256",
      "before": "e337b712f9e0473e6f85a6494fc04ef2366b58623c176457bc793eff9e9e8f28",
-     "after": "a8f22a62c8e7cb163c69c7701d6eb5bb66e534a238a1cace433ead26a9553017"
+     "after": "23580e504c3627f9b8221c1dc0e75fb8dd5af8a7cb535d192079c2dd8487124a"
     },
     {
      "key": "result.key.analyticalComparison",
@@ -5941,7 +5975,7 @@
     {
      "key": "result.key.boilingCap",
      "before": "<missing>",
-     "after": "0833a85b5ec69a00bd7b356d5bf6e1b82bbed8da4016d2adf254eedbd24f4eb0",
+     "after": "60ae376d001f0ec715f83a0cda8493e42d638bd9aca8d9635dbd95853513604e",
      "rawBefore": "<not recorded>",
      "rawAfter": {
       "modelId": "boiling-cap-v1",
@@ -5951,6 +5985,8 @@
       "maxVaporFractionProxy": 0.17450651156220223,
       "latentHeatVap_J_kg": 8900000.0,
       "energyLeavesDomain": false,
+      "isReferenceSolution": false,
+      "isEvaporationModel": false,
       "note": "Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is not conserved. Not an evaporation model."
      },
      "rawChanges": [
@@ -5975,7 +6011,7 @@
     {
      "key": "result.orderedTypedSha256",
      "before": "a014941a5082cb3e3e9d70be8f61d6f567900eb070aebcb5c44e33eff3b216f7",
-     "after": "cfd1ba8da78e17f688c49efc365eeb78bf2dce9afcc93952b6ed28d900aea4d3"
+     "after": "d877c0caa6d074f2ba969a84c224d2bb85947465234bee43d0ad09b10dce2dd6"
     },
     {
      "key": "result.topLevelKeys",
@@ -6066,11 +6102,11 @@
      ]
     }
    ],
-   "elapsed_s": 3.7,
+   "elapsed_s": 7.4,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
-   "observationsSha256": "3a194f54e9753f76c2e52cdad6a5bc7c3af67ff3a6bbd3108010471e4475e1e1"
+   "observationsSha256": "8be0380ee9081edd69ca7c0892c87f85a8ce2988e3963d1c39d3cba0900ff59f"
   },
   "g17_evaporation_316l": {
    "status": "DRIFT",
@@ -6105,7 +6141,7 @@
     {
      "key": "result.canonicalSha256",
      "before": "afd5c527d3fa1cfcae10c38efc52724743a887f4dc9202d06e9c240a9de12194",
-     "after": "e524caf1910e07bf9454847d809091816111e90c9be38c9e5ee28c025e703957"
+     "after": "425874f5f9ac55cc861af70dbb2108613be8c22ba1169b568818ddb7deb24706"
     },
     {
      "key": "result.key.analyticalComparison",
@@ -6202,7 +6238,7 @@
     {
      "key": "result.key.boilingCap",
      "before": "<missing>",
-     "after": "c3dedb9d961f60971ffdcae52c333c57749fe134d88cd31cc34538831932f5db",
+     "after": "35b7911e6faed740657de589bc23b6d8b9bb87588144ab695ca14e9bbd7c6588",
      "rawBefore": "<not recorded>",
      "rawAfter": {
       "modelId": "boiling-cap-v1",
@@ -6212,6 +6248,8 @@
       "maxVaporFractionProxy": 0.11114950223937266,
       "latentHeatVap_J_kg": 6250000.0,
       "energyLeavesDomain": false,
+      "isReferenceSolution": false,
+      "isEvaporationModel": false,
       "note": "Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is not conserved. Not an evaporation model."
      },
      "rawChanges": [
@@ -6236,7 +6274,7 @@
     {
      "key": "result.orderedTypedSha256",
      "before": "a38349556bf06114dfa6c0f0e0f2e29a18d65d89c4a81d142cce2adbc61724bc",
-     "after": "027a799e58711a95300985541fd175b42a69ee3bed9ffdea1ed7f1291993c7c6"
+     "after": "6b8c76df637e2ac7f27c939d7e576c90ecd2ef3235f86895446056db6eb0d749"
     },
     {
      "key": "result.topLevelKeys",
@@ -6327,11 +6365,11 @@
      ]
     }
    ],
-   "elapsed_s": 3.4,
+   "elapsed_s": 6.9,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
-   "observationsSha256": "a3aa1c7fbf6ceac78e386b4d6badb65682dde3472feda41eff5c468e48ddd171"
+   "observationsSha256": "d2e3d4209f27768744b063d114655873571e6c5f46ee6799630057c121593248"
   },
   "g17_evaporation_alsi10mg": {
    "status": "DRIFT",
@@ -6366,7 +6404,7 @@
     {
      "key": "result.canonicalSha256",
      "before": "4705b71ed89641fd8962cfd061e2769d8dad7992b5e734122ed4f6cf837e9990",
-     "after": "ddcd1d09b2a410b3a294bde24a33a14bdef975060d63a11afd207e6b50a5b684"
+     "after": "339a571790b4856cdc1189ddb10e062510e1aefcaee4f7c675e568ae0df1c003"
     },
     {
      "key": "result.key.analyticalComparison",
@@ -6463,7 +6501,7 @@
     {
      "key": "result.key.boilingCap",
      "before": "<missing>",
-     "after": "f5aa50809280ebd8193b797b30f32692b317b7e79a20b1199f275d574d1dc027",
+     "after": "5c5a0c046bf84ae80038bf01a087d6bc74972608e48b486fdd8d4a4b5bd11dc7",
      "rawBefore": "<not recorded>",
      "rawAfter": {
       "modelId": "boiling-cap-v1",
@@ -6473,6 +6511,8 @@
       "maxVaporFractionProxy": 0.45838151726113613,
       "latentHeatVap_J_kg": 10500000.0,
       "energyLeavesDomain": false,
+      "isReferenceSolution": false,
+      "isEvaporationModel": false,
       "note": "Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is not conserved. Not an evaporation model."
      },
      "rawChanges": [
@@ -6497,7 +6537,7 @@
     {
      "key": "result.orderedTypedSha256",
      "before": "a9a4cbc0311fbc152a318dee7679a2840993cbbd76ad04815622b2f8426e0e41",
-     "after": "50d2e8ca70667427a8e2d2e6ebde624f7c1e6ce3cfb784fcb6143cb3c7358031"
+     "after": "f338aab8ec2df4e65e95c8d94fe6d9d3efb9c0f2300abd75ca4641464b22a907"
     },
     {
      "key": "result.topLevelKeys",
@@ -6588,11 +6628,11 @@
      ]
     }
    ],
-   "elapsed_s": 4.5,
+   "elapsed_s": 7.2,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
-   "observationsSha256": "1b7e1200d69ea5ea9a4146334ad75321a94861d93a7f7353ef1a5e2e18439e6f"
+   "observationsSha256": "9e483f9bbcd15fdcc8d94e9fdfcbc8766f4f8f33fbb6b48b03e4037afbe0aa9b"
   },
   "g18_in625_latent_heat": {
    "status": "DRIFT",
@@ -6601,7 +6641,7 @@
     {
      "key": "meltpool.in625",
      "before": "b5773275d729fd34c377c324476ef348a298583f7786f55f404033d6c3b6918a",
-     "after": "3fb5b648a6ab4f08cb2e195779beda81cc292d2252512a9c6ca169abdbbeb0f1"
+     "after": "3bfb5efeac406ac8c7578781412b2701b604578042e54edddcc48628c9ebd2e2"
     },
     {
      "key": "meltpool.in625.equalWithLatentHeatFusion.260000",
@@ -6612,6 +6652,21 @@
      "key": "meltpool.in625.equalWithLatentHeatFusion.290000",
      "before": false,
      "after": true
+    },
+    {
+     "key": "meltpool.in625.geometry_um",
+     "before": "<missing>",
+     "after": "2b721e3fc6c761e5645cb14f1246aa445c11ee8848f756659c8852b49c97106b",
+     "rawBefore": "<not recorded>",
+     "rawAfter": [
+      145.4,
+      107.6,
+      795.0,
+      37.7
+     ],
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> [145.4 (0x1.22ccccccccccdp+7), 107.6 (0x1.ae66666666666p+6), 795.0 (0x1.8d80000000000p+9), 37.7 (0x1.2d9999999999ap+5)]"
+     ]
     },
     {
      "key": "meltpool.in625.table.latent_heat_fusion_J_kg",
@@ -6625,9 +6680,9 @@
      ]
     }
    ],
-   "elapsed_s": 0.0,
+   "elapsed_s": 0.1,
    "implementationHashes": [],
-   "observationsSha256": "9813793b68a3c62648052de2d5bb200c29637d3c27718da6b399bc0def07fc0d"
+   "observationsSha256": "24c2e866dafbc88f9f4e2c66559bca5ab47dcfe3bd86af1a9022e6089c9cac11"
   },
   "g19_emissivity_echo": {
    "status": "DRIFT",
@@ -6702,9 +6757,9 @@
      "after": "fbdd7eb21b5c516111efbd36b5d5215376be85d8c8cf69af479e86d71e87adc8"
     }
    ],
-   "elapsed_s": 3.6,
+   "elapsed_s": 8.7,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
    "observationsSha256": "0c5b6762aa93991617d5ad899f62cb6bc98f598e0b32a34662a6bdfa861fd962"
   },
@@ -6716,6 +6771,39 @@
      "key": "plain.canonicalSha256",
      "before": "ff7ae33eab5edf22209bf0a7e26357d17b079850d96a884a048f72b927e369a4",
      "after": "1c12c5c9d84406189adc84315142e30bcdaf8a0ebebf320e3eaffc07a4a01bfb"
+    },
+    {
+     "key": "plain.key.analyticalComparison",
+     "before": "<missing>",
+     "after": "fc0532aeb4bcacfaa25726de67f3aae2eda62225c48176c3355d0412c5fc8dc0",
+     "rawBefore": "<not recorded>",
+     "rawAfter": {
+      "rosenthal": {
+       "width_um": 50.0,
+       "depth_um": 25.0,
+       "length_um": 221.66666666666688,
+       "gridResolution_um": [
+        11.666666666666769,
+        8.333333333333334
+       ],
+       "truncated": false,
+       "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+      },
+      "goldak": {
+       "width_um": 50.0,
+       "depth_um": 25.0,
+       "length_um": 186.66666666666657,
+       "gridResolution_um": [
+        11.666666666666769,
+        8.333333333333334
+       ],
+       "truncated": false,
+       "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
+      }
+     },
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> {\"rosenthal\": {\"width_um\": 50.0, \"depth_um\": 25.0, \"length_um\": 221.66666666666688, \"gridResolution_um\": [11.666666666666769, 8.333333333333334], \"truncated\"..."
+     ]
     },
     {
      "key": "result.canonicalSha256",
@@ -6786,11 +6874,11 @@
      "after": "c848624722089db3688d8a4878e30ad16ddad170289a45f3cdae64cb0f547e8a"
     }
    ],
-   "elapsed_s": 18.7,
+   "elapsed_s": 49.4,
    "implementationHashes": [
-    "e21d92645d5e0aae74bcec92639015d92dfa22fe7d1958c3e1e391a04eee2782"
+    "acb905ca1c50bf06b2fd5687bca7dd2579ca907b829ec8d210160482ea57189b"
    ],
-   "observationsSha256": "b346d5b0f57edb31368942722f927e4c1d1facd4248ef2396bcfe59a9d97524a"
+   "observationsSha256": "9eb9a4434e8e1b755bb123e5dbc1024f4b6282c788acdb04071fa19b4b6c96d7"
   },
   "g9_material_snapshots": {
    "status": "DRIFT",
@@ -6818,7 +6906,7 @@
      ]
     }
    ],
-   "elapsed_s": 0.2,
+   "elapsed_s": 0.1,
    "implementationHashes": [],
    "observationsSha256": "7b31e729ae948a5759f04790f7ed85c86eaff1852f79347e892bfa3bbdb95cc7"
   },
@@ -6826,7 +6914,7 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 1.3,
+   "elapsed_s": 1.2,
    "implementationHashes": [],
    "observationsSha256": "02683c67d2fd424fbb454e4bdd826e516d904f8d5237cef751c3edd0c8f09b08"
   },
@@ -6835,34 +6923,129 @@
    "problems": [],
    "drift": [
     {
+     "key": "meltpool.0.canonicalSha256",
+     "before": "34d87b733211c92722de0f7c8d451b33e93a97cc09403656000abcecba46c010",
+     "after": "c6a6013c3c98c9314b90209622dfc3d98b1d78e2fa8bfef4bd78862aae935f94"
+    },
+    {
+     "key": "meltpool.0.geometry_um",
+     "before": "<missing>",
+     "after": "c6ef3e4fb135f2d5582341240b9a8cd27cfb2efc603f06f3522d28b659ad6ead",
+     "rawBefore": "<not recorded>",
+     "rawAfter": [
+      144.3,
+      101.9,
+      755.3,
+      32.5
+     ],
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> [144.3 (0x1.209999999999ap+7), 101.9 (0x1.979999999999ap+6), 755.3 (0x1.79a6666666666p+9), 32.5 (0x1.0400000000000p+5)]"
+     ]
+    },
+    {
+     "key": "meltpool.0.peakTemperature_C",
+     "before": "<missing>",
+     "after": "a9e27258b9e252e7aa28fbda07565b5b72693666ee46a172a59f63a0e5bb1dc8",
+     "rawBefore": "<not recorded>",
+     "rawAfter": 2500.2,
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> 2500.2 (0x1.3886666666666p+11)"
+     ]
+    },
+    {
+     "key": "meltpool.0.typedSha256",
+     "before": "af9e890099d62723986da1f396b257169509732c5958315d653dd9eba9da2403",
+     "after": "fe93b2707f9c70c7ac8093f8bc92f9014e1f620501c8874dcbe25537ec29f2eb"
+    },
+    {
      "key": "meltpool.1.canonicalSha256",
      "before": "6f24f3fbbd1055800c4bed25a0bb4718121676af7e46ecdc97b5e08dd518e470",
-     "after": "f9acc5046164145174c3507495e23c35cf96d0856c74bbb3d15458038a6b4a01"
+     "after": "bc97b57dbbe1ef06bfaec2fcc65941092106b5fa27ab3d6664cb47ccefb88daa"
+    },
+    {
+     "key": "meltpool.1.geometry_um",
+     "before": "<missing>",
+     "after": "5f3eddcaba081639a573844c8c982beae4d0d70a808d9dc34e3fc78954192184",
+     "rawBefore": "<not recorded>",
+     "rawAfter": [
+      126.7,
+      124.5,
+      641.9,
+      68.3
+     ],
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> [126.7 (0x1.faccccccccccdp+6), 124.5 (0x1.f200000000000p+6), 641.9 (0x1.40f3333333333p+9), 68.3 (0x1.1133333333333p+6)]"
+     ]
+    },
+    {
+     "key": "meltpool.1.peakTemperature_C",
+     "before": "<missing>",
+     "after": "a72db60d805fcc76ad4b4aa582c455eae4af1b0a67ba268c4b68c433e4e0a7ea",
+     "rawBefore": "<not recorded>",
+     "rawAfter": 28776.6,
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> 28776.6 (0x1.c1a2666666666p+14)"
+     ]
     },
     {
      "key": "meltpool.1.typedSha256",
      "before": "ce605dc166c34363b83afc5dd7e2d52909b9965a9f81201b0b8c2198905d699b",
-     "after": "f611239fa3c3be230f8f586a7869c0289c117c477efcabb8276e7bc6a404d567"
+     "after": "9a7a16cd688063e51ceba2d4232faf4fe16845bdc6435b9e32b3943d09c258cf"
     },
     {
      "key": "meltpool.2.canonicalSha256",
      "before": "8240f27b71267adcd9d36a3ee474ececbaa97b5acc4c6521ab276ff862d0532c",
-     "after": "2028b3e2577687d4a57f2ce58ef9afea780bf07a19b78fd5b2e98fd2d591f696"
+     "after": "78420b31374538bb0eda25a37cda12aea068ac7d0b6bc800ef1385453617c5ad"
+    },
+    {
+     "key": "meltpool.2.geometry_um",
+     "before": "<missing>",
+     "after": "9310163d850b1473f85693ed2a16ab6483bdee8cefdf0e9af77f62c4643240c8",
+     "rawBefore": "<not recorded>",
+     "rawAfter": [
+      168.9,
+      251.6,
+      681.8,
+      169.5
+     ],
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> [168.9 (0x1.51ccccccccccdp+7), 251.6 (0x1.f733333333333p+7), 681.8 (0x1.54e6666666666p+9), 169.5 (0x1.5300000000000p+7)]"
+     ]
+    },
+    {
+     "key": "meltpool.2.peakTemperature_C",
+     "before": "<missing>",
+     "after": "4811a080aed033e0b1631950cc518662d9a456f97da7c97fc85c8902052a0638",
+     "rawBefore": "<not recorded>",
+     "rawAfter": 19247.4,
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> 19247.4 (0x1.2cbd99999999ap+14)"
+     ]
     },
     {
      "key": "meltpool.2.typedSha256",
      "before": "5c23767554360cd9b988fcbc1183269915406412644118f11e5e82ce466c48df",
-     "after": "a9c89a203f9433d89ba7be0e60930de74fbd3c5f8a6cc9d1183d77a37d029147"
+     "after": "159a4431ddb2779e410891e59b9e296334a077d2973b665e390103811fa0d81f"
     },
     {
      "key": "thermalSolver.THERMOPHYSICAL_DB",
      "before": "8e38c5fe4082f4af20d5d22bbf35ddda5f7645d979c32f7383d3a41789a59d36",
      "after": "cb66808200e16f120b8da692a885cb18a061f9c92354057c7237ad7e6fbb340c"
+    },
+    {
+     "key": "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg",
+     "before": "<missing>",
+     "after": "0af842ac641617fbd4054d29e6f5459eda14ee6e8573c0798f547945146feb85",
+     "rawBefore": "<not recorded>",
+     "rawAfter": 290000.0,
+     "rawChanges": [
+      "<value>: \"<not recorded>\" -> 290000.0 (0x1.1b34000000000p+18)"
+     ]
     }
    ],
-   "elapsed_s": 0.5,
+   "elapsed_s": 0.6,
    "implementationHashes": [],
-   "observationsSha256": "2fa7a114b8ee2147e96ae646cd193b2ca417fb87f56550492b1d5d9a0bcac025"
+   "observationsSha256": "18ec512afcee5d609308a930a0c2f045d8c8b0ebed5bf506331c939d52558c20"
   },
   "g12_analytical_modules": {
    "status": "DRIFT",
@@ -6871,7 +7054,7 @@
     {
      "key": "eagarTsai.temperature",
      "before": "accd3fbab6c0ae362764e22de2167718edaab0a143e5eaed11c884de7fa6f5d9",
-     "after": "e07ddad7b99b7d789c65a51a7bc1930098ab5eefa235ca20adf6f3c1a9e18c53",
+     "after": "cce6d9e90b57533c8e1df8b8219086555fc2b4e37ae00c0d40aecccf3d58c6f2",
      "rawBefore": [
       1183.8311716709165,
       2347.20511938115,
@@ -6938,102 +7121,102 @@
       80.40988042402124
      ],
      "rawAfter": [
-      1217.405238382868,
-      1983.7851663936904,
-      2351.542809729842,
-      960.4200545742234,
-      1540.4927367181767,
-      1816.9515350249249,
-      497.04510599621796,
-      755.0900733558924,
-      875.8122534439563,
-      1253.2998233248013,
-      2417.0524824323106,
-      3058.2169595413006,
-      931.4011547813167,
-      1742.840178668769,
-      2182.7151952952117,
-      418.33553479031826,
-      707.9843588972415,
-      858.6636432499588,
-      1150.26011879875,
-      3030.8060395593448,
-      4427.518375012427,
-      785.6666592918631,
-      1926.2700635358956,
-      2729.687893469239,
-      298.47942356048816,
-      585.2841818027186,
-      765.0673767544665,
-      732.3320163433646,
-      3464.7760207345386,
-      8627.678902260235,
-      459.2962560924644,
-      1777.4595163228362,
-      3657.565195823132,
-      165.70498758186045,
-      359.7782884559106,
-      533.9264589568445,
-      213.4236296334556,
-      1534.8440539611715,
-      15713.856950455365,
-      150.03817160363084,
-      666.3593817432522,
-      3613.713702141344,
-      92.24766469594076,
-      137.80624632465765,
-      209.35497657666463,
-      84.16881132458518,
-      128.94840117672675,
-      698.9145573984501,
-      82.16880414916528,
-      99.35258720373125,
-      213.82728107039986,
-      80.3707021408688,
-      81.81708550770924,
-      84.25776436561185,
-      80.01841902471234,
-      80.10916261350991,
-      80.337239704569,
-      80.01049155756382,
-      80.05246679840126,
-      80.12612259517627,
-      80.00225233077539,
-      80.007855231243,
-      80.01332063176025
+      1217.4052383748704,
+      1983.7851664069765,
+      2351.5428097530503,
+      960.4200545634612,
+      1540.4927367196715,
+      1816.9515350337624,
+      497.04510598950674,
+      755.0900733472797,
+      875.8122534360499,
+      1253.2998232991795,
+      2417.0524824562403,
+      3058.216959583764,
+      931.4011547582375,
+      1742.8401786667268,
+      2182.7151953084176,
+      418.3355347892109,
+      707.9843588867026,
+      858.6636432383569,
+      1150.2601187592047,
+      3030.8060396137807,
+      4427.518375069963,
+      785.6666592524288,
+      1926.2700635474555,
+      2729.6878934990864,
+      298.4794235648194,
+      585.284181791686,
+      765.0673767420758,
+      732.3320163312574,
+      3464.7760207484384,
+      8627.678902267518,
+      459.29625606394643,
+      1777.459516327079,
+      3657.5651958299322,
+      165.70498758750622,
+      359.77828845497686,
+      533.9264589542406,
+      213.42362957004585,
+      1534.8440539311407,
+      15713.85695045538,
+      150.03817161218876,
+      666.3593817390957,
+      3613.7137021413937,
+      92.24766469509194,
+      137.80624632490787,
+      209.35497657689666,
+      84.16881132160732,
+      128.94840117545357,
+      698.9145573984467,
+      82.16880414922267,
+      99.35258720355453,
+      213.82728107040475,
+      80.37070214084855,
+      81.81708550771779,
+      84.25776436561812,
+      80.01841902471419,
+      80.10916261350992,
+      80.33723970456894,
+      80.01049155756337,
+      80.0524667984015,
+      80.12612259517643,
+      80.00225233077552,
+      80.00785523124291,
+      80.01332063176017
      ],
      "rawChanges": [
-      "[0]: 1183.8311716709165 (0x1.27f531eaa9fcbp+10) -> 1217.405238382868 (0x1.3059ef6cf8602p+10)",
-      "[1]: 2347.20511938115 (0x1.25669056853a1p+11) -> 1983.7851663936904 (0x1.eff2402a8bb46p+10)",
-      "[2]: 2987.7219311728354 (0x1.75771a0f67295p+11) -> 2351.542809729842 (0x1.25f15eb282b3ep+11)",
-      "[3]: 907.2779313019726 (0x1.c5a39340be40ep+9) -> 960.4200545742234 (0x1.e035c45929699p+9)",
-      "[4]: 1762.1263915924424 (0x1.b88816ccc301ep+10) -> 1540.4927367181767 (0x1.811f88ff9686ep+10)",
-      "[5]: 2229.18531224003 (0x1.16a5ee13ef4f4p+11) -> 1816.9515350249249 (0x1.c63ce5f329434p+10)",
-      "[6]: 433.64535683260306 (0x1.b1a5361afa47cp+8) -> 497.04510599621796 (0x1.f10b8c110a9c1p+8)",
-      "[7]: 779.103111619755 (0x1.858d32c2f557cp+9) -> 755.0900733558924 (0x1.798b878612e64p+9)",
-      "[8]: 963.8819502005268 (0x1.e1f0e3be81fb5p+9) -> 875.8122534439563 (0x1.b5e7f7ebbced8p+9)",
-      "[9]: 1096.3876942687243 (0x1.1218cffb9f412p+10) -> 1253.2998233248013 (0x1.3953304e2ba66p+10)",
-      "[10]: 2725.169857920522 (0x1.54a56f79e0b38p+11) -> 2417.0524824323106 (0x1.2e21adefa34c7p+11)",
-      "[11]: 3810.625578292366 (0x1.dc5404bcc4599p+11) -> 3058.2169595413006 (0x1.7e46f15522ce2p+11)",
-      "[12]: 802.2325918156047 (0x1.911dc59190ab7p+9) -> 931.4011547813167 (0x1.d1b3590a3531dp+9)",
-      "[13]: 1921.382920078583 (0x1.e05881c3379fcp+10) -> 1742.840178668769 (0x1.b3b5c57cc04a4p+10)",
-      "[14]: 2654.198079660787 (0x1.4bc656ab2822ap+11) -> 2182.7151952952117 (0x1.10d6e2e13e660p+11)",
-      "[15]: 345.4440688049865 (0x1.5971ae7e42974p+8) -> 418.33553479031826 (0x1.a255e59ba7165p+8)",
-      "[16]: 720.1259433037524 (0x1.68101ee901622p+9) -> 707.9843588972415 (0x1.61fdff78eb96ep+9)",
-      "[17]: 954.3047941113599 (0x1.dd27037e5226fp+9) -> 858.6636432499588 (0x1.ad54f24313646p+9)",
-      "[18]: 846.6696100498931 (0x1.a755b5c838ae9p+9) -> 1150.26011879875 (0x1.1f90a5c9516d3p+10)",
-      "[19]: 3095.01879386764 (0x1.82e099f598dc2p+11) -> 3030.8060395593448 (0x1.7ad9cb1379556p+11)",
-      "[20]: 5380.3372062177 (0x1.5045653258d08p+12) -> 4427.518375012427 (0x1.14b84b4398d70p+12)",
-      "[21]: 589.7798505607705 (0x1.26e3d224a7236p+9) -> 785.6666592918631 (0x1.88d5551778103p+9)",
-      "[22]: 1995.4596713455735 (0x1.f2dd6b415d096p+10) -> 1926.2700635358956 (0x1.e19148b891a0ep+10)",
-      "[23]: 3347.9375497185856 (0x1.a27e006844766p+11) -> 2729.687893469239 (0x1.553603392a307p+11)",
+      "[0]: 1183.8311716709165 (0x1.27f531eaa9fcbp+10) -> 1217.4052383748704 (0x1.3059ef6cefc9cp+10)",
+      "[1]: 2347.20511938115 (0x1.25669056853a1p+11) -> 1983.7851664069765 (0x1.eff2402a99f87p+10)",
+      "[2]: 2987.7219311728354 (0x1.75771a0f67295p+11) -> 2351.5428097530503 (0x1.25f15eb28f29ap+11)",
+      "[3]: 907.2779313019726 (0x1.c5a39340be40ep+9) -> 960.4200545634612 (0x1.e035c459124d0p+9)",
+      "[4]: 1762.1263915924424 (0x1.b88816ccc301ep+10) -> 1540.4927367196715 (0x1.811f88ff9821cp+10)",
+      "[5]: 2229.18531224003 (0x1.16a5ee13ef4f4p+11) -> 1816.9515350337624 (0x1.c63ce5f332c08p+10)",
+      "[6]: 433.64535683260306 (0x1.b1a5361afa47cp+8) -> 497.04510598950674 (0x1.f10b8c10edc90p+8)",
+      "[7]: 779.103111619755 (0x1.858d32c2f557cp+9) -> 755.0900733472797 (0x1.798b878600676p+9)",
+      "[8]: 963.8819502005268 (0x1.e1f0e3be81fb5p+9) -> 875.8122534360499 (0x1.b5e7f7ebabf2fp+9)",
+      "[9]: 1096.3876942687243 (0x1.1218cffb9f412p+10) -> 1253.2998232991795 (0x1.3953304e10238p+10)",
+      "[10]: 2725.169857920522 (0x1.54a56f79e0b38p+11) -> 2417.0524824562403 (0x1.2e21adefb0255p+11)",
+      "[11]: 3810.625578292366 (0x1.dc5404bcc4599p+11) -> 3058.216959583764 (0x1.7e46f155399a4p+11)",
+      "[12]: 802.2325918156047 (0x1.911dc59190ab7p+9) -> 931.4011547582375 (0x1.d1b3590a03a1ep+9)",
+      "[13]: 1921.382920078583 (0x1.e05881c3379fcp+10) -> 1742.8401786667268 (0x1.b3b5c57cbe18ep+10)",
+      "[14]: 2654.198079660787 (0x1.4bc656ab2822ap+11) -> 2182.7151953084176 (0x1.10d6e2e1457d0p+11)",
+      "[15]: 345.4440688049865 (0x1.5971ae7e42974p+8) -> 418.3355347892109 (0x1.a255e59ba254cp+8)",
+      "[16]: 720.1259433037524 (0x1.68101ee901622p+9) -> 707.9843588867026 (0x1.61fdff78d4f51p+9)",
+      "[17]: 954.3047941113599 (0x1.dd27037e5226fp+9) -> 858.6636432383569 (0x1.ad54f242fa7a3p+9)",
+      "[18]: 846.6696100498931 (0x1.a755b5c838ae9p+9) -> 1150.2601187592047 (0x1.1f90a5c926f71p+10)",
+      "[19]: 3095.01879386764 (0x1.82e099f598dc2p+11) -> 3030.8060396137807 (0x1.7ad9cb13968f0p+11)",
+      "[20]: 5380.3372062177 (0x1.5045653258d08p+12) -> 4427.518375069963 (0x1.14b84b43a848ep+12)",
+      "[21]: 589.7798505607705 (0x1.26e3d224a7236p+9) -> 785.6666592524288 (0x1.88d555172360fp+9)",
+      "[22]: 1995.4596713455735 (0x1.f2dd6b415d096p+10) -> 1926.2700635474555 (0x1.e19148b89e0a7p+10)",
+      "[23]: 3347.9375497185856 (0x1.a27e006844766p+11) -> 2729.6878934990864 (0x1.553603393a36ap+11)",
       "... (more raw changes)"
      ]
     },
     {
      "key": "goldak.field",
      "before": "516393812af8d62c76a0ce2c60cf6f8f5d3d22e3665680141b87e4608aa761b0",
-     "after": "c7df4fc79e7b5d60b8e4613cbdd7cf2d584cbc13be9a983939005432b24e8f7d",
+     "after": "34dfd844309c21fe452ea85261599077e9c3a1b6a584d20104d77e800381ca39",
      "rawBefore": {
       "axes": {
        "af_m": 4e-05,
@@ -7125,103 +7308,103 @@
       ],
       "q": 76.0,
       "temperature": [
-       1620.5326619686443,
-       2623.692169038736,
-       3100.6021837562594,
-       1234.8229492222079,
-       1965.1771493125188,
-       2309.2053045600296,
-       583.5656181324166,
-       878.3629542594666,
-       1014.0752665077364,
-       1711.1264714675765,
-       3258.6381465241893,
-       4099.517056948864,
-       1202.1521019202858,
-       2207.799331664654,
-       2740.5521512682817,
-       472.96471408250966,
-       780.4773532189795,
-       935.0804606532218,
-       1651.7444272520956,
-       4244.098495090151,
-       6118.462263450314,
-       1019.4158512711978,
-       2372.628527754937,
-       3260.7269709412417,
-       317.51844392886846,
-       581.339558540024,
-       732.3973287778437,
-       1178.382353674033,
-       5244.63092757318,
-       10165.409930457972,
-       605.4830852240221,
-       2023.2970467755702,
-       3357.714464207106,
-       164.53617404063334,
-       303.49128778816134,
-       398.29833747872203,
-       357.9731022251811,
-       2860.715609140617,
-       7710.798247305368,
-       181.46612987134444,
-       713.9672443198498,
-       1469.6883122450054,
-       90.31010336806061,
-       113.77968328108923,
-       132.83451823316102,
-       84.91643625803124,
-       120.88047623617098,
-       183.42174145881978,
-       81.90796985179516,
-       90.54689265355499,
-       101.66838367038005,
-       80.21247579841427,
-       80.66825887165943,
-       81.02568086162991,
-       80.00781510785325,
-       80.02615822461773,
-       80.04133301647884,
-       80.0041579277712,
-       80.01246742420496,
-       80.01872392914773,
-       80.00080118395653,
-       80.00194611187347,
-       80.00267178339377
+       1620.5326512926038,
+       2623.6921646952,
+       3100.6021855020185,
+       1234.8229396460854,
+       1965.1771395275437,
+       2309.2052970980403,
+       583.5656157366483,
+       878.3629479072612,
+       1014.0752586807318,
+       1711.1264855017237,
+       3258.6382428700417,
+       4099.517191075688,
+       1202.152096572919,
+       2207.7993713110095,
+       2740.552220279714,
+       472.9647089036803,
+       780.4773427884472,
+       935.0804505434619,
+       1651.7445887368635,
+       4244.098208449407,
+       6118.461361984946,
+       1019.4159413910622,
+       2372.6286629662154,
+       3260.7269510884908,
+       317.51843178058755,
+       581.3395684120653,
+       732.397365142976,
+       1178.3819355301312,
+       5244.63767151451,
+       10165.427308122962,
+       605.4829966458784,
+       2023.29703931216,
+       3357.716745665266,
+       164.53617198949684,
+       303.4913224994374,
+       398.29836130900645,
+       357.97301164063344,
+       2860.6921557499113,
+       7710.642018937102,
+       181.4661130155286,
+       713.9664168513144,
+       1469.68250295242,
+       90.31010157492112,
+       113.77968909297311,
+       132.8345291946062,
+       84.91643538228098,
+       120.88047005745517,
+       183.42175389089834,
+       81.90796996817936,
+       90.54689410685717,
+       101.66838290606808,
+       80.21247578331194,
+       80.66825889700539,
+       81.02568110121038,
+       80.00781510623389,
+       80.02615823040412,
+       80.04133302320545,
+       80.00415792814141,
+       80.01246742224161,
+       80.01872393051516,
+       80.00080118382691,
+       80.00194611213828,
+       80.00267178392646
       ]
      },
      "rawChanges": [
       "q: 38.0 (0x1.3000000000000p+5) -> 76.0 (0x1.3000000000000p+6)",
-      "temperature[0]: 850.2663309843222 (0x1.a922172239c9ap+9) -> 1620.5326619686443 (0x1.9522172239c9ap+10)",
-      "temperature[1]: 1351.846084519368 (0x1.51f6263faf15ap+10) -> 2623.692169038736 (0x1.47f6263faf15ap+11)",
-      "temperature[2]: 1590.3010918781297 (0x1.8d934516de6a2p+10) -> 3100.6021837562594 (0x1.83934516de6a2p+11)",
-      "temperature[3]: 657.4114746111039 (0x1.48b4ab3336e9bp+9) -> 1234.8229492222079 (0x1.34b4ab3336e9bp+10)",
-      "temperature[4]: 1022.5885746562594 (0x1.ff4b566a11f1cp+9) -> 1965.1771493125188 (0x1.eb4b566a11f1cp+10)",
-      "temperature[5]: 1194.6026522800148 (0x1.2aa691dade618p+10) -> 2309.2053045600296 (0x1.20a691dade618p+11)",
-      "temperature[6]: 331.7828090662083 (0x1.4bc8662cca608p+8) -> 583.5656181324166 (0x1.23c8662cca608p+9)",
-      "temperature[7]: 479.1814771297333 (0x1.df2e7549012d3p+8) -> 878.3629542594666 (0x1.b72e7549012d3p+9)",
-      "temperature[8]: 547.0376332538682 (0x1.1184d12a9d4d9p+9) -> 1014.0752665077364 (0x1.fb09a2553a9b2p+9)",
-      "temperature[9]: 895.5632357337882 (0x1.bfc8181bc8479p+9) -> 1711.1264714675765 (0x1.abc8181bc8479p+10)",
-      "temperature[10]: 1669.3190732620947 (0x1.a1546bb2426e6p+10) -> 3258.6381465241893 (0x1.97546bb2426e6p+11)",
-      "temperature[11]: 2089.758528474432 (0x1.053845dd81d8ap+11) -> 4099.517056948864 (0x1.003845dd81d8ap+12)",
-      "temperature[12]: 641.0760509601429 (0x1.4089bc09b1525p+9) -> 1202.1521019202858 (0x1.2c89bc09b1525p+10)",
-      "temperature[13]: 1143.899665832327 (0x1.1df9941fffcb1p+10) -> 2207.799331664654 (0x1.13f9941fffcb1p+11)",
-      "temperature[14]: 1410.2760756341409 (0x1.6091ab3922f6ep+10) -> 2740.5521512682817 (0x1.5691ab3922f6ep+11)",
-      "temperature[15]: 276.48235704125483 (0x1.147b7bc0452f5p+8) -> 472.96471408250966 (0x1.d8f6f7808a5eap+8)",
-      "temperature[16]: 430.23867660948974 (0x1.ae3d19e908142p+8) -> 780.4773532189795 (0x1.863d19e908142p+9)",
-      "temperature[17]: 507.5402303266109 (0x1.fb8a4c88e119fp+8) -> 935.0804606532218 (0x1.d38a4c88e119fp+9)",
-      "temperature[18]: 865.8722136260478 (0x1.b0efa4b233802p+9) -> 1651.7444272520956 (0x1.9cefa4b233802p+10)",
-      "temperature[19]: 2162.0492475450756 (0x1.0e41936f96704p+11) -> 4244.098495090151 (0x1.0941936f96704p+12)",
-      "temperature[20]: 3099.231131725157 (0x1.8367656e5c13cp+11) -> 6118.462263450314 (0x1.7e67656e5c13cp+12)",
-      "temperature[21]: 549.7079256355989 (0x1.12da9d4ea672ep+9) -> 1019.4158512711978 (0x1.fdb53a9d4ce5bp+9)",
-      "temperature[22]: 1226.3142638774684 (0x1.32941ce63d02ap+10) -> 2372.628527754937 (0x1.28941ce63d02ap+11)",
+      "temperature[0]: 850.2663309843222 (0x1.a922172239c9ap+9) -> 1620.5326512926038 (0x1.952216f57279fp+10)",
+      "temperature[1]: 1351.846084519368 (0x1.51f6263faf15ap+10) -> 2623.6921646952 (0x1.47f62636932a9p+11)",
+      "temperature[2]: 1590.3010918781297 (0x1.8d934516de6a2p+10) -> 3100.6021855020185 (0x1.8393451a87a97p+11)",
+      "temperature[3]: 657.4114746111039 (0x1.48b4ab3336e9bp+9) -> 1234.8229396460854 (0x1.34b4ab0b0ca13p+10)",
+      "temperature[4]: 1022.5885746562594 (0x1.ff4b566a11f1cp+9) -> 1965.1771395275437 (0x1.eb4b564107684p+10)",
+      "temperature[5]: 1194.6026522800148 (0x1.2aa691dade618p+10) -> 2309.2052970980403 (0x1.20a691cb38418p+11)",
+      "temperature[6]: 331.7828090662083 (0x1.4bc8662cca608p+8) -> 583.5656157366483 (0x1.23c86618b180fp+9)",
+      "temperature[7]: 479.1814771297333 (0x1.df2e7549012d3p+8) -> 878.3629479072612 (0x1.b72e7513b7eb5p+9)",
+      "temperature[8]: 547.0376332538682 (0x1.1184d12a9d4d9p+9) -> 1014.0752586807318 (0x1.fb09a213923dep+9)",
+      "temperature[9]: 895.5632357337882 (0x1.bfc8181bc8479p+9) -> 1711.1264855017237 (0x1.abc81856a5549p+10)",
+      "temperature[10]: 1669.3190732620947 (0x1.a1546bb2426e6p+10) -> 3258.6382428700417 (0x1.97546c7c4fb78p+11)",
+      "temperature[11]: 2089.758528474432 (0x1.053845dd81d8ap+11) -> 4099.517191075688 (0x1.0038466a263ddp+12)",
+      "temperature[12]: 641.0760509601429 (0x1.4089bc09b1525p+9) -> 1202.152096572919 (0x1.2c89bbf343a15p+10)",
+      "temperature[13]: 1143.899665832327 (0x1.1df9941fffcb1p+10) -> 2207.7993713110095 (0x1.13f9947324c4bp+11)",
+      "temperature[14]: 1410.2760756341409 (0x1.6091ab3922f6ep+10) -> 2740.552220279714 (0x1.5691abc9dd31fp+11)",
+      "temperature[15]: 276.48235704125483 (0x1.147b7bc0452f5p+8) -> 472.9647089036803 (0x1.d8f6f729a7778p+8)",
+      "temperature[16]: 430.23867660948974 (0x1.ae3d19e908142p+8) -> 780.4773427884472 (0x1.863d199188ae6p+9)",
+      "temperature[17]: 507.5402303266109 (0x1.fb8a4c88e119fp+8) -> 935.0804505434619 (0x1.d38a4c34128eap+9)",
+      "temperature[18]: 865.8722136260478 (0x1.b0efa4b233802p+9) -> 1651.7445887368635 (0x1.9cefa75784732p+10)",
+      "temperature[19]: 2162.0492475450756 (0x1.0e41936f96704p+11) -> 4244.098208449407 (0x1.0941924305e65p+12)",
+      "temperature[20]: 3099.231131725157 (0x1.8367656e5c13cp+11) -> 6118.461361984946 (0x1.7e6761bd1acf6p+12)",
+      "temperature[21]: 549.7079256355989 (0x1.12da9d4ea672ep+9) -> 1019.4159413910622 (0x1.fdb53d9147d52p+9)",
+      "temperature[22]: 1226.3142638774684 (0x1.32941ce63d02ap+10) -> 2372.6286629662154 (0x1.28941e01cc034p+11)",
       "... (more raw changes)"
      ]
     },
     {
      "key": "solidification.evaluate",
      "before": "86ea6c07f821df113d9099f2d27d89d9b6d09d6604eb3f2dfa1fef544ee296c8",
-     "after": "659c592c4acd4a9688c727598b50124b6ad3b5a877e7c3158d810df94861293c",
+     "after": "f25aaae88f9e24b6652c247e2d581303ccf52a5a9bdc9315ba4c23f9a4f0a5ca",
      "rawBefore": {
       "modelId": "solidification-front-v1",
       "gradientSource": "solidification-front-v1",
@@ -7262,12 +7445,12 @@
       "modelId": "solidification-front-v1",
       "gradientSource": "solidification-front-v1",
       "usedFieldMap": true,
-      "thermalGradient_G_K_m": 109577797.63101736,
+      "thermalGradient_G_K_m": 109577797.62934247,
       "solidificationRate_R_m_s": 0.0001,
       "coolingRate_K_s": 1.0,
-      "g_over_r_ratio": 1095777976310.1735,
+      "g_over_r_ratio": 1095777976293.4246,
       "microstructureMorphology": "Planar (Hunt G/R screening)",
-      "primaryDendriteArmSpacing_PDAS_um": 1.1368042215147736,
+      "primaryDendriteArmSpacing_PDAS_um": 1.136804221523461,
       "secondaryDendriteArmSpacing_SDAS_um": 23.38675706435991,
       "phaseTransformation": {
        "alloyClass": "IN718",
@@ -7278,7 +7461,7 @@
       },
       "doi": "10.1016/0025-5416(84)90201-X",
       "disclaimer": "G,R from the conduction-field liquidus. Hunt G/R bands are not calibrated N0 CET. Does not re-score Build Job.",
-      "G_tail_K_m": 108244662.90202917,
+      "G_tail_K_m": 108244662.89793807,
       "R_tail_m_s": 0.0,
       "frontPointCount": 9,
       "tail": {
@@ -7295,10 +7478,10 @@
       }
      },
      "rawChanges": [
-      "thermalGradient_G_K_m: 115943567.8943321 (0x1.ba4a23f93cbcbp+26) -> 109577797.63101736 (0x1.a20191686296ap+26)",
-      "g_over_r_ratio: 1159435678943.3208 (0x1.0df3c074df522p+40) -> 1095777976310.1735 (0x1.fe42e9ffec58dp+39)",
-      "primaryDendriteArmSpacing_PDAS_um: 1.1051561150567129 (0x1.1aeb82db249b5p+0) -> 1.1368042215147736 (0x1.230599f95c565p+0)",
-      "G_tail_K_m: 114944263.24706163 (0x1.b67a41cfcfdb9p+26) -> 108244662.90202917 (0x1.9cebadb9bad89p+26)",
+      "thermalGradient_G_K_m: 115943567.8943321 (0x1.ba4a23f93cbcbp+26) -> 109577797.62934247 (0x1.a20191684725ap+26)",
+      "g_over_r_ratio: 1159435678943.3208 (0x1.0df3c074df522p+40) -> 1095777976293.4246 (0x1.fe42e9ffcad96p+39)",
+      "primaryDendriteArmSpacing_PDAS_um: 1.1051561150567129 (0x1.1aeb82db249b5p+0) -> 1.136804221523461 (0x1.230599f965e3ap+0)",
+      "G_tail_K_m: 114944263.24706163 (0x1.b67a41cfcfdb9p+26) -> 108244662.89793807 (0x1.9cebadb977d14p+26)",
       "tail.z_um: 28.7 (0x1.cb33333333333p+4) -> 33.6 (0x1.0cccccccccccdp+5)",
       "tail.G_K_m: 114944263.0 (0x1.b67a41c000000p+26) -> 108244663.0 (0x1.9cebadc000000p+26)",
       "bottom.z_um: 28.7 (0x1.cb33333333333p+4) -> 33.6 (0x1.0cccccccccccdp+5)",
@@ -7306,9 +7489,9 @@
      ]
     }
    ],
-   "elapsed_s": 0.0,
+   "elapsed_s": 0.1,
    "implementationHashes": [],
-   "observationsSha256": "b77b67562652a2618b49faca90a36e4953fb5b584d719f0b45d76c429fa226cc"
+   "observationsSha256": "a35937d02a79cd679957bdc6c01fe40c034ff9e1fc5d75473d34df3ec971b1e4"
   },
   "npz_determinism": {
    "status": "PASS",

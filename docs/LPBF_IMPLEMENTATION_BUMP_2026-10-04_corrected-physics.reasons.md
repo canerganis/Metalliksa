@@ -1,0 +1,38 @@
+# Corrected-physics bump — drift reasons (edddf0dc… → acb905ca…)
+
+Companion to `LPBF_IMPLEMENTATION_BUMP_2026-10-04_corrected-physics.json` (tool output of `python -B tools/lpbf_bump_record.py --from-revision fbf310b --with-parity-check --slow --expect-drift …`; the 125 observation-scoped entries are in `….expect-drift.txt`). Every allowed observation is listed here with its physical cause and the raw before → after values (digests in the record; raw values from the record's `rawValues`/`rawChanges`, or — for the nine companion observations that did not exist in the goldens — from a run of the same harness code against a `git archive fbf310b` copy, marked *base run*). Lengths in µm, temperatures in °C unless stated. `VERSION` enthalpy-fv-6 is unchanged; the reference-transient numerics of G1/G2/G4 (`metrics`, `thermalHistory`, `energyBalance`, fields, artifacts, NPZ, fixture equality) and every identity digest (`materialRevisionSha256`, `materialSha256`, `inputSha256`) are bit-equal.
+
+## Causes
+
+| id | cause | files |
+|---|---|---|
+| C1 | Goldak kernel deposits the absorbed power Q (was Q/2) and its time quadrature resolves the wake pulse at every speed (was a single 56-node rule) — `goldak-half-space-v3` | `goldak_solver.py` |
+| C2 | Eagar–Tsai kernel: σ = r0/2, U = vσ/2α, wake-resolving adaptive quadrature — `eagar-tsai-v2` | `eagar_tsai_solver.py` |
+| C3 | `evaporationModel=true` is labelled a boiling cap (label, assumption string, `boilingCap` block); L_v from the material authority per alloy (D1) | `lpbf_simulation.py`, `lpbf_evaporation_marangoni.py` |
+| C4 | IN625 fusion latent heat on the Rosenthal/build-job path 260 → 290 kJ/kg (Sabau; D5). The Mills transient specification keeps 227 kJ/kg — unchanged | `lpbf_thermal_solver.py` |
+| C5 | `evaluate_literature_pv` refuses unknown alloy ids (D8) | `four_alloy_materials.py` |
+| C6 | `meltPoolGeometry` carries `extentStatus`/`extentNote` (heuristic-width fallback made explicit); new key in every melt-pool result | `lpbf_thermal_solver.py` |
+| C7 | New companion observations added by the harness (raw W/D/L/cavity, peak T, IN625 L_f, G8 analytical-comparison digest); goldens predate them | `tools/lpbf_parity_check.py` |
+
+## Observations
+
+| case | observation(s) | cause | raw before → after |
+|---|---|---|---|
+| g1_v1_60w_in718 | `result.key.analyticalComparison`, `result.canonicalSha256`, `result.orderedTypedSha256`, `v1Archive.strippedResultEqual` | C1 (analytic companion only) | `analyticalComparison.goldak` W/D/L 16.667/8.333/70.000 → 50.000/25.000/186.667; `rosenthal` block and grid unchanged; `strippedResultEqual` true → false (a V1 replay equals the archived `3eed50ef…` result in every other key; V1 acceptance stays bound to `10e3005`/`7482697c`) |
+| g3_powder_stripe_multilayer, g3_powder_island | `result.key.analyticalComparison` + two digests | C1 | goldak 0/0/23.333 → 50.000/25.000/128.333 |
+| g3_powder_meander_unidirectional | `meander.*`, `unidirectional.*` (analyticalComparison + digests) | C1 | goldak 0/0/23.333 → 50.000/25.000/128.333 |
+| g8_observers | `result.key.analyticalComparison`, `result.*Sha256`, `plain.canonicalSha256`, `plain.key.analyticalComparison` (new) | C1, C7 | goldak 16.667/8.333/70.000 → 50.000/25.000/186.667 (same block in `plain`; rosenthal 50.0/25.0/221.667 unchanged) |
+| g14_calibration_measurements | `matched.*`, `unmatched.*` | C1 | goldak 0/0/23.333 → 50.000/25.000/128.333 |
+| g16_non_in718_transient | `ti6al4v.*`, `ss316l.*` (`alsi10mg` unchanged: no Goldak melt at 40 W) | C1 | Ti-6Al-4V goldak 16.667/8.333/58.333 → 50.000/25.000/163.333; 316L 0/0/0 → 50.000/25.000/105.000 |
+| g19_emissivity_echo | `implicit.*` | C1 | goldak 0/0/23.333 → 50.000/25.000/128.333 |
+| g6_screening_and_fallback | per sub-run (`screening`, `highFidelityFallback`, `highFidelityFallbackWithOpenfoam`, `screeningTi64`): `key.metrics`, `key.analyticalComparison`, `key.geometricDefectScreen`, `key.mainRisk`, `key.recommendation`, two digests | C1 (screening `metrics = analytical["goldak"]`) | IN718 default W/D/L 83.333/41.667/373.333 → 133.333/66.667/770.000 (Rosenthal 133.333/66.667/781.667 unchanged); Ti-6Al-4V 180 W/900 mm/s 83.333/41.667/408.333 → 116.667/58.333/840.000; lackOfFusion status `lack-of-fusion-screened` → `covered-geometrically` (IN718 sub-runs; ellipseIndex 2.362 → 0.923), mainRisk `lack-of-fusion` → `balling (screening)` (L/W 4.48 → 5.77), recommendation accordingly; `key.regime` unchanged |
+| g5_evaporation | `result.key.label`, `result.label`, `result.key.assumptions`, `result.key.boilingCap` (new), `result.topLevelKeys`, `result.key.analyticalComparison`, two digests | C3, C1 | label "Unvalidated transient thermal" → "… (boiling-capped: temperature clipped at T_boil, excess enthalpy retained in-cell; not an evaporation model)"; `boilingCap` {cappedSteps 378, maxExcessEnthalpy 5.203e5 J/kg, proxy 0.0813, L_v 6.4e6, isReferenceSolution false}; IN718 L_v unchanged → no numeric drift; goldak companion 50/25/128.333 as G3 |
+| g17_evaporation_ti6al4v / _316l / _alsi10mg | as G5 plus `evaporation.latentHeatVapUsed_J_kg`, `evaporation.maxVaporFraction` | C3 (D1) | L_v 6.4e6 → 8.9e6 / 6.25e6 / 10.5e6 J/kg; maxVaporFraction scales with 1/L_v; cappedSteps Ti-6Al-4V 728, 316L 402 |
+| g11_build_job_meltpool | `meltpool.0.*` (Rosenthal), `meltpool.1.*` (ET), `meltpool.2.*` (Goldak) digests; `meltpool.{0,1,2}.geometry_um`, `.peakTemperature_C` (new); `thermalSolver.THERMOPHYSICAL_DB`, `….in625.latent_heat_fusion_J_kg` (new) | C6 (all three), C2 (1), C1 (2), C4 (DB) | *base run* → after — payload 0 IN718 Rosenthal: [144.3, 101.9, 755.3, 32.5] / 2500.2 → unchanged (digest moves only by the new `extentStatus`/`extentNote` keys); payload 1 Ti-6Al-4V ET: [132.6, 124.5, 824.0, 71.0] / 21116.3 → [126.7, 124.5, 641.9, 68.3] / 28776.6; payload 2 316L Goldak: [117.4, 251.6, 351.4, 194.5] / 9636.3 → [168.9, 251.6, 681.8, 169.5] / 19247.4; IN625 L_f 260000 → 290000 |
+| g12_analytical_modules | `eagarTsai.temperature`, `goldak.field`, `solidification.evaluate` | C2, C1, C2 (ET field feeds the front mapper) | grid values in the record's rawValues (e.g. ET first point 1217.405 °C after; Goldak field doubled in the near field) |
+| g9_material_snapshots | `fam.evaluate_literature_pv.unknownDefaultsToIn718` | C5 | IN718 window verdict → `ValueError("Unsupported LPBF alloy identity: 'unknown'")` |
+| g18_in625_latent_heat | `meltpool.in625`, `meltpool.in625.geometry_um` (new), `….equalWithLatentHeatFusion.260000` / `.290000`, `….table.latent_heat_fusion_J_kg` | C4, C6 | *base run* [147.0, 108.8, 810.8, 38.1] → [145.4, 107.6, 795.0, 37.7]; L_f 260000 → 290000; equal-with flags [F, T, F] → [F, F, T]; `in625.transientSpecification.latentHeat_J_kg` 227000 unchanged |
+
+Not drifted (8 PASS): g2_bare_plate_100w_corridor (165 observations incl. fixture equality), g4_layered_plate, g7_mesh_study, g7_timestep_study, g10_openfoam_case_generation, g13_source_quadrature_refinement, g15_bare_plate_square_optical_observer, npz_determinism.
+
+Behaviour changes without a golden: user-supplied property tables with `evaporationModel=true` now raise ("user-supplied material properties … no literal and no other-alloy value is substituted") where they ran with IN718's L_v; retired heat-source ids `eagar-tsai-v1`, `goldak-v1`, `goldak-total-power-v2` raise instead of running the corrected kernel silently; the GPU transient RPC requires `alloyId`/`materialName` (no material defaults; not covered by goldens, warp unavailable here).
