@@ -4,6 +4,7 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import express from "express";
 import {
+  LOGIN_REFERRER_POLICY,
   LoginAuth,
   buildLoginBannerLines,
   SESSION_COOKIE,
@@ -551,11 +552,13 @@ test("GET /login without a code serves an accessible sign-in form with status 20
   assert.equal(res.headers["set-cookie"], undefined);
 });
 
-test("every /login response is no-store and no-referrer (success, failure, throttled, GET, HEAD)", () => {
+// The login pages deliberately use LOGIN_REFERRER_POLICY ("strict-origin") instead of "no-referrer":
+// under "no-referrer" browsers send "Origin: null" on the same-origin sign-in form POST (Phase 2 D1).
+test("every /login response is no-store and carries the login referrer policy (success, failure, throttled, GET, HEAD)", () => {
   const auth = new LoginAuth({ token: "s3cret", loginLimit: 3 });
   const check = (res: any, label: string) => {
     assert.equal(res.headers["cache-control"], "no-store", label);
-    assert.equal(res.headers["referrer-policy"], "no-referrer", label);
+    assert.equal(res.headers["referrer-policy"], LOGIN_REFERRER_POLICY, label);
   };
   check(login(auth, "s3cret"), "success form");
   check(login(auth, "s3cret", { headers: { "content-type": "application/json" }, ip: "5.5.5.5" }), "success json");
@@ -653,7 +656,7 @@ test("HEAD /login never consumes the one-time code or creates a session; HEAD th
     assert.equal(head.status, 200);
     assert.equal(head.headers["set-cookie"], undefined);
     assert.equal(head.headers["cache-control"], "no-store");
-    assert.equal(head.headers["referrer-policy"], "no-referrer");
+    assert.equal(head.headers["referrer-policy"], LOGIN_REFERRER_POLICY);
     assert.equal(auth.checkCode("ONCE"), "auto");
     assert.equal((auth as any).sessions.size, 0);
     const get = await request(port, "GET", "/login?code=ONCE");
@@ -734,7 +737,7 @@ test("startup banner: token mode never prints the token or a URL containing it; 
   assert.deepEqual(buildLoginBannerLines(resolveBindConfig({}), 3000), []);
 });
 
-test("parser failures on /login and /logout carry no-store and no-referrer (malformed JSON 400, oversized body 413)", async () => {
+test("parser failures on /login and /logout carry no-store and the login referrer policy (malformed JSON 400, oversized body 413)", async () => {
   const app = express();
   applySecurity(app, null, { log: () => {}, auth: new LoginAuth({ token: "s3cret" }) });
   app.use(errorHandler(() => {}));
@@ -743,14 +746,14 @@ test("parser failures on /login and /logout carry no-store and no-referrer (malf
     const bad = await request(port, "POST", "/login", json, "{not json");
     assert.equal(bad.status, 400);
     assert.equal(bad.headers["cache-control"], "no-store");
-    assert.equal(bad.headers["referrer-policy"], "no-referrer");
+    assert.equal(bad.headers["referrer-policy"], LOGIN_REFERRER_POLICY);
     assert.equal(bad.headers["set-cookie"], undefined);
     assert.equal(JSON.parse(bad.body).code, "BAD_REQUEST");
 
     const big = await request(port, "POST", "/login", json, JSON.stringify({ code: "x".repeat(8192) }));
     assert.equal(big.status, 413);
     assert.equal(big.headers["cache-control"], "no-store");
-    assert.equal(big.headers["referrer-policy"], "no-referrer");
+    assert.equal(big.headers["referrer-policy"], LOGIN_REFERRER_POLICY);
 
     const bigForm = await request(port, "POST", "/login", { "content-type": "application/x-www-form-urlencoded" }, "code=" + "x".repeat(8192));
     assert.equal(bigForm.status, 413);
@@ -808,4 +811,119 @@ test("buildTrustProxyWarning fires only for a non-loopback bind with trust proxy
   assert.equal(buildTrustProxyWarning(exposed, 1), null);
   assert.equal(buildTrustProxyWarning(exposed, "10.0.0.0/8"), null);
   assert.equal(buildTrustProxyWarning(resolveBindConfig({}), false), null);
+});
+
+// ---------------------------------------------------------------------------
+// Phase 2 D1: browser sign-in through the real form
+// ---------------------------------------------------------------------------
+/** Effective referrer policy of a served page: a <meta name="referrer"> overrides the response header. */
+function effectiveReferrerPolicy(page: { headers: http.IncomingHttpHeaders; body: string }): string {
+  const meta = /<meta name="referrer" content="([^"]+)">/.exec(page.body);
+  return (meta ? meta[1] : String(page.headers["referrer-policy"] ?? "")).trim().toLowerCase();
+}
+
+/**
+ * The Origin header a browser sends for a form-submission (non-CORS) POST, per the Fetch standard's
+ * "serializing a request origin": the referrer policy of the submitting page decides whether the real
+ * origin or the literal "null" is sent, even for a same-origin target.
+ */
+function browserFormPostOrigin(pageOrigin: string, targetOrigin: string, policy: string): string {
+  const page = new URL(pageOrigin);
+  const target = new URL(targetOrigin);
+  const sameOrigin = page.origin === target.origin;
+  const downgrade = page.protocol === "https:" && target.protocol === "http:";
+  switch (policy) {
+    case "no-referrer":
+      return "null";
+    case "same-origin":
+      return sameOrigin ? page.origin : "null";
+    case "no-referrer-when-downgrade":
+    case "strict-origin":
+    case "strict-origin-when-cross-origin":
+    case "":
+      return downgrade ? "null" : page.origin;
+    default:
+      return page.origin;
+  }
+}
+
+test("D1 model: the old no-referrer login page made browsers send Origin null on the same-origin form POST", () => {
+  assert.equal(browserFormPostOrigin("http://h:1", "http://h:1", "no-referrer"), "null");
+  assert.equal(browserFormPostOrigin("http://h:1", "http://h:1", "same-origin"), "http://h:1");
+  assert.equal(browserFormPostOrigin("http://evil.example", "http://h:1", "same-origin"), "null");
+  assert.notEqual(LOGIN_REFERRER_POLICY, "no-referrer");
+});
+
+test("D1 real HTTP: sign-in through the served one-time-link form succeeds with the Origin a browser sends", async () => {
+  const app = express();
+  const auth = new LoginAuth({ accessCode: "FORMCODE" });
+  applySecurity(app, null, { log: () => {}, auth });
+  app.all("/api/ping", (_req, res) => res.json({ ok: true }));
+  await withServer(app, async (port) => {
+    const own = `http://127.0.0.1:${port}`;
+    const page = await request(port, "GET", "/login?code=FORMCODE");
+    assert.equal(page.status, 200);
+    const policy = effectiveReferrerPolicy(page);
+    assert.equal(policy, LOGIN_REFERRER_POLICY, "meta tag and header agree");
+    assert.equal(String(page.headers["referrer-policy"]), LOGIN_REFERRER_POLICY);
+    const origin = browserFormPostOrigin(own, own, policy);
+    assert.equal(origin, own, "the browser sends the real origin, not null");
+    // Chromium on a loopback (potentially trustworthy) origin also sends fetch metadata.
+    const headers = { "content-type": "application/x-www-form-urlencoded", origin, "sec-fetch-site": "same-origin", "sec-fetch-mode": "navigate" };
+    const ok = await request(port, "POST", "/login", headers, "code=FORMCODE");
+    assert.equal(ok.status, 303, ok.body);
+    const cookie = String(ok.headers["set-cookie"]).split(";")[0];
+    // After sign-in the SPA writes with fetch(), which is CORS mode and always sends the real Origin.
+    assert.equal((await request(port, "POST", "/api/ping", { cookie, origin: own, "sec-fetch-site": "same-origin" })).status, 200);
+    assert.equal((await request(port, "POST", "/api/ping", { cookie, origin: "null", "sec-fetch-site": "same-origin" })).status, 403, "API writes still need a real Origin");
+    assert.equal((await request(port, "POST", "/logout", { cookie, origin: own, "sec-fetch-site": "same-origin" })).status, 200);
+  });
+});
+
+test("D1 real HTTP: a plain-http LAN address (no fetch metadata) can sign in through the form", async () => {
+  const app = express();
+  const auth = new LoginAuth({ accessCode: "LANCODE" });
+  applySecurity(app, null, { log: () => {}, auth });
+  await withServer(app, async (port) => {
+    // Browsers omit Sec-Fetch-* on non-trustworthy http origins, so the fix must not rely on them.
+    const lan = `http://192.168.1.5:${port}`;
+    const host = `192.168.1.5:${port}`;
+    const page = await request(port, "GET", "/login?code=LANCODE", { host });
+    const origin = browserFormPostOrigin(lan, lan, effectiveReferrerPolicy(page));
+    assert.equal(origin, lan);
+    const ok = await request(port, "POST", "/login", { host, "content-type": "application/x-www-form-urlencoded", origin }, "code=LANCODE");
+    assert.equal(ok.status, 303, ok.body);
+  });
+});
+
+test("D1 real HTTP: Origin null is accepted only with browser proof (Sec-Fetch-Site same-origin); cross-site stays rejected", async () => {
+  const app = express();
+  const auth = new LoginAuth({ token: "s3cret", loginLimit: 1000 });
+  applySecurity(app, null, { log: () => {}, auth });
+  await withServer(app, async (port) => {
+    const form = { "content-type": "application/x-www-form-urlencoded" };
+    const post = (headers: Record<string, string>) => request(port, "POST", "/login", { ...form, ...headers }, "code=s3cret");
+    // A page still rendered under no-referrer (e.g. an older cached copy) sends null plus fetch metadata.
+    assert.equal((await post({ origin: "null", "sec-fetch-site": "same-origin" })).status, 303);
+    assert.equal((await post({ origin: "null" })).status, 403, "null without browser proof (non-browser client)");
+    assert.equal((await post({ origin: "null", "sec-fetch-site": "cross-site" })).status, 403);
+    assert.equal((await post({ origin: "null", "sec-fetch-site": "same-site" })).status, 403);
+    assert.equal((await post({ origin: "http://evil.example", "sec-fetch-site": "cross-site" })).status, 403);
+    assert.equal((await post({ origin: "http://evil.example" })).status, 403);
+    assert.equal((await post({ "sec-fetch-site": "cross-site" })).status, 403, "browser-reported cross-site without Origin");
+    const sameSite = await post({ origin: `http://127.0.0.1:${port}`, "sec-fetch-site": "same-site" });
+    assert.equal(sameSite.status, 403);
+    assert.equal(sameSite.headers["set-cookie"], undefined);
+    assert.equal((await post({})).status, 303, "non-browser clients without Origin still work (existing contract)");
+
+    const cookieFor = async () => String((await post({})).headers["set-cookie"]).split(";")[0];
+    assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor() })).status, 403, "logout without Origin");
+    assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null" })).status, 403);
+    assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null", "sec-fetch-site": "cross-site" })).status, 403);
+    for (const site of ["same-site", "cross-site"]) {
+      const sameOriginHeader = `http://127.0.0.1:${port}`;
+      assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: sameOriginHeader, "sec-fetch-site": site })).status, 403, `logout with ${site} metadata`);
+    }
+    assert.equal((await request(port, "POST", "/logout", { cookie: await cookieFor(), origin: "null", "sec-fetch-site": "same-origin" })).status, 200);
+  });
 });
