@@ -460,5 +460,5 @@ test("second re-review: every tab has a render branch, preset point labels are n
   assert.match(studio, /solveErrorState && solveErrorState\.element === selectedElement/);
   assert.match(text("server/processOrchestrator.ts"), /pyProcess\.stdout\.setEncoding\("utf8"\);\s*pyProcess\.stderr\.setEncoding\("utf8"\);/);
   assert.match(plain(render()), /Zn is constant-dependent \(with the wateq4f \/ Baes & Mesmer Zn\(OH\)₂\(aq\) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays\)/);
-  assert.match(plain(render({ initialSolveError: "boom" })), /boom/);
+  assert.match(plain(renderToStaticMarkup(React.createElement(DynamicPourbaixStudio, { initialSolveError: "boom" }))), /boom/);
 });
