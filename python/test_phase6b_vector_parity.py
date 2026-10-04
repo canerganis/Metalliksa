@@ -86,6 +86,25 @@ def _display_unit(value):
     return 10.0 ** -digits if digits <= 6 else None
 
 
+# Documented change (cnls_fitting_solver, fx-xrd lane): the faa6684 "Hirschorn" capacitance
+# was algebraically identical to the Hsu-Mansfeld one, so cHirschorn_F / cHirschorn_uF are
+# removed. A removal is tolerated ONLY for these two leaves, and only when the old golden
+# value equals its sibling Hsu-Mansfeld value to 1e-12 relative (the duplicate claim holds on
+# the data).
+HIRSCHORN_REMOVED_LEAVES = {"cHirschorn_F": "cHsuMansfeld_F", "cHirschorn_uF": "cHsuMansfeld_uF"}
+
+
+def _is_documented_hirschorn_removal(row, old_flat):
+    leaf = row["key"].rsplit(".", 1)[-1]
+    sibling = HIRSCHORN_REMOVED_LEAVES.get(leaf)
+    if sibling is None:
+        return False
+    sibling_key = row["key"][: -len(leaf)] + sibling
+    # the two formulas are algebraically equal but not bit-identical in floating point
+    return (sibling_key in old_flat and isinstance(row["old"], float)
+            and abs(old_flat[sibling_key] - row["old"]) <= 1e-12 * abs(row["old"]))
+
+
 def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
     """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
 
@@ -96,7 +115,10 @@ def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False):
     in-process kernel comparisons (old blob vs new on the same machine) never
     use this allowance."""
     bad = []
+    old_flat = dict(drift_report.flatten(old))
     for row in drift_report.diff(old, new):
+        if row["kind"] == "removed" and _is_documented_hirschorn_removal(row, old_flat):
+            continue
         if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
             if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
                 continue
@@ -266,6 +288,26 @@ def _in_process(solver, case_or_payload, module=None):
     payload = cases.CASES[solver][case_or_payload] if isinstance(case_or_payload, str) else case_or_payload
     module = __import__(solver) if module is None else module
     return as_stdout(bench.dispatch(module, solver, payload))
+
+
+class HirschornRemovalGuardTest(unittest.TestCase):
+    """The documented cHirschorn_* removal is tolerated exactly, nothing more."""
+
+    def test_documented_removal_is_tolerated(self):
+        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHirschorn_uF": 1.5, "cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15),
+                      "cHsuMansfeld_uF": 1.5}]}
+        new = {"c": [{"cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15), "cHsuMansfeld_uF": 1.5}]}
+        self.assertEqual(tolerance_violations(old, new), [])
+
+    def test_removal_is_refused_when_the_values_are_not_duplicates(self):
+        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.6e-6}]}
+        self.assertEqual(len(tolerance_violations(old, {"c": [{"cHsuMansfeld_F": 1.6e-6}]})), 1)
+
+    def test_other_removed_keys_and_changed_values_are_still_violations(self):
+        old = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.0e-6}]}
+        self.assertEqual(len(tolerance_violations(old, {"c": [{"cHsuMansfeld_F": 1.5e-6}]})), 1)
+        changed = {"c": [{"cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.1e-6}]}
+        self.assertEqual([r["key"] for r in tolerance_violations(old, changed)], ["c[0].cBrug_F"])
 
 
 @require_git_revision(GIT, f"git or revision {BASE} unavailable")
