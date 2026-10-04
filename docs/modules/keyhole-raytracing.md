@@ -6,7 +6,8 @@
 
 - Migration state: contracted; contract version 0.1.0
 - Maturity: Research (product maturity, not the evidence status of a result)
-- Workspace: lpbf; owner: lpbf workspace
+- Workspace: lpbf; owner: unassigned (needs maintainer)
+- Seed-derived (copied unreviewed from the module seed): label, next, maturity
 - View: `src/components/KeyholeRaytracingLab.tsx` (`KeyholeRaytracingLab`)
 
 ## Operations

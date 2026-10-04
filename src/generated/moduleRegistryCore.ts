@@ -502,7 +502,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Keyhole Ray Tracing",
-      "description": "Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.",
+      "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
       "next": "database",
       "maturity": "Research",
       "navigation": "listed",

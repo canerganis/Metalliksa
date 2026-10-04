@@ -89,6 +89,11 @@ HTTP_METHODS = ("GET", "POST", "PUT", "DELETE", "PATCH")
 VALUE_TYPES = ("number", "integer", "boolean", "enum")
 
 TODO_MARKER = "TODO(maintainer-review)"
+# Explicit owner marker: no person or team has been assigned by a maintainer yet.
+OWNER_UNASSIGNED = "unassigned (needs maintainer)"
+# Identity text that originates in python/module_registry_seed.json (copied from the old UI
+# list without review). A contract lists which of these it still inherits unreviewed.
+SEED_TEXT_FIELDS = ("label", "description", "next", "maturity")
 
 _SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 _MODULE_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -542,6 +547,8 @@ class ModuleContract:
     # Repository files (optionally ``path:line`` or ``path:start-end``) the contract's
     # fields, limits and outputs were read from. Required once contracted; each must exist.
     source_refs: Tuple[str, ...] = ()
+    # SEED_TEXT_FIELDS still copied unreviewed from the seed (all of them for legacy contracts).
+    seed_derived: Tuple[str, ...] = SEED_TEXT_FIELDS
 
     def __post_init__(self) -> None:
         _require(isinstance(self.id, str) and bool(_MODULE_ID.match(self.id)), f"invalid module id {self.id!r}")
@@ -589,8 +596,13 @@ class ModuleContract:
             _text(self.tests.schema, f"{self.id}.tests.schema")
             _text(self.tests.docs, f"{self.id}.tests.docs")
             _require(len(self.source_refs) > 0, f"{self.id}: contracted modules need sourceRefs")
-            _require(TODO_MARKER not in self.owner, f"{self.id}: contracted modules need a reviewed owner")
+            # Never a placeholder, never a claimed person: the explicit unassigned marker or a team id.
+            _require(self.owner == OWNER_UNASSIGNED or self.owner.startswith("team:"),
+                     f"{self.id}: contracted owner must be {OWNER_UNASSIGNED!r} or a 'team:' id")
         _unique(self.source_refs, f"{self.id}.sourceRefs")
+        _unique(self.seed_derived, f"{self.id}.seedDerived")
+        for name in self.seed_derived:
+            _one_of(name, SEED_TEXT_FIELDS, f"{self.id}.seedDerived")
         for ref in self.source_refs:
             _text(ref, f"{self.id}.sourceRefs")
 
@@ -606,6 +618,7 @@ class ModuleContract:
             "lifecycle": self.lifecycle.to_dict() if self.lifecycle else None,
             "tests": self.tests.to_dict(), "migrationState": self.migration_state,
             "legacyNotes": list(self.legacy_notes), "sourceRefs": list(self.source_refs),
+            "seedDerived": list(self.seed_derived),
         }
 
 
@@ -652,7 +665,7 @@ def contract_from_dict(d: dict) -> ModuleContract:
                                      ci_note=t["oracle"]["ciNote"], scope=t["oracle"]["scope"]),
                        schema=t["schema"], docs=t["docs"]),
         migration_state=d["migrationState"], legacy_notes=tuple(d["legacyNotes"]),
-        source_refs=tuple(d["sourceRefs"]),
+        source_refs=tuple(d["sourceRefs"]), seed_derived=tuple(d["seedDerived"]),
     )
 
 

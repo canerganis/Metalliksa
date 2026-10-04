@@ -33,7 +33,8 @@ from typing import Dict, List, Tuple
 from module_contract import (
     ALWAYS_FORBIDDEN_CLAIMS, AUTHORITY_KINDS, BACKGROUND_WORK, EVIDENCE_STATUSES, EVIDENCE_TYPES,
     FORBIDDEN_CLAIM_KEYS, GPU_MODES, HTTP_METHODS, LIFECYCLE_RESOURCES, MATURITY, MIGRATION_STATES, NAVIGATION,
-    ORACLE_STATES, PENDING_ORACLE_CEILING, RUN_STATES, TODO_MARKER, VALUE_TYPES, WORKSPACES,
+    ORACLE_STATES, OWNER_UNASSIGNED, PENDING_ORACLE_CEILING, RUN_STATES, SEED_TEXT_FIELDS, TODO_MARKER, VALUE_TYPES,
+    WORKSPACES,
     Authority, Evidence, InputField, Lifecycle, ModuleContract, Operation, Oracle, OutputSchema, TestRefs, View,
 )
 
@@ -403,7 +404,12 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                             timeout_ms=_WORKER_TIMEOUT_MS, gpu="optional"),
         input=_KEYHOLE_FIELDS, output=_KEYHOLE_OUTPUT,
     )
-    return _pilot(row, owner="lpbf workspace", operation=operation,
+    return _pilot(row, operation=operation,
+                  # Rewritten from the contract: the seed said "GPU-accelerated ... via NVIDIA Warp BVH",
+                  # but the authority defaults to CPU and CUDA is optional.
+                  reviewed={"description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity "
+                                           "(NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, "
+                                           "not a solved keyhole."},
                   evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
                                     note=_KEYHOLE_EVIDENCE_NOTE),
                   oracle=Oracle(status="present", ci_note=_KEYHOLE_ORACLE_CI_NOTE,
@@ -440,7 +446,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
         input=_UQ_FIELDS, output=_UQ_OUTPUT,
         undeclared_input=("alloyName", "standardSpec", "composition_wt", "composition_tolerances"),
     )
-    return _pilot(row, owner="evidence workspace", operation=operation,
+    return _pilot(row, operation=operation, reviewed={},
                   evidence=Evidence(emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=_PILOT_FORBIDDEN,
                                     note=_UQ_EVIDENCE_NOTE),
                   oracle=Oracle(status="pending"),
@@ -478,11 +484,19 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                   ))
 
 
-def _pilot(row, *, owner, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
+def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
+    """Contract around one operation. ``reviewed`` replaces seed identity text (SEED_TEXT_FIELDS);
+    every field not replaced is recorded as seed-derived (unreviewed)."""
     slug = row["id"].replace("-", "_")
+    seed = {"label": row["label"], "description": row["description"], "next": row["next"], "maturity": row["scope"]}
+    unknown = set(reviewed) - set(SEED_TEXT_FIELDS)
+    if unknown:
+        raise ValueError(f"{row['id']}: reviewed names non-seed fields {sorted(unknown)}")
+    text = {**seed, **reviewed}
     return ModuleContract(
-        id=row["id"], version=CONTRACT_VERSION, owner=owner, workspace=row["workspace"], label=row["label"],
-        description=row["description"], next=row["next"], maturity=row["scope"], navigation="listed",
+        id=row["id"], version=CONTRACT_VERSION, owner=OWNER_UNASSIGNED, workspace=row["workspace"],
+        label=text["label"], description=text["description"], next=text["next"], maturity=text["maturity"],
+        navigation="listed", seed_derived=tuple(f for f in SEED_TEXT_FIELDS if f not in reviewed),
         view=View(component=row["viewComponent"], export=row["viewExport"]),
         evidence=evidence,
         tests=TestRefs(oracle=oracle, schema=f"python/test_contract_{slug}.py", docs=module_doc_path(row["id"])),
@@ -734,6 +748,7 @@ def render_ts(document: dict) -> str:
         "  readonly migrationState: MigrationState;",
         "  readonly legacyNotes: readonly string[];",
         "  readonly sourceRefs: readonly string[];",
+        "  readonly seedDerived: readonly string[];",
         "}",
         "export interface ModuleRegistryDocument {",
         "  readonly schemaVersion: number; readonly generatedBy: string;",
@@ -767,6 +782,7 @@ def render_module_doc(contract: ModuleContract) -> str:
         f"- Migration state: {c.migration_state}; contract version {c.version}",
         f"- Maturity: {c.maturity} (product maturity, not the evidence status of a result)",
         f"- Workspace: {c.workspace}; owner: {c.owner}",
+        "- Seed-derived (copied unreviewed from the module seed): " + (", ".join(c.seed_derived) or "none"),
         f"- View: `{c.view.component}` (`{c.view.export}`)",
         "",
         "## Operations",

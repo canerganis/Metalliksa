@@ -45,7 +45,7 @@ def _evidence(**overrides):
 
 
 def _contract(**overrides):
-    values = dict(id="uq-lab", version="1.0.0", owner="evidence-team", workspace="evidence",
+    values = dict(id="uq-lab", version="1.0.0", owner=mc.OWNER_UNASSIGNED, workspace="evidence",
                   label="Uncertainty", description="Sampling.", next="qualification",
                   maturity="Research", navigation="listed", view=_view(), evidence=_evidence(),
                   tests=mc.TestRefs(schema="python/test_contract_uq_lab.py", docs="docs/modules/uq-lab.md"),
@@ -322,6 +322,14 @@ class ForbiddenClaimTests(unittest.TestCase):
     def test_contracted_requires_reviewed_owner_and_operations(self):
         with self.assertRaises(mc.ContractError):
             _contract(owner=f"{mc.TODO_MARKER}: unassigned")
+        for person in ("Jane Doe", "jane@example.com", "evidence workspace"):
+            with self.subTest(owner=person), self.assertRaises(mc.ContractError):
+                _contract(owner=person)
+        self.assertEqual(_contract(owner="team:evidence").owner, "team:evidence")
+        with self.assertRaises(mc.ContractError):
+            _contract(seed_derived=("label", "label"))
+        with self.assertRaises(mc.ContractError):
+            _contract(seed_derived=("owner",))
         with self.assertRaises(mc.ContractError):
             _contract(operations=())
         with self.assertRaises(mc.ContractError):
@@ -539,6 +547,28 @@ class ContractedRegistryTests(unittest.TestCase):
             dataclasses.replace(contract, evidence=dataclasses.replace(contract.evidence, note="silent"))
         with self.assertRaises(mc.ContractError):
             mc.Oracle(status="pending", ci_note="not run")
+
+    def test_contracted_modules_claim_no_owner_and_mark_seed_text(self):
+        seed = {row["id"]: row for row in mr.load_seed()}
+        for contract in self.contracted.values():
+            with self.subTest(module=contract.id):
+                self.assertEqual(contract.owner, mc.OWNER_UNASSIGNED, "no person/team owner is claimed")
+                row = seed[contract.id]
+                original = {"label": row["label"], "description": row["description"], "next": row["next"],
+                            "maturity": row["scope"]}
+                for name in mc.SEED_TEXT_FIELDS:
+                    if name in contract.seed_derived:
+                        self.assertEqual(getattr(contract, name), original[name], f"{name} marked seed-derived")
+                    else:
+                        self.assertNotEqual(getattr(contract, name), original[name], f"{name} claimed rewritten")
+        keyhole = self.contracted["keyhole-raytracing"]
+        self.assertNotIn("description", keyhole.seed_derived)
+        self.assertNotIn("GPU-accelerated", keyhole.description)
+        self.assertIn("CPU by default, CUDA optional", keyhole.description)
+        self.assertEqual(self.contracted["uq-lab"].seed_derived, mc.SEED_TEXT_FIELDS)
+        for contract in self.registry:
+            if contract.migration_state == "legacy":
+                self.assertEqual(contract.seed_derived, mc.SEED_TEXT_FIELDS, contract.id)
 
     def test_pilot_authorities_match_the_legacy_binding(self):
         keyhole = self.contracted["keyhole-raytracing"].operations[0]

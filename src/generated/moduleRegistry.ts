@@ -60,6 +60,7 @@ export interface ModuleContract {
   readonly migrationState: MigrationState;
   readonly legacyNotes: readonly string[];
   readonly sourceRefs: readonly string[];
+  readonly seedDerived: readonly string[];
 }
 export interface ModuleRegistryDocument {
   readonly schemaVersion: number; readonly generatedBy: string;
@@ -357,7 +358,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "lpbf-optimizer",
@@ -420,7 +427,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "solidification-microstructure",
@@ -483,7 +496,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "thermomechanical-distortion",
@@ -546,7 +565,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "experimental-validation",
@@ -609,7 +634,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "modulus-fno-lab",
@@ -672,7 +703,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "toolpath-studio",
@@ -735,7 +772,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "toolpath-thermal-map",
@@ -798,7 +841,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "industrial-certification",
@@ -861,7 +910,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "murakami-fatigue",
@@ -924,7 +979,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "defect-twin",
@@ -987,7 +1048,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "adaptive-mitigation",
@@ -1050,7 +1117,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "multilaser-plume",
@@ -1113,7 +1186,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "thermal-accumulation",
@@ -1176,7 +1255,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "powder-compaction",
@@ -1239,7 +1324,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "optical-tomography",
@@ -1302,7 +1393,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "transient-3d-gpu",
@@ -1349,15 +1446,21 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "The view calls POST /api/python/transient-3d-gpu, which no server route handles; no authority exists for this module."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "keyhole-raytracing",
       "version": "0.1.0",
-      "owner": "lpbf workspace",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Keyhole Ray Tracing",
-      "description": "Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.",
+      "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
       "next": "database",
       "maturity": "Research",
       "navigation": "listed",
@@ -1657,6 +1760,11 @@ export const MODULE_REGISTRY = {
         "src/components/KeyholeRaytracingLab.tsx:26-59",
         "src/components/KeyholeRaytracingLab.tsx:116-127",
         "docs/MODULE_EVIDENCE_INVENTORY.md:40"
+      ],
+      "seedDerived": [
+        "label",
+        "next",
+        "maturity"
       ]
     },
     {
@@ -1720,7 +1828,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "alloy-builder",
@@ -1783,7 +1897,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "phase-diagram",
@@ -1880,7 +2000,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "ttt-cct-kinetics",
@@ -1943,7 +2069,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "micrograph",
@@ -2025,7 +2157,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "eds-lab",
@@ -2088,7 +2226,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "electrochem-suite",
@@ -2185,7 +2329,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "icme-motor",
@@ -2248,7 +2398,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "materials-project",
@@ -2330,7 +2486,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "calculators",
@@ -2393,7 +2555,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "research-hub",
@@ -2490,7 +2658,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "experimental-data",
@@ -2537,7 +2711,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "digital-twin",
@@ -2600,12 +2780,18 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "uq-lab",
       "version": "0.1.0",
-      "owner": "evidence workspace",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "evidence",
       "label": "Uncertainty & Coupons",
       "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
@@ -2990,6 +3176,12 @@ export const MODULE_REGISTRY = {
         "src/components/uqLabData.ts:155",
         "src/services/pythonComputationService.ts:1579-1614",
         "docs/MODULE_EVIDENCE_INVENTORY.md:77"
+      ],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
       ]
     },
     {
@@ -3055,7 +3247,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "aerospace-pdf-audit",
@@ -3120,7 +3318,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "traceability",
@@ -3167,7 +3371,13 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
       ],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "copilot",
@@ -3230,7 +3440,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     },
     {
       "id": "ai-orchestrator",
@@ -3293,7 +3509,13 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [],
-      "sourceRefs": []
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
+        "next",
+        "maturity"
+      ]
     }
   ]
 } as const satisfies ModuleRegistryDocument;
