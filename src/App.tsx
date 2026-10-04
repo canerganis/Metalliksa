@@ -12,6 +12,7 @@ import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore'
 import { ScientificContextPanel } from './components/ScientificContextPanel';
 import { BootSequence } from './components/BootSequence';
 import { SilentBoundary } from './components/SilentBoundary';
+import { subsystemQualifier } from './services/bootSteps';
 // Own chunk: the strip sits at the end of the page, so it does not need to be in the index chunk.
 const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m => ({ default: m.TelemetryStrip })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
@@ -206,7 +207,7 @@ export default function App() {
         {statusError && <p role="alert" className="text-sm text-amber-300">{statusError}</p>}
         <p className="text-sm mb-3">{status?.online ? `Python ${status.pythonVersion ?? 'version unavailable'} · ${status.status}` : 'Python backend unavailable. Check the local server and Python runtime.'}</p>
         <dl className="divide-y divide-slate-800">{(Object.entries(status?.subsystems ?? {}) as [string, { available: boolean }][]).map(([name, subsystem]) => <div key={name} className="py-2 flex justify-between gap-3 text-xs"><dt>{name.replaceAll('_', ' ')}</dt><dd className={subsystem.available ? 'text-sky-300' : 'text-amber-300'}>{subsystem.available ? 'Available' : 'Unavailable'}</dd></div>)}</dl>
-        {!status?.subsystems && <p className="text-xs text-slate-500">Subsystem status has not been reported.</p>}
+        {!status?.subsystems && <p className="text-xs text-slate-500">Subsystems: {status?.online ? subsystemQualifier(status) : 'unavailable'}</p>}
         <button disabled={checking} onClick={() => void refreshStatus()} className="mt-4 rounded-lg bg-sky-600 px-4 py-2 text-sm disabled:opacity-50">{checking ? 'Checking…' : 'Refresh status'}</button>
     </AccessibleModal>}
   </div></>;
