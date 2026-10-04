@@ -77,7 +77,8 @@ RUN npm ci --omit=dev
 #  - the WORKDIR-relative default data directories, created and chowned below so the server also works
 #    when those variables are unset;
 #  - /app/data/collected-sources (server/approvedSourceCollector.ts writes there, relative to the cwd);
-#  - /tmp: Python temporary directories (tempfile) and the IPC socket (/tmp/metallix_python_ipc.sock).
+#  - /tmp: Python temporary directories (tempfile), including the IPC daemon's private 0700 socket directory
+#    (/tmp/metallix-ipc-*/ipc.sock; the daemon refuses a socket placed directly in /tmp).
 # PYTHONDONTWRITEBYTECODE=1 (base stage) keeps Python from writing __pycache__ into python/.
 FROM base AS runtime
 # METALLIKSA_HOST=0.0.0.0: the server binds 127.0.0.1 by default (server/security.ts resolveBindConfig), which a

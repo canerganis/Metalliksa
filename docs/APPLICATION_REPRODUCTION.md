@@ -60,14 +60,13 @@ Keep `METALLIX_PYTHON` and `PYTHONDONTWRITEBYTECODE` set for the entire sequence
 
 ## Start with an explicit Python interpreter
 
-First install the separately locked CPU environment following the linked guide. From the clean snapshot, assign `METALLIX_PYTHON` its absolute executable path. Assign unused application and Python HTTP ports; inspect existing listeners first. Then run:
+First install the separately locked CPU environment following the linked guide. From the clean snapshot, assign `METALLIX_PYTHON` its absolute executable path. Assign an unused application port; the Python daemon binds a free loopback port itself (leave `METALLIX_IPC_PORT` unset). Then run:
 
 ```powershell
 $env:NODE_ENV = 'production'
 $env:AIRGAPPED = '1'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 $env:PORT = '3016'
-$env:METALLIX_IPC_PORT = '5058'
 # Replace this example with the absolute path of the verified CPU interpreter.
 $env:METALLIX_PYTHON = 'C:/verified-environment/Scripts/python.exe'
 npm start
@@ -77,7 +76,7 @@ Run `npm start` from the application root. The server resolves `python/`, `dist/
 
 Read `/api/python/status` on the application port. Require the expected interpreter version, `online: true`, and an active transport. On Windows the Python daemon binds HTTP and skips UNIX sockets. `warmModules` records imports only; `subsystemStatus: unverified` explicitly withholds solver availability. `/api/python/ipc-warmup` reports readiness and returns 503 before the daemon is ready; it does not run solver validation.
 
-The Python daemon (`python/persistent_ipc_service.py`) is an internal channel, not an API. `server/processOrchestrator.ts` generates a fresh random token for every daemon spawn and passes it only through the child environment (`METALLIX_IPC_TOKEN`); every HTTP and UNIX-socket request must carry it. The daemon refuses to start without a token, sends no CORS headers, rejects requests with an `Origin` header or a `Host` other than its own loopback `host:port`, accepts only `application/json` bodies, and runs only allowlisted `python/<module>.py` scripts that resolve inside `python/`. Its UNIX socket is owner-only (0600). A non-loopback `METALLIX_IPC_HOST` is ignored by the supervisor and refused by the daemon unless `METALLIX_IPC_ALLOW_REMOTE=1`. The HTTP port is bound exclusively (`SO_EXCLUSIVEADDRUSE` on Windows, no `SO_REUSEADDR` sharing), so a second process cannot bind a port the daemon holds. If two servers are configured with the same `METALLIX_IPC_PORT`, the second daemon cannot bind it; which daemon a request then reaches, and whether it is refused (401) and falls back to an ad-hoc spawn, depends on start order, so keep the ports distinct. To launch the daemon by hand (diagnostics only), set `METALLIX_IPC_TOKEN` to at least 32 random characters and send `Authorization: Bearer <token>`.
+The Python daemon (`python/persistent_ipc_service.py`) is an internal channel, not an API. `server/processOrchestrator.ts` generates a fresh random secret for every daemon spawn and passes it only through the child environment (`METALLIX_IPC_TOKEN`; an inherited value is deleted at startup). The secret never travels on the wire: each request carries a timestamp, a nonce and an HMAC-SHA256 over the request, and each response an HMAC over the nonce, status and body, so a process that is not the daemon can neither replay a request nor forge solver output the server accepts. The daemon announces its channels in its ready message: an ephemeral loopback HTTP port (bound with `SO_EXCLUSIVEADDRUSE` on Windows) and, on POSIX, a socket (0600) in a fresh 0700 directory. The server uses only channels its own daemon announced; anything else (not ready, a refused or unsigned reply, any status of 400 or more) falls back to an ad-hoc script spawn. The daemon refuses to start without a secret, sends no CORS headers, rejects requests with an `Origin` header or a `Host` other than its own `host:port`, accepts only `application/json` bodies up to 64 MiB, and runs only the `python/<module>.py` scripts that `routes/*.ts` dispatch, resolved inside `python/`. A non-loopback `METALLIX_IPC_HOST` is ignored by the supervisor and refused by the daemon unless `METALLIX_IPC_ALLOW_REMOTE=1`; wildcard addresses are always refused. Residual risk: code running as the same user can read the secret from the process environment or memory. To launch the daemon by hand (diagnostics only), set `METALLIX_IPC_TOKEN` to at least 32 random characters and sign requests as `server/processOrchestrator.ts` does (`signIpcRequest`).
 
 Stop only the processes launched for this check. Keep the original checkout and preview separate.
 
