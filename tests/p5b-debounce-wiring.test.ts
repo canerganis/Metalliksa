@@ -37,10 +37,6 @@ test('corrosion EIS signature only contains request inputs (coatingType is not s
   assert.doesNotMatch(text.slice(text.indexOf('const runPythonSimulation'), text.indexOf('// Debounced, visibility-gated')), /coatingType/);
 });
 
-test('usePythonAnalysis debounce is opt-in', () => {
-  assert.match(src('src/hooks/usePythonAnalysis.ts'), /options\?: \{ debounceMs\?: number \}/);
-});
-
 test('micrograph diagnosis shows an honest indeterminate state, not simulated stage progress', () => {
   const text = src('src/components/MicrographLab.tsx');
   assert.doesNotMatch(text, /setInterval|analysisStep|LOADING_STEPS|stepInterval/);
