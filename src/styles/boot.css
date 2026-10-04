@@ -129,8 +129,8 @@
   font-size: var(--mk-fs-2xs);
   font-variant-numeric: tabular-nums;
 }
-/* index.css gives every shell child z-index 1; the strip comes later in the DOM, so at equal z it would
- * still paint over modals opened inside the main row. z-index 0 keeps it below them. */
+/* index.css positions every shell child (no z-index since the shell fix); z-index 0 keeps the strip
+ * explicitly below module modals (z-50) and the sticky header (z-40) even if a later rule adds one. */
 .mk-shell > .mk-telemetry:not(.mk-grid-overlay):not(.mk-scanline) { z-index: 0; }
 .mk-telemetry dl { display: flex; flex-wrap: wrap; gap: var(--mk-space-1) var(--mk-space-5); }
 .mk-telemetry dl > div { display: flex; gap: var(--mk-space-2); }

@@ -143,9 +143,14 @@
   animation: mkSweep 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
-.mk-shell > *:not(.mk-grid-overlay):not(.mk-scanline) {
-  position: relative;
-  z-index: 1;
+/* Shell children paint above the fixed decorative layers (z-index 0, earlier in the DOM) by being
+ * positioned. Layered, so Tailwind utilities on a child win: the header keeps `sticky top-0 z-40` and
+ * the engine-status AccessibleModal keeps `fixed inset-0 z-50`. No z-index here: a z-index would make
+ * the main row a stacking context and trap its module modals (fixed z-50) below the z-40 header. */
+@layer components {
+  .mk-shell > *:not(.mk-grid-overlay):not(.mk-scanline) {
+    position: relative;
+  }
 }
 
 .mk-header {
