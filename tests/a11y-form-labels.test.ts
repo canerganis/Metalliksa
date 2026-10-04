@@ -10,20 +10,13 @@ import { test } from "node:test";
  * EXCLUSIONS bookkeeping or shrinking the scan cannot silently drop their check.
  */
 const EXCLUSIONS: Record<string, string> = {
-  // EIS / battery deletion-candidate cluster (.orchestra/DELETION-MANIFEST.md): will be removed, not worth labelling.
-  "src/components/CircuitLibraryModal.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/CNLSFittingStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/EISUploadInsightsStudio.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/EquivalentCircuitBuilder.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/PresetCircuitLibraryPanel.tsx": "deletion candidate (EIS/battery cluster)",
-  "src/components/SyntheticNoiseStressStudio.tsx": "deletion candidate (EIS/battery cluster)",
   // Thin wrappers: the <input>/<select> is a pass-through element; every call site is wrapped by <label>.
   "src/components/OpticalTomographyLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
   "src/components/PowderDEMCompactionLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
   "src/components/TransientEnthalpy3DGPULab.tsx": "wrapper-only Input/Select; call sites wrapped by <label>",
 };
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
-const MAX_EXCLUSIONS = 16; // the list may shrink, never grow silently
+const MAX_EXCLUSIONS = 3; // the list may shrink, never grow silently
 
 // Files labelled in Phase 8 batches 1 and 2; independent of the automatic scan.
 const PINNED_GUARDED = [
@@ -76,14 +69,8 @@ const PINNED_GUARDED = [
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
 const PINNED_EXCLUDED = [
-  "src/components/CNLSFittingStudio.tsx",
-  "src/components/CircuitLibraryModal.tsx",
-  "src/components/EISUploadInsightsStudio.tsx",
-  "src/components/EquivalentCircuitBuilder.tsx",
   "src/components/OpticalTomographyLab.tsx",
   "src/components/PowderDEMCompactionLab.tsx",
-  "src/components/PresetCircuitLibraryPanel.tsx",
-  "src/components/SyntheticNoiseStressStudio.tsx",
   "src/components/TransientEnthalpy3DGPULab.tsx",
 ];
 
