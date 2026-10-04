@@ -62,3 +62,19 @@ export interface NistOpticalReport {
   reasons: string[];
   errors: { width: NistOpticalError; depth: NistOpticalError } | null;
 }
+
+export interface NistProxyCampaignSourceBinding extends RunSourceLink {
+  artifactPath: string;
+  artifactSha256: string;
+  artifactSizeBytes: number;
+  caseNumber: NistOpticalCaseNumber;
+}
+
+export interface NistProxyBeamInputDeclaration {
+  status: 'published-source-declared';
+  definition: 'D4sigma';
+  value_um: number;
+  mappingStatus: 'conditional-ideal-Gaussian';
+  measuredProfileMatched: false;
+  sourceBinding: NistProxyCampaignSourceBinding;
+}

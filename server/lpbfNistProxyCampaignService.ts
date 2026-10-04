@@ -9,6 +9,8 @@ import { LpbfRunArchiveError } from './lpbfRunArchiveService';
 import { LpbfRunRepository, type ProxyCampaignRecord, type RunRecord } from './lpbfRunRepository';
 import { runArtifacts } from './lpbfRunImport';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
+import { deriveProxyCampaignRunBinding, proxyCampaignEligibilityFailure, rederiveProxyCampaignSections,
+  validateArchivedProxySections } from './lpbfProxyCampaignBinding';
 import { getHostPython } from './pythonRuntime';
 
 const DATASET_ID = 'nist-amb2022-03-optical-table4-local-v1';
@@ -17,24 +19,17 @@ const TABLE_SHA256 = 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa1079
 const TABLE_BYTES = 4321;
 const TABLE_PATH = 'table4-aggregate-v2.json';
 const RESULTS_URL = 'https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10';
-const SECTION_IDS = ['x-4p9mm', 'x-6p0mm'];
-const SECTION_RECORD_IDS = ['single-line-x-4p9mm', 'single-line-x-6p0mm'];
 const SECTION_DISTANCES = [4.9, 6.0];
-const SECTION_OPERATOR = 'bare-plate-corridor-accepted-peak-x-linear-section-v1';
-const CONTOUR_OPERATOR = 'linear-liquidus-crossings-between-cell-centers-v1';
-const SECTION_FIELD_PATH = 'rectangular-corridor-section-fields.npz';
-const SECTION_FIELD_BINDING = 'accepted-step-maximum-per-source-X-plane';
-const MAX_SECTION_FIELD_BYTES = 32 * 1024 * 1024;
 const PYTHON_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../python');
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const unavailable = (reasons: string[]) => ({ schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign-validation',
-  status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
+  campaignId: null, status: 'unavailable', validationStatus: 'unvalidated', experimentalValidation: false,
   numericalConvergenceStatus: 'not-evaluated', comparisonResiduals: null, observationCount: null, reasons });
 
-function validatePython(campaign: unknown, source: unknown): Promise<any> {
+function validatePython(campaign: unknown, source: unknown, expectedBeamDiameterUm: number): Promise<any> {
   return new Promise((resolve, reject) => {
     const python = getHostPython();
-    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"]), allow_nan=False))`;
+    const code = `import json,sys; sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)}); from lpbf_nist_proxy_campaign import validate_proxy_campaign; q=json.load(sys.stdin); print(json.dumps(validate_proxy_campaign(q["campaign"], q["source"], q["expectedBeamDiameterUm"]), allow_nan=False))`;
     const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
     let stdout = '', stderr = '', done = false;
     const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };
@@ -49,78 +44,8 @@ function validatePython(campaign: unknown, source: unknown): Promise<any> {
       catch { fail(new Error('Invalid proxy validation response')); }
     });
     child.stdin.on('error', fail);
-    child.stdin.end(JSON.stringify({ campaign, source }));
+    child.stdin.end(JSON.stringify({ campaign, source, expectedBeamDiameterUm }));
   });
-}
-
-function rederivePythonSections(result: unknown, bytes: Buffer): Promise<any> {
-  return new Promise((resolve, reject) => {
-    let python;
-    try { python = getHostPython(); }
-    catch { reject(new Error('Host Python is unavailable for NPZ re-derivation.')); return; }
-    const code = [
-      'import json,sys',
-      `sys.path.insert(0,${JSON.stringify(PYTHON_ROOT)})`,
-      'try:',
-      ' from lpbf_nist_proxy_sections import rederive_rectangular_corridor_sections',
-      ' from lpbf_nist_proxy_sections import SectionArtifactError',
-      ' header=json.loads(sys.stdin.buffer.readline())',
-      ' payload=sys.stdin.buffer.read()',
-      ' answer=rederive_rectangular_corridor_sections(payload,header["result"])',
-      ' print(json.dumps(answer,allow_nan=False))',
-      'except SectionArtifactError as exc:',
-      ' print(json.dumps({"status":"unavailable","reason":str(exc)}))',
-    ].join('\n');
-    const child = spawn(python.cmd, [...python.prefix, '-c', code], { cwd: path.resolve(), windowsHide: true, shell: false, stdio: 'pipe' });
-    let stdout = '', stderr = '', done = false;
-    const fail = (error: Error) => { if (!done) { done = true; clearTimeout(timer); reject(error); } };
-    const timer = setTimeout(() => { child.kill(); fail(new Error('Python NPZ re-derivation timed out.')); }, 15000);
-    child.stdout.on('data', chunk => { stdout += chunk.toString(); if (stdout.length > 256 * 1024) { child.kill(); fail(new Error('Python NPZ re-derivation response is too large.')); } });
-    child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-2048); });
-    child.on('error', () => fail(new Error('Python NPZ re-derivation reader is unavailable.')));
-    child.on('close', code => {
-      if (done) return;
-      if (code !== 0) { fail(new Error(stderr.includes('No module named') ? 'Python NPZ re-derivation reader or dependency is unavailable.' : 'Python NPZ re-derivation failed.')); return; }
-      try { const answer = JSON.parse(stdout); done = true; clearTimeout(timer); resolve(answer); }
-      catch { fail(new Error('Python NPZ re-derivation returned an invalid response.')); }
-    });
-    child.stdin.on('error', () => fail(new Error('Could not send verified NPZ bytes to Python.')));
-    child.stdin.write(`${JSON.stringify({ result })}\n`);
-    child.stdin.end(bytes);
-  });
-}
-
-async function validateArchivedSections(result: any, store: LpbfArtifactStore,
-  reader: (result: unknown, bytes: Buffer) => Promise<any> = rederivePythonSections): Promise<string | null> {
-  const descriptor = result?.barePlateSectionFieldArtifact;
-  if (descriptor?.schemaVersion !== 1 || descriptor?.status !== 'captured'
-    || descriptor?.path !== SECTION_FIELD_PATH || descriptor?.binding !== SECTION_FIELD_BINDING) {
-    return 'Archived run lacks the exact captured section-field artifact descriptor.';
-  }
-  if (!Array.isArray(result?.artifacts)) return 'Archived run artifact manifest is missing.';
-  const matches = result.artifacts.filter((item: any) => item?.path === SECTION_FIELD_PATH);
-  if (matches.length !== 1) return 'Archived run manifest must contain exactly one section-field artifact entry.';
-  const artifact = matches[0];
-  if (typeof artifact.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(artifact.sha256)
-    || !Number.isSafeInteger(artifact.size_bytes) || artifact.size_bytes <= 0
-    || artifact.size_bytes > MAX_SECTION_FIELD_BYTES) {
-    return 'Archived section-field artifact manifest has an invalid identity or exceeds the compressed-byte budget.';
-  }
-  try {
-    const verified = await store.verify({ sha256: artifact.sha256, byteSize: artifact.size_bytes });
-    const bytes = readFileSync(verified.path);
-    if (bytes.length !== artifact.size_bytes || sha(bytes) !== artifact.sha256) {
-      return 'Archived section-field artifact bytes changed or failed SHA-256 verification after store verification.';
-    }
-    const answer = await reader(result, bytes);
-    if (answer?.status !== 'validated') {
-      return typeof answer?.reason === 'string' ? answer.reason : 'Archived section-field artifact could not re-derive both thermal-proxy sections.';
-    }
-    return null;
-  } catch (error) {
-    return error instanceof Error && error.message ? `Archived section-field artifact verification failed: ${error.message}`
-      : 'Archived section-field artifact verification failed with a non-Error exception.';
-  }
 }
 
 function exactCase(table: any, caseNumber: string) {
@@ -129,78 +54,10 @@ function exactCase(table: any, caseNumber: string) {
   return matches.length === 1 ? matches[0] : null;
 }
 
-function runCampaignIdentity(record: RunRecord, result: any, observations: any[], sourceBinding: any) {
-  const core = result.coreContract, material = result.material;
-  if (!core || !material || !Array.isArray(observations) || observations.length !== 2) return null;
-  const scanStartX = result.scanPath?.[0]?.start?.[0];
-  if (!Number.isFinite(scanStartX)) return null;
-  const captureBytes = Buffer.from(record.document.capture.resultJson, 'utf8');
-  const runIdentity = {
-    runId: record.document.runId,
-    runDocumentSha256: record.documentSha256,
-    resultArtifact: { path: 'capture/result.json', sha256: sha(captureBytes), size_bytes: captureBytes.length },
-    inputSha256: core.inputSha256,
-    materialSha256: core.materialSha256,
-    materialId: material.materialId,
-    materialRevisionSha256: material.materialRevisionSha256,
-    coreContract: { schemaVersion: core.schemaVersion, modelId: core.modelId,
-      solverId: core.solverId, actualBackend: core.actualBackend },
-  };
-  const converted = [];
-  for (let index = 0; index < SECTION_IDS.length; index++) {
-    const sample = observations.find(item => item?.recordId === SECTION_RECORD_IDS[index]);
-    if (!sample || sample.status !== 'thermal-proxy' || !Number.isFinite(sample.width_um)
-      || !Number.isFinite(sample.depth_um) || sample.width_um <= 0 || sample.depth_um <= 0) return null;
-    const interp = sample.interpolationOperator;
-    const expectedX = scanStartX + SECTION_DISTANCES[index] * 1e-3;
-    const close = (left: unknown, right: number, tolerance = 1e-12) =>
-      typeof left === 'number' && Number.isFinite(left) && Math.abs(left - right) <= tolerance;
-    if (sample.operator !== SECTION_OPERATOR
-      || sample.scanLineScope !== 'one simulated +X track; not experimental repeats'
-      || !close(sample.distanceFromScanStart_mm, SECTION_DISTANCES[index], 1e-9)
-      || !close(sample.scanStartX_m, scanStartX)
-      || !close(sample.xCoordinate_m, expectedX)
-      || sample.temporalAggregation !== 'accepted-step maximum per source X plane, then spatially interpolated'
-      || sample.contourOperator !== CONTOUR_OPERATOR
-      || !Number.isSafeInteger(sample.sampleCells) || sample.sampleCells < 1
-      || sample.evidenceScope !== 'Numerical thermal proxy; no etched-boundary or experimental validation; one simulated line only'
-      || !Array.isArray(sample.sourcePlaneIndices) || !Array.isArray(sample.sourcePlaneX_m)
-      || !Array.isArray(sample.sourcePlaneX_um)
-      || sample.sourcePlaneIndices.some((value: unknown) => !Number.isSafeInteger(value) || Number(value) < 0)
-      || sample.sourcePlaneX_m.some((value: unknown) => typeof value !== 'number' || !Number.isFinite(value))
-      || sample.sourcePlaneX_um.some((value: unknown) => typeof value !== 'number' || !Number.isFinite(value))) return null;
-    if (interp === 'exact-cell-center') {
-      if (sample.sourcePlaneIndices.length !== 1 || sample.sourcePlaneX_m.length !== 1
-        || sample.sourcePlaneX_um.length !== 1 || sample.interpolationFraction !== 0
-        || !close(sample.sourcePlaneX_m[0], expectedX)
-        || !close(sample.sourcePlaneX_um[0], expectedX * 1e6, 1e-6)) return null;
-    } else if (interp === 'linear-interpolation-between-accepted-peak-temperature-planes-v1') {
-      if (sample.sourcePlaneIndices.length !== 2 || sample.sourcePlaneX_m.length !== 2
-        || sample.sourcePlaneX_um.length !== 2
-        || sample.sourcePlaneIndices[1] !== sample.sourcePlaneIndices[0] + 1
-        || sample.sourcePlaneX_m[0] > expectedX || sample.sourcePlaneX_m[1] < expectedX
-        || sample.sourcePlaneX_m[0] >= sample.sourcePlaneX_m[1]
-        || typeof sample.interpolationFraction !== 'number' || !Number.isFinite(sample.interpolationFraction)
-        || sample.interpolationFraction < 0 || sample.interpolationFraction > 1
-        || !close(sample.sourcePlaneX_m[0] + (sample.sourcePlaneX_m[1] - sample.sourcePlaneX_m[0])
-          * sample.interpolationFraction, expectedX)
-        || !close(sample.sourcePlaneX_um[0], sample.sourcePlaneX_m[0] * 1e6, 1e-6)
-        || !close(sample.sourcePlaneX_um[1], sample.sourcePlaneX_m[1] * 1e6, 1e-6)) return null;
-    } else return null;
-    converted.push({ sectionId: SECTION_IDS[index], coordinateFrame: 'scan-start-relative', scanDirection: '+X',
-      distanceFromScanStart_mm: sample.distanceFromScanStart_mm, surfaceZ_m: 0, status: 'thermal-proxy',
-      geometry: { width_um: sample.width_um, depth_um: sample.depth_um },
-      operator: { sectionOperatorId: SECTION_OPERATOR, interpolationOperatorId: interp,
-        contourOperatorId: CONTOUR_OPERATOR, evidenceClass: 'thermal-proxy-only' },
-      provenance: { sourceBinding, runIdentity } });
-  }
-  return { runIdentity, observations: converted };
-}
-
 export class LpbfNistProxyCampaignService {
   constructor(private readonly runRoot = path.resolve(process.env.METALLIKSA_LPBF_RUN_ROOT || '.lpbf-runs'),
     private readonly sourceRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources'),
-    private readonly sectionReader: (result: unknown, bytes: Buffer) => Promise<any> = rederivePythonSections) {}
+    private readonly sectionReader: (result: unknown, bytes: Buffer) => Promise<any> = rederiveProxyCampaignSections) {}
 
   async list(): Promise<ProxyCampaignRecord[]> {
     const runDb = path.join(this.runRoot, 'runs.sqlite');
@@ -231,6 +88,11 @@ export class LpbfNistProxyCampaignService {
     if (!Array.isArray(runIds) || runIds.length !== 3 || runIds.some(id => typeof id !== 'string' || !/^[a-f0-9]{32}$/.test(id))
       || new Set(runIds).size !== 3 || typeof caseNumber !== 'string') {
       throw new LpbfRunArchiveError(400, 'Provide exactly three distinct archived run IDs and a Table 4 case number.');
+    }
+    if (caseNumber !== '0') {
+      return { campaign: null, validation: unavailable([
+        'Proxy campaign v2 currently supports Table 4 case 0 only; other cases are unavailable.',
+      ]) };
     }
     let runs: LpbfRunRepository | null = null, sources: LpbfSourceRepository | null = null;
     try {
@@ -271,11 +133,24 @@ export class LpbfNistProxyCampaignService {
       const table = JSON.parse(bytes.toString('utf8')), row = exactCase(table, caseNumber);
       if (!row) return { campaign: null, validation: unavailable(['Selected Table 4 case is absent or ambiguous in the verified source.']) };
 
+      const gpuPilot = records.find(record => record.runKind === 'gpu-thermal-pilot');
+      if (gpuPilot) {
+        return { campaign: null, validation: unavailable([
+          `Archived GPU pilot ${gpuPilot.document.runId} is separate from CPU-core proxy eligibility.`,
+        ]) };
+      }
+      const eligibilityFailure = proxyCampaignEligibilityFailure(records, {
+        beamDiameter_um: row.beamDiameterD4sigma_um,
+        power_W: row.laserPower_W,
+        speed_mm_s: row.scanSpeed_mm_s,
+      });
+      if (eligibilityFailure) return { campaign: null, validation: unavailable([eligibilityFailure]) };
+
       const tracks = [];
       let sharedRunIdentity: any = null;
       for (let index = 0; index < records.length; index++) {
         const record = records[index], result = JSON.parse(record.document.capture.resultJson);
-        const settings = result.settings || {}, beam = result.measuredBeamProfileEvidence || {};
+        const settings = result.settings || {};
         if (record.runKind === 'gpu-thermal-pilot') {
           return { campaign: null, validation: unavailable([`Archived GPU pilot ${record.document.runId} is separate from CPU-core proxy eligibility.`]) };
         }
@@ -285,7 +160,7 @@ export class LpbfNistProxyCampaignService {
           || result.material?.materialId !== 'in718' || settings.surfaceMode !== 'bare-plate' || settings.tracks !== 1
           || settings.layers !== 1 || settings.trackLength_um !== 10000 || settings.scanAngle_deg !== 0
           || settings.power_W !== row.laserPower_W || settings.speed_mm_s !== row.scanSpeed_mm_s
-          || settings.beamDiameter_um !== row.beamDiameterD4sigma_um || beam.D4sigma_um !== row.beamDiameterD4sigma_um
+          || settings.beamDiameter_um !== row.beamDiameterD4sigma_um
           || !Number.isFinite(settings.preheat_C) || settings.preheat_C < 22.5 || settings.preheat_C > 24.5
           || !Number.isFinite(settings.speed_mm_s) || settings.speed_mm_s <= 0
           || !Array.isArray(result.scanPath) || result.scanPath.length !== 1
@@ -296,10 +171,10 @@ export class LpbfNistProxyCampaignService {
           || !Array.isArray(result.barePlateSectionObservations)) {
           return { campaign: null, validation: unavailable([`Archived run ${record.document.runId} is not a matching, core-bound IN718 bare-plate thermal track for Table 4 case ${caseNumber}.`]) };
         }
-        const sectionFailure = await validateArchivedSections(result,
+        const sectionFailure = await validateArchivedProxySections(result,
           new LpbfArtifactStore(path.join(this.runRoot, 'artifacts'), { readOnly: true }), this.sectionReader);
         if (sectionFailure) return { campaign: null, validation: unavailable([`Archived run ${record.document.runId}: ${sectionFailure}`]) };
-        const run = runCampaignIdentity(record, result, result.barePlateSectionObservations, sourceBinding);
+        const run = deriveProxyCampaignRunBinding(record, sourceBinding);
         if (!run) return { campaign: null, validation: unavailable([`Archived run ${record.document.runId} lacks both finite 4.9/6.0 mm thermal-proxy sections.`]) };
         const identity = run.runIdentity;
         const physicalIdentity = JSON.stringify({ inputSha256: identity.inputSha256, materialSha256: identity.materialSha256,
@@ -311,13 +186,20 @@ export class LpbfNistProxyCampaignService {
         tracks.push({ simulatedTrackId: `sim-${record.document.runId}`, experimentalTrackId: null,
           replicateKind: 'independent-computational-run', runIdentity: run.runIdentity, observations: run.observations });
       }
-      const campaignId = sha(JSON.stringify({ runIds, caseNumber, revision: link.revision, doc: link.documentSha256 })).slice(0, 32);
-      const campaign = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign', campaignId,
+      const schemaVersion = 2;
+      const campaignId = sha(JSON.stringify({ schemaVersion, runIds, caseNumber, revision: link.revision, doc: link.documentSha256 })).slice(0, 32);
+      const beamInputDeclaration = { status: 'published-source-declared', definition: 'D4sigma',
+        value_um: row.beamDiameterD4sigma_um, mappingStatus: 'conditional-ideal-Gaussian',
+        measuredProfileMatched: false, sourceBinding };
+      const campaign = { schemaVersion, kind: 'lpbf-nist-amb2022-03-proxy-campaign', campaignId,
         benchmark: 'AMB2022-03-TMPG', caseNumber, sourceBinding,
+        beamInputDeclaration,
         claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated', experimentalValidation: false, opticalOperatorMatched: false },
         samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: SECTION_DISTANCES,
-          expectedTrackCount: 3, expectedObservationCount: 6, replicateSemantics: 'independent-computational-runs-only' }, tracks };
-      const validation = await validatePython(campaign, sourceBinding);
+          expectedTrackCount: 3, expectedObservationCount: 6,
+          replicateSemantics: 'reproducibility-evidence-not-independent-replicates' },
+        tracks: tracks.map(track => ({ ...track, replicateKind: 'reproducibility-execution' })) };
+      const validation = await validatePython(campaign, sourceBinding, row.beamDiameterD4sigma_um);
       if (validation?.status !== 'proxy-screening-only' || validation.comparisonResiduals !== null
         || validation.experimentalValidation !== false || validation.validationStatus !== 'unvalidated') {
         return { campaign: null, validation: unavailable(Array.isArray(validation?.reasons) ? validation.reasons : ['Python proxy validator returned an invalid result.']) };

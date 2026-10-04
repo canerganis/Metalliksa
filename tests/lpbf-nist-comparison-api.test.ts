@@ -62,6 +62,31 @@ function alterProxySectionField(bytes: Buffer): Buffer {
   return Buffer.from(changed.stdout.trim(), 'base64');
 }
 
+function alterProxySectionArchiveTimestamp(bytes: Buffer): Buffer {
+  const python = getHostPython();
+  const code = [
+    'import base64,io,struct,sys,zipfile',
+    'data=bytearray(base64.b64decode(sys.stdin.buffer.read()))',
+    'archive=zipfile.ZipFile(io.BytesIO(data),"r")',
+    'for info in archive.infolist():',
+    ' offset=info.header_offset; timestamp=(1,33)',
+    ' if struct.unpack_from("<HH",data,offset+10)!=timestamp: struct.pack_into("<HH",data,offset+10,*timestamp)',
+    ' else: timestamp=(2,33); struct.pack_into("<HH",data,offset+10,*timestamp)',
+    ' cursor=archive.start_dir; found=False',
+    ' while data[cursor:cursor+4]==b"PK\\x01\\x02":',
+    '  name_size,extra_size,comment_size=struct.unpack_from("<HHH",data,cursor+28)',
+    '  name=data[cursor+46:cursor+46+name_size].decode("utf-8")',
+    '  if name==info.filename: struct.pack_into("<HH",data,cursor+12,*timestamp); found=True; break',
+    '  cursor+=46+name_size+extra_size+comment_size',
+    ' if not found: raise RuntimeError("Could not locate NPZ central-directory entry")',
+    'archive.close(); sys.stdout.buffer.write(base64.b64encode(data))',
+  ].join('\n');
+  const changed = spawnSync(python.cmd, [...python.prefix, '-c', code], { input: bytes.toString('base64'),
+    encoding: 'utf8', windowsHide: true, cwd: process.cwd(), maxBuffer: 4 * 1024 * 1024 });
+  if (changed.error || changed.status !== 0) throw changed.error || new Error(`Could not mutate NPZ archive metadata: ${changed.stderr}`);
+  return Buffer.from(changed.stdout.trim(), 'base64');
+}
+
 test('NIST optical HTTP gate uses archived exact source and verified bytes, and withholds pilot errors', async t => {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-nist-http-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -148,13 +173,17 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     sources: [exactLink] });
 
   const proxyRunIds = ['4', '5', '6'].map(value => value.repeat(32));
-  const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0'].map(value => value.repeat(16)));
+  const case0ExecutionMutants = ['wrong-diameter', 'wrong-power', 'wrong-speed', 'wrong-preheat',
+    'wrong-start', 'wrong-end', 'wrong-timing'] as const;
+  const case0ExecutionMutantIds = new Map(case0ExecutionMutants.map((kind, index) => [kind,
+    ['d', 'e', 'f'].map(value => `${value}${index}`.repeat(16))]));
+  const malformedProxyRunIds = ['0', '7'].map(value => value.repeat(32)).concat(['a0', 'b0', 'c0'].map(value => value.repeat(16)));
   const sectionFailureIds = ['2a', '2b', '2c', '2d', '2e', '2f', '30', '31'].map(value => value.repeat(16));
   const proxyResultJson = new Map<string, string>();
   const tableCase = JSON.parse(readFileSync(path.join(tableRoot, artifact.relativePath), 'utf8'))
     .cases.find((item: any) => item.caseNumber === '0');
   const producerFixture = createProxySectionFieldFixture();
-  async function saveProxyRun(runId: string, corruption?: 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
+  async function saveProxyRun(runId: string, corruption?: typeof case0ExecutionMutants[number] | 'distance' | 'operator' | 'x-coordinate' | 'linear-fraction'
     | 'missing-descriptor' | 'mismatched-descriptor' | 'missing-manifest'
     | 'changed-width' | 'changed-depth' | 'changed-sample-cells' | 'changed-plane'
     | 'compressed-budget') {
@@ -164,6 +193,10 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       beamDiameter_um: tableCase.beamDiameterD4sigma_um, preheat_C: 23.5,
       surfaceMode: 'bare-plate', tracks: 1, layers: 1, trackLength_um: 10000, scanAngle_deg: 0, mesh_um: 1000,
     };
+    if (corruption === 'wrong-diameter') settings.beamDiameter_um += 1;
+    if (corruption === 'wrong-power') settings.power_W += 1;
+    if (corruption === 'wrong-speed') settings.speed_mm_s += 1;
+    if (corruption === 'wrong-preheat') settings.preheat_C += 2;
     const material = { materialId: 'in718', materialRevisionSha256: sha('proxy-material-revision'),
       name: 'Inconel 718', quality: 'literature', source: 'synthetic service fixture', liquidus_K: 1600 };
     const inputJson = JSON.stringify(settings), materialJsonForRun = JSON.stringify(material);
@@ -187,6 +220,11 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
     const sectionArtifactIdentity = { relativePath: sectionArtifact.path, sha256: sectionArtifact.sha256, byteSize: sectionArtifact.size_bytes };
     await runStore.putFile(sectionJob, sectionArtifact.path, sectionArtifactIdentity);
     const artifacts = [runArtifact, ...(corruption === 'missing-manifest' ? [] : [sectionArtifact])];
+    const scanPath = [{ start: [-0.005, 0], end: [0.005, 0], start_s: 0,
+      end_s: 10 / settings.speed_mm_s }];
+    if (corruption === 'wrong-start') scanPath[0].start = [-0.004, 0];
+    if (corruption === 'wrong-end') scanPath[0].end = [0.004, 0];
+    if (corruption === 'wrong-timing') scanPath[0].end_s += 0.1;
     const result = {
       ...baseResult, runKind: 'transient-thermal', requestedMode: 'standard', effectiveMode: 'standard',
       settings, material,
@@ -207,9 +245,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
         resolvedPhysics: { conduction: true, transient: true, latentHeat: true,
           momentum: false, freeSurface: false, evaporation: false },
         inputSha256: sha(inputJson), materialSha256: sha(materialJsonForRun) },
-      measuredBeamProfileEvidence: { D4sigma_um: tableCase.beamDiameterD4sigma_um },
-      scanPath: [{ start: [-0.005, 0], end: [0.005, 0], start_s: 0,
-        end_s: 10 / tableCase.scanSpeed_mm_s }],
+      scanPath,
       barePlateSectionObservations: observations,
     };
     const resultJson = JSON.stringify(result);
@@ -220,7 +256,10 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       sources: [exactLink] });
   }
   for (const runId of proxyRunIds) await saveProxyRun(runId);
-  const corruptions = ['distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
+  for (const kind of case0ExecutionMutants) {
+    for (const runId of case0ExecutionMutantIds.get(kind)!) await saveProxyRun(runId, kind);
+  }
+  const corruptions = ['wrong-diameter', 'distance', 'operator', 'x-coordinate', 'linear-fraction'] as const;
   for (let index = 0; index < malformedProxyRunIds.length; index++) await saveProxyRun(malformedProxyRunIds[index], corruptions[index]);
   const sectionCorruptions = ['missing-descriptor', 'mismatched-descriptor', 'missing-manifest',
     'changed-width', 'changed-depth', 'changed-sample-cells', 'changed-plane', 'compressed-budget'] as const;
@@ -252,19 +291,69 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
       headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
     return { status: response.status, body: await response.json() };
   }
-  async function postCampaignPreview(runIds: string[]) {
+  async function postCampaignPreview(runIds: string[], caseNumber = '0') {
     const response = await fetch(`${endpoint}/proxy-campaigns/preview`, { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber: '0' }) });
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber }) });
     return { status: response.status, body: await response.json() };
   }
+  async function postCampaignCreate(runIds: string[], caseNumber = '0') {
+    const response = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds, caseNumber, previewSha256: '0'.repeat(64) }) });
+    return { status: response.status, body: await response.json() };
+  }
+
+  for (const kind of case0ExecutionMutants) {
+    const mutantIds = case0ExecutionMutantIds.get(kind)!;
+    const mutantHashes = mutantIds.map(id => JSON.parse(proxyResultJson.get(id)!).coreContract.inputSha256);
+    if (kind === 'wrong-diameter' || kind === 'wrong-power' || kind === 'wrong-speed' || kind === 'wrong-preheat') {
+      assert.equal(new Set(mutantHashes).size, 1, `${kind} mutant runs share the same recomputed input hash`);
+    }
+    const mutantPreview = await postCampaignPreview(mutantIds);
+    assert.equal(mutantPreview.status, 200, `${kind} mutant returns the service validation envelope`);
+    assert.equal(mutantPreview.body.campaign, null, `${kind} mutant must fail service eligibility`);
+    assert.ok(mutantPreview.body.validation.reasons.some((reason: string) => reason.includes('required Table 4 case-0 execution settings')),
+      `${kind} mutant must fail the shared Table 4 case-0 execution gate`);
+    const mutantCreate = await postCampaignCreate(mutantIds);
+    assert.equal(mutantCreate.status, 200, `${kind} create mutant returns the service validation envelope`);
+    assert.equal(mutantCreate.body.campaign, null, `${kind} mutant must fail service create eligibility`);
+    assert.deepEqual(mutantCreate.body.validation.reasons, mutantPreview.body.validation.reasons,
+      `${kind} preview and create must use the same eligibility gate`);
+  }
+
+  const unsupportedCasePreview = await postCampaignPreview(proxyRunIds, '1.1');
+  assert.equal(unsupportedCasePreview.status, 200);
+  assert.equal(unsupportedCasePreview.body.campaign, null);
+  assert.deepEqual(unsupportedCasePreview.body.validation.reasons, [
+    'Proxy campaign v2 currently supports Table 4 case 0 only; other cases are unavailable.',
+  ]);
 
   const proxyPreview = await postCampaignPreview(proxyRunIds);
   assert.equal(proxyPreview.status, 200);
   assert.equal(proxyPreview.body.validation.status, 'proxy-screening-only', JSON.stringify(proxyPreview.body.validation));
+  assert.equal(proxyPreview.body.validation.campaignId, proxyPreview.body.campaign.campaignId,
+    'successful service validation reports the producer campaign ID');
   assert.equal(proxyPreview.body.validation.comparisonResiduals, null);
   assert.equal(proxyPreview.body.campaign.claimBoundary.opticalOperatorMatched, false);
   assert.equal(proxyPreview.body.campaign.claimBoundary.experimentalValidation, false);
   assert.equal(proxyPreview.body.campaign.tracks.length, 3);
+  assert.equal(proxyPreview.body.campaign.schemaVersion, 2);
+  const expectedV2CampaignId = sha(JSON.stringify({ schemaVersion: 2, runIds: proxyRunIds, caseNumber: '0',
+    revision: proxyPreview.body.campaign.sourceBinding.revision,
+    doc: proxyPreview.body.campaign.sourceBinding.documentSha256 })).slice(0, 32);
+  const v1FormulaCampaignId = sha(JSON.stringify({ schemaVersion: 1, runIds: proxyRunIds, caseNumber: '0',
+    revision: proxyPreview.body.campaign.sourceBinding.revision,
+    doc: proxyPreview.body.campaign.sourceBinding.documentSha256 })).slice(0, 32);
+  assert.equal(proxyPreview.body.campaign.campaignId, expectedV2CampaignId);
+  assert.notEqual(proxyPreview.body.campaign.campaignId, v1FormulaCampaignId,
+    'v2 campaign ID is derived from the v2 formula, not the legacy v1 formula');
+  assert.deepEqual(proxyPreview.body.campaign.beamInputDeclaration, {
+    status: 'published-source-declared', definition: 'D4sigma', value_um: tableCase.beamDiameterD4sigma_um,
+    mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false,
+    sourceBinding: proxyPreview.body.campaign.sourceBinding,
+  });
+  assert.equal(proxyPreview.body.campaign.samplingPlan.replicateSemantics,
+    'reproducibility-evidence-not-independent-replicates');
+  assert.ok(proxyPreview.body.campaign.tracks.every((track: any) => track.replicateKind === 'reproducibility-execution'));
   for (let index = 0; index < proxyRunIds.length; index++) {
     const runId = proxyRunIds[index];
     const track = proxyPreview.body.campaign.tracks[index];
@@ -308,7 +397,7 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const unavailablePreview = await noPythonReader.preview(proxyRunIds, '0');
   assert.equal(unavailablePreview.campaign, null);
   assert.equal(unavailablePreview.validation.status, 'unavailable');
-  assert.match(unavailablePreview.validation.reasons.join(' '), /Python NPZ re-derivation reader is unavailable/i);
+  assert.match(unavailablePreview.validation.reasons.join(' '), /section-field artifact verification failed/i);
 
   const verifiedSection = JSON.parse(proxyResultJson.get(proxyRunIds[0])!).artifacts
     .find((item: any) => item.path === 'rectangular-corridor-section-fields.npz');
@@ -318,7 +407,10 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   LpbfArtifactStore.prototype.verify = async function(ref) {
     const verified = await originalVerify.call(this, ref);
     if (ref.sha256 === verifiedSection.sha256 && ++sectionVerifications === 4) {
-      writeFileSync(verified.path, Buffer.from('changed after successful store verification'));
+      const sameSizeMutation = alterProxySectionArchiveTimestamp(producerFixture.bytes);
+      assert.equal(sameSizeMutation.length, producerFixture.bytes.length, 'NPZ reread mutation must preserve byte length');
+      assert.notEqual(sha(sameSizeMutation), sha(producerFixture.bytes), 'NPZ reread mutation must change its digest');
+      writeFileSync(verified.path, sameSizeMutation);
     }
     return verified;
   };
@@ -332,6 +424,60 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   assert.equal(rereadMismatch.campaign, null);
   assert.match(rereadMismatch.validation.reasons.join(' '), /changed or failed SHA-256 verification after store verification/i);
 
+  const sectionArtifactPath = verifiedSectionPath;
+  const originalVerifyForReadFailure = LpbfArtifactStore.prototype.verify;
+  let sectionReadAttempts = 0;
+  LpbfArtifactStore.prototype.verify = async function(ref) {
+    if (ref.sha256 === verifiedSection.sha256 && ++sectionReadAttempts === 4) {
+      const error = new Error(`ENOENT: no such file or directory, open '${sectionArtifactPath}'`) as NodeJS.ErrnoException;
+      error.code = 'ENOENT';
+      throw error;
+    }
+    return originalVerifyForReadFailure.call(this, ref);
+  };
+  let sanitizedReadFailure;
+  try {
+    sanitizedReadFailure = await new LpbfNistProxyCampaignService(runRoot, sourceRoot).preview(proxyRunIds, '0');
+  } finally {
+    LpbfArtifactStore.prototype.verify = originalVerifyForReadFailure;
+  }
+  assert.equal(sanitizedReadFailure.campaign, null);
+  const sanitizedReason = sanitizedReadFailure.validation.reasons.join(' ');
+  assert.match(sanitizedReason, /section-field artifact verification failed/i);
+  assert.ok(!sanitizedReason.includes(sectionArtifactPath), 'filesystem failure messages must not disclose artifact paths');
+
+  const table4Binding = proxyPreview.body.campaign.sourceBinding;
+  const sourceArtifactSha = table4Binding.artifactSha256;
+  const originalSourceVerify = LpbfArtifactStore.prototype.verify;
+  let sourceArtifactPath = '';
+  let originalTable4Bytes: Buffer | null = null;
+  let table4Verifications = 0;
+  LpbfArtifactStore.prototype.verify = async function(ref) {
+    const verified = await originalSourceVerify.call(this, ref);
+    if (ref.sha256 === sourceArtifactSha && ++table4Verifications === 1) {
+      sourceArtifactPath = verified.path;
+      const capturedBytes = readFileSync(verified.path);
+      originalTable4Bytes = capturedBytes;
+      const originalText = capturedBytes.toString('utf8');
+      const changedText = originalText.replace(': ', ':\t');
+      assert.notEqual(changedText, originalText, 'fixture must contain JSON whitespace to mutate');
+      assert.equal(Buffer.byteLength(changedText), capturedBytes.length, 'Table 4 mutation must preserve byte size');
+      assert.deepEqual(JSON.parse(changedText), JSON.parse(originalText), 'case-0 settings and all Table 4 values stay unchanged');
+      writeFileSync(verified.path, Buffer.from(changedText, 'utf8'));
+    }
+    return verified;
+  };
+  let table4RereadMismatch;
+  try {
+    table4RereadMismatch = await new LpbfNistProxyCampaignService(runRoot, sourceRoot).preview(proxyRunIds, '0');
+  } finally {
+    LpbfArtifactStore.prototype.verify = originalSourceVerify;
+    if (originalTable4Bytes && sourceArtifactPath) writeFileSync(sourceArtifactPath, originalTable4Bytes);
+  }
+  assert.equal(table4Verifications, 1, 'test must mutate the source artifact only after its successful store verification');
+  assert.equal(table4RereadMismatch.campaign, null);
+  assert.match(table4RereadMismatch.validation.reasons.join(' '), /Table 4 source artifact bytes failed exact SHA-256 verification/i);
+
   const createProxy = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds,
       caseNumber: '0', previewSha256: proxyPreview.body.previewSha256 }) });
@@ -342,6 +488,15 @@ test('NIST optical HTTP gate uses archived exact source and verified bytes, and 
   const listedProxy = await fetch(`${endpoint}/proxy-campaigns`, { cache: 'no-store' });
   assert.equal(listedProxy.status, 200);
   assert.equal((await listedProxy.json()).length, 1);
+  const forgedDeclaration = await fetch(`${endpoint}/proxy-campaigns/preview`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds, caseNumber: '0',
+      beamInputDeclaration: proxyPreview.body.campaign.beamInputDeclaration }) });
+  assert.equal(forgedDeclaration.status, 400);
+  const forgedCreateDeclaration = await fetch(`${endpoint}/proxy-campaigns`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runIds: proxyRunIds, caseNumber: '0',
+      previewSha256: proxyPreview.body.previewSha256,
+      beamInputDeclaration: { ...proxyPreview.body.campaign.beamInputDeclaration, value_um: 999 } }) });
+  assert.equal(forgedCreateDeclaration.status, 400);
 
   const valid = await post(boundId, { caseNumber: '0' });
   assert.equal(valid.status, 200);
