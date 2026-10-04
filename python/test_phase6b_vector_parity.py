@@ -360,23 +360,22 @@ class XrdParityTest(unittest.TestCase):
                     self.assertLessEqual(shift, bound, (case, key, shift / sigma[k], d))
 
     def test_mutation_truncated_minimiser_is_detected(self):
-        import scipy.optimize
-        original = scipy.optimize.least_squares
-        with patch.object(scipy.optimize, "least_squares", lambda *a, **k: original(*a, **dict(k, max_nfev=2))):
+        import xrd_peak_deconvolution as xrd
+        original = xrd.least_squares
+        with patch.object(xrd, "least_squares", lambda *a, **k: original(*a, **dict(k, max_nfev=2))):
             mutated = _in_process("xrd_peak_deconvolution", "pv_ka2_cu111")
         old = load("xrd_peak_deconvolution", "pv_ka2_cu111")["stdout"]
         with self.assertRaises(AssertionError):
             self.assert_minimiser_parity(self, "pv_ka2_cu111", old, mutated)
 
-    def test_williamson_hall_and_empty_roi_do_not_import_scipy(self):
-        # Cold-spawn cost: scipy.optimize / numpy / input_validation load only for a fit.
+    def test_module_import_preloads_scipy_optimize(self):
+        # The IPC daemon pre-imports the module, so its warm-up (not the first fit)
+        # pays the scipy.optimize import; input_validation stays lazy.
         import subprocess
-        probe = ("import json, sys; import xrd_peak_deconvolution as x; "
-                 "x.solve_williamson_hall([{'twoTheta': 43.3}, {'twoTheta': 50.4}]); "
-                 "x.deconvolve_peak_roi([], 43.68, 4000.0); "
-                 "print(json.dumps(sorted(m for m in ('numpy', 'scipy', 'input_validation') if m in sys.modules)))")
+        probe = ("import json, sys; import xrd_peak_deconvolution; "
+                 "print(json.dumps(['scipy.optimize' in sys.modules, 'input_validation' in sys.modules]))")
         out = subprocess.run([sys.executable, "-B", "-c", probe], cwd=str(HERE), capture_output=True, check=True)
-        self.assertEqual(json.loads(out.stdout), [])
+        self.assertEqual(json.loads(out.stdout), [True, False])
 
 
 class NewValidationTest(unittest.TestCase):

@@ -11,9 +11,13 @@ import json
 import math
 import time
 
-# numpy, scipy.optimize and input_validation are imported where they are needed, so
-# the Williamson-Hall path and an empty ROI do not pay their import cost on a cold
-# spawn (the persistent IPC daemon pre-imports this module either way).
+import numpy as np
+from scipy.optimize import least_squares
+
+# numpy/scipy are imported at module level so the persistent IPC daemon, which
+# pre-imports this module, pays their import cost at warm-up instead of on the first
+# fit; only the ad-hoc spawn fallback pays it per call. input_validation is imported
+# only when a validation error is raised.
 
 def pseudo_voigt_profile(two_theta, center, intensity, fwhm, eta):
     """
@@ -61,7 +65,6 @@ def calculate_ka2_two_theta(ka1_two_theta, wavelength_ka1=1.540598, wavelength_k
 
 def _profile_array(two_theta, center, intensity, fwhm, shape, profile_type):
     """Vectorised pseudo_voigt_profile / pearson_vii_profile (same formulas and clamps)."""
-    import numpy as np
     delta = two_theta - center
     if profile_type == "pseudo-voigt":
         u = (delta / max(1e-5, fwhm / 2.0)) ** 2
@@ -82,9 +85,6 @@ def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, k
     eta in [0, 1] (pseudo-Voigt) or m in [0.8, 10] (Pearson-VII), intensity > 0.
     Returns the solution vector as Python floats.
     """
-    import numpy as np
-    from scipy.optimize import least_squares
-
     two_theta = np.asarray(two_theta, dtype=np.float64)
     y_exp = np.asarray(y_exp, dtype=np.float64)
     shape_lo, shape_hi = (0.0, 1.0) if profile_type == "pseudo-voigt" else (0.8, 10.0)
