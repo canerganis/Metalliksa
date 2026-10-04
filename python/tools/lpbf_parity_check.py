@@ -38,9 +38,15 @@ value (so goldens are never captured from an unpinned implementation). --twice
 runs every case twice in different work directories and refuses to write unless
 both runs are identical (determinism and work-directory independence).
 
-Platform note: goldens are recorded on Windows with the locked py312 runtime
-(numpy 2.2.6). G10 file trees are written with Path.write_text and therefore
-carry platform newlines; a check on another platform reports that explicitly.
+Reference machine only: the goldens are bit-exact results of ONE environment,
+recorded in each golden as recordedEnvironment (Python, numpy, OS, the locked
+runtime directory, CPU brand, numpy SIMD baseline/dispatch/found features, BLAS).
+--check is valid only there: when environment() differs, every case is reported
+"SKIP ... NOT VERIFIED" and the command exits 3 (never PASS);
+--allow-environment-mismatch compares anyway, for diagnostics only. This harness
+is therefore NOT part of CI; CI runs the environment-independent pin, source
+identity and closure tests. G10 file trees are hashed with CRLF -> LF and POSIX
+names, so their digests do not depend on the writer's platform newlines.
 """
 
 from __future__ import annotations
@@ -51,7 +57,6 @@ import hashlib
 import io
 import json
 import math
-import os
 import platform
 import shutil
 import subprocess
@@ -607,11 +612,18 @@ def _cfd_case_module():
 
 
 def _tree_observations(root: Path, prefix: str) -> Dict[str, Any]:
+    """File tree digest with platform-neutral names (POSIX) and newlines (CRLF -> LF).
+
+    The case writers use Path.write_text, i.e. platform newlines; normalising them keeps
+    the G10 goldens about content, not about the OS that wrote them.
+    """
     observations: Dict[str, Any] = {}
     files = sorted(p for p in root.rglob("*") if p.is_file())
     observations[f"{prefix}.files"] = [p.relative_to(root).as_posix() for p in files]
     for path in files:
-        data = path.read_bytes()
+        data = path.read_bytes().replace(b"\r\n", b"\n")
+        if str(root).encode() in data or root.as_posix().encode() in data:
+            raise AssertionError(f"{path.name} embeds the absolute case directory")
         observations[f"{prefix}.file.{path.relative_to(root).as_posix()}"] = [len(data), sha256_bytes(data)]
     return observations
 
@@ -622,7 +634,7 @@ def case_g10_openfoam_case_generation(ctx: CaseContext) -> Dict[str, Any]:
     from lpbf_simulation import validate
 
     cases_module = _cfd_case_module()
-    observations: Dict[str, Any] = {"platform.newline": repr(os.linesep)}
+    observations: Dict[str, Any] = {}
     for name in ("setup_droplet_case", "setup_stefan_case", "setup_darcy_damping_case",
                  "setup_thermal_parity_case", "setup_marangoni_case", "setup_recoil_case",
                  "setup_laser_case"):
@@ -840,9 +852,58 @@ def _git_head() -> Optional[str]:
         return None
 
 
+def _cpu_brand() -> str:
+    try:
+        if platform.system() == "Windows":
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+                return str(winreg.QueryValueEx(key, "ProcessorNameString")[0]).strip()
+        cpuinfo = Path("/proc/cpuinfo")
+        if cpuinfo.is_file():
+            for line in cpuinfo.read_text(encoding="utf-8", errors="replace").splitlines():
+                if line.lower().startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or "unknown"
+
+
+def _numpy_runtime() -> Dict[str, Any]:
+    """numpy SIMD dispatch (what np.show_runtime() summarises) and the BLAS build."""
+    info: Dict[str, Any] = {}
+    try:
+        from numpy._core._multiarray_umath import (__cpu_baseline__, __cpu_dispatch__,
+                                                    __cpu_features__)
+        info["simdBaseline"] = list(__cpu_baseline__)
+        info["simdDispatch"] = list(__cpu_dispatch__)
+        info["simdFound"] = sorted(name for name, found in __cpu_features__.items() if found)
+    except ImportError as exc:
+        info["simd"] = f"unavailable: {exc}"
+    try:
+        blas = np.show_config(mode="dicts")["Build Dependencies"]["blas"]
+        info["blas"] = f"{blas.get('name')} {blas.get('version')}"
+    except Exception as exc:  # noqa: BLE001 - informational only
+        info["blas"] = f"unavailable: {type(exc).__name__}"
+    return info
+
+
 def environment() -> Dict[str, Any]:
+    """Everything a bit-exact golden depends on besides the code: the goldens are valid
+    only where this is equal (the reference machine with the locked runtime)."""
     return {"python": platform.python_version(), "numpy": np.__version__,
-            "platform": platform.system(), "executable": Path(sys.executable).name}
+            "platform": platform.system(), "runtime": Path(sys.prefix).name,
+            "cpu": _cpu_brand(), "numpyRuntime": _numpy_runtime()}
+
+
+def environment_mismatch(recorded: Dict[str, Any]) -> Optional[str]:
+    current = environment()
+    if recorded == current:
+        return None
+    keys = sorted(k for k in set(recorded) | set(current) if recorded.get(k) != current.get(k))
+    return ("environment differs from the recording in " + ", ".join(keys)
+            + "; goldens are bit-exact only on the reference machine "
+              "(rerun there, or pass --allow-environment-mismatch to compare anyway)")
 
 
 def execute(case: Case, work_root: Path) -> Tuple[Dict[str, Any], List[str], float]:
@@ -965,7 +1026,8 @@ def command_record(args) -> int:
     return 1 if failures else 0
 
 
-def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Dict[str, Any]:
+def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
+               allow_environment_mismatch: bool = False) -> Dict[str, Any]:
     """Run one case against its golden; returns problems, observations and timing."""
     from lpbf_simulation import implementation_fingerprint
     path = golden_path(case)
@@ -980,6 +1042,10 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Di
         outcome["problems"] = [f"golden {path.name} has the wrong schema or case id"]
         return outcome
     current, pinned = implementation_fingerprint(), pinned_fingerprint()
+    mismatch = environment_mismatch(golden.get("recordedEnvironment", {}))
+    if mismatch is not None and not allow_environment_mismatch:
+        outcome["skipped"] = mismatch
+        return outcome
     try:
         observations, hashes, elapsed = execute(case, work_root)
     except CaseSkipped as skipped:
@@ -987,9 +1053,8 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False) -> Di
         return outcome
     problems, warnings = check_implementation(case, hashes, pinned, current, expect_unpinned)
     problems += diff_observations(golden["observations"], observations)
-    recorded_env = golden.get("recordedEnvironment", {})
-    if problems and recorded_env != environment():
-        problems.append(f"note: environment differs from the recording {recorded_env} -> {environment()}")
+    if mismatch is not None:
+        warnings.append(f"compared despite: {mismatch}")
     outcome.update(problems=problems, warnings=warnings, elapsed_s=elapsed, observations=observations,
                    implementationHashes=sorted(set(hashes)))
     return outcome
@@ -1004,7 +1069,8 @@ def command_check(args) -> int:
               "result implementationHash != implementation_fingerprint() still FAIL")
     failures = skips = 0
     for case in selected_cases(args):
-        outcome = check_case(case, Path(args.work_root), args.expect_unpinned)
+        outcome = check_case(case, Path(args.work_root), args.expect_unpinned,
+                             args.allow_environment_mismatch)
         if outcome["skipped"] is not None:
             skips += 1
             print(f"SKIP {case.id} [{case.group}] NOT VERIFIED: {outcome['skipped']}")
@@ -1045,6 +1111,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--force", action="store_true", help="overwrite existing goldens when recording")
     parser.add_argument("--twice", action="store_true", help="record: run twice and require identical observations")
     parser.add_argument("--work-root", default=str(DEFAULT_WORK_ROOT), help="scratch root for artifacts")
+    parser.add_argument("--allow-environment-mismatch", action="store_true",
+                        help="check: compare even when environment() differs from the recording "
+                             "(diagnostics only; a PASS there is not the reference-machine proof)")
     parser.add_argument("--expect-unpinned", action="store_true",
                         help="check: bump-branch mode (B1-B5), a fingerprint != pin mismatch is only a warning")
     args = parser.parse_args(argv)

@@ -197,6 +197,27 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(len(outcome["problems"]), 1)
         self.assertIn("changed fabbro.depth", outcome["problems"][0])
 
+    def test_goldens_record_the_full_reference_environment(self):
+        for case in parity.CASES:
+            with self.subTest(case=case.id):
+                recorded = json.loads(parity.golden_path(case).read_text(encoding="utf-8"))["recordedEnvironment"]
+                self.assertEqual(set(recorded), {"python", "numpy", "platform", "runtime", "cpu", "numpyRuntime"})
+                self.assertIn("simdFound", recorded["numpyRuntime"])
+                self.assertIn("blas", recorded["numpyRuntime"])
+
+    def test_other_environment_is_skipped_not_passed_unless_overridden(self):
+        case = parity.CASE_BY_ID["g12_analytical_modules"]
+        other = dict(parity.environment(), cpu="Some Other CPU")
+        with patch.object(parity, "environment", return_value=other):
+            skipped = parity.check_case(case, self.root)
+            self.assertIn("environment differs from the recording in cpu", skipped["skipped"])
+            self.assertEqual(skipped["observations"], {})
+            self.assertEqual(parity.main(["--check", "--case", case.id, "--work-root", str(self.root)]), 3)
+            compared = parity.check_case(case, self.root, allow_environment_mismatch=True)
+        self.assertIsNone(compared["skipped"])
+        self.assertEqual(compared["problems"], [])
+        self.assertTrue(any("compared despite" in w for w in compared["warnings"]))
+
     def test_g11_is_skipped_not_passed_when_warp_is_importable(self):
         import importlib.util
         original = importlib.util.find_spec

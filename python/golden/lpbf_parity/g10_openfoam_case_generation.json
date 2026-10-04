@@ -6,20 +6,73 @@
  "slow": false,
  "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "81bc1d9c85536d3821d02ff2df9cf636c1165cac",
+ "recordedGitHead": "ed0df5079de9dbe2daa6d61121926ff148d2aec8",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
   "platform": "Windows",
-  "executable": "python.exe"
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
  },
  "recordedRuns_s": [
-  2.2,
+  1.5,
   0.4
  ],
  "recordedTwice": true,
  "observations": {
-  "platform.newline": "'\\r\\n'",
   "cfd.setup_droplet_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_droplet_case.files": [
    "0/alpha.metal",
@@ -39,64 +92,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_droplet_case.file.0/alpha.metal": [
-   3258,
-   "7085c40470cf9cf1d96322dcd2f3df5fdd85e0e7da47cecbccd5a3e69523e4ee"
+   2826,
+   "68447736301d54d0ba99fb12d1a6a25d31601b87a041a19750a5c64283ef92f6"
   ],
   "cfd.setup_droplet_case.file.0/liquidFraction": [
-   2833,
-   "1244cf973768a870e9f068a88fc13d29fd50539e71a6d6a4e5cc9a370ec34f22"
+   2401,
+   "de898ada50b0c1c1a77c5c3b4f311645c564d75047b74957011efb784cb8f11e"
   ],
   "cfd.setup_droplet_case.file.0/p_rgh": [
-   848,
-   "bf29355704bdb969b240a040e245cb48fc8c8cd343ed51e651e231598107098f"
+   818,
+   "db98f87755bf2c961dc16dff0bfc96d33c69c4843b13bd01037ad460990cf089"
   ],
   "cfd.setup_droplet_case.file.0/T": [
-   809,
-   "8230aed026d333e3e404ed090c22bc71e958b20756bb162e5442d740d9c9cb7a"
+   780,
+   "27b45022f850ea45dbf90c7f9a01e505d14908d7978557cf1204dd384128ba28"
   ],
   "cfd.setup_droplet_case.file.0/U": [
-   803,
-   "e8909d3274efd69ec28c17388d1a04e8df0c185677667b09f7fe1c00a95f2367"
+   774,
+   "ff5736cdc49d94e1321bc1357215ebef992ab598888303505a74609ccdcf5b39"
   ],
   "cfd.setup_droplet_case.file.constant/g": [
-   659,
-   "c5f5a8b142446505f1ed80effedea9dd092640fabd271baab952d106735fee27"
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
   ],
   "cfd.setup_droplet_case.file.constant/momentumTransport": [
-   642,
-   "dbca20dd355714cd898411e0c2d885d046bfcdc9175f68b01b0b8e6f637349e1"
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
   ],
   "cfd.setup_droplet_case.file.constant/phaseProperties": [
-   666,
-   "c6873f97aa4081e7489d9003f1bf23950cf3d64a3acc05adb82cc0bcb7a617bd"
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
   ],
   "cfd.setup_droplet_case.file.constant/physicalProperties.gas": [
-   696,
-   "d7f82d53117804e0e36ed7dcd66dbbf11014cdc94dec5a605cb3006f4c6a4872"
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
   ],
   "cfd.setup_droplet_case.file.constant/physicalProperties.metal": [
-   699,
-   "6cd006995863f1a023f43bc1fb9dc5b108c6114a07f90eefc9fbe709b15742a3"
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
   ],
   "cfd.setup_droplet_case.file.constant/thermalProperties": [
-   808,
-   "59d914333eb1f8993d8f1976d875e94c88dcf393e8d6955aa92e4a8032498d5e"
+   784,
+   "35af69b83c82eb86a3c5636c7bd784b43e127e361c4fb3a47bbb8672cd1a19a7"
   ],
   "cfd.setup_droplet_case.file.system/blockMeshDict": [
-   1261,
-   "2e7dd220a417b129691b7bb63a8a3372fd232da8da5d6c5453e677cd8ddf0583"
+   1201,
+   "f0483b70d6496234769a8c15f5d755fe8f48cdd92037e6df5833d54ac3e447ee"
   ],
   "cfd.setup_droplet_case.file.system/controlDict": [
-   976,
-   "0600cb3228d61e54b69e9bdca308dc4e62bd1325c40cf06a115da8f086852456"
+   945,
+   "2be8c9ad854b6eb6eea3d4ebcef0797c7be748e3a2599d6765b63cbc03897992"
   ],
   "cfd.setup_droplet_case.file.system/fvSchemes": [
-   1153,
-   "0117f7645be22fc6448e38adc135931113db0157b92c066402fd43687a3fb138"
+   1109,
+   "8137ff3840db049b4ac7d21c8acf39f8aa65d3ef6a9b2ca7410e457988a7d785"
   ],
   "cfd.setup_droplet_case.file.system/fvSolution": [
-   1787,
-   "3c4826406d937d066f1820e3896904c9543942db821df47da12ec2d32f1d1a89"
+   1712,
+   "1111bc4c17b1929138e7ac88ace5653eba51f23c2bcac509e92decafe026448d"
   ],
   "cfd.setup_stefan_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_stefan_case.files": [
@@ -117,64 +170,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_stefan_case.file.0/alpha.metal": [
-   831,
-   "794b2e869bcaacd7b73a14b38422f9dbf48031eb56490d33cc2a09299bf32290"
+   806,
+   "cad101b7e7665d84d8f770aef4b28e32b8a4b6bb369fde9787a4248a55551b34"
   ],
   "cfd.setup_stefan_case.file.0/liquidFraction": [
-   834,
-   "ba6078a90cd595c019f2d37066ef279857b5d53326003a7db7f2b541260f84d6"
+   809,
+   "975611c441388e814fedfabdd49b694a48840d2f92a60fe87d65f8d780635f6e"
   ],
   "cfd.setup_stefan_case.file.0/p_rgh": [
-   899,
-   "ec06355894bf9f8a9acfc8e1392135f09f888fbb7c62b6cb2aecf6ffb18e634d"
+   874,
+   "268a97ad4e00ed3585652860e7f6d8f5fda2e16154411933ab7d21911f3ffb5c"
   ],
   "cfd.setup_stefan_case.file.0/T": [
-   857,
-   "873f3a53d6324bc4c6dad9e9d78a37860fbd472ddb980eaa024bddaaecdbea53"
+   832,
+   "9035bf8ba5b929c34f257f1476d6b748a3be14b82544ccf88990731536b3a317"
   ],
   "cfd.setup_stefan_case.file.0/U": [
-   817,
-   "4bbe976f6b3a953973fea2f84f5d05dafc7a8379f75426f2bbfac197181d299d"
+   792,
+   "0c0d175a5a5215acfe4e6bd1d0f77bc6512bb44a6c2c56167823eec499d6a6e8"
   ],
   "cfd.setup_stefan_case.file.constant/g": [
-   659,
-   "c5f5a8b142446505f1ed80effedea9dd092640fabd271baab952d106735fee27"
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
   ],
   "cfd.setup_stefan_case.file.constant/momentumTransport": [
-   642,
-   "dbca20dd355714cd898411e0c2d885d046bfcdc9175f68b01b0b8e6f637349e1"
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
   ],
   "cfd.setup_stefan_case.file.constant/phaseProperties": [
-   666,
-   "c6873f97aa4081e7489d9003f1bf23950cf3d64a3acc05adb82cc0bcb7a617bd"
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
   ],
   "cfd.setup_stefan_case.file.constant/physicalProperties.gas": [
-   696,
-   "d7f82d53117804e0e36ed7dcd66dbbf11014cdc94dec5a605cb3006f4c6a4872"
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
   ],
   "cfd.setup_stefan_case.file.constant/physicalProperties.metal": [
-   699,
-   "6cd006995863f1a023f43bc1fb9dc5b108c6114a07f90eefc9fbe709b15742a3"
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
   ],
   "cfd.setup_stefan_case.file.constant/thermalProperties": [
-   808,
-   "ab680ff3633326d5455de6cb81a9e4282465697756c57928c22cdbffa65b82eb"
+   784,
+   "ca09d39fb0aead5ba5a01722afc1684a5cb880a1e4191b3f5fc62ad819448b34"
   ],
   "cfd.setup_stefan_case.file.system/blockMeshDict": [
-   1329,
-   "7aaa636dc60e1e1e98dd76469e21af662a0c5ead06a716e4884f9437c79388a8"
+   1261,
+   "af9230b5f75ad17144aba84926479de13fe9ae487532c91b6f27ced4a2851b7a"
   ],
   "cfd.setup_stefan_case.file.system/controlDict": [
-   976,
-   "dade3f07d5439c86b403111e87049561d1b72a23985c8bcfb04bdbcad54f026f"
+   945,
+   "b79126f12f1d93251ac06004bd59ec9e3c9d2ed56ee3dec53c70e79a6508bdc3"
   ],
   "cfd.setup_stefan_case.file.system/fvSchemes": [
-   1153,
-   "0117f7645be22fc6448e38adc135931113db0157b92c066402fd43687a3fb138"
+   1109,
+   "8137ff3840db049b4ac7d21c8acf39f8aa65d3ef6a9b2ca7410e457988a7d785"
   ],
   "cfd.setup_stefan_case.file.system/fvSolution": [
-   1682,
-   "99c82feeaf52425b605cd34c691a517d19cf73b2a3fdfa4bcb26c8c99621afca"
+   1612,
+   "9383fbf3f7cc4f3d1a6eb5d1bce49434f0983d26be85424c5f53c6c00a2337ca"
   ],
   "cfd.setup_darcy_damping_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_darcy_damping_case.files": [
@@ -195,64 +248,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_darcy_damping_case.file.0/alpha.metal": [
-   846,
-   "837dd1379cfa397365a44c50600ababfb56c167ed632fd20f736ba6304ec8a15"
+   821,
+   "7a7a5cbf7533fa8aa8cdad81f58ed0e05f5e4ecf1db403869309a4030ffdde83"
   ],
   "cfd.setup_darcy_damping_case.file.0/liquidFraction": [
-   1859,
-   "277dbd8749776b7e59e7085f123754b9f18d58d7f541ca6d0effe2b1974b223c"
+   1631,
+   "0a60c0258b02cfb144946b2a1ff90b22d583e2d8ad3b3a85c874c6aba4dfe09e"
   ],
   "cfd.setup_darcy_damping_case.file.0/p_rgh": [
-   887,
-   "dfdf98f40783c4d4e352abef74558e0472cc3e1ec496282448d7fc21a54778cc"
+   862,
+   "2b897c90917ad610bf8421f962ec74f1b52d687a17a4f1bec951409555277bca"
   ],
   "cfd.setup_darcy_damping_case.file.0/T": [
-   2357,
-   "e11fa5818bc66ec5a1f76c54b35c656bd3bdfc5ceb1ec005600356417958081b"
+   2129,
+   "6b689d447efd9eb04b2981d92165eb8f2aedfa95cda2e0b094c61eaf72bff053"
   ],
   "cfd.setup_darcy_damping_case.file.0/U": [
-   865,
-   "eff23eede2e26bcf3da7cbd8687daec2f75cd5a8f4ab876893aab7317f2edc4e"
+   840,
+   "3332cc5e7568ecd92e3319939bc60ac16004636c88860b8fd9d3b2a9c62def18"
   ],
   "cfd.setup_darcy_damping_case.file.constant/g": [
-   659,
-   "c5f5a8b142446505f1ed80effedea9dd092640fabd271baab952d106735fee27"
+   641,
+   "98eef6e69cf73de6e75a22947dc5938391babac6d0760bfda09f10709368d169"
   ],
   "cfd.setup_darcy_damping_case.file.constant/momentumTransport": [
-   642,
-   "dbca20dd355714cd898411e0c2d885d046bfcdc9175f68b01b0b8e6f637349e1"
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
   ],
   "cfd.setup_darcy_damping_case.file.constant/phaseProperties": [
-   666,
-   "c6873f97aa4081e7489d9003f1bf23950cf3d64a3acc05adb82cc0bcb7a617bd"
+   648,
+   "b12fbe69bb0fa59c444f6b532b33fa448b502ff3d40735b6196441eef5d6bb76"
   ],
   "cfd.setup_darcy_damping_case.file.constant/physicalProperties.gas": [
-   696,
-   "d7f82d53117804e0e36ed7dcd66dbbf11014cdc94dec5a605cb3006f4c6a4872"
+   677,
+   "0424cb510bb7fe3e461af540225931344544c1ca05dc2daca9c2fd79988098f4"
   ],
   "cfd.setup_darcy_damping_case.file.constant/physicalProperties.metal": [
-   699,
-   "6cd006995863f1a023f43bc1fb9dc5b108c6114a07f90eefc9fbe709b15742a3"
+   680,
+   "60969d7a759122e4fcef29f40c312a0c7f7130e2a60abc540e95084ee6c2f75c"
   ],
   "cfd.setup_darcy_damping_case.file.constant/thermalProperties": [
-   808,
-   "ab680ff3633326d5455de6cb81a9e4282465697756c57928c22cdbffa65b82eb"
+   784,
+   "ca09d39fb0aead5ba5a01722afc1684a5cb880a1e4191b3f5fc62ad819448b34"
   ],
   "cfd.setup_darcy_damping_case.file.system/blockMeshDict": [
-   1340,
-   "1b9370d836272e99d99d9f34d7d2b9ea1775b4885660944dbda741716b53dc0f"
+   1276,
+   "9819ee28978399082aa2a4fd52449acd37c96ef610ca3741db8d5c09d04bc279"
   ],
   "cfd.setup_darcy_damping_case.file.system/controlDict": [
-   976,
-   "86ee07a6d2ea6fe08cdae841418a95a0e316c508d39e8cf4196fc66f594aeb03"
+   945,
+   "44a165dbce78852b190da92ea46b7fd124941fe311c2d28c70b35e39d748075c"
   ],
   "cfd.setup_darcy_damping_case.file.system/fvSchemes": [
-   1105,
-   "d49cc3fc54cabf653e32892363f33940aea9565a0a7393aead31f4ada50c9898"
+   1062,
+   "cfb32f89d67675342c54962fc6449f7e5e3cdc06a49a3457b72d730371ffa182"
   ],
   "cfd.setup_darcy_damping_case.file.system/fvSolution": [
-   1531,
-   "b05f00c7953bbd96706dc2efdff4b1566766fde98add0d047eec4a558c9888a5"
+   1472,
+   "b61d98cc59517463ea608ce9c25416e30b51c49967a4316a5c12dd900f0629d3"
   ],
   "cfd.setup_thermal_parity_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_thermal_parity_case.files": [
@@ -273,64 +326,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_thermal_parity_case.file.0/alpha.metal": [
-   811,
-   "f1ab6aa4032704237989994a094b8bf1ec2856cf863bae1def8a86d41588f78e"
+   786,
+   "1915c2c29698c57f7252d9cc59194287c6a39e98ca7a5bd07d26f685ab751594"
   ],
   "cfd.setup_thermal_parity_case.file.0/liquidFraction": [
-   814,
-   "824c088cad2c0aac7d6320a45ab23a81534be0a7bf55f87daa227abe48cebdb9"
+   789,
+   "10a0938faf40c98b2d9445e053615ad8697abedf243bbecb64dd9fb0397c7001"
   ],
   "cfd.setup_thermal_parity_case.file.0/p_rgh": [
-   879,
-   "17fad50c939aae85f7cb6b391bb4ecc73c2e37357f3c4b26c184ef67130ab984"
+   854,
+   "9f6e923054a6045a91bc9725472f32dca63f7f88ddd70dace51022a5e08e5379"
   ],
   "cfd.setup_thermal_parity_case.file.0/T": [
-   835,
-   "0d21046fe258adbca975add18640c0af0ffae6e5d6302cb751265b4aa3f8bca8"
+   810,
+   "3624156919741b5ab76575a7b5d33b43ecbd04be541ac2cd2825e314349e01d4"
   ],
   "cfd.setup_thermal_parity_case.file.0/U": [
-   878,
-   "f85aa0d0be748c8a04015b2119655d0407f2219d1cc9acebbf9896d72850f49e"
+   853,
+   "4cc31c1afa335d3ca7bca4732fd3ae169a1cd40ad833206173ed447e63cda0fe"
   ],
   "cfd.setup_thermal_parity_case.file.constant/g": [
-   644,
-   "0830a4dfc3357b668fc7fbadd426cf2eb5681f076d920a24e4f8abfd0bb20a52"
+   626,
+   "d138b6c533437bef74e4b850ddf8198a3dc1a76d428592f935f4d5e512f07633"
   ],
   "cfd.setup_thermal_parity_case.file.constant/momentumTransport": [
-   641,
-   "261c43ed22eb3d6b3aa7f1f9ad2ae9c6a9d349cc7605660bd7eeaeefde3c894a"
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
   ],
   "cfd.setup_thermal_parity_case.file.constant/phaseProperties": [
-   647,
-   "258b18ca38f27c4ea9c0e80737a0d58377eb0cc2c61d886440ac9e566fed44c0"
+   629,
+   "6567e45df60f1b83ece3614f0d5bf19862631a6c707d01d402e56de1b4e6db44"
   ],
   "cfd.setup_thermal_parity_case.file.constant/physicalProperties.gas": [
-   670,
-   "f1f4f2d97e42637f93ed46fb79981b715e0b6e5e77a839e1b6e0320a27d4618a"
+   651,
+   "978f3dcf218f69d1206dec8c399e6182b7153507d4d1c766517272a2000f76e4"
   ],
   "cfd.setup_thermal_parity_case.file.constant/physicalProperties.metal": [
-   673,
-   "6fc778a1d54bb83a36ac65d7e9721950d25dc39106ebe79ea4095bdfddc229a9"
+   654,
+   "78198eed90374cb2b2aaa818d6d3bb9c922abb67dfc837d3a19bdf702ac9edf7"
   ],
   "cfd.setup_thermal_parity_case.file.constant/thermalProperties": [
-   744,
-   "ae321d414e605bae44c110f9ad113dd0d31298bbeded85d01c0460eac17d845e"
+   720,
+   "3e86c0d24a52330e6f7d121c5240779c2acb03cdb30fbf925e087dc2efb42361"
   ],
   "cfd.setup_thermal_parity_case.file.system/blockMeshDict": [
-   1321,
-   "6ea0b78b5927e95b8e565eefdbd2034eb02817074581f9715319d0eb2d7ef980"
+   1257,
+   "6dfc577467da32ae139ada9bb0ec1661c2c7b3a1c361a6e012d975ea397358c2"
   ],
   "cfd.setup_thermal_parity_case.file.system/controlDict": [
-   976,
-   "d8343e8e5f447a6c457a3a5685805a95d099afa2da58fe7de71c74a4d6db1124"
+   945,
+   "60d90cbc0014b8ae2a8cddfd72b0a8408bd2bf8802220c30a9645a0174d391e0"
   ],
   "cfd.setup_thermal_parity_case.file.system/fvSchemes": [
-   1027,
-   "66a68dbbfb46265ccaa90211c5eefb7c5d5e5c2805ef243c7b20b0901b7e831e"
+   999,
+   "e3af8ea18b2dd731a63bd22e4847d251d1c1d4f567f84083a5e5289a120845e8"
   ],
   "cfd.setup_thermal_parity_case.file.system/fvSolution": [
-   1660,
-   "21fb5823dbe16f8e2f69332b6bd6e42d582de9f3b921659a66cd15725f049d2b"
+   1590,
+   "3e9e8a96be8e68450ae16bf9502748820cd7fbd1ea99d990d1c1fd40f1b35d8a"
   ],
   "cfd.setup_marangoni_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_marangoni_case.files": [
@@ -351,64 +404,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_marangoni_case.file.0/alpha.metal": [
-   2100,
-   "4633e469e65272350983b6ff7eb898bf33f4405915c7516ff3b001e2e4d9b5ab"
+   1670,
+   "b4263121da8bec2b5e8dfe16dd1b65761e17129573a4a53cc00fb71f964c9819"
   ],
   "cfd.setup_marangoni_case.file.0/liquidFraction": [
-   863,
-   "ba95de72d0d2e0e99821e1b37da5750a1f89b0eebac77979fd726413492afe07"
+   837,
+   "5fc740e2df0a739317e7985e2ae840ce560a588a8c1e4d41ed26afdeaf0d1799"
   ],
   "cfd.setup_marangoni_case.file.0/p_rgh": [
-   957,
-   "908e12097abd80db7cc6150bb7fd7dbaeeb1cfd438e73d0f7e3c1e39a290effd"
+   931,
+   "578da06f5c5b6ee35427a21adfccd98ba6ce559eecbb5876f1bc5a5b3a0dd13d"
   ],
   "cfd.setup_marangoni_case.file.0/T": [
-   5169,
-   "0cf2f332dc3a53a5c55b067a78bd2807ae1e5dc41923d48ac0eb28e945f5854d"
+   4739,
+   "773013703a9ac851c49f51f8f89ddfd3c70713c79e718dfd3d2715c36a189cbb"
   ],
   "cfd.setup_marangoni_case.file.0/U": [
-   842,
-   "60470861b3d470592704ab2d371a5a46c5642996ca1000da577296d4490c06ef"
+   816,
+   "8c2693801c0fd48a83fecc314a39e77d79cfbab1181afce09d31524e29fdeb78"
   ],
   "cfd.setup_marangoni_case.file.constant/g": [
-   678,
-   "e665823090d040de53c94a50e52231d4164eaaeb8eafcc2beeef13e7fc1267f3"
+   660,
+   "c4a31d247f39c92d27008c040132f022eb2a28b8bceaf626ad269ed5915f39b8"
   ],
   "cfd.setup_marangoni_case.file.constant/momentumTransport": [
-   642,
-   "dbca20dd355714cd898411e0c2d885d046bfcdc9175f68b01b0b8e6f637349e1"
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
   ],
   "cfd.setup_marangoni_case.file.constant/phaseProperties": [
-   667,
-   "259e8219b3f9d4771d9cd1ae63dd220a2ea3e4de8fd11b7325ee5adc9b104add"
+   649,
+   "e6a88fe6e1d123f3cc30cda07be82f843da6061bcd3a605e422d8cf9ed7150ed"
   ],
   "cfd.setup_marangoni_case.file.constant/physicalProperties.gas": [
-   695,
-   "56d6444f549692a9ff833a80163abb752dc88b3e201f24e91e22f96075195f04"
+   676,
+   "1836bf0332b14f911b8f18c6498c1137d937962406f953a268789fffe62f3743"
   ],
   "cfd.setup_marangoni_case.file.constant/physicalProperties.metal": [
-   696,
-   "08d9e2c8e9f28a98d91acdd1ffaa92060e7c2989b211beab1d8d0812efe6ca0b"
+   677,
+   "27fa1cd0f55aaec202e0be60a551ed271cc95153a2fea2f61d5f69a5cbb4ea9b"
   ],
   "cfd.setup_marangoni_case.file.constant/thermalProperties": [
-   995,
-   "516c63ae2a63731f8269f445f966a2d3c74332b7edbd1322c93909b141acfec7"
+   964,
+   "6e9be40daebb898555780162675c492d7df09d63194369fa9389903cfd14f422"
   ],
   "cfd.setup_marangoni_case.file.system/blockMeshDict": [
-   1270,
-   "50848c20e39ae8f850f01dd3007dcaec1ba76921b0597321927a626d0263f7c3"
+   1227,
+   "0e4ef693185421849c58ef8e5ceb0d01c91bf84cec89d7b9e71f1ab974e33636"
   ],
   "cfd.setup_marangoni_case.file.system/controlDict": [
-   907,
-   "7dc78fcae789cb95563564db1dfec5403b0187266570fa47b532ecf34b1339bf"
+   879,
+   "73647433f0a29f25b6d073fac255d299c13c948cb5c4a149031c0fd04678b395"
   ],
   "cfd.setup_marangoni_case.file.system/fvSchemes": [
-   1078,
-   "ff3b58bb409a0d2a9806e037bc27fb358a3b0cbffd9770294ddb76d24979d51e"
+   1049,
+   "ba25ba9e2b63611b9aa88908cf97cc6bba5944eec3b999037037c9735a8336a3"
   ],
   "cfd.setup_marangoni_case.file.system/fvSolution": [
-   1568,
-   "3dda21a20e69833f029e3a8d29fdd808faee225b5536182a3acbb44c2acd59bd"
+   1515,
+   "198045783d868ebd7d7d5e8a6d301110f586f193ff554871b068a3aa467e463b"
   ],
   "cfd.setup_recoil_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_recoil_case.files": [
@@ -430,68 +483,68 @@
    "system/fvSolution"
   ],
   "cfd.setup_recoil_case.file.0/alpha.metal": [
-   2100,
-   "03d4c3455be273d80ab2413cbff4fca5d7cfa0ce9ff90333f9ae695ccd022ff7"
+   1670,
+   "c89f26bd8a1d1cda6ff61dbd36746902d690f70446d040136caa23f97533016c"
   ],
   "cfd.setup_recoil_case.file.0/liquidFraction": [
-   863,
-   "42ec28c1ce659e9ac947e2a3698dc5faedac7787bfe10ce8a65fd7da86376030"
+   837,
+   "6ebd614223fd596ff19641afeb6bc040c37b6ae7813a92e20320892c9e9618f8"
   ],
   "cfd.setup_recoil_case.file.0/p": [
-   880,
-   "17940838a168b8a153e3c2e571d72afd28a73a28f75210ce837cd5392d1f8bf4"
+   854,
+   "10429c1c80e4531c9d4c473649e5e0f41b4a5a796cc2076cbeb3bffd9b5e20a2"
   ],
   "cfd.setup_recoil_case.file.0/p_rgh": [
-   957,
-   "c03835b9db9f0822b9aece9e8a88919c7fd7f2d7247204c5c7ad3d86c3a6746d"
+   931,
+   "ec63150ff80f5fd65b6d94a771c07a730117450b900c45d37a8afb7567ed2d05"
   ],
   "cfd.setup_recoil_case.file.0/T": [
-   4370,
-   "2fb8d6c7d423de3726dc8d0f9b013464d4fc3423511a82526c0f33e33ff38422"
+   3940,
+   "83e572435855a97f9fc200e5ba3ee66547014a16719bca449203d55d89ad4500"
   ],
   "cfd.setup_recoil_case.file.0/U": [
-   840,
-   "a1f8ef9c7af57e6ed2b9b438982e060c4253318826a0624f20410006989e3396"
+   814,
+   "5371ccda5c9a31589e164c5d9e62ac654d22ef8768658bb4e90368772af7116c"
   ],
   "cfd.setup_recoil_case.file.constant/g": [
-   678,
-   "e665823090d040de53c94a50e52231d4164eaaeb8eafcc2beeef13e7fc1267f3"
+   660,
+   "c4a31d247f39c92d27008c040132f022eb2a28b8bceaf626ad269ed5915f39b8"
   ],
   "cfd.setup_recoil_case.file.constant/momentumTransport": [
-   642,
-   "dbca20dd355714cd898411e0c2d885d046bfcdc9175f68b01b0b8e6f637349e1"
+   625,
+   "40d797d767b9dc9bde0e5dca6411ef8484475a111787b662f4cf2e09158ee9f8"
   ],
   "cfd.setup_recoil_case.file.constant/phaseProperties": [
-   667,
-   "259e8219b3f9d4771d9cd1ae63dd220a2ea3e4de8fd11b7325ee5adc9b104add"
+   649,
+   "e6a88fe6e1d123f3cc30cda07be82f843da6061bcd3a605e422d8cf9ed7150ed"
   ],
   "cfd.setup_recoil_case.file.constant/physicalProperties.gas": [
-   695,
-   "56d6444f549692a9ff833a80163abb752dc88b3e201f24e91e22f96075195f04"
+   676,
+   "1836bf0332b14f911b8f18c6498c1137d937962406f953a268789fffe62f3743"
   ],
   "cfd.setup_recoil_case.file.constant/physicalProperties.metal": [
-   696,
-   "08d9e2c8e9f28a98d91acdd1ffaa92060e7c2989b211beab1d8d0812efe6ca0b"
+   677,
+   "27fa1cd0f55aaec202e0be60a551ed271cc95153a2fea2f61d5f69a5cbb4ea9b"
   ],
   "cfd.setup_recoil_case.file.constant/thermalProperties": [
-   1243,
-   "84f42fd4f02978173b379bb4246cbcb74dfabea6906a026e63b325fdab78b535"
+   1204,
+   "98496a5ac947fb7c6312f91cd63df63c89149fab8936778716bd7b31e6d3c74b"
   ],
   "cfd.setup_recoil_case.file.system/blockMeshDict": [
-   1270,
-   "22cb5665af01ce7efcedbb87e86350228e75c88258b9249924bcb9a10f0925bd"
+   1227,
+   "614c0ce7003c0545bcf8ff5bfbcd743a1dbb4a58708b76d2e032bfe8032a3dc0"
   ],
   "cfd.setup_recoil_case.file.system/controlDict": [
-   907,
-   "7dc78fcae789cb95563564db1dfec5403b0187266570fa47b532ecf34b1339bf"
+   879,
+   "73647433f0a29f25b6d073fac255d299c13c948cb5c4a149031c0fd04678b395"
   ],
   "cfd.setup_recoil_case.file.system/fvSchemes": [
-   1078,
-   "ff3b58bb409a0d2a9806e037bc27fb358a3b0cbffd9770294ddb76d24979d51e"
+   1049,
+   "ba25ba9e2b63611b9aa88908cf97cc6bba5944eec3b999037037c9735a8336a3"
   ],
   "cfd.setup_recoil_case.file.system/fvSolution": [
-   1568,
-   "3dda21a20e69833f029e3a8d29fdd808faee225b5536182a3acbb44c2acd59bd"
+   1515,
+   "198045783d868ebd7d7d5e8a6d301110f586f193ff554871b068a3aa467e463b"
   ],
   "cfd.setup_laser_case.return": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "cfd.setup_laser_case.files": [
@@ -512,64 +565,64 @@
    "system/fvSolution"
   ],
   "cfd.setup_laser_case.file.0/alpha.metal": [
-   1963,
-   "1839e52e0a49a76c245229e1240c54e9c5a3b1a84e0b2c5d5b116d67897d8ee4"
+   1537,
+   "41b7c8178317d8ccc28a28fb5f7556c1f0a7839d943270b6287fab35acddc734"
   ],
   "cfd.setup_laser_case.file.0/liquidFraction": [
-   741,
-   "1e918299af5f98c29c3979f6de76ef56a394d7afa67a1a0a42a010514a50594a"
+   718,
+   "ca389d8e05111719cf2f300fcff80ba1266cce5de30776fe8842af6d6a012902"
   ],
   "cfd.setup_laser_case.file.0/p_rgh": [
-   762,
-   "0ccba79b0d5909a48a91e70e2ff31cba73ef515b090234f8ccc93e845a284c99"
+   739,
+   "a2a5c55d62de7df582497b310256cbb62f7e18e8eeb2eccad1013642036235aa"
   ],
   "cfd.setup_laser_case.file.0/T": [
-   741,
-   "bd8951a556281602d79f12e49d154e4df3b79f8b55227aed1b0b53c68b9d26e6"
+   718,
+   "a742cbd9799399a72123d9519ac5d7386551908d7b682bfcf10154e899bb2018"
   ],
   "cfd.setup_laser_case.file.0/U": [
-   736,
-   "f9fabdace0c9414c0795b0a318b92b6e22ddc823fb2ddde0c49cff7373fb2f17"
+   713,
+   "fb7ef340fd888299e9d8fdc54714ee1e460b5014488150d7573e5624bc268756"
   ],
   "cfd.setup_laser_case.file.constant/g": [
-   644,
-   "0830a4dfc3357b668fc7fbadd426cf2eb5681f076d920a24e4f8abfd0bb20a52"
+   626,
+   "d138b6c533437bef74e4b850ddf8198a3dc1a76d428592f935f4d5e512f07633"
   ],
   "cfd.setup_laser_case.file.constant/momentumTransport": [
-   641,
-   "261c43ed22eb3d6b3aa7f1f9ad2ae9c6a9d349cc7605660bd7eeaeefde3c894a"
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
   ],
   "cfd.setup_laser_case.file.constant/phaseProperties": [
-   647,
-   "258b18ca38f27c4ea9c0e80737a0d58377eb0cc2c61d886440ac9e566fed44c0"
+   629,
+   "6567e45df60f1b83ece3614f0d5bf19862631a6c707d01d402e56de1b4e6db44"
   ],
   "cfd.setup_laser_case.file.constant/physicalProperties.gas": [
-   670,
-   "f1f4f2d97e42637f93ed46fb79981b715e0b6e5e77a839e1b6e0320a27d4618a"
+   651,
+   "978f3dcf218f69d1206dec8c399e6182b7153507d4d1c766517272a2000f76e4"
   ],
   "cfd.setup_laser_case.file.constant/physicalProperties.metal": [
-   673,
-   "6fc778a1d54bb83a36ac65d7e9721950d25dc39106ebe79ea4095bdfddc229a9"
+   654,
+   "78198eed90374cb2b2aaa818d6d3bb9c922abb67dfc837d3a19bdf702ac9edf7"
   ],
   "cfd.setup_laser_case.file.constant/thermalProperties": [
-   1070,
-   "b6cb7f16409598d7eefc0fc8885de1077817019a7aae3a35c1017d965a913568"
+   1036,
+   "555a5f8206821bb53ba1695a13d1a24030e0dd08982cb45551d31760d148e8a8"
   ],
   "cfd.setup_laser_case.file.system/blockMeshDict": [
-   1127,
-   "924133b7947e23b4950f33a663d5c0fa61d384235e23f8729e8770d676139d85"
+   1081,
+   "0b26b461b873c8f3f558e55991f9f11247acfe2d1ec5481f97e2389850940eab"
   ],
   "cfd.setup_laser_case.file.system/controlDict": [
-   976,
-   "e5beded7082c755c1273064dd536b4648ca038e36daa95d8250e68fd52f60ea5"
+   945,
+   "b9a9a9697f372766bf96c2971ad71ea6a39614b250247c349a5ab0344ed7ff3b"
   ],
   "cfd.setup_laser_case.file.system/fvSchemes": [
-   1027,
-   "66a68dbbfb46265ccaa90211c5eefb7c5d5e5c2805ef243c7b20b0901b7e831e"
+   999,
+   "e3af8ea18b2dd731a63bd22e4847d251d1c1d4f567f84083a5e5289a120845e8"
   ],
   "cfd.setup_laser_case.file.system/fvSolution": [
-   1660,
-   "21fb5823dbe16f8e2f69332b6bd6e42d582de9f3b921659a66cd15725f049d2b"
+   1590,
+   "3e9e8a96be8e68450ae16bf9502748820cd7fbd1ea99d990d1c1fd40f1b35d8a"
   ],
   "cfd.stefan_analytical_solution": "0df26d32712aeda392291ed43b9a65f96312e30135d61a82942a4ef5b3edc42c",
   "cfd.knight_analytical_recoil_pressure": "50f655bd5e641cca286006a199788975bdfb7950c4c8bc48895c32182302c143",
@@ -589,44 +642,44 @@
    "system/fvSolution"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/g": [
-   650,
-   "17cd86d5650759bf08043c74b0fb89ec0e3558b7609a927b76511cd369b0cee9"
+   632,
+   "9555812616aee190500ef920b4e2f31de3ed50bf3ba578613ad58f0867171cab"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/momentumTransport": [
-   641,
-   "261c43ed22eb3d6b3aa7f1f9ad2ae9c6a9d349cc7605660bd7eeaeefde3c894a"
+   624,
+   "9040a7193e95ee251881fbad1c6e3f41fbf815371f9ac881d6848cd2899bc3f8"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/phaseProperties": [
-   648,
-   "0b418fe5c068b0d1b1cf96971c19d360f82cd02371a2ba6d4a3519488f6d05ca"
+   630,
+   "3a9aa0035b265464e5c29bb82e08f03b12b36937cef5da0d2d347a3586fd3349"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/physicalProperties.gas": [
-   670,
-   "3061380f67b942d9827e66a6471916d2dee6496f272029724045339179f7a399"
+   651,
+   "a1ded1c1bd6fc5d4c975ad3419d6827b20ea470d715dd474ad0e3659fd659406"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/physicalProperties.metal": [
-   673,
-   "8e0cff687f4d49b8967d50298246087ee354d4c68a97b8791e7b5e2ff0a80774"
+   654,
+   "2157a88528d96c9f11b392f47e8ca0f1b0c21ef6ac24b5bf2c8b290ef3679458"
   ],
   "cfd.setup_cfd_multiphysics_case.file.constant/thermalProperties": [
-   1807,
-   "e50cea90cf42981bfddc2b130e32d7e6faf3ffd164b32f489ee5e06f2ee90e71"
+   1755,
+   "ec137c58a9e7b29746823880e6df4d55173f2e088ddd6720ab1d85061067533f"
   ],
   "cfd.setup_cfd_multiphysics_case.file.system/blockMeshDict": [
-   1603,
-   "0733d7530d4f63030a5335b6397f799aa89875c0f3091ae9bb24b77ae557a709"
+   1567,
+   "23a18bd247f80c4490c67c2755f7cd95b93ef1fab0b64d97344f66979a80987f"
   ],
   "cfd.setup_cfd_multiphysics_case.file.system/controlDict": [
-   1098,
-   "c94e93e34a6d6d2ff0892cb4c0e05c0935245b99c24d962652ff1143a6b25a79"
+   1063,
+   "0679ad8964100079c5b629e5abdf5adbb821c6e2cac988121ae8891f7dd1546f"
   ],
   "cfd.setup_cfd_multiphysics_case.file.system/fvSchemes": [
-   1070,
-   "603038579c90c51cd3c4fb88e71244e849f1a88d486e19e218cdc43a321b7a9b"
+   1041,
+   "500aa9062844fd9f25191f9a1799b89f37805425e2b70e4c310cb881edbcd11e"
   ],
   "cfd.setup_cfd_multiphysics_case.file.system/fvSolution": [
-   1282,
-   "9798f42f4249b20f342ffa61fee3eb3e30a5ae85b1b048729492c736c131c285"
+   1250,
+   "17b9549a2c46866bfac4af33ab35ffd704d69c0fe0941b522cdaaa7f488f78af"
   ],
   "openfoam.generate_case.powder.return": "88356dc81a26f3985c4326758bdcf1446dea0f5c93218bbcbb2e5e320058bf97",
   "openfoam.generate_case.powder.files": [
@@ -637,24 +690,24 @@
    "thermalInput.dat"
   ],
   "openfoam.generate_case.powder.file.system/blockMeshDict": [
-   903,
-   "740aa7f0500306d9b92f16ae5d730c33b67bb847e6c1ba7a0bb4d74ba4cb7a88"
+   889,
+   "9c789c880685b72fbe2d66e3e05292389d37807ae1cfdffe6f23122a8f284476"
   ],
   "openfoam.generate_case.powder.file.system/controlDict": [
-   310,
-   "10f7ef4de2704d20e1064c844a9bb151f7ddf078f967a249fc13a62288549b95"
+   308,
+   "5c3cea3847765e783cbc9ce4137e5f46020695e63141fec806e25a996faa2e01"
   ],
   "openfoam.generate_case.powder.file.system/fvSchemes": [
-   308,
-   "4d50c2b9f5d49f5d1b368ff908646b7067841b25f76bc1e92e92807e1cd3ee73"
+   306,
+   "78b41c97038a9c7cce3e2dfb677f48b6db0fa9bf7634f04b2ec2018b9beca739"
   ],
   "openfoam.generate_case.powder.file.system/fvSolution": [
-   90,
-   "4f1d902fcd67ca697153abd29d562fddecadff48559febdbeebf567448ae021d"
+   88,
+   "48e61e0402615d31ff14eba640055603421bb51a9f2372bb18cb865a4a5f9f40"
   ],
   "openfoam.generate_case.powder.file.thermalInput.dat": [
-   1124994,
-   "bf86e2a07ef1a9f92bade90cd68e514194a8f85c3f1181f5de84f7c0f97be757"
+   1112988,
+   "d388e615176af2c218cca7e51231af8ca63b75fe1c1e228895ca0efe7922dcd1"
   ],
   "openfoam.generate_case.powderMultilayer.return": "3f7e518e03f817d41da0e4f57b06d072fd285e0f8d3e65060c832264ee7a4b06",
   "openfoam.generate_case.powderMultilayer.files": [
@@ -665,24 +718,24 @@
    "thermalInput.dat"
   ],
   "openfoam.generate_case.powderMultilayer.file.system/blockMeshDict": [
-   660,
-   "c57f2e517f810c3299327c963ea13d3ce4f5239221a25eec2436f22c8a209252"
+   646,
+   "281590b66be90cca81221dfcacdc762eb3f33ad16585c2bf1913a4c4cf6ac2d1"
   ],
   "openfoam.generate_case.powderMultilayer.file.system/controlDict": [
-   309,
-   "72e86f8c915b52e7f2baaaeb3c4f112b2d847f86f8660fce2775903c3728735a"
+   307,
+   "a596cfa9018d743b2c6dda0b00f68031f0af2974d01a36c9a65f1c7f1916ab27"
   ],
   "openfoam.generate_case.powderMultilayer.file.system/fvSchemes": [
-   308,
-   "4d50c2b9f5d49f5d1b368ff908646b7067841b25f76bc1e92e92807e1cd3ee73"
+   306,
+   "78b41c97038a9c7cce3e2dfb677f48b6db0fa9bf7634f04b2ec2018b9beca739"
   ],
   "openfoam.generate_case.powderMultilayer.file.system/fvSolution": [
-   90,
-   "4f1d902fcd67ca697153abd29d562fddecadff48559febdbeebf567448ae021d"
+   88,
+   "48e61e0402615d31ff14eba640055603421bb51a9f2372bb18cb865a4a5f9f40"
   ],
   "openfoam.generate_case.powderMultilayer.file.thermalInput.dat": [
-   1125521,
-   "35e97a54e935876f51bda53169ce1fe33b7e6338d5295e2258765cd1391fa1ca"
+   1113512,
+   "e4efdf9f2440b02c77b9dbb3f6bb234978b6122b58624ae260177c30280474f6"
   ]
  }
 }
