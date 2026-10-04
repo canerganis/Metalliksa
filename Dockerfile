@@ -1,8 +1,11 @@
 # syntax=docker/dockerfile:1.7
-# DRAFT / UNVERIFIED: this file has never been built (Docker Desktop's engine was not running when checked).
-# python/requirements-lpbf-linux-py312.lock now exists (uv, manylinux_2_28, CPython 3.12.15) and was install-checked with --require-hashes
-# in WSL Ubuntu 22.04 (LPBF engineering 40 OK + 1 skip, build-job PASS, CMU 8 OK, Phase 6a golden tests OK, fingerprint unchanged).
-# See docs/APPLICATION_PACKAGING_NOTES.md.
+# PARTIALLY VERIFIED (Docker Desktop 4.91.0 / Engine 29.8.0, Windows host, tree 'build(docker): do not set AIRGAPPED=1' on orch/docker-verify):
+# node-deps (npm ci), py-deps (pip --require-hashes from python/requirements-lpbf-linux-py312.lock), and in the verify stage
+# 'npm run lint', the unit tests (698 pass, 0 fail, 1 skipped, 19 todo), 'npm run build', python/test_eagar_tsai.py and
+# python/test_lpbf_meltpool_accuracy.py all succeeded.
+# `docker build --target verify` currently FAILS at python/test_goldak_fabbro.py ("Goldak NIST width 81.7"): the test needs the
+# optional GPU 'warp' ray-tracing path; without it (this CPU lock) the flat-plate fallback gives a narrower pool. Not fixed here.
+# The runtime stage has never been built or run. See docs/APPLICATION_PACKAGING_NOTES.md.
 
 FROM node:24-bookworm-slim AS node-src
 
