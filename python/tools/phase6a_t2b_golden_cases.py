@@ -16,6 +16,8 @@ lpbf_fatigue_fracture has no __main__; it runs through MODULE_DRIVERS.
 
 from typing import Any, Dict
 
+import kinetics_documented_changes as _kinetics_fx  # tools/ module
+
 _UQ_COMMON = {"mcSamples": 500, "seed": 42, "samplingMethod": "sobol_qmc", "scramble": True}
 
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
@@ -120,5 +122,9 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
             "classes and outside HRC 20-68",
         r"cctContinuousCoolingMap\[\d+\]\.predictedHardness_HV_status":
             "new status key next to predictedHardness_HV (converted / unavailable reason)",
+        # Engine-fix lane fx-kinetics: non-steel alloys unavailable (steel-only model), registry
+        # placeholders null, TTT floor flags, floor/step-limited CCT starts null, LSW unit fix.
+        # Each pattern is verified exactly by tools/kinetics_documented_changes.row_violation.
+        **_kinetics_fx.DESCRIPTIONS,
     },
 }

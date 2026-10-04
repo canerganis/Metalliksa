@@ -217,6 +217,7 @@ class StepBGoldenTest(unittest.TestCase):
             with self.subTest(file=f"{solver}/{case}"):
                 doc = json.loads(path.read_text(encoding="utf-8"))
                 self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"]), [])
+                self.assertEqual(golden.step_b_document_violations(solver, doc["stdout"]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -276,6 +277,82 @@ class StepBGoldenTest(unittest.TestCase):
                                                  steel(18.0, rng)))
         big = {"key": "x", "kind": "numeric", "old": 1.0, "new": 1.02, "abs": 0.02, "rel": 0.02}
         self.assertTrue(golden.step_b_violations(solver, [big], steel(42.0, conv)))
+
+    def _kinetics_step_b(self, case):
+        path = golden.step_b_path("kinetics_ttt_cct_solver", case)
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        return doc["driftVsBase"], doc["stdout"]
+
+    def test_fx_kinetics_documented_changes_are_checked_exactly(self):
+        # Engine-fix lane fx-kinetics (tools/kinetics_documented_changes.py): every documented row is
+        # verified against the re-blessed document; a wrong value, a wrong status, the wrong alloy class
+        # or an unflagged placeholder is a violation, and numeric R drift stays under the bounded guard.
+        import copy
+        solver = "kinetics_ttt_cct_solver"
+        for case in ("aisi4140_ui_defaults", "aisi4340_slow_cool", "in718_lpbf_quench", "ti64_beta_quench"):
+            rows, new = self._kinetics_step_b(case)
+            self.assertEqual(golden.step_b_violations(solver, rows, new), [], case)
+            self.assertEqual(golden.step_b_document_violations(solver, new), [], case)
+
+        def violations(case, mutate_rows=None, mutate_doc=None):
+            rows, new = self._kinetics_step_b(case)
+            rows, new = copy.deepcopy(rows), copy.deepcopy(new)
+            if mutate_rows:
+                mutate_rows(rows)
+            if mutate_doc:
+                mutate_doc(new)
+            return golden.step_b_violations(solver, rows, new) + golden.step_b_document_violations(solver, new)
+
+        def row(rows, key):
+            return next(r for r in rows if r["key"] == key)
+
+        def doc_set(path, value):
+            def mutate(doc):
+                node = doc
+                for part in path[:-1]:
+                    node = node[part]
+                node[path[-1]] = value
+            return mutate
+
+        # non-steel: the steel-only claim must hold in the document, and every nulled value must be null
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["kineticsModel", "status"], "available")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["alloyMetadata", "type"], "Low-Alloy Steel")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct").update(new=63.0)))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].transformedStart_status").update(new="available")))
+        # placeholders: only keys flagged in alloy_registry.KINETICS_PLACEHOLDERS may be null
+        self.assertTrue(violations("ti64_beta_quench", mutate_rows=lambda rows: rows.append(
+            {"key": "alloyMetadata.Ms_C", "kind": "changed", "old": 800.0, "new": None})))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "criticalTransformationTemperatures.Ms_C_status").update(new="registry-screening-value")))
+        # LSW: the recorded old/new radius, strengthening and regime must equal the independent oracle
+        key = "lswPrecipitateCoarsening[9].meanRadius_nm"
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(new=22.9)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(old=1.6)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(
+            rows, "lswPrecipitateCoarsening[9].strengtheningMechanism").update(new="Weak-Pair / Strong-Pair Cutting")))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["lswPrecipitateCoarsening", 0, "meanRadius_nm"], 1.5)))
+        # steel TTT floor flags and the floor-driven CCT start
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["tttIsothermalCurves", 0, "floorHit"], not self._kinetics_step_b("aisi4140_ui_defaults")[1][
+                "tttIsothermalCurves"][0]["floorHit"])))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(["tttIncubationFloor", "floorHitCount"], 31)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["cctContinuousCoolingMap", 0, "primaryMicrostructure"], "Pearlite")))
+        # a steel row may not lose its phase fractions (only non-steel rows do)
+        self.assertTrue(golden.step_b_violations(solver, [
+            {"key": "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct", "kind": "changed", "old": 98.0, "new": None}],
+            self._kinetics_step_b("aisi4140_ui_defaults")[1]))
+        # numeric R drift of a steel TTT time stays under the default bound (not a documented row)
+        num = lambda rel: [{"key": "tttIsothermalCurves[0].t50_s", "kind": "numeric", "old": 1.0,
+                            "new": 1.0 + rel, "abs": rel, "rel": rel}]
+        steel_doc = self._kinetics_step_b("aisi4140_ui_defaults")[1]
+        self.assertEqual(golden.step_b_violations(solver, num(0.005), steel_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, num(0.05), steel_doc))
+        # without the re-blessed document nothing of this is accepted
+        self.assertTrue(golden.step_b_violations(solver, self._kinetics_step_b("in718_lpbf_quench")[0]))
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).

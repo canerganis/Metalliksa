@@ -71,7 +71,8 @@ def bless(solver: str, dry_run: bool = False) -> Tuple[List[Tuple[str, List[Dict
                              f"not a value drift, refusing to bless.\n{fresh['stderr']}")
         drift.append((f"{solver}/{case}", drift_report.diff(previous["stdout"], fresh["stdout"])))
         vs_base = drift_report.diff(base["stdout"], fresh["stdout"])
-        violations = golden.step_b_violations(solver, vs_base, fresh["stdout"])
+        violations = (golden.step_b_violations(solver, vs_base, fresh["stdout"])
+                      + golden.step_b_document_violations(solver, fresh["stdout"]))
         if violations:
             raise SystemExit(f"{solver}/{case}: drift is not an allowed value change; refusing to "
                              "bless:\n  " + "\n  ".join(violations))

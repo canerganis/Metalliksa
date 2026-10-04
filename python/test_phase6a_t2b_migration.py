@@ -76,29 +76,50 @@ class KineticsTest(unittest.TestCase):
 
     ARGS = ((), (0.3, 40.0, 900.0, 4.0, 650.0), (2000.0,))
 
-    def _split_documented_hv(self, new, old):
-        """Remove the documented HV change (EXPECTED_DOCUMENTED_VALUE_CHANGES) after checking it.
+    SOLVER = "kinetics_ttt_cct_solver"
 
-        predictedHardness_HV moved from round(10.5 * HRC + 40) to ASTM E140 Table 1 for the
-        steels (null outside HRC 20-68) and to null for the other alloy classes; the new
-        predictedHardness_HV_status key follows it. Everything else is compared unchanged.
+    @staticmethod
+    def _order_preserved(old, new):
+        """Every dict of ``old`` keeps its key order inside ``new`` (documented additions may interleave)."""
+        if isinstance(old, dict) and isinstance(new, dict):
+            if [k for k in new if k in old] != list(old):
+                return False
+            return all(KineticsTest._order_preserved(v, new[k]) for k, v in old.items())
+        if isinstance(old, list) and isinstance(new, list) and len(old) == len(new):
+            return all(KineticsTest._order_preserved(a, b) for a, b in zip(old, new))
+        return True
+
+    def _undocumented_rows(self, new, old, new_r_gas=None):
+        """Drift rows (old blob -> new) that are NOT a documented change, after verifying the documented ones.
+
+        Documented changes: predictedHardness_HV -> ASTM E140 (golden.documented_change_violation) and the
+        fx-kinetics changes (steel-only model, registry placeholders, TTT floor flags, LSW unit fix;
+        kinetics_documented_changes.row_violation). Each documented row is checked exactly against ``new``;
+        the rows returned are the rest, for the caller to bound or to require empty.
         """
-        import hardness_conversion_e140 as e140
-        steel = "Steel" in new["alloyMetadata"]["type"]
-        self.assertEqual(len(new["cctContinuousCoolingMap"]), len(old["cctContinuousCoolingMap"]))
-        for n, o in zip(new["cctContinuousCoolingMap"], old["cctContinuousCoolingMap"]):
-            hrc = n["predictedHardness_HRC"]
-            self.assertEqual(o["predictedHardness_HV"], round(hrc * 10.5 + 40.0, 0))
-            expected = (e140.hrc_to_hv_non_austenitic_steel(hrc) if steel
-                        else (None, e140.STATUS_UNAVAILABLE_ALLOY_CLASS))
-            self.assertEqual((n.pop("predictedHardness_HV"), n.pop("predictedHardness_HV_status")), expected)
-            o.pop("predictedHardness_HV")
-        return new, old
+        import capture_phase6a_golden as golden
+        import drift_report
+        import kinetics_documented_changes as kdc
+        self.assertEqual(kdc.document_violations(new, new_r_gas), [])
+        self.assertTrue(self._order_preserved(old, new), "key order of the old document is not preserved")
+        undocumented = []
+        for row in drift_report.diff(old, new):
+            if golden._KINETICS_HV_ROW.fullmatch(row["key"]):
+                problem = golden.documented_change_violation(self.SOLVER, row, new)
+            elif kdc.is_documented_row(row["key"], row["kind"]):
+                problem = kdc.row_violation(row, new, new_r_gas)
+            else:
+                undocumented.append(row)
+                continue
+            self.assertIsNone(problem)
+        return undocumented
 
     def test_every_alloy_equals_the_base_blob_with_the_legacy_r_including_key_order(self):
-        # Design step (b) changed only R (8.314 -> exact). With R_GAS put back to 8.314
-        # the migrated solver must still reproduce the base blob bit for bit, apart from
-        # the documented HV change (checked exactly in _split_documented_hv).
+        # Design step (b) changed only R (8.314 -> exact). With R_GAS put back to 8.314 the migrated
+        # solver must reproduce the base blob bit for bit, key order included, apart from the documented
+        # changes (HV -> E140, fx-kinetics steel-only/placeholder/TTT-floor/LSW; each checked exactly in
+        # _undocumented_rows).
+        import drift_report
         with mock.patch.object(kin, "R_GAS", 8.314):
             for name in self.LEGACY:
                 for extra in self.ARGS:
@@ -106,8 +127,8 @@ class KineticsTest(unittest.TestCase):
                     with self.subTest(args=args):
                         new = _strip(kin.solve_phase_transformation_kinetics(*args))
                         old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
-                        new, old = self._split_documented_hv(new, old)
-                        self.assertEqual(json.dumps(new), json.dumps(old))
+                        rest = self._undocumented_rows(new, old, new_r_gas=8.314)
+                        self.assertEqual(rest, [], drift_report.render(name, rest, 10))
 
     def test_exact_r_drift_is_numeric_and_bounded(self):
         import drift_report
@@ -118,8 +139,7 @@ class KineticsTest(unittest.TestCase):
                 with self.subTest(args=args):
                     new = _strip(kin.solve_phase_transformation_kinetics(*args))
                     old = _strip(OLD_KIN.solve_phase_transformation_kinetics(*args))
-                    new, old = self._split_documented_hv(new, old)
-                    rows = drift_report.diff(old, new)
+                    rows = self._undocumented_rows(new, old)
                     self.assertTrue(all(r["kind"] == "numeric" for r in rows), drift_report.render(name, rows, 10))
                     # Last printed digit of rounded Arrhenius outputs (largest seen: 6.7e-3,
                     # AISI 4340 tStart_s 0.0149 -> 0.0148); unrounded change ~ (Q/RT)*5.6e-5.
