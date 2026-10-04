@@ -1255,51 +1255,18 @@ class PythonComputationService {
     instrumentBroadeningDeg?: number;
     peaks?: Array<{ twoTheta: number; hkl: string; intensity?: number }>;
   }): Promise<PythonXRDResult> {
-    try {
-      const res = await fetch("/api/python/xrd-deconvolve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          return { ...data, isPythonEngine: true };
-        }
-      }
-    } catch (err) {
-      console.warn("Python XRD proxy failed, returning fallback deconvolution:", err);
+    // No client fallback: a failed or unsuccessful dispatch is an error, never a made-up fit.
+    const res = await fetch("/api/python/xrd-deconvolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.success) {
+      const detail = typeof data?.error === "string" ? `: ${data.error}` : "";
+      throw new Error(`XRD deconvolution failed (HTTP ${res.status})${detail}`);
     }
-
-    return {
-      success: true,
-      engine: "MetalliX-Client-Heuristic",
-      computeTimeMs: 8,
-      isPythonEngine: false,
-      peaks: [
-        {
-          peak_id: 1,
-          two_theta_deg: 43.5,
-          hkl: "(111)",
-          fwhm_deg: 0.28,
-          eta_lorentz_fraction: 0.45,
-          d_spacing_angstrom: 2.078,
-          integral_breadth_deg: 0.32,
-          apparent_crystallite_size_nm: 38.5,
-          microstrain_pct: 0.18,
-        },
-      ],
-      williamsonHall: {
-        linear_slope_4_epsilon: 0.0078,
-        intercept_K_lambda_over_D: 0.0035,
-        microstrain_epsilon: 0.00195,
-        microstrain_percent: 0.195,
-        crystallite_size_nm: 44.0,
-        dislocation_density_m_minus_2: 1.85e15,
-        r_squared: 0.985,
-      },
-    };
+    return { ...data, isPythonEngine: true };
   }
 
   /**
