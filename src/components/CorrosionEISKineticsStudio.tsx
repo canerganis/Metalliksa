@@ -13,7 +13,6 @@ import {
   Sliders,
   Layers,
   Code,
-  Zap,
   Flame,
   ArrowRight,
   Sparkles,
@@ -31,11 +30,7 @@ import {
   ReferenceLine
 } from "recharts";
 
-interface CorrosionEISKineticsStudioProps {
-  onSendToCNLS?: (points: any[], name: string) => void;
-}
-
-export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKineticsStudioProps) {
+export function CorrosionEISKineticsStudio() {
   const [metalId, setMetalId] = useState<string>("steel-316l");
   const [betaA, setBetaA] = useState<number>(0.12);
   const [betaC, setBetaC] = useState<number>(0.10);
@@ -125,28 +120,6 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
         </div>
 
         <div className="flex items-center gap-2">
-          {onSendToCNLS && simResult?.coatingNyquist?.[0] && (
-            <button
-              type="button"
-              onClick={() => {
-                const latestSpec = simResult.coatingNyquist.slice(-1)[0]?.spectrum || [];
-                const points = latestSpec.map((pt: any) => ({
-                  frequency: pt.frequency,
-                  zReal: pt.zReal,
-                  zImag: -pt.minusZImag,
-                  minusZImag: pt.minusZImag,
-                  zMag: Math.sqrt(pt.zReal * pt.zReal + pt.minusZImag * pt.minusZImag),
-                  phaseDeg: (Math.atan2(-pt.minusZImag, pt.zReal) * 180) / Math.PI,
-                }));
-                onSendToCNLS(points, `Corrosion_Coating_${metalId.toUpperCase()}_Day${exposureDays}`);
-              }}
-              className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>Send Spectrum to CNLS Studio</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={() => runPythonSimulationNow()}
