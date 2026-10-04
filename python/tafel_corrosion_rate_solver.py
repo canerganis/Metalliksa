@@ -16,7 +16,7 @@ import time
 
 import alloy_registry
 import physical_constants
-from input_validation import ValidationError, require_known_alloy, validation_envelope
+from input_validation import UNKNOWN_ALLOY, ValidationError, require_known_alloy, validation_envelope
 
 # Physical & Electrochemical Constants
 # Phase 6a structural step (a): R and F come from physical_constants but keep the
@@ -49,10 +49,30 @@ _CORROSION_DISPLAY_NAME = {
 }
 
 
+# The registry record "ti6al4v" also carries the LPBF ELI / Grade 23 names, but the
+# only titanium corrosion preset here is Ti-6Al-4V Grade 5. Only these names (as
+# normalised by alloy_registry.normalise_name) may consume that preset; every other
+# name that resolves to "ti6al4v" (e.g. "Ti-6Al-4V ELI", "... Grade 23") is refused.
+_TI_GRADE5_PRESET_NAMES = frozenset({
+    "ti-6al-4v", "ti6al4v", "ti64", "titanium ti-6al-4v (grade 5)", "ti-6al-4v grade 5",
+    "ti-6al-4v grade 5 titanium", "ti-6al-4v grade 5 (ams 4928)", "ti-6al-4v grade 5 (aero am)",
+    "ti-6al-4v (grade 5 alpha-beta)", "ti64-ams4928",
+})
+
+
 def corrosion_preset(alloy_id: str) -> dict:
     """Registry-backed alloy preset. Raises ValidationError(UNKNOWN_ALLOY) instead of
     silently substituting AISI 316L for an unknown id."""
     record = require_known_alloy(alloy_id, alloy_registry.DOMAIN_CORROSION, field="alloyId")
+    if record.id == "ti6al4v" and alloy_registry.normalise_name(alloy_id) not in _TI_GRADE5_PRESET_NAMES:
+        raise ValidationError(
+            UNKNOWN_ALLOY, "alloyId",
+            f"Alloy {alloy_id!r} is a titanium variant without a corrosion preset; the only "
+            "titanium preset is Ti-6Al-4V Grade 5 ('ti-6al-4v'). Send that id, or supply "
+            "alloyName, density_g_cm3, equivalentWeight and activationEnergyJ_mol.",
+            {"name": repr(alloy_id), "domain": alloy_registry.DOMAIN_CORROSION,
+             "reason": "variant-without-preset", "presetAlloy": "ti-6al-4v"},
+        )
     table = record.domains[alloy_registry.DOMAIN_CORROSION]
     composition = dict(table["composition"].value)
     return {

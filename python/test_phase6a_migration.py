@@ -106,6 +106,30 @@ class TafelPresetTest(unittest.TestCase):
                 self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
                 self.assertEqual(ctx.exception.detail["reason"], reason)
 
+    def test_titanium_variants_do_not_consume_the_grade5_preset(self):
+        library = _snapshot("tafel_corrosion_rate_solver")
+        for name in ("ti-6al-4v", "Ti64", "Titanium Ti-6Al-4V (Grade 5)", "Ti-6Al-4V Grade 5 Titanium",
+                     "ti64_ams4928", "TI6AL4V"):
+            with self.subTest(accepted=name):
+                preset = tafel.corrosion_preset(name.lower())
+                self.assertEqual(preset["ew"], library["ti-6al-4v"]["ew"])
+        for name in ("Ti-6Al-4V ELI", "ti-6al-4v eli", "Ti-6Al-4V ELI Grade 23", "Ti6Al4V ELI"):
+            with self.subTest(rejected=name):
+                with self.assertRaises(iv.ValidationError) as ctx:
+                    tafel.corrosion_preset(name.lower())
+                self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
+                self.assertEqual(ctx.exception.detail["reason"], "variant-without-preset")
+                self.assertIn("Grade 5", ctx.exception.message)
+                with self.assertRaises(iv.ValidationError):
+                    tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId=name))
+                # The full caller-supplied property set never consults the preset.
+                out = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE, alloyId=name, **FULL_OVERRIDES))
+                self.assertTrue(out["success"])
+                self.assertIsNone(out["provenance"]["registryAlloyId"])
+        code, out = _run("tafel_corrosion_rate_solver.py", {"alloyId": "Ti-6Al-4V ELI"})
+        self.assertEqual(code, 2)
+        self.assertEqual(out["error"]["detail"]["reason"], "variant-without-preset")
+
     def test_fit_curve_unknown_alloy_raises(self):
         points = [{"potential": -0.5 + 0.05 * i, "currentDensity_uA_cm2": 1.0 + abs(i - 5)} for i in range(11)]
         with self.assertRaises(iv.ValidationError):
