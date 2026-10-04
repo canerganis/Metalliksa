@@ -22,7 +22,13 @@ import capture_phase6a_golden as golden  # noqa: E402
 import drift_report  # noqa: E402
 
 # (solver, case) -> expected validation error code (exit 2, errorKind "validation").
-EXPECTED_BEHAVIOUR_CHANGES = {}
+# Both were silent defaults before the Phase 6a structural migration:
+# - tafel alloyId "unobtainium-x" was solved with the AISI 316L preset;
+# - pourbaix element "Unobtainium" was drawn with the Fe system (Ni point branch).
+EXPECTED_BEHAVIOUR_CHANGES = {
+    ("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"): "UNKNOWN_ALLOY",
+    ("pourbaix_solver", "edge_unknown_element_badvals"): "UNKNOWN_ELEMENT",
+}
 
 
 class GoldenFilesTest(unittest.TestCase):
@@ -67,6 +73,10 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertTrue(out["error"]["field"])
             self.assertTrue(out["error"]["message"])
             self.assertIsInstance(out["error"]["detail"], dict)
+            self.assertEqual(set(out), {"success", "error", "errorKind"})
+            # The old golden is still the pre-migration record of the silent default.
+            self.assertEqual(doc["exitCode"], 0)
+            self.assertIs(doc["stdout"].get("success"), True)
             return
         self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
         rows = drift_report.diff(doc["stdout"], fresh["stdout"])
@@ -82,6 +92,43 @@ class GoldenRegressionTest(unittest.TestCase):
         for case in golden.CASES["pourbaix_solver"]:
             with self.subTest(case=case):
                 self._check("pourbaix_solver", case)
+
+
+class ProvenanceTest(unittest.TestCase):
+    """Provenance is stripped from the bit-exact comparison, so pin it here."""
+
+    def _fresh(self, solver, case):
+        return golden.run_solver(solver, golden.CASES[solver][case])
+
+    def test_tafel_provenance(self):
+        import alloy_registry
+        import physical_constants as pc
+        expected_ids = {
+            "solve_316l_default_fields": "ss316l",
+            "solve_1018_custom_composition": "steel1018",
+            "fit_curve_synthetic_bv": "al6061",
+            # every preset-derived field was supplied: the alloy is never resolved
+            "solve_unknown_alloy_full_overrides": None,
+        }
+        for case, registry_id in expected_ids.items():
+            with self.subTest(case=case):
+                prov = self._fresh("tafel_corrosion_rate_solver", case)["provenance"]["provenance"]
+                self.assertEqual(prov["registryVersion"], alloy_registry.REGISTRY_VERSION)
+                self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
+                self.assertEqual(prov["registryAlloyId"], registry_id)
+                self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
+                self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+
+    def test_pourbaix_provenance(self):
+        import physical_constants as pc
+        prov = self._fresh("pourbaix_solver", "fe_chloride_points")["provenance"]["provenance"]
+        self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
+        self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+
+    def test_validation_envelope_has_no_provenance(self):
+        for solver, case in EXPECTED_BEHAVIOUR_CHANGES:
+            self.assertIsNone(self._fresh(solver, case)["provenance"])
 
 
 class DriftReportTest(unittest.TestCase):

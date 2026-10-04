@@ -38,6 +38,11 @@ GOLDEN_SCHEMA = "phase6a-golden-1"
 # time.perf_counter wall times, timestamp is wall-clock UTC, pythonVersion is the
 # interpreter that ran the capture. Nothing else is stripped.
 VOLATILE_KEYS = frozenset({"durationMs", "computeTimeMs", "timestamp", "pythonVersion"})
+# Top-level keys added by the Phase 6a migration that carry provenance, not results.
+# They are removed from the bit-exact comparison explicitly and checked separately
+# (test_phase6a_golden.ProvenanceTest), so a golden captured before the migration
+# still compares equal.
+PROVENANCE_KEYS = frozenset({"provenance"})
 
 # Synthetic Butler-Volmer polarisation curve (Ecorr -0.30 V, icorr 2.0 uA/cm2,
 # ba 0.08, bc 0.12 V/dec), 41 points. Synthetic, not experimental data.
@@ -156,7 +161,11 @@ def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout:
         parsed = json.loads(stdout)
     except json.JSONDecodeError:
         parsed = {"__unparseableStdout__": stdout}
+    provenance = None
+    if isinstance(parsed, dict):
+        provenance = {k: parsed.pop(k) for k in PROVENANCE_KEYS if k in parsed} or None
     return {"exitCode": proc.returncode, "stdout": strip_volatile(parsed),
+            "provenance": provenance,
             "stderr": proc.stderr.decode("utf-8", errors="replace")}
 
 

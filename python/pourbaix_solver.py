@@ -11,6 +11,20 @@ import json
 import math
 import time
 
+import physical_constants
+from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+
+# Phase 6a structural step (a): R, F and the Celsius offset come from
+# physical_constants but keep the CODATA printed truncations used before the
+# migration (8.314462618, 96485.33212) so the output stays bit-identical. The
+# switch to the exact SI products is the separate value step (b).
+R_GAS = physical_constants.TRUNCATED_GAS_CONSTANT_R  # J / (mol * K)
+F_FARADAY = physical_constants.TRUNCATED_FARADAY  # C / mol
+ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
+# Not in physical_constants: its CIAAW abridged Cl value is not registered and
+# would be 35.45, not the 35.453 used here, so this stays local until step (b).
+CHLORIDE_MOLAR_MASS_G_MOL = 35.453
+
 # Reference Electrode Standard Offsets vs SHE at 25°C
 REF_ELECTRODE_OFFSETS = {
     "SHE": 0.000,
@@ -25,7 +39,7 @@ REF_ELECTRODE_OFFSETS = {
 POURBAIX_ELEMENT_SYSTEMS = {
     "Fe": {
         "name": "Iron (Fe-H₂O System)",
-        "atomicMass": 55.845,
+        "atomicMass": physical_constants.atomic_weight("Fe"),
         "standardE0_V": -0.440,
         "reactions": [
             {
@@ -110,7 +124,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Cr": {
         "name": "Chromium (Cr-H₂O System)",
-        "atomicMass": 51.996,
+        "atomicMass": physical_constants.atomic_weight("Cr"),
         "standardE0_V": -0.913,
         "reactions": [
             {
@@ -159,7 +173,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Ni": {
         "name": "Nickel (Ni-H₂O System)",
-        "atomicMass": 58.693,
+        "atomicMass": physical_constants.atomic_weight("Ni"),
         "standardE0_V": -0.257,
         "reactions": [
             {
@@ -207,7 +221,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Ti": {
         "name": "Titanium (Ti-H₂O System)",
-        "atomicMass": 47.867,
+        "atomicMass": physical_constants.atomic_weight("Ti"),
         "standardE0_V": -1.630,
         "reactions": [
             {
@@ -255,7 +269,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Al": {
         "name": "Aluminum (Al-H₂O Amphoteric System)",
-        "atomicMass": 26.982,
+        "atomicMass": physical_constants.atomic_weight("Al"),
         "standardE0_V": -1.662,
         "reactions": [
             {
@@ -302,7 +316,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Cu": {
         "name": "Copper (Cu-H₂O System)",
-        "atomicMass": 63.546,
+        "atomicMass": physical_constants.atomic_weight("Cu"),
         "standardE0_V": +0.342,
         "reactions": [
             {
@@ -362,7 +376,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Zn": {
         "name": "Zinc (Zn-H₂O System Amphoteric)",
-        "atomicMass": 65.38,
+        "atomicMass": physical_constants.atomic_weight("Zn"),
         "standardE0_V": -0.763,
         "reactions": [
             {
@@ -409,7 +423,7 @@ POURBAIX_ELEMENT_SYSTEMS = {
     },
     "Mg": {
         "name": "Magnesium (Mg-H₂O System)",
-        "atomicMass": 24.305,
+        "atomicMass": physical_constants.atomic_weight("Mg"),
         "standardE0_V": -2.372,
         "reactions": [
             {
@@ -446,14 +460,14 @@ POURBAIX_ELEMENT_SYSTEMS = {
 }
 
 def calculate_nernst_slope(temperature_C=25.0):
-    t_kelvin = 273.15 + float(temperature_C)
-    r_gas = 8.314462618
-    f_faraday = 96485.33212
+    t_kelvin = ZERO_CELSIUS_K + float(temperature_C)
+    r_gas = R_GAS
+    f_faraday = F_FARADAY
     return (2.302585093 * r_gas * t_kelvin) / f_faraday # 0.05916 V/pH at 25°C
 
 def generate_water_stability_lines(temperature_C=25.0):
     nernst_slope = calculate_nernst_slope(temperature_C)
-    t_k = temperature_C + 273.15
+    t_k = temperature_C + ZERO_CELSIUS_K
     # Standard O2 potential temperature dependence: E0(T) = 1.229 - 0.000845*(T - 298.15)
     e0_oer = 1.229 - 0.000845 * (t_k - 298.15)
     
@@ -493,7 +507,7 @@ def calculate_chloride_pitting_boundary(element="Fe", temperature_C=25.0, chlori
     if chloride_ppm <= 0:
         return {"pittingActive": False, "pittingPotential_V_SHE": None, "points": []}
         
-    cl_mol_l = (chloride_ppm * 1e-3) / 35.453
+    cl_mol_l = (chloride_ppm * 1e-3) / CHLORIDE_MOLAR_MASS_G_MOL
     # Shift: delta_Epit = k * log10([Cl-] / 0.001 M)
     k_sensitivity = 0.088
     if element == "Al":
@@ -526,7 +540,7 @@ def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log
     """
     nernst = calculate_nernst_slope(temperature_C)
     e_her = 0.0 - nernst * ph
-    e_oer = (1.229 - 0.000845 * (temperature_C + 273.15 - 298.15)) - nernst * ph
+    e_oer = (1.229 - 0.000845 * (temperature_C + ZERO_CELSIUS_K - 298.15)) - nernst * ph
     
     # Calculate pitting potential
     pitting_data = calculate_chloride_pitting_boundary(element, temperature_C, chloride_ppm)
@@ -894,7 +908,15 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
     and overlays user measured experimental test data to classify active corrosion mechanisms.
     """
     start_time = time.perf_counter()
-    sys_data = POURBAIX_ELEMENT_SYSTEMS.get(element, POURBAIX_ELEMENT_SYSTEMS["Fe"])
+    if not isinstance(element, str) or element not in POURBAIX_ELEMENT_SYSTEMS:
+        # Phase 6a: no silent substitution of the Fe system for an unknown element.
+        supported = list(POURBAIX_ELEMENT_SYSTEMS)
+        raise ValidationError(
+            UNKNOWN_ELEMENT, "element",
+            f"No Pourbaix system for element {element!r}; supported: {', '.join(supported)}.",
+            {"element": repr(element), "supported": supported},
+        )
+    sys_data = POURBAIX_ELEMENT_SYSTEMS[element]
     nernst_slope = calculate_nernst_slope(temperature_C)
     
     # 1. Water stability boundaries
@@ -1055,7 +1077,15 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             "riskBreakdown": risk_breakdown,
             "overallTrajectoryDiagnosis": trajectory_diagnosis,
             "points": analyzed_experimental_points
-        }
+        },
+        # Phase 6a provenance (constants version and the R/F values actually used)
+        "provenance": {
+            "constantsVersion": physical_constants.CONSTANTS_VERSION,
+            "gasConstantR_J_molK": R_GAS,
+            "faraday_C_mol": F_FARADAY,
+            "constantsNote": "CODATA printed truncations of R and F (pre-migration values); "
+                             "exact SI values are pending the Phase 6a value step.",
+        },
     }
 
 if __name__ == "__main__":
@@ -1077,7 +1107,7 @@ if __name__ == "__main__":
     try:
         raw_input = sys.stdin.read()
         if not raw_input.strip():
-            print(json.dumps({"error": "Empty stdin payload"}))
+            print(json.dumps({"error": "Empty stdin payload", "errorKind": "internal"}))
             sys.exit(1)
             
         data = json.loads(raw_input)
@@ -1089,6 +1119,10 @@ if __name__ == "__main__":
         
         result = solve_pourbaix_diagram(el, temp, act, cl_ppm, exp_pts)
         print(json.dumps(result))
+    except ValidationError as e:
+        # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+        print(json.dumps(validation_envelope(e)))
+        sys.exit(2)
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        print(json.dumps({"error": str(e), "errorKind": "internal"}))
         sys.exit(1)
