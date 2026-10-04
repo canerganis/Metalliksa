@@ -271,8 +271,9 @@ class ProvenanceTest(unittest.TestCase):
         import physical_constants as pc
         prov = self._fresh("pourbaix_solver", "fe_chloride_points")["provenance"]["provenance"]
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(prov["faraday_C_mol"], pc.TRUNCATED_FARADAY)
+        # Design step (b): exact SI 2019 products.
+        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
+        self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
 
     def test_validation_envelope_has_no_provenance(self):
         for solver, case in EXPECTED_BEHAVIOUR_CHANGES:

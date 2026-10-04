@@ -79,12 +79,11 @@ class ExactConstantsTest(unittest.TestCase):
         # module, still as the truncated value.
         import calphad_solver
         self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.TRUNCATED_GAS_CONSTANT_R)
-        # pourbaix_solver (Phase 6a structural migration) takes R/F from this module,
-        # still as the truncated values.
-        self.assertEqual(pourbaix_solver.R_GAS, pc.TRUNCATED_GAS_CONSTANT_R)
-        self.assertEqual(pourbaix_solver.F_FARADAY, pc.TRUNCATED_FARADAY)
+        # pourbaix_solver: design step (b) switched R/F to the exact SI products.
+        self.assertEqual(pourbaix_solver.R_GAS, pc.GAS_CONSTANT_R.value)
+        self.assertEqual(pourbaix_solver.F_FARADAY, pc.FARADAY.value)
         self.assertEqual(pourbaix_solver.calculate_nernst_slope(25.0),
-                         (2.302585093 * 8.314462618 * 298.15) / 96485.33212)
+                         (2.302585093 * pc.GAS_CONSTANT_R.value * 298.15) / pc.FARADAY.value)
 
     def test_constant_metadata_fields(self):
         for c in (pc.AVOGADRO, pc.BOLTZMANN, pc.ELEMENTARY_CHARGE, pc.GAS_CONSTANT_R,
