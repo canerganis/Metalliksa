@@ -31,11 +31,11 @@ kept separately in ``AtomicWeight.interval`` and ``validity`` stays None.
 Exact versus truncated R and F
 ------------------------------
 GAS_CONSTANT_R and FARADAY below are the full exact products N_A*k and N_A*e.
-The free solvers (tafel_corrosion_rate_solver, pourbaix_solver, calphad_solver)
-use the CODATA printed truncations 8.314462618 and 96485.33212. Those differ from
-the exact values by about 1.84e-11 (R) and 3.4e-11 (F) relative, so a structural
-migration step that swaps in these records cannot be bit-exact against golden
-outputs; test_physical_constants pins the deltas.
+Phase 6a design step (b) switched every migrated free solver (tafel, pourbaix,
+calphad, battery EIS, icme, kinetics, stochastic UQ) from its truncated/rounded
+printing (8.314462618, 8.31446, 8.314; 96485.33212, 96485.332, 96485.33) to these
+records and removed the TRUNCATED_* / LEGACY_* constants that step (a) had kept
+for bit-identical output. test_physical_constants pins the old-vs-exact deltas.
 """
 
 from __future__ import annotations
@@ -55,18 +55,6 @@ ATOMIC_WEIGHT_NOTE = (
     "CIAAW 2021 standard atomic weight for normal terrestrial material; tagged literature. "
     "The interval is isotopic variability, not an applicability validity range."
 )
-# CODATA printed truncations used by tafel/pourbaix/calphad today (not exact).
-TRUNCATED_GAS_CONSTANT_R = 8.314462618
-TRUNCATED_FARADAY = 96485.33212
-# ---- BEGIN phase6a-t2b block: legacy R of kinetics / stochastic UQ ----
-# 8.314 J/(mol*K) is the 4-significant-figure R hard-coded in kinetics_ttt_cct_solver
-# (:108, :306-307), stochastic_uq_mmpds_solver (:297), battery_corrosion_eis_solver
-# (:160, :621) and icme_multiscale_pipeline_solver (:202) at 7f3f803. Single authority:
-# alloy_data_calphad_battery_icme.LEGACY_R_8_314 wraps this value. Not exact:
-# (8.314 - GAS_CONSTANT_R) / GAS_CONSTANT_R is about -5.56e-5. Used only until
-# design step (b) switches those solvers to GAS_CONSTANT_R.
-LEGACY_GAS_CONSTANT_R_4SF = 8.314
-# ---- END phase6a-t2b block ----
 
 
 def _check_metadata(source_type: str, validity: object) -> None:

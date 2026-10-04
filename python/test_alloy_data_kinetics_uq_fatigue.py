@@ -92,9 +92,11 @@ class LeafModuleTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             data.KINETICS_DESCRIPTORS["aisi4140"]["type"] = "x"  # type: ignore[index]
 
-    def test_legacy_r_constant(self):
-        self.assertEqual(pc.LEGACY_GAS_CONSTANT_R_4SF, 8.314)
-        rel = (pc.LEGACY_GAS_CONSTANT_R_4SF - pc.GAS_CONSTANT_R.value) / pc.GAS_CONSTANT_R.value
+    def test_legacy_r_constant_is_gone(self):
+        # Design step (b): kinetics and stochastic UQ use the exact R; the 8.314 record
+        # (LEGACY_GAS_CONSTANT_R_4SF) was removed. Its old relative offset, for the record:
+        self.assertFalse(hasattr(pc, "LEGACY_GAS_CONSTANT_R_4SF"))
+        rel = (8.314 - pc.GAS_CONSTANT_R.value) / pc.GAS_CONSTANT_R.value
         self.assertAlmostEqual(rel, -5.5645e-5, delta=1e-8)
 
 
@@ -173,7 +175,7 @@ class StochasticValueTest(unittest.TestCase):
         body = self._assigns(self.funcs["solve_single_realization"].body)
         self.assertEqual(repr(dict(data.UQ_SOLUTE_POTENCY)), repr(body["misfit_weights"]))
         self.assertEqual(data.UQ_PRECIPITATION_Q_J_MOL, body["Q_diff"])
-        self.assertEqual(body["R_gas"], pc.LEGACY_GAS_CONSTANT_R_4SF)
+        self.assertEqual(body["R_gas"], 8.314)  # the base blob's literal (now exact R, design step (b))
         src = _base_blob("python/stochastic_uq_mmpds_solver.py")
         self.assertIn("misfit_weights.get(el, 5.0)", src)
         self.assertEqual(data.UQ_DEFAULT_SOLUTE_POTENCY, 5.0)

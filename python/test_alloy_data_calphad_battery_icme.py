@@ -54,39 +54,18 @@ class LeafGuardTest(unittest.TestCase):
 
 
 class LegacyConstantTest(unittest.TestCase):
-    def test_values_are_the_solver_literals_and_not_exact(self):
-        expected = {
-            data.LEGACY_R_8_314: (8.314, "J/(mol*K)"),
-            data.LEGACY_R_8_31446: (8.31446, "J/(mol*K)"),
-            data.LEGACY_F_96485_332: (96485.332, "C/mol"),
-            data.LEGACY_F_96485_33: (96485.33, "C/mol"),
-        }
-        for const, (value, unit) in expected.items():
-            self.assertEqual(const.value, value)
-            self.assertEqual(const.unit, unit)
-            self.assertFalse(const.exact)
-            self.assertIn("not exact", const.note)
+    def test_legacy_r_f_records_are_gone(self):
+        # Design step (b): every solver uses physical_constants.GAS_CONSTANT_R / FARADAY;
+        # the rounded LEGACY_* records and their site map were removed.
+        for name in ("LEGACY_R_8_314", "LEGACY_R_8_31446", "LEGACY_F_96485_332",
+                     "LEGACY_F_96485_33", "LEGACY_CONSTANT_SITES"):
+            self.assertFalse(hasattr(data, name), name)
 
-    def test_legacy_8_314_has_one_authority(self):
-        # S3: physical_constants.LEGACY_GAS_CONSTANT_R_4SF is the only 8.314 literal.
-        self.assertIs(data.LEGACY_R_8_314.value, pc.LEGACY_GAS_CONSTANT_R_4SF)
+    def test_no_r_or_f_literal_in_the_module(self):
         literals = [n.value for n in ast.walk(ast.parse((HERE / f"{MODULE}.py").read_text(encoding="utf-8")))
-                    if isinstance(n, ast.Constant) and n.value == 8.314]
+                    if isinstance(n, ast.Constant) and isinstance(n.value, float)
+                    and (8.3 < n.value < 8.4 or 96485.0 <= n.value < 96486.0)]
         self.assertEqual(literals, [])
-
-    def test_relative_deltas_to_the_exact_values(self):
-        r, f = pc.GAS_CONSTANT_R.value, pc.FARADAY.value
-        self.assertAlmostEqual((data.LEGACY_R_8_314.value - r) / r, -5.565e-5, delta=1e-8)
-        self.assertAlmostEqual((data.LEGACY_R_8_31446.value - r) / r, -3.15e-7, delta=1e-9)
-        self.assertLess(abs((data.LEGACY_F_96485_332.value - f) / f), 1.3e-9)
-        self.assertLess(abs((data.LEGACY_F_96485_33.value - f) / f), 2.3e-8)
-
-    def test_every_site_names_a_known_constant(self):
-        for site, names in data.LEGACY_CONSTANT_SITES.items():
-            for name in names:
-                if name is None:
-                    continue
-                self.assertTrue(hasattr(data, name) or hasattr(pc, name), (site, name))
 
 
 class CalphadElementsTest(unittest.TestCase):
@@ -102,7 +81,6 @@ class CalphadElementsTest(unittest.TestCase):
         for name in ("CALPHAD_ELEMENTS", "CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL",
                      "CALPHAD_LEGACY_FALLBACK_NOTE"):
             self.assertFalse(hasattr(data, name), name)
-        self.assertNotIn(("calphad_solver.py", "module GAS_CONSTANT_R"), data.LEGACY_CONSTANT_SITES)
 
 
 class IcmeDataTest(unittest.TestCase):

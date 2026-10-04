@@ -3,16 +3,14 @@
 Domain data for the Phase 6a tranche-2a solvers: calphad_solver,
 battery_corrosion_eis_solver and icme_multiscale_pipeline_solver.
 
-Structural step (a) only. Every number here is a copy of the value the solver used
-at BASE_REVISION, including rounded/truncated constants and legacy rounded atomic
-weights, so the solver output stays bit-identical. The value step (b) swaps them
-for the exact physical_constants records; see the drift preview in the tranche-2a
-handoff.
+Phase 6a design step (b) (value commits) replaced every rounded/truncated R/F
+printing and every legacy atomic weight that step (a) had copied here with the
+exact physical_constants records (SI 2019 R = N_A*k, F = N_A*e; CIAAW 2021
+abridged atomic weights); those legacy records were removed. What remains is
+solver-local domain data.
 
 Provenance honesty (RULES.md section 2): no value below carries a per-value
-citation in its solver, so the solver-local values are tagged ``estimated``. The
-truncated R/F printings are tagged ``literature`` like physical_constants does for
-CODATA values, with ``exact=False`` and a note naming the truncation.
+citation in its solver, so the solver-local values are tagged ``estimated``.
 
 Leaf module: standard library + physical_constants only, no numpy/scipy at import.
 alloy_registry imports it (one delimited block); no manifest file may import it
@@ -24,35 +22,11 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Dict, Mapping, Tuple
 
-from physical_constants import LEGACY_GAS_CONSTANT_R_4SF, Constant, atomic_weight
+from physical_constants import atomic_weight
 
-DATA_VERSION = "alloy-data-calphad-battery-icme-1"
+# -2: design step (b) (exact R/F, CIAAW weights; legacy constant records removed).
+DATA_VERSION = "alloy-data-calphad-battery-icme-2"
 BASE_REVISION = "7f3f803"
-
-# --------------------------------------------------------------------------- legacy constants
-# Rounded/truncated printings of R and F found in the solvers at BASE_REVISION. The
-# 8.314462618 / 96485.33212 truncations already exist as
-# physical_constants.TRUNCATED_GAS_CONSTANT_R / TRUNCATED_FARADAY and are not repeated.
-_CODATA = "NIST CODATA 2018"
-_TRUNC_NOTE = ("Rounded printing of the CODATA value kept for bit-identical output in Phase 6a "
-               "step (a); not exact. Replaced by the exact SI product in step (b).")
-
-# The value itself lives in physical_constants (single authority, shared with the
-# kinetics and stochastic UQ solvers); this record only adds unit/source metadata.
-LEGACY_R_8_314 = Constant(LEGACY_GAS_CONSTANT_R_4SF, "J/(mol*K)", f"{_CODATA} R, rounded to 3 decimals",
-                          False, note=_TRUNC_NOTE)
-LEGACY_R_8_31446 = Constant(8.31446, "J/(mol*K)", f"{_CODATA} R, rounded to 5 decimals", False,
-                            note=_TRUNC_NOTE)
-LEGACY_F_96485_332 = Constant(96485.332, "C/mol", f"{_CODATA} F, rounded to 3 decimals", False,
-                              note=_TRUNC_NOTE)
-LEGACY_F_96485_33 = Constant(96485.33, "C/mol", f"{_CODATA} F, rounded to 2 decimals", False,
-                             note=_TRUNC_NOTE)
-
-# Where each truncated constant is used (solver file, function) -> (R, F) names.
-# "TRUNCATED_*" refers to physical_constants; None means the site uses no F.
-# Design step (b) removed the calphad, battery_corrosion_eis_solver and
-# icme_multiscale_pipeline_solver sites (exact SI R/F); no site is left.
-LEGACY_CONSTANT_SITES: Mapping[Tuple[str, str], Tuple[str, object]] = MappingProxyType({})
 
 # --------------------------------------------------------------------------- calphad
 # Design step (b): calphad_solver takes every atomic weight from
