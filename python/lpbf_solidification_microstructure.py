@@ -1,28 +1,28 @@
 """
 lpbf_solidification_microstructure.py  — Phase 8
 ================================================
-Python-side solidification microstructure solver for LPBF.
+Python-side solidification microstructure helpers for LPBF.
 
 Provides:
-  compute_solidification_microstructure(params, material)
-    → Runs the CFD simulation (or reads a mock result when CFD unavailable)
-      and returns a rich SolidificationMicrostructureResult dict that the
-      frontend Microstructure Lab UI consumes.
+  compute_solidification_microstructure(params, material, cfd_result)
+    → RPC route "solidification-microstructure". Uses the CFD
+      solidificationMicrostructure sub-dict (meanG_K_m, meanR_m_s, ...) when
+      present. Without CFD data it returns status "unavailable": G and R are
+      never estimated from default constants.
+  project_build_job_microstructure(thermal)
+    → Build-job projection of thermal["solidificationKinetics"] (the conduction
+      field G/R from solidification_front); numbers are copied, not recomputed.
 
-Hunt-Lu PDAS model:
+Hunt-Lu PDAS model (CFD path only):
     λ₁ [µm] = 80 · G^(-0.5) · R^(-0.25)        (Hunt-Lu 1996)
 
-Kirkwood SDAS model:
+Kirkwood SDAS model (CFD path only):
     λ₂ [µm] = 64.5 · Ṫ^(-0.33)                 (Kirkwood 1985)
 
 Hunt G/R morphology criterion:
     G/R > 1×10⁸  K·s/m²  → columnar
     G/R < 1×10⁶  K·s/m²  → equiaxed
     in between             → mixed (columnar+equiaxed coexistence)
-
-Physical defaults when CFD JSON is absent (analytical Rosenthal screening):
-    G  ~ 0.45 · √(P / (v · k))  [K/m]   (power P, speed v, conductivity k)
-    R  ~ v · cos(45°)             [m/s]   (typical pool tail angle)
 """
 
 import math
@@ -85,43 +85,79 @@ def morphology_fractions(G_Km: float, R_ms: float) -> Dict[str, float]:
 
 
 # ---------------------------------------------------------------------------
-# Analytical Rosenthal screening — used when CFD JSON is unavailable
-# ---------------------------------------------------------------------------
-
-def _rosenthal_screening(params: Dict[str, Any], material: Dict[str, Any]) -> Dict[str, float]:
-    """
-    Estimate G and R from Rosenthal point-source conduction model (thin-plate
-    approximation) for use when the OpenFOAM simulation JSON is unavailable.
-
-    Returns dict with keys: G_K_m, R_m_s, coolingRate_K_s
-    """
-    P   = float(params.get("laserPower_W", params.get("power_W", 200.0)))
-    v   = float(params.get("scanSpeed_mm_s", params.get("scanSpeed_mms", params.get("speed_mm_s", 800.0)))) * 1e-3   # m/s
-    absorb = float(material.get("absorptivity", 0.35))
-    k   = float(material.get("k_WmK", 15.0))              # thermal conductivity W/(m·K)
-    T_liq = float(material.get("liquidus_K", 1700.0))
-    T_ref = 300.0  # ambient [K]
-
-    # Effective absorbed power
-    Q = P * absorb
-
-    # Rosenthal 3-D conduction approximation:
-    #   T - T0 = (Q / (2πk)) * (1/r) * exp(-v(x+r)/(2α))
-    # At pool boundary (isotherm T_liq), the dominant gradient:
-    # G ≈ ΔT / L  where L ~ pool half-length ≈ Q / (π k ΔT) (simplified)
-    # Standard screening: G ~ ΔT * 2πk * v / Q   (from rear-pool scaling)
-    delta_T = max(10.0, T_liq - T_ref)
-    G = max(1.0e4, (2.0 * math.pi * k * v * delta_T) / max(Q, 1.0))
-
-    # R ≈ v * cos(θ) at pool tail; θ ≈ 45° for typical LPBF conditions
-    R = max(1.0e-5, v * math.cos(math.radians(45.0)))
-
-    return {"G_K_m": G, "R_m_s": R, "coolingRate_K_s": G * R}
-
-
-# ---------------------------------------------------------------------------
 # Main public API
 # ---------------------------------------------------------------------------
+
+_UNAVAILABLE_NO_CFD_REASON = (
+    "no CFD solidification data (solidificationMicrostructure.meanG_K_m); "
+    "G and R are not estimated from default constants"
+)
+
+_MICROSTRUCTURE_DOI = {
+    "pdas": "10.1016/S1359-6454(96)00096-5",     # Hunt-Lu 1996
+    "sdas": "10.1007/BF02649565",                 # Kirkwood 1985
+    "morphology": "10.1016/0001-6160(84)90147-8", # Hunt 1984
+}
+
+_MICROSTRUCTURE_DISCLAIMER = (
+    "G from grad(T) at mushy-zone front; R from U·n_front. "
+    "PDAS/SDAS are semi-empirical correlations validated for LPBF dendrite scale. "
+    "Morphology is Hunt G/R criterion with soft transition band."
+)
+
+
+def _finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Project thermal["solidificationKinetics"] into the build-job microstructure block.
+
+    The numbers are copied from the thermal block (conduction-field G/R from
+    solidification_front.evaluate_solidification); no second Hunt-Lu / Kirkwood
+    estimate is made here. When the thermal block carries no finite G/R/cooling
+    rate the block is reported as unavailable instead of falling back to constants.
+    """
+    kin = thermal.get("solidificationKinetics") if isinstance(thermal, dict) else None
+    if (
+        isinstance(kin, dict)
+        and _finite_number(kin.get("thermalGradient_G_K_m"))
+        and _finite_number(kin.get("solidificationRate_R_m_s"))
+        and _finite_number(kin.get("coolingRate_K_s"))
+    ):
+        base_disclaimer = kin.get("disclaimer") or ""
+        note = (
+            "Build-job microstructure is a projection of the thermal block's "
+            "conduction-field G/R; no second estimate."
+        )
+        return {
+            "status": "available",
+            "source": "thermal.solidificationKinetics",
+            "modelId": kin.get("modelId"),
+            "gradientSource": kin.get("gradientSource"),
+            "usedFieldMap": kin.get("usedFieldMap"),
+            "G_K_m": kin["thermalGradient_G_K_m"],
+            "R_m_s": kin["solidificationRate_R_m_s"],
+            "coolingRate_K_s": kin["coolingRate_K_s"],
+            "PDAS_um": kin.get("primaryDendriteArmSpacing_PDAS_um"),
+            "SDAS_um": kin.get("secondaryDendriteArmSpacing_SDAS_um"),
+            "morphology": kin.get("microstructureMorphology"),
+            "g_over_r_ratio": kin.get("g_over_r_ratio"),
+            "doi": kin.get("doi"),
+            "disclaimer": (base_disclaimer + " " + note).strip(),
+        }
+    return {
+        "status": "unavailable",
+        "reason": "thermal.solidificationKinetics missing or non-finite",
+        "G_K_m": None,
+        "R_m_s": None,
+        "coolingRate_K_s": None,
+        "PDAS_um": None,
+        "SDAS_um": None,
+        "morphology": None,
+    }
+
 
 def compute_solidification_microstructure(
     params: Dict[str, Any],
@@ -129,55 +165,66 @@ def compute_solidification_microstructure(
     cfd_result: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """
-    Compute solidification microstructure metrics for LPBF.
+    Compute solidification microstructure metrics from CFD solidification data.
 
     Parameters
     ----------
-    params   : LPBF process parameters (power_W, speed_mm_s, …)
-    material : Alloy properties (liquidus_K, k_WmK, absorptivity, …)
-    cfd_result : Optional output from cfd_multiphysics(); if present the
-                 solidificationMicrostructure sub-dict from the OpenFOAM
-                 JSON is used as ground-truth for G and R.
+    params   : LPBF process parameters (kept for the RPC signature; not used to
+               estimate G/R)
+    material : Alloy properties (kept for the RPC signature; not used to
+               estimate G/R)
+    cfd_result : Optional output from cfd_multiphysics(); the
+                 solidificationMicrostructure sub-dict from the OpenFOAM JSON
+                 supplies G and R.
 
     Returns
     -------
-    SolidificationMicrostructureResult dict with keys:
+    With CFD data: status "available" and keys
         source, G_K_m, maxG_K_m, R_m_s, maxR_m_s, coolingRate_K_s,
         PDAS_um, SDAS_um, morphology, morphologyFractions,
         frontCellCount, graftAnnotation
+    Without CFD data: status "unavailable", source "none", a reason, and None
+    for every numeric field (no default-constant estimate is ever returned).
     """
-    # ---- 1. Determine G / R source ----------------------------------------
     cfd_solid = {}
     if cfd_result and isinstance(cfd_result.get("solidificationMicrostructure"), dict):
         cfd_solid = cfd_result["solidificationMicrostructure"]
 
-    use_cfd = bool(cfd_solid.get("meanG_K_m"))
+    if not bool(cfd_solid.get("meanG_K_m")):
+        return {
+            "status": "unavailable",
+            "source": "none",
+            "reason": _UNAVAILABLE_NO_CFD_REASON,
+            "G_K_m": None,
+            "maxG_K_m": None,
+            "R_m_s": None,
+            "maxR_m_s": None,
+            "coolingRate_K_s": None,
+            "PDAS_um": None,
+            "SDAS_um": None,
+            "morphology": None,
+            "morphologyFractions": None,
+            "frontCellCount": None,
+            "doi": dict(_MICROSTRUCTURE_DOI),
+            "disclaimer": _MICROSTRUCTURE_DISCLAIMER,
+            "graftAnnotation": "covers: python/lpbf_solidification_microstructure.py",
+        }
 
-    if use_cfd:
-        G    = float(cfd_solid["meanG_K_m"])
-        R    = float(cfd_solid["meanR_m_s"])
-        Tdot = float(cfd_solid.get("meanCoolingRate_K_s", G * R))
-        maxG = float(cfd_solid.get("maxG_K_m", G))
-        maxR = float(cfd_solid.get("maxR_m_s", R))
-        front_cells = int(cfd_solid.get("frontCellCount", 0))
-        source = "openfoam-solidification-model-v1"
-    else:
-        screen = _rosenthal_screening(params, material)
-        G    = screen["G_K_m"]
-        R    = screen["R_m_s"]
-        Tdot = screen["coolingRate_K_s"]
-        maxG = G
-        maxR = R
-        front_cells = 0
-        source = "rosenthal-analytical-screening"
+    G    = float(cfd_solid["meanG_K_m"])
+    R    = float(cfd_solid["meanR_m_s"])
+    Tdot = float(cfd_solid.get("meanCoolingRate_K_s", G * R))
+    maxG = float(cfd_solid.get("maxG_K_m", G))
+    maxR = float(cfd_solid.get("maxR_m_s", R))
+    front_cells = int(cfd_solid.get("frontCellCount", 0))
+    source = "openfoam-solidification-model-v1"
 
-    # ---- 2. Microstructure correlations ------------------------------------
+    # ---- Microstructure correlations ---------------------------------------
     pdas = hunt_lu_pdas_um(G, R)
     sdas = kirkwood_sdas_um(Tdot)
     morph = hunt_morphology(G, R)
     fracs = morphology_fractions(G, R)
 
-    # ---- 3. Validate physical bounds (unit-test oracle) -------------------
+    # ---- Validate physical bounds (unit-test oracle; CFD path only) --------
     assert 1.0e3 <= G <= 1.0e10, f"G={G:.3e} K/m out of physical range [1e3, 1e10]"
     assert 1.0e-6 <= R <= 2.0,   f"R={R:.3e} m/s out of physical range [1e-6, 2]"
     assert 0.05 <= pdas <= 500.0, f"PDAS={pdas:.2f} µm outside [0.05, 500]"
@@ -186,6 +233,7 @@ def compute_solidification_microstructure(
     assert abs(total_frac - 1.0) < 0.01, f"Morphology fractions sum {total_frac:.4f} ≠ 1"
 
     return {
+        "status": "available",
         "source": source,
         "G_K_m": round(G, 2),
         "maxG_K_m": round(maxG, 2),
@@ -197,15 +245,7 @@ def compute_solidification_microstructure(
         "morphology": morph,
         "morphologyFractions": fracs,
         "frontCellCount": front_cells,
-        "doi": {
-            "pdas": "10.1016/S1359-6454(96)00096-5",     # Hunt-Lu 1996
-            "sdas": "10.1007/BF02649565",                 # Kirkwood 1985
-            "morphology": "10.1016/0001-6160(84)90147-8", # Hunt 1984
-        },
-        "disclaimer": (
-            "G from grad(T) at mushy-zone front; R from U·n_front. "
-            "PDAS/SDAS are semi-empirical correlations validated for LPBF dendrite scale. "
-            "Morphology is Hunt G/R criterion with soft transition band."
-        ),
+        "doi": dict(_MICROSTRUCTURE_DOI),
+        "disclaimer": _MICROSTRUCTURE_DISCLAIMER,
         "graftAnnotation": "covers: python/lpbf_solidification_microstructure.py",
     }
