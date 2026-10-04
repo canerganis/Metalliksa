@@ -1,0 +1,85 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g11_build_job_meltpool",
+ "group": "G11",
+ "description": "lpbf_thermal_solver.calculate_meltpool_physics for three fixed payloads",
+ "slow": false,
+ "recordedImplementationHash": "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "ed0df5079de9dbe2daa6d61121926ff148d2aec8",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  0.6,
+  0.6
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "meltpool.0.typedSha256": "af9e890099d62723986da1f396b257169509732c5958315d653dd9eba9da2403",
+  "meltpool.0.canonicalSha256": "34d87b733211c92722de0f7c8d451b33e93a97cc09403656000abcecba46c010",
+  "meltpool.1.typedSha256": "ce605dc166c34363b83afc5dd7e2d52909b9965a9f81201b0b8c2198905d699b",
+  "meltpool.1.canonicalSha256": "6f24f3fbbd1055800c4bed25a0bb4718121676af7e46ecdc97b5e08dd518e470",
+  "meltpool.2.typedSha256": "5c23767554360cd9b988fcbc1183269915406412644118f11e5e82ce466c48df",
+  "meltpool.2.canonicalSha256": "8240f27b71267adcd9d36a3ee474ececbaa97b5acc4c6521ab276ff862d0532c",
+  "thermalSolver.THERMOPHYSICAL_DB": "8e38c5fe4082f4af20d5d22bbf35ddda5f7645d979c32f7383d3a41789a59d36",
+  "thermalSolver.classify_enthalpy_regime": "cd5ef3c4b600fdcde92381596c489baff6cf68eecc1463c3d30e08ac70287298"
+ }
+}

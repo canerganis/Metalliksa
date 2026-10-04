@@ -20,3 +20,7 @@
 /tests/route-authority.test.ts @0000can0000
 /tests/component-reachability.test.ts @0000can0000
 *.ceiling.json @0000can0000
+# LPBF implementation fingerprint pin (changes only at the planned bump) and the pre-bump
+# parity goldens (never re-recorded during the bump); design 5c.
+/python/lpbf_implementation_fingerprint.expected @0000can0000
+/python/golden/lpbf_parity/ @0000can0000

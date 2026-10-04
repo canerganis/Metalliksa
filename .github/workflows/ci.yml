@@ -90,6 +90,19 @@ jobs:
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_contract_keyhole_raytracing test_contract_uq_lab
           test_phase6b_vector_parity test_stochastic_uq_evidence
+      # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
+      # package-aware manifest import closure and the canonical-v3 framing vectors. The
+      # canonical identity normalises CRLF, so these are checkout-newline independent.
+      # The bit-exact parity goldens (test_lpbf_parity_golden) stay OUT of CI: they are
+      # valid only on the recorded reference machine.
+      - name: LPBF implementation fingerprint pin and source identity
+        working-directory: python
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: >-
+          python -B -m unittest
+          test_lpbf_implementation_fingerprint_pin test_lpbf_implementation_fingerprint
+          test_lpbf_source_identity
       # Runs the BASE revision's copy of the checker, so a change cannot weaken the check that
       # reviews it; .github/CODEOWNERS (enforced by branch protection) covers the same paths.
       - name: Allowlist ceilings and guard files change only with a 'Ceiling-Review:' commit trailer
