@@ -1,5 +1,5 @@
 {
-  "schema": "pourbaix-species-25c-v1",
+  "schema": "pourbaix-species-25c-v2",
   "generatedBy": "python/pourbaix_species_25c.py",
   "temperature_C": 25.0,
   "temperature_K": 298.15,
@@ -44,6 +44,10 @@
       "sourceSetNote": "Atlas set (Pourbaix 1974); FeO4 2- derived from Latimer E0 (L)",
       "waterDfG_kJ_mol": -237.19096000000002,
       "referenceCation": "Fe2+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Fe",
@@ -150,12 +154,602 @@
           "evidence": "E0(FeO4 2-/Fe3+) = 2.20 V (Wikipedia data page); derived row, an estimate whose domain lies above the O2 line",
           "category": "Transpassive"
         }
-      ]
+      ],
+      "candidateSets": [],
+      "unsourcedSpecies": []
     },
     "Cr": {
       "name": "Chromium (Cr-H₂O System)",
-      "available": false,
-      "reason": "No verified Cr-H2O data in this tool: the alkaline Cr(III) species (CrO2-/Cr(OH)4-) have no value that this project has verified yet (candidate source: Ball & Nordstrom, J. Chem. Eng. Data 43 (1998) 895)."
+      "available": true,
+      "sourceSet": "N",
+      "sourceSetNote": "NBS set (Wagman 1982): Cr, Cr2O3, HCrO4-, CrO4 2-. The Cr(III)/Cr(II) aqueous species are WITHHELD: four reputable compilations put Cr3+ between -214.2 and -195.1 kJ/mol (66 mV in E0(Cr3+/Cr)); they are carried as candidate sets and the map is not valid where any of them would be stable (dataValidity)",
+      "waterDfG_kJ_mol": -237.129,
+      "referenceCation": null,
+      "activityLog10Range": [
+        -6.0,
+        -2.0
+      ],
+      "species": [
+        {
+          "id": "Cr",
+          "formula": "Cr",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": 0.0,
+          "role": "metal",
+          "source": "ref",
+          "verification": "V1",
+          "evidence": "reference state",
+          "category": "Immunity"
+        },
+        {
+          "id": "Cr2O3",
+          "formula": "Cr₂O₃",
+          "x": 2,
+          "o": 3,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -1058.1,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "NBS (Wagman 1982, Table 51) -1058.1 kJ/mol; LLNL thermo.com.V8.R6 eskolaite (llnl.dat log K -9.1306 with its CrO4 2-) -1058.10. NIST-JANAF (Chase 1998, Cr-014) -1053.07 and Ziemniak et al. (KAPL LM-06K145, 2007) -1049.96 are 5.0 and 8.1 kJ/mol less negative: E0(Cr2O3/Cr) -0.5989 V (NBS) vs -0.5902 V (JANAF), 8.7 mV; -0.5848 V (KAPL), 14 mV",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "HCrO4-",
+          "formula": "HCrO₄⁻",
+          "x": 1,
+          "o": 4,
+          "h": 1,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -764.7,
+          "role": "anion_high",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS -764.7 kJ/mol; LLNL thermo.com.V8.R6 -764.83 (0.13 kJ/mol). CrO4 2- + H+ = HCrO4-: table log K 6.473 vs Ball & Nordstrom 1998 6.55 +/- 0.04 and Baes & Mesmer 1976 6.51 (COST NECTAR CrVI table)",
+          "category": "Transpassive"
+        },
+        {
+          "id": "CrO4^2-",
+          "formula": "CrO₄²⁻",
+          "x": 1,
+          "o": 4,
+          "h": 0,
+          "z": -2,
+          "phase": "aq",
+          "dfG_kJ_mol": -727.75,
+          "role": "anion_high",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS -727.75 kJ/mol; LLNL thermo.com.V8.R6 (llnl.dat, Cr3+ and CrO4 2- through Cr(s)) -727.76 (0.01 kJ/mol); OBIGT SSWS97 -174800 cal = -731.36 (3.6 kJ/mol)",
+          "category": "Transpassive"
+        }
+      ],
+      "candidateSets": [
+        {
+          "id": "Cr-CRC",
+          "label": "Cr(III)/Cr(II) with hydrolysis, CRC values",
+          "speciesIds": [
+            "Cr2+[CRC]",
+            "Cr3+[CRC]",
+            "CrOH+[CRC]",
+            "CrOH2+[CRC]",
+            "Cr(OH)2+[CRC]",
+            "Cr(OH)3(aq)[CRC]",
+            "Cr(OH)4-[CRC]"
+          ]
+        },
+        {
+          "id": "Cr-SSWS97",
+          "label": "Cr(III)/Cr(II) with hydrolysis, SSWS97 values",
+          "speciesIds": [
+            "Cr2+[SSWS97]",
+            "Cr3+[SSWS97]",
+            "CrOH+[SSWS97]",
+            "CrOH2+[SSWS97]",
+            "Cr(OH)2+[SSWS97]",
+            "Cr(OH)3(aq)[SSWS97]",
+            "Cr(OH)4-[SSWS97]"
+          ]
+        },
+        {
+          "id": "Cr-LLNL",
+          "label": "Cr(III)/Cr(II) with hydrolysis, LLNL values",
+          "speciesIds": [
+            "Cr2+[LLNL]",
+            "Cr3+[LLNL]",
+            "CrOH+[LLNL]",
+            "CrOH2+[LLNL]",
+            "Cr(OH)2+[LLNL]",
+            "Cr(OH)3(aq)[LLNL]",
+            "Cr(OH)4-[LLNL]"
+          ]
+        },
+        {
+          "id": "Cr-BN98",
+          "label": "Cr(III)/Cr(II) with hydrolysis, BN98 values",
+          "speciesIds": [
+            "Cr2+[BN98]",
+            "Cr3+[BN98]",
+            "CrOH+[BN98]",
+            "CrOH2+[BN98]",
+            "Cr(OH)2+[BN98]",
+            "Cr(OH)3(aq)[BN98]",
+            "Cr(OH)4-[BN98]"
+          ]
+        },
+        {
+          "id": "Cr-H2CrO4",
+          "label": "H2CrO4 (Ball & Nordstrom 1998)",
+          "speciesIds": [
+            "H2CrO4[BN98]"
+          ]
+        }
+      ],
+      "unsourcedSpecies": [
+        {
+          "formula": "Cr(OH)₃ (amorphous)",
+          "reason": "metastable solid: Cr(OH)3(s) + 3H+ = Cr3+ + 3H2O log K 9.41 (Brown & Ekberg 2016) / 9.35 (Ball & Nordstrom 1998) against 4.26 per Cr for Cr2O3 (Ball & Nordstrom): more soluble than Cr2O3, and its value depends on the withheld Cr3+"
+        }
+      ],
+      "withheldSpecies": [
+        {
+          "id": "Cr2+[CRC]",
+          "formula": "Cr²⁺ (CRC)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -173.67359782195803,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (Wikipedia data page E0 Cr3+/Cr -0.74 V and Cr2+/Cr -0.9 V (CRC / Bratsch lineage)): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr3+[CRC]",
+          "formula": "Cr³⁺ (CRC)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -214.19743731374825,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (Wikipedia data page E0 Cr3+/Cr -0.74 V and Cr2+/Cr -0.9 V (CRC / Bratsch lineage)): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH+[CRC]",
+          "formula": "CrOH⁺ (CRC)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -379.40854555801405,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr2+ + H2O = CrOH+ + H+ log K -5.5 (NIST46, NECTAR CrII table, which says the reliability of the Cr(II) data is in doubt) on the CRC Cr2+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH2+[CRC]",
+          "formula": "CrOH²⁺ (CRC)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -430.7776031046213,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 1 H2O hydrolysis log K -3.6 (Brown & Ekberg 2016, NECTAR CrIII table) on the CRC Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)2+[CRC]",
+          "formula": "Cr(OH)₂⁺ (CRC)",
+          "x": 1,
+          "o": 2,
+          "h": 2,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -633.373145614283,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 2 H2O hydrolysis log K -9.65 (Brown & Ekberg 2016, NECTAR CrIII table) on the CRC Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)3(aq)[CRC]",
+          "formula": "Cr(OH)₃(aq) (CRC)",
+          "x": 1,
+          "o": 3,
+          "h": 3,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -832.8292828975502,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 3 H2O hydrolysis log K -16.25 (Brown & Ekberg 2016, NECTAR CrIII table) on the CRC Cr3+, which is itself withheld; neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)4-[CRC]",
+          "formula": "Cr(OH)₄⁻ (CRC)",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -1005.4006954238765,
+          "role": "anion_low",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 4 H2O hydrolysis log K -27.56 (Brown & Ekberg 2016, NECTAR CrIII table) on the CRC Cr3+, which is itself withheld",
+          "category": "Corrosion (alkaline)"
+        },
+        {
+          "id": "Cr2+[SSWS97]",
+          "formula": "Cr²⁺ (SSWS97)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -164.8496,
+          "role": "cation",
+          "source": "O",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (CHNOSZ OBIGT SSWS97 Cr+3 -49300 cal and Cr+2 -39400 cal): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr3+[SSWS97]",
+          "formula": "Cr³⁺ (SSWS97)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -206.27120000000002,
+          "role": "cation",
+          "source": "O",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (CHNOSZ OBIGT SSWS97 Cr+3 -49300 cal and Cr+2 -39400 cal): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH+[SSWS97]",
+          "formula": "CrOH⁺ (SSWS97)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -370.5845477360561,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr2+ + H2O = CrOH+ + H+ log K -5.5 (NIST46, NECTAR CrII table, which says the reliability of the Cr(II) data is in doubt) on the SSWS97 Cr2+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH2+[SSWS97]",
+          "formula": "CrOH²⁺ (SSWS97)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -422.8513657908731,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 1 H2O hydrolysis log K -3.6 (Brown & Ekberg 2016, NECTAR CrIII table) on the SSWS97 Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)2+[SSWS97]",
+          "formula": "Cr(OH)₂⁺ (SSWS97)",
+          "x": 1,
+          "o": 2,
+          "h": 2,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -625.4469083005347,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 2 H2O hydrolysis log K -9.65 (Brown & Ekberg 2016, NECTAR CrIII table) on the SSWS97 Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)3(aq)[SSWS97]",
+          "formula": "Cr(OH)₃(aq) (SSWS97)",
+          "x": 1,
+          "o": 3,
+          "h": 3,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -824.9030455838019,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 3 H2O hydrolysis log K -16.25 (Brown & Ekberg 2016, NECTAR CrIII table) on the SSWS97 Cr3+, which is itself withheld; neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)4-[SSWS97]",
+          "formula": "Cr(OH)₄⁻ (SSWS97)",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -997.4744581101282,
+          "role": "anion_low",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 4 H2O hydrolysis log K -27.56 (Brown & Ekberg 2016, NECTAR CrIII table) on the SSWS97 Cr3+, which is itself withheld",
+          "category": "Corrosion (alkaline)"
+        },
+        {
+          "id": "Cr2+[LLNL]",
+          "formula": "Cr²⁺ (LLNL)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -146.44406161461302,
+          "role": "cation",
+          "source": "P",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (PHREEQC llnl.dat (LLNL thermo.com.V8.R6) log K 98.6784 (Cr(s) -> Cr3+), 8.3842 and -21.6373 (CrO4 2- -> Cr3+, Cr2+), SUPCRT92 water and OBIGT O2(aq); its E0(Cr3+/Cr2+) is -0.504 V against the measured -0.407 V): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr3+[LLNL]",
+          "formula": "Cr³⁺ (LLNL)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -195.08198089497535,
+          "role": "cation",
+          "source": "P",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (PHREEQC llnl.dat (LLNL thermo.com.V8.R6) log K 98.6784 (Cr(s) -> Cr3+), 8.3842 and -21.6373 (CrO4 2- -> Cr3+, Cr2+), SUPCRT92 water and OBIGT O2(aq); its E0(Cr3+/Cr2+) is -0.504 V against the measured -0.407 V): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH+[LLNL]",
+          "formula": "CrOH⁺ (LLNL)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -352.1790093506691,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr2+ + H2O = CrOH+ + H+ log K -5.5 (NIST46, NECTAR CrII table, which says the reliability of the Cr(II) data is in doubt) on the LLNL Cr2+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH2+[LLNL]",
+          "formula": "CrOH²⁺ (LLNL)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -411.6621466858484,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 1 H2O hydrolysis log K -3.6 (Brown & Ekberg 2016, NECTAR CrIII table) on the LLNL Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)2+[LLNL]",
+          "formula": "Cr(OH)₂⁺ (LLNL)",
+          "x": 1,
+          "o": 2,
+          "h": 2,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -614.25768919551,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 2 H2O hydrolysis log K -9.65 (Brown & Ekberg 2016, NECTAR CrIII table) on the LLNL Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)3(aq)[LLNL]",
+          "formula": "Cr(OH)₃(aq) (LLNL)",
+          "x": 1,
+          "o": 3,
+          "h": 3,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -813.7138264787773,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 3 H2O hydrolysis log K -16.25 (Brown & Ekberg 2016, NECTAR CrIII table) on the LLNL Cr3+, which is itself withheld; neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)4-[LLNL]",
+          "formula": "Cr(OH)₄⁻ (LLNL)",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -986.2852390051036,
+          "role": "anion_low",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 4 H2O hydrolysis log K -27.56 (Brown & Ekberg 2016, NECTAR CrIII table) on the LLNL Cr3+, which is itself withheld",
+          "category": "Corrosion (alkaline)"
+        },
+        {
+          "id": "Cr2+[BN98]",
+          "formula": "Cr²⁺ (BN98)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -158.403090306613,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (Ball & Nordstrom 1998 Cr2O3 + 6H+ = 2Cr3+ + 3H2O log K 8.52 (NECTAR CrIII table) on the NBS Cr2O3, Cr2+ by E0(Cr3+/Cr2+) = -0.407 V): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr3+[BN98]",
+          "formula": "Cr³⁺ (BN98)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -197.67262048080016,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate (Ball & Nordstrom 1998 Cr2O3 + 6H+ = 2Cr3+ + 3H2O log K 8.52 (NECTAR CrIII table) on the NBS Cr2O3, Cr2+ by E0(Cr3+/Cr2+) = -0.407 V): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH+[BN98]",
+          "formula": "CrOH⁺ (BN98)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -364.13803804266905,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr2+ + H2O = CrOH+ + H+ log K -5.5 (NIST46, NECTAR CrII table, which says the reliability of the Cr(II) data is in doubt) on the BN98 Cr2+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "CrOH2+[BN98]",
+          "formula": "CrOH²⁺ (BN98)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -414.2527862716732,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 1 H2O hydrolysis log K -3.6 (Brown & Ekberg 2016, NECTAR CrIII table) on the BN98 Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)2+[BN98]",
+          "formula": "Cr(OH)₂⁺ (BN98)",
+          "x": 1,
+          "o": 2,
+          "h": 2,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -616.8483287813349,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 2 H2O hydrolysis log K -9.65 (Brown & Ekberg 2016, NECTAR CrIII table) on the BN98 Cr3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)3(aq)[BN98]",
+          "formula": "Cr(OH)₃(aq) (BN98)",
+          "x": 1,
+          "o": 3,
+          "h": 3,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -816.3044660646021,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 3 H2O hydrolysis log K -16.25 (Brown & Ekberg 2016, NECTAR CrIII table) on the BN98 Cr3+, which is itself withheld; neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Cr(OH)4-[BN98]",
+          "formula": "Cr(OH)₄⁻ (BN98)",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -988.8758785909284,
+          "role": "anion_low",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Cr3+ + 4 H2O hydrolysis log K -27.56 (Brown & Ekberg 2016, NECTAR CrIII table) on the BN98 Cr3+, which is itself withheld",
+          "category": "Corrosion (alkaline)"
+        },
+        {
+          "id": "H2CrO4[BN98]",
+          "formula": "H₂CrO₄(aq) (BN98)",
+          "x": 1,
+          "o": 4,
+          "h": 2,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -763.7675399609975,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: CrO4 2- + 2H+ = H2CrO4 log K 6.31 (Ball & Nordstrom 1998, NECTAR CrVI table) on the NBS CrO4 2-; HCrO4- + H+ = H2CrO4 -0.16 here, -0.20 Baes & Mesmer, but llnl.dat -1.32 and minteq.v4.dat -0.09. Its region (pH below about -0.2, above 1.2 V) has the same category as HCrO4- (transpassive)",
+          "category": "Transpassive"
+        },
+        {
+          "id": "Cr2O7^2-",
+          "formula": "Cr₂O₇²⁻",
+          "x": 2,
+          "o": 7,
+          "h": 0,
+          "z": -2,
+          "phase": "aq",
+          "dfG_kJ_mol": -1301.1,
+          "role": "anion_high",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "EXCLUDED (polynuclear): NBS -1301.1 kJ/mol; 2HCrO4- = Cr2O7 2- + H2O log K 1.55 (NBS), 1.6 (Ball & Nordstrom 1998), 1.523 (Baes & Mesmer). Under the per-species activity convention it would take a domain from 10^-1.55 M (10^-1.75 M with the Ball & Nordstrom 2CrO4 2- + 2H+ constant 14.7 on the NBS CrO4 2- and HCrO4-), so the Cr activity is limited to 10^-6..10^-2 M",
+          "category": "Transpassive"
+        }
+      ]
     },
     "Ni": {
       "name": "Nickel (Ni-H₂O System)",
@@ -164,6 +758,10 @@
       "sourceSetNote": "NEA-TDB set (Gamsjaeger et al. 2005, Chemical Thermodynamics of Nickel, Table III-1) with CODATA water; Ni3O4 and Ni2O3 (atlas rows) and the NiO2 estimate are withheld",
       "waterDfG_kJ_mol": -237.14,
       "referenceCation": "Ni2+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Ni",
@@ -226,6 +824,8 @@
           "category": "Corrosion (alkaline)"
         }
       ],
+      "candidateSets": [],
+      "unsourcedSpecies": [],
       "withheldSpecies": [
         {
           "id": "Ni3O4",
@@ -276,8 +876,363 @@
     },
     "Ti": {
       "name": "Titanium (Ti-H₂O System)",
-      "available": false,
-      "reason": "Published aqueous Ti data are mutually inconsistent (TiO2+ -596 or -615 kJ/mol from the same E0 table; Ti/TiO2 -1.076 V with rutile vs -0.86 V with the atlas oxide). No verified Ti-H2O data."
+      "available": true,
+      "sourceSet": "N",
+      "sourceSetNote": "NBS set (Wagman 1982): Ti, Ti2O3, Ti3O5, TiO2 (rutile), each within 0.4 kJ/mol of NIST-JANAF. TiO (NBS and JANAF 18 kJ/mol apart), the Ti(II)/Ti(III)/Ti(IV) aqueous species (mutually inconsistent) and the hydride TiH2 are WITHHELD candidates; the map is not valid where any of them would be stable (dataValidity)",
+      "waterDfG_kJ_mol": -237.129,
+      "referenceCation": null,
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
+      "species": [
+        {
+          "id": "Ti",
+          "formula": "Ti",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": 0.0,
+          "role": "metal",
+          "source": "ref",
+          "verification": "V1",
+          "evidence": "reference state",
+          "category": "Immunity"
+        },
+        {
+          "id": "Ti2O3",
+          "formula": "Ti₂O₃",
+          "x": 2,
+          "o": 3,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -1434.2,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS (Wagman 1982, Table 57) -1434.2 kJ/mol; NIST-JANAF (O-059) -1433.83 (0.37 kJ/mol). E0(2TiO2/Ti2O3) -0.5580 V vs -0.56 V (Wikipedia data page)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "Ti3O5",
+          "formula": "Ti₃O₅",
+          "x": 3,
+          "o": 5,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -2317.4,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS -2317.4 kJ/mol; NIST-JANAF (O-080) -2317.29 (0.11 kJ/mol). It has no domain with these values (Ti2O3 + TiO2 is lower)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "TiO2",
+          "formula": "TiO₂ (rutile)",
+          "x": 1,
+          "o": 2,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -889.5,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS rutile -889.5 kJ/mol; NIST-JANAF (O-043) -889.41 (0.09 kJ/mol). E0(TiO2/Ti) -1.0759 V",
+          "category": "Passivation (thermodynamic, film-forming)"
+        }
+      ],
+      "candidateSets": [
+        {
+          "id": "Ti-CRC",
+          "label": "Ti(II)/Ti(III)/Ti(IV) and TiO, CRC E0 (TiO2+ from TiO2+/Ti)",
+          "speciesIds": [
+            "Ti2+[CRC]",
+            "Ti3+[CRC]",
+            "TiOH2+[CRC]",
+            "TiO2+[CRC]",
+            "TiO[CRC]"
+          ]
+        },
+        {
+          "id": "Ti-CRC-b",
+          "label": "TiO2+ from TiO2+/Ti3+ (CRC E0)",
+          "speciesIds": [
+            "TiO2+[CRC-b]"
+          ]
+        },
+        {
+          "id": "Ti-TiO-NBS",
+          "label": "TiO (NBS)",
+          "speciesIds": [
+            "TiO[NBS]"
+          ]
+        },
+        {
+          "id": "Ti-TiO-JANAF",
+          "label": "TiO (NIST-JANAF)",
+          "speciesIds": [
+            "TiO[JANAF]"
+          ]
+        },
+        {
+          "id": "Ti-BE16",
+          "label": "Ti(IV) hydrolysis (Brown & Ekberg 2016)",
+          "speciesIds": [
+            "Ti4+[BE16]",
+            "TiOOH+[BE16]",
+            "TiO(OH)2[BE16]",
+            "TiO(OH)3-[BE16]"
+          ]
+        },
+        {
+          "id": "Ti-LLNL",
+          "label": "Ti(OH)4(aq) (llnl.dat)",
+          "speciesIds": [
+            "Ti(OH)4[LLNL]"
+          ]
+        },
+        {
+          "id": "Ti-hydride",
+          "label": "TiH2 (NBS; hydride outside the oxide/ion table)",
+          "speciesIds": [
+            "TiH2"
+          ]
+        }
+      ],
+      "unsourcedSpecies": [],
+      "withheldSpecies": [
+        {
+          "id": "Ti2+[CRC]",
+          "formula": "Ti²⁺ (CRC)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -314.5421827219906,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(Ti2+/Ti) -1.63 V (Wikipedia data page); the same table's Ti(II)/Ti(III)/Ti(IV) couples are mutually inconsistent (TiO2+ -596.05 from TiO2+/Ti, -615.35 from TiO2+/Ti3+)",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Ti3+[CRC]",
+          "formula": "Ti³⁺ (CRC)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -396.5547150268042,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(Ti3+/Ti) -1.37 V (Wikipedia data page); no second compilation consulted gives a Ti3+ value",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiOH2+[CRC]",
+          "formula": "TiOH²⁺ (CRC)",
+          "x": 1,
+          "o": 1,
+          "h": 1,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -624.265499347621,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: Ti3+ + H2O = TiOH2+ + H+ log K -1.65 +/- 0.11 (Brown & Ekberg 2016, NECTAR TiIII table; Perrin 1969 -1.29, Baes & Mesmer -2.2) on the CRC Ti3+, which is itself withheld",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO2+[CRC]",
+          "formula": "TiO²⁺ (CRC, TiO²⁺/Ti)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -596.0544354987132,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(TiO2+ + 2H+ + 4e- = Ti + H2O) -0.93 V (Wikipedia data page) gives -596.05 kJ/mol",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO[CRC]",
+          "formula": "TiO (CRC)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -489.9205701630723,
+          "role": "oxide",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(TiO + 2H+ + 2e- = Ti + H2O) -1.31 V (Wikipedia data page) gives -489.92 kJ/mol",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "TiO2+[CRC-b]",
+          "formula": "TiO²⁺ (CRC, TiO²⁺/Ti³⁺)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -615.3515019233753,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(TiO2+/Ti3+) +0.19 V with E0(Ti3+/Ti) -1.37 V (same table) gives -615.35 kJ/mol, 19 kJ/mol below the TiO2+/Ti route",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO[NBS]",
+          "formula": "TiO (NBS)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -495.0,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: NBS TiO alpha -495.0 kJ/mol; NIST-JANAF (O-018) -513.28: 18.3 kJ/mol apart (95 mV in E0(TiO/Ti)). Both values give TiO a band between Ti and Ti2O3",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "TiO[JANAF]",
+          "formula": "TiO (JANAF)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -513.278,
+          "role": "oxide",
+          "source": "J",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: NIST-JANAF TiO alpha (O-018) -513.278 kJ/mol; NBS -495.0",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "Ti4+[BE16]",
+          "formula": "Ti⁴⁺ (BE16)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 4,
+          "phase": "aq",
+          "dfG_kJ_mol": -394.9214861709745,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: TiO2(s) + 4H+ = Ti4+ + 2H2O log K -3.56 +/- 0.10 (Brown & Ekberg 2016, NECTAR TiIV table) on NBS rutile (the table does not name the polymorph); Baes & Mesmer give only Ti(OH)2 2+ based constants",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiOOH+[BE16]",
+          "formula": "TiO(OH)⁺ (BE16)",
+          "x": 1,
+          "o": 2,
+          "h": 1,
+          "z": 1,
+          "phase": "aq",
+          "dfG_kJ_mol": -854.9094624146363,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: TiO2(s) + H+ = TiOOH+ log K -6.06 +/- 0.30 (Brown & Ekberg 2016) on NBS rutile",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO(OH)2[BE16]",
+          "formula": "TiO(OH)₂(aq) (BE16)",
+          "x": 1,
+          "o": 3,
+          "h": 2,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -1075.1427542871318,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: TiO2(s) + H2O = TiO(OH)2 log K -9.02 +/- 0.02 (Brown & Ekberg 2016) on NBS rutile; Baes & Mesmer about -4.8 (TiO2(c) + 2H2O = Ti(OH)4); neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO(OH)3-[BE16]",
+          "formula": "TiO(OH)₃⁻ (BE16)",
+          "x": 1,
+          "o": 4,
+          "h": 3,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -1244.346441206962,
+          "role": "anion_low",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: TiO(OH)2 + H2O = TiO(OH)3- + H+ log K -11.9 +/- 0.5 (Brown & Ekberg 2016)",
+          "category": "Corrosion (alkaline)"
+        },
+        {
+          "id": "Ti(OH)4[LLNL]",
+          "formula": "Ti(OH)₄(aq) (LLNL)",
+          "x": 1,
+          "o": 4,
+          "h": 4,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -1308.703106746147,
+          "role": "cation",
+          "source": "P",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: rutile + 2H2O = Ti(OH)4 log K -9.6452 (llnl.dat) on NBS rutile (anatase -8.5586); no domain for log a >= -6; neutral species, role 'cation' is bookkeeping only",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiH2",
+          "formula": "TiH₂",
+          "x": 1,
+          "o": 0,
+          "h": 2,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -80.3,
+          "role": "metal",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "EXCLUDED (scope: hydride): NBS TiH2 -80.3 kJ/mol. Ti + 2H+ + 2e- = TiH2 lies at E = 0.416 - 0.0592 pH, above the Ti/oxide lines, so the hydride, not the metal, is the equilibrium phase wherever the map shows Ti; role 'metal' is bookkeeping only (a reduced solid, not immunity)",
+          "category": "Immunity"
+        },
+        {
+          "id": "TiO2(anatase)",
+          "formula": "TiO₂ (anatase)",
+          "x": 1,
+          "o": 2,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -884.5,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "EXCLUDED (metastable): NBS anatase -884.5 kJ/mol, 5.0 kJ/mol above rutile (JANAF O-042 -883.27, 6.1 above); it never has a domain",
+          "category": "Passivation (thermodynamic, film-forming)"
+        }
+      ]
     },
     "Al": {
       "name": "Aluminum (Al-H₂O Amphoteric System)",
@@ -286,6 +1241,10 @@
       "sourceSetNote": "CHNOSZ OBIGT set: Al3+ and Al(OH)4- (Tagirov & Schott 2001) with gibbsite (Robie, Hemingway & Fisher 1978) and SUPCRT92 water. The solid is gibbsite; boehmite and corundum are listed under withheldSpecies (metastable/excluded). The mononuclear hydrolysis species AlOH2+, Al(OH)2+ and Al(OH)3(aq) (TS01) are omitted as for the other elements: they have no domain for log a >= -7.16; at log a = -8 AlOH2+ would take pH 4.96-5.38 from Al3+ and gibbsite",
       "waterDfG_kJ_mol": -237.178408,
       "referenceCation": "Al3+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Al",
@@ -348,6 +1307,8 @@
           "category": "Corrosion (alkaline)"
         }
       ],
+      "candidateSets": [],
+      "unsourcedSpecies": [],
       "withheldSpecies": [
         {
           "id": "AlO2-(atlas)",
@@ -418,6 +1379,10 @@
       "sourceSetNote": "NBS set (Wagman 1982)",
       "waterDfG_kJ_mol": -237.129,
       "referenceCation": "Cu2+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Cu",
@@ -524,7 +1489,9 @@
           "evidence": "SKI Report 95:73 Table 3: Cu(OH)4 2- -657.48 kJ/mol, so CuO2 2- = -183.22 (Cu(OH)4 2- = CuO2 2- + 2 H2O): delta -0.38 kJ/mol",
           "category": "Corrosion (alkaline)"
         }
-      ]
+      ],
+      "candidateSets": [],
+      "unsourcedSpecies": []
     },
     "Zn": {
       "name": "Zinc (Zn-H₂O System Amphoteric)",
@@ -533,6 +1500,10 @@
       "sourceSetNote": "NBS set (Wagman 1982), ZnO see row evidence",
       "waterDfG_kJ_mol": -237.129,
       "referenceCation": "Zn2+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Zn",
@@ -609,7 +1580,9 @@
           "evidence": "E0(Zn(OH)4 2-/Zn, alkaline) table -1.190 V vs -1.199 V (Wikipedia data page): 9 mV",
           "category": "Corrosion (alkaline)"
         }
-      ]
+      ],
+      "candidateSets": [],
+      "unsourcedSpecies": []
     },
     "Mg": {
       "name": "Magnesium (Mg-H₂O System)",
@@ -618,6 +1591,10 @@
       "sourceSetNote": "NBS set (Wagman 1982)",
       "waterDfG_kJ_mol": -237.129,
       "referenceCation": "Mg2+",
+      "activityLog10Range": [
+        -6.0,
+        0.0
+      ],
       "species": [
         {
           "id": "Mg",
@@ -664,12 +1641,209 @@
           "evidence": "E0(Mg(OH)2/Mg, alkaline) table -2.690 V vs -2.69 V (Wikipedia data page)",
           "category": "Passivation (thermodynamic, film-forming)"
         }
-      ]
+      ],
+      "candidateSets": [],
+      "unsourcedSpecies": []
     },
     "Mo": {
-      "name": "Molybdenum",
-      "available": false,
-      "reason": "No sourced Mo-H2O data."
+      "name": "Molybdenum (Mo-H₂O System)",
+      "available": true,
+      "sourceSet": "N",
+      "sourceSetNote": "NBS set (Wagman 1982) for Mo, MoO2, MoO3 and MoO4 2-; HMoO4- and H2MoO4(aq) from the NBS MoO4 2- with the Crea et al. 2017 constants (NECTAR). Mo(III) is a withheld candidate; Mo(VI) cations and the polymolybdates are not represented (dissolved activity limited to 10^-6..10^-4)",
+      "waterDfG_kJ_mol": -237.129,
+      "referenceCation": null,
+      "activityLog10Range": [
+        -6.0,
+        -4.0
+      ],
+      "species": [
+        {
+          "id": "Mo",
+          "formula": "Mo",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": 0.0,
+          "role": "metal",
+          "source": "ref",
+          "verification": "V1",
+          "evidence": "reference state",
+          "category": "Immunity"
+        },
+        {
+          "id": "MoO2",
+          "formula": "MoO₂",
+          "x": 1,
+          "o": 2,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -533.01,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "NBS (Wagman 1982, Table 52) -533.01 kJ/mol; NIST-JANAF (Mo-009) -532.01 (1.0 kJ/mol). E0(MoO2/Mo) -0.1522 V vs -0.15 V (Wikipedia data page)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "MoO3",
+          "formula": "MoO₃",
+          "x": 1,
+          "o": 3,
+          "h": 0,
+          "z": 0,
+          "phase": "s",
+          "dfG_kJ_mol": -667.97,
+          "role": "oxide",
+          "source": "N",
+          "verification": "V1",
+          "evidence": "NBS -667.97 kJ/mol; NIST-JANAF (Mo-014) -668.08 (0.11 kJ/mol). MoO3 + H2O = MoO4 2- + 2H+: table log K -12.05 vs Baes & Mesmer -12.06 (3 M NaClO4, NECTAR Mo table); MoO3 + H2O = H2MoO4(aq) -3.93, so MoO3 has a domain only above 10^-3.93 M (outside the Mo activity range)",
+          "category": "Passivation (thermodynamic, film-forming)"
+        },
+        {
+          "id": "H2MoO4",
+          "formula": "H₂MoO₄(aq)",
+          "x": 1,
+          "o": 4,
+          "h": 2,
+          "z": 0,
+          "phase": "aq",
+          "dfG_kJ_mol": -882.6490371605862,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "NBS MoO4 2- with MoO4 2- + 2H+ = H2MoO4 log K 8.12 +/- 0.03 (Crea et al. 2017, NECTAR Mo table); NIST46 4.24 + 4.0 = 8.24 (0.7 kJ/mol). E0(H2MoO4/MoO2) 0.6458 V vs 0.65 V and E0(H2MoO4/Mo) 0.1138 V vs 0.11 V (Wikipedia data page). Neutral Mo(VI) oxo species: category of the high-valence dissolved species (transpassive)",
+          "category": "Transpassive"
+        },
+        {
+          "id": "HMoO4-",
+          "formula": "HMoO₄⁻",
+          "x": 1,
+          "o": 4,
+          "h": 1,
+          "z": -1,
+          "phase": "aq",
+          "dfG_kJ_mol": -861.8148024763326,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "NBS MoO4 2- with MoO4 2- + H+ = HMoO4- log K 4.47 +/- 0.02 (Crea et al. 2017, NECTAR Mo table); NIST46 4.24 (1.3 kJ/mol), OBIGT SSWS97 4.40 (0.4 kJ/mol)",
+          "category": "Transpassive"
+        },
+        {
+          "id": "MoO4^2-",
+          "formula": "MoO₄²⁻",
+          "x": 1,
+          "o": 4,
+          "h": 0,
+          "z": -2,
+          "phase": "aq",
+          "dfG_kJ_mol": -836.3,
+          "role": "anion_high",
+          "source": "N",
+          "verification": "V2",
+          "evidence": "NBS -836.3 kJ/mol; OBIGT SSWS97 -200400 cal = -838.47 (2.2 kJ/mol). High-valence Mo(VI) oxyanion: transpassive category (at neutral and alkaline pH its domain begins directly above MoO2)",
+          "category": "Transpassive"
+        }
+      ],
+      "candidateSets": [
+        {
+          "id": "Mo-CRC",
+          "label": "Mo(III): Mo3+ (CRC E0)",
+          "speciesIds": [
+            "Mo3+[CRC]"
+          ]
+        }
+      ],
+      "unsourcedSpecies": [
+        {
+          "formula": "MoO₂²⁺",
+          "reason": "cationic Mo(VI) species of strongly acid solution: no constant in NBS 1982, the NECTAR Mo table, llnl.dat or minteq.v4.dat; below about pH 1 the dissolved Mo(VI) domain is shown as H2MoO4(aq)"
+        },
+        {
+          "formula": "Mo(V)",
+          "reason": "no aqueous Mo(V) species with a sourced value"
+        }
+      ],
+      "withheldSpecies": [
+        {
+          "id": "Mo3+[CRC]",
+          "formula": "Mo³⁺ (CRC)",
+          "x": 1,
+          "o": 0,
+          "h": 0,
+          "z": 3,
+          "phase": "aq",
+          "dfG_kJ_mol": -58.59911559965617,
+          "role": "cation",
+          "source": "C",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: E0(H2MoO4 + 6H+ + 3e- = Mo3+ + 4H2O) = 0.43 V (Wikipedia data page, single atlas / Latimer lineage, no second compilation found) on the table's H2MoO4; E0(Mo3+/Mo) -0.200 V",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "Mo7O24^6-",
+          "formula": "Mo₇O₂₄⁶⁻",
+          "x": 7,
+          "o": 24,
+          "h": 0,
+          "z": -6,
+          "phase": "aq",
+          "dfG_kJ_mol": -5202.000933466656,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "EXCLUDED (polynuclear): 7 MoO4 2- + 8 H+ = Mo7O24^6- + 4H2O log K 51.93 (Crea et al. 2017, NECTAR Mo table). Under the per-species activity convention the heptamolybdates take a domain from 10^-3.53 M, so the Mo activity is limited to 10^-6..10^-4 M",
+          "category": "Transpassive"
+        },
+        {
+          "id": "HMo7O24^5-",
+          "formula": "HMo₇O₂₄⁵⁻",
+          "x": 7,
+          "o": 24,
+          "h": 1,
+          "z": -5,
+          "phase": "aq",
+          "dfG_kJ_mol": -5241.785759699326,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "EXCLUDED (polynuclear): 7 MoO4 2- + 9 H+ = HMo7O24^5- + 4H2O log K 58.9 (Crea et al. 2017, NECTAR Mo table). Under the per-species activity convention the heptamolybdates take a domain from 10^-3.53 M, so the Mo activity is limited to 10^-6..10^-4 M",
+          "category": "Transpassive"
+        },
+        {
+          "id": "H2Mo7O24^4-",
+          "formula": "H₂Mo₇O₂₄⁴⁻",
+          "x": 7,
+          "o": 24,
+          "h": 2,
+          "z": -4,
+          "phase": "aq",
+          "dfG_kJ_mol": -5274.492654148854,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "EXCLUDED (polynuclear): 7 MoO4 2- + 10 H+ = H2Mo7O24^4- + 4H2O log K 64.63 (Crea et al. 2017, NECTAR Mo table). Under the per-species activity convention the heptamolybdates take a domain from 10^-3.53 M, so the Mo activity is limited to 10^-6..10^-4 M",
+          "category": "Transpassive"
+        },
+        {
+          "id": "H3Mo7O24^3-",
+          "formula": "H₃Mo₇O₂₄³⁻",
+          "x": 7,
+          "o": 24,
+          "h": 3,
+          "z": -3,
+          "phase": "aq",
+          "dfG_kJ_mol": -5297.610092634121,
+          "role": "anion_high",
+          "source": "X",
+          "verification": "V2",
+          "evidence": "EXCLUDED (polynuclear): 7 MoO4 2- + 11 H+ = H3Mo7O24^3- + 4H2O log K 68.68 (Crea et al. 2017, NECTAR Mo table). Under the per-species activity convention the heptamolybdates take a domain from 10^-3.53 M, so the Mo activity is limited to 10^-6..10^-4 M",
+          "category": "Transpassive"
+        }
+      ]
     }
   }
 }

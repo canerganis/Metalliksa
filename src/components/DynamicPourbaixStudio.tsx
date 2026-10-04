@@ -23,7 +23,14 @@ import {
   POURBAIX_DATA,
   classifyPourbaixPoint,
   computeDomains,
+  ION_ACTIVITY_OPTIONS,
+  WITHHELD_REGION_NOTE,
+  activityInRange,
+  computeWithheldRegions,
+  freePhWindows,
+  pourbaixActivityRange,
   pourbaixUnavailableReason,
+  withheldSpeciesAt,
   primaryElementOf,
   speciesCoefficients,
   waterLines25C,
@@ -125,7 +132,15 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   // The single element whose M-H2O map is shown and sent to the Python solver
   const primaryElement = selectedElement;
   const unavailableReason = pourbaixUnavailableReason(selectedElement);
-  const log10Activity = Math.log10(ionActivity);
+  // Each element has its own dissolved-activity range (Cr up to 1e-2, Mo up to 1e-4: polynuclear species); a
+  // chosen activity outside it falls back to 1e-6 for this element, and the request carries that value.
+  const [activityLo, activityHi] = pourbaixActivityRange(selectedElement);
+  const activityOutsideRange = !activityInRange(selectedElement, Math.log10(ionActivity));
+  const effectiveIonActivity = activityOutsideRange ? 1e-6 : ionActivity;
+  const log10Activity = Math.log10(effectiveIonActivity);
+  const elementEntry = POURBAIX_DATA.elements[selectedElement];
+  const candidateSets = elementEntry && "candidateSets" in elementEntry ? elementEntry.candidateSets : [];
+  const unsourcedSpecies = elementEntry && "unsourcedSpecies" in elementEntry ? elementEntry.unsourcedSpecies : [];
 
   // Water stability lines (25 °C) and Nernst slope
   const waterLines = useMemo(() => waterLines25C(), []);
@@ -140,11 +155,21 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     [selectedElement, log10Activity, unavailableReason]
   );
   const domains = useMemo(() => (coeffs ? computeDomains(coeffs) : []), [coeffs]);
+  // Regions where a withheld (contradictory or excluded) species would be stable: the map is not valid there
+  const withheldRegions = useMemo(
+    () => (coeffs ? computeWithheldRegions(selectedElement, log10Activity) : []),
+    [coeffs, selectedElement, log10Activity]
+  );
+  const freeWindows = useMemo(() => freePhWindows(withheldRegions), [withheldRegions]);
 
   // Probed Thermodynamic State
   const probedState = useMemo(
     () => (coeffs ? classifyPourbaixPoint(coeffs, probePH, probePotential_SHE) : null),
     [coeffs, probePH, probePotential_SHE]
+  );
+  const probeWithheld = useMemo(
+    () => (coeffs ? withheldSpeciesAt(selectedElement, log10Activity, probePH, probePotential_SHE) : []),
+    [coeffs, selectedElement, log10Activity, probePH, probePotential_SHE]
   );
 
   // Every test point classified in the CURRENT map by the same port (never by a solver echo, so it cannot be
@@ -153,16 +178,21 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     () =>
       experimentalPoints.map((pt) => {
         const she = pt.potential_V + (REF_OFFSETS_VS_SHE[pt.refElectrode] ?? 0);
-        return { pt, she, state: coeffs ? classifyPourbaixPoint(coeffs, pt.pH, she) : null };
+        return {
+          pt,
+          she,
+          state: coeffs ? classifyPourbaixPoint(coeffs, pt.pH, she) : null,
+          withheld: coeffs ? withheldSpeciesAt(selectedElement, log10Activity, pt.pH, she).length > 0 : false,
+        };
       }),
-    [experimentalPoints, coeffs]
+    [experimentalPoints, coeffs, selectedElement, log10Activity]
   );
 
   // Each constituent element evaluated alone at the probe point (no alloy equilibrium, no composite verdict)
   const elementStates = useMemo(() => {
     const states: { [el: string]: ReturnType<typeof classifyPourbaixPoint> | null } = {};
     for (const el of Object.keys(activeComposition)) {
-      states[el] = pourbaixUnavailableReason(el) === null
+      states[el] = pourbaixUnavailableReason(el) === null && activityInRange(el, log10Activity)
         ? classifyPourbaixPoint(speciesCoefficients(el, log10Activity), probePH, probePotential_SHE)
         : null;
     }
@@ -179,7 +209,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   // ASYNC PYTHON POURBAIX EQUILIBRIUM SOLVER DISPATCH
   // -------------------------------------------------------------
   // Debounced, visibility-gated and abortable; an unchanged input is not re-solved when the module is shown again.
-  const pourbaixInputSignature = pourbaixRequestSignature({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints });
+  const pourbaixInputSignature = pourbaixRequestSignature({ primaryElement, temperature_C, ionActivity: effectiveIonActivity, chlorideActivity, experimentalPoints });
   useDebouncedLatestTask(pourbaixInputSignature, async (_signature, signal): Promise<boolean> => {
     async function dispatchPythonSolver(): Promise<boolean> {
       // No verified data: the panel already states the engine's reason; a request would only repeat it as an alert.
@@ -194,7 +224,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
         setPythonSolveError(null);
 
         const result = await pythonComputationService.solvePourbaixDiagram(
-          buildPourbaixRequest({ primaryElement, temperature_C, ionActivity, chlorideActivity, experimentalPoints }), signal);
+          buildPourbaixRequest({ primaryElement, temperature_C, ionActivity: effectiveIonActivity, chlorideActivity, experimentalPoints }), signal);
 
         if (!signal.aborted && result.success) {
           // The result is shown only for the element and activity it was solved for (pythonFresh). Solver
@@ -250,6 +280,8 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
       points: pointStates.map(({ pt, she, state }) => ({
         id: pt.id, name: pt.name, stageName: pt.stageName, pH: pt.pH, she, category: state ? state.category : null,
       })),
+      withheldRegions,
+      probeInWithheldRegion: probeWithheld.length > 0,
     });
   }, [
     viewBounds,
@@ -268,6 +300,8 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
     selectedPointId,
     showTrajectoryPath,
     showPointLabels,
+    withheldRegions,
+    probeWithheld,
   ]);
 
   // Redraw on dependency changes AND whenever the canvas is (re)mounted: it is unmounted with the diagram tab
@@ -555,19 +589,23 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 <div>
                   <label className="text-[10px] text-slate-400 font-mono block mb-1">Metal Ion Activity a(M):</label>
                   <select aria-label="Metal Ion Activity a(M)"
-                    value={ionActivity}
+                    value={effectiveIonActivity}
                     onChange={(e) => setIonActivity(parseFloat(e.target.value))}
                     className="w-full bg-[#060b13] border border-[#1a263c] rounded px-2 py-1.5 text-xs text-slate-200 font-mono"
                   >
-                    <option value={1e-6}>10⁻⁶ M (corrosion convention)</option>
-                    <option value={1e-3}>10⁻³ M (Millimolar)</option>
-                    <option value={1.0}>1.0 M (Concentrated)</option>
+                    {ION_ACTIVITY_OPTIONS.filter((o) => activityInRange(selectedElement, Math.log10(o.value))).map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                   <p className="text-[10px] text-slate-500 font-mono mt-1">
                     Mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq)) are not in the species table for any element, so
                     10⁻⁶ M is the lowest activity offered; the engine refuses lower values. At 10⁻⁶ M they change at most
                     about 0.6 % of the cells for Fe, Ni, Cu, Mg and Al; Zn is constant-dependent (with the wateq4f / Baes &amp;
-                    Mesmer Zn(OH)₂(aq) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays).
+                    Mesmer Zn(OH)₂(aq) constant the whole ZnO domain would vanish, with IUPAC 2013 it stays). Cr is limited to
+                    10⁻² M and Mo to 10⁻⁴ M (polynuclear Cr₂O₇²⁻ and heptamolybdates are not in the table).
+                    {activityOutsideRange
+                      ? ` The chosen activity is outside the ${selectedElement} range (10^${activityLo} to 10^${activityHi}); 10⁻⁶ M is used.`
+                      : ""}
                   </p>
                 </div>
               </div>
@@ -618,6 +656,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                 </div>
                 {probedState?.category === PASSIVATION && (
                   <p className="text-[10px] text-emerald-300/80 leading-snug">Passivation here means a {PASSIVATION_NOTE}.</p>
+                )}
+                {probeWithheld.length > 0 && (
+                  <p role="status" className="text-[10px] text-amber-300 leading-snug">
+                    {`Not valid here: ${WITHHELD_REGION_NOTE} (${[...new Set(probeWithheld.map((h) => h.formula))].join(", ")}).`}
+                  </p>
                 )}
                 <div className="flex justify-between">
                   <span className="text-slate-400">Water Stability:</span>
@@ -745,7 +788,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   <canvas
                     ref={canvasRef}
                     role="img"
-                    aria-label={`${selectedElement}–H₂O E–pH map at 25 °C, dissolved activity 10^${log10Activity}; probe at pH ${probePH.toFixed(2)}, ${(probePotential_SHE - refOffset).toFixed(3)} V ${refElectrode}${probedState ? `: ${probedState.formula}, ${probedState.category}` : ""}`}
+                    aria-label={`${selectedElement}–H₂O E–pH map at 25 °C, dissolved activity 10^${log10Activity}; probe at pH ${probePH.toFixed(2)}, ${(probePotential_SHE - refOffset).toFixed(3)} V ${refElectrode}${probedState ? `: ${probedState.formula}, ${probedState.category}` : ""}${probeWithheld.length > 0 ? "; withheld-data region, map not valid here" : ""}`}
                     width={960}
                     height={600}
                     className="w-full h-full object-contain"
@@ -768,6 +811,24 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   {` (${selectedPointState.state.formula})`}
                   {` — ${CATEGORY_DISPLAY[selectedPointState.state.category]}`}
                 </p>
+              )}
+              {unavailableReason === null && candidateSets.length > 0 && (
+                <div role="note" aria-label="Data validity" className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 font-mono text-[10px] text-slate-300 space-y-1">
+                  <p className="font-bold text-amber-300">
+                    Data validity ({selectedElement}, dissolved activity 10^{activityLo} to 10^{activityHi} M): hatched = {WITHHELD_REGION_NOTE}.
+                  </p>
+                  <p>
+                    Inside the water window the map is free of withheld-data regions for{" "}
+                    {freeWindows.length > 0
+                      ? freeWindows.map(([a, b]) => `pH ${a.toFixed(2)} to ${b.toFixed(2)}`).join(", ")
+                      : "no pH"}{" "}
+                    at a(M) = 10^{log10Activity}.
+                  </p>
+                  <p>Withheld candidate sets: {candidateSets.map((c) => c.label).join("; ")}.</p>
+                  {unsourcedSpecies.length > 0 && (
+                    <p>Not represented (no sourced value): {unsourcedSpecies.map((u) => u.formula).join(", ")}.</p>
+                  )}
+                </div>
               )}
               {unavailableReason === null && experimentalPoints.length > 0 && showExperimentalOverlay && (
                 <p className="text-[10px] font-mono text-slate-500">
@@ -838,7 +899,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                         <span className="text-[10px] text-slate-500">{wt}% wt</span>
                       </div>
                       <div className="text-[11px] font-semibold text-slate-300 truncate">
-                        {state ? state.formula : "no verified data"}
+                        {state
+                          ? state.formula
+                          : pourbaixUnavailableReason(elem) === null
+                            ? `activity outside ${elem} range`
+                            : "no verified data"}
                       </div>
                       <div
                         className="text-[9px] font-bold px-1.5 py-0.5 rounded text-center truncate"
@@ -871,10 +936,10 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead className="text-slate-500">
-                  <tr><th className="py-1 pr-3">#</th><th className="pr-3">Point</th><th className="pr-3">pH</th><th className="pr-3">E ({refElectrode})</th><th className="pr-3">E (vs SHE)</th><th className="pr-3">Species</th><th>Category</th></tr>
+                  <tr><th className="py-1 pr-3">#</th><th className="pr-3">Point</th><th className="pr-3">pH</th><th className="pr-3">E ({refElectrode})</th><th className="pr-3">E (vs SHE)</th><th className="pr-3">Species</th><th className="pr-3">Category</th><th>Data validity</th></tr>
                 </thead>
                 <tbody className="text-slate-300">
-                  {pointStates.map(({ pt, she, state }, idx) => (
+                  {pointStates.map(({ pt, she, state, withheld }, idx) => (
                     <tr key={pt.id} className="border-t border-[#162032]">
                       <td className="py-1 pr-3">{idx + 1}</td>
                       <td className="pr-3">{pt.stageName || pt.name}</td>
@@ -882,7 +947,8 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                       <td className="pr-3">{(she - refOffset).toFixed(3)} V</td>
                       <td className="pr-3">{she.toFixed(3)} V</td>
                       <td className="pr-3">{state ? state.formula : "n/a"}</td>
-                      <td>{state ? `${state.category}${state.isInsideWaterStability ? "" : " — outside water stability (metastable)"}` : "n/a"}</td>
+                      <td className="pr-3">{state ? `${state.category}${state.isInsideWaterStability ? "" : " — outside water stability (metastable)"}` : "n/a"}</td>
+                      <td>{state ? (withheld ? "withheld-data region (map not valid)" : "valid") : "n/a"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -986,7 +1052,15 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   </div>
                   <div className="text-[11px] text-slate-400 leading-relaxed">
                     {reason === null ? (
-                      <span className="text-emerald-300">Verified {elem}–H₂O data available.</span>
+                      <span className="text-emerald-300">
+                        Verified {elem}–H₂O data available.
+                        {(() => {
+                          const e = POURBAIX_DATA.elements[elem];
+                          return e && "candidateSets" in e && e.candidateSets.length > 0
+                            ? " Contradictory or excluded species are withheld; their regions are hatched on the map."
+                            : "";
+                        })()}
+                      </span>
                     ) : (
                       <>
                         <span className="text-amber-300">No verified {elem}–H₂O data.</span> {reason}

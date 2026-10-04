@@ -6,6 +6,7 @@ import { CATEGORY_STYLE, clipPolygon, polygonArea, polygonCentroid } from "./pou
 import type {
   PourbaixDomain,
   PourbaixPointState,
+  PourbaixWithheldRegion,
   SpeciesCoefficients,
   StabilityCategory,
   WaterStabilityLines,
@@ -53,7 +54,14 @@ export interface PourbaixScene {
   showPointLabels: boolean;
   points: CanvasTestPoint[];
   selectedPointId: string | null;
+  /** Regions where a withheld candidate species would be stable (hatched; the map is not valid there). */
+  withheldRegions?: PourbaixWithheldRegion[];
+  /** True when the probe lies in a withheld-data region (the readout says so). */
+  probeInWithheldRegion?: boolean;
 }
+
+/** Hatch colour and spacing of the withheld-data regions (strokes only: the domain fills keep their alpha). */
+export const WITHHELD_HATCH = { color: "rgba(226, 232, 240, 0.55)", spacingPx: 9 };
 
 export const MARKER_FALLBACK_COLOR = "#38bdf8";
 
@@ -81,6 +89,31 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
     ctx.fill();
   }
   ctx.globalAlpha = 1.0;
+
+  // 2b. Withheld-data regions: diagonal hatch clipped to each region polygon, dashed outline
+  for (const r of s.withheldRegions ?? []) {
+    ctx.save();
+    ctx.beginPath();
+    r.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
+    ctx.closePath();
+    ctx.clip();
+    ctx.strokeStyle = WITHHELD_HATCH.color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = -height; x < width; x += WITHHELD_HATCH.spacingPx) {
+      ctx.moveTo(x, height);
+      ctx.lineTo(x + height, 0);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = WITHHELD_HATCH.color;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    r.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // 3. Grid lines and axis labels (the E axis shows the displayed reference scale)
   ctx.strokeStyle = "#162235";
@@ -276,9 +309,10 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
   ctx.strokeStyle = probeColor;
   ctx.lineWidth = 1.5;
   const boxX = Math.min(width - boxW - 10, Math.max(10, probeX + 12));
-  const boxY = Math.min(height - 60, Math.max(20, probeY - 45));
-  ctx.fillRect(boxX, boxY, boxW, 50);
-  ctx.strokeRect(boxX, boxY, boxW, 50);
+  const boxH = s.probeInWithheldRegion ? 64 : 50;
+  const boxY = Math.min(height - boxH - 10, Math.max(20, probeY - 45));
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 10px monospace";
   ctx.fillText(`pH: ${s.probePH.toFixed(2)} | E: ${(s.probePotential_SHE - refOffset).toFixed(3)}V`, boxX + 6, boxY + 16);
@@ -291,4 +325,8 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
     boxX + 6,
     boxY + 42
   );
+  if (s.probeInWithheldRegion) {
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText("withheld-data region: map not valid here", boxX + 6, boxY + 56);
+  }
 }

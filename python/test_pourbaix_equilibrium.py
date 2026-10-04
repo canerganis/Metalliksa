@@ -24,8 +24,8 @@ import pourbaix_species_25c as table  # noqa: E402
 
 K = 0.0591597  # ln10 RT/F at 298.15 K (V)
 INTERCEPT, SLOPE, VERTICAL, TRIPLE_E = 0.001, 0.0005, 0.01, 0.002
-ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg", "Al")
-UNAVAILABLE = ("Cr", "Ti", "Mo")
+ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg", "Al")  # the v4 elements; Cr, Mo, Ti: test_pourbaix_ticrmo
+ALL_ELEMENTS = ELEMENTS + ("Cr", "Mo", "Ti")
 KJ_PER_LOG_K = 0.0591597 * 96.48533212  # ln10 RT at 298.15 K in kJ/mol (5.708)
 
 
@@ -617,12 +617,16 @@ class ValidationTest(unittest.TestCase):
         self._raises("TEMPERATURE_UNSUPPORTED", "temperature_C", "Ni", 80, -5, 600, [])
 
     def test_unavailable_elements_raise_data_unavailable(self):
-        for el in UNAVAILABLE:
-            err = self._raises("POURBAIX_DATA_UNAVAILABLE", "element", el, 25.0, -6.0, 0.0, [])
-            self.assertEqual(err.detail["element"], el)
-            self.assertTrue(err.detail["reason"])
-            self.assertEqual(err.detail["available"], list(ELEMENTS))
-        self.assertEqual(table.available_elements(), list(ELEMENTS))
+        # v5: every engine element has a table (Cr, Mo and Ti with withheld candidate sets); the refusal path
+        # stays for an element whose table is removed
+        self.assertEqual(table.available_elements(), list(ALL_ELEMENTS))
+        self.assertEqual(table.UNAVAILABLE_ELEMENTS, {})
+        self.assertEqual(solver.UNAVAILABLE_ONLY_ELEMENTS, ())
+        from unittest import mock
+        with mock.patch.object(table, "available_elements", return_value=list(ELEMENTS)), \
+                mock.patch.dict(table.UNAVAILABLE_ELEMENTS, {"Cr": "test reason"}):
+            err = self._raises("POURBAIX_DATA_UNAVAILABLE", "element", "Cr", 25.0, -6.0, 0.0, [])
+        self.assertEqual(err.detail, {"element": "Cr", "reason": "test reason", "available": list(ELEMENTS)})
 
     def test_unknown_element_still_unknown_element(self):
         self._raises("UNKNOWN_ELEMENT", "element", "Unobtainium", 25.0, -6.0, 0.0, [])
@@ -726,14 +730,16 @@ class ValidationTest(unittest.TestCase):
     def test_cli_exit_codes_and_envelopes(self):
         code, out = _run_cli({"element": "Al", "temperature_C": 60})
         self.assertEqual((code, out["errorKind"], out["error"]["code"]), (2, "validation", "TEMPERATURE_UNSUPPORTED"))
+        code, out = _run_cli({"element": "Mo", "ionActivity_log10": -3})
+        self.assertEqual((code, out["error"]["code"], out["error"]["field"]), (2, "OUT_OF_RANGE", "ionActivity_log10"))
         code, out = _run_cli({"element": "Ti"})
-        self.assertEqual((code, out["error"]["code"]), (2, "POURBAIX_DATA_UNAVAILABLE"))
+        self.assertEqual((code, out["engine"]), (0, "pourbaix-gibbs-25c-v5"))
         code, out = _run_cli({"element": "Fe", "experimentalPoints": [{"ph": 7, "potential_V": 0, "refElectrode": "X"}]})
         self.assertEqual((code, out["error"]["code"]), (2, "UNKNOWN_REFERENCE_ELECTRODE"))
         self.assertEqual(set(out["error"]), {"code", "field", "message", "detail"})
         code, out = _run_cli({"element": "Fe"})
         self.assertEqual(code, 0)
-        self.assertEqual(out["engine"], "pourbaix-gibbs-25c-v4")
+        self.assertEqual(out["engine"], "pourbaix-gibbs-25c-v5")
 
 
 class OutputContractTest(unittest.TestCase):
@@ -752,13 +758,14 @@ class OutputContractTest(unittest.TestCase):
 
     def test_every_old_key_is_kept_and_new_keys_are_added(self):
         self.assertTrue(self.OLD_TOP_KEYS <= set(self.result))
-        self.assertTrue({"model", "speciesTable", "temperatureStatus", "domains"} <= set(self.result))
-        self.assertEqual(self.result["engine"], "pourbaix-gibbs-25c-v4")
+        self.assertTrue({"model", "speciesTable", "temperatureStatus", "domains", "dataValidity"} <= set(self.result))
+        self.assertEqual(self.result["engine"], "pourbaix-gibbs-25c-v5")
         self.assertTrue({"temperature_C", "nernstSlope_V_pH", "ionActivity_log10", "chlorideConcentration_ppm",
                          "chloride_Molar", "pittingPotential_V_SHE", "pittingRisk"} <= set(self.result["parameters"]))
         for pt in self.result["experimentalOverlay"]["points"]:
             self.assertTrue(self.OLD_POINT_KEYS <= set(pt))
-            self.assertTrue({"category", "dominantSpeciesId"} <= set(pt))
+            self.assertTrue({"category", "dominantSpeciesId", "insideWithheldDataRegion",
+                             "withheldDataSpeciesIds"} <= set(pt))
         for cell in self.result["stabilityFieldGrid"]:
             self.assertTrue({"pH", "E_V_SHE", "regime", "dominantSpecies", "mechanismTitle", "color",
                              "category", "dominantSpeciesId"} <= set(cell))
@@ -843,12 +850,11 @@ class GeneratedSpeciesFileTest(unittest.TestCase):
 
     def test_document_content(self):
         doc = json.loads(table.GENERATED_JSON.read_text(encoding="utf-8"))
-        self.assertEqual(doc["schema"], "pourbaix-species-25c-v1")
-        self.assertEqual({k for k, v in doc["elements"].items() if v["available"]}, set(ELEMENTS))
-        for el in UNAVAILABLE:
-            self.assertFalse(doc["elements"][el]["available"])
-            self.assertTrue(doc["elements"][el]["reason"])
-        for el in ELEMENTS:
+        self.assertEqual(doc["schema"], "pourbaix-species-25c-v2")
+        self.assertEqual({k for k, v in doc["elements"].items() if v["available"]}, set(ALL_ELEMENTS))
+        self.assertEqual(set(doc["elements"]), set(ALL_ELEMENTS))
+        for el in ALL_ELEMENTS:
+            self.assertEqual(doc["elements"][el]["activityLog10Range"], list(table.activity_range(el)))
             for row in doc["elements"][el]["species"]:
                 self.assertTrue({"id", "formula", "x", "o", "h", "z", "phase", "dfG_kJ_mol", "role", "source",
                                  "verification", "evidence", "category"} <= set(row))
@@ -857,7 +863,7 @@ class GeneratedSpeciesFileTest(unittest.TestCase):
 
     def test_table_agrees_with_the_independent_oracle_data(self):
         # the oracle encodes the numbers separately (atlas as cal/mol): a transcription slip shows here
-        for el in ELEMENTS:
+        for el in ALL_ELEMENTS:
             ours = {r["id"]: r for r in table.species_rows(el)}
             theirs = oracle.DATA[el]["sp"]
             self.assertEqual(list(ours), list(theirs), el)
@@ -882,7 +888,7 @@ class GeneratedSpeciesFileTest(unittest.TestCase):
         self.assertIn("estimate", row["evidence"])
 
     def test_withheld_and_unverified_rows_are_not_in_the_engine(self):
-        for el in ELEMENTS:
+        for el in ALL_ELEMENTS:
             for row in table.species_rows(el):
                 self.assertNotEqual(row["verification"], "V3", (el, row["id"]))
         for rows in table.WITHHELD_SPECIES.values():

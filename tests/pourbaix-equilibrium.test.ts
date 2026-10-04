@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   ALLOY_PRESETS,
   DEFAULT_ALLOY_ID,
+  ION_ACTIVITY_OPTIONS,
   NERNST_SLOPE_25C,
   PASSIVATION_NOTE,
   POURBAIX_DATA,
@@ -13,14 +14,18 @@ import {
   boundaryLine,
   classifyPourbaixPoint,
   computeDomains,
+  computeWithheldRegions,
   dominantSpecies,
+  freePhWindows,
   pointInPolygon,
   polygonArea,
   polygonCentroid,
+  pourbaixActivityRange,
   pourbaixUnavailableReason,
   primaryElementOf,
   speciesCoefficients,
   waterLines25C,
+  withheldSpeciesAt,
 } from "../src/utils/pourbaixThermodynamics";
 import { DynamicPourbaixStudio } from "../src/components/DynamicPourbaixStudio";
 import { EXPERIMENTAL_POURBAIX_PRESETS } from "../src/utils/experimentalPourbaixOverlay";
@@ -28,7 +33,7 @@ import { pourbaixRequestSignature } from "../src/utils/pourbaixRequest";
 
 const text = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
-interface FixtureCase { element: string; log10Activity: number; speciesIds: string[]; rows: string[] }
+interface FixtureCase { element: string; log10Activity: number; speciesIds: string[]; rows: string[]; withheldRows?: string[] }
 interface Fixture { n: number; box: { pH_min: number; pH_max: number; E_min_V_SHE: number; E_max_V_SHE: number }; cases: FixtureCase[] }
 const fixture: Fixture = JSON.parse(text("tests/fixtures/pourbaix-grid-200x200.json"));
 
@@ -56,8 +61,31 @@ test("the fixture covers every available element at two activities on a 200 x 20
   assert.equal(fixture.n, 200);
   assert.deepEqual(fixture.box, POURBAIX_DATA.box);
   const got = fixture.cases.map((c) => `${c.element}@${c.log10Activity}`).sort();
-  const want = availablePourbaixElements().flatMap((e) => [-6, -3].map((a) => `${e}@${a}`)).sort();
+  // the second activity is -3, or the element's upper limit when that is lower (Mo: -4)
+  const want = availablePourbaixElements().flatMap((e) => [-6, Math.min(-3, pourbaixActivityRange(e)[1])].map((a) => `${e}@${a}`)).sort();
   assert.deepEqual(got, want);
+  assert.ok(got.includes("Mo@-4") && got.includes("Cr@-3") && got.includes("Ti@-3"));
+});
+
+test("the TS withheld-data flags (dataValidity) equal the Python engine's on every fixture cell >= 1 mV from a candidate boundary", () => {
+  const { phs, es } = centres();
+  let flagged = 0, compared = 0;
+  for (const c of fixture.cases) {
+    const hasSets = (POURBAIX_DATA.elements[c.element] as { candidateSets?: unknown[] }).candidateSets?.length ?? 0;
+    assert.equal(c.withheldRows !== undefined, hasSets > 0, `${c.element}: withheld rows iff candidate sets`);
+    if (!c.withheldRows) continue;
+    c.withheldRows.forEach((row, j) => {
+      if (j % 2) return;
+      decode(row).forEach((token, i) => {
+        if (token === ".") return;
+        const ts = withheldSpeciesAt(c.element, c.log10Activity, phs[i], es[j]).length > 0;
+        if (ts !== (token === "1")) assert.fail(`${c.element}@${c.log10Activity} pH ${phs[i]} E ${es[j]}: TS ${ts}, Python ${token}`);
+        flagged += ts ? 1 : 0;
+        compared++;
+      });
+    });
+  }
+  assert.ok(compared > 100000 && flagged > 1000, `${compared} compared, ${flagged} flagged`);
 });
 
 test("the TS port classifies every fixture cell >= 1 mV from a boundary exactly as the Python engine", () => {
@@ -110,7 +138,7 @@ test("the domains of an element tile the box exactly (convex polygons, area sum 
   const box = POURBAIX_DATA.box;
   const boxArea = (box.pH_max - box.pH_min) * (box.E_max_V_SHE - box.E_min_V_SHE);
   for (const el of availablePourbaixElements()) {
-    for (const logA of [-6, -3, -1, 0]) {
+    for (const logA of [-6, -4, -3, -1, 0].filter((a) => a <= pourbaixActivityRange(el)[1])) {
       const domains = computeDomains(speciesCoefficients(el, logA));
       const total = domains.reduce((s, d) => s + polygonArea(d.polygon), 0);
       assert.ok(Math.abs(total - boxArea) < 1e-6, `${el}@${logA}: ${total} vs ${boxArea}`);
@@ -249,18 +277,49 @@ test("water lines and Nernst slope at 25 C: E = -k pH and 1.2288 - k pH", () => 
 // Availability, defaults and the removal of the old rule trees
 // ---------------------------------------------------------------------------------------------
 
-test("Cr, Ti and Mo are unavailable with the engine's reason; Fe, Ni, Cu, Zn, Mg, Al have a map", () => {
-  assert.deepEqual(availablePourbaixElements().sort(), ["Al", "Cu", "Fe", "Mg", "Ni", "Zn"]);
-  for (const el of ["Cr", "Ti", "Mo"]) {
-    const reason = pourbaixUnavailableReason(el);
-    assert.ok(reason && reason.length > 20, `${el} reason`);
+test("engine v5: Cr, Mo and Ti have a map (with withheld-data regions); elements absent from the table stay unavailable", () => {
+  assert.deepEqual(availablePourbaixElements().sort(), ["Al", "Cr", "Cu", "Fe", "Mg", "Mo", "Ni", "Ti", "Zn"]);
+  for (const el of ["Cr", "Ti", "Mo", "Fe", "Al"]) assert.equal(pourbaixUnavailableReason(el), null, el);
+  for (const el of ["Xx", "V", "Nb", "Co", "Mn"]) {
+    assert.ok(pourbaixUnavailableReason(el), `${el}: an element absent from the table is unavailable, not Fe`);
     assert.throws(() => speciesCoefficients(el, -6), /No verified/);
   }
-  assert.match(pourbaixUnavailableReason("Ti")!, /mutually inconsistent/);
-  assert.match(pourbaixUnavailableReason("Cr")!, /^No verified Cr-H2O data in this tool/);
-  assert.equal(pourbaixUnavailableReason("Mo"), "No sourced Mo-H2O data.");
-  for (const el of ["Fe", "Al"]) assert.equal(pourbaixUnavailableReason(el), null, el);
-  assert.ok(pourbaixUnavailableReason("Xx"), "an element absent from the table is unavailable, not Fe");
+  assert.deepEqual(pourbaixActivityRange("Cr"), [-6, -2]);
+  assert.deepEqual(pourbaixActivityRange("Mo"), [-6, -4]);
+  assert.deepEqual(pourbaixActivityRange("Ti"), [-6, 0]);
+  assert.deepEqual(pourbaixActivityRange("Fe"), [-6, 0]);
+});
+
+test("Cr, Mo, Ti: the port's lines and free pH windows equal the Python engine's (NBS set, NECTAR constants)", () => {
+  // values from python/test_pourbaix_ticrmo.py (recomputed there from the primary constants)
+  sloped("Cr", "Cr", "Cr2O3", -0.5989, -0.0592);
+  sloped("Cr", "Cr2O3", "HCrO4-", 1.1156, -0.0789);
+  sloped("Cr", "Cr2O3", "CrO4^2-", 1.2433, -0.0986);
+  vertical("Cr", "HCrO4-", "CrO4^2-", 6.473);
+  sloped("Mo", "Mo", "MoO2", -0.1522, -0.0592);
+  sloped("Mo", "MoO2", "MoO4^2-", 0.7085, -0.1183);
+  vertical("Mo", "H2MoO4", "HMoO4-", 3.65);
+  vertical("Mo", "HMoO4-", "MoO4^2-", 4.47);
+  sloped("Ti", "Ti", "Ti2O3", -1.2486, -0.0592);
+  sloped("Ti", "Ti2O3", "TiO2", -0.558, -0.0592);
+  const want: Record<string, [number, number][]> = { Cr: [[4.778, 14.405]], Mo: [[1.991, 16]], Ti: [[0.909, 14.92]], Fe: [[-2, 16]] };
+  for (const [el, w] of Object.entries(want)) {
+    const got = freePhWindows(computeWithheldRegions(el, -6));
+    assert.equal(got.length, w.length, el);
+    got.forEach(([a, b], i) => { near(a, w[i][0], 0.001, `${el} window start`); near(b, w[i][1], 0.001, `${el} window end`); });
+  }
+  // point classification and validity flags (same points as the Python test)
+  const cr = speciesCoefficients("Cr", -6);
+  assert.equal(classifyPourbaixPoint(cr, 2, 0).speciesId, "Cr2O3");
+  assert.deepEqual(withheldSpeciesAt("Cr", -6, 2, 0).map((h) => h.speciesId), ["Cr3+[CRC]", "Cr3+[SSWS97]", "Cr3+[LLNL]", "Cr3+[BN98]"]);
+  assert.deepEqual(withheldSpeciesAt("Cr", -6, 7, 0.2), []);
+  assert.equal(classifyPourbaixPoint(cr, 7, 1.0).category, "Transpassive");
+  const ti = speciesCoefficients("Ti", -6);
+  assert.equal(classifyPourbaixPoint(ti, 7, -1.8).speciesId, "Ti");
+  assert.ok(withheldSpeciesAt("Ti", -6, 7, -1.8).some((h) => h.speciesId === "TiH2"), "the Ti metal domain is a TiH2 region");
+  const mo = speciesCoefficients("Mo", -6);
+  assert.deepEqual([[7, 0.2], [7, -0.4], [2, 0.6]].map(([p, e]) => classifyPourbaixPoint(mo, p, e).speciesId), ["MoO4^2-", "MoO2", "H2MoO4"]);
+  for (const el of ["Fe", "Ni", "Cu", "Zn", "Mg", "Al"]) assert.deepEqual(computeWithheldRegions(el, -6), [], el);
 });
 
 test("availability is read from the generated JSON, not from a list in the TS sources", () => {
@@ -326,20 +385,42 @@ test("default studio (pure Fe): relabelled title, subtitle, tabs, fixed 25 C tem
   assert.match(html, /<option value="Fe" selected="">Fe \(100% wt\)<\/option>/);
 });
 
-test("Ti-6Al-4V shows the engine's no-verified-data reason instead of a map; Inconel 718 maps Ni", () => {
+test("Ti-6Al-4V draws the Ti map with the data-validity note (no reason panel); Inconel 718 maps Ni and offers Cr and Mo", () => {
   const ti = render({ initialAlloyId: "ti-6al-4v" });
   const t = plain(ti);
-  assert.match(t, /No verified Ti–H₂O data: no map is drawn\./);
-  assert.ok(t.includes(pourbaixUnavailableReason("Ti")!));
-  assert.ok(t.includes("POURBAIX_DATA_UNAVAILABLE"));
-  assert.ok(!/<canvas/.test(ti));
-  assert.equal(t.split(PASSIVATION_NOTE).length - 1, 1, "the legend caveat stays; there is no probe state without data");
+  assert.match(ti, /<canvas/);
+  assert.match(t, /Ti–H₂O \( ?Ti-6Al-4V/);
+  assert.ok(!t.includes("POURBAIX_DATA_UNAVAILABLE") && !t.includes("No verified Ti–H₂O data"));
+  assert.match(t, /Data validity \(Ti, dissolved activity 10\^-6 to 10\^0 M\): hatched = withheld-data region/);
+  assert.match(t, /free of withheld-data regions for pH 0\.91 to 14\.92 at a\(M\) = 10\^-6/);
+  assert.match(t, /TiH2 \(NBS; hydride outside the oxide\/ion table\)/);
+  assert.equal(t.split(PASSIVATION_NOTE).length - 1, 2, "legend caveat + probe-card caveat (pH 7 / 0.2 V is a TiO2 point)");
   const inconel = render({ initialAlloyId: "inconel-718" });
   assert.match(inconel, /<canvas/);
   assert.match(plain(inconel), /Ni–H₂O \(Inconel 718/);
-  assert.match(plain(inconel), /Al \(0\.5% wt\) (?!- no verified data)/, "Al is an available element of Inconel 718");
-  assert.match(plain(inconel), /Cr \(19% wt\) - no verified data/, "Cr stays unavailable");
-  assert.match(plain(inconel), /Mo \(3% wt\) - no verified data/, "Mo stays unavailable");
+  for (const el of ["Al \\(0\\.5% wt\\)", "Cr \\(19% wt\\)", "Mo \\(3% wt\\)"]) {
+    assert.match(plain(inconel), new RegExp(`${el} (?!- no verified data)`), el);
+  }
+  assert.match(plain(inconel), /Nb \(5\.1% wt\) - no verified data/, "Nb has no table");
+  assert.ok(!/Data validity \(/.test(plain(inconel)), "Ni has no withheld candidate sets");
+});
+
+test("pure Cr / Mo presets draw their maps; Mo offers only 1e-6 and 1e-4; the withheld regions are named in the note", () => {
+  const cr = render({ initialAlloyId: "pure-cr" });
+  assert.match(cr, /<canvas/);
+  assert.match(plain(cr), /Data validity \(Cr, dissolved activity 10\^-6 to 10\^-2 M\)/);
+  assert.match(plain(cr), /free of withheld-data regions for pH 4\.78 to 14\.40/);
+  assert.match(plain(cr), /Cr\(III\)\/Cr\(II\) with hydrolysis, CRC values/);
+  const crOptions = [...cr.matchAll(/<option value="([0-9.e-]+)"[^>]*>10|<option value="([0-9.e-]+)"[^>]*>1\.0 M/g)].map((m) => Number(m[1] ?? m[2]));
+  assert.deepEqual(crOptions, [1e-6, 1e-4, 1e-3]);
+  const mo = render({ initialAlloyId: "pure-mo" });
+  assert.match(mo, /<canvas/);
+  const moOptions = [...mo.matchAll(/<option value="([0-9.e-]+)"[^>]*>10|<option value="([0-9.e-]+)"[^>]*>1\.0 M/g)].map((m) => Number(m[1] ?? m[2]));
+  assert.deepEqual(moOptions, [1e-6, 1e-4]);
+  assert.match(plain(mo), /Not represented \(no sourced value\): MoO₂²⁺, Mo\(V\)\./);
+  const fe = render();
+  const feOptions = [...fe.matchAll(/<option value="([0-9.e-]+)"[^>]*>10|<option value="([0-9.e-]+)"[^>]*>1\.0 M/g)].map((m) => Number(m[1] ?? m[2]));
+  assert.deepEqual(feOptions, [1e-6, 1e-4, 1e-3, 1]);
 });
 
 test("Al-7075 selects Al and draws the gibbsite map (no reason panel); Al in other compositions is no longer flagged \"no verified data\"", () => {
@@ -366,9 +447,10 @@ test("S2: the activity range is limited to 1e-6 .. 1 in the generated JSON, the 
   const json = JSON.parse(text("src/generated/pourbaixSpecies25C.json")) as { activity: { log10Range: number[] } };
   assert.deepEqual(json.activity.log10Range, [-6, 0]);
   const studio = text("src/components/DynamicPourbaixStudio.tsx");
-  const options = [...studio.matchAll(/<option value=\{(1e-\d+|1\.0)\}>/g)].map((m) => Math.log10(Number(m[1])));
+  const options = ION_ACTIVITY_OPTIONS.map((o) => Math.log10(o.value));
   assert.ok(options.length >= 3);
   for (const o of options) assert.ok(o >= json.activity.log10Range[0] && o <= json.activity.log10Range[1], `option 10^${o} outside the engine range`);
+  assert.match(studio, /ION_ACTIVITY_OPTIONS\.filter\(\(o\) => activityInRange\(selectedElement, Math\.log10\(o\.value\)\)\)/);
   assert.ok(!studio.includes("1e-8"), "the refused 1e-8 option is gone");
   assert.match(plain(render()), /Mononuclear hydrolysis species \(MOH⁺, M\(OH\)₂\(aq\)\) are not in the species table for any element/);
 });
@@ -431,18 +513,18 @@ test("NIT: accessible canvas label, no '+ 0.0000·pH', no internal process words
   assert.match(html, /<canvas[^>]*role="img"[^>]*aria-label="Fe–H₂O E–pH map at 25 °C, dissolved activity 10\^-6; probe at pH 7\.00, 0\.200 V SHE: Fe₂O₃/);
   assert.ok(text("src/components/DynamicPourbaixStudio.tsx").includes("independent of pH"));
   assert.ok(!/0\.0000·pH/.test(text("src/components/DynamicPourbaixStudio.tsx")));
-  for (const el of ["Cr", "Ti", "Mo"]) assert.ok(!/WP-|Blocked until/.test(pourbaixUnavailableReason(el)!), el);
-  assert.match(pourbaixUnavailableReason("Cr")!, /no verified Cr-H2O data in this tool/i);
-  const ti = plain(render({ initialAlloyId: "ti-6al-4v" }));
-  assert.equal(ti.split(pourbaixUnavailableReason("Ti")!).length - 1, 1, "the Ti reason is shown once");
-  assert.ok(!ti.includes("Test Points Overlaid"), "no 'test points overlaid' badge without a map");
+  const json = JSON.parse(text("src/generated/pourbaixSpecies25C.json")) as { elements: Record<string, { sourceSetNote?: string }> };
+  for (const el of ["Cr", "Ti", "Mo"]) assert.ok(!/WP-|Blocked until/.test(json.elements[el].sourceSetNote!), el);
+  const hea = plain(render({ initialAlloyId: "al-co-cr-fe-ni-hea" }));  // primary element Co: no table
+  assert.equal(hea.split(pourbaixUnavailableReason("Co")!).length - 1, 1, "the Co reason is shown once");
+  assert.ok(!hea.includes("Test Points Overlaid"), "no 'test points overlaid' badge without a map");
 });
 
 test("preset points of another element are labelled as reclassified; unavailable maps show no point readout", () => {
   const ni = plain(render({ initialAlloyId: "inconel-718" }));
   assert.match(ni, /The points of the preset (?:"|&quot;)Carbon Steel \(AISI 1018\).*?(?:"|&quot;) belong to Fe; they are only reclassified here in the Ni–H₂O map\./);
   assert.ok(!/belong to Fe; they are only reclassified/.test(plain(render())), "no notice on the Fe map");
-  assert.ok(!/Selected test point/.test(plain(render({ initialAlloyId: "ti-6al-4v" }))));
+  assert.ok(!/Selected test point/.test(plain(render({ initialAlloyId: "al-co-cr-fe-ni-hea" }))));
 });
 
 test("second re-review: every tab has a render branch, preset point labels are neutral, the error is tied to its element, the ad-hoc stdout is decoded as a stream, Zn is named in the UI note", () => {

@@ -30,14 +30,28 @@ export interface PourbaixSpeciesRow {
   evidence: string;
 }
 
+/** A withheld alternative dataset (python/pourbaix_species_25c.py CANDIDATE_SETS): ids of withheldSpecies rows. */
+export interface PourbaixCandidateSet {
+  id: string;
+  label: string;
+  speciesIds: string[];
+}
+
 export interface PourbaixAvailableElement {
   name: string;
   available: true;
   sourceSet: string;
   sourceSetNote: string;
   waterDfG_kJ_mol: number;
-  referenceCation: string;
+  /** null when the table has no verified cation (Cr, Mo, Ti): no unit-activity metal/cation E0. */
+  referenceCation: string | null;
+  /** log10 dissolved activity accepted for this element (Cr and Mo are narrower than the global range). */
+  activityLog10Range: [number, number];
   species: PourbaixSpeciesRow[];
+  /** Rows not used by the engine (rejected, contradictory or excluded), with their values. */
+  withheldSpecies?: PourbaixSpeciesRow[];
+  candidateSets: PourbaixCandidateSet[];
+  unsourcedSpecies: { formula: string; reason: string }[];
 }
 
 export interface PourbaixUnavailableElement {
@@ -86,6 +100,14 @@ export interface PourbaixPointState {
   formula: string;
   category: StabilityCategory;
   isInsideWaterStability: boolean;
+}
+
+/** Domain that a withheld candidate species would take if its candidate set were added: the map is not valid there. */
+export interface PourbaixWithheldRegion {
+  candidateSet: string;
+  speciesId: string;
+  formula: string;
+  polygon: PourbaixPolygon;
 }
 
 export interface AlloyPreset {
@@ -180,6 +202,15 @@ export interface PythonPourbaixResult {
   temperatureStatus?: { status: string; temperature_C: number; supported_C: number[]; toleranceC: number; note: string };
   model?: Record<string, unknown>;
   speciesTable?: { sourceSet: string; sourceSetNote: string; waterDfG_kJ_mol: number; schema: string; species: PourbaixSpeciesRow[]; withheldSpecies: { id: string; verification: string; reason: string }[] };
+  dataValidity?: {
+    status: string;
+    activityRange_log10: [number, number];
+    rule: string;
+    candidateSets: PourbaixCandidateSet[];
+    regions: { candidateSet: string; speciesId: string; formula: string; category: StabilityCategory; polygon: { pH: number; E_V_SHE: number }[] }[];
+    pHWindowsFreeOfRegionsInsideWater: [number, number][];
+    unsourcedSpecies: { formula: string; reason: string }[];
+  };
   waterStabilityLines: {
     nernstSlope: number;
     e0_OER: number;

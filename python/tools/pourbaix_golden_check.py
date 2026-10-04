@@ -20,7 +20,11 @@ only when the section it lives in has no problem. What is compared:
   differ from the exact SI constants by 3e-11 relative, far below the rounding step);
 - the species table: stoichiometry exact, ``dfG_kJ_mol`` equal to the oracle within float
   representation (1e-6 kJ/mol = 1 mJ/mol: the oracle writes the atlas values as cal/mol * 4.184 and uses CODATA-printed F in the derived FeO4 2- row);
-- the old value of every row: equal to the d33b6f5 golden (checked by the caller).
+- the old value of every row: equal to the d33b6f5 golden (checked by the caller);
+- dataValidity (engine v5): candidate-set ids and members equal the oracle's own CANDIDATES (rebuilt from the
+  primary numbers), each withheld region's vertices within COORD_TOL of the oracle's polygon, the free pH
+  windows recomputed here from those oracle polygons and the oracle's water lines, every grid cell's and
+  point's withheld flag equal to the oracle's brute-force ``withheld_hits``.
 
 Nothing here widens the generic step-(b) bound for any other row.
 """
@@ -45,9 +49,12 @@ COORD_TOL = 1e-4  # V (pH units for the pH coordinate): boundary / polygon coord
 DFG_TOL_KJ = 1e-6  # kJ/mol: float representation of cal -> kJ and the 3e-11 R/F difference of the Latimer-derived FeO4 2- row
 NUDGE_V = 3 * COORD_TOL  # V (or pH): side probes of a boundary midpoint (beyond the coordinate bound)
 
-SECTIONS = ("analyticalBoundaries", "chloridePittingBoundary", "domains", "engine", "experimentalOverlay",
-            "model", "parameters", "speciesInventory", "speciesTable", "stabilityFieldGrid",
+SECTIONS = ("analyticalBoundaries", "chloridePittingBoundary", "dataValidity", "domains", "engine",
+            "experimentalOverlay", "model", "parameters", "speciesInventory", "speciesTable", "stabilityFieldGrid",
             "temperatureStatus", "waterStabilityLines")
+ENGINE_ID = "pourbaix-gibbs-25c-v5"
+# Withheld rows recorded as excluded by scope (V2) although they belong to a candidate set (the others are V3).
+SCOPE_EXCLUDED_CANDIDATES = {"TiH2"}
 
 # Reference-electrode offsets (V vs SHE) of the d33b6f5 solver; unchanged by WP-E.
 _OFFSETS = {"SHE": 0.000, "SCE": 0.241, "Ag/AgCl (3M KCl)": 0.207, "Ag/AgCl (Sat KCl)": 0.197,
@@ -193,6 +200,39 @@ def _metal_boundary_E(element: str, log_a: float, pH: float) -> Optional[float]:
     return bound
 
 
+def _oracle_free_windows(element: str, log_a: float) -> List[List[float]]:
+    """pH intervals free of withheld regions inside the water window, from the oracle's polygons."""
+    k = oracle.LN10 * oracle.R * oracle.T / oracle.F
+    e0 = oracle.water_lines(0.0)[1]
+    blocked = []
+    for _, _, poly in oracle.withheld_polygons(element, log_a):
+        for a, b, c in ((-k, -1.0, 0.0), (k, 1.0, -e0)):
+            new = []
+            for i in range(len(poly)):
+                p_, q_ = poly[i], poly[(i + 1) % len(poly)]
+                fp, fq = c + a * p_[0] + b * p_[1], c + a * q_[0] + b * q_[1]
+                if fp <= 0:
+                    new.append(p_)
+                if (fp < 0 < fq) or (fq < 0 < fp):
+                    t = fp / (fp - fq)
+                    new.append((p_[0] + t * (q_[0] - p_[0]), p_[1] + t * (q_[1] - p_[1])))
+            poly = new
+            if not poly:
+                break
+        if poly and 0.5 * abs(sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
+                                  for i in range(len(poly)))) > 1e-9:
+            blocked.append((min(q[0] for q in poly), max(q[0] for q in poly)))
+    blocked.sort()
+    free, start = [], oracle.BOX[0]
+    for lo, hi in blocked:
+        if lo > start:
+            free.append([start, lo])
+        start = max(start, hi)
+    if start < oracle.BOX[1]:
+        free.append([start, oracle.BOX[1]])
+    return free
+
+
 def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) -> Dict[str, List[str]]:
     """Recompute the documented sections of ``new_stdout`` from the oracle; {section: [problems]}."""
     eng, table, pc = _engine()
@@ -256,9 +296,16 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
         withheld = oracle.WITHHELD.get(element, {})
         # Elements with a plain withheld dict (Ni): the keys are the ids (V3). Al (WP-Al): the rejected
         # atlas rows that are not in the served set keep an "(atlas)" id (V3), followed by the excluded
-        # metastable phases of the same set (V2, tools/pourbaix_oracle.AL_EXCLUDED).
+        # metastable phases of the same set (V2, tools/pourbaix_oracle.AL_EXCLUDED). Cr, Mo, Ti (v5): the
+        # members of the oracle's candidate sets in set order (V3; TiH2 V2, excluded by scope), then the
+        # oracle's EXCLUDED rows (V2).
         want_level = {}
-        if "sp" not in withheld:
+        if element in oracle.CANDIDATES:
+            want_ids = [k for members in oracle.CANDIDATES[element].values() for k in members]
+            want_level = {k: ("V2" if k in SCOPE_EXCLUDED_CANDIDATES else "V3") for k in want_ids}
+            want_ids += list(oracle.EXCLUDED.get(element, {}))
+            want_level.update({k: "V2" for k in oracle.EXCLUDED.get(element, {})})
+        elif "sp" not in withheld:
             want_ids = [k for k in withheld]
             want_level = {k: "V3" for k in want_ids}
         else:
@@ -308,7 +355,8 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
                         "dominantSpecies": formula_of[sp], "category": cat,
                         "regime": cat if inside else f"{cat} — {eng.OUTSIDE_WATER_LABEL}",
                         "mechanismTitle": texts[cat]["mechanismTitle"], "color": texts[cat]["color"],
-                        "isInsideWaterStability": inside}
+                        "isInsideWaterStability": inside,
+                        "insideWithheldDataRegion": bool(oracle.withheld_hits(element, ph, e, log_a))}
                 if set(cell) != set(want):
                     p.append(f"cell {k - 1}: keys {sorted(cell)} != {sorted(want)}")
                     continue
@@ -449,6 +497,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
         breakdown = {k: 0 for k in _RISK_KEYS}
         counts: Dict[str, int] = {}
         outside = 0
+        withheld_pts = 0
         for i, (pt, old) in enumerate(zip(pts, old_points)):
             ph, pot, ref = old["pH"], old["potential_Input_V"], old["refElectrode"]
             e = pot + _OFFSETS[ref]
@@ -457,6 +506,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             her, oer = oracle.water_lines(ph)
             inside = her <= e <= oer
             e_imm = _metal_boundary_E(element, log_a, ph)
+            hits = oracle.withheld_hits(element, ph, e, log_a)
             tx = texts[cat]
             if e < her:
                 dep = "H⁺ reduction possible (E below water line a)"
@@ -482,6 +532,7 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
                     "deltaE_Immunity_V": None if e_imm is None else round(e - e_imm, 3),
                     "deltaE_Pitting_V": None, "isInsideWaterStability": inside,
                     "waterStabilityLabel": eng.INSIDE_WATER_LABEL if inside else eng.OUTSIDE_WATER_LABEL,
+                    "insideWithheldDataRegion": bool(hits), "withheldDataSpeciesIds": [h[1] for h in hits],
                     "engineeringMitigations": mit}
             for key, val in want.items():
                 if key not in pt or not _exact(pt[key], val):
@@ -497,12 +548,16 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
             breakdown[tx["riskLevel"]] += 1
             counts[cat] = counts.get(cat, 0) + 1
             outside += 0 if inside else 1
+            withheld_pts += 1 if hits else 0
         if pts:
             parts = ", ".join(f"{n} in {c}" for c, n in sorted(counts.items()))
             diag = (f"Equilibrium classification of {len(pts)} measured point(s) in the {element}–H₂O map at "
                     f"25 °C (dissolved activity 10^{log_a:g}): {parts}.")
             if outside:
                 diag += f" {outside} point(s) lie outside the water stability window (metastable)."
+            if withheld_pts:
+                diag += (f" {withheld_pts} point(s) lie in a withheld-data region, where the map is not valid "
+                         "(dataValidity).")
             diag += (" This is a thermodynamic statement; it makes no claim about rates, film protectiveness "
                      "or pitting.")
         else:
@@ -545,22 +600,74 @@ def document_problems(old_stdout: Dict[str, Any], new_stdout: Dict[str, Any]) ->
     if new_stdout.get("temperatureStatus") != want_t:
         p.append(f"temperatureStatus {new_stdout.get('temperatureStatus')!r} != {want_t!r}")
     p = problems["engine"]
-    if new_stdout.get("engine") != eng.ENGINE_ID or eng.ENGINE_ID != "pourbaix-gibbs-25c-v4":
-        p.append(f"engine {new_stdout.get('engine')!r} != 'pourbaix-gibbs-25c-v4'")
+    if new_stdout.get("engine") != eng.ENGINE_ID or eng.ENGINE_ID != ENGINE_ID:
+        p.append(f"engine {new_stdout.get('engine')!r} != {ENGINE_ID!r}")
     p = problems["model"]
     model = new_stdout.get("model")
-    want_m = eng._model_block(log_a)
+    want_m = eng._model_block(log_a, element)
     want_m.update({"temperature_C": 25.0, "temperature_K": 298.15,
                    "box": {"pH_min": oracle.BOX[0], "pH_max": oracle.BOX[1],
                            "E_min_V_SHE": oracle.BOX[2], "E_max_V_SHE": oracle.BOX[3]},
                    "gasConstantR_J_molK": pc.GAS_CONSTANT_R.value, "faraday_C_mol": pc.FARADAY.value,
-                   "engine": "pourbaix-gibbs-25c-v4", "dissolvedActivityRange_log10": [-6.0, 0.0]})
+                   "engine": ENGINE_ID,
+                   "dissolvedActivityRange_log10": list(oracle.ACTIVITY_RANGE.get(element, (-6.0, 0.0)))})
     if model != want_m:
         p.append(f"model block differs from the engine text/constants: {sorted(set(model or {}) ^ set(want_m))}")
     if isinstance(model, dict):
         if abs(model.get("gasConstantR_J_molK", 0) / oracle.R - 1) > 1e-9 \
                 or abs(model.get("faraday_C_mol", 0) / oracle.F - 1) > 1e-9:
             p.append("model R / F differ from the oracle's CODATA values by more than 1e-9 relative")
+
+    # ---- dataValidity (v5) -----------------------------------------------------------------
+    p = problems["dataValidity"]
+    dv = new_stdout.get("dataValidity")
+    want_keys = {"status", "activityRange_log10", "rule", "candidateSets", "regions",
+                 "pHWindowsFreeOfRegionsInsideWater", "unsourcedSpecies"}
+    if not isinstance(dv, dict) or set(dv) != want_keys:
+        p.append(f"dataValidity keys {sorted(dv) if isinstance(dv, dict) else dv!r} != {sorted(want_keys)}")
+        return problems
+    cand = oracle.CANDIDATES.get(element, {})
+    want_regions = oracle.withheld_polygons(element, log_a)
+    want_status = ("withheld-species-regions" if want_regions else
+                   ("withheld-candidates-without-region" if cand else "no-withheld-candidates"))
+    if dv["status"] != want_status:
+        p.append(f"status {dv['status']!r} != {want_status!r}")
+    if dv["activityRange_log10"] != list(oracle.ACTIVITY_RANGE.get(element, (-6.0, 0.0))):
+        p.append(f"activityRange_log10 {dv['activityRange_log10']!r}")
+    if dv["rule"] != eng._data_validity_block("Fe", -6.0)["rule"]:
+        p.append("rule text differs from the engine's")
+    got_sets = dv["candidateSets"]
+    if [(c.get("id"), c.get("speciesIds")) for c in got_sets] != [(k, list(v)) for k, v in cand.items()]:
+        p.append("candidateSets (ids / members) differ from the oracle's candidate sets")
+    elif got_sets != table.candidate_sets(element):
+        p.append("candidateSets labels differ from the engine's table")
+    if dv["unsourcedSpecies"] != table.unsourced_species(element):
+        p.append("unsourcedSpecies differ from the engine's table")
+    regions = dv["regions"]
+    if [(r.get("candidateSet"), r.get("speciesId")) for r in regions] != [(a, b) for a, b, _ in want_regions]:
+        p.append(f"regions {[(r.get('candidateSet'), r.get('speciesId')) for r in regions]} != oracle "
+                 f"{[(a, b) for a, b, _ in want_regions]}")
+    else:
+        rows_w = {r["id"]: r for r in table.withheld_rows(element)}
+        for r, (set_id, sid, poly) in zip(regions, want_regions):
+            if set(r) != {"candidateSet", "speciesId", "formula", "category", "polygon"}:
+                p.append(f"region {sid}: keys {sorted(r)}")
+                continue
+            role = cand[set_id][sid][6]
+            if r["category"] != oracle.CATEGORY[role] or r["formula"] != rows_w[sid]["formula"]:
+                p.append(f"region {sid}: category / formula")
+            got = _dedupe([(v["pH"], v["E_V_SHE"]) for v in r["polygon"]])
+            bad = _match_vertices(got, _dedupe(poly))
+            if bad:
+                p.append(f"region {sid}: {bad}")
+            elif not _convex_simple(got):
+                p.append(f"region {sid}: polygon is not a simple convex polygon")
+    windows = dv["pHWindowsFreeOfRegionsInsideWater"]
+    want_w = _oracle_free_windows(element, log_a)
+    if not (isinstance(windows, list) and len(windows) == len(want_w)
+            and all(isinstance(w, list) and len(w) == 2 and _close(w[0], v[0], COORD_TOL) and _close(w[1], v[1], COORD_TOL)
+                    for w, v in zip(windows, want_w))):
+        p.append(f"pHWindowsFreeOfRegionsInsideWater {windows!r} != oracle {want_w!r}")
     return problems
 
 
@@ -594,6 +701,24 @@ DOCUMENTED_KEYS = (
     'chloridePittingBoundary.pittingThresholdLine[].pH',
     'chloridePittingBoundary.points',
     'chloridePittingBoundary.status',
+    'dataValidity.activityRange_log10[]',
+    'dataValidity.candidateSets',
+    'dataValidity.candidateSets[].id',
+    'dataValidity.candidateSets[].label',
+    'dataValidity.candidateSets[].speciesIds[]',
+    'dataValidity.pHWindowsFreeOfRegionsInsideWater[][]',
+    'dataValidity.regions',
+    'dataValidity.regions[].candidateSet',
+    'dataValidity.regions[].category',
+    'dataValidity.regions[].formula',
+    'dataValidity.regions[].polygon[].E_V_SHE',
+    'dataValidity.regions[].polygon[].pH',
+    'dataValidity.regions[].speciesId',
+    'dataValidity.rule',
+    'dataValidity.status',
+    'dataValidity.unsourcedSpecies',
+    'dataValidity.unsourcedSpecies[].formula',
+    'dataValidity.unsourcedSpecies[].reason',
     'domains[].category',
     'domains[].polygon[].E_V_SHE',
     'domains[].polygon[].pH',
@@ -608,12 +733,15 @@ DOCUMENTED_KEYS = (
     'experimentalOverlay.points[].dominantSpecies',
     'experimentalOverlay.points[].dominantSpeciesId',
     'experimentalOverlay.points[].engineeringMitigations[]',
+    'experimentalOverlay.points[].insideWithheldDataRegion',
     'experimentalOverlay.points[].mechanismDetails',
     'experimentalOverlay.points[].mechanismId',
     'experimentalOverlay.points[].mechanismTitle',
     'experimentalOverlay.points[].regime',
     'experimentalOverlay.points[].riskLevel',
     'experimentalOverlay.points[].waterStabilityLabel',
+    'experimentalOverlay.points[].withheldDataSpeciesIds',
+    'experimentalOverlay.points[].withheldDataSpeciesIds[]',
     'experimentalOverlay.riskBreakdown.Caution',
     'experimentalOverlay.riskBreakdown.High Risk',
     'experimentalOverlay.riskBreakdown.Immune',
@@ -675,6 +803,7 @@ DOCUMENTED_KEYS = (
     'stabilityFieldGrid[].color',
     'stabilityFieldGrid[].dominantSpecies',
     'stabilityFieldGrid[].dominantSpeciesId',
+    'stabilityFieldGrid[].insideWithheldDataRegion',
     'stabilityFieldGrid[].isInsideWaterStability',
     'stabilityFieldGrid[].mechanismTitle',
     'stabilityFieldGrid[].regime',
@@ -755,3 +884,23 @@ def row_problem(row: Dict[str, Any], context: Context) -> Optional[str]:
                 f"leaf {None if old is _MISSING else old!r} -> the re-blessed leaf "
                 f"{None if new is _MISSING else new!r}")
     return None
+
+
+def main(argv=None) -> int:
+    """Check every re-blessed pourbaix_solver step_b document against the oracle (exit 1 on any problem)."""
+    import capture_phase6a_golden as golden
+    failed = 0
+    for case in golden.CASES["pourbaix_solver"]:
+        path = golden.step_b_path("pourbaix_solver", case)
+        if not path.is_file():
+            continue
+        old = golden.load_golden("pourbaix_solver", case)["stdout"]
+        new = golden.load_expected("pourbaix_solver", case)["stdout"]
+        problems = {k: v for k, v in document_problems(old, new).items() if v}
+        print(f"pourbaix_solver/{case}: {'OK' if not problems else problems}")
+        failed += bool(problems)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

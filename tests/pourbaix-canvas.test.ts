@@ -8,11 +8,12 @@ import {
   classifyPourbaixPoint,
   clipPolygon,
   computeDomains,
+  computeWithheldRegions,
   polygonArea,
   speciesCoefficients,
   waterLines25C,
 } from "../src/utils/pourbaixThermodynamics";
-import { ZONE_LABEL, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
+import { WITHHELD_HATCH, ZONE_LABEL, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
 import { REF_OFFSETS_VS_SHE } from "../src/utils/experimentalPourbaixOverlay";
 
 // The Studio only builds a scene; the drawing is a pure function, so a recording 2D context can check it
@@ -154,4 +155,27 @@ test("the water lines are drawn, the overlay toggles work and nothing is drawn f
   drawPourbaixScene(noLabels.ctx, scene("Mg", { showPointLabels: false }));
   assert.ok(!noLabels.calls.some((c) => c.op === "fillText" && c.args[0] === "Stage one"));
   assert.ok(calls.some((c) => c.op === "fillText" && c.args[0] === "Stage one"));
+});
+
+test("withheld-data regions (Cr, Mo, Ti) are hatched with strokes clipped to each region; the domain fills are unchanged", () => {
+  for (const el of ["Cr", "Mo", "Ti"]) {
+    const regions = computeWithheldRegions(el, -6);
+    assert.ok(regions.length > 0, el);
+    const plain = recorder();
+    drawPourbaixScene(plain.ctx, scene(el));
+    const { ctx, calls } = recorder();
+    drawPourbaixScene(ctx, scene(el, { withheldRegions: regions, probeInWithheldRegion: true }));
+    assert.equal(calls.filter((c) => c.op === "clip").length, regions.length, `${el}: one clip per region`);
+    assert.equal(plain.calls.filter((c) => c.op === "clip").length, 0, `${el}: no hatch without regions`);
+    const fills = (cs: Call[]) => cs.filter((c) => c.op === "fill" && c.alpha < 1).length;
+    assert.equal(fills(calls), fills(plain.calls), `${el}: the hatch adds no translucent fill`);
+    assert.ok(calls.some((c) => c.op === "stroke" && c.strokeStyle === WITHHELD_HATCH.color), `${el}: hatch strokes`);
+    assert.ok(calls.some((c) => c.op === "fillText" && c.args[0] === "withheld-data region: map not valid here"), `${el}: probe readout`);
+    assert.ok(!plain.calls.some((c) => c.op === "fillText" && c.args[0] === "withheld-data region: map not valid here"));
+    // every hatched region starts at the first vertex of its polygon
+    for (const r of regions) {
+      assert.ok(calls.some((c) => c.op === "moveTo" && Math.abs((c.args[0] as number) - xOf(r.polygon[0][0])) < 1e-9
+        && Math.abs((c.args[1] as number) - yOf(r.polygon[0][1])) < 1e-9), `${el} ${r.speciesId}`);
+    }
+  }
 });

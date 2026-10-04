@@ -11,6 +11,11 @@ Cells within 1 mV (E direction) or 1 mV / 59.16 mV per pH unit = 0.0169 pH (pH d
 boundary of the winning species are written as '.' and are not compared. That margin is measured
 with ``pourbaix_oracle`` (independent numbers), not with the engine.
 
+The second activity is -3 or, when the element's activity range ends lower (Mo: -4), its upper limit.
+Elements with withheld candidate sets (Cr, Mo, Ti) also carry ``withheldRows``: '1' when the engine puts the
+cell in a withheld-data region (some candidate set's own species is the argmin), '0' when not, '.' when the
+cell is within the same margin of a boundary of any candidate set's augmented table (oracle numbers).
+
 Usage (from python/):
   python tools/pourbaix_ts_fixture.py --emit    write the fixture (LF)
   python tools/pourbaix_ts_fixture.py --check   exit 1 when the committed fixture differs from a fresh build
@@ -74,11 +79,25 @@ def encode_row(cells):
     return ",".join(f"{t}:{n}" for t, n in runs)
 
 
+def activities(element):
+    lo, hi = table.activity_range(element)
+    return tuple(min(max(a, lo), hi) for a in LOG_ACTIVITIES)
+
+
+def _augmented_oracle_coeffs(element, log_a):
+    out = []
+    for members in oracle.CANDIDATES.get(element, {}).values():
+        sp = dict(oracle.DATA[element]["sp"])
+        sp.update(members)
+        out.append(oracle.coeffs_of(sp, oracle.DATA[element]["H2O"], log_a))
+    return out
+
+
 def build():
     phs, es = cell_centres()
     cases = []
     for element in table.available_elements():
-        for log_a in LOG_ACTIVITIES:
+        for log_a in activities(element):
             coeffs = solver._coefficients(element, log_a)
             index = {sp.id: i for i, sp in enumerate(coeffs)}
             oracle_c = oracle.coeffs(element, log_a)
@@ -91,8 +110,21 @@ def build():
                     else:
                         cells.append(str(index[solver._argmin(coeffs, ph, e).id]))
                 rows.append(encode_row(cells))
-            cases.append({"element": element, "log10Activity": log_a,
-                          "speciesIds": [sp.id for sp in coeffs], "rows": rows})
+            case = {"element": element, "log10Activity": log_a,
+                    "speciesIds": [sp.id for sp in coeffs], "rows": rows}
+            if table.candidate_sets(element):
+                augmented = _augmented_oracle_coeffs(element, log_a)
+                wrows = []
+                for e in es:
+                    cells = []
+                    for ph in phs:
+                        if any(near_boundary(c, ph, e) for c in augmented):
+                            cells.append(".")
+                        else:
+                            cells.append("1" if solver.withheld_species_at(element, ph, e, log_a) else "0")
+                    wrows.append(encode_row(cells))
+                case["withheldRows"] = wrows
+            cases.append(case)
     return {
         "schema": SCHEMA,
         "generatedBy": "python/tools/pourbaix_ts_fixture.py",

@@ -36,7 +36,7 @@ ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 # would be 35.45, not the 35.453 used here, so this stays local until step (b).
 CHLORIDE_MOLAR_MASS_G_MOL = 35.453
 
-ENGINE_ID = "pourbaix-gibbs-25c-v4"
+ENGINE_ID = "pourbaix-gibbs-25c-v5"
 SUPPORTED_TEMPERATURE_C = 25.0
 TEMPERATURE_TOLERANCE_C = 0.5
 T_KELVIN = ZERO_CELSIUS_K + SUPPORTED_TEMPERATURE_C
@@ -88,9 +88,10 @@ POURBAIX_ELEMENT_SYSTEMS = {
     "Cu": {"name": species_table.NAMES["Cu"], "atomicMass": physical_constants.atomic_weight("Cu")},
     "Zn": {"name": species_table.NAMES["Zn"], "atomicMass": physical_constants.atomic_weight("Zn")},
     "Mg": {"name": species_table.NAMES["Mg"], "atomicMass": physical_constants.atomic_weight("Mg")},
+    "Mo": {"name": species_table.NAMES["Mo"], "atomicMass": physical_constants.atomic_weight("Mo")},
 }
-# Elements without a Python system entry that the lab still names: reported as unavailable.
-UNAVAILABLE_ONLY_ELEMENTS = ("Mo",)
+# Elements without a Python system entry that the lab still names: reported as unavailable (none since v5).
+UNAVAILABLE_ONLY_ELEMENTS = ()
 
 # ---------------------------------------------------------------------------------------
 # Fixed category texts (one text per category; no rate, protectiveness or pitting claims).
@@ -141,9 +142,10 @@ CATEGORY_TEXTS = {
     },
     CATEGORY_TRANSPASSIVE: {
         "mechanismId": "oxyanion_high_potential_stable",
-        "mechanismTitle": "High-valence oxyanion is the stable phase (transpassive domain)",
-        "mechanismDetails": "A high-valence dissolved oxyanion has the lowest Gibbs energy at this pH, potential and "
-                            "dissolved activity; the solid oxide is thermodynamically unstable.",
+        "mechanismTitle": "High-valence oxyanion or oxyacid is the stable phase (transpassive domain)",
+        "mechanismDetails": "A high-valence dissolved oxyanion (or its neutral oxyacid, e.g. H₂MoO₄) has the lowest "
+                            "Gibbs energy at this pH, potential and dissolved activity; the solid oxide is "
+                            "thermodynamically unstable.",
         "riskLevel": "High Risk",
         "color": "#e11d48",
     },
@@ -219,9 +221,16 @@ def _coefficients(element, log_a):
     cached = _COEFF_CACHE.get(key)
     if cached is not None:
         return cached
-    h2o = species_table.water_dfg_kj_mol(element) * 1000.0
+    out = _coefficients_of(species_table.species_rows(element), species_table.water_dfg_kj_mol(element), log_a)
+    _COEFF_CACHE[key] = out
+    return out
+
+
+def _coefficients_of(rows, h2o_kj, log_a):
+    """Same as ``_coefficients`` for explicit species rows (used for the withheld candidate sets)."""
+    h2o = h2o_kj * 1000.0
     out = []
-    for row in species_table.species_rows(element):
+    for row in rows:
         sp = _Species()
         for name in ("id", "formula", "x", "o", "h", "z", "phase", "role", "category"):
             setattr(sp, name, row[name])
@@ -233,7 +242,6 @@ def _coefficients(element, log_a):
         sp.cpH = -sp.m * LN10 * RT
         sp.cE = -sp.n * F_FARADAY
         out.append(sp)
-    _COEFF_CACHE[key] = out
     return out
 
 
@@ -276,10 +284,10 @@ def _polygon_area(poly):
                          for k in range(len(poly))))
 
 
-def compute_domains(element, log_a):
+def compute_domains(element, log_a, coeffs=None):
     """species id -> convex polygon [(pH, E)] clipped to the box (species with area > 1e-9 only)."""
     box = species_table.BOX
-    coeffs = _coefficients(element, log_a)
+    coeffs = _coefficients(element, log_a) if coeffs is None else coeffs
     domains = {}
     for sp in coeffs:
         poly = [(box["pH_min"], box["E_min_V_SHE"]), (box["pH_max"], box["E_min_V_SHE"]),
@@ -411,6 +419,92 @@ def compute_boundaries(element, log_a):
 
 
 # ---------------------------------------------------------------------------------------
+# Data validity: where a withheld candidate set would change the stable species
+# ---------------------------------------------------------------------------------------
+
+_CANDIDATE_CACHE = {}
+
+
+def _candidate_coefficients(element, log_a):
+    """[(set id, served + set coefficients, set member ids)] in the table's candidate-set order."""
+    key = (element, float(log_a))
+    cached = _CANDIDATE_CACHE.get(key)
+    if cached is not None:
+        return cached
+    served = species_table.species_rows(element)
+    h2o = species_table.water_dfg_kj_mol(element)
+    out = []
+    for cset in species_table.candidate_sets(element):
+        rows = species_table.candidate_rows(element, cset["id"])
+        out.append((cset["id"], _coefficients_of(served + rows, h2o, log_a), frozenset(cset["speciesIds"])))
+    _CANDIDATE_CACHE[key] = out
+    return out
+
+
+def withheld_species_at(element, ph, e_she, log_a):
+    """[(candidate set id, species id)] of every candidate set whose own species would be the argmin here."""
+    hits = []
+    for set_id, coeffs, members in _candidate_coefficients(element, log_a):
+        sp = _argmin(coeffs, ph, e_she)
+        if sp.id in members:
+            hits.append((set_id, sp.id))
+    return hits
+
+
+def compute_withheld_regions(element, log_a):
+    """Domains (convex polygons) that the species of each candidate set would take when that set alone is added
+    to the served table: [{candidateSet, speciesId, formula, category, polygon}]. The map is not valid there."""
+    regions = []
+    for set_id, coeffs, members in _candidate_coefficients(element, log_a):
+        by_id = {sp.id: sp for sp in coeffs}
+        for sid, poly in compute_domains(element, log_a, coeffs).items():
+            if sid in members:
+                regions.append({"candidateSet": set_id, "speciesId": sid, "formula": by_id[sid].formula,
+                                "category": by_id[sid].category,
+                                "polygon": [{"pH": p[0], "E_V_SHE": p[1]} for p in poly]})
+    return regions
+
+
+def free_ph_windows(regions):
+    """pH intervals of the box in which no withheld region touches the water stability window (area > 1e-9)."""
+    box = species_table.BOX
+    k = RT * LN10 / F_FARADAY
+    blocked = []
+    for r in regions:
+        poly = [(q["pH"], q["E_V_SHE"]) for q in r["polygon"]]
+        poly = _clip_polygon(poly, -k, -1.0, 0.0)  # E >= -k pH (line a)
+        if poly:
+            poly = _clip_polygon(poly, k, 1.0, -_E0_O2_H2O_V)  # E <= 1.2288 - k pH (line b)
+        if poly and _polygon_area(poly) > 1e-9:
+            blocked.append((min(p[0] for p in poly), max(p[0] for p in poly)))
+    blocked.sort()
+    free, start = [], box["pH_min"]
+    for lo, hi in blocked:
+        if lo > start:
+            free.append([start, lo])
+        start = max(start, hi)
+    if start < box["pH_max"]:
+        free.append([start, box["pH_max"]])
+    return free
+
+
+def _data_validity_block(element, log_a):
+    regions = compute_withheld_regions(element, log_a)
+    sets = species_table.candidate_sets(element)
+    return {
+        "status": "withheld-species-regions" if regions else (
+            "withheld-candidates-without-region" if sets else "no-withheld-candidates"),
+        "activityRange_log10": list(species_table.activity_range(element)),
+        "rule": "a region is the domain that a withheld candidate species would take if its candidate set alone were "
+                "added to the served table; the map is not valid inside any region",
+        "candidateSets": sets,
+        "regions": regions,
+        "pHWindowsFreeOfRegionsInsideWater": free_ph_windows(regions),
+        "unsourcedSpecies": species_table.unsourced_species(element),
+    }
+
+
+# ---------------------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------------------
 
@@ -509,6 +603,7 @@ def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log
     _check_temperature(temperature_C)
     ph, e_she = _check_point(ph, e_she)
     sp, inside, e_her, e_oer, e_imm = _classify(element, ph, e_she, ion_act_log10)
+    hits = withheld_species_at(element, ph, e_she, ion_act_log10)
     text = CATEGORY_TEXTS[sp.category]
     delta_imm = None if e_imm is None else round(e_she - e_imm, 3)
     regime = sp.category if inside else f"{sp.category} — {OUTSIDE_WATER_LABEL}"
@@ -541,6 +636,8 @@ def evaluate_point_mechanism(element, ph, e_she, temperature_C=25.0, ion_act_log
         "deltaE_Pitting_V": None,
         "isInsideWaterStability": inside,
         "waterStabilityLabel": INSIDE_WATER_LABEL if inside else OUTSIDE_WATER_LABEL,
+        "insideWithheldDataRegion": bool(hits),
+        "withheldDataSpeciesIds": [sid for _, sid in hits],
         "e_HER_V_SHE": round(e_her, 3),
         "e_OER_V_SHE": round(e_oer, 3),
         "engineeringMitigations": mitigations,
@@ -563,7 +660,7 @@ def _species_inventory(element):
     return inventory
 
 
-def _model_block(log_a):
+def _model_block(log_a, element):
     return {
         "temperature_C": SUPPORTED_TEMPERATURE_C,
         "temperature_K": T_KELVIN,
@@ -573,16 +670,22 @@ def _model_block(log_a):
         "activityConvention": f"every dissolved metal species has activity 10^{log_a:g}; solids and water "
                               "have unit activity; gases 1 bar",
         "activityCoefficients": "ideal (γ=1), no ionic-strength correction",
-        "dissolvedActivityRange_log10": list(species_table.ACTIVITY_LOG10_RANGE),
+        "dissolvedActivityRange_log10": list(species_table.activity_range(element)),
         "excludedSpecies": [
-            "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined",
+            "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined; the Cr "
+            "and Mo activities are limited (10⁻⁶ to 10⁻² M and 10⁻⁶ to 10⁻⁴ M) so that Cr₂O₇²⁻ (from 10^-1.55 M) and "
+            "the heptamolybdates (from 10^-3.53 M) would not take a domain even under that convention",
             "chloro and other complexes: the equilibrium contains no chloride species",
-            "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of every element: omitted. "
+            "mononuclear hydrolysis species (MOH⁺, M(OH)₂(aq) and the like) of Fe, Ni, Cu, Zn, Mg and Al: omitted. "
             "Checked with open-database constants they change at most about 0.6 % of the water-window cells at "
             "10⁻⁶ M and above for Fe, Ni, Cu, Mg and Al, but several % at 10⁻⁸ M (MgOH⁺ about 5 %, Cu(OH)₂(aq) "
             "up to about 14 %), which is why the dissolved activity is limited to 10⁻⁶ M to 1 M. Zn is "
             "constant-dependent at 10⁻⁶ M: with the IUPAC 2013 Zn(OH)₂(aq) constant ZnO keeps its domain, with "
             "the wateq4f / Baes & Mesmer constant Zn(OH)₂(aq) would replace the whole ZnO domain",
+            "withheld candidate species (Cr(III)/Cr(II) with hydrolysis, Mo(III), Ti(II)/Ti(III)/Ti(IV) with "
+            "hydrolysis, TiO, TiH₂): not in the served table because the compilations contradict each other or the "
+            "phase is outside the oxide/ion table; dataValidity.regions marks where any candidate set would be "
+            "stable, and the map is not valid there",
         ],
         "chloride": "chloride_ppm is echoed only; the equilibrium has no chloro-complexes and no sourced "
                     "generic pitting potential exists (chloridePittingBoundary.status)",
@@ -612,7 +715,7 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             {"element": element, "reason": species_table.UNAVAILABLE_ELEMENTS[element],
              "available": species_table.available_elements()})
     _check_availability(element)
-    lo, hi = species_table.ACTIVITY_LOG10_RANGE
+    lo, hi = species_table.activity_range(element)
     log_a = require_range("ionActivity_log10", ion_activity_log10, lo, hi, "log10 activity")
     chloride_ppm = require_finite("chloride_ppm", chloride_ppm)
     sys_data = POURBAIX_ELEMENT_SYSTEMS[element]
@@ -643,6 +746,7 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             e_she = -2.0 + e_idx * 0.2
             sp, inside, _, _, _ = _classify(element, ph, e_she, log_a)
             text = CATEGORY_TEXTS[sp.category]
+            hits = withheld_species_at(element, ph, e_she, log_a)
             stability_grid.append({
                 "pH": ph,
                 "E_V_SHE": round(e_she, 2),
@@ -653,6 +757,7 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
                 "mechanismTitle": text["mechanismTitle"],
                 "color": text["color"],
                 "isInsideWaterStability": inside,
+                "insideWithheldDataRegion": bool(hits),
             })
 
     # 4. Exact boundaries and domains
@@ -722,6 +827,8 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
                 "deltaE_Pitting_V": eval_res["deltaE_Pitting_V"],
                 "isInsideWaterStability": eval_res["isInsideWaterStability"],
                 "waterStabilityLabel": eval_res["waterStabilityLabel"],
+                "insideWithheldDataRegion": eval_res["insideWithheldDataRegion"],
+                "withheldDataSpeciesIds": eval_res["withheldDataSpeciesIds"],
                 "engineeringMitigations": eval_res["engineeringMitigations"]
             })
 
@@ -740,6 +847,10 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
         )
         if outside:
             trajectory_diagnosis += f" {outside} point(s) lie outside the water stability window (metastable)."
+        withheld = sum(1 for p in analyzed_experimental_points if p["insideWithheldDataRegion"])
+        if withheld:
+            trajectory_diagnosis += (f" {withheld} point(s) lie in a withheld-data region, where the map is not "
+                                     "valid (dataValidity).")
         trajectory_diagnosis += " This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting."
 
     compute_time_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
@@ -770,7 +881,8 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
             "toleranceC": TEMPERATURE_TOLERANCE_C,
             "note": "No temperature extrapolation: the table has no consistent entropies or heat capacities.",
         },
-        "model": _model_block(log_a),
+        "model": _model_block(log_a, element),
+        "dataValidity": _data_validity_block(element, log_a),
         "speciesTable": {
             "sourceSet": species_table.ELEMENT_SET[element][0],
             "sourceSetNote": species_table.ELEMENT_SET[element][2],
@@ -806,6 +918,8 @@ def solve_pourbaix_diagram(element="Fe", temperature_C=25.0, ion_activity_log10=
 def _standard_e0(element):
     """Unit-activity E0 (V SHE) of metal / reference cation, derived from the table (informational)."""
     coeffs = {sp.id: sp for sp in _coefficients(element, 0.0)}
+    if species_table.REFERENCE_CATION[element] is None:
+        return None
     cation = coeffs[species_table.REFERENCE_CATION[element]]
     line = _line_between(coeffs[next(iter(coeffs))], cation)
     return None if line is None or line[0] != "sloped" else round(line[1], 4)
@@ -835,6 +949,7 @@ if __name__ == "__main__":
                 "Water stability lines a and b (HER, OER)",
                 "Exact domain polygons and boundary lines derived from a sourced species table",
                 "Experimental E-pH point overlay classified by thermodynamic category",
+                "Withheld-data regions (dataValidity) where contradictory or excluded candidate species would be stable",
                 "No chloride/pitting model (no sourced generic Epit)"
             ]
         }))
