@@ -348,7 +348,9 @@ class XrdParityTest(unittest.TestCase):
         test.assertEqual(cls._structure(old), cls._structure(stripped))
         for o, n in zip(old["deconvolutionProfile"], new["deconvolutionProfile"]):
             test.assertEqual((o["twoTheta"], o["rawIntensity"]), (n["twoTheta"], n["rawIntensity"]))
-        # fit quality: never worse than the old coordinate search
+        # Fit quality, as asserted: SSE_new <= SSE_old * (1 + 1e-9) and r_wp_new <= r_wp_old
+        # (not "strictly lower"). Observed on the 4 fitted goldens: strictly lower,
+        # by 3.0 %, 10.1 %, 22.0 % and 1.0 % (Windows capture machine).
         test.assertLessEqual(new["goodnessOfFit"]["residualSumSquares"],
                              old["goodnessOfFit"]["residualSumSquares"] * (1 + REL_TOL), case)
         test.assertLessEqual(new["goodnessOfFit"]["r_wp_pct"], old["goodnessOfFit"]["r_wp_pct"], case)

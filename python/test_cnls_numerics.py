@@ -95,12 +95,18 @@ class CNLSNumericsTests(unittest.TestCase):
         self.assertIsNone(report["kramersKronig"]["isValid"])
         self.assertIsNone(report["astmG106"]["isAstmG106Compliant"])
 
-    def test_resistor_moves_toward_known_value_in_both_backends(self):
-        for numpy in (False, True):
-            with self.subTest(numpy=numpy), patch.object(solver, "HAS_NUMPY", numpy):
-                report = solver.run_cnls_fit(RESISTOR, resistor_points(), [parameter("R", 2)], "unit")
-                self.assertAlmostEqual(report["parameters"][0]["fittedValue"], 20, delta=1e-6)
-                self.assertLess(report["reducedChiSquare"], 1e-12)
+    def test_resistor_moves_toward_known_value(self):
+        # Phase 6b removed the scalar residual path: the fit is NumPy-only, and the
+        # HAS_NUMPY flag (kept for the disabled DE auto-fit) does not select a backend.
+        report = solver.run_cnls_fit(RESISTOR, resistor_points(), [parameter("R", 2)], "unit")
+        self.assertAlmostEqual(report["parameters"][0]["fittedValue"], 20, delta=1e-6)
+        self.assertLess(report["reducedChiSquare"], 1e-12)
+
+    def test_fit_without_numpy_is_a_clear_runtime_error(self):
+        with patch.object(solver, "np", None), self.assertRaisesRegex(RuntimeError, "requires NumPy"):
+            solver.run_cnls_fit(RESISTOR, resistor_points(), [parameter("R", 2)], "unit")
+        with patch.object(solver, "np", None), self.assertRaisesRegex(RuntimeError, "requires NumPy"):
+            solver.perform_lin_kk_stationarity_test(resistor_points())
 
     def test_randles_recovers_three_known_parameters(self):
         # Independent closed form: Rs + Rct / (1 + j*w*Rct*Cdl).
