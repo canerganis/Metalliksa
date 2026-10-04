@@ -10,7 +10,10 @@ from lpbf_fatigue_fracture import MurakamiFatigueEngine
 from lpbf_multilaser_plume import ShieldGasFlow, PlumeParameters, MultiLaserPlumeEngine
 from lpbf_optical_tomography import OpticalTomographySimulator
 from lpbf_powder_dem_compaction import PowderCompactionEngine
-from lpbf_solidification_microstructure import compute_solidification_microstructure
+from lpbf_solidification_microstructure import (
+    compute_screening_field_microstructure,
+    compute_solidification_microstructure,
+)
 from lpbf_support_optimization import SupportStructureOptimizer
 from lpbf_thermal_accumulation import AlloyThermalProperties, HatchProcessConfig, MultiTrackThermalEngine
 from lpbf_toolpath_kinematics import LPBFToolpathParser, GalvanometerKinematicsEngine, ScannerProfile
@@ -22,10 +25,15 @@ def _rpc_solidification_microstructure(request):
     # Phase 8
     payload = request["payload"]
     p = payload.get("params", {})
-    m = payload.get("material", {})
     cfd = payload.get("cfdResult", None)
-    data = compute_solidification_microstructure(p, m, cfd)
-    return data
+    if cfd:
+        # Legacy CFD path, only when a cfdResult is supplied (no UI caller does today).
+        m = payload.get("material", {})
+        return compute_solidification_microstructure(p, m, cfd)
+    # Screening-field path: Python (lpbf_thermal_solver) is the authority for every number;
+    # material k/liquidus/absorptivity are looked up there, never taken from the payload.
+    # Unusable inputs return status "unavailable" with a reason instead of raising.
+    return compute_screening_field_microstructure(p)
 
 
 def _rpc_thermomechanical_distortion(request):
