@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 // Components whose hand-rolled overlays were migrated to the shared AccessibleModal.
 const MIGRATED = [
-  "src/App.tsx",
+  "src/components/EngineStatusDialog.tsx", // the App engine status modal, now its own lazy chunk
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/SendToModuleModal.tsx",
   "src/components/StandardQualificationEngine.tsx",
@@ -87,11 +87,15 @@ for (const rel of MIGRATED) {
 }
 
 test("App engine status modal keeps backdrop close, its label id and no ad-hoc Escape listener", () => {
-  const text = read("src/App.tsx");
-  const tag = modalOpeningTags(text)[0];
+  const dialog = read("src/components/EngineStatusDialog.tsx");
+  const tag = modalOpeningTags(dialog)[0];
   assert.match(tag, /\bcloseOnBackdrop\b/);
   assert.match(tag, /labelledBy="engine-title"/);
-  assert.ok(!/addEventListener\(\s*["']keydown["']/.test(text), "App must not register its own keydown/Escape listener");
-  assert.ok(!/event\.key === ['"]Escape['"]/.test(text), "App must not handle Escape itself");
-  assert.ok(!/<button[^>]*\bautoFocus\b/.test(text), "autoFocus must not return (focus is managed by AccessibleModal)");
+  const app = read("src/App.tsx");
+  assert.match(app, /\{showStatus && <SilentBoundary><Suspense fallback=\{null\}><EngineStatusDialog [^>]*onClose=\{\(\) => setShowStatus\(false\)\}/, "App renders the lazy dialog only while open");
+  for (const text of [app, dialog]) {
+    assert.ok(!/addEventListener\(\s*["']keydown["']/.test(text), "no own keydown/Escape listener");
+    assert.ok(!/event\.key === ['"]Escape['"]/.test(text), "Escape is handled by AccessibleModal only");
+    assert.ok(!/<button[^>]*\bautoFocus\b/.test(text), "autoFocus must not return (focus is managed by AccessibleModal)");
+  }
 });
