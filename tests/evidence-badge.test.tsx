@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { EvidenceBadge, evidenceBadgeView } from '../src/components/sdk/EvidenceBadge';
+import { ContractEvidenceBadge, EvidenceBadge, evidenceBadgeView } from '../src/components/sdk/EvidenceBadge';
 import { MODULE_CONTRACTS, MODULE_REGISTRY_CORE as MODULE_REGISTRY, type EvidenceType, type RegisteredContract } from '../src/modules/registry';
 
 const EVIDENCE_TYPES = MODULE_REGISTRY.vocabulary.evidenceTypes as readonly EvidenceType[];
@@ -22,7 +22,7 @@ test('the badge shows exactly the contract ceiling and no stronger evidence clas
     assert.match(html, new RegExp(`data-oracle="${contract.tests.oracle.status}"`), contract.id);
     assert.ok(html.includes(`Max claim: ${LABELS[rank(ceiling)]}`), contract.id);
     for (const stronger of LABELS.slice(0, rank(ceiling))) assert.ok(!html.includes(stronger), `${contract.id} shows ${stronger}`);
-    assert.ok(!/qualified|certified|validated|airworthy/i.test(html.replace(/not a validation claim/, '')), contract.id);
+    assert.ok(!/qualified|certified|validated|airworthy/i.test(html), contract.id);
   }
 });
 
@@ -46,9 +46,39 @@ test('the view is a pure projection of whatever ceiling the contract holds', () 
     assert.equal(view?.ceiling, ceiling);
     assert.ok(view?.text.startsWith(`Max claim: ${LABELS[rank(ceiling)]} ·`), ceiling);
   }
-  const pending = { ...base, tests: { ...base.tests, oracle: { status: 'pending', ref: null } } } as unknown as RegisteredContract;
+  const pending = { ...base, tests: { oracle: { status: 'pending', ciNote: null, scope: null } } } as unknown as RegisteredContract;
   assert.match(evidenceBadgeView(pending)?.description ?? '', /Oracle pending/);
   assert.equal(evidenceBadgeView({ ...base, migrationState: 'legacy' } as unknown as RegisteredContract), null);
+});
+
+// Both pilots are screening-only, so rendering only the registry could not catch a ceiling or
+// oracle hard-coded in the JSX. Render synthetic contracts through the same component instead.
+test('the rendered badge follows every ceiling and oracle state of the contract it is given', () => {
+  const base = MODULE_CONTRACTS.find(contract => contract.id === 'keyhole-raytracing') as RegisteredContract;
+  const oracles = [
+    { status: 'present', ciNote: null, scope: 'It checks a synthetic case only.' },
+    { status: 'pending', ciNote: null, scope: null },
+  ] as const;
+  for (const ceiling of EVIDENCE_TYPES) {
+    for (const oracle of oracles) {
+      const contract = { ...base, evidence: { ceiling }, tests: { oracle } } as unknown as RegisteredContract;
+      const html = renderToStaticMarkup(<ContractEvidenceBadge contract={contract} />);
+      const visible = /<span class="mk-count-badge[^>]*>([^<]*)<\/span>/.exec(html)?.[1] ?? '';
+      const label = `${ceiling}/${oracle.status}`;
+      assert.match(html, new RegExp(`data-evidence-ceiling="${ceiling}"`), label);
+      assert.match(html, new RegExp(`data-oracle="${oracle.status}"`), label);
+      assert.equal(visible, `Max claim: ${LABELS[rank(ceiling)]} · Oracle ${oracle.status}`, label);
+      for (const other of LABELS.filter(item => item !== LABELS[rank(ceiling)])) assert.ok(!visible.includes(other), `${label} shows ${other}`);
+      // The screen-reader description (not only the tooltip) carries the contract's oracle text.
+      const sr = /class="mk-sr-only">([^<]*)</.exec(html)?.[1] ?? '';
+      assert.equal(/title="([^"]*)"/.exec(html)?.[1], sr, label);
+      assert.equal(sr.includes('It checks a synthetic case only.'), oracle.status === 'present', label);
+      assert.equal(sr.includes('stays capped'), oracle.status === 'pending', label);
+    }
+  }
+  const withGap = { ...base, tests: { oracle: { status: 'present', ciNote: 'Synthetic CI gap.', scope: 'Checks x.' } } } as unknown as RegisteredContract;
+  assert.match(renderToStaticMarkup(<ContractEvidenceBadge contract={withGap} />), /class="mk-sr-only">[^<]*Synthetic CI gap\./);
+  assert.equal(renderToStaticMarkup(<ContractEvidenceBadge contract={{ ...base, migrationState: 'legacy' } as unknown as RegisteredContract} />), '');
 });
 
 test('the disclaimer is screen-reader text tied to the badge, not only a tooltip', () => {
