@@ -158,10 +158,18 @@ def _aw(symbol: str, abridged: float, lo: float, hi: float) -> AtomicWeight:
 # Every entry below is from the CIAAW 2021 table (Pure Appl. Chem. 94 (2022) 573).
 # Columns: abridged value, then the standard interval [lo, hi]. For single-valued
 # elements [lo, hi] = standard value -/+ its stated uncertainty, quoted in comments.
+# Phase 6a design step (b) added Li, Be, Ca, Sc, Pd, Ag, Sb, La, Ce, Nd, Pb and Bi
+# (UI specimens send Be, Sc, Pd and Pb; the others are common alloying additions), so
+# calphad_solver no longer needs its 50.0 g/mol stand-in for real elements. Values
+# checked on 2026-10-04 against https://www.ciaaw.org/atomic-weights.htm and
+# https://www.ciaaw.org/abridged-atomic-weights.htm (tables "based on Atomic Weights
+# 2021"; the 2024 revisions there concern Gd, Lu and Zr only, none of these twelve).
 STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
     a.symbol: a
     for a in (
         _aw("H", 1.008, 1.00784, 1.00811),        # interval [1.00784, 1.00811]
+        _aw("Li", 6.94, 6.938, 6.997),            # interval [6.938, 6.997]
+        _aw("Be", 9.0122, 9.0121826, 9.0121836),  # 9.0121831(5)
         _aw("B", 10.81, 10.806, 10.821),          # interval [10.806, 10.821]
         _aw("C", 12.011, 12.0096, 12.0116),       # interval [12.0096, 12.0116]
         _aw("N", 14.007, 14.00643, 14.00728),     # interval [14.00643, 14.00728]
@@ -171,6 +179,8 @@ STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
         _aw("Si", 28.085, 28.084, 28.086),        # interval [28.084, 28.086]
         _aw("P", 30.974, 30.973761993, 30.973762003),  # 30.973761998(5)
         _aw("S", 32.06, 32.059, 32.076),          # interval [32.059, 32.076]
+        _aw("Ca", 40.078, 40.074, 40.082),        # 40.078(4)
+        _aw("Sc", 44.956, 44.955903, 44.955911),  # 44.955907(4)
         _aw("Ti", 47.867, 47.866, 47.868),        # 47.867(1)
         _aw("V", 50.942, 50.9414, 50.9416),       # 50.9415(1)
         _aw("Cr", 51.996, 51.9955, 51.9967),      # 51.9961(6)
@@ -185,13 +195,21 @@ STANDARD_ATOMIC_WEIGHTS: Dict[str, AtomicWeight] = {
         _aw("Nb", 92.906, 92.90636, 92.90638),    # 92.90637(1)
         _aw("Mo", 95.95, 95.94, 95.96),           # 95.95(1)
         _aw("Ru", 101.07, 101.05, 101.09),        # 101.07(2)
+        _aw("Pd", 106.42, 106.41, 106.43),        # 106.42(1)
+        _aw("Ag", 107.87, 107.8680, 107.8684),    # 107.8682(2)
         _aw("Sn", 118.71, 118.703, 118.717),      # 118.710(7)
+        _aw("Sb", 121.76, 121.759, 121.761),      # 121.760(1)
+        _aw("La", 138.91, 138.90540, 138.90554),  # 138.90547(7)
+        _aw("Ce", 140.12, 140.115, 140.117),      # 140.116(1)
+        _aw("Nd", 144.24, 144.239, 144.245),      # 144.242(3)
         _aw("Hf", 178.49, 178.480, 178.492),      # 178.486(6)
         _aw("Ta", 180.95, 180.94786, 180.94790),  # 180.94788(2)
         _aw("W", 183.84, 183.83, 183.85),         # 183.84(1)
         _aw("Re", 186.21, 186.206, 186.208),      # 186.207(1)
         _aw("Pt", 195.08, 195.075, 195.093),      # 195.084(9)
         _aw("Au", 196.97, 196.966566, 196.966574),  # 196.966570(4)
+        _aw("Pb", 207.2, 206.14, 207.94),         # interval [206.14, 207.94] (abridged 207.2 +/- 1.1)
+        _aw("Bi", 208.98, 208.98039, 208.98041),  # 208.98040(1)
     )
 }
 

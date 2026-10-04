@@ -131,6 +131,23 @@ class AtomicWeightTest(unittest.TestCase):
         self.assertEqual(pc.atomic_weight("Sn"), 118.71)
         self.assertEqual(pc.atomic_weight_record("Sn").interval, (118.703, 118.717))
 
+    def test_step_b_added_elements(self):
+        # Design step (b): CIAAW 2021 abridged value and standard interval for the
+        # elements UI specimens send (Be, Sc, Pd, Pb) and common alloying additions.
+        expected = {
+            "Li": (6.94, (6.938, 6.997)), "Be": (9.0122, (9.0121826, 9.0121836)),
+            "Ca": (40.078, (40.074, 40.082)), "Sc": (44.956, (44.955903, 44.955911)),
+            "Pd": (106.42, (106.41, 106.43)), "Ag": (107.87, (107.8680, 107.8684)),
+            "Sb": (121.76, (121.759, 121.761)), "La": (138.91, (138.90540, 138.90554)),
+            "Ce": (140.12, (140.115, 140.117)), "Nd": (144.24, (144.239, 144.245)),
+            "Pb": (207.2, (206.14, 207.94)), "Bi": (208.98, (208.98039, 208.98041)),
+        }
+        for el, (value, interval) in expected.items():
+            with self.subTest(el=el):
+                self.assertEqual(pc.atomic_weight(el), value)
+                self.assertEqual(pc.atomic_weight_record(el).interval, interval)
+                self.assertEqual(pc.atomic_weight(el.upper()), value)
+
     def test_atomic_weight_metadata_fields(self):
         for symbol, rec in pc.STANDARD_ATOMIC_WEIGHTS.items():
             self.assertEqual(rec.source_type, "literature", symbol)
