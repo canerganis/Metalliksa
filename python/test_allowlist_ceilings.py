@@ -34,6 +34,12 @@ PINNED = {
     "routes/AUTHORITY_ALLOWLIST.ceiling.json": "b7bd114df5ba6f886a6b0474cf6e61e91c9d5b68b49ca8184edd853924209407",
     "python/module_warm_parity.ceiling.json": "9bb6d8f9d96dcd1fbecb7f0c18e5a607ef1a9a00ba83f338c058e580d14f172a",
 }
+# Ceilings added after ORIGINAL_COMMIT are frozen by the sha256 of their current content
+# (CRLF normalised to LF): any change, including growth, needs an edit here.
+PINNED_CONTENT = {
+    # Fix round 2 (review item 5): orphans under src/features|utils|services|hooks.
+    "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": "19daf7b4ae01cf64299a64862bc8b3edd2439a613e332d8615cb5a8181384711",
+}
 # Reviewed growth after ORIGINAL_COMMIT (slice-1 fix rounds). Nothing else may be added.
 DELIBERATE_DELTA = {
     "routes/AUTHORITY_ALLOWLIST.ceiling.json": {
@@ -83,7 +89,13 @@ def _git_show(commit: str, path: str):
 
 class PinnedCeilingTests(unittest.TestCase):
     def test_every_ceiling_file_is_pinned(self):
-        self.assertEqual(ceiling_files(), sorted(PINNED), "a new *.ceiling.json must be pinned here")
+        self.assertEqual(ceiling_files(), sorted({**PINNED, **PINNED_CONTENT}), "a new *.ceiling.json must be pinned here")
+
+    def test_later_ceilings_are_frozen_by_content(self):
+        for path, digest in PINNED_CONTENT.items():
+            with self.subTest(path=path):
+                content = (REPO_ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+                self.assertEqual(hashlib.sha256(content).hexdigest(), digest, f"{path} changed: review it and update the pin")
 
     def test_ceilings_never_grow_beyond_original_plus_reviewed_delta(self):
         for path, digest in PINNED.items():

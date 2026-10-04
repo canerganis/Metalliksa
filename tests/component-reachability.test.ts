@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { MODULE_CONTRACTS } from '../src/modules/registry';
 import { importSpecifiers, reachableFrom, rel, repoRoot } from './support/importGraph';
@@ -80,9 +80,30 @@ test('type-only and erased imports are not runtime edges', () => {
     "export { type G } from './reexportTypeSpecifier';",
     "export { H } from './reexportValue';",
     "const Lazy = lazy(() => import('./lazyTarget'));",
+    "export const view = <Lazy value={value} other={Default} />;",
   ].join('\n');
   assert.deepEqual(importSpecifiers('sample.tsx', sample),
     ['./mixed', './defaultPlusType', './sideEffect', './reexportValue', './lazyTarget']);
+});
+
+test('mutation: imports whose bindings are unused or only used as types are not runtime edges', () => {
+  const sample = [
+    "import { Unused } from './unusedValue';",
+    "import { OnlyType } from './typeUsage';",
+    "import { Queried } from './typeofUsage';",
+    "import * as NsUnused from './namespaceUnused';",
+    "import { Rendered } from './jsxUsage';",
+    "import { Called } from './callUsage';",
+    "import { Reexported } from './localReexport';",
+    "const Never = lazy(() => import('./lazyNeverRendered'));",
+    "const Shown = lazy(() => import('./lazyRendered'));",
+    "let a: OnlyType; type T = typeof Queried; interface I { x: OnlyType }",
+    "const obj = { Unused: 1 }; obj.Unused;",
+    "export const v = <Shown><Rendered /></Shown>;",
+    "Called();",
+    "export { Reexported };",
+  ].join('\n');
+  assert.deepEqual(importSpecifiers('sample.tsx', sample), ['./jsxUsage', './callUsage', './localReexport', './lazyRendered']);
 });
 
 test('SHARED.json entries exist and carry an owner and a reason', () => {
@@ -113,6 +134,37 @@ test('mutation: a new orphan plus a matching baseline (or shared) entry still fa
   assert.deepEqual(viaShared.beyondCeiling, ['src/components/NewOrphan.tsx']);
   // Against the committed ceilings too.
   assert.deepEqual(ratchet(['src/components/NewOrphan.tsx'], [], ['src/components/NewOrphan.tsx']).beyondCeiling, ['src/components/NewOrphan.tsx']);
+});
+
+// Support code outside src/components: features (if present), utils, services, hooks.
+const SUPPORT_DIRS = ['src/features', 'src/utils', 'src/services', 'src/hooks'];
+const supportBaseline = readJson<{ files: BaselineEntry[] }>('src/UNREACHABLE_SUPPORT_BASELINE.json').files;
+const supportCeiling = readCeiling('src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json', 'paths').paths;
+
+function supportFiles(): string[] {
+  const walk = (dir: string): string[] => readdirSync(dir).flatMap(name => {
+    const full = path.join(dir, name);
+    return statSync(full).isDirectory() ? walk(full) : [full];
+  });
+  return SUPPORT_DIRS.filter(dir => existsSync(path.join(repoRoot, dir)))
+    .flatMap(dir => walk(path.join(repoRoot, dir))).map(rel).filter(file => CODE_FILE.test(file) && !file.endsWith('.d.ts')).sort();
+}
+
+test('every support module (utils/services/hooks/features) is reachable or in its shrinking baseline', () => {
+  const files = supportFiles();
+  const orphans = files.filter(file => !reachable.has(file));
+  const result = ratchet(orphans, [], supportBaseline.map(entry => entry.path), { baseline: supportCeiling, shared: new Set() });
+  console.log(`Support-module scan: ${files.length} files, ${orphans.length} unreachable (baseline ${supportBaseline.length}).`);
+  assert.ok(files.length > 40, 'expected src/utils, src/services and src/hooks to be scanned');
+  assert.deepEqual(result.beyondCeiling, [], `Support baseline entries ${result.beyondCeiling.join(', ')} exceed src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json.`);
+  assert.deepEqual(result.grown, [], `New unreachable support module(s) ${result.grown.join(', ')}: import them from a registered view or delete them.`);
+  assert.deepEqual(result.staleBaseline, [], `Support baseline entries ${result.staleBaseline.join(', ')} are reachable again or deleted: remove them.`);
+});
+
+test('mutation: a new support orphan plus a matching support-baseline entry still fails', () => {
+  const sneaked = 'src/utils/newOrphan.ts';
+  const result = ratchet([sneaked], [], [sneaked], { baseline: supportCeiling, shared: new Set() });
+  assert.deepEqual(result.beyondCeiling, [sneaked]);
 });
 
 test('every component is reachable, shared, or in the shrinking unreachable baseline', () => {
