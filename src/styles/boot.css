@@ -118,8 +118,8 @@
 
 /* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
  * In-flow footer at the end of the shell, deliberately NOT sticky: module modals are not portalled
- * (fixed inset-0 z-50 inside the shell's z-index:1 children), so a sticky strip would paint over
- * their bottom action buttons. */
+ * (fixed inset-0 z-50 inside the main row, which is positioned with z-index auto), so the strip stays
+ * a plain footer below them rather than a second pinned bar over their bottom action buttons. */
 .mk-telemetry {
   padding: var(--mk-space-2) var(--mk-space-4);
   border-top: 1px solid var(--mk-border);
