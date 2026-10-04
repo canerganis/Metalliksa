@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/materialDataPipeline";
+import { estimateSpecimenHardnessHV, type HardnessHVEstimateStatus } from "../utils/hardnessStrengthEstimate";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -43,7 +44,14 @@ export interface MaterialSpecimen {
   uts_25C_MPa: number;
   youngsModulus_GPa: number;
   elongation_pct: number;
-  hardness_HV: number;
+  /**
+   * Never a measurement: an estimate from the (itself composition-based) yield strength for non-austenitic
+   * hypoeutectoid steels only (Pavlina & Van Tyne 2008), otherwise null (unavailable). See hardnessHVNote.
+   */
+  hardness_HV: number | null;
+  hardnessHVStatus?: HardnessHVEstimateStatus;
+  /** Source and validity range of hardness_HV, or the reason it is unavailable. */
+  hardnessHVNote?: string;
 
   // 3D LPBF Additive & Thermal Parameters
   lpbf: {
@@ -231,7 +239,6 @@ export function deriveProperties(
   let uts_25C_MPa = 1350;
   let youngsModulus_GPa = 210;
   let elongation_pct = 16;
-  let hardness_HV = 380;
   let crystalSystem: "FCC" | "BCC" | "HCP" | "Tetragonal" | "Other" = "FCC";
   let spaceGroup = "Fm-3m (225)";
   let latticeA_A = 3.595;
@@ -259,7 +266,6 @@ export function deriveProperties(
     uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.32 + 80);
     elongation_pct = Math.max(6, Math.min(28, parseFloat((28 - gammaPrimeFormers * 1.6).toFixed(1))));
     youngsModulus_GPa = Math.round(205 + refractoryMoW * 3.5);
-    hardness_HV = Math.round(yieldStrength_25C_MPa / 3.05);
 
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
@@ -309,7 +315,6 @@ export function deriveProperties(
     uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.15 + 60);
     elongation_pct = Math.max(8, Math.min(22, parseFloat((18 - (alEquiv + moEquiv) * 0.8).toFixed(1))));
     youngsModulus_GPa = Math.round(114 - moEquiv * 1.5);
-    hardness_HV = Math.round(yieldStrength_25C_MPa / 2.9);
 
     if (moEquiv > 10) {
       crystalSystem = "BCC";
@@ -334,8 +339,10 @@ export function deriveProperties(
     mitigationRecommendation = "Maintain argon inert atmosphere (<200 ppm O2) and heated build platform.";
   } else if (baseMetal === "Fe") {
     category = "Steels & Irons";
-    const crEq = cr + mo * 1.5 + composition["Si"] * 1.5 + (composition["Nb"] || 0) * 0.5;
-    const niEq = composition["Ni"] || 0 + c * 30 + (composition["N"] || 0) * 30 + (composition["Mn"] || 0) * 0.5;
+    // Si defaults to 0: a Si-free composition gave NaN here and skipped the austenitic branch below.
+    const crEq = cr + mo * 1.5 + (composition["Si"] || 0) * 1.5 + (composition["Nb"] || 0) * 0.5;
+    // Parenthesised: `Ni || 0 + ...` counted only Ni whenever Ni was present (C, N, Mn were dropped).
+    const niEq = (composition["Ni"] || 0) + c * 30 + (composition["N"] || 0) * 30 + (composition["Mn"] || 0) * 0.5;
 
     liquidus_C = Math.round(1538 - (c * 65 + cr * 2.5 + niEq * 2));
     solidus_C = Math.round(liquidus_C - (30 + c * 80 + cr * 3));
@@ -351,7 +358,6 @@ export function deriveProperties(
       uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.35 + 100);
       elongation_pct = 38;
       youngsModulus_GPa = 195;
-      hardness_HV = 210;
       thermalConductivity_k_WmK = 16.2;
     } else {
       standardDesignation = "Alloy Steel / Tool Steel";
@@ -363,7 +369,6 @@ export function deriveProperties(
       uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.28 + 120);
       elongation_pct = 14;
       youngsModulus_GPa = 210;
-      hardness_HV = Math.round(yieldStrength_25C_MPa / 3.1);
       thermalConductivity_k_WmK = 24.5;
     }
 
@@ -377,14 +382,14 @@ export function deriveProperties(
   } else if (baseMetal === "Al") {
     category = "Aluminum Alloys";
     standardDesignation = "AlSi10Mg / EN AC-43000";
-    liquidus_C = Math.round(660 - (si * 6.5 + mg * 4.5 + composition["Cu"] * 3));
+    // Absent Cu counts as 0 wt% (a Cu-free alloy such as AlSi10Mg gave NaN).
+    liquidus_C = Math.round(660 - (si * 6.5 + mg * 4.5 + (composition["Cu"] || 0) * 3));
     solidus_C = 570;
     solvus_C = 510;
     yieldStrength_25C_MPa = Math.round(240 + si * 8 + mg * 35);
     uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.45);
     elongation_pct = 8.5;
     youngsModulus_GPa = 71;
-    hardness_HV = 115;
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
     latticeA_A = 4.049;
@@ -398,6 +403,15 @@ export function deriveProperties(
     crackingMechanism = "Gas porosity & keyholing from high optical reflectivity at 1064nm";
     mitigationRecommendation = "Utilize higher laser power (350W+), preheat bed to 150°C, and maintain strict powder dryness.";
   }
+
+  // HV is never measured here. The old per-class rules (YS/3.05 Ni, YS/2.9 Ti, YS/3.1 steel, 210 HV austenitic,
+  // 115 HV Al, 380 HV for every other base) had no source; see hardnessStrengthEstimate.ts.
+  const hardnessEstimate = estimateSpecimenHardnessHV({
+    baseMetal,
+    crystalSystem,
+    composition,
+    yieldStrength_MPa: yieldStrength_25C_MPa,
+  });
 
   const name = customName || existingMetadata?.name || `${chemicalFormula} Specimen`;
 
@@ -434,7 +448,9 @@ export function deriveProperties(
     uts_25C_MPa,
     youngsModulus_GPa,
     elongation_pct,
-    hardness_HV,
+    hardness_HV: hardnessEstimate.hv,
+    hardnessHVStatus: hardnessEstimate.status,
+    hardnessHVNote: hardnessEstimate.note,
     lpbf: {
       recommendedLaserPower_W,
       recommendedScanSpeed_mms,
@@ -460,6 +476,55 @@ export function deriveProperties(
       microstrain_pct: 0.22,
       crystalliteSize_nm: 28,
     },
+  };
+}
+
+/** Recompute the hardness fields of a stored specimen (used for persisted records and atomic-percent edits). */
+export function withHardnessEstimate(specimen: MaterialSpecimen): MaterialSpecimen {
+  const e = estimateSpecimenHardnessHV({
+    baseMetal: specimen.metadata?.baseMetal,
+    crystalSystem: specimen.xrd?.crystalSystem,
+    composition: specimen.composition,
+    unit: specimen.unit,
+    yieldStrength_MPa: specimen.yieldStrength_25C_MPa,
+  });
+  return { ...specimen, hardness_HV: e.hv, hardnessHVStatus: e.status, hardnessHVNote: e.note };
+}
+
+/** Persisted state before version 1 carries hardness_HV from the removed unsourced YS/x rules. */
+export function migrateMaterialStoreState(persisted: unknown, version: number): unknown {
+  if (version >= 1 || !persisted || typeof persisted !== "object") return persisted;
+  const state = persisted as Record<string, unknown>;
+  // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable ("no yield strength" or the
+  // class reason) instead of keeping its stale HV. Non-objects pass through.
+  const fix = (s: unknown) =>
+    s && typeof s === "object" && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object))
+      ? withHardnessEstimate(s as MaterialSpecimen)
+      : s;
+  return {
+    ...state,
+    ...(state.activeMaterialSpecimen ? { activeMaterialSpecimen: fix(state.activeMaterialSpecimen) } : {}),
+    ...(state.activeSpecimen ? { activeSpecimen: fix(state.activeSpecimen) } : {}),
+    ...(Array.isArray(state.savedSpecimens) ? { savedSpecimens: state.savedSpecimens.map(fix) } : {}),
+  };
+}
+
+/**
+ * Persisted data over the initial state. activeSpecimen always mirrors activeMaterialSpecimen (an old blob may lack
+ * one of them); actions always come from the current state.
+ */
+export function mergeMaterialStoreState(persisted: unknown, current: MaterialStore): MaterialStore {
+  if (!persisted || typeof persisted !== "object") return current;
+  const p = persisted as Partial<MaterialStore>;
+  const asSpecimen = (s: unknown) => (s && typeof s === "object" ? (s as MaterialSpecimen) : undefined);
+  const active = asSpecimen(p.activeMaterialSpecimen) ?? asSpecimen(p.activeSpecimen) ?? current.activeMaterialSpecimen;
+  return {
+    ...current,
+    activeMaterialSpecimen: active,
+    activeSpecimen: active,
+    savedSpecimens: Array.isArray(p.savedSpecimens)
+      ? p.savedSpecimens.filter((s): s is MaterialSpecimen => !!s && typeof s === "object")
+      : current.savedSpecimens,
   };
 }
 
@@ -642,9 +707,10 @@ export const useMaterialStore = create<MaterialStore>()(
   persist(
     (set, get) => ({
       activeMaterialSpecimen: INITIAL_MATERIAL_SPECIMEN,
-      get activeSpecimen() {
-        return get().activeMaterialSpecimen;
-      },
+      // Plain field kept in sync by every setter. A getter here (`get activeSpecimen() { return get()... }`) threw
+      // while zustand spread the initial state during first hydration, so persisted state (saved specimens) was
+      // discarded and the version migration never ran.
+      activeSpecimen: INITIAL_MATERIAL_SPECIMEN,
       savedSpecimens: [INITIAL_MATERIAL_SPECIMEN],
 
       updateComposition: (newComposition, customName, metadataPatch, sourceTab = "Alloy Formulator (Tab 1)") => {
@@ -652,7 +718,7 @@ export const useMaterialStore = create<MaterialStore>()(
         const resolvedComp = typeof newComposition === "function" ? newComposition(current.composition) : newComposition;
         // Atomic-percent edits retain their unit and identity; weight-percent models are not evaluated.
         if (current.unit === "at_pct") {
-          const next: MaterialSpecimen = {...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}};
+          const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
           set({activeMaterialSpecimen:next,activeSpecimen:next});
           return;
         }
@@ -690,8 +756,10 @@ export const useMaterialStore = create<MaterialStore>()(
             youngsModulus: nextSpecimen.youngsModulus_GPa,
             density: nextSpecimen.metadata.density_gcm3,
             elongation: nextSpecimen.elongation_pct,
-            hardness: `${nextSpecimen.hardness_HV} HV`,
+            // Estimate or unavailable, never measured: the note carries the source/range or the reason.
+            hardness: nextSpecimen.hardnessHVNote ?? (nextSpecimen.hardness_HV === null ? "Unavailable" : `${nextSpecimen.hardness_HV} HV (estimate, not measured)`),
             hardnessHV: nextSpecimen.hardness_HV,
+            hardnessHVSource: nextSpecimen.hardness_HV === null ? "unavailable" : "estimate-from-yield",
             poissonsRatio: 0.31,
             thermalConductivity: nextSpecimen.lpbf.thermalConductivity_k_WmK,
             kineticProfile: {
@@ -716,7 +784,7 @@ export const useMaterialStore = create<MaterialStore>()(
               name: nextSpecimen.name,
               category: nextSpecimen.metadata.category as any,
               crystalStructure: nextSpecimen.xrd.crystalSystem as any,
-              defaultHardnessHV: nextSpecimen.hardness_HV,
+              defaultHardnessHV: nextSpecimen.hardness_HV ?? undefined,
               hardnessHV: nextSpecimen.hardness_HV,
               measuredYield_MPa: nextSpecimen.yieldStrength_25C_MPa,
               measuredUTS_MPa: nextSpecimen.uts_25C_MPa,
@@ -920,6 +988,9 @@ export const useMaterialStore = create<MaterialStore>()(
     }),
     {
       name: "metallix-material-specimen-store",
+      version: 1,
+      migrate: (persisted, version) => migrateMaterialStoreState(persisted, version) as MaterialStore,
+      merge: (persisted, current) => mergeMaterialStoreState(persisted, current),
     }
   )
 );
