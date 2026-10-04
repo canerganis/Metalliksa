@@ -1,7 +1,6 @@
 import {
   CarbonEquivalentResult,
   DiffusionResult,
-  HardnessConversionResult,
   SchaefflerResult,
   TransformationTempsResult,
   XrdPeak,
@@ -37,60 +36,7 @@ export function erfinv(x: number): number {
   return sign * Math.sqrt(Math.sqrt(innerSqrt) - term1);
 }
 
-// --- 1. ASTM E140 / ISO 18265 Hardness Conversion Engine ---
-export function convertHardness(
-  value: number,
-  fromScale: "HV" | "HRC" | "HRB" | "HBW"
-): HardnessConversionResult {
-  let vickers = 0;
-
-  // Normalize input to Vickers (HV) first
-  if (fromScale === "HV") {
-    vickers = Math.max(50, Math.min(1500, value));
-  } else if (fromScale === "HRC") {
-    const hrc = Math.max(20, Math.min(70, value));
-    // ASTM E140 Non-linear fit for Steel
-    vickers = 142.8 + 8.94 * hrc + 0.134 * hrc * hrc;
-  } else if (fromScale === "HRB") {
-    const hrb = Math.max(40, Math.min(100, value));
-    vickers = 24.5 + 1.25 * hrb + 0.007 * hrb * hrb;
-  } else if (fromScale === "HBW") {
-    const hbw = Math.max(80, Math.min(650, value));
-    vickers = 1.05 * hbw - 5;
-  }
-
-  // Derive all other scales from calibrated Vickers (HV)
-  let rockwellC: number | undefined;
-  if (vickers >= 240) {
-    rockwellC = Number(
-      Math.max(20, Math.min(69, -20.6 + 0.098 * vickers - 0.000045 * vickers * vickers)).toFixed(1)
-    );
-  }
-
-  let rockwellB: number | undefined;
-  if (vickers <= 320) {
-    rockwellB = Number(
-      Math.max(30, Math.min(100, -18.2 + 0.82 * vickers - 0.0014 * vickers * vickers)).toFixed(1)
-    );
-  }
-
-  const brinell = Math.round(vickers / 1.05);
-  const knoop = Math.round(vickers * 1.03);
-
-  // Approximate Tensile Strength (Rm) in MPa based on ASTM E140 for carbon/alloy steels (Rm ≈ 3.45 * HBW)
-  const tensileMpa = Math.round(vickers * 3.25);
-  const tensileKsi = Number((tensileMpa * 0.145038).toFixed(1));
-
-  return {
-    vickers: Math.round(vickers),
-    rockwellC,
-    rockwellB,
-    brinell,
-    knoop,
-    tensileMpa,
-    tensileKsi,
-  };
-}
+// --- 1. Hardness conversion: moved to ./hardnessConversion (convertSteelHardness, shared with the unit converter) ---
 
 // --- 2. Carbon Equivalents & AWS D1.1 Preheat Calculations ---
 export interface CompositionInput {
