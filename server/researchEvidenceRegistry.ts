@@ -36,8 +36,16 @@ export class ResearchEvidenceRegistry {
     while (true) {
       try { lock = await open(lockPath, 'wx', 0o600); break; }
       catch (error) {
-        if (!isCode(error, 'EEXIST')) throw error;
-        if (Date.now() >= deadline) throw new ResearchRegistryError(503, 'Research registry is busy or requires lock recovery. Retry; no data was replaced.');
+        // Windows: an exclusive create racing another holder's release (its unlink has set the delete
+        // disposition but not yet closed the handle) fails with EPERM (STATUS_DELETE_PENDING), not EEXIST.
+        // That is contention: retry it within the same deadline. A persistent EPERM is a real permission
+        // failure and is rethrown unchanged once the deadline passes.
+        const releasing = process.platform === 'win32' && isCode(error, 'EPERM');
+        if (!isCode(error, 'EEXIST') && !releasing) throw error;
+        if (Date.now() >= deadline) {
+          if (releasing) throw error;
+          throw new ResearchRegistryError(503, 'Research registry is busy or requires lock recovery. Retry; no data was replaced.');
+        }
         await delay(25);
       }
     }

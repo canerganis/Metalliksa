@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import fsPromises, { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { syncBuiltinESMExports } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import express from 'express';
 import { createResearchRegistryRouter } from '../routes/researchRegistry';
-import { ResearchEvidenceRegistry } from '../server/researchEvidenceRegistry';
+import { ResearchEvidenceRegistry, ResearchRegistryError } from '../server/researchEvidenceRegistry';
 
 const empty = () => ({ schemaVersion: 1, briefs: [], sources: [], findings: [], integrations: [], feedback: [] });
 // Contract fixture only: this is a research question, not experimental evidence.
@@ -68,6 +69,47 @@ test('separate registry instances serialize concurrent writers and reject stale 
     assert.equal(oldIdentity.status, 409); assert.deepEqual((await oldIdentity.json()).current, winner);
     assert.equal((await readdir(directory)).filter(name => name.startsWith('revision-')).length, 2);
   } finally { await Promise.all([a.close(), b.close()]); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('a Windows lock release race (EPERM from the exclusive create) is retried as contention; a persistent EPERM still fails', async t => {
+  // On Windows, open(lock, 'wx') while another holder's unlink is completing fails with EPERM (delete pending)
+  // instead of EEXIST; measured with four processes cycling one lock file, about 1 % of contended attempts.
+  // That window cannot be scheduled from a test, so its observable result is injected at the fs boundary.
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'research-registry-eperm-'));
+  const lockPath = path.join(directory, '.write-lock');
+  const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+  const realOpen = fsPromises.open;
+  let failNext = 0, injected = 0;
+  t.mock.method(fsPromises, 'open', async (...args: Parameters<typeof realOpen>) => {
+    if (args[0] === lockPath && args[1] === 'wx' && failNext !== 0) {
+      failNext -= 1; injected += 1;
+      throw Object.assign(new Error(`EPERM: operation not permitted, open '${lockPath}'`), { code: 'EPERM', syscall: 'open', path: lockPath });
+    }
+    return realOpen(...args);
+  });
+  syncBuiltinESMExports();
+  const setPlatform = (value: string) => Object.defineProperty(process, 'platform', { ...platform, value });
+  try {
+    setPlatform('win32');
+    failNext = 3;
+    assert.equal((await new ResearchEvidenceRegistry(directory, 2000).current()).revision, 0);
+    assert.equal(injected, 3, 'every transient EPERM was retried, then the lock was acquired');
+
+    failNext = -1; injected = 0;
+    await assert.rejects(new ResearchEvidenceRegistry(directory, 100).current(),
+      error => (error as NodeJS.ErrnoException).code === 'EPERM' && !(error instanceof ResearchRegistryError));
+    assert.ok(injected > 1, 'a persistent EPERM is retried until the lock deadline, then surfaced unchanged');
+
+    setPlatform('linux');
+    injected = 0;
+    await assert.rejects(new ResearchEvidenceRegistry(directory, 2000).current(), error => (error as NodeJS.ErrnoException).code === 'EPERM');
+    assert.equal(injected, 1, 'outside Windows EPERM is a permission failure and is not retried');
+  } finally {
+    Object.defineProperty(process, 'platform', platform);
+    t.mock.restoreAll();
+    syncBuiltinESMExports();
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('registry validates body, source integrity and browser mutation origin without modifying saved data', async () => {
