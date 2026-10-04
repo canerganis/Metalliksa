@@ -509,6 +509,54 @@ class ParityHarnessTests(unittest.TestCase):
                       result["problems"])
         self.assertEqual([record["key"] for record in result["drift"]], ["goldak.field"])
 
+    def test_expect_drift_refuses_the_widened_honesty_observations_in_any_case(self):
+        # Review rr2 S2: the evidence-honesty flags (and the G9 IN625 admission verdict) are protected
+        # like validationStatus: CASE, CASE:* and the exact CASE:<key> entry all fail, in every case.
+        patterns = ("*.experimentalValidation", "*.key.experimentalValidation",
+                    "*.experimentalComparison", "*.key.experimentalComparison",
+                    "*.unresolvedPhysics", "*.key.unresolvedPhysics",
+                    "*.opticalOperatorMatched", "*.key.opticalOperatorMatched",
+                    "in625.validateScreeningAdmission",
+                    "experimentalValidation", "experimentalComparison",
+                    "unresolvedPhysics", "opticalOperatorMatched")
+        for pattern in patterns:
+            self.assertIn(pattern, parity.HONESTY_PATTERNS)
+            # Concrete observation keys this pattern covers (fnmatch '*' also spans dots).
+            keys = ([pattern] if "*" not in pattern else [pattern.replace("*", "result", 1), pattern.replace("*", "a.b", 1)])
+            for key in keys:
+                for case_id in ("g3_powder_island", "g9_material_snapshots", "g14_calibration_measurements",
+                                "g15_bare_plate_square_optical_observer"):
+                    with self.subTest(pattern=pattern, case=case_id, key=key):
+                        case = parity.CASE_BY_ID[case_id]
+                        drifted = self._synthetic_outcome({key: "0" * 64, "other": 1}, {key: "1" * 64, "other": 2})
+                        for allow in (case_id, f"{case_id}:*", f"{case_id}:{key}"):
+                            result = parity.evaluate_drift(case, drifted, parity.parse_expect_drift([allow]))
+                            self.assertEqual(result["status"], "FAIL", allow)
+                            self.assertIn(f"changed {key}: honesty observation never drifts under --expect-drift",
+                                          result["problems"])
+        # The patterns are exact names, not substrings: an unrelated observation that merely contains the
+        # word stays an ordinary allowed observation.
+        case = parity.CASE_BY_ID["g12_analytical_modules"]
+        outcome = self._synthetic_outcome({"goldak.experimentalValidationNote": "0" * 64},
+                                          {"goldak.experimentalValidationNote": "1" * 64})
+        result = parity.evaluate_drift(case, outcome, parity.parse_expect_drift(["g12_analytical_modules:*"]))
+        self.assertEqual((result["status"], result["problems"]), ("DRIFT", []))
+
+    def test_checked_in_drift_allowlist_names_no_honesty_or_identity_observation(self):
+        import fnmatch
+        allowlist = HERE.parent / "docs" / "LPBF_IMPLEMENTATION_BUMP_2026-10-04_corrected-physics.expect-drift.txt"
+        entries = [line.strip() for line in allowlist.read_text(encoding="utf-8").splitlines() if line.strip()]
+        self.assertGreater(len(entries), 0)
+        for entry in entries:
+            case_id, separator, key = entry.partition(":")
+            with self.subTest(entry=entry):
+                self.assertTrue(separator and key, "every entry names CASE:KEY")
+                self.assertIn(case_id, parity.CASE_BY_ID)
+                for pattern in parity.HONESTY_PATTERNS:
+                    self.assertFalse(fnmatch.fnmatchcase(key, pattern), f"{entry} matches honesty pattern {pattern}")
+                for pattern in parity.IDENTITY_PATTERNS:
+                    self.assertFalse(fnmatch.fnmatchcase(key, pattern), f"{entry} matches identity pattern {pattern}")
+
     def test_expect_drift_on_g1_allows_only_named_non_numeric_observations(self):
         def reviewer(observations):  # review b5g S1: result digest + material revision + V1 equality
             observations["result.canonicalSha256"] = "0" * 64
