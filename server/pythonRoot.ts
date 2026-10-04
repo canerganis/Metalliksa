@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -14,4 +15,17 @@ import path from 'node:path';
  */
 export function resolvePythonRoot(cwd: string = process.cwd()): string {
   return path.resolve(cwd, 'python');
+}
+
+/**
+ * Start-up layout check. Returns an error message when the working directory is not an application
+ * root: python/persistent_ipc_service.py is always required, dist/index.html in production.
+ */
+export function startupLayoutError(cwd: string, production: boolean, exists: (file: string) => boolean = existsSync): string | null {
+  const required = [path.join(resolvePythonRoot(cwd), 'persistent_ipc_service.py')];
+  if (production) required.push(path.resolve(cwd, 'dist', 'index.html'));
+  const missing = required.filter((file) => !exists(file));
+  if (missing.length === 0) return null;
+  return `Start the server from the application root (the directory with python/${production ? ' and the dist/ built by `npm run build`' : ''}). `
+    + `Working directory: ${cwd}. Missing: ${missing.join(', ')}.`;
 }

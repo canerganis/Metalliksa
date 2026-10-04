@@ -15,7 +15,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, type BuildOptions } from 'esbuild';
-import { resolvePythonRoot } from '../server/pythonRoot.ts';
+import { resolvePythonRoot, startupLayoutError } from '../server/pythonRoot.ts';
 import { getHostPython } from '../server/pythonRuntime.ts';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -68,6 +68,41 @@ function killTree(child: ChildProcess): Promise<void> {
   // The server handles SIGTERM itself, so only a hard kill is used; never wait forever.
   return Promise.race([exited, new Promise<void>((resolve) => setTimeout(resolve, 5000).unref())]);
 }
+
+test('startupLayoutError requires python/persistent_ipc_service.py, and dist/index.html in production', () => {
+  const app = path.resolve(os.tmpdir(), 'metalliksa-app');
+  const ipc = path.join(app, 'python', 'persistent_ipc_service.py');
+  const index = path.join(app, 'dist', 'index.html');
+  const has = (...files: string[]) => (file: string) => files.includes(file);
+  assert.equal(startupLayoutError(app, true, has(ipc, index)), null);
+  assert.equal(startupLayoutError(app, false, has(ipc)), null);
+  const prod = startupLayoutError(app, true, has(ipc));
+  assert.match(prod ?? '', /application root/);
+  assert.ok(prod?.includes(index) && !prod.includes(ipc), prod ?? '');
+  const dev = startupLayoutError(app, false, has());
+  assert.ok(dev?.includes(ipc) && !dev.includes(index), dev ?? '');
+  assert.equal(startupLayoutError(repoRoot, false), null);
+});
+
+test('the production bundle exits with a clear message, before starting Python, outside an application root', { timeout: 60_000 }, async () => {
+  const work = mkdtempSync(path.join(os.tmpdir(), 'metalliksa-prod-layout-'));
+  try {
+    const outfile = path.join(work, 'bundle', 'server.cjs');
+    await build(serverBundleOptions(outfile));
+    const app = path.join(work, 'app');
+    mkdirSync(app);
+    const env: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: 'production', NODE_PATH: path.join(repoRoot, 'node_modules'),
+      PORT: String(await freePort()), METALLIKSA_HOST: '127.0.0.1' };
+    const run = spawnSync(process.execPath, [outfile], { cwd: app, env, encoding: 'utf8', timeout: 30_000, windowsHide: true });
+    assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+    assert.match(run.stderr, /Start the server from the application root/);
+    assert.ok(run.stderr.includes(path.join('python', 'persistent_ipc_service.py')), run.stderr);
+    assert.ok(run.stderr.includes(path.join('dist', 'index.html')), run.stderr);
+    assert.doesNotMatch(run.stdout, /Python-Supervisor/);
+  } finally {
+    rmSync(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  }
+});
 
 test('resolvePythonRoot anchors python/ on the working directory', () => {
   const app = path.resolve(os.tmpdir(), 'metalliksa-app');
@@ -123,10 +158,12 @@ test('the production server bundle (esbuild CJS, as in npm run build) loads and 
     }
 
     // An isolated application root: dist/index.html for the SPA fallback, data roots under it, no .env,
-    // and no python/ directory, so the supervisor's worker exits at once instead of binding a port.
+    // and a stub python/persistent_ipc_service.py that exits at once instead of binding a port.
     const app = path.join(work, 'app');
     mkdirSync(path.join(app, 'dist'), { recursive: true });
     writeFileSync(path.join(app, 'dist', 'index.html'), '<!doctype html><title>bundle-smoke</title><div id="root"></div>');
+    mkdirSync(path.join(app, 'python'));
+    writeFileSync(path.join(app, 'python', 'persistent_ipc_service.py'), 'raise SystemExit(0)\n');
     const env: NodeJS.ProcessEnv = { ...process.env };
     for (const key of ['METALLIKSA_TOKEN', 'METALLIKSA_TRUST_PROXY', 'METALLIX_IPC_HOST']) delete env[key];
     Object.assign(env, {
