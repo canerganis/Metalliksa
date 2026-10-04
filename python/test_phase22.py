@@ -1,6 +1,8 @@
 import json
+import os
 import subprocess
 import time
+import unittest
 
 def test_transient_3d_gpu():
     payload = {
@@ -65,6 +67,21 @@ def test_transient_3d_gpu():
     except Exception as e:
         print("Failed to parse response:", e)
         assert False, "Parse error"
+
+def _warp_available():
+    try:
+        import warp  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+@unittest.skipUnless(_warp_available(), "warp is not installed in this interpreter")
+@unittest.skipUnless(os.path.exists("python/lpbf_worker.py"), "must run from the repository root (spawns python/lpbf_worker.py)")
+class Phase22TransientGpuRpc(unittest.TestCase):
+    def test_transient_3d_gpu(self):
+        test_transient_3d_gpu()
+
 
 if __name__ == "__main__":
     test_transient_3d_gpu()
