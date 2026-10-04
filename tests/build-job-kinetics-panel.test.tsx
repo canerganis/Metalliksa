@@ -1,0 +1,91 @@
+import React from "react";
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BuildJobKineticsPanel } from "../src/components/3d-distortion-lab/BuildJobKineticsPanel";
+import { BUILD_JOB_SOLVER_REVISION } from "../src/store/useLpbfBuildJobStore";
+
+// Real Python output: python/test_lpbf_build_job.py check_kinetics_fixture() fails when this file differs from
+// build_job_kinetics (regenerate with `python test_lpbf_build_job.py --write-kinetics-fixture`).
+const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const BLOCKS = JSON.parse(read("tests/fixtures/build-job-kinetics-blocks.json"));
+const html = (name: string) => {
+  assert.ok(BLOCKS[name], name);
+  return renderToStaticMarkup(<BuildJobKineticsPanel kinetics={BLOCKS[name]} />);
+};
+const text = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
+const metric = (markup: string, label: string): string | null => {
+  const m = new RegExp(`data-kinetics-metric="${label.replace(/[()]/g, "\\$&")}"[^>]*>(.*?)</div></div>`).exec(markup);
+  if (!m) return null;
+  const values = [...m[1].matchAll(/<div[^>]*>([^<]*)<\/div>/g)].map((x) => x[1]);
+  return values[1] ?? null; // [label, value, hint]
+};
+const NUMBER_TILES = ["Primary Phase", "Martensite", "Hardness (HRC)", "Hardness (HV)"];
+
+test("TS and Python build-job solver revisions are the same string", () => {
+  const py = /^BUILD_JOB_SOLVER_REVISION = "([^"]+)"/m.exec(read("python/lpbf_job_cache.py"));
+  assert.ok(py);
+  assert.equal(BUILD_JOB_SOLVER_REVISION, py[1]);
+  assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-core-peak-field-v2");
+});
+
+test("316L and AlSi10Mg: one Unavailable tile with the reason, no numbers, no substituted alloy", () => {
+  for (const [name, alloy] of [["ss316l_no_model", "316L Stainless Steel"], ["alsi10mg_no_model", "AlSi10Mg"]]) {
+    const markup = html(name);
+    assert.equal(metric(markup, "Kinetics"), "Unavailable", name);
+    for (const tile of NUMBER_TILES) assert.equal(metric(markup, tile), null, `${name} renders ${tile}`);
+    assert.ok(text(markup).includes(`no kinetics model for ${alloy}.`), name);
+    assert.ok(!/4140|7075|Martensitic|Pearlite|%/.test(text(markup)), name);
+  }
+});
+
+test("degenerate solidification front (1 K/s floor): Unavailable, never the 1 °C/s anneal row", () => {
+  const markup = html("in718_degenerate_floor");
+  assert.equal(metric(markup, "Kinetics"), "Unavailable");
+  for (const tile of NUMBER_TILES) assert.equal(metric(markup, tile), null, tile);
+  assert.ok(text(markup).includes("cooling rate is the 1 K/s floor of a degenerate solidification front, not a computed build rate."));
+  assert.ok(!/Diffusional|Pearlite|CCT row 1 /.test(text(markup)));
+});
+
+test("IN718 / Ti-6Al-4V above the CCT map: tiles Unavailable, the range reason shown, no martensite or verdict", () => {
+  for (const [name, rate] of [["in718_above_map", "877254"], ["ti6al4v_above_map", "1089047"]]) {
+    const markup = html(name);
+    for (const tile of NUMBER_TILES) assert.equal(metric(markup, tile), "Unavailable", `${name} ${tile}`);
+    const t = text(markup);
+    assert.ok(
+      t.includes(`No CCT row: build cooling rate ${rate} °C/s is above the CCT map maximum 2000 °C/s; no row is extrapolated.`),
+      `${name}: ${t}`
+    );
+    assert.ok(t.includes("Martensite and verdict:"), name);
+    assert.ok(!/Full Martensitic|Pearlite|Bainite|\d%/.test(t), `${name}: ${t}`);
+  }
+  assert.ok(text(html("in718_above_map")).includes("Ms of Inconel 718 is a non-physical placeholder"));
+});
+
+test("in-map rate: the Python-selected row (not row 0) with its rate; martensite only where Ms is physical", () => {
+  const ti = BLOCKS.ti6al4v_in_map_30;
+  const row = ti.cctContinuousCoolingMap[ti.buildCoolingRateCctRow.rowIndex];
+  assert.equal(row.coolingRate_C_s, 25);
+  assert.notEqual(ti.buildCoolingRateCctRow.rowIndex, 0);
+  const markup = html("ti6al4v_in_map_30");
+  assert.equal(metric(markup, "Primary Phase"), row.primaryMicrostructure);
+  assert.equal(metric(markup, "Hardness (HRC)"), String(row.predictedHardness_HRC));
+  assert.equal(metric(markup, "Martensite"), `${ti.buildRateMartensite.predictedMartensite_pct}%`);
+  const t = text(markup);
+  assert.ok(t.includes("CCT row 25 °C/s (nearest on a log scale to the build cooling rate 30 °C/s)."), t);
+  assert.ok(t.includes("At build rate 30 °C/s"));
+  assert.ok(t.includes(ti.buildRateMartensite.verdict));
+
+  const in718 = BLOCKS.in718_in_map_30;
+  const inRow = in718.cctContinuousCoolingMap[in718.buildCoolingRateCctRow.rowIndex];
+  const m = html("in718_in_map_30");
+  assert.equal(metric(m, "Primary Phase"), inRow.primaryMicrostructure);
+  assert.equal(metric(m, "Martensite"), "Unavailable");
+  assert.ok(text(m).includes("non-physical placeholder"));
+  assert.ok(!text(m).includes(in718.calphadVsKineticsGap.kineticRealityAtSelectedCooling.verdict));
+});
+
+test("no kinetics block renders nothing", () => {
+  assert.equal(renderToStaticMarkup(<BuildJobKineticsPanel kinetics={null} />), "");
+});
