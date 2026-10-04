@@ -1,5 +1,5 @@
-# DRAFT: `docker compose up` was never run (only `docker compose config`). The same runtime image was started with
-# `docker run` and served /api/health; see docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification".
+# `docker compose up -d app` was run locally on 2026-10-04 (container healthy; /api/health 200, unauthenticated /api 401);
+# not run in CI. See docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification".
 services:
   app:
     build:
