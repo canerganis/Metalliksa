@@ -8,12 +8,12 @@ import {
   calculateSchaeffler,
   calculateTransformationTemps,
   calculateXrdPeaks,
-  convertHardness,
   erf,
   erfinv,
   simulateCarburizingDiffusion,
 } from "../src/utils/metallurgyCalculations";
 import { astmGrainSizeNumberFromIntercept } from "../src/utils/semAnalysis";
+import { convertSteelHardness } from "../src/utils/hardnessConversion";
 
 // Independent high-precision erf (Maclaurin series, |x| < 3) used as the oracle for the A&S approximation.
 function erfSeries(x: number): number {
@@ -48,26 +48,19 @@ test("erfinv (Winitzki approximation) inverts erf to better than 4e-3 and matche
   for (const x of [0.1, 0.3, 0.6, 0.9, 0.95]) near(erfSeries(erfinv(x)), x, 2e-3, `round trip ${x}`);
 });
 
-test("pocket-calculator hardness table pins today's outputs (same polynomials as the unit converter; see the HRC<->HV todo there)", () => {
-  assert.deepEqual(convertHardness(30, "HRC"), {
-    vickers: 532, rockwellC: 20, rockwellB: undefined, brinell: 506, knoop: 548, tensileMpa: 1728, tensileKsi: 250.6,
-  });
-  assert.equal(convertHardness(10, "HV").vickers, 50); // clamp [50, 1500]
-  assert.equal(convertHardness(9000, "HV").vickers, 1500);
-  assert.equal(convertHardness(5, "HRC").vickers, convertHardness(20, "HRC").vickers); // HRC clamp [20, 70]
-  assert.equal(convertHardness(300, "HV").tensileMpa, 975); // 300 * 3.25
-  assert.equal(convertHardness(300, "HV").knoop, 309);
-});
-
-test(
-  "pocket-calculator HRC -> HV matches the ASTM E140 steel table within 3 %",
-  { todo: "BUG: same HRC polynomial as metallurgicalConversions (HRC 40 -> HV 715, E140 392); see tests/utils-metallurgical-conversions.test.ts" },
-  () => {
-    for (const [hrc, hv] of [[30, 302], [40, 392], [50, 513], [60, 697]] as Array<[number, number]>) {
-      assert.ok(Math.abs(convertHardness(hrc, "HRC").vickers - hv) / hv < 0.03, `HRC ${hrc}`);
-    }
+// Pocket Calculators' convertHardness (same polynomials as the unit converter: HRC 30 -> HV 532, HRC 40 -> 715) was
+// removed; the tab now calls the shared convertSteelHardness (ASTM E140 Table 1 / ISO 18265 Table A.1 interpolation,
+// tests/utils-hardness-conversion.test.ts). The former todo is a real test here.
+test("pocket-calculator HRC -> HV matches the ASTM E140 Table 1 rows (old polynomial: 532 / 715 / 925 / 1162)", () => {
+  for (const [hrc, hv] of [[30, 302], [40, 392], [50, 513], [60, 697]] as Array<[number, number]>) {
+    assert.equal(convertSteelHardness(hrc, "HRC").HV, hv, `HRC ${hrc}`);
   }
-);
+  // default tab input HRC 30: no clamping, no HRB above HV 240, Rm from ISO 18265 Table A.1
+  const r = convertSteelHardness(30, "HRC");
+  assert.deepEqual([r.HV, r.HRC, r.HRB, r.HBW, r.HK, r.tensileRm_MPa, r.tensileRm_ksi], [302, 30, null, 286, 311, 971, 140.8]);
+  assert.equal(convertSteelHardness(5, "HRC").HV, null); // old: clamped to the HRC 20 value
+  assert.equal(convertSteelHardness(1550, "HV").HRC, null); // "Tungsten Carbide WC" preset: outside every steel table
+});
 
 // ---------------------------------------------------------------------------------------------------------------
 // Carbon equivalent (IIW, Pcm, CEN) and preheat bands

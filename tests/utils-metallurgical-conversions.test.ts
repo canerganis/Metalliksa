@@ -10,7 +10,6 @@ import {
   convertDensity,
   convertFractureToughness,
   convertImpactEnergy,
-  convertMetallurgicalHardness,
   convertMicroLength,
   convertStress,
   convertTemperature,
@@ -18,6 +17,7 @@ import {
   interpretStressMpa,
   type TempUnit,
 } from "../src/utils/metallurgicalConversions";
+import { convertSteelHardness } from "../src/utils/hardnessConversion";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Temperature (offset scales): exact definitions K = C + 273.15, F = 1.8 C + 32, R = 1.8 K.
@@ -170,20 +170,46 @@ test("corrosion round trip mpy -> mm/yr -> mpy", () => {
 // Dual-unit report (extracted from MetallurgicalUnitConverter.tsx)
 // ---------------------------------------------------------------------------------------------------------------
 
-test("dual-unit report reproduces the pre-extraction numbers (default scratchpad inputs)", () => {
-  assert.deepEqual(computeDualUnitReport({ yieldMpa: 880, utsMpa: 950, hardnessHrc: 34, cvnJ: 42, testTempC: 23 }), {
-    yieldKsi: 127.6,
-    utsKsi: 137.8,
-    hv: 602, // see the HRC->HV bug todo below
-    hbw: 573,
-    cvnFtLbf: 31,
-    tempF: 73.4,
-    tempK: 296.1,
-  });
-  const cold = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessHrc: 20, cvnJ: 27, testTempC: -40 });
+const steel = { hardnessScale: "HRC" as const, hardnessMaterialClass: "non-austenitic-steel" as const };
+
+test("dual-unit report: default scratchpad (Ti-6Al-4V, 34 HRC measured) is NOT converted by the steel table", () => {
+  assert.deepEqual(
+    computeDualUnitReport({ yieldMpa: 880, utsMpa: 950, hardnessValue: 34, hardnessScale: "HRC", hardnessMaterialClass: "titanium-alloy", cvnJ: 42, testTempC: 23 }),
+    {
+      yieldKsi: 127.6,
+      utsKsi: 137.8,
+      hardnessMeasured: "34 HRC",
+      hardnessConverted: null, // was 602 HV / 573 HBW (polynomial), then 336 / 319 (steel table applied to titanium)
+      hardnessText: "34 HRC (converted values: Unavailable, no verified conversion table for this alloy class)",
+      hrc: 34,
+      hv: null,
+      hbw: null,
+      cvnFtLbf: 31,
+      tempF: 73.4,
+      tempK: 296.1,
+    }
+  );
+});
+
+test("dual-unit report: non-austenitic steel shows the measured value with the E140 conversion in parentheses", () => {
+  const r = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 34, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.deepEqual([r.hrc, r.hv, r.hbw], [34, 336, 319]); // ASTM E140 Table 1 row HRC 34
+  assert.equal(r.hardnessText, "34 HRC (≈ 336 HV / 319 HBW, converted per ASTM E140 tables, not measured)");
+  const cold = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 20, ...steel, cvnJ: 27, testTempC: -40 });
   assert.equal(cold.tempF, -40);
   assert.equal(cold.tempK, 233.1); // 233.15 is stored as 233.14999.. so toFixed(1) gives 233.1
   assert.equal(cold.cvnFtLbf, 19.9);
+  assert.deepEqual([cold.hv, cold.hbw], [238, 226]); // E140 Table 1, HRC 20
+  // outside HRC 20-68 the converted hardness is unavailable instead of clamped, and no "n/a" pair is printed
+  const soft = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 15, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.deepEqual([soft.hv, soft.hbw, soft.hardnessConverted], [null, null, null]);
+  assert.equal(soft.hardnessText, "15 HRC (converted values: Unavailable, outside the verified table range)");
+  const hrc62 = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 62, ...steel, cvnJ: 0, testTempC: 0 });
+  assert.equal(hrc62.hbw, null); // HBW tabulated to HRC 59
+  assert.equal(hrc62.hardnessConverted, "≈ 746 HV"); // only the available scale is listed
+  // a synced specimen HV stays primary (old code replaced it by a converted HRC)
+  const hv = computeDualUnitReport({ yieldMpa: 0, utsMpa: 0, hardnessValue: 392, hardnessScale: "HV", hardnessMaterialClass: "non-austenitic-steel", cvnJ: 0, testTempC: 0 });
+  assert.equal(hv.hardnessText, "392 HV (≈ 40 HRC / 371 HBW, converted per ASTM E140 tables, not measured)");
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -271,30 +297,34 @@ test("HISTORICAL E112 FromG intercept before the fix: planimetric 1000/sqrt(2^(G
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// Hardness
+// Hardness: the unit converter now uses the shared convertSteelHardness (src/utils/hardnessConversion.ts; full
+// coverage in tests/utils-hardness-conversion.test.ts). The studio-lane todo tests below are now real tests.
 // ---------------------------------------------------------------------------------------------------------------
 
-test("hardness from HV: HBW = HV/1.05, HK = 1.03 HV, Rm = 3.25 HV (the parts that are consistent today)", () => {
-  const r = convertMetallurgicalHardness(300, "HV");
+test("hardness from HV 300: E140 Table 1 interpolation, ISO 18265 Rm, HRB unavailable (old: HRB 101.8, Rm 975)", () => {
+  const r = convertSteelHardness(300, "HV");
   assert.equal(r.HV, 300);
-  assert.equal(r.HBW, 286); // 285.7
-  assert.equal(r.HK, 309);
-  assert.equal(r.tensileRm_MPa, 975); // 300 * 3.25
-  assert.equal(r.tensileRm_ksi, 141.4);
-  assert.equal(r.validRangeNote, "ASTM E140 & ISO 18265 calibrated correlation");
-  // HK <-> HV round trip
-  assert.equal(convertMetallurgicalHardness(1000, "HK").HV, 971); // 1000 / 1.03
-  assert.equal(convertMetallurgicalHardness(convertMetallurgicalHardness(500, "HV").HK, "HK").HV, 500);
-  // input clamps
-  assert.equal(convertMetallurgicalHardness(5, "HV").HV, 40);
-  assert.equal(convertMetallurgicalHardness(5000, "HV").HV, 2000);
+  assert.equal(r.HRC, 30); // 29.75 between HRC 29 (294 HV) and 30 (302 HV), reported as a whole number
+  assert.equal(r.HBW, 284); // 279 + 7 * 6/8 = 284.25
+  assert.equal(r.HK, 309); // 304 + 7 * 6/8 = 309.25
+  assert.equal(r.HRB, null);
+  assert.equal(r.tensileRm_MPa, 965); // ISO 18265 Table A.1
+  assert.equal(r.tensileRm_ksi, 140);
+  assert.equal(r.validRangeNote, "Approximate conversion for non-austenitic steels per ASTM E140 / ISO 18265 tables; not a substitute for direct testing.");
+  // HK <-> HV is a table now, not HK = 1.03 HV (old: HK 1000 -> HV 971)
+  assert.equal(convertSteelHardness(1000, "HK").HV, null); // above HK 920 (HRC 68)
+  assert.equal(convertSteelHardness(convertSteelHardness(500, "HV").HK!, "HK").HV, 500);
+  // no input clamps (old: HV 5 -> 40, HV 5000 -> 2000): the input is echoed, nothing is derived
+  assert.equal(convertSteelHardness(5, "HV").HRC, null);
+  assert.equal(convertSteelHardness(5000, "HV").HV, 5000);
+  assert.equal(convertSteelHardness(5000, "HV").HRC, null);
 });
 
 test("hardness out-of-range notices", () => {
-  assert.match(convertMetallurgicalHardness(19, "HRC").validRangeNote, /outside ASTM E140 certified HRC range/);
-  assert.match(convertMetallurgicalHardness(69, "HRC").validRangeNote, /outside ASTM E140 certified HRC range/);
-  assert.equal(convertMetallurgicalHardness(40, "HRC").validRangeNote, "ASTM E140 & ISO 18265 calibrated correlation");
-  assert.match(convertMetallurgicalHardness(39, "HRB").validRangeNote, /HRB ball indenter range/);
+  assert.match(convertSteelHardness(19, "HRC").validRangeNote, /^Input outside verified range \(HRC 20-68\): conversion unavailable\./);
+  assert.match(convertSteelHardness(69, "HRC").validRangeNote, /outside verified range \(HRC 20-68\)/);
+  assert.doesNotMatch(convertSteelHardness(40, "HRC").validRangeNote, /outside/);
+  assert.match(convertSteelHardness(39, "HRB").validRangeNote, /outside verified range \(HRB 55-100\)/);
 });
 
 test("hardness interpretation bands", () => {
@@ -305,68 +335,41 @@ test("hardness interpretation bands", () => {
   assert.match(interpretHardness(750).condition, /^Super-Hard/);
 });
 
-test("pins today's HRC <-> HV outputs (these disagree with ASTM E140; see the todo tests below)", () => {
-  const hrc40 = convertMetallurgicalHardness(40, "HRC");
-  assert.deepEqual([hrc40.HV, hrc40.HRC, hrc40.HBW, hrc40.tensileRm_MPa], [715, 26.5, 681, 2323]);
-  const hv392 = convertMetallurgicalHardness(392, "HV");
-  assert.equal(hv392.HRC, 18); // clamped floor
-  assert.equal(convertMetallurgicalHardness(300, "HV").HRC, 18);
-});
-
-// BUG (reported, NOT fixed: scientific-calculation changes need the user). The Rockwell C <-> Vickers polynomials
-//   HV  = 142.8 + 8.94 HRC + 0.134 HRC^2        (HRC -> HV)
-//   HRC = -20.6 + 0.098 HV - 0.000045 HV^2      (HV -> HRC, clamped to [18, 70])
-// do not reproduce the ASTM E140 / ISO 18265 tables for steel, and are not inverses of each other:
-//   HRC 30: code HV 532, E140 302   | HRC 40: code 715, E140 392   | HRC 50: code 925, E140 513
-//   HRC 60: code 1162, E140 697     | the default report input HRC 34 shows HV 602 / HBW 573 (E140: ~336 HV)
-//   HV 302 -> code HRC 18 (clamp floor), E140 HRC 30;  HV 392 -> 18 (E140 40);  HV 513 -> 18.0 (E140 50)
-//   Round trip HRC 40 -> HV 715 -> HRC 26.5.  Also HV 300 -> HRB 101.8 although HRB tops out near HV 240.
-// The same polynomials are duplicated in metallurgyCalculations.convertHardness (Pocket Calculators).
-// Reference anchors (non-austenitic steel, E140 Table 1 / ISO 18265 Table A.1): HRC 20=238 HV, 30=302, 40=392,
-// 50=513, 60=697.
+// Former BUG (studio lane, fixed 2026-10): the polynomials HV = 142.8 + 8.94 HRC + 0.134 HRC^2 and
+// HRC = -20.6 + 0.098 HV - 0.000045 HV^2 (clamped 18..70) gave HRC 40 -> HV 715 -> HRC 26.5. They were removed and
+// replaced by interpolation in the ASTM E140 Table 1 rows below, read from three public reproductions of the table
+// (labtesting.com chart-hardness-c.pdf, andersonlabs.com ASTM-Hardness-Conversion-Table-Rockwell-C-Range.pdf, Struers
+// poster at epsevg.upc.edu; identical values; see src/utils/hardnessConversion.ts for the full URLs).
 const E140_HRC_HV: Array<[number, number]> = [[20, 238], [30, 302], [40, 392], [50, 513], [60, 697]];
 
-test(
-  "HRC -> HV matches the ASTM E140 steel table within 3 %",
-  { todo: "BUG: polynomial 142.8 + 8.94 HRC + 0.134 HRC^2 over-predicts HV by 30-130 %; see comment block" },
-  () => {
-    for (const [hrc, hv] of E140_HRC_HV) {
-      const got = convertMetallurgicalHardness(hrc, "HRC").HV;
-      assert.ok(Math.abs(got - hv) / hv < 0.03, `HRC ${hrc}: ${got} vs E140 ${hv}`);
-    }
+test("HRC -> HV matches the ASTM E140 Table 1 rows exactly", () => {
+  for (const [hrc, hv] of E140_HRC_HV) {
+    assert.equal(convertSteelHardness(hrc, "HRC").HV, hv, `HRC ${hrc}`);
   }
-);
+});
 
-test(
-  "HV -> HRC matches the ASTM E140 steel table within 1 HRC",
-  { todo: "BUG: polynomial -20.6 + 0.098 HV - 0.000045 HV^2 returns the clamp floor 18 for HV 230-515; see comment block" },
-  () => {
-    for (const [hrc, hv] of E140_HRC_HV) {
-      const got = convertMetallurgicalHardness(hv, "HV").HRC;
-      assert.ok(got !== undefined && Math.abs(got - hrc) <= 1, `HV ${hv}: ${got} vs E140 ${hrc}`);
-    }
+test("HV -> HRC matches the ASTM E140 Table 1 rows exactly (old code: clamp floor 18 for HV 302/392/513)", () => {
+  for (const [hrc, hv] of E140_HRC_HV) {
+    assert.equal(convertSteelHardness(hv, "HV").HRC, hrc, `HV ${hv}`);
   }
-);
+});
 
-test(
-  "HRC -> HV -> HRC round trip returns the input within 1 HRC",
-  { todo: "BUG: the two polynomials are not inverses (HRC 40 -> HV 715 -> HRC 26.5)" },
-  () => {
-    for (const hrc of [25, 30, 40, 50, 60]) {
-      const hv = convertMetallurgicalHardness(hrc, "HRC").HV;
-      const back = convertMetallurgicalHardness(hv, "HV").HRC;
-      assert.ok(back !== undefined && Math.abs(back - hrc) <= 1, `HRC ${hrc} -> HV ${hv} -> HRC ${back}`);
-    }
+test("HRC -> HV -> HRC round trip: whole HRC exact, 0.5 steps within 0.6 HRC (integer HV, whole-number HRC)", () => {
+  for (const hrc of [20, 25, 30, 34, 40, 45.5, 50, 55, 60, 67.5, 68]) {
+    const hv = convertSteelHardness(hrc, "HRC").HV;
+    assert.ok(hv !== null);
+    const back = convertSteelHardness(hv, "HV").HRC;
+    assert.ok(back !== null && Math.abs(back - hrc) <= (Number.isInteger(hrc) ? 0 : 0.6), `HRC ${hrc} -> HV ${hv} -> HRC ${back}`);
   }
-);
+});
 
-// Minor: HV = 1.05 HBW - 5 is inverted as HBW = HV / 1.05 (the -5 offset is not undone): HBW 200 -> HV 205 -> HBW 195.
-test(
-  "HBW -> HV -> HBW round trip is the identity",
-  { todo: "BUG (minor): forward HV = 1.05 HBW - 5, inverse HBW = HV / 1.05; HBW 200 -> HV 205 -> HBW 195" },
-  () => {
-    for (const hbw of [120, 200, 300, 450]) {
-      assert.equal(convertMetallurgicalHardness(hbw, "HBW").HBW, hbw);
-    }
+// Former minor BUG: HV = 1.05 HBW - 5 inverted as HBW = HV / 1.05 (HBW 200 -> HV 205 -> HBW 195). HBW now comes from
+// the E140 Table 1 carbide-ball column (HBW 226-634); HBW 120 and 200 are outside it and unavailable.
+test("HBW -> HV -> HBW round trip is the identity on the tabulated range", () => {
+  for (const hbw of [226, 300, 371, 450, 634]) {
+    const hv = convertSteelHardness(hbw, "HBW").HV;
+    assert.ok(hv !== null);
+    assert.equal(convertSteelHardness(hv, "HV").HBW, hbw, `HBW ${hbw} -> HV ${hv}`);
   }
-);
+  for (const hbw of [120, 200]) assert.equal(convertSteelHardness(hbw, "HBW").HV, null);
+});

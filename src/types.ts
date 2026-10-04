@@ -92,16 +92,6 @@ export interface MaterialSpec {
   failureRisks: string[];
 }
 
-export interface HardnessConversionResult {
-  vickers: number; // HV
-  rockwellC?: number; // HRC
-  rockwellB?: number; // HRB
-  brinell: number; // HBW 10/3000
-  knoop?: number; // HK
-  tensileMpa: number; // Estimated Rm
-  tensileKsi: number;
-}
-
 export interface CarbonEquivalentResult {
   ceIIW: number;
   pcm: number;
