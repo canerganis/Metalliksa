@@ -204,36 +204,6 @@ export interface PythonDFTResult {
   }[];
 }
 
-export interface PythonCNLSResult {
-  success: boolean;
-  engine: string;
-  computeTimeMs: number;
-  isPythonEngine: boolean;
-  circuitModel: string;
-  convergence: {
-    iterations: number;
-    finalChiSquare: number;
-    reducedChiSquare: number;
-    converged: boolean;
-  };
-  fittedParameters: Record<string, { value: number; unit: string; error_percent: number }>;
-  kramersKronigLinKK: {
-    status: string;
-    mu_consistency_factor: number;
-    maxResidualPercent: number;
-  };
-  fittedSpectrum: Array<{
-    frequency_Hz: number;
-    z_real_measured: number;
-    z_imag_measured: number;
-    z_real_fit: number;
-    z_imag_fit: number;
-    z_mag_fit: number;
-    phase_deg_fit: number;
-    residual_pct: number;
-  }>;
-}
-
 export interface PythonXRDResult {
   success: boolean;
   engine: string;
@@ -1274,87 +1244,6 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch EIS Complex Non-Linear Least Squares (CNLS) Optimization to Python
-   */
-  async fitCNLSEIS(payload: {
-    circuitModel?: string;
-    measuredData?: Array<{ frequency: number; zReal: number; zImag: number }>;
-    initialParams?: Record<string, number>;
-  }): Promise<PythonCNLSResult> {
-    try {
-      const res = await fetch("/api/python/cnls-fit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          return { ...data, isPythonEngine: true };
-        }
-      }
-    } catch (err) {
-      console.warn("Python CNLS proxy failed, returning fallback fit:", err);
-    }
-
-    return {
-      success: true,
-      engine: "MetalliX-Client-Heuristic",
-      computeTimeMs: 5,
-      isPythonEngine: false,
-      circuitModel: payload.circuitModel || "Randles_Warburg",
-      convergence: { iterations: 12, finalChiSquare: 0.0018, reducedChiSquare: 0.00015, converged: true },
-      fittedParameters: {
-        Rs: { value: 12.4, unit: "Ω", error_percent: 0.8 },
-        Rct: { value: 2450.0, unit: "Ω", error_percent: 1.2 },
-        Cdl: { value: 18.5e-6, unit: "F", error_percent: 2.1 },
-        Zw: { value: 320.0, unit: "Ω·s^-0.5", error_percent: 3.4 },
-      },
-      kramersKronigLinKK: {
-        status: "Pass (Kramers-Kronig Compliant)",
-        mu_consistency_factor: 0.965,
-        maxResidualPercent: 1.2,
-      },
-      fittedSpectrum: [],
-    };
-  }
-
-  /**
-   * Dispatch Global Differential Evolution Auto-Fit to Python Backend
-   */
-  async runAutoFitCNLS(payload: {
-    topology: any;
-    points: any[];
-    parameters?: any[];
-    weighting?: string;
-    maxGenerations?: number;
-    populationSize?: number;
-    polishLM?: boolean;
-  }): Promise<any> {
-    try {
-      const res = await fetch("/api/python/cnls-autofit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "auto_fit",
-          ...payload,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          return { ...data, isPythonEngine: true };
-        }
-      }
-    } catch (err) {
-      console.warn("Python CNLS Auto-Fit failed:", err);
-    }
-    return null;
-  }
-
-  /**
    * Dispatch XRD Peak Deconvolution & Williamson-Hall Microstrain Analysis to Python
    */
   async deconvolveXRD(payload: {
@@ -1815,64 +1704,6 @@ class PythonComputationService {
 
     // Client-side fallback with exact same ASTM G102 formulas
     return fallbackClientTafelCorrosionRate(payload);
-  }
-
-  /**
-   * Ingest and analyze experimental battery or corrosion data via Python 3.10 engine
-   */
-  async uploadBatteryCorrosionData(payload: any): Promise<any> {
-    const res = await fetch("/api/python/battery-corrosion-upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      throw new Error(`Python upload failed with status HTTP ${res.status}`);
-    }
-    return await res.json();
-  }
-
-  /**
-   * Execute custom user Python script with optional battery/corrosion data
-   */
-  async executeBatteryCorrosionUserScript(scriptCode: string, data?: any, title?: string): Promise<any> {
-    const res = await fetch("/api/python/battery-corrosion-exec-script", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scriptCode, data, title }),
-    });
-    if (!res.ok) {
-      let serverMessage = "";
-      try {
-        const body = await res.json();
-        if (body?.code === "SCRIPT_EXEC_DISABLED" && typeof body.error === "string") serverMessage = body.error;
-      } catch {
-        // Non-JSON error body: fall back to the generic message.
-      }
-      throw new Error(serverMessage || `Python script execution failed with status HTTP ${res.status}`);
-    }
-    return await res.json();
-  }
-
-  /**
-   * Get recently ingested datasets from Python uploads
-   */
-  async getRecentBatteryCorrosionUploads(): Promise<any> {
-    const res = await fetch("/api/python/battery-corrosion-upload/recent");
-    if (!res.ok) {
-      throw new Error(`Failed to fetch recent uploads HTTP ${res.status}`);
-    }
-    return await res.json();
-  }
-
-  /**
-   * Clear recent upload by ID or all
-   */
-  async clearRecentBatteryCorrosionUpload(id?: string): Promise<any> {
-    const res = await fetch(`/api/python/battery-corrosion-upload/${id || "all"}`, {
-      method: "DELETE",
-    });
-    return await res.json();
   }
 }
 
