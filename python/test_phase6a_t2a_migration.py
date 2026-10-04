@@ -1,7 +1,8 @@
 """Phase 6a tranche 2a: structural migration of calphad, battery EIS and icme solvers.
 
 Covers: bit-exact golden regression for the three solvers, parity with the
-pre-migration blob on extra payloads, the validation errors that replace the
+pre-migration blob on extra payloads, the calphad legacy 50.0 g/mol element
+fallback kept in step (a) (fix round B1), the icme validation errors that replace the
 silent element/base-metal defaults (and only those), the stdout envelope + exit
 code 2 (also through the persistent IPC runner), provenance, the pinned
 pre-existing battery success:true masking, and a source guard.
@@ -122,6 +123,12 @@ class BaseBlobTest(unittest.TestCase):
             {"elements": {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}, "tMin": 900.0, "tMax": 1500.0, "tStep": 40.0},
             {"elements": {"Al": 50.0, "Ni": 50.0}, "unit": "at_pct", "tMin": 900.0, "tMax": 1700.0, "tStep": 50.0},
             {"elements": {"Cu": 70.0, "Zn": 30.0}, "tMin": 700.0, "tMax": 1100.0, "tStep": 25.0},
+            # Legacy 50.0 g/mol fallback kept in step (a) (fix round B1): unknown elements
+            # with positive amounts must give the pre-migration output, in both units.
+            {"elements": {"Fe": 90.0, "P": 5.0, "Sn": 5.0}},
+            {"elements": {"Cu": 83.0, "Sn": 7.0, "Pb": 7.0, "Zn": 3.0}, "unit": "at_pct",
+             "tMin": 700.0, "tMax": 1200.0, "tStep": 50.0},
+            {"elements": {"Ni": 70.0, "Xx": 30.0}, "customTdbText": "ELEMENT XX BLANK 0 0 0 !"},
         ],
         "icme_multiscale_pipeline_solver": [
             {"baseMetal": "Fe", "composition_wt": {"C": 0.2, "Cr": 12.0, "Mo": 1.0, "V": 0.3, "W": 0.5},
@@ -157,7 +164,6 @@ class BaseBlobTest(unittest.TestCase):
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
-            ("calphad_solver", {"elements": {"Fe": 90.0, "P": 5.0, "Sn": 5.0}}),
             ("icme_multiscale_pipeline_solver", {"baseMetal": "Co", "composition_wt": {"Cr": 20.0}}),
             ("icme_multiscale_pipeline_solver", {"baseMetal": "Ni", "composition_wt": {"cr": 19.0}}),
         ]
@@ -180,17 +186,54 @@ class BaseBlobTest(unittest.TestCase):
             self.assertEqual(golden.canonical(values), golden.canonical(doc["values"]))
 
 
+# src/data/materialsDatabase.ts:10 and :111 (AISI 1018-type and AISI 4140-type
+# specimens): P and S at positive amounts, sent as-is by CALPHADMultiComponentStudio.
+P_S_SPECIMENS = (
+    {"C": 0.18, "Mn": 0.75, "P": 0.04, "S": 0.05, "Fe": 98.98},
+    {"C": 0.40, "Cr": 1.00, "Mo": 0.20, "Mn": 0.85, "Si": 0.25, "P": 0.035, "S": 0.04, "Fe": 97.225},
+)
+
+
 class CalphadElementTest(unittest.TestCase):
-    def test_unknown_elements_raise(self):
+    def test_unknown_elements_use_the_legacy_fallback(self):
+        # Fix round B1: refusing these made UI specimens lose the Python engine.
+        self.assertEqual(data.CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL, 50.0)
         for elements in ({"Ni": 70, "Xx": 30}, {"Fe": 95, "P": 5}, {"Ti": 90, "Sn": 10},
                          {"Ni": 90, "": 10}, {"Cu": 60, "Pb": 40}):
             for unit in ("wt_pct", "at_pct"):
                 with self.subTest(elements=elements, unit=unit):
-                    with self.assertRaises(iv.ValidationError) as ctx:
-                        calphad_solver.normalize_composition(elements, unit)
-                    self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
-                    self.assertTrue(ctx.exception.field.startswith("elements."))
-                    self.assertIn("supported", ctx.exception.detail)
+                    wt, at = calphad_solver.normalize_composition(elements, unit)
+                    self.assertEqual(len(wt), 2)
+                    self.assertAlmostEqual(sum(at.values()), 1.0, places=12)
+        self.assertEqual(calphad_solver._atomic_weight("P"), 50.0)
+        self.assertEqual(calphad_solver._atomic_weight("Fe"), 55.845)
+        self.assertEqual(calphad_solver.legacy_fallback_elements(["Fe", "P", "S", "C"]), ["P", "S"])
+
+    def test_p_and_s_specimens_get_a_normal_python_result(self):
+        for elements in P_S_SPECIMENS:
+            with self.subTest(elements=elements):
+                code, out = _run("calphad_solver.py", {"name": "steel", "elements": elements,
+                                                       "tMin": 500.0, "tMax": 1600.0, "tStep": 50.0})
+                self.assertEqual(code, 0)
+                self.assertIs(out["success"], True)
+                self.assertTrue(out["equilibriumProfile"])  # what the UI requires
+                self.assertNotIn("errorKind", out)
+                self.assertEqual(out["engine"], "subregular-adaptive-minimizer")
+                fallback = out["provenance"]["legacyAtomicWeightFallback"]
+                self.assertEqual(fallback["elements"], ["P", "S"])
+                self.assertEqual(fallback["weight_g_mol"], 50.0)
+                self.assertIn("step (b)", fallback["note"])
+
+    def test_custom_tdb_text_is_not_refused(self):
+        code, out = _run("calphad_solver.py", {"elements": {"Ni": 70.0, "Xx": 30.0},
+                                               "customTdbText": "ELEMENT XX BLANK 0 0 0 !"})
+        self.assertEqual(code, 0)
+        self.assertIs(out["success"], True)
+        self.assertEqual(out["provenance"]["legacyAtomicWeightFallback"]["elements"], ["Xx"])
+
+    def test_known_elements_report_no_fallback(self):
+        fresh = golden.run_solver("calphad_solver", cases.CASES["calphad_solver"]["in718_wt_pct"])
+        self.assertEqual(fresh["provenance"]["provenance"]["legacyAtomicWeightFallback"]["elements"], [])
 
     def test_case_variants_and_zero_amounts_are_unchanged(self):
         wt, at = calphad_solver.normalize_composition({"ni": 50.0, "CR": 50.0, "Xx": 0, "Yy": None})
@@ -239,12 +282,8 @@ class IcmeElementTest(unittest.TestCase):
 
 
 class EnvelopeAndProvenanceTest(unittest.TestCase):
-    def test_calphad_envelope_and_internal_error(self):
-        code, out = _run("calphad_solver.py", {"elements": {"Ni": 80, "Xx": 20}})
-        self.assertEqual(code, 2)
-        self.assertEqual(out["errorKind"], "validation")
-        self.assertEqual(out["error"]["code"], "UNKNOWN_ELEMENT")
-        self.assertEqual(out["error"]["field"], "elements.Xx")
+    def test_calphad_internal_error(self):
+        # calphad has no validation refusal in step (a) (legacy element fallback kept).
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 80}, "tMin": "cold"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
@@ -299,8 +338,6 @@ class PersistentIpcRelayTest(unittest.TestCase):
     def test_pool_worker_and_process_pool_paths(self):
         import persistent_ipc_service as ipc
         self._assert_envelope(ipc._worker_run_script(
-            str(HERE / "calphad_solver.py"), json.dumps({"elements": {"Ni": 80, "Xx": 20}}), []))
-        self._assert_envelope(ipc._worker_run_script(
             str(HERE / "icme_multiscale_pipeline_solver.py"), json.dumps({"baseMetal": "Co"}), []))
         # Own registry: another test module may already have shut the global pool down.
         own = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
@@ -323,7 +360,7 @@ class PersistentIpcRelayTest(unittest.TestCase):
         registry.active_jobs = 0
         registry.total_duration_ms = 0.0
         registry.pool = None
-        res = registry.execute_script("python/calphad_solver.py", {"elements": {"Ni": 80, "Xx": 20}})
+        res = registry.execute_script("python/icme_multiscale_pipeline_solver.py", {"baseMetal": "Co"})
         self.assertEqual(res["concurrency"], "in_process_fallback")
         self._assert_envelope(res)
 
@@ -343,10 +380,14 @@ class SourceGuardTest(unittest.TestCase):
                     self.assertNotIn(node.value, self.FORBIDDEN_FLOATS, f"{name}:{node.lineno}")
 
     def test_no_numeric_atomic_weight_fallbacks(self):
-        for name in ("calphad_solver.py", "icme_multiscale_pipeline_solver.py"):
-            src = (HERE / name).read_text(encoding="utf-8")
-            for pattern in ("ATOMIC_WEIGHTS.get(", "atomic_weights.get(", "atomic_weights = {"):
-                self.assertNotIn(pattern, src, name)
+        src = (HERE / "icme_multiscale_pipeline_solver.py").read_text(encoding="utf-8")
+        for pattern in ("atomic_weights.get(", "atomic_weights = {"):
+            self.assertNotIn(pattern, src)
+        # calphad keeps exactly one, named, legacy fallback (fix round B1).
+        src = (HERE / "calphad_solver.py").read_text(encoding="utf-8")
+        self.assertEqual(src.count("ATOMIC_WEIGHTS.get("), 1)
+        self.assertIn("ATOMIC_WEIGHTS.get(el, CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL)", src)
+        self.assertNotIn("50.0)", src.split("def _atomic_weight", 1)[1].split("def legacy_fallback_elements", 1)[0])
 
     def test_no_table_fallback_pattern_in_calphad_and_icme(self):
         # battery_corrosion_eis_solver keeps ELECTROLYTE_FORMULATIONS.get(id, TABLE[...]) and

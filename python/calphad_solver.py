@@ -48,8 +48,13 @@ except Exception as e:
     PYCALPHAD_VERSION = str(e)
 
 import physical_constants
-from alloy_data_calphad_battery_icme import CALPHAD_ELEMENTS, provenance as _domain_data_provenance
-from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+from alloy_data_calphad_battery_icme import (
+    CALPHAD_ELEMENTS,
+    CALPHAD_LEGACY_FALLBACK_NOTE,
+    CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL,
+    provenance as _domain_data_provenance,
+)
+from input_validation import ValidationError, validation_envelope
 
 # Phase 6a structural step (a): R and the Celsius offset come from physical_constants
 # but keep the CODATA printed truncation used before the migration (8.314462618), so
@@ -65,8 +70,25 @@ _TDB_CACHE: Dict[str, Any] = {}
 
 # Standard atomic weights (g/mol): CIAAW 2021 abridged values from physical_constants
 # for the solver's element set (identical to the pre-migration literals). An element
-# outside this set is a validation error; there is no 50.0 g/mol fallback.
+# outside this set keeps the LEGACY 50.0 g/mol fallback (see _atomic_weight).
 ATOMIC_WEIGHTS = {el: physical_constants.atomic_weight(el) for el in CALPHAD_ELEMENTS}
+
+
+def _atomic_weight(el: str) -> float:
+    """Atomic weight used by normalize_composition.
+
+    LEGACY FALLBACK (Phase 6a step (a), bit-identical to 7f3f803): an element outside
+    ATOMIC_WEIGHTS is weighted with CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL
+    (50.0 g/mol, not a real atomic weight). Scheduled for removal at design step (b)
+    together with real CIAAW weights. The elements that hit it are listed in the
+    output provenance (legacyAtomicWeightFallback).
+    """
+    return ATOMIC_WEIGHTS.get(el, CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL)
+
+
+def legacy_fallback_elements(symbols) -> List[str]:
+    """Normalised element symbols that are weighted with the legacy 50.0 g/mol fallback."""
+    return [el for el in symbols if el not in ATOMIC_WEIGHTS]
 
 # New-PHACOMP Electron Hole Numbers (N_v) and d-orbital energy levels (Md in eV)
 PHACOMP_DATA = {
@@ -190,16 +212,6 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     if not clean:
         clean = {"Ni": 80.0, "Al": 10.0, "Cr": 10.0}
 
-    for el in clean:
-        if el not in ATOMIC_WEIGHTS:
-            # Phase 6a: no silent 50.0 g/mol substitute for an unknown element.
-            raise ValidationError(
-                UNKNOWN_ELEMENT, f"elements.{el}",
-                f"No atomic weight for element {el!r} in the CALPHAD element set; "
-                f"supported: {', '.join(ATOMIC_WEIGHTS)}.",
-                {"element": el, "supported": list(ATOMIC_WEIGHTS)},
-            )
-
     total = sum(clean.values())
     if total <= 0:
         total = 1.0
@@ -207,12 +219,12 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
     if unit == "at_pct":
         at_frac = {el: val / total for el, val in clean.items()}
         # Compute wt%
-        mw_mix = sum(at_frac[el] * ATOMIC_WEIGHTS[el] for el in at_frac)
-        wt_pct = {el: (at_frac[el] * ATOMIC_WEIGHTS[el] / mw_mix) * 100.0 for el in at_frac}
+        mw_mix = sum(at_frac[el] * _atomic_weight(el) for el in at_frac)
+        wt_pct = {el: (at_frac[el] * _atomic_weight(el) / mw_mix) * 100.0 for el in at_frac}
     else:
         wt_pct = {el: (val / total) * 100.0 for el, val in clean.items()}
         # Convert wt% to moles
-        moles = {el: (pct / 100.0) / ATOMIC_WEIGHTS[el] for el, pct in wt_pct.items()}
+        moles = {el: (pct / 100.0) / _atomic_weight(el) for el, pct in wt_pct.items()}
         tot_moles = sum(moles.values())
         at_frac = {el: m / tot_moles for el, m in moles.items()}
 
@@ -1427,6 +1439,11 @@ def main():
             **_domain_data_provenance(),
             "constantsNote": "CODATA printed truncation of R (pre-migration value); "
                              "the exact SI value is pending the Phase 6a value step.",
+            "legacyAtomicWeightFallback": {
+                "weight_g_mol": CALPHAD_LEGACY_UNKNOWN_ELEMENT_WEIGHT_G_MOL,
+                "elements": legacy_fallback_elements(result.get("nominalComposition") or {}),
+                "note": CALPHAD_LEGACY_FALLBACK_NOTE,
+            },
         }
         print(json.dumps(result))
 

@@ -92,7 +92,7 @@ class CalphadElementsTest(unittest.TestCase):
 
     def test_registry_knows_elements_the_solver_never_had(self):
         # P, S and Sn are in physical_constants but were 50.0-fallback elements in
-        # calphad; the structural step refuses them instead of changing their value.
+        # calphad; step (a) keeps their legacy 50.0 g/mol fallback (fix round B1).
         for el in ("P", "S", "Sn"):
             self.assertTrue(pc.is_known_element(el))
             self.assertNotIn(el, data.CALPHAD_ELEMENTS)
