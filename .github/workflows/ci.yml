@@ -41,6 +41,8 @@ jobs:
           echo "Running $(echo "$files" | wc -l) test files"
           node_modules/.bin/tsx --test $files
       - run: npm run build
+      # Gzip ratchet on the built assets (scripts/bundle-budgets.json); reuses the dist/ from build.
+      - run: node scripts/check-bundle-size.mjs
 
   python:
     runs-on: ubuntu-latest

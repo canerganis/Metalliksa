@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { MODULE_CONTRACTS, type ContractOperation } from '../src/modules/registry';
+// Operations live in the full registry, which the app loads lazily (the eager core slice has none).
+import { MODULE_REGISTRY, type ContractOperation } from '../src/generated/moduleRegistry';
+
+const MODULE_CONTRACTS = MODULE_REGISTRY.contracts;
 import { routeHandlers, type RouteHandler } from './support/routeScan';
 import { repoRoot } from './support/importGraph';
 import { beyondCeiling, readCeiling } from './support/ceiling';

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EvidenceBadge, evidenceBadgeView } from '../src/components/sdk/EvidenceBadge';
-import { MODULE_CONTRACTS, MODULE_REGISTRY, type EvidenceType, type RegisteredContract } from '../src/modules/registry';
+import { MODULE_CONTRACTS, MODULE_REGISTRY_CORE as MODULE_REGISTRY, type EvidenceType, type RegisteredContract } from '../src/modules/registry';
 
 const EVIDENCE_TYPES = MODULE_REGISTRY.vocabulary.evidenceTypes as readonly EvidenceType[];
 // Lower index = stronger claim (python/module_contract.py EVIDENCE_RANK).

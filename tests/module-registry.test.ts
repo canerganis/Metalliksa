@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { MODULES } from '../src/data/workspaces';
 import { EVIDENCE_TYPES } from '../src/types/research';
 import { MODULE_REGISTRY, type ModuleRegistryDocument } from '../src/generated/moduleRegistry';
+import { MODULE_REGISTRY_CORE } from '../src/generated/moduleRegistryCore';
+import { loadModuleContractDetails } from '../src/modules/registry';
 
 // Reads only the committed JSON emitted by python/module_registry.py, so Node CI never needs Python.
 const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistry.json', import.meta.url), 'utf8')) as ModuleRegistryDocument;
@@ -64,4 +66,27 @@ test('contracted pilots stay bounded: no emitted status, screening-only ceiling,
       assert.notEqual(operation.authority.timeoutMs, null, contract.id);
     }
   }
+});
+
+// Independent projection: the eager slice may carry only navigation identity and badge data.
+const CORE_KEYS = ['id', 'version', 'workspace', 'label', 'description', 'next', 'maturity', 'navigation', 'hiddenReason', 'view', 'migrationState'] as const;
+
+test('the eager core slice is exactly the projection of the full registry', () => {
+  const expected = registry.contracts.map(contract => ({
+    ...Object.fromEntries(CORE_KEYS.map(key => [key, contract[key]])),
+    evidence: { ceiling: contract.evidence.ceiling },
+    tests: { oracle: { status: contract.tests.oracle.status } },
+  }));
+  assert.deepEqual(MODULE_REGISTRY_CORE.contracts, expected);
+  const text = readFileSync(new URL('../src/generated/moduleRegistryCore.ts', import.meta.url), 'utf8');
+  for (const detail of ['"operations"', '"sourceRefs"', '"legacyNotes"', '"undeclaredInput"', '"forbiddenClaims"', '"lifecycle"']) {
+    assert.ok(!text.includes(detail), `core slice must not carry ${detail}`);
+  }
+});
+
+test('the app reaches full contracts only through a dynamic import', async () => {
+  const source = readFileSync(new URL('../src/modules/registry.ts', import.meta.url), 'utf8');
+  assert.ok(!/^import [^;]*from '\.\.\/generated\/moduleRegistry';/m.test(source), 'no static value import of the full registry');
+  assert.match(source, /import\('\.\.\/generated\/moduleRegistry'\)/);
+  assert.deepEqual(await loadModuleContractDetails(), MODULE_REGISTRY);
 });

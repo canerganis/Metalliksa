@@ -498,6 +498,15 @@ class ContractedRegistryTests(unittest.TestCase):
         self.assertEqual((uq.method, uq.route, uq.authority.script, uq.authority.timeout_ms, uq.authority.warm),
                          ("POST", "/api/python/stochastic-uq-mmpds", "python/stochastic_uq_mmpds_solver.py", 25000, True))
 
+    def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
+        core = mr.core_document(mr.registry_document(self.registry))
+        allowed = set(mr.CORE_CONTRACT_KEYS) | {"evidence", "tests"}
+        for entry in core["contracts"]:
+            self.assertEqual(set(entry), allowed)
+            self.assertEqual(set(entry["evidence"]), {"ceiling"})
+            self.assertEqual(set(entry["tests"]), {"oracle"})
+        self.assertIn(mr.GENERATED_CORE_TS, mr.rendered_outputs())
+
     def test_ref_forms(self):
         self.assertEqual(mr.ref_problem("python/module_registry.py"), "")
         self.assertEqual(mr.ref_problem("python/module_registry.py:1-2"), "")

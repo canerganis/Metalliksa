@@ -28,9 +28,9 @@ type BadgeContract = Pick<RegisteredContract, 'migrationState' | 'evidence' | 't
 export function evidenceBadgeView(contract: BadgeContract | undefined): EvidenceBadgeView | null {
   if (!contract || contract.migrationState !== 'contracted') return null;
   const ceiling: EvidenceType = contract.evidence.ceiling;
-  const { status, ref } = contract.tests.oracle;
+  const { status } = contract.tests.oracle;
   const oracleText = status === 'present'
-    ? `Oracle present (${ref}). It checks the numerics only.`
+    ? 'Oracle present. It checks the numerics only.'
     : 'Oracle pending, so the ceiling stays capped.';
   return {
     ceiling,
