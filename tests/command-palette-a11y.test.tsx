@@ -114,6 +114,15 @@ test('App: visible trigger, Ctrl/Cmd+K hook, lazy chunk with the same navigate()
   assert.match(hook, /removeEventListener\('keydown', onKey\)/);
 });
 
+test('phone header keeps one row with the trigger: decorative brand mark from sm up, tighter right gap', () => {
+  // Browser-measured at 375 px: without this the status button overflowed the viewport (right edge 422 px);
+  // a wrapped header would exceed --mk-header-h (scroll padding, WCAG 2.4.11), so the row must not wrap.
+  const app = read('src/App.tsx');
+  assert.match(app, /<div className="hidden sm:contents"><div className="mk-brand-mark" aria-label="Metalliksa logo">/);
+  assert.match(app, /<div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog"/);
+  assert.match(app, /<h1 className="mk-brand-title[^"]*">METALLIKSA<\/h1>/, 'the brand name stays visible at every width');
+});
+
 // Same token sets as tests/design-tokens-contrast.test.ts, which checks their contrast.
 const TEXT_TOKEN = /^--mk-(text|muted|signal-|evidence-)|^--mk-(ice|plasma|amber)$/;
 const SURFACES = ['--mk-bg', '--mk-surface', '--mk-surface-raised', '--mk-glass-bg', '--mk-fill-panel', '--mk-fill-deep'];
