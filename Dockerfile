@@ -30,7 +30,10 @@ RUN python -m venv /opt/venv \
 # The unit test list is the tests/*.test.ts(x) glob minus scripts/ci-unit-tests.txt,
 # the same rule as .github/workflows/ci.yml.
 FROM base AS verify
-ENV METALLIX_PYTHON=/opt/venv/bin/python AIRGAPPED=1 CI=1
+# AIRGAPPED is deliberately NOT set here: .github/workflows/ci.yml does not set it, and 12 unit tests
+# (GPT-6 service/route, route input-limit validation, workstation literature query) assume it is unset.
+# The runtime stage below keeps AIRGAPPED=1.
+ENV METALLIX_PYTHON=/opt/venv/bin/python CI=1
 COPY --from=py-deps /opt/venv /opt/venv
 COPY --from=node-deps /app/node_modules ./node_modules
 COPY . .
