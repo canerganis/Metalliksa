@@ -2,6 +2,16 @@ import React from 'react';
 import { computeMMPDSEmpiricalStats, isSyntheticCouponDataset, type MaterialDataset, type MMPDSEmpiricalAllowableStats } from './uqLabData';
 
 export const formatUqNumber = (value: number | null | undefined, digits = 1) => typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : 'Not assessed';
+export const UQ_MODEL_STATUS_LABEL = 'Illustrative strength model, not calibrated (see modelStatus)';
+/** Honesty label for the solver's toy strength model; `modelStatus` is the solver's provenance note when the response carries it. */
+export function UqModelStatusNote({ modelStatus }: { modelStatus?: string }) {
+  return (
+    <div role="note" data-testid="uq-model-status" className="text-xs text-amber-200 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2">
+      <strong className="text-amber-300">{UQ_MODEL_STATUS_LABEL}</strong>
+      {modelStatus ? <span className="block mt-0.5 text-slate-300">{modelStatus}</span> : null}
+    </div>
+  );
+}
 export function couponReportRows(dataset: MaterialDataset) {
   return [
     { key: 'yieldStrength', label: 'Yield strength', unit: 'MPa', minimum: dataset.specMinYieldMPa, values: dataset.coupons.map(c => c.yieldStrengthMPa) },

@@ -33,6 +33,61 @@ def _require_numpy(what):
         raise RuntimeError(f"{what} requires NumPy (python/requirements.txt)")
 
 
+def _validation_error(code, field, message, detail):
+    # input_validation is imported only when an error is raised (module import cost).
+    import input_validation
+    return input_validation.ValidationError(getattr(input_validation, code), field, message, detail)
+
+
+# Element type names evaluate_element_impedance understands (ZView / impedance.py names
+# first). Anything else is refused with a validation error: the former fallback returned
+# a silent 1 Ohm for an unknown element.
+ELEMENT_TYPES = (
+    "R", "Resistor", "C", "Capacitor", "CPE", "ConstantPhaseElement", "Q", "W", "Warburg",
+    "Wo", "OpenWarburg", "ReflectiveWarburg",
+    "Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion",
+    "G", "Gerischer", "CC", "ColeCole", "HN", "HavriliakNegami",
+    "TLM_open", "BisquertOpen", "TLM_short", "BisquertShort", "BisquertTrans", "L", "Inductor",
+)
+
+# Preset topology ids evaluate_circuit_impedance understands. Anything else is refused
+# with a validation error: the former fallback was a silent Rs + Rct resistor circuit.
+PRESET_TOPOLOGY_IDS = (
+    "standard_randles", "randles", "rc_parallel",
+    "randles_cpe", "cpe_randles", "rs_rcpe",
+    "randles_warburg", "warburg",
+    "two_time_constants", "oxide_coating", "coated_metal",
+    "porous_electrode", "transmission_line", "tlm", "bisquert_open", "tlm_open",
+    "bisquert_short", "tlm_short", "dssc_tlm", "porous_catalytic",
+    "gerischer", "gerischer_diffusion", "sofc_cathode",
+    "havriliak_negami", "hn_dielectric", "solid_polymer_electrolyte",
+    "finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective",
+)
+
+
+def _unknown_element_error(el_type):
+    return _validation_error(
+        "UNKNOWN_ELEMENT", "elementType",
+        f"unknown circuit element type {el_type!r}; no impedance is invented for it",
+        {"elementType": repr(el_type), "supported": list(ELEMENT_TYPES)})
+
+
+def _unknown_topology_error(topology_id):
+    return _validation_error(
+        "OUT_OF_RANGE", "topology",
+        f"unknown circuit topology {topology_id!r}; no default circuit is substituted",
+        {"topology": repr(topology_id), "supportedPresets": list(PRESET_TOPOLOGY_IDS)})
+
+
+def _topology_id(topology_data):
+    """The preset id of a string / {"id": ...} topology; refuses anything unknown."""
+    topology_id = topology_data if isinstance(topology_data, str) else (
+        topology_data.get("id") if isinstance(topology_data, dict) else None)
+    if topology_id not in PRESET_TOPOLOGY_IDS:
+        raise _unknown_topology_error(topology_id)
+    return topology_id
+
+
 def evaluate_element_impedance(el_type, params, omega):
     """
     Computes complex impedance Z = R + j*X for a single circuit element.
@@ -42,8 +97,16 @@ def evaluate_element_impedance(el_type, params, omega):
     - C: Capacitor
     - CPE / Q: Constant Phase Element
     - W: Infinite Warburg (45-deg diffusion)
-    - Wo / OpenWarburg: Finite-length transmissive / Nernst diffusion (tanh)
-    - Ws / ShortWarburg: Finite-length reflective / intercalation diffusion (coth)
+    - Wo / OpenWarburg: finite-space Warburg, open (reflective, blocking) terminus,
+      Z = Rd*coth(sqrt(j*w*tau))/sqrt(j*w*tau)  (ZView / impedance.py "Wo")
+    - Ws / ShortWarburg: finite-length Warburg, short (transmissive) terminus,
+      Z = Rd*tanh(sqrt(j*w*tau))/sqrt(j*w*tau)  (ZView / impedance.py "Ws")
+    (impedance.py elements.py: Wo = Z0/(sqrt(j w tau) tanh(...)) = coth form, Ws = tanh form;
+    before this fix the two names were swapped here.)
+    - Aliases: ReflectiveWarburg = Wo (reflective = blocking = open terminus, coth).
+      FiniteWarburg and NernstDiffusion = Ws (finite-length / transmissive terminus, tanh);
+      impedance.py calls the tanh element "short (finite-length) Warburg". FiniteWarburg
+      used to return coth (the open form) here, which contradicted that naming.
     - G / Gerischer: Chemical reaction coupled with diffusion
     - CC / ColeCole: Cole-Cole dielectric relaxation
     - HN / HavriliakNegami: Havriliak-Negami asymmetric dielectric relaxation
@@ -76,21 +139,8 @@ def evaluate_element_impedance(el_type, params, omega):
         val = sigma / sqrt_w
         return val * (1.0 - 1j) if is_arr else complex(val, -val)
     
-    elif el_type in ["Wo", "OpenWarburg", "NernstDiffusion"]:
-        # Transmissive boundary / open Warburg: Z = Rd * tanh(sqrt(j*w*tau)) / sqrt(j*w*tau)
-        r = max(1e-6, params.get("value", params.get("resistance", params.get("r", 100.0))))
-        t = max(1e-6, params.get("exponent", params.get("timeConstant", params.get("tau", 0.5))))
-        if is_arr:
-            arg = np.sqrt(j * w * t)
-            return np.where(np.abs(arg) < 1e-12, complex(r, 0.0), (r * np.tanh(arg)) / (arg + 1e-30))
-        else:
-            arg = cmath.sqrt(j * w * t)
-            if abs(arg) < 1e-12:
-                return complex(r, 0.0)
-            return r * cmath.tanh(arg) / arg
-
-    elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "ReflectiveWarburg"]:
-        # Reflective boundary / short Warburg (intercalation): Z = Rd * coth(sqrt(j*w*tau)) / sqrt(j*w*tau)
+    elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg"]:
+        # Open (reflective / blocking) terminus, impedance.py Wo: Z = Rd * coth(sqrt(j*w*tau)) / sqrt(j*w*tau)
         r = max(1e-6, params.get("value", params.get("resistance", params.get("r", 100.0))))
         t = max(1e-6, params.get("exponent", params.get("timeConstant", params.get("tau", 0.5))))
         if is_arr:
@@ -108,6 +158,19 @@ def evaluate_element_impedance(el_type, params, omega):
             if abs(tanh_val) < 1e-30:
                 return complex(1e12, 0.0)
             return (r / arg) * (1.0 / tanh_val)
+
+    elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion"]:
+        # Short (transmissive) terminus, impedance.py Ws: Z = Rd * tanh(sqrt(j*w*tau)) / sqrt(j*w*tau)
+        r = max(1e-6, params.get("value", params.get("resistance", params.get("r", 100.0))))
+        t = max(1e-6, params.get("exponent", params.get("timeConstant", params.get("tau", 0.5))))
+        if is_arr:
+            arg = np.sqrt(j * w * t)
+            return np.where(np.abs(arg) < 1e-12, complex(r, 0.0), (r * np.tanh(arg)) / (arg + 1e-30))
+        else:
+            arg = cmath.sqrt(j * w * t)
+            if abs(arg) < 1e-12:
+                return complex(r, 0.0)
+            return r * cmath.tanh(arg) / arg
 
     elif el_type in ["G", "Gerischer"]:
         # Gerischer element: Z = Rg / (1 + (j*w*tau)^alpha)^0.5
@@ -192,7 +255,7 @@ def evaluate_element_impedance(el_type, params, omega):
         l = max(1e-12, params.get("value", params.get("inductance", 1e-6)))
         return j * w * l
     
-    return np.full(w.shape, complex(1.0, 0.0), dtype=np.complex128) if is_arr else complex(1.0, 0.0)
+    raise _unknown_element_error(el_type)
 
 def evaluate_custom_topology_impedance(branches, params_dict, omega):
     """
@@ -202,7 +265,9 @@ def evaluate_custom_topology_impedance(branches, params_dict, omega):
     """
     is_arr = _is_array(omega)
     if not branches:
-        return np.full_like(omega, complex(10.0, 0.0), dtype=np.complex128) if is_arr else complex(10.0, 0.0)
+        raise _validation_error("OUT_OF_RANGE", "topology.branches",
+                                "a custom topology needs at least one branch; no 10 Ohm default circuit is substituted",
+                                {"branches": 0})
     
     z_total = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
     
@@ -286,7 +351,7 @@ def evaluate_circuit_impedance(topology_data, params_dict, omega):
     if isinstance(topology_data, dict) and "branches" in topology_data and topology_data["branches"]:
         return evaluate_custom_topology_impedance(topology_data["branches"], params_dict, omega)
         
-    topology_id = topology_data if isinstance(topology_data, str) else topology_data.get("id", "standard_randles")
+    topology_id = _topology_id(topology_data)
     
     # Standard Randles: R_s + (R_ct || C_dl)
     if topology_id in ["standard_randles", "randles", "rc_parallel"]:
@@ -388,8 +453,11 @@ def evaluate_circuit_impedance(topology_data, params_dict, omega):
         el_hn = {"r0": r0, "tau": tau, "alpha": alpha, "beta": beta}
         return rs + evaluate_element_impedance("HN", el_hn, omega)
 
-    # Finite Reflective Warburg (Thin-Film Intercalation)
-    elif topology_id in ["finite_reflective_warburg", "intercalation_warburg", "ws_reflective"]:
+    # Finite Reflective Warburg (Thin-Film Intercalation): reflective = blocking = open terminus
+    # = coth = impedance.py Wo. "wo_reflective" is the ZView/impedance.py-consistent id;
+    # "ws_reflective" is the legacy id from the pre-fix mnemonic (where "Ws" meant coth) and
+    # is kept only so existing callers keep their numbers: it is NOT the tanh Ws element.
+    elif topology_id in ["finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective"]:
         rs = params_dict.get("Rs", 5.0)
         rct = params_dict.get("Rct", 50.0)
         qdl = params_dict.get("Qdl", 2e-5)
@@ -397,16 +465,15 @@ def evaluate_circuit_impedance(topology_data, params_dict, omega):
         rd = params_dict.get("Rd", 80.0)
         tau_d = params_dict.get("tau_d", 1.2)
         
-        z_ws = evaluate_element_impedance("Ws", {"r": rd, "tau": tau_d}, omega)
+        # Reflective (blocking) terminus = coth form = impedance.py Wo (this preset always used coth)
+        z_ws = evaluate_element_impedance("Wo", {"r": rd, "tau": tau_d}, omega)
         z_faradaic = rct + z_ws
         z_qdl = evaluate_element_impedance("CPE", {"q": qdl, "n": ndl}, omega)
         z_loop = (z_faradaic * z_qdl) / (z_faradaic + z_qdl)
         return rs + z_loop
 
-    # Default fallback: R_s + R_p
-    r1 = params_dict.get("Rs", 10.0)
-    r2 = params_dict.get("Rct", 100.0)
-    return np.full_like(omega, complex(r1 + r2, 0.0), dtype=np.complex128) if is_arr else complex(r1 + r2, 0.0)
+    # _topology_id() only returns ids listed in PRESET_TOPOLOGY_IDS, each handled above.
+    raise _unknown_topology_error(topology_id)
 
 def evaluate_topology_impedance(topology_data, omega, params_dict=None):
     """
@@ -538,7 +605,7 @@ def extract_topology_parameters(topology_data):
                         "max": 1e7,
                         "isFixed": is_fixed,
                     })
-                elif el_type in ["Wo", "OpenWarburg", "NernstDiffusion"]:
+                elif el_type in ["Wo", "OpenWarburg", "ReflectiveWarburg"]:
                     params.append({
                         "paramName": f"Rd_{el_name}",
                         "elementId": el_id,
@@ -561,7 +628,7 @@ def extract_topology_parameters(topology_data):
                         "max": 1e4,
                         "isFixed": is_fixed,
                     })
-                elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "ReflectiveWarburg"]:
+                elif el_type in ["Ws", "ShortWarburg", "FiniteWarburg", "NernstDiffusion"]:
                     params.append({
                         "paramName": f"Rd_{el_name}",
                         "elementId": el_id,
@@ -652,7 +719,7 @@ def extract_topology_parameters(topology_data):
                         "max": 1.00,
                         "isFixed": is_fixed,
                     })
-                elif el_type in ["TLM_short", "BisquertShort"]:
+                elif el_type in ["TLM_short", "BisquertShort", "BisquertTrans"]:
                     params.append({
                         "paramName": f"Rion_{el_name}",
                         "elementId": el_id,
@@ -743,16 +810,18 @@ def extract_topology_parameters(topology_data):
                         "max": 1e-1,
                         "isFixed": is_fixed,
                     })
+                else:
+                    raise _unknown_element_error(el_type)
         return params
 
-    topo_id = topology_data if isinstance(topology_data, str) else topology_data.get("id", "standard_randles")
+    topo_id = _topology_id(topology_data)
     if topo_id in ["standard_randles", "randles", "rc_parallel"]:
         return [
             {"paramName": "Rs", "elementId": "el-rs", "field": "value", "value": 10.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e6},
             {"paramName": "Rct", "elementId": "el-rct", "field": "value", "value": 100.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e7},
             {"paramName": "Cdl", "elementId": "el-cdl", "field": "value", "value": 1e-5, "unit": "F", "paramType": "Capacitor", "min": 1e-14, "max": 1.0},
         ]
-    elif topo_id in ["randles_cpe", "cpe_randles"]:
+    elif topo_id in ["randles_cpe", "cpe_randles", "rs_rcpe"]:
         return [
             {"paramName": "Rs", "elementId": "el-rs", "field": "value", "value": 10.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e6},
             {"paramName": "Rct", "elementId": "el-rct", "field": "value", "value": 100.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e7},
@@ -767,7 +836,7 @@ def extract_topology_parameters(topology_data):
             {"paramName": "ndl", "elementId": "el-qdl", "field": "exponent", "value": 0.90, "unit": "", "paramType": "Exponent", "min": 0.20, "max": 1.00},
             {"paramName": "sigma", "elementId": "el-w", "field": "value", "value": 50.0, "unit": "Ω·s^-0.5", "paramType": "Warburg", "min": 1e-2, "max": 1e7},
         ]
-    elif topo_id in ["two_time_constants", "oxide_coating"]:
+    elif topo_id in ["two_time_constants", "oxide_coating", "coated_metal"]:
         return [
             {"paramName": "Rs", "elementId": "el-rs", "field": "value", "value": 15.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e6},
             {"paramName": "Rpore", "elementId": "el-rp", "field": "value", "value": 500.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e7},
@@ -777,7 +846,7 @@ def extract_topology_parameters(topology_data):
             {"paramName": "Qdl", "elementId": "el-qdl", "field": "value", "value": 5e-6, "unit": "S·s^n", "paramType": "ConstantPhaseElement", "min": 1e-14, "max": 1.0},
             {"paramName": "ndl", "elementId": "el-qdl", "field": "exponent", "value": 0.82, "unit": "", "paramType": "Exponent", "min": 0.20, "max": 1.00},
         ]
-    elif topo_id in ["bisquert_open", "porous_electrode", "transmission_line"]:
+    elif topo_id in ["bisquert_open", "porous_electrode", "transmission_line", "tlm", "tlm_open"]:
         return [
             {"paramName": "Rs", "elementId": "el-rs", "field": "value", "value": 2.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e5},
             {"paramName": "Rion", "elementId": "el-tlm", "field": "value", "value": 65.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e6},
@@ -785,10 +854,12 @@ def extract_topology_parameters(topology_data):
             {"paramName": "Qdl", "elementId": "el-tlm", "field": "qd", "value": 1.5e-4, "unit": "S·s^n", "paramType": "ConstantPhaseElement", "min": 1e-14, "max": 1.0},
             {"paramName": "alpha", "elementId": "el-tlm", "field": "exponent", "value": 0.90, "unit": "", "paramType": "Exponent", "min": 0.20, "max": 1.00},
         ]
-    return [
-        {"paramName": "Rs", "elementId": "el-rs", "field": "value", "value": 10.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e6},
-        {"paramName": "Rct", "elementId": "el-rct", "field": "value", "value": 100.0, "unit": "Ω", "paramType": "Resistor", "min": 1e-3, "max": 1e7},
-    ]
+    # A known preset without a default parameter table (previously a silent Rs + Rct list
+    # that does not belong to these circuits): the caller must pass explicit parameters.
+    raise _validation_error(
+        "OUT_OF_RANGE", "topology",
+        f"preset topology {topo_id!r} has no default parameter table; pass explicit parameters or a custom topology",
+        {"topology": topo_id})
 
 def run_global_auto_fit(topology_data, points, initial_params=None, weighting="modulus", max_generations=80, pop_size=40, polish_lm=True, seed=42):
     """
@@ -1364,7 +1435,14 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
 def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1.0):
     """
     Computes true effective double-layer and film capacitances (C_eff) from Constant Phase Elements (CPE, Q, n)
-    using the Brug (2D surface distribution), Hirschorn (3D normal distribution), and Hsu-Mansfeld models.
+    using the Brug (2D surface distribution) and Hsu-Mansfeld (peak-frequency) models.
+    The former "Hirschorn" value was algebraically identical to Hsu-Mansfeld
+    (Q^(1/n) R^((1-n)/n) = (Q R^(1-n))^(1/n), verified numerically); it is removed.
+    Hirschorn et al., Electrochim. Acta 55 (2010) 6218, whose abstract (the only part
+    read) states that the effective-capacitance formula must match the type of
+    time-constant distribution (surface or normal), is not otherwise implemented here: no
+    separate normal-distribution formula is computed, and which inputs it would need
+    was not verified.
     """
     cpe_results = []
     area = max(1e-6, float(electrode_area or 1.0))
@@ -1437,12 +1515,9 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1
                     r_comb = (r_solution * r_parallel) / max(1e-12, (r_solution + r_parallel))
                     c_brug = (q_val ** (1.0 / n_val)) * (r_comb ** ((1.0 - n_val) / n_val))
                 
-                # 2. Hirschorn / Mansfeld Formula (3D Normal Distribution through film/coating):
-                # C_eff = Q^(1/n) * R_film^((1-n)/n)
-                c_hirschorn = (q_val ** (1.0 / n_val)) * (r_parallel ** ((1.0 - n_val) / n_val))
                 
-                # 3. Hsu-Mansfeld Formula (Characteristic frequency apex):
-                # C_eff = Q * (omega_max)^(n-1) = (Q * R_ct^(1-n))^(1/n)
+                # 2. Hsu-Mansfeld Formula (Characteristic frequency apex):
+                # C_eff = Q * (omega_max)^(n-1) = (Q * R_ct^(1-n))^(1/n) = Q^(1/n) * R^((1-n)/n)
                 c_hsu = (q_val * (r_parallel ** (1.0 - n_val))) ** (1.0 / n_val)
                 
                 tau_brug_ms = r_parallel * c_brug * 1000.0
@@ -1467,8 +1542,6 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1
                     "cBrug_F": c_brug,
                     "cBrug_uF": round(c_brug_uF, 4),
                     "cEffectiveArea_uFcm2": round(c_brug_uFcm2, 3),
-                    "cHirschorn_F": c_hirschorn,
-                    "cHirschorn_uF": round(c_hirschorn * 1e6, 4),
                     "cHsuMansfeld_F": c_hsu,
                     "cHsuMansfeld_uF": round(c_hsu * 1e6, 4),
                     "tauEffectiveMs": round(tau_brug_ms, 3),
@@ -1936,7 +2009,7 @@ if __name__ == "__main__":
             cpe_caps = calculate_cpe_effective_capacitances(initial_params, topology_data, area)
             print(json.dumps({
                 "success": True,
-                "engine": "CPython-3.10-CPE-Brug-Hirschorn-Calculator",
+                "engine": "CPython-3.10-CPE-Brug-HsuMansfeld-Calculator",
                 "cpeCapacitances": cpe_caps
             }))
         elif action in ["synthetic_noise_benchmark", "synthetic_noise"]:
@@ -2177,5 +2250,10 @@ if __name__ == "__main__":
             result = run_cnls_fit(topology_data, points, initial_params, weighting, max_iterations)
             print(json.dumps(result))
     except Exception as e:
+        validation = sys.modules.get("input_validation")
+        if validation is not None and isinstance(e, validation.ValidationError):
+            # Phase 6a envelope: invalid input, not a solver failure (HTTP 422 in the bridge).
+            print(json.dumps(validation.validation_envelope(e)))
+            sys.exit(2)
         print(json.dumps({"error": str(e)}))
         sys.exit(1)

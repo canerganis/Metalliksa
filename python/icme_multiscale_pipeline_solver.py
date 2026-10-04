@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
-MetalliX ICME Multi-Scale Pipeline Solver
+MetalliX ICME Multi-Scale Pipeline Solver (ILLUSTRATIVE closed-form estimator)
 Author: MetalliX Computational Materials Science HPC Engine
 
-Solves the end-to-end Integrated Computational Materials Engineering (ICME) Digital Thread:
+modelStatus = "illustrative": every scale below is a closed-form formula on hard-coded
+tabulated constants. No DFT, CALPHAD or finite-element calculation is run (the scale
+names are historical API keys), the model is room-temperature only, and the ultimate
+tensile strength and the fracture toughness (K_Ic, critical flaw size, plastic zone)
+are reported as unavailable (see MODEL_STATUS_NOTE and the *_status fields).
+
+Historical scale layout (ICME digital-thread names, kept as output keys):
 Scale 0: DFT Atomistic (Lattice, C_ij Elastic Stiffness, Peierls-Nabarro, Pugh B/G, Taylor M)
 Scale 1: CALPHAD & Solute Misfit (Gibbs Energy, Size & Modulus Misfit, Labusch-Fleischer Solid Solution)
 Scale 2: Microstructure & Kinetics (Cooling Rate, SDAS, Grain Size d, Dislocation Density rho, LSW Precipitate Orowan/Cutting)
-Scale 3: Continuum Plasticity (Strengthening Superposition, Hollomon/Voce/Johnson-Cook Stress-Strain Curve, K_1c Fracture Toughness)
-Scale 4: Macro Structural Limit (Aero/Turbine Component FEA Load, Safety Margin, Critical Flaw a_c)
-CAE Export: Abaqus, ANSYS, LS-DYNA, NASTRAN Material Cards
+Scale 3: Continuum Plasticity (Strengthening Superposition, Schematic Stress-Strain Curve, Johnson-Cook parameters; UTS and K_1c unavailable)
+Scale 4: Yield-only component check (catalogue stress, safety margin; no FEA; flaw size unavailable)
+CAE Export: Abaqus, ANSYS, LS-DYNA illustrative (uncalibrated) material cards
 """
 
 import sys
@@ -34,6 +40,53 @@ from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelo
 # 8.314) and the atomic weights are CIAAW 2021 abridged values (were rounded copies).
 R_GAS = physical_constants.GAS_CONSTANT_R.value  # J/(mol*K), exact
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
+
+# Honesty labels (backlog lane 9 "Demote to illustrative", audit D5). The scale keys of the
+# output (scale0_dftAtomistic, ...) are historical API names; this block says what the
+# numbers really are.
+MODEL_STATUS = "illustrative"
+MODEL_STATUS_NOTE = (
+    "Illustrative closed-form estimate; it is not calibrated to measurements or validated. "
+    "Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table "
+    "of elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a "
+    "Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of atomic "
+    "radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no thermodynamic "
+    "calculation is run, and the size and modulus misfit values are reported but do not enter "
+    "the strength. The microstructure scale uses empirical SDAS, Hall-Petch, Taylor and "
+    "LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and CAE-card parameters "
+    "come from a schematic hardening law with a placeholder strain-hardening exponent n. The "
+    "'macro FEA' scale is a yield-only comparison of Rp0.2 with a fixed catalogue stress, not a "
+    "finite-element analysis. The model is room-temperature only: serviceTemp_C does not change "
+    "any value and strainRate_s_inv only appears in a card line. Ultimate tensile strength and "
+    "fracture toughness (K_Ic, critical flaw size, plastic zone radius) are unavailable; see the "
+    "status fields next to them."
+)
+MODEL_PARTS = [
+    "scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)",
+    "scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no CALPHAD)",
+    "scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations",
+    "scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with placeholder n",
+    "scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)",
+    "caeExportCards: uncalibrated illustrative cards",
+]
+UTS_UNAVAILABLE_STATUS = (
+    "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so "
+    "that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only "
+    "return the yield strength; an independent measured n and K are required"
+)
+K1C_UNAVAILABLE_STATUS = (
+    "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not "
+    "MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; "
+    "supply a measured K_Ic"
+)
+LEFM_UNAVAILABLE_STATUS = (
+    "unavailable: the critical flaw size and the plastic zone radius need a fracture toughness K_Ic, "
+    "which this model does not provide"
+)
+STRUCTURAL_VERDICT_BASIS = (
+    "Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa against "
+    "requiredSafetyFactor. No creep, fatigue, fracture, buckling or service-temperature check exists."
+)
 
 
 def _default_composition_wt() -> dict:
@@ -283,15 +336,17 @@ def solve_multiscale_pipeline(params: dict) -> dict:
 
     n_hollomon = max(0.08, min(0.32, 0.26 / (1.0 + yield_strength_MPa / 1200.0)))
     K_hollomon_MPa = yield_strength_MPa * math.pow(math.e / n_hollomon, n_hollomon)
-    true_uts_MPa = K_hollomon_MPa * math.pow(n_hollomon, n_hollomon)
-    eng_uts_MPa = true_uts_MPa / math.exp(n_hollomon)
+    # UTS is NOT computed (backlog lane 9): K above is K = Rp0.2*(e/n)^n, so the Considere
+    # engineering UTS = K*(n/e)^n equals Rp0.2 identically, and n is a placeholder correlation.
+    # It was reported as UTS == yield strength before; it is unavailable now.
     
     uniform_elongation_pct = n_hollomon * 100.0
     ductility_factor = 1.3 if is_ductile_pugh else 0.8
     total_elongation_pct = max(4.0, min(42.0, uniform_elongation_pct * ductility_factor + 4200.0 / (yield_strength_MPa + 250.0)))
 
     fracture_strain_true = math.log(1.0 + total_elongation_pct / 100.0)
-    K_1c_MPa_sqrt_m = math.sqrt(max(15.0, (2.0 / 3.0) * (youngs_modulus_E_GPa * 1000.0) * yield_strength_MPa * fracture_strain_true * (n_hollomon**2)))
+    # K_Ic is NOT computed (backlog lane 9): sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not
+    # MPa*sqrt(m), and had an invented 15 floor.
 
     # Generate 50-point true & engineering stress-strain curve for plotting & FEA export
     stress_strain_curve = []
@@ -363,14 +418,14 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     is_structurally_safe = sf_actual >= comp_spec["safetyFactorDesign"]
     
     geom_Y = comp_spec["geometryFactorY"]
-    crit_flaw_size_ac_mm = (1.0 / math.pi) * math.pow((K_1c_MPa_sqrt_m / (geom_Y * applied_stress_MPa)), 2.0) * 1000.0
-    plastic_zone_radius_mm = (1.0 / (2.0 * math.pi)) * math.pow((K_1c_MPa_sqrt_m / yield_strength_MPa), 2.0) * 1000.0
+    # The critical flaw size a_c = (1/pi)*(K_Ic/(Y*sigma))^2 and the plastic zone radius need a
+    # K_Ic; none is available, so neither is computed.
 
     # =========================================================================
     # CAE MATERIAL CARD GENERATORS (Abaqus, ANSYS, LS-DYNA, Nastran)
     # =========================================================================
     abaqus_card = f"""*HEADING
-** MetalliX Multi-Scale ICME Calibrated Card for {alloy_name}
+** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for {alloy_name}
 *MATERIAL, NAME={alloy_name.replace(' ', '_').upper()}
 *DENSITY
 {density_g_cm3 * 1000.0:.2f}
@@ -387,6 +442,7 @@ def solve_multiscale_pipeline(params: dict) -> dict:
 {fracture_strain_true:.4f}, 0.0, 0.0"""
 
     ls_dyna_card = f"""$*LS-DYNA MATERIAL DECK: {alloy_name}
+$ ILLUSTRATIVE estimate (uncalibrated, not validated)
 *MAT_PIECEWISE_LINEAR_PLASTICITY
 $#     mid        ro         e        pr      sigy      etan      fail      tdel
          1  {density_g_cm3 * 1e-3:.3e}  {youngs_modulus_E_GPa * 1e3:.1f}   {poisson_ratio:.4f}  {jcA_MPa:.1f}       0.0  {fracture_strain_true:.4f}       0.0
@@ -394,6 +450,7 @@ $#       c         p      lcss      lcsr        vp
    {jcC:.4f}       0.0         0         0       0.0"""
 
     ansys_card = f"""! ANSYS APDL Material Card: {alloy_name}
+! ILLUSTRATIVE estimate (uncalibrated, not validated)
 MPTEMP,,,,,,,,
 MPTEMP,1,0
 MPDATA,EX,1,,{youngs_modulus_E_GPa * 1e3:.2f}
@@ -410,7 +467,10 @@ TBPT,,0.20,{jcA_MPa + (jcB_MPa * 0.20**jcn):.1f}"""
 
     return {
         "success": True,
-        "engine": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)",
+        "modelStatus": MODEL_STATUS,
+        "modelStatusNote": MODEL_STATUS_NOTE,
+        "modelParts": list(MODEL_PARTS),
+        "engine": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
         "computeTimeMs": compute_time_ms,
         "inputParameters": {
             "alloyName": alloy_name,
@@ -480,10 +540,12 @@ TBPT,,0.20,{jcA_MPa + (jcB_MPa * 0.20**jcn):.1f}"""
             },
             "mechanicalProperties": {
                 "yieldStrength_Rp02_MPa": round(yield_strength_MPa, 1),
-                "ultimateTensileStrength_UTS_MPa": round(eng_uts_MPa, 1),
+                "ultimateTensileStrength_UTS_MPa": None,
+                "ultimateTensileStrength_UTS_status": UTS_UNAVAILABLE_STATUS,
                 "uniformElongationPct": round(uniform_elongation_pct, 1),
                 "totalElongationPct": round(total_elongation_pct, 1),
-                "fractureToughness_K1c_MPa_sqrt_m": round(K_1c_MPa_sqrt_m, 1),
+                "fractureToughness_K1c_MPa_sqrt_m": None,
+                "fractureToughness_K1c_status": K1C_UNAVAILABLE_STATUS,
                 "hollomon_n": round(n_hollomon, 3),
                 "hollomon_K_MPa": round(K_hollomon_MPa, 1)
             },
@@ -503,11 +565,13 @@ TBPT,,0.20,{jcA_MPa + (jcB_MPa * 0.20**jcn):.1f}"""
             "appliedStress_MPa": applied_stress_MPa,
             "requiredSafetyFactor": comp_spec["safetyFactorDesign"],
             "actualSafetyFactor": round(sf_actual, 2),
-            "structuralVerdict": "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)" if is_structurally_safe else "WARNING: INSUFFICIENT SAFETY MARGIN (Risk of Plastic Yielding)",
+            "structuralVerdict": "YIELD CHECK PASSED (yield strength vs fixed catalogue stress only; no creep, fatigue or fracture check)" if is_structurally_safe else "WARNING: INSUFFICIENT YIELD SAFETY MARGIN (Risk of Plastic Yielding; yield-only check)",
+            "structuralVerdictBasis": STRUCTURAL_VERDICT_BASIS,
             "lefmDamageTolerance": {
-                "criticalFlawSize_ac_mm": round(crit_flaw_size_ac_mm, 2),
-                "plasticZoneRadius_rp_mm": round(plastic_zone_radius_mm, 2),
-                "inspectionNDICapability": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)" if crit_flaw_size_ac_mm > 1.0 else "High-Resolution Eddy Current / Computed Tomography Required (Sub-mm Flaw)"
+                "criticalFlawSize_ac_mm": None,
+                "plasticZoneRadius_rp_mm": None,
+                "inspectionNDICapability": "Unavailable (no critical flaw size without K_Ic)",
+                "status": LEFM_UNAVAILABLE_STATUS
             }
         },
         "caeExportCards": {

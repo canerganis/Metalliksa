@@ -31,7 +31,9 @@ All keys are optional at the authority, which applies the listed default when a 
 
 Undeclared input keys (read by the authority, not describable by the Field schema): `alloyName`, `crystalSystem`, `composition_wt`, `grainSize_um`.
 
-Output fields (no status key, so the output carries no evidence status): `success`, `engine`, `computeTimeMs`, `inputParameters`, `scale0_dftAtomistic`, `scale1_calphadSoluteMisfit`, `scale2_microstructureKinetics`, `scale3_continuumPlasticity`, `scale4_macroComponentFEA`, `caeExportCards`, `provenance`.
+Output fields (no status key, so the output carries no evidence status): `success`, `modelStatus`, `modelStatusNote`, `modelParts`, `engine`, `computeTimeMs`, `inputParameters`, `scale0_dftAtomistic`, `scale1_calphadSoluteMisfit`, `scale2_microstructureKinetics`, `scale3_continuumPlasticity`, `scale4_macroComponentFEA`, `caeExportCards`, `provenance`.
+
+`modelStatus` is a transport field, not an evidence status; values: `illustrative`.
 
 ## Evidence
 
@@ -41,7 +43,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: Emits no evidence status: the output has no status key. scale4_macroComponentFEA.structuralVerdict is fixed text chosen by comparing the estimated yield strength with a catalog safety factor; it is not an evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
+- Note: Emits no evidence status: modelStatus is a model label (always 'illustrative'), not an evidence status, and the output has no evidence status key. scale4_macroComponentFEA.structuralVerdict is fixed text chosen by comparing the estimated yield strength with a catalog safety factor (a yield-only check: no creep, fatigue or fracture check); it is not an evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. ultimateTensileStrength_UTS_MPa, fractureToughness_K1c_MPa_sqrt_m, criticalFlawSize_ac_mm and plasticZoneRadius_rp_mm are null (unavailable, with a status text) because the model has no valid way to compute them. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
 
@@ -54,8 +56,9 @@ Background work: none; resources: fetch.
 ## Recorded notes
 
 - alloyName is a free-text label written into the output and the material cards; crystalSystem is echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, so they are recorded as undeclaredInput.
-- Recorded wording gap (not changed here): when the yield-based safety factor passes, scale4_macroComponentFEA.structuralVerdict reads 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)', but no creep check exists and serviceTemp_C is not used; the verdict is the same at 1000 degC.
-- Recorded wording gap (not changed here): the exported CAE material cards are headed 'MetalliX Multi-Scale ICME Calibrated Card', although no calibration against data is performed.
+- Wording gap fixed in fx-icme: the verdict used to read 'STRUCTURALLY SAFE (Passed Yield & Creep Criteria)' although no creep check exists. It is now a yield-only text ('YIELD CHECK PASSED ... no creep, fatigue or fracture check'); serviceTemp_C is still not used and the verdict is the same at 1000 degC (no creep check exists).
+- Wording gap fixed in fx-icme: the exported CAE material cards were headed 'MetalliX Multi-Scale ICME Calibrated Card'; they are now headed 'ILLUSTRATIVE Card (uncalibrated, not validated)' because no calibration against data is performed.
+- Unavailable by design (fx-icme): the former UTS (equal to the yield strength by the Hollomon K choice) and the former K_Ic (a formula with the unit MPa, not MPa*sqrt(m)) are null with status texts; the critical flaw size and plastic zone radius that need K_Ic are null too.
 - No validity domain is declared: no source-backed applicability range is established for the coupled estimates.
 - warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt.
 
