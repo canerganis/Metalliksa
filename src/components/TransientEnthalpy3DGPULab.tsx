@@ -13,52 +13,66 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {..
 const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => <select {...props} className={`w-full rounded border border-slate-300 px-2 py-1.5 text-sm bg-white ${props.className ?? ''}`} />;
 const Label = ({ children }: SlotProps) => <span className="block text-xs text-slate-500">{children}</span>;
 
-// Material inputs come from the Python authority (src/generated/lpbfMaterialAuthority.json); no alloy numbers here.
-const MATERIALS = {
+// Dropdown label -> alloy id. Material inputs come from the Python authority
+// (src/generated/lpbfMaterialAuthority.json); no alloy numbers here. Pinned by tests/lpbf-material-authority.test.ts.
+export const GPU_LAB_MATERIALS = {
   "Ti-6Al-4V": "ti6al4v",
   "IN718": "in718",
   "316L": "ss316l",
   "AlSi10Mg": "alsi10mg",
 } as const satisfies Record<string, AuthorityAlloyId>;
+export type GpuLabMaterialLabel = keyof typeof GPU_LAB_MATERIALS;
+
+export interface GpuLabParams {
+  nx: number; ny: number; nz: number;
+  dx: number; dy: number; dz: number;
+  power_W: number;
+  T_preheat_K: number;
+  material: GpuLabMaterialLabel;
+}
+
+/** The exact payload the lab hands to computeTransient3DGPU: authority inputs passed through unchanged (K). */
+export function transientGpuRequest(params: GpuLabParams): Parameters<typeof pythonComputationService.computeTransient3DGPU>[0] {
+  const alloyId = GPU_LAB_MATERIALS[params.material];
+  if (!alloyId) throw new Error(`Unknown material preset "${String(params.material)}"; no surrogate alloy is substituted.`);
+  const dx_m = params.dx * 1e-6;
+  const dy_m = params.dy * 1e-6;
+  const dz_m = params.dz * 1e-6;
+  return {
+    nx: params.nx, ny: params.ny, nz: params.nz,
+    dx: dx_m, dy: dy_m, dz: dz_m,
+    power_W: params.power_W,
+    T_preheat_K: params.T_preheat_K,
+    toolpath: {
+      t: [0.0, 100e-6],
+      x: [params.nx * dx_m * 0.25, params.nx * dx_m * 0.75],
+      y: [params.ny * dy_m * 0.5, params.ny * dy_m * 0.5],
+      p: [params.power_W, params.power_W]
+    },
+    ...transientGpuMaterialInputs(alloyId),
+  };
+}
 
 export function TransientEnthalpy3DGPULab() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [params, setParams] = useState({
+  const [error, setError] = useState<string | null>(null);
+  const [params, setParams] = useState<GpuLabParams>({
     nx: 64, ny: 64, nz: 32,
     dx: 2.0, dy: 2.0, dz: 2.0,
     power_W: 200.0,
     T_preheat_K: 300.0,
-    material: "Ti-6Al-4V" as keyof typeof MATERIALS
+    material: "Ti-6Al-4V"
   });
 
   const handleSimulate = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const mat = transientGpuMaterialInputs(MATERIALS[params.material]);
-      const dx_m = params.dx * 1e-6;
-      const dy_m = params.dy * 1e-6;
-      const dz_m = params.dz * 1e-6;
-      setResult(await pythonComputationService.computeTransient3DGPU({
-        nx: params.nx, ny: params.ny, nz: params.nz,
-        dx: dx_m, dy: dy_m, dz: dz_m,
-        power_W: params.power_W,
-        T_preheat_K: params.T_preheat_K,
-        toolpath: {
-          t: [0.0, 100e-6],
-          x: [params.nx * dx_m * 0.25, params.nx * dx_m * 0.75],
-          y: [params.ny * dy_m * 0.5, params.ny * dy_m * 0.5],
-          p: [params.power_W, params.power_W]
-        },
-        rho: mat.rho,
-        L_f: mat.L_f,
-        T_solidus: mat.T_solidus,
-        T_liquidus: mat.T_liquidus,
-        cp_solid: mat.cp_solid,
-        cp_liquid: mat.cp_liquid,
-        k_solid: mat.k_solid,
-        k_liquid: mat.k_liquid
-      }));
+      setResult(await pythonComputationService.computeTransient3DGPU(transientGpuRequest(params)));
+    } catch (e: unknown) {
+      setResult(null);
+      setError(e instanceof Error ? e.message : 'Simulation failed.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +86,7 @@ export function TransientEnthalpy3DGPULab() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Layers className="h-5 w-5" />Simulation Parameters</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <label className="space-y-1 text-sm"><Label>Material</Label><Select value={params.material} onChange={e => setParams({...params, material: e.target.value as any})}><option value="Ti-6Al-4V">Ti-6Al-4V</option><option value="IN718">IN718</option><option value="316L">316L</option><option value="AlSi10Mg">AlSi10Mg</option></Select></label>
+          <label className="space-y-1 text-sm"><Label>Material</Label><Select value={params.material} onChange={e => setParams({...params, material: e.target.value as GpuLabMaterialLabel})}>{(Object.keys(GPU_LAB_MATERIALS) as GpuLabMaterialLabel[]).map(label => <option key={label} value={label}>{label}</option>)}</Select></label>
           <label className="space-y-1 text-sm"><Label>Power (W)</Label><Input type="number" value={params.power_W} onChange={e => setParams({...params, power_W: Number(e.target.value)})} /></label>
           <label className="space-y-1 text-sm"><Label>Preheat Temp (K)</Label><Input type="number" value={params.T_preheat_K} onChange={e => setParams({...params, T_preheat_K: Number(e.target.value)})} /></label>
           <label className="space-y-1 text-sm"><Label>Grid Nx</Label><Input type="number" value={params.nx} onChange={e => setParams({...params, nx: Number(e.target.value)})} /></label>
@@ -82,6 +96,7 @@ export function TransientEnthalpy3DGPULab() {
           <label className="space-y-1 text-sm"><Label>Cell dz (µm)</Label><Input type="number" step="0.1" value={params.dz} onChange={e => setParams({...params, dz: Number(e.target.value)})} /></label>
         </div>
         <Button onClick={handleSimulate} disabled={loading} className="w-full">{loading ? <Activity className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}Run GPU Simulation</Button>
+        {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
       </CardContent></Card>
       <Card className="lg:col-span-2"><CardHeader><CardTitle>Results & Diagnostics</CardTitle></CardHeader><CardContent>
         {!result ? <div className="py-24 text-center text-slate-400"><p>Configure parameters and run the 3D solver.</p></div> : <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-center">

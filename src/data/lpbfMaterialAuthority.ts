@@ -7,8 +7,11 @@
  * numbers to this file or to its consumers; change the Python authority and regenerate.
  * Equality is tested in tests/lpbf-material-authority.test.ts and
  * python/test_lpbf_material_authority_json.py. Unknown alloys throw: no surrogate alloy.
- * The values carry the authority's own label (quality "estimated", provenance not
- * independently verified); this module adds no evidence claim.
+ * Labels are the authority's own: the four alloys carry quality "estimated" (provenance not
+ * independently verified). The IN625 row is NOT from the four-alloy authority: it carries
+ * quality "secondary-unreconciled", the registry catalog label ("missing") and the list of
+ * other IN625 values Python holds; use authorityThermalProvenance() to show that label.
+ * This module adds no evidence claim.
  */
 import authorityDocument from "../generated/lpbfMaterialAuthority.json";
 
@@ -59,10 +62,20 @@ export interface AuthorityAlloyEntry {
   readonly literaturePvWindow: AuthorityPvWindow;
 }
 
+export interface AuthorityUnreconciledValue {
+  readonly quantity: string;
+  readonly unit: string;
+  readonly values: readonly { readonly module: string; readonly use: string; readonly value: number }[];
+}
+
 export interface AuthoritySecondaryEntry {
   readonly thermalName: string;
+  readonly quality: string;
   readonly source: string;
+  readonly registryCatalogQuality: string;
+  readonly registryCatalogNote: string;
   readonly note: string;
+  readonly unreconciledPythonValues: readonly AuthorityUnreconciledValue[];
   readonly thermal: AuthorityThermal;
 }
 
@@ -75,7 +88,18 @@ export interface LpbfMaterialAuthorityDocument {
   readonly secondary: Readonly<{ in625: AuthoritySecondaryEntry }>;
 }
 
-export const LPBF_MATERIAL_AUTHORITY = authorityDocument as unknown as LpbfMaterialAuthorityDocument;
+/** The document shape this accessor was written for; a regenerated file with another version must fail loudly. */
+export const LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION = 1;
+
+export function checkedAuthorityDocument(document: unknown): LpbfMaterialAuthorityDocument {
+  const version = (document as { schemaVersion?: unknown } | null)?.schemaVersion;
+  if (version !== LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION) {
+    throw new Error(`lpbfMaterialAuthority.json schemaVersion ${String(version)} is not the supported ${LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION}; regenerate it and update this accessor.`);
+  }
+  return document as LpbfMaterialAuthorityDocument;
+}
+
+export const LPBF_MATERIAL_AUTHORITY = checkedAuthorityDocument(authorityDocument);
 
 function unknownAlloy(alloyId: string, scope: string): never {
   throw new Error(`No ${scope} in the Python material authority for alloy "${alloyId}"; no surrogate alloy is substituted.`);
@@ -94,6 +118,19 @@ export function authorityAlloy(alloyId: string): AuthorityAlloyEntry {
 export function authorityThermal(alloyId: string): AuthorityThermal {
   if (isAuthorityAlloyId(alloyId)) return LPBF_MATERIAL_AUTHORITY.alloys[alloyId].thermal;
   if (alloyId === "in625") return LPBF_MATERIAL_AUTHORITY.secondary.in625.thermal;
+  return unknownAlloy(alloyId, "thermophysical row");
+}
+
+/** The label and source that belong next to an authorityThermal() row. */
+export function authorityThermalProvenance(alloyId: string): { readonly quality: string; readonly source: string } {
+  if (isAuthorityAlloyId(alloyId)) {
+    const entry = LPBF_MATERIAL_AUTHORITY.alloys[alloyId];
+    return { quality: entry.quality, source: entry.source };
+  }
+  if (alloyId === "in625") {
+    const entry = LPBF_MATERIAL_AUTHORITY.secondary.in625;
+    return { quality: entry.quality, source: entry.source };
+  }
   return unknownAlloy(alloyId, "thermophysical row");
 }
 

@@ -166,8 +166,66 @@
   "secondary": {
     "in625": {
       "thermalName": "Inconel 625",
+      "quality": "secondary-unreconciled",
       "source": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
-      "note": "Secondary alloy, outside the four-alloy authority. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). python/in625_thermal_material.py holds a separate IN625 thermal model (Sabau et al. 2020; latent heat 290 kJ/kg there, 260 kJ/kg here); the two are not reconciled.",
+      "registryCatalogQuality": "missing",
+      "registryCatalogNote": "Bounded fusion-enthalpy literature-model screening only; full transient solver unavailable.",
+      "note": "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in python/in625_thermal_material.py (Sabau et al. 2020 screening; transient spec) and they are not reconciled: latent heat of fusion 260000 vs 290000 vs 227000 J/kg; boiling point 2880 vs 2900 C; IR absorptivity 0.38 vs 0.4. The material registry catalog does not offer this row as a material.",
+      "unreconciledPythonValues": [
+        {
+          "quantity": "latent heat of fusion",
+          "unit": "J/kg",
+          "values": [
+            {
+              "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
+              "use": "Rosenthal / build-job path (this row)",
+              "value": 260000.0
+            },
+            {
+              "module": "python/in625_thermal_material.py LATENT_HEAT_J_KG",
+              "use": "Sabau et al. 2020 fusion-enthalpy screening",
+              "value": 290000.0
+            },
+            {
+              "module": "python/in625_thermal_material.py IN625_LATENT_HEAT_FUSION_MILLS_J_KG",
+              "use": "transient material spec",
+              "value": 227000.0
+            }
+          ]
+        },
+        {
+          "quantity": "boiling point",
+          "unit": "C",
+          "values": [
+            {
+              "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
+              "use": "Rosenthal / build-job path (this row)",
+              "value": 2880.0
+            },
+            {
+              "module": "python/in625_thermal_material.py IN625_BOILING_K",
+              "use": "transient material spec (K - 273.15)",
+              "value": 2900.0
+            }
+          ]
+        },
+        {
+          "quantity": "IR absorptivity",
+          "unit": "",
+          "values": [
+            {
+              "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
+              "use": "Rosenthal / build-job path (this row)",
+              "value": 0.38
+            },
+            {
+              "module": "python/in625_thermal_material.py IN625_ABSORPTIVITY_IR",
+              "use": "transient material spec",
+              "value": 0.4
+            }
+          ]
+        }
+      ],
       "thermal": {
         "base": "Ni",
         "liquidus_C": 1350.0,

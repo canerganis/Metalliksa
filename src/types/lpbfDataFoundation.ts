@@ -71,7 +71,7 @@ export interface LPBFProcessParams {
     arealEnergyDensity_J_mm2: number;      // E_A = P / (v * h) [J/mm²]
     volumetricEnergyDensity_J_mm3: number; // E_V = P / (v * h * t) [J/mm³]
     peakLaserIntensity_MW_cm2: number;     // I_0 = 4P / (pi * d^2) [MW/cm²]
-    normalizedEnthalpy_dH_hs?: number;     // Normalized Enthalpy (King et al.)
+    normalizedEnthalpy_dH_hs?: number;     // Normalized Enthalpy (King et al.); not computed in the UI (Python only). Older stored user records may carry a legacy TS value; it is not used for ranking.
     pecletNumber?: number;                 // Pe = v * d / (2 * alpha)
     predictedRegime: ProcessRegime;
   };
@@ -137,15 +137,15 @@ export interface TraceableLPBFRecord {
 }
 
 /**
- * Physical Constants for Energy Density & Normalized Enthalpy calculations
+ * Alloy constants for the UI: the Python authority's values plus the TS-local VED thresholds.
+ * No normalized enthalpy (ΔH/h_s) is computed in the UI: that quantity comes from Python only
+ * (python/lpbf_thermal_solver.py), so h_s and alpha are not derived here.
  */
 export interface AlloyThermalConstants {
   meltingPoint_C: number;
   density_kg_m3: number;
   specificHeat_J_kgK: number;
   thermalConductivity_W_mK: number;
-  thermalDiffusivity_m2_s: number;
-  enthalpyOfMelting_hs_J_m3: number; // rho * Cp * Tm (enthalpy per unit volume to reach melting)
   defaultAbsorptivity: number;
   lofVedThreshold_J_mm3: number;
   keyholeVedThreshold_J_mm3: number;
@@ -153,7 +153,9 @@ export interface AlloyThermalConstants {
 
 /**
  * TS-local, not authority: VED regime thresholds used only by classifyProcessRegime.
- * The Python material authority has no counterpart for these values.
+ * The Python material authority has no counterpart for these values. B5 step 1 said to stop
+ * when a consumer needs a property the authority lacks; these pre-existing values were kept
+ * (labelled) instead of being invented in Python. Moving them is left to a later Python step.
  */
 const VED_REGIME_THRESHOLDS_TS_LOCAL: Record<LPBFAlloyId, { lof_J_mm3: number; keyhole_J_mm3: number }> = {
   ti6al4v: { lof_J_mm3: 48, keyhole_J_mm3: 110 },
@@ -166,21 +168,16 @@ const VED_REGIME_THRESHOLDS_TS_LOCAL: Record<LPBFAlloyId, { lof_J_mm3: number; k
 /**
  * Material constants read from the Python authority (src/generated/lpbfMaterialAuthority.json):
  * Tm = liquidus_C, rho, Cp and k are the solid rows, defaultAbsorptivity = absorptivity_IR.
- * alpha = k / (rho Cp) and h_s = rho Cp Tm are derived here from those values; no alloy number is held in TS.
+ * No alloy number is held in TS. in625 is the labelled secondary row (quality "secondary-unreconciled").
  */
 function alloyThermalConstantsFromAuthority(alloyId: LPBFAlloyId): AlloyThermalConstants {
   const t = authorityThermal(alloyId);
-  const rho = t.density_kg_m3;
-  const cp = t.specific_heat_J_kgK;
-  const k = t.thermal_conductivity_W_mK;
   const thresholds = VED_REGIME_THRESHOLDS_TS_LOCAL[alloyId];
   return {
     meltingPoint_C: t.liquidus_C,
-    density_kg_m3: rho,
-    specificHeat_J_kgK: cp,
-    thermalConductivity_W_mK: k,
-    thermalDiffusivity_m2_s: k / (rho * cp),
-    enthalpyOfMelting_hs_J_m3: rho * cp * t.liquidus_C,
+    density_kg_m3: t.density_kg_m3,
+    specificHeat_J_kgK: t.specific_heat_J_kgK,
+    thermalConductivity_W_mK: t.thermal_conductivity_W_mK,
     defaultAbsorptivity: t.absorptivity_IR,
     lofVedThreshold_J_mm3: thresholds.lof_J_mm3,
     keyholeVedThreshold_J_mm3: thresholds.keyhole_J_mm3,
@@ -246,32 +243,12 @@ export function calculatePeakLaserIntensity(power_W: number, beamDiameter_um: nu
   return Number(((2 * power_MW) / area_cm2).toFixed(3));
 }
 
-/**
- * Normalized Enthalpy (King / Gouge / Scime criterion): ΔH / h_s
- * Constants come from the Python authority; an unknown alloy throws. This annotation uses
- * h_s = rho Cp Tm(°C); python/lpbf_thermal_solver.py uses rho Cp max(50, T_liq - T_preheat)
- * with a powder-bed absorptivity, so the two are not the same number.
+/*
+ * Normalized enthalpy ΔH/h_s is intentionally NOT computed in the UI (B5 step 1). The former TS
+ * calculateNormalizedEnthalpy used h_s = rho Cp Tm(°C) with the record's absorptivity, while
+ * python/lpbf_thermal_solver.py uses rho Cp max(50, T_liq - T_preheat) with a powder-bed
+ * absorptivity: a second result path for the same quantity. The UI shows Python's value only.
  */
-export function calculateNormalizedEnthalpy(
-  power_W: number,
-  scanSpeed_mm_s: number,
-  beamDiameter_um: number,
-  alloyId: LPBFAlloyId,
-  absorptivity?: number
-): number {
-  const alloy = alloyThermalConstants(alloyId);
-  const eta = absorptivity !== undefined ? absorptivity : alloy.defaultAbsorptivity;
-  const v_m_s = scanSpeed_mm_s * 1e-3;
-  const sigma_m = (beamDiameter_um / 2) * 1e-6; // beam radius in meters
-  const alpha = alloy.thermalDiffusivity_m2_s;
-  const hs = alloy.enthalpyOfMelting_hs_J_m3;
-
-  // delta H / hs ~ (eta * P) / (hs * sqrt(pi * alpha * v * sigma^3))
-  const denominator = hs * Math.sqrt(Math.PI * alpha * Math.max(1e-4, v_m_s) * Math.pow(Math.max(1e-6, sigma_m), 3));
-  if (denominator <= 0) return 0;
-  const normalized = (eta * power_W) / denominator;
-  return Number(normalized.toFixed(2));
-}
 
 /**
  * Classify Process Regime based on VED, laser power, speed and alloy thresholds
