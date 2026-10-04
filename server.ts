@@ -24,6 +24,9 @@ import {
 } from "./server/airgap.ts";
 
 dotenv.config();
+// The Python IPC secret is generated per daemon spawn (server/processOrchestrator.ts); a value from
+// .env loaded just above must not linger in this process's environment or reach ad-hoc spawns.
+delete process.env.METALLIX_IPC_TOKEN;
 
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
