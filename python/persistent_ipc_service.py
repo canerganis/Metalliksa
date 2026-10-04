@@ -33,6 +33,7 @@ import hmac
 import hashlib
 import ipaddress
 import json
+import multiprocessing
 import shutil
 import stat
 import tempfile
@@ -60,9 +61,23 @@ ALLOW_REMOTE = os.environ.get("METALLIX_IPC_ALLOW_REMOTE", "") == "1"
 MIN_TOKEN_LENGTH = 32
 
 
-# Read once and removed from os.environ before the worker pool is created, so pool workers do
-# not inherit it in their environment.
-IPC_TOKEN: Optional[str] = os.environ.pop("METALLIX_IPC_TOKEN", None)
+def _token_taker():
+    """Removes METALLIX_IPC_TOKEN from os.environ at import, before any worker pool exists, so
+    pool workers and the solvers they run never see it in their environment. The value is held
+    in this closure (not a module global) until run_services takes it once and hands it to the
+    server objects. Solver code that runs in this process (the in-process fallback) could still
+    find it in memory, so this is environment/global hygiene, not an isolation boundary."""
+    held = [os.environ.pop("METALLIX_IPC_TOKEN", None)]
+
+    def take() -> Optional[str]:
+        value, held[0] = held[0], None
+        return value
+
+    return take
+
+
+_take_ipc_token = _token_taker()
+del _token_taker
 
 # Number of parallel workers (defaults to CPU count clamped between 2 and 4)
 DEFAULT_WORKERS = max(2, min(4, (os.cpu_count() or 2)))
@@ -416,6 +431,13 @@ def _worker_run_script(full_path: str, input_str: str, args: list) -> Dict[str, 
     }
 
 
+def _pool_mp_context():
+    """Workers start from a fresh interpreter (forkserver where available, else spawn) instead of
+    a fork of this process, so they never inherit this process's memory."""
+    methods = multiprocessing.get_all_start_methods()
+    return multiprocessing.get_context("forkserver" if os.name != "nt" and "forkserver" in methods else "spawn")
+
+
 class ConcurrentModuleRegistry:
     """
     Manages warm module imports, pre-compilation, and a high-concurrency ProcessPoolExecutor
@@ -477,6 +499,7 @@ class ConcurrentModuleRegistry:
                     pass
             self.pool = ProcessPoolExecutor(
                 max_workers=self.num_workers,
+                mp_context=_pool_mp_context(),
                 initializer=_worker_init,
                 initargs=(self.script_dir, WARM_MODULE_NAMES),
             )
@@ -643,10 +666,16 @@ class ConcurrentModuleRegistry:
                 pass
 
 
+def _is_pool_worker_process() -> bool:
+    """spawn/forkserver pool workers re-import this module (as __mp_main__ when it is the main
+    script); they must not build a second registry (warm-up plus a nested pool)."""
+    return multiprocessing.parent_process() is not None
+
+
 # Global registry. Built at import for library use (tests, tools); when this file runs as the
 # service it is built in run_services after the startup checks, so a refused launch never warms up.
 registry: Optional[ConcurrentModuleRegistry] = (
-    None if __name__ == "__main__" else ConcurrentModuleRegistry(SCRIPT_DIR))
+    None if (__name__ == "__main__" or _is_pool_worker_process()) else ConcurrentModuleRegistry(SCRIPT_DIR))
 WarmModuleRegistry = ConcurrentModuleRegistry
 
 
@@ -976,7 +1005,7 @@ def _http_url(host: str, port: int) -> str:
 def run_services():
     """Checks the configuration and binds both channels before any warm-up, then serves."""
     global registry
-    token = IPC_TOKEN
+    token = _take_ipc_token()
     validate_startup_config(HTTP_HOST, token, ALLOW_REMOTE)
 
     # 1. UNIX domain socket IPC (POSIX). Failure is fatal: the supervisor must not believe in a

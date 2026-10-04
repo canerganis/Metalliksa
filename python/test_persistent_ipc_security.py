@@ -330,8 +330,19 @@ class StartupConfigTest(unittest.TestCase):
         for host in ("127.0.0.1", "127.0.0.5", "localhost", "::1"):
             ipc.validate_startup_config(host, TOKEN, False)
 
-    def test_token_is_not_left_in_environment(self):
+    def test_token_is_neither_in_environment_nor_a_module_global(self):
         self.assertNotIn("METALLIX_IPC_TOKEN", os.environ)
+        self.assertFalse(hasattr(ipc, "IPC_TOKEN"))
+        module_strings = [v for v in vars(ipc).values() if isinstance(v, str) and len(v) >= 32]
+        self.assertNotIn(TOKEN, module_strings)
+
+    def test_pool_workers_start_from_a_fresh_interpreter(self):
+        self.assertIn(ipc._pool_mp_context().get_start_method(), ("spawn", "forkserver"))
+        if os.name != "nt" and "forkserver" in __import__("multiprocessing").get_all_start_methods():
+            self.assertEqual(ipc._pool_mp_context().get_start_method(), "forkserver")
+        with mock.patch.object(ipc.multiprocessing, "parent_process", return_value=object()):
+            self.assertTrue(ipc._is_pool_worker_process())
+        self.assertFalse(ipc._is_pool_worker_process())
 
 
 class ExclusiveBindTest(unittest.TestCase):
