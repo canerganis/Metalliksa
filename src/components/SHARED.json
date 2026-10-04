@@ -1,0 +1,10 @@
+{
+  "description": "Files under src/components/** that are intentionally not reachable from App.tsx or a registered module view yet. Each entry needs an owner and a reason; tests/component-reachability.test.ts enforces this. Dead code does not belong here: it goes to UNREACHABLE_BASELINE.json and is deleted after user approval.",
+  "files": [
+    {
+      "path": "src/components/Field.tsx",
+      "owner": "Phase 8 accessibility (a11y primitives)",
+      "reason": "Shared labelled-field wrapper added with AccessibleModal for the a11y migration; not adopted by a module view yet. Covered by tests/field-wrapper.test.tsx."
+    }
+  ]
+}

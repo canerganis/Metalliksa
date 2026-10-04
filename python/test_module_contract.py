@@ -3,6 +3,7 @@
 Run from the python directory:  python -B -m unittest test_module_contract
 """
 import dataclasses
+import json
 import re
 import unittest
 from pathlib import Path
@@ -31,7 +32,7 @@ def _field(**overrides):
 def _operation(**authority_overrides):
     authority = dict(kind="python-ipc", script="uq_lab.py", timeout_ms=30000)
     authority.update(authority_overrides)
-    return mc.Operation(id="run", route="/api/uq/run", authority=mc.Authority(**authority),
+    return mc.Operation(id="run", method="POST", route="/api/uq/run", authority=mc.Authority(**authority),
                         input=(_field(),), output=mc.OutputSchema(fields=("samples",)))
 
 
@@ -138,9 +139,65 @@ class FieldAndAuthorityTests(unittest.TestCase):
         with self.assertRaises(mc.ContractError):
             _operation(timeout_ms=0)
 
+    def test_timeout_required_only_where_code_runs_under_a_deadline(self):
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="python-ipc", script="python/x.py")
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="lpbf-worker", worker_method="get")
+        self.assertIsNone(mc.Authority(kind="node-provider").timeout_ms)
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="node-provider", timeout_ms=0)
+
+    def test_warm_applies_only_to_python_ipc(self):
+        with self.assertRaises(mc.ContractError):
+            mc.Authority(kind="lpbf-worker", worker_method="get", timeout_ms=1, warm=True)
+        self.assertTrue(mc.Authority(kind="python-ipc", script="python/x.py", timeout_ms=1, warm=True).warm)
+
+    def test_only_browser_local_operations_omit_a_route(self):
+        local = mc.Authority(kind="browser-local", exception_reason="recorded debt")
+        self.assertIsNone(mc.Operation(id="local", route=None, authority=local).route)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", route=None, authority=mc.Authority(kind="node-provider"))
+
+    def test_routed_operations_need_an_http_method(self):
+        node = mc.Authority(kind="node-provider")
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", route="/api/x", authority=node)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="remote", method="FETCH", route="/api/x", authority=node)
+        with self.assertRaises(mc.ContractError):
+            mc.Operation(id="local", method="GET", route=None,
+                         authority=mc.Authority(kind="browser-local", exception_reason="recorded debt"))
+        self.assertEqual(mc.Operation(id="remote", method="GET", route="/api/x", authority=node).to_dict()["method"], "GET")
+
+    def test_contracted_operations_must_declare_output(self):
+        undeclared = mc.Operation(id="run", method="POST", route="/api/uq/run",
+                                  authority=mc.Authority(kind="python-ipc", script="uq_lab.py", timeout_ms=1))
+        with self.assertRaises(mc.ContractError):
+            _contract(operations=(undeclared,))
+        self.assertIsNone(undeclared.to_dict()["output"])
+
+    def test_contracted_operations_must_declare_a_timeout(self):
+        for authority in (mc.Authority(kind="node-provider"),
+                          mc.Authority(kind="browser-local", exception_reason="recorded debt")):
+            operation = mc.Operation(id="run", method="POST", route="/api/uq/run", authority=authority,
+                                     output=mc.OutputSchema(fields=("samples",)))
+            with self.subTest(kind=authority.kind), self.assertRaises(mc.ContractError):
+                _contract(operations=(operation,))
+        timed = mc.Operation(id="run", method="POST", route="/api/uq/run",
+                             authority=mc.Authority(kind="node-provider", timeout_ms=12000),
+                             output=mc.OutputSchema(fields=("samples",)))
+        self.assertEqual(_contract(operations=(timed,)).operations[0].authority.timeout_ms, 12000)
+
+    def test_legacy_notes_are_unique_text(self):
+        with self.assertRaises(mc.ContractError):
+            _contract(legacy_notes=("same", "same"))
+        with self.assertRaises(mc.ContractError):
+            _contract(legacy_notes=(" ",))
+
     def test_route_must_be_api(self):
         with self.assertRaises(mc.ContractError):
-            mc.Operation(id="run", route="uq/run", authority=mc.Authority(kind="node-provider", timeout_ms=1),
+            mc.Operation(id="run", method="POST", route="uq/run", authority=mc.Authority(kind="node-provider", timeout_ms=1),
                          input=(), output=mc.OutputSchema(fields=("x",)))
 
     def test_validity_domain_requires_sources(self):
@@ -221,23 +278,25 @@ class LegacyRegistryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.registry = mr.build_registry()
-        cls.workspaces = (REPO_ROOT / "src" / "data" / "workspaces.ts").read_text(encoding="utf-8")
         cls.app = (REPO_ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
+        cls.golden = json.loads((REPO_ROOT / "tests" / "fixtures" / "modules-nav-golden.json").read_text(encoding="utf-8"))
 
-    def test_one_contract_per_listed_module_and_legacy_ratchet(self):
-        modules = mr.parse_workspaces_modules(self.workspaces)
-        self.assertEqual(len(modules), mr.count_module_ids(self.workspaces))
-        ids = [c.id for c in self.registry]
-        self.assertEqual(len(ids), len(modules))
-        self.assertEqual(set(ids), {m["id"] for m in modules})
+    def test_registry_matches_pre_registry_navigation_and_legacy_ratchet(self):
+        # The registry is the navigation source since slice 1; the golden is the
+        # hand-written MODULES list captured before derivation (same order).
+        listed = [c for c in self.registry if c.navigation == "listed"]
+        self.assertEqual(
+            [{"id": c.id, "workspace": c.workspace, "label": c.label, "scope": c.maturity,
+              "description": c.description, "next": c.next} for c in listed],
+            self.golden)
         legacy = [c for c in self.registry if c.migration_state == "legacy"]
         # Ratchet: migration may lower the legacy count; it must never grow.
         self.assertLessEqual(len(legacy), LEGACY_CEILING)
 
-    def test_unparseable_module_row_fails_loudly(self):
-        bad = self.workspaces.replace("scope: 'Research'", "scope: \"Research\"", 1)
-        with self.assertRaisesRegex(ValueError, "unparseable MODULES row"):
-            mr.parse_workspaces_modules(bad)
+    def test_workspaces_ts_no_longer_hand_lists_modules(self):
+        workspaces = (REPO_ROOT / "src" / "data" / "workspaces.ts").read_text(encoding="utf-8")
+        self.assertIn("LISTED_CONTRACTS", workspaces)
+        self.assertNotRegex(workspaces, r"\{\s*id:\s*'[a-z0-9-]+',\s*workspace:")
 
     def test_render_module_switch_is_bounded_and_rejects_duplicates(self):
         trailing = self.app + "\nfunction later() { switch (x) { case 'zzz-extra': return <UQLab />; } }\n"
@@ -247,9 +306,12 @@ class LegacyRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate renderModule case"):
             mr.parse_app_views(duplicated)
 
-    def test_seed_matches_typescript_sources(self):
-        self.assertEqual(mr.load_seed(), mr.build_seed(self.workspaces, self.app),
-                         "seed drifted; run python scripts/emit-module-registry.py --refresh-seed")
+    def test_seed_views_match_app_render_switch(self):
+        self.assertEqual(mr.seed_view_mismatches(mr.load_seed(), self.app), [])
+        drifted = [dict(row) for row in mr.load_seed()]
+        drifted[0]["viewExport"] = "SomethingElse"
+        self.assertEqual(len(mr.seed_view_mismatches(drifted, self.app)), 1)
+        self.assertIn("App.tsx case without a registry module", mr.seed_view_mismatches(drifted[1:], self.app)[0])
 
     def test_generated_files_are_current(self):
         self.assertEqual(mr.stale_outputs(), [], "run python scripts/emit-module-registry.py")
@@ -270,6 +332,34 @@ class LegacyRegistryTests(unittest.TestCase):
         for contract in self.registry:
             with self.subTest(module=contract.id):
                 self.assertTrue((REPO_ROOT / contract.view.component).is_file())
+
+    def test_legacy_operations_declare_authority_only(self):
+        # Slice 1 records which authority each view calls; fields, outputs, validity
+        # domains and source refs stay undeclared until a module is contracted.
+        for contract in self.registry:
+            for operation in contract.operations:
+                with self.subTest(module=contract.id, operation=operation.id):
+                    self.assertEqual(operation.input, ())
+                    self.assertIsNone(operation.output)
+                    if operation.authority.kind == "browser-local":
+                        self.assertIn("Recorded debt", operation.authority.exception_reason)
+
+    def test_legacy_authority_targets_exist_in_code(self):
+        worker_routes = (REPO_ROOT / "routes" / "lpbfSimulation.ts").read_text(encoding="utf-8")
+        for contract in self.registry:
+            for operation in contract.operations:
+                authority = operation.authority
+                with self.subTest(module=contract.id, operation=operation.id):
+                    if authority.kind == "python-ipc":
+                        self.assertTrue((REPO_ROOT / authority.script).is_file(), authority.script)
+                    if authority.kind == "lpbf-worker":
+                        self.assertRegex(worker_routes, rf"[\"']{re.escape(authority.worker_method)}[\"']")
+
+    def test_every_module_has_an_authority_or_a_recorded_gap(self):
+        for contract in self.registry:
+            with self.subTest(module=contract.id):
+                self.assertTrue(contract.operations or contract.legacy_notes,
+                                "record the authority or explain why none exists")
 
 
 if __name__ == "__main__":
