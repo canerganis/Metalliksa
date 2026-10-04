@@ -12,7 +12,7 @@ import {
   speciesCoefficients,
   waterLines25C,
 } from "../src/utils/pourbaixThermodynamics";
-import { ZONE_LABEL, ZONE_LABEL_MIN_AREA_PX2, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
+import { ZONE_LABEL, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
 import { REF_OFFSETS_VS_SHE } from "../src/utils/experimentalPourbaixOverlay";
 
 // The Studio only builds a scene; the drawing is a pure function, so a recording 2D context can check it
@@ -133,7 +133,7 @@ test("zone labels: exactly the domains whose view-clipped area exceeds the thres
       let poly = d.polygon;
       poly = clipPolygon(poly, -1, 0, BOX.pH_min); poly = clipPolygon(poly, 1, 0, -BOX.pH_max);
       poly = clipPolygon(poly, 0, -1, BOX.E_min_V_SHE); poly = clipPolygon(poly, 0, 1, -BOX.E_max_V_SHE);
-      return poly.length >= 3 && polygonArea(poly) * pxPerPhE >= ZONE_LABEL_MIN_AREA_PX2;
+      return poly.length >= 3 && polygonArea(poly) * pxPerPhE >= 3000 /* px^2, the documented label threshold */;
     });
     const labels = calls.filter((c) => c.op === "fillText" && Object.values(ZONE_LABEL).includes(c.args[0] as string));
     assert.equal(labels.length, expected.length, el);

@@ -525,6 +525,28 @@ class StepBGoldenTest(unittest.TestCase):
                     self.assertTrue(violations, "mutant accepted")
                     self.assertTrue(any(expect in v for v in violations), (expect, violations[:3]))
 
+    def test_pourbaix_oracle_check_itself_rejects_her_and_input_drift(self):
+        # independent of the step-(b) bound: the section checks of document_problems
+        import pourbaix_golden_check as check
+        for case in self.POURBAIX_CASES:
+            old, new = self._pb(case)
+            self.assertEqual({k: v for k, v in check.document_problems(old, new).items() if v}, {})
+            her = copy.deepcopy(new)
+            her["waterStabilityLines"]["line_a_hydrogen_HER"][5]["E_V_SHE"] *= 1.009
+            self.assertTrue(check.document_problems(old, her)["waterStabilityLines"], case)
+            eq = copy.deepcopy(new)
+            eq["waterStabilityLines"]["equation_HER"] += " "
+            self.assertTrue(check.document_problems(old, eq)["waterStabilityLines"], case)
+            pot = copy.deepcopy(new)
+            pot["experimentalOverlay"]["points"][0]["potential_Input_V"] *= 1.008
+            self.assertTrue(check.document_problems(old, pot)["experimentalOverlay"], case)
+            slope = copy.deepcopy(new)
+            slope["parameters"]["nernstSlope_V_pH"] *= 1.005
+            self.assertTrue(check.document_problems(old, slope)["parameters"], case)
+            slope_w = copy.deepcopy(new)
+            slope_w["waterStabilityLines"]["nernstSlope"] *= 1.005
+            self.assertTrue(check.document_problems(old, slope_w)["waterStabilityLines"], case)
+
     def test_pourbaix_has_no_generic_percentage_bound(self):
         # every numeric Pourbaix drift row is a documented change or a violation: bound 0
         self.assertEqual(golden.step_b_max_rel(self.POURBAIX, [{"key": "x", "rel": 0.001}]), 0.0)
