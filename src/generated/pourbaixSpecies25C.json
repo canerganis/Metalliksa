@@ -985,6 +985,7 @@
           "label": "Ti(IV) hydrolysis (Brown & Ekberg 2016)",
           "speciesIds": [
             "Ti4+[BE16]",
+            "TiO2+[BE16]",
             "TiOOH+[BE16]",
             "TiO(OH)2[BE16]",
             "TiO(OH)3-[BE16]"
@@ -1140,6 +1141,21 @@
           "source": "X",
           "verification": "V3",
           "evidence": "WITHHELD candidate: TiO2(s) + 4H+ = Ti4+ + 2H2O log K -3.56 +/- 0.10 (Brown & Ekberg 2016, NECTAR TiIV table) on NBS rutile (the table does not name the polymorph); Baes & Mesmer give only Ti(OH)2 2+ based constants",
+          "category": "Corrosion (acid)"
+        },
+        {
+          "id": "TiO2+[BE16]",
+          "formula": "TiO²⁺ (BE16)",
+          "x": 1,
+          "o": 1,
+          "h": 0,
+          "z": 2,
+          "phase": "aq",
+          "dfG_kJ_mol": -631.9363259809238,
+          "role": "cation",
+          "source": "X",
+          "verification": "V3",
+          "evidence": "WITHHELD candidate: TiO2(s) + 2H+ = TiO2+ + H2O log K -3.58, the difference of TiO2(s) + H+ = TiOOH+ (-6.06 +/- 0.30) and TiO2+ + H2O = TiOOH+ + H+ (-2.48 +/- 0.10) (Brown & Ekberg 2016, NECTAR TiIV table) on NBS rutile; its region at 1e-6 M reaches pH 1.21 inside the water window. Their TiO2+ + 2H2O = TiO(OH)2 + 2H+ (-5.49) agrees with the TiO(OH)2 row to 0.05 log units",
           "category": "Corrosion (acid)"
         },
         {

@@ -27,6 +27,7 @@ import {
   WITHHELD_REGION_NOTE,
   activityInRange,
   computeWithheldRegions,
+  constituentStates,
   freePhWindows,
   pourbaixActivityRange,
   pourbaixUnavailableReason,
@@ -70,7 +71,12 @@ export function PourbaixSolveError({ message }: { message: string | null }) {
 }
 
 /** `initialSolveError` and `initialAlloyId` are render-test seams only (the solver effect resets the error before every dispatch). */
-export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId = DEFAULT_ALLOY_ID }: { initialSolveError?: string | null; initialAlloyId?: string } = {}) {
+export function DynamicPourbaixStudio({
+  initialSolveError = null,
+  initialAlloyId = DEFAULT_ALLOY_ID,
+  initialProbePH = 7.0,
+  initialProbePotential_SHE = 0.2,
+}: { initialSolveError?: string | null; initialAlloyId?: string; initialProbePH?: number; initialProbePotential_SHE?: number } = {}) {
   // The loaded experimental preset names the element its points belong to; the default alloy (pure Fe) agrees with it.
   const initialPreset = EXPERIMENTAL_POURBAIX_PRESETS[0];
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>(initialAlloyId);
@@ -116,8 +122,8 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   const pythonSolveError = solveErrorState && solveErrorState.element === selectedElement ? solveErrorState.message : null;
 
   // Interactive Crosshair Probe
-  const [probePH, setProbePH] = useState<number>(7.0);
-  const [probePotential_SHE, setProbePotential_SHE] = useState<number>(0.2);
+  const [probePH, setProbePH] = useState<number>(initialProbePH);
+  const [probePotential_SHE, setProbePotential_SHE] = useState<number>(initialProbePotential_SHE);
 
   // View bounds: the engine box (pH -2..16, E -3.0..2.5 V SHE)
   const FULL_VIEW = { minPH: BOX.pH_min, maxPH: BOX.pH_max, minE: BOX.E_min_V_SHE, maxE: BOX.E_max_V_SHE };
@@ -191,15 +197,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
   );
 
   // Each constituent element evaluated alone at the probe point (no alloy equilibrium, no composite verdict)
-  const elementStates = useMemo(() => {
-    const states: { [el: string]: ReturnType<typeof classifyPourbaixPoint> | null } = {};
-    for (const el of Object.keys(activeComposition)) {
-      states[el] = pourbaixUnavailableReason(el) === null && activityInRange(el, log10Activity)
-        ? classifyPourbaixPoint(speciesCoefficients(el, log10Activity), probePH, probePotential_SHE)
-        : null;
-    }
-    return states;
-  }, [activeComposition, log10Activity, probePH, probePotential_SHE]);
+  // (with its own withheld-data validity: a constituent whose candidate species would be stable here is flagged)
+  const elementStates = useMemo(
+    () => constituentStates(Object.keys(activeComposition), log10Activity, probePH, probePotential_SHE),
+    [activeComposition, log10Activity, probePH, probePotential_SHE]
+  );
 
   // The Python result is shown only while it belongs to the current element and activity.
   const pythonFresh =
@@ -830,7 +832,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                   </p>
                   <p>Withheld candidate sets: {candidateSets.map((c) => c.label).join("; ")}.</p>
                   {unsourcedSpecies.length > 0 && (
-                    <p>Not represented (no sourced value): {unsourcedSpecies.map((u) => u.formula).join(", ")}.</p>
+                    <p>Not represented in the table: {unsourcedSpecies.map((u) => `${u.formula} (${u.reason})`).join("; ")}.</p>
                   )}
                 </div>
               )}
@@ -893,7 +895,7 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 {Object.keys(activeComposition).map((elem) => {
-                  const state = elementStates[elem];
+                  const { state, withheld } = elementStates[elem];
                   const wt = activeComposition[elem];
                   const color = state ? CATEGORY_STYLE[state.category].color : "#94a3b8";
                   return (
@@ -915,6 +917,11 @@ export function DynamicPourbaixStudio({ initialSolveError = null, initialAlloyId
                       >
                         {state ? state.category : "unavailable"}
                       </div>
+                      {withheld.length > 0 && (
+                        <div role="status" className="text-[9px] font-bold text-amber-300 truncate" title={withheld.map((h) => h.formula).join(", ")}>
+                          map not valid here (withheld data)
+                        </div>
+                      )}
                     </div>
                   );
                 })}

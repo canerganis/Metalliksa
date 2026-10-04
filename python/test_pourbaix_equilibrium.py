@@ -733,13 +733,13 @@ class ValidationTest(unittest.TestCase):
         code, out = _run_cli({"element": "Mo", "ionActivity_log10": -3})
         self.assertEqual((code, out["error"]["code"], out["error"]["field"]), (2, "OUT_OF_RANGE", "ionActivity_log10"))
         code, out = _run_cli({"element": "Ti"})
-        self.assertEqual((code, out["engine"]), (0, "pourbaix-gibbs-25c-v5"))
+        self.assertEqual((code, out["engine"]), (0, "pourbaix-gibbs-25c-v6"))
         code, out = _run_cli({"element": "Fe", "experimentalPoints": [{"ph": 7, "potential_V": 0, "refElectrode": "X"}]})
         self.assertEqual((code, out["error"]["code"]), (2, "UNKNOWN_REFERENCE_ELECTRODE"))
         self.assertEqual(set(out["error"]), {"code", "field", "message", "detail"})
         code, out = _run_cli({"element": "Fe"})
         self.assertEqual(code, 0)
-        self.assertEqual(out["engine"], "pourbaix-gibbs-25c-v5")
+        self.assertEqual(out["engine"], "pourbaix-gibbs-25c-v6")
 
 
 class OutputContractTest(unittest.TestCase):
@@ -759,7 +759,7 @@ class OutputContractTest(unittest.TestCase):
     def test_every_old_key_is_kept_and_new_keys_are_added(self):
         self.assertTrue(self.OLD_TOP_KEYS <= set(self.result))
         self.assertTrue({"model", "speciesTable", "temperatureStatus", "domains", "dataValidity"} <= set(self.result))
-        self.assertEqual(self.result["engine"], "pourbaix-gibbs-25c-v5")
+        self.assertEqual(self.result["engine"], "pourbaix-gibbs-25c-v6")
         self.assertTrue({"temperature_C", "nernstSlope_V_pH", "ionActivity_log10", "chlorideConcentration_ppm",
                          "chloride_Molar", "pittingPotential_V_SHE", "pittingRisk"} <= set(self.result["parameters"]))
         for pt in self.result["experimentalOverlay"]["points"]:

@@ -36,7 +36,7 @@ ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 # would be 35.45, not the 35.453 used here, so this stays local until step (b).
 CHLORIDE_MOLAR_MASS_G_MOL = 35.453
 
-ENGINE_ID = "pourbaix-gibbs-25c-v5"
+ENGINE_ID = "pourbaix-gibbs-25c-v6"
 SUPPORTED_TEMPERATURE_C = 25.0
 TEMPERATURE_TOLERANCE_C = 0.5
 T_KELVIN = ZERO_CELSIUS_K + SUPPORTED_TEMPERATURE_C

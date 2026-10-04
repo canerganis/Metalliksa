@@ -1974,7 +1974,7 @@
   {
    "key": "engine",
    "kind": "changed",
-   "new": "pourbaix-gibbs-25c-v5",
+   "new": "pourbaix-gibbs-25c-v6",
    "old": "MetalliX-Python-HPC-Pourbaix-v3.10"
   },
   {
@@ -2132,7 +2132,7 @@
   {
    "key": "model.engine",
    "kind": "added",
-   "new": "pourbaix-gibbs-25c-v5",
+   "new": "pourbaix-gibbs-25c-v6",
    "old": null
   },
   {
@@ -16187,7 +16187,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "739a887b91d13ced852de57337dd70da196c8c77",
+ "gitHead": "d1a699775b150abdb30d7fbdd2122f7ae5bf5204",
  "input": {
   "chloride_ppm": 0,
   "element": "Cu",
@@ -16214,7 +16214,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "pourbaix_solver",
  "solverFile": "python/pourbaix_solver.py",
- "solverSha256": "2908c98e29f60a633d5e361a90a7db01f459d0b02ddbf534337df1192da2049b",
+ "solverSha256": "88ee9494f124bf063087ada95b5a440e724851e4442b22422cc421f95b18f244",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -16648,7 +16648,7 @@
    }
   ],
   "element": "Cu",
-  "engine": "pourbaix-gibbs-25c-v5",
+  "engine": "pourbaix-gibbs-25c-v6",
   "experimentalOverlay": {
    "overallTrajectoryDiagnosis": "Equilibrium classification of 1 test point(s) in the Cu–H₂O map at 25 °C (dissolved activity 10^-6): 1 in Corrosion (acid). This is a thermodynamic statement; it makes no claim about rates, film protectiveness or pitting.",
    "points": [
@@ -16710,7 +16710,7 @@
     -6.0,
     0.0
    ],
-   "engine": "pourbaix-gibbs-25c-v5",
+   "engine": "pourbaix-gibbs-25c-v6",
    "excludedSpecies": [
     "polynuclear aqueous species (e.g. Cr₂O₇²⁻): the per-species activity convention is ill-defined; the Cr and Mo activities are limited (10⁻⁶ to 10⁻² M and 10⁻⁶ to 10⁻⁴ M) so that Cr₂O₇²⁻ (from 10^-1.55 M) and the heptamolybdates (from 10^-3.53 M) would not take a domain even under that convention",
     "chloro and other complexes: the equilibrium contains no chloride species",

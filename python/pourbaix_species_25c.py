@@ -192,6 +192,9 @@ _TIO_J = -513.278
 #    TiO(OH)2 + H2O = TiO(OH)3- + H+ -11.9.
 _TI4_X = _RUTILE - 2.0 * _W - _K_LOG * (-3.56)
 _TIOOH_X = _RUTILE - _K_LOG * (-6.06)
+# Titanyl (fix round 2, review pbxt-sol SF-1): TiO2 + H+ = TiOOH+ (-6.06) minus TiO2+ + H2O = TiOOH+ + H+ (-2.48)
+# gives TiO2 + 2H+ = TiO2+ + H2O, log K -3.58 (same Brown & Ekberg 2016 table).
+_TIO2P_X = _RUTILE - _W - _K_LOG * (-6.06 - (-2.48))
 _TIOOH2_X = _RUTILE + _W - _K_LOG * (-9.02)
 _TIOOH3_X = _TIOOH2_X + _W - _K_LOG * (-11.9)
 # P: llnl.dat rutile + 2 H2O = Ti(OH)4(aq) log K -9.6452, on NBS rutile.
@@ -518,6 +521,11 @@ WITHHELD_SPECIES.update({
          "WITHHELD candidate: TiO2(s) + 4H+ = Ti4+ + 2H2O log K -3.56 +/- 0.10 (Brown & Ekberg 2016, NECTAR TiIV "
          "table) on NBS rutile (the table does not name the polymorph); Baes & Mesmer give only Ti(OH)2 2+ based "
          "constants"),
+        ("TiO2+[BE16]", "TiO²⁺ (BE16)", 1, 1, 0, 2, "aq", _TIO2P_X, "cation", "X", "V3",
+         "WITHHELD candidate: TiO2(s) + 2H+ = TiO2+ + H2O log K -3.58, the difference of TiO2(s) + H+ = TiOOH+ "
+         "(-6.06 +/- 0.30) and TiO2+ + H2O = TiOOH+ + H+ (-2.48 +/- 0.10) (Brown & Ekberg 2016, NECTAR TiIV table) on "
+         "NBS rutile; its region at 1e-6 M reaches pH 1.21 inside the water window. Their TiO2+ + 2H2O = TiO(OH)2 + 2H+ "
+         "(-5.49) agrees with the TiO(OH)2 row to 0.05 log units"),
         ("TiOOH+[BE16]", "TiO(OH)⁺ (BE16)", 1, 2, 1, 1, "aq", _TIOOH_X, "cation", "X", "V3",
          "WITHHELD candidate: TiO2(s) + H+ = TiOOH+ log K -6.06 +/- 0.30 (Brown & Ekberg 2016) on NBS rutile"),
         ("TiO(OH)2[BE16]", "TiO(OH)₂(aq) (BE16)", 1, 3, 2, 0, "aq", _TIOOH2_X, "cation", "X", "V3",
@@ -552,7 +560,7 @@ CANDIDATE_SETS = {
            ("Ti-TiO-NBS", "TiO (NBS)", ("TiO[NBS]",)),
            ("Ti-TiO-JANAF", "TiO (NIST-JANAF)", ("TiO[JANAF]",)),
            ("Ti-BE16", "Ti(IV) hydrolysis (Brown & Ekberg 2016)",
-            ("Ti4+[BE16]", "TiOOH+[BE16]", "TiO(OH)2[BE16]", "TiO(OH)3-[BE16]")),
+            ("Ti4+[BE16]", "TiO2+[BE16]", "TiOOH+[BE16]", "TiO(OH)2[BE16]", "TiO(OH)3-[BE16]")),
            ("Ti-LLNL", "Ti(OH)4(aq) (llnl.dat)", ("Ti(OH)4[LLNL]",)),
            ("Ti-hydride", "TiH2 (NBS; hydride outside the oxide/ion table)", ("TiH2",))),
 }

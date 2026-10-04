@@ -209,6 +209,8 @@ CANDIDATES = {
         "Ti-TiO-JANAF": {"TiO[JANAF]": (1, 1, 0, 0, -513.278, "s", "oxide")},
         "Ti-BE16": {
             "Ti4+[BE16]": (1, 0, 0, 4, -889.5 - 2 * _W_NBS + 3.56 * _K, "aq", "cation"),
+            # TiO2 + 2H+ = TiO2+ + H2O: log K = -6.06 - (-2.48) (rutile -> TiOOH+ minus titanyl hydrolysis)
+            "TiO2+[BE16]": (1, 1, 0, 2, -889.5 - _W_NBS + (6.06 - 2.48) * _K, "aq", "cation"),
             "TiOOH+[BE16]": (1, 2, 1, 1, -889.5 + 6.06 * _K, "aq", "cation"),
             "TiO(OH)2[BE16]": (1, 3, 2, 0, -889.5 + _W_NBS + 9.02 * _K, "aq", "cation"),
             "TiO(OH)3-[BE16]": (1, 4, 3, -1, -889.5 + 2 * _W_NBS + (9.02 + 11.9) * _K, "aq", "anion_low"),

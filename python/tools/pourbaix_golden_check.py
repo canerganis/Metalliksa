@@ -52,7 +52,7 @@ NUDGE_V = 3 * COORD_TOL  # V (or pH): side probes of a boundary midpoint (beyond
 SECTIONS = ("analyticalBoundaries", "chloridePittingBoundary", "dataValidity", "domains", "engine",
             "experimentalOverlay", "model", "parameters", "speciesInventory", "speciesTable", "stabilityFieldGrid",
             "temperatureStatus", "waterStabilityLines")
-ENGINE_ID = "pourbaix-gibbs-25c-v5"
+ENGINE_ID = "pourbaix-gibbs-25c-v6"
 # Withheld rows recorded as excluded by scope (V2) although they belong to a candidate set (the others are V3).
 SCOPE_EXCLUDED_CANDIDATES = {"TiH2"}
 

@@ -211,6 +211,28 @@ class WithheldCandidatesTest(unittest.TestCase):
         self.assertAlmostEqual(withheld("Ti", "TiO(OH)3-[BE16]")["dfG_kJ_mol"],
                                NBS["rutile"] + 2 * W + (9.02 + 11.9) * K_LOG, delta=1e-6)
 
+    def test_titanyl_is_a_be16_candidate_and_invalidates_ti_at_ph1(self):
+        # review pbxt-sol SF-1: TiO2 + H+ = TiOOH+ (-6.06) minus TiO2+ + H2O = TiOOH+ + H+ (-2.48) (Brown & Ekberg 2016)
+        log_k = -6.06 - (-2.48)
+        self.assertAlmostEqual(log_k, -3.58, delta=1e-12)
+        g = NBS["rutile"] - W - log_k * K_LOG                         # TiO2 + 2H+ = TiO2+ + H2O
+        self.assertAlmostEqual(withheld("Ti", "TiO2+[BE16]")["dfG_kJ_mol"], g, delta=1e-6)
+        self.assertAlmostEqual(g, -631.936, delta=0.001)
+        self.assertIn("TiO2+[BE16]", next(c for c in table.candidate_sets("Ti") if c["id"] == "Ti-BE16")["speciesIds"])
+        self.assertAlmostEqual((log_k + 6) / 2, 1.21, delta=1e-12)     # rutile / titanyl boundary at 1e-6
+        # the reproduced counterexample: pH 1, 0 V SHE, a = 1e-6 is TiO2 in the served table but NOT certified
+        out = solver.solve_pourbaix_diagram("Ti", 25, -6, 0, [{"ph": 1.0, "potential_V": 0.0}])
+        p = out["experimentalOverlay"]["points"][0]
+        self.assertEqual(p["dominantSpeciesId"], "TiO2")
+        self.assertTrue(p["insideWithheldDataRegion"])
+        self.assertIn("TiO2+[BE16]", p["withheldDataSpeciesIds"])
+        self.assertTrue(p["isInsideWaterStability"])
+        self.assertEqual(oracle.withheld_hits("Ti", 1.0, 0.0, -6.0), [("Ti-BE16", "TiO2+[BE16]")])
+        line = solver.boundary_line("Ti", "TiO2", "TiO2", -6.0)
+        self.assertIsNone(line)
+        self.assertGreater(out["dataValidity"]["pHWindowsFreeOfRegionsInsideWater"][0][0], 1.2)
+        self.assertEqual(solver.ENGINE_ID, "pourbaix-gibbs-25c-v6")
+
     def test_every_candidate_set_member_is_a_withheld_row(self):
         for el in ("Cr", "Mo", "Ti"):
             ids = {r["id"] for r in table.withheld_rows(el)}
@@ -237,7 +259,7 @@ class WithheldCandidatesTest(unittest.TestCase):
 
     def test_free_ph_windows_at_the_default_activity(self):
         # inside the water window, pH ranges without any withheld region (a = 1e-6)
-        want = {"Cr": [[4.778, 14.405]], "Mo": [[1.991, 16.0]], "Ti": [[0.909, 14.92]]}
+        want = {"Cr": [[4.778, 14.405]], "Mo": [[1.991, 16.0]], "Ti": [[1.210, 14.92]]}
         for el, w in want.items():
             got = solver.free_ph_windows(solver.compute_withheld_regions(el, -6.0))
             self.assertEqual(len(got), len(w), el)

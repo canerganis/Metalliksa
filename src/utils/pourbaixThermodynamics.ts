@@ -210,6 +210,28 @@ export function computeWithheldRegions(element: string, log10Activity: number): 
   return out;
 }
 
+/** One constituent element evaluated alone at a point: its served state (null without data or outside its activity
+ * range) and the withheld candidate species that would be stable there (non-empty = the map is not valid here). */
+export interface ConstituentState {
+  state: PourbaixPointState | null;
+  withheld: { candidateSet: string; speciesId: string; formula: string }[];
+  reason: "ok" | "unavailable" | "activity-outside-range";
+}
+
+export function constituentStates(elements: string[], log10Activity: number, ph: number, e_she: number): Record<string, ConstituentState> {
+  const out: Record<string, ConstituentState> = {};
+  for (const el of elements) {
+    if (pourbaixUnavailableReason(el) !== null) out[el] = { state: null, withheld: [], reason: "unavailable" };
+    else if (!activityInRange(el, log10Activity)) out[el] = { state: null, withheld: [], reason: "activity-outside-range" };
+    else out[el] = {
+      state: classifyPourbaixPoint(speciesCoefficients(el, log10Activity), ph, e_she),
+      withheld: withheldSpeciesAt(el, log10Activity, ph, e_she),
+      reason: "ok",
+    };
+  }
+  return out;
+}
+
 /** pH intervals in which no withheld region touches the water stability window. */
 export function freePhWindows(regions: PourbaixWithheldRegion[]): [number, number][] {
   const k = NERNST_SLOPE_25C;

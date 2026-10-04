@@ -15,6 +15,7 @@ import {
   classifyPourbaixPoint,
   computeDomains,
   computeWithheldRegions,
+  constituentStates,
   dominantSpecies,
   freePhWindows,
   pointInPolygon,
@@ -302,7 +303,7 @@ test("Cr, Mo, Ti: the port's lines and free pH windows equal the Python engine's
   vertical("Mo", "HMoO4-", "MoO4^2-", 4.47);
   sloped("Ti", "Ti", "Ti2O3", -1.2486, -0.0592);
   sloped("Ti", "Ti2O3", "TiO2", -0.558, -0.0592);
-  const want: Record<string, [number, number][]> = { Cr: [[4.778, 14.405]], Mo: [[1.991, 16]], Ti: [[0.909, 14.92]], Fe: [[-2, 16]] };
+  const want: Record<string, [number, number][]> = { Cr: [[4.778, 14.405]], Mo: [[1.991, 16]], Ti: [[1.21, 14.92]], Fe: [[-2, 16]] };
   for (const [el, w] of Object.entries(want)) {
     const got = freePhWindows(computeWithheldRegions(el, -6));
     assert.equal(got.length, w.length, el);
@@ -364,7 +365,7 @@ test("the old rule trees, Kw/Psat view, Epit line, hand-entered data and composi
 // Visible text
 // ---------------------------------------------------------------------------------------------
 
-const render = (props: { initialAlloyId?: string } = {}) => renderToStaticMarkup(React.createElement(DynamicPourbaixStudio, props));
+const render = (props: { initialAlloyId?: string; initialProbePH?: number; initialProbePotential_SHE?: number } = {}) => renderToStaticMarkup(React.createElement(DynamicPourbaixStudio, props));
 const plain = (html: string) => html.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 
 test("default studio (pure Fe): relabelled title, subtitle, tabs, fixed 25 C temperature and the passivation caveat", () => {
@@ -392,7 +393,7 @@ test("Ti-6Al-4V draws the Ti map with the data-validity note (no reason panel); 
   assert.match(t, /Ti–H₂O \( ?Ti-6Al-4V/);
   assert.ok(!t.includes("POURBAIX_DATA_UNAVAILABLE") && !t.includes("No verified Ti–H₂O data"));
   assert.match(t, /Data validity \(Ti, dissolved activity 10\^-6 to 10\^0 M\): hatched = withheld-data region/);
-  assert.match(t, /free of withheld-data regions for pH 0\.91 to 14\.92 at a\(M\) = 10\^-6/);
+  assert.match(t, /free of withheld-data regions for pH 1\.21 to 14\.92 at a\(M\) = 10\^-6/);
   assert.match(t, /TiH2 \(NBS; hydride outside the oxide\/ion table\)/);
   assert.equal(t.split(PASSIVATION_NOTE).length - 1, 2, "legend caveat + probe-card caveat (pH 7 / 0.2 V is a TiO2 point)");
   const inconel = render({ initialAlloyId: "inconel-718" });
@@ -417,7 +418,11 @@ test("pure Cr / Mo presets draw their maps; Mo offers only 1e-6 and 1e-4; the wi
   assert.match(mo, /<canvas/);
   const moOptions = [...mo.matchAll(/<option value="([0-9.e-]+)"[^>]*>10|<option value="([0-9.e-]+)"[^>]*>1\.0 M/g)].map((m) => Number(m[1] ?? m[2]));
   assert.deepEqual(moOptions, [1e-6, 1e-4]);
-  assert.match(plain(mo), /Not represented \(no sourced value\): MoO₂²⁺, Mo\(V\)\./);
+  assert.match(plain(mo), /Not represented in the table: MoO₂²⁺ \(cationic Mo\(VI\) species/);
+  assert.match(plain(mo), /Mo\(V\) \(no aqueous Mo\(V\) species with a sourced value\)/);
+  // review pbxt-sol N-1: the excluded Cr(OH)3(am) shows its reason, not "no sourced value"
+  assert.match(plain(cr), /Cr\(OH\)₃ \(amorphous\) \(metastable solid: Cr\(OH\)3\(s\) \+ 3H\+ = Cr3\+ \+ 3H2O log K 9\.41/);
+  assert.ok(!plain(cr).includes("no sourced value):"));
   const fe = render();
   const feOptions = [...fe.matchAll(/<option value="([0-9.e-]+)"[^>]*>10|<option value="([0-9.e-]+)"[^>]*>1\.0 M/g)].map((m) => Number(m[1] ?? m[2]));
   assert.deepEqual(feOptions, [1e-6, 1e-4, 1e-3, 1]);
@@ -562,4 +567,21 @@ test("review Sol 6.1 SF-1: illustrative and captured points are test points, nev
   for (const p of EXPERIMENTAL_POURBAIX_PRESETS) for (const pt of p.points) assert.ok(!/(?<!not )measured/i.test(`${pt.name} ${pt.stageName} ${pt.notes}`), pt.id);
   assert.ok(!text("python/pourbaix_solver.py").includes("measured point"));
   assert.ok(!text("python/tools/pourbaix_golden_check.py").includes("measured point"));
+});
+
+test("review pbxt-sol SF-2: constituent cards carry their own withheld-data validity (ss-316l, Fe selected, pH 2, E 0 V SHE, 1e-6)", () => {
+  const states = constituentStates(["Fe", "Cr", "Ni", "Mo", "Mn"], -6, 2, 0);
+  assert.equal(states.Cr.state?.speciesId, "Cr2O3");
+  assert.deepEqual(states.Cr.withheld.map((h) => h.speciesId), ["Cr3+[CRC]", "Cr3+[SSWS97]", "Cr3+[LLNL]", "Cr3+[BN98]"]);
+  assert.deepEqual(states.Fe.withheld, []);
+  assert.deepEqual(states.Ni.withheld, []);
+  assert.equal(states.Mn.reason, "unavailable");
+  const html = render({ initialAlloyId: "ss-316l", initialProbePH: 2, initialProbePotential_SHE: 0 });
+  const t = plain(html);
+  assert.match(t, /Fe–H₂O \( ?Stainless Steel 316L/);
+  assert.match(t, /Cr 17% wt Cr₂O₃ Passivation \(thermodynamic\) map not valid here \(withheld data\)/);
+  assert.ok(!/Fe 66\.5% wt \S+ \S+[^C]*map not valid here/.test(t.split("Cr 17% wt")[0].slice(-200)), "the Fe card is not flagged");
+  assert.equal(t.split("map not valid here (withheld data)").length - 1, 1, "only the Cr card is flagged");
+  // at the default probe (pH 7, 0.2 V) no card is flagged
+  assert.ok(!plain(render({ initialAlloyId: "ss-316l" })).includes("map not valid here (withheld data)"));
 });
