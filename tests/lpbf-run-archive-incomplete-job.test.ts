@@ -68,9 +68,9 @@ test('archiving a cancelled, unknown or malformed job returns a specific 4xx wit
   const submission = await lpbfWorker.request('submit', {
     mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60,
     speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,
-    // A 10 mm track at 40 um mesh runs for about a minute, so the immediate cancel below can never lose the
+    // The longest powder-layer track the validator allows (3 mm) runs far longer than the immediate cancel below needs, so it cannot lose the
     // race against completion (a 600 um track finishes in about a second and made this test flaky).
-    mesh_um: 40, maxDt_s: 0.000001, trackLength_um: 10000, tracks: 1, layers: 1,
+    mesh_um: 20, maxDt_s: 0.000001, trackLength_um: 3000, tracks: 1, layers: 1,
     surfaceMode: 'powder-layer', cooling_s: 0.0005, dwell_s: 0.0002,
   }) as { id: string };
   const cancelled = await lpbfWorker.request('cancel', submission.id) as { status: string };
