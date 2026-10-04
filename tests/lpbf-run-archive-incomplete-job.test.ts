@@ -11,7 +11,7 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
-import { isolateWorkerJobRoot, removeWorkerTestRoot, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 // Phase 2 D9: archiving a cancelled job through the real worker and the real route used to answer
 // 503 "Run archive unavailable or integrity check failed." It is a client error.
@@ -20,12 +20,13 @@ test('archiving a cancelled, unknown or malformed job returns a specific 4xx wit
   const root = mkdtempSync(path.join(process.cwd(), '.tmp-lpbf-archive-incomplete-'));
   const restoreJobRoot = isolateWorkerJobRoot(path.join(root, 'jobs'));
   let server: Server | undefined;
-  t.after(async () => {
-    await stopRealWorker();
-    restoreJobRoot();
-    if (server) await new Promise<void>(resolve => server!.close(() => resolve()));
-    await removeWorkerTestRoot(root);
-  });
+  // Every step runs even if an earlier one fails, so a stuck worker is a loud failure, not a leaked env or root.
+  t.after(() => runCleanupSteps([
+    stopRealWorker,
+    restoreJobRoot,
+    () => server && new Promise<void>(resolve => server!.close(() => resolve())),
+    () => removeWorkerTestRoot(root),
+  ]));
 
   const sourceRoot = path.join(root, 'sources');
   const catalogEntry = nistOpticalTable4CatalogEntry();

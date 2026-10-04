@@ -12,14 +12,36 @@ const CALLER_DEADLINE_ERRORS = new Set(['LPBF worker request deadline exceeded',
  * budget. Any other failure, such as a worker that exited, is thrown at once. */
 export async function waitForRealWorker(deadline: number) {
   for (;;) {
-    try { return await lpbfWorker.request('capabilities'); }
-    catch (error) {
+    // Each attempt is also capped at the remaining warm-up budget, so the warm-up cannot overrun its deadline
+    // by up to one request budget (20 s). The capped request keeps running in the bridge; its late outcome is
+    // observed and ignored.
+    const attempt = lpbfWorker.request('capabilities');
+    attempt.catch(() => {});
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([attempt, new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('LPBF worker was not ready within the warm-up deadline')),
+          Math.max(0, deadline - Date.now()));
+      })]);
+    } catch (error) {
       const retryable = error instanceof LpbfWorkerUnavailableError
         && (error.code === 'LPBF_WORKER_STARTING' || CALLER_DEADLINE_ERRORS.has(error.message));
-      if (!retryable || Date.now() > deadline) throw error;
-      await new Promise(resolve => setTimeout(resolve, 250));
-    }
+      if (!retryable || Date.now() >= deadline) throw error;
+      await new Promise(resolve => setTimeout(resolve, Math.min(250, Math.max(0, deadline - Date.now()))));
+    } finally { clearTimeout(timer); }
   }
+}
+
+/** Run every teardown step even when an earlier one fails (for example stopRealWorker hitting its 10 s bound),
+ * so the environment is restored, the HTTP server closed and the temp root removed; then fail loudly with the
+ * first error (all errors when several steps failed). */
+export async function runCleanupSteps(steps: Array<() => unknown>) {
+  const errors: unknown[] = [];
+  for (const step of steps) {
+    try { await step(); } catch (error) { errors.push(error); }
+  }
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1) throw new AggregateError(errors, `${errors.length} teardown steps failed`);
 }
 
 function restoreEnv(name: string, value: string | undefined) {

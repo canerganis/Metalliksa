@@ -17,7 +17,7 @@ import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
 import { canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
-import { isolateWorkerJobRoot, removeWorkerTestRoot, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 
@@ -40,12 +40,13 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   const bundleRoot = path.join(root, 'bundles');
   let server: Server | undefined;
   const restoreJobRoot = isolateWorkerJobRoot(path.join(root, 'jobs'));
-  t.after(async () => {
-    await stopRealWorker();
-    restoreJobRoot();
-    if (server) await new Promise<void>(resolve => server!.close(() => resolve()));
-    await removeWorkerTestRoot(root);
-  });
+  // Every step runs even if an earlier one fails, so a stuck worker is a loud failure, not a leaked env or root.
+  t.after(() => runCleanupSteps([
+    stopRealWorker,
+    restoreJobRoot,
+    () => server && new Promise<void>(resolve => server!.close(() => resolve())),
+    () => removeWorkerTestRoot(root),
+  ]));
 
   const opticalSource = nistOpticalTable4CatalogEntry();
   const sources = new LpbfSourceArchiveService(sourceRoot, [opticalSource]);
