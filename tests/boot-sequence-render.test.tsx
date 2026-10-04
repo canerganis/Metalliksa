@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { BootSequence, bootController } from "../src/components/BootSequence";
 import { TelemetryStrip } from "../src/components/TelemetryStrip";
+import { SilentBoundary } from "../src/components/SilentBoundary";
 import { MODULES } from "../src/data/workspaces";
 
 test("first paint of the boot screen: a labelled dialog, a plain list of five waiting checks and ONE live k/N region, no percent", () => {
@@ -23,6 +24,16 @@ test("first paint of the boot screen: a labelled dialog, a plain list of five wa
   assert.ok(!html.includes("%"), "no percent progress");
   assert.ok(!/online|OK</.test(html), "nothing is reported before a check has answered");
   assert.match(html, />Skip intro</);
+});
+
+test("the lazy telemetry strip sits inside a boundary that renders nothing on a chunk/render error", () => {
+  assert.deepEqual(SilentBoundary.getDerivedStateFromError(), { failed: true });
+  const boundary = new SilentBoundary({ children: <span>strip</span> });
+  assert.equal(renderToStaticMarkup(<>{boundary.render()}</>), "<span>strip</span>");
+  boundary.state = { failed: true };
+  assert.equal(boundary.render(), null);
+  const app = readFileSync(resolve(process.cwd(), "src/App.tsx"), "utf8");
+  assert.match(app, /<SilentBoundary><Suspense fallback=\{null\}><TelemetryStrip /);
 });
 
 test("Esc, backdrop and the button share one skip handler that only hides the overlay", () => {

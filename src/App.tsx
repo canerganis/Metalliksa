@@ -11,6 +11,7 @@ import { startMaterialContextBridge, useMaterialContextBridgeStore } from './ser
 import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore';
 import { ScientificContextPanel } from './components/ScientificContextPanel';
 import { BootSequence } from './components/BootSequence';
+import { SilentBoundary } from './components/SilentBoundary';
 // Own chunk: the strip sits at the end of the page, so it does not need to be in the index chunk.
 const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m => ({ default: m.TelemetryStrip })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
@@ -198,7 +199,7 @@ export default function App() {
         <div className="mt-8 border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-3"><p className="text-xs text-slate-500">Review inputs, source applicability and evidence before making an engineering decision.</p><button onClick={() => navigate(activeModule.next)} className="inline-flex gap-2 items-center text-sm text-sky-300 hover:text-sky-100">Next: {MODULES.find(m => m.id === activeModule.next)?.label}<ArrowRight className="h-4 w-4"/></button></div>
       </main>
     </div>
-    <Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense>
+    <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
     {showStatus && <AccessibleModal open onClose={() => setShowStatus(false)} labelledBy="engine-title" closeOnBackdrop overlayClassName="bg-slate-950/80 p-4" panelClassName="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950 p-6">
         <div className="flex justify-between items-center"><h2 id="engine-title" className="font-semibold flex gap-2 items-center"><Cpu className="w-5 h-5 text-sky-400"/>Engine availability</h2><button aria-label="Close engine status" onClick={() => setShowStatus(false)}><X className="w-5 h-5"/></button></div>
         <p className="my-4 text-sm text-slate-400">Availability is reported by the backend. An installed solver does not establish a validated physical model.</p>
