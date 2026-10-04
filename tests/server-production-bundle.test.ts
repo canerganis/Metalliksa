@@ -80,16 +80,31 @@ test('resolvePythonRoot anchors python/ on the working directory', () => {
   }
 });
 
-test('the production server bundle (esbuild CJS, as in npm run build) loads and serves /api/health', { timeout: 60_000 }, async (t) => {
-  let python: { cmd: string; prefix: string[] };
-  try { python = getHostPython(); } catch (error) {
-    t.skip(`no host Python (the bundled server's Python supervisor needs one at load): ${(error as Error).message}`);
-    return;
-  }
+/** Start the bundle; `listening` resolves once it listens on `port` and rejects if it exits first. */
+function startBundle(outfile: string, cwd: string, env: NodeJS.ProcessEnv, port: number) {
+  const child = spawn(process.execPath, [outfile], { cwd, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+    detached: process.platform !== 'win32' });
+  let output = '';
+  child.stdout!.on('data', (chunk) => { output += chunk; });
+  child.stderr!.on('data', (chunk) => { output += chunk; });
+  const listening = new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`bundle did not start listening within 20 s:\n${output}`)), 20_000);
+    child.stdout!.on('data', () => {
+      if (output.includes(`running on http://127.0.0.1:${port}`)) { clearTimeout(timer); resolve(); }
+    });
+    child.once('exit', (code, signal) => {
+      clearTimeout(timer);
+      reject(new Error(`bundle exited during load (code=${code}, signal=${signal}):\n${output}`));
+    });
+  });
+  return { child, listening, output: () => output };
+}
+
+test('the production server bundle (esbuild CJS, as in npm run build) loads and serves /api/health', { timeout: 90_000 }, async (t) => {
   const work = mkdtempSync(path.join(os.tmpdir(), 'metalliksa-prod-bundle-'));
   let child: ChildProcess | undefined;
-  let output = '';
   try {
+    // The bundle checks run on every host, before anything that needs Python.
     const outfile = path.join(work, 'bundle', 'server.cjs');
     const result = await build(serverBundleOptions(outfile));
     const importMetaWarnings = result.warnings.filter((w) => w.text.includes('import.meta'));
@@ -97,17 +112,26 @@ test('the production server bundle (esbuild CJS, as in npm run build) loads and 
       'import.meta is empty in --format=cjs output; derive paths from process.cwd() (see server/pythonRoot.ts)');
     assert.doesNotMatch(readFileSync(outfile, 'utf8'), /\bimport_meta\d*\b/);
 
+    // Loading the bundle needs a host Python (the Python supervisor resolves one at load). Skip only on a
+    // developer host without any Python; under CI, or with an explicit but broken METALLIX_PYTHON, fail.
+    let python: { cmd: string; prefix: string[] };
+    try { python = getHostPython(); } catch (error) {
+      const message = `no host Python (the bundled server's Python supervisor needs one at load): ${(error as Error).message}`;
+      if (process.env.CI || process.env.METALLIX_PYTHON) assert.fail(message);
+      t.skip(message);
+      return;
+    }
+
     // An isolated application root: dist/index.html for the SPA fallback, data roots under it, no .env,
     // and no python/ directory, so the supervisor's worker exits at once instead of binding a port.
     const app = path.join(work, 'app');
     mkdirSync(path.join(app, 'dist'), { recursive: true });
     writeFileSync(path.join(app, 'dist', 'index.html'), '<!doctype html><title>bundle-smoke</title><div id="root"></div>');
-    const [port, ipcPort] = [await freePort(), await freePort()];
     const env: NodeJS.ProcessEnv = { ...process.env };
     for (const key of ['METALLIKSA_TOKEN', 'METALLIKSA_TRUST_PROXY', 'METALLIX_IPC_HOST']) delete env[key];
     Object.assign(env, {
-      NODE_ENV: 'production', METALLIKSA_HOST: '127.0.0.1', PORT: String(port), AIRGAPPED: '1',
-      METALLIX_IPC_PORT: String(ipcPort), METALLIX_IPC_SOCK: path.join(work, 'ipc.sock'),
+      NODE_ENV: 'production', METALLIKSA_HOST: '127.0.0.1', AIRGAPPED: '1',
+      METALLIX_IPC_SOCK: path.join(work, 'ipc.sock'),
       // --packages=external: the bundle requires express, vite, ... from the repository's node_modules.
       NODE_PATH: path.join(repoRoot, 'node_modules'),
       METALLIKSA_LPBF_SOURCE_ROOT: path.join(app, 'data', 'sources'), METALLIKSA_LPBF_RUN_ROOT: path.join(app, 'data', 'runs'),
@@ -118,23 +142,24 @@ test('the production server bundle (esbuild CJS, as in npm run build) loads and 
     // is passed explicitly because the child's working directory has no .venv.
     if (python.prefix.length === 0) env.METALLIX_PYTHON = python.cmd;
 
-    child = spawn(process.execPath, [outfile], { cwd: app, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
-      detached: process.platform !== 'win32' });
-    const server = child;
-    server.stdout!.on('data', (chunk) => { output += chunk; });
-    server.stderr!.on('data', (chunk) => { output += chunk; });
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`bundle did not start listening within 20 s:\n${output}`)), 20_000);
-      const check = () => {
-        if (output.includes(`running on http://127.0.0.1:${port}`)) { clearTimeout(timer); resolve(); }
-      };
-      server.stdout!.on('data', check);
-      server.once('exit', (code, signal) => {
-        clearTimeout(timer);
-        reject(new Error(`bundle exited during load (code=${code}, signal=${signal}):\n${output}`));
-      });
-      check();
-    });
+    // freePort() releases its probe socket before the child binds, so another process can take the port
+    // in between: retry with fresh ports when the bundle reports EADDRINUSE.
+    let port = 0;
+    for (let attempt = 1; ; attempt++) {
+      port = await freePort();
+      env.PORT = String(port);
+      env.METALLIX_IPC_PORT = String(await freePort());
+      const started = startBundle(outfile, app, env, port);
+      child = started.child;
+      try {
+        await started.listening;
+        break;
+      } catch (error) {
+        await killTree(child);
+        if (attempt < 3 && /EADDRINUSE/.test(started.output())) continue;
+        throw error;
+      }
+    }
 
     const health = await fetch(`http://127.0.0.1:${port}/api/health`);
     assert.equal(health.status, 200);
