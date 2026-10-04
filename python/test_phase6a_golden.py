@@ -47,6 +47,11 @@ class GoldenFilesTest(unittest.TestCase):
             self.assertEqual(doc["case"], case)
             self.assertEqual(doc["baseRevision"], golden.BASE_REVISION)
             self.assertEqual(golden.canonical(doc["input"]), golden.canonical(golden.CASES[solver][case]))
+            # N2: the stored input is exactly the key-sorted payload (same text, same
+            # order), so the regression re-run sends what the sorted payload says.
+            self.assertEqual(json.dumps(doc["input"], ensure_ascii=False),
+                             json.dumps(golden.CASES[solver][case], sort_keys=True, ensure_ascii=False),
+                             f"{solver}/{case}")
 
     def test_case_counts(self):
         for solver, cases in golden.CASES.items():

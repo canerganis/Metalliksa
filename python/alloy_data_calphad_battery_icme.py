@@ -24,7 +24,7 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Dict, Mapping, Tuple
 
-from physical_constants import Constant
+from physical_constants import LEGACY_GAS_CONSTANT_R_4SF, Constant
 
 DATA_VERSION = "alloy-data-calphad-battery-icme-1"
 BASE_REVISION = "7f3f803"
@@ -37,8 +37,10 @@ _CODATA = "NIST CODATA 2018"
 _TRUNC_NOTE = ("Rounded printing of the CODATA value kept for bit-identical output in Phase 6a "
                "step (a); not exact. Replaced by the exact SI product in step (b).")
 
-LEGACY_R_8_314 = Constant(8.314, "J/(mol*K)", f"{_CODATA} R, rounded to 3 decimals", False,
-                          note=_TRUNC_NOTE)
+# The value itself lives in physical_constants (single authority, shared with the
+# kinetics and stochastic UQ solvers); this record only adds unit/source metadata.
+LEGACY_R_8_314 = Constant(LEGACY_GAS_CONSTANT_R_4SF, "J/(mol*K)", f"{_CODATA} R, rounded to 3 decimals",
+                          False, note=_TRUNC_NOTE)
 LEGACY_R_8_31446 = Constant(8.31446, "J/(mol*K)", f"{_CODATA} R, rounded to 5 decimals", False,
                             note=_TRUNC_NOTE)
 LEGACY_F_96485_332 = Constant(96485.332, "C/mol", f"{_CODATA} F, rounded to 3 decimals", False,

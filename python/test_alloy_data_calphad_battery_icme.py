@@ -67,6 +67,13 @@ class LegacyConstantTest(unittest.TestCase):
             self.assertFalse(const.exact)
             self.assertIn("not exact", const.note)
 
+    def test_legacy_8_314_has_one_authority(self):
+        # S3: physical_constants.LEGACY_GAS_CONSTANT_R_4SF is the only 8.314 literal.
+        self.assertIs(data.LEGACY_R_8_314.value, pc.LEGACY_GAS_CONSTANT_R_4SF)
+        literals = [n.value for n in ast.walk(ast.parse((HERE / f"{MODULE}.py").read_text(encoding="utf-8")))
+                    if isinstance(n, ast.Constant) and n.value == 8.314]
+        self.assertEqual(literals, [])
+
     def test_relative_deltas_to_the_exact_values(self):
         r, f = pc.GAS_CONSTANT_R.value, pc.FARADAY.value
         self.assertAlmostEqual((data.LEGACY_R_8_314.value - r) / r, -5.565e-5, delta=1e-8)
