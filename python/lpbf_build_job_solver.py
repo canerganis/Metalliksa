@@ -3,7 +3,7 @@
 Single LPBF Build Job engine: Rosenthal melt-pool screening + STL slicer + print verdict.
 
 The industrial UI must display this verdict. TypeScript must not re-decide printability.
-Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v1`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
+Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v2`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
 """
 
 import json
@@ -268,8 +268,24 @@ def _suggested_patch(thermal, alloy_id, dominant_gate, verdict):
     }
 
 
+# Gates whose result is a function of the melt-pool W/D/L extent. When the thermal solver
+# reports ``extentStatus != "computed"`` (heuristic fallback, width floor, search-box limit)
+# these are unavailable: a verdict must not be built from screening-heuristic numbers.
+GEOMETRY_DEPENDENT_GATES = ("lof_tang", "lof_wh", "lof_dt", "balling")
+
+
 def compose_verdict(thermal, alloy_id, extras=None):
     extras = extras or {}
+    geometry = thermal["meltPoolGeometry"]
+    extent_status = str(geometry.get("extentStatus") or "not-reported")
+    extent_note = geometry.get("extentNote")
+    geometry_resolved = extent_status == "computed"
+    geometry_reason = None
+    if not geometry_resolved:
+        geometry_reason = (
+            f"melt-pool geometry not resolved ({extent_status}): "
+            f"{extent_note if extent_note else 'no extentNote reported'}"
+        )
     W = float(thermal["meltPoolGeometry"]["width_um"])
     D = float(thermal["meltPoolGeometry"]["depth_um"])
     h = float(thermal["processParameters"]["hatchSpacing_um"])
@@ -307,7 +323,18 @@ def compose_verdict(thermal, alloy_id, extras=None):
         elif float(downskin_angle) > 45.0:
             downskin_warn = True
 
+    if not geometry_resolved:
+        # Geometry-derived flags are heuristic here: neutralise them so no reason, verdict or
+        # dominant gate is built from screening-substitute W/D/L numbers.
+        lof_fail = lof_warn = balling_high = False
+
     reasons = []
+    if not geometry_resolved:
+        reasons.append(
+            f"Lack-of-fusion (Tang h/W, t/D, W/h, D/t) and balling (L/W) gates unavailable: "
+            f"{geometry_reason.rstrip('.')}. "
+            "No print / do-not-print verdict is issued from heuristic geometry."
+        )
     if lof_fail:
         reasons.append(
             f"Lack of fusion (Tang): (h/W)²+(t/D)² = {tang:.3f} (need ≤1.0); "
@@ -347,6 +374,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
         verdict = "do-not-print"
     elif lof_warn or keyhole_high or recoater_high or distortion_high or downskin_warn or (not win["inside"]):
         verdict = "risky"
+    if not geometry_resolved:
+        verdict = "inconclusive"
 
     if not reasons:
         reasons.append(
@@ -358,6 +387,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "printable": "Printable — stay in the conduction window",
         "risky": "Risky — qualify with coupon builds before flight hardware",
         "do-not-print": "Do not print — change P, v, h, or t before a build",
+        "inconclusive": f"Inconclusive — melt-pool geometry not resolved ({extent_status}); see reasons",
     }[verdict]
 
     lw = round(width_over_hatch, 3)
@@ -446,6 +476,23 @@ def compose_verdict(thermal, alloy_id, extras=None):
             "Overhang from vertical: >45° warn, >55° fail. Omitted angle → pass.",
         ),
     ]
+    unavailable_gates = []
+    if not geometry_resolved:
+        for g in gates:
+            if g["id"] in GEOMETRY_DEPENDENT_GATES:
+                g["status"] = "unavailable"
+                g["measured"] = None
+                g["reason"] = geometry_reason
+                unavailable_gates.append(g["id"])
+    geometry_independent_fail_gates = (
+        [g["id"] for g in gates if g["status"] == "fail"] if not geometry_resolved else []
+    )
+    if geometry_independent_fail_gates:
+        reasons.append(
+            "Geometry-independent gate(s) already failing: "
+            + ", ".join(geometry_independent_fail_gates)
+            + " (these do not depend on the unresolved melt-pool extent)."
+        )
     dominant = "none"
     for g in gates:
         if g["status"] == "fail":
@@ -472,6 +519,12 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "gates": gates,
         "dominantGate": dominant,
         "suggestedPatch": _suggested_patch(thermal, alloy_id, dominant, verdict),
+        "geometryResolved": geometry_resolved,
+        "extentStatus": extent_status,
+        "extentNote": extent_note,
+        "verdictReason": geometry_reason,
+        "unavailableGates": unavailable_gates,
+        "geometryIndependentFailGates": geometry_independent_fail_gates,
     }
 
 

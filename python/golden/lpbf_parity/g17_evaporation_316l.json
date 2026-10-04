@@ -4,9 +4,9 @@
  "group": "G17",
  "description": "evaporationModel=True 316L 80 W: L_v passed to the inversion (today IN718's 6.4e6)",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  8.0,
-  8.8
+  4.4,
+  4.4
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "afd5c527d3fa1cfcae10c38efc52724743a887f4dc9202d06e9c240a9de12194",
-  "result.orderedTypedSha256": "a38349556bf06114dfa6c0f0e0f2e29a18d65d89c4a81d142cce2adbc61724bc",
+  "result.canonicalSha256": "425874f5f9ac55cc861af70dbb2108613be8c22ba1169b568818ddb7deb24706",
+  "result.orderedTypedSha256": "6b8c76df637e2ac7f27c939d7e576c90ecd2ef3235f86895446056db6eb0d749",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -94,6 +94,7 @@
    "metrics",
    "thermalHistory",
    "fieldSeries",
+   "boilingCap",
    "peakInterpolatedMeltPool",
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
@@ -127,14 +128,15 @@
   "result.key.confidence": "364bb7082249ee9fbc5247ee49735c4246f271b82c2745a35107ddda0d7cabcc",
   "result.key.validationStatus": "034d24b06221faeb3860b36b4069fe6436aeadc3db62a687efe73615cfb2541d",
   "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
-  "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
+  "result.key.label": "1655bd5656c7ba0ca2026f3eace5cf7aac5e58d4c316c7b0c839f1045880eec4",
   "result.key.provenance": "f46d93ef2e7d5d12479a9f567bdcb25194bfa101bce60e971931a6bc70f82615",
-  "result.key.analyticalComparison": "65a42e503fb0af8d64974bd28a2523f939bfbfbd342fc76c502cb70cbc7737b1",
-  "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "result.key.analyticalComparison": "1cecdbd22bb3a129eaad66f4795a94005620c8493c8ede9c66ebd37a59d09fa7",
+  "result.key.assumptions": "93c5d334bdeaaf2304cb0bc59e91248928643a26483648bcddd4c5c4e4fb0410",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "5c7d628cdee06f2271847d4287749e48a50552d786318fd1d123e4ade60581c5",
   "result.key.thermalHistory": "62f76b142dadb7058870e5d843e1e48638064625754a3d038f4ca94ca7dd1a0c",
   "result.key.fieldSeries": "7e5d844a6929e466a78a570e89bba38f7aca29004a88e1b5afc69fa25fa7c8e3",
+  "result.key.boilingCap": "35b7911e6faed740657de589bc23b6d8b9bb87588144ab695ca14e9bbd7c6588",
   "result.key.peakInterpolatedMeltPool": "3bccfddaa52a01f68a986c198b48bf5304a1883ed576e4a5f0620d8027f82340",
   "result.key.fieldOverlapDiagnostics": "44a535026e155ac8c74933557e65a493708923545d60488b2c9a0f3842a67207",
   "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
@@ -165,7 +167,7 @@
   "result.validationStatus": "unvalidated",
   "result.productionReady": false,
   "result.effectiveMode": "standard",
-  "result.label": "Unvalidated transient thermal",
+  "result.label": "Unvalidated transient thermal (boiling-capped: temperature clipped at T_boil, excess enthalpy retained in-cell; not an evaporation model)",
   "result.confidence": "low",
   "result.implementationHashOccurrencesAfterStrip": 0,
   "artifacts.files": [
@@ -583,13 +585,13 @@
   "evaporation.inversionCalls": 402,
   "evaporation.latentHeatVapUsed_J_kg": [
    [
-    6400000.0,
-    "0x1.86a0000000000p+22"
+    6250000.0,
+    "0x1.7d78400000000p+22"
    ]
   ],
   "evaporation.maxVaporFraction": [
-   0.10854443578063735,
-   "0x1.bc99171d73232p-4"
+   0.11114950223937266,
+   "0x1.c744b3515b46dp-4"
   ],
   "evaporation.authorityLatentHeatVap_J_kg": [
    6250000.0,
@@ -623,9 +625,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 50.0,
-    "depth_um": 25.0,
-    "length_um": 105.00000000000006,
+    "width_um": 66.66666666666667,
+    "depth_um": 33.333333333333336,
+    "length_um": 233.33333333333366,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -636,7 +638,7 @@
   },
   "result.key.assumptions": [
    "SI internal units; beam diameter is 1/e^2 intensity diameter.",
-   "No resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores.",
+   "evaporationModel=true: no resolved momentum, Marangoni flow, evaporation, recoil, VOF, keyhole or pores. Above the boiling enthalpy the inversion caps T at T_boil and keeps the excess enthalpy in the cell; no mass or energy leaves the domain (see boilingCap). Liquid conductivity is multiplied by 1+(marangoniMultiplier-1)*f_liq, an isotropic surrogate (estimated, uncited).",
    "Estimated material laws; fixed reference density conserves mass on a stationary grid.",
    "Uniform effective powder, irreversible conductivity densification; no resolved powder particles.",
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
@@ -647,6 +649,18 @@
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
   ],
+  "result.key.boilingCap": {
+   "modelId": "boiling-cap-v1",
+   "active": true,
+   "cappedSteps": 402,
+   "maxExcessEnthalpy_J_kg": 694684.3889960791,
+   "maxVaporFractionProxy": 0.11114950223937266,
+   "latentHeatVap_J_kg": 6250000.0,
+   "energyLeavesDomain": false,
+   "isReferenceSolution": false,
+   "isEvaporationModel": false,
+   "note": "Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is not conserved. Not an evaporation model."
+  },
   "result.key.confidence": "low",
   "result.key.confidenceReason": "estimated material data and unresolved flow; no independent experimental validation.",
   "result.key.coreContract": {
@@ -774,7 +788,7 @@
     }
    ]
   },
-  "result.key.label": "Unvalidated transient thermal",
+  "result.key.label": "Unvalidated transient thermal (boiling-capped: temperature clipped at T_boil, excess enthalpy retained in-cell; not an evaporation model)",
   "result.key.mainRisk": "lack-of-fusion",
   "result.key.massBalance": {
    "initial_kg": 5.25206155885714e-07,

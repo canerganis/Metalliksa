@@ -6,6 +6,7 @@ import numpy as np
 import warp as wp
 
 from lpbf_transient_3d_gpu import TransientEnthalpy3DGPU
+from phase22_legacy_test_material import LEGACY_SOLVER_TEST_MATERIAL
 
 
 CASE = {
@@ -40,7 +41,7 @@ def _run(device):
     solver.device = device
     return solver.solve_toolpath(
         CASE["toolpath"], T_preheat_K=CASE["initial_temperature_K"],
-        include_diagnostic_fields=True,
+        include_diagnostic_fields=True, **LEGACY_SOLVER_TEST_MATERIAL,
     )
 
 
@@ -94,7 +95,7 @@ class Phase22FullFieldCudaParity(unittest.TestCase):
         solver.device = "cpu"
         result = solver.solve_toolpath(
             {"t": [0.0], "x": [0.0], "y": [0.0], "p": [0.0]},
-            T_preheat_K=300.0,
+            T_preheat_K=300.0, **LEGACY_SOLVER_TEST_MATERIAL,
         )
         self.assertNotIn("diagnostic_fields", result)
 
@@ -103,7 +104,7 @@ class Phase22FullFieldCudaParity(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "limited to 100000 cells"):
             solver.solve_toolpath(
                 {"t": [0.0], "x": [0.0], "y": [0.0], "p": [0.0]},
-                include_diagnostic_fields=True,
+                include_diagnostic_fields=True, **LEGACY_SOLVER_TEST_MATERIAL,
             )
 
 

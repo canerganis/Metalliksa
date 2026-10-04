@@ -48,6 +48,8 @@ import {
   relativeErrorPct,
 } from "../../data/meltPoolLiteratureCases";
 import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";
+import { literatureErrorUnavailableText } from "../../utils/meltPoolExtentStatus";
+import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
 
 export interface MeltPool3DCrossSectionProps {
   initialPower_W?: number;
@@ -627,7 +629,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1">
                   <Cpu className="w-3 h-3 text-sky-400" />
                   {pyResult?.modelId ||
-                    (heatSource === "goldak" ? "goldak-total-power-v2" : heatSource === "eagar-tsai" ? "eagar-tsai-v1" : "rosenthal-screening-v1")}
+                    (heatSource === "goldak" ? "goldak-half-space-v3" : heatSource === "eagar-tsai" ? "eagar-tsai-v2" : "rosenthal-screening-v1")}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
@@ -1104,6 +1106,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                     <strong className="text-sm text-amber-300">{pyResult.meltPoolGeometry.depth_um} μm</strong>
                   </div>
                 </div>
+                <MeltPoolExtentNotice geometry={pyResult.meltPoolGeometry} />
 
                 <div className="space-y-1 text-[11px] text-slate-300">
                   <div className="flex justify-between py-0.5 border-b border-slate-800/60">
@@ -1274,10 +1277,12 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 const same = matchesLoadableLiteratureCase(c, pyResult.material, pyResult.processParameters);
                 const canScore =
                   same && c.publishedWidth_um != null && c.publishedDepth_um != null;
-                const wErr = canScore
+                // Only a computed liquidus isotherm may be scored against a published track.
+                const errorExcluded = literatureErrorUnavailableText(pyResult.meltPoolGeometry);
+                const wErr = canScore && errorExcluded === null
                   ? relativeErrorPct(pyResult.meltPoolGeometry.width_um, c.publishedWidth_um as number)
                   : 0;
-                const dErr = canScore
+                const dErr = canScore && errorExcluded === null
                   ? relativeErrorPct(pyResult.meltPoolGeometry.depth_um, c.publishedDepth_um as number)
                   : 0;
                 const predFam = regimeFamily(pyResult.meltPoolGeometry.regime);
@@ -1324,10 +1329,15 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                     {c.processScope === "bare-plate" && <p className="mt-1 text-[10px] text-slate-400">
                       Optical cross-section, n={c.measurementCount}: W {c.publishedWidth_um} ± {c.widthStdDev_um} µm; D {c.publishedDepth_um} ± {c.depthStdDev_um} µm (mean ± SD).
                     </p>}
-                    {canScore && (
+                    {canScore && errorExcluded === null && (
                       <div className="mt-1 grid grid-cols-2 gap-1 text-[10px] text-slate-300">
                         <span>W {pyResult.meltPoolGeometry.width_um} vs {c.publishedWidth_um} μm ({wErr >= 0 ? "+" : ""}{wErr.toFixed(0)}%)</span>
                         <span>D {pyResult.meltPoolGeometry.depth_um} vs {c.publishedDepth_um} μm ({dErr >= 0 ? "+" : ""}{dErr.toFixed(0)}%)</span>
+                      </div>
+                    )}
+                    {canScore && errorExcluded !== null && (
+                      <div className="mt-1 text-[10px] text-amber-300" data-literature-error="excluded">
+                        W / D vs published {c.publishedWidth_um} / {c.publishedDepth_um} μm: {errorExcluded}
                       </div>
                     )}
                   </button>
