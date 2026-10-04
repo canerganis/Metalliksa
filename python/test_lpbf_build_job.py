@@ -65,6 +65,30 @@ def kinetics_fixture_blocks():
     return out
 
 
+MICROSTRUCTURE_FIXTURE = os.path.join(HERE, "..", "tests", "fixtures", "build-job-microstructure-blocks.json")
+
+
+def microstructure_fixture_blocks():
+    """Real project_build_job_microstructure output for the UI render test (tests/build-job-microstructure-panel.test.tsx)."""
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+
+    common = {"beamDiameter_um": 80, "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True}
+    available = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **common})
+    fallback = run_job({"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000, **common})
+    return {
+        "available_in718_285_960": available["microstructure"],
+        "screening_fallback_in718_60_2000": fallback["microstructure"],
+        "unavailable_no_kinetics": project_build_job_microstructure({}),
+    }
+
+
+def check_microstructure_fixture():
+    with open(MICROSTRUCTURE_FIXTURE, encoding="utf-8") as fh:
+        committed = json.load(fh)
+    current = json.loads(json.dumps(microstructure_fixture_blocks()))
+    assert committed == current, "tests/fixtures/build-job-microstructure-blocks.json is stale: rerun with --write-microstructure-fixture"
+
+
 def check_kinetics_fixture():
     """The committed UI fixture must equal the current Python output (no hand-made blocks)."""
     with open(KINETICS_FIXTURE, encoding="utf-8") as fh:
@@ -216,10 +240,23 @@ def check_build_job_microstructure(job):
     """Build-job microstructure is a projection of thermal.solidificationKinetics (no second G/R)."""
     micro = job["microstructure"]
     kin = job["thermal"]["solidificationKinetics"]
-    assert micro["status"] == "available"
+    # The 285 W / 960 mm/s IN718 case must use the liquidus field map, not the tail-length
+    # heuristic: a G threshold alone cannot tell the two apart (fallback G is ~1.3e5 K/m).
+    assert kin["usedFieldMap"] is True and kin["gradientSource"] != "tail-length-fallback", kin
+    assert micro["status"] == "available", micro["status"]
+    assert micro["usedFieldMap"] is True
+    assert micro["gradientSource"] == kin["gradientSource"]
+    assert "reason" not in micro
     assert micro["source"] == "thermal.solidificationKinetics"
     assert micro["G_K_m"] == kin["thermalGradient_G_K_m"]
-    assert micro["R_m_s"] == kin["solidificationRate_R_m_s"]
+    # R is the more precise R_mm_s / 1e3 when present (R_m_s is rounded to 3 decimals).
+    assert micro["R_m_s"] == kin["solidificationRate_R_mm_s"] / 1.0e3
+    assert abs(micro["R_m_s"] - kin["solidificationRate_R_m_s"]) <= 5.0e-4
+    # Keyhole regime is carried so the panel can say the G/R field is outside its regime.
+    assert micro["regime"] == job["thermal"]["meltPoolGeometry"]["regime"]
+    assert micro["regime"].startswith("Keyhole"), micro["regime"]
+    assert micro["normalizedEnthalpy"] == job["thermal"]["processParameters"]["normalizedEnthalpy"]
+    assert micro["regimeNote"] == "Keyhole Mode: outside the conduction regime of the G/R field"
     assert micro["coolingRate_K_s"] == kin["coolingRate_K_s"]
     assert micro["PDAS_um"] == kin["primaryDendriteArmSpacing_PDAS_um"]
     assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
@@ -244,6 +281,46 @@ def check_build_job_microstructure(job):
         assert unavailable["reason"] == "thermal.solidificationKinetics missing or non-finite"
         for key in ("G_K_m", "R_m_s", "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology"):
             assert unavailable[key] is None, key
+
+    # usedFieldMap not True (even with a non-fallback gradientSource label) is a screening fallback.
+    synthetic = project_build_job_microstructure(
+        {"solidificationKinetics": {**kin, "usedFieldMap": False}, "meltPoolGeometry": {"regime": "Conduction Mode (Stable)"}}
+    )
+    assert synthetic["status"] == "screening-fallback" and synthetic["regimeNote"] is None
+    assert synthetic["reason"] == FALLBACK_REASON
+
+
+FALLBACK_REASON = (
+    "thermal.solidificationKinetics used the tail-length heuristic (G = ΔT/x_rear, R = v·cosθ), "
+    "not the liquidus field map; treat G/R/PDAS/SDAS as screening only"
+)
+
+
+def check_build_job_microstructure_fallback():
+    """Low power / high speed cases fall back to the tail-length heuristic: labelled, not 'available'."""
+    cases = (
+        {"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000},
+        {"alloyId": "ti6al4v", "laserPower_W": 40, "scanSpeed_mm_s": 1500},
+    )
+    for case in cases:
+        job = run_job({**case, "beamDiameter_um": 80, "layerThickness_um": 40,
+                       "hatchSpacing_um": 110, "bypassCache": True})
+        kin = job["thermal"]["solidificationKinetics"]
+        micro = job["microstructure"]
+        assert kin["usedFieldMap"] is False and kin["gradientSource"] == "tail-length-fallback", (case, kin)
+        assert micro["status"] == "screening-fallback", (case, micro["status"])
+        assert micro["reason"] == FALLBACK_REASON
+        assert micro["usedFieldMap"] is False
+        assert micro["gradientSource"] == "tail-length-fallback"
+        # Numbers are still the thermal block's, never recomputed.
+        assert micro["G_K_m"] == kin["thermalGradient_G_K_m"]
+        assert micro["coolingRate_K_s"] == kin["coolingRate_K_s"]
+        assert micro["PDAS_um"] == kin["primaryDendriteArmSpacing_PDAS_um"]
+        assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
+        assert micro["morphology"] == kin["microstructureMorphology"]
+        assert micro["regimeNote"] is None
+        print("  fallback", case["alloyId"], case["laserPower_W"], "W /", case["scanSpeed_mm_s"], "mm/s:",
+              "G", micro["G_K_m"], "R", micro["R_m_s"], "PDAS", micro["PDAS_um"], micro["status"], micro["gradientSource"])
 
 
 def main():
@@ -389,6 +466,8 @@ def main():
     assert b["cache"]["stats"]["hits"] >= 1
     assert b["materialPropertySha256"] == a["materialPropertySha256"]
     check_build_job_microstructure(a)
+    check_build_job_microstructure_fallback()
+    check_microstructure_fixture()
 
     # The effective thermal input is frozen once per request and changes cache identity.
     from four_alloy_materials import _THERMAL
@@ -795,6 +874,11 @@ if __name__ == "__main__":
     if "--write-kinetics-fixture" in sys.argv:
         with open(KINETICS_FIXTURE, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(kinetics_fixture_blocks(), fh, indent=1, ensure_ascii=False)
+            fh.write("\n")
+        sys.exit(0)
+    if "--write-microstructure-fixture" in sys.argv:
+        with open(MICROSTRUCTURE_FIXTURE, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(microstructure_fixture_blocks(), fh, indent=1, ensure_ascii=False)
             fh.write("\n")
         sys.exit(0)
     sys.exit(main())

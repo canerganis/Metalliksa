@@ -30,6 +30,7 @@ import { heatTreatmentCohorts, orientationCohorts } from "../../utils/lpbfFourAl
 import type { PythonLpbfScreeningGate } from "../../services/pythonComputationService";
 import { LPBF_DEMO_VECTORS } from "../../utils/lpbfDemoVectors";
 import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
+import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -628,27 +629,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
 
       {(job?.microstructure || job?.kinetics) && (
         <div className="rounded-2xl border border-teal-500/30 bg-[#090e18] p-3.5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {job?.microstructure && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-teal-400" />
-                <h3 className="text-xs font-bold text-white">Solidification Microstructure</h3>
-              </div>
-              {job.microstructure.status === "unavailable" ? (
-                <p className="text-[11px] text-slate-400">Unavailable — {job.microstructure.reason}</p>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Metric label="PDAS (µm)" value={job.microstructure.PDAS_um?.toFixed(2) ?? "—"} hint={job.microstructure.source} />
-                    <Metric label="SDAS (µm)" value={job.microstructure.SDAS_um?.toFixed(2) ?? "—"} hint={job.microstructure.source} />
-                    <Metric label="Morphology" value={job.microstructure.morphology ?? "—"} hint={`G/R = ${(job.microstructure.G_K_m / Math.max(1e-9, job.microstructure.R_m_s)).toExponential(1)}`} />
-                    <Metric label="Cooling Rate" value={job.microstructure.coolingRate_K_s?.toExponential(1) ?? "—"} hint="K/s" />
-                  </div>
-                  <p className="text-[9px] text-slate-500 mt-1">{job.microstructure.disclaimer}</p>
-                </>
-              )}
-            </div>
-          )}
+          <BuildJobMicrostructurePanel microstructure={job?.microstructure} />
           <BuildJobKineticsPanel kinetics={job?.kinetics} />
         </div>
       )}

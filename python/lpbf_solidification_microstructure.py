@@ -13,11 +13,14 @@ Provides:
     → Build-job projection of thermal["solidificationKinetics"] (the conduction
       field G/R from solidification_front); numbers are copied, not recomputed.
 
-Hunt-Lu PDAS model (CFD path only):
-    λ₁ [µm] = 80 · G^(-0.5) · R^(-0.25)        (Hunt-Lu 1996)
-
-Kirkwood SDAS model (CFD path only):
+Legacy CFD-path correlations (unreachable today: no caller supplies a CFD result;
+they are NOT the model of record for any displayed number):
+    λ₁ [µm] = 80 · G^(-0.5) · R^(-0.25)        ("Hunt-Lu 1996" label; prefactor
+                                                 differs from solidification_front,
+                                                 see the S4 follow-up in the N1 handoff)
     λ₂ [µm] = 64.5 · Ṫ^(-0.33)                 (Kirkwood 1985)
+The numbers shown by the build job and by the Microstructure Lab come from
+solidification_front via thermal["solidificationKinetics"].
 
 Hunt G/R morphology criterion:
     G/R > 1×10⁸  K·s/m²  → columnar
@@ -99,6 +102,13 @@ _MICROSTRUCTURE_DOI = {
     "morphology": "10.1016/0001-6160(84)90147-8", # Hunt 1984
 }
 
+_FALLBACK_REASON = (
+    "thermal.solidificationKinetics used the tail-length heuristic (G = ΔT/x_rear, R = v·cosθ), "
+    "not the liquidus field map; treat G/R/PDAS/SDAS as screening only"
+)
+
+_KEYHOLE_REGIME_NOTE = "Keyhole Mode: outside the conduction regime of the G/R field"
+
 _MICROSTRUCTURE_DISCLAIMER = (
     "G from grad(T) at mushy-zone front; R from U·n_front. "
     "PDAS/SDAS are semi-empirical correlations validated for LPBF dendrite scale. "
@@ -118,6 +128,16 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
     solidification_front.evaluate_solidification); no second Hunt-Lu / Kirkwood
     estimate is made here. When the thermal block carries no finite G/R/cooling
     rate the block is reported as unavailable instead of falling back to constants.
+
+    status:
+      "available"          usedFieldMap is True (liquidus field-map G/R).
+      "screening-fallback" usedFieldMap is not True or gradientSource is
+                           "tail-length-fallback" (G = ΔT/x_rear, R = v·cosθ
+                           heuristic); the numbers are still copied, never
+                           recomputed, and carry the reason.
+    R is taken from solidificationRate_R_mm_s / 1e3 when present (the thermal
+    block rounds R_m_s to 3 decimals, about 1 % at 0.03 m/s); this is a unit
+    conversion of the same thermal value, not a second estimate.
     """
     kin = thermal.get("solidificationKinetics") if isinstance(thermal, dict) else None
     if (
@@ -131,14 +151,26 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
             "Build-job microstructure is a projection of the thermal block's "
             "conduction-field G/R; no second estimate."
         )
-        return {
-            "status": "available",
+        gradient_source = kin.get("gradientSource")
+        used_field_map = kin.get("usedFieldMap")
+        is_fallback = used_field_map is not True or gradient_source == "tail-length-fallback"
+        r_mm_s = kin.get("solidificationRate_R_mm_s")
+        r_m_s = r_mm_s / 1.0e3 if _finite_number(r_mm_s) else kin["solidificationRate_R_m_s"]
+        geometry = thermal.get("meltPoolGeometry") if isinstance(thermal.get("meltPoolGeometry"), dict) else {}
+        params = thermal.get("processParameters") if isinstance(thermal.get("processParameters"), dict) else {}
+        regime = geometry.get("regime")
+        regime_note = _KEYHOLE_REGIME_NOTE if isinstance(regime, str) and regime.startswith("Keyhole") else None
+        block = {
+            "status": "screening-fallback" if is_fallback else "available",
             "source": "thermal.solidificationKinetics",
             "modelId": kin.get("modelId"),
-            "gradientSource": kin.get("gradientSource"),
-            "usedFieldMap": kin.get("usedFieldMap"),
+            "gradientSource": gradient_source,
+            "usedFieldMap": used_field_map,
+            "regime": regime,
+            "normalizedEnthalpy": params.get("normalizedEnthalpy"),
+            "regimeNote": regime_note,
             "G_K_m": kin["thermalGradient_G_K_m"],
-            "R_m_s": kin["solidificationRate_R_m_s"],
+            "R_m_s": r_m_s,
             "coolingRate_K_s": kin["coolingRate_K_s"],
             "PDAS_um": kin.get("primaryDendriteArmSpacing_PDAS_um"),
             "SDAS_um": kin.get("secondaryDendriteArmSpacing_SDAS_um"),
@@ -147,6 +179,14 @@ def project_build_job_microstructure(thermal: Dict[str, Any]) -> Dict[str, Any]:
             "doi": kin.get("doi"),
             "disclaimer": (base_disclaimer + " " + note).strip(),
         }
+        if is_fallback:
+            block["reason"] = _FALLBACK_REASON
+            block["disclaimer"] = (
+                block["disclaimer"]
+                + " This operating point used the tail-length heuristic, not the liquidus field map "
+                "(see reason): the G,R wording above does not apply."
+            ).strip()
+        return block
     return {
         "status": "unavailable",
         "reason": "thermal.solidificationKinetics missing or non-finite",
