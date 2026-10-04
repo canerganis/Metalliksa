@@ -371,7 +371,7 @@
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "lpbf",
       "label": "Microstructure Lab",
-      "description": "In-situ G/R solidification front tracking with Hunt-Lu PDAS, Kirkwood SDAS and dendrite morphology prediction.",
+      "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
       "next": "thermomechanical-distortion",
       "maturity": "Research",
       "navigation": "listed",
@@ -2615,7 +2615,7 @@
       "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "TTT / CCT",
-      "description": "Transformation kinetics depend on supplied material parameters.",
+      "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
       "next": "micrograph",
       "maturity": "Research",
       "navigation": "listed",
@@ -2751,6 +2751,8 @@
               "cctContinuousCoolingMap",
               "lswPrecipitateCoarsening",
               "calphadVsKineticsGap",
+              "kineticsModel",
+              "tttIncubationFloor",
               "provenance"
             ],
             "statusKey": null,
@@ -2770,7 +2772,7 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "Emits no evidence status: the output has no status key (cctContinuousCoolingMap[].predictedHardness_HV_status is a hardness-conversion applicability flag, not an evidence status). Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
+        "note": "Emits no evidence status: kineticsModel.status (available for the three steels, unavailable with the reason 'kinetics model is steel-only' for Inconel 718, Ti-6Al-4V and Al 7075) and the per-row *_status keys (e.g. cctContinuousCoolingMap[].predictedHardness_HV_status, a hardness-conversion applicability flag) record applicability and availability, not evidence. Transformation times come from JMAK/Scheil expressions with fixed per-alloy-class constants in the solver; no matched TTT/CCT fixture exists (docs/MODULE_EVIDENCE_INVENTORY.md next gap). Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -2790,9 +2792,10 @@
       },
       "migrationState": "contracted",
       "legacyNotes": [
-        "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics', the same for every alloy including Inconel 718, Ti-6Al-4V and Al 7075); no CALPHAD calculation runs in this operation.",
-        "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output.",
-        "The LSW coarsening profile uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs.",
+        "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / Equilibrium intermetallics'; 'Ferrite + alloy carbides (M7C3 / M23C6)' for AISI D2), status static-text-not-a-calphad-calculation; for Inconel 718, Ti-6Al-4V and Al 7075 it is null with status unavailable-kinetics-model-steel-only; no CALPHAD calculation runs in this operation.",
+        "The TTT/CCT/phase-fraction/hardness model is a steel template: for the non-steel alloys the TTT curves, CCT start, primary microstructure, phase fractions, HRC, martensite fraction, verdict, critical cooling rate and eutectoid Ae1 are null with the reason 'kinetics model is steel-only'. Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS: Inconel 718 and Al 7075 Ms/Mf) are null.",
+        "cctContinuousCoolingMap[].phaseFractions and predictedHardness_HRC are fixed values per cooling-rate band relative to the alloy's critical cooling rate, not JMAK/Scheil output (steels only). The diffusional CCT start of every steel row is null: the incubation law has no Ae3 asymptote and tttIsothermalCurves[].floorHit flags the points on the 1 ms floor (tttIncubationFloor).",
+        "The LSW coarsening profile (K = 8 gamma D C_e Vm^2 / (9 R T), C_e in mol/m^3) uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs. It is null at or above the registry Ae3 (steels: Ae1).",
         "No validity domain is declared: no source-backed applicability range is established for the kinetic constants.",
         "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
       ],

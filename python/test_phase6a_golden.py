@@ -218,12 +218,14 @@ class StepBGoldenTest(unittest.TestCase):
                 self.assertNotIn((solver, case), EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
                 self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                self.assertNotIn((solver, case), golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)
                 self.assertNotIn((solver, case), golden.step_b_excluded_cases())
 
     def test_excluded_cases_cover_every_behaviour_change(self):
         excluded = golden.step_b_excluded_cases()
         for key in (set(EXPECTED_BEHAVIOUR_CHANGES) | set(golden._t2a_cases.EXPECTED_BEHAVIOUR_CHANGES)
-                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)):
+                    | set(golden._t2a_cases.EXPECTED_SUCCESS_FLAG_CHANGES)
+                    | set(golden._t2a_cases.EXPECTED_UNAVAILABLE_CHANGES)):
             self.assertIn(key, excluded)
 
     def test_recorded_drift_is_a_bounded_value_change(self):
@@ -236,6 +238,7 @@ class StepBGoldenTest(unittest.TestCase):
                 base = golden.load_golden(solver, case)["stdout"]
                 self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"],
                                                           golden.CASES[solver][case], base), [])
+                self.assertEqual(golden.step_b_document_violations(solver, doc["stdout"]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -668,6 +671,186 @@ class StepBGoldenTest(unittest.TestCase):
                 mutate(doc)
                 problems = check.document_problems(base, doc)
                 self.assertTrue(any(problems.values()), mutate.__name__)
+    def _kinetics_step_b(self, case):
+        path = golden.step_b_path("kinetics_ttt_cct_solver", case)
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        return doc["driftVsBase"], doc["stdout"]
+
+    def test_fx_kinetics_documented_changes_are_checked_exactly(self):
+        # Engine-fix lane fx-kinetics (tools/kinetics_documented_changes.py): every documented row is
+        # verified against the re-blessed document; a wrong value, a wrong status, the wrong alloy class
+        # or an unflagged placeholder is a violation, and numeric R drift stays under the bounded guard.
+        import copy
+        solver = "kinetics_ttt_cct_solver"
+        for case in ("aisi4140_ui_defaults", "aisi4340_slow_cool", "in718_lpbf_quench", "ti64_beta_quench"):
+            rows, new = self._kinetics_step_b(case)
+            self.assertEqual(golden.step_b_violations(solver, rows, new), [], case)
+            self.assertEqual(golden.step_b_document_violations(solver, new), [], case)
+
+        def violations(case, mutate_rows=None, mutate_doc=None):
+            rows, new = self._kinetics_step_b(case)
+            rows, new = copy.deepcopy(rows), copy.deepcopy(new)
+            if mutate_rows:
+                mutate_rows(rows)
+            if mutate_doc:
+                mutate_doc(new)
+            return golden.step_b_violations(solver, rows, new) + golden.step_b_document_violations(solver, new)
+
+        def row(rows, key):
+            return next(r for r in rows if r["key"] == key)
+
+        def doc_set(path, value):
+            def mutate(doc):
+                node = doc
+                for part in path[:-1]:
+                    node = node[part]
+                node[path[-1]] = value
+            return mutate
+
+        # non-steel: the steel-only claim must hold in the document, and every nulled value must be null
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["kineticsModel", "status"], "available")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_doc=doc_set(["alloyMetadata", "type"], "Low-Alloy Steel")))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct").update(new=63.0)))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "cctContinuousCoolingMap[0].transformedStart_status").update(new="available")))
+        # placeholders: only keys flagged in alloy_registry.KINETICS_PLACEHOLDERS may be null
+        self.assertTrue(violations("ti64_beta_quench", mutate_rows=lambda rows: rows.append(
+            {"key": "alloyMetadata.Ms_C", "kind": "changed", "old": 800.0, "new": None})))
+        self.assertTrue(violations("in718_lpbf_quench", mutate_rows=lambda rows: row(
+            rows, "criticalTransformationTemperatures.Ms_C_status").update(new="registry-screening-value")))
+        # LSW: the recorded old/new radius, strengthening and regime must equal the independent oracle
+        key = "lswPrecipitateCoarsening[9].meanRadius_nm"
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(new=22.9)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(rows, key).update(old=1.6)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_rows=lambda rows: row(
+            rows, "lswPrecipitateCoarsening[9].strengtheningMechanism").update(new="Weak-Pair / Strong-Pair Cutting")))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["lswPrecipitateCoarsening", 0, "meanRadius_nm"], 1.5)))
+        # steel TTT floor flags and the floor-driven CCT start
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["tttIsothermalCurves", 0, "floorHit"], not self._kinetics_step_b("aisi4140_ui_defaults")[1][
+                "tttIsothermalCurves"][0]["floorHit"])))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(["tttIncubationFloor", "floorHitCount"], 31)))
+        self.assertTrue(violations("aisi4140_ui_defaults", mutate_doc=doc_set(
+            ["cctContinuousCoolingMap", 0, "primaryMicrostructure"], "Pearlite")))
+        # a steel row may not lose its phase fractions (only non-steel rows do)
+        self.assertTrue(golden.step_b_violations(solver, [
+            {"key": "cctContinuousCoolingMap[0].phaseFractions.Martensite_pct", "kind": "changed", "old": 98.0, "new": None}],
+            self._kinetics_step_b("aisi4140_ui_defaults")[1]))
+        # numeric R drift of a steel TTT time stays under the default bound (not a documented row)
+        num = lambda rel: [{"key": "tttIsothermalCurves[0].t50_s", "kind": "numeric", "old": 1.0,
+                            "new": 1.0 + rel, "abs": rel, "rel": rel}]
+        steel_doc = self._kinetics_step_b("aisi4140_ui_defaults")[1]
+        self.assertEqual(golden.step_b_violations(solver, num(0.005), steel_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, num(0.05), steel_doc))
+        # without the re-blessed document nothing of this is accepted
+        self.assertTrue(golden.step_b_violations(solver, self._kinetics_step_b("in718_lpbf_quench")[0]))
+    def test_fx_kinetics_document_checks_reject_the_review_mutants(self):
+        # fx-kinetics code review S1: the row handlers see only drifted values, so every mutant below
+        # (a value that equals the base, or an inconsistent status/flag) must be caught by the whole-document
+        # checks (tools/kinetics_documented_changes.document_violations).
+        import copy
+        solver = "kinetics_ttt_cct_solver"
+        docs = {c: self._kinetics_step_b(c)[1] for c in ("aisi4140_ui_defaults", "in718_lpbf_quench", "ti64_beta_quench")}
+
+        def rejected(case, mutate):
+            doc = copy.deepcopy(docs[case])
+            mutate(doc)
+            self.assertTrue(golden.step_b_document_violations(solver, doc), case)
+
+        for case, doc in docs.items():
+            self.assertEqual(golden.step_b_document_violations(solver, doc), [], case)
+
+        def floor_never(doc):
+            for p in doc["tttIsothermalCurves"]:
+                p["floorHit"] = False
+            doc["tttIncubationFloor"].update(floorHitCount=0, status="no-floor-hit-points")
+
+        def floor_from_rounded(doc):  # one flagged point lost
+            next(p for p in doc["tttIsothermalCurves"] if p["floorHit"])["floorHit"] = False
+            doc["tttIncubationFloor"]["floorHitCount"] -= 1
+
+        def reported_start(doc):  # the old "775 C Pearlite" claim comes back with a "computed" status
+            row = doc["cctContinuousCoolingMap"][4]
+            row.update(transformedStartTemp_C=774.5, transformedStartTime_s=8.55, primaryMicrostructure="Pearlite",
+                       transformedStart_status="diffusional-start-scheil-additivity", unavailableReason=None)
+
+        def start_null_with_wrong_status(doc):
+            doc["cctContinuousCoolingMap"][4]["transformedStart_status"] = "athermal-martensite-no-diffusional-start-above-ms"
+
+        def start_blanking_narrowed(doc):  # a start reported while the status still says "not computed"
+            doc["cctContinuousCoolingMap"][9].update(transformedStartTemp_C=765.0, primaryMicrostructure="Pearlite")
+
+        rejected("aisi4140_ui_defaults", floor_never)
+        rejected("aisi4140_ui_defaults", floor_from_rounded)
+        rejected("aisi4140_ui_defaults", reported_start)
+        rejected("aisi4140_ui_defaults", start_null_with_wrong_status)
+        rejected("aisi4140_ui_defaults", start_blanking_narrowed)
+        # placeholder echoed in alloyMetadata although it is flagged and null elsewhere
+        rejected("in718_lpbf_quench", lambda d: d["alloyMetadata"].update(Ms_C=-50.0))
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(Ms_C=-50.0))
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(Ms_C_status="registry-screening-value"))
+        # non-steel critical cooling rate shown while its status says unavailable (both blocks), eutectoid Ae1 shown
+        rejected("in718_lpbf_quench", lambda d: d["criticalTransformationTemperatures"].update(CriticalCoolingRate_CCR_C_s=150.0))
+        rejected("in718_lpbf_quench", lambda d: d["alloyMetadata"].update(critical_cooling_rate_C_s=150.0))
+        rejected("ti64_beta_quench", lambda d: d["criticalTransformationTemperatures"].update(Ae1_C=700.0))
+        rejected("ti64_beta_quench", lambda d: d["alloyMetadata"].update(Ae1_C=700.0))
+        rejected("ti64_beta_quench", lambda d: d["alloyMetadata"].update(Ms_C=None))  # unflagged: must stay a number
+        # kineticsModel block
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(illustrativeOnly=False))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(scope="all-alloys"))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(placeholderParameters=[]))
+        rejected("in718_lpbf_quench", lambda d: d["kineticsModel"].update(note="Steel template"))
+        rejected("aisi4140_ui_defaults", lambda d: d["kineticsModel"].update(status="unavailable"))
+        rejected("aisi4140_ui_defaults", lambda d: d["tttIncubationFloor"].update(note="x"))
+        # gap fields of a non-steel and the steel texts
+        rejected("ti64_beta_quench", lambda d: d["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"].update(
+            criticalCoolingRate_C_s=410.0))
+        rejected("ti64_beta_quench", lambda d: d["calphadVsKineticsGap"]["equilibriumPrediction"].update(
+            stablePhasesAtRT="Ferrite + Cementite / Equilibrium intermetallics"))
+        rejected("aisi4140_ui_defaults", lambda d: d["calphadVsKineticsGap"]["equilibriumPrediction"].update(reason="x"))
+        rejected("aisi4140_ui_defaults", lambda d: d["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"].update(
+            verdict="Full Martensitic / Metastable Quench"))
+        # LSW: a number above the solvus is rejected, a null below it is rejected
+        rejected("in718_lpbf_quench", lambda d: d["lswPrecipitateCoarsening"][0].update(meanRadius_nm=None))
+        rejected("in718_lpbf_quench", lambda d: d["inputParameters"].update(agingTemp_C=1100.0))
+
+        # untested guard branches (code review N1)
+        steel_doc, in718_doc = docs["aisi4140_ui_defaults"], docs["in718_lpbf_quench"]
+        # a handler that cannot verify (bad index) is a violation, never "accepted"
+        bad_index = {"key": "tttIsothermalCurves[99].floorHit", "kind": "added", "old": None, "new": True}
+        self.assertTrue(golden.step_b_violations(solver, [bad_index], steel_doc))
+        # registryAlloyId is the registry id the request alloy resolves to
+        rid = {"key": "kineticsModel.registryAlloyId", "kind": "added", "old": None, "new": "in718"}
+        self.assertEqual(golden.step_b_violations(solver, [rid], in718_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(rid, new="ti6al4v")], in718_doc))
+        # HV of a non-steel row whose HRC is now null: the old value must be the old formula of an old HRC band
+        hv = lambda old: {"key": "cctContinuousCoolingMap[0].predictedHardness_HV", "kind": "changed", "old": old, "new": None}
+        self.assertEqual(golden.step_b_violations(solver, [hv(229.0)], in718_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [hv(500.0)], in718_doc))
+        # the not-computed CCT start reason must be the exact text
+        reason = {"key": "cctContinuousCoolingMap[0].unavailableReason", "kind": "added", "old": None,
+                  "new": "incubation law has no Ae3 asymptote; start not computed"}
+        self.assertEqual(golden.step_b_violations(solver, [reason], steel_doc), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(reason, new="the Scheil-additivity start is not a model result")], steel_doc))
+        # D2 only: the equilibrium text names carbides; another steel may not change it
+        d2 = {"alloyMetadata": {"type": "Cold-Work Tool Steel"}, "kineticsModel": {"registryAlloyId": "aisid2"}}
+        phases = {"key": "calphadVsKineticsGap.equilibriumPrediction.stablePhasesAtRT", "kind": "changed",
+                  "old": "Ferrite + Cementite / Equilibrium intermetallics", "new": "Ferrite + alloy carbides (M7C3 / M23C6)"}
+        self.assertEqual(golden.step_b_violations(solver, [phases], d2), [])
+        self.assertTrue(golden.step_b_violations(solver, [phases], steel_doc))
+        self.assertTrue(golden.step_b_violations(solver, [dict(phases, new="Ferrite + carbides")], d2))
+        # LSW above the solvus: old value must still be the old formula, new must be null
+        al = {"alloyMetadata": {"type": "Aerospace Aluminum", "Q_diff_kJ_mol": 130.0, "Ae3_C": 480.0, "Ae1_C": None},
+              "inputParameters": {"agingTemp_C": 720.0}, "lswPrecipitateCoarsening": [{"agingTime_h": 0.1}]}
+        import kinetics_documented_changes as kdc
+        old_r = round(kdc.lsw_radius_nm(130.0, 720.0, 0.1, 8.314, corrected=False), 2)
+        lsw = {"key": "lswPrecipitateCoarsening[0].meanRadius_nm", "kind": "changed", "old": old_r, "new": None}
+        self.assertEqual(golden.step_b_violations(solver, [lsw], al), [])
+        self.assertTrue(golden.step_b_violations(solver, [dict(lsw, old=old_r + 1.0)], al))
+        self.assertTrue(golden.step_b_violations(solver, [dict(lsw, new=1884.97, kind="numeric", abs=1.0, rel=1.0)], al))
+
     def test_documented_uq_sampler_change_is_checked_against_the_scipy_oracle(self):
         # EXPECTED_DOCUMENTED_VALUE_CHANGES: stochastic UQ norm_ppf sign fix. The drift rows are
         # not bounded; the whole new document must equal the solver run with scipy's ndtri.

@@ -107,4 +107,6 @@
 # Pourbaix 25 C species table emitted by python/pourbaix_species_25c.py: identical LF bytes on every checkout.
 /src/generated/pourbaixSpecies25C.json text eol=lf
 /tests/fixtures/pourbaix-grid-200x200.json text eol=lf
+
+# Validity-envelope sweep output: written LF by python/tools/lpbf_validity_envelope.py.
 /docs/LPBF_VALIDITY_ENVELOPE_2026-10-04.json text eol=lf

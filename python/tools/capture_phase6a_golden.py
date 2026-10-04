@@ -330,10 +330,19 @@ def _documented_change_patterns(solver: str) -> Dict[str, str]:
     return dict(EXPECTED_DOCUMENTED_VALUE_CHANGES.get(solver, {}))
 
 
-def _is_documented_change_row(solver: str, key: str) -> bool:
-    return any(re.fullmatch(p, key) for p in _documented_change_patterns(solver))
+def _is_documented_change_row(solver: str, key: str, kind: Optional[str] = None) -> bool:
+    if not any(re.fullmatch(p, key) for p in _documented_change_patterns(solver)):
+        return False
+    if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
+        # fx-kinetics patterns only apply to the row kinds they document (other kinds, e.g. the
+        # bounded numeric R drift of a steel TTT time, stay under the default guard).
+        import kinetics_documented_changes as kdc  # noqa: E402 (tools/ module)
+        return kdc.is_documented_row(key, kind)
+    return True
 
 
+# HRC values of the old kinetics CCT lookup bands (kinetics_ttt_cct_solver at 7f3f803).
+_OLD_KINETICS_HRC_BANDS = (18.0, 28.0, 42.0, 54.0, 58.0, 64.0)
 _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
 
 
@@ -659,6 +668,12 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     key = row["key"]
     if solver == "pourbaix_solver":
         return pourbaix_documented_change_violation(row, old_stdout, new_stdout, pourbaix_context)
+    if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
+        # Engine-fix lane fx-kinetics changes (steel-only model, placeholders, TTT floor, LSW units).
+        if new_stdout is None:
+            return f"{key}: documented change needs the re-blessed document to be verified"
+        import kinetics_documented_changes as kdc  # noqa: E402 (tools/ module)
+        return kdc.row_violation(row, new_stdout)
     if solver == "stochastic_uq_mmpds_solver":
         return _uq_sampler_violation(row, new_stdout, payload)
     if solver == "icme_multiscale_pipeline_solver":
@@ -688,9 +703,18 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
         return None
     if row["kind"] not in ("numeric", "changed"):
         return f"{key}: {row['kind']} row is not the documented HV change"
-    old_formula = round(hrc * 10.5 + 40.0, 0)
-    if type(row["old"]) is not float or row["old"] != old_formula:
-        return f"{key}: old {row['old']!r} is not round(10.5 * {hrc} + 40) = {old_formula!r}"
+    if hrc is None:
+        # fx-kinetics: a non-steel row's HRC is now null too (steel-only model); the old HRC is not in
+        # this row, so the old HV must be the old formula applied to one of the old lookup bands.
+        if "Steel" in alloy_type:
+            return f"{key}: a steel row has no HRC"
+        allowed = {round(h * 10.5 + 40.0, 0) for h in _OLD_KINETICS_HRC_BANDS}
+        if type(row["old"]) is not float or row["old"] not in allowed:
+            return f"{key}: old {row['old']!r} is not round(10.5 * HRC + 40) of an old HRC band {sorted(allowed)!r}"
+    else:
+        old_formula = round(hrc * 10.5 + 40.0, 0)
+        if type(row["old"]) is not float or row["old"] != old_formula:
+            return f"{key}: old {row['old']!r} is not round(10.5 * {hrc} + 40) = {old_formula!r}"
     if type(row["new"]) is not type(expected_hv) or row["new"] != expected_hv:
         return f"{key}: new {row['new']!r} is not the E140 value {expected_hv!r} ({expected_status})"
     if entry.get("predictedHardness_HV_status") != expected_status:
@@ -714,7 +738,7 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
     pourbaix_context = None
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
-        if _is_documented_change_row(solver, r["key"]):
+        if _is_documented_change_row(solver, r["key"], r["kind"]):
             if (solver == "pourbaix_solver" and pourbaix_context is None
                     and old_stdout is not None and new_stdout is not None):
                 import pourbaix_golden_check  # noqa: E402 (python/tools module)
@@ -734,6 +758,14 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
     return out
 
 
+def step_b_document_violations(solver: str, new_stdout: Optional[Dict[str, Any]]) -> List[str]:
+    """Whole-document checks of a re-blessed stdout (kinetics: LSW oracle, steel-only consistency)."""
+    if solver != "kinetics_ttt_cct_solver" or not isinstance(new_stdout, dict):
+        return []
+    import kinetics_documented_changes as kdc  # noqa: E402 (tools/ module)
+    return kdc.document_violations(new_stdout)
+
+
 def step_b_excluded_cases() -> set:
     """Cases that are behaviour changes, never value re-blesses."""
     excluded = set()
@@ -742,6 +774,7 @@ def step_b_excluded_cases() -> set:
         if cases is not None:
             excluded |= set(getattr(cases, "EXPECTED_BEHAVIOUR_CHANGES", {}))
             excluded |= set(getattr(cases, "EXPECTED_SUCCESS_FLAG_CHANGES", ()))
+            excluded |= set(getattr(cases, "EXPECTED_UNAVAILABLE_CHANGES", {}))
     # pourbaix al_hot_chloride / ni_acid_points: 80 C and 60 C requests now give the
     # TEMPERATURE_UNSUPPORTED envelope (WP-E, 25 C engine); old goldens stay as the record.
     excluded |= {("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"),

@@ -48,7 +48,8 @@ def run_benchmark():
                 "PDAS_um": micro["PDAS_um"],
                 "SDAS_um": micro["SDAS_um"],
                 "morphology": micro["morphology"],
-                "martensite_pct": kin["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]["predictedMartensite_pct"],
+                # None when the kinetics block is unavailable (the model is steel-only; no build-job alloy is a steel)
+                "martensite_pct": ((kin.get("calphadVsKineticsGap") or {}).get("kineticRealityAtSelectedCooling") or {}).get("predictedMartensite_pct"),
                 "compute_time_ms": round(dt * 1000, 2)
             })
             
