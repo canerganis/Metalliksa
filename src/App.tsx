@@ -8,7 +8,6 @@ import { AirgapBanner } from './components/AirgapBanner';
 import { pythonComputationService, PythonEngineStatus } from './services/pythonComputationService';
 import { startMaterialContextBridge, useMaterialContextBridgeStore } from './services/materialContextBridge';
 import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore';
-import { ScientificContextPanel } from './components/ScientificContextPanel';
 import { SilentBoundary } from './components/SilentBoundary';
 import { ModuleNav } from './components/ModuleNav';
 import { formatExactNumber } from './utils/numberFormat';
@@ -17,6 +16,11 @@ import { formatExactNumber } from './utils/numberFormat';
 const bootChunk = import('./components/BootSequence');
 bootChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render (shell shows).
 const BootSequence = lazy(() => bootChunk.then(m => ({ default: m.BootSequence })));
+// Scientific context panel (mostly explanatory text) in its own chunk, requested at module evaluation like the
+// boot chunk; it arrives while the boot overlay still covers the shell. Keeps the index chunk within budget.
+const contextChunk = import('./components/ScientificContextPanel');
+contextChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render.
+const ScientificContextPanel = lazy(() => contextChunk.then(m => ({ default: m.ScientificContextPanel })));
 // Own chunk: the strip sits at the end of the page, so it does not need to be in the index chunk.
 const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m => ({ default: m.TelemetryStrip })));
 // Own chunk: the engine availability dialog is opened on demand from the header status button. A factory,
@@ -199,7 +203,7 @@ export default function App() {
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
         </details>
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
-        {activeTab !== 'ai-orchestrator' && <ScientificContextPanel moduleId={activeTab} specimen={specimen} />}
+        {activeTab !== 'ai-orchestrator' && <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>}
         {visited.map(id => <div key={id} hidden={id !== activeTab} data-module={id}><WorkspaceVisibility visible={id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>
             <Suspense fallback={<div role="status" className="min-h-60 flex items-center justify-center text-slate-400">Loading engineering module…</div>}>

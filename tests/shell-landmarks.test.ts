@@ -85,6 +85,13 @@ test("one header-height variable drives scroll padding, the lg header height and
   assert.doesNotMatch(app, /77px/, "no second, hard-coded header height");
 });
 
+test("scientific context panel is an early-started lazy chunk behind a silent boundary", () => {
+  assert.doesNotMatch(app, /^import [^;]*\.\/components\/ScientificContextPanel['"]/m, "not in the index chunk");
+  assert.match(app, /^const contextChunk = import\('\.\/components\/ScientificContextPanel'\);$/m, "request starts at module evaluation");
+  assert.match(app, /contextChunk\.catch\(/, "no unhandled rejection before render");
+  assert.match(app, /\{activeTab !== 'ai-orchestrator' && <SilentBoundary><Suspense fallback=\{null\}><ScientificContextPanel moduleId=\{activeTab\} specimen=\{specimen\} \/><\/Suspense><\/SilentBoundary>\}/);
+});
+
 test("skip link is visible on focus and uses contrast-tested tokens only", () => {
   const rule = css.match(/\.mk-skip-link \{([^}]*)\}/)?.[1] ?? "";
   assert.match(rule, /color: var\(--mk-ice\);/);
