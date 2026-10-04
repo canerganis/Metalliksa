@@ -1,23 +1,29 @@
 /**
  * SolidificationMicrostructureLab.tsx — Phase 8
- * LPBF solidification analysis with G/R map, dendrite spacing, morphology,
- * and diagnostics. Numerical work remains in pythonComputationService.
+ * Screening-field LPBF solidification: G/R map, dendrite spacing, morphology tendency and diagnostics.
+ * Every number comes from Python (lpbf_thermal_solver thermal.solidificationKinetics, the same numbers the
+ * Build Job projects) through pythonComputationService. The lab sends the alloy name and visible process
+ * inputs only; Python looks the alloy up, nothing is defaulted or substituted. Status-labelled screening:
+ * not in-situ front tracking, not validated.
  */
 
 import React, { useState, useCallback } from 'react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
-  PieChart, Pie, Legend, LabelList,
+  LabelList,
 } from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
-import type { SolidificationMicrostructureResult } from '../services/pythonComputationService';
+import type { SolidificationMicrostructureAvailable } from '../services/pythonComputationService';
+import { solidificationOutcome } from '../utils/solidificationOutcome';
 import {
-  authorityThermalProvenance, solidificationMaterialInputs, type AuthorityAlloyId, type SolidificationMaterialInputs,
+  authorityAlloy, authorityThermalProvenance, solidificationMaterialInputs, type AuthorityAlloyId, type SolidificationMaterialInputs,
 } from '../data/lpbfMaterialAuthority';
 
-// Preset label -> alloy id. Presets read the Python authority (src/generated/lpbfMaterialAuthority.json):
-// solid k, liquidus, IR absorptivity. No alloy numbers here. Pinned by tests/lpbf-material-authority.test.ts.
+// Preset label -> alloy id. The label is mapped to the Python thermophysical name (authority thermalName) that
+// is sent as materialName; the displayed k/liquidus/absorptivity read the Python authority
+// (src/generated/lpbfMaterialAuthority.json) for display only. No alloy numbers here. Pinned by
+// tests/lpbf-material-authority.test.ts.
 export const SOLIDIFICATION_PRESETS = {
   'Inconel 718': 'in718',
   'Ti-6Al-4V': 'ti6al4v',
@@ -25,35 +31,55 @@ export const SOLIDIFICATION_PRESETS = {
   '316L SS': 'ss316l',
 } as const satisfies Record<string, AuthorityAlloyId>;
 
-/** Inputs for a preset label; an unknown label throws (no surrogate alloy). */
-export function solidificationPresetInputs(label: string): SolidificationMaterialInputs {
+function solidificationPresetAlloyId(label: string): AuthorityAlloyId {
   if (!Object.prototype.hasOwnProperty.call(SOLIDIFICATION_PRESETS, label)) {
     throw new Error(`Unknown material preset "${label}"; no surrogate alloy is substituted.`);
   }
-  return solidificationMaterialInputs(SOLIDIFICATION_PRESETS[label as keyof typeof SOLIDIFICATION_PRESETS]);
+  return SOLIDIFICATION_PRESETS[label as keyof typeof SOLIDIFICATION_PRESETS];
 }
 
-/** The exact payload the lab hands to computeSolidificationMicrostructure. */
-export function solidificationRequest(
-  label: string,
-  process: { power_W: number; speed_mm_s: number; hatch_um: number; layerThickness_um: number },
-): { params: Record<string, number>; material: Record<string, number> } {
-  const inputs = solidificationPresetInputs(label);
-  return {
-    params: { ...process },
-    material: { k_WmK: inputs.k_WmK, liquidus_K: inputs.liquidus_K, absorptivity: inputs.absorptivity },
-  };
+/** Display-only authority row for a preset label; an unknown label throws (no surrogate alloy). */
+export function solidificationPresetInputs(label: string): SolidificationMaterialInputs {
+  return solidificationMaterialInputs(solidificationPresetAlloyId(label));
 }
 
-const MORPHOLOGY_COLORS: Record<string, string> = {
-  columnar: '#75b8ff', equiaxed: '#70d8b0', mixed: '#f0bd73',
+export type SolidificationHeatSource = 'rosenthal' | 'eagar-tsai' | 'goldak';
+export const SOLIDIFICATION_HEAT_SOURCES: Record<SolidificationHeatSource, string> = {
+  rosenthal: 'Rosenthal (default)',
+  'eagar-tsai': 'Eagar–Tsai',
+  goldak: 'Goldak',
 };
 
-// Hunt G/R boundary curves: columnar/mixed G/R = 1e8; mixed/equiaxed G/R = 1e6.
-const GR_SCATTER = Array.from({ length: 40 }, (_, i) => {
-  const R = Math.exp(Math.log(1e-5) + (i / 39) * Math.log(2 / 1e-5));
-  return { R_ms: R, G_col: 1e8 * R, G_eq: 1e6 * R };
-});
+export interface SolidificationProcessInputs {
+  power_W: number;
+  speed_mm_s: number;
+  beamDiameter_um: number;
+  preheat_C: number;
+  layerThickness_um: number;
+  hatch_um: number;
+  heatSource: SolidificationHeatSource;
+}
+
+/**
+ * The exact payload the lab hands to computeSolidificationMicrostructure: the Python material name plus the
+ * visible process inputs. No k/liquidus/absorptivity is sent; Python is the authority for the alloy.
+ */
+export function solidificationRequest(
+  label: string,
+  process: SolidificationProcessInputs,
+): { params: Record<string, number | string> } {
+  const materialName = authorityAlloy(solidificationPresetAlloyId(label)).thermalName;
+  return { params: { materialName, ...process } };
+}
+
+const MORPHOLOGY_COLORS: [prefix: string, color: string][] = [
+  ['Planar', '#9aa7b5'], ['Cellular', '#75b8ff'], ['Columnar', '#f0bd73'], ['Mixed', '#70d8b0'],
+];
+const morphologyColor = (morphology: string | null | undefined) =>
+  MORPHOLOGY_COLORS.find(([prefix]) => (morphology ?? '').startsWith(prefix))?.[1] ?? '#9aa7b5';
+
+// Growth-rate axis extent (m/s) of the G-R map; the Hunt band lines are drawn across it.
+const GR_AXIS_R: readonly [min: number, max: number] = [1e-5, 2];
 
 const panelClass = 'rounded-2xl border border-white/10 bg-[#111b25] shadow-[0_18px_50px_rgba(0,0,0,.18)]';
 const mutedText = 'text-slate-400';
@@ -76,17 +102,21 @@ interface Props {
   onSendToModule?: (moduleId: string, data: unknown) => void;
 }
 
-type ChartTab = 'gr-map' | 'spacing' | 'morphology' | 'diagnostics';
+type ChartTab = 'gr-map' | 'spacing' | 'diagnostics';
 
 export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   const [laserPower, setLaserPower] = useState(285);
   const [scanSpeed, setScanSpeed] = useState(960);
   const [hatch, setHatch] = useState(110);
   const [layerThickness, setLayerThickness] = useState(40);
+  const [beamDiameter, setBeamDiameter] = useState(80);
+  const [preheat, setPreheat] = useState(80);
+  const [heatSource, setHeatSource] = useState<SolidificationHeatSource>('rosenthal');
   const [selectedAlloy, setSelectedAlloy] = useState('Inconel 718');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<SolidificationMicrostructureResult | null>(null);
+  const [result, setResult] = useState<SolidificationMicrostructureAvailable | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unavailableReason, setUnavailableReason] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ChartTab>('gr-map');
 
   const alloyProps = solidificationPresetInputs(selectedAlloy);
@@ -94,11 +124,13 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   const invalidateResult = () => {
     setResult(null);
     setError(null);
+    setUnavailableReason(null);
   };
 
   const handleCompute = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setUnavailableReason(null);
     setResult(null);
     try {
       const res = await pythonComputationService.computeSolidificationMicrostructure(solidificationRequest(selectedAlloy, {
@@ -106,40 +138,44 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
         speed_mm_s: scanSpeed,
         hatch_um: hatch,
         layerThickness_um: layerThickness,
+        beamDiameter_um: beamDiameter,
+        preheat_C: preheat,
+        heatSource,
       }));
-      if (res.status === 'unavailable') {
-        setError(`Unavailable — ${res.reason ?? 'no solidification data'}`);
+      const outcome = solidificationOutcome(res);
+      if ('error' in outcome) {
+        setUnavailableReason(outcome.error);
         return;
       }
-      setResult(res);
+      setResult(outcome.result);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Computation failed. Check the service and try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [laserPower, scanSpeed, hatch, layerThickness, selectedAlloy]);
+  }, [laserPower, scanSpeed, hatch, layerThickness, beamDiameter, preheat, heatSource, selectedAlloy]);
 
   const grPoint = result ? [{ R_ms: result.R_m_s, G_K_m: result.G_K_m }] : [];
   const spacingData = result ? [
     { name: 'PDAS · λ₁', value: result.PDAS_um },
     { name: 'SDAS · λ₂', value: result.SDAS_um },
   ] : [];
-  const morphData = result
-    ? (Object.entries(result.morphologyFractions) as [string, number][])
-      .filter(([, value]) => value > 0.005)
-      .map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value: parseFloat((value * 100).toFixed(1)),
-        fill: MORPHOLOGY_COLORS[name] ?? '#9aa7b5',
-      }))
+  const morphColor = morphologyColor(result?.morphology);
+  const cellular = (result?.morphology ?? '').startsWith('Cellular');
+  const provenance = result ? [result.modelId, result.gradientSource].filter(Boolean).join(' · ') || result.source : '';
+  // Hunt G/R band boundaries come from Python (solidification_front); the lab holds no thresholds.
+  const grBands = result?.morphologyBands_G_over_R
+    ? ([
+      ['Planar / cellular', result.morphologyBands_G_over_R.planar, '#bba3f4'],
+      ['Cellular / columnar', result.morphologyBands_G_over_R.cellular, '#75b8ff'],
+      ['Columnar / mixed', result.morphologyBands_G_over_R.columnar, '#70d8b0'],
+    ] as [string, number, string][])
     : [];
-  const morphColor = result ? MORPHOLOGY_COLORS[result.morphology] ?? '#9aa7b5' : '#9aa7b5';
 
   const tabs: { id: ChartTab; label: string; index: string }[] = [
     { id: 'gr-map', label: 'G–R map', index: '01' },
     { id: 'spacing', label: 'Dendrite spacing', index: '02' },
-    { id: 'morphology', label: 'Morphology', index: '03' },
-    { id: 'diagnostics', label: 'Diagnostics', index: '04' },
+    { id: 'diagnostics', label: 'Diagnostics', index: '03' },
   ];
 
   const numberField = (label: string, value: number, min: number, max: number, step: number, unit: string, update: (value: number) => void) => (
@@ -183,7 +219,8 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             </div>
             <h1 className="font-serif text-3xl font-medium tracking-tight text-white sm:text-4xl">Solidification atlas</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-[15px]">
-              Follow the thermal gradient into the solidification front, then read its signature in dendrite spacing and morphology.
+              Screening conduction-field G/R from the Python thermal solver, read as dendrite spacing and morphology tendency.
+              Status-labelled screening: not in-situ front tracking, not validated.
             </p>
           </div>
           <div className="flex min-w-[152px] items-center gap-3 rounded-xl border border-white/[.08] bg-black/15 px-3 py-2.5">
@@ -193,13 +230,13 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             </span>
             <div>
               <div className="text-xs font-semibold text-slate-200">{isLoading ? 'Solver running' : result ? 'Analysis ready' : 'Ready to analyse'}</div>
-              <div className="mt-0.5 text-[10px] text-slate-500">{result ? `${result.frontCellCount.toLocaleString()} front cells` : 'Configure the process below'}</div>
+              <div className="mt-0.5 text-[10px] text-slate-500">{result ? `${result.heatSourceModel ?? 'screening field'} · ${result.status}` : 'Configure the process below'}</div>
             </div>
           </div>
         </div>
         <div className="mt-6 grid max-w-3xl grid-cols-3 gap-2 border-t border-white/[.08] pt-4 sm:gap-6">
           {[
-            ['01', 'THERMAL FIELD'], ['02', 'DENDRITE SCALE'], ['03', 'GRAIN CHARACTER'],
+            ['01', 'CONDUCTION FIELD'], ['02', 'DENDRITE SCALE'], ['03', 'MORPHOLOGY TENDENCY'],
           ].map(([step, title]) => (
             <div key={step} className="flex items-center gap-2 sm:gap-3">
               <span className="font-mono text-xs text-cyan-200/75">{step}</span>
@@ -220,7 +257,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
 
         <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 xl:grid-cols-6">
           <label className="block min-w-0 xl:col-span-2">
-            <span className="mb-2 flex items-center justify-between text-xs font-medium text-slate-300"><span>Material preset</span><span className="text-[10px] text-slate-500">THERMAL PROPERTIES</span></span>
+            <span className="mb-2 flex items-center justify-between text-xs font-medium text-slate-300"><span>Material preset</span><span className="text-[10px] text-slate-500">PYTHON LOOKUP</span></span>
             <select
               aria-label="Material preset"
               className="w-full rounded-lg border border-white/10 bg-[#0b141d] px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
@@ -229,16 +266,30 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             >
               {Object.keys(SOLIDIFICATION_PRESETS).map(alloy => <option key={alloy} value={alloy}>{alloy}</option>)}
             </select>
-            <span className="mt-1.5 block text-[10px] text-slate-500">Preset supplies k, liquidus and absorptivity</span>
+            <span className="mt-1.5 block text-[10px] text-slate-500">Sends the alloy name; Python looks up its properties</span>
           </label>
           {numberField('Laser power', laserPower, 50, 1000, 5, 'W', setLaserPower)}
           {numberField('Scan speed', scanSpeed, 100, 3000, 10, 'mm/s', setScanSpeed)}
           {numberField('Hatch spacing', hatch, 50, 300, 5, 'µm', setHatch)}
           {numberField('Layer thickness', layerThickness, 20, 120, 5, 'µm', setLayerThickness)}
+          {numberField('Beam diameter', beamDiameter, 20, 500, 5, 'µm', setBeamDiameter)}
+          {numberField('Preheat', preheat, 20, 800, 5, '°C', setPreheat)}
+          <label className="block min-w-0 xl:col-span-2">
+            <span className="mb-2 flex items-center justify-between text-xs font-medium text-slate-300"><span>Heat source</span><span className="text-[10px] text-slate-500">CONDUCTION FIELD</span></span>
+            <select
+              aria-label="Heat source"
+              className="w-full rounded-lg border border-white/10 bg-[#0b141d] px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
+              value={heatSource}
+              onChange={event => { setHeatSource(event.target.value as SolidificationHeatSource); invalidateResult(); }}
+            >
+              {(Object.entries(SOLIDIFICATION_HEAT_SOURCES) as [SolidificationHeatSource, string][]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+            <span className="mt-1.5 block text-[10px] text-slate-500">Sent explicitly; the Python solver does not assume one</span>
+          </label>
         </div>
 
         <div className="mt-5 flex flex-col-reverse gap-3 border-t border-white/[.07] pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[11px] leading-5 text-slate-500">Model properties: <span className="font-mono text-slate-400">k {alloyProps.k_WmK} W/m·K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">Tₗ {Math.round(alloyProps.liquidus_K)} K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">A {alloyProps.absorptivity}</span><span className="mx-2 text-slate-700">·</span><span className="text-slate-500">{alloyQuality}</span></p>
+          <p className="text-[11px] leading-5 text-slate-500">Python authority row (display only): <span className="font-mono text-slate-400">k {alloyProps.k_WmK} W/m·K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">Tₗ {Math.round(alloyProps.liquidus_K)} K</span><span className="mx-2 text-slate-700">·</span><span className="font-mono text-slate-400">A {alloyProps.absorptivity}</span><span className="mx-2 text-slate-700">·</span><span className="text-slate-500">{alloyQuality}</span></p>
           <button
             type="button" onClick={handleCompute} disabled={isLoading}
             className="group inline-flex min-h-11 items-center justify-center gap-3 rounded-lg border border-cyan-100/20 bg-gradient-to-r from-cyan-200/15 to-blue-300/10 px-5 text-sm font-semibold text-cyan-50 shadow-[0_8px_24px_rgba(26,156,180,.08)] transition hover:border-cyan-100/40 hover:from-cyan-200/20 hover:to-blue-300/15 disabled:cursor-wait disabled:opacity-60"
@@ -256,18 +307,25 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
         </section>
       )}
 
+      {unavailableReason && !isLoading && (
+        <section role="status" data-solidification-status="unavailable" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[.04] px-4 py-3.5 text-sm text-slate-200">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/20 text-xs">i</span>
+          <div className="min-w-0"><h2 className="font-semibold">Unavailable</h2><p className="mt-1 break-words text-xs leading-5 text-slate-400">{unavailableReason}. No numbers are shown: nothing is defaulted or substituted.</p></div>
+        </section>
+      )}
+
       {isLoading && (
         <section role="status" aria-live="polite" className={`${panelClass} flex min-h-48 flex-col items-center justify-center gap-4 px-5 py-8 text-center`}>
           <div className="relative flex h-12 w-12 items-center justify-center rounded-full border border-cyan-100/20">
             <span className="absolute inset-1 animate-spin rounded-full border border-transparent border-t-cyan-200/80" />
             <span className="h-2 w-2 rounded-full bg-cyan-100 shadow-[0_0_18px_5px_rgba(103,221,232,.3)]" />
           </div>
-          <div><h2 className="font-medium text-slate-100">Tracing the solidification front</h2><p className="mt-1 text-xs text-slate-500">Estimating thermal gradients, growth rate and microstructure scales…</p></div>
+          <div><h2 className="font-medium text-slate-100">Evaluating the screening conduction field…</h2></div>
           <div className="h-1 w-48 overflow-hidden rounded-full bg-white/[.07]"><div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-cyan-300/30 via-cyan-200 to-blue-300/30" /></div>
         </section>
       )}
 
-      {!result && !isLoading && !error && (
+      {!result && !isLoading && !error && !unavailableReason && (
         <section className={`${panelClass} relative flex min-h-56 items-center overflow-hidden px-5 py-8 sm:min-h-64 sm:px-10`}>
           <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-2/5 opacity-70 sm:block">
             <div className="absolute right-12 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full border border-cyan-100/[.08]" />
@@ -282,21 +340,30 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           <div className="relative max-w-lg">
             <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.18em] text-cyan-100/70">Your analysis canvas</div>
             <h2 className="text-xl font-semibold tracking-tight text-slate-100 sm:text-2xl">A process window, made visible.</h2>
-            <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">Choose a material and operating point, then run the analysis to reveal the G–R regime, dendrite scales and estimated morphology.</p>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-slate-500"><span><b className="mr-1.5 text-cyan-100/70">01</b>Thermal field</span><span><b className="mr-1.5 text-cyan-100/70">02</b>Cell spacing</span><span><b className="mr-1.5 text-cyan-100/70">03</b>Morphology</span></div>
+            <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">Choose a material and operating point, then run the analysis to reveal the screening G–R regime, dendrite scales and morphology tendency.</p>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-slate-500"><span><b className="mr-1.5 text-cyan-100/70">01</b>Conduction field</span><span><b className="mr-1.5 text-cyan-100/70">02</b>Cell spacing</span><span><b className="mr-1.5 text-cyan-100/70">03</b>Morphology tendency</span></div>
           </div>
         </section>
       )}
 
       {result && !isLoading && (
         <>
+          {result.status === 'screening-fallback' && (
+            <section role="status" data-solidification-status="screening-fallback" className="rounded-xl border border-amber-300/25 bg-amber-300/[.07] px-4 py-3 text-xs leading-5 text-amber-100">
+              <b className="mr-1.5">Screening fallback.</b>{result.reason}
+            </section>
+          )}
+          {result.status === 'available' && <span hidden data-solidification-status="available" />}
+          {result.regimeNote && (
+            <section role="note" data-solidification-note="regime" className="rounded-xl border border-amber-300/25 bg-amber-300/[.07] px-4 py-3 text-xs leading-5 text-amber-100">{result.regimeNote}</section>
+          )}
           <section aria-label="Analysis summary" className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            <Metric label="Thermal gradient" value={result.G_K_m.toExponential(2)} unit="K/m" accent="#75b8ff" detail="mean at front" />
-            <Metric label="Solidification rate" value={result.R_m_s.toExponential(2)} unit="m/s" accent="#70d8b0" detail="local growth rate" />
-            <Metric label="Cooling rate" value={result.coolingRate_K_s.toExponential(2)} unit="K/s" accent="#f08080" detail="thermal response" />
-            <Metric label="Primary spacing · λ₁" value={result.PDAS_um.toFixed(2)} unit="µm" accent="#bba3f4" detail="PDAS estimate" />
-            <Metric label="Secondary spacing · λ₂" value={result.SDAS_um.toFixed(2)} unit="µm" accent="#f0bd73" detail="SDAS estimate" />
-            <Metric label="Front morphology" value={result.morphology} accent={morphColor} detail={result.source.includes('rosenthal') ? 'analytical source' : 'CFD source'} />
+            <Metric label="Thermal gradient" value={result.G_K_m.toExponential(2)} unit="K/m" accent="#75b8ff" detail={provenance} />
+            <Metric label="Solidification rate" value={result.R_m_s.toExponential(2)} unit="m/s" accent="#70d8b0" detail="screening field" />
+            <Metric label="Cooling rate" value={result.coolingRate_K_s.toExponential(2)} unit="K/s" accent="#f08080" detail="G · R" />
+            <Metric label="Primary spacing · λ₁" value={result.PDAS_um.toFixed(2)} unit="µm" accent="#bba3f4" detail="Hunt–Lu 1996 PDAS" />
+            <Metric label="Secondary spacing · λ₂" value={result.SDAS_um.toFixed(2)} unit="µm" accent="#f0bd73" detail={cellular ? 'cells have no secondary arms · Kirkwood 1985' : 'Kirkwood 1985 SDAS'} />
+            <Metric label="Morphology tendency" value={result.morphology} accent={morphColor} detail={`${result.heatSourceModel ?? 'screening field'} · ${result.gradientSource ?? result.source}`} />
           </section>
 
           <section className={`${panelClass} min-h-[420px] overflow-hidden`} aria-label="Analysis visualisations">
@@ -316,26 +383,25 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
               {activeTab === 'gr-map' && <>
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                   <div><h3 className="text-sm font-medium text-slate-200">Thermal gradient vs. growth rate</h3><p className="mt-1 text-xs text-slate-500">Hunt morphology regime map · logarithmic axes</p></div>
-                  <div className="flex flex-wrap gap-3 text-[10px] text-slate-400"><span className="flex items-center gap-1.5"><i className="h-0.5 w-4 bg-blue-300" />Columnar / mixed</span><span className="flex items-center gap-1.5"><i className="h-0.5 w-4 bg-emerald-300" />Mixed / equiaxed</span><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full" style={{ background: morphColor }} />Operating point</span></div>
+                  <div className="flex flex-wrap gap-3 text-[10px] text-slate-400">{grBands.map(([name, ratio, color]) => <span key={name} className="flex items-center gap-1.5"><i className="h-0.5 w-4" style={{ background: color }} />{name} · G/R {ratio.toExponential(0)}</span>)}<span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full" style={{ background: morphColor }} />Operating point</span></div>
                 </div>
                 <div className="h-[300px] w-full sm:h-[360px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 10, right: 18, bottom: 16, left: 12 }}>
                       <CartesianGrid strokeDasharray="2 6" stroke="#263744" />
-                      <XAxis dataKey="R_ms" type="number" scale="log" domain={[1e-5, 2]} name="R (m/s)" tickFormatter={v => Number(v).toExponential(0)} tick={{ fill: '#8595a3', fontSize: 10 }} axisLine={{ stroke: '#3a4a57' }} tickLine={false} label={{ value: 'Growth rate R (m/s)', position: 'insideBottom', offset: -8, fill: '#91a0ad', fontSize: 11 }} />
+                      <XAxis dataKey="R_ms" type="number" scale="log" domain={[GR_AXIS_R[0], GR_AXIS_R[1]]} name="R (m/s)" tickFormatter={v => Number(v).toExponential(0)} tick={{ fill: '#8595a3', fontSize: 10 }} axisLine={{ stroke: '#3a4a57' }} tickLine={false} label={{ value: 'Growth rate R (m/s)', position: 'insideBottom', offset: -8, fill: '#91a0ad', fontSize: 11 }} />
                       <YAxis dataKey="G_K_m" type="number" scale="log" domain={[1e4, 1e10]} name="G (K/m)" tickFormatter={v => Number(v).toExponential(0)} tick={{ fill: '#8595a3', fontSize: 10 }} axisLine={false} tickLine={false} label={{ value: 'Thermal gradient G (K/m)', angle: -90, position: 'insideLeft', fill: '#91a0ad', fontSize: 11 }} />
                       <Tooltip cursor={{ stroke: '#9ab5c5', strokeDasharray: '3 4' }} formatter={(value: number, name: string) => [Number(value).toExponential(3), name]} contentStyle={{ background: '#111b25', border: '1px solid #354653', borderRadius: '10px', color: '#edf4f7', fontSize: 12 }} />
-                      {GR_SCATTER.slice(0, -1).map((point, index) => <ReferenceLine key={`columnar-${index}`} segment={[{ x: point.R_ms, y: point.G_col }, { x: GR_SCATTER[index + 1].R_ms, y: GR_SCATTER[index + 1].G_col }]} stroke="#75b8ff" strokeDasharray="4 4" strokeOpacity={0.55} />)}
-                      {GR_SCATTER.slice(0, -1).map((point, index) => <ReferenceLine key={`equiaxed-${index}`} segment={[{ x: point.R_ms, y: point.G_eq }, { x: GR_SCATTER[index + 1].R_ms, y: GR_SCATTER[index + 1].G_eq }]} stroke="#70d8b0" strokeDasharray="4 4" strokeOpacity={0.55} />)}
+                      {grBands.map(([name, ratio, color]) => <ReferenceLine key={name} segment={[{ x: GR_AXIS_R[0], y: ratio * GR_AXIS_R[0] }, { x: GR_AXIS_R[1], y: ratio * GR_AXIS_R[1] }]} stroke={color} strokeDasharray="4 4" strokeOpacity={0.6} ifOverflow="hidden" />)}
                       <Scatter data={grPoint} dataKey="G_K_m" fill={morphColor} name="Operating point" shape="star" />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="mt-2 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500">Boundary curves show Hunt G/R criteria (G/R = 10⁸ and 10⁶); the marker locates this operating point. They indicate a model regime, not a measured grain structure.</p>
+                <p className="mt-2 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500">Boundary lines are the Hunt G/R bands used by the Python solver (uncalibrated screening bands); the marker locates this operating point. They indicate a model regime, not a measured grain structure.</p>
               </>}
 
               {activeTab === 'spacing' && <>
-                <div className="mb-3"><h3 className="text-sm font-medium text-slate-200">Dendrite spacing estimates</h3><p className="mt-1 text-xs text-slate-500">Primary and secondary arm spacing returned by the selected model.</p></div>
+                <div className="mb-3"><h3 className="text-sm font-medium text-slate-200">Dendrite spacing estimates</h3><p className="mt-1 text-xs text-slate-500">Primary (Hunt–Lu 1996) and secondary (Kirkwood 1985) arm spacing returned by Python.{cellular ? ' This is a cellular morphology: cells have no secondary arms, so SDAS is indicative only.' : ''}</p></div>
                 <div className="h-[300px] w-full sm:h-[350px]">
                   <ResponsiveContainer width="100%" height="100%"><BarChart data={spacingData} margin={{ top: 24, right: 18, bottom: 8, left: 4 }}>
                     <CartesianGrid vertical={false} strokeDasharray="2 6" stroke="#263744" />
@@ -351,23 +417,6 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
                 <p className="mt-2 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500">Typical LPBF literature ranges (PDAS 1–30 µm; SDAS 0.5–15 µm) are context only and are not acceptance limits for this result.</p>
               </>}
 
-              {activeTab === 'morphology' && <>
-                <div className="mb-3"><h3 className="text-sm font-medium text-slate-200">Estimated morphology fractions</h3><p className="mt-1 text-xs text-slate-500">Classification at the solidification front from the G/R criterion.</p></div>
-                <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_minmax(220px,.8fr)]">
-                  <div className="h-[280px] w-full sm:h-[340px]"><ResponsiveContainer width="100%" height="100%"><PieChart>
-                    <Pie data={morphData} cx="50%" cy="50%" outerRadius="76%" innerRadius="54%" paddingAngle={3} dataKey="value" stroke="#111b25" strokeWidth={3}>
-                      {morphData.map((entry, index) => <Cell key={`morph-${index}`} fill={entry.fill} />)}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => [`${value}%`, 'Estimated fraction']} contentStyle={{ background: '#111b25', border: '1px solid #354653', borderRadius: '10px', color: '#edf4f7', fontSize: 12 }} />
-                  </PieChart></ResponsiveContainer></div>
-                  <div className="space-y-2">
-                    {morphData.map(item => <div key={item.name} className="flex items-center justify-between gap-3 rounded-xl border border-white/[.07] bg-[#0b141d] px-4 py-3"><div className="flex items-center gap-2.5"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.fill }} /><span className="text-sm text-slate-300">{item.name}</span></div><span className="font-mono text-sm text-slate-100">{item.value.toFixed(1)}%</span></div>)}
-                    {!morphData.length && <p className="text-sm text-slate-400">No morphology fractions above the display threshold.</p>}
-                  </div>
-                </div>
-                <p className="mt-2 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500">Fractions are model estimates; they should not be interpreted as direct microscopy measurements.</p>
-              </>}
-
               {activeTab === 'diagnostics' && <>
                 <div className="mb-3"><h3 className="text-sm font-medium text-slate-200">Model diagnostics</h3><p className="mt-1 text-xs text-slate-500">Field summary, result provenance and scientific caveats.</p></div>
                 <div className="grid gap-3 md:grid-cols-2">
@@ -375,10 +424,14 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
                     <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[.16em] text-cyan-100/70">Thermal field</h4>
                     <dl className="space-y-2">
                       {[
-                        ['G · mean', `${result.G_K_m.toExponential(3)} K/m`], ['G · max', `${result.maxG_K_m.toExponential(3)} K/m`],
-                        ['R · mean', `${result.R_m_s.toExponential(3)} m/s`], ['R · max', `${result.maxR_m_s.toExponential(3)} m/s`],
+                        ['G', `${result.G_K_m.toExponential(3)} K/m`],
+                        ['R', `${result.R_m_s.toExponential(3)} m/s`],
                         ['Cooling rate', `${result.coolingRate_K_s.toExponential(3)} K/s`],
-                      ].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-white/[.05] pb-2 text-xs"><dt className="text-slate-500">{label}</dt><dd className="font-mono text-slate-200">{value}</dd></div>)}
+                        ['G/R', result.g_over_r_ratio != null ? `${result.g_over_r_ratio.toExponential(2)} K·s/m²` : '—'],
+                        ['Normalised enthalpy', result.normalizedEnthalpy != null ? String(result.normalizedEnthalpy) : '—'],
+                        ['Regime', result.regime ?? '—'],
+                        ['Absorptivity (effective / conduction)', result.absorptivity ? `${result.absorptivity.effective ?? '—'} / ${result.absorptivity.conduction ?? '—'}` : '—'],
+                      ].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-white/[.05] pb-2 text-xs"><dt className="text-slate-500">{label}</dt><dd className="text-right font-mono text-slate-200">{value}</dd></div>)}
                     </dl>
                   </div>
                   <div className="rounded-xl border border-white/[.07] bg-[#0b141d] p-4">
@@ -386,21 +439,24 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
                     <dl className="space-y-2">
                       {[
                         ['PDAS · λ₁', `${result.PDAS_um.toFixed(2)} µm`], ['SDAS · λ₂', `${result.SDAS_um.toFixed(2)} µm`],
-                        ['Morphology', result.morphology], ['Front cells', result.frontCellCount.toLocaleString()],
-                        ['Calculation source', result.source.includes('rosenthal') ? 'Rosenthal analytical' : 'OpenFOAM CFD'],
+                        ['Morphology', result.morphology], ['Status', result.status],
+                        ['Heat source', result.heatSourceModel ?? '—'], ['Gradient source', result.gradientSource ?? '—'],
+                        ['Liquidus field map used', result.usedFieldMap == null ? '—' : String(result.usedFieldMap)],
+                        ['Material', result.materialName ?? '—'], ['Calculation source', result.source],
                       ].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-white/[.05] pb-2 text-xs"><dt className="text-slate-500">{label}</dt><dd className="text-right font-mono text-slate-200">{value}</dd></div>)}
                     </dl>
                   </div>
                 </div>
                 <div className="mt-3 rounded-xl border border-amber-100/10 bg-amber-100/[.035] p-4">
                   <h4 className="mb-1 text-xs font-semibold text-amber-100/80">Interpret with care</h4>
+                  {result.scope && <p className="mb-2 text-xs leading-5 text-slate-300">{result.scope}</p>}
                   <p className="text-xs leading-5 text-slate-400">{result.disclaimer}</p>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[10px] text-slate-500"><span>Hunt–Lu PDAS · DOI {result.doi.pdas}</span><span>Kirkwood SDAS · DOI {result.doi.sdas}</span><span>Hunt morphology · DOI {result.doi.morphology}</span></div>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[10px] text-slate-500"><span>Hunt–Lu 1996 PDAS</span><span>Kirkwood 1985 SDAS</span><span>Hunt 1984 morphology{typeof result.doi === 'string' ? ` · DOI ${result.doi}` : ''}</span></div>
               </>}
             </div>
           </section>
-          <p className="px-1 pb-2 text-[10px] leading-5 text-slate-600">Results are model-derived estimates. Use the diagnostic notes and calculation source when interpreting comparisons; this view does not replace experimental validation.</p>
+          <p className="px-1 pb-2 text-[10px] leading-5 text-slate-600">Results are model-derived screening estimates. Use the status, diagnostic notes and calculation source when interpreting comparisons; this view is not in-situ tracking and does not replace experimental validation.</p>
         </>
       )}
     </div>

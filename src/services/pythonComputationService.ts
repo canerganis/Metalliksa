@@ -513,29 +513,63 @@ export interface PythonBayesianOptimizationResult {
   nIterations: number;
 }
 
-// Phase 8: Solidification Microstructure Lab result type
-export interface SolidificationMicrostructureResult {
-  // "unavailable" (no CFD solidification data) carries null numerics; callers must check status first.
-  status?: 'available' | 'unavailable';
-  reason?: string;
+// Phase 8: Solidification Microstructure Lab result type.
+// Screening-field path (python/lpbf_solidification_microstructure.py compute_screening_field_microstructure):
+// the numbers are thermal.solidificationKinetics from lpbf_thermal_solver, the same ones the Build Job projects.
+// status "available" = liquidus field-map G/R; "screening-fallback" = tail-length heuristic (reason says so);
+// "unavailable" = no numbers (missing/unknown input), reason says why. Callers must check status first.
+export interface SolidificationMicrostructureAvailable {
+  status: 'available' | 'screening-fallback';
+  reason?: string | null;
   source: string;
+  modelId?: string | null;
+  gradientSource?: string | null;
+  usedFieldMap?: boolean | null;
+  heatSourceModel?: string | null;
+  materialName?: string | null;
+  regime?: string | null;
+  regimeNote?: string | null;
+  normalizedEnthalpy?: number | null;
+  absorptivity?: { effective: number | null; conduction: number | null };
+  materialEvidence?: Record<string, unknown>;
+  inputs?: Record<string, number>;
+  morphologyBands_G_over_R?: { planar: number; cellular: number; columnar: number };
+  scope?: string;
   G_K_m: number;
-  maxG_K_m: number;
   R_m_s: number;
-  maxR_m_s: number;
   coolingRate_K_s: number;
+  g_over_r_ratio?: number | null;
   PDAS_um: number;
   SDAS_um: number;
-  morphology: 'columnar' | 'equiaxed' | 'mixed';
-  morphologyFractions: {
-    columnar: number;
-    equiaxed: number;
-    mixed: number;
-  };
-  frontCellCount: number;
-  doi: Record<string, string>;
+  morphology: string;
+  doi?: string | Record<string, string> | null;
   disclaimer: string;
+  // Legacy CFD path only (a cfdResult was supplied); absent on the screening-field path.
+  maxG_K_m?: number;
+  maxR_m_s?: number;
+  morphologyFractions?: { columnar: number; equiaxed: number; mixed: number };
+  frontCellCount?: number;
 }
+
+export interface SolidificationMicrostructureUnavailable {
+  status: 'unavailable';
+  reason: string;
+  source: string;
+  heatSourceModel?: string | null;
+  scope?: string;
+  disclaimer?: string;
+  doi?: string | Record<string, string> | null;
+  G_K_m: null;
+  R_m_s: null;
+  coolingRate_K_s: null;
+  PDAS_um: null;
+  SDAS_um: null;
+  morphology: null;
+}
+
+export type SolidificationMicrostructureResult =
+  | SolidificationMicrostructureAvailable
+  | SolidificationMicrostructureUnavailable;
 
 // Phase 9: Thermomechanical Distortion Lab result type
 export interface ThermomechanicalDistortionResult {
@@ -599,9 +633,11 @@ class PythonComputationService {
   }
 
   // Phase 8: Solidification Microstructure Lab
+  // params: materialName + power_W, speed_mm_s, beamDiameter_um, preheat_C, layerThickness_um, hatch_um, heatSource.
+  // Python looks the alloy up by materialName; no k/liquidus/absorptivity is sent.
   async computeSolidificationMicrostructure(data: {
     params: Record<string, number | string>;
-    material: Record<string, number | string>;
+    material?: Record<string, number | string>;
     cfdResult?: Record<string, unknown>;
   }): Promise<SolidificationMicrostructureResult> {
     const res = await fetch("/api/python/lpbf-solidification-microstructure", {
