@@ -17,13 +17,25 @@ test("formatOptionalValue: numbers carry their unit, null/undefined/NaN/Infinity
 
 test("ICME studio and service never show the old overclaiming strings and use the null-safe formatter", () => {
   const studio = readFileSync(join(ROOT, "src", "components", "ICMEMultiScalePipelineStudio.tsx"), "utf8");
-  for (const old of ["Calibrated CAE Material Cards", "Passed Yield & Creep", "ASTM E1820", "Ab-Initio / Density Functional Theory"]) {
+  for (const old of ["Calibrated CAE Material Cards", "Passed Yield & Creep", "ASTM E1820", "Ab-Initio / Density Functional Theory",
+    "DFT Atomistic", "Macro FEA Component", "Target Component FEA"]) {
     assert.ok(!studio.includes(old), `studio still contains ${old}`);
   }
   assert.ok(studio.includes("formatOptionalValue(pipelineResult.scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa"));
   assert.ok(studio.includes("formatOptionalValue(pipelineResult.scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m"));
   assert.ok(studio.includes("lefmDamageTolerance.criticalFlawSize_ac_mm, \"mm\""));
   assert.ok(studio.includes("ultimateTensileStrength_UTS_MPa != null"), "UTS reference line must be conditional");
+});
+
+test("Industrial certification lab shows the design limit honestly and handles null limits", () => {
+  const lab = readFileSync(join(ROOT, "src", "components", "IndustrialCertificationLab.tsx"), "utf8");
+  for (const old of ["99% Survival Design Limit", "99_Percent_Survival_Design_Limit_MPa"]) {
+    assert.ok(!lab.includes(old), `lab still contains ${old}`);
+  }
+  assert.ok(lab.includes("Design Limit (fixed 0.85 knockdown, illustrative)"));
+  assert.ok(lab.includes("formatOptionalValue(result.Certification_Limits?.Design_Limit_MPa"));
+  assert.ok(lab.includes("formatOptionalValue(result.Certification_Limits?.Expected_Fatigue_Limit_MPa"));
+  assert.ok(lab.includes("result.Certification_Limits?.Status"), "the unavailable reason (e.g. no hardness for alloy) is shown");
 });
 
 test("ICME solver output (golden) is illustrative with unavailable UTS/K_Ic and a yield-only verdict", () => {
