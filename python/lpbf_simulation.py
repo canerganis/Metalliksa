@@ -543,6 +543,10 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         interface_z = np.zeros((nz-1, ny, nx), dtype=bool)
         interface_z[support_cells-1, :, :] = True
         support_snapshot = ss304_support_thermal_snapshot()
+    # Loop-invariant enthalpy limits (design 5c B4): tt, hh and m are fixed for the run;
+    # hoisted unchanged from the step body, so every value and message is bit-identical.
+    minimum_allowed_h = float(hh[0])-1e-8
+    boiling_enthalpy = float(np.interp(m["boiling_K"], tt, hh))
     while time < end:
         seg = next((s for s in segments if s["start_s"] <= time+1e-14 and time < s["end_s"]-1e-14), None)
         active_layer = max([s["layer"] for s in segments if s["start_s"] <= time+1e-14] or [0])
@@ -613,7 +617,7 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         h = H/rho+h0_field
         if layered:
             if (not np.isfinite(h).all() or float(h[~support_mask].min()) < hh[0]-1e-8
-                    or float(h[~support_mask].max()) >= np.interp(m["boiling_K"], tt, hh)
+                    or float(h[~support_mask].max()) >= boiling_enthalpy
                     or float(h[support_mask].min()) < ss_h_table[0]-1e-8
                     or float(h[support_mask].max()) > ss_h_table[-1]):
                 raise ValueError("Thermal model validity exceeded (IN718 boiling or SS304 fit range)")
@@ -623,8 +627,6 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             if not np.isfinite(h).all():
                 raise ValueError("Thermal model validity exceeded (non-finite specific enthalpy)")
             minimum_h, maximum_h = float(h.min()), float(h.max())
-            minimum_allowed_h = float(hh[0])-1e-8
-            boiling_enthalpy = float(np.interp(m["boiling_K"], tt, hh))
             if minimum_h < minimum_allowed_h:
                 raise ValueError(
                     "Thermal model validity exceeded below the property-table range "
@@ -722,7 +724,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         if front is not None:
             fronts.append(front)
         previous_melt = melt
-        peak = max(peak, float(T.max()))
+        # One reduction per accepted step, reused by the sampled history and report (B4).
+        temperature_max = float(T.max())
+        peak = max(peak, temperature_max)
         sampled = time >= next_sample or time >= end
         peak_tracker.observe(T, surface, p["scanAngle_deg"]+active_layer*p["layerRotation_deg"],
                              time, step, sampled=sampled)
@@ -733,9 +737,9 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
             overlap_tracker.observe(T, surface, active_layer, active_track)
         if sampled:
             recorder.record(time, T, surface)
-            history.append(dict(time_s=time, peak_K=float(T.max()), center_K=float(T[nx//2, ny//2, top_index]),
+            history.append(dict(time_s=time, peak_K=temperature_max, center_K=float(T[nx//2, ny//2, top_index]),
                                 storedEnergy_J=float(H.sum())*dx**3, inputEnergy_J=energy_in, lossEnergy_J=energy_out))
-            report(time/end, f"step={step} t={time:.7g}s peak={T.max():.1f}K cells={T.size}")
+            report(time/end, f"step={step} t={time:.7g}s peak={temperature_max:.1f}K cells={T.size}")
             next_sample = time+end/60
         if step > 250000:
             raise ValueError("Reference solver step budget exceeded")
