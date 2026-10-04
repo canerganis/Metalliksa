@@ -197,7 +197,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     ),
     "micrograph": (
         _op("diagnose-micrograph", "POST", "/api/metallurgy/diagnose-micrograph", _NODE),
-        _AI_CONSULT,
     ),
     "eds-lab": (_AI_CONSULT,),
     "electrochem-suite": (
@@ -237,10 +236,6 @@ LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
     "transient-3d-gpu": (
         "The view calls POST /api/python/transient-3d-gpu, which no server route handles; "
         "no authority exists for this module.",
-    ),
-    "micrograph": (
-        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant "
-        "values without calling any authority; not bound as operations.",
     ),
     "qualification": (_CANNED_QUALIFY,),
     "aerospace-pdf-audit": (_CANNED_QUALIFY,),

@@ -60,7 +60,6 @@ const PINNED_GUARDED = [
   "src/components/PhaseDiagramViewer.tsx",
   "src/components/PhaseKineticsTTTCCTStudio.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
-  "src/components/SEMAutoAnalyzerStudio.tsx",
   "src/components/StandardQualificationEngine.tsx",
   "src/components/TafelPolarizationLab.tsx",
   "src/components/UQLab.tsx",
@@ -244,8 +243,8 @@ export function rawUnitInterpolations(source: string): number[] {
     });
   return lines;
 }
-// Option values are already the display text there (µm/nm/mm), so interpolating the state is safe.
-const RAW_UNIT_ALLOWED = new Set(["src/components/SEMAutoAnalyzerStudio.tsx"]);
+// Files whose *Unit state values are already display text (µm/nm/mm), so interpolating them is safe.
+const RAW_UNIT_ALLOWED = new Set<string>([]); // the only former entry (SEMAutoAnalyzerStudio.tsx) was deleted
 
 function listTsx(dir: string): string[] {
   return (readdirSync(resolve(ROOT, dir), { recursive: true }) as string[])

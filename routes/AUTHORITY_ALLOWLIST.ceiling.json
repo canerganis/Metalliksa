@@ -34,8 +34,6 @@
     "POST /api/lpbf/sources/:datasetId/import",
     "POST /api/lpbf/sources/:datasetId/preview",
     "POST /api/lpbf/sources/:datasetId/verify",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend",
     "POST /api/metallurgy/qualify-aerospace",
     "POST /api/orchestrator/collect-source",
     "POST /api/python/bisquert-tlm-identify",
@@ -66,8 +64,6 @@
     "GET /api/health",
     "GET /api/materials-project/search",
     "GET /api/orchestrator/approved-sources",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend",
     "POST /api/metallurgy/qualify-aerospace"
   ]
 }

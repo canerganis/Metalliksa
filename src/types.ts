@@ -132,27 +132,6 @@ export interface XrdPeak {
   intensityPct: number;
 }
 
-export interface MicrographSample {
-  id: string;
-  title: string;
-  material: string;
-  condition: string;
-  magnification: string;
-  etchant: string;
-  description: string;
-  keyFeatures: string[];
-  imageUrl: string;
-  mimeType: string;
-  category?: "Additive Manufacturing (LPBF)" | "Nickel & Cobalt Superalloys" | "Titanium & Aerospace Alloys" | "Steels & Hardmetals" | "Failure Analysis & Fractography" | "Coatings & Interfaces";
-  microscopeType?: "SEM-SE (Secondary Electron)" | "SEM-BSE (Backscattered)" | "TEM / STEM" | "Optical Metallograph";
-  voltageKv?: number;
-  defaultScaleMicronsPerPixel?: number;
-  scaleBarLengthUm?: number;
-  expectedPhases?: { phase: string; fractionPct: number; color: string }[];
-  expectedPorosityPct?: number;
-  nominalGrainSizeAstm?: string;
-}
-
 export interface ChatMessage {
   id: string;
   sender: "user" | "assistant";

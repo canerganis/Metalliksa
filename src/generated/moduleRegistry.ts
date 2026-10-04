@@ -2922,23 +2922,6 @@ export const MODULE_REGISTRY = {
           "input": [],
           "undeclaredInput": [],
           "output": null
-        },
-        {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
         }
       ],
       "validityDomain": null,
@@ -2967,9 +2950,7 @@ export const MODULE_REGISTRY = {
         "docs": null
       },
       "migrationState": "legacy",
-      "legacyNotes": [
-        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
-      ],
+      "legacyNotes": [],
       "sourceRefs": [],
       "seedDerived": [
         "label",
