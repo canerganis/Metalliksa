@@ -11,8 +11,11 @@ import { useVisiblePolling } from "../../hooks/useVisiblePolling";
 import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { useMaterialSpecimenStore } from "../../store/useMaterialSpecimenStore";
 import { DISPLAY_LOCALE } from "../../utils/numberFormat";
+import { readChoice, writeChoice } from "../../utils/viewerPreference";
 
 import { LPBF_ENGINEERING_DEFAULTS as defaults, engineeringSignature, resumeEngineeringJob, useEngineeringField, useLpbfEngineeringStore } from "../../store/useLpbfEngineeringStore";
+export const GPU_PILOT_ENGINE_PREFERENCE_KEY = "metalliksa.lpbf.gpuPilot.engine.v1";
+const GPU_PILOT_ENGINES = ["torch", "warp"] as const;
 const controls = [
   ["stripeWidth_um","Stripe width (µm)",20,3000], ["islandSize_um","Island size (µm)",50,3000],
   ["mesh_um","Mesh spacing (µm)",5,80], ["maxDt_s","Maximum timestep (s)",1e-9,1e-4],
@@ -345,7 +348,8 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
 }) {
   const [device, setDevice] = useState("");
   const [deviceCaps, setDeviceCaps] = useState<SimulationCapabilities | undefined>(caps);
-  const [engine, setEngine] = useState<'torch' | 'warp'>('torch');
+  // Remembered per viewer (a select convenience); a restored saved pilot job still shows its executed engine.
+  const [engine, setEngine] = useState<'torch' | 'warp'>(() => readChoice(GPU_PILOT_ENGINE_PREFERENCE_KEY, GPU_PILOT_ENGINES, 'torch'));
   const [job, setJob] = useState<GpuPilotJob>();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -441,7 +445,7 @@ function GpuThermalPilotPanel({input, settings, material, properties, strategy, 
     <p className="mt-2 text-xs text-amber-200">Numerical CPU/GPU parity only. A completed bound GPU result can be imported with Save to Archive below after selecting a source revision; field bytes and numerical evidence are rechecked during import and bundle restore. This remains unvalidated parity evidence. Experimental validation and qualification are unavailable. CPU alternative: Reference enthalpy FV above.</p>
     <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
       <label className="text-sm">GPU engine<select aria-label="GPU engine" className={inputClass} value={engine}
-        disabled={blocked||submitting||active} onChange={e=>setEngine(e.target.value === 'warp' ? 'warp' : 'torch')}>
+        disabled={blocked||submitting||active} onChange={e=>{const next = e.target.value === 'warp' ? 'warp' : 'torch'; setEngine(next); writeChoice(GPU_PILOT_ENGINE_PREFERENCE_KEY, next);}}>
         <option value="torch">PyTorch CUDA · v1</option><option value="warp">NVIDIA Warp candidate · v2</option>
       </select></label>
       <label className="text-sm">CUDA device<select aria-label="CUDA device" className={inputClass} value={device}
