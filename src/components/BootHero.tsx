@@ -1,35 +1,69 @@
 /**
- * Decorative boot hero (Phase 9, DESIGN-9 section 4). Lazy chunk; three.js comes from vendor-three.
- * A 64x64 instanced powder bed with a laser spot on a stripe toolpath and a decaying heat tint.
- * It is an illustration only: no solver, no physical units, no data from any model.
- * Mounted only with WebGL, motion allowed and after the runtime-config check. DPR <= 1.5,
- * paused while the tab is hidden, after 30 consecutive frames slower than 20 ms it renders one static
- * cold-bed frame (no spot, no heat) and stops,
- * and disposes renderer, geometries, materials and observers on unmount.
+ * Decorative boot hero: a WebGL spark layer laid over the foundry artwork (FoundryStage). Sparks are
+ * thrown from the melt point where the beam meets the sphere, drawn as short additive streaks with hot
+ * heads, pulled down by gravity and cooling from white through amber to nothing. Lazy chunk; three.js
+ * comes from vendor-three. It is an illustration only: no solver, no physical units, no data from any model.
+ * Mounted only with WebGL, motion allowed and after the runtime-config check. DPR <= 1.5, paused while the
+ * tab is hidden, after 30 consecutive frames slower than 20 ms it clears the sparks and stops (the
+ * artwork stays), and disposes renderer, geometries, materials and observers on unmount.
  */
 import React, { useEffect, useRef } from "react";
 import {
-  Color,
-  IcosahedronGeometry,
-  InstancedMesh,
-  Mesh,
-  MeshBasicMaterial,
-  Object3D,
-  PerspectiveCamera,
+  AdditiveBlending,
+  BufferAttribute,
+  BufferGeometry,
+  CanvasTexture,
+  LineBasicMaterial,
+  LineSegments,
+  OrthographicCamera,
+  Points,
+  PointsMaterial,
   Scene,
   WebGLRenderer,
 } from "three";
 
-const N = 64;
-const GAP = 0.1;
-const STRIPE_ROWS = 4;
-const STRIPE_SECONDS = 1.6;
+const COUNT = 260;
 const SLOW_FRAME_MS = 20;
 const SLOW_FRAME_LIMIT = 30;
+// Melt point in the artwork, as a fraction of the frame (matches --hx / --hy in foundry.css).
+const HIT_X = 0.742;
+const HIT_Y = 0.146;
 
-function tokenColor(name: string): Color {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return new Color(value || "white");
+/** Soft round sprite for the spark heads (drawn once on a small canvas, no image file). */
+function glowTexture(): CanvasTexture {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const g = canvas.getContext("2d");
+  if (g) {
+    // White sprite with a radial alpha falloff, written pixel by pixel (no colour literals).
+    const img = g.createImageData(size, size);
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const r = Math.hypot(x + 0.5 - size / 2, y + 0.5 - size / 2) / (size / 2);
+        const a = r >= 1 ? 0 : r < 0.25 ? 1 : Math.pow(1 - (r - 0.25) / 0.75, 2);
+        const o = (y * size + x) * 4;
+        img.data[o] = 255;
+        img.data[o + 1] = 255;
+        img.data[o + 2] = 255;
+        img.data[o + 3] = Math.round(a * 255);
+      }
+    }
+    g.putImageData(img, 0, 0);
+  }
+  return new CanvasTexture(canvas);
+}
+
+/** Cooling colour of a spark: white-hot -> yellow -> amber -> deep orange, by age 0..1. */
+function heat(t: number, out: Float32Array, o: number, alpha: number) {
+  const r = 1;
+  const g = Math.max(0.25, 1 - t * 0.85);
+  const b = Math.max(0.05, 0.9 - t * 1.6);
+  out[o] = r * alpha;
+  out[o + 1] = g * alpha;
+  out[o + 2] = b * alpha;
+  out[o + 3] = alpha;
 }
 
 export default function BootHero() {
@@ -44,102 +78,126 @@ export default function BootHero() {
     container.appendChild(canvas);
     let renderer: WebGLRenderer;
     try {
-      renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "low-power" });
+      renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true, powerPreference: "low-power" });
     } catch {
       canvas.remove();
       return undefined;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setClearColor(0x000000, 0);
+    container.closest(".mk-foundry")?.classList.add("has-webgl");
 
     const scene = new Scene();
-    const camera = new PerspectiveCamera(34, 1, 0.1, 40);
-    camera.position.set(0, 0.95, 2.7);
-    camera.lookAt(0, 0, -0.5);
+    const camera = new OrthographicCamera(0, 1, 0, 1, -1, 1);
 
-    const grainGeometry = new IcosahedronGeometry(0.045, 0);
-    const grainMaterial = new MeshBasicMaterial();
-    const bed = new InstancedMesh(grainGeometry, grainMaterial, N * N);
-    // Porcelain stage: graphite-grey grains on a light page, an incandescent spot and a warm wake.
-    const base = tokenColor("--mk-hair-2");
-    const hot = tokenColor("--mk-laser");
-    const core = tokenColor("--mk-laser-soft");
-    const tint = new Float32Array(N * N);
-    const heat = new Float32Array(N * N);
-    const dummy = new Object3D();
-    const color = new Color();
-    for (let i = 0; i < N * N; i += 1) {
-      const x = i % N;
-      const z = Math.floor(i / N);
-      dummy.position.set((x - N / 2 + Math.random() * 0.4) * GAP, Math.random() * 0.02, (z - N / 2 + Math.random() * 0.4) * GAP);
-      dummy.updateMatrix();
-      bed.setMatrixAt(i, dummy.matrix);
-      tint[i] = 0.7 + Math.random() * 0.3;
-      bed.setColorAt(i, color.copy(base).multiplyScalar(tint[i]));
-    }
-    scene.add(bed);
+    // Particle state (CSS pixels, y down).
+    const px = new Float32Array(COUNT);
+    const py = new Float32Array(COUNT);
+    const vx = new Float32Array(COUNT);
+    const vy = new Float32Array(COUNT);
+    const age = new Float32Array(COUNT);
+    const life = new Float32Array(COUNT);
 
-    const spotGeometry = new IcosahedronGeometry(0.06, 1);
-    const spotMaterial = new MeshBasicMaterial({ color: hot });
-    const spot = new Mesh(spotGeometry, spotMaterial);
-    scene.add(spot);
+    const headPos = new Float32Array(COUNT * 3);
+    const headCol = new Float32Array(COUNT * 4);
+    const trailPos = new Float32Array(COUNT * 6);
+    const trailCol = new Float32Array(COUNT * 8);
 
+    const heads = new BufferGeometry();
+    heads.setAttribute("position", new BufferAttribute(headPos, 3));
+    heads.setAttribute("color", new BufferAttribute(headCol, 4));
+    const sprite = glowTexture();
+    const headMaterial = new PointsMaterial({ size: 5, map: sprite, vertexColors: true, transparent: true, depthWrite: false, blending: AdditiveBlending, sizeAttenuation: false });
+    const points = new Points(heads, headMaterial);
+
+    const trails = new BufferGeometry();
+    trails.setAttribute("position", new BufferAttribute(trailPos, 3));
+    trails.setAttribute("color", new BufferAttribute(trailCol, 4));
+    const trailMaterial = new LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: AdditiveBlending });
+    const lines = new LineSegments(trails, trailMaterial);
+    scene.add(lines, points);
+
+    let width = 1;
+    let height = 1;
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = canvas;
       if (!w || !h) return;
+      width = w;
+      height = h;
       renderer.setSize(w, h, false);
-      camera.aspect = w / h;
+      camera.right = w;
+      camera.bottom = h;
       camera.updateProjectionMatrix();
     };
     resize();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resize);
     observer?.observe(canvas);
 
+    const spawn = (i: number) => {
+      const scale = width / 900;
+      // Thrown mostly upwards and sideways out of the melt pool, a few skate down the curved surface.
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.35;
+      const speed = (90 + Math.random() * 360) * scale;
+      px[i] = width * HIT_X + (Math.random() - 0.5) * 4;
+      py[i] = height * HIT_Y + (Math.random() - 0.5) * 3;
+      vx[i] = Math.cos(angle) * speed;
+      vy[i] = Math.sin(angle) * speed;
+      age[i] = 0;
+      life[i] = 0.35 + Math.random() * 0.9;
+    };
+    for (let i = 0; i < COUNT; i += 1) {
+      spawn(i);
+      age[i] = Math.random() * life[i];
+    }
+
     let raf = 0;
     let last = 0;
     let slow = 0;
-    let time = 0;
     let stopped = false;
-    const stripes = N / STRIPE_ROWS;
 
     const frame = (now: number) => {
-      const dt = last ? now - last : 16;
+      const dtMs = last ? now - last : 16;
       last = now;
-      slow = dt > SLOW_FRAME_MS ? slow + 1 : 0;
-      time += Math.min(dt, 50) / 1000;
-      const stripe = Math.floor(time / STRIPE_SECONDS) % stripes;
-      const s = (time % STRIPE_SECONDS) / STRIPE_SECONDS;
-      const gx = (stripe % 2 ? 1 - s : s) * (N - 1);
-      const gz = stripe * STRIPE_ROWS + STRIPE_ROWS / 2;
-      spot.position.set((gx - N / 2) * GAP, 0.05, (gz - N / 2) * GAP);
-
-      const decay = Math.exp(-dt / 500);
-      for (let i = 0; i < heat.length; i += 1) heat[i] *= decay;
-      const cx = Math.round(gx);
-      for (let dz = -3; dz <= 3; dz += 1) {
-        for (let dx = -3; dx <= 3; dx += 1) {
-          const x = cx + dx;
-          const z = gz + dz;
-          if (x < 0 || x >= N || z < 0 || z >= N) continue;
-          const i = z * N + x;
-          heat[i] = Math.max(heat[i], 1 - Math.hypot(x - gx, z - gz) / 3.2);
-        }
+      slow = dtMs > SLOW_FRAME_MS ? slow + 1 : 0;
+      const dt = Math.min(dtMs, 50) / 1000;
+      const gravity = 520 * (width / 900);
+      for (let i = 0; i < COUNT; i += 1) {
+        age[i] += dt;
+        if (age[i] >= life[i]) spawn(i);
+        const ox = px[i];
+        const oy = py[i];
+        vy[i] += gravity * dt;
+        vx[i] *= 0.995;
+        px[i] += vx[i] * dt;
+        py[i] += vy[i] * dt;
+        const t = age[i] / life[i];
+        const alpha = t < 0.08 ? t / 0.08 : 1 - t;
+        headPos[i * 3] = px[i];
+        headPos[i * 3 + 1] = py[i];
+        heat(t, headCol, i * 4, alpha);
+        // Streak from where the spark was a few frames ago (motion blur).
+        const tail = 3.2;
+        trailPos[i * 6] = px[i];
+        trailPos[i * 6 + 1] = py[i];
+        trailPos[i * 6 + 3] = px[i] - (px[i] - ox) * tail;
+        trailPos[i * 6 + 4] = py[i] - (py[i] - oy) * tail;
+        heat(t, trailCol, i * 8, alpha * 0.9);
+        heat(Math.min(1, t + 0.3), trailCol, i * 8 + 4, 0);
       }
       const bail = slow >= SLOW_FRAME_LIMIT;
       if (bail) {
-        // Too slow for this device: settle on a clean static frame (cold bed, no spot), then stop.
-        heat.fill(0);
-        spot.visible = false;
+        // Too slow for this device: clear the sparks (the artwork and CSS layers stay), then stop.
+        headCol.fill(0);
+        trailCol.fill(0);
       }
-      for (let i = 0; i < heat.length; i += 1) {
-        const h = heat[i];
-        color.copy(base).multiplyScalar(tint[i]);
-        if (h > 0.01) color.lerp(hot, Math.min(1, h * 1.4)).lerp(core, Math.max(0, h - 0.75) * 2);
-        bed.setColorAt(i, color);
-      }
-      if (bed.instanceColor) bed.instanceColor.needsUpdate = true;
+      heads.attributes.position.needsUpdate = true;
+      heads.attributes.color.needsUpdate = true;
+      trails.attributes.position.needsUpdate = true;
+      trails.attributes.color.needsUpdate = true;
       renderer.render(scene, camera);
       if (bail) {
         stopped = true;
+        container.closest(".mk-foundry")?.classList.remove("has-webgl");
         return;
       }
       raf = requestAnimationFrame(frame);
@@ -158,11 +216,12 @@ export default function BootHero() {
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVisibility);
       observer?.disconnect();
-      bed.dispose();
-      grainGeometry.dispose();
-      grainMaterial.dispose();
-      spotGeometry.dispose();
-      spotMaterial.dispose();
+      container.closest(".mk-foundry")?.classList.remove("has-webgl");
+      heads.dispose();
+      trails.dispose();
+      headMaterial.dispose();
+      trailMaterial.dispose();
+      sprite.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       canvas.remove();

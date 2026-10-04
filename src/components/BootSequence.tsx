@@ -7,6 +7,7 @@
  */
 import React, { Suspense, lazy, useEffect, useState, useSyncExternalStore } from "react";
 import { AccessibleModal } from "./AccessibleModal";
+import { FoundryStage } from "./FoundryStage";
 import { fetchRuntimeConfig, runtimeConfigProbe } from "./AirgapBanner";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { MODULES } from "../data/workspaces";
@@ -164,6 +165,20 @@ export function BootSequence() {
   const open = !gone && !snap.dismissed;
   // Shell decisions outside this chunk (the command palette never opens over the boot screen).
   useEffect(() => setBootOverlayOpen(open), [open]);
+  // The modal focuses Skip (the first control, at the end of the column), which scrolls a tall panel on
+  // phones; bring the picture and headline back into view. Focus stays on Skip.
+  useEffect(() => {
+    const frame = open ? requestAnimationFrame(() => document.querySelector(".mk-boot-panel")?.scrollTo(0, 0)) : 0;
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+  // The stage stylesheet travels in its own chunk (kept out of the index CSS); the picture mounts once it
+  // has arrived, so it never flashes unstyled. The checklist does not wait for it.
+  const [stageReady, setStageReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    import("../styles/foundryStyles").then(() => live && setStageReady(true), () => undefined);
+    return () => { live = false; };
+  }, []);
   // Esc (shared escape stack), backdrop click and the button all hide the overlay; checks keep running.
   const skip = () => controller.skip();
   const stopped = snap.phase === "stopped";
@@ -186,13 +201,25 @@ export function BootSequence() {
       panelClassName="mk-boot-panel"
     >
       <div className="mk-boot" data-animate={String(snap.animate)} data-phase={snap.phase}>
+        {/* The foundry artwork as a live cinemagraph; the WebGL spark layer joins it on a plain animated start. */}
+        {stageReady && <FoundryStage className="mk-boot-art">
+          {webgl && wantsHero && (
+            <Suspense fallback={null}>
+              <BootHero />
+            </Suspense>
+          )}
+        </FoundryStage>}
+        <div className="mk-boot-copy">
         <div className="mk-boot-stage">
           <BootEmblem />
-          <p className="mk-boot-word" aria-hidden="true">
-            {[...WORDMARK].map((letter, i) => <span key={i} style={{ "--i": i } as React.CSSProperties}>{letter}</span>)}
-          </p>
-          <p className="mk-boot-kicker">Metalliksa · local start-up</p>
+          <div>
+            <p className="mk-boot-word" aria-hidden="true">
+              {[...WORDMARK].map((letter, i) => <span key={i} style={{ "--i": i } as React.CSSProperties}>{letter}</span>)}
+            </p>
+            <p className="mk-boot-kicker">Metalliksa · local start-up</p>
+          </div>
         </div>
+        <p className="mk-boot-tagline" aria-hidden="true"><span>A world,</span> <span>built by light.</span></p>
         <div className="mk-boot-head">
           <h2 id="boot-title" className="mk-boot-title">Start-up checks</h2>
           {/* Live while checks run and on a sign-in stop; the final result is spoken by the announcer above. */}
@@ -219,16 +246,12 @@ export function BootSequence() {
             Sign-in required: <a href="/login">open the sign-in page</a>, or use the one-time login link printed in the server console.
           </p>
         )}
-        {webgl && wantsHero && (
-          <Suspense fallback={null}>
-            <BootHero />
-          </Suspense>
-        )}
         <div className="mk-boot-actions">
           <button type="button" className="mk-boot-skip" onClick={skip}>
             {stopped ? "Continue without signing in" : "Skip intro"}
           </button>
           <span className="mk-boot-hint">Esc also hides this panel. The checks keep running; the status bar at the end of the page shows their outcome.</span>
+        </div>
         </div>
       </div>
     </AccessibleModal>

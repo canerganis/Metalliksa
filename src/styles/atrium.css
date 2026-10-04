@@ -2,26 +2,30 @@
  * Atrium (start page). Loaded with the lazy Atrium chunk. Porcelain tokens only; the laser colour is
  * ornament. Motion (scan, orbits, glints, tilt) runs only when the user has not asked for less.
  */
-.mk-atrium { position: relative; isolation: isolate; overflow-x: clip; padding-bottom: var(--mk-space-6); }
+.mk-atrium { position: relative; isolation: isolate; padding-bottom: var(--mk-space-6); }
 /* Pointer light (ornament): a soft white bloom with a faint cobalt rim that follows the mouse. */
 .mk-atrium::before {
   content: "";
   position: absolute;
-  inset: -2rem;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(26rem 26rem at calc(var(--mx, 70%) + 2rem) calc(var(--my, 22rem) + 2rem), rgba(255, 255, 255, 0.9), rgba(214, 222, 240, 0.35) 45%, transparent 70%);
+  background: radial-gradient(26rem 26rem at var(--mx, 70%) var(--my, 22rem), rgba(255, 255, 255, 0.9), rgba(214, 222, 240, 0.35) 45%, transparent 70%);
   transition: background-position 120ms linear;
 }
 
 /* Hero */
 .mk-at-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: var(--mk-space-6);
-  min-height: min(34rem, calc(100vh - 9rem));
+  min-height: min(40rem, calc(100vh - 8rem));
+  margin: -1rem -2rem 0;
+  padding: 0 2rem;
 }
+.mk-at-copy { position: relative; z-index: 1; max-width: 36rem; padding: 2rem 0; }
+/* Foundry cinemagraph behind the copy, fading out to the left and bottom. */
+.mk-at-art { position: absolute; top: 0; right: 0; bottom: 0; width: 72%; border-radius: 0 0 0 28px; mask-image: linear-gradient(90deg, transparent 0, black 36%), linear-gradient(180deg, transparent 0, black 14%, black 76%, transparent); mask-composite: intersect; }
 .mk-at-kicker {
   font-family: var(--mk-font-mono);
   font-size: 10.5px;
@@ -30,18 +34,16 @@
   color: var(--mk-ice);
 }
 .mk-at-title {
-  margin: 1rem 0 0 -0.04em;
-  font-size: clamp(2.6rem, 5.4vw, 5.4rem);
+  margin: 1.1rem 0 0 -0.03em;
+  font-family: var(--mk-font-serif);
+  font-size: clamp(2.8rem, 5.6vw, 5.6rem);
   font-weight: 300;
   line-height: 0.95;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  background: linear-gradient(100deg, var(--mk-text-strong) 0%, #3b424d 38%, var(--mk-text-strong) 52%, #474e59 78%, var(--mk-text-strong));
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  letter-spacing: -0.035em;
+  color: var(--mk-text-strong);
 }
+.mk-at-title span { display: block; }
+.mk-at-title span + span { font-style: italic; }
 .mk-at-lede { max-width: 34rem; margin-top: 1.4rem; font-size: 1.05rem; line-height: 1.7; color: var(--mk-text-soft); }
 
 .mk-at-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
@@ -93,19 +95,6 @@
 .mk-at-readout dd[data-tone="ok"] { color: var(--mk-signal-ok); }
 .mk-at-readout dd[data-tone="fail"] { color: var(--mk-signal-fail); }
 .mk-at-note { margin-top: 0.6rem; font-size: 12px; color: var(--mk-text-dim); }
-
-/* Build chamber art */
-.mk-at-art { width: 100%; max-width: 36rem; max-height: 34rem; overflow: visible; color: var(--mk-laser); justify-self: center; }
-.mk-at-art .a-layer { fill: rgba(255, 255, 255, 0.85); stroke: rgba(17, 22, 31, 0.28); stroke-width: 0.8; }
-.mk-at-art .a-top { fill: var(--mk-paper); stroke: rgba(17, 22, 31, 0.55); filter: drop-shadow(0 18px 24px rgba(16, 24, 40, 0.18)); }
-.mk-at-art .a-side { fill: #d9dde3; stroke: rgba(17, 22, 31, 0.4); stroke-width: 0.6; }
-.mk-at-art .a-side-r { fill: #c6cbd3; }
-.mk-at-art .a-hatch { stroke: var(--mk-text-strong); stroke-width: 1.05; stroke-dasharray: 100; stroke-dashoffset: 0; opacity: 0.85; }
-.mk-at-art .a-orbit { fill: none; stroke: rgba(17, 22, 31, 0.18); stroke-width: 0.8; stroke-dasharray: 2 6; }
-.mk-at-art .a-orbit-2 { stroke: rgba(35, 70, 176, 0.3); stroke-dasharray: 60 12 4 12; }
-.mk-at-art .a-beam { stroke-width: 1.8; filter: drop-shadow(0 0 3px var(--mk-laser)); }
-.mk-at-art .a-spot { fill: #fff6ec; }
-.mk-at-art .a-spot-glow { fill: var(--mk-laser); opacity: 0.35; filter: blur(3px); }
 
 /* Section label */
 .mk-at-section { display: flex; align-items: center; gap: 1rem; margin: var(--mk-space-5) 0 var(--mk-space-4); }
@@ -194,34 +183,20 @@
 
 /* Motion (allowed only) */
 @media (prefers-reduced-motion: no-preference) {
-  .mk-atrium[data-motion="true"] .mk-at-title { animation: mkAtSheen 9s linear infinite; }
-  .mk-atrium[data-motion="true"] .mk-at-art .a-hatch { animation: mkAtHatch 6.4s linear infinite backwards; }
-  .mk-atrium[data-motion="true"] .mk-at-art .a-orbit-1 { animation: mkAtDash 18s linear infinite; }
-  .mk-atrium[data-motion="true"] .mk-at-art .a-orbit-2 { animation: mkAtDash 26s linear infinite reverse; }
-  .mk-atrium[data-motion="true"] .mk-at-art .a-spot-glow { animation: mkAtPulse 1.2s ease-in-out infinite alternate; }
   .mk-at-cta:hover::after, .mk-at-card:hover::after { transition: background-position 900ms var(--mk-ease-out); background-position: -60% 0; }
   .mk-atrium .mk-at-hero > *, .mk-atrium .mk-at-card { animation: mkAtRise 700ms var(--mk-ease-out) backwards; }
-  .mk-atrium .mk-at-art { animation-delay: 120ms; }
   .mk-atrium .mk-at-card:nth-child(2) { animation-delay: 80ms; }
   .mk-atrium .mk-at-card:nth-child(3) { animation-delay: 160ms; }
   .mk-atrium .mk-at-card:nth-child(4) { animation-delay: 240ms; }
 }
-@keyframes mkAtSheen { from { background-position: 0% 0; } to { background-position: -220% 0; } }
-@keyframes mkAtHatch {
-  0% { stroke-dashoffset: 100; opacity: 0.85; }
-  6.25% { stroke-dashoffset: 0; }
-  88% { opacity: 0.85; }
-  99% { opacity: 0.08; stroke-dashoffset: 0; }
-  100% { opacity: 0.08; stroke-dashoffset: 100; }
-}
-@keyframes mkAtDash { to { stroke-dashoffset: -400; } }
-@keyframes mkAtPulse { from { opacity: 0.2; } to { opacity: 0.5; } }
 /* Entrance moves only: every label is fully opaque from the first frame. */
 @keyframes mkAtRise { from { transform: translateY(14px); } to { transform: none; } }
 
 @media (max-width: 63.99rem) {
-  .mk-at-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; }
-  .mk-at-art { order: -1; max-height: 18rem; }
+  .mk-at-hero { display: block; min-height: 0; margin: -1rem -1rem 0; padding: 0 1rem; }
+  .mk-at-art { position: relative; width: auto; height: 44vh; margin: 0 -1rem; mask-image: linear-gradient(180deg, black 55%, transparent), linear-gradient(90deg, transparent, black 10%, black 90%, transparent); mask-composite: intersect; }
+  .mk-at-art .f-frame { right: auto; left: 50%; transform: translateX(-64%); }
+  .mk-at-copy { margin-top: -5vh; padding-top: 0; }
 }
 @media (max-width: 47.99rem) {
   .mk-at-grid { grid-template-columns: minmax(0, 1fr); }
@@ -231,3 +206,7 @@
 }
 /* Touch screens have no pointer to follow: no light layer (avoids a clipped bloom on phones). */
 @media (hover: none) { .mk-atrium::before { display: none; } }
+
+@media (min-width: 37.5rem) and (max-width: 63.99rem) {
+  .mk-at-art .f-frame { top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; transform: none; }
+}

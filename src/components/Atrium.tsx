@@ -8,6 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { ArrowRight, Search } from 'lucide-react';
 import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
 import type { PythonEngineStatus } from '../services/pythonComputationService';
+import { FoundryStage } from './FoundryStage';
+import '../styles/foundry.css';
 import '../styles/atrium.css';
 
 const SCOPES: ModuleScope[] = ['Production', 'Research', 'Preview', 'Unresolved'];
@@ -23,53 +25,6 @@ function useMotionAllowed(): boolean {
     return () => query.removeEventListener('change', onChange);
   }, [query]);
   return allowed;
-}
-
-// Isometric build plate: rhombus around (210, y) with half-width 150 and half-height 75.
-const plate = (y: number) => `60,${y} 210,${y - 75} 360,${y} 210,${y + 75}`;
-const HATCH = 22;
-const TOP = 196;
-const hatch = Array.from({ length: HATCH }, (_, i) => {
-  const t = (i + 0.5) / HATCH;
-  const a = [60 + 150 * t, TOP - 75 * t];
-  const b = [210 + 150 * t, TOP + 75 - 75 * t];
-  return i % 2 ? [b, a] : [a, b];
-});
-const scanPath = 'M' + hatch.map(([a, b]) => `${a[0].toFixed(1)} ${a[1].toFixed(1)} L${b[0].toFixed(1)} ${b[1].toFixed(1)}`).join(' L');
-const CYCLE_S = 6.4;
-
-/** Decorative build chamber: stacked layers, a hatch being re-scanned, a beam, orbit rings. */
-function BuildChamber({ motion }: { motion: boolean }) {
-  return (
-    <svg className="mk-at-art" viewBox="0 0 420 420" aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id="mk-at-beam" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="-200" y2="0">
-          <stop offset="0" stopColor="currentColor" stopOpacity="0" />
-          <stop offset="1" stopColor="currentColor" stopOpacity="1" />
-        </linearGradient>
-        <clipPath id="mk-at-top"><polygon points={plate(TOP)} /></clipPath>
-      </defs>
-      <ellipse className="a-orbit a-orbit-1" cx="210" cy="250" rx="196" ry="70" />
-      <ellipse className="a-orbit a-orbit-2" cx="210" cy="250" rx="170" ry="112" transform="rotate(-14 210 250)" />
-      {[316, 296, 276, 256, 236, 216].map((y, i) => <polygon key={y} className="a-layer" style={{ opacity: 0.35 + i * 0.1 }} points={plate(y)} />)}
-      <polygon className="a-side" points={`60,${TOP} 210,${TOP + 75} 210,${TOP + 84} 60,${TOP + 9}`} />
-      <polygon className="a-side a-side-r" points={`210,${TOP + 75} 360,${TOP} 360,${TOP + 9} 210,${TOP + 84}`} />
-      <polygon className="a-layer a-top" points={plate(TOP)} />
-      <g clipPath="url(#mk-at-top)">
-        {hatch.map(([a, b], i) => (
-          <line key={i} className="a-hatch" x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} pathLength="100"
-            style={{ animationDelay: `${(i * CYCLE_S) / HATCH}s` } as React.CSSProperties} />
-        ))}
-      </g>
-      {/* Without motion the head rests on the middle of the plate. */}
-      <g className="a-head" transform={motion ? undefined : `translate(${hatch[8][0][0]} ${hatch[8][0][1]})`}>
-        <line className="a-beam" x1="0" y1="-200" x2="0" y2="0" stroke="url(#mk-at-beam)" />
-        <circle className="a-spot-glow" r="9" />
-        <circle className="a-spot" r="2.6" />
-        {motion && <animateMotion dur={`${CYCLE_S}s`} repeatCount="indefinite" path={scanPath} />}
-      </g>
-    </svg>
-  );
 }
 
 /** Small line motif per workspace (decorative). */
@@ -116,9 +71,10 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
   return (
     <section className="mk-atrium" aria-labelledby="atrium-title" data-motion={String(motion)} onPointerMove={spot}>
       <div className="mk-at-hero">
+        <FoundryStage className="mk-at-art" caption="Illustration — not a simulation result" />
         <div className="mk-at-copy">
-          <p className="mk-at-kicker">Local research workstation · Laser powder-bed fusion</p>
-          <h2 id="atrium-title" className="mk-at-title">Metalliksa</h2>
+          <p className="mk-at-kicker">Metalliksa · Local research workstation · Laser powder-bed fusion</p>
+          <h2 id="atrium-title" className="mk-at-title"><span>Built by light,</span> <span>layer by layer.</span></h2>
           <p className="mk-at-lede">LPBF engineering, materials intelligence and evidence &amp; qualification. Traceable thermal research, material characterization and reviewed literature evidence.</p>
           <div className="mk-at-actions">
             <button type="button" className="mk-at-cta" onClick={() => onNavigate(resume.id)}>
@@ -135,7 +91,6 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
           </dl>
           <p className="mk-at-note">Maturity describes a module, not a validation claim for any result.</p>
         </div>
-        <BuildChamber motion={motion} />
       </div>
 
       <div className="mk-at-section">
