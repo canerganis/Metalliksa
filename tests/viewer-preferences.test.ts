@@ -30,7 +30,7 @@ test("thermal backend choice is restored at startup and written when it changes"
   try {
     useLpbfEngineeringStore.setState({ job: undefined, busy: false, settings: { ...initial.settings, backend: "auto" } });
     stop = startEngineeringJobPersistence(storage);
-    assert.equal(useLpbfEngineeringStore.getState().settings.backend, "reference", "restored before any view renders");
+    assert.equal(useLpbfEngineeringStore.getState().settings.backend, "reference", "restored synchronously when persistence starts");
     useLpbfEngineeringStore.setState(s => ({ settings: { ...s.settings, backend: "openfoam-thermal" } }));
     assert.equal(storage.values.get(LPBF_BACKEND_PREFERENCE_KEY), "openfoam-thermal");
     // Only the select value is stored: no job, result or evidence state under the preference key.
@@ -51,6 +51,15 @@ test("unknown, missing or blocked backend values leave the current choice untouc
       stop();
     }
   } finally { stop(); useLpbfEngineeringStore.setState(initial); }
+});
+
+test("a remembered OpenFOAM backend that the worker reports unavailable is flagged outside the collapsed details", () => {
+  const view = readFileSync(resolve(process.cwd(), "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx"), "utf8");
+  const note = view.match(/\{settings\.backend === "openfoam-thermal" && caps && !caps\.openfoamThermal && <p role="status"[^>]*>([^<]*)<\/p>\}\r?\n\s*<details/);
+  assert.ok(note, "note is rendered right before the details element, not inside it");
+  assert.equal(note[1], "Backend OpenFOAM 14 thermal is selected (remembered in this browser). OpenFOAM thermal: unavailable. Select Automatic or Reference enthalpy FV under Backend, convergence study and optical overrides.");
+  // The capability wording is the one the readiness checklist already uses.
+  assert.match(view, /OpenFOAM thermal: \$\{caps\.openfoamThermal \? "available" : "unavailable"\}/);
 });
 
 test("the GPU pilot engine select is remembered through the same guarded helper", () => {

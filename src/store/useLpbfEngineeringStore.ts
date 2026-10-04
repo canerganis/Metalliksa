@@ -52,7 +52,9 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
     }
   } catch { /* Invalid or disabled storage must not block a new simulation. */ }
   try {
-    // Remembered backend select (unknown values ignored), restored before any view renders. A job restored below keeps its executed backend.
+    // Remembered backend select (unknown values ignored), restored when App starts this persistence (an App effect,
+    // so after App's first render). Views and the report read the store reactively and follow the restored value.
+    // A job restored below keeps its executed backend.
     const backend = storage?.getItem(LPBF_BACKEND_PREFERENCE_KEY) as SimulationInput["backend"];
     if (backend && BACKENDS.includes(backend) && backend !== useLpbfEngineeringStore.getState().settings.backend) useLpbfEngineeringStore.setState(s => ({settings: {...s.settings, backend}}));
   } catch { /* Disabled storage: nothing is remembered. */ }
