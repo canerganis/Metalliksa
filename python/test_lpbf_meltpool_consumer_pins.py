@@ -1,0 +1,58 @@
+"""Pins the Melt Pool lab consumer numbers of the corrected kernels (SPEC-lpbf-kernels-fable §6).
+
+CPU path (no warp): the solver prints its flat-plate fallback warning. These are screening
+numbers for regression only, not validation against NIST; the measured NIST width is 136.3 µm
+and depth 139.7 µm (keyhole), the model is conduction-only plus the Fabbro depth proxy.
+"""
+import contextlib
+import io
+import unittest
+
+from lpbf_thermal_solver import calculate_meltpool_physics
+
+NIST = ("Inconel 718", 285, 960, 67, 23.5, 40, 110)
+
+
+def _geometry(heat_source, *args, **kwargs):
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = calculate_meltpool_physics(*args, heat_source=heat_source, **kwargs)
+    return result["meltPoolGeometry"], result
+
+
+class MeltPoolConsumerPins(unittest.TestCase):
+    def test_nist_goldak_cpu_fallback(self):
+        g, r = _geometry("goldak", *NIST)
+        self.assertEqual(r["modelId"], "goldak-half-space-v3")
+        self.assertAlmostEqual(g["width_um"], 117.4, delta=0.5)   # v2 kernel: 81.7
+        self.assertAlmostEqual(g["depth_um"], 123.9, delta=0.5)   # Fabbro depth, unchanged
+        self.assertAlmostEqual(g["length_um"], 558.5, delta=1.0)  # v2 kernel: 280.7
+        self.assertEqual(g["extentStatus"], "computed")
+
+    def test_nist_eagar_tsai(self):
+        g, r = _geometry("eagar-tsai", *NIST)
+        self.assertEqual(r["modelId"], "eagar-tsai-v2")
+        self.assertAlmostEqual(g["width_um"], 122.5, delta=0.5)   # v1 kernel: 127.8
+        self.assertAlmostEqual(g["depth_um"], 123.9, delta=0.5)
+        self.assertAlmostEqual(g["length_um"], 567.7, delta=1.0)  # v1 kernel: 776.0
+        self.assertEqual(g["extentStatus"], "computed")
+
+    def test_g11_payloads(self):
+        g, _ = _geometry("eagar-tsai", "Ti-6Al-4V", 280.0, 1200.0, 70.0, 200.0, 30.0, 120.0)
+        self.assertAlmostEqual(g["width_um"], 126.7, delta=0.5)   # v1 kernel: 132.6
+        g, _ = _geometry("goldak", "316L Stainless Steel", 370.0, 600.0, 60.0, 25.0, 50.0, 90.0)
+        self.assertAlmostEqual(g["width_um"], 168.9, delta=0.5)   # v2 kernel: 117.4
+
+    def test_retired_heat_source_ids_are_refused(self):
+        for retired in ("eagar-tsai-v1", "goldak-v1", "goldak-total-power-v2"):
+            with self.assertRaisesRegex(ValueError, "Retired LPBF heat-source id"):
+                _geometry(retired, *NIST)
+
+    def test_heuristic_width_fallback_is_labelled(self):
+        # A cold low-power case: the conduction field has no resolvable liquidus extent.
+        g, _ = _geometry("goldak", "Inconel 718", 20.0, 2000.0, 80.0, 23.5, 40, 110)
+        self.assertEqual(g["extentStatus"], "heuristic-width-fallback")
+        self.assertIn("not a computed isotherm", g["extentNote"])
+
+
+if __name__ == "__main__":
+    unittest.main()

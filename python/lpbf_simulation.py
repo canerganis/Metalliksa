@@ -561,8 +561,10 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
         # fallback. Snapshot bytes are untouched (material() does not carry this key).
         authority = thermal_props(m["materialId"]) if m.get("provenanceClass") == "estimated-legacy" else None
         if authority is None or "latent_heat_vap_J_kg" not in authority:
-            raise ValueError("evaporationModel (boiling cap) requires a sourced latent heat of vaporization "
-                             f"for the material; none for {m.get('materialId')!r}")
+            cause = ("user-supplied material properties" if m.get("provenanceClass") != "estimated-legacy"
+                     else f"material {m.get('materialId')!r} has no latent_heat_vap_J_kg in four_alloy_materials")
+            raise ValueError(f"evaporationModel (boiling cap) requires a sourced latent heat of vaporization: {cause}; "
+                             "no literal and no other-alloy value is substituted")
         cap_latent_heat_vap = float(authority["latent_heat_vap_J_kg"])
     while time < end:
         seg = next((s for s in segments if s["start_s"] <= time+1e-14 and time < s["end_s"]-1e-14), None)
@@ -837,6 +839,7 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                     maxExcessEnthalpy_J_kg=cap_max_excess_h,
                     maxVaporFractionProxy=cap_max_vapor_fraction_proxy,
                     latentHeatVap_J_kg=cap_latent_heat_vap, energyLeavesDomain=False,
+                    isReferenceSolution=False, isEvaporationModel=False,
                     note="Diagnostic of the boiling cap: the inversion clips T at T_boil and keeps the excess "
                          "enthalpy in the cell; the vapor-fraction proxy excess_h/L_v is not a mass loss and is "
                          "not conserved. Not an evaporation model.")} if boiling_cap else {}),

@@ -216,10 +216,16 @@ def _normalize_heat_source(heat_source: str | None) -> str:
     key = heat_source.strip().lower().replace("_", "-")
     if key in ("rosenthal", "rosenthal-screening", "rosenthal-screening-v1"):
         return "rosenthal"
-    if key in ("eagar-tsai", "eagar-tsai-v1", "eagar-tsai-v2", "et", "eager-tsai"):
+    if key in ("eagar-tsai", "eagar-tsai-v2", "et", "eager-tsai"):
         return "eagar-tsai"
-    if key in ("goldak", "goldak-v1", "goldak-double-ellipsoid", "goldak-half-space-v3"):
+    if key in ("goldak", "goldak-double-ellipsoid", "goldak-half-space-v3"):
         return "goldak"
+    if key in ("eagar-tsai-v1", "goldak-v1", "goldak-total-power-v2"):
+        # Retired kernel ids are never run silently as the corrected kernel.
+        current = "eagar-tsai-v2" if key.startswith("eagar") else "goldak-half-space-v3"
+        raise ValueError(f"Retired LPBF heat-source id {heat_source!r}: its kernel was replaced by the "
+                         f"corrected {current!r} (planned corrected-physics bump); request {current!r} or the "
+                         f"unversioned name explicitly")
     raise ValueError(f"Unsupported LPBF heat source: {heat_source!r}")
 
 
@@ -411,7 +417,17 @@ def calculate_meltpool_physics(
     for x_probe in (-x_rear * 0.25, -x_rear * 0.1, -x_rear * 0.04, 0.0):
         d_iso = max(d_iso, _binary_extent(lambda z: T_field(x_probe, 0.0, z) >= T_liq, 0.0, search_depth))
 
+    # The conduction field did not produce a resolvable liquidus extent (no melt or a pool below the
+    # search resolution): the width/depth below are a HEURISTIC substitute, reported as such in
+    # meltPoolGeometry.extentStatus, never presented as a computed isotherm.
+    extent_status = "computed"
+    extent_note = None
     if half_w < 8e-6 or d_iso < 3e-6:
+        extent_status = "heuristic-width-fallback"
+        extent_note = ("The conduction field has no resolvable liquidus extent at these inputs (half-width "
+                       f"{half_w*1e6:.1f} um, depth {d_iso*1e6:.1f} um before substitution); width/depth/length are "
+                       "the screening heuristic sqrt(w_analytical^2 + (0.65 d_beam)^2) and its depth ratio, not a "
+                       "computed isotherm. Treat this geometry as not resolved.")
         w_fb = math.sqrt(max(1e-12, w_analytical ** 2 + (0.65 * d_beam) ** 2))
         half_w = max(half_w, w_fb / 2.0)
         d_iso = max(d_iso, half_w * (0.38 + 0.10 * min(1.0, normalized_enthalpy / ENTHALPY_TRANSITION)))
@@ -763,6 +779,8 @@ def calculate_meltpool_physics(
             "depthToWidthRatio_D_over_W": round(d_melt_um / max(1.0, w_melt_um), 2),
             "keyholeVaporCavityDepth_um": round(keyhole_depth_um, 1),
             "regime": regime,
+            "extentStatus": extent_status,
+            "extentNote": extent_note,
             "goldakParameters": {
                 "semiAxis_af_front_um": round(goldak_af_um, 1),
                 "semiAxis_ar_rear_um": round(goldak_ar_um, 1),

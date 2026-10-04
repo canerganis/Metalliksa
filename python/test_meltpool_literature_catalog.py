@@ -30,6 +30,10 @@ def goldak_score(t):
     s = score_track(r["meltPoolGeometry"]["width_um"], r["meltPoolGeometry"]["depth_um"], t)
     s["pred_W"] = r["meltPoolGeometry"]["width_um"]
     s["pred_D"] = r["meltPoolGeometry"]["depth_um"]
+    s["extentStatus"] = r["meltPoolGeometry"]["extentStatus"]
+    if s["extentStatus"] != "computed":
+        # A heuristic substitute width is not a computed prediction: it cannot pass a benchmark.
+        s["pass"] = False
     return s
 
 
