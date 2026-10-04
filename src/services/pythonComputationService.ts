@@ -460,7 +460,9 @@ export interface PythonKineticsResult {
       RetainedAustenite_pct: number;
     };
     predictedHardness_HRC: number;
-    predictedHardness_HV: number;
+    /** ASTM E140 Table 1 conversion of the predicted HRC (non-austenitic steels, HRC 20-68); null otherwise. */
+    predictedHardness_HV: number | null;
+    predictedHardness_HV_status?: string;
   }>;
   lswPrecipitateCoarsening: Array<{
     agingTime_h: number;
