@@ -30,9 +30,11 @@ export interface PhaseEquilibriumPoint {
     isPrecipitate?: boolean;
     isTCP?: boolean;
   }[];
-  totalGibbsEnergy_kJ_mol: number;
-  thermodynamicActivities?: { [element: string]: number };
-  chemicalPotentials_J_mol?: { [element: string]: number };
+  /** null for a grid point whose equilibrium did not converge (status "not-converged"). */
+  totalGibbsEnergy_kJ_mol: number | null;
+  status?: "converged" | "not-converged";
+  thermodynamicActivities?: { [element: string]: number } | null;
+  chemicalPotentials_J_mol?: { [element: string]: number } | null;
   phaseCompositions?: { [phaseId: string]: { [element: string]: number } };
 }
 
@@ -68,8 +70,8 @@ export interface MultiComponentSolveResult {
     liquidCompositions: { [element: string]: number };
     solidCompositions: { [element: string]: number };
   }[];
-  thermodynamicStabilityIndex: number; // 0-100 score
-  tcpEmbrittlementRisk: "Low" | "Moderate" | "High";
+  thermodynamicStabilityIndex: number | null; // 0-100 score; null when New-PHACOMP does not apply (not a Ni-base alloy)
+  tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
 }
 
 /**

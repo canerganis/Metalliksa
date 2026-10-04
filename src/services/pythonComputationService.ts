@@ -80,11 +80,14 @@ export interface PythonCalphadDatabaseEntry {
   status?: "assessment" | "test-fixture";
   usable?: boolean;
   statusReason?: string | null;
+  /** Machine-readable scope: the base elements this database is assessed for. */
+  assessedBaseElements?: string[];
 }
 
 export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   engine: string;
-  computeTimeMs: number;
+  /** null when the engine did not report a time (never an invented one). */
+  computeTimeMs: number | null;
   proxyRoundtripMs?: number;
   isPythonEngine: boolean;
   iterations?: number;
@@ -103,27 +106,18 @@ export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
   pythonUnavailable?: CalphadUnavailable;
   activeComponents?: string[];
   unsupportedElements?: string[];
-  adaptiveGrid?: boolean;
-  adaptiveTelemetry?: {
-    isAdaptive: boolean;
-    coarseStepsCount: number;
-    refinedStepsCount: number;
-    totalEvaluations: number;
-    equivalentUniformSteps: number;
-    speedupFactor: number;
-    minRefineStepC: number;
-    boundaryToleranceC: number;
-    transitionZones: Array<{
-      description: string;
-      intervalC: [number, number];
-    }>;
-  };
+  databaseSuitability?: string;
+  /** Grid temperatures (degC) whose equilibrium did not converge; their profile entries are null. */
+  nonConvergedPoints?: number[];
+  boundaryRefinement?: { enabled: boolean; toleranceC: number; equilibriumCalls: number; note: string };
   phacompAnalysis?: {
-    n_v_bar: number;
-    m_d_bar: number;
-    tcpEmbrittlementRisk: "Low" | "Moderate" | "High";
+    status: "screening-tabulated-values" | "unavailable";
+    reason?: string;
+    n_v_bar: number | null;
+    m_d_bar: number | null;
+    tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
     tcpSigmaRiskTemperatureC: number | null;
-    thermodynamicStabilityIndex: number;
+    thermodynamicStabilityIndex: number | null;
   };
 }
 
@@ -1076,7 +1070,7 @@ class PythonComputationService {
               ...data,
               isPythonEngine: true,
               engine: data.engine || "pycalphad-open-tdb",
-              computeTimeMs: data.computeTimeMs || 12,
+              computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
             };
           }
           // The Python engine has no fallback model: it says "unavailable" and why.

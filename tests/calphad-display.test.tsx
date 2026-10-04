@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { pythonComputationService } from "../src/services/pythonComputationService";
 import {
   calphadProvenanceLabels,
+  calphadUnavailableDetails,
   formatCalphadUnavailable,
   formatCriticalTemperature,
   formatFreezingRange,
@@ -12,6 +13,9 @@ import {
   partitionSourceNote,
 } from "../src/utils/calphadDisplay";
 import { CALPHADMultiComponentStudio } from "../src/components/CALPHADMultiComponentStudio";
+import type { PythonCalphadSolveResult } from "../src/services/pythonComputationService";
+import { solveMultiComponentEquilibrium } from "../src/physics/calphadMultiComponentSolver";
+import { parseTDBFile, PRELOADED_MULTI_COMPONENT_TDB } from "../src/physics/tdbParser";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
@@ -106,4 +110,130 @@ test("Studio first paint says the numbers are not CALPHAD and no longer claims a
   assert.doesNotMatch(text, /Rigorous Thermodynamic Trust Guarantee/);
   assert.doesNotMatch(text, /Simplified Solvus Minimizer/);
   assert.match(text, /not an assessment/);
+});
+
+// ---- Studio rendering with a solved result (test seams initialResult / initialSubTab) ----
+const textOf = (markup: string) =>
+  markup.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/\s+/g, " ");
+
+function clientBase(): PythonCalphadSolveResult {
+  const tdb = parseTDBFile(PRELOADED_MULTI_COMPONENT_TDB[0].rawTdbText, PRELOADED_MULTI_COMPONENT_TDB[0].name);
+  const client = solveMultiComponentEquilibrium(ALLOY, tdb, 500, 1450, 50);
+  return { ...client, engine: "MetalliX-Client-TS-Solver", computeTimeMs: null, isPythonEngine: false, isEmpirical: true };
+}
+
+function pycalphadResult(over: Partial<PythonCalphadSolveResult> = {}): PythonCalphadSolveResult {
+  const base = clientBase();
+  return {
+    ...base,
+    engine: "pycalphad-open-tdb",
+    isPythonEngine: true,
+    isEmpirical: false,
+    computeTimeMs: 1234,
+    thermodynamicModel: "Compound Energy Formalism (CEF) Gibbs minimisation (pycalphad equilibrium)",
+    databaseUsed: "COST 507 Comprehensive Light Alloys Database",
+    databaseSuitability: "Light-metal alloys with an Al, Mg or Ti base. Ni-, Fe- and Co-base alloys are outside its assessed scope and are refused.",
+    criticalTemperatures: { liquidusC: 1689.5, solidusC: null, freezingRangeC: null, gammaPrimeSolvusC: null, betaTransusC: 932.9 },
+    criticalTemperatureStatus: {
+      solidusC: { status: "unavailable", reason: "no liquid appears inside the temperature grid, so the solidus is above the grid" },
+      gammaPrimeSolvusC: { status: "unavailable", reason: "gamma-prime was identified by phase name only" },
+    },
+    multiElementScheil: base.multiElementScheil.map((pt) => ({ ...pt, temperatureC: null })),
+    multiElementScheilNote: "Compositions follow the Scheil equation; the temperature axis is null when either is unavailable.",
+    tcpEmbrittlementRisk: null,
+    thermodynamicStabilityIndex: null,
+    phacompAnalysis: {
+      status: "unavailable",
+      reason: "New-PHACOMP (Nv/Md TCP screening) applies to Ni-base superalloys only; this alloy is Ti-base",
+      n_v_bar: null, m_d_bar: null, tcpEmbrittlementRisk: null, tcpSigmaRiskTemperatureC: null, thermodynamicStabilityIndex: null,
+    },
+    ...over,
+  };
+}
+
+test("Studio shows the unavailable banner with the Python reason, scope and missing elements", () => {
+  const result = {
+    ...clientBase(),
+    pythonUnavailable: {
+      unavailableKind: "database-not-assessed-for-base",
+      reason: "database 'cost507' is not assessed for Ni-base alloys (assessed base elements: AL, MG, TI)",
+      reasons: ["database 'cost507' is not assessed for Ni-base alloys (assessed base elements: AL, MG, TI)"],
+      missingElements: ["Cr"],
+      databaseUsed: "COST 507 Comprehensive Light Alloys Database",
+      databaseSuitability: "Light-metal alloys with an Al, Mg or Ti base.",
+    },
+  } as PythonCalphadSolveResult;
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} />));
+  assert.match(text, /Python CALPHAD \(pycalphad\) unavailable: database 'cost507' is not assessed for Ni-base alloys/);
+  assert.match(text, /Elements missing from the database: Cr\./);
+  assert.match(text, /Database scope \(COST 507 Comprehensive Light Alloys Database\): Light-metal alloys with an Al, Mg or Ti base\./);
+  assert.match(text, /The numbers below come from the client-side screening model, not from CALPHAD\./);
+  assert.match(text, /Compute Time: n\/a/);
+  // and no banner without a Python refusal
+  const none = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={clientBase()} />));
+  assert.doesNotMatch(none, /Python CALPHAD \(pycalphad\) unavailable/);
+});
+
+test("Studio shows the database scope and Unavailable cards for a pycalphad result", () => {
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} />);
+  const text = textOf(markup);
+  assert.match(text, /Database scope: Light-metal alloys with an Al, Mg or Ti base\./);
+  assert.match(text, /Solidus \(T_sol\): Unavailable/);
+  assert.match(text, /γ' Solvus: Unavailable/);
+  assert.match(text, /Liquidus \(T_liq\): 1689\.5°C/);
+  assert.match(text, /TCP Risk: Unavailable/);
+  assert.match(text, /Compute Time: 1234 ms/);
+  assert.ok(markup.includes("no liquid appears inside the temperature grid"), "reason is the tooltip");
+  assert.doesNotMatch(text, /null/);
+});
+
+test("Studio no longer claims adaptive refinement", () => {
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} />));
+  assert.doesNotMatch(text, /ADAPTIVE REFINEMENT/);
+  assert.doesNotMatch(text, /Adaptive Grid/);
+  assert.doesNotMatch(text, /Ultra-Sharp/);
+  assert.doesNotMatch(text, /two-pass bisection/);
+  assert.match(text, /Liquidus \/ solidus boundary refinement/);
+  assert.match(text, /there is no adaptive grid/);
+});
+
+test("Studio non-converged grid points are announced, never shown as numbers", () => {
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult({ nonConvergedPoints: [800, 825] })} />));
+  assert.match(text, /2 grid point\(s\) did not converge and are shown as n\/a: 800, 825 °C\./);
+});
+
+test("Scheil tab with a null temperature axis says why instead of an empty chart", () => {
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} initialSubTab="multi_scheil" />);
+  const text = textOf(markup);
+  assert.ok(markup.includes('data-testid="scheil-unavailable"'));
+  assert.match(text, /No temperature axis: the curve needs both the liquidus and the solidus\./);
+  assert.match(text, /Solidus unavailable: no liquid appears inside the temperature grid/);
+  assert.doesNotMatch(text, /Liquidus unavailable/);
+  assert.match(text, /not a CALPHAD Scheil calculation/);
+  // with both temperatures the notice is absent
+  const full = pycalphadResult({
+    criticalTemperatures: { liquidusC: 1689.5, solidusC: 1650.0, freezingRangeC: 39.5 },
+    multiElementScheil: clientBase().multiElementScheil,
+  });
+  assert.ok(!renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={full} initialSubTab="multi_scheil" />).includes("scheil-unavailable"));
+});
+
+test("no compute time is invented when the engine reports none", async () => {
+  stubFetch(200, { success: true, engine: "pycalphad-open-tdb", equilibriumProfile: [{ temperatureC: 600, phases: [], totalGibbsEnergy_kJ_mol: -1 }] });
+  const res = await pythonComputationService.solveCalphadEquilibrium(ALLOY);
+  assert.equal(res.computeTimeMs, null);
+});
+
+test("unavailable details carry the scope, the missing elements and the convergence counts", () => {
+  const u = parseCalphadUnavailable({
+    status: "unavailable", unavailableKind: "pycalphad-equilibrium-failed",
+    reason: "pycalphad equilibrium failed (non-finite results)", nonConvergedPoints: 39, gridPoints: 39,
+    databaseSuitability: "Light-metal alloys.", databaseUsed: "COST 507", missingElements: ["Al"],
+  });
+  assert.ok(u);
+  assert.deepEqual(calphadUnavailableDetails(u!), [
+    "Elements missing from the database: Al.",
+    "Database scope (COST 507): Light-metal alloys.",
+    "39 of 39 grid points did not converge.",
+  ]);
 });
