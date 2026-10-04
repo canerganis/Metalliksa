@@ -76,6 +76,43 @@ def _profile_array(two_theta, center, intensity, fwhm, shape, profile_type):
     return intensity / (1.0 + c1 * (delta / max(1e-5, fwhm)) ** 2) ** m
 
 
+# Per-start evaluation budget: converged fits here need <= ~25 evaluations; a start
+# that stalls (status 0) is cut off and loses to the other start on SSE.
+MAX_NFEV_PER_START = 200
+
+
+def _grid_start(two_theta, y_exp, x0, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
+                wavelength_ka1, wavelength_ka2, center_bounds):
+    """Data-driven start: for every observed 2theta inside the centre bounds, with the
+    guessed fwhm/shape, intensity and linear background are linear parameters, so
+    they are solved exactly (3x3 least squares, batched); the centre with the lowest
+    sum of squares and a positive intensity wins. Returns None if none qualifies."""
+    fwhm, shape = x0[2], x0[3]
+    centres = np.unique(two_theta[(two_theta >= center_bounds[0]) & (two_theta <= center_bounds[1])])
+    if centres.size == 0:
+        return None
+    peaks = np.stack([_profile_array(two_theta, c, 1.0, fwhm, shape, profile_type) for c in centres])
+    if enable_ka2:
+        peaks = peaks + np.stack([
+            _profile_array(two_theta, calculate_ka2_two_theta(c, wavelength_ka1, wavelength_ka2), ka2_ratio,
+                           fwhm * ka2_fwhm_ratio, shape, profile_type) for c in centres])
+    t_mid = float(np.mean(two_theta))
+    tc = two_theta - t_mid  # centred 2theta keeps the 3x3 systems well conditioned
+    design = np.stack([peaks, np.ones_like(peaks), np.broadcast_to(tc, peaks.shape)], axis=2)  # (C, N, 3)
+    gram = np.einsum("cni,cnj->cij", design, design)
+    rhs = np.einsum("cni,n->ci", design, y_exp)
+    ok = np.abs(np.linalg.det(gram)) > 1e-300
+    coef = np.full((centres.size, 3), np.nan)
+    coef[ok] = np.linalg.solve(gram[ok], rhs[ok][..., None])[..., 0]
+    resid = y_exp[None, :] - np.einsum("cni,ci->cn", design, np.nan_to_num(coef))
+    sse = np.where(ok & (coef[:, 0] > 0.0), np.einsum("cn,cn->c", resid, resid), np.inf)
+    best = int(np.argmin(sse))
+    if not np.isfinite(sse[best]):
+        return None
+    intensity, b0c, b1 = coef[best]
+    return [float(centres[best]), float(intensity), fwhm, shape, float(b0c - b1 * t_mid), float(b1)]
+
+
 def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
                                wavelength_ka1, wavelength_ka2, center_bounds=(-math.inf, math.inf)):
     """Bounded non-linear least squares (scipy trust-region reflective) for
@@ -84,16 +121,24 @@ def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, k
     Bounds are the former coordinate-search clamps: fwhm in [0.02, 3.0] deg,
     eta in [0, 1] (pseudo-Voigt) or m in [0.8, 10] (Pearson-VII), intensity > 0;
     plus the Ka1 centre within ``center_bounds`` (the ROI 2theta span).
-    Returns the solution vector as Python floats.
+
+    Two starts are fitted: the caller's guess and a data-driven start from
+    _grid_start (a local trf fit from a guess a few tenths of a degree off the peak
+    can stall in a zero-intensity local minimum). The lower sum of squares wins
+    (the guess on a tie). Returns (solution as Python floats, info) where info
+    holds the winning start label and scipy's status, message and nfev.
     """
     two_theta = np.asarray(two_theta, dtype=np.float64)
     y_exp = np.asarray(y_exp, dtype=np.float64)
     shape_lo, shape_hi = (0.0, 1.0) if profile_type == "pseudo-voigt" else (0.8, 10.0)
     lower = np.array([center_bounds[0], 0.0, 0.02, shape_lo, -np.inf, -np.inf])
     upper = np.array([center_bounds[1], np.inf, 3.0, shape_hi, np.inf, np.inf])
-    start = np.clip(np.asarray(x0, dtype=np.float64), lower, upper)
-    if start[1] <= 0.0:
-        start[1] = 1.0  # trf needs a strictly feasible start (intensity > 0)
+
+    def feasible(x):
+        x = np.clip(np.asarray(x, dtype=np.float64), lower, upper)
+        if x[1] <= 0.0:
+            x[1] = 1.0  # trf needs a strictly feasible start (intensity > 0)
+        return x
 
     def residuals(x):
         c1, i1, w1, shape_p, b0, b1 = x
@@ -103,9 +148,20 @@ def _fit_profile_least_squares(two_theta, y_exp, x0, profile_type, enable_ka2, k
             model = model + _profile_array(two_theta, c2, i1 * ka2_ratio, w1 * ka2_fwhm_ratio, shape_p, profile_type)
         return y_exp - model
 
-    result = least_squares(residuals, start, bounds=(lower, upper), method="trf", x_scale="jac",
-                           ftol=1e-12, xtol=1e-12, gtol=1e-12, max_nfev=2000)
-    return [float(v) for v in result.x]
+    starts = [("guess", feasible(x0))]
+    grid = _grid_start(two_theta, y_exp, feasible(x0), profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio,
+                       wavelength_ka1, wavelength_ka2, (lower[0], upper[0]))
+    if grid is not None:
+        starts.append(("grid", feasible(grid)))
+    best = None
+    for label, start in starts:
+        result = least_squares(residuals, start, bounds=(lower, upper), method="trf", x_scale="jac",
+                               ftol=1e-12, xtol=1e-12, gtol=1e-12, max_nfev=MAX_NFEV_PER_START)
+        if best is None or result.cost < best[1].cost:
+            best = (label, result)
+    label, result = best
+    info = {"start": label, "status": int(result.status), "message": str(result.message), "nfev": int(result.nfev)}
+    return [float(v) for v in result.x], info
 
 def _require_finite_start(start, two_theta_obs, intensity_obs, profile_type):
     """The least-squares minimiser needs a finite start and finite observations
@@ -203,7 +259,7 @@ def deconvolve_peak_roi(points, center_guess, intensity_guess, fwhm_guess=0.25,
         if roi[1] > roi[0] and not roi[0] <= best_params[0] <= roi[1]:
             best_params = [min(max(best_params[0], roi[0]), roi[1])] + best_params[1:]
             current_loss = loss_func(best_params)
-        fitted = _fit_profile_least_squares(
+        fitted, _fit_info = _fit_profile_least_squares(
             two_theta_obs, intensity_obs,
             best_params, profile_type, enable_ka2, ka2_ratio, ka2_fwhm_ratio, wavelength_ka1, wavelength_ka2,
             center_bounds=roi if roi[1] > roi[0] else (-math.inf, math.inf))

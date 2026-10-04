@@ -336,7 +336,7 @@ class XrdParityTest(unittest.TestCase):
             with self.subTest(case=case):
                 xrd, cap, out = self._fit(case)
                 res = self._residual_fn(xrd, cap["args"])
-                x = np.array(cap["x"])
+                x = np.array(cap["x"][0])
                 rss, s2, sigma = self._sigma(res, x)
                 # the minimiser's answer was accepted and is what the output reports
                 self.assertLessEqual(abs(out["goodnessOfFit"]["residualSumSquares"] - rss), 0.0051)
@@ -380,6 +380,38 @@ class XrdParityTest(unittest.TestCase):
                 out = _in_process("xrd_peak_deconvolution", dict(base, center=guess))
                 self.assertGreaterEqual(out["ka1Peak"]["twoTheta"], lo)
                 self.assertLessEqual(out["ka1Peak"]["twoTheta"], hi)
+
+    def _off_guess_regressions(self):
+        """Starts away from the peak (centre, fwhm): cases where the new fit's SSE is
+        above the faa6684 coordinate search's. Needs the faa6684 blob."""
+        old = blob_module("xrd_peak_deconvolution")
+        import xrd_peak_deconvolution as xrd
+        worse = []
+        for case in ("pv_ka2_cu111", "pearson7_ka2"):
+            base = cases.CASES["xrd_peak_deconvolution"][case]
+            lo, hi = base["points"][0]["twoTheta"], base["points"][-1]["twoTheta"]
+            for centre in (lo, 43.0, 0.5 * (lo + hi), hi):
+                for fwhm in (0.1, 0.25):
+                    payload = dict(base, center=centre, fwhm=fwhm)
+                    a = bench.dispatch(old, "xrd_peak_deconvolution", payload)["goodnessOfFit"]["residualSumSquares"]
+                    b = bench.dispatch(xrd, "xrd_peak_deconvolution", payload)["goodnessOfFit"]["residualSumSquares"]
+                    if b > a * (1 + REL_TOL):
+                        worse.append((case, centre, fwhm, a, b))
+        return worse
+
+    @unittest.skipUnless(GIT, f"git or revision {BASE} unavailable")
+    def test_off_peak_guesses_never_fit_worse_than_old(self):
+        # Review-round finding: from a guess 0.3 deg off the peak the bounded trf fit
+        # stalled in a zero-intensity local minimum (SSE 9.6e7 vs 9.3e5). The second,
+        # data-driven start (_grid_start) removes that; 504 starts were swept for the
+        # handoff, this is the CI-sized subset.
+        self.assertEqual(self._off_guess_regressions(), [])
+
+    @unittest.skipUnless(GIT, f"git or revision {BASE} unavailable")
+    def test_mutation_without_grid_start_is_detected(self):
+        import xrd_peak_deconvolution as xrd
+        with patch.object(xrd, "_grid_start", lambda *a, **k: None):
+            self.assertGreater(len(self._off_guess_regressions()), 0)
 
     def test_module_import_preloads_scipy_optimize(self):
         # The IPC daemon pre-imports the module, so its warm-up (not the first fit)
