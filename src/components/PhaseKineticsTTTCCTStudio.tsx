@@ -37,6 +37,7 @@ import {
   Area
 } from "recharts";
 import { pythonComputationService, PythonKineticsResult } from "../services/pythonComputationService";
+import { kineticsHardnessText } from "../utils/kineticsHardnessDisplay";
 
 interface PhaseKineticsTTTCCTStudioProps {
   initialAlloy?: string;
@@ -151,6 +152,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
     );
     return sorted[0];
   }, [kineticsData, coolingRate]);
+
+  // No invented fallback: without a solver row the card shows "Unavailable".
+  const currentHardness = kineticsHardnessText(currentCCTMatch);
 
   const pieData = useMemo(() => {
     if (!currentCCTMatch) return [];
@@ -552,6 +556,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <tbody className="divide-y divide-slate-800/60 bg-slate-950/40">
                     {kineticsData?.cctContinuousCoolingMap.map((row, idx) => {
                       const isSelected = Math.abs(row.coolingRate_C_s - coolingRate) < 1.0;
+                      const hardness = kineticsHardnessText(row);
                       return (
                         <tr
                           key={idx}
@@ -576,7 +581,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                             </span>
                           </td>
                           <td className="p-2.5 text-red-400 font-bold">{row.phaseFractions.Martensite_pct}%</td>
-                          <td className="p-2.5 text-emerald-400 font-bold">{row.predictedHardness_HRC} HRC ({row.predictedHardness_HV} HV)</td>
+                          <td className="p-2.5 text-emerald-400 font-bold" title={hardness.note}>{hardness.hrc} ({hardness.hv})</td>
                         </tr>
                       );
                     })}
@@ -781,12 +786,12 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
                     <div className="text-[10px] text-slate-500 uppercase tracking-wider">PREDICTED HARDNESS AT RT</div>
-                    <div className="flex items-baseline gap-3">
+                    <div className="flex items-baseline gap-3" title={currentHardness.note}>
                       <span className="text-2xl font-bold font-mono text-emerald-400">
-                        {currentCCTMatch?.predictedHardness_HRC || 52} HRC
+                        {currentHardness.hrc}
                       </span>
                       <span className="text-sm font-mono text-slate-400">
-                        ({currentCCTMatch?.predictedHardness_HV || 550} HV)
+                        ({currentHardness.hv})
                       </span>
                     </div>
                   </div>

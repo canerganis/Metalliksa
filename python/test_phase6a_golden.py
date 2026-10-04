@@ -216,7 +216,7 @@ class StepBGoldenTest(unittest.TestCase):
             solver, case = path.parent.parent.name, path.stem
             with self.subTest(file=f"{solver}/{case}"):
                 doc = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"]), [])
+                self.assertEqual(golden.step_b_violations(solver, doc["driftVsBase"], doc["stdout"]), [])
 
     def test_guard_rejects_structural_and_large_drift(self):
         num = lambda key, rel: {"key": key, "kind": "numeric", "old": 1.0, "new": 1.0 + rel, "abs": rel, "rel": rel}
@@ -231,6 +231,51 @@ class StepBGoldenTest(unittest.TestCase):
         rows = [num("equivalentWeight", 0.03), num("remainingPittingMm", -0.09)]
         self.assertEqual(golden.step_b_violations("tafel_corrosion_rate_solver", rows), [])
         self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", rows + [num("x", 0.2)]))
+
+    def test_documented_hardness_change_is_checked_exactly(self):
+        # EXPECTED_DOCUMENTED_VALUE_CHANGES: kinetics predictedHardness_HV -> ASTM E140 Table 1.
+        solver = "kinetics_ttt_cct_solver"
+        key = "cctContinuousCoolingMap[0].predictedHardness_HV"
+        skey = key + "_status"
+
+        def doc(alloy_type, hrc, status):
+            return {"alloyMetadata": {"type": alloy_type},
+                    "cctContinuousCoolingMap": [{"predictedHardness_HRC": hrc, "predictedHardness_HV_status": status}]}
+
+        def hv_row(old, new):
+            kind = "numeric" if new is not None else "changed"
+            row = {"key": key, "kind": kind, "old": old, "new": new}
+            if kind == "numeric":
+                row.update(abs=new - old, rel=(new - old) / old)
+            return row
+
+        conv, rng, cls = ("converted-astm-e140-table1", "unavailable-outside-e140-table1-hrc-20-68",
+                          "unavailable-no-verified-table-for-alloy-class")
+        steel = lambda hrc, status: doc("Low-Alloy Steel", hrc, status)
+        add = lambda status: {"key": skey, "kind": "added", "old": None, "new": status}
+        # accepted: steel 42 HRC 481 -> 412 (|rel| 0.14), steel 18 HRC 229 -> null, Ti 64 HRC 712 -> null
+        self.assertEqual(golden.step_b_violations(solver, [hv_row(481.0, 412.0), add(conv)], steel(42.0, conv)), [])
+        self.assertEqual(golden.step_b_violations(solver, [hv_row(229.0, None), add(rng)], steel(18.0, rng)), [])
+        self.assertEqual(golden.step_b_violations(
+            solver, [hv_row(712.0, None), add(cls)], doc("Alpha-Beta Titanium Alloy", 64.0, cls)), [])
+        # rejected: no document, wrong new value, int instead of float, wrong old value,
+        # non-steel given a number, wrong status, status changed instead of added
+        self.assertTrue(golden.step_b_violations(solver, [hv_row(481.0, 412.0)]))
+        self.assertTrue(golden.step_b_violations(solver, [hv_row(481.0, 413.0)], steel(42.0, conv)))
+        self.assertTrue(golden.step_b_violations(solver, [hv_row(481.0, 412)], steel(42.0, conv)))
+        self.assertTrue(golden.step_b_violations(solver, [hv_row(480.0, 412.0)], steel(42.0, conv)))
+        self.assertTrue(golden.step_b_violations(
+            solver, [hv_row(712.0, 800.0)], doc("Precipitation-Hardenable Ni-Fe Superalloy", 64.0, conv)))
+        self.assertTrue(golden.step_b_violations(solver, [add(rng)], steel(42.0, conv)))
+        self.assertTrue(golden.step_b_violations(
+            solver, [{"key": skey, "kind": "changed", "old": "x", "new": conv}], steel(42.0, conv)))
+        # the exception is per solver and per key: same key elsewhere, or a null HRC, stays structural
+        self.assertTrue(golden.step_b_violations("stochastic_uq_mmpds_solver", [hv_row(229.0, None)], steel(18.0, rng)))
+        self.assertTrue(golden.step_b_violations(solver, [{"key": "cctContinuousCoolingMap[0].predictedHardness_HRC",
+                                                           "kind": "changed", "old": 18.0, "new": None}],
+                                                 steel(18.0, rng)))
+        big = {"key": "x", "kind": "numeric", "old": 1.0, "new": 1.02, "abs": 0.02, "rel": 0.02}
+        self.assertTrue(golden.step_b_violations(solver, [big], steel(42.0, conv)))
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).
