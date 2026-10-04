@@ -2,12 +2,88 @@
  "case": "default_payload_in718",
  "driftVsBase": [
   {
-   "abs": -0.10000000000002274,
+   "key": "caeExportCards.abaqus",
+   "kind": "changed",
+   "new": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for Inconel 718\n*MATERIAL, NAME=INCONEL_718\n*DENSITY\n8190.00\n*ELASTIC, TYPE=ISOTROPIC\n223867.64, 0.3100\n*PLASTIC\n1192.0, 0.0000\n1584.2, 0.0500\n1621.2, 0.1000\n1655.3, 0.1800\n*RATE DEPENDENT\n0.01400, 0.001\n*TENSILE FAILURE\n0.1812, 0.0, 0.0",
+   "old": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for Inconel 718\n*MATERIAL, NAME=INCONEL_718\n*DENSITY\n8190.00\n*ELASTIC, TYPE=ISOTROPIC\n223867.64, 0.3100\n*PLASTIC\n1192.0, 0.0000\n1584.2, 0.0500\n1621.2, 0.1000\n1655.3, 0.1800\n*RATE DEPENDENT\n0.01400, 0.001\n*TENSILE FAILURE\n0.1812, 0.0, 0.0"
+  },
+  {
+   "key": "caeExportCards.ansys",
+   "kind": "changed",
+   "new": "! ANSYS APDL Material Card: Inconel 718\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,223867.64\nMPDATA,PRXY,1,,0.3100\nMPDATA,DENS,1,,8.1900e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1192.0\nTBPT,,0.05,1584.2\nTBPT,,0.10,1621.2\nTBPT,,0.20,1661.7",
+   "old": "! ANSYS APDL Material Card: Inconel 718\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,223867.64\nMPDATA,PRXY,1,,0.3100\nMPDATA,DENS,1,,8.1900e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1192.0\nTBPT,,0.05,1584.2\nTBPT,,0.10,1621.2\nTBPT,,0.20,1661.7"
+  },
+  {
+   "key": "caeExportCards.lsDyna",
+   "kind": "changed",
+   "new": "$*LS-DYNA MATERIAL DECK: Inconel 718\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  8.190e-03  223867.6   0.3100  1192.0       0.0  0.1812       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0140       0.0         0         0       0.0",
+   "old": "$*LS-DYNA MATERIAL DECK: Inconel 718\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  8.190e-03  223867.6   0.3100  1192.0       0.0  0.1812       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0140       0.0         0         0       0.0"
+  },
+  {
+   "key": "engine",
+   "kind": "changed",
+   "new": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
+   "old": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)"
+  },
+  {
+   "key": "modelParts[0]",
+   "kind": "added",
+   "new": "scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)",
+   "old": null
+  },
+  {
+   "key": "modelParts[1]",
+   "kind": "added",
+   "new": "scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no CALPHAD)",
+   "old": null
+  },
+  {
+   "key": "modelParts[2]",
+   "kind": "added",
+   "new": "scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations",
+   "old": null
+  },
+  {
+   "key": "modelParts[3]",
+   "kind": "added",
+   "new": "scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with placeholder n",
+   "old": null
+  },
+  {
+   "key": "modelParts[4]",
+   "kind": "added",
+   "new": "scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)",
+   "old": null
+  },
+  {
+   "key": "modelParts[5]",
+   "kind": "added",
+   "new": "caeExportCards: uncalibrated illustrative cards",
+   "old": null
+  },
+  {
+   "key": "modelStatus",
+   "kind": "added",
+   "new": "illustrative",
+   "old": null
+  },
+  {
+   "key": "modelStatusNote",
+   "kind": "added",
+   "new": "Illustrative closed-form estimate; it is not calibrated to measurements or validated. Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table of elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of atomic radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no thermodynamic calculation is run, and the size and modulus misfit values are reported but do not enter the strength. The microstructure scale uses empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and CAE-card parameters come from a schematic hardening law with a placeholder strain-hardening exponent n. The 'macro FEA' scale is a yield-only comparison of Rp0.2 with a fixed catalogue stress, not a finite-element analysis. The model is room-temperature only: serviceTemp_C does not change any value and strainRate_s_inv only appears in a card line. Ultimate tensile strength and fracture toughness (K_Ic, critical flaw size, plastic zone radius) are unavailable; see the status fields next to them.",
+   "old": null
+  },
+  {
    "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m",
-   "kind": "numeric",
-   "new": 740.6,
-   "old": 740.7,
-   "rel": -0.00013500742540842816
+   "kind": "changed",
+   "new": null,
+   "old": 740.7
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status",
+   "kind": "added",
+   "new": "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; supply a measured K_Ic",
+   "old": null
   },
   {
    "abs": 0.10000000000013642,
@@ -16,6 +92,18 @@
    "new": 1771.2,
    "old": 1771.1,
    "rel": 5.646208570952314e-05
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa",
+   "kind": "changed",
+   "new": null,
+   "old": 1191.8
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status",
+   "kind": "added",
+   "new": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
+   "old": null
   },
   {
    "abs": 0.09999999999990905,
@@ -458,22 +546,50 @@
    "rel": 6.643635397283355e-05
   },
   {
-   "abs": -0.00999999999999801,
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm",
+   "kind": "changed",
+   "new": null,
+   "old": 247.47
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability",
+   "kind": "changed",
+   "new": "Unavailable (no critical flaw size without K_Ic)",
+   "old": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)"
+  },
+  {
    "key": "scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm",
-   "kind": "numeric",
-   "new": 61.46,
-   "old": 61.47,
-   "rel": -0.0001626809825931025
+   "kind": "changed",
+   "new": null,
+   "old": 61.47
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.status",
+   "kind": "added",
+   "new": "unavailable: the critical flaw size and the plastic zone radius need a fracture toughness K_Ic, which this model does not provide",
+   "old": null
+  },
+  {
+   "key": "scale4_macroComponentFEA.structuralVerdict",
+   "kind": "changed",
+   "new": "YIELD CHECK PASSED (yield strength vs fixed catalogue stress only; no creep, fatigue or fracture check)",
+   "old": "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
+  },
+  {
+   "key": "scale4_macroComponentFEA.structuralVerdictBasis",
+   "kind": "added",
+   "new": "Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa against requiredSafetyFactor. No creep, fatigue, fracture, buckling or service-temperature check exists.",
+   "old": null
   }
  ],
  "exitCode": 0,
- "gitHead": "5391bdd54af980305545d5b93c5381030cc8adf1",
+ "gitHead": "68c364c760adafbf73fb6ed1a7a8dba044ef1fdd",
  "input": {},
  "invocation": "python -B icme_multiscale_pipeline_solver.py < input (cwd python/)",
  "label": "phase6a-step-b",
  "provenance": {
   "provenance": {
-   "atomicWeightsSource": "IUPAC CIAAW standard atomic weights 2021 (abridged five-figure values)",
+   "atomicWeightsSource": "IUPAC CIAAW standard atomic weights 2021 (abridged values, at most five significant figures)",
    "constantsNote": "Exact SI 2019 R = N_A*k and CIAAW 2021 abridged atomic weights (Phase 6a value step); they replaced R = 8.314 and rounded weights.",
    "constantsVersion": "physical-constants-1",
    "domainDataBaseRevision": "7f3f803",
@@ -485,16 +601,16 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "icme_multiscale_pipeline_solver",
  "solverFile": "python/icme_multiscale_pipeline_solver.py",
- "solverSha256": "699dc45f6c0fc77f6e08fa0427233e59685f2ca1559071492b3be416d96738e8",
+ "solverSha256": "305d1324a6e5e3f8ddc9e321ce64bb6842eeedc3996f2ba5969ecfda58b7f87b",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
   "caeExportCards": {
-   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for Inconel 718\n*MATERIAL, NAME=INCONEL_718\n*DENSITY\n8190.00\n*ELASTIC, TYPE=ISOTROPIC\n223867.64, 0.3100\n*PLASTIC\n1192.0, 0.0000\n1584.2, 0.0500\n1621.2, 0.1000\n1655.3, 0.1800\n*RATE DEPENDENT\n0.01400, 0.001\n*TENSILE FAILURE\n0.1812, 0.0, 0.0",
-   "ansys": "! ANSYS APDL Material Card: Inconel 718\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,223867.64\nMPDATA,PRXY,1,,0.3100\nMPDATA,DENS,1,,8.1900e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1192.0\nTBPT,,0.05,1584.2\nTBPT,,0.10,1621.2\nTBPT,,0.20,1661.7",
-   "lsDyna": "$*LS-DYNA MATERIAL DECK: Inconel 718\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  8.190e-03  223867.6   0.3100  1192.0       0.0  0.1812       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0140       0.0         0         0       0.0"
+   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for Inconel 718\n*MATERIAL, NAME=INCONEL_718\n*DENSITY\n8190.00\n*ELASTIC, TYPE=ISOTROPIC\n223867.64, 0.3100\n*PLASTIC\n1192.0, 0.0000\n1584.2, 0.0500\n1621.2, 0.1000\n1655.3, 0.1800\n*RATE DEPENDENT\n0.01400, 0.001\n*TENSILE FAILURE\n0.1812, 0.0, 0.0",
+   "ansys": "! ANSYS APDL Material Card: Inconel 718\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,223867.64\nMPDATA,PRXY,1,,0.3100\nMPDATA,DENS,1,,8.1900e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1192.0\nTBPT,,0.05,1584.2\nTBPT,,0.10,1621.2\nTBPT,,0.20,1661.7",
+   "lsDyna": "$*LS-DYNA MATERIAL DECK: Inconel 718\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  8.190e-03  223867.6   0.3100  1192.0       0.0  0.1812       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0140       0.0         0         0       0.0"
   },
-  "engine": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)",
+  "engine": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
   "inputParameters": {
    "agingTemp_C": 720.0,
    "agingTime_h": 8.0,
@@ -505,6 +621,16 @@
    "crystalSystem": "FCC",
    "grainSize_um": 1.6920127332110155
   },
+  "modelParts": [
+   "scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)",
+   "scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no CALPHAD)",
+   "scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations",
+   "scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with placeholder n",
+   "scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)",
+   "caeExportCards: uncalibrated illustrative cards"
+  ],
+  "modelStatus": "illustrative",
+  "modelStatusNote": "Illustrative closed-form estimate; it is not calibrated to measurements or validated. Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table of elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of atomic radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no thermodynamic calculation is run, and the size and modulus misfit values are reported but do not enter the strength. The microstructure scale uses empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and CAE-card parameters come from a schematic hardening law with a placeholder strain-hardening exponent n. The 'macro FEA' scale is a yield-only comparison of Rp0.2 with a fixed catalogue stress, not a finite-element analysis. The model is room-temperature only: serviceTemp_C does not change any value and strainRate_s_inv only appears in a card line. Ultimate tensile strength and fracture toughness (K_Ic, critical flaw size, plastic zone radius) are unavailable; see the status fields next to them.",
   "scale0_dftAtomistic": {
    "burgersVector_b_nm": 0.2535,
    "elasticTensor_Cij_GPa": {
@@ -638,11 +764,13 @@
     "n": 0.13
    },
    "mechanicalProperties": {
-    "fractureToughness_K1c_MPa_sqrt_m": 740.6,
+    "fractureToughness_K1c_MPa_sqrt_m": null,
+    "fractureToughness_K1c_status": "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; supply a measured K_Ic",
     "hollomon_K_MPa": 1771.2,
     "hollomon_n": 0.13,
     "totalElongationPct": 19.9,
-    "ultimateTensileStrength_UTS_MPa": 1191.8,
+    "ultimateTensileStrength_UTS_MPa": null,
+    "ultimateTensileStrength_UTS_status": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
     "uniformElongationPct": 13.0,
     "yieldStrength_Rp02_MPa": 1191.8
    },
@@ -1022,12 +1150,14 @@
    "componentName": "High-Pressure Gas Turbine Blade Fir-Tree Root",
    "criticalSectionArea_mm2": 320.0,
    "lefmDamageTolerance": {
-    "criticalFlawSize_ac_mm": 247.47,
-    "inspectionNDICapability": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)",
-    "plasticZoneRadius_rp_mm": 61.46
+    "criticalFlawSize_ac_mm": null,
+    "inspectionNDICapability": "Unavailable (no critical flaw size without K_Ic)",
+    "plasticZoneRadius_rp_mm": null,
+    "status": "unavailable: the critical flaw size and the plastic zone radius need a fracture toughness K_Ic, which this model does not provide"
    },
    "requiredSafetyFactor": 1.25,
-   "structuralVerdict": "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
+   "structuralVerdict": "YIELD CHECK PASSED (yield strength vs fixed catalogue stress only; no creep, fatigue or fracture check)",
+   "structuralVerdictBasis": "Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa against requiredSafetyFactor. No creep, fatigue, fracture, buckling or service-temperature check exists."
   },
   "success": true
  },

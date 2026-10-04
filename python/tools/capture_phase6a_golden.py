@@ -315,9 +315,123 @@ def _is_documented_change_row(solver: str, key: str) -> bool:
 _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
 
 
+_ICME_OLD_ENGINE = ("MetalliX ICME Multi-Scale HPC Pipeline "
+                    "(DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)")
+_ICME_OLD_VERDICT = {
+    "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)":
+        "YIELD CHECK PASSED (yield strength vs fixed catalogue stress only; no creep, fatigue or fracture check)",
+    "WARNING: INSUFFICIENT SAFETY MARGIN (Risk of Plastic Yielding)":
+        "WARNING: INSUFFICIENT YIELD SAFETY MARGIN (Risk of Plastic Yielding; yield-only check)",
+}
+_ICME_OLD_NDI = frozenset({
+    "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)",
+    "High-Resolution Eddy Current / Computed Tomography Required (Sub-mm Flaw)",
+})
+_ICME_NEW_NDI = "Unavailable (no critical flaw size without K_Ic)"
+_ICME_MECH = "scale3_continuumPlasticity.mechanicalProperties."
+_ICME_LEFM = "scale4_macroComponentFEA.lefmDamageTolerance."
+_ICME_CARD_ROW = re.compile(r"caeExportCards\.(abaqus|lsDyna|ansys)")
+_ICME_CARD_LINE = {  # card -> (old header prefix, new header prefix); lines 0 and 2.. are unchanged
+    "abaqus": ("** MetalliX Multi-Scale ICME Calibrated Card for ",
+               "** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for "),
+}
+
+
+def _icme_documented_violation(row: Dict[str, Any], rows: Optional[List[Dict[str, Any]]],
+                               new_stdout: Optional[Dict[str, Any]]) -> Optional[str]:
+    """None when ``row`` is exactly one of the documented icme changes (fx-icme, lane 9).
+
+    UTS: the old value must be the old yield strength (the UTS == Rp0.2 identity of the K
+    choice, to the 0.1 MPa print rounding) and the new value null with an 'unavailable' status.
+    K_Ic, a_c and r_p: old numeric, new null. Verdict: the old text maps to the matching
+    yield-only text of the same pass/fail decision and never mentions creep. NDI text: one of
+    the two old texts -> the fixed unavailable text. Cards: the new card is the old card with
+    only the header line replaced / one comment line inserted. New keys are added rows with the
+    expected text shape. Nothing is accepted by tolerance except the 0.1 MPa UTS/yield rounding.
+    """
+    key, kind, old, new = row["key"], row["kind"], row["old"], row["new"]
+    is_num = lambda v: type(v) is float  # noqa: E731
+
+    def added(check):
+        if kind != "added" or not isinstance(new, str) or not check(new):
+            return f"{key}: expected an added text of the documented shape, got {kind} {new!r}"
+        return None
+
+    def nulled(label):
+        if kind != "changed" or not is_num(old) or new is not None:
+            return f"{key}: {label} must change a number to null, got {kind} {old!r} -> {new!r}"
+        return None
+
+    if key == "modelStatus":
+        return None if (kind == "added" and new == "illustrative") else f"{key}: expected added 'illustrative'"
+    if key == "modelStatusNote":
+        return added(lambda t: t.startswith("Illustrative") and "no DFT is run" in t and "unavailable" in t)
+    if re.fullmatch(r"modelParts\[\d+\]", key):
+        return added(lambda t: bool(t))
+    if key == "engine":
+        if kind != "changed" or old != _ICME_OLD_ENGINE or not str(new).startswith(
+                "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative"):
+            return f"{key}: not the documented engine relabel ({old!r} -> {new!r})"
+        return None
+    if key == _ICME_MECH + "ultimateTensileStrength_UTS_MPa":
+        problem = nulled("UTS")
+        if problem:
+            return problem
+        if new_stdout is None:
+            return f"{key}: documented change needs the re-blessed document to be verified"
+        yield_row = next((r for r in (rows or []) if r["key"] == _ICME_MECH + "yieldStrength_Rp02_MPa"), None)
+        old_yield = yield_row["old"] if yield_row is not None else new_stdout[
+            "scale3_continuumPlasticity"]["mechanicalProperties"]["yieldStrength_Rp02_MPa"]
+        if abs(old - old_yield) > 0.11:
+            return f"{key}: old UTS {old!r} is not the old yield strength {old_yield!r}"
+        return None
+    if key == _ICME_MECH + "ultimateTensileStrength_UTS_status":
+        return added(lambda t: t.startswith("unavailable:") and "Considere" in t)
+    if key == _ICME_MECH + "fractureToughness_K1c_MPa_sqrt_m":
+        return nulled("K_Ic")
+    if key == _ICME_MECH + "fractureToughness_K1c_status":
+        return added(lambda t: t.startswith("unavailable:") and "MPa*sqrt(m)" in t)
+    if key == "scale4_macroComponentFEA.structuralVerdict":
+        if kind != "changed" or old not in _ICME_OLD_VERDICT or new != _ICME_OLD_VERDICT[old] or "Creep" in new:
+            return f"{key}: not the documented verdict relabel ({old!r} -> {new!r})"
+        return None
+    if key == "scale4_macroComponentFEA.structuralVerdictBasis":
+        return added(lambda t: t.startswith("Yield-only check") and "No creep" in t)
+    if key in (_ICME_LEFM + "criticalFlawSize_ac_mm", _ICME_LEFM + "plasticZoneRadius_rp_mm"):
+        return nulled("LEFM value")
+    if key == _ICME_LEFM + "inspectionNDICapability":
+        if kind != "changed" or old not in _ICME_OLD_NDI or new != _ICME_NEW_NDI:
+            return f"{key}: not the documented NDI text change ({old!r} -> {new!r})"
+        return None
+    if key == _ICME_LEFM + "status":
+        return added(lambda t: t.startswith("unavailable:") and "K_Ic" in t)
+    card = _ICME_CARD_ROW.fullmatch(key)
+    if card:
+        if kind != "changed" or not isinstance(old, str) or not isinstance(new, str):
+            return f"{key}: card must be a changed text"
+        o, n = old.split("\n"), new.split("\n")
+        name = card.group(1)
+        if name == "abaqus":
+            prefix_old, prefix_new = _ICME_CARD_LINE["abaqus"]
+            if len(o) != len(n) or o[1].startswith(prefix_old) is False or n[1] != prefix_new + o[1][len(prefix_old):] \
+                    or o[0] != n[0] or o[2:] != n[2:]:
+                return f"{key}: abaqus card differs from the old card by more than the header relabel"
+            return None
+        marker = "$ ILLUSTRATIVE estimate (uncalibrated, not validated)" if name == "lsDyna" else \
+            "! ILLUSTRATIVE estimate (uncalibrated, not validated)"
+        if n != o[:1] + [marker] + o[1:]:
+            return f"{key}: {name} card differs from the old card by more than one inserted comment line"
+        return None
+    return f"{key}: no documented-change check for this row"
+
+
 def documented_change_violation(solver: str, row: Dict[str, Any],
-                                new_stdout: Optional[Dict[str, Any]]) -> Optional[str]:
+                                new_stdout: Optional[Dict[str, Any]],
+                                rows: Optional[List[Dict[str, Any]]] = None) -> Optional[str]:
     """None when ``row`` is exactly the documented change (EXPECTED_DOCUMENTED_VALUE_CHANGES).
+
+    icme_multiscale_pipeline_solver rows are checked by _icme_documented_violation (``rows`` is
+    the whole drift table, needed to read the old yield strength).
 
     kinetics_ttt_cct_solver predictedHardness_HV: the old value must be the old formula
     round(10.5 * HRC + 40) of the row's (unchanged) HRC, and the new value must be the
@@ -326,6 +440,8 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     status that belongs to that HV. Nothing is accepted by tolerance.
     """
     key = row["key"]
+    if solver == "icme_multiscale_pipeline_solver":
+        return _icme_documented_violation(row, rows, new_stdout)
     if solver != "kinetics_ttt_cct_solver" or not _KINETICS_HV_ROW.fullmatch(key):
         return f"{key}: no documented-change check for this row"
     if new_stdout is None:
@@ -373,7 +489,7 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
         if _is_documented_change_row(solver, r["key"]):
-            problem = documented_change_violation(solver, r, new_stdout)
+            problem = documented_change_violation(solver, r, new_stdout, rows)
             if problem:
                 out.append(problem)
         elif r["kind"] == "numeric":

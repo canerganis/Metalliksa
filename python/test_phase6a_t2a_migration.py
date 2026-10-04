@@ -188,6 +188,11 @@ class BaseBlobTest(unittest.TestCase):
                     self.assertEqual(new["exitCode"], old["exitCode"], new["stderr"])
                     rows = drift_report.diff(old["stdout"], new["stdout"])
                     self.assertTrue(rows)  # the value change is visible here
+                    # fx-icme: the documented ICME rows (EXPECTED_DOCUMENTED_VALUE_CHANGES) are
+                    # verified exactly; every other row must still be a bounded numeric drift.
+                    self.assertEqual(golden.step_b_violations(solver, rows, new["stdout"]), [],
+                                     drift_report.render(solver, rows, 10))
+                    rows = [r for r in rows if not golden._is_documented_change_row(solver, r["key"])]
                     self.assertEqual({r["kind"] for r in rows}, {"numeric"},
                                      drift_report.render(solver, rows, 10))
                     worst = max(abs(r["rel"]) for r in rows if r["rel"] is not None)

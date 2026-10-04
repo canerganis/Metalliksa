@@ -121,4 +121,33 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
         r"cctContinuousCoolingMap\[\d+\]\.predictedHardness_HV_status":
             "new status key next to predictedHardness_HV (converted / unavailable reason)",
     },
+    # fx-icme (backlog lane 9, "Demote to illustrative"): every row below is checked exactly by
+    # capture_phase6a_golden._icme_documented_violation (old value, new value and the relation
+    # between them), never by tolerance.
+    "icme_multiscale_pipeline_solver": {
+        r"modelStatus": "new honesty field modelStatus == 'illustrative'",
+        r"modelStatusNote": "new plain-language note (closed-form estimates on tabulated constants)",
+        r"modelParts\[\d+\]": "new list of the model parts and their real basis",
+        r"engine": "engine string no longer claims DFT/CALPHAD/FEA",
+        r"scale3_continuumPlasticity\.mechanicalProperties\.ultimateTensileStrength_UTS_MPa":
+            "UTS (== Rp0.2 by the K choice) -> null (unavailable)",
+        r"scale3_continuumPlasticity\.mechanicalProperties\.ultimateTensileStrength_UTS_status":
+            "new status key next to UTS (unavailable reason)",
+        r"scale3_continuumPlasticity\.mechanicalProperties\.fractureToughness_K1c_MPa_sqrt_m":
+            "K_Ic (dimensionally inconsistent formula) -> null (unavailable)",
+        r"scale3_continuumPlasticity\.mechanicalProperties\.fractureToughness_K1c_status":
+            "new status key next to K_Ic (unavailable reason)",
+        r"scale4_macroComponentFEA\.structuralVerdict":
+            "verdict no longer claims a creep check (yield-only wording, same pass/fail decision)",
+        r"scale4_macroComponentFEA\.structuralVerdictBasis": "new key stating what the verdict checks",
+        r"scale4_macroComponentFEA\.lefmDamageTolerance\.criticalFlawSize_ac_mm":
+            "a_c (needs K_Ic) -> null (unavailable)",
+        r"scale4_macroComponentFEA\.lefmDamageTolerance\.plasticZoneRadius_rp_mm":
+            "r_p (needs K_Ic) -> null (unavailable)",
+        r"scale4_macroComponentFEA\.lefmDamageTolerance\.inspectionNDICapability":
+            "NDI text (derived from a_c) -> unavailable text",
+        r"scale4_macroComponentFEA\.lefmDamageTolerance\.status": "new status key for the LEFM block",
+        r"caeExportCards\.(abaqus|lsDyna|ansys)":
+            "card header 'Calibrated Card' relabelled illustrative / uncalibrated comment line added",
+    },
 }

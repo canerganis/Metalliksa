@@ -1,0 +1,715 @@
+{
+ "case": "aisi4340_preset",
+ "driftVsBase": [
+  {
+   "key": "caeExportCards.abaqus",
+   "kind": "changed",
+   "new": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AISI 4340 Ultra-High Strength Steel\n*MATERIAL, NAME=AISI_4340_ULTRA-HIGH_STRENGTH_STEEL\n*DENSITY\n7850.00\n*ELASTIC, TYPE=ISOTROPIC\n211139.97, 0.2900\n*PLASTIC\n682.0, 0.0000\n926.5, 0.0500\n956.3, 0.1000\n984.4, 0.1800\n*RATE DEPENDENT\n0.01500, 0.001\n*TENSILE FAILURE\n0.2315, 0.0, 0.0",
+   "old": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for AISI 4340 Ultra-High Strength Steel\n*MATERIAL, NAME=AISI_4340_ULTRA-HIGH_STRENGTH_STEEL\n*DENSITY\n7850.00\n*ELASTIC, TYPE=ISOTROPIC\n211139.97, 0.2900\n*PLASTIC\n682.0, 0.0000\n926.5, 0.0500\n956.3, 0.1000\n984.4, 0.1800\n*RATE DEPENDENT\n0.01500, 0.001\n*TENSILE FAILURE\n0.2315, 0.0, 0.0"
+  },
+  {
+   "key": "caeExportCards.ansys",
+   "kind": "changed",
+   "new": "! ANSYS APDL Material Card: AISI 4340 Ultra-High Strength Steel\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,211139.97\nMPDATA,PRXY,1,,0.2900\nMPDATA,DENS,1,,7.8500e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,682.0\nTBPT,,0.05,926.5\nTBPT,,0.10,956.3\nTBPT,,0.20,989.7",
+   "old": "! ANSYS APDL Material Card: AISI 4340 Ultra-High Strength Steel\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,211139.97\nMPDATA,PRXY,1,,0.2900\nMPDATA,DENS,1,,7.8500e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,682.0\nTBPT,,0.05,926.5\nTBPT,,0.10,956.3\nTBPT,,0.20,989.7"
+  },
+  {
+   "key": "caeExportCards.lsDyna",
+   "kind": "changed",
+   "new": "$*LS-DYNA MATERIAL DECK: AISI 4340 Ultra-High Strength Steel\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  7.850e-03  211140.0   0.2900  682.0       0.0  0.2315       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0150       0.0         0         0       0.0",
+   "old": "$*LS-DYNA MATERIAL DECK: AISI 4340 Ultra-High Strength Steel\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  7.850e-03  211140.0   0.2900  682.0       0.0  0.2315       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0150       0.0         0         0       0.0"
+  },
+  {
+   "key": "engine",
+   "kind": "changed",
+   "new": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
+   "old": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)"
+  },
+  {
+   "key": "modelParts[0]",
+   "kind": "added",
+   "new": "scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)",
+   "old": null
+  },
+  {
+   "key": "modelParts[1]",
+   "kind": "added",
+   "new": "scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no CALPHAD)",
+   "old": null
+  },
+  {
+   "key": "modelParts[2]",
+   "kind": "added",
+   "new": "scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations",
+   "old": null
+  },
+  {
+   "key": "modelParts[3]",
+   "kind": "added",
+   "new": "scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with placeholder n",
+   "old": null
+  },
+  {
+   "key": "modelParts[4]",
+   "kind": "added",
+   "new": "scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)",
+   "old": null
+  },
+  {
+   "key": "modelParts[5]",
+   "kind": "added",
+   "new": "caeExportCards: uncalibrated illustrative cards",
+   "old": null
+  },
+  {
+   "key": "modelStatus",
+   "kind": "added",
+   "new": "illustrative",
+   "old": null
+  },
+  {
+   "key": "modelStatusNote",
+   "kind": "added",
+   "new": "Illustrative closed-form estimate; it is not calibrated to measurements or validated. Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table of elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of atomic radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no thermodynamic calculation is run, and the size and modulus misfit values are reported but do not enter the strength. The microstructure scale uses empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and CAE-card parameters come from a schematic hardening law with a placeholder strain-hardening exponent n. The 'macro FEA' scale is a yield-only comparison of Rp0.2 with a fixed catalogue stress, not a finite-element analysis. The model is room-temperature only: serviceTemp_C does not change any value and strainRate_s_inv only appears in a card line. Ultimate tensile strength and fracture toughness (K_Ic, critical flaw size, plastic zone radius) are unavailable; see the status fields next to them.",
+   "old": null
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m",
+   "kind": "changed",
+   "new": null,
+   "old": 781.6
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_status",
+   "kind": "added",
+   "new": "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; supply a measured K_Ic",
+   "old": null
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa",
+   "kind": "changed",
+   "new": null,
+   "old": 682.3
+  },
+  {
+   "key": "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_status",
+   "kind": "added",
+   "new": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
+   "old": null
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm",
+   "kind": "changed",
+   "new": null,
+   "old": 694.93
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.inspectionNDICapability",
+   "kind": "changed",
+   "new": "Unavailable (no critical flaw size without K_Ic)",
+   "old": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)"
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.plasticZoneRadius_rp_mm",
+   "kind": "changed",
+   "new": null,
+   "old": 208.88
+  },
+  {
+   "key": "scale4_macroComponentFEA.lefmDamageTolerance.status",
+   "kind": "added",
+   "new": "unavailable: the critical flaw size and the plastic zone radius need a fracture toughness K_Ic, which this model does not provide",
+   "old": null
+  },
+  {
+   "key": "scale4_macroComponentFEA.structuralVerdict",
+   "kind": "changed",
+   "new": "WARNING: INSUFFICIENT YIELD SAFETY MARGIN (Risk of Plastic Yielding; yield-only check)",
+   "old": "WARNING: INSUFFICIENT SAFETY MARGIN (Risk of Plastic Yielding)"
+  },
+  {
+   "key": "scale4_macroComponentFEA.structuralVerdictBasis",
+   "kind": "added",
+   "new": "Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa against requiredSafetyFactor. No creep, fatigue, fracture, buckling or service-temperature check exists.",
+   "old": null
+  }
+ ],
+ "exitCode": 0,
+ "gitHead": "68c364c760adafbf73fb6ed1a7a8dba044ef1fdd",
+ "input": {
+  "agingTemp_C": 480,
+  "agingTime_h": 2,
+  "alloyName": "AISI 4340 Ultra-High Strength Steel",
+  "baseMetal": "Fe",
+  "componentType": "pressure_bulkhead",
+  "composition_wt": {
+   "C": 0.4,
+   "Cr": 0.8,
+   "Mn": 0.7,
+   "Mo": 0.25,
+   "Ni": 1.8,
+   "Si": 0.25
+  },
+  "coolingRate_C_s": 250
+ },
+ "invocation": "python -B icme_multiscale_pipeline_solver.py < input (cwd python/)",
+ "label": "phase6a-step-b",
+ "provenance": {
+  "provenance": {
+   "atomicWeightsSource": "IUPAC CIAAW standard atomic weights 2021 (abridged values, at most five significant figures)",
+   "constantsNote": "Exact SI 2019 R = N_A*k and CIAAW 2021 abridged atomic weights (Phase 6a value step); they replaced R = 8.314 and rounded weights.",
+   "constantsVersion": "physical-constants-1",
+   "domainDataBaseRevision": "7f3f803",
+   "domainDataVersion": "alloy-data-calphad-battery-icme-2",
+   "gasConstantR_J_molK": 8.31446261815324,
+   "registryVersion": "alloy-registry-2"
+  }
+ },
+ "schema": "phase6a-step-b-golden-1",
+ "solver": "icme_multiscale_pipeline_solver",
+ "solverFile": "python/icme_multiscale_pipeline_solver.py",
+ "solverSha256": "305d1324a6e5e3f8ddc9e321ce64bb6842eeedc3996f2ba5969ecfda58b7f87b",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "caeExportCards": {
+   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AISI 4340 Ultra-High Strength Steel\n*MATERIAL, NAME=AISI_4340_ULTRA-HIGH_STRENGTH_STEEL\n*DENSITY\n7850.00\n*ELASTIC, TYPE=ISOTROPIC\n211139.97, 0.2900\n*PLASTIC\n682.0, 0.0000\n926.5, 0.0500\n956.3, 0.1000\n984.4, 0.1800\n*RATE DEPENDENT\n0.01500, 0.001\n*TENSILE FAILURE\n0.2315, 0.0, 0.0",
+   "ansys": "! ANSYS APDL Material Card: AISI 4340 Ultra-High Strength Steel\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,211139.97\nMPDATA,PRXY,1,,0.2900\nMPDATA,DENS,1,,7.8500e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,682.0\nTBPT,,0.05,926.5\nTBPT,,0.10,956.3\nTBPT,,0.20,989.7",
+   "lsDyna": "$*LS-DYNA MATERIAL DECK: AISI 4340 Ultra-High Strength Steel\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  7.850e-03  211140.0   0.2900  682.0       0.0  0.2315       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0150       0.0         0         0       0.0"
+  },
+  "engine": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
+  "inputParameters": {
+   "agingTemp_C": 480.0,
+   "agingTime_h": 2.0,
+   "alloyName": "AISI 4340 Ultra-High Strength Steel",
+   "baseMetal": "Fe",
+   "componentType": "pressure_bulkhead",
+   "coolingRate_C_s": 250.0,
+   "crystalSystem": "BCC",
+   "grainSize_um": 13.969907793367275
+  },
+  "modelParts": [
+   "scale0_dftAtomistic: tabulated elastic constants and Peierls-Nabarro estimate (no DFT)",
+   "scale1_calphadSoluteMisfit: tabulated radii, moduli and k*sqrt(wt%) coefficients (no CALPHAD)",
+   "scale2_microstructureKinetics: empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations",
+   "scale3_continuumPlasticity: Rp0.2 by power-law superposition; schematic curve with placeholder n",
+   "scale4_macroComponentFEA: yield-only check against a fixed catalogue stress (no FEA)",
+   "caeExportCards: uncalibrated illustrative cards"
+  ],
+  "modelStatus": "illustrative",
+  "modelStatusNote": "Illustrative closed-form estimate; it is not calibrated to measurements or validated. Every scale is a formula on hard-coded tabulated constants. The 'DFT' scale is a table of elastic constants (C11, C12, C44), lattice parameters and Taylor factors with a Peierls-Nabarro friction estimate; no DFT is run. The 'CALPHAD' scale is a table of atomic radii, shear moduli and solid-solution coefficients (k * sqrt(wt%)); no thermodynamic calculation is run, and the size and modulus misfit values are reported but do not enter the strength. The microstructure scale uses empirical SDAS, Hall-Petch, Taylor and LSW/Orowan relations. The stress-strain curve and the Johnson-Cook and CAE-card parameters come from a schematic hardening law with a placeholder strain-hardening exponent n. The 'macro FEA' scale is a yield-only comparison of Rp0.2 with a fixed catalogue stress, not a finite-element analysis. The model is room-temperature only: serviceTemp_C does not change any value and strainRate_s_inv only appears in a card line. Ultimate tensile strength and fracture toughness (K_Ic, critical flaw size, plastic zone radius) are unavailable; see the status fields next to them.",
+  "scale0_dftAtomistic": {
+   "burgersVector_b_nm": 0.2482,
+   "elasticTensor_Cij_GPa": {
+    "C11": 237.0,
+    "C12": 141.0,
+    "C44": 116.0
+   },
+   "homogenizedModuli": {
+    "bulkModulus_B_GPa": 173.0,
+    "cauchyPressure_GPa": 25.0,
+    "ductilityVerdict": "Ductile (Pugh B/G > 1.75)",
+    "poissonsRatio": 0.29,
+    "pughRatio_B_over_G": 2.125,
+    "shearModulus_G_GPa": 81.4,
+    "youngsModulus_E_GPa": 211.1
+   },
+   "latticeParameter_a0_Angstrom": 2.866,
+   "peierlsNabarroLatticeFriction": {
+    "sigma_0_friction_stress_MPa": 234.6,
+    "tau_PN_MPa": 166.9,
+    "taylorFactor_M": 2.75
+   },
+   "slipPlane_dhkl_nm": 0.2027
+  },
+  "scale1_calphadSoluteMisfit": {
+   "atomicFractions": {
+    "C": 1.83,
+    "Cr": 0.85,
+    "Fe": 94.3,
+    "Mn": 0.7,
+    "Mo": 0.14,
+    "Ni": 1.69,
+    "Si": 0.49
+   },
+   "soluteBreakdown": {
+    "C": {
+     "at_frac": 1.83,
+     "modulusMisfit": 1.439,
+     "sizeMisfit": 0.379,
+     "strengthContribution_MPa": 101.2,
+     "wt_pct": 0.4
+    },
+    "Cr": {
+     "at_frac": 0.85,
+     "modulusMisfit": 0.402,
+     "sizeMisfit": 0.032,
+     "strengthContribution_MPa": 8.5,
+     "wt_pct": 0.8
+    },
+    "Mn": {
+     "at_frac": 0.7,
+     "modulusMisfit": 0.024,
+     "sizeMisfit": 0.024,
+     "strengthContribution_MPa": 10.0,
+     "wt_pct": 0.7
+    },
+    "Mo": {
+     "at_frac": 0.14,
+     "modulusMisfit": 0.537,
+     "sizeMisfit": 0.121,
+     "strengthContribution_MPa": 14.0,
+     "wt_pct": 0.25
+    },
+    "Ni": {
+     "at_frac": 1.69,
+     "modulusMisfit": 0.073,
+     "sizeMisfit": 0.0,
+     "strengthContribution_MPa": 16.1,
+     "wt_pct": 1.8
+    },
+    "Si": {
+     "at_frac": 0.49,
+     "modulusMisfit": 0.512,
+     "sizeMisfit": 0.048,
+     "strengthContribution_MPa": 8.0,
+     "wt_pct": 0.25
+    }
+   },
+   "totalSolidSolutionStrengthening_MPa": 157.8
+  },
+  "scale2_microstructureKinetics": {
+   "computedSDAS_um": 7.76,
+   "coolingRate_C_s": 250.0,
+   "dislocationDensity_rho_m2": "1.20e+13",
+   "grainSize_d_um": 13.97,
+   "hallPetchStrengthening_MPa": 147.2,
+   "precipitationKinetics": {
+    "activeMechanism": "Dislocation Particle Shearing (Friedel-Gere Cutting)",
+    "agingTemp_C": 480.0,
+    "agingTime_h": 2.0,
+    "effectivePrecipitationStrengthening_MPa": 109.7,
+    "interparticleSpacing_nm": 6.9,
+    "meanPrecipitateRadius_nm": 1.5,
+    "orowanStrength_MPa": 900.0,
+    "shearingStrength_MPa": 109.7,
+    "volumeFractionPct": 4.8
+   },
+   "taylorDislocationStrengthening_MPa": 61.6
+  },
+  "scale3_continuumPlasticity": {
+   "johnsonCookParameters": {
+    "A_MPa": 682,
+    "B_MPa": 402,
+    "C": 0.015,
+    "T_melt_C": 1450.0,
+    "m": 1.03,
+    "n": 0.166
+   },
+   "mechanicalProperties": {
+    "fractureToughness_K1c_MPa_sqrt_m": null,
+    "fractureToughness_K1c_status": "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; supply a measured K_Ic",
+    "hollomon_K_MPa": 1084.7,
+    "hollomon_n": 0.166,
+    "totalElongationPct": 26.1,
+    "ultimateTensileStrength_UTS_MPa": null,
+    "ultimateTensileStrength_UTS_status": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
+    "uniformElongationPct": 16.6,
+    "yieldStrength_Rp02_MPa": 682.3
+   },
+   "strengtheningContributions_MPa": {
+    "deltaSigma_Disloc_Forest": 61.6,
+    "deltaSigma_HP_GrainBoundary": 147.2,
+    "deltaSigma_Precip_OrowanCutting": 109.7,
+    "deltaSigma_SS_SolidSolution": 157.8,
+    "sigma_0_LatticeFriction": 234.6
+   },
+   "stressStrainCurve": [
+    {
+     "engineeringStrainPct": 0.456,
+     "engineeringStressMPa": 812.8,
+     "trueStrain": 0.0045,
+     "trueStressMPa": 816.5
+    },
+    {
+     "engineeringStrainPct": 0.912,
+     "engineeringStressMPa": 846.4,
+     "trueStrain": 0.0091,
+     "trueStressMPa": 854.1
+    },
+    {
+     "engineeringStrainPct": 1.368,
+     "engineeringStressMPa": 859.5,
+     "trueStrain": 0.0136,
+     "trueStressMPa": 871.2
+    },
+    {
+     "engineeringStrainPct": 1.824,
+     "engineeringStressMPa": 867.1,
+     "trueStrain": 0.0181,
+     "trueStressMPa": 882.9
+    },
+    {
+     "engineeringStrainPct": 2.28,
+     "engineeringStressMPa": 872.1,
+     "trueStrain": 0.0225,
+     "trueStressMPa": 891.9
+    },
+    {
+     "engineeringStrainPct": 2.736,
+     "engineeringStressMPa": 875.4,
+     "trueStrain": 0.027,
+     "trueStressMPa": 899.4
+    },
+    {
+     "engineeringStrainPct": 3.192,
+     "engineeringStressMPa": 877.7,
+     "trueStrain": 0.0314,
+     "trueStressMPa": 905.7
+    },
+    {
+     "engineeringStrainPct": 3.647,
+     "engineeringStressMPa": 879.1,
+     "trueStrain": 0.0358,
+     "trueStressMPa": 911.2
+    },
+    {
+     "engineeringStrainPct": 4.103,
+     "engineeringStressMPa": 880.0,
+     "trueStrain": 0.0402,
+     "trueStressMPa": 916.1
+    },
+    {
+     "engineeringStrainPct": 4.559,
+     "engineeringStressMPa": 880.4,
+     "trueStrain": 0.0446,
+     "trueStressMPa": 920.6
+    },
+    {
+     "engineeringStrainPct": 5.015,
+     "engineeringStressMPa": 880.5,
+     "trueStrain": 0.0489,
+     "trueStressMPa": 924.7
+    },
+    {
+     "engineeringStrainPct": 5.471,
+     "engineeringStressMPa": 880.3,
+     "trueStrain": 0.0533,
+     "trueStressMPa": 928.4
+    },
+    {
+     "engineeringStrainPct": 5.927,
+     "engineeringStressMPa": 879.8,
+     "trueStrain": 0.0576,
+     "trueStressMPa": 931.9
+    },
+    {
+     "engineeringStrainPct": 6.383,
+     "engineeringStressMPa": 879.1,
+     "trueStrain": 0.0619,
+     "trueStressMPa": 935.2
+    },
+    {
+     "engineeringStrainPct": 6.839,
+     "engineeringStressMPa": 878.2,
+     "trueStrain": 0.0662,
+     "trueStressMPa": 938.2
+    },
+    {
+     "engineeringStrainPct": 7.295,
+     "engineeringStressMPa": 877.1,
+     "trueStrain": 0.0704,
+     "trueStressMPa": 941.1
+    },
+    {
+     "engineeringStrainPct": 7.751,
+     "engineeringStressMPa": 875.9,
+     "trueStrain": 0.0747,
+     "trueStressMPa": 943.8
+    },
+    {
+     "engineeringStrainPct": 8.207,
+     "engineeringStressMPa": 874.7,
+     "trueStrain": 0.0789,
+     "trueStressMPa": 946.4
+    },
+    {
+     "engineeringStrainPct": 8.663,
+     "engineeringStressMPa": 873.3,
+     "trueStrain": 0.0831,
+     "trueStressMPa": 948.9
+    },
+    {
+     "engineeringStrainPct": 9.119,
+     "engineeringStressMPa": 871.8,
+     "trueStrain": 0.0873,
+     "trueStressMPa": 951.3
+    },
+    {
+     "engineeringStrainPct": 9.575,
+     "engineeringStressMPa": 870.2,
+     "trueStrain": 0.0914,
+     "trueStressMPa": 953.5
+    },
+    {
+     "engineeringStrainPct": 10.031,
+     "engineeringStressMPa": 868.6,
+     "trueStrain": 0.0956,
+     "trueStressMPa": 955.7
+    },
+    {
+     "engineeringStrainPct": 10.486,
+     "engineeringStressMPa": 866.9,
+     "trueStrain": 0.0997,
+     "trueStressMPa": 957.8
+    },
+    {
+     "engineeringStrainPct": 10.942,
+     "engineeringStressMPa": 865.1,
+     "trueStrain": 0.1038,
+     "trueStressMPa": 959.8
+    },
+    {
+     "engineeringStrainPct": 11.398,
+     "engineeringStressMPa": 863.3,
+     "trueStrain": 0.1079,
+     "trueStressMPa": 961.7
+    },
+    {
+     "engineeringStrainPct": 11.854,
+     "engineeringStressMPa": 861.5,
+     "trueStrain": 0.112,
+     "trueStressMPa": 963.6
+    },
+    {
+     "engineeringStrainPct": 12.31,
+     "engineeringStressMPa": 859.6,
+     "trueStrain": 0.1161,
+     "trueStressMPa": 965.4
+    },
+    {
+     "engineeringStrainPct": 12.766,
+     "engineeringStressMPa": 857.7,
+     "trueStrain": 0.1201,
+     "trueStressMPa": 967.2
+    },
+    {
+     "engineeringStrainPct": 13.222,
+     "engineeringStressMPa": 855.7,
+     "trueStrain": 0.1242,
+     "trueStressMPa": 968.9
+    },
+    {
+     "engineeringStrainPct": 13.678,
+     "engineeringStressMPa": 853.8,
+     "trueStrain": 0.1282,
+     "trueStressMPa": 970.6
+    },
+    {
+     "engineeringStrainPct": 14.134,
+     "engineeringStressMPa": 851.8,
+     "trueStrain": 0.1322,
+     "trueStressMPa": 972.2
+    },
+    {
+     "engineeringStrainPct": 14.59,
+     "engineeringStressMPa": 849.7,
+     "trueStrain": 0.1362,
+     "trueStressMPa": 973.7
+    },
+    {
+     "engineeringStrainPct": 15.046,
+     "engineeringStressMPa": 847.7,
+     "trueStrain": 0.1402,
+     "trueStressMPa": 975.2
+    },
+    {
+     "engineeringStrainPct": 15.502,
+     "engineeringStressMPa": 845.6,
+     "trueStrain": 0.1441,
+     "trueStressMPa": 976.7
+    },
+    {
+     "engineeringStrainPct": 15.958,
+     "engineeringStressMPa": 843.6,
+     "trueStrain": 0.1481,
+     "trueStressMPa": 978.2
+    },
+    {
+     "engineeringStrainPct": 16.414,
+     "engineeringStressMPa": 841.5,
+     "trueStrain": 0.152,
+     "trueStressMPa": 979.6
+    },
+    {
+     "engineeringStrainPct": 16.87,
+     "engineeringStressMPa": 830.2,
+     "trueStrain": 0.1559,
+     "trueStressMPa": 981.0
+    },
+    {
+     "engineeringStrainPct": 17.326,
+     "engineeringStressMPa": 814.0,
+     "trueStrain": 0.1598,
+     "trueStressMPa": 982.3
+    },
+    {
+     "engineeringStrainPct": 17.781,
+     "engineeringStressMPa": 797.8,
+     "trueStrain": 0.1637,
+     "trueStressMPa": 983.6
+    },
+    {
+     "engineeringStrainPct": 18.237,
+     "engineeringStressMPa": 781.7,
+     "trueStrain": 0.1675,
+     "trueStressMPa": 984.9
+    },
+    {
+     "engineeringStrainPct": 18.693,
+     "engineeringStressMPa": 765.6,
+     "trueStrain": 0.1714,
+     "trueStressMPa": 986.2
+    },
+    {
+     "engineeringStrainPct": 19.149,
+     "engineeringStressMPa": 749.6,
+     "trueStrain": 0.1752,
+     "trueStressMPa": 987.4
+    },
+    {
+     "engineeringStrainPct": 19.605,
+     "engineeringStressMPa": 733.7,
+     "trueStrain": 0.179,
+     "trueStressMPa": 988.6
+    },
+    {
+     "engineeringStrainPct": 20.061,
+     "engineeringStressMPa": 717.8,
+     "trueStrain": 0.1828,
+     "trueStressMPa": 989.8
+    },
+    {
+     "engineeringStrainPct": 20.517,
+     "engineeringStressMPa": 702.0,
+     "trueStrain": 0.1866,
+     "trueStressMPa": 991.0
+    },
+    {
+     "engineeringStrainPct": 20.973,
+     "engineeringStressMPa": 686.3,
+     "trueStrain": 0.1904,
+     "trueStressMPa": 992.1
+    },
+    {
+     "engineeringStrainPct": 21.429,
+     "engineeringStressMPa": 670.7,
+     "trueStrain": 0.1942,
+     "trueStressMPa": 993.3
+    },
+    {
+     "engineeringStrainPct": 21.885,
+     "engineeringStressMPa": 655.1,
+     "trueStrain": 0.1979,
+     "trueStressMPa": 994.4
+    },
+    {
+     "engineeringStrainPct": 22.341,
+     "engineeringStressMPa": 639.6,
+     "trueStrain": 0.2016,
+     "trueStressMPa": 995.5
+    },
+    {
+     "engineeringStrainPct": 22.797,
+     "engineeringStressMPa": 624.2,
+     "trueStrain": 0.2054,
+     "trueStressMPa": 996.5
+    },
+    {
+     "engineeringStrainPct": 23.253,
+     "engineeringStressMPa": 608.9,
+     "trueStrain": 0.2091,
+     "trueStressMPa": 997.6
+    },
+    {
+     "engineeringStrainPct": 23.709,
+     "engineeringStressMPa": 593.6,
+     "trueStrain": 0.2128,
+     "trueStressMPa": 998.6
+    },
+    {
+     "engineeringStrainPct": 24.165,
+     "engineeringStressMPa": 578.4,
+     "trueStrain": 0.2164,
+     "trueStressMPa": 999.6
+    },
+    {
+     "engineeringStrainPct": 24.62,
+     "engineeringStressMPa": 563.3,
+     "trueStrain": 0.2201,
+     "trueStressMPa": 1000.6
+    },
+    {
+     "engineeringStrainPct": 25.076,
+     "engineeringStressMPa": 548.2,
+     "trueStrain": 0.2238,
+     "trueStressMPa": 1001.6
+    },
+    {
+     "engineeringStrainPct": 25.532,
+     "engineeringStressMPa": 533.2,
+     "trueStrain": 0.2274,
+     "trueStressMPa": 1002.6
+    },
+    {
+     "engineeringStrainPct": 25.988,
+     "engineeringStressMPa": 518.3,
+     "trueStrain": 0.231,
+     "trueStressMPa": 1003.5
+    },
+    {
+     "engineeringStrainPct": 26.444,
+     "engineeringStressMPa": 503.5,
+     "trueStrain": 0.2346,
+     "trueStressMPa": 1004.5
+    },
+    {
+     "engineeringStrainPct": 26.9,
+     "engineeringStressMPa": 488.8,
+     "trueStrain": 0.2382,
+     "trueStressMPa": 1005.4
+    },
+    {
+     "engineeringStrainPct": 27.356,
+     "engineeringStressMPa": 474.1,
+     "trueStrain": 0.2418,
+     "trueStressMPa": 1006.3
+    }
+   ]
+  },
+  "scale4_macroComponentFEA": {
+   "actualSafetyFactor": 1.29,
+   "appliedStress_MPa": 529.0,
+   "componentName": "Aerospace Fuselage Cryogenic Pressure Bulkhead",
+   "criticalSectionArea_mm2": 850.0,
+   "lefmDamageTolerance": {
+    "criticalFlawSize_ac_mm": null,
+    "inspectionNDICapability": "Unavailable (no critical flaw size without K_Ic)",
+    "plasticZoneRadius_rp_mm": null,
+    "status": "unavailable: the critical flaw size and the plastic zone radius need a fracture toughness K_Ic, which this model does not provide"
+   },
+   "requiredSafetyFactor": 1.5,
+   "structuralVerdict": "WARNING: INSUFFICIENT YIELD SAFETY MARGIN (Risk of Plastic Yielding; yield-only check)",
+   "structuralVerdictBasis": "Yield-only check at room temperature: Rp0.2 divided by the catalogue appliedStress_MPa against requiredSafetyFactor. No creep, fatigue, fracture, buckling or service-temperature check exists."
+  },
+  "success": true
+ },
+ "supersedes": "aisi4340_preset.json (d33b6f5)",
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
