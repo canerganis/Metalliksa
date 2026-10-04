@@ -40,6 +40,7 @@ import {
   TENSILE_ESTIMATE_NOTE,
   convertHardness,
 } from "../utils/hardnessConversion";
+import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { MetallurgicalUnitConverter } from "./MetallurgicalUnitConverter";
 import { MetallurgicalQuickConversionsGrid } from "./MetallurgicalQuickConversionsGrid";
@@ -374,27 +375,22 @@ export const PocketCalculators: React.FC = () => {
             <div>
               <span className="text-[10px] text-slate-400 font-mono tracking-wider block mb-2 uppercase">Aerospace & Metallurgy Presets:</span>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                {[
-                  // Example measured inputs; only the non-austenitic steels are converted.
-                  { name: "Annealed Ti-6Al-4V", val: 34, scale: "HRC" as const, cls: "titanium-alloy" as HardnessMaterialClass },
-                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as const, cls: "nickel-alloy" as HardnessMaterialClass },
-                  { name: "Austenitic 316L", val: 80, scale: "HRB" as const, cls: "austenitic-steel" as HardnessMaterialClass },
-                  { name: "AerMet 100 Ultra-High", val: 55, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
-                  { name: "4140 Q&T", val: 35, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
-                  { name: "52100 Bearing Steel", val: 60, scale: "HRC" as const, cls: "non-austenitic-steel" as HardnessMaterialClass },
-                ].map((p, idx) => (
+                {HARDNESS_PRESETS.filter(
+                  (p): p is HardnessPreset & { scale: "HRC" | "HV" | "HRB" | "HBW" } =>
+                    p.scale === "HRC" || p.scale === "HV" || p.scale === "HRB" || p.scale === "HBW"
+                ).map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setHardnessScale(p.scale);
-                      setHardnessVal(p.val);
+                      setHardnessVal(p.value);
                       setHardnessClass(p.cls);
                     }}
                     className="p-2 text-left bg-[#0c1322] border border-[#162032] hover:border-sky-400/40 rounded transition text-slate-300 hover:text-sky-300"
                   >
                     <div className="font-medium truncate text-xs">{p.name}</div>
                     <div className="font-mono text-[10px] text-slate-500">
-                      {p.val} {p.scale}
+                      {p.value} {p.scale}
                     </div>
                   </button>
                 ))}

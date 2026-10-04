@@ -29,6 +29,7 @@ import {
   convertHardness,
   hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
+import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
@@ -131,16 +132,10 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
     }
   };
 
-  // Example measured inputs (value in the scale it is usually measured in). Only the non-austenitic steels are
-  // converted; the other alloy classes show the measured value only.
-  const hardnessPresets: Array<{ name: string; scale: "HRC" | "HV"; value: number; cls: HardnessMaterialClass; desc: string }> = [
-    { name: "316L Annealed", scale: "HV", value: 155, cls: "austenitic-steel", desc: "Austenitic: measured HV only" },
-    { name: "Ti-6Al-4V Annealed", scale: "HRC", value: 34, cls: "titanium-alloy", desc: "Titanium: measured HRC only" },
-    { name: "Inconel 718 Aged", scale: "HRC", value: 44, cls: "nickel-alloy", desc: "Nickel alloy: measured HRC only" },
-    { name: "4140 Q&T", scale: "HRC", value: 35, cls: "non-austenitic-steel", desc: "Tough structural" },
-    { name: "52100 Bearing Steel", scale: "HRC", value: 60, cls: "non-austenitic-steel", desc: "Martensitic race" },
-    { name: "M2 High-Speed Tool", scale: "HRC", value: 64, cls: "non-austenitic-steel", desc: "Cutting edge" },
-  ];
+  // Shared example measured inputs; this card takes HRC or HV only.
+  const hardnessPresets = HARDNESS_PRESETS.filter(
+    (p): p is HardnessPreset & { scale: "HRC" | "HV" } => p.scale === "HRC" || p.scale === "HV"
+  ).map((p) => ({ ...p, desc: p.note }));
   const applyHardnessPreset = (p: (typeof hardnessPresets)[number]) => {
     setHardnessClass(p.cls);
     if (p.scale === "HRC") handleHrcChange(p.value, p.cls);

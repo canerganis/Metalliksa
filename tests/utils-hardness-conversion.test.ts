@@ -9,6 +9,7 @@ import {
   hardnessMaterialClassOf,
 } from "../src/utils/hardnessConversion";
 import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
+import { HARDNESS_PRESETS } from "../src/utils/hardnessPresets";
 
 // Reference values, read from the public reproductions cited in src/utils/hardnessConversion.ts:
 //   ASTM E140 Table 1 (non-austenitic steels): [A] labtesting.com chart-hardness-c.pdf, [B] andersonlabs.com Rockwell C
@@ -216,4 +217,25 @@ test("alloy class of a material record", () => {
   assert.equal(hardnessMaterialClassOf({ baseMetal: "Al" }), "aluminium-alloy");
   assert.equal(hardnessMaterialClassOf({ baseMetal: "Co" }), "other");
   assert.equal(hardnessMaterialClassOf({}), "other");
+});
+
+test("hardness presets: steel presets lie inside the verified range, others are measured-only, notes quote no numbers", () => {
+  assert.ok(HARDNESS_PRESETS.length >= 6);
+  for (const p of HARDNESS_PRESETS) {
+    const r = convertHardness(p.value, p.scale, p.cls);
+    assert.equal(r[p.scale], p.value, p.name); // the measured value is shown as entered
+    assert.doesNotMatch(p.note, /\d/, `${p.name}: note must not quote converted numbers`);
+    if (p.cls === "non-austenitic-steel") {
+      const range = HARDNESS_VERIFIED_RANGES[p.scale]!;
+      assert.ok(p.value >= range.min && p.value <= range.max, `${p.name} outside ${p.scale} ${range.min}-${range.max}`);
+      assert.notEqual(r.HV, null, p.name);
+    } else {
+      for (const k of ["HV", "HRC", "HRB", "HBW", "HK", "tensileRm_MPa"] as const) {
+        if (k !== p.scale) assert.equal(r[k], null, `${p.name} ${k}`);
+      }
+      assert.match(r.validRangeNote, /no verified conversion table for this alloy class/);
+    }
+  }
+  // the removed out-of-scope presets stay removed (WC 1550 HV, nitrided 880/950 HV)
+  assert.ok(!HARDNESS_PRESETS.some((p) => /carbide|nitrid/i.test(p.name)));
 });

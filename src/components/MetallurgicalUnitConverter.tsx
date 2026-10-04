@@ -48,6 +48,7 @@ import {
   convertHardness,
   hardnessMaterialClassOf,
 } from "../utils/hardnessConversion";
+import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
@@ -597,30 +598,21 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                 Typical Heat Treat &amp; Alloy Presets:
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                {[
-                  // Example measured inputs. Only the non-austenitic steels are converted; the other alloy classes
-                  // show the measured value only (no verified conversion table).
-                  { name: "316L Annealed", val: 80, scale: "HRB" as HardnessScale, cls: "austenitic-steel" as HardnessMaterialClass, sub: "Austenitic: measured HRB only" },
-                  { name: "Ti-6Al-4V Annealed", val: 34, scale: "HRC" as HardnessScale, cls: "titanium-alloy" as HardnessMaterialClass, sub: "Titanium: measured HRC only" },
-                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as HardnessScale, cls: "nickel-alloy" as HardnessMaterialClass, sub: "Nickel alloy: measured HRC only" },
-                  { name: "52100 Bearing Steel", val: 60, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Through-hardened steel" },
-                  { name: "M2 High Speed Tool", val: 64, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Hardened tool steel" },
-                  { name: "4140 Q&T", val: 35, scale: "HRC" as HardnessScale, cls: "non-austenitic-steel" as HardnessMaterialClass, sub: "Quenched & tempered steel" },
-                ].map((p, idx) => (
+                {HARDNESS_PRESETS.map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setHardnessScale(p.scale);
-                      setHardnessInput(p.val);
+                      setHardnessInput(p.value);
                       setHardnessClass(p.cls);
                     }}
                     className="p-2 text-left bg-[#0c1322] hover:bg-slate-800/80 border border-[#162032] hover:border-sky-400/50 rounded-lg transition"
                   >
                     <div className="font-semibold text-slate-200 truncate">{p.name}</div>
                     <div className="font-mono text-[10px] text-sky-400 mt-0.5">
-                      {p.val} {p.scale}
+                      {p.value} {p.scale}
                     </div>
-                    <div className="text-[9px] text-slate-500 truncate">{p.sub}</div>
+                    <div className="text-[9px] text-slate-500 truncate">{p.note}</div>
                   </button>
                 ))}
               </div>
