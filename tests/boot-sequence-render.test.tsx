@@ -37,6 +37,15 @@ test("the lazy telemetry strip sits inside a boundary that renders nothing on a 
   assert.match(app, /<SilentBoundary><Suspense fallback=\{null\}><TelemetryStrip /);
 });
 
+test("the boot screen is an early-started lazy chunk behind an opaque, text-free cover and a silent boundary", () => {
+  const app = readFileSync(resolve(process.cwd(), "src/App.tsx"), "utf8");
+  assert.doesNotMatch(app, /^import [^;]*\.\/components\/BootSequence['"]/m, "not in the index chunk");
+  assert.match(app, /^const bootChunk = import\('\.\/components\/BootSequence'\);$/m, "request starts at module evaluation");
+  assert.match(app, /bootChunk\.catch\(/, "no unhandled rejection before render");
+  assert.match(app, /<SilentBoundary><Suspense fallback=\{<div className="mk-boot-cover" aria-hidden="true" \/>\}><BootSequence \/><\/Suspense><\/SilentBoundary>/);
+  assert.doesNotMatch(app, /^import [^;]*services\/bootSteps['"]/m, "App must not pull the boot steps into the index chunk");
+});
+
 test("one subsystem wording everywhere: engine-status modal, boot row and strip all use subsystemQualifier", () => {
   assert.equal(subsystemQualifier({ online: true, status: "online", subsystemStatus: "unverified" }), "unverified (server)");
   const app = readFileSync(resolve(process.cwd(), "src/App.tsx"), "utf8");

@@ -10,9 +10,13 @@ import { pythonComputationService, PythonEngineStatus } from './services/pythonC
 import { startMaterialContextBridge, useMaterialContextBridgeStore } from './services/materialContextBridge';
 import { startEngineeringJobPersistence } from './store/useLpbfEngineeringStore';
 import { ScientificContextPanel } from './components/ScientificContextPanel';
-import { BootSequence } from './components/BootSequence';
 import { SilentBoundary } from './components/SilentBoundary';
-import { subsystemQualifier } from './services/bootSteps';
+import { subsystemQualifier } from './utils/engineStatusText';
+// Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
+// module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
+const bootChunk = import('./components/BootSequence');
+bootChunk.catch(() => undefined); // A failed chunk is handled by SilentBoundary at render (shell shows).
+const BootSequence = lazy(() => bootChunk.then(m => ({ default: m.BootSequence })));
 // Own chunk: the strip sits at the end of the page, so it does not need to be in the index chunk.
 const TelemetryStrip = lazy(() => import('./components/TelemetryStrip').then(m => ({ default: m.TelemetryStrip })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
@@ -158,7 +162,7 @@ export default function App() {
     }
   }
 
-  return <><BootSequence /><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
+  return <><SilentBoundary><Suspense fallback={<div className="mk-boot-cover" aria-hidden="true" />}><BootSequence /></Suspense></SilentBoundary><div className="mk-shell min-h-screen text-slate-100 selection:bg-sky-500/25">
     <div className="mk-grid-overlay" aria-hidden="true" />
     <div className="mk-scanline" aria-hidden="true" />
     <AirgapBanner />

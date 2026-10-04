@@ -10,6 +10,8 @@
   transition: opacity var(--mk-dur-base) var(--mk-ease-out);
 }
 .mk-boot-overlay.is-leaving { opacity: 0; }
+/* Opaque placeholder while the lazy boot chunk loads (no text: nothing has been checked yet). */
+.mk-boot-cover { position: fixed; inset: 0; z-index: 50; background: var(--mk-bg); }
 /* Visually hidden, still read by screen readers (persistent boot announcer). */
 .mk-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
