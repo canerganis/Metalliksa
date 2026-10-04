@@ -47,3 +47,10 @@ test('micrograph diagnosis shows an honest indeterminate state, not simulated st
   assert.doesNotMatch(text, /setInterval|analysisStep|LOADING_STEPS|stepInterval/);
   assert.match(text, /Progress is not reported/);
 });
+
+test('thermal map labels the heuristic fallback field while no Python result is available', () => {
+  const text = src('src/components/LaserMeltPoolThermalMap.tsx');
+  assert.match(text, /\{!pyResult && \(\s*<div role="status"/);
+  assert.match(text, /Provisional client-side heuristic field; Python solve failed\./);
+  assert.match(text, /Provisional client-side heuristic field; Python solve pending\./);
+});
