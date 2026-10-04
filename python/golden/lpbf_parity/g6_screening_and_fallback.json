@@ -4,9 +4,9 @@
  "group": "G6",
  "description": "Screening (Goldak/Rosenthal) and the honest high-fidelity fallback",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  7.2,
-  7.8
+  6.4,
+  6.4
  ],
  "recordedTwice": true,
  "observations": {
-  "screening.canonicalSha256": "a52c6de8aa4e668eb78e75d24052398cb4d92e30c95b4df8d689fdb72f4f801f",
-  "screening.orderedTypedSha256": "423480dfc1681fd6a4a4d15245c62ddb70345816bb5ee4e9b8d070d6227f427b",
+  "screening.canonicalSha256": "8861444dc50dea05aaa6e947664d2ac71f046a02575099cef7afede67ab0351d",
+  "screening.orderedTypedSha256": "c80aa70b2b1decc2de7cefd0b4cb20a3f4c677db3cae1ed304eb3a3d7ed927e2",
   "screening.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -114,14 +114,14 @@
   "screening.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "screening.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "screening.key.provenance": "74df40bbeab0763288ab49f4ad197c28b809f9c24b95413e2689e52225d88247",
-  "screening.key.analyticalComparison": "15bac8c4aba89b5bc07a823ccf8552ef00ed024926c11905654d1962798b3094",
+  "screening.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
   "screening.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screening.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "screening.key.metrics": "e2a70f43deacd50a2a8f2c6718cca34825c859cb92afbb24f06cd13d005f89a5",
-  "screening.key.geometricDefectScreen": "d2645d86a77a456264465521a5afb12d8b73284e63a700de0d3cd5139877fc81",
+  "screening.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
+  "screening.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
   "screening.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "screening.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
-  "screening.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
+  "screening.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "screening.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "screening.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "screening.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
   "screening.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
@@ -138,8 +138,8 @@
   "screening.label": "Screening only",
   "screening.confidence": "low",
   "screening.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallback.canonicalSha256": "de8ebc315e323bcdef1ecf50295fd7fb4d02097e2c62826dc29aa2b3f5ebb1cc",
-  "highFidelityFallback.orderedTypedSha256": "8ec314135fbf73a1166dc08f852df235663354ba9737a39d3024681ffb37a3ec",
+  "highFidelityFallback.canonicalSha256": "862fdd8e1c7925738d6efd13d5e5361f3cfcd9d409a9ef775635b2eaebc6902d",
+  "highFidelityFallback.orderedTypedSha256": "2c62423c464957710d7d77862931adfdd4e78c507e93bbdb791e754c41f7ff99",
   "highFidelityFallback.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -179,14 +179,14 @@
   "highFidelityFallback.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "highFidelityFallback.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "highFidelityFallback.key.provenance": "3c1b5c1e8e02cde96d39d2c99606abc6f6b502b55bea85309e5daaef648fc877",
-  "highFidelityFallback.key.analyticalComparison": "15bac8c4aba89b5bc07a823ccf8552ef00ed024926c11905654d1962798b3094",
+  "highFidelityFallback.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
   "highFidelityFallback.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallback.key.fallbackReason": "6e4dd5716eb9a19c332be02caf7d68e7dcf8b128c09279475225cfc2ff3ddaec",
-  "highFidelityFallback.key.metrics": "e2a70f43deacd50a2a8f2c6718cca34825c859cb92afbb24f06cd13d005f89a5",
-  "highFidelityFallback.key.geometricDefectScreen": "d2645d86a77a456264465521a5afb12d8b73284e63a700de0d3cd5139877fc81",
+  "highFidelityFallback.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
+  "highFidelityFallback.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
   "highFidelityFallback.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "highFidelityFallback.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
-  "highFidelityFallback.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
+  "highFidelityFallback.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "highFidelityFallback.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "highFidelityFallback.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "highFidelityFallback.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
   "highFidelityFallback.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
@@ -203,8 +203,8 @@
   "highFidelityFallback.label": "Screening only",
   "highFidelityFallback.confidence": "low",
   "highFidelityFallback.implementationHashOccurrencesAfterStrip": 0,
-  "screeningTi64.canonicalSha256": "cf7b3d915446f7aecafeb49cf836bac3de943c13b84a42502a3f1a7601d5dfdc",
-  "screeningTi64.orderedTypedSha256": "f7be3c468d12331350a882694aa4dbe32b4d414cc048e83aeb6a10c5972351ba",
+  "screeningTi64.canonicalSha256": "a58dc565baccedf97ed09be178a6756b40fe6d059f8ff709ba7c0e195d971069",
+  "screeningTi64.orderedTypedSha256": "9a460e870ab8f415888d0f39b48c34a6568aaace2d627a1e23348be61a73a4af",
   "screeningTi64.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -244,14 +244,14 @@
   "screeningTi64.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "screeningTi64.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "screeningTi64.key.provenance": "9283ed73b70280b63981ad9c620273d0303be78fb5c648892e992c3f5dbe5e37",
-  "screeningTi64.key.analyticalComparison": "adbef98c724f012ba2851d6a7841d8ee6254ee9f212ff9b7f07699ab3c2586d3",
+  "screeningTi64.key.analyticalComparison": "5265d234709a875f25cf8f1ea536b392d05828ebf08c07d13d4d7d4010df90fa",
   "screeningTi64.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screeningTi64.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "screeningTi64.key.metrics": "27471c1b2d59ddfb383fd0b59c473190436d838e9008030032d940e47be8053e",
-  "screeningTi64.key.geometricDefectScreen": "d3da81040759fa240d6d92451e3aff03c17cae18f3179caa51a47cb04b2b8149",
+  "screeningTi64.key.metrics": "1a09a5e4d7b10c770cf0c737122a86c44c4b38cb543a95cd839bcc6ada46440d",
+  "screeningTi64.key.geometricDefectScreen": "55e7a76e9caa6fcadae4564fc332cb811c44d6c070d23eda8f32dd8073a31545",
   "screeningTi64.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "screeningTi64.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
-  "screeningTi64.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
+  "screeningTi64.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "screeningTi64.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "screeningTi64.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "screeningTi64.key.resourceEstimate": "e74a48a39a602cb6c9c79f17a9f1dc608fe68ab7e31388ddc5e67c3fbe1b5d93",
   "screeningTi64.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
@@ -268,8 +268,8 @@
   "screeningTi64.label": "Screening only",
   "screeningTi64.confidence": "low",
   "screeningTi64.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallbackWithOpenfoam.canonicalSha256": "4f2c9faadfd26c090d7ad6c0e40f8da64278a898847ddde969a0b3406b15d317",
-  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "d8e5bee34ac063c6ddf203ad899842fdb1301c595458c81c2db4554c46d9352e",
+  "highFidelityFallbackWithOpenfoam.canonicalSha256": "5331f74bb3dd46983ef68545d74de3aa84df3bf08efae29ad245bc303dbf3859",
+  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "3fa1845d338d4077370f05a331a5c34f6f04fc0786bc9f9c2f2e10036688093f",
   "highFidelityFallbackWithOpenfoam.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -309,14 +309,14 @@
   "highFidelityFallbackWithOpenfoam.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "highFidelityFallbackWithOpenfoam.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "highFidelityFallbackWithOpenfoam.key.provenance": "3c1b5c1e8e02cde96d39d2c99606abc6f6b502b55bea85309e5daaef648fc877",
-  "highFidelityFallbackWithOpenfoam.key.analyticalComparison": "15bac8c4aba89b5bc07a823ccf8552ef00ed024926c11905654d1962798b3094",
+  "highFidelityFallbackWithOpenfoam.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
   "highFidelityFallbackWithOpenfoam.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallbackWithOpenfoam.key.fallbackReason": "6f422ebac6e741612c1f4552bcd6df77dfdaf0e405954690205b62f3ca79cea6",
-  "highFidelityFallbackWithOpenfoam.key.metrics": "e2a70f43deacd50a2a8f2c6718cca34825c859cb92afbb24f06cd13d005f89a5",
-  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "d2645d86a77a456264465521a5afb12d8b73284e63a700de0d3cd5139877fc81",
+  "highFidelityFallbackWithOpenfoam.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
+  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
   "highFidelityFallbackWithOpenfoam.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "highFidelityFallbackWithOpenfoam.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
-  "highFidelityFallbackWithOpenfoam.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
+  "highFidelityFallbackWithOpenfoam.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "highFidelityFallbackWithOpenfoam.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "highFidelityFallbackWithOpenfoam.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "highFidelityFallbackWithOpenfoam.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
   "highFidelityFallbackWithOpenfoam.key.unresolvedPhysics": "e56903d893f881cd5a1e576df18872eed3708168d7a13e2e07afd6fc3734d9d1",
@@ -348,9 +348,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 83.33333333333334,
-    "depth_um": 41.66666666666667,
-    "length_um": 373.3333333333336,
+    "width_um": 133.33333333333334,
+    "depth_um": 66.66666666666667,
+    "length_um": 769.9999999999999,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -418,12 +418,12 @@
     "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
    ],
    "lackOfFusion": {
-    "status": "lack-of-fusion-screened",
-    "ellipseIndex": 2.3615999999999997,
-    "signedMargin": -1.3615999999999997,
-    "overlapDepth_um": 0.0,
-    "maximumHatch_um": 23.33333333333338,
-    "riskScreened": true,
+    "status": "covered-geometrically",
+    "ellipseIndex": 0.9225,
+    "signedMargin": 0.07750000000000001,
+    "overlapDepth_um": 44.09585518440985,
+    "maximumHatch_um": 106.66666666666669,
+    "riskScreened": false,
     "reason": "Only the idealized elliptical overlap condition is evaluated."
    },
    "keyhole": {
@@ -432,9 +432,9 @@
     "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
    },
    "balling": {
-    "lengthToWidth": 4.480000000000003,
+    "lengthToWidth": 5.774999999999999,
     "risk": "high",
-    "reason": "L/W ratio 4.48 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
    },
    "gasPore": {
     "risk": null,
@@ -463,7 +463,7 @@
    ]
   },
   "highFidelityFallback.key.label": "Screening only",
-  "highFidelityFallback.key.mainRisk": "lack-of-fusion",
+  "highFidelityFallback.key.mainRisk": "balling (screening)",
   "highFidelityFallback.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -512,9 +512,9 @@
    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749"
   },
   "highFidelityFallback.key.metrics": {
-   "width_um": 83.33333333333334,
-   "depth_um": 41.66666666666667,
-   "length_um": 373.3333333333336,
+   "width_um": 133.33333333333334,
+   "depth_um": 66.66666666666667,
+   "length_um": 769.9999999999999,
    "gridResolution_um": [
     11.666666666666769,
     8.333333333333334
@@ -530,7 +530,7 @@
    "materialVersion": "lpbf-materials-1",
    "solverBinaryHash": null
   },
-  "highFidelityFallback.key.recommendation": "Reduce hatch/layer spacing; verify penetration experimentally.",
+  "highFidelityFallback.key.recommendation": "Compare with measured tracks before changing process parameters.",
   "highFidelityFallback.key.regime": "conduction assumption",
   "highFidelityFallback.key.requestedBackend": "auto",
   "highFidelityFallback.key.requestedMode": "high-fidelity",
@@ -621,9 +621,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 83.33333333333334,
-    "depth_um": 41.66666666666667,
-    "length_um": 373.3333333333336,
+    "width_um": 133.33333333333334,
+    "depth_um": 66.66666666666667,
+    "length_um": 769.9999999999999,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -691,12 +691,12 @@
     "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
    ],
    "lackOfFusion": {
-    "status": "lack-of-fusion-screened",
-    "ellipseIndex": 2.3615999999999997,
-    "signedMargin": -1.3615999999999997,
-    "overlapDepth_um": 0.0,
-    "maximumHatch_um": 23.33333333333338,
-    "riskScreened": true,
+    "status": "covered-geometrically",
+    "ellipseIndex": 0.9225,
+    "signedMargin": 0.07750000000000001,
+    "overlapDepth_um": 44.09585518440985,
+    "maximumHatch_um": 106.66666666666669,
+    "riskScreened": false,
     "reason": "Only the idealized elliptical overlap condition is evaluated."
    },
    "keyhole": {
@@ -705,9 +705,9 @@
     "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
    },
    "balling": {
-    "lengthToWidth": 4.480000000000003,
+    "lengthToWidth": 5.774999999999999,
     "risk": "high",
-    "reason": "L/W ratio 4.48 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
    },
    "gasPore": {
     "risk": null,
@@ -736,7 +736,7 @@
    ]
   },
   "highFidelityFallbackWithOpenfoam.key.label": "Screening only",
-  "highFidelityFallbackWithOpenfoam.key.mainRisk": "lack-of-fusion",
+  "highFidelityFallbackWithOpenfoam.key.mainRisk": "balling (screening)",
   "highFidelityFallbackWithOpenfoam.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -785,9 +785,9 @@
    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749"
   },
   "highFidelityFallbackWithOpenfoam.key.metrics": {
-   "width_um": 83.33333333333334,
-   "depth_um": 41.66666666666667,
-   "length_um": 373.3333333333336,
+   "width_um": 133.33333333333334,
+   "depth_um": 66.66666666666667,
+   "length_um": 769.9999999999999,
    "gridResolution_um": [
     11.666666666666769,
     8.333333333333334
@@ -803,7 +803,7 @@
    "materialVersion": "lpbf-materials-1",
    "solverBinaryHash": null
   },
-  "highFidelityFallbackWithOpenfoam.key.recommendation": "Reduce hatch/layer spacing; verify penetration experimentally.",
+  "highFidelityFallbackWithOpenfoam.key.recommendation": "Compare with measured tracks before changing process parameters.",
   "highFidelityFallbackWithOpenfoam.key.regime": "conduction assumption",
   "highFidelityFallbackWithOpenfoam.key.requestedBackend": "auto",
   "highFidelityFallbackWithOpenfoam.key.requestedMode": "high-fidelity",
@@ -894,9 +894,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 83.33333333333334,
-    "depth_um": 41.66666666666667,
-    "length_um": 373.3333333333336,
+    "width_um": 133.33333333333334,
+    "depth_um": 66.66666666666667,
+    "length_um": 769.9999999999999,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -964,12 +964,12 @@
     "No Ti-6Al-4V-specific correction or universal keyhole/balling threshold is applied."
    ],
    "lackOfFusion": {
-    "status": "lack-of-fusion-screened",
-    "ellipseIndex": 2.3615999999999997,
-    "signedMargin": -1.3615999999999997,
-    "overlapDepth_um": 0.0,
-    "maximumHatch_um": 23.33333333333338,
-    "riskScreened": true,
+    "status": "covered-geometrically",
+    "ellipseIndex": 0.9225,
+    "signedMargin": 0.07750000000000001,
+    "overlapDepth_um": 44.09585518440985,
+    "maximumHatch_um": 106.66666666666669,
+    "riskScreened": false,
     "reason": "Only the idealized elliptical overlap condition is evaluated."
    },
    "keyhole": {
@@ -978,9 +978,9 @@
     "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
    },
    "balling": {
-    "lengthToWidth": 4.480000000000003,
+    "lengthToWidth": 5.774999999999999,
     "risk": "high",
-    "reason": "L/W ratio 4.48 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
    },
    "gasPore": {
     "risk": null,
@@ -1009,7 +1009,7 @@
    ]
   },
   "screening.key.label": "Screening only",
-  "screening.key.mainRisk": "lack-of-fusion",
+  "screening.key.mainRisk": "balling (screening)",
   "screening.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -1058,9 +1058,9 @@
    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749"
   },
   "screening.key.metrics": {
-   "width_um": 83.33333333333334,
-   "depth_um": 41.66666666666667,
-   "length_um": 373.3333333333336,
+   "width_um": 133.33333333333334,
+   "depth_um": 66.66666666666667,
+   "length_um": 769.9999999999999,
    "gridResolution_um": [
     11.666666666666769,
     8.333333333333334
@@ -1076,7 +1076,7 @@
    "materialVersion": "lpbf-materials-1",
    "solverBinaryHash": null
   },
-  "screening.key.recommendation": "Reduce hatch/layer spacing; verify penetration experimentally.",
+  "screening.key.recommendation": "Compare with measured tracks before changing process parameters.",
   "screening.key.regime": "conduction assumption",
   "screening.key.requestedBackend": "auto",
   "screening.key.requestedMode": "screening",
@@ -1167,9 +1167,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 83.33333333333334,
-    "depth_um": 41.66666666666667,
-    "length_um": 408.3333333333335,
+    "width_um": 116.66666666666667,
+    "depth_um": 58.333333333333336,
+    "length_um": 840.0,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -1238,10 +1238,10 @@
    ],
    "lackOfFusion": {
     "status": "lack-of-fusion-screened",
-    "ellipseIndex": 2.3615999999999997,
-    "signedMargin": -1.3615999999999997,
-    "overlapDepth_um": 0.0,
-    "maximumHatch_um": 23.33333333333338,
+    "ellipseIndex": 1.2048979591836735,
+    "signedMargin": -0.20489795918367348,
+    "overlapDepth_um": 30.046260628866584,
+    "maximumHatch_um": 84.91826135237999,
     "riskScreened": true,
     "reason": "Only the idealized elliptical overlap condition is evaluated."
    },
@@ -1251,9 +1251,9 @@
     "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
    },
    "balling": {
-    "lengthToWidth": 4.900000000000001,
+    "lengthToWidth": 7.199999999999999,
     "risk": "high",
-    "reason": "L/W ratio 4.90 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "reason": "L/W ratio 7.20 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
    },
    "gasPore": {
     "risk": null,
@@ -1282,7 +1282,7 @@
    ]
   },
   "screeningTi64.key.label": "Screening only",
-  "screeningTi64.key.mainRisk": "lack-of-fusion",
+  "screeningTi64.key.mainRisk": "balling (screening)",
   "screeningTi64.key.material": {
    "solidus_K": 1877.15,
    "liquidus_K": 1933.15,
@@ -1331,9 +1331,9 @@
    "materialRevisionSha256": "a2d15d6c44ecc7c5a283b3ad457cc71cb3820cba03033b47bab697efff5c3c4e"
   },
   "screeningTi64.key.metrics": {
-   "width_um": 83.33333333333334,
-   "depth_um": 41.66666666666667,
-   "length_um": 408.3333333333335,
+   "width_um": 116.66666666666667,
+   "depth_um": 58.333333333333336,
+   "length_um": 840.0,
    "gridResolution_um": [
     11.666666666666769,
     8.333333333333334
@@ -1349,7 +1349,7 @@
    "materialVersion": "lpbf-materials-1",
    "solverBinaryHash": null
   },
-  "screeningTi64.key.recommendation": "Reduce hatch/layer spacing; verify penetration experimentally.",
+  "screeningTi64.key.recommendation": "Compare with measured tracks before changing process parameters.",
   "screeningTi64.key.regime": "conduction assumption",
   "screeningTi64.key.requestedBackend": "auto",
   "screeningTi64.key.requestedMode": "screening",

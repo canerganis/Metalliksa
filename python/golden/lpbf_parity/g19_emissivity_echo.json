@@ -4,9 +4,9 @@
  "group": "G19",
  "description": "Registry emissivity literal 0.35 echoed into p/m per alloy; overrides; 0.36 override rejected",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  8.6,
-  8.3
+  5.1,
+  4.8
  ],
  "recordedTwice": true,
  "observations": {
@@ -261,8 +261,8 @@
   "validate.override.True.emissivity": {
    "error": "ValueError: emissivity must be in [0,1]"
   },
-  "implicit.canonicalSha256": "18c3dce385ce489ff5adda95e81c8eaebe791b926396c50da94ead3daa01f74e",
-  "implicit.orderedTypedSha256": "899f7f243655e59745a84173bbbadf58660da131afe97741e774b0bdd5a2d12c",
+  "implicit.canonicalSha256": "7294fa2c304ef7949a66400a9fc209c2d6398b13bea94c668115d6d6f2abd7f7",
+  "implicit.orderedTypedSha256": "fbdd7eb21b5c516111efbd36b5d5215376be85d8c8cf69af479e86d71e87adc8",
   "implicit.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -314,7 +314,7 @@
   "implicit.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "implicit.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "implicit.key.provenance": "0a8c7b838e9937a93e1609afa11e31e5d9e536310738e70d5b562fb3cb0599c7",
-  "implicit.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "implicit.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "implicit.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "implicit.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "implicit.key.metrics": "1110333dbb63b5bacc73cb8069a0232df03c4f645bb75533cd62f9db2ee458ca",
@@ -369,9 +369,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
