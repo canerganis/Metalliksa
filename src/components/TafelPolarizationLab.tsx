@@ -85,8 +85,8 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
   const [selectedAlloyId, setSelectedAlloyId] = useState<string>("ss316l");
   const [electrodeAreaCm2, setElectrodeAreaCm2] = useState<number>(1.0);
   const [referenceElectrode, setReferenceElectrode] = useState<ReferenceElectrodeType>("SCE");
-  const [customDensity, setCustomDensity] = useState<number>(8.00);
-  const [customEW, setCustomEW] = useState<number>(25.68);
+  const [customDensity, setCustomDensity] = useState<number>(COMMON_ALLOYS[0].density);
+  const [customEW, setCustomEW] = useState<number>(COMMON_ALLOYS[0].equivalentWeight);
   const [electrolyteDesc, setElectrolyteDesc] = useState<string>("3.5 wt% NaCl (Simulated Marine / ASTM G5)");
   const [temperatureC, setTemperatureC] = useState<number>(25);
 
@@ -872,7 +872,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                     type="number"
                     step="0.01"
                     value={customDensity}
-                    onChange={(e) => setCustomDensity(parseFloat(e.target.value) || 8.0)}
+                    onChange={(e) => setCustomDensity(parseFloat(e.target.value) || COMMON_ALLOYS[0].density)}
                     className="w-full bg-[#050810] border border-[#162032] rounded px-2 py-1 text-slate-200"
                   />
                 </div>
@@ -882,7 +882,7 @@ export function TafelPolarizationLab({ onDatasetLoaded, className = "" }: TafelP
                     type="number"
                     step="0.01"
                     value={customEW}
-                    onChange={(e) => setCustomEW(parseFloat(e.target.value) || 25.68)}
+                    onChange={(e) => setCustomEW(parseFloat(e.target.value) || COMMON_ALLOYS[0].equivalentWeight)}
                     className="w-full bg-[#050810] border border-[#162032] rounded px-2 py-1 text-slate-200"
                   />
                 </div>

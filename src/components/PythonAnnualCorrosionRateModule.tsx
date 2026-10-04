@@ -28,6 +28,7 @@ import {
 } from "../types/tafel";
 import { calculatePythonTafelCorrosionRate } from "../services/pythonComputationService";
 import { isPythonValidationError } from "../utils/pythonValidationError";
+import { COMMON_ALLOYS } from "../utils/tafelParser";
 
 interface Props {
   tafelFit?: TafelFitResult | null;
@@ -36,17 +37,25 @@ interface Props {
   onNavigateToTafel?: () => void;
 }
 
-const ALLOY_PRESETS = [
-  { id: "steel-316l", name: "AISI 316L Stainless Steel", density: 7.98, ew: 25.68, category: "Stainless" },
-  { id: "steel-304", name: "AISI 304 Stainless Steel", density: 7.93, ew: 25.12, category: "Stainless" },
-  { id: "steel-1018", name: "Carbon Steel (AISI 1018)", density: 7.87, ew: 27.92, category: "Carbon Steel" },
-  { id: "ti-6al-4v", name: "Titanium Ti-6Al-4V (Grade 5)", density: 4.43, ew: 11.97, category: "Titanium" },
-  { id: "al-7075", name: "Aerospace Al 7075-T6", density: 2.81, ew: 9.15, category: "Aluminum" },
-  { id: "al-6061", name: "Structural Al 6061-T6", density: 2.70, ew: 9.02, category: "Aluminum" },
-  { id: "cu-c110", name: "Pure Copper (ETP C11000)", density: 8.94, ew: 31.77, category: "Copper" },
-  { id: "inconel-718", name: "Inconel 718 Superalloy", density: 8.19, ew: 26.45, category: "Nickel" },
-  { id: "az31b", name: "Magnesium Alloy AZ31B", density: 1.77, ew: 12.28, category: "Magnesium" },
+// density and EW come from src/utils/tafelParser.ts COMMON_ALLOYS, which mirrors
+// python/alloy_registry.py (one source; python/test_phase6a_migration.py checks it).
+// "common" names the COMMON_ALLOYS row for each solver alloy id sent to Python.
+const ALLOY_PRESET_IDS = [
+  { id: "steel-316l", common: "ss316l", name: "AISI 316L Stainless Steel", category: "Stainless" },
+  { id: "steel-304", common: "ss304", name: "AISI 304 Stainless Steel", category: "Stainless" },
+  { id: "steel-1018", common: "steel1018", name: "Carbon Steel (AISI 1018)", category: "Carbon Steel" },
+  { id: "ti-6al-4v", common: "ti64", name: "Titanium Ti-6Al-4V (Grade 5)", category: "Titanium" },
+  { id: "al-7075", common: "al7075", name: "Aerospace Al 7075-T6", category: "Aluminum" },
+  { id: "al-6061", common: "al6061", name: "Structural Al 6061-T6", category: "Aluminum" },
+  { id: "cu-c110", common: "cu_c110", name: "Pure Copper (ETP C11000)", category: "Copper" },
+  { id: "inconel-718", common: "inconel718", name: "Inconel 718 Superalloy", category: "Nickel" },
+  { id: "az31b", common: "az31b", name: "Magnesium Alloy AZ31B", category: "Magnesium" },
 ];
+const ALLOY_PRESETS = ALLOY_PRESET_IDS.map((p) => {
+  const row = COMMON_ALLOYS.find((a) => a.id === p.common);
+  if (!row) throw new Error(`COMMON_ALLOYS has no row ${p.common}`);
+  return { id: p.id, name: p.name, density: row.density, ew: row.equivalentWeight, category: p.category };
+});
 
 export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
   tafelFit,
@@ -56,8 +65,8 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 }) => {
   // Input parameters state, initialized from tafelFit and dataset if available
   const [alloyId, setAlloyId] = useState<string>("steel-316l");
-  const [customDensity, setCustomDensity] = useState<number>(7.98);
-  const [customEw, setCustomEw] = useState<number>(25.68);
+  const [customDensity, setCustomDensity] = useState<number>(ALLOY_PRESETS[0].density);
+  const [customEw, setCustomEw] = useState<number>(ALLOY_PRESETS[0].ew);
   const [initialThicknessMm, setInitialThicknessMm] = useState<number>(5.0);
   const [allowableLossMm, setAllowableLossMm] = useState<number>(1.5);
   const [temperatureC, setTemperatureC] = useState<number>(25.0);
@@ -430,7 +439,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   type="number"
                   step="0.01"
                   value={customDensity}
-                  onChange={(e) => setCustomDensity(parseFloat(e.target.value) || 7.98)}
+                  onChange={(e) => setCustomDensity(parseFloat(e.target.value) || ALLOY_PRESETS[0].density)}
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Density"
                 />
@@ -438,7 +447,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   type="number"
                   step="0.01"
                   value={customEw}
-                  onChange={(e) => setCustomEw(parseFloat(e.target.value) || 25.68)}
+                  onChange={(e) => setCustomEw(parseFloat(e.target.value) || ALLOY_PRESETS[0].ew)}
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="EW"
                 />

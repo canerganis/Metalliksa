@@ -99,6 +99,27 @@ class TafelPresetTest(unittest.TestCase):
         service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
         self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
 
+    def test_ui_preset_tables_read_common_alloys(self):
+        # Fix round item 2: PythonAnnualCorrosionRateModule and TafelPolarizationLab take
+        # density/EW from COMMON_ALLOYS (the registry mirror), not from their own copies.
+        import re
+        comp = HERE.parent / "src" / "components"
+        annual = (comp / "PythonAnnualCorrosionRateModule.tsx").read_text(encoding="utf-8")
+        block = annual.split("const ALLOY_PRESET_IDS", 1)[1].split("];", 1)[0]
+        pairs = re.findall(r'id: "([^"]+)", common: "([^"]+)"', block)
+        self.assertEqual(len(pairs), 9)
+        self.assertNotRegex(block, r"density:|ew:")  # no numeric copy left
+        for solver_id, common_id in pairs:
+            with self.subTest(solver_id=solver_id):
+                self.assertEqual(tafel.corrosion_preset(solver_id), tafel.corrosion_preset(common_id))
+        self.assertIn("density: row.density, ew: row.equivalentWeight", annual)
+        lab = (comp / "TafelPolarizationLab.tsx").read_text(encoding="utf-8")
+        for text in (annual, lab):
+            self.assertNotRegex(text, r"useState<number>\((25\.68|8\.00?|7\.98)\)")
+            self.assertNotRegex(text, r"\|\| (25\.68|8\.0|8\.00|7\.98)\)")
+        self.assertIn("useState<number>(COMMON_ALLOYS[0].density)", lab)
+        self.assertIn("useState<number>(COMMON_ALLOYS[0].equivalentWeight)", lab)
+
     def test_ui_ids_now_resolve_to_their_own_preset(self):
         # TafelPolarizationLab sends src/utils/tafelParser.ts COMMON_ALLOYS ids; before
         # the migration none of them matched and all silently became AISI 316L.
