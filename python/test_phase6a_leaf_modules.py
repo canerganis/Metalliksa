@@ -17,7 +17,8 @@ from lpbf_simulation import IMPLEMENTATION_SOURCE_FILES
 
 HERE = Path(__file__).parent
 LEAF_MODULES = ("physical_constants", "alloy_registry", "input_validation",
-                "alloy_data_kinetics_uq_fatigue")  # phase6a-t2b domain data
+                "alloy_data_kinetics_uq_fatigue",  # phase6a-t2b domain data
+                "murakami_constants")  # engine-fix: shared Murakami C (audit defect 7)
 # Local modules each leaf may import (everything else must be standard library).
 ALLOWED_LOCAL_IMPORTS = {
     "physical_constants": set(),
@@ -26,6 +27,7 @@ ALLOWED_LOCAL_IMPORTS = {
                        "physical_constants"},  # design step (b): computed corrosion EW
     "alloy_data_kinetics_uq_fatigue": set(),  # phase6a-t2b
     "input_validation": {"alloy_registry", "physical_constants"},
+    "murakami_constants": {"input_validation"},  # fx-murakami: ValidationError (unknown location, bad sqrt(area)/HV)
 }
 # Phase 6a tranche 2a domain-data leaf (its own guard: test_alloy_data_calphad_battery_icme).
 ALLOWED_LOCAL_IMPORTS["alloy_registry"].add("alloy_data_calphad_battery_icme")

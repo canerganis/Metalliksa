@@ -3,7 +3,8 @@ import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AEROSPACE_MATERIAL_DATASETS, computeMMPDSEmpiricalStats, type MaterialDataset } from '../src/components/uqLabData';
-import { CouponSummary, CouponWorksheet, couponReportRows, couponWorksheetText } from '../src/components/UqCouponReport';
+import { CouponSummary, CouponWorksheet, UQ_MODEL_STATUS_LABEL, UqModelStatusNote, couponReportRows, couponWorksheetText } from '../src/components/UqCouponReport';
+import { readFileSync } from 'node:fs';
 import { createUqRunSession } from '../src/utils/uqRunSession';
 
 const dataset: MaterialDataset = { ...AEROSPACE_MATERIAL_DATASETS[0], couponSource: 'uploaded', coupons: [0, 1, 2].map(i => ({ id: `test-${i}`, specimenNumber: `S${i}`, heatLotId: '', testTempC: null, yieldStrengthMPa: 100 + 10 * i, utsMPa: 200 + 20 * i, elongationPct: 3 + i, reductionOfAreaPct: null, testStandard: '', evidenceOrigin: 'unknown' })) };
@@ -29,6 +30,20 @@ test('empty and constant coupons never render passing evidence or a manufactured
     if (!values.length) assert.doesNotMatch(markup, /100\.0%/);
   }
   assert.match(couponWorksheetText({ ...dataset, coupons: dataset.coupons.map(c => ({ ...c, evidenceOrigin: 'synthetic' })) }), /Synthetic teaching coupons/);
+});
+
+test('the Sobol view labels the strength model as illustrative and shows the solver modelStatus when present', () => {
+  assert.equal(UQ_MODEL_STATUS_LABEL, 'Illustrative strength model, not calibrated (see modelStatus)');
+  const bare = renderToStaticMarkup(<UqModelStatusNote />);
+  assert.match(bare, /Illustrative strength model, not calibrated/);
+  const full = renderToStaticMarkup(<UqModelStatusNote modelStatus="Illustrative, not calibrated: toy model." />);
+  assert.match(full, /Illustrative strength model, not calibrated/); assert.match(full, /toy model/);
+  // The label is rendered by UQLab next to the Sobol table, fed from the response provenance,
+  // and the solver really emits that note.
+  const lab = readFileSync(new URL('../src/components/UQLab.tsx', import.meta.url), 'utf8');
+  assert.match(lab, /<UqModelStatusNote modelStatus=\{uqResult\.provenance\?\.modelStatus\} \/>/);
+  const solver = readFileSync(new URL('../python/stochastic_uq_mmpds_solver.py', import.meta.url), 'utf8');
+  assert.match(solver, /"modelStatus": "Illustrative, not calibrated/);
 });
 
 test('late UQ success and failure cannot overwrite a newer run or its loading state', async () => {

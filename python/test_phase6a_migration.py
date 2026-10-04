@@ -93,11 +93,15 @@ class TafelPresetTest(unittest.TestCase):
                 preset = tafel.corrosion_preset(ui_id)
                 self.assertEqual(float(density), preset["density_g_cm3"])
                 self.assertEqual(float(ew), preset["ew"])
-        # The client fallbacks default to the 316L preset values, not their own copies.
-        self.assertIn("dataset.metadata.equivalentWeight || COMMON_ALLOYS[0].equivalentWeight", text)
-        self.assertIn("dataset.metadata.density_g_cm3 || COMMON_ALLOYS[0].density", text)
+        # Engine-fix lane (defect 6a): the client fallbacks no longer default to the 316L preset; a missing
+        # equivalent weight / density makes the rate unavailable (tests/tafel-unavailable.test.tsx).
+        self.assertNotIn("COMMON_ALLOYS[0].equivalentWeight", text.split("export function tryAutoFitTafel", 1)[1])
+        self.assertNotIn("COMMON_ALLOYS[0].density", text.split("export function tryAutoFitTafel", 1)[1])
         service = (HERE.parent / "src" / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
-        self.assertIn(f"payload.equivalentWeight || {tafel.corrosion_preset('steel-316l')['ew']})", service)
+        fallback = service.split("export function fallbackClientTafelCorrosionRate", 1)[1].split("\nexport ", 1)[0]
+        self.assertNotIn("24.8205", fallback)
+        self.assertNotIn("7.98", fallback)
+        self.assertNotIn("|| 1.25", fallback)
 
     def test_custom_composition_without_ew_data_is_refused_not_27(self):
         # Fix round item 5: no silent 27.0 g/equivalent when no counted element is known.
@@ -182,12 +186,17 @@ class TafelPresetTest(unittest.TestCase):
             customAtomicWeights={"Fe": 55.845, "Cr": 51.996}))
         self.assertTrue(out["success"])
 
-    def test_missing_alloy_id_still_defaults_to_316l(self):
-        # A documented default for an absent field is not a silent substitution.
+    def test_missing_alloy_id_is_no_longer_defaulted_to_316l(self):
+        # Engine-fix lane (review S4): a request without alloyId and without density / equivalentWeight
+        # does not get the 316L substrate; the rate is unavailable with the reason. (This test used to pin
+        # the 316L default as "documented"; that default was a silent alloy substitution.)
         out = tafel.solve_tafel_corrosion_rate(dict(SOLVE_BASE))
-        self.assertEqual(out["alloyId"], "steel-316l")
-        self.assertEqual(out["alloyName"], "AISI 316L Stainless Steel")
-        self.assertEqual(out["provenance"]["registryAlloyId"], "ss316l")
+        self.assertEqual(out["status"], "unavailable")
+        self.assertIsNone(out["alloyId"])
+        self.assertIsNone(out["alloyName"])
+        self.assertIsNone(out["corrosionRateMmYr"])
+        self.assertIn("no alloyId was sent", out["unavailable"]["substrate"])
+        self.assertIsNone(out["provenance"]["registryAlloyId"])
 
     def test_bare_grade_and_alloy_without_corrosion_data_are_refused(self):
         for name, reason in (("304", "bare-grade"), ("alsi10mg", "no-domain-data"),

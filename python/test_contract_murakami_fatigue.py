@@ -48,18 +48,19 @@ class FatigueContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.Te
         factors = {loc: engine.murakami_geometric_constant(loc) for loc in locations}
         self.assertEqual(factors, {"surface": 1.43, "sub-surface": 1.41, "internal": 1.56})
 
-    def test_recorded_gaps_arithmetic_failures_in_the_paris_integration(self):
-        # Known gaps pinned as current behaviour at main f41e316: fixing one (another lane may fix R = 1)
-        # means updating the contract note and this test.
+    def test_input_rejections_are_validation_errors(self):
+        # fx-murakami: R >= 1, a non-positive amplitude or sqrt(area) are ValidationErrors (HTTP 422),
+        # not ZeroDivisionError / math domain error. No exclusive bound is declared in the contract.
         notes = {f.key: f.note for f in self.operation.input}
-        for payload, error, phrase in (({"stressRatio_R": 1.0}, ZeroDivisionError, "R = 1 fails"),
-                                       ({"stressAmplitude_MPa": 0.0}, ZeroDivisionError, "0 fails"),
-                                       ({"sqrtArea_um": -5.0}, ValueError, "negative value fails")):
+        for payload, code, phrase in (({"stressRatio_R": 1.0}, input_validation.OUT_OF_RANGE, "R < 1"),
+                                      ({"stressAmplitude_MPa": 0.0}, input_validation.NON_POSITIVE, "> 0"),
+                                      ({"sqrtArea_um": -5.0}, input_validation.NON_POSITIVE, "> 0")):
             (key,) = payload
             with self.subTest(key=key):
                 self.assertEqual(self.operation.input_problems(payload), [], "no bound is declared")
-                with self.assertRaises(error):
+                with self.assertRaises(input_validation.ValidationError) as caught:
                     worker_dispatch("fatigue-fracture", payload)
+                self.assertEqual((caught.exception.code, caught.exception.field), (code, key))
                 self.assertIn(phrase, notes[key])
 
 

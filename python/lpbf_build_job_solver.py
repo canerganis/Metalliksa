@@ -486,7 +486,10 @@ def solve_lpbf_build_job(data):
 
     # Normalize paste → defect list before cache key.
     if not data.get("defectSqrtAreas_um") and data.get("defectSqrtAreasPaste"):
-        parsed = parse_defect_sqrt_areas_text(data.get("defectSqrtAreasPaste"))
+        try:
+            parsed = parse_defect_sqrt_areas_text(data.get("defectSqrtAreasPaste"))
+        except ValueError as e:  # input_validation.ValidationError (inf / nan token)
+            return {"success": False, "error": f"Invalid LPBF build-job payload: {e}"}
         if parsed:
             data["defectSqrtAreas_um"] = parsed
 

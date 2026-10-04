@@ -11,6 +11,9 @@ import math
 import re
 from typing import Any, Dict, List, Optional
 
+import input_validation
+import murakami_constants
+
 # Screening defaults when HV not supplied (literature-typical as-built / STA ranges).
 ALLOY_HV_DEFAULTS = {
     "ti6al4v": 340.0,
@@ -26,7 +29,12 @@ PASTE_HINT = (
 
 
 def parse_defect_sqrt_areas_text(text: Optional[str]) -> List[float]:
-    """Parse pasted CSV / whitespace / line-separated √area (µm). Empty → []."""
+    """Parse pasted CSV / whitespace / line-separated √area (µm). Empty → [].
+
+    Non-numeric tokens and non-positive numbers are skipped; "inf" / "nan" tokens
+    are rejected with input_validation.ValidationError (NON_FINITE) instead of being
+    kept (inf) or silently dropped (nan) and poisoning the Gumbel fit.
+    """
     if not text or not str(text).strip():
         return []
     parts = re.split(r"[\s,;|/]+", str(text).strip())
@@ -38,6 +46,10 @@ def parse_defect_sqrt_areas_text(text: Optional[str]) -> List[float]:
             v = float(p)
         except ValueError:
             continue
+        if not math.isfinite(v):
+            raise input_validation.ValidationError(
+                input_validation.NON_FINITE, "defectSqrtAreasPaste",
+                f"defect size {p!r} is not a finite number", {"token": p})
         if v > 0:
             out.append(v)
     return out
@@ -73,10 +85,14 @@ def gumbel_fit_maxima(samples: List[float]) -> Optional[Dict[str, float]]:
 
 
 def murakami_fatigue_limit_MPa(sqrt_area_um: float, hardness_HV: float, location: str = "internal") -> float:
-    area = max(1e-6, float(sqrt_area_um))
-    hv = max(1.0, float(hardness_HV))
-    c = 1.43 if location == "internal" else 1.41
-    return c * (hv + 120.0) / (area ** (1.0 / 6.0))
+    """Murakami sigma_w = C (HV + 120) / sqrt(area)^(1/6) [MPa].
+
+    C comes from murakami_constants (surface 1.43, sub-surface 1.41, internal 1.56;
+    this function used 1.43 for internal and 1.41 for everything else, which is wrong
+    for both). Non-positive / non-finite sqrt_area or HV, or an unknown location,
+    raise input_validation.ValidationError instead of being clamped.
+    """
+    return murakami_constants.murakami_sqrt_area_limit_MPa(sqrt_area_um, hardness_HV, location)
 
 
 def evaluate_murakami_block(
