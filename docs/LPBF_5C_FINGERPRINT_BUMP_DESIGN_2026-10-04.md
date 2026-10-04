@@ -492,11 +492,16 @@ All commands ran in `C:/Users/can02/Projects/metalliksaa/Metalliksa-1-orch-p5c-d
 - B5 step 2 (orch/b5-goldens): all goldens re-recorded twice at `edddf0dc…` in a commit of
   their own (observations unchanged; only the recorded hash, git head and timings moved).
   New cases recorded at `edddf0dc…` document today's behaviour for the corrected-physics bump:
-  - G17 `evaporationModel=True` for Ti-6Al-4V, 316L and AlSi10Mg (AlSi10Mg needs
-    `marangoniMultiplier=1.0`, 300 W, 400 mm/s to reach boiling on the small grid). Every alloy
-    passes IN718's 6.4e6 J/kg to the enthalpy inversion (authority: 8.9e6, 6.25e6, 1.05e7).
-    A harness-side probe with the authority value gives a bit-equal result: the inversion's
-    vapour fraction is discarded, so today L_v does not reach any result byte.
+  - G17 `evaporationModel=True` for Ti-6Al-4V and 316L (80 W) and AlSi10Mg (500 W), all at
+    the default Marangoni multiplier and speed. (AlSi10Mg does not boil at 400 W on the small
+    grid; at 600 W its maximum vapour fraction saturates at 1.0 for both L_v values, at 500 W
+    it does not.) Every alloy passes IN718's 6.4e6 J/kg to the enthalpy inversion (authority:
+    8.9e6, 6.25e6, 1.05e7). A harness-side probe with the authority value gives a bit-equal
+    result: the inversion's vapour fraction is discarded, so today L_v does not reach any
+    result byte; the D1 fix should drift only `evaporation.latentHeatVapUsed_J_kg` and
+    `evaporation.maxVaporFraction`. The probe wraps today's call shape; a bump that changes
+    the call must update the wrapper in the same branch (an unknown shape is recorded as a
+    note, not a crash).
   - G18 IN625 fusion latent heat per path: the Rosenthal melt-pool path
     (`calculate_meltpool_physics`) uses 260 kJ/kg, the screening snapshot 290 kJ/kg, the
     transient specification 227 kJ/kg. The build job resolves only the four alloys

@@ -6,7 +6,7 @@
  "slow": false,
  "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "224ab87bda41365582f114439633eee06c965429",
+ "recordedGitHead": "920cb2202995147bebf3fe18f18aa4ac816de742",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -92,7 +92,7 @@
    6300000.0,
    "0x1.8085800000000p+22"
   ],
-  "buildJob.resolveAlloyId.Inconel 625": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "buildJob.resolveAlloyId.Inconel 625": null,
   "thermalScreening.Inconel 625.latentHeat_J_kg": [
    290000.0,
    "0x1.1b34000000000p+18"

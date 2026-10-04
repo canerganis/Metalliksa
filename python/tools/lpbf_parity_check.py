@@ -499,36 +499,53 @@ def value_hex(value: Any) -> Any:
 # corrected-physics bump has measurable drift: lpbf_simulation passes
 # m.get("latent_heat_vap_J_kg", 6.4e6) to the enthalpy inversion, and material() never
 # carries that key, so every alloy uses IN718's 6.4e6 J/kg (FABLE-B5-OPINION D1).
-# AlSi10Mg does not reach its boiling enthalpy on the SMALL grid at the default Marangoni
-# multiplier (2.2) even at 1200 W, so its case uses marangoniMultiplier=1.0, 300 W, 400 mm/s.
+# All three use the default Marangoni multiplier (2.2) and speed. AlSi10Mg needs 500 W to
+# reach its boiling enthalpy on the SMALL grid (400 W: no inversion call; 600 W saturates the
+# vapour fraction at 1.0 for both L_v values, 500 W does not, so its maxVaporFraction stays
+# sensitive to L_v).
 EVAPORATION_CASES = {
     "ti6al4v": ("Ti-6Al-4V", {**SMALL, "material": "Ti-6Al-4V", "power_W": 80, "evaporationModel": True}),
     "ss316l": ("316L Stainless Steel", {**SMALL, "material": "316L Stainless Steel", "power_W": 80,
                                          "evaporationModel": True}),
-    "alsi10mg": ("AlSi10Mg", {**SMALL, "material": "AlSi10Mg", "power_W": 300, "speed_mm_s": 400,
-                              "marangoniMultiplier": 1.0, "evaporationModel": True}),
+    "alsi10mg": ("AlSi10Mg", {**SMALL, "material": "AlSi10Mg", "power_W": 500, "evaporationModel": True}),
 }
 
 
 def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str,
                               substitute_latent_heat_vap: Optional[float] = None):
     """Run with the evaporation inversion wrapped: record the L_v it receives, change nothing
-    (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe)."""
+    (or, with substitute_latent_heat_vap, pass that value instead: a harness-side probe).
+
+    The wrapper knows today's call shape (L_v as 5th positional or latent_heat_vap_j_kg
+    keyword). Any other shape is recorded as a readable note, so a changed call drifts these
+    observations instead of aborting the whole --check run; the bump that changes the call
+    must update this wrapper in the same branch."""
     import lpbf_evaporation_marangoni as evaporation
-    calls: List[Tuple[float, float]] = []
+    calls: List[Tuple[Any, Any]] = []
     original = evaporation.invert_enthalpy_with_evaporation
+    keyword = "latent_heat_vap_j_kg"
 
     def recording(*args, **kwargs):
         args = list(args)
-        if substitute_latent_heat_vap is not None:
+        known = len(args) > 4 or keyword in kwargs
+        if substitute_latent_heat_vap is not None and known:
             if len(args) > 4:
                 args[4] = substitute_latent_heat_vap
             else:
-                kwargs["latent_heat_vap_j_kg"] = substitute_latent_heat_vap
-        temperature, vapor_fraction = original(*args, **kwargs)
-        used = args[4] if len(args) > 4 else kwargs["latent_heat_vap_j_kg"]
-        calls.append((float(used), float(np.max(vapor_fraction))))
-        return temperature, vapor_fraction
+                kwargs[keyword] = substitute_latent_heat_vap
+        result = original(*args, **kwargs)
+        if not known:
+            used: Any = (f"unrecognised call shape: {len(args)} positional, "
+                         f"keywords {sorted(kwargs)}")
+        else:
+            used = float(args[4] if len(args) > 4 else kwargs[keyword])
+        try:
+            temperature, vapor_fraction = result
+            fraction: Any = float(np.max(vapor_fraction))
+        except (TypeError, ValueError):
+            fraction = f"unrecognised return shape: {type(result).__name__}"
+        calls.append((used, fraction))
+        return result
 
     evaporation.invert_enthalpy_with_evaporation = recording
     try:
@@ -538,6 +555,21 @@ def _recorded_evaporation_run(ctx: CaseContext, raw: Dict[str, Any], prefix: str
     return observations, calls
 
 
+def _distinct(values) -> List[Any]:
+    """Distinct values, floats first (sorted, as [value, hex]), then notes (sorted text)."""
+    values = set(values)
+    floats = sorted(v for v in values if type(v) is float)
+    return [value_hex(v) for v in floats] + sorted(str(v) for v in values if type(v) is not float)
+
+
+def _maximum(values) -> Any:
+    values = list(values)
+    floats = [v for v in values if type(v) is float]
+    if len(floats) != len(values):
+        return sorted({str(v) for v in values if type(v) is not float})
+    return value_hex(max(floats, default=None))
+
+
 def _evaporation_case(ctx: CaseContext, key: str) -> Dict[str, Any]:
     import four_alloy_materials as fam
     import lpbf_material_registry as registry
@@ -545,8 +577,8 @@ def _evaporation_case(ctx: CaseContext, key: str) -> Dict[str, Any]:
     observations, calls = _recorded_evaporation_run(ctx, raw, "result")
     authority = fam.thermal_props(name)["latent_heat_vap_J_kg"]
     observations["evaporation.inversionCalls"] = len(calls)
-    observations["evaporation.latentHeatVapUsed_J_kg"] = [value_hex(v) for v in sorted({c[0] for c in calls})]
-    observations["evaporation.maxVaporFraction"] = value_hex(max((c[1] for c in calls), default=None))
+    observations["evaporation.latentHeatVapUsed_J_kg"] = _distinct(c[0] for c in calls)
+    observations["evaporation.maxVaporFraction"] = _maximum(c[1] for c in calls)
     observations["evaporation.authorityLatentHeatVap_J_kg"] = value_hex(float(authority))
     observations["evaporation.materialSnapshotHasLatentHeatVap"] = "latent_heat_vap_J_kg" in registry.material(name)
     # Harness-side probe (no implementation change): the same run with the authority L_v
@@ -554,10 +586,8 @@ def _evaporation_case(ctx: CaseContext, key: str) -> Dict[str, Any]:
     # vapour fraction is discarded); the corrected bump may legitimately change that.
     probe, probe_calls = _recorded_evaporation_run(ctx, raw, "authorityLatentHeatVap",
                                                    substitute_latent_heat_vap=float(authority))
-    observations["evaporation.authorityProbe.latentHeatVapUsed_J_kg"] = [
-        value_hex(v) for v in sorted({c[0] for c in probe_calls})]
-    observations["evaporation.authorityProbe.maxVaporFraction"] = value_hex(
-        max((c[1] for c in probe_calls), default=None))
+    observations["evaporation.authorityProbe.latentHeatVapUsed_J_kg"] = _distinct(c[0] for c in probe_calls)
+    observations["evaporation.authorityProbe.maxVaporFraction"] = _maximum(c[1] for c in probe_calls)
     observations["evaporation.authorityProbe.resultCanonicalEqual"] = (
         probe["authorityLatentHeatVap.canonicalSha256"] == observations["result.canonicalSha256"])
     observations["evaporation.authorityProbe.artifactsEqual"] = all(
@@ -614,7 +644,8 @@ def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
     table = SECONDARY_THERMOPHYSICAL_DB["Inconel 625"]
     observations["meltpool.in625.table.latent_heat_fusion_J_kg"] = value_hex(table["latent_heat_fusion_J_kg"])
     observations["meltpool.in625.table.latent_heat_vap_J_kg"] = value_hex(table["latent_heat_vap_J_kg"])
-    observe_value(observations, "buildJob.resolveAlloyId.Inconel 625", lambda: resolve_alloy_id("Inconel 625"))
+    status_b, value_b = capture_call(lambda: resolve_alloy_id("Inconel 625"))
+    observations["buildJob.resolveAlloyId.Inconel 625"] = value_b if status_b == "ok" else {"error": value_b}
     for name in ("Inconel 625", "IN625"):
         status_s, screening = capture_call(lambda name=name: registry.thermal_screening_material(name))
         observations[f"thermalScreening.{name}.latentHeat_J_kg"] = (
@@ -656,8 +687,10 @@ def case_g19_emissivity_echo(ctx: CaseContext) -> Dict[str, Any]:
         explicit["explicit.canonicalSha256"] == implicit["implicit.canonicalSha256"])
     # A different user emissivity changes the material dict but not its revision identity:
     # the core contract rejects the run after the solve (fail closed), pinned here.
-    status, value = capture_call(lambda: ctx.run_case({**SMALL, "emissivity": 0.36}, prefix="override036")[1])
-    observations["run.override0.36"] = value["override036.canonicalSha256"] if status == "ok" else {"error": value}
+    rejected = 0.36  # the key carries the value, so a different override changes the golden
+    status, value = capture_call(lambda: ctx.run_case({**SMALL, "emissivity": rejected}, prefix="override")[1])
+    observations[f"run.override{rejected!r}"] = (value["override.canonicalSha256"] if status == "ok"
+                                                 else {"error": value})
     return observations
 
 
@@ -1117,7 +1150,7 @@ CASES: Tuple[Case, ...] = (
     Case("g17_evaporation_316l", "G17", case_g17_evaporation_316l,
          "evaporationModel=True 316L 80 W: L_v passed to the inversion (today IN718's 6.4e6)"),
     Case("g17_evaporation_alsi10mg", "G17", case_g17_evaporation_alsi10mg,
-         "evaporationModel=True AlSi10Mg 300 W 400 mm/s marangoniMultiplier 1.0: L_v passed to the inversion"),
+         "evaporationModel=True AlSi10Mg 500 W: L_v passed to the inversion (today IN718's 6.4e6)"),
     Case("g18_in625_latent_heat", "G18", case_g18_in625_latent_heat,
          "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
          runs_solver=False),

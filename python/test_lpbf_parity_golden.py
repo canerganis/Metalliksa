@@ -124,6 +124,13 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(emissivity["run.override0.36"], {"error": "ValueError: LPBF material revision identity mismatch"})
         self.assertIs(emissivity["explicit0.35.canonicalEqualsImplicit"], True)
 
+    def test_evaporation_wrapper_records_an_unknown_call_shape_as_a_note(self):
+        note = "unrecognised call shape: 4 positional, keywords ['l_vap']"
+        self.assertEqual(parity._distinct([6.4e6, note, 6.4e6]), [[6.4e6, (6.4e6).hex()], note])
+        self.assertEqual(parity._maximum([0.5, 0.25]), [0.5, (0.5).hex()])
+        self.assertEqual(parity._maximum([0.5, note]), [note])
+        self.assertEqual(parity._maximum([]), None)
+
     def _mutated_golden_dir(self, case_id, mutate):
         directory = Path(tempfile.mkdtemp(dir=self.root))
         for path in parity.GOLDEN_DIR.glob("*.json"):
