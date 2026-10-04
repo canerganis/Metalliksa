@@ -107,4 +107,4 @@
   60% { opacity: 0.9; }
   100% { opacity: 0; transform: translate(calc(cos(var(--a)) * var(--d)), calc(sin(var(--a)) * var(--d) + 36px)) scale(0.4); }
 }
-@media (max-width: 30rem) { .mk-foundry .f-caption { top: 10px; right: 12px; font-size: 9px; letter-spacing: 0.08em; } }
+@media (max-width: 30rem) { .mk-foundry .f-caption { top: 10px; right: auto; left: 64%; transform: translateX(-50%); white-space: nowrap; font-size: 9px; letter-spacing: 0.06em; } }

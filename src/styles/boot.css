@@ -224,7 +224,8 @@
 }
 
 @media (max-width: 30rem) {
-  .mk-boot-hero figcaption { top: var(--mk-space-2); right: var(--mk-space-3); font-size: 9px; letter-spacing: 0.06em; }
+  /* The frame is wider than the phone and centred on its 64% line, so centre the caption there. */
+  .mk-boot-hero figcaption { top: var(--mk-space-2); right: auto; left: 64%; transform: translateX(-50%); white-space: nowrap; font-size: 9px; letter-spacing: 0.06em; }
 }
 
 /* Telemetry strip: every cell shows a value returned by an API, or "unavailable".
