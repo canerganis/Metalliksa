@@ -15,8 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 35
-CONTRACTED = ("keyhole-raytracing", "uq-lab")  # Phase 7 wave 1 pilots
+LEGACY_CEILING = 28
+# Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
+CONTRACTED = ("toolpath-studio", "murakami-fatigue", "defect-twin", "adaptive-mitigation", "optical-tomography",
+              "keyhole-raytracing", "ttt-cct-kinetics", "icme-motor", "uq-lab")
 
 
 def _view():
@@ -573,7 +575,9 @@ class ContractedRegistryTests(unittest.TestCase):
     def test_pilot_units_and_wording_are_consistent(self):
         # One symbol per unit: µm (not um/micron), degC (not °C) for temperatures with an offset.
         units = {f.unit for c in self.contracted.values() for op in c.operations for f in op.input if f.unit}
-        self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%"})
+        self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%",
+                                     # Phase 7 wave 2
+                                     "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s"})
         texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
         texts += [n for c in self.contracted.values() for n in c.legacy_notes]
         texts += [c.evidence.note for c in self.contracted.values()]
@@ -592,6 +596,39 @@ class ContractedRegistryTests(unittest.TestCase):
         uq = self.contracted["uq-lab"].operations[0]
         self.assertEqual((uq.method, uq.route, uq.authority.script, uq.authority.timeout_ms, uq.authority.warm),
                          ("POST", "/api/python/stochastic-uq-mmpds", "python/stochastic_uq_mmpds_solver.py", 25000, True))
+
+    def test_wave2_authorities_match_the_legacy_binding(self):
+        # Same operation id, route, authority and deadline the legacy contracts recorded (slice 1).
+        worker = ("lpbf-worker", 20000, False)
+        expected = {
+            "toolpath-studio": ("toolpath-kinematics", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics") + worker,
+            "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
+            "defect-twin": ("stl-voxelize", "/api/python/lpbf-stl-voxelize", "stl-voxelize") + worker,
+            "adaptive-mitigation": ("adaptive-feedforward", "/api/python/lpbf-adaptive-feedforward",
+                                    "adaptive-feedforward") + worker,
+            "optical-tomography": ("optical-tomography", "/api/python/lpbf-optical-tomography",
+                                   "optical-tomography") + worker,
+            "ttt-cct-kinetics": ("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct",
+                                 "python/kinetics_ttt_cct_solver.py", "python-ipc", 25000, True),
+            "icme-motor": ("icme-multiscale-pipeline", "/api/python/icme-multiscale-pipeline",
+                           "python/icme_multiscale_pipeline_solver.py", "python-ipc", 25000, True),
+        }
+        for module_id, values in expected.items():
+            (operation,) = self.contracted[module_id].operations
+            a = operation.authority
+            with self.subTest(module=module_id):
+                self.assertEqual((operation.id, operation.route, a.script or a.worker_method, a.kind, a.timeout_ms,
+                                  a.warm), values)
+                self.assertEqual((operation.method, a.gpu), ("POST", "none"))
+                self.assertEqual(self.contracted[module_id].tests.oracle.status, "pending")
+                self.assertEqual(self.contracted[module_id].seed_derived, mc.SEED_TEXT_FIELDS,
+                                 "wave 2 does not rewrite identity text")
+                # The cited inventory row names the route that is actually served.
+                (row_ref,) = [r for r in self.contracted[module_id].source_refs
+                              if r.startswith("docs/MODULE_EVIDENCE_INVENTORY.md:")]
+                line = int(row_ref.split(":")[1].split("#")[0])
+                inventory = (REPO_ROOT / "docs" / "MODULE_EVIDENCE_INVENTORY.md").read_text(encoding="utf-8")
+                self.assertIn(f"`{operation.route}`", inventory.splitlines()[line - 1])
 
     def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
         core = mr.core_document(mr.registry_document(self.registry))
