@@ -16,7 +16,7 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { deriveProxyCampaignRunBinding } from '../server/lpbfProxyCampaignBinding';
 import { getHostPython } from '../server/pythonRuntime';
 
-const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 function bundleV2Campaign(runRecords: any[], sourceBinding: any) {
   const tracks = runRecords.map(record => {
     const binding = deriveProxyCampaignRunBinding(record, sourceBinding);

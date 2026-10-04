@@ -18,7 +18,7 @@ import { createRunBundleTar } from '../server/lpbfRunBundleTar';
 import { deriveProxyCampaignRunBinding } from '../server/lpbfProxyCampaignBinding';
 import { getHostPython } from '../server/pythonRuntime';
 
-const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 function proxySectionFixture(): { bytes: Buffer; observations: any[] } {
   const python = getHostPython();
   const code = [
