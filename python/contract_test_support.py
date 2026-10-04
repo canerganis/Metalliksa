@@ -6,17 +6,119 @@ rejection, resolvable references, and an oracle test that is skipped with a
 reason while the oracle is pending (which keeps the evidence ceiling capped).
 Authority-specific checks live in the per-module file.
 """
+import ast
 import importlib.util
 import json
 import math
+import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
 import module_contract as mc
 import module_registry as mr
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+PYTHON_DIR = Path(__file__).resolve().parent
+REPO_ROOT = PYTHON_DIR.parent
 GENERATED_JSON = REPO_ROOT / "src" / "generated" / "moduleRegistry.json"
+
+
+# --- Authority helpers (Phase 7 wave 2) ----------------------------------------
+
+def _tree(path: Path) -> ast.Module:
+    return ast.parse(Path(path).read_text(encoding="utf-8"))
+
+
+def function_node(path: Path, name: str) -> ast.AST:
+    """The (first) function definition called ``name`` in a Python file."""
+    for node in ast.walk(_tree(path)):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
+            return node
+    raise AssertionError(f"{name} not found in {path}")
+
+
+def main_block(path: Path) -> ast.AST:
+    """The module-level ``if __name__ == "__main__":`` block of a Python file."""
+    for node in _tree(path).body:
+        if (isinstance(node, ast.If) and isinstance(node.test, ast.Compare)
+                and getattr(node.test.left, "id", None) == "__name__"):
+            return node
+    raise AssertionError(f"no __main__ block in {path}")
+
+
+def _is_get(node: ast.AST, receiver: str) -> bool:
+    return (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "get"
+            and getattr(node.func.value, "id", None) == receiver and bool(node.args)
+            and isinstance(node.args[0], ast.Constant))
+
+
+def get_reads(node: ast.AST, receiver: str) -> dict:
+    """key -> default node (None without one) for every ``<receiver>.get("key", default)`` under ``node``."""
+    return {call.args[0].value: (call.args[1] if len(call.args) > 1 else None)
+            for call in ast.walk(node) if _is_get(call, receiver)}
+
+
+def get_conversions(node: ast.AST, receiver: str) -> dict:
+    """key -> 'float' | 'int' | 'bool' when the get call is wrapped in that conversion, else None."""
+    conversions = {key: None for key in get_reads(node, receiver)}
+    for call in ast.walk(node):
+        if (isinstance(call, ast.Call) and getattr(call.func, "id", None) in ("float", "int", "bool")
+                and call.args and _is_get(call.args[0], receiver)):
+            conversions[call.args[0].args[0].value] = call.func.id
+    return conversions
+
+
+def run_script(script: str, payload: dict) -> tuple:
+    """Run a python/ solver script the way the dispatch route does (JSON on stdin).
+
+    Returns (exit code, parsed stdout). The warm IPC service executes the same entry point.
+    """
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    proc = subprocess.run([sys.executable, "-B", str(PYTHON_DIR / script)], input=json.dumps(payload),
+                          capture_output=True, text=True, cwd=str(PYTHON_DIR), env=env, timeout=300)
+    return proc.returncode, json.loads(proc.stdout)
+
+
+def worker_dispatch(method: str, payload: dict):
+    """Call the LPBF worker RPC handler exactly as python/lpbf_worker.py does for ``method``."""
+    import lpbf_worker_rpc
+    return lpbf_worker_rpc.dispatch({"method": method, "payload": payload}, None, lambda queue: {})
+
+
+class AuthorityReadsMixin:
+    """Checks a single-operation contract against the authority's key reads (AST)."""
+
+    def assert_reads_match(self, operation: mc.Operation, reads: dict) -> None:
+        fields = {f.key: f for f in operation.input}
+        self.assertEqual(set(reads), set(fields) | set(operation.undeclared_input),
+                         "every key the authority reads is declared or recorded as undeclared")
+        for key, node in reads.items():
+            if key not in fields:
+                continue
+            with self.subTest(key=key):
+                default = ast.literal_eval(node)  # declared defaults are literals in the authority (e.g. -1.0)
+                self.assertEqual(fields[key].default, default)
+                self.assertEqual(isinstance(fields[key].default, bool), isinstance(default, bool))
+                self.assertFalse(fields[key].required)
+                self.assertIsNone(fields[key].min, "the authority enforces no bound")
+                self.assertIsNone(fields[key].max, "the authority enforces no bound")
+
+    def assert_conversion_notes(self, operation: mc.Operation, conversions: dict) -> None:
+        """Field notes that state a conversion must match the code; integer fields are int()-converted."""
+        for field in operation.input:
+            with self.subTest(key=field.key):
+                note = field.note or ""
+                if "Converted with float()" in note:
+                    self.assertEqual(conversions[field.key], "float")
+                if "Converted with int()" in note:
+                    self.assertEqual(conversions[field.key], "int")
+                if "Passed unconverted" in note:
+                    self.assertIsNone(conversions[field.key])
+                if "coerces with bool()" in note:
+                    self.assertEqual(conversions[field.key], "bool")
+                if field.value_type == "integer":
+                    self.assertEqual(conversions[field.key], "int")
 
 
 def has_module(name: str) -> bool:
