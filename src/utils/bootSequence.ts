@@ -92,6 +92,22 @@ export function bootSummary(snap: BootSnapshot): string {
   return issues.length ? `${head} · needs attention: ${issues.join(", ")}` : done ? `${head} · no problems reported` : head;
 }
 
+/**
+ * Announcements are split so each is spoken once and never lost with the overlay:
+ * - the overlay k/N line is live while checks run and on a sign-in stop (the overlay stays open);
+ * - the final result is spoken by a persistent region outside the overlay, filled only after the
+ *   overlay has closed (it closes 300 ms after the last check, or earlier on Esc/skip), so it is not
+ *   cut off by the unmount and is not hidden behind aria-modal. A sign-in stop after an early skip is
+ *   announced by the shell's own role="alert" sign-in banner.
+ */
+export function bootCountLive(phase: BootPhase): "polite" | "off" {
+  return phase === "running" || phase === "stopped" ? "polite" : "off";
+}
+
+export function bootAnnouncement(snap: BootSnapshot, overlayOpen: boolean): string {
+  return !overlayOpen && (snap.phase === "complete" || snap.phase === "done") ? bootSummary(snap) : "";
+}
+
 function errorText(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "check failed";
 }

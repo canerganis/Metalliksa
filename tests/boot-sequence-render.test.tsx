@@ -9,13 +9,13 @@ import { TelemetryStrip } from "../src/components/TelemetryStrip";
 import { SilentBoundary } from "../src/components/SilentBoundary";
 import { MODULES } from "../src/data/workspaces";
 
-test("first paint of the boot screen: a labelled dialog, a plain list of five waiting checks and ONE live k/N region, no percent", () => {
+test("first paint of the boot screen: a labelled dialog, a plain list of five waiting checks, a live k/N line, an empty persistent announcer, no percent", () => {
   const html = renderToStaticMarkup(<BootSequence />);
   assert.match(html, /role="dialog"/);
   assert.match(html, /aria-labelledby="boot-title"/);
-  assert.equal((html.match(/role="status"/g) ?? []).length, 1, "a single status region");
-  assert.equal((html.match(/aria-live=/g) ?? []).length, 1, "a single live region");
+  assert.equal((html.match(/aria-live=/g) ?? []).length, 2, "overlay k/N line + persistent announcer, nothing else");
   assert.match(html, /<p id="boot-count"[^>]*role="status" aria-live="polite">0\/5 checks finished<\/p>/);
+  assert.ok(html.startsWith('<p class="mk-sr-only" role="status" aria-live="polite"></p>'), "announcer exists (empty) before the overlay, outside it");
   assert.match(html, /<ol class="mk-boot-rows" aria-label="Start-up checks">/);
   assert.equal((html.match(/<li class="mk-boot-row" data-state="pending">/g) ?? []).length, 5);
   assert.equal((html.match(/>Waiting</g) ?? []).length, 5, "state word once per row");
@@ -46,20 +46,27 @@ test("Esc, backdrop and the button share one skip handler that only hides the ov
 });
 
 // Runs after the first-paint test: it hides the page singleton for the rest of this file.
-test("after a skip the overlay renders nothing while the checks still run to the end", async () => {
+test("after a skip only the persistent announcer remains; checks run to the end and it then carries the final result", async () => {
   const realFetch = globalThis.fetch;
   globalThis.fetch = (async () => {
     throw new TypeError("offline in test");
   }) as typeof fetch;
+  const announcer = (text: string) => `<p class="mk-sr-only" role="status" aria-live="polite">${text}</p>`;
   try {
     const controller = bootController();
     const run = controller.start();
     controller.skip();
-    assert.equal(renderToStaticMarkup(<BootSequence />), "");
+    assert.equal(renderToStaticMarkup(<BootSequence />), announcer(""), "no overlay, nothing announced mid-run");
     await run;
     const snap = controller.getSnapshot();
     assert.equal(snap.finished, 5);
     assert.deepEqual(snap.rows.map((r) => r.state), ["limited", "unavailable", "unavailable", "unavailable", "ok"]);
+    assert.equal(
+      renderToStaticMarkup(<BootSequence />),
+      announcer(
+        "Start-up checks finished 5/5 · needs attention: Runtime configuration limited, Access unavailable, Air-gap unavailable, Python engine unavailable",
+      ),
+    );
   } finally {
     globalThis.fetch = realFetch;
   }

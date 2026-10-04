@@ -10,6 +10,8 @@
   transition: opacity var(--mk-dur-base) var(--mk-ease-out);
 }
 .mk-boot-overlay.is-leaving { opacity: 0; }
+/* Visually hidden, still read by screen readers (persistent boot announcer). */
+.mk-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .mk-boot-panel {
   width: 100%;

@@ -11,7 +11,14 @@ import { fetchRuntimeConfig, runtimeConfigProbe } from "./AirgapBanner";
 import { pythonComputationService } from "../services/pythonComputationService";
 import { MODULES } from "../data/workspaces";
 import { getBootController } from "../services/bootSteps";
-import { BOOT_STATE_TEXT, bootSummary, type BootController, type BootStepState } from "../utils/bootSequence";
+import {
+  BOOT_STATE_TEXT,
+  bootAnnouncement,
+  bootCountLive,
+  bootSummary,
+  type BootController,
+  type BootStepState,
+} from "../utils/bootSequence";
 // Styles: src/styles/boot.css, imported once from src/main.tsx.
 
 const BootHero = lazy(() => import("./BootHero"));
@@ -85,13 +92,19 @@ export function BootSequence() {
     return () => window.clearTimeout(timer);
   }, [snap.phase, snap.animate]);
 
-  if (gone || snap.dismissed) return null;
-
+  const open = !gone && !snap.dismissed;
   // Esc (shared escape stack), backdrop click and the button all hide the overlay; checks keep running.
   const skip = () => controller.skip();
   const stopped = snap.phase === "stopped";
 
+  // The announcer is always the same first child (never remounted), outside the overlay, so a live
+  // region already exists when the final result is written into it after the overlay closes.
   return (
+    <>
+    <p className="mk-sr-only" role="status" aria-live="polite">
+      {bootAnnouncement(snap, open)}
+    </p>
+    {open && (
     <AccessibleModal
       open
       onClose={skip}
@@ -104,8 +117,8 @@ export function BootSequence() {
       <div className="mk-boot" data-animate={String(snap.animate)} data-phase={snap.phase}>
         <p className="mk-boot-kicker">Metalliksa · local start-up</p>
         <h2 id="boot-title" className="mk-boot-title">Start-up checks</h2>
-        {/* The single live region: k/N progress, every problem by name, and the final result. */}
-        <p id="boot-count" className="mk-boot-count" role="status" aria-live="polite">
+        {/* Live while checks run and on a sign-in stop; the final result is spoken by the announcer above. */}
+        <p id="boot-count" className="mk-boot-count" role="status" aria-live={bootCountLive(snap.phase)}>
           {bootSummary(snap)}
         </p>
         <div className="mk-boot-trace" aria-hidden="true" />
@@ -137,5 +150,7 @@ export function BootSequence() {
         </div>
       </div>
     </AccessibleModal>
+    )}
+    </>
   );
 }

@@ -120,8 +120,11 @@ test("new boot and telemetry components use no literal or palette colors and no 
 
 test("boot rows are a plain list with one live k/N region, the overlay reuses AccessibleModal, the hero stays lazy", () => {
   const boot = read("src/components/BootSequence.tsx");
-  assert.equal((boot.match(/aria-live=/g) ?? []).length, 1, "exactly one live region");
-  assert.match(boot, /<p id="boot-count" className="mk-boot-count" role="status" aria-live="polite">/);
+  assert.equal((boot.match(/aria-live=/g) ?? []).length, 2, "the overlay k/N line and the persistent announcer only");
+  assert.match(boot, /<p id="boot-count" className="mk-boot-count" role="status" aria-live=\{bootCountLive\(snap\.phase\)\}>/);
+  assert.match(boot, /<p className="mk-sr-only" role="status" aria-live="polite">\s*\{bootAnnouncement\(snap, open\)\}\s*<\/p>\s*\{open && \(/,
+    "announcer is a stable first child; only the overlay is conditional (a remounted live region would not announce)");
+  assert.doesNotMatch(boot, /if \(!open\) return/);
   assert.match(boot, /<li key=\{row\.id\} className="mk-boot-row"/);
   assert.doesNotMatch(boot, /<li[^>]*role=/, "list items keep listitem semantics");
   assert.match(boot, /<AccessibleModal[\s\S]*labelledBy="boot-title"/);

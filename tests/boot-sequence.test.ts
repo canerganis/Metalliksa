@@ -3,6 +3,8 @@ import { test } from "node:test";
 import {
   BOOT_EXIT_DELAY_MS,
   BOOT_STEP_TIMEOUT_MS,
+  bootAnnouncement,
+  bootCountLive,
   bootSummary,
   createBootController,
   type BootOutcome,
@@ -365,4 +367,35 @@ test("rows start without a detail so the state word is not repeated ('Waiting Wa
   const c = createBootController({ steps: [step("a", ok())] });
   assert.equal(c.getSnapshot().rows[0].state, "pending");
   assert.equal(c.getSnapshot().rows[0].detail, "");
+});
+
+test("final result survives the overlay unmount (reduced motion / skip flag): spoken once, by the persistent announcer", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const c = createBootController({ steps: [step("a", ok()), step("b", async () => ({ state: "limited", detail: "x" }))], reducedMotion: true });
+  assert.equal(bootCountLive(c.getSnapshot().phase), "polite", "progress is live in the overlay while running");
+  assert.equal(bootAnnouncement(c.getSnapshot(), true), "");
+  void c.start();
+  await flush();
+  const complete = c.getSnapshot();
+  assert.equal(complete.phase, "complete");
+  assert.equal(bootCountLive(complete.phase), "off", "the overlay does not try to speak the final result 300 ms before it unmounts");
+  assert.equal(bootAnnouncement(complete, true), "", "nothing from the announcer while the overlay (aria-modal) is still open");
+  t.mock.timers.tick(300);
+  const done = c.getSnapshot();
+  assert.equal(done.phase, "done");
+  // With reduced motion or the skip flag, BootSequence unmounts the overlay at "done" (open = false).
+  assert.equal(bootAnnouncement(done, false), "Start-up checks finished 2/2 · needs attention: b limited");
+});
+
+test("a sign-in stop is spoken by the overlay (it stays open), never repeated by the announcer", () => {
+  const stopped: BootSnapshot = {
+    rows: [{ id: "access", label: "Access", state: "blocked", detail: "Sign-in required" }],
+    phase: "stopped",
+    finished: 1,
+    total: 1,
+    animate: false,
+    dismissed: false,
+  };
+  assert.equal(bootCountLive("stopped"), "polite");
+  assert.equal(bootAnnouncement(stopped, false), "", "after Esc the shell's role=alert sign-in banner takes over");
 });
