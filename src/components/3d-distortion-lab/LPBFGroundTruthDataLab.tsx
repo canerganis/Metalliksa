@@ -617,7 +617,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
             <div className="flex items-center gap-2">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
               <span className="text-xs font-mono text-slate-400">Regime:</span>
-              <select
+              <select aria-label="Regime"
                 value={regimeFilter}
                 onChange={(e) => setRegimeFilter(e.target.value)}
                 className="bg-[#0c121e] border border-[#1e293b] rounded-lg px-2.5 py-1 text-xs font-mono text-slate-200 focus:border-sky-400 focus:outline-none"
@@ -1170,7 +1170,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Laser Power (P)</span>
                   <span className="text-sky-400 font-bold">{calcPower_W} W</span>
                 </div>
-                <input
+                <input aria-label="Laser Power (P)"
                   type="range"
                   min={50}
                   max={500}
@@ -1192,7 +1192,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Scan Speed (v)</span>
                   <span className="text-cyan-400 font-bold">{calcSpeed_mm_s} mm/s</span>
                 </div>
-                <input
+                <input aria-label="Scan Speed (v)"
                   type="range"
                   min={200}
                   max={2500}
@@ -1214,7 +1214,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Hatch Spacing (h)</span>
                   <span className="text-amber-400 font-bold">{calcHatch_um} µm</span>
                 </div>
-                <input
+                <input aria-label="Hatch Spacing (h)"
                   type="range"
                   min={40}
                   max={200}
@@ -1236,7 +1236,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Layer Thickness (t)</span>
                   <span className="text-purple-400 font-bold">{calcLayer_um} µm</span>
                 </div>
-                <input
+                <input aria-label="Layer Thickness (t)"
                   type="range"
                   min={20}
                   max={80}
@@ -1258,7 +1258,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Beam Spot Diameter (d)</span>
                   <span className="text-emerald-400 font-bold">{calcSpot_um} µm</span>
                 </div>
-                <input
+                <input aria-label="Beam Spot Diameter (d)"
                   type="range"
                   min={40}
                   max={150}
@@ -1280,7 +1280,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   <span className="text-slate-300 font-semibold">Alloy Preset</span>
                   <span className="text-rose-400 font-bold">η = {calcAbsorptivity}</span>
                 </div>
-                <select
+                <select aria-label="Alloy Preset"
                   value={selectedAlloy}
                   onChange={(e) => {
                     const newAlloy = e.target.value as LPBFAlloyId;
@@ -1512,7 +1512,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Laser Power (P):</span>
                       <span className="font-bold">{isoVedA_Power} W</span>
                     </div>
-                    <input
+                    <input aria-label="Condition A laser power (P)"
                       type="range"
                       min={100}
                       max={450}
@@ -1528,7 +1528,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Scan Speed (v):</span>
                       <span className="font-bold">{isoVedA_Speed} mm/s</span>
                     </div>
-                    <input
+                    <input aria-label="Condition A scan speed (v)"
                       type="range"
                       min={300}
                       max={2000}
@@ -1544,7 +1544,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Beam Diameter (d):</span>
                       <span className="font-bold">{isoVedA_Spot} µm</span>
                     </div>
-                    <input
+                    <input aria-label="Condition A beam diameter (d)"
                       type="range"
                       min={40}
                       max={150}
@@ -1590,7 +1590,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Laser Power (P):</span>
                       <span className="font-bold">{isoVedB_Power} W</span>
                     </div>
-                    <input
+                    <input aria-label="Condition B laser power (P)"
                       type="range"
                       min={50}
                       max={350}
@@ -1606,7 +1606,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Scan Speed (v):</span>
                       <span className="font-bold">{isoVedB_Speed} mm/s</span>
                     </div>
-                    <input
+                    <input aria-label="Condition B scan speed (v)"
                       type="range"
                       min={200}
                       max={1200}
@@ -1622,7 +1622,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                       <span>Beam Diameter (d):</span>
                       <span className="font-bold">{isoVedB_Spot} µm</span>
                     </div>
-                    <input
+                    <input aria-label="Condition B beam diameter (d)"
                       type="range"
                       min={40}
                       max={160}
@@ -1701,7 +1701,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                   <div>
                     <label className="block text-slate-400 mb-1">Build Job Name / Run ID</label>
-                    <input
+                    <input aria-label="Build Job Name / Run ID"
                       type="text"
                       value={formBuildJob}
                       onChange={(e) => setFormBuildJob(e.target.value)}
@@ -1711,7 +1711,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Machine Model</label>
-                    <input
+                    <input aria-label="Machine Model"
                       type="text"
                       value={formMachine}
                       onChange={(e) => setFormMachine(e.target.value)}
@@ -1721,7 +1721,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Target Alloy</label>
-                    <select
+                    <select aria-label="Target Alloy"
                       value={selectedAlloy}
                       onChange={(e) => setSelectedAlloy(e.target.value as LPBFAlloyId)}
                       className="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2 text-white"
@@ -1733,7 +1733,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Powder lot (optional)</label>
-                    <input
+                    <input aria-label="Powder lot (optional)"
                       type="text"
                       value={formPowderLot}
                       onChange={(e) => setFormPowderLot(e.target.value)}
@@ -1743,7 +1743,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">D10 (µm, optional)</label>
-                    <input
+                    <input aria-label="D10 (µm, optional)"
                       type="number"
                       value={formPowderD10}
                       onChange={(e) => setFormPowderD10(e.target.value)}
@@ -1753,7 +1753,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">D50 (µm, optional)</label>
-                    <input
+                    <input aria-label="D50 (µm, optional)"
                       type="number"
                       value={formPowderD50}
                       onChange={(e) => setFormPowderD50(e.target.value)}
@@ -1763,7 +1763,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">D90 (µm, optional)</label>
-                    <input
+                    <input aria-label="D90 (µm, optional)"
                       type="number"
                       value={formPowderD90}
                       onChange={(e) => setFormPowderD90(e.target.value)}
@@ -1785,7 +1785,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
                   <div>
                     <label className="block text-slate-400 mb-1">Power (W)</label>
-                    <input
+                    <input aria-label="Power (W)"
                       type="number"
                       value={formPower}
                       onChange={(e) => setFormPower(Number(e.target.value))}
@@ -1795,7 +1795,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Speed (mm/s)</label>
-                    <input
+                    <input aria-label="Speed (mm/s)"
                       type="number"
                       value={formSpeed}
                       onChange={(e) => setFormSpeed(Number(e.target.value))}
@@ -1805,7 +1805,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Hatch (µm)</label>
-                    <input
+                    <input aria-label="Hatch (µm)"
                       type="number"
                       value={formHatch}
                       onChange={(e) => setFormHatch(Number(e.target.value))}
@@ -1815,7 +1815,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Layer (µm)</label>
-                    <input
+                    <input aria-label="Layer (µm)"
                       type="number"
                       value={formLayer}
                       onChange={(e) => setFormLayer(Number(e.target.value))}
@@ -1825,7 +1825,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Spot Size (µm)</label>
-                    <input
+                    <input aria-label="Spot Size (µm)"
                       type="number"
                       value={formSpot}
                       onChange={(e) => setFormSpot(Number(e.target.value))}
@@ -1835,7 +1835,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Scan Strategy</label>
-                    <select
+                    <select aria-label="Scan Strategy"
                       value={formStrategy}
                       onChange={(e) => setFormStrategy(e.target.value)}
                       className="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2 text-white"
@@ -1856,7 +1856,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
                   <div>
                     <label className="block text-slate-400 mb-1">Sample Code</label>
-                    <input
+                    <input aria-label="Sample Code"
                       type="text"
                       value={formSampleCode}
                       onChange={(e) => setFormSampleCode(e.target.value)}
@@ -1866,7 +1866,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Orientation</label>
-                    <select
+                    <select aria-label="Orientation"
                       value={formOrientation}
                       onChange={(e) => setFormOrientation(Number(e.target.value) as any)}
                       className="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2 text-white"
@@ -1878,7 +1878,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Heat Treatment</label>
-                    <select
+                    <select aria-label="Heat Treatment"
                       value={formHeatTreatment}
                       onChange={(e) => setFormHeatTreatment(e.target.value)}
                       className="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2 text-white"
@@ -1891,7 +1891,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Relative Density (%)</label>
-                    <input
+                    <input aria-label="Relative Density (%)"
                       type="number"
                       step={0.01}
                       value={formDensityPct}
@@ -1902,7 +1902,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">UTS (MPa)</label>
-                    <input
+                    <input aria-label="UTS (MPa)"
                       type="number"
                       value={formUTS}
                       onChange={(e) => setFormUTS(Number(e.target.value))}
@@ -1911,7 +1911,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Elongation (%)</label>
-                    <input
+                    <input aria-label="Elongation (%)"
                       type="number"
                       step={0.1}
                       value={formElongation}
@@ -1930,7 +1930,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                   <div>
                     <label className="block text-slate-400 mb-1">Citation / Lab Report</label>
-                    <input
+                    <input aria-label="Citation / Lab Report"
                       type="text"
                       value={formCitation}
                       onChange={(e) => setFormCitation(e.target.value)}
@@ -1940,7 +1940,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">DOI or Internal Hash</label>
-                    <input
+                    <input aria-label="DOI or Internal Hash"
                       type="text"
                       value={formDoi}
                       onChange={(e) => setFormDoi(e.target.value)}
@@ -1950,7 +1950,7 @@ export const LPBFGroundTruthDataLab: React.FC<LPBFGroundTruthDataLabProps> = ({
                   </div>
                   <div>
                     <label className="block text-slate-400 mb-1">Testing Standards Used</label>
-                    <input
+                    <input aria-label="Testing Standards Used"
                       type="text"
                       value={formStandard}
                       onChange={(e) => setFormStandard(e.target.value)}

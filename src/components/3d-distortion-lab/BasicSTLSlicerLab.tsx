@@ -1385,7 +1385,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
 
               {/* Scrubber Slider */}
               <div className="relative">
-                <input
+                <input aria-label="Layer scrubber"
                   type="range"
                   min={1}
                   max={Math.max(1, stackSummary.totalLayers)}
@@ -1460,7 +1460,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
             {/* Material Selection */}
             <div className="space-y-1.5">
               <label className="text-xs text-slate-400 font-bold">Alloy Material Preset</label>
-              <select
+              <select aria-label="Alloy Material Preset"
                 value=""
                 onChange={(e) => { if (e.target.value) loadSharedPreset(e.target.value); }}
                 className="w-full bg-[#0c1424] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
@@ -1509,7 +1509,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Hatch Spacing (h_s):</span>
                 <span className="text-emerald-300 font-bold font-mono">{hatchSpacing_um} µm</span>
               </div>
-              <input
+              <input aria-label="Hatch Spacing (h_s)"
                 type="range"
                 min={10}
                 max={1000}
@@ -1535,7 +1535,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Laser Power (P):</span>
                 <span className="text-amber-300 font-bold font-mono">{laserPower_W} W</span>
               </div>
-              <input
+              <input aria-label="Laser Power (P)"
                 type="range"
                 min={10}
                 max={1500}
@@ -1556,7 +1556,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Scan Velocity (v_scan):</span>
                 <span className="text-sky-300 font-bold font-mono">{scanSpeed_mms} mm/s</span>
               </div>
-              <input
+              <input aria-label="Scan Velocity (v_scan)"
                 type="range"
                 min={10}
                 max={10000}
@@ -1577,7 +1577,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Recoat Wiper Time / Layer:</span>
                 <span className="text-purple-300 font-bold font-mono">{recoatTimePerLayer_s} s</span>
               </div>
-              <input
+              <input aria-label="Recoat Wiper Time per Layer"
                 type="range"
                 min={5}
                 max={20}

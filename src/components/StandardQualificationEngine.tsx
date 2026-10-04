@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useEscapeToClose } from "./AccessibleModal";
+import { AccessibleModal } from "./AccessibleModal";
 import {
   ShieldCheck,
   Award,
@@ -484,7 +484,6 @@ export const StandardQualificationEngine: React.FC = () => {
 
   // Certificate of Conformance (CoC) Export Modal State
   const [showCocModal, setShowCocModal] = useState<boolean>(false);
-  useEscapeToClose(showCocModal, () => setShowCocModal(false));
   const [cocEngineerName, setCocEngineerName] = useState<string>("Materials engineer (placeholder)");
   const [cocFacility, setCocFacility] = useState<string>("Engineering screening workbench");
   const [cocProgramName, setCocProgramName] = useState<string>("Generic structural coupon screening");
@@ -1410,8 +1409,13 @@ export const StandardQualificationEngine: React.FC = () => {
       {/* AS9100 / MIL-HDBK-5 OFFICIAL CERTIFICATE OF CONFORMANCE (CoC) MODAL       */}
       {/* ========================================================================= */}
       {showCocModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto font-mono">
-          <div role="dialog" aria-modal="true" aria-label="Certificate of conformance" className="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+        <AccessibleModal
+          open
+          onClose={() => setShowCocModal(false)}
+          label="Certificate of conformance"
+          overlayClassName="p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto font-mono"
+          panelClassName="bg-[#090e18] border border-[#1e2d46] rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden"
+        >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#162032] bg-[#0c1322]">
               <div className="flex items-center gap-3">
@@ -1685,8 +1689,7 @@ export const StandardQualificationEngine: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

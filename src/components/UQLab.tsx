@@ -1,5 +1,5 @@
 import { createUqRunSession } from '../utils/uqRunSession';
-import { useEscapeToClose } from "./AccessibleModal";
+import { AccessibleModal } from "./AccessibleModal";
 import { CouponSummary, CouponWorksheet, formatUqNumber } from './UqCouponReport';
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -105,7 +105,6 @@ export function UQLab({ onNavigate }: UQLabProps) {
   // File Upload Ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSynthesizeModalOpen, setIsSynthesizeModalOpen] = useState<boolean>(false);
-  useEscapeToClose(isSynthesizeModalOpen, () => setIsSynthesizeModalOpen(false));
   const [synthSampleSize, setSynthSampleSize] = useState<number>(40);
   const [synthLotCount, setSynthLotCount] = useState<number>(4);
 
@@ -1168,8 +1167,13 @@ export function UQLab({ onNavigate }: UQLabProps) {
       {/* SYNTHESIZE BATCH MODAL */}
       {/* ==================================================================== */}
       {isSynthesizeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div role="dialog" aria-modal="true" aria-label="Synthesize coupon data" className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+        <AccessibleModal
+          open
+          onClose={() => setIsSynthesizeModalOpen(false)}
+          label="Synthesize coupon data"
+          overlayClassName="bg-black/70 backdrop-blur-sm p-4"
+          panelClassName="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl"
+        >
             {errorMsg && <p role="alert" className="text-sm text-rose-300">{errorMsg}</p>}
             <div className="flex items-center justify-between">
               <h4 className="text-base font-bold text-slate-100 flex items-center gap-2">
@@ -1228,8 +1232,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
                 Generate Coupons
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

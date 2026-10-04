@@ -127,7 +127,7 @@ export const LpbfToolpathStudioLab: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Toolpath Text</label>
-            <textarea
+            <textarea aria-label="Toolpath Text"
               rows={8}
               value={toolpathText}
               onChange={e => setToolpathText(e.target.value)}
@@ -163,7 +163,7 @@ export const LpbfToolpathStudioLab: React.FC = () => {
                 <span className="text-xs font-medium text-white block">Skywriting Mode</span>
                 <span className="text-[10px] text-gray-400 block">Laser only fires at steady-state velocity</span>
               </div>
-              <input
+              <input aria-label="Skywriting Mode"
                 type="checkbox"
                 checked={skywriting}
                 onChange={e => setSkywriting(e.target.checked)}

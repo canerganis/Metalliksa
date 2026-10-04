@@ -152,6 +152,35 @@ export function nextTrapIndex(count: number, current: number, shiftKey: boolean)
   return current === -1 || current >= count - 1 ? 0 : null;
 }
 
+export interface FocusMemory<T = unknown> {
+  opened: boolean;
+  previous: T | null;
+}
+
+/** Pure: records the focused element once per open, before any child autoFocus can move focus. */
+export function rememberFocusOnOpen<T>(memory: FocusMemory<T>, open: boolean, active: T | null): void {
+  if (open && !memory.opened) {
+    memory.opened = true;
+    memory.previous = active;
+  }
+}
+
+/** Pure: returns the element to restore and resets the memory for the next open. */
+export function takeFocusMemory<T>(memory: FocusMemory<T>): T | null {
+  const previous = memory.previous;
+  memory.opened = false;
+  memory.previous = null;
+  return previous;
+}
+
+/**
+ * Pure backdrop rule (previous click semantics): close only for a primary-button click whose press
+ * started on the overlay itself and whose click target is the overlay itself.
+ */
+export function shouldCloseOnBackdropClick(input: { pressStartedOnOverlay: boolean; targetIsOverlay: boolean; button: number }): boolean {
+  return input.button === 0 && input.pressStartedOnOverlay && input.targetIsOverlay;
+}
+
 export interface ScrollLockState {
   count: number;
   original: string;
@@ -207,18 +236,28 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
   children,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const focusMemory = useRef<FocusMemory<HTMLElement>>({ opened: false, previous: null });
+  const pressStartedOnOverlay = useRef(false);
   useEscapeToClose(open, onClose);
+  // Render phase on purpose: React applies a child's autoFocus during commit, before any effect of this
+  // component runs, so the previously focused element must be captured before that.
+  rememberFocusOnOpen(
+    focusMemory.current,
+    open,
+    typeof document !== "undefined" && document.activeElement instanceof HTMLElement ? document.activeElement : null,
+  );
 
   // Focus management: depends only on `open`, so toggling other props never moves focus.
   useEffect(() => {
     if (!open) return undefined;
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const memory = focusMemory.current;
     const panel = panelRef.current;
     if (panel && !panel.contains(document.activeElement)) {
       const first = getTabbableElements(panel)[0];
       (first ?? panel).focus();
     }
     return () => {
+      const previous = takeFocusMemory(memory);
       if (previous && previous.isConnected) previous.focus();
     };
   }, [open]);
@@ -262,7 +301,16 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center ${overlayClassName}`}
-      onMouseDown={closeOnBackdrop ? (event) => { if (event.target === event.currentTarget) onClose(); } : undefined}
+      onMouseDown={closeOnBackdrop ? (event) => { pressStartedOnOverlay.current = event.button === 0 && event.target === event.currentTarget; } : undefined}
+      onClick={
+        closeOnBackdrop
+          ? (event) => {
+              const started = pressStartedOnOverlay.current;
+              pressStartedOnOverlay.current = false;
+              if (shouldCloseOnBackdropClick({ pressStartedOnOverlay: started, targetIsOverlay: event.target === event.currentTarget, button: event.button })) onClose();
+            }
+          : undefined
+      }
     >
       <div
         ref={panelRef}

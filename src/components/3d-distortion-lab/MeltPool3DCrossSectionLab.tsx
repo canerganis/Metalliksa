@@ -1049,7 +1049,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                 <div className="absolute bottom-3 left-3 right-3 p-2.5 rounded-xl bg-[#090e18]/90 backdrop-blur-md border border-slate-700/70 flex items-center gap-3">
                   <Scissors className="w-4 h-4 text-sky-400 shrink-0" />
                   <span className="text-[11px] text-slate-300 shrink-0">Section Plane Shift:</span>
-                  <input
+                  <input aria-label="Section Plane Shift"
                     type="range"
                     min={-120}
                     max={120}

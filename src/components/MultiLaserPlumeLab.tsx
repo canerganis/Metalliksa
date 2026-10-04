@@ -133,7 +133,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-gray-400 mb-1">Inert Gas Type</label>
-                <select
+                <select aria-label="Inert Gas Type"
                   value={gasType}
                   onChange={(e) => setGasType(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded p-1.5 text-white"
@@ -144,7 +144,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Cross-Flow Velocity: {gasVelocity} m/s</label>
-                <input
+                <input aria-label="Cross-Flow Velocity"
                   type="range"
                   min="0.5"
                   max="5.0"
@@ -156,7 +156,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Flow Direction Angle: {gasAngle}°</label>
-                <input
+                <input aria-label="Flow Direction Angle"
                   type="range"
                   min="0"
                   max="360"
@@ -175,7 +175,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-gray-400 mb-1">Nominal Power: {laserPower} W</label>
-                <input
+                <input aria-label="Nominal Power"
                   type="range"
                   min="100"
                   max="500"
@@ -187,7 +187,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Scan Velocity: {laserSpeed} mm/s</label>
-                <input
+                <input aria-label="Scan Velocity"
                   type="range"
                   min="400"
                   max="2000"
@@ -199,7 +199,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Laser 2 Downwind X-Offset: {downwindOffset} mm</label>
-                <input
+                <input aria-label="Laser 2 Downwind X-Offset"
                   type="range"
                   min="0"
                   max="30"
@@ -211,7 +211,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Laser 2 Transverse Y-Separation: {beamSeparationY} mm</label>
-                <input
+                <input aria-label="Laser 2 Transverse Y-Separation"
                   type="range"
                   min="0"
                   max="10"
@@ -230,7 +230,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-gray-400 mb-1">Plume Width (σ_p): {sigmaPlume} mm</label>
-                <input
+                <input aria-label="Plume Width (σ_p)"
                   type="range"
                   min="1.0"
                   max="5.0"
@@ -242,7 +242,7 @@ export const MultiLaserPlumeLab: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Downwind Decay Length: {decayLength} mm</label>
-                <input
+                <input aria-label="Downwind Decay Length"
                   type="range"
                   min="10.0"
                   max="60.0"
