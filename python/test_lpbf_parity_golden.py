@@ -11,8 +11,10 @@ numerical tolerance, a changed material value and an unpinned implementation
 each make the check fail.
 """
 
+import contextlib
 import copy
 import importlib.util
+import io
 import json
 import os
 import shutil
@@ -328,6 +330,81 @@ class ParityHarnessTests(unittest.TestCase):
         with patch.object(bump, "GOLDEN_DIR", directory):
             with self.assertRaisesRegex(SystemExit, "goldens not recorded at fromHash"):
                 bump.build_record(GOLDEN_REVISION, False, False, allow_same_hash=True)
+
+    def _check(self, *args):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            code = parity.main(["--check", "--work-root", str(self.root), *args])
+        return code, output.getvalue()
+
+    def _synthetic_drift_dir(self):
+        # Synthetic drift fixture: the G18 golden says the melt-pool table holds 250 kJ/kg and
+        # the G12 goldens are untouched, so only G18 differs from the current implementation.
+        def mutate(observations):
+            observations["meltpool.in625.table.latent_heat_fusion_J_kg"] = [250000.0, (250000.0).hex()]
+        return self._mutated_golden_dir("g18_in625_latent_heat", mutate)
+
+    def test_expect_drift_allows_only_the_named_case_and_reports_hex_values(self):
+        cases = ["--case", "g18_in625_latent_heat", "--case", "g12_analytical_modules"]
+        with patch.object(parity, "GOLDEN_DIR", self._synthetic_drift_dir()):
+            code, output = self._check(*cases)
+            self.assertEqual(code, 1, output)  # unlisted drift fails
+            self.assertIn("FAIL g18_in625_latent_heat", output)
+            code, output = self._check(*cases, "--expect-drift", "g18_in625_latent_heat")
+            self.assertEqual(code, 0, output)
+            self.assertIn("DRIFT g18_in625_latent_heat", output)
+            self.assertIn("PASS g12_analytical_modules", output)
+            self.assertIn("DRIFT meltpool.in625.table.latent_heat_fusion_J_kg: 250000.0 (0x1.e848000000000p+17)"
+                          " -> 260000.0 (0x1.fbd0000000000p+17)", output)
+            self.assertIn("RESULT: PASS (planned drift in g18_in625_latent_heat)", output)
+
+    def test_expect_drift_with_a_wrong_allowlist_fails(self):
+        cases = ["--case", "g18_in625_latent_heat", "--case", "g12_analytical_modules"]
+        with patch.object(parity, "GOLDEN_DIR", self._synthetic_drift_dir()):
+            # Wrong case named: the real drift is unlisted AND the named case is stale.
+            code, output = self._check(*cases, "--expect-drift", "g12_analytical_modules")
+            self.assertEqual(code, 1, output)
+            self.assertIn("FAIL g18_in625_latent_heat", output)
+            self.assertIn("FAIL g12_analytical_modules", output)
+            self.assertIn("stale --expect-drift entry", output)
+            # Right case plus a stale extra one still fails.
+            code, output = self._check(*cases, "--expect-drift", "g18_in625_latent_heat,g12_analytical_modules")
+            self.assertEqual(code, 1, output)
+            self.assertIn("DRIFT g18_in625_latent_heat", output)
+            self.assertIn("RESULT: FAIL (1 case(s))", output)
+            # A named case that is not selected cannot prove its drift.
+            code, output = self._check("--case", "g18_in625_latent_heat",
+                                       "--expect-drift", "g18_in625_latent_heat,g12_analytical_modules")
+            self.assertEqual(code, 1, output)
+            self.assertIn("FAIL g12_analytical_modules: named in --expect-drift but not selected", output)
+        # Without any drift the allowlist is stale.
+        code, output = self._check("--case", "g12_analytical_modules", "--expect-drift", "g12_analytical_modules")
+        self.assertEqual(code, 1, output)
+        self.assertIn("stale --expect-drift entry", output)
+        with self.assertRaisesRegex(SystemExit, "unknown case"):
+            self._check("--case", "g12_analytical_modules", "--expect-drift", "g99_missing")
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            parity.main(["--record", "--case", "g12_analytical_modules", "--expect-drift", "g12_analytical_modules"])
+
+    def test_expect_drift_still_fails_on_pin_and_hash_problems(self):
+        with patch.object(parity, "GOLDEN_DIR", self._synthetic_drift_dir()), \
+                patch.object(parity, "pinned_fingerprint", return_value="0" * 64):
+            code, output = self._check("--case", "g18_in625_latent_heat", "--expect-drift", "g18_in625_latent_heat")
+        self.assertEqual(code, 1, output)
+        self.assertIn("!= pinned", output)
+
+    def test_expect_drift_on_a_runtime_material_change_in_a_solver_case(self):
+        # Synthetic drift without editing manifest code: a few-ulp absorptivity change
+        # (patched in memory, as in test_a_few_ulp_material_change_fails_a_solver_case).
+        import four_alloy_materials
+        in718 = four_alloy_materials._THERMAL["in718"]
+        with patch.dict(in718, {"absorptivity_IR": in718["absorptivity_IR"] + 1e-15}):
+            code, output = self._check("--case", "g3_powder_island")
+            self.assertEqual(code, 1, output)
+            code, output = self._check("--case", "g3_powder_island", "--expect-drift", "g3_powder_island")
+        self.assertEqual(code, 0, output)
+        self.assertIn("DRIFT g3_powder_island", output)
+        self.assertIn("DRIFT result.canonicalSha256: sha256 ", output)
 
     def test_record_refuses_an_unpinned_implementation(self):
         with patch.object(parity, "pinned_fingerprint", return_value="0" * 64):

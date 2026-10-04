@@ -32,7 +32,14 @@ opt-in (--slow or --case). Everything else runs in about one minute.
 Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_parity_check.py --list
     python -B tools/lpbf_parity_check.py --check [--slow] [--case ID ...] [--expect-unpinned]
+        [--expect-drift CASE[,CASE...]]
     python -B tools/lpbf_parity_check.py --record --force [--twice] [--slow] [--case ID ...]
+
+--expect-drift (corrected-physics bump): the named cases may differ from their goldens
+and are reported as DRIFT with a before -> after line per changed observation (floats
+with float.hex()); they still fail on implementation-hash or pin problems. Any diff in
+an unnamed case fails, and a named case that does not drift, or is not selected, fails
+too (stale allowlist).
 
 --record refuses to overwrite an existing golden without --force, and refuses to
 record at all unless implementation_fingerprint() equals the pinned .expected
@@ -1365,12 +1372,58 @@ def check_case(case: Case, work_root: Path, expect_unpinned: bool = False,
         outcome["skipped"] = str(skipped)
         return outcome
     problems, warnings = check_implementation(case, hashes, pinned, current, expect_unpinned)
-    problems += diff_observations(golden["observations"], observations)
+    implementation_problems = list(problems)
+    diffs = diff_observations(golden["observations"], observations)
+    problems += diffs
     if mismatch is not None:
         warnings.append(f"compared despite: {mismatch}")
     outcome.update(problems=problems, warnings=warnings, elapsed_s=elapsed, observations=observations,
-                   implementationHashes=sorted(set(hashes)))
+                   implementationHashes=sorted(set(hashes)),
+                   implementationProblems=implementation_problems, observationDiffs=diffs)
     return outcome
+
+
+def describe_value(value: Any) -> str:
+    """Short value-level rendering for drift reports: floats with float.hex(), digests shortened."""
+    if type(value) is float:
+        return f"{value!r} ({value.hex()})"
+    if isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value):
+        return f"sha256 {value[:16]}"
+    if (isinstance(value, list) and len(value) == 2 and type(value[0]) is float
+            and isinstance(value[1], str) and value[1].startswith(("0x", "-0x"))):
+        return f"{value[0]!r} ({value[1]})"
+    if isinstance(value, list):
+        return "[" + ", ".join(describe_value(item) for item in value[:8]) + (", ..." if len(value) > 8 else "") + "]"
+    text = json.dumps(value, allow_nan=False)
+    return text if len(text) <= 160 else text[:157] + "..."
+
+
+def drift_summary(expected: Dict[str, Any], actual: Dict[str, Any]) -> List[str]:
+    """One line per drifted observation: before -> after, value level (hex for floats)."""
+    lines = []
+    for key in sorted(set(expected) | set(actual)):
+        if key not in actual:
+            lines.append(f"{key}: {describe_value(expected[key])} -> <missing>")
+        elif key not in expected:
+            lines.append(f"{key}: <new> -> {describe_value(actual[key])}")
+        elif expected[key] != actual[key]:
+            lines.append(f"{key}: {describe_value(expected[key])} -> {describe_value(actual[key])}")
+    return lines
+
+
+def parse_expect_drift(values: Optional[List[str]]) -> List[str]:
+    """--expect-drift a,b --expect-drift c -> [a, b, c]; unknown or empty names are an error."""
+    names: List[str] = []
+    for value in values or []:
+        for name in value.split(","):
+            name = name.strip()
+            if not name:
+                raise SystemExit("--expect-drift: empty case name")
+            if name not in CASE_BY_ID:
+                raise SystemExit(f"--expect-drift: unknown case {name}")
+            if name not in names:
+                names.append(name)
+    return names
 
 
 def command_check(args) -> int:
@@ -1380,8 +1433,18 @@ def command_check(args) -> int:
     if args.expect_unpinned:
         print("bump-branch mode (--expect-unpinned): a pin mismatch is a WARNING; observation diffs and "
               "result implementationHash != implementation_fingerprint() still FAIL")
+    expect_drift = parse_expect_drift(args.expect_drift)
+    cases = selected_cases(args)
     failures = skips = 0
-    for case in selected_cases(args):
+    drifted: List[str] = []
+    if expect_drift:
+        print(f"planned-drift mode (--expect-drift): only {', '.join(expect_drift)} may differ from their "
+              "goldens; any other diff, an implementation problem, or a named case without drift FAILS")
+        not_run = [name for name in expect_drift if name not in {case.id for case in cases}]
+        for name in not_run:
+            print(f"FAIL {name}: named in --expect-drift but not selected (add --slow or --case {name})")
+        failures += len(not_run)
+    for case in cases:
         outcome = check_case(case, Path(args.work_root), args.expect_unpinned,
                              args.allow_environment_mismatch)
         if outcome["skipped"] is not None:
@@ -1389,10 +1452,23 @@ def command_check(args) -> int:
             print(f"SKIP {case.id} [{case.group}] NOT VERIFIED: {outcome['skipped']}")
             continue
         problems, golden = outcome["problems"], outcome["golden"] or {}
+        drift_lines: List[str] = []
+        if case.id in expect_drift:
+            # Only observation diffs are allowed; a missing golden or a hash problem still fails.
+            diffs = outcome.get("observationDiffs") or []
+            problems = list(outcome.get("implementationProblems", problems))
+            if golden.get("observations") is None:
+                problems = outcome["problems"]
+            elif not diffs:
+                problems.append("stale --expect-drift entry: the case did NOT drift from its golden")
+            else:
+                drift_lines = drift_summary(golden["observations"], outcome["observations"])
         recorded = golden.get("recordedImplementationHash")
-        status = "PASS" if not problems else "FAIL"
+        status = "FAIL" if problems else ("DRIFT" if drift_lines else "PASS")
         suffix = (f" (implementationHash differs from the recording {str(recorded)[:12]}: bump)"
                   if recorded not in (None, current) and not problems else "")
+        if drift_lines:
+            suffix += f" ({len(drift_lines)} observation(s) drifted, allowed by --expect-drift)"
         print(f"{status} {case.id} [{case.group}] {len(outcome['observations'])} observations, "
               f"{outcome['elapsed_s']:.1f} s{suffix}")
         for warning in outcome["warnings"]:
@@ -1401,6 +1477,10 @@ def command_check(args) -> int:
             print(f"    {problem}")
         if len(problems) > 40:
             print(f"    ... {len(problems) - 40} more")
+        for line in drift_lines:
+            print(f"    DRIFT {line}")
+        if drift_lines and not problems:
+            drifted.append(case.id)
         failures += bool(problems)
     if failures:
         print(f"RESULT: FAIL ({failures} case(s))" + (f", {skips} skipped" if skips else ""))
@@ -1409,7 +1489,7 @@ def command_check(args) -> int:
         # A skipped case proves nothing: exit 3 so a gate never mistakes it for a pass.
         print(f"RESULT: INCOMPLETE ({skips} case(s) skipped, not verified)")
         return 3
-    print("RESULT: PASS")
+    print("RESULT: PASS" + (f" (planned drift in {', '.join(drifted)})" if drifted else ""))
     return 0
 
 
@@ -1429,7 +1509,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                              "(diagnostics only; a PASS there is not the reference-machine proof)")
     parser.add_argument("--expect-unpinned", action="store_true",
                         help="check: bump-branch mode (B1-B5), a fingerprint != pin mismatch is only a warning")
+    parser.add_argument("--expect-drift", action="append", metavar="CASE[,CASE...]",
+                        help="check: planned-drift allowlist; only these cases may differ from their goldens "
+                             "(reported as DRIFT with a value-level summary); any other diff fails, and so "
+                             "does a named case that does not drift (stale allowlist)")
     args = parser.parse_args(argv)
+    if args.expect_drift and not args.check:
+        parser.error("--expect-drift is only valid with --check")
     if args.list:
         for case in CASES:
             print(f"{case.id:40s} {case.group:4s} {'slow' if case.slow else 'fast'}  {case.description}")
