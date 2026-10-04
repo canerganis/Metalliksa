@@ -1,0 +1,1294 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "ss316l_fixed_grid",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "adaptiveGrid": false,
+  "boundaryRefinement": false,
+  "elements": {
+   "C": 0.03,
+   "Cr": 17.0,
+   "Fe": 65.5,
+   "Mn": 2.0,
+   "Mo": 2.5,
+   "Ni": 12.0,
+   "Si": 0.75
+  },
+  "name": "316L",
+  "tMax": 1550.0,
+  "tMin": 700.0,
+  "tStep": 50.0,
+  "unit": "wt_pct"
+ },
+ "invocation": "python -B calphad_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "calphad_solver",
+ "solverFile": "python/calphad_solver.py",
+ "solverSha256": "d54acda6ad93212367de84fd759d1e5df992730f0d47d26189de363683fd8a24",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "adaptiveGrid": true,
+  "adaptiveTelemetry": {
+   "boundaryToleranceC": 0.15,
+   "coarseStepsCount": 18,
+   "equivalentUniformSteps": 1701,
+   "isAdaptive": false,
+   "minRefineStepC": 0.5,
+   "refinedStepsCount": 0,
+   "speedupFactor": 94.5,
+   "totalEvaluations": 18,
+   "transitionZones": []
+  },
+  "alloyName": "316L",
+  "atomicFractions": {
+   "C": 0.0013907434331461477,
+   "Cr": 0.18204716348937897,
+   "Fe": 0.6530733095152976,
+   "Mn": 0.0202703888935629,
+   "Mo": 0.014507746548131303,
+   "Ni": 0.11384130561067507,
+   "Si": 0.014869342509808064
+  },
+  "criticalTemperatures": {
+   "betaTransusC": null,
+   "carbidePrecipitationC": null,
+   "deltaSolvusC": null,
+   "freezingRangeC": 37.6,
+   "gammaDoublePrimeSolvusC": null,
+   "gammaPrimeSolvusC": null,
+   "liquidusC": 1389.7,
+   "solidusC": 1352.1,
+   "tcpSigmaRiskTemperatureC": 840.0
+  },
+  "databaseUsed": "Multi-Component Fe-Co-Cr-Nb-Ti Superalloys & Steels",
+  "engine": "subregular-adaptive-minimizer",
+  "equilibriumProfile": [
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -56859.4,
+     "Cr": -16761.5,
+     "Fe": -4710.6,
+     "Mn": -35111.6,
+     "Mo": -37838.9,
+     "Ni": -20808.4,
+     "Si": -37638.4
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9526,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     },
+     {
+      "color": "#ef4444",
+      "fraction": 0.0474,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Cr",
+       "Mo",
+       "Fe"
+      ],
+      "phaseId": "SIGMA_SGTE",
+      "phaseName": "σ-Phase (TCP Intermetallic)"
+     }
+    ],
+    "temperatureC": 700.0,
+    "temperatureK": 973.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -8.562
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -59780.8,
+     "Cr": -17622.7,
+     "Fe": -4952.6,
+     "Mn": -36915.6,
+     "Mo": -39783.1,
+     "Ni": -21877.5,
+     "Si": -39572.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 0.93,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     },
+     {
+      "color": "#ef4444",
+      "fraction": 0.07,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Cr",
+       "Mo",
+       "Fe"
+      ],
+      "phaseId": "SIGMA_SGTE",
+      "phaseName": "σ-Phase (TCP Intermetallic)"
+     }
+    ],
+    "temperatureC": 750.0,
+    "temperatureK": 1023.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -8.997
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -62702.2,
+     "Cr": -18483.9,
+     "Fe": -5194.6,
+     "Mn": -38719.7,
+     "Mo": -41727.2,
+     "Ni": -22946.6,
+     "Si": -41506.1
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 0.9526,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     },
+     {
+      "color": "#ef4444",
+      "fraction": 0.0474,
+      "isPrecipitate": true,
+      "majorElements": [
+       "Cr",
+       "Mo",
+       "Fe"
+      ],
+      "phaseId": "SIGMA_SGTE",
+      "phaseName": "σ-Phase (TCP Intermetallic)"
+     }
+    ],
+    "temperatureC": 800.0,
+    "temperatureK": 1073.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -9.433
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -65623.6,
+     "Cr": -19345.1,
+     "Fe": -5436.7,
+     "Mn": -40523.7,
+     "Mo": -43671.4,
+     "Ni": -24015.7,
+     "Si": -43440.0
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 850.0,
+    "temperatureK": 1123.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -9.869
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -68545.0,
+     "Cr": -20206.3,
+     "Fe": -5678.7,
+     "Mn": -42327.7,
+     "Mo": -45615.5,
+     "Ni": -25084.9,
+     "Si": -45373.8
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 900.0,
+    "temperatureK": 1173.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -10.304
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -71466.4,
+     "Cr": -21067.5,
+     "Fe": -5920.7,
+     "Mn": -44131.7,
+     "Mo": -47559.7,
+     "Ni": -26154.0,
+     "Si": -47307.7
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 950.0,
+    "temperatureK": 1223.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -10.74
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -74387.8,
+     "Cr": -21928.7,
+     "Fe": -6162.7,
+     "Mn": -45935.7,
+     "Mo": -49503.8,
+     "Ni": -27223.1,
+     "Si": -49241.5
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1000.0,
+    "temperatureK": 1273.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -11.176
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -77309.2,
+     "Cr": -22789.9,
+     "Fe": -6404.8,
+     "Mn": -47739.8,
+     "Mo": -51448.0,
+     "Ni": -28292.2,
+     "Si": -51175.3
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1050.0,
+    "temperatureK": 1323.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -11.611
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -80230.6,
+     "Cr": -23651.1,
+     "Fe": -6646.8,
+     "Mn": -49543.8,
+     "Mo": -53392.1,
+     "Ni": -29361.4,
+     "Si": -53109.2
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1100.0,
+    "temperatureK": 1373.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -12.047
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -83152.0,
+     "Cr": -24512.3,
+     "Fe": -6888.8,
+     "Mn": -51347.8,
+     "Mo": -55336.3,
+     "Ni": -30430.5,
+     "Si": -55043.0
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1150.0,
+    "temperatureK": 1423.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -12.482
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -86073.4,
+     "Cr": -25373.5,
+     "Fe": -7130.8,
+     "Mn": -53151.8,
+     "Mo": -57280.4,
+     "Ni": -31499.6,
+     "Si": -56976.9
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1200.0,
+    "temperatureK": 1473.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -12.918
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -88994.8,
+     "Cr": -26234.7,
+     "Fe": -7372.9,
+     "Mn": -54955.8,
+     "Mo": -59224.6,
+     "Ni": -32568.7,
+     "Si": -58910.7
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1250.0,
+    "temperatureK": 1523.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -13.354
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -91916.2,
+     "Cr": -27095.9,
+     "Fe": -7614.9,
+     "Mn": -56759.9,
+     "Mo": -61168.7,
+     "Ni": -33637.8,
+     "Si": -60844.6
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1300.0,
+    "temperatureK": 1573.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -13.789
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -94837.6,
+     "Cr": -27957.1,
+     "Fe": -7856.9,
+     "Mn": -58563.9,
+     "Mo": -63112.9,
+     "Ni": -34707.0,
+     "Si": -62778.4
+    },
+    "phases": [
+     {
+      "color": "#38bdf8",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "Fe"
+      ],
+      "phaseId": "BCC_A2",
+      "phaseName": "α-Ferrite (BCC)"
+     }
+    ],
+    "temperatureC": 1350.0,
+    "temperatureK": 1623.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -14.225
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -97759.1,
+     "Cr": -28818.3,
+     "Fe": -8098.9,
+     "Mn": -60367.9,
+     "Mo": -65057.0,
+     "Ni": -35776.1,
+     "Si": -64712.3
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "C",
+       "Cr",
+       "Fe"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1400.0,
+    "temperatureK": 1673.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -14.661
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -100680.5,
+     "Cr": -29679.5,
+     "Fe": -8341.0,
+     "Mn": -62171.9,
+     "Mo": -67001.2,
+     "Ni": -36845.2,
+     "Si": -66646.1
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "C",
+       "Cr",
+       "Fe"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1450.0,
+    "temperatureK": 1723.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -15.096
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -103601.9,
+     "Cr": -30540.7,
+     "Fe": -8583.0,
+     "Mn": -63975.9,
+     "Mo": -68945.3,
+     "Ni": -37914.3,
+     "Si": -68580.0
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "C",
+       "Cr",
+       "Fe"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1500.0,
+    "temperatureK": 1773.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -15.532
+   },
+   {
+    "chemicalPotentials_J_mol": {
+     "C": -106523.3,
+     "Cr": -31401.9,
+     "Fe": -8825.0,
+     "Mn": -65779.9,
+     "Mo": -70889.5,
+     "Ni": -38983.5,
+     "Si": -70513.8
+    },
+    "phases": [
+     {
+      "color": "#0284c7",
+      "fraction": 1.0,
+      "isPrimary": true,
+      "majorElements": [
+       "C",
+       "Cr",
+       "Fe"
+      ],
+      "phaseId": "LIQUID",
+      "phaseName": "Liquid Phase"
+     }
+    ],
+    "temperatureC": 1550.0,
+    "temperatureK": 1823.15,
+    "thermodynamicActivities": {
+     "C": 0.00089,
+     "Cr": 0.12599,
+     "Fe": 0.55868,
+     "Mn": 0.01304,
+     "Mo": 0.00931,
+     "Ni": 0.0764,
+     "Si": 0.00954
+    },
+    "totalGibbsEnergy_kJ_mol": -15.968
+   }
+  ],
+  "isEmpirical": false,
+  "iterations": 18,
+  "multiElementScheil": [
+   {
+    "fractionSolid": 0.0,
+    "liquidCompositions": {
+     "C": 0.03,
+     "Cr": 17.04,
+     "Fe": 65.64,
+     "Mn": 2.0,
+     "Mo": 2.51,
+     "Ni": 12.03,
+     "Si": 0.75
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.19,
+     "Fe": 65.64,
+     "Mn": 1.8,
+     "Mo": 2.06,
+     "Ni": 10.83,
+     "Si": 0.68
+    },
+    "temperatureC": 1389.7
+   },
+   {
+    "fractionSolid": 0.048,
+    "liquidCompositions": {
+     "C": 0.03,
+     "Cr": 17.08,
+     "Fe": 65.64,
+     "Mn": 2.01,
+     "Mo": 2.53,
+     "Ni": 12.09,
+     "Si": 0.75
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.23,
+     "Fe": 65.64,
+     "Mn": 1.81,
+     "Mo": 2.08,
+     "Ni": 10.88,
+     "Si": 0.68
+    },
+    "temperatureC": 1389.2
+   },
+   {
+    "fractionSolid": 0.096,
+    "liquidCompositions": {
+     "C": 0.03,
+     "Cr": 17.13,
+     "Fe": 65.64,
+     "Mn": 2.02,
+     "Mo": 2.56,
+     "Ni": 12.15,
+     "Si": 0.76
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.27,
+     "Fe": 65.64,
+     "Mn": 1.82,
+     "Mo": 2.1,
+     "Ni": 10.94,
+     "Si": 0.68
+    },
+    "temperatureC": 1388.6
+   },
+   {
+    "fractionSolid": 0.144,
+    "liquidCompositions": {
+     "C": 0.03,
+     "Cr": 17.17,
+     "Fe": 65.64,
+     "Mn": 2.03,
+     "Mo": 2.58,
+     "Ni": 12.22,
+     "Si": 0.76
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.31,
+     "Fe": 65.64,
+     "Mn": 1.83,
+     "Mo": 2.12,
+     "Ni": 11.0,
+     "Si": 0.69
+    },
+    "temperatureC": 1388.0
+   },
+   {
+    "fractionSolid": 0.192,
+    "liquidCompositions": {
+     "C": 0.04,
+     "Cr": 17.22,
+     "Fe": 65.64,
+     "Mn": 2.04,
+     "Mo": 2.61,
+     "Ni": 12.29,
+     "Si": 0.77
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.36,
+     "Fe": 65.64,
+     "Mn": 1.84,
+     "Mo": 2.14,
+     "Ni": 11.06,
+     "Si": 0.69
+    },
+    "temperatureC": 1387.4
+   },
+   {
+    "fractionSolid": 0.24,
+    "liquidCompositions": {
+     "C": 0.04,
+     "Cr": 17.28,
+     "Fe": 65.64,
+     "Mn": 2.06,
+     "Mo": 2.64,
+     "Ni": 12.36,
+     "Si": 0.77
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.41,
+     "Fe": 65.64,
+     "Mn": 1.85,
+     "Mo": 2.16,
+     "Ni": 11.13,
+     "Si": 0.69
+    },
+    "temperatureC": 1386.7
+   },
+   {
+    "fractionSolid": 0.288,
+    "liquidCompositions": {
+     "C": 0.04,
+     "Cr": 17.33,
+     "Fe": 65.64,
+     "Mn": 2.07,
+     "Mo": 2.67,
+     "Ni": 12.45,
+     "Si": 0.78
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.47,
+     "Fe": 65.64,
+     "Mn": 1.86,
+     "Mo": 2.19,
+     "Ni": 11.2,
+     "Si": 0.7
+    },
+    "temperatureC": 1385.9
+   },
+   {
+    "fractionSolid": 0.336,
+    "liquidCompositions": {
+     "C": 0.04,
+     "Cr": 17.39,
+     "Fe": 65.64,
+     "Mn": 2.08,
+     "Mo": 2.7,
+     "Ni": 12.53,
+     "Si": 0.78
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.52,
+     "Fe": 65.64,
+     "Mn": 1.88,
+     "Mo": 2.22,
+     "Ni": 11.28,
+     "Si": 0.7
+    },
+    "temperatureC": 1385.1
+   },
+   {
+    "fractionSolid": 0.384,
+    "liquidCompositions": {
+     "C": 0.04,
+     "Cr": 17.46,
+     "Fe": 65.64,
+     "Mn": 2.1,
+     "Mo": 2.74,
+     "Ni": 12.63,
+     "Si": 0.79
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.58,
+     "Fe": 65.64,
+     "Mn": 1.89,
+     "Mo": 2.25,
+     "Ni": 11.36,
+     "Si": 0.71
+    },
+    "temperatureC": 1384.2
+   },
+   {
+    "fractionSolid": 0.432,
+    "liquidCompositions": {
+     "C": 0.05,
+     "Cr": 17.53,
+     "Fe": 65.64,
+     "Mn": 2.12,
+     "Mo": 2.78,
+     "Ni": 12.73,
+     "Si": 0.79
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.65,
+     "Fe": 65.64,
+     "Mn": 1.9,
+     "Mo": 2.28,
+     "Ni": 11.46,
+     "Si": 0.71
+    },
+    "temperatureC": 1383.2
+   },
+   {
+    "fractionSolid": 0.48,
+    "liquidCompositions": {
+     "C": 0.05,
+     "Cr": 17.61,
+     "Fe": 65.64,
+     "Mn": 2.14,
+     "Mo": 2.82,
+     "Ni": 12.84,
+     "Si": 0.8
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.73,
+     "Fe": 65.64,
+     "Mn": 1.92,
+     "Mo": 2.32,
+     "Ni": 11.56,
+     "Si": 0.72
+    },
+    "temperatureC": 1382.1
+   },
+   {
+    "fractionSolid": 0.528,
+    "liquidCompositions": {
+     "C": 0.06,
+     "Cr": 17.69,
+     "Fe": 65.64,
+     "Mn": 2.16,
+     "Mo": 2.87,
+     "Ni": 12.97,
+     "Si": 0.81
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.81,
+     "Fe": 65.64,
+     "Mn": 1.94,
+     "Mo": 2.36,
+     "Ni": 11.67,
+     "Si": 0.73
+    },
+    "temperatureC": 1380.9
+   },
+   {
+    "fractionSolid": 0.576,
+    "liquidCompositions": {
+     "C": 0.06,
+     "Cr": 17.79,
+     "Fe": 65.64,
+     "Mn": 2.18,
+     "Mo": 2.93,
+     "Ni": 13.11,
+     "Si": 0.82
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 16.9,
+     "Fe": 65.64,
+     "Mn": 1.96,
+     "Mo": 2.4,
+     "Ni": 11.8,
+     "Si": 0.74
+    },
+    "temperatureC": 1379.5
+   },
+   {
+    "fractionSolid": 0.624,
+    "liquidCompositions": {
+     "C": 0.07,
+     "Cr": 17.89,
+     "Fe": 65.64,
+     "Mn": 2.21,
+     "Mo": 2.99,
+     "Ni": 13.27,
+     "Si": 0.83
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 17.0,
+     "Fe": 65.64,
+     "Mn": 1.98,
+     "Mo": 2.45,
+     "Ni": 11.94,
+     "Si": 0.74
+    },
+    "temperatureC": 1377.9
+   },
+   {
+    "fractionSolid": 0.672,
+    "liquidCompositions": {
+     "C": 0.07,
+     "Cr": 18.02,
+     "Fe": 65.64,
+     "Mn": 2.24,
+     "Mo": 3.07,
+     "Ni": 13.45,
+     "Si": 0.84
+    },
+    "solidCompositions": {
+     "C": 0.01,
+     "Cr": 17.12,
+     "Fe": 65.64,
+     "Mn": 2.01,
+     "Mo": 2.52,
+     "Ni": 12.1,
+     "Si": 0.75
+    },
+    "temperatureC": 1375.9
+   },
+   {
+    "fractionSolid": 0.72,
+    "liquidCompositions": {
+     "C": 0.09,
+     "Cr": 18.16,
+     "Fe": 65.64,
+     "Mn": 2.27,
+     "Mo": 3.16,
+     "Ni": 13.66,
+     "Si": 0.85
+    },
+    "solidCompositions": {
+     "C": 0.02,
+     "Cr": 17.25,
+     "Fe": 65.64,
+     "Mn": 2.04,
+     "Mo": 2.59,
+     "Ni": 12.3,
+     "Si": 0.77
+    },
+    "temperatureC": 1373.6
+   },
+   {
+    "fractionSolid": 0.768,
+    "liquidCompositions": {
+     "C": 0.1,
+     "Cr": 18.33,
+     "Fe": 65.64,
+     "Mn": 2.31,
+     "Mo": 3.27,
+     "Ni": 13.92,
+     "Si": 0.87
+    },
+    "solidCompositions": {
+     "C": 0.02,
+     "Cr": 17.41,
+     "Fe": 65.64,
+     "Mn": 2.08,
+     "Mo": 2.68,
+     "Ni": 12.53,
+     "Si": 0.78
+    },
+    "temperatureC": 1370.7
+   },
+   {
+    "fractionSolid": 0.816,
+    "liquidCompositions": {
+     "C": 0.12,
+     "Cr": 18.55,
+     "Fe": 65.64,
+     "Mn": 2.37,
+     "Mo": 3.4,
+     "Ni": 14.25,
+     "Si": 0.89
+    },
+    "solidCompositions": {
+     "C": 0.02,
+     "Cr": 17.62,
+     "Fe": 65.64,
+     "Mn": 2.13,
+     "Mo": 2.79,
+     "Ni": 12.82,
+     "Si": 0.8
+    },
+    "temperatureC": 1366.9
+   },
+   {
+    "fractionSolid": 0.864,
+    "liquidCompositions": {
+     "C": 0.15,
+     "Cr": 18.83,
+     "Fe": 65.64,
+     "Mn": 2.44,
+     "Mo": 3.59,
+     "Ni": 14.69,
+     "Si": 0.92
+    },
+    "solidCompositions": {
+     "C": 0.03,
+     "Cr": 17.89,
+     "Fe": 65.64,
+     "Mn": 2.2,
+     "Mo": 2.95,
+     "Ni": 13.22,
+     "Si": 0.82
+    },
+    "temperatureC": 1361.6
+   },
+   {
+    "fractionSolid": 0.912,
+    "liquidCompositions": {
+     "C": 0.22,
+     "Cr": 19.24,
+     "Fe": 65.64,
+     "Mn": 2.55,
+     "Mo": 3.89,
+     "Ni": 15.34,
+     "Si": 0.96
+    },
+    "solidCompositions": {
+     "C": 0.04,
+     "Cr": 18.28,
+     "Fe": 65.64,
+     "Mn": 2.3,
+     "Mo": 3.19,
+     "Ni": 13.81,
+     "Si": 0.86
+    },
+    "temperatureC": 1353.0
+   },
+   {
+    "fractionSolid": 0.96,
+    "liquidCompositions": {
+     "C": 0.42,
+     "Cr": 20.02,
+     "Fe": 65.64,
+     "Mn": 2.76,
+     "Mo": 4.48,
+     "Ni": 16.6,
+     "Si": 1.03
+    },
+    "solidCompositions": {
+     "C": 0.08,
+     "Cr": 19.01,
+     "Fe": 65.64,
+     "Mn": 2.48,
+     "Mo": 3.67,
+     "Ni": 14.94,
+     "Si": 0.93
+    },
+    "temperatureC": 1334.7
+   }
+  ],
+  "nominalComposition": {
+   "C": 0.030066145520144312,
+   "Cr": 17.037482461415113,
+   "Fe": 65.64441771898176,
+   "Mn": 2.0044097013429547,
+   "Mo": 2.5055121266786933,
+   "Ni": 12.026458208057726,
+   "Si": 0.7516536380036078
+  },
+  "phacompAnalysis": {
+   "m_d_bar": 1.0705,
+   "n_v_bar": 2.9312,
+   "tcpEmbrittlementRisk": "High",
+   "tcpSigmaRiskTemperatureC": 850.0,
+   "thermodynamicStabilityIndex": 25.5
+  },
+  "pycalphadVersion": "No module named 'pycalphad'",
+  "solutePartitioning": [
+   {
+    "element": "C",
+    "isSegregating": true,
+    "nominalWeightPct": 0.03,
+    "partitionCoefficient_k": 0.18,
+    "soluteRole": "Grain Boundary & Carbide Former"
+   },
+   {
+    "element": "Cr",
+    "isSegregating": false,
+    "nominalWeightPct": 17.04,
+    "partitionCoefficient_k": 0.95,
+    "soluteRole": "Oxidation & Matrix Strengthener"
+   },
+   {
+    "element": "Fe",
+    "isSegregating": false,
+    "nominalWeightPct": 65.64,
+    "partitionCoefficient_k": 1.0,
+    "soluteRole": "Matrix Base"
+   },
+   {
+    "element": "Mn",
+    "isSegregating": false,
+    "nominalWeightPct": 2.0,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   },
+   {
+    "element": "Mo",
+    "isSegregating": true,
+    "nominalWeightPct": 2.51,
+    "partitionCoefficient_k": 0.82,
+    "soluteRole": "Solid Solution Strengthener"
+   },
+   {
+    "element": "Ni",
+    "isSegregating": false,
+    "nominalWeightPct": 12.03,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   },
+   {
+    "element": "Si",
+    "isSegregating": false,
+    "nominalWeightPct": 0.75,
+    "partitionCoefficient_k": 0.9,
+    "soluteRole": "Alloying Solute"
+   }
+  ],
+  "success": true,
+  "tcpEmbrittlementRisk": "High",
+  "temperatureRangeC": [
+   700.0,
+   1550.0
+  ],
+  "temperatureStepC": 50.0,
+  "thermodynamicModel": "Adaptive Multi-Component Redlich-Kister Sub-regular Gibbs Minimizer",
+  "thermodynamicStabilityIndex": 25.5
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

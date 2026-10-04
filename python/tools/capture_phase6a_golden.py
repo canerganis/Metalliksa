@@ -187,6 +187,16 @@ def git_head() -> Optional[str]:
         return None
 
 
+_BLOB_RUNNER = (
+    "import os, sys\n"
+    "_f = os.environ['PHASE6A_BLOB_AS_FILE']\n"
+    "sys.argv = [_f]\n"
+    "with open(os.environ['PHASE6A_BLOB_SCRIPT'], 'rb') as _h:\n"
+    "    _code = compile(_h.read(), _f, 'exec')\n"
+    "exec(_code, {'__name__': '__main__', '__file__': _f, '__builtins__': __builtins__})\n"
+)
+
+
 def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout: float = 180.0,
                script: Optional[Path] = None) -> Dict[str, Any]:
     """Run ``<solver>.py`` like the app's ad-hoc spawn; return exit code and parsed stdout.
@@ -195,12 +205,17 @@ def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout:
     dir) with the same cwd, and python/ on PYTHONPATH for its local imports.
     """
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
-    target = f"{solver}.py"
+    cmd = [python, "-B", f"{solver}.py"]
     if script is not None:
-        target = str(script)
         env["PYTHONPATH"] = str(PYTHON_DIR) + os.pathsep + env.get("PYTHONPATH", "")
+        # Execute the copied bytes as if they were python/<solver>.py: solvers that
+        # locate data next to __file__ (calphad_solver's databases/) must see the
+        # real directory, and sys.argv must look like a plain script run.
+        env["PHASE6A_BLOB_SCRIPT"] = str(script)
+        env["PHASE6A_BLOB_AS_FILE"] = str(PYTHON_DIR / f"{solver}.py")
+        cmd = [python, "-B", "-c", _BLOB_RUNNER]
     proc = subprocess.run(
-        [python, "-B", target], input=json.dumps(payload).encode("utf-8"),
+        cmd, input=json.dumps(payload).encode("utf-8"),
         capture_output=True, timeout=timeout, env=env, cwd=str(PYTHON_DIR),
     )
     stdout = proc.stdout.decode("utf-8")
@@ -333,6 +348,24 @@ def capture_source_tables(force: bool, label: str = BASE_REVISION,
         _write(path, doc)
         out.append(f"wrote {solver}/{SOURCE_TABLES_FILE}")
     return out
+
+
+# ---- BEGIN Phase 6a tranche 2a (calphad, battery EIS, icme) ----
+# Cases and source-table snapshots live in tools/phase6a_cases_t2a.py. These three
+# solvers are byte-identical at d33b6f5 and 7f3f803, so the BASE_REVISION binding
+# above applies to them unchanged.
+import phase6a_cases_t2a as _t2a_cases  # noqa: E402
+
+CASES.update(_t2a_cases.CASES)
+VOLATILE_KEYS = VOLATILE_KEYS | _t2a_cases.EXTRA_VOLATILE_KEYS
+_t2a_base_capture_source_tables = capture_source_tables
+
+
+def capture_source_tables(force: bool, label: str = BASE_REVISION,  # noqa: F811
+                          from_revision: Optional[str] = None) -> List[str]:
+    out = _t2a_base_capture_source_tables(force, label, from_revision)
+    return out + _t2a_cases.capture_source_tables(sys.modules[__name__], force, label, from_revision)
+# ---- END Phase 6a tranche 2a ----
 
 
 def main(argv=None) -> int:

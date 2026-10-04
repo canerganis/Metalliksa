@@ -1,0 +1,896 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "battery_degradation_lfp",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "action": "battery_degradation",
+  "chargeCRate": 1.5,
+  "chemistryId": "lfp",
+  "cycles": 800,
+  "tempC": 35.0
+ },
+ "invocation": "python -B battery_corrosion_eis_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "battery_corrosion_eis_solver",
+ "solverFile": "python/battery_corrosion_eis_solver.py",
+ "solverSha256": "8736ec244305c351313fb3a83d4dc1e5d26ddda7761bd06509bd622d0302eb78",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "chargeCRate": 1.5,
+  "chemistryId": "lfp",
+  "evolution": [
+   {
+    "anodePotential_V": -0.7461,
+    "cycle": 1,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.0986,
+    "rCt_ohm": 0.4142,
+    "rSei_ohm": 0.3132,
+    "rTotal_ohm": 0.8261,
+    "sohPct": 99.99
+   },
+   {
+    "anodePotential_V": -0.8967,
+    "cycle": 50,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.0993,
+    "rCt_ohm": 0.422,
+    "rSei_ohm": 0.4688,
+    "rTotal_ohm": 0.9902,
+    "sohPct": 99.95
+   },
+   {
+    "anodePotential_V": -0.9715,
+    "cycle": 100,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1001,
+    "rCt_ohm": 0.4274,
+    "rSei_ohm": 0.5439,
+    "rTotal_ohm": 1.0714,
+    "sohPct": 99.93
+   },
+   {
+    "anodePotential_V": -1.079,
+    "cycle": 200,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1016,
+    "rCt_ohm": 0.4362,
+    "rSei_ohm": 0.6501,
+    "rTotal_ohm": 1.1879,
+    "sohPct": 99.89
+   },
+   {
+    "anodePotential_V": -1.297,
+    "cycle": 500,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.106,
+    "rCt_ohm": 0.4573,
+    "rSei_ohm": 0.8607,
+    "rTotal_ohm": 1.424,
+    "sohPct": 99.77
+   },
+   {
+    "anodePotential_V": -1.4573,
+    "cycle": 800,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1104,
+    "rCt_ohm": 0.4748,
+    "rSei_ohm": 1.0126,
+    "rTotal_ohm": 1.5979,
+    "sohPct": 99.65
+   },
+   {
+    "anodePotential_V": -1.5487,
+    "cycle": 1000,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1134,
+    "rCt_ohm": 0.4855,
+    "rSei_ohm": 1.0982,
+    "rTotal_ohm": 1.697,
+    "sohPct": 99.57
+   },
+   {
+    "anodePotential_V": -1.7455,
+    "cycle": 1500,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1208,
+    "rCt_ohm": 0.5098,
+    "rSei_ohm": 1.2803,
+    "rTotal_ohm": 1.9109,
+    "sohPct": 99.36
+   },
+   {
+    "anodePotential_V": -1.9136,
+    "cycle": 2000,
+    "platingRisk": "CRITICAL: Active Lithium Dendrite Plating",
+    "r0_ohm": 0.1282,
+    "rCt_ohm": 0.5319,
+    "rSei_ohm": 1.4339,
+    "rTotal_ohm": 2.094,
+    "sohPct": 99.14
+   }
+  ],
+  "maxSafeCRate": 0.2,
+  "nyquistMultiCycle": [
+   {
+    "cycle": 1,
+    "soh": 99.99,
+    "spectrum": [
+     {
+      "frequency": 10000.0,
+      "minusZImag": 0.2813,
+      "zReal": 0.5608
+     },
+     {
+      "frequency": 7543.12,
+      "minusZImag": 0.2732,
+      "zReal": 0.6241
+     },
+     {
+      "frequency": 5689.866,
+      "minusZImag": 0.2552,
+      "zReal": 0.6835
+     },
+     {
+      "frequency": 4291.934,
+      "minusZImag": 0.2301,
+      "zReal": 0.734
+     },
+     {
+      "frequency": 3237.458,
+      "minusZImag": 0.2028,
+      "zReal": 0.774
+     },
+     {
+      "frequency": 2442.053,
+      "minusZImag": 0.1775,
+      "zReal": 0.8043
+     },
+     {
+      "frequency": 1842.07,
+      "minusZImag": 0.1565,
+      "zReal": 0.8275
+     },
+     {
+      "frequency": 1389.495,
+      "minusZImag": 0.1409,
+      "zReal": 0.846
+     },
+     {
+      "frequency": 1048.113,
+      "minusZImag": 0.1306,
+      "zReal": 0.8619
+     },
+     {
+      "frequency": 790.604,
+      "minusZImag": 0.1253,
+      "zReal": 0.8765
+     },
+     {
+      "frequency": 596.362,
+      "minusZImag": 0.1245,
+      "zReal": 0.891
+     },
+     {
+      "frequency": 449.843,
+      "minusZImag": 0.1279,
+      "zReal": 0.9061
+     },
+     {
+      "frequency": 339.322,
+      "minusZImag": 0.135,
+      "zReal": 0.9223
+     },
+     {
+      "frequency": 255.955,
+      "minusZImag": 0.1459,
+      "zReal": 0.9403
+     },
+     {
+      "frequency": 193.07,
+      "minusZImag": 0.1605,
+      "zReal": 0.9604
+     },
+     {
+      "frequency": 145.635,
+      "minusZImag": 0.1788,
+      "zReal": 0.9832
+     },
+     {
+      "frequency": 109.854,
+      "minusZImag": 0.2012,
+      "zReal": 1.0091
+     },
+     {
+      "frequency": 82.864,
+      "minusZImag": 0.2279,
+      "zReal": 1.0386
+     },
+     {
+      "frequency": 62.506,
+      "minusZImag": 0.2595,
+      "zReal": 1.0724
+     },
+     {
+      "frequency": 47.149,
+      "minusZImag": 0.2964,
+      "zReal": 1.1111
+     },
+     {
+      "frequency": 35.565,
+      "minusZImag": 0.3393,
+      "zReal": 1.1555
+     },
+     {
+      "frequency": 26.827,
+      "minusZImag": 0.3891,
+      "zReal": 1.2066
+     },
+     {
+      "frequency": 20.236,
+      "minusZImag": 0.4468,
+      "zReal": 1.2652
+     },
+     {
+      "frequency": 15.264,
+      "minusZImag": 0.5134,
+      "zReal": 1.3326
+     },
+     {
+      "frequency": 11.514,
+      "minusZImag": 0.5902,
+      "zReal": 1.4102
+     },
+     {
+      "frequency": 8.685,
+      "minusZImag": 0.6789,
+      "zReal": 1.4994
+     },
+     {
+      "frequency": 6.551,
+      "minusZImag": 0.7811,
+      "zReal": 1.6021
+     },
+     {
+      "frequency": 4.942,
+      "minusZImag": 0.8989,
+      "zReal": 1.7203
+     },
+     {
+      "frequency": 3.728,
+      "minusZImag": 1.0346,
+      "zReal": 1.8563
+     },
+     {
+      "frequency": 2.812,
+      "minusZImag": 1.1909,
+      "zReal": 2.0129
+     },
+     {
+      "frequency": 2.121,
+      "minusZImag": 1.3709,
+      "zReal": 2.1931
+     },
+     {
+      "frequency": 1.6,
+      "minusZImag": 1.5782,
+      "zReal": 2.4007
+     },
+     {
+      "frequency": 1.207,
+      "minusZImag": 1.8169,
+      "zReal": 2.6396
+     },
+     {
+      "frequency": 0.91,
+      "minusZImag": 2.0918,
+      "zReal": 2.9146
+     },
+     {
+      "frequency": 0.687,
+      "minusZImag": 2.4083,
+      "zReal": 3.2313
+     },
+     {
+      "frequency": 0.518,
+      "minusZImag": 2.7728,
+      "zReal": 3.5959
+     },
+     {
+      "frequency": 0.391,
+      "minusZImag": 3.1925,
+      "zReal": 4.0157
+     },
+     {
+      "frequency": 0.295,
+      "minusZImag": 3.6758,
+      "zReal": 4.499
+     },
+     {
+      "frequency": 0.222,
+      "minusZImag": 4.2322,
+      "zReal": 5.0555
+     },
+     {
+      "frequency": 0.168,
+      "minusZImag": 4.8729,
+      "zReal": 5.6962
+     },
+     {
+      "frequency": 0.126,
+      "minusZImag": 5.6105,
+      "zReal": 6.4339
+     },
+     {
+      "frequency": 0.095,
+      "minusZImag": 6.4599,
+      "zReal": 7.2833
+     },
+     {
+      "frequency": 0.072,
+      "minusZImag": 7.4378,
+      "zReal": 8.2613
+     },
+     {
+      "frequency": 0.054,
+      "minusZImag": 8.5639,
+      "zReal": 9.3874
+     },
+     {
+      "frequency": 0.041,
+      "minusZImag": 9.8603,
+      "zReal": 10.6839
+     },
+     {
+      "frequency": 0.031,
+      "minusZImag": 11.3531,
+      "zReal": 12.1767
+     },
+     {
+      "frequency": 0.023,
+      "minusZImag": 13.0719,
+      "zReal": 13.8955
+     },
+     {
+      "frequency": 0.018,
+      "minusZImag": 15.0509,
+      "zReal": 15.8745
+     },
+     {
+      "frequency": 0.013,
+      "minusZImag": 17.3295,
+      "zReal": 18.1532
+     },
+     {
+      "frequency": 0.01,
+      "minusZImag": 19.9531,
+      "zReal": 20.7768
+     }
+    ]
+   },
+   {
+    "cycle": 500,
+    "soh": 99.77,
+    "spectrum": [
+     {
+      "frequency": 10000.0,
+      "minusZImag": 0.6202,
+      "zReal": 0.8729
+     },
+     {
+      "frequency": 7543.12,
+      "minusZImag": 0.5816,
+      "zReal": 1.0222
+     },
+     {
+      "frequency": 5689.866,
+      "minusZImag": 0.5213,
+      "zReal": 1.1477
+     },
+     {
+      "frequency": 4291.934,
+      "minusZImag": 0.4515,
+      "zReal": 1.2457
+     },
+     {
+      "frequency": 3237.458,
+      "minusZImag": 0.3825,
+      "zReal": 1.3183
+     },
+     {
+      "frequency": 2442.053,
+      "minusZImag": 0.3212,
+      "zReal": 1.3703
+     },
+     {
+      "frequency": 1842.07,
+      "minusZImag": 0.2707,
+      "zReal": 1.4077
+     },
+     {
+      "frequency": 1389.495,
+      "minusZImag": 0.2318,
+      "zReal": 1.4355
+     },
+     {
+      "frequency": 1048.113,
+      "minusZImag": 0.2036,
+      "zReal": 1.4578
+     },
+     {
+      "frequency": 790.604,
+      "minusZImag": 0.1848,
+      "zReal": 1.477
+     },
+     {
+      "frequency": 596.362,
+      "minusZImag": 0.1742,
+      "zReal": 1.4952
+     },
+     {
+      "frequency": 449.843,
+      "minusZImag": 0.1706,
+      "zReal": 1.5134
+     },
+     {
+      "frequency": 339.322,
+      "minusZImag": 0.1732,
+      "zReal": 1.5327
+     },
+     {
+      "frequency": 255.955,
+      "minusZImag": 0.1815,
+      "zReal": 1.5538
+     },
+     {
+      "frequency": 193.07,
+      "minusZImag": 0.195,
+      "zReal": 1.5772
+     },
+     {
+      "frequency": 145.635,
+      "minusZImag": 0.2136,
+      "zReal": 1.6035
+     },
+     {
+      "frequency": 109.854,
+      "minusZImag": 0.2374,
+      "zReal": 1.6334
+     },
+     {
+      "frequency": 82.864,
+      "minusZImag": 0.2667,
+      "zReal": 1.6675
+     },
+     {
+      "frequency": 62.506,
+      "minusZImag": 0.3019,
+      "zReal": 1.7064
+     },
+     {
+      "frequency": 47.149,
+      "minusZImag": 0.3435,
+      "zReal": 1.751
+     },
+     {
+      "frequency": 35.565,
+      "minusZImag": 0.3922,
+      "zReal": 1.8021
+     },
+     {
+      "frequency": 26.827,
+      "minusZImag": 0.449,
+      "zReal": 1.8608
+     },
+     {
+      "frequency": 20.236,
+      "minusZImag": 0.5149,
+      "zReal": 1.9283
+     },
+     {
+      "frequency": 15.264,
+      "minusZImag": 0.5912,
+      "zReal": 2.0058
+     },
+     {
+      "frequency": 11.514,
+      "minusZImag": 0.6793,
+      "zReal": 2.095
+     },
+     {
+      "frequency": 8.685,
+      "minusZImag": 0.7811,
+      "zReal": 2.1977
+     },
+     {
+      "frequency": 6.551,
+      "minusZImag": 0.8985,
+      "zReal": 2.3157
+     },
+     {
+      "frequency": 4.942,
+      "minusZImag": 1.0338,
+      "zReal": 2.4516
+     },
+     {
+      "frequency": 3.728,
+      "minusZImag": 1.1897,
+      "zReal": 2.608
+     },
+     {
+      "frequency": 2.812,
+      "minusZImag": 1.3693,
+      "zReal": 2.788
+     },
+     {
+      "frequency": 2.121,
+      "minusZImag": 1.5762,
+      "zReal": 2.9953
+     },
+     {
+      "frequency": 1.6,
+      "minusZImag": 1.8145,
+      "zReal": 3.2339
+     },
+     {
+      "frequency": 1.207,
+      "minusZImag": 2.0889,
+      "zReal": 3.5085
+     },
+     {
+      "frequency": 0.91,
+      "minusZImag": 2.405,
+      "zReal": 3.8247
+     },
+     {
+      "frequency": 0.687,
+      "minusZImag": 2.7689,
+      "zReal": 4.1888
+     },
+     {
+      "frequency": 0.518,
+      "minusZImag": 3.1879,
+      "zReal": 4.608
+     },
+     {
+      "frequency": 0.391,
+      "minusZImag": 3.6704,
+      "zReal": 5.0906
+     },
+     {
+      "frequency": 0.295,
+      "minusZImag": 4.2259,
+      "zReal": 5.6463
+     },
+     {
+      "frequency": 0.222,
+      "minusZImag": 4.8656,
+      "zReal": 6.286
+     },
+     {
+      "frequency": 0.168,
+      "minusZImag": 5.6021,
+      "zReal": 7.0227
+     },
+     {
+      "frequency": 0.126,
+      "minusZImag": 6.4502,
+      "zReal": 7.8708
+     },
+     {
+      "frequency": 0.095,
+      "minusZImag": 7.4267,
+      "zReal": 8.8473
+     },
+     {
+      "frequency": 0.072,
+      "minusZImag": 8.551,
+      "zReal": 9.9717
+     },
+     {
+      "frequency": 0.054,
+      "minusZImag": 9.8455,
+      "zReal": 11.2662
+     },
+     {
+      "frequency": 0.041,
+      "minusZImag": 11.336,
+      "zReal": 12.7568
+     },
+     {
+      "frequency": 0.031,
+      "minusZImag": 13.0522,
+      "zReal": 14.473
+     },
+     {
+      "frequency": 0.023,
+      "minusZImag": 15.0282,
+      "zReal": 16.449
+     },
+     {
+      "frequency": 0.018,
+      "minusZImag": 17.3034,
+      "zReal": 18.7242
+     },
+     {
+      "frequency": 0.013,
+      "minusZImag": 19.923,
+      "zReal": 21.3439
+     },
+     {
+      "frequency": 0.01,
+      "minusZImag": 22.9392,
+      "zReal": 24.3601
+     }
+    ]
+   },
+   {
+    "cycle": 800,
+    "soh": 99.65,
+    "spectrum": [
+     {
+      "frequency": 10000.0,
+      "minusZImag": 0.7216,
+      "zReal": 0.9092
+     },
+     {
+      "frequency": 7543.12,
+      "minusZImag": 0.6884,
+      "zReal": 1.0918
+     },
+     {
+      "frequency": 5689.866,
+      "minusZImag": 0.623,
+      "zReal": 1.2482
+     },
+     {
+      "frequency": 4291.934,
+      "minusZImag": 0.5416,
+      "zReal": 1.371
+     },
+     {
+      "frequency": 3237.458,
+      "minusZImag": 0.4587,
+      "zReal": 1.4615
+     },
+     {
+      "frequency": 2442.053,
+      "minusZImag": 0.3838,
+      "zReal": 1.5258
+     },
+     {
+      "frequency": 1842.07,
+      "minusZImag": 0.3216,
+      "zReal": 1.5713
+     },
+     {
+      "frequency": 1389.495,
+      "minusZImag": 0.273,
+      "zReal": 1.6046
+     },
+     {
+      "frequency": 1048.113,
+      "minusZImag": 0.2373,
+      "zReal": 1.6305
+     },
+     {
+      "frequency": 790.604,
+      "minusZImag": 0.2129,
+      "zReal": 1.6525
+     },
+     {
+      "frequency": 596.362,
+      "minusZImag": 0.1983,
+      "zReal": 1.6728
+     },
+     {
+      "frequency": 449.843,
+      "minusZImag": 0.192,
+      "zReal": 1.6929
+     },
+     {
+      "frequency": 339.322,
+      "minusZImag": 0.1929,
+      "zReal": 1.714
+     },
+     {
+      "frequency": 255.955,
+      "minusZImag": 0.2003,
+      "zReal": 1.7369
+     },
+     {
+      "frequency": 193.07,
+      "minusZImag": 0.2138,
+      "zReal": 1.7623
+     },
+     {
+      "frequency": 145.635,
+      "minusZImag": 0.233,
+      "zReal": 1.7908
+     },
+     {
+      "frequency": 109.854,
+      "minusZImag": 0.2581,
+      "zReal": 1.8231
+     },
+     {
+      "frequency": 82.864,
+      "minusZImag": 0.2892,
+      "zReal": 1.8598
+     },
+     {
+      "frequency": 62.506,
+      "minusZImag": 0.3267,
+      "zReal": 1.9018
+     },
+     {
+      "frequency": 47.149,
+      "minusZImag": 0.3713,
+      "zReal": 1.9499
+     },
+     {
+      "frequency": 35.565,
+      "minusZImag": 0.4236,
+      "zReal": 2.0051
+     },
+     {
+      "frequency": 26.827,
+      "minusZImag": 0.4847,
+      "zReal": 2.0684
+     },
+     {
+      "frequency": 20.236,
+      "minusZImag": 0.5556,
+      "zReal": 2.1412
+     },
+     {
+      "frequency": 15.264,
+      "minusZImag": 0.6378,
+      "zReal": 2.2248
+     },
+     {
+      "frequency": 11.514,
+      "minusZImag": 0.7328,
+      "zReal": 2.321
+     },
+     {
+      "frequency": 8.685,
+      "minusZImag": 0.8425,
+      "zReal": 2.4317
+     },
+     {
+      "frequency": 6.551,
+      "minusZImag": 0.969,
+      "zReal": 2.559
+     },
+     {
+      "frequency": 4.942,
+      "minusZImag": 1.1148,
+      "zReal": 2.7055
+     },
+     {
+      "frequency": 3.728,
+      "minusZImag": 1.2829,
+      "zReal": 2.8742
+     },
+     {
+      "frequency": 2.812,
+      "minusZImag": 1.4766,
+      "zReal": 3.0683
+     },
+     {
+      "frequency": 2.121,
+      "minusZImag": 1.6996,
+      "zReal": 3.2918
+     },
+     {
+      "frequency": 1.6,
+      "minusZImag": 1.9566,
+      "zReal": 3.549
+     },
+     {
+      "frequency": 1.207,
+      "minusZImag": 2.2525,
+      "zReal": 3.8452
+     },
+     {
+      "frequency": 0.91,
+      "minusZImag": 2.5932,
+      "zReal": 4.1862
+     },
+     {
+      "frequency": 0.687,
+      "minusZImag": 2.9856,
+      "zReal": 4.5787
+     },
+     {
+      "frequency": 0.518,
+      "minusZImag": 3.4374,
+      "zReal": 5.0307
+     },
+     {
+      "frequency": 0.391,
+      "minusZImag": 3.9576,
+      "zReal": 5.5511
+     },
+     {
+      "frequency": 0.295,
+      "minusZImag": 4.5567,
+      "zReal": 6.1502
+     },
+     {
+      "frequency": 0.222,
+      "minusZImag": 5.2464,
+      "zReal": 6.8401
+     },
+     {
+      "frequency": 0.168,
+      "minusZImag": 6.0406,
+      "zReal": 7.6343
+     },
+     {
+      "frequency": 0.126,
+      "minusZImag": 6.955,
+      "zReal": 8.5489
+     },
+     {
+      "frequency": 0.095,
+      "minusZImag": 8.0079,
+      "zReal": 9.6018
+     },
+     {
+      "frequency": 0.072,
+      "minusZImag": 9.2202,
+      "zReal": 10.8142
+     },
+     {
+      "frequency": 0.054,
+      "minusZImag": 10.616,
+      "zReal": 12.21
+     },
+     {
+      "frequency": 0.041,
+      "minusZImag": 12.2232,
+      "zReal": 13.8172
+     },
+     {
+      "frequency": 0.031,
+      "minusZImag": 14.0737,
+      "zReal": 15.6678
+     },
+     {
+      "frequency": 0.023,
+      "minusZImag": 16.2043,
+      "zReal": 17.7985
+     },
+     {
+      "frequency": 0.018,
+      "minusZImag": 18.6576,
+      "zReal": 20.2517
+     },
+     {
+      "frequency": 0.013,
+      "minusZImag": 21.4822,
+      "zReal": 23.0764
+     },
+     {
+      "frequency": 0.01,
+      "minusZImag": 24.7345,
+      "zReal": 26.3287
+     }
+    ]
+   }
+  ],
+  "success": true,
+  "temperatureC": 35.0
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
