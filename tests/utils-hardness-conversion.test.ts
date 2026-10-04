@@ -251,7 +251,9 @@ test("alloy class gate: only non-austenitic steel is converted; other classes ke
     for (const k of ["HV", "HRB", "HBW", "HK", "HLD", "tensileRm_MPa", "tensileRm_ksi"] as const) assert.equal(r[k], null, `${cls} ${k}`);
     assert.equal(r.unavailable.HV, NO_TABLE_FOR_CLASS);
     assert.equal(r.unavailable.Rm, NO_TABLE_FOR_CLASS);
-    assert.match(r.validRangeNote, /^Unavailable: no verified conversion table for this alloy class \(.+\)\. Only the measured HRC value is shown\.$/);
+    // Reason text: "not implemented in this tool" (E140 has tables for some other classes; the old text said none existed).
+    assert.match(r.validRangeNote, /^Unavailable: no conversion table for this alloy class is implemented in this tool \(.+\)\. Only the measured HRC value is shown\.$/);
+    assert.doesNotMatch(r.validRangeNote, /no verified conversion table/);
   }
   assert.equal(convertHardness(80, "HRB", "austenitic-steel").HV, null); // 316L preset
   assert.equal(convertHardness(1550, "HV", "hardmetal").HV, 1550);
@@ -282,7 +284,7 @@ test("hardness presets: steel presets lie inside the verified range, others are 
       for (const k of ["HV", "HRC", "HRB", "HBW", "HK", "tensileRm_MPa"] as const) {
         if (k !== p.scale) assert.equal(r[k], null, `${p.name} ${k}`);
       }
-      assert.match(r.validRangeNote, /no verified conversion table for this alloy class/);
+      assert.match(r.validRangeNote, /no conversion table for this alloy class is implemented in this tool/);
     }
   }
   // the removed out-of-scope presets stay removed (WC 1550 HV, nitrided 880/950 HV)

@@ -291,7 +291,10 @@ export const HARDNESS_MATERIAL_CLASSES: ReadonlyArray<{ id: HardnessMaterialClas
   { id: "other", label: "Other / unknown alloy" },
 ];
 
-export const NO_TABLE_FOR_CLASS = "Unavailable: no verified conversion table for this alloy class";
+// ASTM E140 also has tables for some other classes (e.g. nickel alloys, cartridge brass, austenitic stainless HB-HRB,
+// wrought aluminium; per the review, not read here). Only the non-austenitic steel tables are implemented and verified,
+// so the reason says "not implemented", not that no table exists.
+export const NO_TABLE_FOR_CLASS = "Unavailable: no conversion table for this alloy class is implemented in this tool";
 
 export const hardnessMaterialClassLabel = (c: HardnessMaterialClass) =>
   HARDNESS_MATERIAL_CLASSES.find((m) => m.id === c)?.label ?? c;

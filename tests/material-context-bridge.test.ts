@@ -20,6 +20,11 @@ test("startup mirrors authoritative shared material into builder without applyin
   assert.deepEqual(useMaterialStore.getState().activeMaterialSpecimen.composition,shared.composition);
   assert.equal(useMaterialStore.getState().activeMaterialSpecimen.metadata.category,"Steels & Irons");
   assert.equal(useMaterialStore.getState().savedSpecimens,saved);
+  // The mirror used HV = round(YS / 3.1) for any alloy; an austenitic 316L now gets no HV, with the reason.
+  const mirrored=useMaterialStore.getState().activeMaterialSpecimen;
+  assert.equal(mirrored.hardness_HV,null);
+  assert.equal(mirrored.hardnessHVStatus,"unavailable");
+  assert.match(mirrored.hardnessHVNote??"",/^Unavailable: no verified hardness-strength relation for this alloy class \(Austenitic stainless steel\)/);
 });
 
 test("all shared base families have selectable categories and legacy persisted labels normalize without losing metadata",()=>{
