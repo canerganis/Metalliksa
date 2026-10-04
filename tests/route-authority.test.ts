@@ -5,7 +5,7 @@ import path from 'node:path';
 import { MODULE_CONTRACTS, type ContractOperation } from '../src/modules/registry';
 import { routeHandlers, siteless, type RouteHandler } from './support/routeScan';
 import { repoRoot } from './support/importGraph';
-import { beyondCeiling, readCeiling } from './support/ceiling';
+import { beyondCeiling, beyondSiteCounts, readCeiling, readCeilingCounts } from './support/ceiling';
 
 // Phase 7 slice 1, static part of the route-authority check (design 7 section 5). Every HTTP
 // handler declared in routes/**, server/** or server.ts (discovery: tests/support/routeScan.ts)
@@ -15,12 +15,13 @@ import { beyondCeiling, readCeiling } from './support/ceiling';
 // without calling a recognised authority (AUTHORITY_CALLEES) is flagged as canned; today's
 // offenders sit in a ratcheted baseline. Handler shapes the parser cannot classify fail visibly
 // unless allowlisted under "unclassified". All allowlists are capped by AUTHORITY_ALLOWLIST.ceiling.json.
-// `use` mounts are keyed by site ('USE /api/x (routes/a.ts:12)') so one allowlist entry never
-// covers a second mount at the same path; the ceiling caps them by path (siteless key).
+// `use` mounts are keyed by site: file plus the ordinal of that path's mounts in the file
+// ('USE /api/x (routes/a.ts#2)'), so one allowlist entry never covers a second mount at the same
+// path; the ceiling caps them by path (siteless key) and by site count per path (unclassifiedSites).
 // This is a heuristic; the dynamic nonce sentinel test is later work.
 
 interface Allowlist { unbound: Record<string, string>; cannedBaseline: Record<string, string>; unclassified: Record<string, string> }
-interface AllowlistCeiling { unbound: ReadonlySet<string>; cannedBaseline: ReadonlySet<string>; unclassified: ReadonlySet<string> }
+interface AllowlistCeiling { unbound: ReadonlySet<string>; cannedBaseline: ReadonlySet<string>; unclassified: ReadonlySet<string>; unclassifiedSites: ReadonlyMap<string, number> }
 
 const read = (relative: string) => readFileSync(path.join(repoRoot, relative), 'utf8');
 export function tsFiles(dir: string): string[] {
@@ -36,7 +37,10 @@ export const SCANNED_FILES = [...tsFiles('routes'), ...tsFiles('server'), 'serve
 const handlers = SCANNED_FILES.flatMap(file => routeHandlers(file, read(file), path.join(repoRoot, file)));
 const serverHandlers: RouteHandler[] = [];
 const allowlist = JSON.parse(read('routes/AUTHORITY_ALLOWLIST.json')) as Allowlist;
-const ceiling: AllowlistCeiling = readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline', 'unclassified');
+const ceiling: AllowlistCeiling = {
+  ...readCeiling('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unbound', 'cannedBaseline', 'unclassified'),
+  unclassifiedSites: readCeilingCounts('routes/AUTHORITY_ALLOWLIST.ceiling.json', 'unclassifiedSites'),
+};
 // Method-aware binding keys, e.g. 'DELETE /api/lpbf/jobs/:id' (same shape as RouteHandler.key).
 const operationRoutes = new Set(MODULE_CONTRACTS.flatMap(contract => (contract.operations as readonly ContractOperation[])
   .flatMap(operation => operation.route === null ? [] : [`${operation.method} ${operation.route}`])));
@@ -57,7 +61,9 @@ export function allowlistDecision(found: RouteHandler[], scanned: RouteHandler[]
     staleUnclassified: Object.keys(live.unclassified).filter(key => !unclassifiedKeys.has(key)),
     beyondCeiling: [...beyondCeiling(Object.keys(live.unbound), limit.unbound).map(key => `unbound: ${key}`),
       ...beyondCeiling(Object.keys(live.cannedBaseline), limit.cannedBaseline).map(key => `cannedBaseline: ${key}`),
-      ...Object.keys(live.unclassified).filter(key => !limit.unclassified.has(siteless(key))).sort().map(key => `unclassified: ${key}`)],
+      ...Object.keys(live.unclassified).filter(key => !limit.unclassified.has(siteless(key))).sort().map(key => `unclassified: ${key}`),
+      ...beyondSiteCounts(Object.keys(live.unclassified).filter(key => siteless(key) !== key), siteless, limit.unclassifiedSites)
+        .map(entry => `unclassified sites: ${entry}`)],
   };
 }
 const decision = allowlistDecision(handlers, serverHandlers, operationRoutes, allowlist, ceiling);
@@ -70,7 +76,7 @@ test('the static parser finds direct, aliased, prefixed and table-driven handler
   }
   assert.ok(handlers.length > 60, `expected the full route surface, found ${handlers.length}`);
   for (const key of ['GET /api/health', 'GET /api/runtime-config', 'ALL /api/*']) assert.ok(keys.has(key), `parser missed ${key}`);
-  assert.ok([...keys].some(key => siteless(key) === 'USE /api/lpbf/sources' && key.includes('(routes/lpbfSources.ts:')), 'parser missed the USE /api/lpbf/sources mount');
+  assert.ok([...keys].some(key => siteless(key) === 'USE /api/lpbf/sources' && key.includes('(routes/lpbfSources.ts#')), 'parser missed the USE /api/lpbf/sources mount');
   // The scope walks nested directories (tests/support proves recursion) and includes server/**.
   assert.ok(tsFiles('tests').includes('tests/support/routeScan.ts'));
   assert.ok(SCANNED_FILES.includes('server/security.ts') && SCANNED_FILES.includes('server.ts'));
@@ -100,10 +106,10 @@ test('mutation: every route-registration evasion form is discovered', () => {
   const resolved = Object.fromEntries(found.filter(handler => !handler.key.startsWith('UNRESOLVED')).map(handler => [handler.key, handler.canned]));
   assert.deepEqual(resolved, {
     'POST /api/any-receiver': true, 'GET /api/this-router': true, 'POST /api/element-access': true,
-    'GET /api/route-chain': true, 'PUT /api/route-var': true, 'ALL /api/all': true, 'USE /api/use (evasion.ts:7)': true,
+    'GET /api/route-chain': true, 'PUT /api/route-var': true, 'ALL /api/all': true, 'USE /api/use (evasion.ts#1)': true,
     'POST /api/table-const': true, 'GET /api/a/x': true, 'GET /api/b/x': true,
   });
-  assert.ok(found.find(handler => handler.key === 'USE /api/use (evasion.ts:7)')!.unclassified, 'use-mounted /api handlers must be allowlisted');
+  assert.ok(found.find(handler => handler.key === 'USE /api/use (evasion.ts#1)')!.unclassified, 'use-mounted /api handlers must be allowlisted');
   const unresolvedLines = found.filter(handler => handler.key.startsWith('UNRESOLVED')).map(handler => handler.line).sort((x, y) => x - y);
   assert.deepEqual(unresolvedLines, [12, 13, 14, 15, 16, 17]);
 });
@@ -272,7 +278,7 @@ test('mutation: invoker, options/head and relative sub-router registrations are 
   const resolved = Object.fromEntries(found.filter(handler => !handler.key.startsWith('UNRESOLVED')).map(handler => [handler.key, handler.canned]));
   assert.deepEqual(resolved, {
     'POST /api/call': true, 'PUT /api/apply': true, 'PATCH /api/bind-now': true, 'POST /api/bind-alias': true,
-    'OPTIONS /api/options': true, 'HEAD /api/head': true, 'USE /api/mounted (invokers.ts:8)': false,
+    'OPTIONS /api/options': true, 'HEAD /api/head': true, 'USE /api/mounted (invokers.ts#1)': false,
     'GET /api/mounted/relative': true, 'POST /api/mounted': false,
   });
   assert.equal(found.find(handler => handler.key === 'GET /api/mounted/relative')!.line, 7);
@@ -289,27 +295,46 @@ test('mutation: an imported sub-router mounted under /api is reported under the 
   ].join('\n');
   const found = routeHandlers('tests/fixtures/sample-route.ts', sample, path.join(repoRoot, 'tests/fixtures/sample-route.ts'));
   assert.deepEqual(Object.fromEntries(found.map(handler => [handler.key, handler.canned])), {
-    'USE /api/sub (tests/fixtures/sample-route.ts:3)': false, 'USE /api/default-sub (tests/fixtures/sample-route.ts:4)': false,
+    'USE /api/sub (tests/fixtures/sample-route.ts#1)': false, 'USE /api/default-sub (tests/fixtures/sample-route.ts#1)': false,
     'POST /api/sub/canned': true, 'GET /api/sub': false, 'POST /api/default-sub/canned': true, 'GET /api/default-sub': false,
   });
   const canned = found.find(handler => handler.key === 'POST /api/sub/canned')!;
   assert.deepEqual([canned.file, canned.line], ['tests/fixtures/route-sub-router.ts', 7]);
 });
 
-test('mutation: a second mount at an allowlisted USE path needs its own site entry', () => {
+test('mutation: use mounts are keyed by file and per-path ordinal, not by line', () => {
+  const sample = ["router.use('/api/a', guard);", '', "router.use('/api/b', guard);", "router.use('/api/a', bodyError);"].join('\n');
+  const keys = routeHandlers('routes/mounts.ts', sample).map(handler => handler.key);
+  assert.deepEqual(keys, ['USE /api/a (routes/mounts.ts#1)', 'USE /api/b (routes/mounts.ts#1)', 'USE /api/a (routes/mounts.ts#2)']);
+  // Moving the mounts down (an unrelated edit above them) keeps the keys.
+  assert.deepEqual(routeHandlers('routes/mounts.ts', '// a new comment\n\n' + sample).map(handler => handler.key), keys);
+  assert.deepEqual(keys.map(siteless), ['USE /api/a', 'USE /api/b', 'USE /api/a']);
+});
+
+test('mutation: a second mount at an allowlisted USE path needs its own site entry within the site count', () => {
   const extra = routeHandlers('routes/otherMount.ts', `router.use('/api/lpbf', subRouter);`);
-  assert.deepEqual(extra.map(handler => handler.key), ['USE /api/lpbf (routes/otherMount.ts:1)']);
+  assert.deepEqual(extra.map(handler => handler.key), ['USE /api/lpbf (routes/otherMount.ts#1)']);
   assert.deepEqual(allowlistDecision([...handlers, ...extra], serverHandlers, operationRoutes, allowlist, ceiling).unclassified,
-    ['USE /api/lpbf (routes/otherMount.ts:1)']);
-  // A reviewed site entry for an existing ceiling path is accepted...
-  const reviewed = allowlistDecision([...handlers, ...extra], serverHandlers, operationRoutes,
-    { ...allowlist, unclassified: { ...allowlist.unclassified, 'USE /api/lpbf (routes/otherMount.ts:1)': 'reviewed' } }, ceiling);
-  assert.deepEqual([reviewed.unclassified, reviewed.beyondCeiling], [[], []]);
-  // ...while a mount at a path the ceiling does not hold stays beyond it.
+    ['USE /api/lpbf (routes/otherMount.ts#1)']);
+  // Allowlisting the second /api/lpbf site exceeds the ceiling's site count for that path...
+  const second = allowlistDecision([...handlers, ...extra], serverHandlers, operationRoutes,
+    { ...allowlist, unclassified: { ...allowlist.unclassified, 'USE /api/lpbf (routes/otherMount.ts#1)': 'sneaked in' } }, ceiling);
+  assert.deepEqual([second.unclassified, second.beyondCeiling], [[], ['unclassified sites: USE /api/lpbf (2 > 1 sites)']]);
+  // ...moving a site to another file within the count is fine...
+  const moved = { ...allowlist.unclassified };
+  delete moved['USE /api/lpbf (routes/lpbfSimulation.ts#1)'];
+  assert.deepEqual(allowlistDecision(handlers, serverHandlers, operationRoutes,
+    { ...allowlist, unclassified: { ...moved, 'USE /api/lpbf (routes/otherMount.ts#1)': 'moved' } }, ceiling).beyondCeiling, []);
+  // ...and a mount at a path the ceiling does not hold stays beyond it.
   const fresh = routeHandlers('routes/otherMount.ts', `router.use('/api/fresh', subRouter);`);
   const sneaked = allowlistDecision([...handlers, ...fresh], serverHandlers, operationRoutes,
-    { ...allowlist, unclassified: { ...allowlist.unclassified, 'USE /api/fresh (routes/otherMount.ts:1)': 'sneaked in' } }, ceiling);
-  assert.deepEqual(sneaked.beyondCeiling, ['unclassified: USE /api/fresh (routes/otherMount.ts:1)']);
+    { ...allowlist, unclassified: { ...allowlist.unclassified, 'USE /api/fresh (routes/otherMount.ts#1)': 'sneaked in' } }, ceiling);
+  assert.deepEqual(sneaked.beyondCeiling, ['unclassified: USE /api/fresh (routes/otherMount.ts#1)',
+    'unclassified sites: USE /api/fresh (1 > 0 sites)']);
+});
+
+test('the site-count ceiling only covers unclassified ceiling paths', () => {
+  assert.deepEqual([...ceiling.unclassifiedSites.keys()].filter(entry => !ceiling.unclassified.has(entry)), []);
 });
 
 test('mutation: look-alike authorities do not count; recognised imports and injected services do', () => {

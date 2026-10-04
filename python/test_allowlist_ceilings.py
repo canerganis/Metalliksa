@@ -164,6 +164,18 @@ DELIBERATE_DELTA = {
         "cannedBaseline": {"GET /api/health"},
     },
 }
+# Count-valued ceiling keys ({entry: max}) may only shrink below these reviewed caps; a key or
+# entry not listed here is growth. p7 re-audit fix round: site count per USE mount path.
+COUNT_CAPS = {
+    "routes/AUTHORITY_ALLOWLIST.ceiling.json": {
+        "unclassifiedSites": {
+            "USE /api/lpbf": 1,
+            "USE /api/lpbf/runs": 2,
+            "USE /api/lpbf/sources": 2,
+            "USE /api/research/registry": 1,
+        },
+    },
+}
 IGNORED_DIRS = {"node_modules", ".git", "dist", "graft", ".runtime"}
 
 
@@ -178,6 +190,23 @@ def ceiling_files() -> list:
         dirs[:] = [d for d in dirs if d not in IGNORED_DIRS and not d.startswith(".")]
         found += [Path(root, f).relative_to(REPO_ROOT).as_posix() for f in files if f.endswith(".ceiling.json")]
     return sorted(found)
+
+
+def count_growth(path: str, data: dict) -> list:
+    """Count-map entries of a ceiling beyond COUNT_CAPS (new keys, new entries, larger counts)."""
+    problems = []
+    caps = COUNT_CAPS.get(path, {})
+    for key, value in data.items():
+        if not isinstance(value, dict):
+            continue
+        if key not in caps:
+            problems.append(f"new count key {key!r}")
+            continue
+        for entry, count in sorted(value.items()):
+            limit = caps[key].get(entry)
+            if limit is None or not isinstance(count, int) or isinstance(count, bool) or count < 0 or count > limit:
+                problems.append(f"{key}: {entry} = {count!r} (cap {limit})")
+    return problems
 
 
 def growth(original: dict, current: dict, delta: dict) -> list:
@@ -236,6 +265,20 @@ class PinnedCeilingTests(unittest.TestCase):
         current = entry_sets((REPO_ROOT / path).read_text(encoding="utf-8"))
         current["unbound"] = current["unbound"] | {"POST /api/sneaked-in"}
         self.assertEqual(growth(original, current, DELIBERATE_DELTA[path]), ["unbound: POST /api/sneaked-in"])
+
+    def test_count_ceilings_never_grow(self):
+        for path in ceiling_files():
+            with self.subTest(path=path):
+                data = json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+                self.assertEqual(count_growth(path, data), [])
+
+    def test_count_growth_logic(self):
+        path = "routes/AUTHORITY_ALLOWLIST.ceiling.json"
+        self.assertEqual(count_growth(path, {"unclassifiedSites": {"USE /api/lpbf": 1}}), [])
+        self.assertEqual(count_growth(path, {"unclassifiedSites": {"USE /api/lpbf": 2}}), ["unclassifiedSites: USE /api/lpbf = 2 (cap 1)"])
+        self.assertEqual(count_growth(path, {"unclassifiedSites": {"USE /api/new": 1}}), ["unclassifiedSites: USE /api/new = 1 (cap None)"])
+        self.assertEqual(count_growth(path, {"other": {"x": 1}}), ["new count key 'other'"])
+        self.assertEqual(count_growth("python/module_warm_parity.ceiling.json", {"names": ["a"]}), [])
 
     def test_growth_logic_rejects_additions_and_new_keys(self):
         original = {"unbound": {"a"}, "cannedBaseline": {"c"}}

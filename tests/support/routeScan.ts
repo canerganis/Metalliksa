@@ -544,16 +544,20 @@ export function joinRoute(prefix: string, route: string): string {
   return `${prefix.replace(/\/+$/, '')}${route.startsWith('/') ? '' : '/'}${route}`;
 }
 
-/** Allowlist key of a handler: method and path; `use` mounts are also keyed by their site. */
-const handlerKey = (method: string, route: string, file: string, line: number) =>
-  method === 'use' ? `USE ${route} (${file}:${line})` : `${method.toUpperCase()} ${route}`;
+/**
+ * Allowlist key of a handler: method and path. A `use` mount is also keyed by its site: file
+ * plus the ordinal of that path's mounts within the file ('USE /api/x (routes/a.ts#2)'), which
+ * survives unrelated edits that move lines.
+ */
+const handlerKey = (method: string, route: string, file: string, ordinal: number) =>
+  method === 'use' ? `USE ${route} (${file}#${ordinal})` : `${method.toUpperCase()} ${route}`;
 
-/** The site-independent part of a key: 'USE /api/x (routes/a.ts:3)' -> 'USE /api/x'. */
-export const siteless = (key: string) => key.replace(/ \([^()]+:\d+\)$/, '');
+/** The site-independent part of a key: 'USE /api/x (routes/a.ts#2)' -> 'USE /api/x'. */
+export const siteless = (key: string) => key.replace(/ \([^()]+#\d+\)$/, '');
 
 // A route registered with a non-/api path on a named receiver; reported only when that receiver
 // is mounted under an /api prefix.
-interface RelativeRoute { receiver: string; method: string; route: string; file: string; line: number; canned: boolean; unclassified: boolean }
+interface RelativeRoute { receiver: string; method: string; route: string; file: string; line: number; ordinal: number; canned: boolean; unclassified: boolean }
 interface Mount { prefixes: string[]; name: string }
 interface Scan { handlers: RouteHandler[]; relative: RelativeRoute[]; mounts: Mount[]; ctx: FileContext }
 type RouteCall = { method: string; receiver: ts.Expression; args: readonly ts.Expression[]; anchor: ts.Node };
@@ -577,10 +581,18 @@ function scanFile(file: string, text: string, absPath: string | null): Scan {
     const line = lineOf(node);
     const owner = receiver && ts.isIdentifier(unwrap(receiver)) ? (unwrap(receiver) as ts.Identifier).text : undefined;
     for (const route of paths) {
-      if (route.startsWith('/api')) handlers.push({ key: handlerKey(method, route, file, line), file, line, canned, unclassified });
-      else if (owner) relative.push({ receiver: owner, method, route, file, line, canned, unclassified });
+      const ordinal = method === 'use' ? nextOrdinal(route) : 0;
+      if (route.startsWith('/api')) handlers.push({ key: handlerKey(method, route, file, ordinal), file, line, canned, unclassified });
+      else if (owner) relative.push({ receiver: owner, method, route, file, line, ordinal, canned, unclassified });
     }
   };
+  // n-th `use` mount of the same path in this file, in source order.
+  const useOrdinals = new Map<string, number>();
+  function nextOrdinal(route: string): number {
+    const next = (useOrdinals.get(route) ?? 0) + 1;
+    useOrdinals.set(route, next);
+    return next;
+  }
   const routeChainPath = (receiver: ts.Expression): ts.Expression | undefined => {
     // router.route('/api/x').get(h)  or  const r = router.route('/api/x'); r.get(h)
     let target: ts.Expression | undefined = receiver;
@@ -740,7 +752,7 @@ export function routeHandlers(file: string, text: string, absPath: string | null
     for (const prefix of mount.prefixes) {
       for (const route of routes) {
         const joined = joinRoute(prefix, route.route);
-        handlers.push({ key: handlerKey(route.method, joined, route.file, route.line), file: route.file, line: route.line, canned: route.canned, unclassified: route.unclassified });
+        handlers.push({ key: handlerKey(route.method, joined, route.file, route.ordinal), file: route.file, line: route.line, canned: route.canned, unclassified: route.unclassified });
       }
     }
   }

@@ -1,5 +1,5 @@
 {
-  "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. 'unclassified' keys of use mounts carry their site (file:line); the ceiling caps them by path. Route behaviour is unchanged.",
+  "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. 'unclassified' keys of use mounts carry their site (file#ordinal of that path's mounts in the file); the ceiling caps them by path and by site count per path. Route behaviour is unchanged.",
   "unbound": {
     "GET /api/health": "Infrastructure (server.ts): liveness and API-key presence flag.",
     "GET /api/runtime-config": "Infrastructure (server.ts): air-gap configuration for the UI banner.",
@@ -51,12 +51,12 @@
     "POST /api/python/lpbf-bayesian-optimization": "LPBF worker route; the UI calls the python-ipc /api/python/lpbf-bayesian-optimize instead."
   },
   "unclassified": {
-    "USE /api/lpbf (routes/lpbfSimulation.ts:15)": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
-    "USE /api/lpbf/sources (routes/lpbfSources.ts:8)": "routes/lpbfSources.ts guard (no-store, read-only/origin/content-type checks); calls next() or answers error envelopes; no result payload.",
-    "USE /api/lpbf/sources (routes/lpbfSources.ts:58)": "routes/lpbfSources.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
-    "USE /api/lpbf/runs (routes/lpbfRuns.ts:54)": "routes/lpbfRuns.ts no-store/guard middleware; calls next() or answers error envelopes; no result payload.",
-    "USE /api/lpbf/runs (routes/lpbfRuns.ts:141)": "routes/lpbfRuns.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
-    "USE /api/research/registry (routes/researchRegistry.ts:17)": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
+    "USE /api/lpbf (routes/lpbfSimulation.ts#1)": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#1)": "routes/lpbfSources.ts guard (no-store, read-only/origin/content-type checks); calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#2)": "routes/lpbfSources.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#1)": "routes/lpbfRuns.ts no-store/guard middleware; calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#2)": "routes/lpbfRuns.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/research/registry (routes/researchRegistry.ts#1)": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
   },
   "cannedBaseline": {
     "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
