@@ -283,9 +283,10 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # Guard on what a step_b re-bless may record (fix round item 7). Design step (b) only
 # changes values: every drift row against the d33b6f5 golden must be numeric, except
 # changed strings under the keys below (generated code snippets that print a value).
-# Exception, listed per row pattern: phase6a_t2b_golden_cases.EXPECTED_DOCUMENTED_VALUE_CHANGES
-# (kinetics predictedHardness_HV -> ASTM E140), each row verified exactly by
-# documented_change_violation; it does not widen the bound for any other row.
+# Exception, listed per row pattern: EXPECTED_DOCUMENTED_VALUE_CHANGES below (kinetics
+# predictedHardness_HV -> ASTM E140 from phase6a_t2b_golden_cases; pourbaix WP-E equilibrium
+# engine from pourbaix_golden_check), each row verified exactly by documented_change_violation;
+# it does not widen the bound for any other row.
 STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
 STEP_B_DEFAULT_MAX_REL = 1e-2
 # tafel: the drift follows the equivalent-weight change (EW rel r): rates and losses
@@ -303,9 +304,25 @@ def step_b_max_rel(solver: str, rows: List[Dict[str, Any]]) -> float:
     return STEP_B_DEFAULT_MAX_REL
 
 
-def _documented_change_patterns(solver: str) -> Dict[str, str]:
+# Documented value changes of every solver: the tranche-2b table (kinetics HV) plus the pourbaix
+# entry (WP-G). Pourbaix rows are verified by documented_change_violation against
+# tools/pourbaix_oracle.py (pourbaix_golden_check), never by a bound.
+EXPECTED_DOCUMENTED_VALUE_CHANGES: Dict[str, Dict[str, str]] = {}
+
+
+def _load_documented_value_changes() -> None:
     cases = globals().get("_t2b_cases")
-    return dict(getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).get(solver, {}))
+    EXPECTED_DOCUMENTED_VALUE_CHANGES.clear()
+    EXPECTED_DOCUMENTED_VALUE_CHANGES.update(
+        {k: dict(v) for k, v in getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).items()})
+    import pourbaix_golden_check  # noqa: E402 (python/tools module)
+    EXPECTED_DOCUMENTED_VALUE_CHANGES["pourbaix_solver"] = dict(pourbaix_golden_check.DOCUMENTED_VALUE_CHANGES)
+
+
+def _documented_change_patterns(solver: str) -> Dict[str, str]:
+    if not EXPECTED_DOCUMENTED_VALUE_CHANGES:
+        _load_documented_value_changes()
+    return dict(EXPECTED_DOCUMENTED_VALUE_CHANGES.get(solver, {}))
 
 
 def _is_documented_change_row(solver: str, key: str) -> bool:
@@ -315,9 +332,32 @@ def _is_documented_change_row(solver: str, key: str) -> bool:
 _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
 
 
+def pourbaix_documented_change_violation(row: Dict[str, Any], old_stdout: Optional[Dict[str, Any]],
+                                         new_stdout: Optional[Dict[str, Any]],
+                                         context: Any = None) -> Optional[str]:
+    """Pourbaix hook (WP-G): None when ``row`` is exactly the documented WP-E change.
+
+    The row's old value must be the d33b6f5 golden's leaf (``old_stdout``), its new value the
+    re-blessed document's leaf, and the section of the re-blessed document it lives in must equal
+    the independent oracle (tools/pourbaix_golden_check.document_problems: categories, species
+    and texts equal, boundary/polygon coordinates <= 1e-4 V). Nothing is accepted by tolerance.
+    """
+    key = row["key"]
+    if old_stdout is None or new_stdout is None:
+        return f"{key}: documented change needs the d33b6f5 golden and the re-blessed document"
+    import pourbaix_golden_check as check  # noqa: E402 (python/tools module)
+    if context is None:
+        context = check.Context(old_stdout, new_stdout)
+    return check.row_problem(row, context)
+
+
 def documented_change_violation(solver: str, row: Dict[str, Any],
-                                new_stdout: Optional[Dict[str, Any]]) -> Optional[str]:
+                                new_stdout: Optional[Dict[str, Any]],
+                                old_stdout: Optional[Dict[str, Any]] = None,
+                                pourbaix_context: Any = None) -> Optional[str]:
     """None when ``row`` is exactly the documented change (EXPECTED_DOCUMENTED_VALUE_CHANGES).
+
+    pourbaix_solver: see pourbaix_documented_change_violation (needs ``old_stdout``).
 
     kinetics_ttt_cct_solver predictedHardness_HV: the old value must be the old formula
     round(10.5 * HRC + 40) of the row's (unchanged) HRC, and the new value must be the
@@ -326,6 +366,8 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     status that belongs to that HV. Nothing is accepted by tolerance.
     """
     key = row["key"]
+    if solver == "pourbaix_solver":
+        return pourbaix_documented_change_violation(row, old_stdout, new_stdout, pourbaix_context)
     if solver != "kinetics_ttt_cct_solver" or not _KINETICS_HV_ROW.fullmatch(key):
         return f"{key}: no documented-change check for this row"
     if new_stdout is None:
@@ -362,18 +404,24 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
 
 
 def step_b_violations(solver: str, rows: List[Dict[str, Any]],
-                      new_stdout: Optional[Dict[str, Any]] = None) -> List[str]:
+                      new_stdout: Optional[Dict[str, Any]] = None,
+                      old_stdout: Optional[Dict[str, Any]] = None) -> List[str]:
     """Rows a step_b re-bless must not contain (empty list = acceptable drift).
 
-    ``new_stdout`` is the re-blessed stdout; it is needed only to verify rows listed in
-    EXPECTED_DOCUMENTED_VALUE_CHANGES (without it those rows are violations).
+    ``new_stdout`` is the re-blessed stdout and ``old_stdout`` the d33b6f5 golden's; they are
+    needed only to verify rows listed in EXPECTED_DOCUMENTED_VALUE_CHANGES (kinetics needs
+    ``new_stdout``, pourbaix both; without them those rows are violations).
     """
     bound = step_b_max_rel(solver, rows)
     out = []
+    pourbaix_context = None
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
         if _is_documented_change_row(solver, r["key"]):
-            problem = documented_change_violation(solver, r, new_stdout)
+            if solver == "pourbaix_solver" and pourbaix_context is None                     and old_stdout is not None and new_stdout is not None:
+                import pourbaix_golden_check  # noqa: E402 (python/tools module)
+                pourbaix_context = pourbaix_golden_check.Context(old_stdout, new_stdout)
+            problem = documented_change_violation(solver, r, new_stdout, old_stdout, pourbaix_context)
             if problem:
                 out.append(problem)
         elif r["kind"] == "numeric":
@@ -393,8 +441,12 @@ def step_b_excluded_cases() -> set:
         if cases is not None:
             excluded |= set(getattr(cases, "EXPECTED_BEHAVIOUR_CHANGES", {}))
             excluded |= set(getattr(cases, "EXPECTED_SUCCESS_FLAG_CHANGES", ()))
+    # pourbaix al_hot_chloride / ni_acid_points: 80 C and 60 C requests now give the
+    # TEMPERATURE_UNSUPPORTED envelope (WP-E, 25 C engine); old goldens stay as the record.
     excluded |= {("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"),
-                 ("pourbaix_solver", "edge_unknown_element_badvals")}
+                 ("pourbaix_solver", "edge_unknown_element_badvals"),
+                 ("pourbaix_solver", "al_hot_chloride"),
+                 ("pourbaix_solver", "ni_acid_points")}
     return excluded
 
 
@@ -483,6 +535,7 @@ CASES.update(_t2b_cases.CASES)
 _TABLE_TARGETS.update(_t2b_cases.TABLE_TARGETS)
 MODULE_DRIVERS.update(_t2b_cases.MODULE_DRIVERS)
 # ---- END phase6a-t2b block ----
+_load_documented_value_changes()  # tranche-2b kinetics entry + pourbaix (WP-G)
 
 
 def capture_source_tables(force: bool, label: str = BASE_REVISION,
