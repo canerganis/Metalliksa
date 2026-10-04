@@ -1,4 +1,5 @@
 import type { MmpdsBasisResult, QualificationTestEvaluation } from "../types";
+import { screeningToleranceFactors } from "./toleranceFactors";
 
 /**
  * Pure screening logic extracted verbatim from StandardQualificationEngine.tsx.
@@ -23,20 +24,10 @@ export function computeQualificationMmpdsStats(inputs: QualificationMmpdsInputs)
   // MMPDS One-Sided Tolerance Limit Factors:
   // A-Basis: 99% probability with 95% confidence
   // B-Basis: 90% probability with 95% confidence
-  const z99 = 2.326348;
-  const z90 = 1.281552;
-  const z95_conf = 1.644854;
-
-  // Classical Natrella / Lieberman-Resnikoff approximation for one-sided tolerance factor k:
-  const kA = Number(
-    (z99 + Math.sqrt(z99 * z99 - (1 - (z95_conf * z95_conf) / (2 * (N - 1))) * (z99 * z99 - (z95_conf * z95_conf) / N)) /
-      (1 - (z95_conf * z95_conf) / (2 * (N - 1)))).toFixed(3)
-  ) || (z99 * (1 + z95_conf / Math.sqrt(2 * N)));
-
-  const kB = Number(
-    (z90 + Math.sqrt(z90 * z90 - (1 - (z95_conf * z95_conf) / (2 * (N - 1))) * (z90 * z90 - (z95_conf * z95_conf) / N)) /
-      (1 - (z95_conf * z95_conf) / (2 * (N - 1)))).toFixed(3)
-  ) || (z90 * (1 + z95_conf / Math.sqrt(2 * N)));
+  // Classical Natrella / Lieberman-Resnikoff approximation k = (z_p + sqrt(z_p^2 - a b)) / a, shared with
+  // AerospaceAuditReportGenerator. (Until 2026-10 this screen divided only the sqrt term by a, which made
+  // k_A / k_B 2-11 % too small, i.e. optimistic allowables; see tests/utils-tolerance-factor.test.ts.)
+  const { kA, kB } = screeningToleranceFactors(N);
 
   // A-Basis & B-Basis Yield Strength
   const aBasisYield = Math.max(0, Math.round(meanYieldMpa - kA * stdDev));

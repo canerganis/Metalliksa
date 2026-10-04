@@ -3,29 +3,31 @@ import test from "node:test";
 import { calculateMMPDSToleranceFactor } from "../src/components/uqLabData";
 import { buildQualificationChecklist, computeQualificationMmpdsStats } from "../src/utils/qualificationScreening";
 
-// Golden values were captured from the UNMODIFIED inline useMemo of StandardQualificationEngine.tsx (HEAD faa6684)
-// by a differential run over 324 input combinations before the component was wired to this module.
+// Golden values were first captured from the UNMODIFIED inline useMemo of StandardQualificationEngine.tsx (HEAD faa6684)
+// by a differential run over 324 input combinations before the component was wired to this module. The k_A / k_B
+// grouping bug was fixed afterwards (shared toleranceFactors.ts, identical to the aerospace screen); the values
+// below are the corrected ones and the pre-fix values are kept in the HISTORICAL block at the end of this file.
 
 const base = { meanYieldMpa: 930, meanTensileMpa: 1010, fractureToughnessMpaM: 68, sampleSizeN: 60, customScatterCv: 2.8 };
 
-test("default screening inputs reproduce the pre-extraction numbers exactly", () => {
+test("default screening inputs (corrected Natrella k)", () => {
   assert.deepEqual(computeQualificationMmpdsStats(base), {
     meanYield: 930,
     meanTensile: 1010,
     stdDev: 26,
     covPct: 2.8,
     sampleSize: 60,
-    kA: 2.746,
-    kB: 1.574,
-    aBasisYield: 858,
-    bBasisYield: 889,
+    kA: 2.801,
+    kB: 1.604,
+    aBasisYield: 857,
+    bBasisYield: 888,
     sBasisYield: 852,
-    aBasisTensile: 932,
+    aBasisTensile: 931,
     bBasisTensile: 965,
     shearUltimate: 559,
-    bearingYield: 1287,
-    bearingUltimate: 1864,
-    compressiveYield: 892,
+    bearingYield: 1286,
+    bearingUltimate: 1862,
+    compressiveYield: 891,
     fractureToughnessKic: 68,
     cpk: 1.79,
     status: "A-Basis Qualified",
@@ -36,12 +38,12 @@ test("golden table: small sample, high scatter and clamped inputs", () => {
   const n20 = computeQualificationMmpdsStats({ ...base, sampleSizeN: 20 });
   assert.deepEqual(
     [n20.kA, n20.kB, n20.aBasisYield, n20.bBasisYield, n20.aBasisTensile, n20.bBasisTensile, n20.status],
-    [3.096, 1.812, 849, 883, 922, 959, "S-Basis Provisional"]
+    [3.274, 1.91, 845, 880, 917, 956, "S-Basis Provisional"]
   );
   const highCv = computeQualificationMmpdsStats({ ...base, customScatterCv: 8.5 });
   assert.deepEqual(
     [highCv.stdDev, highCv.covPct, highCv.aBasisYield, highCv.bBasisYield, highCv.sBasisYield, highCv.cpk, highCv.status],
-    [79, 8.5, 713, 806, 693, 0.59, "B-Basis Qualified"]
+    [79, 8.5, 709, 803, 693, 0.59, "B-Basis Qualified"]
   );
   // N below 10 is clamped to 10 and scatter below 1 % is clamped to 1 %.
   const clamped = computeQualificationMmpdsStats({
@@ -55,7 +57,7 @@ test("golden table: small sample, high scatter and clamped inputs", () => {
   assert.equal(clamped.covPct, 1);
   assert.deepEqual(
     [clamped.stdDev, clamped.kA, clamped.kB, clamped.aBasisYield, clamped.bBasisYield, clamped.cpk, clamped.status],
-    [5, 3.528, 2.094, 482, 490, 5, "S-Basis Provisional"]
+    [5, 3.94, 2.321, 480, 488, 5, "S-Basis Provisional"]
   );
 });
 
@@ -122,39 +124,59 @@ test("checklist rows are template-only: never a pass, always Not executed", () =
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// FORMULA BUG (reported, NOT fixed: scientific-calculation changes need the user).
-// StandardQualificationEngine computes the Natrella one-sided tolerance factor as
-//   k = z_p + sqrt(z_p^2 - a*b) / a          (the division binds only to the sqrt term)
+// FORMULA BUG FIXED (2026-10). StandardQualificationEngine used to compute the Natrella one-sided tolerance factor as
+//   k = z_p + sqrt(z_p^2 - a*b) / a          (the division bound only to the sqrt term)
 // whereas the Natrella / Lieberman-Resnikoff formula is
 //   k = (z_p + sqrt(z_p^2 - a*b)) / a,   a = 1 - z_g^2/(2(N-1)),  b = z_p^2 - z_g^2/N.
-// AerospaceAuditReportGenerator has the correct grouping. Evidence at 99 %/95 % (A-basis):
-//   N=10:  engine 3.528   Natrella 3.940   exact non-central t 3.981 (scipy.stats.nct)
-//   N=30:  engine 2.937   Natrella 3.050   exact 3.064
-//   N=60:  engine 2.746   Natrella 2.8006  exact 2.807
-//   N=100: engine 2.648   Natrella 2.680   exact 2.684
-// The engine therefore under-states k_A (and k_B: N=60 engine 1.574, Natrella 1.604, exact 1.609),
-// i.e. its A/B-basis estimates are optimistic by up to ~11 % in k at small N.
+// It now shares toleranceFactors.ts with AerospaceAuditReportGenerator. Proof against the EXACT non-central-t factor
+// (tests/fixtures/one-sided-tolerance-factor-oracle.json, scipy) is in tests/utils-tolerance-factor.test.ts.
+//   A-basis N=10: old 3.528   fixed 3.940   exact 3.981      N=60: old 2.746  fixed 2.801  exact 2.807
+//   B-basis N=10: old 2.094   fixed 2.321   exact 2.355      N=60: old 1.574  fixed 1.604  exact 1.609
 // ---------------------------------------------------------------------------------------------------------------
-test(
-  "kA/kB match the Natrella formula (engine mis-groups the division)",
-  { todo: "BUG: k = z + sqrt(..)/a instead of (z + sqrt(..))/a; see comment block above" },
-  () => {
-    for (const N of [10, 30, 60, 100]) {
-      const r = computeQualificationMmpdsStats({ ...base, sampleSizeN: N });
-      const kA = calculateMMPDSToleranceFactor(N, 0.99, 0.95)!;
-      const kB = calculateMMPDSToleranceFactor(N, 0.9, 0.95)!;
-      assert.ok(Math.abs(r.kA - kA) < 0.01, `N=${N}: kA ${r.kA} vs Natrella ${kA}`);
-      assert.ok(Math.abs(r.kB - kB) < 0.01, `N=${N}: kB ${r.kB} vs Natrella ${kB}`);
-    }
+test("kA/kB match the Natrella formula (independent implementation in uqLabData)", () => {
+  for (const N of [10, 30, 60, 100]) {
+    const r = computeQualificationMmpdsStats({ ...base, sampleSizeN: N });
+    const kA = calculateMMPDSToleranceFactor(N, 0.99, 0.95)!;
+    const kB = calculateMMPDSToleranceFactor(N, 0.9, 0.95)!;
+    assert.ok(Math.abs(r.kA - kA) < 0.001, `N=${N}: kA ${r.kA} vs Natrella ${kA}`);
+    assert.ok(Math.abs(r.kB - kB) < 0.001, `N=${N}: kB ${r.kB} vs Natrella ${kB}`);
   }
-);
+});
 
-test("documents today's kA/kB values (pins the unmodified behaviour until the formula is approved for change)", () => {
+test("corrected kA/kB values by N", () => {
   const byN = Object.fromEntries(
     [10, 30, 60, 100].map((N) => {
       const r = computeQualificationMmpdsStats({ ...base, sampleSizeN: N });
       return [N, [r.kA, r.kB]];
     })
   );
-  assert.deepEqual(byN, { 10: [3.528, 2.094], 30: [2.937, 1.705], 60: [2.746, 1.574], 100: [2.648, 1.506] });
+  assert.deepEqual(byN, { 10: [3.94, 2.321], 30: [3.05, 1.767], 60: [2.801, 1.604], 100: [2.68, 1.524] });
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// HISTORICAL (pre-fix values, pinned so reviewers see the delta). Displayed by StandardQualificationEngine before
+// the k grouping fix; the old formula is re-implemented and checked against the exact factor in
+// tests/utils-tolerance-factor.test.ts ("HISTORICAL old qualification k").
+// ---------------------------------------------------------------------------------------------------------------
+test("HISTORICAL pre-fix qualification outputs differ from the corrected ones exactly where k enters", () => {
+  const before = {
+    default: { kA: 2.746, kB: 1.574, aBasisYield: 858, bBasisYield: 889, aBasisTensile: 932, bBasisTensile: 965, bearingYield: 1287, bearingUltimate: 1864, compressiveYield: 892 },
+    n20: { kA: 3.096, kB: 1.812, aBasisYield: 849, bBasisYield: 883, aBasisTensile: 922, bBasisTensile: 959 },
+    cv85: { aBasisYield: 713, bBasisYield: 806 },
+    n10clamped: { kA: 3.528, kB: 2.094, aBasisYield: 482, bBasisYield: 490 },
+  };
+  const now = {
+    default: computeQualificationMmpdsStats(base),
+    n20: computeQualificationMmpdsStats({ ...base, sampleSizeN: 20 }),
+    cv85: computeQualificationMmpdsStats({ ...base, customScatterCv: 8.5 }),
+    n10clamped: computeQualificationMmpdsStats({ meanYieldMpa: 500, meanTensileMpa: 600, fractureToughnessMpaM: 30, sampleSizeN: 5, customScatterCv: 0.2 }),
+  };
+  for (const [name, old] of Object.entries(before)) {
+    const cur = now[name as keyof typeof now] as unknown as Record<string, number>;
+    for (const [field, oldValue] of Object.entries(old)) {
+      // corrected k is larger, so every allowable is lower or equal (never optimistic relative to the old screen)
+      if (field === "kA" || field === "kB") assert.ok(cur[field] > oldValue, `${name}.${field}`);
+      else assert.ok(cur[field] <= oldValue, `${name}.${field}: ${cur[field]} vs old ${oldValue}`);
+    }
+  }
 });

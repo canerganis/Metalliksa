@@ -4,6 +4,8 @@
  * certificate, not a pass/fail test result.
  */
 
+import { screeningToleranceFactors } from "./toleranceFactors";
+
 export interface AerospaceScreeningInputs {
   meanYieldMpa: number;
   meanTensileMpa: number;
@@ -16,33 +18,8 @@ export function computeAerospaceScreeningStats({ meanYieldMpa, meanTensileMpa, s
   const cov = Math.max(1.0, scatterCvPct) / 100;
   const stdDev = meanYieldMpa * cov;
 
-  const z99 = 2.326348;
-  const z90 = 1.281552;
-  const z95_conf = 1.644854;
-
-  const kA = Number(
-    (
-      (z99 +
-        Math.sqrt(
-          z99 * z99 -
-            (1 - (z95_conf * z95_conf) / (2 * (N - 1))) *
-              (z99 * z99 - (z95_conf * z95_conf) / N)
-        )) /
-      (1 - (z95_conf * z95_conf) / (2 * (N - 1)))
-    ).toFixed(3)
-  ) || Number((z99 * (1 + z95_conf / Math.sqrt(2 * N))).toFixed(3));
-
-  const kB = Number(
-    (
-      (z90 +
-        Math.sqrt(
-          z90 * z90 -
-            (1 - (z95_conf * z95_conf) / (2 * (N - 1))) *
-              (z90 * z90 - (z95_conf * z95_conf) / N)
-        )) /
-      (1 - (z95_conf * z95_conf) / (2 * (N - 1)))
-    ).toFixed(3)
-  ) || Number((z90 * (1 + z95_conf / Math.sqrt(2 * N))).toFixed(3));
+  // Natrella one-sided tolerance factors (shared with StandardQualificationEngine; same expression and rounding).
+  const { kA, kB } = screeningToleranceFactors(N);
 
   const aBasisYield = Math.max(0, Math.round(meanYieldMpa - kA * stdDev));
   const bBasisYield = Math.max(0, Math.round(meanYieldMpa - kB * stdDev));
