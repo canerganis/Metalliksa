@@ -1,0 +1,172 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "ss316l_surface_r01",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "alloyName": "316L SS",
+  "location": "surface",
+  "sqrtArea_um": 120,
+  "stressAmplitude_MPa": 180,
+  "stressRatio_R": 0.1
+ },
+ "invocation": "python -B lpbf_fatigue_fracture.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "lpbf_fatigue_fracture",
+ "solverFile": "python/lpbf_fatigue_fracture.py",
+ "solverSha256": "1c045a23e50dd327c2f2c6961b98543cd111e16d773284fae4cc111c56c0dede",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "fatigue_limit": {
+   "el_haddad_a0_um": 127.32,
+   "fatigue_limit_R_minus_1_MPa": 157.9,
+   "fatigue_limit_corrected_MPa": 129.5,
+   "hardness_HV": 215.0,
+   "location": "surface",
+   "murakami_raw_MPa": 215.7,
+   "sqrt_area_um": 120.0,
+   "stress_ratio_R": 0.1
+  },
+  "kitagawa_takahashi_curve": [
+   {
+    "defect_sqrt_area_um": 0.1,
+    "fatigue_limit_MPa": 180.5
+   },
+   {
+    "defect_sqrt_area_um": 0.14,
+    "fatigue_limit_MPa": 180.5
+   },
+   {
+    "defect_sqrt_area_um": 0.19,
+    "fatigue_limit_MPa": 180.4
+   },
+   {
+    "defect_sqrt_area_um": 0.26,
+    "fatigue_limit_MPa": 180.4
+   },
+   {
+    "defect_sqrt_area_um": 0.36,
+    "fatigue_limit_MPa": 180.3
+   },
+   {
+    "defect_sqrt_area_um": 0.49,
+    "fatigue_limit_MPa": 180.2
+   },
+   {
+    "defect_sqrt_area_um": 0.67,
+    "fatigue_limit_MPa": 180.1
+   },
+   {
+    "defect_sqrt_area_um": 0.92,
+    "fatigue_limit_MPa": 179.9
+   },
+   {
+    "defect_sqrt_area_um": 1.27,
+    "fatigue_limit_MPa": 179.7
+   },
+   {
+    "defect_sqrt_area_um": 1.74,
+    "fatigue_limit_MPa": 179.3
+   },
+   {
+    "defect_sqrt_area_um": 2.4,
+    "fatigue_limit_MPa": 178.9
+   },
+   {
+    "defect_sqrt_area_um": 3.29,
+    "fatigue_limit_MPa": 178.3
+   },
+   {
+    "defect_sqrt_area_um": 4.52,
+    "fatigue_limit_MPa": 177.4
+   },
+   {
+    "defect_sqrt_area_um": 6.21,
+    "fatigue_limit_MPa": 176.3
+   },
+   {
+    "defect_sqrt_area_um": 8.53,
+    "fatigue_limit_MPa": 174.8
+   },
+   {
+    "defect_sqrt_area_um": 11.72,
+    "fatigue_limit_MPa": 172.8
+   },
+   {
+    "defect_sqrt_area_um": 16.1,
+    "fatigue_limit_MPa": 170.1
+   },
+   {
+    "defect_sqrt_area_um": 22.12,
+    "fatigue_limit_MPa": 166.7
+   },
+   {
+    "defect_sqrt_area_um": 30.39,
+    "fatigue_limit_MPa": 162.2
+   },
+   {
+    "defect_sqrt_area_um": 41.75,
+    "fatigue_limit_MPa": 156.7
+   },
+   {
+    "defect_sqrt_area_um": 57.36,
+    "fatigue_limit_MPa": 149.9
+   },
+   {
+    "defect_sqrt_area_um": 78.8,
+    "fatigue_limit_MPa": 141.9
+   },
+   {
+    "defect_sqrt_area_um": 108.26,
+    "fatigue_limit_MPa": 132.7
+   },
+   {
+    "defect_sqrt_area_um": 148.74,
+    "fatigue_limit_MPa": 122.6
+   },
+   {
+    "defect_sqrt_area_um": 204.34,
+    "fatigue_limit_MPa": 111.9
+   },
+   {
+    "defect_sqrt_area_um": 280.72,
+    "fatigue_limit_MPa": 100.9
+   },
+   {
+    "defect_sqrt_area_um": 385.66,
+    "fatigue_limit_MPa": 89.9
+   },
+   {
+    "defect_sqrt_area_um": 529.83,
+    "fatigue_limit_MPa": 79.5
+   },
+   {
+    "defect_sqrt_area_um": 727.9,
+    "fatigue_limit_MPa": 69.7
+   },
+   {
+    "defect_sqrt_area_um": 1000.0,
+    "fatigue_limit_MPa": 60.7
+   }
+  ],
+  "paris_crack_growth": {
+   "crack_growth_curve": [
+    {
+     "crack_length_um": 120.0,
+     "cycles": 0
+    }
+   ],
+   "cycles_to_failure": 10000000,
+   "final_crack_size_um": 60.0,
+   "initial_crack_size_um": 120.0,
+   "status": "non_propagating"
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

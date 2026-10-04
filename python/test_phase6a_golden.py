@@ -63,7 +63,11 @@ class GoldenRegressionTest(unittest.TestCase):
 
     def _check(self, solver: str, case: str):
         doc = golden.load_golden(solver, case)
-        fresh = golden.run_solver(solver, doc["input"])
+        # Run the CASES payload, not doc["input"]: golden files store the input with
+        # sorted keys, and key order is significant for some solvers (stochastic UQ maps
+        # composition elements to Sobol dimensions in insertion order).
+        # GoldenFilesTest asserts both are canonically equal.
+        fresh = golden.run_solver(solver, golden.CASES[solver][case])
         expected_code = EXPECTED_BEHAVIOUR_CHANGES.get((solver, case))
         if expected_code is not None:
             self.assertEqual(fresh["exitCode"], 2, fresh["stderr"])

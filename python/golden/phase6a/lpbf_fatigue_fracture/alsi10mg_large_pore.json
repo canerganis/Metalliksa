@@ -1,0 +1,638 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "alsi10mg_large_pore",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "alloyName": "AlSi10Mg",
+  "location": "internal",
+  "sqrtArea_um": 400,
+  "stressAmplitude_MPa": 90,
+  "stressRatio_R": 0.1
+ },
+ "invocation": "python -B lpbf_fatigue_fracture.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "lpbf_fatigue_fracture",
+ "solverFile": "python/lpbf_fatigue_fracture.py",
+ "solverSha256": "1c045a23e50dd327c2f2c6961b98543cd111e16d773284fae4cc111c56c0dede",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "fatigue_limit": {
+   "el_haddad_a0_um": 45.84,
+   "fatigue_limit_R_minus_1_MPa": 48.1,
+   "fatigue_limit_corrected_MPa": 39.8,
+   "hardness_HV": 115.0,
+   "location": "internal",
+   "murakami_raw_MPa": 135.1,
+   "sqrt_area_um": 400.0,
+   "stress_ratio_R": 0.1
+  },
+  "kitagawa_takahashi_curve": [
+   {
+    "defect_sqrt_area_um": 0.1,
+    "fatigue_limit_MPa": 124.0
+   },
+   {
+    "defect_sqrt_area_um": 0.14,
+    "fatigue_limit_MPa": 123.9
+   },
+   {
+    "defect_sqrt_area_um": 0.19,
+    "fatigue_limit_MPa": 123.8
+   },
+   {
+    "defect_sqrt_area_um": 0.26,
+    "fatigue_limit_MPa": 123.7
+   },
+   {
+    "defect_sqrt_area_um": 0.36,
+    "fatigue_limit_MPa": 123.6
+   },
+   {
+    "defect_sqrt_area_um": 0.49,
+    "fatigue_limit_MPa": 123.4
+   },
+   {
+    "defect_sqrt_area_um": 0.67,
+    "fatigue_limit_MPa": 123.2
+   },
+   {
+    "defect_sqrt_area_um": 0.92,
+    "fatigue_limit_MPa": 122.9
+   },
+   {
+    "defect_sqrt_area_um": 1.27,
+    "fatigue_limit_MPa": 122.4
+   },
+   {
+    "defect_sqrt_area_um": 1.74,
+    "fatigue_limit_MPa": 121.8
+   },
+   {
+    "defect_sqrt_area_um": 2.4,
+    "fatigue_limit_MPa": 121.0
+   },
+   {
+    "defect_sqrt_area_um": 3.29,
+    "fatigue_limit_MPa": 119.9
+   },
+   {
+    "defect_sqrt_area_um": 4.52,
+    "fatigue_limit_MPa": 118.4
+   },
+   {
+    "defect_sqrt_area_um": 6.21,
+    "fatigue_limit_MPa": 116.4
+   },
+   {
+    "defect_sqrt_area_um": 8.53,
+    "fatigue_limit_MPa": 113.9
+   },
+   {
+    "defect_sqrt_area_um": 11.72,
+    "fatigue_limit_MPa": 110.7
+   },
+   {
+    "defect_sqrt_area_um": 16.1,
+    "fatigue_limit_MPa": 106.7
+   },
+   {
+    "defect_sqrt_area_um": 22.12,
+    "fatigue_limit_MPa": 101.9
+   },
+   {
+    "defect_sqrt_area_um": 30.39,
+    "fatigue_limit_MPa": 96.2
+   },
+   {
+    "defect_sqrt_area_um": 41.75,
+    "fatigue_limit_MPa": 89.8
+   },
+   {
+    "defect_sqrt_area_um": 57.36,
+    "fatigue_limit_MPa": 82.7
+   },
+   {
+    "defect_sqrt_area_um": 78.8,
+    "fatigue_limit_MPa": 75.2
+   },
+   {
+    "defect_sqrt_area_um": 108.26,
+    "fatigue_limit_MPa": 67.7
+   },
+   {
+    "defect_sqrt_area_um": 148.74,
+    "fatigue_limit_MPa": 60.2
+   },
+   {
+    "defect_sqrt_area_um": 204.34,
+    "fatigue_limit_MPa": 53.1
+   },
+   {
+    "defect_sqrt_area_um": 280.72,
+    "fatigue_limit_MPa": 46.5
+   },
+   {
+    "defect_sqrt_area_um": 385.66,
+    "fatigue_limit_MPa": 40.4
+   },
+   {
+    "defect_sqrt_area_um": 529.83,
+    "fatigue_limit_MPa": 35.0
+   },
+   {
+    "defect_sqrt_area_um": 727.9,
+    "fatigue_limit_MPa": 30.2
+   },
+   {
+    "defect_sqrt_area_um": 1000.0,
+    "fatigue_limit_MPa": 26.0
+   }
+  ],
+  "paris_crack_growth": {
+   "crack_growth_curve": [
+    {
+     "crack_length_um": 210.0,
+     "cycles": 798,
+     "delta_K_MPa_m": 2.93
+    },
+    {
+     "crack_length_um": 220.5,
+     "cycles": 1561,
+     "delta_K_MPa_m": 3.01
+    },
+    {
+     "crack_length_um": 231.53,
+     "cycles": 2292,
+     "delta_K_MPa_m": 3.08
+    },
+    {
+     "crack_length_um": 243.1,
+     "cycles": 2991,
+     "delta_K_MPa_m": 3.16
+    },
+    {
+     "crack_length_um": 255.26,
+     "cycles": 3660,
+     "delta_K_MPa_m": 3.23
+    },
+    {
+     "crack_length_um": 268.02,
+     "cycles": 4300,
+     "delta_K_MPa_m": 3.31
+    },
+    {
+     "crack_length_um": 281.42,
+     "cycles": 4913,
+     "delta_K_MPa_m": 3.4
+    },
+    {
+     "crack_length_um": 295.49,
+     "cycles": 5500,
+     "delta_K_MPa_m": 3.48
+    },
+    {
+     "crack_length_um": 310.27,
+     "cycles": 6061,
+     "delta_K_MPa_m": 3.56
+    },
+    {
+     "crack_length_um": 325.78,
+     "cycles": 6598,
+     "delta_K_MPa_m": 3.65
+    },
+    {
+     "crack_length_um": 342.07,
+     "cycles": 7112,
+     "delta_K_MPa_m": 3.74
+    },
+    {
+     "crack_length_um": 359.17,
+     "cycles": 7604,
+     "delta_K_MPa_m": 3.84
+    },
+    {
+     "crack_length_um": 377.13,
+     "cycles": 8075,
+     "delta_K_MPa_m": 3.93
+    },
+    {
+     "crack_length_um": 395.99,
+     "cycles": 8526,
+     "delta_K_MPa_m": 4.03
+    },
+    {
+     "crack_length_um": 415.79,
+     "cycles": 8957,
+     "delta_K_MPa_m": 4.13
+    },
+    {
+     "crack_length_um": 436.57,
+     "cycles": 9370,
+     "delta_K_MPa_m": 4.23
+    },
+    {
+     "crack_length_um": 458.4,
+     "cycles": 9765,
+     "delta_K_MPa_m": 4.33
+    },
+    {
+     "crack_length_um": 481.32,
+     "cycles": 10143,
+     "delta_K_MPa_m": 4.44
+    },
+    {
+     "crack_length_um": 505.39,
+     "cycles": 10505,
+     "delta_K_MPa_m": 4.55
+    },
+    {
+     "crack_length_um": 530.66,
+     "cycles": 10851,
+     "delta_K_MPa_m": 4.66
+    },
+    {
+     "crack_length_um": 557.19,
+     "cycles": 11182,
+     "delta_K_MPa_m": 4.78
+    },
+    {
+     "crack_length_um": 585.05,
+     "cycles": 11499,
+     "delta_K_MPa_m": 4.9
+    },
+    {
+     "crack_length_um": 614.3,
+     "cycles": 11802,
+     "delta_K_MPa_m": 5.02
+    },
+    {
+     "crack_length_um": 645.02,
+     "cycles": 12092,
+     "delta_K_MPa_m": 5.14
+    },
+    {
+     "crack_length_um": 677.27,
+     "cycles": 12370,
+     "delta_K_MPa_m": 5.27
+    },
+    {
+     "crack_length_um": 711.13,
+     "cycles": 12636,
+     "delta_K_MPa_m": 5.4
+    },
+    {
+     "crack_length_um": 746.69,
+     "cycles": 12890,
+     "delta_K_MPa_m": 5.53
+    },
+    {
+     "crack_length_um": 784.03,
+     "cycles": 13133,
+     "delta_K_MPa_m": 5.67
+    },
+    {
+     "crack_length_um": 823.23,
+     "cycles": 13366,
+     "delta_K_MPa_m": 5.81
+    },
+    {
+     "crack_length_um": 864.39,
+     "cycles": 13589,
+     "delta_K_MPa_m": 5.95
+    },
+    {
+     "crack_length_um": 907.61,
+     "cycles": 13802,
+     "delta_K_MPa_m": 6.1
+    },
+    {
+     "crack_length_um": 952.99,
+     "cycles": 14006,
+     "delta_K_MPa_m": 6.25
+    },
+    {
+     "crack_length_um": 1000.64,
+     "cycles": 14201,
+     "delta_K_MPa_m": 6.4
+    },
+    {
+     "crack_length_um": 1050.67,
+     "cycles": 14388,
+     "delta_K_MPa_m": 6.56
+    },
+    {
+     "crack_length_um": 1103.2,
+     "cycles": 14567,
+     "delta_K_MPa_m": 6.72
+    },
+    {
+     "crack_length_um": 1158.36,
+     "cycles": 14738,
+     "delta_K_MPa_m": 6.89
+    },
+    {
+     "crack_length_um": 1216.28,
+     "cycles": 14902,
+     "delta_K_MPa_m": 7.06
+    },
+    {
+     "crack_length_um": 1277.1,
+     "cycles": 15059,
+     "delta_K_MPa_m": 7.23
+    },
+    {
+     "crack_length_um": 1340.95,
+     "cycles": 15209,
+     "delta_K_MPa_m": 7.41
+    },
+    {
+     "crack_length_um": 1408.0,
+     "cycles": 15353,
+     "delta_K_MPa_m": 7.59
+    },
+    {
+     "crack_length_um": 1478.4,
+     "cycles": 15490,
+     "delta_K_MPa_m": 7.78
+    },
+    {
+     "crack_length_um": 1552.32,
+     "cycles": 15621,
+     "delta_K_MPa_m": 7.97
+    },
+    {
+     "crack_length_um": 1629.93,
+     "cycles": 15747,
+     "delta_K_MPa_m": 8.17
+    },
+    {
+     "crack_length_um": 1711.43,
+     "cycles": 15867,
+     "delta_K_MPa_m": 8.37
+    },
+    {
+     "crack_length_um": 1797.0,
+     "cycles": 15982,
+     "delta_K_MPa_m": 8.58
+    },
+    {
+     "crack_length_um": 1886.85,
+     "cycles": 16092,
+     "delta_K_MPa_m": 8.79
+    },
+    {
+     "crack_length_um": 1981.19,
+     "cycles": 16197,
+     "delta_K_MPa_m": 9.01
+    },
+    {
+     "crack_length_um": 2080.25,
+     "cycles": 16298,
+     "delta_K_MPa_m": 9.23
+    },
+    {
+     "crack_length_um": 2184.27,
+     "cycles": 16394,
+     "delta_K_MPa_m": 9.46
+    },
+    {
+     "crack_length_um": 2293.48,
+     "cycles": 16486,
+     "delta_K_MPa_m": 9.69
+    },
+    {
+     "crack_length_um": 2408.15,
+     "cycles": 16574,
+     "delta_K_MPa_m": 9.93
+    },
+    {
+     "crack_length_um": 2528.56,
+     "cycles": 16659,
+     "delta_K_MPa_m": 10.18
+    },
+    {
+     "crack_length_um": 2654.99,
+     "cycles": 16740,
+     "delta_K_MPa_m": 10.43
+    },
+    {
+     "crack_length_um": 2787.74,
+     "cycles": 16817,
+     "delta_K_MPa_m": 10.69
+    },
+    {
+     "crack_length_um": 2927.13,
+     "cycles": 16891,
+     "delta_K_MPa_m": 10.95
+    },
+    {
+     "crack_length_um": 3073.48,
+     "cycles": 16962,
+     "delta_K_MPa_m": 11.22
+    },
+    {
+     "crack_length_um": 3227.16,
+     "cycles": 17030,
+     "delta_K_MPa_m": 11.5
+    },
+    {
+     "crack_length_um": 3388.51,
+     "cycles": 17095,
+     "delta_K_MPa_m": 11.78
+    },
+    {
+     "crack_length_um": 3557.94,
+     "cycles": 17157,
+     "delta_K_MPa_m": 12.07
+    },
+    {
+     "crack_length_um": 3735.84,
+     "cycles": 17216,
+     "delta_K_MPa_m": 12.37
+    },
+    {
+     "crack_length_um": 3922.63,
+     "cycles": 17273,
+     "delta_K_MPa_m": 12.68
+    },
+    {
+     "crack_length_um": 4118.76,
+     "cycles": 17327,
+     "delta_K_MPa_m": 12.99
+    },
+    {
+     "crack_length_um": 4324.7,
+     "cycles": 17379,
+     "delta_K_MPa_m": 13.31
+    },
+    {
+     "crack_length_um": 4540.93,
+     "cycles": 17429,
+     "delta_K_MPa_m": 13.64
+    },
+    {
+     "crack_length_um": 4767.98,
+     "cycles": 17477,
+     "delta_K_MPa_m": 13.97
+    },
+    {
+     "crack_length_um": 5006.38,
+     "cycles": 17522,
+     "delta_K_MPa_m": 14.32
+    },
+    {
+     "crack_length_um": 5256.7,
+     "cycles": 17566,
+     "delta_K_MPa_m": 14.67
+    },
+    {
+     "crack_length_um": 5519.53,
+     "cycles": 17608,
+     "delta_K_MPa_m": 15.04
+    },
+    {
+     "crack_length_um": 5795.51,
+     "cycles": 17648,
+     "delta_K_MPa_m": 15.41
+    },
+    {
+     "crack_length_um": 6085.29,
+     "cycles": 17686,
+     "delta_K_MPa_m": 15.79
+    },
+    {
+     "crack_length_um": 6389.55,
+     "cycles": 17722,
+     "delta_K_MPa_m": 16.18
+    },
+    {
+     "crack_length_um": 6709.03,
+     "cycles": 17757,
+     "delta_K_MPa_m": 16.58
+    },
+    {
+     "crack_length_um": 7044.48,
+     "cycles": 17790,
+     "delta_K_MPa_m": 16.99
+    },
+    {
+     "crack_length_um": 7396.7,
+     "cycles": 17822,
+     "delta_K_MPa_m": 17.41
+    },
+    {
+     "crack_length_um": 7766.54,
+     "cycles": 17852,
+     "delta_K_MPa_m": 17.84
+    },
+    {
+     "crack_length_um": 8154.86,
+     "cycles": 17881,
+     "delta_K_MPa_m": 18.28
+    },
+    {
+     "crack_length_um": 8562.61,
+     "cycles": 17909,
+     "delta_K_MPa_m": 18.73
+    },
+    {
+     "crack_length_um": 8990.74,
+     "cycles": 17936,
+     "delta_K_MPa_m": 19.19
+    },
+    {
+     "crack_length_um": 9440.27,
+     "cycles": 17961,
+     "delta_K_MPa_m": 19.66
+    },
+    {
+     "crack_length_um": 9912.29,
+     "cycles": 17985,
+     "delta_K_MPa_m": 20.15
+    },
+    {
+     "crack_length_um": 10407.9,
+     "cycles": 18008,
+     "delta_K_MPa_m": 20.65
+    },
+    {
+     "crack_length_um": 10928.3,
+     "cycles": 18030,
+     "delta_K_MPa_m": 21.16
+    },
+    {
+     "crack_length_um": 11474.71,
+     "cycles": 18051,
+     "delta_K_MPa_m": 21.68
+    },
+    {
+     "crack_length_um": 12048.45,
+     "cycles": 18071,
+     "delta_K_MPa_m": 22.21
+    },
+    {
+     "crack_length_um": 12650.87,
+     "cycles": 18090,
+     "delta_K_MPa_m": 22.76
+    },
+    {
+     "crack_length_um": 13283.41,
+     "cycles": 18109,
+     "delta_K_MPa_m": 23.32
+    },
+    {
+     "crack_length_um": 13947.58,
+     "cycles": 18127,
+     "delta_K_MPa_m": 23.9
+    },
+    {
+     "crack_length_um": 14644.96,
+     "cycles": 18144,
+     "delta_K_MPa_m": 24.49
+    },
+    {
+     "crack_length_um": 15377.21,
+     "cycles": 18160,
+     "delta_K_MPa_m": 25.1
+    },
+    {
+     "crack_length_um": 16146.07,
+     "cycles": 18176,
+     "delta_K_MPa_m": 25.72
+    },
+    {
+     "crack_length_um": 16953.38,
+     "cycles": 18191,
+     "delta_K_MPa_m": 26.35
+    },
+    {
+     "crack_length_um": 17801.05,
+     "cycles": 18205,
+     "delta_K_MPa_m": 27.0
+    },
+    {
+     "crack_length_um": 18691.1,
+     "cycles": 18219,
+     "delta_K_MPa_m": 27.67
+    },
+    {
+     "crack_length_um": 19625.65,
+     "cycles": 18232,
+     "delta_K_MPa_m": 28.35
+    }
+   ],
+   "cycles_to_failure": 18232,
+   "final_crack_size_um": 19286.94,
+   "initial_crack_size_um": 400.0,
+   "status": "fractured"
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

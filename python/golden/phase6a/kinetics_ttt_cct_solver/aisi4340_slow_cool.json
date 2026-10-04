@@ -1,0 +1,654 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "aisi4340_slow_cool",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "agingTemp_C": 600.0,
+  "agingTime_h": 4.0,
+  "alloy": "AISI 4340",
+  "austTemp_C": 845.0,
+  "coolingRate_C_s": 0.5,
+  "grainSize_um": 20.0
+ },
+ "invocation": "python -B kinetics_ttt_cct_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "kinetics_ttt_cct_solver",
+ "solverFile": "python/kinetics_ttt_cct_solver.py",
+ "solverSha256": "40b74c3de5dbe3ca5e6281ca135297d418dcccb54aa5386cc413d552a014c593",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "alloy": "AISI 4340",
+  "alloyMetadata": {
+   "Ae1_C": 710.0,
+   "Ae3_C": 765.0,
+   "Mf_C": 140.0,
+   "Ms_C": 290.0,
+   "Q_diff_kJ_mol": 265.0,
+   "aust_temp_C_default": 845.0,
+   "composition_wt": {
+    "C": 0.4,
+    "Cr": 0.8,
+    "Fe": 95.7,
+    "Mn": 0.7,
+    "Mo": 0.25,
+    "Ni": 1.85,
+    "Si": 0.3
+   },
+   "critical_cooling_rate_C_s": 8.5,
+   "description": "Ultra-high strength structural steel with high hardenability and fracture toughness.",
+   "grain_size_d_um_default": 20.0,
+   "phases": [
+    "Ferrite",
+    "Pearlite",
+    "Bainite",
+    "Martensite"
+   ],
+   "type": "High-Strength Ni-Cr-Mo Steel"
+  },
+  "calphadVsKineticsGap": {
+   "equilibriumPrediction": {
+    "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
+    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
+    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics"
+   },
+   "kineticRealityAtSelectedCooling": {
+    "coolingRate_C_s": 0.5,
+    "criticalCoolingRate_C_s": 8.5,
+    "diffusionSuppressionIndex": 0.059,
+    "isSuppressedEquilibrium": false,
+    "predictedMartensite_pct": 5.6,
+    "verdict": "Diffusional Equilibrium Decomposition"
+   }
+  },
+  "cctContinuousCoolingMap": [
+   {
+    "coolingRate_C_s": 0.05,
+    "phaseFractions": {
+     "Bainite_pct": 0.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 98.5,
+     "RetainedAustenite_pct": 1.5
+    },
+    "predictedHardness_HRC": 18.0,
+    "predictedHardness_HV": 229.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 760.0,
+    "transformedStartTime_s": 1700.05
+   },
+   {
+    "coolingRate_C_s": 0.2,
+    "phaseFractions": {
+     "Bainite_pct": 0.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 98.5,
+     "RetainedAustenite_pct": 1.5
+    },
+    "predictedHardness_HRC": 18.0,
+    "predictedHardness_HV": 229.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 760.0,
+    "transformedStartTime_s": 425.0
+   },
+   {
+    "coolingRate_C_s": 1.0,
+    "phaseFractions": {
+     "Bainite_pct": 20.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 78.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 28.0,
+    "predictedHardness_HV": 334.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 760.0,
+    "transformedStartTime_s": 85.05
+   },
+   {
+    "coolingRate_C_s": 5.0,
+    "phaseFractions": {
+     "Bainite_pct": 55.0,
+     "Martensite_pct": 25.0,
+     "Pearlite_Ferrite_pct": 18.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 42.0,
+    "predictedHardness_HV": 481.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 760.0,
+    "transformedStartTime_s": 17.0
+   },
+   {
+    "coolingRate_C_s": 10.0,
+    "phaseFractions": {
+     "Bainite_pct": 12.0,
+     "Martensite_pct": 85.0,
+     "Pearlite_Ferrite_pct": 2.0,
+     "RetainedAustenite_pct": 1.0
+    },
+    "predictedHardness_HRC": 54.0,
+    "predictedHardness_HV": 607.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 759.5,
+    "transformedStartTime_s": 8.55
+   },
+   {
+    "coolingRate_C_s": 25.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 649.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 758.8,
+    "transformedStartTime_s": 3.45
+   },
+   {
+    "coolingRate_C_s": 50.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 649.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 757.5,
+    "transformedStartTime_s": 1.75
+   },
+   {
+    "coolingRate_C_s": 100.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 649.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 755.0,
+    "transformedStartTime_s": 0.9
+   },
+   {
+    "coolingRate_C_s": 500.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 649.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 755.0,
+    "transformedStartTime_s": 0.18
+   },
+   {
+    "coolingRate_C_s": 2000.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 58.0,
+    "predictedHardness_HV": 649.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 755.0,
+    "transformedStartTime_s": 0.05
+   }
+  ],
+  "criticalTransformationTemperatures": {
+   "Ae1_C": 710.0,
+   "Ae3_BetaTransus_GammaSolvus_C": 765.0,
+   "CriticalCoolingRate_CCR_C_s": 8.5,
+   "Mf_C": 140.0,
+   "Ms_C": 290.0
+  },
+  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
+  "inputParameters": {
+   "agingTemp_C": 600.0,
+   "agingTime_h": 4.0,
+   "austSolutionTemp_C": 845.0,
+   "priorGrainSize_um": 20.0,
+   "selectedCoolingRate_C_s": 0.5
+  },
+  "lswPrecipitateCoarsening": [
+   {
+    "agingTime_h": 0.1,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 0.5,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 1.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 2.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 4.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 8.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 16.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 24.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 48.0,
+    "meanRadius_nm": 1.51,
+    "precipitationHardening_MPa": 114.6,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 100.0,
+    "meanRadius_nm": 1.51,
+    "precipitationHardening_MPa": 114.9,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   }
+  ],
+  "success": true,
+  "tttIsothermalCurves": [
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 562.2,
+    "phase": "Bainite",
+    "t50_s": 118.465,
+    "tFinish_s": 305.3515,
+    "tStart_s": 14.2649,
+    "temperature_C": 297.77777777777777
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 550.7,
+    "phase": "Bainite",
+    "t50_s": 27.6469,
+    "tFinish_s": 71.2617,
+    "tStart_s": 3.3291,
+    "temperature_C": 309.3333333333333
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 539.1,
+    "phase": "Bainite",
+    "t50_s": 6.9936,
+    "tFinish_s": 18.0264,
+    "tStart_s": 0.8421,
+    "temperature_C": 320.8888888888889
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 527.6,
+    "phase": "Bainite",
+    "t50_s": 1.9129,
+    "tFinish_s": 4.9305,
+    "tStart_s": 0.2303,
+    "temperature_C": 332.44444444444446
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 516.0,
+    "phase": "Bainite",
+    "t50_s": 0.5645,
+    "tFinish_s": 1.4549,
+    "tStart_s": 0.068,
+    "temperature_C": 344.0
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 504.4,
+    "phase": "Bainite",
+    "t50_s": 0.1793,
+    "tFinish_s": 0.4622,
+    "tStart_s": 0.0216,
+    "temperature_C": 355.55555555555554
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 492.9,
+    "phase": "Bainite",
+    "t50_s": 0.0612,
+    "tFinish_s": 0.1578,
+    "tStart_s": 0.0074,
+    "temperature_C": 367.1111111111111
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 481.3,
+    "phase": "Bainite",
+    "t50_s": 0.0224,
+    "tFinish_s": 0.0578,
+    "tStart_s": 0.0027,
+    "temperature_C": 378.66666666666663
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 469.8,
+    "phase": "Bainite",
+    "t50_s": 0.0088,
+    "tFinish_s": 0.0226,
+    "tStart_s": 0.0011,
+    "temperature_C": 390.2222222222222
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 458.2,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 401.77777777777777
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 446.7,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 413.3333333333333
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 435.1,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 424.8888888888889
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 423.6,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 436.44444444444446
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 412.0,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 448.0
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 400.4,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 459.55555555555554
+   },
+   {
+    "avramiExponent_n": 2.0,
+    "drivingForce_DeltaT_C": 388.9,
+    "phase": "Bainite",
+    "t50_s": 0.0083,
+    "tFinish_s": 0.0214,
+    "tStart_s": 0.001,
+    "temperature_C": 471.1111111111111
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 282.3,
+    "phase": "Pearlite",
+    "t50_s": 0.0509,
+    "tFinish_s": 0.0958,
+    "tStart_s": 0.0124,
+    "temperature_C": 482.66666666666663
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 270.8,
+    "phase": "Pearlite",
+    "t50_s": 0.0226,
+    "tFinish_s": 0.0424,
+    "tStart_s": 0.0055,
+    "temperature_C": 494.2222222222222
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 259.2,
+    "phase": "Pearlite",
+    "t50_s": 0.0106,
+    "tFinish_s": 0.0199,
+    "tStart_s": 0.0026,
+    "temperature_C": 505.77777777777777
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 247.7,
+    "phase": "Pearlite",
+    "t50_s": 0.0053,
+    "tFinish_s": 0.0099,
+    "tStart_s": 0.0013,
+    "temperature_C": 517.3333333333333
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 236.1,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 528.8888888888889
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 224.6,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 540.4444444444443
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 213.0,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 552.0
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 201.4,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 563.5555555555555
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 189.9,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 575.1111111111111
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 178.3,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 586.6666666666666
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 166.8,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 598.2222222222222
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 155.2,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 609.7777777777778
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 143.7,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 621.3333333333333
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 132.1,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 632.8888888888889
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 120.6,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 644.4444444444445
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 109.0,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 656.0
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 97.4,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 667.5555555555555
+   },
+   {
+    "avramiExponent_n": 3.0,
+    "drivingForce_DeltaT_C": 85.9,
+    "phase": "Pearlite",
+    "t50_s": 0.0041,
+    "tFinish_s": 0.0077,
+    "tStart_s": 0.001,
+    "temperature_C": 679.1111111111111
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 74.3,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 690.6666666666667
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 62.8,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 702.2222222222222
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 51.2,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 713.7777777777778
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 39.7,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 725.3333333333333
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 28.1,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 736.8888888888889
+   },
+   {
+    "avramiExponent_n": 2.5,
+    "drivingForce_DeltaT_C": 16.6,
+    "phase": "Ferrite",
+    "t50_s": 0.0054,
+    "tFinish_s": 0.0116,
+    "tStart_s": 0.001,
+    "temperature_C": 748.4444444444443
+   }
+  ]
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
