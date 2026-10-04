@@ -81,6 +81,45 @@ class LpbfSourceIdentityTests(unittest.TestCase):
             fingerprint_manifest_entries(entries, "solver-v6", schema=CANONICAL_SCHEMA),
         )
 
+    def test_canonical_v3_schema_fixed_framing_vector(self):
+        # Fixed vector for the canonical-v3 framing that implementation_fingerprint()
+        # uses (design 5c stage P1). Same entries as the raw-v2 vector above; the CRLF
+        # in z.py is normalised to LF before framing. Independent of the real manifest.
+        entries = [("z.py", b"x=2\r\n"), ("a.py", b"x=1\n")]
+        self.assertEqual(
+            fingerprint_manifest_entries(entries, "solver-v6", schema=CANONICAL_SCHEMA),
+            "79032686ac1bae15aff42c417235657ccc83098640a5aaadf3bcd468385b8abc",
+        )
+        self.assertEqual(
+            fingerprint_manifest_entries(entries, "solver-v6"),
+            "79032686ac1bae15aff42c417235657ccc83098640a5aaadf3bcd468385b8abc",
+        )
+
+    def test_canonical_v3_vector_covers_text_paths_bom_lone_cr_and_binary(self):
+        entries = [
+            ("openfoam/Make/files", b"a.C\r\nEXE = x\r\n"),
+            ("openfoam/src/t.H", b"\xef\xbb\xbf// h\r\n"),
+            ("blob.dat", b"\x00\r\n\xff"),
+            ("m.py", b"a = 1\rb = 2\r\n"),
+        ]
+        expected = "2f3ce290f3ab7b772f963fa197b6bba7d007d4cb140f51d785ee93422c2e791d"
+        self.assertEqual(fingerprint_manifest_entries(entries, "solver-v6"), expected)
+        # Independent re-implementation of the framing: schema\0version\0, then for each
+        # path in sorted order a 4-byte big-endian name length, the UTF-8 name, an 8-byte
+        # big-endian content length and the canonical content.
+        canonical = {
+            "blob.dat": b"\x00\r\n\xff",
+            "m.py": b"a = 1\rb = 2\n",
+            "openfoam/Make/files": b"a.C\nEXE = x\n",
+            "openfoam/src/t.H": b"\xef\xbb\xbf// h\n",
+        }
+        digest = hashlib.sha256((CANONICAL_SCHEMA + "\0solver-v6\0").encode("utf-8"))
+        for name in sorted(canonical):
+            encoded, content = name.encode("utf-8"), canonical[name]
+            digest.update(len(encoded).to_bytes(4, "big") + encoded
+                          + len(content).to_bytes(8, "big") + content)
+        self.assertEqual(digest.hexdigest(), expected)
+
     def test_manifest_hash_is_order_independent_but_path_and_version_bound(self):
         entries = [("b.py", b"b\n"), ("a.py", b"a\n")]
         digest = fingerprint_manifest_entries(entries, "v1")
