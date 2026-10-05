@@ -755,6 +755,29 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
     return "\n".join(L).rstrip("\n") + "\n"
 
 
+def make_view_record(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Drop non-rendered analysis detail from the browser payload for excluded public rows."""
+    view = {k: v for k, v in doc.items() if k != "breakdowns"}
+    if "referenceTransient" in view:
+        view["referenceTransient"] = {k: v for k, v in view["referenceTransient"].items() if k != "rows"}
+    excluded_datasets = {"cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021"}
+    slim_rows = []
+    compact_exclusions: Dict[tuple, int] = {}
+    for row in view["rows"]:
+        if row.get("dataset") not in excluded_datasets:
+            slim_rows.append(row)
+            continue
+        status = row["predictions"]["rosenthal"]["extentStatus"]
+        key = (row["regime"]["label"], status)
+        compact_exclusions[key] = compact_exclusions.get(key, 0) + 1
+    view["rows"] = slim_rows
+    view["predictionExclusions"] = [
+        {"regime": regime, "status": status, "count": count}
+        for (regime, status), count in sorted(compact_exclusions.items())
+    ]
+    return view
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", required=True, help="output JSON path (the .md goes next to it)")
@@ -782,9 +805,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                          allow_raytracer=a.allow_raytracer,
                          reuse_reference=Path(a.reuse_reference).resolve() if a.reuse_reference else None)
     out.parent.mkdir(parents=True, exist_ok=True)
-    view = {k: v for k, v in doc.items() if k != "breakdowns"}
-    if "referenceTransient" in view:
-        view["referenceTransient"] = {k: v for k, v in view["referenceTransient"].items() if k != "rows"}
+    view = make_view_record(doc)
     view_text = json.dumps(view, sort_keys=True, indent=1, ensure_ascii=False) + "\n"
     out.write_text(json.dumps(doc, sort_keys=True, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     view_out.write_text(view_text, encoding="utf-8", newline="\n")

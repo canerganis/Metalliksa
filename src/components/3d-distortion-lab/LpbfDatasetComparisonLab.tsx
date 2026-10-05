@@ -149,7 +149,7 @@ function pointsFor(
 ): ScatterPoint[] {
   const out: ScatterPoint[] = [];
   for (const row of rows) {
-    const prediction = row.predictions[kernel];
+    const prediction = row.predictions?.[kernel];
     if (!prediction) continue;
     const measured = row.measured[metric === "width" ? "width_um" : "depth_um"];
     const predicted = prediction[metric === "width" ? "width_um" : "depth_um"];
@@ -176,8 +176,9 @@ function pointsFor(
 export function DatasetComparisonView({ document }: { document: LpbfDatasetComparisonDocument }) {
   const kernels = document.kernels;
   const regimeLabels = useMemo(
-    () => Array.from(new Set(document.rows.map((r) => r.regime.label))),
-    [document],
+    () => Array.from(new Set(Object.values(document.summary).flatMap((byRegime) =>
+      Object.keys(byRegime).filter((label) => label !== "all" && label !== "common")))),
+    [document.summary],
   );
   const [kernel, setKernel] = useState<string>(kernels[0] ?? "");
   const [enabled, setEnabled] = useState<readonly string[]>(regimeLabels);
@@ -194,7 +195,7 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
     for (const row of document.rows) {
       const mv = row.measured[metric === "width" ? "width_um" : "depth_um"];
       if (typeof mv === "number") max = Math.max(max, mv);
-      for (const prediction of Object.values(row.predictions)) {
+      for (const prediction of Object.values(row.predictions ?? {})) {
         const pv = prediction[metric === "width" ? "width_um" : "depth_um"];
         if (typeof pv === "number") max = Math.max(max, pv);
       }
@@ -202,8 +203,18 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
     return Math.max(1, Math.ceil(max / 50) * 50);
   };
 
-  const excludedRows = shownRows.filter((r) => r.predictions[kernel] && !r.predictions[kernel].included);
-  const excludedStatuses = Array.from(new Set(excludedRows.map((r) => r.predictions[kernel].extentStatus)));
+  const excludedRows = shownRows.filter((r) => {
+    const prediction = r.predictions?.[kernel];
+    return prediction ? !prediction.included : Boolean(r.predictionExclusion);
+  });
+  const compactExclusions = (document.predictionExclusions ?? []).filter((entry) => enabled.includes(entry.regime));
+  const excludedCount = Object.entries(document.summary[kernel] ?? {})
+    .filter(([regime]) => regime !== "all" && regime !== "common" && enabled.includes(regime))
+    .reduce((total, [, cell]) => total + cell.nExcluded, 0);
+  const excludedStatuses = Array.from(new Set([
+    ...excludedRows.map((r) => r.predictions?.[kernel]?.extentStatus ?? r.predictionExclusion ?? "excluded"),
+    ...compactExclusions.map((entry) => entry.status),
+  ]));
   const summaryEntries = Object.entries(document.summary[kernel] ?? {})
     .filter(([regime]) => regime === "all" || regime === "common" || enabled.includes(regime))
     .sort(([a], [b]) => (a === "all" ? -1 : b === "all" ? 1 : a === "common" ? -1 : b === "common" ? 1 : 0));
@@ -303,9 +314,9 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
         ))}
       </div>
       <p className="text-xs text-slate-600" data-testid="excluded-caption">
-        {excludedRows.length === 0
+        {excludedCount === 0
           ? "0 excluded rows for this kernel and regime selection."
-          : `${excludedRows.length} excluded: extentStatus ${excludedStatuses.join(", ")} (hover a hollow marker for the kernel's extentNote).`}
+          : `${excludedCount} excluded: extentStatus ${excludedStatuses.join(", ")} (hover a hollow marker for the kernel's extentNote).`}
       </p>
 
       <Card>

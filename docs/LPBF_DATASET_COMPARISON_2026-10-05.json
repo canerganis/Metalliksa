@@ -15,7 +15,7 @@
   "note": "flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the predictions change (reviewer stub: Eagar-Tsai hofmann-0001 171.0/119.6 -> 209.2/143.6 um at effective 0.65). fallbackWarnings counts the solver's 'GPU Powder Bed Ray Tracing failed' messages (captured, not suppressed): with the pin it fires once per solver call (solverCalls), which confirms the flat-plate branch was the realized path.",
   "path": "flat-plate",
   "pinned": true,
-  "raytracerImportable": false,
+  "raytracerImportable": true,
   "raytracerModulePresent": true,
   "solverCalls": 3963
  },
@@ -2830,7 +2830,7 @@
   "reusedFrom": {
    "hashOf": "LF-normalised bytes of the source record",
    "note": "block copied, not re-run: it depends on wall-clock budgets",
-   "sha256": "ce162c9100f4416c3028e3d779a73677eeba20e30fd9976d9ce540d127cbcae4"
+   "sha256": "a47f3c443433f212d63d2605568694e12a002732434a2d87513c0b983a4522b5"
   },
   "rows": [
    {

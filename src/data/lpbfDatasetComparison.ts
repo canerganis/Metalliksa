@@ -46,13 +46,15 @@ export interface ComparisonRow {
     readonly preheat_C: number;
   };
   readonly measured: {
-    readonly width_um: number;
-    readonly depth_um: number;
+    readonly width_um: number | null;
+    readonly depth_um: number | null;
     readonly area_um2?: number | null;
     readonly balling?: boolean | number | null;
   };
   readonly regime: { readonly label: string; readonly normalizedEnthalpy?: number; readonly dOverW?: number };
-  readonly predictions: Readonly<Record<string, ComparisonKernelPrediction>>;
+  /** omitted for rows whose predictions are uniformly excluded and summarized in predictionExclusion */
+  readonly predictions?: Readonly<Record<string, ComparisonKernelPrediction>>;
+  readonly predictionExclusion?: string;
 }
 
 export interface ComparisonErrorStats {
@@ -84,6 +86,7 @@ export interface LpbfDatasetComparisonDocument {
   readonly kernels: readonly string[];
   readonly rows: readonly ComparisonRow[];
   readonly summary: Readonly<Record<string, Readonly<Record<string, ComparisonSummaryCell>>>>;
+  readonly predictionExclusions?: readonly { readonly regime: string; readonly status: string; readonly count: number }[];
   readonly absorptivitySensitivity: {
     readonly values: readonly number[];
     readonly label?: string;
@@ -170,6 +173,11 @@ export function checkedDatasetComparison(document: unknown): LpbfDatasetComparis
     fail("limits is not an array of strings");
   }
   if (document.absorption !== undefined && !isRecord(document.absorption)) fail("absorption is not an object");
+  if (document.predictionExclusions !== undefined) {
+    if (!Array.isArray(document.predictionExclusions) || !document.predictionExclusions.every((item) =>
+      isRecord(item) && typeof item.regime === "string" && typeof item.status === "string" && isFiniteNumber(item.count),
+    )) fail("predictionExclusions is not an array of regime, status and count entries");
+  }
 
   document.datasets.forEach((d, index) => {
     const where = `datasets[${index}]`;
@@ -199,19 +207,27 @@ export function checkedDatasetComparison(document: unknown): LpbfDatasetComparis
 
   const datasetIds = new Set(document.datasets.map((d) => (isRecord(d) ? d.id : undefined)));
   document.rows.forEach((row, index) => {
-    if (!isRecord(row) || !isRecord(row.inputs) || !isRecord(row.measured) || !isRecord(row.regime) || !isRecord(row.predictions)) {
-      fail(`rows[${index}] is missing inputs, measured, regime or predictions`);
+    if (!isRecord(row) || !isRecord(row.inputs) || !isRecord(row.measured) || !isRecord(row.regime)) {
+      fail(`rows[${index}] is missing inputs, measured or regime`);
     }
+    const predictions = isRecord(row.predictions) ? row.predictions : undefined;
+    const hasPredictions = predictions !== undefined;
+    const hasExclusion = typeof row.predictionExclusion === "string" && row.predictionExclusion.length > 0;
+    if (!hasPredictions && !hasExclusion) fail(`rows[${index}] is missing predictions or predictionExclusion`);
     if (!datasetIds.has(row.dataset)) fail(`rows[${index}] names unknown dataset ${String(row.dataset)}`);
-    checkFinite(row.measured.width_um, `rows[${index}].measured.width_um`);
-    checkFinite(row.measured.depth_um, `rows[${index}].measured.depth_um`);
-    checkString(row.regime.label, `rows[${index}].regime.label`);
-    for (const kernel of kernels) {
-      if (!(kernel in row.predictions)) fail(`rows[${index}].predictions has no entry for declared kernel ${kernel}`);
+    for (const key of ["width_um", "depth_um"] as const) {
+      const value = row.measured[key];
+      if (value !== null) checkFinite(value, `rows[${index}].measured.${key}`);
     }
-    for (const [kernel, prediction] of Object.entries(row.predictions)) {
-      if (!isRecord(prediction) || typeof prediction.included !== "boolean" || typeof prediction.extentStatus !== "string") {
-        fail(`rows[${index}].predictions.${kernel} needs boolean included and string extentStatus`);
+    checkString(row.regime.label, `rows[${index}].regime.label`);
+    if (predictions) {
+      for (const kernel of kernels) {
+        if (!(kernel in predictions)) fail(`rows[${index}].predictions has no entry for declared kernel ${kernel}`);
+      }
+      for (const [kernel, prediction] of Object.entries(predictions)) {
+        if (!isRecord(prediction) || typeof prediction.included !== "boolean" || typeof prediction.extentStatus !== "string") {
+          fail(`rows[${index}].predictions.${kernel} needs boolean included and string extentStatus`);
+        }
       }
     }
   });

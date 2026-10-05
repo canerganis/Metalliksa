@@ -278,7 +278,16 @@ class CommittedComparisonTests(unittest.TestCase):
         self.assertEqual(view["referenceTransient"]["counts"], doc["referenceTransient"]["counts"])
         for k in doc:
             if k not in ("breakdowns", "referenceTransient"):
-                self.assertEqual(view[k], doc[k], k)
+                if k != "rows":
+                    self.assertEqual(view[k], doc[k], k)
+        compact_datasets = {"cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021"}
+        compact_count = sum(row["dataset"] in compact_datasets for row in doc["rows"])
+        self.assertEqual(len(view["rows"]), len(doc["rows"]) - compact_count)
+        self.assertFalse(any(row["dataset"] in compact_datasets for row in view["rows"]))
+        self.assertEqual(sum(item["count"] for item in view["predictionExclusions"]), compact_count)
+        for row in view["rows"]:
+            source = next(item for item in doc["rows"] if item["dataset"] == row["dataset"] and item["rowId"] == row["rowId"])
+            self.assertEqual(row, source)
 
 
 if __name__ == "__main__":
