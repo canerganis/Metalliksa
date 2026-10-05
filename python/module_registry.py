@@ -1176,6 +1176,7 @@ def _top_level_imports(path: Path) -> set:
                 for handler in node.handlers:
                     visit(handler.body)
                 visit(node.orelse)
+                visit(node.finalbody)
             elif isinstance(node, ast.If):
                 visit(node.body)
                 visit(node.orelse)

@@ -693,6 +693,15 @@ class ContractedRegistryTests(unittest.TestCase):
             self.assertEqual(mr.ref_problem(ref, root=Path(root)), "")
             self.assertIn("::", ref)
 
+    def test_top_level_imports_walk_every_try_branch_including_finalbody(self):
+        import tempfile
+        lines = ["try:", "    import alpha", "except ImportError:", "    import beta", "else:", "    import gamma",
+                 "finally:", "    import delta", "if True:", "    import epsilon", ""]
+        with tempfile.TemporaryDirectory() as root:
+            fixture = Path(root) / "scratch_imports.py"
+            fixture.write_text(chr(10).join(lines), encoding="utf-8")
+            self.assertEqual(mr._top_level_imports(fixture), {"alpha", "beta", "gamma", "delta", "epsilon"})
+
 
 if __name__ == "__main__":
     unittest.main()
