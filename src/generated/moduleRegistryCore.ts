@@ -291,7 +291,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "database",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Materials Database",
       "description": "Handbook values and reviewed research references; source applicability requires review.",
@@ -303,7 +303,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/MaterialsDatabaseView.tsx",
         "export": "MaterialsDatabaseView"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

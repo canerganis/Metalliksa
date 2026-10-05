@@ -41,6 +41,7 @@ from module_contracts_dataset_view import build_dataset_view_contract
 from module_contracts_eds import build_eds_contract
 from module_contracts_composition import build_composition_contract
 from module_contracts_elasticity import build_elasticity_contract
+from module_contracts_database import build_database_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -179,9 +180,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "solidification-microstructure": (_worker_op("solidification-microstructure"),),
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
-    ),
-    "database": (
-        _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
     # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
     "phase-diagram": (
@@ -984,6 +982,7 @@ def module_doc_path(module_id: str) -> str:
 
 
 CONTRACTED_BUILDERS = {
+    "database": build_database_contract,
     "alloy-builder": build_composition_contract,
     "materials-project": build_elasticity_contract,
     "eds-lab": build_eds_contract,

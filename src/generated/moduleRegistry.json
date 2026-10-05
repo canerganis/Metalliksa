@@ -1572,8 +1572,8 @@
     },
     {
       "id": "database",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Materials Database",
       "description": "Handbook values and reviewed research references; source applicability requires review.",
@@ -1587,7 +1587,7 @@
       },
       "operations": [
         {
-          "id": "catalog-lookup",
+          "id": "search-catalog",
           "method": null,
           "route": null,
           "authority": {
@@ -1597,11 +1597,562 @@
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): material records are read from the bundled src/data/materialsDatabase.ts in the browser."
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "searchQuery"
+          ],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "filter-by-category",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedCategory",
+              "label": "Catalog category filter",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "All",
+              "required": false,
+              "enum": [
+                "All",
+                "Carbon Steel",
+                "Alloy Steel",
+                "Tool Steel",
+                "Stainless Steel",
+                "Aluminum Alloy",
+                "Copper Alloy",
+                "Titanium Alloy",
+                "Nickel Superalloy",
+                "Magnesium Alloy",
+                "Refractory & Specialty",
+                "Ceramic & Carbide"
+              ],
+              "note": "These are the exact category pills in MaterialsDatabaseView; the field filters local rows only."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "filter-by-min-yield-strength",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "minYield",
+              "label": "Minimum yield-strength filter",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 50,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "filter-by-min-modulus",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "minModulus",
+              "label": "Minimum Young's-modulus filter",
+              "valueType": "number",
+              "unit": "GPa",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 10,
+              "default": 40,
+              "required": false,
+              "enum": [],
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "filter-by-max-density",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "maxDensity",
+              "label": "Maximum density filter",
+              "valueType": "number",
+              "unit": "g/cm^3",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 0.2,
+              "default": 17.0,
+              "required": false,
+              "enum": [],
+              "note": "The visible density slider edits maxDensity (value=maxDensity, setter=setMaxDensity); its state default is 17.0 and step is 0.2. minDensity remains fixed at 1.5 here. Slider attributes do not establish material validity bounds."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "reset-property-range-filters",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
           },
           "input": [],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "minYield",
+              "maxYield",
+              "minModulus",
+              "maxModulus",
+              "minDensity",
+              "maxDensity"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "toggle-property-filter-panel",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "showFilters"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "switch-view-mode",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "activeTab",
+              "label": "Database view mode",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-view-mode",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "split",
+              "required": true,
+              "enum": [
+                "split",
+                "heatmap",
+                "catalog"
+              ],
+              "note": null
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeView"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "sort-catalog",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "sortBy",
+              "label": "Catalog sort key",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "yield",
+              "required": true,
+              "enum": [
+                "yield",
+                "tensile",
+                "specific_strength",
+                "modulus",
+                "density",
+                "name"
+              ],
+              "note": null
+            },
+            {
+              "key": "sortOrder",
+              "label": "Catalog sort direction",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "desc",
+              "required": true,
+              "enum": [
+                "desc",
+                "asc"
+              ],
+              "note": null
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "sortedMaterials"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "select-material-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "material"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "toggle-comparison-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "material"
+          ],
+          "output": {
+            "fields": [
+              "compareList"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "open-comparison-drawer",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isCompareOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "close-comparison-drawer",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isCompareOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "copy-selected-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "clipboardWriteAttempt",
+              "optimisticCopyFeedback"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "export-catalog-json",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "fullCatalogJsonDownload"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "open-transfer-picker",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "transferPickerOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "dispatch-material-to-module",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "targetId",
+              "label": "Transfer destination",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "module-navigation-target",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "alloy-builder",
+              "required": true,
+              "enum": [
+                "alloy-builder",
+                "icme-motor",
+                "3d-distortion-lab",
+                "phase-diagram"
+              ],
+              "note": "Exact destination IDs rendered by SendToModuleModal for this transfer flow."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "pipelineMaterialEvent",
+              "navigationTarget"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1616,22 +2167,62 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No numerical or provenance oracle is declared for this catalog view. Displayed handbook-style properties and downstream composition-based profiles remain screening material; browsing or transferring a record does not establish source applicability, calibration, or physical validation."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_database.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/database.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.",
+        "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
+        "Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.",
+        "createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.",
+        "The transfer picker presents Alloy Builder, ICME, LPBF wizard, and Phase Diagram as destinations. Dispatch stores the payload through the browser pipeline utility, then navigates after a 350 ms setTimeout. This is a local cross-module handoff, not provider/server execution or LPBF acceptance.",
+        "The comparison list initially contains catalog entries at indexes 0 and 5; clicking toggles membership and additions stop at four entries. The category and view-mode enums below describe the actual visible controls, not material-property validity classes.",
+        "The property-filter panel has a local showFilters toggle. The comparison drawer opens only when the compare list is nonempty and closes from its modal callback or either close button.",
+        "Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.",
+        "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
+        "No fetch, worker, solver, scheduled job, or source download is initiated by this view. The nested comparison and transfer dialogs are UI children, not background work."
+      ],
+      "sourceRefs": [
+        "src/components/MaterialsDatabaseView.tsx:36-111#filteredMaterials",
+        "src/components/MaterialsDatabaseView.tsx:122-143#handleCopySpec",
+        "src/components/MaterialsDatabaseView.tsx:60-72#categories",
+        "src/components/MaterialsDatabaseView.tsx:236-338#Property Sliders",
+        "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
+        "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
+        "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
+        "src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions",
+        "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
+        "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
+        "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
+        "src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)",
+        "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
+        "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
+        "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
+        "src/types.ts:32-63#MaterialSpec",
+        "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
+        "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
+        "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
+        "src/components/SendToModuleButton.tsx:6-12#SendToModuleButtonProps",
+        "src/components/SendToModuleModal.tsx:47-62#handleDispatch",
+        "src/components/SendToModuleModal.tsx:63-132#targets",
+        "src/utils/materialDataPipeline.ts:6-11#ModuleTargetId",
+        "src/services/materialContextBridge.ts:47-70#applyIdentity",
+        "src/services/materialContextBridge.ts:91-91#subscribeToPipelineMaterial"
+      ],
       "seedDerived": [
         "label",
         "description",
