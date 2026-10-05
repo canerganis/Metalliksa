@@ -1,15 +1,15 @@
-# Digital Twin Phase 0 — current-code audit
+# Digital Twin current-code audit
 
 Started 2026-09-21 at `fb1a614b8b9ce97b2cbe4d818ea622b63664d008`, branch `main`.
 The application tree and index were initially clean. The parent repository already
 contained changes, including STATUS.md and cache deletions; these are not ours.
-Gemini ownership is unknown. See ACTIVE_WORK.md for this task's scope.
+Gemini ownership was not recorded. This dated note does not describe current task ownership.
 
-**Phase 0 is open. No later phase or experimental qualification is accepted.**
+**The audit remains open. No experimental qualification is accepted.**
 
 ## Current bounded core baseline — owner01a0c36f
 
-See `LPBF_CORE_BASELINE_2026-09-21.md` for current16entry UI/API/worker map,
+See `../LPBF_CORE_BASELINE_2026-09-21.md` for the dated UI/API/worker map,
 shared thermal seams, source-backed specialist gaps and fresh melting CPU profile.
 40W/40um and20um produce actual saved molten fields, wall2.317/4.893s and~245MB
 peak process working set. W/D changes40/40→80/20um; convergence remains OPEN.
@@ -35,8 +35,8 @@ in this interpreter. These system package versions are not the Windows lock.
 The actual current `python/test_lpbf_engineering.py` completed26/26 tests,
 including compiled OpenFOAM versus independent reference, in69.935s. No skipped
 tests. This is a bounded numerical/software suite, not all-engine or GPU evidence.
-Logs: `.runtime/phase0-audit/wsl-doctor-01a0c35a.json` and
-`.runtime/phase0-audit/wsl-engineering-01a0c35a.log`. No installation or WSL config
+Logs: .runtime/phase0-audit/wsl-doctor-01a0c35a.json and
+.runtime/phase0-audit/wsl-engineering-01a0c35a.log. No installation or WSL config
 change. No owned test server remains running.
 
 Remaining LPBF baseline work:
@@ -74,7 +74,7 @@ Secondary-module work remains deferred.
   and purges its plot on unmount. Preview now uses actual fitted topology.
 - Fresh `npm run test:unit`:126/126 PASS; `npm run lint`:PASS;
   `npm run build`:PASS23.28s (existing chunk-size warnings). Logs:
-  `.runtime/phase0-audit/identity-{unit,lint,build}-final.txt`.
+  .runtime/phase0-audit/identity-{unit,lint,build}-final.txt.
 - Browser `tests/contracts-browser.html`, real Node3193→PythonIPC5193 with explicit
   CPU Python3.12: before fix, held local fit overwrote edited Rs9 with0.02874 and
   falsely displayed current convergence. After fix Rs9 survives; no Apply/report.
@@ -87,7 +87,7 @@ Secondary-module work remains deferred.
   10 PASS (input/retry/late error/finally/A-B-A/unmount/zero). These are software
   checks using synthetic inputs, not experimental qualification.
 - Remaining: explicit client-JS fitting, SyntheticNoise wrappers/provenance,
-  incomplete static ASTM/K-K labels, legacy LinKK numerics and broader Phase0.
+  incomplete static ASTM/K-K labels, legacy LinKK numerics and broader audit scope.
 
 ## 2026-09-21 continuation: CNLS numerical and result contracts
 
@@ -122,7 +122,7 @@ Secondary-module work remains deferred.
   Existing explicit client-JS solver, late input/reply paths, Plotly, synthetic-noise
   wrappers and remaining synthetic instrument/experiment metadata are NOT repaired.
 - Fresh validation: Python CNLS12/12, no-fabricated-outputs10/10; unit125/125,
-  lintPASS, buildPASS23.32s. Logs `.runtime/phase0-audit/cnls-*`.
+  lintPASS, buildPASS23.32s. Logs .runtime/phase0-audit/cnls-*.
 - Browser real components / actual Node→Python at3192/5192: studio and builder
   local fit65iterations/reduced objective1.029e-2/R²0.99124; nullable independent
   K-K assessment displayed. Studio HTTP503 clears old results, partial global
@@ -184,8 +184,8 @@ when no adjustable parameters, and clips covariance/R². len<5 Lin-KK still repo
 95/true/zero. CNLSFittingStudio and cnlsOptimizer.runAsyncAutoFit still have invented
 default metrics; EquivalentCircuitBuilder/Plotly stale-input cancellation remains
 to audit. Built-in EIS metadata still calls synthetic circuits measured experiments.
-Repair these next, then material authority/queued transient and remaining Phase0
-profiling/raw hashes/source terms/SQLite ADR. Phase0 remains OPEN.
+Repair these next, then address material authority, queued transient work,
+profiling, raw hashes, source terms and the SQLite ADR. Initial audit remains open.
 
 The user's subsequent instruction expands the audit to fabricated Python outputs.
 Random sampling is evaluated by method/seed/convergence; it is not itself fabrication.
@@ -209,7 +209,7 @@ not a full scientific review of every model in the repository.
 | `npm run lint` | FAIL, existing TypeScript errors in multiple component files | Includes Keyhole `NodeJS` type, Recharts record types, inconsistent alloy properties |
 | `npm run test:unit` | FAIL, module-inventory coverage/runtime coverage assertions | First sandbox run was EPERM; rerun outside sandbox reached real assertions |
 | scientific venv `pip check` + `python/check_requirement_ranges.py` | PASS; all 18 declared requirement ranges satisfied | Warp is not declared or in this environment |
-| scientific venv `environment_doctor.py --gpu-smoke --timeout 30` | CUDA training smoke PASS, RTX 4060 Laptop, Torch 2.11.0+cu128 | Docker engine unavailable; ParaView/pvpython absent from PATH; report `.runtime/phase0-audit/doctor.json` |
+| scientific venv `environment_doctor.py --gpu-smoke --timeout 30` | CUDA training smoke PASS, RTX 4060 Laptop, Torch 2.11.0+cu128 | Docker engine unavailable; ParaView/pvpython absent from PATH; report .runtime/phase0-audit/doctor.json |
 | scientific venv `test_lpbf_build_job.py` | PASS fast mode | Slow UQ/NIST not run; optional Warp fallbacks printed |
 | scientific venv Eagar–Tsai, Goldak/Fabbro, meltpool accuracy scripts | PASS | Existing fixture envelopes, not a newly frozen independent experiment protocol |
 | scientific venv `test_phase26.py` | FAIL: no worker reply | Direct worker launch exposed missing `warp` during eager import |
@@ -268,7 +268,7 @@ No packages were installed or lock files changed by this audit.
    several direct lab branches have independent default constants. These need
    migration to the material authority with explicit missing-data rejection.
 
-## Outstanding Phase 0 acceptance work
+## Outstanding engineering audit work
 
 - Complete fresh visible-module route/data/test mapping and reconcile inventory.
 - Run isolated live API and browser checks, including failures/stale inputs.
@@ -283,7 +283,7 @@ No packages were installed or lock files changed by this audit.
 ## 2026-09-21 successor verification and repairs
 
 These observations supersede the initial defects above only in the stated scope.
-Phase 0 remains open. No experimental qualification or all-engine audit is claimed.
+Initial audit remains open. No experimental qualification or all-engine audit is claimed.
 
 - Keyhole repaired in Python: bounded finite inputs before allocation, executable
   dynamic Warp counter, grid spacing and two-sided reflections, local PCG64 seed,
@@ -336,13 +336,13 @@ Phase 0 remains open. No experimental qualification or all-engine audit is claim
   Targeted inventory tests 3 PASS. Initial full unit run: 109 PASS / 2 inventory
   FAIL; rerun after correction recorded below. Build PASS (24.36 s Vite), existing
   large chunk warnings. TypeScript lint still FAILS in preexisting components;
-  no Keyhole diagnostics. Logs: `.runtime/phase0-audit/*-successor.txt`.
+  no Keyhole diagnostics. Logs: .runtime/phase0-audit/*-successor.txt.
 - Local Graft refreshed changed files. CBM remains generation 2026-09-18T15:50:24Z;
   targeted coverage was stale/untracked and direct sources superseded it. Parent
   STATUS.md is the active continuation point, updated at each meaningful checkpoint.
 
 Final full unit rerun after inventory corrections: **111 PASS / 0 FAIL**, 2.564 s.
-This does not clear the separate TypeScript lint or Phase 0 scientific gates.
+This does not clear the separate TypeScript lint or scientific acceptance gates.
 
 ## EIS frontend repair — continuation 01a0c11f
 
@@ -359,7 +359,7 @@ This does not clear the separate TypeScript lint or Phase 0 scientific gates.
   underlying example metadata still need a source/provenance audit.
 - Fresh unit **117 PASS / 0 FAIL**; build PASS (25.35 s, chunk warning). Lint still
   FAILS with previous component diagnostics; none in the two studios/shared hook.
-  Logs `.runtime/phase0-audit/{unit,build,lint}-eis-final.txt`.
+  Logs .runtime/phase0-audit/{unit,build,lint}-eis-final.txt.
 - Browser: actual components mounted in `tests/eis-browser.html` using real Node
   API → Python at isolated ports 3190/5190. Physical CPE 8.2761 uF, Lin-KK score 0
   displayed as returned; uploaded EIS displayed SCREENING, not invented DRIFT/PASS.
@@ -372,7 +372,7 @@ This does not clear the separate TypeScript lint or Phase 0 scientific gates.
   its direct API, broad backend stationarity/compliance strings, heuristic SOH/
   DRT interpretations and examples elsewhere remain scientific/audit gaps.
   The physical studio rejects reports with no residuals rather than showing the
-  backend's insufficient-points score. No Phase 0 gate is accepted by this repair.
+  backend's insufficient-points score. This repair does not pass an acceptance gate.
 
 ## Micrograph training/export guard repair — continuation 01a0c11f
 
@@ -394,7 +394,7 @@ This does not clear the separate TypeScript lint or Phase 0 scientific gates.
   zero-epoch initialization and unguarded export. Backend nonfabrication regression
   suite remains ten PASS on CPU venv. Logs in `.runtime/phase0-audit/`.
 - EIS test server PID41348 and captured children stopped; no listeners remain
-  on 3190/5190. Unknown-owner HMR24678 was left untouched. Phase0 stays open.
+  on 3190/5190. Unknown-owner HMR24678 was left untouched. Initial audit stays open.
 # 2026-09-21 — Python synthetic recovery contract
 
 Owner01a0c326. Four focused regressions first failed, including actual CLI
@@ -404,4 +404,4 @@ Recovery preserves missing values, undefined zero-denominator percentages and
 unavailable uncertainty; aggregate percentages require every row. No arbitrary
 robustness grade, inferred reliability, default convergence/time or score.
 One synthetic realization is not experimental qualification. Frontend migration
-and its tests remain pending; Phase0 is open.
+and its tests remain pending; the audit is open.

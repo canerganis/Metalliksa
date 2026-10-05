@@ -58,8 +58,8 @@
 - SCHEMA.md: veri ve izlenebilirlik sözleşmesi.
 - docs/LPBF_ENGINEERING.md: model tanımları ve bilimsel sınırlar.
 - docs/RESEARCH_WORKSTATION.md: ürün akışları.
-- docs/MODULE_EVIDENCE_INVENTORY.md: kanıt envanteri.
-- Aktif plan: fazlar, bağımlılıklar ve kabul kapıları.
+- docs/archive/MODULE_EVIDENCE_INVENTORY_2026-09-20.md: dated module inventory snapshot; do not use it as the live registry.
+- Aktif plan: öncelikler, bağımlılıklar ve kabul kapıları.
 
 Bütün belgeleri her oturumda yükleme. Değişken deney sonuçlarını burada tekrarlama.
 

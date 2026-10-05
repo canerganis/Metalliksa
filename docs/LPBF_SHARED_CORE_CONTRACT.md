@@ -1,7 +1,7 @@
 # Shared LPBF core contract
 
-This is the incremental design following `LPBF_CORE_BASELINE_2026-09-21.md`.
-The authorized goal is shared LPBF physics/data integration. Phase0 stays open;
+This is the incremental design following the dated [core baseline](archive/LPBF_CORE_BASELINE_2026-09-21.md).
+The authorized goal is shared LPBF physics/data integration. The initial audit stays open;
 this contract does not qualify a model, accept later phases or enable old GPU CFD.
 
 Implemented first deliverable: `python/lpbf_core_contract.py`, attached by `run`

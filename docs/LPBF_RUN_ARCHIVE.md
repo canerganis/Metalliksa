@@ -64,7 +64,7 @@ Fresh package evidence: six bundle tests plus existing run/source/artifact tests
 a later live run during source backup: excluded from frozen runs, while newer
 source revisions do not replace historical links. Source-only bundle unchanged.
 Actual prior CPU run66artifacts + NIST3payloads550398609bytes/two revisions backed
-up and restored in `.runtime/phase0-audit/run-bundle-pilot-01a0c399/report.json`.
+up and restored in .runtime/phase0-audit/run-bundle-pilot-01a0c399/report.json.
 Result bytes unchanged; the pilot association to NISTrevision1 is explicitly a
 storage test, not a matched experiment, numerical rerun or calibration claim.
 
@@ -78,8 +78,8 @@ storage test, not a matched experiment, numerical rerun or calibration claim.
 - Real40W reference worker capture:66files/322352bytes, model backend
   numpy-reference, Python3.12.10/NumPy2.2.6. Immutable import and independent
   metadata restore preserved the document hash; peak2119.810114K, W/D40/40um.
-  Report `.runtime/phase0-audit/capture-pilot-01a0c383/report.json`.
+  Report .runtime/phase0-audit/capture-pilot-01a0c383/report.json.
 - No numerical equations changed; no convergence or experimental qualification
-  is claimed. Phase0 remains OPEN. External edits are preserved, not included.
+  is claimed. Initial audit remains open. External edits are preserved, not included.
 - Current lint/build passed (30.46s; existing large chunk warning). Full unit
  151PASS/4FAIL: eis-unavailable and three UQ modules fail in external changes.

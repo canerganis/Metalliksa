@@ -1,7 +1,7 @@
 # LPBF core baseline — bounded current-source review
 
 Baseline: application `2ce1abc`, owner `01a0c36f-7006-7eb3-992d-73265a0a354d`.
-Phase 0 remains OPEN. This is entry-point wiring plus a deeper thermal-contract
+Initial audit remains open. This is entry-point wiring plus a deeper thermal-contract
 review, not an exhaustive scientific audit of all specialist implementations.
 
 ## Evidence method
@@ -14,7 +14,7 @@ Coverage on core, adapters, UI, routes and named tests reported changed metadata
 or untracked paths; App line166 and EngineeringSimulation line167 had parse gaps.
 Those source ranges were read directly. The routes scope had no recorded gaps;
 direct routes/server search still checked the missing GPU endpoint. Coverage
-responses are retained under `.runtime/phase0-audit/coverage-*-01a0c36f.json`.
+responses are retained under .runtime/phase0-audit/coverage-*-01a0c36f.json.
 Local Graft map and both directions of `run` callers supplied navigation; direct
 current source supersedes old graph cards. Dynamic calls through `thermal_solver`
 are inspected in source, not inferred absent from Graft's outgoing edges.
@@ -103,7 +103,7 @@ Peak memory includes imported libraries over process lifetime, excluding shell;
 artifact totals include solver-produced files, excluding added result/profile JSON.
 Wall time is one observation per mesh, not a statistical benchmark.
 
-Harness `.runtime/phase0-audit/profile_melting_01a0c36f.py`; successful folders
+Harness .runtime/phase0-audit/profile_melting_01a0c36f.py; successful folders
 `lpbf-melting-40um-r2-01a0c36f` and `lpbf-melting-20um-01a0c36f` contain complete
 resolved inputs, runtime, manifest SHA256s, result and profile JSON. First40um
 attempt failed only in profiler's fieldSeries parsing after solving; its partial
@@ -115,7 +115,7 @@ was nonmelting. This correction supersedes that description.
 
 Windows CPU: engineering25PASS/1OpenFOAMskip; heat source7PASS/1skip;
 peak4PASS/1skip; overlap5PASS/2skip; thermal-material RPC3PASS. Total44PASS/5skip.
-Logs `.runtime/phase0-audit/test_*-permitted-01a0c36f.log`. Initial sandbox runs
+Logs .runtime/phase0-audit/test_*-permitted-01a0c36f.log. Initial sandbox runs
 failed temporary-directory access; permission-scoped reruns passed. Windows skips
 are explicit Linux/OpenFOAM conditions. Previous task's WSL engineering26PASS
 is separate historical evidence; the new source/peak/overlap groups have not yet
@@ -123,5 +123,5 @@ been rerun in WSL here. No numerical acceptance threshold changed.
 
 Still open: specialist evidence defects above, primary calibration equation and
 measurement operator, melting mesh/time convergence, matched CPU/GPU proof,
-run/experiment persistence and complete bundle restoration. Phase0 baseline
+run/experiment persistence and complete bundle restoration. Phase baseline
 coverage is substantially improved, but no later-phase acceptance is implied.

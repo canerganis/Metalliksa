@@ -2,9 +2,9 @@
 
 ## Latest verified boundary — 2026-09-15
 
-The [clean application record](APPLICATION_REPRODUCTION.md) and [full scientific/CUDA reproduction](SCIENTIFIC_ENVIRONMENT_REPRODUCTION.md) supersede the earlier open environment items below. A new Python environment installed 94 hash-locked wheels offline and matched all locked versions. Package consistency, all 18 imports and requirement ranges, CUDA training smoke, selected LPBF/importer regressions and a clean Node application's live API passed. WSL passed all 26 engineering tests including compiled OpenFOAM; initial WSL failure to Windows fallback was exercised separately. Independent source/artifact review found no remaining material acceptance gap. A02 is accepted for technical workstation/software reproduction; no model qualification is implied.
+The [clean application record](../APPLICATION_REPRODUCTION.md) and [full scientific/CUDA reproduction](../SCIENTIFIC_ENVIRONMENT_REPRODUCTION.md) supersede the earlier open environment items below. A new Python environment installed 94 hash-locked wheels offline and matched all locked versions. Package consistency, all 18 imports and requirement ranges, CUDA training smoke, selected LPBF/importer regressions and a clean Node application's live API passed. WSL passed all 26 engineering tests including compiled OpenFOAM; initial WSL failure to Windows fallback was exercised separately. Independent source/artifact review found no remaining material acceptance gap. A02 is accepted for technical workstation/software reproduction; no model qualification is implied.
 
-The [CPU LPBF guide](LPBF_CPU_REPRODUCTION.md) remains a separate seven-package baseline. [Versioned evidence](evidence/a02-environment-2026-09-15.json) preserves the clean interpreter scope and lock hash. Earlier snapshots below are historical observations, not current availability.
+The [CPU LPBF guide](../LPBF_CPU_REPRODUCTION.md) remains a separate seven-package baseline. [Versioned evidence](../evidence/a02-environment-2026-09-15.json) preserves the clean interpreter scope and lock hash. Earlier snapshots below are historical observations, not current availability.
 
 ## Tool execution verified — 2026-09-15 continuation
 

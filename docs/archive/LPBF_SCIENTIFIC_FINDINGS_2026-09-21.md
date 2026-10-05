@@ -2,7 +2,7 @@
 
 Bounded follow-up to LPBF_CORE_BASELINE_2026-09-21.md, not an exhaustive science
 audit. User explicitly requested LPBF-only common core/database work and removal
-of unscientific behavior. Phase0 remains OPEN.
+of unscientific behavior. Initial audit remains open.
 
 ## Repaired: fabricated experimental comparison
 
@@ -11,7 +11,7 @@ PDAS1.5um/keyhole depth120um irrespective of active run. Its measured inputs wer
 prefilled1.6/150. These were not computed predictions or user measurements.
 lpbf_experimental_validation returned `validated` even with zero metric pairs,
 assigned EBSD/CT method labels, and used undocumented15/20percent cutoffs to claim
-pass/high/moderate agreement. Old Phase10 tests asserted those false semantics.
+pass/high/moderate agreement. Old Phase tests asserted those false semantics.
 
 The UI now states comparison unavailable because no run/source dataset is bound.
 It has no substitute constants, measurement defaults or execute control. It
@@ -29,10 +29,10 @@ persisted provenance chain. No acceptance thresholds are manufactured.
 
 ## Evidence
 
-Python Phase10 tests: old behavior12FAIL+1error →5PASS. UI render regression
+Python Phase tests: old behavior12FAIL+1error →5PASS. UI render regression
 RED→PASS; lint and buildPASS36.60s. Real Node route→bridge→Python on3197:
 equal synthetic pair comparison-only/unvalidated/unknown; empty body400. Saved
-`.runtime/phase0-audit/evidence-api-01a0c383.json`.
+.runtime/phase0-audit/evidence-api-01a0c383.json.
 Actual browser rendered the compiled real component using production CSS;
 Tab/Enter unmount/remount and readable layout passed. This was the isolated
 `tests/lpbf-evidence-browser.html` harness, not a claim that the full app's

@@ -16,11 +16,11 @@
 
 ## 2026-09-21 — Comprehensive simulation and digital twin master plan
 - Task: Prepare a comprehensive plan before development; user clarified no Superpowers dependency is required.
-- Done / Last completed action: Created a Turkish master plan with architecture, local storage/migration, data provenance, open benchmark strategy, shared physics, alloy capability gates, machine scenarios, numerical/experimental acceptance, ten phases, effort estimates, risks and first-release checklist. Self-reviewed proposed versus existing paths and skill-independent planning scope.
+- Done / Last completed action: Created a Turkish master plan with architecture, local storage/migration, data provenance, open benchmark strategy, shared physics, alloy capability gates, machine scenarios, numerical/experimental acceptance, work packages, effort estimates, risks and first-release checklist. Self-reviewed proposed versus existing paths and skill-independent planning scope.
 - Files touched: docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md, parent STATUS.md, this log.
 - Validation: Documentation checks for placeholder/skill gates and git diff --check passed; referenced existing paths inspected. No solver/build/runtime tests run because no product code changed. No scientific validation claimed.
 - Result: PASS — planning artifact prepared for review; implementation not started.
-- Where we left off / Next action: Review master plan and begin Phase 0 evidence/environment audit when development work is requested.
+- Where we left off / Next action: Review master plan and begin the engineering evidence/environment audit when development work is requested.
 - Agent: Codex (GPT-6).
 ## 2026-09-21 — General application planning recommendations
 - Task: Review the application broadly for recommendations aligned with open-data simulation and alloy expansion.
@@ -41,44 +41,44 @@
 - Where we left off / Next action: Clarify measured-experiment reproduction versus process design versus a specific machine, then select alloy, benchmark and acceptance criteria.
 - Agent: Codex (GPT-6).
 
-## 2026-09-18 20:45 — LPBF Multiphysics CFD Phase 7 & Phase 8: Plume/Spatter & Solidification Microstructure Coupling
-- Task: Complete Phase 7 (Plume momentum, shielding gas crossflow, spatter diagnostics) and Phase 8 (In-situ solidification front G/R tracking, Hunt-Lu PDAS, Kirkwood SDAS, Hunt CET morphology, Microstructure Lab UI).
+## 2026-09-18 20:45 — LPBF Multiphysics CFD: Plume/Spatter & Solidification Microstructure Coupling
+- Task: Complete plume momentum, shielding gas crossflow and spatter diagnostics, plus in-situ solidification-front G/R tracking, Hunt-Lu PDAS, Kirkwood SDAS, Hunt CET morphology and the Microstructure Lab UI.
 - Done / Last completed action:
-  - Phase 7: Added plume momentum body force `SPlume_ = -(j_evap^2 / rho_gas) grad(alpha1)` into UEqn in `metalliksaMeltPoolFoam.C`, discrete patch boundaries for shielding gas crossflow (`shielding_gas_velocity_mps`) in `lpbf_cfd.py`, and spatter volume/velocity diagnostics. Verified via `python/test_phase7.py`.
-  - Phase 8: Created `python/openfoam/meltPoolFoam/solidificationModel.H` with mushy-zone cell G/R sampling, Hunt-Lu PDAS (λ₁ = 80·G^-0.5·R^-0.25 µm), Kirkwood SDAS (λ₂ = 64.5·Ṫ^-0.33 µm), and Hunt CET morphology criterion. Linked to solver `metalliksaMeltPoolFoam.C` emitting `solidification-microstructure.json`. Implemented Python-side solver `python/lpbf_solidification_microstructure.py` with analytical Rosenthal screening fallback and worker RPC endpoint. Built frontend `SolidificationMicrostructureLab.tsx` with G-R scatter map, PDAS/SDAS bar chart, morphology doughnut pie, and diagnostics table. Wired into `App.tsx` and `workspaces.ts`.
+  - Plume and spatter: Added plume momentum body force `SPlume_ = -(j_evap^2 / rho_gas) grad(alpha1)` into UEqn in `metalliksaMeltPoolFoam.C`, discrete patch boundaries for shielding gas crossflow (`shielding_gas_velocity_mps`) in `lpbf_cfd.py`, and spatter volume/velocity diagnostics. Verified via `python/test_phase7.py`.
+  - Solidification microstructure: Created `python/openfoam/meltPoolFoam/solidificationModel.H` with mushy-zone cell G/R sampling, Hunt-Lu PDAS (λ₁ = 80·G^-0.5·R^-0.25 µm), Kirkwood SDAS (λ₂ = 64.5·Ṫ^-0.33 µm), and Hunt CET morphology criterion. Linked to solver `metalliksaMeltPoolFoam.C` emitting `solidification-microstructure.json`. Implemented Python-side solver `python/lpbf_solidification_microstructure.py` with analytical Rosenthal screening fallback and worker RPC endpoint. Built frontend `SolidificationMicrostructureLab.tsx` with G-R scatter map, PDAS/SDAS bar chart, morphology doughnut pie, and diagnostics table. Wired into `App.tsx` and `workspaces.ts`.
 - Files touched: `python/openfoam/meltPoolFoam/evaporationModel.H`, `metalliksaMeltPoolFoam.H`, `metalliksaMeltPoolFoam.C`, `solidificationModel.H`, `python/lpbf_cfd.py`, `python/lpbf_worker.py`, `python/lpbf_solidification_microstructure.py`, `python/test_phase7.py`, `python/test_phase8.py`, `src/components/SolidificationMicrostructureLab.tsx`, `src/App.tsx`, `src/data/workspaces.ts`, `src/services/pythonComputationService.ts`, `docs/MODULE_EVIDENCE_INVENTORY.md`, `STATUS.md`, `sonkayıtlar/CURRENT_HANDOFF.md`, this log.
 - Tests: `python -m pytest python/test_phase8.py -v` (20/20 PASS in 232s); `npm run lint` (0 errors PASS).
-- Result: PASS for Phase 7 & 8 deliverables.
-- Where we left off / Next action: Commit Phase 7 & 8 to git; hold and await user directive before starting Phase 9.
+- Result: PASS for both workstreams.
+- Where we left off / Next action: Commit both workstreams to git; hold and await user directive before starting additional work.
 - Agent: Antigravity. English application/code, Turkish user updates.
 
 ## 2026-09-18 16:15 — Roadmap: North Star 3-Tier Toolpath & Defect Digital Twin Integration
 - Task: Formalize and integrate the North Star vision and the 3-tier toolpath kinematics architecture into the official product roadmap (ROADMAP.md).
-- Done / Last completed action: Updated North-Star Product Target and Phase 5 in ROADMAP.md to establish the hybrid toolpath ingestion strategy: (1) Core high-precision direct toolpath parsing (CLI / G-Code), (2) Agile R&D parametric benchmark patterns (Single track, 90° Turnaround, Island/Checkerboard), and (3) Rapid in-app STL slicing via BasicSTLSlicer. Formalized physical defect criteria: Harkin et al. (2023) elliptical overlap for Lack of Fusion (LoF), King & Cunningham normalized enthalpy and vapor depression collapse for Keyhole, and Rayleigh-Plateau / Yadroitsev capillary breakup (L/W > pi) for Balling. Integrated scanner mirror dynamics (acceleration profiles, skywriting toggle, mark/jump delays) and 3D spatial defect mapping with UQ-driven relative density (%99.X) output.
+- Done / Last completed action: Updated the North-Star Product Target and roadmap in ROADMAP.md to establish the hybrid toolpath ingestion strategy: (1) Core high-precision direct toolpath parsing (CLI / G-Code), (2) Agile R&D parametric benchmark patterns (Single track, 90° Turnaround, Island/Checkerboard), and (3) Rapid in-app STL slicing via BasicSTLSlicer. Formalized physical defect criteria: Harkin et al. (2023) elliptical overlap for Lack of Fusion (LoF), King & Cunningham normalized enthalpy and vapor depression collapse for Keyhole, and Rayleigh-Plateau / Yadroitsev capillary breakup (L/W > pi) for Balling. Integrated scanner mirror dynamics (acceleration profiles, skywriting toggle, mark/jump delays) and 3D spatial defect mapping with UQ-driven relative density (%99.X) output.
 - Files touched: ROADMAP.md, sonkayıtlar/LOG.md.
 - Tests: Document validation and lint check PASS. No source code broken.
 - Result: PASS for roadmap formalization milestone.
 - Where we left off / Next action: Implement Tier 1/2 toolpath ingestion (CLI parser / Parametric test patterns) and King/Rayleigh-Plateau defect thresholds in lpbf_defect_diagnostics.py.
 - Agent: Antigravity. English application/code, Turkish user updates.
 
-## 2026-09-18 16:05 — LPBF Multiphysics CFD Phase 3: Knight Recoil Pressure & Hertz-Knudsen Evaporation
-- Task: Implement Phase 3 of LPBF Multiphysics CFD Roadmap (docs/LPBF_MULTIPHYSICS_CFD_ROADMAP.md).
+## 2026-09-18 16:05 — LPBF Multiphysics CFD: Knight Recoil Pressure & Hertz-Knudsen Evaporation
+- Task: Implement Knight recoil pressure and Hertz-Knudsen evaporation for the LPBF multiphysics CFD roadmap (docs/LPBF_MULTIPHYSICS_CFD_ROADMAP.md).
 - Done / Last completed action: Implemented full EvaporationModel in python/openfoam/meltPoolFoam/evaporationModel.H with Knight (1979) recoil pressure P_recoil = 0.54 * P_sat(T) via Clausius-Clapeyron, Hertz-Knudsen evaporative mass flux, normal interface recoil body force f_recoil = P_recoil * grad(alpha1) directing downward into the liquid metal, and latent evaporative cooling sink Sh_evap = -Lv * j_evap * |grad(alpha1)|. Integrated SRecoil_ into momentumPredictor and ShEvap_ into thermophysicalPredictor of metalliksaMeltPoolFoam. Bumped solver to metalliksaMeltPoolFoam-OpenFOAM14-3 and recoil model to recoil-knight-clausius-v1. Added setup_recoil_case and automated unit tests 07 & 08 in python/test_lpbf_cfd.py.
 - Files touched: python/openfoam/meltPoolFoam/evaporationModel.H, metalliksaMeltPoolFoam.H, metalliksaMeltPoolFoam.C; python/lpbf_cfd.py; python/test_lpbf_cfd.py; PROOF.md; sonkayıtlar/CURRENT_HANDOFF.md; this log.
 - Tests: WSL wmake PASS (exit code 0); python/test_lpbf_cfd.py 8 tests (7 PASS, 1 skip on coarse mesh diagnostics-gate, 0 failures in 30.9s); regression tests test_lpbf_overlap and test_lpbf_engineering 33/33 PASS in 36.8s.
 - Review: Recoil pressure agrees with analytical Knight relation within expected grid offset tolerance; normal recoil body force verified to direct fluid downward into the liquid pool (Uy < 0).
-- Result: PASS for Phase 3 deliverable. Ready for local git commit. GitHub push blocked per instructions until explicit user authorization.
-- Where we left off / Next action: Phase 4 of Multiphysics CFD (Moving interface laser heating / surface flux) or transition per user preference.
+- Result: PASS for the solver deliverable. Ready for local git commit. GitHub push blocked per instructions until explicit user authorization.
+- Where we left off / Next action: Continue multiphysics CFD with moving-interface laser heating/surface flux, or transition per user preference.
 - Agent: Antigravity. English application/code, Turkish user updates.
 
-## 2026-09-18 14:45 — LPBF Multiphysics CFD Phase 1: metalliksaMeltPoolFoam Solver and Verification Suite
-- Task: Implement Phase 1 of LPBF Multiphysics CFD Roadmap (docs/LPBF_MULTIPHYSICS_CFD_ROADMAP.md).
+## 2026-09-18 14:45 — LPBF Multiphysics CFD: metalliksaMeltPoolFoam Solver and Verification Suite
+- Task: Implement the LPBF multiphysics CFD solver and verification suite from docs/LPBF_MULTIPHYSICS_CFD_ROADMAP.md.
 - Done / Last completed action: Created standalone OpenFOAM 14 multiphysics CFD solver metalliksaMeltPoolFoam in python/openfoam/meltPoolFoam/ (inheriting from incompressibleVoF). Linked against OpenFOAM 14 VOF and two-phase libraries. Implemented coupled metal-gas VOF, Continuum Surface Force (CSF) capillarity, Apparent Heat Capacity (AHC) enthalpy formulation with conservative mass-flux convection, and Carman-Kozeny mushy-zone Darcy momentum sink. Created Python orchestration layer in python/lpbf_cfd.py and automated verification test suite in python/test_lpbf_cfd.py.
 - Files touched: python/openfoam/meltPoolFoam/metalliksaMeltPoolFoam.C, metalliksaMeltPoolFoam.H, laserModel.H, evaporationModel.H, interfaceForces.H, Make/files, Make/options; python/lpbf_cfd.py; python/test_lpbf_cfd.py; PROOF.md; this log.
 - Tests: WSL wmake PASS (exit code 0); python/test_lpbf_cfd.py 5/5 PASS in 29.9s (cfd capability, droplet Laplace pressure & volume conservation, 1D Stefan melting benchmark, Darcy velocity suppression in solid, and flow-disabled thermal parity); regression tests test_lpbf_overlap.py 7/7 PASS, test_lpbf_engineering.py 26/26 PASS.
 - Review: OpenFOAM 14 equation dimensions verified; conservative mass-flux convection fvm::div(fvc::interpolate(cpEff) * rhoPhi, T) resolves interface convective errors; Apparent Heat Capacity unconditionally eliminates Picard non-linear oscillations while conserving exact latent heat. Free-surface solver UI capability remains False until full multi-physics qualification per roadmap rules.
-- Result: PASS for Phase 1 deliverable. Local git commit ready. GitHub push blocked per instructions until explicit user authorization.
-- Where we left off / Next action: Phase 2 of Multiphysics CFD (Capillary & Marangoni flow with tangential Marangoni stress) or transition to fresh context per user request ("Bağlam artınca yeni yere geç").
+- Result: PASS for the solver deliverable. Local git commit ready. GitHub push blocked per instructions until explicit user authorization.
+- Where we left off / Next action: Continue multiphysics CFD with capillary and Marangoni flow, or transition to fresh context per user request ("Bağlam artınca yeni yere geç").
 - Agent: Antigravity. English application/code, Turkish user updates.
 
 ## 2026-09-18 14:15 — Field-resolved inter-track overlap and remelting diagnostics
@@ -88,7 +88,7 @@
 - Tests: WSL wmake PASS; WSL Python test suite 60/60 PASS in 38.3s; frontend unit tests 109/109 PASS; tsc --noEmit PASS; npm run build PASS (51.8s).
 - Review: Python and C++ implementations audited for coordinate alignment and powder-surface boundary exclusion. OpenFOAM writes track-melt.dat; Python FieldOverlapTracker computes identical metrics across both solvers. Pre-existing user modifications preserved.
 - Result: PASS for field-resolved overlap increment. Broader LPBF multiphysics CFD roadmap ongoing. Local task commit prepared; GitHub push blocked per instructions until explicit user authorization.
-- Where we left off / Next action: Multiphysics CFD Phase 1 roadmap (metalliksaMeltPoolFoam VOF / Stefan problem) or live UI verification on free ports.
+- Where we left off / Next action: Continue the multiphysics CFD roadmap (metalliksaMeltPoolFoam VOF / Stefan problem) or live UI verification on free ports.
 - Agent: Antigravity. English application/code, Turkish user updates.
 
 ## 2026-09-16 14:33 — LPBF accepted-step melt maximum
@@ -133,7 +133,7 @@
 - Tests: N/A — documentation-only change; roadmap wording and Markdown diff reviewed.
 - Result: PASS — roadmap updated; no scientific model or validation claim was marked complete.
 - Agent: GPT-5 (Codex).
-- Done / Last completed action: Added the north-star product target, GO-MELT baseline requirement, CAD-to-solver input contract, defect taxonomy, powder/atmosphere uncertainty, part-level aggregation, holdout validation and hotspot escalation milestones. Replaced the old Phase 5 threshold-only wording and made optimization depend on validated defect risk.
+- Done / Last completed action: Added the north-star product target, GO-MELT baseline requirement, CAD-to-solver input contract, defect taxonomy, powder/atmosphere uncertainty, part-level aggregation, holdout validation and hotspot escalation milestones. Replaced the old Phase threshold-only wording and made optimization depend on validated defect risk.
 - Where we left off / Next action: Implement the benchmark/input contract first, then build the single-material defect MVP. GO-MELT remains a reference backend/benchmark; unsupported porosity certainty must remain blocked.
 
 ## 2026-09-15 17:48 — A02 clean committed application and WSL verification
@@ -423,7 +423,7 @@ Added real thermal field time-series artifacts and isolated 3D explorer; respons
 - **Files:** `python/lpbf_simulation.py`, `python/lpbf_openfoam.py`, `python/openfoam/metalliksaThermal.C`, `python/lpbf_material_registry.py`, `python/lpbf_evidence.py`, `python/lpbf_worker.py`, `python/test_lpbf_engineering.py`, `python/test_lpbf_api.py`, `python/benchmark_lpbf_engineering.py`, `routes/lpbfSimulation.ts`, `docs/LPBF_ARCHITECTURE_AUDIT.md`, `docs/LPBF_ENGINEERING.md`, `docs/LPBF_BENCHMARK_2026-09-12.json`, `PROOF.md`, this log.
 - **Tests:** WSL physics 23/23; real wmake/blockMesh/checkMesh; three actual backend benchmarks; API 6/6 on isolated host and full application; lint/build/runtime contract pass. Existing analytical suites pass, including the explicitly reported Guo N01 depth discrepancy. Browser verified modes, numerical-only fallback, genuine thermal field images, measured comparison, refresh recovery of active job and active cancellation without result.
 - **Where we left off:** Thermal research capability is strengthened. UI increment follows in a separate local commit. Free-surface/momentum/evaporation/keyhole and experimental validation remain unresolved; no data or physics fields invented. Existing main-bundle warning remains.
-- **Git:** Only task files staged. Unrelated `.cursor/mcp.json` and generated bytecode excluded. Local phase commit followed by final task push to existing origin; final status will be reported.
+- **Git:** Only task files staged. Unrelated `.cursor/mcp.json` and generated bytecode excluded. A local task commit was followed by a final task push to the existing origin; final status will be reported.
 
 # Latest records (`sonkayıtlar`)
 
@@ -520,12 +520,12 @@ Operational log of agent jobs **whether they finished or stopped mid-task**. New
 
 ---
 
-## 2026-09-12 13:20 — Phase 3 liquidus G/R + fold into main
+## 2026-09-12 13:20 — Liquidus G/R screening folded into main
 - **Agent**: Cursor Grok 4.6
 - **Result**: PASS
 - **Task**: Continue from GitHub 12:59 (`ed12fb9` Melt Pool kıvam). Unlock G/R mapping. Put all developed work on `main`. `yeni1`/`yeni2` had nothing unique; delete those branches.
 - **Done**: `solidification-front-v1` maps \(G=|\nabla T|\), \(R=v n_x\cos\theta\) on the liquidus. Hunt \(G/R\) screening + Hunt–Lu PDAS + Kirkwood SDAS + Ahmed & Rack Ti64 note. Melt Pool lab shows field-map stations. Build Job stays `rosenthal-screening-v1`. PROOF 021. Feature branch merged to `main`.
-- **Where we left off**: Phase 3 screening G/R is on Melt Pool. Still locked: Marangoni CFD, Goldak FEA, using Goldak/ET to re-score Build Job, Gäumann \(N_0\) CET.
+- **Where we left off**: G/R screening is in Melt Pool. Still locked: Marangoni CFD, Goldak FEA, using Goldak/ET to re-score Build Job, Gäumann \(N_0\) CET.
 - **Files**: `python/solidification_front.py`, `python/test_solidification_front.py`, `python/lpbf_thermal_solver.py`, `src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx`, `src/services/pythonComputationService.ts`, `PROOF.md`, `ROADMAP.md`, `AGENTS.md`, `sonkayıtlar/LOG.md`
 - **Tests**: `py -3 python/test_solidification_front.py` PASS; `py -3 python/test_goldak_fabbro.py` PASS; `py -3 python/test_eagar_tsai.py` PASS; `py -3 python/test_lpbf_build_job.py` PASS; `npx tsc --noEmit` PASS
 
@@ -536,7 +536,7 @@ Operational log of agent jobs **whether they finished or stopped mid-task**. New
 - **Result**: PASS
 - **Task**: User said keep going without waiting for approval until the melt-pool simulation is at the intended kıvam.
 - **Done**: Stopped double-counting multi-reflection A on Fabbro/ET/Goldak (Fresnel \(A=\eta_0\)). NIST AMB2022-03 Goldak W/D now ~117/124 µm vs 136.3/139.7. Recoil uses Knight \(0.54 P_\mathrm{sat}(T_s)\) with \(T_s\le T_v\) (~55 kPa, not \(10^7\) kPa). Unlocked `marangoni-heiple-v1` (30–60 ppm S inversion, no W/D fit). Melt Pool lab sulfur slider + surface-T / flow chips. Build Job stays Rosenthal + King. PROOF 020.
-- **Where we left off**: Melt Pool kıvam is literature-consistent on W/D/recoil/Marangoni sign. Still locked: Marangoni CFD, Goldak FEA, using Goldak/ET to re-score Build Job, G/R mapping as a dedicated Phase 3 lab.
+- **Where we left off**: Melt Pool kıvam is literature-consistent on W/D/recoil/Marangoni sign. Still locked: Marangoni CFD, Goldak FEA, using Goldak/ET to re-score Build Job, G/R mapping as a dedicated lab.
 - **Files**: `python/marangoni_screening.py`, `python/lpbf_thermal_solver.py`, `python/fabbro_keyhole.py`, `python/test_goldak_fabbro.py`, `python/test_marangoni_screening.py`, `src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx`, `src/services/pythonComputationService.ts`, `PROOF.md`, `ROADMAP.md`, `AGENTS.md`, `sonkayıtlar/LOG.md`
 - **Tests**: `python3 python/test_goldak_fabbro.py` PASS; `python3 python/test_marangoni_screening.py` PASS; `python3 python/test_eagar_tsai.py` PASS; melt-pool / four-alloy / build-job PASS; `npx tsc --noEmit` PASS
 - **Düzeltme (2026-10-04)**: Yukarıdaki "W/D ~117/124 µm" ifadesi bugünkü kodla doğrulanmadı: GPU ışın izlemeli Goldak sonucu W = 102,2 µm, CPU yedeği W = 81,7 µm (D ≈ 124 µm doğru). NIST genişlik denetimi hiçbir otomatik kapının parçası değildir. Ayrıntı: PROOF.md en üst düzeltme girdisi, STATUS.md.
@@ -565,24 +565,24 @@ Operational log of agent jobs **whether they finished or stopped mid-task**. New
 
 ---
 
-## 2026-09-06 22:45 — LPBF Faz 5 (cache, lazy UQ/NIST, Murakami, SBOM, air-gap)
+## 2026-09-06 22:45 — LPBF Faz (cache, lazy UQ/NIST, Murakami, SBOM, air-gap)
 - **Agent**: Cursor Auto (Composer) / Grok inherit for survey
 - **Result**: PASS
-- **Task**: MetalliX LPBF Faz 5 ortam+performans + serbest kalite: hash cache; lazy UQ/NIST; Murakami paste; CycloneDX SBOM; AIRGAPPED; PROOF 017; push yeni1 + main sync.
+- **Task**: MetalliX LPBF Faz ortam+performans + serbest kalite: hash cache; lazy UQ/NIST; Murakami paste; CycloneDX SBOM; AIRGAPPED; PROOF 017; push yeni1 + main sync.
 - **Done**: `lpbf_job_cache.py`; schema defaults enableUq/includeAmbench=false; Decision lab Run UQ / Validate vs NIST + NIST MAPE table + Murakami paste/HV; Spearman screeningSensitivity; air-gap middleware+banner; `npm run sbom`; rail cache/UQ chips; tests fast/slow; PROOF 017.
 - **Where we left off**: Nothing left on this task after commit/push + main sync.
 - **Files**: `python/lpbf_job_cache.py`, `python/lpbf_build_job_solver.py`, `python/lpbf_build_job_schema.py`, `python/lpbf_screening_uq.py`, `python/murakami_fatigue_screening.py`, `python/generate_sbom.py`, `python/test_lpbf_build_job.py`, `python/requirements.txt`, `server/airgap.ts`, `server.ts`, `routes/copilot.ts`, `src/store/useLpbfBuildJobStore.ts`, `src/components/LpbfBuildJobRail.tsx`, `src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx`, `src/components/AirgapBanner.tsx`, `src/App.tsx`, `src/services/pythonComputationService.ts`, `src/physics/lpbfBuildJob.ts`, `package.json`, `README.md`, `sbom/*`, `PROOF.md`, `sonkayıtlar/LOG.md`
 - **Tests**: `py -3 python/test_lpbf_build_job.py` PASS; `py -3 python/test_lpbf_build_job.py --slow` PASS; `py -3 python/generate_sbom.py` PASS; `npx tsc --noEmit` PASS
 
-## 2026-09-06 22:20 — LPBF Faz 3+4 (UQ, NIST, Murakami, qualification)
+## 2026-09-06 22:20 — LPBF Faz+4 (UQ, NIST, Murakami, qualification)
 - **Agent**: Cursor Auto (Composer)
 - **Result**: PASS
-- **Task**: MetalliX LPBF Faz 3+4: literature UQ on build-job; NIST AMB2018-02; Murakami/Gumbel; AMS/ASTM qualification template; verdict label + P(printable); dört alaşım; sayı uydurma yok.
-- **Done**: lpbf_screening_uq.py MC + Sobol-proxy; 
+- **Task**: MetalliX LPBF Faz+4: literature UQ on build-job; NIST AMB2018-02; Murakami/Gumbel; AMS/ASTM qualification template; verdict label + P(printable); dört alaşım; sayı uydurma yok.
+- **Done**: lpbf_screening_uq.py MC + Sobol-proxy;
 ist_ambench_2018_02.py Table 4 CBM; murakami_fatigue_screening.py; build-job/schema/TS/rail/Decision lab wired; PROOF 016.
 - **Where we left off**: Nothing left on this task. Commit/push yeni1 then main sync.
 - **Files**: python/lpbf_screening_uq.py, python/nist_ambench_2018_02.py, python/murakami_fatigue_screening.py, python/lpbf_build_job_solver.py, python/lpbf_build_job_schema.py, python/lpbf_thermal_solver.py, python/test_lpbf_build_job.py, src/services/pythonComputationService.ts, src/store/useLpbfBuildJobStore.ts, src/components/LpbfBuildJobRail.tsx, src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx, PROOF.md, sonkayıtlar/LOG.md
-- **Tests**: py -3 python/test_lpbf_build_job.py PASS (Phase 0–4); 
+- **Tests**: py -3 python/test_lpbf_build_job.py PASS (suite);
 px tsc --noEmit PASS
 
 ## 2026-09-06 22:06 — Force push nedir (soru)
@@ -596,12 +596,12 @@ px tsc --noEmit PASS
 
 ---
 
-## 2026-09-06 21:10 — LPBF Faz 0→2 + serbest iyileştirme
+## 2026-09-06 21:10 — LPBF Faz + serbest iyileştirme
 - **Agent**: Cursor Grok 4.6
 - **Result**: PASS
-- **Task**: MetalliX LPBF çekirdek Faz 0→1→2 (verdict yalnız Python; ölçüm uydurma yok; force-push yok) + sınırlı kalite iyileştirmeleri; bitince `yeni1` push ve `main` sync.
+- **Task**: MetalliX LPBF çekirdek Faz (verdict yalnız Python; ölçüm uydurma yok; force-push yok) + sınırlı kalite iyileştirmeleri; bitince `yeni1` push ve `main` sync.
 - **Done**: F0 seed/M_molar/Tang/(h/W)²+(t/D)²/sahte tavan kaldırma/Marangoni=termal; F1 efektif k/Cp (King solid), R=v·cosθ, downskin gate, stripe 5 mm/67°/dwell 0 + DOI assumptions; F2 numpy, pydantic şema, triangle cap 12000; UI seed+strategy; PROOF 015.
-- **Where we left off**: Nothing left on this task. Faz 3–5 (UQ/Murakami/AMS/SBOM) bilerek yapılmadı.
+- **Where we left off**: Nothing left on this task. Faz (UQ/Murakami/AMS/SBOM) bilerek yapılmadı.
 - **Files**: `python/lpbf_thermal_solver.py`, `python/lpbf_build_job_solver.py`, `python/lpbf_build_job_schema.py`, `python/four_alloy_materials.py`, `python/marangoni_pore_instability_solver.py`, `python/stl_slicer_build_time_solver.py`, `python/test_lpbf_build_job.py`, `python/requirements.txt`, `src/store/useMaterialSpecimenStore.ts`, `src/store/useLpbfBuildJobStore.ts`, `src/services/pythonComputationService.ts`, `src/components/LpbfBuildJobRail.tsx`, `src/components/3d-distortion-lab/MarangoniPoreInstabilityLab.tsx`, `src/types/lpbfDataFoundation.ts`, `src/physics/lpbfBuildJob.ts`, `PROOF.md`, `sonkayıtlar/LOG.md`
 - **Tests**: `py -3 python/test_lpbf_build_job.py` PASS; `py -3 python/test_lpbf_meltpool_accuracy.py` PASS; `py -3 python/test_four_alloy_literature.py` PASS; `npx tsc --noEmit` PASS
 
@@ -721,7 +721,7 @@ px tsc --noEmit PASS
 - **Result**: PASS
 - **Task**: Make `3d-distortion-lab` a 4-step LPBF process job (Alloy → STL → Python decision → Literature) with Advanced physics collapsed; actionable Python reasons; literature I₀/ΔH matching; Send-to Additive; optional PSD on save.
 - **Done**: Wizard rail is 4 steps with a single P–v panel on `activeSpecimen.lpbf`. The 12-lab bar is an Advanced accordion; deep-link `activeSubTab` (query/hash/events) still opens labs. Verdict UI maps Python reasons to actions without re-scoring. Nearest literature uses I₀ and ΔH/hₛ when present; DOI dots overlay the 7×7 map. Inverse Send-to opens Additive; Inverse no longer shows a green industrial printable badge. Save-run PSD/lot fields start empty.
-- **Where we left off**: Faz 5 in-wizard DOE scan was skipped. Browser click-through not run (no browser tools in this session). No git commit (prompt did not ask).
+- **Where we left off**: Faz in-wizard DOE scan was skipped. Browser click-through not run (no browser tools in this session). No git commit (prompt did not ask).
 - **Files**: `src/components/Additive3DDistortionLab.tsx`, `src/components/LpbfBuildJobRail.tsx`, `src/utils/lpbfActionableReasons.ts`, `src/utils/lpbfIndustrialDecision.ts`, `src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx`, `src/components/3d-distortion-lab/LPBFGroundTruthDataLab.tsx`, `src/utils/materialDataPipeline.ts`, `src/components/SendToModuleModal.tsx`, `src/components/InverseAlloyStudio.tsx`, `src/components/LPBFAdditivePhysicsSuite.tsx`, `sonkayıtlar/LOG.md`
 - **Tests**: `npx tsc --noEmit` PASS. Browser verification N/A — no browser MCP. Regime labels unchanged (no PROOF.md science claim).
 
@@ -732,7 +732,7 @@ px tsc --noEmit PASS
 - **Result**: PARTIAL
 - **Task**: Open the LPBF process-job wizard plan in a new agent (Alloy → STL → Decision → Literature; Advanced labs hidden).
 - **Done**: Launched a background implementation agent with the approved plan (wizard shell, actionable reasons, literature nearest, Send-to Additive, optional PSD fields). This chat did not edit LPBF UI source.
-- **Where we left off**: Implementation runs on [LPBF process wizard](d7123b79-0264-4642-bde3-104f077ba6e1). Faz 5 DOE is out of first pass. User asked not to commit from this prompt.
+- **Where we left off**: Implementation runs on [LPBF process wizard](d7123b79-0264-4642-bde3-104f077ba6e1). Faz DOE is out of first pass. User asked not to commit from this prompt.
 - **Files**: `sonkayıtlar/LOG.md`
 - **Tests**: N/A — spawn only; implementing agent will run tsc/tests.
 
@@ -1048,7 +1048,7 @@ px tsc --noEmit PASS
 - Scope: B01/B02 remain uncredited and pilot, holdout and commercial gates stay blocked. C01/C02 may proceed with explicitly labelled generic assumptions and public sourced data; no customer evidence or scientific approval is inferred.
 - Result: PASS — decision recorded without falsifying customer evidence. Next: begin C01/C02 material identity, units and provenance work under deferred-customer scope.
 
-## 2026-09-18 — Phase 4: Moving Interface Laser Heating Complete
+## 2026-09-18 — Moving Interface Laser Heating Complete
 
 ## 2026-09-20 — HANGAR BİGG başvuru taslağı hazırlandı
 
@@ -1061,4 +1061,4 @@ px tsc --noEmit PASS
 - Decision: Implemented Moving Gaussian Surface Flux directly on the VOF interface.
 - Files: laserModel.H, metalliksaMeltPoolFoam.C, lpbf_cfd.py, 	est_lpbf_cfd.py, CURRENT_HANDOFF.md.
 - Scope: Formulated volumetric heat source as S_h = I(x) max(grad(alpha1) dot d, 0) |grad(alpha1)|, ensuring projection onto the gas-metal free surface dynamically. Updated the solver to read scan path vectors and timing from 	hermalProperties. Unit test verified moving domain heating locally.
-- Result: PASS — Test 	est_09_moving_laser_surface_heating executes successfully under WSL and reports expected elevated temperatures and laser model activation. Next: Phase 5 Python Pipeline & Pre-Processing.
+- Result: PASS — Test `test_09_moving_laser_surface_heating` executes successfully under WSL and reports expected elevated temperatures and laser model activation. Next: Python pipeline and preprocessing.
