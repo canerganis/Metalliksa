@@ -93,7 +93,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-black tracking-tight text-white">
-                    MetalliX Universal Alloy Builder &amp; Specimen Studio
+                    Composition Editor
                   </h1>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
                     Live Shared Store
@@ -137,7 +137,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               Rapid XRD Lab
             </span>
             <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              Digital Twin Hub
+              Specimen Records
             </span>
           </div>
 

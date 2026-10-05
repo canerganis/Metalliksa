@@ -164,7 +164,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
           <div>
             <h2 className="text-sm font-bold text-white tracking-tight font-mono">AI Metallurgy & Materials Science Copilot</h2>
             <p className="text-xs text-slate-400">
-              Grounded in CALPHAD thermodynamics, physical metallurgy, crystallography, and failure analysis.
+              Language-model answers to metallurgy questions; advisory only, verify every claim against sources.
             </p>
           </div>
         </div>

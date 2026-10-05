@@ -294,7 +294,7 @@ export const EDSSpectrumLab: React.FC<{
               <Crosshair className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white">SEM-EDS Spectrum Viewer &amp; Peak Candidates</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white">EDS Spectrum Viewer</h2>
               <p className="text-xs text-slate-400 mt-0.5">
                 Imported spectra only. Peak candidates are listed from a cited line table; nothing here is quantified.
               </p>

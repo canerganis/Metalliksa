@@ -174,9 +174,9 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       if (content) {
         const success = importTwinFromJSON(content);
         if (success) {
-          alert("Digital Twin imported successfully!");
+          alert("Specimen record imported successfully!");
         } else {
-          alert("Invalid Digital Twin JSON structure.");
+          alert("Invalid specimen record JSON structure.");
         }
       }
     };
@@ -254,7 +254,7 @@ Provide an evidence-gap review:
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-xl font-bold tracking-tight text-white">
-                    Sample Digital Twin
+                    Specimen Records
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40">
                     Integrated Multi-Scale Data Spine
@@ -1137,7 +1137,7 @@ Provide an evidence-gap review:
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-sky-400" />
-                <span>Single Source of Truth (Digital Twin Schema JSON)</span>
+                <span>Specimen Record Schema JSON</span>
               </h3>
               <p className="text-[11px] text-slate-400">Full structured object feeding all modules</p>
             </div>

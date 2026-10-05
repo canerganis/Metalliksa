@@ -231,7 +231,7 @@ export function ICMEMultiScalePipelineStudio() {
               </span>
             </div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-              Multi-Scale ICME Alloy Pipeline
+              Yield Strength Breakdown (Illustrative)
             </h1>
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl">
               Closed-form chain on tabulated constants (no DFT, CALPHAD or FEA is run): <span className="text-sky-300 font-medium">Elastic constants table (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">Solute strengthening table</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Schematic σ-ε Curve</span> → <span className="text-rose-300 font-medium">Yield-only Component Check</span>.

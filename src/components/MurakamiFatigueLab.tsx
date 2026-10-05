@@ -39,7 +39,7 @@ export const MurakamiFatigueLab: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-900 text-gray-200">
       <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
         <div>
-          <h2 className="text-lg font-bold text-white">Murakami Fatigue & Fracture Lab</h2>
+          <h2 className="text-lg font-bold text-white">Defect Fatigue & Crack Growth</h2>
           <p className="text-sm text-gray-400">Phase 13: Kitagawa-Takahashi Diagram, El-Haddad Short Cracks & Paris Law Life</p>
         </div>
         <button
