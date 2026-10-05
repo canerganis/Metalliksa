@@ -1033,12 +1033,24 @@ class ConcurrentModuleRegistry:
         return f"job left running: {others} other job(s) share the pool"
 
     def prewarm_pool(self, timeout_s: float = 300.0) -> int:
-        """Starts every worker before the service announces readiness; returns the worker count."""
+        """Starts every worker before the service announces readiness; returns the number of distinct workers seen.
+
+        One batch of N short tasks does not guarantee N distinct workers: under load a fast worker can drain two
+        tasks before the next process has initialised. Batches are repeated until N distinct PIDs have answered,
+        bounded by timeout_s; at the deadline the (smaller) observed count is returned, never an inflated one.
+        """
         if self.pool is None:
             return 0
         try:
-            futures = [self.pool.submit(_worker_noop, 0.2) for _ in range(self.num_workers)]
-            return len({f.result(timeout=timeout_s) for f in futures})
+            deadline = time.monotonic() + timeout_s
+            pids = set()
+            while len(pids) < self.num_workers:
+                futures = [self.pool.submit(_worker_noop, 0.2) for _ in range(self.num_workers)]
+                for f in futures:
+                    pids.add(f.result(timeout=max(0.001, deadline - time.monotonic())))
+                if time.monotonic() >= deadline:
+                    break
+            return len(pids)
         except Exception as e:
             sys.stderr.write(f"[PersistentIPC] Worker pre-warm failed: {e}\n")
             return 0
