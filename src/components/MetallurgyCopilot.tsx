@@ -227,7 +227,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
         <button
           onClick={handleClearHistory}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0c1322] hover:bg-white/5 text-slate-400 hover:text-white border border-[#162032] text-xs font-mono transition self-start md:self-auto"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0c1322] hover:bg-white/5 text-slate-400 hover:text-white border border-[#162032] text-xs font-mono transition motion-reduce:transition-none self-start md:self-auto"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>Clear Chat</span>
@@ -245,7 +245,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
             <button
               key={idx}
               onClick={() => handleSendMessage(item.prompt)}
-              className="px-2.5 py-1 bg-[#090e18] hover:bg-white/5 border border-[#162032] hover:border-sky-400/50 rounded text-xs text-slate-300 hover:text-sky-300 transition whitespace-nowrap shrink-0 font-mono"
+              className="px-2.5 py-1 bg-[#090e18] hover:bg-white/5 border border-[#162032] hover:border-sky-400/50 rounded text-xs text-slate-300 hover:text-sky-300 transition motion-reduce:transition-none whitespace-nowrap shrink-0 font-mono"
             >
               {item.label}
             </button>
@@ -352,7 +352,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
         <button
           type="submit"
           disabled={isLoading || !inputPrompt.trim()}
-          className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(56,189,248,0.3)] transition disabled:opacity-40 font-mono active:scale-95"
+          className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(56,189,248,0.3)] transition motion-reduce:transition-none disabled:opacity-40 font-mono active:scale-95 motion-reduce:active:scale-100"
         >
           <span>Consult</span>
           <Send className="w-3.5 h-3.5" />
