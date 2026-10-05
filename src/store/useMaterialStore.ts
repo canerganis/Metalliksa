@@ -505,7 +505,7 @@ export function migrateMaterialStoreState(persisted: unknown, version: number): 
   // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable ("no yield strength" or the
   // class reason) instead of keeping its stale HV. Non-objects pass through.
   const fix = (s: unknown) =>
-    isPersistableSpecimen(s) && ("hardness_HV" in s || "yieldStrength_25C_MPa" in s)
+    s && typeof s === "object" && !Array.isArray(s) && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object))
       ? withHardnessEstimate(s as MaterialSpecimen)
       : s;
   return {
