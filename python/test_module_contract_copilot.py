@@ -37,7 +37,12 @@ class CopilotContractTests(unittest.TestCase):
             self.assertIsNone(operations[name].authority.timeout_ms)
         notes = " ".join(self.contract.legacy_notes)
         self.assertIn("does not consume the history array", notes)
-        self.assertIn("no abort signal or generation gate", notes)
+        self.assertIn("aborts the fetch", notes)
+        self.assertIn('signal: request.signal', view)
+        self.assertIn('requestLifecycle.current.isCurrent(request)', view)
+        self.assertIn('requestLifecycle.current.invalidate()', view)
+        self.assertEqual(set(consult.undeclared_input), {"prompt", "history", "message", "context", "systemInstruction"})
+        self.assertIn("cannot enforce string length", notes)
         self.assertIn("not a scientific result", notes)
 
 

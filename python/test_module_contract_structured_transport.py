@@ -1,5 +1,6 @@
 """Structured availability remains distinct from scientific evidence."""
 import dataclasses
+import copy
 import unittest
 
 import module_contract as mc
@@ -64,6 +65,25 @@ class StructuredTransportTests(unittest.TestCase):
         payload = contract.to_dict()
         payload["operations"][0]["output"].pop("transportObjects")
         self.assertEqual(mc.contract_from_dict(payload), contract)
+
+    def test_malformed_json_cannot_turn_vocabulary_strings_into_character_enums(self):
+        contract = _contract(operations=(dataclasses.replace(_operation(), output=self.output()),),
+                             evidence=_evidence(emits=(), note="Transport shapes are not scientific evidence."))
+        original = contract.to_dict()
+        mutations = (
+            lambda out: out.update(transportObjects=[]),
+            lambda out: out["transportObjects"].update(criticalTemperatureStatus=[]),
+            lambda out: out["transportObjects"]["criticalTemperatureStatus"].update({"freezingRangeC.status": "computed"}),
+            lambda out: out["transportObjects"]["criticalTemperatureStatus"].update({"freezingRangeC.status": {"computed": True}}),
+            lambda out: out.update(transportValues=[]),
+            lambda out: out["transportValues"].update(status="computed"),
+            lambda out: out.update(fields="criticalTemperatureStatus"),
+        )
+        for mutation in mutations:
+            payload = copy.deepcopy(original)
+            mutation(payload["operations"][0]["output"])
+            with self.subTest(mutation=mutation), self.assertRaises(mc.ContractError):
+                mc.contract_from_dict(payload)
 
 
 if __name__ == "__main__":

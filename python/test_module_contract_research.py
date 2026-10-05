@@ -30,6 +30,8 @@ class ResearchHubContractTests(unittest.TestCase):
         self.assertEqual(contract.view.component, "src/components/AdvancedResearchHub.tsx")
         self.assertEqual(contract.view.export, "AdvancedResearchHub")
         self.assertEqual(set(self.operations), {
+            "select-workflow-tab", "select-research-brief", "select-extraction-source",
+            "edit-form-draft", "use-search-metadata", "filter-saved-sources",
             "create-brief", "search-crossref-metadata", "register-source", "edit-source", "save-extraction",
             "revise-extraction", "review-extraction", "link-reviewed-finding", "compare-findings",
             "flag-finding-conflict", "record-feedback", "check-server-registry", "save-server-revision",

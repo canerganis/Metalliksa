@@ -668,6 +668,26 @@ def _field_from_dict(d: dict) -> InputField:
                       value_type=d["valueType"], note=d["note"])
 
 
+def _output_from_dict(out: dict) -> OutputSchema:
+    """Reject malformed JSON containers before converting immutable descriptors."""
+    _require(isinstance(out, dict), "output must be a JSON object")
+    _require(isinstance(out.get("fields"), list), "output.fields must be a JSON array")
+    scalar = out.get("transportValues")
+    objects = out.get("transportObjects", {})
+    _require(isinstance(scalar, dict), "output.transportValues must be a JSON object")
+    _require(isinstance(objects, dict), "output.transportObjects must be a JSON object")
+    for key, values in scalar.items():
+        _require(isinstance(values, list), f"output.transportValues[{key!r}] must be a JSON array")
+    for key, members in objects.items():
+        _require(isinstance(members, dict), f"output.transportObjects[{key!r}] must be a JSON object")
+        for path, values in members.items():
+            _require(isinstance(values, list), f"output.transportObjects[{key!r}][{path!r}] must be a JSON array")
+    return OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
+                        transport_values=tuple((key, tuple(values)) for key, values in scalar.items()),
+                        transport_objects=tuple((key, tuple((path, tuple(values)) for path, values in members.items()))
+                                                for key, members in objects.items()))
+
+
 def _operation_from_dict(d: dict) -> Operation:
     a = d["authority"]
     authority = Authority(kind=a["kind"], timeout_ms=a["timeoutMs"], gpu=a["gpu"], warm=a["warm"],
@@ -676,11 +696,7 @@ def _operation_from_dict(d: dict) -> Operation:
     return Operation(id=d["id"], route=d["route"], method=d["method"], authority=authority,
                      input=tuple(_field_from_dict(f) for f in d["input"]),
                      undeclared_input=tuple(d["undeclaredInput"]),
-                     output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
-                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()),
-                                         transport_objects=tuple((k, tuple((path, tuple(values)) for path, values in members.items()))
-                                                                 for k, members in out.get("transportObjects", {}).items()))
-                     if out else None)
+                     output=_output_from_dict(out) if out is not None else None)
 
 
 def contract_from_dict(d: dict) -> ModuleContract:

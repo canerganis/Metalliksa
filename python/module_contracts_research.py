@@ -63,6 +63,12 @@ _FINDING_FIELDS = (
 
 def _operations() -> Tuple[Operation, ...]:
     return (
+        _local("select-workflow-tab", ("activeTab",), ("activeTab",)),
+        _local("select-research-brief", ("activeBriefId",), ("activeBriefId", "activeSourceId")),
+        _local("select-extraction-source", ("activeSourceId",), ("activeSourceId", "activeTab")),
+        _local("edit-form-draft", ("key", "value"), ("drafts",)),
+        _local("use-search-metadata", ("source",), ("sourceDraft", "errors")),
+        _local("filter-saved-sources", ("filter",), ("visibleSources",)),
         _local("create-brief", ("question", "alloy", "process", "method", "dataType"), _ACTION_RESULT),
         _remote("search-crossref-metadata", "GET", "/api/research/search", 20000,
                 ("q",), ("provider", "retrievedAt", "scope", "items")),
@@ -139,7 +145,8 @@ def build_research_hub_contract(seed: Mapping[str, str]) -> ModuleContract:
             "Server sync is explicit: Check reads the current envelope and may read a saved ancestor revision; "
             "Apply reviewed combination changes only browser state; Save sends registryId, expectedRevision and snapshot "
             "to create a new compare-and-swap revision. The server stores immutable numbered JSON revisions on its "
-            "local filesystem, has no user accounts/access control, caps JSON/snapshot size at 10 MiB and uses a "
+            "local filesystem, has no registry-specific accounts or per-record access control (the server's "
+            "global login boundary still applies), caps JSON/snapshot size at 10 MiB and uses a "
             "write lock. A 409 requires rechecking; storage/busy errors do not reset saved data. The history endpoint "
             "exists but this hub does not call it. Current and selected server revision exports are browser downloads.",
             "Crossref is the only search provider called by this hub. Search sends q to the local same-origin route; "
@@ -160,15 +167,17 @@ def build_research_hub_contract(seed: Mapping[str, str]) -> ModuleContract:
             "local completeness and positive-number checks and rejects recognizable solver-echo labels; it does not "
             "resolve the DOI, persist a record, edit the catalog, fit a solver or validate measurements. The separate "
             "research-registry history API and other application providers are not called from this view.",
-            "Network requests occur only after explicit search/check/save/revision-export actions. Fetch abort timers "
-            "and one-second object-URL revocation timers are cleaned up; the lifecycle vocabulary has no timeout "
-            "resource, so these are described here rather than mislabeled as intervals. No polling, interval, server "
+            "Network requests occur only after explicit search/check/save/revision-export actions. Fetch deadline timers "
+            "clear in request finally blocks; source search aborts on unmount, while registry sync lives outside "
+            "the component. Downloads schedule URL revocation after one second, without an unmount timer cleanup. "
+            "The lifecycle vocabulary has no timeout resource, so these are described here rather than mislabeled as intervals. No polling, interval, server "
             "job or background analysis is launched by the hub.",
         ),
         source_refs=(
             "src/components/AdvancedResearchHub.tsx::AdvancedResearchHub",
             "src/components/AdvancedResearchHub.tsx:12-12#Research brief",
             "src/components/AdvancedResearchHub.tsx:19-21#state.exportSnapshot()",
+            "src/components/research/ResearchControls.tsx::useDraft",
             "src/components/research/ResearchSourcesPanel.tsx::ResearchSourcesPanel",
             "src/components/research/ResearchSourcesPanel.tsx:19-24#api/research/search",
             "src/components/research/ResearchExtractionPanel.tsx::ResearchExtractionPanel",
