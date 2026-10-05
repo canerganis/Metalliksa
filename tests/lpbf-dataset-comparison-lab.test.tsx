@@ -41,7 +41,8 @@ test('summary tiles equal the fixture values and the sensitivity row is labelled
       assert.ok(tile.includes(`${stat.bias_pct} %`));
       assert.ok(tile.includes(`${stat.mape_pct} %`));
       assert.ok(tile.includes(`${stat.rmse_um} µm`));
-      assert.ok(tile.includes(`${stat.within30pct} %`));
+      assert.ok(tile.includes(`${Math.round(stat.within30pct * 1000) / 10} %`), `within30pct rendered as percent of the fraction ${stat.within30pct}`);
+      assert.ok(stat.within30pct <= 1, 'fixture stores fractions like the real record');
     }
   }
   assert.ok(html.includes('sensitivity, not calibration'));

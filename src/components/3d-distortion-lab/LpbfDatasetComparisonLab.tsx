@@ -58,19 +58,19 @@ function ScatterPlot({ metric, points, axisMax }: { metric: Metric; points: read
       aria-label={`Predicted versus measured ${metric} scatter with 1:1 line and plus or minus 30 percent band`}
       className="w-full max-w-md"
     >
-      <rect x={m.l} y={m.t} width={w} height={h} fill="#f8fafc" stroke="#cbd5e1" />
+      <rect x={m.l} y={m.t} width={w} height={h} fill="var(--mk-paper)" stroke="var(--mk-chart-axis)" />
       {ticks.map((t) => (
         <g key={t}>
-          <line x1={sx(t)} x2={sx(t)} y1={m.t} y2={m.t + h} stroke="#e2e8f0" />
-          <line x1={m.l} x2={m.l + w} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
-          <text x={sx(t)} y={m.t + h + 14} fontSize="9" textAnchor="middle" fill="#64748b">{Math.round(t)}</text>
-          <text x={m.l - 6} y={sy(t) + 3} fontSize="9" textAnchor="end" fill="#64748b">{Math.round(t)}</text>
+          <line x1={sx(t)} x2={sx(t)} y1={m.t} y2={m.t + h} stroke="var(--mk-chart-axis)" strokeOpacity="0.5" />
+          <line x1={m.l} x2={m.l + w} y1={sy(t)} y2={sy(t)} stroke="var(--mk-chart-axis)" strokeOpacity="0.5" />
+          <text x={sx(t)} y={m.t + h + 14} fontSize="9" textAnchor="middle" fill="var(--mk-text-dim)">{Math.round(t)}</text>
+          <text x={m.l - 6} y={sy(t) + 3} fontSize="9" textAnchor="end" fill="var(--mk-text-dim)">{Math.round(t)}</text>
         </g>
       ))}
       {/* +30 % and -30 % guides: predicted = 1.3 x measured and 0.7 x measured */}
-      <line data-guide="band-upper" x1={sx(0)} y1={sy(0)} x2={sx(upper)} y2={sy(axisMax)} stroke="#94a3b8" strokeDasharray="4 3" />
-      <line data-guide="band-lower" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(lower)} stroke="#94a3b8" strokeDasharray="4 3" />
-      <line data-guide="one-to-one" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(axisMax)} stroke="#334155" />
+      <line data-guide="band-upper" x1={sx(0)} y1={sy(0)} x2={sx(upper)} y2={sy(axisMax)} stroke="var(--mk-text-dim)" strokeDasharray="4 3" />
+      <line data-guide="band-lower" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(lower)} stroke="var(--mk-text-dim)" strokeDasharray="4 3" />
+      <line data-guide="one-to-one" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(axisMax)} stroke="var(--mk-text-strong)" />
       {points.map((p) => {
         const common = { fill: p.hollow ? "#ffffff" : p.color, stroke: p.color, strokeWidth: 1.6, fillOpacity: p.hollow ? 0.2 : 0.85 };
         return (
@@ -82,10 +82,15 @@ function ScatterPlot({ metric, points, axisMax }: { metric: Metric; points: read
           </g>
         );
       })}
-      <text x={m.l + w / 2} y={size - 6} fontSize="10" textAnchor="middle" fill="#334155">{`measured ${metric} (µm)`}</text>
+      <text x={m.l + w / 2} y={size - 6} fontSize="10" textAnchor="middle" fill="var(--mk-text-strong)">{`measured ${metric} (µm)`}</text>
       <text x={12} y={m.t + h / 2} fontSize="10" textAnchor="middle" fill="#334155" transform={`rotate(-90 12 ${m.t + h / 2})`}>{`predicted ${metric} (µm)`}</text>
     </svg>
   );
+}
+
+/** The record stores within-band fractions in [0, 1]; the page shows them as whole percents. */
+export function formatFraction(fraction: number): string {
+  return `${Math.round(fraction * 1000) / 10}`;
 }
 
 function StatLine({ label, cell }: { label: string; cell: ComparisonSummaryCell["width"] }) {
@@ -96,7 +101,8 @@ function StatLine({ label, cell }: { label: string; cell: ComparisonSummaryCell[
         <dt>bias</dt><dd>{`${cell.bias_pct} %`}</dd>
         <dt>MAPE</dt><dd>{`${cell.mape_pct} %`}</dd>
         <dt>RMSE</dt><dd>{`${cell.rmse_um} µm`}</dd>
-        <dt>within ±30 %</dt><dd>{`${cell.within30pct} %`}</dd>
+        <dt>within ±30 %</dt><dd>{`${formatFraction(cell.within30pct)} %`}</dd>
+        {typeof cell.withinFactor2 === "number" ? <><dt>within ×0.5–2</dt><dd>{`${formatFraction(cell.withinFactor2)} %`}</dd></> : null}
       </dl>
     </div>
   );
@@ -256,10 +262,10 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
         <CardHeader><CardTitle className="text-sm">{`Summary by regime: ${KERNEL_LABELS[kernel] ?? kernel}`}</CardTitle></CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {Object.entries(summaryForKernel)
-            .filter(([regime]) => enabled.includes(regime))
+            .filter(([regime]) => regime === "all" || enabled.includes(regime))
             .map(([regime, cell]) => (
               <div key={regime} className="rounded-lg border border-slate-200 p-3" data-summary={`${kernel}/${regime}`}>
-                <div className="text-sm font-semibold" style={{ color: regimeColor(regime) }}>{regime}</div>
+                <div className="text-sm font-semibold" style={{ color: regime === "all" ? undefined : regimeColor(regime) }}>{regime === "all" ? "all regimes (pooled)" : regime}</div>
                 <div className="mb-2 text-xs text-slate-500">{`n ${cell.n}, excluded ${cell.nExcluded}`}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <StatLine label="width" cell={cell.width} />

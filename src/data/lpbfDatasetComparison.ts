@@ -58,7 +58,9 @@ export interface ComparisonErrorStats {
   readonly bias_pct: number;
   readonly mape_pct: number;
   readonly rmse_um: number;
+  /** fraction in [0, 1] (the record stores fractions; the view renders percents) */
   readonly within30pct: number;
+  readonly withinFactor2?: number;
 }
 
 export interface ComparisonSummaryCell {

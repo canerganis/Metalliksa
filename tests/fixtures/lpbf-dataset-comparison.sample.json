@@ -590,13 +590,13 @@
           "bias_pct": -6.21,
           "mape_pct": 7.35,
           "rmse_um": 10.06,
-          "within30pct": 100
+          "within30pct": 1.0
         },
         "depth": {
           "bias_pct": -17.17,
           "mape_pct": 17.17,
           "rmse_um": 12.51,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       },
       "transition": {
@@ -606,13 +606,13 @@
           "bias_pct": 19.79,
           "mape_pct": 19.79,
           "rmse_um": 49.31,
-          "within30pct": 75
+          "within30pct": 0.75
         },
         "depth": {
           "bias_pct": -15.86,
           "mape_pct": 15.86,
           "rmse_um": 49.8,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       }
     },
@@ -624,13 +624,13 @@
           "bias_pct": 0.51,
           "mape_pct": 4.72,
           "rmse_um": 7.12,
-          "within30pct": 100
+          "within30pct": 1.0
         },
         "depth": {
           "bias_pct": -3.82,
           "mape_pct": 8.79,
           "rmse_um": 5.73,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       },
       "transition": {
@@ -640,13 +640,13 @@
           "bias_pct": 13.91,
           "mape_pct": 13.91,
           "rmse_um": 47.65,
-          "within30pct": 100
+          "within30pct": 1.0
         },
         "depth": {
           "bias_pct": -10.24,
           "mape_pct": 11.56,
           "rmse_um": 48.23,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       }
     },
@@ -658,13 +658,13 @@
           "bias_pct": 1.95,
           "mape_pct": 5.63,
           "rmse_um": 6.56,
-          "within30pct": 100
+          "within30pct": 1.0
         },
         "depth": {
           "bias_pct": 6.07,
           "mape_pct": 8.18,
           "rmse_um": 4.88,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       },
       "transition": {
@@ -674,13 +674,13 @@
           "bias_pct": 10.16,
           "mape_pct": 10.16,
           "rmse_um": 38.07,
-          "within30pct": 100
+          "within30pct": 1.0
         },
         "depth": {
           "bias_pct": -2.42,
           "mape_pct": 6.44,
           "rmse_um": 21.76,
-          "within30pct": 100
+          "within30pct": 1.0
         }
       }
     }
