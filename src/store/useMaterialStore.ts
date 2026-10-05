@@ -505,7 +505,7 @@ export function migrateMaterialStoreState(persisted: unknown, version: number): 
   // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable ("no yield strength" or the
   // class reason) instead of keeping its stale HV. Non-objects pass through.
   const fix = (s: unknown) =>
-    s && typeof s === "object" && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object))
+    isPersistableSpecimen(s) && ("hardness_HV" in s || "yieldStrength_25C_MPa" in s)
       ? withHardnessEstimate(s as MaterialSpecimen)
       : s;
   return {
@@ -521,18 +521,44 @@ export function migrateMaterialStoreState(persisted: unknown, version: number): 
  * one of them); actions always come from the current state.
  */
 export function mergeMaterialStoreState(persisted: unknown, current: MaterialStore): MaterialStore {
-  if (!persisted || typeof persisted !== "object") return current;
+  if (!persisted || typeof persisted !== "object" || Array.isArray(persisted)) return current;
   const p = persisted as Partial<MaterialStore>;
-  const asSpecimen = (s: unknown) => (s && typeof s === "object" ? (s as MaterialSpecimen) : undefined);
+  const asSpecimen = (s: unknown) => isPersistableSpecimen(s) ? s : undefined;
   const active = asSpecimen(p.activeMaterialSpecimen) ?? asSpecimen(p.activeSpecimen) ?? current.activeMaterialSpecimen;
   return {
     ...current,
     activeMaterialSpecimen: active,
     activeSpecimen: active,
     savedSpecimens: Array.isArray(p.savedSpecimens)
-      ? p.savedSpecimens.filter((s): s is MaterialSpecimen => !!s && typeof s === "object")
+      ? p.savedSpecimens.filter(isPersistableSpecimen)
       : current.savedSpecimens,
   };
+}
+
+/** Persisted specimens must carry a non-empty, bounded composition before migration or hydration can use them. */
+function isPersistableSpecimen(value: unknown): value is MaterialSpecimen {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  try {
+    const specimen = value as Partial<MaterialSpecimen>;
+    return typeof specimen.id === "string"
+      && typeof specimen.name === "string"
+      && (specimen.unit === "wt_pct" || specimen.unit === "at_pct")
+      && !!specimen.metadata
+      && typeof specimen.metadata === "object"
+      && !Array.isArray(specimen.metadata)
+      && isNonEmptyValidComposition(specimen.composition);
+  } catch {
+    // Malformed legacy objects (including throwing accessors) are discarded without deriving properties.
+    return false;
+  }
+}
+
+function isNonEmptyValidComposition(value: unknown): value is Record<string, number> {
+  try {
+    return isValidCompositionInput(value) && Object.keys(value).length > 0;
+  } catch {
+    return false;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -902,6 +928,12 @@ export const useMaterialStore = create<MaterialStore>()(
       },
 
       setActiveMaterialSpecimen: (specimen) => {
+        if (!specimen || typeof specimen !== "object" || Array.isArray(specimen)) return;
+        if (Object.prototype.hasOwnProperty.call(specimen, "composition")
+          && !isNonEmptyValidComposition(specimen.composition)) return;
+        if (Object.prototype.hasOwnProperty.call(specimen, "metadata")
+          && specimen.metadata !== undefined
+          && (!specimen.metadata || typeof specimen.metadata !== "object" || Array.isArray(specimen.metadata))) return;
         const current = get().activeMaterialSpecimen;
         const merged: MaterialSpecimen = {
           ...current,
