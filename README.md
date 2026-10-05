@@ -7,7 +7,7 @@
 **A research workstation for laser powder-bed fusion and metallurgy, built so that every number knows where it came from.**
 
 [![React 18](https://img.shields.io/badge/React-18-1f2937?logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-3.11%20%7C%203.12-1f2937?logo=python&logoColor=white)](https://www.python.org)
 [![Local first](https://img.shields.io/badge/runs-local%20%26%20air--gap%20ready-1f2937)](#local-first-and-honest-by-design)
 [![Evidence first](https://img.shields.io/badge/evidence-first-1f2937)](#evidence-before-claims)
