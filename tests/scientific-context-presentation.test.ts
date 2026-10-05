@@ -3,6 +3,39 @@ import test from 'node:test';
 import type { ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
 import { buildScientificContext } from '../src/utils/scientificContext';
 
+test('Elastic Constants context describes form inputs independently of the shared specimen', () => {
+  const specimen = {
+    name: 'Shared IN718 fixture', composition: { Ni: 52, Cr: 19 }, density_gcm3: 8.2,
+    freezingRange_C: 80,
+    lpbf: { laserPower_W: 280, scanSpeed_mms: 940, hatch_um: 100, layer_um: 40 },
+  } as ActiveSpecimenState;
+  const otherSpecimen = {
+    ...specimen, name: 'Different aluminium fixture', composition: { Al: 100 }, density_gcm3: 2.7,
+    lpbf: { ...specimen.lpbf, laserPower_W: 500, scanSpeed_mms: 1600 },
+  } as ActiveSpecimenState;
+  const context = buildScientificContext('materials-project', specimen);
+  assert.deepEqual(context, buildScientificContext('materials-project', otherSpecimen));
+  assert.equal(context.title, 'Elastic Constants input context');
+  const text = [context.observation, context.mechanism, ...context.variables,
+    context.interpretation, context.limitation].join(' ');
+  assert.match(text, /form.*C_ij.*K\/G/i);
+  assert.match(text, /optional.*density.*composition/i);
+  assert.match(text, /shared specimen.*process parameters.*not automatically/i);
+  assert.match(text, /Voigt-Reuss-Hill/);
+  assert.match(text, /Born.*mechanical.*not.*phase stability/i);
+  assert.match(text, /before.*Calculate Elasticity.*no.*result/i);
+  assert.match(text, /not.*validation claim/i);
+  assert.doesNotMatch(text, /Shared IN718 fixture|280 W|8\.2 g\/cm|predicted behavior/i);
+
+  // Unrelated modules retain the existing specimen-driven generic presentation.
+  const generic = buildScientificContext('database', specimen);
+  assert.equal(generic.title, 'Scientific interpretation for this module');
+  assert.match(generic.observation, /Shared IN718 fixture; 280 W/);
+  assert.deepEqual(generic.variables, [
+    'Composition: Ni 52%, Cr 19%', 'Density: 8.2 g/cm³', 'Solidification range: 80 °C',
+  ]);
+});
+
 test('LPBF context does not present heuristic conductivity as a solver input', () => {
   const specimen = {
     name: 'Ni alloy fixture',
