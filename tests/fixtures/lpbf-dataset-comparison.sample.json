@@ -11,7 +11,9 @@
       "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "rows": 677,
       "citation": "FIXTURE: Hofmann et al. 2026, 316L single-track dataset (sample rows only; values are synthetic test data).",
-      "notes": "Fixture sample: 7 of 677 rows, synthetic numbers for tests."
+      "notes": [
+        "Fixture sample: 7 of 677 rows, synthetic numbers for tests."
+      ]
     },
     {
       "id": "totis-2021-ti64",
@@ -21,7 +23,10 @@
       "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "rows": 80,
       "citation": "FIXTURE: Totis/Vaglio 2021, Ti-6Al-4V single-track dataset (sample rows only; values are synthetic test data).",
-      "notes": "Fixture sample: 5 of 80 rows, synthetic numbers for tests."
+      "notes": [
+        "Fixture sample: 5 of 80 rows, synthetic numbers for tests.",
+        "The workbook does not state the depth reference line (original substrate surface vs powder surface): depth is used 'as found'."
+      ]
     }
   ],
   "regimeFilter": {
