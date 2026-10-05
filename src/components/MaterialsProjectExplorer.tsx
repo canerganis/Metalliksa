@@ -58,6 +58,7 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
     try {
       payload = buildElasticityInput(form);
     } catch (e: any) {
+      setPythonDftResult(null);
       setErrorMsg(e.message);
       return;
     }
@@ -134,9 +135,10 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
         {/* Modes Toggle */}
         <div className="flex flex-wrap items-center gap-3 border-b border-[#162032] pb-4">
           <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider font-bold">Input Mode:</label>
-          <div className="flex bg-[#050810] border border-[#1e2d46] rounded-lg p-0.5">
+          <div role="group" aria-label="Input mode" className="flex bg-[#050810] border border-[#1e2d46] rounded-lg p-0.5">
             <button
               type="button"
+              aria-pressed={form.input_mode === 'custom'}
               onClick={() => handleChange(p => ({ ...p, input_mode: 'custom' }))}
               className={`px-4 py-1.5 rounded-md text-xs font-mono transition-colors ${
                 form.input_mode === 'custom'
@@ -148,6 +150,7 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
             </button>
             <button
               type="button"
+              aria-pressed={form.input_mode === 'isotropic'}
               onClick={() => handleChange(p => ({ ...p, input_mode: 'isotropic' }))}
               className={`px-4 py-1.5 rounded-md text-xs font-mono transition-colors ${
                 form.input_mode === 'isotropic'
@@ -237,7 +240,7 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
                 type="text"
                 value={form.formula}
                 onChange={(e) => handleChange(p => ({ ...p, formula: e.target.value }))}
-                placeholder="e.g. Ti-6Al-4V"
+                placeholder="e.g. Ni3Al"
                 className="bg-[#050810] border border-[#1e2d46] rounded px-2 py-1.5 text-xs text-white font-mono placeholder:text-slate-600 focus:border-purple-400"
               />
             </div>
