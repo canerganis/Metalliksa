@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as tafel from '../src/utils/tafelParser';
 
+// Synthetic CSV fixtures characterize header handling, not native instrument-file compatibility.
+// Legacy magnitude/column heuristics below are not scientific validation; inferred units are not verified units.
+
 function generateRows(n: number, potFn: (i: number) => number, curFn: (i: number) => number): string {
   const rows: string[] = [];
   for (let i = 0; i < n; i++) {
@@ -10,22 +13,22 @@ function generateRows(n: number, potFn: (i: number) => number, curFn: (i: number
   return rows.join('\n');
 }
 
-test('Edge: Detects instrument, scan rate, and reference electrode from BioLogic/EC-Lab headers', () => {
+test('Synthetic CSV: recognizes EC-Lab header signature and legacy NHE-to-SHE normalization', () => {
   const header = `
 EC-Lab ASCII File
-Nb header lines : 3
+Nb header lines : 5
 Scan Rate: 10 mV/s
 Reference: NHE
 Potential (V), Current (mA)
   `.trim() + '\n';
   const csv = header + generateRows(12, i => -0.5 + i * 0.01, i => 0.1 + i * 0.01);
-  const ds = tafel.parseTafelFile(csv, 'biologic.mpt');
+  const ds = tafel.parseTafelFile(csv, 'data.csv');
   assert.equal(ds.sourceInstrument, 'biologic');
   assert.equal(ds.metadata.scanRateMv_s, 10);
   assert.equal(ds.metadata.referenceElectrode, 'SHE');
 });
 
-test('Edge: Detects Gamry signature and V/s scan rate conversion', () => {
+test('Synthetic CSV: recognizes Gamry header signature and V/s scan rate conversion', () => {
   const header = `
 EXPLAIN
 TAG\tGAMRY
@@ -34,16 +37,16 @@ d(E)/dt\t0.05 V/s
 Vf (V), Im (A)
   `.trim() + '\n';
   const csv = header + generateRows(12, i => -0.5 + i * 0.01, i => 1e-6);
-  const ds = tafel.parseTafelFile(csv, 'gamry.dta');
+  const ds = tafel.parseTafelFile(csv, 'data.csv');
   assert.equal(ds.sourceInstrument, 'gamry');
   assert.equal(ds.metadata.scanRateMv_s, 50);
 });
 
-test('Edge: Detects Autolab / NOVA and PAR VersaStudio instrument signatures', () => {
-  const autolabDs = tafel.parseTafelFile('Autolab NOVA data\nPotential (V), Current (A)\n' + generateRows(12, i => -0.5 + i * 0.01, i => 1), 'autolab.csv');
+test('Synthetic CSV: recognizes Autolab/NOVA and VersaStudio header signatures', () => {
+  const autolabDs = tafel.parseTafelFile('Autolab NOVA data\nPotential (V), Current (A)\n' + generateRows(12, i => -0.5 + i * 0.01, i => 1), 'data.csv');
   assert.equal(autolabDs.sourceInstrument, 'autolab');
 
-  const parDs = tafel.parseTafelFile('VersaStudio\nPotential (V), Current (A)\n' + generateRows(12, i => -0.5 + i * 0.01, i => 1), 'par.csv');
+  const parDs = tafel.parseTafelFile('VersaStudio\nPotential (V), Current (A)\n' + generateRows(12, i => -0.5 + i * 0.01, i => 1), 'data.csv');
   assert.equal(parDs.sourceInstrument, 'par');
 });
 
@@ -74,7 +77,7 @@ garbage, text, here
   assert.equal(ds.points[11].potential, -0.39);
 });
 
-test('Edge: Implicit current density ignores custom area', () => {
+test('Explicit current-density header bypasses area normalization', () => {
   const csv = `
 E (V), I (mA/cm2)
 -0.5, 2.5
@@ -95,28 +98,28 @@ E (V), I (mA/cm2)
   assert.equal(ds.points[0].currentDensity_uA_cm2, 2500); // 2.5 mA = 2500 uA
 });
 
-test('Edge: Infers current unit (uA) from magnitude > 10 when no unit is specified', () => {
+test('Legacy heuristic characterization: unitless values well above10 inferred as uA', () => {
   const csv = `Potential, Current\n` + generateRows(12, i => -0.5 + i * 0.05, i => 15.0 + i);
   const ds = tafel.parseTafelFile(csv, 'infer_ua.csv');
   assert.equal(ds.points[0].currentUnit, 'uA');
   assert.equal(ds.points[0].currentDensity_uA_cm2, 15.0);
 });
 
-test('Edge: Infers current unit (mA) from magnitude > 0.05 when no unit is specified', () => {
+test('Legacy heuristic characterization: unitless values between0.05and10 inferred as mA', () => {
   const csv = `Potential, Current\n` + generateRows(12, i => -0.5 + i * 0.05, i => 0.10 + i * 0.01);
   const ds = tafel.parseTafelFile(csv, 'infer_ma.csv');
   assert.equal(ds.points[0].currentUnit, 'mA');
   assert.equal(ds.points[0].currentDensity_uA_cm2, 100.0); // 0.1 mA = 100 uA
 });
 
-test('Edge: Infers current unit (A) from magnitude <= 0.05 when no unit is specified', () => {
+test('Legacy heuristic characterization: unitless values well below0.05 inferred as A', () => {
   const csv = `Potential, Current\n` + generateRows(12, i => -0.5 + i * 0.05, i => 0.01 + i * 0.001);
   const ds = tafel.parseTafelFile(csv, 'infer_a.csv');
   assert.equal(ds.points[0].currentUnit, 'A');
   assert.equal(ds.points[0].currentDensity_uA_cm2, 10000.0); // 0.01 A = 10000 uA
 });
 
-test('Edge: Fallback column detection swaps columns if col 0 > 5 and col 1 <= 5', () => {
+test('Legacy heuristic characterization: headerless current-first sample uses column swap', () => {
   const csv = `
 6.0, -2.0
 6.1, -1.9
