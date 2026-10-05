@@ -72,6 +72,23 @@ test("normalizeComposition does not turn a non-finite total into invalid entries
   });
 });
 
+test("invalid mutating updater cannot alter live aliases, properties or shared specimen", () => {
+  withRestoredStore(() => {
+    const before = useMaterialStore.getState();
+    const sharedBefore = useMaterialSpecimenStore.getState().activeSpecimen;
+    const specimenSnapshot = structuredClone(before.activeMaterialSpecimen);
+    useMaterialStore.getState().updateComposition(comp => {
+      comp.Ni = Number.NaN;
+      return comp;
+    });
+    const after = useMaterialStore.getState();
+    assert.strictEqual(after.activeMaterialSpecimen, before.activeMaterialSpecimen);
+    assert.strictEqual(after.activeSpecimen, before.activeSpecimen);
+    assert.deepEqual(after.activeMaterialSpecimen, specimenSnapshot);
+    assert.strictEqual(useMaterialSpecimenStore.getState().activeSpecimen, sharedBefore);
+  });
+});
+
 test("JSON import rejects exponent overflow before storing or deriving it", () => {
   withRestoredStore((originalComposition) => {
     const accepted = useMaterialStore.getState().importFromJSON('{"name":"Overflow specimen","composition":{"Ni":1e999}}');

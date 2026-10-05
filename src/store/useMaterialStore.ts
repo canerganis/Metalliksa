@@ -722,7 +722,7 @@ export const useMaterialStore = create<MaterialStore>()(
 
       updateComposition: (newComposition, customName, metadataPatch, sourceTab = "Alloy Formulator (Tab 1)") => {
         const current = get().activeMaterialSpecimen;
-        const resolvedComp = typeof newComposition === "function" ? newComposition(current.composition) : newComposition;
+        const resolvedComp = typeof newComposition === "function" ? newComposition({ ...current.composition }) : newComposition;
         if (!isValidCompositionInput(resolvedComp)) return;
         // Atomic-percent edits retain their unit and identity; weight-percent models are not evaluated.
         if (current.unit === "at_pct") {
