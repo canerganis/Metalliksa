@@ -576,9 +576,11 @@ class ModuleContract:
             _require(len(self.operations) > 0, f"{self.id}: contracted modules need operations")
             _require(all(op.output is not None for op in self.operations),
                      f"{self.id}: contracted operations must declare an output schema")
-            # Legacy node-provider/browser-local authorities may leave the timeout undeclared;
-            # a contracted operation must state the deadline it runs under.
-            _require(all(op.authority.timeout_ms is not None for op in self.operations),
+            # Remote operations declare their enforced deadline. A route-free local
+            # store action has no runtime deadline; do not invent a numeric sentinel.
+            _require(all(op.authority.timeout_ms is not None or
+                         (op.authority.kind == "browser-local" and op.route is None and op.method is None)
+                         for op in self.operations),
                      f"{self.id}: contracted operations must declare authority.timeoutMs")
             # emits lists only statuses the code really emits: an output without a
             # status key emits none, and an output with one must declare what it emits.

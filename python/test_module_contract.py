@@ -229,7 +229,7 @@ class FieldAndAuthorityTests(unittest.TestCase):
             _contract(operations=(undeclared,))
         self.assertIsNone(undeclared.to_dict()["output"])
 
-    def test_contracted_operations_must_declare_a_timeout(self):
+    def test_contracted_remote_operations_must_declare_a_timeout(self):
         for authority in (mc.Authority(kind="node-provider"),
                           mc.Authority(kind="browser-local", exception_reason="recorded debt")):
             operation = mc.Operation(id="run", method="POST", route="/api/uq/run", authority=authority,
@@ -240,6 +240,21 @@ class FieldAndAuthorityTests(unittest.TestCase):
                              authority=mc.Authority(kind="node-provider", timeout_ms=12000),
                              output=mc.OutputSchema(fields=("samples",)))
         self.assertEqual(_contract(operations=(timed,)).operations[0].authority.timeout_ms, 12000)
+
+    def test_route_free_browser_contract_does_not_invent_a_deadline(self):
+        for deadline in (0, -1, True):
+            with self.subTest(deadline=deadline), self.assertRaises(mc.ContractError):
+                mc.Authority(kind="browser-local", timeout_ms=deadline,
+                             exception_reason="Synchronous local store edit.")
+        operation = mc.Operation(
+            id="edit", method=None, route=None,
+            authority=mc.Authority(kind="browser-local", exception_reason="Synchronous local store edit; no runtime deadline."),
+            output=mc.OutputSchema(fields=("specimen",), status_key=None),
+        )
+        contract = _contract(operations=(operation,), evidence=_evidence(
+            emits=(), note="Local store state is not evidence-bearing solver output."))
+        self.assertIsNone(contract.operations[0].authority.timeout_ms)
+        self.assertEqual(mc.contract_from_dict(contract.to_dict()), contract)
 
     def test_legacy_notes_are_unique_text(self):
         with self.assertRaises(mc.ContractError):
