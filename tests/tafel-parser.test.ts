@@ -65,15 +65,56 @@ test('parseTafelFile rejects empty content and files with too few points', () =>
   assert.throws(() => mod().parseTafelFile('Potential (V),Current (A),Time\n-0.3,1e-6,0\n'), /sufficient/);
 });
 
-// BUG 2 (real, independent of BUG 1): splitLineToTokens only splits on a comma when the line has more than two
-// comma-separated parts, so a plain two-column comma CSV (Potential,Current) is rejected as having no data.
-// Confirmed against a scratch copy with BUG 1 stubbed out. Stays todo after BUG 1 is fixed.
-test('parseTafelFile accepts a plain two-column comma CSV', { todo: 'BUG 2: splitLineToTokens does not split two-column comma CSV lines' }, () => {
+// BUG 2 regression: a single comma can delimit two columns, not just a decimal fraction.
+test('parseTafelFile accepts a plain two-column comma CSV', () => {
   const rows = ['Potential (V),Current (A)'];
   for (let i = 0; i < 12; i++) rows.push(`${(-0.3 + i * 0.01).toFixed(3)},${(1e-6 * (i + 1)).toExponential(3)}`);
   const ds = mod().parseTafelFile(rows.join('\n'), 'two_col.csv');
   assert.equal(ds.points.length, 12);
+  assert.equal(ds.points[0].potential, -0.3);
+  assert.equal(ds.points[0].currentRaw, 1e-6);
+  assert.equal(ds.points[11].currentRaw, 12e-6);
 });
+
+for (const delimiter of [',', ', ', ';', '\t', '   ', ' ']) {
+  test(`parseTafelFile distinguishes decimal commas from ${JSON.stringify(delimiter)} column delimiters`, () => {
+    const decimalComma = delimiter !== ',' && delimiter !== ', ';
+    // Whitespace headers avoid spaces within labels; CSV headers retain unit labels.
+    const rows = [delimiter.trim() ? `Potential (V)${delimiter}Current (mA)` : `E(V)${delimiter}I(mA)`];
+    for (let i = 0; i < 12; i++) {
+      const potential = (-0.3 + i * 0.01).toFixed(3);
+      const current = (i < 6 ? -0.001 : 0.002).toFixed(3);
+      rows.push([potential, current].map(value => decimalComma ? value.replace('.', ',') : value).join(delimiter));
+    }
+    const ds = mod().parseTafelFile(rows.join('\n'), 'delimiters.csv', 2);
+    assert.equal(ds.points.length, 12);
+    assert.equal(ds.points[0].potential, -0.3);
+    assert.equal(ds.points[11].potential, -0.19);
+    assert.equal(ds.points[0].currentUnit, 'mA');
+    assert.equal(ds.points[0].currentRaw, -0.001);
+    assert.equal(ds.points[0].signedCurrentDensity_uA_cm2, -0.5);
+    assert.equal(ds.points[11].signedCurrentDensity_uA_cm2, 1);
+  });
+}
+
+test('parseTafelFile preserves a lone decimal comma in whitespace-separated scientific data without a header', () => {
+  const rows = Array.from({ length: 12 }, (_, i) => `${(-0.3 + i * 0.01).toFixed(3).replace('.', ',')} -1e-6`);
+  const ds = mod().parseTafelFile(rows.join('\n'), 'no_header.txt');
+  assert.equal(ds.points.length, 12);
+  assert.equal(ds.points[0].potential, -0.3);
+  assert.equal(ds.points[0].currentRaw, -1e-6);
+});
+
+for (const [unit, current, density] of [['A', '-1e-6', -0.5], ['mA', '-0.001', -0.5], ['uA', '-1', -0.5], ['nA', '-1', -0.0005]] as const) {
+  test(`parseTafelFile reads integer potentials in spaced two-column CSV with ${unit} currents`, () => {
+    const rows = [`Potential (V), Current (${unit})`, ...Array.from({ length: 12 }, () => `-1, ${current}`)];
+    const ds = mod().parseTafelFile(rows.join('\n'), 'integer.csv', 2);
+    assert.equal(ds.points.length, 12);
+    assert.equal(ds.points[0].potential, -1);
+    assert.equal(ds.points[0].currentUnit, unit);
+    assert.equal(ds.points[0].signedCurrentDensity_uA_cm2, density);
+  });
+}
 
 // BUG 1 regression guard: the module imports, lists no fabricated benchmark curves, and the fabrication helper still refuses.
 test('tafelParser module imports without fabricating benchmark curves', () => {

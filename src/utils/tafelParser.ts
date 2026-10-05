@@ -298,11 +298,14 @@ function splitLineToTokens(line: string): string[] {
   }
   // If line contains commas
   if (line.includes(",")) {
-    // Check if comma is decimal separator (e.g. "1,234   2,567")
-    const parts = line.split(",");
-    if (parts.length > 2) {
-      return parts.map((t) => t.trim());
+    // Whitespace-separated numeric fields may use decimal commas (e.g. "-0,3 1,2e-6").
+    // Require complete numbers: "-0.3, 1e-6" must remain comma-delimited CSV.
+    const whitespaceParts = line.split(/\s+/);
+    const numericField = /^[+-]?(?:\d+(?:\.\d*|,\d+)?|[.,]\d+)(?:e[+-]?\d+)?$/i;
+    if (whitespaceParts.length >= 2 && whitespaceParts.every(t => numericField.test(t))) {
+      return whitespaceParts;
     }
+    return line.split(",").map((t) => t.trim());
   }
   // Split on multiple whitespace
   return line.split(/\s+/).map((t) => t.trim());
