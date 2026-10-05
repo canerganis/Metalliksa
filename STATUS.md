@@ -1,3 +1,10 @@
+## SDK yerel otorite ve kayıt görüntüleme — 2026-10-05
+
+- `476fe1b`/`4380fe3` ve `1f20e53`/`5d24f47` yerel birleştirildi: routesiz/methodsuz browser-local işlemler için sahte deadline gerekmiyor. Remote deadline ve pending-oracle tavanı korunuyor; availability/evidence ayrımı henüz sonraki dar şema işi.
+- Dataset Comparison artık kaynak bağlı salt okunur görüntüleme sözleşmesi taşıyor; nested record/filter girdileri açıkça schema dışında belirtiliyor. Hesaplayıcı çalıştırmaz, eksik record boş durum; bozuk record parser hatasıdır. Oracle pending ve ceiling screening-only; veri görüntüleme fiziksel doğrulama değildir.
+- Kontroller: 66 Python PASS; ebeveyn 53 TS PASS + tsc/gen/ceiling PASS; Sol bağımsız 66 Python, 31 seçili TS ve tsc/gen onayı. Opus deadline patch incelemesinin ek negatif route ve bağımsız ceiling koşulları regression testleriyle kapatıldı; Opus araçsız patch incelemesidir.
+- Registry: 9 contracted / 16 legacy. Kalan işler: Composition Editor helper/action doğrulaması, EDS lifecycle/provenance düzeltmeleri, Elastic Constants gerçek availability alanlarının sözleşmede kaydı; yardımcı dosya teslimi tek başına registry entegrasyonu sayılmıyor. Donmuş LPBF fiziği değişmedi; push yok.
+
 ## Elastic Constants ürün paketi — 2026-10-05
 
 - Yerel merge `038d487`: kalıcı `materials-project` kimliği korunarak örnek katalog yerine boş kullanıcı formu ve Python Cij/K/G hesaplaması getirildi. Paylaşılan specimen/katalog değerleri forma otomatik aktarılmıyor; hesaplama yalnız Calculate ile başlıyor.
