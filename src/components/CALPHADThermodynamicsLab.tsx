@@ -1,5 +1,5 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Atom,
   Flame,
@@ -48,6 +48,11 @@ import {
   PhaseModel,
 } from "../physics/calphadGibbsEngine";
 import { CALPHADMultiComponentStudio } from "./CALPHADMultiComponentStudio";
+import {
+  ConsultationResponseError,
+  LatestConsultationRequest,
+  parseConsultationResponse,
+} from "../utils/calphadConsultation";
 
 export const CALPHADThermodynamicsLab: React.FC = () => {
   // Selected binary system
@@ -71,6 +76,27 @@ export const CALPHADThermodynamicsLab: React.FC = () => {
   // AI & Export state
   const [isAiConsulting, setIsAiConsulting] = useState<boolean>(false);
   const [aiReport, setAiReport] = useState<string | null>(null);
+  const [aiConsultationError, setAiConsultationError] = useState<string | null>(null);
+  const consultationRequest = useRef(new LatestConsultationRequest());
+  const consultationAbort = useRef<AbortController | null>(null);
+  const consultationInputsKey = `${selectedSystemId}:${temperatureC}:${compositionB}`;
+  const currentConsultationInputsKey = useRef(consultationInputsKey);
+  currentConsultationInputsKey.current = consultationInputsKey;
+
+  useEffect(() => {
+    consultationAbort.current?.abort();
+    consultationAbort.current = null;
+    consultationRequest.current.invalidate();
+    setIsAiConsulting(false);
+    setAiReport(null);
+    setAiConsultationError(null);
+
+    return () => {
+      consultationRequest.current.invalidate();
+      consultationAbort.current?.abort();
+      consultationAbort.current = null;
+    };
+  }, [consultationInputsKey]);
 
   // Derived temperature in Kelvin
   const temperatureK = temperatureC + 273.15;
@@ -142,8 +168,14 @@ export const CALPHADThermodynamicsLab: React.FC = () => {
 
   // 5. Run AI CALPHAD Thermodynamic Consultation
   const runAiCalphadConsult = async () => {
+    const request = consultationRequest.current.begin();
+    const requestInputsKey = consultationInputsKey;
+    const controller = new AbortController();
+    consultationAbort.current?.abort();
+    consultationAbort.current = controller;
     setIsAiConsulting(true);
     setAiReport(null);
+    setAiConsultationError(null);
 
     try {
       const prompt = `Act as an expert Computational Thermodynamicist and CALPHAD Specialist (OpenCALPHAD / Thermo-Calc / Pandat).
@@ -170,20 +202,28 @@ Provide a deep physical breakdown:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
+        signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error("Consultation API error");
-      const data = await res.json();
-      setAiReport(data.reply || data.text);
-    } catch (err: any) {
-      setAiReport(
-        `### CALPHAD Thermodynamic Evaluation: ${currentSystem.name}\n\n` +
-          `**Gibbs Free Energy Minima:** At $T = ${temperatureC}^\\circ\\text{C}$, the system achieves global thermodynamic equilibrium with total free energy $G = ${(equilibriumState.totalGibbsEnergyJ_mol / 1000).toFixed(1)}\\text{ kJ/mol}$.\n\n` +
-          `**Phase Constitution:** The stable state consists of **${equilibriumState.stablePhases.map((p) => `${p.phase.name} (${(p.phaseFraction * 100).toFixed(1)}%)`).join(" + ")}** determined by the exact common tangent construction $\\mu_{${currentSystem.elementA}} = \\text{const}, \\mu_{${currentSystem.elementB}} = \\text{const}$.\n\n` +
-          `**Scheil Microsegregation:** Non-equilibrium cooling yields a terminal solidification freezing range of $\\Delta T = ${scheilResult.freezingRangeK}\\text{ K}$ with ${(scheilResult.eutecticFraction * 100).toFixed(1)}\\% non-equilibrium eutectic formation. The hot tearing susceptibility index is **${scheilResult.hotTearingSusceptibilityIndex}** (Kou index), requiring controlled cooling through the critical mushy zone ($0.90 < f_S < 0.99$).`
+      if (!res.ok) throw new Error(`Consultation request failed (HTTP ${res.status}).`);
+      const report = parseConsultationResponse(await res.json());
+      if (consultationRequest.current.isCurrent(request) && currentConsultationInputsKey.current === requestInputsKey) {
+        setAiReport(report);
+      }
+    } catch (err: unknown) {
+      if (controller.signal.aborted || !consultationRequest.current.isCurrent(request) || currentConsultationInputsKey.current !== requestInputsKey) return;
+      setAiConsultationError(
+        err instanceof ConsultationResponseError
+          ? "The consultation service returned an empty or invalid response."
+          : err instanceof Error && err.message.startsWith("Consultation request failed (HTTP ")
+            ? err.message
+            : "The consultation service is currently unavailable. Please try again."
       );
     } finally {
-      setIsAiConsulting(false);
+      if (consultationRequest.current.isCurrent(request) && currentConsultationInputsKey.current === requestInputsKey) {
+        setIsAiConsulting(false);
+        consultationAbort.current = null;
+      }
     }
   };
 
@@ -233,7 +273,7 @@ Provide a deep physical breakdown:
               id="calphad-ai-consult-btn"
               onClick={runAiCalphadConsult}
               disabled={isAiConsulting}
-              className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-violet-500/20 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center gap-2 transition-all motion-reduce:transition-none shadow-lg shadow-violet-500/20 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isAiConsulting ? "Computing..." : "AI CALPHAD Diagnosis"}</span>
@@ -864,9 +904,9 @@ Provide a deep physical breakdown:
           </div>
 
           {/* AI Metallurgical & CALPHAD Diagnosis Report Card */}
-          {aiReport && (
+          {(aiReport || aiConsultationError) && (
             <div className="bg-slate-900/90 border border-violet-500/40 rounded-2xl p-4 shadow-xl space-y-2">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              {aiReport && <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-violet-400" />
                   <span className="text-xs font-bold text-violet-300">
@@ -879,10 +919,11 @@ Provide a deep physical breakdown:
                 >
                   Dismiss
                 </button>
-              </div>
-              <div className="prose prose-invert prose-xs max-w-none text-slate-300 text-xs leading-relaxed space-y-2 whitespace-pre-line">
+              </div>}
+              {aiReport && <div className="prose prose-invert prose-xs max-w-none text-slate-300 text-xs leading-relaxed space-y-2 whitespace-pre-line">
                 {aiReport}
-              </div>
+              </div>}
+              {aiConsultationError && <p role="status" aria-live="polite" aria-atomic="true" className="text-sm text-amber-200">{aiConsultationError}</p>}
             </div>
           )}
         </div>
