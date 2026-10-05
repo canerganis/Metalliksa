@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from module_contract import ContractError, ModuleContract
-from module_contracts_composition import build_composition_contract
+from module_contracts_composition import COMPOSITION_OPERATIONS, build_composition_contract
 
 
 class CompositionContractTests(unittest.TestCase):
@@ -31,27 +31,34 @@ class CompositionContractTests(unittest.TestCase):
         self.assertEqual(contract.tests.oracle.status, "pending")
         self.assertEqual(contract.lifecycle.background_work, "none")
 
-    def test_operation_models_only_the_numeric_control_and_rejects_fake_map_payload(self):
-        operation = build_composition_contract(self.seed).operations[0]
+    def test_visible_store_actions_have_separate_browser_local_scopes(self):
+        operations = {operation.id: operation for operation in COMPOSITION_OPERATIONS}
 
-        self.assertEqual(operation.id, "specimen-editor")
-        self.assertIsNone(operation.route)
-        self.assertEqual(operation.authority.kind, "browser-local")
-        self.assertEqual([field.key for field in operation.input], ["percentage"])
-        self.assertEqual(operation.undeclared_input, ("element",))
-        self.assertEqual(operation.input_problems({"percentage": 18.5, "element": "Ni"}), [])
-        self.assertTrue(any("composition" in problem for problem in operation.input_problems(
-            {"percentage": 18.5, "element": "Ni", "composition": {"Ni": 18.5}}
-        )))
+        self.assertEqual(
+            tuple(operations),
+            ("update-specimen-name", "update-category", "update-standard-designation",
+             "update-manufacturing-route", "add-element", "set-element-content", "remove-element",
+             "normalize-composition", "load-preset", "reset-to-default", "save-current-specimen"),
+        )
+        self.assertTrue(all(operation.route is None and operation.method is None for operation in operations.values()))
+        self.assertTrue(all(operation.authority.kind == "browser-local" for operation in operations.values()))
+        self.assertTrue(all(operation.authority.timeout_ms is None for operation in operations.values()))
+        self.assertEqual(operations["update-category"].undeclared_input, ("category",))
+        self.assertEqual(operations["save-current-specimen"].output.fields, ("savedSpecimens",))
 
     def test_percentage_type_is_checked_without_invented_physical_bounds(self):
-        operation = build_composition_contract(self.seed).operations[0]
+        operation = next(op for op in COMPOSITION_OPERATIONS if op.id == "set-element-content")
 
         self.assertIsNone(operation.input[0].min)
         self.assertIsNone(operation.input[0].max)
+        self.assertTrue(operation.input[0].required)
+        self.assertEqual(operation.undeclared_input, ("element",))
         self.assertEqual(operation.input_problems({"percentage": "18.5", "element": "Ni"}),
                          ["percentage: must be a finite number"])
         self.assertEqual(operation.input_problems({"percentage": 101, "element": "Ni"}), [])
+        self.assertTrue(any("composition" in problem for problem in operation.input_problems(
+            {"percentage": 18.5, "element": "Ni", "composition": {"Ni": 18.5}}
+        )))
 
     def test_bad_seed_identity_fails_contract_construction(self):
         bad_seed = {**self.seed, "id": "Alloy Builder"}

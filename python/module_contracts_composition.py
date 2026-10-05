@@ -1,6 +1,6 @@
 """Bounded Module SDK contract for AlloyBuilder's browser-local editor."""
 
-from typing import Mapping
+from typing import Mapping, Tuple
 
 from module_contract import (
     FORBIDDEN_CLAIM_KEYS,
@@ -21,55 +21,79 @@ from module_contract import (
 
 CONTRACT_VERSION = "0.1.0"
 
+_BROWSER_LOCAL_REASON = (
+    "AlloyBuilder calls browser Zustand actions directly; this operation has no server route "
+    "or execution deadline."
+)
 
-def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
-    """Build a conservative contract from the unchanged alloy-builder seed row.
 
-    This is an operation-level inventory, not a unified request schema: the React
-    view calls individual Zustand actions. ``percentage`` is the only flat numeric
-    edit represented by InputField; the element symbol is recorded as undeclared
-    because Module SDK's scalar kinds cannot represent the free-text key. The
-    dynamic composition map and other controls are described in legacy_notes.
-    """
-    operation = Operation(
-        id="specimen-editor",
+def _browser_operation(
+    operation_id: str,
+    *,
+    fields: Tuple[InputField, ...] = (),
+    undeclared: Tuple[str, ...] = (),
+    output_field: str = "activeMaterialSpecimen",
+) -> Operation:
+    return Operation(
+        id=operation_id,
         route=None,
         method=None,
         authority=Authority(
             kind="browser-local",
-            # Contracted browser-local entries currently require a positive timeout.
-            # This minimum schema sentinel is not enforced by the synchronous UI/store.
-            timeout_ms=1,
-            exception_reason=(
-                "CompositionEditor mutates the browser Zustand store directly; no server route or "
-                "runtime deadline exists. timeoutMs=1 is only the positive value required by the "
-                "contract schema, not an execution guarantee."
-            ),
+            timeout_ms=None,
+            exception_reason=_BROWSER_LOCAL_REASON,
         ),
-        input=(
-            InputField(
-                key="percentage",
-                label="Element content",
-                unit="percent in the active specimen unit (wt.% or at.%)",
-                quantity_kind="element-composition-percentage",
-                min=None,
-                max=None,
-                step=0.1,
-                default=0.0,
-                required=False,
-                note=(
-                    "Optional here because specimen-editor groups distinct UI actions; percentage is "
-                    "supplied for each setElement edit. AlloyBuilder renders a 0..100 number input "
-                    "with step 0.1, but the store does not enforce those HTML hints. Empty input "
-                    "becomes 0, and setElement removes values <= 0."
+        input=fields,
+        undeclared_input=undeclared,
+        output=OutputSchema(fields=(output_field,), status_key=None),
+    )
+
+
+COMPOSITION_OPERATIONS: Tuple[Operation, ...] = (
+        _browser_operation("update-specimen-name", undeclared=("name",)),
+        _browser_operation("update-category", undeclared=("category",)),
+        _browser_operation("update-standard-designation", undeclared=("standardDesignation",)),
+        _browser_operation("update-manufacturing-route", undeclared=("manufacturingRoute",)),
+        _browser_operation("add-element", undeclared=("element",)),
+        _browser_operation(
+            "set-element-content",
+            fields=(
+                InputField(
+                    key="percentage",
+                    label="Element content",
+                    unit="percent in the active specimen unit (wt.% or at.%)",
+                    quantity_kind="element-composition-percentage",
+                    min=None,
+                    max=None,
+                    step=0.1,
+                    default=0.0,
+                    required=True,
+                    note=(
+                        "The active input displays the current stored value; schema default 0.0 records "
+                        "the clear-input action, not an initial field value. Clearing the HTML number "
+                        "field maps to 0; setElement removes values <= 0. The 0..100 attributes and "
+                        "0.1 step are UI hints, not store-enforced limits."
+                    ),
                 ),
             ),
+            undeclared=("element",),
         ),
-        undeclared_input=("element",),
-        # The browser view observes this shared state after its local mutations; it is not
-        # a returned solver result or evidence-bearing output.
-        output=OutputSchema(fields=("activeMaterialSpecimen",), status_key=None),
-    )
+        _browser_operation("remove-element", undeclared=("element",)),
+        _browser_operation("normalize-composition"),
+        _browser_operation("load-preset", undeclared=("presetId",)),
+        _browser_operation("reset-to-default"),
+        _browser_operation("save-current-specimen", output_field="savedSpecimens"),
+)
+
+
+def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
+    """Build an action-scoped contract from the unchanged alloy-builder seed row.
+
+    Each Operation names one user-driven browser store action. The SDK field vocabulary
+    cannot type free-text values or the dynamic element-to-number composition map, so
+    those exact action arguments are recorded in ``undeclared_input`` rather than
+    represented by a fabricated object or enum schema.
+    """
 
     return ModuleContract(
         id=seed["id"],
@@ -87,9 +111,9 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             ceiling=PENDING_ORACLE_CEILING,
             forbidden_claims=FORBIDDEN_CLAIM_KEYS,
             note=(
-                "No oracle is present. This browser-local editor and its composition-based KPI display "
-                "are screening-only; the UI labels its estimate unvalidated. A software contract or "
-                "passing software checks does not establish physical validation."
+                "No oracle is present. The browser editor's composition-based KPI display is explicitly "
+                "unvalidated and remains screening-only; software contract checks do not establish "
+                "physical validation."
             ),
         ),
         tests=TestRefs(
@@ -98,37 +122,49 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             docs="docs/modules/alloy-builder.md",
         ),
         migration_state="contracted",
-        operations=(operation,),
-        lifecycle=Lifecycle(background_work="none"),
+        operations=COMPOSITION_OPERATIONS,
+        lifecycle=Lifecycle(background_work="none", resources=()),
         legacy_notes=(
-            "Operation-level only: AlloyBuilder calls separate browser Zustand actions; it does not "
-            "submit a unified operation payload. The active specimen composition is a dynamic "
-            "element-symbol-to-number map, which the SDK InputField scalar schema cannot describe; "
-            "no element set, nested map schema, or composition-balance check is fabricated.",
-            "Other current controls are specimen name and standard designation free text, material "
-            "category and manufacturing-route selects, quick presets, normalize-to-100%, remove-element, "
-            "reset, and save-snapshot actions. They are directly wired to useMaterialStore and are "
-            "not claimed as fields of one request.",
-            "The category choices come from MATERIAL_CATEGORIES plus the active category when absent; "
-            "route choices come from MANUFACTURING_ROUTES plus the active route when absent. Neither "
-            "select is represented as a fixed enum here.",
-            "The store persists browser state and synchronizes composition updates to the shared material "
-            "pipeline. The editor has no server request lifecycle or background job; its visible KPI "
-            "panel says 'Composition-based estimate; unvalidated.'",
-            "activeMaterialSpecimen in output.fields denotes the post-action browser store state observed "
-            "by the view, not a response payload or oracle result.",
+            "Composition remains browser-local state: MaterialSpecimen.composition is an element-symbol-to-number "
+            "map, not a request object. Each operation scopes one visible store action; the map is not encoded "
+            "as a fabricated flat or nested InputField schema. UI controls preserve dynamic state between actions.",
+            "String-valued arguments are recorded by their actual key in undeclaredInput because the SDK value "
+            "types do not include strings. Category and route choices can include the active value at runtime, "
+            "so no closed enum is inferred.",
+            "Add Element calls setElement with the selected symbol and a fixed 1.0; the editable number and slider "
+            "call setElement with the current symbol and value. The numeric control has min=0/max=100/step=0.1; "
+            "the slider max is 100 for the active base metal and 35 otherwise. The store itself applies no "
+            "finite or upper-bound validation.",
+            "normalizeComposition is a separate click action; it returns only when total <= 0, otherwise "
+            "it scales by 100/total without first rejecting non-finite entries or verifying a finite total. "
+            "A NaN total bypasses the <= 0 branch.",
+            "Preset buttons call loadPreset(key); Reset calls resetToDefault; Save calls saveCurrentSpecimen "
+            "with a generated time label and updates savedSpecimens. The save confirmation is cleared by a "
+            "2500 ms setTimeout. Lifecycle vocabulary has no timeout resource, so this UI timer is recorded "
+            "here and is not mislabeled as an interval or background job.",
+            "The component destructures updateComposition but does not call it directly; edits currently "
+            "use setElement/removeElement and the separate metadata setters. Weight-percent updates also "
+            "publish an active pipeline payload; atomic-percent updates return before that pipeline sync.",
+            "Name/category/designation/route, composition edits, preset, reset, normalize, and save are separate "
+            "browser-local actions; the component does not submit one combined specimen-editor request.",
+            "The visible density/thermal/mechanical KPI panel is composition-derived and states "
+            "'Composition-based estimate; unvalidated.' No physical oracle is present.",
         ),
         source_refs=(
             "src/components/AlloyBuilder.tsx:38-80#activeMaterialSpecimen",
-            "src/components/AlloyBuilder.tsx:33-37#MANUFACTURING_ROUTES",
-            "src/components/AlloyBuilder.tsx:54-58#categoryOptions",
+            "src/components/AlloyBuilder.tsx:70-80#saveCurrentSpecimen",
+            "src/components/AlloyBuilder.tsx:145-160#resetToDefault",
             "src/components/AlloyBuilder.tsx:183-229#Specimen Name",
+            "src/components/AlloyBuilder.tsx:54-58#categoryOptions",
+            "src/components/AlloyBuilder.tsx:239-253#loadPreset(key)",
             "src/components/AlloyBuilder.tsx:263-360#Auto-Normalize to 100%",
             "src/components/AlloyBuilder.tsx:422#Composition-based estimate; unvalidated",
-            "src/store/useMaterialStore.ts:94-116#Core Actions",
-            "src/store/useMaterialStore.ts:716-861#updateComposition",
-            "src/store/useMaterialStore.ts:863-940#updateName",
-            "src/store/useMaterialStore.ts:707#persist(",
+            "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
+            "src/store/useMaterialStore.ts:94-119#Core Actions",
+            "src/store/useMaterialStore.ts:833-861#setElement",
+            "src/store/useMaterialStore.ts:716-827#setActivePipelineMaterial",
+            "src/store/useMaterialStore.ts:863-950#saveCurrentSpecimen",
+            "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
         ),
         seed_derived=("label", "description", "next", "maturity"),
     )
