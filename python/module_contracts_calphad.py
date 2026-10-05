@@ -176,8 +176,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             "0.2/0.5/1/2 °C tolerance; no blanket hard temperature applicability limits are asserted.",
             "The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style "
             "solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' "
-            "button submits prompt text to /api/consult; on request failure the component fabricates a static "
-            "report from those browser calculations. That static text is not an AI response or an independently "
+            "button submits binary-system prompt text to /api/consult; service failure or empty/malformed "
+            "response leaves the consultation unavailable instead of fabricating a scientific report. Input "
+            "changes and unmount abort/invalidate the request. A provider response is not an independently "
             "validated CALPHAD result. Neither browser path is promoted as Python output.",
             "The SDK output fields are conditional inventories. Database coverage entries can say covered or "
             "unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver "
@@ -188,12 +189,12 @@ def build_calphad_contract(seed) -> ModuleContract:
             "on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
         ),
         source_refs=(
-            'python/module_registry.py:187-191#"phase-diagram": (',
+            "python/module_registry.py::build_registry",
             "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
             "src/modules/views.ts:23-23#'phase-diagram': lazy(",
             "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
             "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
-            "src/components/CALPHADThermodynamicsLab.tsx:178-184#} catch (err: any) {",
+            "src/utils/calphadConsultation.ts::parseConsultationResponse",
             "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
             "src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases",
             "src/services/pythonComputationService.ts::PythonComputationService.solveCalphadEquilibrium",
