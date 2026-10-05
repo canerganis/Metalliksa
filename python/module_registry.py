@@ -1160,13 +1160,27 @@ def oracle_listed_in_ci(ref: str) -> bool:
 
 
 def _top_level_imports(path: Path) -> set:
+    """Module-level imports, including those guarded by a module-level try/if (an oracle that probes
+    `import warp` and skips itself still needs warp to run for real, so the CI gap must still be recorded)."""
     import ast
     names = set()
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if isinstance(node, ast.Import):
-            names.update(alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            names.add(node.module.split(".")[0])
+
+    def visit(statements):
+        for node in statements:
+            if isinstance(node, ast.Import):
+                names.update(alias.name.split(".")[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                names.add(node.module.split(".")[0])
+            elif isinstance(node, ast.Try):
+                visit(node.body)
+                for handler in node.handlers:
+                    visit(handler.body)
+                visit(node.orelse)
+            elif isinstance(node, ast.If):
+                visit(node.body)
+                visit(node.orelse)
+
+    visit(ast.parse(path.read_text(encoding="utf-8")).body)
     return names
 
 
