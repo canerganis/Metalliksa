@@ -2,6 +2,11 @@
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*
 
+## Antigravity izin onarımı ve ilk gerçek çıktı — 2026-10-05
+
+- Eksik CLI settings.json oluşturuldu; dosya izinleri iki görev worktree'sindeki hedef yollarla sınırlandı. Genel izin atlama kullanılmadı; ana checkout yazımı ve push/reset/clean/stash engellendi. Sonnet gerçek dosya okumasında READ_OK verdi; belge kontrolünde değişiklik gerekmiyor. Opus sağlanan bağlam üzerinde tasarım önerisi verdi; bu öneriler kaynak doğrulaması yerine geçmez.
+- Gemini 3.1 Pro yeni Tafel parser test dosyasını gerçekten yazdı. Entegrasyon sahibi hatalı kaçışları düzeltti; mevcut + yeni testler 29/29 PASS. Yerel worker commit: f12bc55 (orch/studiotests-ag). Üretim/fizik kodu değişmedi; ana dala henüz alınmadı.
+- Devam: f12bc55 bağımsız inceleme ve yerel entegrasyon; ardından P2 elastik sabitler sözleşmesi ve LPBF batch2 düzeltmelerinin kalan kapıları. Üç Antigravity CLI görevi sonuç verdi ve tamamlandı; süreç açılması tek başına çalışma kanıtı sayılmadı. Push yok.
 ## Codex devralma kapanışı — 2026-10-05 (kod entegrasyonu `94b6964`; yerel, push yok)
 
 - **Kapatılan işler:** altı alt ajanla LPBF batch 1 ve iki inceleme düzeltmesi, işlevsel modül/çalışma alanı adlandırmaları, iki sütunlu Tafel CSV hatası ve eski Docker imajı. Modül kimlikleri/kalıcı kayıt değerleri değişmedi; toplam 25 modül korundu. Materials Project adı, CURATED_MP_PRESETS tabanlı P2 işi henüz tamamlanmadığı için belgelenmiş istisnadır. Ondalık virgül, negatif akım ve A/mA/uA/nA dönüşümleri CSV düzeltmesinde korundu.
