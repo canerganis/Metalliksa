@@ -32,6 +32,23 @@ export async function waitForRealWorker(deadline: number) {
   }
 }
 
+/** Run one worker call, retrying only failures that cannot have changed worker state, until `deadline`.
+ * LPBF_WORKER_STARTING means the request was never written to the worker, so it is always safe to retry. A
+ * caller-deadline error ("RPC timeout") means the request may already have been delivered, so it is retried only
+ * for idempotent calls (get, capabilities, archive-capture) and never for submit. Anything else, and any
+ * failure at the deadline, is thrown unchanged, so a broken worker still fails with its own message. */
+export async function retryWorkerCall<T>(call: () => Promise<T>, deadline: number, options: { idempotent: boolean }): Promise<T> {
+  for (;;) {
+    try { return await call(); }
+    catch (error) {
+      const retryable = error instanceof LpbfWorkerUnavailableError
+        && (error.code === 'LPBF_WORKER_STARTING' || (options.idempotent && CALLER_DEADLINE_ERRORS.has(error.message)));
+      if (!retryable || Date.now() >= deadline) throw error;
+      await new Promise(resolve => setTimeout(resolve, Math.min(250, Math.max(0, deadline - Date.now()))));
+    }
+  }
+}
+
 /** Run every teardown step even when an earlier one fails (for example stopRealWorker hitting its 10 s bound),
  * so the environment is restored, the HTTP server closed and the temp root removed; then fail loudly with the
  * first error (all errors when several steps failed). */

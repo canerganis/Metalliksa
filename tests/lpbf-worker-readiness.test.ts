@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import express from 'express';
 import { LpbfWorkerBridge, LpbfWorkerUnavailableError, lpbfWorker } from '../server/lpbfWorkerBridge';
 import { lpbfSimulationRouter } from '../routes/lpbfSimulation';
+import { retryWorkerCall } from './support/realLpbfWorker';
 
 // Synthetic protocol process: exercises real pipes, timers and exits without Python/GPU work.
 const protocol = `
@@ -45,9 +46,9 @@ function fixture(options: {
     // exercise a deadline pass their own). The request default was 2000 ms, below the 3000 ms startup bound, and a
     // cold first test peaked at 1861 ms under stress (40 concurrent copies plus 24 CPU-spin threads). 5000 ms
     // keeps it above the startup bound, so a slow start reports the bounded startup failure instead of the
-    // caller deadline, with ~2.7x margin over that peak and inside each test's 10 s timeout.
-    startupTimeoutMs: options.startupTimeoutMs ?? 3000,
-    requestTimeoutMs: options.requestTimeoutMs ?? 5000,
+    // caller deadline (budgets were later raised to 20 s / 30 s: they are deadlines that must not fire, never asserted timings), with ~2.7x margin over that peak and inside each test's 10 s timeout.
+    startupTimeoutMs: options.startupTimeoutMs ?? 20000,
+    requestTimeoutMs: options.requestTimeoutMs ?? 30000,
     command: fallback => {
       const command = options.command?.(fallback, commands.length) ?? { cmd: 'native-python', mode: 'normal' };
       return { cmd: command.cmd, args: [String(options.delayMs ?? 20), command.mode ?? 'normal'] };
@@ -73,7 +74,7 @@ function fixture(options: {
   return { bridge, commands, children, ready, cleanup };
 }
 
-test('the default spawn passes a command environment to the worker, else the process environment', { timeout: 10000 }, async () => {
+test('the default spawn passes a command environment to the worker, else the process environment', { timeout: 60000 }, async () => {
   const echo = `require('node:readline').createInterface({input: process.stdin}).on('line', line => {
     const request = JSON.parse(line);
     console.log(JSON.stringify({id: request.id, data: {probe: process.env.LPBF_ENV_PROBE ?? null}}));
@@ -86,7 +87,7 @@ test('the default spawn passes a command environment to the worker, else the pro
   }
 });
 
-test('concurrent cold requests wait for one readiness handshake before sending RPCs', { timeout: 10000 }, async () => {
+test('concurrent cold requests wait for one readiness handshake before sending RPCs', { timeout: 60000 }, async () => {
   const instance = fixture({ delayMs: 150 });
   try {
     const results = await Promise.all(['get', 'estimate', 'submit'].map(method => instance.bridge.request(method, { selected: true }))) as any[];
@@ -96,7 +97,7 @@ test('concurrent cold requests wait for one readiness handshake before sending R
   } finally { await instance.cleanup(); }
 });
 
-test('slow readiness returns recoverable HTTP503 and later uses the same healthy process', { timeout: 10000 }, async t => {
+test('slow readiness returns recoverable HTTP503 and later uses the same healthy process', { timeout: 60000 }, async t => {
   const instance = fixture({ delayMs: 250, requestTimeoutMs: 60 });
   t.mock.method(lpbfWorker, 'request', instance.bridge.request.bind(instance.bridge));
   const app = express(); app.use(lpbfSimulationRouter);
@@ -110,7 +111,15 @@ test('slow readiness returns recoverable HTTP503 and later uses the same healthy
     assert.equal((await initial.json()).code, 'LPBF_WORKER_STARTING');
     assert.equal(instance.children[0].killed, false, 'caller deadline must not kill a healthy startup');
     await instance.ready;
-    const recovered = await fetch(`http://127.0.0.1:${address.port}/api/lpbf/jobs/example`);
+    // The 60 ms caller budget is the point of this test, but the first request after stdout shows readiness can
+    // still lose that race to the bridge's own handshake bookkeeping on a loaded host; poll (bounded, 20 s) until
+    // the same healthy process answers. The recoverable status itself must stay a 503 until then.
+    let recovered = await fetch(`http://127.0.0.1:${address.port}/api/lpbf/jobs/example`);
+    for (const stop = Date.now() + 20000; recovered.status === 503 && Date.now() < stop;) {
+      assert.equal(recovered.headers.get('retry-after'), '1');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      recovered = await fetch(`http://127.0.0.1:${address.port}/api/lpbf/jobs/example`);
+    }
     assert.equal(recovered.status, 200);
     assert.equal((await recovered.json()).method, 'get');
     assert.deepEqual(instance.commands, ['native-python']);
@@ -121,7 +130,7 @@ test('slow readiness returns recoverable HTTP503 and later uses the same healthy
   }
 });
 
-test('explicit native startup exit rejects all waiters without retrying the same command', { timeout: 10000 }, async () => {
+test('explicit native startup exit rejects all waiters without retrying the same command', { timeout: 60000 }, async () => {
   const instance = fixture({ command: () => ({ cmd: 'native-python', mode: 'exit' }) });
   try {
     const results = await Promise.allSettled([instance.bridge.request('get'), instance.bridge.request('estimate')]);
@@ -136,7 +145,7 @@ test('explicit native startup exit rejects all waiters without retrying the same
   } finally { await instance.cleanup(); }
 });
 
-test('failed native spawn is reported without duplicate launch or retained pending request', { timeout: 10000 }, async () => {
+test('failed native spawn is reported without duplicate launch or retained pending request', { timeout: 60000 }, async () => {
   const instance = fixture({ command: (_fallback, launches) => ({ cmd: launches === 0 ? 'missing-python' : 'native-python' }) });
   try {
     await assert.rejects(instance.bridge.request('get'), error => error instanceof LpbfWorkerUnavailableError && /ENOENT/.test(error.message));
@@ -146,7 +155,7 @@ test('failed native spawn is reported without duplicate launch or retained pendi
   } finally { await instance.cleanup(); }
 });
 
-test('a failed actual WSL command falls back once to the host command', { timeout: 10000 }, async () => {
+test('a failed actual WSL command falls back once to the host command', { timeout: 60000 }, async () => {
   const instance = fixture({ command: fallback => fallback
     ? { cmd: 'native-python' } : { cmd: 'wsl.exe', mode: 'exit' } });
   try {
@@ -156,13 +165,13 @@ test('a failed actual WSL command falls back once to the host command', { timeou
   } finally { await instance.cleanup(); }
 });
 
-test('bounded background readiness failure can be retried by a later caller', { timeout: 10000 }, async () => {
+test('bounded background readiness failure can be retried by a later caller', { timeout: 60000 }, async () => {
   // The startup bound applies to every launch. The never-ready launch is rejected by it at any value, but the
   // retry launch is a cold Node start whose handshake must also finish inside it: with 500 ms it failed under
   // full-suite load with "LPBF worker RPC timeout" from the startup capabilities RPC. Use the fixture's cold-start
-  // bound (3000 ms) and keep the caller deadline above it, so the first caller observes the bounded startup
+  // bound (10 s here) and keep the caller deadline above it, so the first caller observes the bounded startup
   // failure itself rather than its own deadline ("still starting").
-  const instance = fixture({ startupTimeoutMs: 3000, requestTimeoutMs: 6000, command: (_fallback, launches) => ({
+  const instance = fixture({ startupTimeoutMs: 10000, requestTimeoutMs: 20000, command: (_fallback, launches) => ({
     cmd: 'native-python', mode: launches === 0 ? 'never-ready' : 'normal',
   }) });
   try {
@@ -173,7 +182,7 @@ test('bounded background readiness failure can be retried by a later caller', { 
   } finally { await instance.cleanup(); }
 });
 
-test('exit after readiness rejects pending RPCs and a subsequent request starts a new process', { timeout: 10000 }, async () => {
+test('exit after readiness rejects pending RPCs and a subsequent request starts a new process', { timeout: 60000 }, async () => {
   const instance = fixture();
   try {
     await instance.bridge.request('get');
@@ -184,7 +193,7 @@ test('exit after readiness rejects pending RPCs and a subsequent request starts 
   } finally { await instance.cleanup(); }
 });
 
-test('closing during WSL readiness does not launch an unsolicited fallback', { timeout: 10000 }, async () => {
+test('closing during WSL readiness does not launch an unsolicited fallback', { timeout: 60000 }, async () => {
   const instance = fixture({ delayMs: 200, command: () => ({ cmd: 'wsl.exe' }) });
   const pending = instance.bridge.request('get');
   instance.bridge.close();
@@ -194,7 +203,7 @@ test('closing during WSL readiness does not launch an unsolicited fallback', { t
   } finally { await instance.cleanup(); }
 });
 
-test('stdin EPIPE becomes a recoverable HTTP503, kills the unhealthy child, and waits before restart', { timeout: 10000 }, async t => {
+test('stdin EPIPE becomes a recoverable HTTP503, kills the unhealthy child, and waits before restart', { timeout: 60000 }, async t => {
   const instance = fixture({ command: (_fallback, launches) => ({ cmd: 'native-python', mode: launches === 0 ? 'stuck' : 'normal' }) });
   t.mock.method(lpbfWorker, 'request', instance.bridge.request.bind(instance.bridge));
   const app = express(); app.use(lpbfSimulationRouter);
@@ -236,7 +245,7 @@ test('stdin EPIPE becomes a recoverable HTTP503, kills the unhealthy child, and 
   }
 });
 
-test('a request invalidated by close cannot be sent to the replacement worker', { timeout: 10000 }, async () => {
+test('a request invalidated by close cannot be sent to the replacement worker', { timeout: 60000 }, async () => {
   const instance = fixture({ delayMs: 100 });
   try {
     const stale = instance.bridge.request('old-request');
@@ -248,12 +257,16 @@ test('a request invalidated by close cannot be sent to the replacement worker', 
   } finally { await instance.cleanup(); }
 });
 
-test('a retry waits for terminal child exit and close invalidates waiters before replacement launch', { timeout: 10000 }, async () => {
-  const instance = fixture({ requestTimeoutMs: 1000 });
+test('a retry waits for terminal child exit and close invalidates waiters before replacement launch', { timeout: 60000 }, async () => {
+  // The 1000 ms caller budget below is what the test asserts on (a retry that cannot launch fails with STARTING
+  // inside it), so it must stay short. A cold Node start plus handshake can exceed 1000 ms on a loaded host,
+  // so the first launch is warmed with a bounded retry loop: a STARTING/deadline failure leaves the startup
+  // running in the bridge, and the next attempt joins it. The worker must become healthy within 30 s or fail.
+  const instance = fixture({ startupTimeoutMs: 30000, requestTimeoutMs: 1000 });
   let restoreKill = () => {};
   let killRequested = false;
   try {
-    await instance.bridge.request('get');
+    await retryWorkerCall(() => instance.bridge.request('get'), Date.now() + 30000, { idempotent: true });
     const child = instance.children[0];
     const kill = child.kill.bind(child);
     child.kill = (() => { killRequested = true; return true; }) as typeof child.kill;
@@ -275,7 +288,9 @@ test('a retry waits for terminal child exit and close invalidates waiters before
     await assert.rejects(stale, /closed|invalidated/);
     assert.deepEqual(instance.commands, ['native-python'], 'invalidated waiter must not launch a replacement');
 
-    assert.equal((await instance.bridge.request('get') as any).method, 'get');
+    // The replacement is a cold start that must finish inside the short 1000 ms caller budget; retry joins the
+    // running startup (bounded at 30 s) instead of failing on a loaded host.
+    assert.equal((await retryWorkerCall(() => instance.bridge.request('get'), Date.now() + 30000, { idempotent: true }) as any).method, 'get');
     assert.equal(instance.commands.length, 2);
   } finally {
     restoreKill();

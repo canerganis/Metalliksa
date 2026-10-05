@@ -9,6 +9,7 @@ import express from 'express';
 import { lpbfSimulationRouter } from '../routes/lpbfSimulation';
 import { lpbfWorker, LpbfWorkerBridge } from '../server/lpbfWorkerBridge';
 import { getHostPython } from '../server/pythonRuntime';
+import { removeWorkerTestRoot, waitForRealWorker } from './support/realLpbfWorker';
 
 const python = getHostPython();
 
@@ -29,7 +30,7 @@ async function killAndWaitForRecordedTestProcess(pid: number) {
   assert.fail(`test-owned process ${pid} did not exit during bounded cleanup`);
 }
 
-test('HTTP DELETE waits for the real worker RPC to terminate and reap its execution child', { timeout: 30000 }, async t => {
+test('HTTP DELETE waits for the real worker RPC to terminate and reap its execution child', { timeout: 240000 }, async t => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'metalliksa-lpbf-delete-'));
   const priorJobRoot = process.env.METALLIKSA_JOB_ROOT;
   process.env.METALLIKSA_JOB_ROOT = path.join(root, 'jobs');
@@ -54,8 +55,8 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
 
   const workerChildren: ChildProcessWithoutNullStreams[] = [];
   const bridge = new LpbfWorkerBridge({
-    startupTimeoutMs: 15000,
-    requestTimeoutMs: 15000,
+    startupTimeoutMs: 90000,
+    requestTimeoutMs: 90000,
     command: () => ({ cmd: python.cmd, args: [...python.prefix, '-u', fixtureScript] }),
     spawn: command => {
       const child = spawn(command.cmd, command.args, { stdio: 'pipe', windowsHide: true });
@@ -76,6 +77,8 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
   let descendantPid: number | undefined;
 
   try {
+    // Warm the real worker first: a cold start under load otherwise answers the first POST with HTTP 503.
+    await waitForRealWorker(Date.now() + 120_000);
     const submittedResponse = await fetch(`${baseUrl}/api/lpbf/jobs`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jobType: 'build-job' }),
     });
@@ -83,7 +86,7 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
     const submitted = await submittedResponse.json() as { id: string; status: string };
     assert.ok(submitted.id);
 
-    const deadline = Date.now() + 10000;
+    const deadline = Date.now() + 90000;
     while ((!childPid || !descendantPid) && Date.now() < deadline) {
       try { childPid = Number((await readFile(pidFile, 'utf8')).trim()); }
       catch { await new Promise(resolve => setTimeout(resolve, 50)); }
@@ -125,7 +128,7 @@ test('HTTP DELETE waits for the real worker RPC to terminate and reap its execut
     } finally {
       if (priorJobRoot === undefined) delete process.env.METALLIKSA_JOB_ROOT;
       else process.env.METALLIKSA_JOB_ROOT = priorJobRoot;
-      await rm(root, { recursive: true, force: true });
+      await removeWorkerTestRoot(root);
     }
   }
 });

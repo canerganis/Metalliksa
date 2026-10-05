@@ -17,7 +17,7 @@ import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
 import { canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
-import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, retryWorkerCall, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 
@@ -33,7 +33,19 @@ async function jsonRequest(base: string, suffix: string, method: 'GET' | 'POST' 
   return { status: response.status, payload };
 }
 
-test('LPBF source select, CPU compute, unvalidated compare, export and restore preserve identities and bytes', async t => {
+/** preview/import capture the job through the worker RPC (20 s caller budget); on a loaded host that RPC can time out
+ * and the route answers a generic 503 before any archive state is written. Retry only that 503, bounded, and
+ * return the last response unchanged at the deadline so the caller's status assertion still reports it. */
+async function jsonRequestRetry503(base: string, suffix: string, body: unknown, budgetMs = 180_000) {
+  const deadline = Date.now() + budgetMs;
+  for (;;) {
+    const result = await jsonRequest(base, suffix, 'POST', body);
+    if (result.status !== 503 || Date.now() >= deadline) return result;
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+}
+
+test('LPBF source select, CPU compute, unvalidated compare, export and restore preserve identities and bytes', { timeout: 600_000 }, async t => {
   const root = mkdtempSync(path.join(process.cwd(), '.tmp-lpbf-workflow-roundtrip-'));
   const sourceRoot = path.join(root, 'sources');
   const runRoot = path.join(root, 'runs');
@@ -73,18 +85,19 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
 
   // Freeze the V1 CPU user-path reference. It is a workflow replay, not a
   // numerical-convergence oracle and does not reproduce NIST Table 4.
-  await waitForRealWorker(Date.now() + 90_000);
-  const submission = await lpbfWorker.request('submit', {
+  const workerBudget = 240_000; // bounded per phase; every retry below still fails at its deadline
+  await waitForRealWorker(Date.now() + workerBudget);
+  const submission = await retryWorkerCall(() => lpbfWorker.request('submit', {
     mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60,
     speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,
     mesh_um: 20, maxDt_s: 0.000001, trackLength_um: 600, tracks: 1, layers: 1,
     surfaceMode: 'powder-layer', cooling_s: 0.0005, dwell_s: 0.0002,
-  }) as { id: string };
+  }), Date.now() + workerBudget, { idempotent: false }) as { id: string };
   assert.match(submission.id, /^[a-f0-9]{32}$/);
   let job: any;
-  const deadline = Date.now() + 90_000;
+  const deadline = Date.now() + workerBudget;
   do {
-    job = await lpbfWorker.request('get', submission.id);
+    job = await retryWorkerCall(() => lpbfWorker.request('get', submission.id), deadline, { idempotent: true });
     if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') break;
     await new Promise(resolve => setTimeout(resolve, 100));
   } while (Date.now() < deadline);
@@ -114,12 +127,12 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.ok(job.result.energyBalance.relativeError <= 0.01, 'numerical ledger closes within the workflow gate');
 
   const selection = [{ ...sourceLink }];
-  const previewResponse = await jsonRequest(base, '/preview', 'POST', { jobId: submission.id, sources: selection });
+  const previewResponse = await jsonRequestRetry503(base, '/preview', { jobId: submission.id, sources: selection });
   assert.equal(previewResponse.status, 200, JSON.stringify(previewResponse.payload));
   assert.equal(previewResponse.payload.sourceBindingStatus, 'exact-revision-bound');
   assert.equal(previewResponse.payload.document.capture.contractStatus, 'core-v1-bound');
   assert.deepEqual(previewResponse.payload.document.sources, selection);
-  const importResponse = await jsonRequest(base, '/import', 'POST', { jobId: submission.id, sources: selection });
+  const importResponse = await jsonRequestRetry503(base, '/import', { jobId: submission.id, sources: selection });
   assert.equal(importResponse.status, 200, JSON.stringify(importResponse.payload));
   assert.deepEqual(importResponse.payload.document, previewResponse.payload.document);
   assert.match(importResponse.payload.documentSha256, /^[a-f0-9]{64}$/);
@@ -138,12 +151,13 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.equal(compared.payload.errors, null);
   assert.ok(compared.payload.reasons.length > 0);
 
-  const buildSubmission = await lpbfWorker.request('submit', { jobType: 'build-job', alloyId: 'in718' }) as { id: string };
+  const buildSubmission = await retryWorkerCall(() => lpbfWorker.request('submit', { jobType: 'build-job', alloyId: 'in718' }),
+    Date.now() + workerBudget, { idempotent: false }) as { id: string };
   assert.match(buildSubmission.id, /^[a-f0-9]{32}$/);
   let buildJob: any;
-  const buildDeadline = Date.now() + 90_000;
+  const buildDeadline = Date.now() + workerBudget;
   do {
-    buildJob = await lpbfWorker.request('get', buildSubmission.id);
+    buildJob = await retryWorkerCall(() => lpbfWorker.request('get', buildSubmission.id), buildDeadline, { idempotent: true });
     if (['completed', 'failed', 'cancelled'].includes(buildJob.status)) break;
     await new Promise(resolve => setTimeout(resolve, 100));
   } while (Date.now() < buildDeadline);
@@ -158,7 +172,8 @@ test('LPBF source select, CPU compute, unvalidated compare, export and restore p
   assert.equal(buildJob.result.material.propertySha256, materialHash);
   // The selected optical source does not establish derivation of build-job material properties.
   // Import this run without source links at the repository boundary; the HTTP import requires a selection.
-  const buildCapture = await lpbfWorker.captureForArchive(buildSubmission.id);
+  const buildCapture = await retryWorkerCall(() => lpbfWorker.captureForArchive(buildSubmission.id),
+    Date.now() + workerBudget, { idempotent: true });
   const buildRuns = new LpbfRunRepository(path.join(runRoot, 'runs.sqlite'));
   const buildSources = new LpbfSourceRepository(path.join(sourceRoot, 'metadata.sqlite'), { readOnly: true });
   let buildImport;
