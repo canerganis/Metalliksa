@@ -32,11 +32,17 @@ Most simulation tools hand you a number. Metalliksa hands you the number, the so
 ## A look inside
 
 <p align="center">
-  <img src="docs/assets/module-lpbf.png" alt="LPBF Workflow module with a live scientific-context panel: mechanism, what drives the result, how to read it, and the limitation" width="49%" />
-  <img src="docs/assets/module-calphad.png" alt="Phase Diagrams and CALPHAD module with the evidence ceiling badge: Screening only, oracle pending" width="49%" />
+  <img src="docs/assets/keyhole-raytracing.png" alt="Keyhole Ray Tracing: a rendered cavity with traced laser rays and the absorption, absorbed power and energy-closure readout" width="100%" />
 </p>
+<p align="center"><sub><b>Keyhole ray tracing</b> in 3D: absorption, absorbed and escaped power and energy closure for a prescribed cavity, on the Warp CPU or GPU backend. Its limits are printed next to the result: a prescribed cavity is not a solved free surface.</sub></p>
 
-<p align="center"><sub>Left: the LPBF Workflow. Right: Phase Diagrams and CALPHAD. Every module states its mechanism, what drives the result, its limits, and the highest evidence level it is allowed to claim.</sub></p>
+<p align="center">
+  <img src="docs/assets/fe-c-phase-diagram.png" alt="Fe-Fe3C binary phase diagram with lever-rule probe and invariant reactions" width="49%" />
+  <img src="docs/assets/ttt-cct.png" alt="Steel TTT diagram for AISI 4140 with ferrite, pearlite and bainite C-curves and the martensite start line" width="49%" />
+</p>
+<p align="center"><sub>Left: the Fe-Fe3C reference diagram with a lever-rule probe. Right: steel TTT/CCT kinetics. Kinetics are steel-only and labelled illustrative; other alloy classes report <i>unavailable</i> instead of a guess.</sub></p>
+
+Every module states its mechanism, what drives the result, its limits, and the highest evidence level it is allowed to claim.
 
 ## How the pieces fit
 
