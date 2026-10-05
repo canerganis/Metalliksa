@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 17  # 16 + the read-only lpbf-dataset-comparison view (legacy contract, no operations; LPBF batch 1)
+LEGACY_CEILING = 16  # Read-only dataset comparison now has a source-bound display contract.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
-              "keyhole-raytracing", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
 
 
 def _view():
@@ -229,7 +229,7 @@ class FieldAndAuthorityTests(unittest.TestCase):
             _contract(operations=(undeclared,))
         self.assertIsNone(undeclared.to_dict()["output"])
 
-    def test_contracted_operations_must_declare_a_timeout(self):
+    def test_contracted_remote_operations_must_declare_a_timeout(self):
         for authority in (mc.Authority(kind="node-provider"),
                           mc.Authority(kind="browser-local", exception_reason="recorded debt")):
             operation = mc.Operation(id="run", method="POST", route="/api/uq/run", authority=authority,
@@ -240,6 +240,40 @@ class FieldAndAuthorityTests(unittest.TestCase):
                              authority=mc.Authority(kind="node-provider", timeout_ms=12000),
                              output=mc.OutputSchema(fields=("samples",)))
         self.assertEqual(_contract(operations=(timed,)).operations[0].authority.timeout_ms, 12000)
+
+    def test_route_free_browser_contract_does_not_invent_a_deadline(self):
+        for deadline in (0, -1, True):
+            with self.subTest(deadline=deadline), self.assertRaises(mc.ContractError):
+                mc.Authority(kind="browser-local", timeout_ms=deadline,
+                             exception_reason="Synchronous local store edit.")
+        operation = mc.Operation(
+            id="edit", method=None, route=None,
+            authority=mc.Authority(kind="browser-local", exception_reason="Synchronous local store edit; no runtime deadline."),
+            output=mc.OutputSchema(fields=("specimen",), status_key=None),
+        )
+        contract = _contract(operations=(operation,), evidence=_evidence(
+            emits=(), note="Local store state is not evidence-bearing solver output."))
+        self.assertIsNone(contract.operations[0].authority.timeout_ms)
+        self.assertEqual(mc.contract_from_dict(contract.to_dict()), contract)
+
+    def test_route_free_exception_does_not_accept_remote_or_partial_routes(self):
+        cases = (
+            (mc.Authority(kind="node-provider"), None, None),
+            (mc.Authority(kind="browser-local", exception_reason="Local edit."), None, "POST"),
+            (mc.Authority(kind="browser-local", exception_reason="Local edit."), "/api/edit", None),
+        )
+        for authority, route, method in cases:
+            with self.subTest(kind=authority.kind, route=route, method=method), self.assertRaises(mc.ContractError):
+                mc.Operation(id="edit", authority=authority, route=route, method=method)
+
+    def test_local_deadline_exception_preserves_pending_oracle_evidence_ceiling(self):
+        operation = mc.Operation(id="edit", route=None, method=None,
+            authority=mc.Authority(kind="browser-local", exception_reason="Local estimate, not validated."),
+            output=mc.OutputSchema(fields=("specimen",), status_key=None))
+        with self.assertRaisesRegex(mc.ContractError, "pending oracle caps"):
+            _contract(operations=(operation,), tests=mc.TestRefs(oracle=mc.Oracle(status="pending")),
+                evidence=mc.Evidence(emits=(), ceiling="validated-simulation",
+                    forbidden_claims=mc.FORBIDDEN_CLAIM_KEYS, note="No validation evidence."))
 
     def test_legacy_notes_are_unique_text(self):
         with self.assertRaises(mc.ContractError):

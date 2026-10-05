@@ -37,6 +37,7 @@ from module_contract import (
     WORKSPACES,
     Authority, Evidence, InputField, Lifecycle, ModuleContract, Operation, Oracle, OutputSchema, TestRefs, View,
 )
+from module_contracts_dataset_view import build_dataset_view_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -176,7 +177,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
-    "lpbf-dataset-comparison": (),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -219,11 +219,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
-    "lpbf-dataset-comparison": (
-        "Read-only view of the committed Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json "
-        "(src/data/lpbfDatasetComparison.ts); it dispatches no request and computes nothing in the browser, "
-        "so no operation is bound.",
-    ),
     "materials-project": (
         "Elastic Constants retains the materials-project identity. The user explicitly submits custom "
         "C_ij or isotropic K/G; optional density and composition are not taken from the shared specimen "
@@ -997,6 +992,7 @@ def module_doc_path(module_id: str) -> str:
 
 
 CONTRACTED_BUILDERS = {
+    "lpbf-dataset-comparison": build_dataset_view_contract,
     "keyhole-raytracing": _keyhole_contract,
     "uq-lab": _uq_contract,
     # Phase 7 wave 2
