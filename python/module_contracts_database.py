@@ -38,6 +38,16 @@ _CATEGORIES = (
 _SORT_FIELDS = ("yield", "tensile", "specific_strength", "modulus", "density", "name")
 _SORT_ORDERS = ("desc", "asc")
 _TRANSFER_TARGETS = ("alloy-builder", "icme-motor", "3d-distortion-lab", "phase-diagram")
+_HEATMAP_MODES = ("alloy-elements", "element-property-binned", "property-correlation")
+_HEATMAP_PROPERTIES = (
+    "yieldStrength", "tensileStrength", "youngsModulus", "density", "specificStrength",
+    "elongation", "thermalConductivity",
+)
+_ALLOYING_ELEMENTS = (
+    "C", "Cr", "Ni", "Mo", "Ti", "Al", "Cu", "V", "Mn", "Si", "Mg", "W", "Co", "Nb", "Zr", "Fe",
+)
+_HEATMAP_SORT_FIELDS = ("property", "element", "category", "name")
+_HEATMAP_PALETTES = ("viridis", "plasma", "turbo", "emerald", "amber-flame")
 
 _BROWSER_REASON = (
     "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; "
@@ -204,6 +214,110 @@ DATABASE_OPERATIONS: Tuple[Operation, ...] = (
 )
 
 
+HEATMAP_OPERATIONS: Tuple[Operation, ...] = (
+    _local_operation(
+        "render-heatmap",
+        undeclared=("materials", "selectedMaterial"),
+        outputs=("displayedMaterials", "svgPlot"),
+    ),
+    _local_operation(
+        "set-heatmap-mode",
+        fields=(InputField(
+            key="heatmapMode", label="D3 plot mode", unit=None, quantity_kind="local-view-mode",
+            min=None, max=None, default="alloy-elements", enum=_HEATMAP_MODES, value_type="enum",
+        ),),
+        outputs=("heatmapMode", "svgPlot"),
+    ),
+    _local_operation(
+        "set-heatmap-property",
+        fields=(InputField(
+            key="selectedPropertyKey", label="Heatmap property", unit=None, quantity_kind="catalog-property-key",
+            min=None, max=None, default="yieldStrength", enum=_HEATMAP_PROPERTIES, value_type="enum",
+        ),),
+        outputs=("selectedPropertyKey", "svgPlot"),
+    ),
+    _local_operation(
+        "set-heatmap-element",
+        fields=(InputField(
+            key="selectedElement", label="Focused alloying element", unit=None, quantity_kind="element-symbol",
+            min=None, max=None, default="Cr", enum=_ALLOYING_ELEMENTS, value_type="enum",
+            note="The select options are the component's alloying-element list; plot-axis clicks choose from elements present in the current data.",
+        ),),
+        outputs=("selectedElement", "svgPlot"),
+    ),
+    _local_operation(
+        "sort-heatmap-alloys",
+        fields=(InputField(
+            key="sortBy", label="Heatmap sort key", unit=None, quantity_kind="local-sort-control",
+            min=None, max=None, default="property", enum=_HEATMAP_SORT_FIELDS, value_type="enum",
+            note="This selector is rendered only in alloy-elements mode; sortAsc is initialized false but has no current UI setter.",
+        ),),
+        outputs=("displayedMaterials", "svgPlot"),
+    ),
+    _local_operation(
+        "set-heatmap-palette",
+        fields=(InputField(
+            key="colorPalette", label="D3 color palette", unit=None, quantity_kind="local-plot-style",
+            min=None, max=None, default="viridis", enum=_HEATMAP_PALETTES, value_type="enum",
+        ),),
+        outputs=("colorPalette", "svgPlot"),
+    ),
+    _local_operation(
+        "select-heatmap-element-from-axis",
+        undeclared=("elem",),
+        outputs=("selectedElement", "svgPlot"),
+    ),
+    _local_operation(
+        "select-heatmap-property-from-axis",
+        undeclared=("prop",),
+        outputs=("selectedPropertyKey", "svgPlot"),
+    ),
+    _local_operation(
+        "select-composition-cell",
+        undeclared=("mat", "elem"),
+        outputs=("selectedMaterial", "selectedElement"),
+    ),
+    _local_operation(
+        "select-binned-bucket",
+        undeclared=("b",),
+        outputs=("selectedMaterial",),
+    ),
+    _local_operation(
+        "select-correlation-cell",
+        undeclared=("cell",),
+        outputs=("selectedElement", "selectedPropertyKey", "svgPlot"),
+    ),
+    _local_operation(
+        "select-scatter-point",
+        undeclared=("mat",),
+        outputs=("selectedMaterial",),
+    ),
+    _local_operation(
+        "inspect-composition-cell",
+        undeclared=("mat", "elem", "wt"),
+        outputs=("hoveredCell", "xLabel", "yLabel", "value", "unit", "material", "extraInfo", "xPos", "yPos"),
+    ),
+    _local_operation(
+        "inspect-binned-cell",
+        undeclared=("b",),
+        outputs=("hoveredCell", "xLabel", "yLabel", "value", "extraInfo", "xPos", "yPos"),
+    ),
+    _local_operation(
+        "inspect-correlation-cell",
+        undeclared=("cell",),
+        outputs=("hoveredCell", "xLabel", "yLabel", "value", "extraInfo", "xPos", "yPos"),
+    ),
+    _local_operation(
+        "clear-heatmap-tooltip",
+        outputs=("hoveredCell",),
+    ),
+    _local_operation(
+        "export-heatmap-svg",
+        outputs=("source", "blob", "url", "download"),
+    ),
+)
+
+
 def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
     """Build the source-bounded contract from the unchanged database seed row."""
     return ModuleContract(
@@ -233,12 +347,13 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             docs="docs/modules/database.md",
         ),
         migration_state="contracted",
-        operations=DATABASE_OPERATIONS,
+        operations=DATABASE_OPERATIONS + HEATMAP_OPERATIONS,
         lifecycle=Lifecycle(background_work="none", resources=()),
         legacy_notes=(
             "This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, "
             "selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. "
             "Outputs name local view effects and transfer state; this is not an API request/response surface.",
+            "The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.",
             "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no "
             "per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The "
             "catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
@@ -264,8 +379,11 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object "
             "URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL "
             "resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
-            "No fetch, worker, solver, scheduled job, or source download is initiated by this view. The nested "
-            "comparison and transfer dialogs are UI children, not background work.",
+            "MaterialsPropertyHeatmapD3 is mounted only while activeTab is \"split\" or \"heatmap\"; catalog mode unmounts it. Its ResizeObserver disconnects on effect dependency change and unmount. The D3-render effect has no cleanup function: redraw removes prior SVG descendants, while normal unmount removes the child DOM. If displayedMaterials becomes empty, that effect returns before clearing the prior SVG, so a previous plot can remain visible until a later nonempty redraw or unmount.",
+            "The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only. Correlation mode omits thermalConductivity from its plotted target properties.",
+            "Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member, and correlation cells display a Pearson r computed from displayed records with sample count (fewer than three positive-property pairs are represented as r=0). These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.",
+            "The child SVG export serializes the current SVG into a Blob, creates an object URL, clicks a temporary download anchor named from heatmapMode and selectedPropertyKey, then revokes the URL synchronously. These output names describe transient browser transport effects, not a returned API object. ResizeObserver, timers, and object URLs have no matching lifecycle resource kind in the schema vocabulary and are documented here rather than mislabeled as raf/interval/three/fetch.",
+            "No fetch, worker, solver, scheduled job, or source download is initiated by this view or its D3 child. The nested comparison and transfer dialogs are UI children, not background work.",
         ),
         source_refs=(
             "src/components/MaterialsDatabaseView.tsx:36-111#filteredMaterials",
@@ -283,6 +401,13 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
             "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
             "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
+            "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
+            "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
+            "src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell",
             "src/types.ts:32-63#MaterialSpec",
             "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
             "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",

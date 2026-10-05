@@ -3,8 +3,9 @@ import re
 import unittest
 from pathlib import Path
 
+import module_registry as mr
 from module_contract import ContractError, ModuleContract
-from module_contracts_database import DATABASE_OPERATIONS, build_database_contract
+from module_contracts_database import DATABASE_OPERATIONS, HEATMAP_OPERATIONS, build_database_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -148,9 +149,108 @@ class DatabaseContractTests(unittest.TestCase):
         self.assertIn("indexes 0 and 5", notes)
         self.assertIn("attempted copy, not confirmed clipboard success", notes)
         self.assertIn("full MATERIALS_DATABASE array, independent of active filters", notes)
+        self.assertIn("maxYield, maxModulus, and minDensity remain at their initialized values", notes)
+        self.assertIn("Slider limits and steps are control settings", notes)
         self.assertIn("local showFilters toggle", notes)
         self.assertIn("No fetch, worker, solver", notes)
         self.assertIn("physical validation", contract.evidence.note)
+
+    def test_heatmap_child_controls_plot_selection_and_mode_specific_tooltips_are_inventory_items(self):
+        operations = {operation.id: operation for operation in HEATMAP_OPERATIONS}
+        self.assertEqual(tuple(operations), (
+            "render-heatmap",
+            "set-heatmap-mode", "set-heatmap-property", "set-heatmap-element",
+            "sort-heatmap-alloys", "set-heatmap-palette", "select-heatmap-element-from-axis",
+            "select-heatmap-property-from-axis", "select-composition-cell", "select-binned-bucket",
+            "select-correlation-cell",
+            "select-scatter-point", "inspect-composition-cell", "inspect-binned-cell",
+            "inspect-correlation-cell", "clear-heatmap-tooltip",
+            "export-heatmap-svg",
+        ))
+        self.assertEqual(operations["set-heatmap-mode"].input[0].enum,
+                         ("alloy-elements", "element-property-binned", "property-correlation"))
+        self.assertEqual(operations["set-heatmap-property"].input[0].enum, (
+            "yieldStrength", "tensileStrength", "youngsModulus", "density", "specificStrength",
+            "elongation", "thermalConductivity",
+        ))
+        self.assertEqual(operations["set-heatmap-element"].input[0].enum,
+                         ("C", "Cr", "Ni", "Mo", "Ti", "Al", "Cu", "V", "Mn", "Si", "Mg", "W",
+                          "Co", "Nb", "Zr", "Fe"))
+        self.assertEqual(operations["sort-heatmap-alloys"].input[0].enum,
+                         ("property", "element", "category", "name"))
+        self.assertEqual(operations["set-heatmap-palette"].input[0].enum,
+                         ("viridis", "plasma", "turbo", "emerald", "amber-flame"))
+        self.assertEqual(operations["select-composition-cell"].undeclared_input, ("mat", "elem"))
+        self.assertEqual(operations["render-heatmap"].undeclared_input, ("materials", "selectedMaterial"))
+        self.assertEqual(operations["select-binned-bucket"].undeclared_input, ("b",))
+        self.assertEqual(operations["select-correlation-cell"].undeclared_input, ("cell",))
+        self.assertEqual(operations["select-heatmap-property-from-axis"].undeclared_input, ("prop",))
+        self.assertEqual(operations["select-scatter-point"].undeclared_input, ("mat",))
+        self.assertEqual(operations["inspect-composition-cell"].undeclared_input, ("mat", "elem", "wt"))
+        self.assertEqual(operations["inspect-composition-cell"].output.fields,
+                         ("hoveredCell", "xLabel", "yLabel", "value", "unit", "material", "extraInfo",
+                          "xPos", "yPos"))
+        self.assertEqual(operations["inspect-binned-cell"].undeclared_input, ("b",))
+        self.assertEqual(operations["inspect-correlation-cell"].undeclared_input, ("cell",))
+        self.assertEqual(operations["export-heatmap-svg"].output.fields,
+                         ("source", "blob", "url", "download"))
+        self.assertTrue(all(operation.route is None and operation.method is None
+                            and operation.output.status_key is None for operation in operations.values()))
+
+        source = read_product_source("src/components/MaterialsPropertyHeatmapD3.tsx")
+        for exact_control in (
+            '"alloy-elements" | "element-property-binned" | "property-correlation"',
+            '"yieldStrength", label: "Yield Strength (σy)", unit: "MPa"',
+            '"specificStrength", label: "Specific Strength (σy/ρ)", unit: "kN·m/kg"',
+            '"thermalConductivity", label: "Thermal Conductivity", unit: "W/(m·K)"',
+            '"C", "Cr", "Ni", "Mo", "Ti", "Al", "Cu", "V", "Mn", "Si", "Mg", "W", "Co", "Nb", "Zr", "Fe"',
+            'onClick={() => setHeatmapMode("property-correlation")}',
+            'onChange={(e) => setSelectedPropertyKey(e.target.value)}',
+            'onChange={(e) => setSelectedElement(e.target.value)}',
+            'onChange={(e) => setColorPalette(e.target.value as ColorPaletteKey)}',
+            '.on("click", () => onSelectMaterial(mat))',
+            'value: `r = ${cell.r > 0 ? "+" : ""}${cell.r}`',
+            'r: 0,\n            sampleCount: pairs.length',
+            'a.download = `Materials_Heatmap_${heatmapMode}_${selectedPropertyKey}.svg`',
+        ):
+            with self.subTest(source_fragment=exact_control):
+                self.assertIn(exact_control, source)
+
+    def test_heatmap_lifecycle_matches_observer_and_render_effect_cleanup(self):
+        contract = build_database_contract(self.seed)
+        notes = " ".join(contract.legacy_notes)
+        self.assertIn("ResizeObserver", notes)
+        self.assertIn("disconnects", notes)
+        self.assertIn("D3-render effect has no cleanup function", notes)
+        self.assertIn('activeTab is "split" or "heatmap"', notes)
+        self.assertIn("catalog mode unmounts it", notes)
+        self.assertIn("If displayedMaterials becomes empty", notes)
+        self.assertIn("categories, activeCategory, and onSelectCategory are passed but unused", notes)
+        self.assertIn("neither has a current UI setter", notes)
+        self.assertIn("materials: MaterialSpec[]", notes)
+        self.assertIn("optional onSelectCategory(string)", notes)
+        self.assertEqual(contract.lifecycle.background_work, "none")
+        self.assertEqual(contract.lifecycle.resources, ())
+        source = read_product_source("src/components/MaterialsPropertyHeatmapD3.tsx")
+        resize_effect = source.split("// ResizeObserver for fluid responsive D3 rendering", 1)[1].split(
+            "// Main D3 Rendering Engine", 1
+        )[0]
+        render_effect = source.split("// Main D3 Rendering Engine", 1)[1].split("const handleExportSVG", 1)[0]
+        self.assertIn("return () => observer.disconnect()", resize_effect)
+        self.assertIn("if (!svgRef.current || displayedMaterials.length === 0) return", render_effect)
+        self.assertNotIn("return () =>", render_effect)
+        parent = read_product_source("src/components/MaterialsDatabaseView.tsx")
+        self.assertIn('(activeTab === "split" || activeTab === "heatmap")', parent)
+
+    def test_contract_source_references_resolve_and_use_generated_docs_placeholder(self):
+        contract = build_database_contract(self.seed)
+        generated = frozenset({mr.module_doc_path("database")})
+        self.assertEqual(contract.tests.docs, "docs/modules/database.md")
+        self.assertEqual(mr.contract_ref_problems(contract, root=REPO_ROOT, generated=generated), [])
+        self.assertIn("src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
+                      contract.source_refs)
+        self.assertIn("src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
+                      contract.source_refs)
 
     def test_invalid_seed_identity_is_rejected(self):
         with self.assertRaises(ContractError):
