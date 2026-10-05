@@ -1,7 +1,7 @@
 # Metalliksa — Ürün Özeti
 
 **Gözden geçirme tarihi:** 2026-09-27  
-**Amaç:** Ürünün mevcut hedefini ve girişimcilik başvurularında kullanılabilecek, kanıtla uyumlu anlatımını tek yerde tutmak.
+**Amaç:** Ürünün mevcut hedefini ve kanıtla uyumlu anlatımını tek yerde tutmak.
 
 ## Ürün hedefi
 
