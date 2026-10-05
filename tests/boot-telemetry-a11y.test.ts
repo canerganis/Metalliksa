@@ -186,7 +186,7 @@ test("the boot artwork is decorative and uncaptioned by default; the hero respec
     assert.doesNotMatch(read(file), /\.mk-foundry-host[^{]*\{[^}]*(opacity|mask-image|animation)/, `${file}: the host (caption parent) is never masked or faded`);
   }
   // Module mastheads carry no artwork (the reticle is pure ornament), so there is no uncaptioned picture.
-  assert.doesNotMatch(read("src/index.css"), /metalliksa-foundry-art/);
+  assert.doesNotMatch(read("src/index.css"), /metalliksa-melt-pool/);
   const hero = read("src/components/BootHero.tsx");
   assert.match(hero, /prefers-reduced-motion: reduce/, "a reduced-motion change stops the sparks");
   assert.match(hero, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);

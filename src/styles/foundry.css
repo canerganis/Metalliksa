@@ -1,20 +1,19 @@
 /*
  * Foundry stage (cinemagraph). The frame keeps the artwork's 3:2 aspect, so every live layer is placed in
- * percentages of the picture: the beam runs down to the melt point at 74.2% / 14.6%.
- * The picture is toned towards silver (white-grey identity); the laser keeps its warmth.
+ * percentages of the picture: the beam runs down to the melt pool at 67.7% / 54.7%.
+ * The picture is silver, white and grey (porcelain identity); only the laser is warm.
  * Without motion everything rests on its base style: beam and bloom lit, rings and sparks hidden.
  */
 /* The host class (boot, atrium) decides position and size; the picture layer fills it and carries the
  * host's mask; the caption is a sibling of the picture, so it is never masked or faded. */
 :where(.mk-foundry-host) { position: relative; }
-.mk-foundry { --hx: 74.2%; --hy: 14.6%; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.mk-foundry .f-frame { position: absolute; top: 0; right: 0; height: 100%; aspect-ratio: 3 / 2; transform-origin: 72% 38%; }
+.mk-foundry { --hx: 67.7%; --hy: 54.7%; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mk-foundry .f-frame { position: absolute; top: 0; right: 0; height: 100%; aspect-ratio: 3 / 2; transform-origin: 67.7% 54.7%; }
 .mk-foundry .f-art {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(0.5) contrast(1.06) brightness(1.04);
   user-select: none;
 }
 
@@ -43,8 +42,8 @@
   background: radial-gradient(circle, #ffffff 0 5%, rgba(255, 226, 180, 0.95) 10%, rgba(255, 150, 70, 0.55) 24%, rgba(255, 110, 40, 0.18) 44%, transparent 68%);
   mix-blend-mode: screen;
 }
-/* Scan rings: new layer contours spreading over the curved top of the sphere. */
-.mk-foundry .f-rings { position: absolute; left: var(--hx); top: var(--hy); width: 26%; height: 17%; transform: translate(-50%, -50%) rotate(-14deg); }
+/* Ripples spreading over the powder bed (flattened by the bed's perspective). */
+.mk-foundry .f-rings { position: absolute; left: var(--hx); top: var(--hy); width: 18%; height: 7.8%; transform: translate(-50%, -50%); }
 .mk-foundry .f-rings i {
   position: absolute;
   inset: 0;

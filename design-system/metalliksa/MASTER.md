@@ -122,12 +122,14 @@ Module bodies were authored for a dark UI. The Tailwind ramps are re-pointed ins
 - `outline: 2px solid var(--mk-focus-color)` (cobalt), `outline-offset: 3px`, optional halo `--mk-focus-halo`.
 - The focus ring never animates or transitions.
 
-## 8b. Artwork provenance (public/images/metalliksa-foundry-art.webp)
+## 8b. Artwork provenance (public/images/metalliksa-melt-pool.svg)
 
-- **What is known:** the file is byte-identical to the asset committed in `codex/premium-ui` commit `a29012b` ("feat: art direct foundry interface", author 0000can0000). Size 109,868 bytes, sha256 `3f6b9ae6b32b51a628e2f19a0a83f97a25074f6010c918b861eca418b28a9c88`, git blob `7d9640b49d41901e3caebfe34aba8f61dcd76a2b`. That proves how it reached this branch, nothing more.
-- **What is not known (not recorded anywhere in the repository):** who or what created the image, its original source, and the licence or permitted use. No assumption is made about how it was produced.
-- **Before distribution:** the owner must record the creator/source and the usage rights here. Until then the picture is used only as decoration inside the local application.
-- **Honesty in the UI:** wherever the picture appears (boot, atrium) it carries the caption "Illustrative — not a simulation result" on an opaque pill that is never masked, faded or animated; module mastheads do not use the picture.
+- **Origin:** original work, composed in code for Metalliksa on 2026-10-05 (orchestra lane hero-opus, Claude Opus 5.5). It is a plain vector SVG: gradients, circles, paths and SVG filters only. It contains no raster image, font, text or third-party asset, and was not traced or derived from any existing picture. The SVG file itself is the source.
+- **Subject:** a laser melt pool on a metal powder bed in perspective, with solidified scan tracks converging to the horizon and the polished cut face of earlier layers showing melt-pool boundaries. Silver, white and grey; only the laser is warm.
+- **Status:** decorative illustration, not a simulation result and not data. Geometry, particle sizes and colours are artistic choices, not measurements.
+- **Live layers:** FoundryStage places the beam, bloom, ripples and sparks on the melt pool at 67.7% / 54.7% of the 3:2 frame (`--hx`/`--hy` in `src/styles/foundry.css`, `HIT_X`/`HIT_Y` in `src/components/BootHero.tsx`); keep those in step if the picture changes.
+- **Replaced:** the earlier raster `metalliksa-foundry-art.webp` (creator and licence never recorded) was removed in the same change.
+- **Captions:** no default caption (maintainer decision 2026-10-05); module mastheads do not use the picture.
 
 ## 9. Brand mark
 
