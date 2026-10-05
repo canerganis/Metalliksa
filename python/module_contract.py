@@ -581,7 +581,7 @@ class ModuleContract:
             _require(all(op.authority.timeout_ms is not None or
                          (op.authority.kind == "browser-local" and op.route is None and op.method is None)
                          for op in self.operations),
-                     f"{self.id}: contracted operations must declare authority.timeoutMs")
+                     f"{self.id}: routed/remote contracted operations must declare authority.timeoutMs")
             # emits lists only statuses the code really emits: an output without a
             # status key emits none, and an output with one must declare what it emits.
             carries_status = any(op.output.status_key is not None for op in self.operations)

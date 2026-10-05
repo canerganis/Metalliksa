@@ -256,6 +256,25 @@ class FieldAndAuthorityTests(unittest.TestCase):
         self.assertIsNone(contract.operations[0].authority.timeout_ms)
         self.assertEqual(mc.contract_from_dict(contract.to_dict()), contract)
 
+    def test_route_free_exception_does_not_accept_remote_or_partial_routes(self):
+        cases = (
+            (mc.Authority(kind="node-provider"), None, None),
+            (mc.Authority(kind="browser-local", exception_reason="Local edit."), None, "POST"),
+            (mc.Authority(kind="browser-local", exception_reason="Local edit."), "/api/edit", None),
+        )
+        for authority, route, method in cases:
+            with self.subTest(kind=authority.kind, route=route, method=method), self.assertRaises(mc.ContractError):
+                mc.Operation(id="edit", authority=authority, route=route, method=method)
+
+    def test_local_deadline_exception_preserves_pending_oracle_evidence_ceiling(self):
+        operation = mc.Operation(id="edit", route=None, method=None,
+            authority=mc.Authority(kind="browser-local", exception_reason="Local estimate, not validated."),
+            output=mc.OutputSchema(fields=("specimen",), status_key=None))
+        with self.assertRaisesRegex(mc.ContractError, "pending oracle caps"):
+            _contract(operations=(operation,), tests=mc.TestRefs(oracle=mc.Oracle(status="pending")),
+                evidence=mc.Evidence(emits=(), ceiling="validated-simulation",
+                    forbidden_claims=mc.FORBIDDEN_CLAIM_KEYS, note="No validation evidence."))
+
     def test_legacy_notes_are_unique_text(self):
         with self.assertRaises(mc.ContractError):
             _contract(legacy_notes=("same", "same"))
