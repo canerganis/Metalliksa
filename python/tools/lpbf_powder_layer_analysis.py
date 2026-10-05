@@ -257,6 +257,41 @@ def reference_input(material: str, P: float, v: float, d: float, layer_um: float
     return raw
 
 
+def reference_settings(budget_s: float, per_case_s: float = REF_PER_CASE_S) -> Dict[str, Any]:
+    """Identity-bearing settings for the bounded reference block."""
+    return {"mode": "standard", "backend": "reference", "material": "316L Stainless Steel",
+            "mesh_um": REF_MESH_UM, "trackLength_um": REF_TRACK_LENGTH_UM, "preheat_C": REF_PREHEAT_C,
+            "layer_um 0": f"bare-plate, square, sourcePenetration_um {REF_SOURCE_PENETRATION_UM:g} "
+                          "(as lpbf_dataset_comparison.py)",
+            "layer_um 30/60": f"powder-layer, packingFraction {PACKING_CODE}, powderConductivityRatio "
+                              f"{CONDUCTIVITY_RATIO_CODE} (DEFAULTS), sourcePenetration_um default",
+            "totalBudget_s": budget_s, "perCaseBudget_s": per_case_s}
+
+
+def validate_reused_reference(src: Any, expected_hash: str, expected_dataset_hash: str,
+                              expected_settings: Dict[str, Any]) -> Dict[str, Any]:
+    """Reject malformed or stale records before reusing a reference result block."""
+    if not isinstance(src, dict):
+        raise ValueError("reference record must be a JSON object")
+    if src.get("schema") != SCHEMA:
+        raise ValueError("reference record schema is missing or incompatible")
+    if src.get("implementationHash") != expected_hash:
+        raise ValueError("reference record implementation fingerprint is stale or missing")
+    datasets = src.get("datasets")
+    if not isinstance(datasets, list) or not datasets or not isinstance(datasets[0], dict):
+        raise ValueError("reference record datasets block is malformed")
+    if datasets[0].get("sha256") != expected_dataset_hash:
+        raise ValueError("reference record dataset hash is stale or missing")
+    block = src.get("referenceTransient")
+    if not isinstance(block, dict) or not isinstance(block.get("settings"), dict):
+        raise ValueError("referenceTransient block or its settings are malformed")
+    if block.get("settings") != expected_settings:
+        raise ValueError("referenceTransient settings are incompatible with this report")
+    if not isinstance(block.get("rows"), list) or not isinstance(block.get("counts"), dict):
+        raise ValueError("referenceTransient results are malformed")
+    return block
+
+
 def _ref_worker(raw: Dict[str, Any], result_path: str) -> None:
     import lpbf_simulation
     try:
@@ -316,13 +351,7 @@ def reference_transient(rows: Sequence[Dict[str, Any]], budget_s: float, per_cas
     counts["notRun"] = sum(1 for x in out_rows if x["status"].startswith("not-run"))
     powder = [x for x in out_rows if x["layer_um"] > 0]
     return {
-        "settings": {"mode": "standard", "backend": "reference", "material": "316L Stainless Steel",
-                     "mesh_um": REF_MESH_UM, "trackLength_um": REF_TRACK_LENGTH_UM, "preheat_C": REF_PREHEAT_C,
-                     "layer_um 0": f"bare-plate, square, sourcePenetration_um {REF_SOURCE_PENETRATION_UM:g} "
-                                   "(as lpbf_dataset_comparison.py)",
-                     "layer_um 30/60": f"powder-layer, packingFraction {PACKING_CODE}, powderConductivityRatio "
-                                       f"{CONDUCTIVITY_RATIO_CODE} (DEFAULTS), sourcePenetration_um default",
-                     "totalBudget_s": budget_s, "perCaseBudget_s": per_case_s},
+        "settings": reference_settings(budget_s, per_case_s),
         "selection": ("2 Hofmann parameter sets with P <= 100 W that have a bare-plate row and whose bare-plate "
                       "row completed (100 W, 900 mm/s, 80 um) or hit the boiling stop (50 W, 300 mm/s, 50 um, "
                       "three thickness levels in the data) in lpbf_dataset_comparison; x layer 0/30/60 um."),
@@ -344,18 +373,22 @@ def zehner_schlunder(porosity: float, k_gas: float, k_solid: float, shape_c: flo
     """Zehner-Schlunder (1970) stagnant effective conductivity of a bed of monosized spheres, gas conduction
     only (no radiation, no contact conduction, no Smoluchowski effect), in the VDI Heat Atlas form:
 
-        k_e/k_g = 1 - sqrt(1-e) + 2 sqrt(1-e)/(1 - B kappa) *
-                  [ (1-kappa) B/(1 - B kappa) ln(1/(B kappa)) - (B+1)/2 - (B-1)/(1 - B kappa) ],
-        kappa = k_g/k_s,  B = C ((1-e)/e)^(10/9),  C = 1.25 for spheres.
+        k_e/k_g = 1 - sqrt(1-e) + 2 sqrt(1-e)/N *
+                  [ (1-1/kappa) B/N^2 ln(kappa/B) - (B+1)/2 - (B-1)/N ],
+        kappa = k_s/k_g, N = 1 - B/kappa,
+        B = C ((1-e)/e)^(10/9), C = 1.25 for spheres; e is porosity.
 
-    Returns k_e in W/m/K. Limits checked in the tests: kappa -> 1 gives k_e = k_g.
+    The logarithmic term has N^2 in its denominator. Equivalently, for solid packing fraction
+    p = 1-e, B = C (p/(1-p))^(10/9); p -> 1 is the solid limit and e -> 1 is the gas limit.
+
+    Returns k_e in W/m/K. The tests check equal phase conductivities and both phase-fraction limits.
     """
     e = porosity
-    kappa = k_gas / k_solid
+    kappa = k_solid / k_gas
     B = shape_c * ((1.0 - e) / e) ** (10.0 / 9.0)
-    bk = B * kappa
-    bracket = ((1.0 - kappa) * B / (1.0 - bk)) * math.log(1.0 / bk) - (B + 1.0) / 2.0 - (B - 1.0) / (1.0 - bk)
-    ratio = 1.0 - math.sqrt(1.0 - e) + (2.0 * math.sqrt(1.0 - e) / (1.0 - bk)) * bracket
+    N = 1.0 - B / kappa
+    bracket = ((1.0 - 1.0 / kappa) * B / (N * N)) * math.log(kappa / B) - (B + 1.0) / 2.0 - (B - 1.0) / N
+    ratio = 1.0 - math.sqrt(1.0 - e) + (2.0 * math.sqrt(1.0 - e) / N) * bracket
     return ratio * k_gas
 
 
@@ -370,23 +403,24 @@ def literature_block() -> Dict[str, Any]:
             cases.append({"packing": packing, "porosity": round(1.0 - packing, 4), "k_gas_W_mK": k_g,
                           "k_solid_W_mK": ks, "k_solidSource": ks_label, "shapeFactorC": 1.25,
                           "B": round(1.25 * (packing / (1.0 - packing)) ** (10.0 / 9.0), 4),
-                          "kappa": round(k_g / ks, 6), "k_eff_W_mK": round(ke, 4), "k_eff_over_k_solid": round(ke / ks, 5),
+                          "kappa": round(ks / k_g, 2), "k_eff_W_mK": round(ke, 4), "k_eff_over_k_solid": round(ke / ks, 5),
                           "ratioVsCode0p12": round((ke / ks) / CONDUCTIVITY_RATIO_CODE, 3)})
     sens = []
-    for kg in (0.0177 * 0.8, 0.0177 * 1.25):
+    for kg in (0.0177 * 0.75, 0.0177 * 1.25):
         ke = zehner_schlunder(1.0 - 0.55, kg, k_s)
         sens.append({"k_gas_W_mK": round(kg, 5), "k_eff_over_k_solid": round(ke / k_s, 5),
-                     "note": "+-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"})
+                     "note": "symmetric +/-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"})
     return {
         "status": "PROPOSAL for a reviewed `literature`-tagged law; nothing in the model was changed",
         "codeValue": {"powderConductivityRatio": CONDUCTIVITY_RATIO_CODE, "packingFraction": PACKING_CODE,
                       "source": "none cited (lpbf_simulation.py DEFAULTS line 86; applied at line 575; bounds line 98)"},
         "laws": [
             {"name": "Zehner-Schlunder", "citation": "Zehner & Schlunder (1970), Chem. Ing. Tech. 42(14), 933-941",
-             "form": "gas-conduction-only stagnant bed of spheres, VDI Heat Atlas form, shape factor C = 1.25 "
-                     "(value for spheres confirmed by a web search; the closed form itself is implemented in "
-                     "this tool from recall of the VDI form, checked only by the kappa -> 1 limit and a "
-                     "hand calculation, NOT against the 1970 paper)",
+             "equationSource": "VDI Heat Atlas form reproduced as Eq. 7 in Particle-Resolved Computational Fluid Dynamics as the Basis for Thermal Process Intensification of Fixed-Bed Reactors on Multiple Scales (2021), https://www.mdpi.com/1996-1073/14/10/2913",
+             "form": "gas-conduction-only stagnant bed of spheres; published VDI Heat Atlas form with "
+                     "kappa = k_solid/k_gas, N = 1 - B/kappa and the logarithmic term denominator N^2; "
+                     "B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression was independently "
+                     "re-derived from its published form and checked against an independent oracle and limits.",
              "computed": True},
             {"name": "Sih & Barlow", "citation": "Sih & Barlow (2004), Particulate Sci. Technol. 22(3), 427-440",
              "form": "ZS-type bed model extended with radiation and a particle emissivity model, up to high temperature",
@@ -412,11 +446,11 @@ def literature_block() -> Dict[str, Any]:
                        "radiation": "not included", "contactConduction": "not included",
                        "temperature": "about 300 K; the bed conductivity at melt-relevant temperature is unsourced"},
             "cases": cases, "k_gasSensitivity_packing_0p55": sens,
-            "reading": ("gas-conduction-only Zehner-Schlunder gives a ratio far BELOW the code's 0.12 for "
-                        "0.55-0.60 packing in argon (see cases); contact, necking and radiation add to it and are "
-                        "not computed here (unsourced), so this is a low-side reference, not a bound and not a "
-                        "recommended value. The 0.12 is therefore neither confirmed nor contradicted by these "
-                        "laws: the missing contact/radiation terms matter most near the melt.")},
+            "reading": ("The computed gas-conduction-only ratios are 0.01342-0.01653 (0.112-0.138 times the "
+                        "uncited code value 0.12) for these two room-temperature inputs. Contact conduction and "
+                        "radiation are excluded, so this calculation is not a complete packed-bed estimate and "
+                        "does not establish the suitability of 0.12. These inputs are illustrative; the gas "
+                        "conductivity is unsourced and the solid conductivity is a repository estimate.")},
         "measuredSnippet": {"source": "PMC7448231 (laser-flash inverse study of IN625 powder)",
                             "value": "powder conductivity 0.65-1.02 W/m/K reported for IN625 (other alloy; "
                                      "solid conductivity and conditions unsourced here, so no ratio is computed)"},
@@ -465,9 +499,16 @@ def build_document(budget_s: float, skip_reference: bool, generated_at: str,
     picked = [rows[i] for i in (0, 120, 260, 400, 600)]  # fixed spread over the table, mixed layers/spots
     doc["kernelSensitivity"] = kernel_sensitivity(picked)
     if reuse_reference is not None:
-        src = json.loads(reuse_reference.read_bytes().decode("utf-8"))
-        block = dict(src["referenceTransient"])
-        block["reusedFrom"] = str(reuse_reference.name)
+        try:
+            src = json.loads(reuse_reference.read_bytes().decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"reference record is not valid UTF-8 JSON: {exc}") from exc
+        block = dict(validate_reused_reference(
+            src, doc["implementationHash"], doc["datasets"][0]["sha256"], reference_settings(budget_s)))
+        block["reusedFrom"] = {"file": reuse_reference.name, "schema": src["schema"],
+                               "implementationHash": src["implementationHash"],
+                               "datasetSha256": src["datasets"][0]["sha256"],
+                               "settings": dict(block["settings"])}
         doc["referenceTransient"] = block
     elif skip_reference:
         doc["referenceTransient"] = {"status": "skipped (--skip-reference)"}
@@ -492,7 +533,7 @@ def build_document(budget_s: float, skip_reference: bool, generated_at: str,
         "The kernel sensitivity is a check of the code path (the layer argument is ignored), not of physics.",
         "The reference-transient block is bounded (<= 6 cases) at a coarse 20 um mesh; layer 0 uses a different "
         "surface mode and an arbitrary source penetration, so it is not a clean powder-on/off contrast.",
-        "Literature: only the Zehner-Schlunder form was computed, from recalled formula, gas-only; Sih-Barlow, "
+        "Literature: only the published Zehner-Schlunder gas-only form was computed; Sih-Barlow, "
         "Yagi-Kunii and Gusarov ratios are `unsourced`.",
     ]
     return _round(doc)
@@ -596,6 +637,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
     a("")
     for law in lit["laws"]:
         a(f"- **{law['name']}** - {law['citation']}. {law['form']}. "
+          + (f"Equation source: {law['equationSource']}. " if law.get("equationSource") else "")
           + ("Computed below." if law["computed"] else f"Ratio: `{law['ratio']}` ({law['reason']})."))
     a("")
     z = lit["zehnerSchlunderComputed"]
@@ -609,7 +651,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
         a(f"| {c['packing']} | {c['porosity']} | {c['B']} | {c['kappa']} | {c['k_eff_W_mK']} | "
           f"{c['k_eff_over_k_solid']} | x{c['ratioVsCode0p12']} |")
     a("")
-    a("k_gas sensitivity at packing 0.55 (+-25 %, illustrative): "
+    a("k_gas sensitivity at packing 0.55 (symmetric +/-25 %, illustrative only): "
       + "; ".join(f"k_gas {s['k_gas_W_mK']} -> {s['k_eff_over_k_solid']}" for s in z["k_gasSensitivity_packing_0p55"]) + ".")
     a("")
     a(z["reading"])

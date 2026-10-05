@@ -439,7 +439,7 @@
   "Thickness is not randomised within a set: differences between levels can include run-order, plate or re-coating effects, so the ratios are descriptive, not causal.",
   "The kernel sensitivity is a check of the code path (the layer argument is ignored), not of physics.",
   "The reference-transient block is bounded (<= 6 cases) at a coarse 20 um mesh; layer 0 uses a different surface mode and an arbitrary source penetration, so it is not a clean powder-on/off contrast.",
-  "Literature: only the Zehner-Schlunder form was computed, from recalled formula, gas-only; Sih-Barlow, Yagi-Kunii and Gusarov ratios are `unsourced`."
+  "Literature: only the published Zehner-Schlunder gas-only form was computed; Sih-Barlow, Yagi-Kunii and Gusarov ratios are `unsourced`."
  ],
  "literature": {
   "codeValue": {
@@ -451,7 +451,8 @@
    {
     "citation": "Zehner & Schlunder (1970), Chem. Ing. Tech. 42(14), 933-941",
     "computed": true,
-    "form": "gas-conduction-only stagnant bed of spheres, VDI Heat Atlas form, shape factor C = 1.25 (value for spheres confirmed by a web search; the closed form itself is implemented in this tool from recall of the VDI form, checked only by the kappa -> 1 limit and a hand calculation, NOT against the 1970 paper)",
+    "equationSource": "VDI Heat Atlas form reproduced as Eq. 7 in Particle-Resolved Computational Fluid Dynamics as the Basis for Thermal Process Intensification of Fixed-Bed Reactors on Multiple Scales (2021), https://www.mdpi.com/1996-1073/14/10/2913",
+    "form": "gas-conduction-only stagnant bed of spheres; published VDI Heat Atlas form with kappa = k_solid/k_gas, N = 1 - B/kappa and the logarithmic term denominator N^2; B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression was independently re-derived from its published form and checked against an independent oracle and limits.",
     "name": "Zehner-Schlunder"
    },
    {
@@ -489,12 +490,12 @@
    "cases": [
     {
      "B": 1.5622,
-     "k_eff_W_mK": 0.2183,
-     "k_eff_over_k_solid": 0.01339,
+     "k_eff_W_mK": 0.2188,
+     "k_eff_over_k_solid": 0.01342,
      "k_gas_W_mK": 0.0177,
      "k_solidSource": "repo estimated 316L k_solid (room-temperature value)",
      "k_solid_W_mK": 16.3,
-     "kappa": 0.00109,
+     "kappa": 920.9,
      "packing": 0.55,
      "porosity": 0.45,
      "ratioVsCode0p12": 0.112,
@@ -502,15 +503,15 @@
     },
     {
      "B": 1.9614,
-     "k_eff_W_mK": 0.2687,
-     "k_eff_over_k_solid": 0.01649,
+     "k_eff_W_mK": 0.2694,
+     "k_eff_over_k_solid": 0.01653,
      "k_gas_W_mK": 0.0177,
      "k_solidSource": "repo estimated 316L k_solid (room-temperature value)",
      "k_solid_W_mK": 16.3,
-     "kappa": 0.00109,
+     "kappa": 920.9,
      "packing": 0.6,
      "porosity": 0.4,
-     "ratioVsCode0p12": 0.137,
+     "ratioVsCode0p12": 0.138,
      "shapeFactorC": 1.25
     }
    ],
@@ -526,17 +527,17 @@
    },
    "k_gasSensitivity_packing_0p55": [
     {
-     "k_eff_over_k_solid": 0.01116,
-     "k_gas_W_mK": 0.01416,
-     "note": "+-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
+     "k_eff_over_k_solid": 0.0106,
+     "k_gas_W_mK": 0.01328,
+     "note": "symmetric +/-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
     },
     {
-     "k_eff_over_k_solid": 0.01605,
+     "k_eff_over_k_solid": 0.01609,
      "k_gas_W_mK": 0.02212,
-     "note": "+-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
+     "note": "symmetric +/-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
     }
    ],
-   "reading": "gas-conduction-only Zehner-Schlunder gives a ratio far BELOW the code's 0.12 for 0.55-0.60 packing in argon (see cases); contact, necking and radiation add to it and are not computed here (unsourced), so this is a low-side reference, not a bound and not a recommended value. The 0.12 is therefore neither confirmed nor contradicted by these laws: the missing contact/radiation terms matter most near the melt."
+   "reading": "The computed gas-conduction-only ratios are 0.01342-0.01653 (0.112-0.138 times the uncited code value 0.12) for these two room-temperature inputs. Contact conduction and radiation are excluded, so this calculation is not a complete packed-bed estimate and does not establish the suitability of 0.12. These inputs are illustrative; the gas conductivity is unsourced and the solid conductivity is a repository estimate."
   }
  },
  "matchedSets": {
@@ -2867,6 +2868,24 @@
   },
   "note": "layer 0 differs from 30/60 not only by the powder layer but also by the surface mode and the arbitrary bare-plate sourcePenetration_um; 20 um mesh is coarse: any completed case with depth < 2.5 cells is meshLimited (cell-quantised). completed/boiling-stop is the reference transient's own validity stop, not loosened; a boiling stop on powder is a finding about the homogenised powder model, not a failure of this analysis. Not validation.",
   "powderCasesCompleted": 0,
+  "reusedFrom": {
+   "datasetSha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8",
+   "file": "LPBF_POWDER_LAYER_ANALYSIS_2026-10-05.json",
+   "implementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+   "schema": "lpbf-powder-layer-analysis-1",
+   "settings": {
+    "backend": "reference",
+    "layer_um 0": "bare-plate, square, sourcePenetration_um 40 (as lpbf_dataset_comparison.py)",
+    "layer_um 30/60": "powder-layer, packingFraction 0.55, powderConductivityRatio 0.12 (DEFAULTS), sourcePenetration_um default",
+    "material": "316L Stainless Steel",
+    "mesh_um": 20.0,
+    "mode": "standard",
+    "perCaseBudget_s": 240.0,
+    "preheat_C": 20.0,
+    "totalBudget_s": 900.0,
+    "trackLength_um": 600.0
+   }
+  },
   "rows": [
    {
     "beamDiameter_um": 80.0,

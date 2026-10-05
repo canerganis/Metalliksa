@@ -1,5 +1,6 @@
 """Tests for tools/lpbf_powder_layer_analysis.py (pure statistics on a synthetic table, one solver check)."""
 
+import math
 import sys
 import unittest
 from pathlib import Path
@@ -27,6 +28,27 @@ def synthetic():
     rows.append(row(i, 100.0, 500.0, 80.0, 0.0, 120.0, 70.0)); i += 1
     rows.append(row(i, 999.0, 500.0, 80.0, 30.0, 1.0, 1.0))
     return rows
+
+
+def published_zehner_oracle(porosity, k_gas, k_solid, shape_c=1.25):
+    """Direct transcription of the published VDI form, independent of the tool implementation."""
+    conductivity_ratio = k_solid / k_gas
+    shape = shape_c * ((1.0 - porosity) / porosity) ** (10.0 / 9.0)
+    N = 1.0 - shape / conductivity_ratio
+    logarithmic_contribution = (
+        (1.0 - 1.0 / conductivity_ratio)
+        * shape
+        * math.log(conductivity_ratio / shape)
+        / (N**2)
+    )
+    geometric_contribution = (
+        -(shape + 1.0) / 2.0 - (shape - 1.0) / N
+    )
+    return k_gas * (
+        1.0 - math.sqrt(1.0 - porosity)
+        + 2.0 * math.sqrt(1.0 - porosity) / N
+        * (logarithmic_contribution + geometric_contribution)
+    )
 
 
 class PowderLayerAnalysisTests(unittest.TestCase):
@@ -81,10 +103,52 @@ class PowderLayerAnalysisTests(unittest.TestCase):
         self.assertEqual(set(m["bySpot_um"]), {"80"})
 
     def test_zehner_schlunder_limit(self):
-        # k_gas == k_solid -> the bed conducts like the gas
-        self.assertAlmostEqual(pla.zehner_schlunder(0.4, 1.0, 1.0 + 1e-9), 1.0, places=6)
-        r = pla.zehner_schlunder(0.45, 0.0177, 16.3) / 16.3
-        self.assertTrue(0.005 < r < 0.12)
+        # Equal phase conductivities give that same conductivity at any porosity.
+        self.assertAlmostEqual(pla.zehner_schlunder(0.4, 1.0, 1.0), 1.0, places=12)
+        # porosity -> 1 is all gas; solid packing fraction -> 1 (porosity -> 0) is all solid.
+        self.assertAlmostEqual(pla.zehner_schlunder(1.0 - 1e-7, 0.0177, 16.3), 0.0177, delta=1e-6)
+        self.assertAlmostEqual(pla.zehner_schlunder(1e-9, 0.0177, 16.3), 16.3, delta=1e-4)
+
+    def test_zehner_schlunder_independent_published_oracle(self):
+        cases = ((0.45, 0.0177, 16.3), (0.4, 0.021, 2.5), (0.3, 0.1, 0.5))
+        for args in cases:
+            with self.subTest(args=args):
+                self.assertAlmostEqual(
+                    pla.zehner_schlunder(*args), published_zehner_oracle(*args), places=12
+                )
+
+    def test_reference_reuse_rejects_stale_identity_and_settings(self):
+        settings = pla.reference_settings(900.0)
+        valid = {"schema": pla.SCHEMA, "implementationHash": "impl", "datasets": [{"sha256": "data"}],
+                 "referenceTransient": {"settings": settings, "rows": [], "counts": {"cases": 0}}}
+        self.assertEqual(pla.validate_reused_reference(valid, "impl", "data", settings),
+                         valid["referenceTransient"])
+        stale_variants = []
+        for key, value in (("schema", "old-schema"), ("implementationHash", "old-impl")):
+            stale = dict(valid)
+            stale[key] = value
+            stale_variants.append(stale)
+        stale_hash = dict(valid)
+        stale_hash["datasets"] = [{"sha256": "old-data"}]
+        stale_variants.append(stale_hash)
+        stale_settings = dict(valid)
+        stale_settings["referenceTransient"] = {**valid["referenceTransient"],
+                                                  "settings": {**settings, "mesh_um": 10}}
+        stale_variants.append(stale_settings)
+        for source in stale_variants:
+            with self.subTest(source=source):
+                with self.assertRaises(ValueError):
+                    pla.validate_reused_reference(source, "impl", "data", settings)
+
+    def test_reference_reuse_rejects_malformed_blocks(self):
+        settings = pla.reference_settings(900.0)
+        base = {"schema": pla.SCHEMA, "implementationHash": "impl", "datasets": [{"sha256": "data"}]}
+        for block in (None, [], {"settings": []}, {"settings": settings},
+                      {"settings": settings, "rows": {}, "counts": {}}):
+            source = {**base, "referenceTransient": block}
+            with self.subTest(block=block):
+                with self.assertRaises(ValueError):
+                    pla.validate_reused_reference(source, "impl", "data", settings)
 
     def test_kernel_sensitivity_one_row(self):
         rows = [row(0, 200.0, 800.0, 80.0, 30.0, 100.0, 60.0)]

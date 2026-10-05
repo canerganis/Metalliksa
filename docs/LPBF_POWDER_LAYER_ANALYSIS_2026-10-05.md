@@ -77,7 +77,7 @@ layer 0 differs from 30/60 not only by the powder layer but also by the surface 
 
 **PROPOSAL for a reviewed `literature`-tagged law; nothing in the model was changed.** Current code: `powderConductivityRatio` = 0.12, `packingFraction` = 0.55; source: none cited (lpbf_simulation.py DEFAULTS line 86; applied at line 575; bounds line 98).
 
-- **Zehner-Schlunder** - Zehner & Schlunder (1970), Chem. Ing. Tech. 42(14), 933-941. gas-conduction-only stagnant bed of spheres, VDI Heat Atlas form, shape factor C = 1.25 (value for spheres confirmed by a web search; the closed form itself is implemented in this tool from recall of the VDI form, checked only by the kappa -> 1 limit and a hand calculation, NOT against the 1970 paper). Computed below.
+- **Zehner-Schlunder** - Zehner & Schlunder (1970), Chem. Ing. Tech. 42(14), 933-941. gas-conduction-only stagnant bed of spheres; published VDI Heat Atlas form with kappa = k_solid/k_gas, N = 1 - B/kappa and the logarithmic term denominator N^2; B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression was independently re-derived from its published form and checked against an independent oracle and limits.. Equation source: VDI Heat Atlas form reproduced as Eq. 7 in Particle-Resolved Computational Fluid Dynamics as the Basis for Thermal Process Intensification of Fixed-Bed Reactors on Multiple Scales (2021), https://www.mdpi.com/1996-1073/14/10/2913. Computed below.
 - **Sih & Barlow** - Sih & Barlow (2004), Particulate Sci. Technol. 22(3), 427-440. ZS-type bed model extended with radiation and a particle emissivity model, up to high temperature. Ratio: `unsourced` (formula not retrieved or verified in this run; no number is quoted).
 - **Yagi-Kunii** - Yagi & Kunii (1957), AIChE J. 3(3), 373-381. stagnant bed with gas, contact and radiation paths in series/parallel. Ratio: `unsourced` (needs void-structure constants (phi, beta, gamma) and radiation coefficients that were not retrieved or verified in this run; no number is quoted).
 - **Gusarov et al.** - Gusarov, Laoui, Froyen, Titov (2003), Int. J. Heat Mass Transfer 46(6), 1103-1109. contact (neck) conductivity of a sintered/packed powder bed, gas conduction treated as secondary at ambient pressure. Ratio: `unsourced` (the contact-conductivity expression and the neck-size input are not available here; the page read in this run states the qualitative conclusion only; no number is quoted).
@@ -86,12 +86,12 @@ Zehner-Schlunder inputs: argon, 1 bar, about 300 K; k_gas = 0.0177 W/m/K (unsour
 
 | packing | porosity | B | kappa | k_eff W/m/K | k_eff / k_solid | vs code 0.12 |
 |---|---|---|---|---|---|---|
-| 0.55 | 0.45 | 1.5622 | 0.00109 | 0.2183 | 0.01339 | x0.112 |
-| 0.6 | 0.4 | 1.9614 | 0.00109 | 0.2687 | 0.01649 | x0.137 |
+| 0.55 | 0.45 | 1.5622 | 920.9 | 0.2188 | 0.01342 | x0.112 |
+| 0.6 | 0.4 | 1.9614 | 920.9 | 0.2694 | 0.01653 | x0.138 |
 
-k_gas sensitivity at packing 0.55 (+-25 %, illustrative): k_gas 0.01416 -> 0.01116; k_gas 0.02212 -> 0.01605.
+k_gas sensitivity at packing 0.55 (symmetric +/-25 %, illustrative only): k_gas 0.01328 -> 0.0106; k_gas 0.02212 -> 0.01609.
 
-gas-conduction-only Zehner-Schlunder gives a ratio far BELOW the code's 0.12 for 0.55-0.60 packing in argon (see cases); contact, necking and radiation add to it and are not computed here (unsourced), so this is a low-side reference, not a bound and not a recommended value. The 0.12 is therefore neither confirmed nor contradicted by these laws: the missing contact/radiation terms matter most near the melt.
+The computed gas-conduction-only ratios are 0.01342-0.01653 (0.112-0.138 times the uncited code value 0.12) for these two room-temperature inputs. Contact conduction and radiation are excluded, so this calculation is not a complete packed-bed estimate and does not establish the suitability of 0.12. These inputs are illustrative; the gas conductivity is unsourced and the solid conductivity is a repository estimate.
 
 Measured snippet: powder conductivity 0.65-1.02 W/m/K reported for IN625 (other alloy; solid conductivity and conditions unsourced here, so no ratio is computed) (PMC7448231 (laser-flash inverse study of IN625 powder)).
 
@@ -109,7 +109,7 @@ A later reviewed change may replace the uncited 0.12 by a `literature`-tagged te
 - Thickness is not randomised within a set: differences between levels can include run-order, plate or re-coating effects, so the ratios are descriptive, not causal.
 - The kernel sensitivity is a check of the code path (the layer argument is ignored), not of physics.
 - The reference-transient block is bounded (<= 6 cases) at a coarse 20 um mesh; layer 0 uses a different surface mode and an arbitrary source penetration, so it is not a clean powder-on/off contrast.
-- Literature: only the Zehner-Schlunder form was computed, from recalled formula, gas-only; Sih-Barlow, Yagi-Kunii and Gusarov ratios are `unsourced`.
+- Literature: only the published Zehner-Schlunder gas-only form was computed; Sih-Barlow, Yagi-Kunii and Gusarov ratios are `unsourced`.
 
 ## Provenance
 
