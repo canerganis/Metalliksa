@@ -151,6 +151,8 @@ class Phase8CfdKey(unittest.TestCase):
             try:
                 result = cfd_multiphysics(p, m, artifact_dir=tmp)
             except NotImplementedError as exc:
+                if "Fabrication of powder bed via random packing is disabled" not in str(exc):
+                    raise
                 self.skipTest(f"cfd_multiphysics currently refuses to run (powder-bed packing disabled): {exc}")
 
         # The key must exist (value may be {} if WSL/OpenFOAM unavailable)

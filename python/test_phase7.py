@@ -40,6 +40,8 @@ class Phase7ShieldingGasAndPlume(unittest.TestCase):
             try:
                 res = cfd_multiphysics(p, m, artifact_dir=tmp)
             except NotImplementedError as exc:
+                if "Fabrication of powder bed via random packing is disabled" not in str(exc):
+                    raise
                 self.skipTest(f"cfd_multiphysics currently refuses to run (powder-bed packing disabled): {exc}")
             diag = res.get("numericalDiagnostics", {})
         
