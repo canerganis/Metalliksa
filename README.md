@@ -15,6 +15,12 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/overview.png" alt="Metalliksa Overview: Built by light, layer by layer, over a rendered LPBF melt-pool scene" width="920" />
+</p>
+
+<p align="center"><sub>The Overview page. The artwork is an original illustration generated in code, not a simulation result.</sub></p>
+
 ---
 
 ## What it is
