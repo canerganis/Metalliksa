@@ -87,3 +87,12 @@ test('autoFitTafel fits every benchmark dataset without NaN or infinite outputs'
     }
   }
 });
+
+test('autoFitTafel preserves an explicitly zero SHE reference offset', () => {
+  const dataset = syntheticBv();
+  dataset.metadata.referenceElectrode = 'SHE';
+  dataset.metadata.refOffsetVsSHE = 0;
+  const fit = mod().autoFitTafel(dataset);
+  assert.notEqual(fit.eCorr, null);
+  assert.equal(fit.eCorrSHE, fit.eCorr);
+});
