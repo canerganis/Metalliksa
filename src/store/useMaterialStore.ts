@@ -122,6 +122,13 @@ export interface MaterialStore {
 // Physics Calculation Helpers
 // ----------------------------------------------------------------------
 
+function isValidCompositionInput(value: unknown): value is Record<string, number> {
+  return !!value && typeof value === "object" && !Array.isArray(value)
+    && Object.entries(value).every(([element, percentage]) => element.trim().length > 0
+      && typeof percentage === "number" && Number.isFinite(percentage)
+      && percentage >= 0 && percentage <= 100);
+}
+
 export const ELEMENT_DENSITIES: Record<string, number> = {
   Ni: 8.908,
   Fe: 7.874,
@@ -715,7 +722,8 @@ export const useMaterialStore = create<MaterialStore>()(
 
       updateComposition: (newComposition, customName, metadataPatch, sourceTab = "Alloy Formulator (Tab 1)") => {
         const current = get().activeMaterialSpecimen;
-        const resolvedComp = typeof newComposition === "function" ? newComposition(current.composition) : newComposition;
+        const resolvedComp = typeof newComposition === "function" ? newComposition({ ...current.composition }) : newComposition;
+        if (!isValidCompositionInput(resolvedComp)) return;
         // Atomic-percent edits retain their unit and identity; weight-percent models are not evaluated.
         if (current.unit === "at_pct") {
           const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
@@ -831,9 +839,10 @@ export const useMaterialStore = create<MaterialStore>()(
       },
 
       setElement: (element, percentage) => {
+        if (!element.trim() || !Number.isFinite(percentage) || percentage < 0 || percentage > 100) return;
         const current = get().activeMaterialSpecimen;
         const newComp = { ...current.composition };
-        if (percentage <= 0) {
+        if (percentage === 0) {
           delete newComp[element];
         } else {
           newComp[element] = parseFloat(percentage.toFixed(3));
@@ -850,8 +859,9 @@ export const useMaterialStore = create<MaterialStore>()(
 
       normalizeComposition: () => {
         const current = get().activeMaterialSpecimen;
+        if (!isValidCompositionInput(current.composition)) return;
         const total = Object.values(current.composition).reduce((acc, val) => acc + (typeof val === "number" ? val : 0), 0);
-        if (total <= 0) return;
+        if (!Number.isFinite(total) || total <= 0) return;
         const factor = 100 / total;
         const normalized: Record<string, number> = {};
         for (const [el, pct] of Object.entries(current.composition)) {
@@ -961,7 +971,7 @@ export const useMaterialStore = create<MaterialStore>()(
       importFromJSON: (jsonString) => {
         try {
           const parsed = JSON.parse(jsonString);
-          if (parsed && parsed.composition && typeof parsed.composition === "object") {
+          if (parsed && isValidCompositionInput(parsed.composition)) {
             const derived = deriveProperties(
               parsed.composition,
               parsed.name || "Imported Specimen",

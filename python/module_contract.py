@@ -283,8 +283,8 @@ class OutputSchema:
     # authority's output carries no evidence status at all (then emits is empty).
     status_key: Optional[str] = "evidenceStatus"
     # Status-like fields that are transport values, with every value the authority
-    # can put there (e.g. ("status", ("success",))). None of them may be an evidence
-    # status or a claim; any other status-like field is rejected.
+    # can put there (e.g. ("status", ("success",))). Explicit availability-only
+    # outputs may use unavailable without emitting evidence; claims stay forbidden.
     transport_values: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
 
     def __post_init__(self) -> None:
@@ -297,11 +297,14 @@ class OutputSchema:
         for key, values in transport.items():
             _require(key in self.fields, f"output.transportValues key {key!r} is not an output field")
             _require(key != self.status_key, f"output.transportValues cannot describe the status key {key!r}")
+            _require(not key.replace("_", "").lower().startswith("evidence"),
+                     f"output.transportValues cannot hide evidence field {key!r}")
             _require(len(values) > 0, f"output.transportValues[{key!r}] needs values")
             _unique(values, f"output.transportValues[{key!r}]")
             for value in values:
                 _text(value, f"output.transportValues[{key!r}]")
-                _require(value not in EVIDENCE_STATUSES and value not in FORBIDDEN_CLAIM_KEYS,
+                availability_only = value == "unavailable" and self.status_key is None
+                _require((value not in EVIDENCE_STATUSES or availability_only) and value not in FORBIDDEN_CLAIM_KEYS,
                          f"output.transportValues[{key!r}] value {value!r} is an evidence status or claim")
         for key in self.fields:
             if key != self.status_key and looks_like_status_key(key):

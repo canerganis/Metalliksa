@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 16  # Read-only dataset comparison now has a source-bound display contract.
+LEGACY_CEILING = 13  # Dataset view, EDS, composition and elasticity are source-bound.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "alloy-builder", "ttt-cct-kinetics", "micrograph", "eds-lab", "icme-motor", "materials-project", "uq-lab")
 
 
 def _view():
@@ -393,6 +393,30 @@ class ForbiddenClaimTests(unittest.TestCase):
             mc.OutputSchema(fields=("value", "runStatus"))
         self.assertEqual(mc.OutputSchema(fields=("value", "success")).status_key, "evidenceStatus")
 
+    def test_explicit_availability_transport_round_trips_without_emitting_evidence(self):
+        output = mc.OutputSchema(fields=("value", "status", "directionalYoungsModuliStatus"),
+            status_key=None, transport_values=(
+                ("status", ("available", "unavailable")),
+                ("directionalYoungsModuliStatus", ("available", "unavailable"))))
+        contract = _contract(operations=(dataclasses.replace(_operation(), output=output),),
+            evidence=_evidence(emits=(), note="Availability describes missing model outputs, not validation."))
+        self.assertEqual(mc.contract_from_dict(contract.to_dict()), contract)
+        self.assertEqual(contract.evidence.emits, ())
+        with self.assertRaisesRegex(mc.ContractError, "emits must be empty"):
+            dataclasses.replace(contract, evidence=_evidence())
+
+    def test_availability_exception_cannot_hide_evidence_or_claim_status(self):
+        for key in ("evidenceStatus", "evidence_status", "evidenceLevel"):
+            with self.subTest(key=key), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=(key,), status_key=None,
+                    transport_values=((key, ("available", "unavailable")),))
+        for value in ("measured", "validated-simulation", "screening-only", "unvalidated", "qualified"):
+            with self.subTest(value=value), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("status",), status_key=None, transport_values=(("status", (value,)),))
+        with self.assertRaises(mc.ContractError):
+            mc.OutputSchema(fields=("status",), status_key="evidenceStatus",
+                transport_values=(("status", ("available", "unavailable")),))
+
     def test_emits_follow_the_output_status_key(self):
         # An output without a status key emits nothing; declaring emits then is a false claim.
         silent = mc.Operation(id="run", method="POST", route="/api/uq/run",
@@ -624,7 +648,7 @@ class ContractedRegistryTests(unittest.TestCase):
                                      # Phase 7 wave 2
                                      "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s",
                                      # micrograph rework (image pixels and image scale)
-                                     "px", "µm/px"})
+                                     "px", "µm/px", "eV"})
         texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
         texts += [n for c in self.contracted.values() for n in c.legacy_notes]
         texts += [c.evidence.note for c in self.contracted.values()]
