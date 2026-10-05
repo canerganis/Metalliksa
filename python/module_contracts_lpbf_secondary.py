@@ -125,6 +125,7 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         undeclared_input=("params",),
         output=OutputSchema(
             fields=("status", "source", "reason", "modelId", "gradientSource", "usedFieldMap",
+                    "regime", "normalizedEnthalpy", "regimeNote", "g_over_r_ratio", "doi",
                     "heatSourceModel", "materialName", "inputs", "absorptivity", "materialEvidence",
                     "morphologyBands_G_over_R", "scope", "disclaimer", "G_K_m", "R_m_s",
                     "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology"),
@@ -141,20 +142,24 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "layerThickness_um (µm), beamDiameter_um (µm), preheat_C (°C), heatSource. Visible presets are "
             "Inconel 718, Ti-6Al-4V, AlSi10Mg and 316L SS; defaults are 285 W, 960 mm/s, 110 µm hatch, "
             "40 µm layer, 80 µm beam, 80 °C and Rosenthal. Visible input min/max/step are UI controls; backend "
-            "requires finite values, positive power/speed/beam/layer/hatch, and preheat above absolute zero and "
-            "below known liquidus. Missing material or inputs and unsupported/unusable physics return unavailable; "
-            "there is no substitute alloy or numeric fallback.",
+            "requires finite values, positive power/speed/beam/layer/hatch, and preheat_C strictly above -273.15 °C "
+            "and, when liquidus_C is known, strictly below that value in °C. Missing/invalid material or inputs and "
+            "unsupported physics return a worker result with status=unavailable, a reason, and null numeric fields "
+            "(normally HTTP 200); no substitute alloy or numeric fallback is used.",
             "The current view does not send cfdResult or material properties. Worker RPC therefore invokes "
             "compute_screening_field_microstructure, which calls lpbf_thermal_solver and projects its "
             "solidificationKinetics. available, screening-fallback and degenerate-floor are source/model result "
             "labels; unavailable has null numeric fields. Provenance includes source/modelId/gradientSource, "
             "material evidence and disclaimer where returned. They are screening estimates, not in-situ tracking "
             "or experimental validation. The separate legacy CFD RPC branch is not reachable from this view.",
-            "The browser performs one fetch per explicit compute and maintains result/error/loading state; it starts "
-            "no interval or background work. The LPBF worker is a server-managed child reused across requests; "
-            "request timeout is 20000 ms (startup timeout is separately 60000 ms). Worker unavailability maps "
-            "to HTTP 503 with retry hint, validation refusal to 422, and other route errors to 400. This module "
-            "contract records availability as transport values only and emits no evidence status.",
+            "The browser performs one fetch per explicit compute. Input edits invalidate the current request "
+            "generation, and unmount invalidates it too; late success/error completions are ignored. The service "
+            "does not accept an AbortSignal, so the in-flight fetch itself is not canceled. No interval or background "
+            "work starts. The LPBF worker is a server-managed child reused across requests; the request deadline is "
+            "20000 ms (worker startup has a separate 60000 ms allowance). Worker transport unavailability maps to "
+            "HTTP 503 with Retry-After; an explicit worker validation envelope maps to 422 and other route errors "
+            "to 400. This handler reports ordinary bad/missing inputs as status=unavailable in its HTTP 200 result. "
+            "The contract records model availability labels as transport values only and emits no evidence status.",
         ),
         sources=(
             "src/components/SolidificationMicrostructureLab.tsx::SolidificationMicrostructureLab",
@@ -164,6 +169,7 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
             "python/lpbf_worker_rpc.py::_rpc_solidification_microstructure",
             "python/lpbf_solidification_microstructure.py::compute_screening_field_microstructure",
+            "python/lpbf_solidification_microstructure.py:202-219#regime",
             "python/lpbf_solidification_microstructure.py:267-284#status",
         ),
     )

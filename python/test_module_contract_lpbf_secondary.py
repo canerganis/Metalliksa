@@ -64,13 +64,19 @@ class LpbfSecondaryContractTests(unittest.TestCase):
         self.assertEqual(operation.output.status_key, None)
         self.assertEqual(dict(operation.output.transport_values)["status"],
                          ("available", "unavailable", "screening-fallback", "degenerate-floor"))
+        self.assertTrue({"regime", "normalizedEnthalpy", "regimeNote", "g_over_r_ratio", "doi"}
+                        .issubset(operation.output.fields))
         self.assertEqual(contract.evidence.emits, ())
         self.assertEqual(contract.evidence.ceiling, "screening-only")
         self.assertEqual(contract.tests.oracle.status, "pending")
         notes = " ".join(contract.legacy_notes)
         self.assertIn("does not send cfdResult", notes)
         self.assertIn("no substitute alloy or numeric fallback", notes)
-        self.assertIn("HTTP 503", notes)
+        self.assertIn("-273.15 °C", notes)
+        self.assertIn("liquidus_C is known", notes)
+        self.assertIn("that value in °C", notes)
+        self.assertIn("HTTP 200", notes)
+        self.assertIn("422", notes)
 
     def test_wrong_seed_identity_is_rejected_by_each_builder(self):
         optimizer = self.seed("lpbf-optimizer")
