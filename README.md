@@ -29,6 +29,52 @@ Metalliksa puts the thermal physics of metal additive manufacturing, alloy therm
 
 Most simulation tools hand you a number. Metalliksa hands you the number, the source it rests on, and an explicit label for what kind of evidence it is: measured, validated simulation, calibrated simulation, literature estimate, screening only, or unresolved.
 
+## A look inside
+
+<p align="center">
+  <img src="docs/assets/module-lpbf.png" alt="LPBF Workflow module with a live scientific-context panel: mechanism, what drives the result, how to read it, and the limitation" width="49%" />
+  <img src="docs/assets/module-calphad.png" alt="Phase Diagrams and CALPHAD module with the evidence ceiling badge: Screening only, oracle pending" width="49%" />
+</p>
+
+<p align="center"><sub>Left: the LPBF Workflow. Right: Phase Diagrams and CALPHAD. Every module states its mechanism, what drives the result, its limits, and the highest evidence level it is allowed to claim.</sub></p>
+
+## How the pieces fit
+
+```mermaid
+flowchart LR
+    subgraph Browser["Browser (React 18, Zustand)"]
+        UI["Overview and module views"]
+        ST["Stores: specimen, workflow, build job, research registry"]
+    end
+    subgraph Server["Express server"]
+        RT["Typed routes, air-gap guard"]
+        BR["Worker bridge"]
+    end
+    subgraph Python["Python solvers"]
+        SV["LPBF thermal, CALPHAD, Pourbaix, kinetics, UQ"]
+        GPU["NVIDIA Warp GPU kernels (optional)"]
+    end
+    DB[("SQLite run archives and source registry")]
+    UI --> ST --> RT --> BR --> SV
+    SV -.-> GPU
+    SV --> DB
+    DB --> RT
+```
+
+## How a result earns its label
+
+```mermaid
+flowchart LR
+    I["Inputs and material identity"] --> S["Solver or estimate"]
+    S --> C{"Checked against"}
+    C -->|"nothing yet"| U["Unresolved or Screening only"]
+    C -->|"literature value"| L["Literature estimate"]
+    C -->|"public dataset"| V["Calibrated or validated simulation"]
+    C -->|"your measurement"| M["Measured"]
+```
+
+A result can only be labelled as strongly as the evidence behind it. Software checks passing never promotes a label.
+
 ## What you can do with it
 
 | Area | What is in the box |
