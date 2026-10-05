@@ -393,6 +393,30 @@ class ForbiddenClaimTests(unittest.TestCase):
             mc.OutputSchema(fields=("value", "runStatus"))
         self.assertEqual(mc.OutputSchema(fields=("value", "success")).status_key, "evidenceStatus")
 
+    def test_explicit_availability_transport_round_trips_without_emitting_evidence(self):
+        output = mc.OutputSchema(fields=("value", "status", "directionalYoungsModuliStatus"),
+            status_key=None, transport_values=(
+                ("status", ("available", "unavailable")),
+                ("directionalYoungsModuliStatus", ("available", "unavailable"))))
+        contract = _contract(operations=(dataclasses.replace(_operation(), output=output),),
+            evidence=_evidence(emits=(), note="Availability describes missing model outputs, not validation."))
+        self.assertEqual(mc.contract_from_dict(contract.to_dict()), contract)
+        self.assertEqual(contract.evidence.emits, ())
+        with self.assertRaisesRegex(mc.ContractError, "emits must be empty"):
+            dataclasses.replace(contract, evidence=_evidence())
+
+    def test_availability_exception_cannot_hide_evidence_or_claim_status(self):
+        for key in ("evidenceStatus", "evidence_status", "evidenceLevel"):
+            with self.subTest(key=key), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=(key,), status_key=None,
+                    transport_values=((key, ("available", "unavailable")),))
+        for value in ("measured", "validated-simulation", "screening-only", "unvalidated", "qualified"):
+            with self.subTest(value=value), self.assertRaises(mc.ContractError):
+                mc.OutputSchema(fields=("status",), status_key=None, transport_values=(("status", (value,)),))
+        with self.assertRaises(mc.ContractError):
+            mc.OutputSchema(fields=("status",), status_key="evidenceStatus",
+                transport_values=(("status", ("available", "unavailable")),))
+
     def test_emits_follow_the_output_status_key(self):
         # An output without a status key emits nothing; declaring emits then is a false claim.
         silent = mc.Operation(id="run", method="POST", route="/api/uq/run",
