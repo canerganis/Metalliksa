@@ -61,18 +61,19 @@ COMPOSITION_OPERATIONS: Tuple[Operation, ...] = (
                 InputField(
                     key="percentage",
                     label="Element content",
-                    unit="percent in the active specimen unit (wt.% or at.%)",
+                    unit="%",
                     quantity_kind="element-composition-percentage",
-                    min=None,
-                    max=None,
+                    min=0.0,
+                    max=100.0,
                     step=0.1,
                     default=0.0,
                     required=True,
                     note=(
                         "The active input displays the current stored value; schema default 0.0 records "
                         "the clear-input action, not an initial field value. Clearing the HTML number "
-                        "field maps to 0; setElement removes values <= 0. The 0..100 attributes and "
-                        "0.1 step are UI hints, not store-enforced limits."
+                        "field maps to 0; setElement removes exactly zero. Finite values in 0..100 "
+                        "are store-enforced input bounds, not a physical applicability domain; percentages "
+                        "retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint."
                     ),
                 ),
             ),
@@ -133,11 +134,11 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             "so no closed enum is inferred.",
             "Add Element calls setElement with the selected symbol and a fixed 1.0; the editable number and slider "
             "call setElement with the current symbol and value. The numeric control has min=0/max=100/step=0.1; "
-            "the slider max is 100 for the active base metal and 35 otherwise. The store itself applies no "
-            "finite or upper-bound validation.",
-            "normalizeComposition is a separate click action; it returns only when total <= 0, otherwise "
-            "it scales by 100/total without first rejecting non-finite entries or verifying a finite total. "
-            "A NaN total bypasses the <= 0 branch.",
+            "the slider max is 100 for the active base metal and 35 otherwise. The store rejects non-finite, "
+            "negative and over-100 content before modifying state or deriving estimates.",
+            "normalizeComposition is a separate click action; invalid entries or a non-finite/non-positive "
+            "total are rejected before scaling by 100/total. JSON import validates composition before "
+            "derivation and rejects exponent overflow; invalid maps leave both active specimen aliases unchanged.",
             "Preset buttons call loadPreset(key); Reset calls resetToDefault; Save calls saveCurrentSpecimen "
             "with a generated time label and updates savedSpecimens. The save confirmation is cleared by a "
             "2500 ms setTimeout. Lifecycle vocabulary has no timeout resource, so this UI timer is recorded "
@@ -161,9 +162,9 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/AlloyBuilder.tsx:422#Composition-based estimate; unvalidated",
             "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
             "src/store/useMaterialStore.ts:94-119#Core Actions",
-            "src/store/useMaterialStore.ts:833-861#setElement",
-            "src/store/useMaterialStore.ts:716-827#setActivePipelineMaterial",
-            "src/store/useMaterialStore.ts:863-950#saveCurrentSpecimen",
+            "src/store/useMaterialStore.ts::isValidCompositionInput",
+            "src/store/useMaterialStore.ts",
+            "tests/material-composition-validation.test.ts",
             "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
         ),
         seed_derived=("label", "description", "next", "maturity"),

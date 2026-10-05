@@ -46,16 +46,16 @@ class CompositionContractTests(unittest.TestCase):
         self.assertEqual(operations["update-category"].undeclared_input, ("category",))
         self.assertEqual(operations["save-current-specimen"].output.fields, ("savedSpecimens",))
 
-    def test_percentage_type_is_checked_without_invented_physical_bounds(self):
+    def test_percentage_type_and_store_input_bounds_are_declared(self):
         operation = next(op for op in COMPOSITION_OPERATIONS if op.id == "set-element-content")
 
-        self.assertIsNone(operation.input[0].min)
-        self.assertIsNone(operation.input[0].max)
+        self.assertEqual(operation.input[0].min, 0)
+        self.assertEqual(operation.input[0].max, 100)
         self.assertTrue(operation.input[0].required)
         self.assertEqual(operation.undeclared_input, ("element",))
         self.assertEqual(operation.input_problems({"percentage": "18.5", "element": "Ni"}),
                          ["percentage: must be a finite number"])
-        self.assertEqual(operation.input_problems({"percentage": 101, "element": "Ni"}), [])
+        self.assertTrue(operation.input_problems({"percentage": 101, "element": "Ni"}))
         self.assertTrue(any("composition" in problem for problem in operation.input_problems(
             {"percentage": 18.5, "element": "Ni", "composition": {"Ni": 18.5}}
         )))
