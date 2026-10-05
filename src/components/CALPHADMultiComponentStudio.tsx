@@ -71,15 +71,35 @@ import {
   formatNullable,
   partitionSourceNote,
 } from "../utils/calphadDisplay";
+import {
+  calphadUnavailableHeadline,
+  formatModelCache,
+  formatTimings,
+  formatCoverageRow,
+  formatPartitionK,
+  scheilSummaryLines,
+  SCHEIL_COMPUTED,
+  calphadTemperatureWindow,
+  type CalphadSystemCoverage,
+} from "../utils/calphadResultDisplay";
 
 export interface CALPHADMultiComponentStudioProps {
   /** Test seam: a solved result to show on first paint (the live solve still replaces it). */
   initialResult?: PythonCalphadSolveResult;
   /** Test seam: the sub-tab shown on first paint. */
   initialSubTab?: "phase_fractions" | "gibbs_energy" | "solute_partitioning" | "multi_scheil" | "tdb_editor";
+  /** Test seam: the database coverage list shown on first paint. */
+  initialCoverage?: CalphadSystemCoverage[];
+  /** Test seam: render the "calculating" state on first paint. */
+  initialSolving?: boolean;
 }
 
-export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioProps> = ({ initialResult, initialSubTab }) => {
+export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioProps> = ({
+  initialResult,
+  initialSubTab,
+  initialCoverage,
+  initialSolving,
+}) => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
   const [isLiveSyncedWithUniversalSpecimen, setIsLiveSyncedWithUniversalSpecimen] = useState<boolean>(true);
   const [selectedAlloyIndex, setSelectedAlloyIndex] = useState<number>(-1); // -1 = Live Universal Specimen
@@ -119,7 +139,11 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   // Python Engine Integration State
   const [usePythonEngine, setUsePythonEngine] = useState<boolean>(true);
   const [pythonStatus, setPythonStatus] = useState<PythonEngineStatus | null>(null);
-  const [isSolving, setIsSolving] = useState<boolean>(false);
+  const [isSolving, setIsSolving] = useState<boolean>(initialSolving ?? false);
+  // Wall time of the running request, measured here (no estimated progress percentage exists).
+  const [solveStartedAt, setSolveStartedAt] = useState<number | null>(null);
+  const [solveElapsedMs, setSolveElapsedMs] = useState<number>(0);
+  const [coverage, setCoverage] = useState<CalphadSystemCoverage[]>(initialCoverage ?? []);
   const [asyncSolveResult, setAsyncSolveResult] = useState<PythonCalphadSolveResult | null>(initialResult ?? null);
   // Message of a Python 422 validation refusal (shown; the client solver result is used instead).
   const [pythonValidationMessage, setPythonValidationMessage] = useState<string | null>(null);
@@ -140,21 +164,34 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       if (dbRes.success && dbRes.databases?.length) {
         setAvailableDatabases(dbRes.databases);
       }
+      if (dbRes.success && Array.isArray(dbRes.systemCoverage)) {
+        setCoverage(dbRes.systemCoverage);
+      }
     });
   }, []);
+
+  // Elapsed-time display while a calculation runs.
+  useEffect(() => {
+    if (!isSolving || solveStartedAt == null) return;
+    const id = setInterval(() => setSolveElapsedMs(performance.now() - solveStartedAt), 250);
+    return () => clearInterval(id);
+  }, [isSolving, solveStartedAt]);
 
   // Solve multi-component equilibrium via Python HPC Proxy (with client fallback)
   useEffect(() => {
     let isMounted = true;
     setIsSolving(true);
+    setSolveStartedAt(performance.now());
+    setSolveElapsedMs(0);
 
+    const win = calphadTemperatureWindow(customAlloy.elements);
     const timer = setTimeout(() => {
       pythonComputationService
         .solveCalphadEquilibrium(
           customAlloy,
-          500,
-          1450,
-          25,
+          win.tMin,
+          win.tMax,
+          win.tStep,
           usePythonEngine,
           selectedDatabaseId === "auto" ? undefined : selectedDatabaseId,
           undefined,
@@ -254,7 +291,15 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     thermodynamicModel: CLIENT_MODEL_LABEL,
   };
   const provenanceLabels = calphadProvenanceLabels(solveResult);
+  const tempWindow = calphadTemperatureWindow(customAlloy.elements);
   const criticalStatus = solveResult.criticalTemperatureStatus ?? {};
+  // A Python "unavailable" answer is shown as such: no equilibrium numbers (the client screening model
+  // is not substituted; it is shown only when the user switches the Python engine off).
+  const pythonUnavailable = usePythonEngine ? solveResult.pythonUnavailable : undefined;
+  const showNumbers = !pythonUnavailable;
+  const timingText = formatTimings(solveResult.timingsMs);
+  const scheilBlock = solveResult.scheilSolidification;
+  const scheilComputed = provenanceLabels.isPycalphad && scheilBlock?.status !== undefined && scheilBlock.status !== "unavailable";
 
   // Active components list for activities and chemical potentials
   const activeComponentsList = useMemo(() => {
@@ -307,6 +352,24 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       p.phases.forEach((ph) => set.add(ph.phaseId));
     });
     return Array.from(set);
+  }, [solveResult]);
+
+  // Equilibrium fraction solid vs T (grid points inside the freezing range plus its two ends), for the Scheil tab.
+  const equilibriumSolidCurve = useMemo(() => {
+    const pts = solveResult.equilibriumProfile
+      .filter((p) => p.status !== "not-converged")
+      .map((p) => {
+        const liquid = p.phases.filter((ph) => ph.phaseId.includes("LIQUID")).reduce((acc, ph) => acc + ph.fraction, 0);
+        return { temperatureC: p.temperatureC, fractionSolid: +(1 - liquid).toFixed(4), liquid };
+      })
+      .sort((x, y) => x.temperatureC - y.temperatureC);
+    const inside = pts.filter((p) => p.liquid > 0 && p.liquid < 1);
+    const out: { temperatureC: number; fractionSolid: number }[] = [];
+    const { liquidusC, solidusC } = solveResult.criticalTemperatures;
+    if (typeof liquidusC === "number") out.push({ temperatureC: liquidusC, fractionSolid: 0 });
+    inside.reverse().forEach((p) => out.push({ temperatureC: p.temperatureC, fractionSolid: p.fractionSolid }));
+    if (typeof solidusC === "number") out.push({ temperatureC: solidusC, fractionSolid: 1 });
+    return out;
   }, [solveResult]);
 
   // Probe at current temperature
@@ -416,14 +479,61 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
         </div>
       )}
 
-      {solveResult.pythonUnavailable && (
-        <div role="alert" className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-0.5">
-          <div>{formatCalphadUnavailable(solveResult.pythonUnavailable)}</div>
-          {calphadUnavailableDetails(solveResult.pythonUnavailable).map((line) => (
+      {isSolving && (
+        <div role="status" aria-live="polite" data-testid="calphad-solving"
+          className="px-4 py-2 rounded-xl bg-sky-500/10 border border-sky-500/40 text-sky-200 text-xs space-y-0.5">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            <strong>Calculating{usePythonEngine ? " with pycalphad" : ""}…</strong>
+            <span>{(solveElapsedMs / 1000).toFixed(1)} s elapsed</span>
+          </div>
+          {usePythonEngine && (
+            <div>The first calculation for a database and element set builds and compiles the thermodynamic models;
+              later ones for the same system reuse them. No completion estimate exists for a single calculation.</div>
+          )}
+          {asyncSolveResult && <div>The results below belong to the previous input until this calculation finishes.</div>}
+        </div>
+      )}
+
+      {pythonUnavailable && (
+        <div role="alert" data-testid="calphad-unavailable" className="px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-0.5">
+          <div className="text-sm font-bold">{calphadUnavailableHeadline(pythonUnavailable)}</div>
+          <div>{formatCalphadUnavailable(pythonUnavailable)}</div>
+          {calphadUnavailableDetails(pythonUnavailable).map((line) => (
             <div key={line}>{line}</div>
           ))}
-          <div>The numbers below come from the client-side screening model, not from CALPHAD.</div>
+          <div>No equilibrium numbers are shown for this request. The client-side screening model is not a substitute;
+            switch Python HPC off to look at it, labelled as a screening model.</div>
         </div>
+      )}
+
+      {provenanceLabels.isPycalphad && (
+        <div data-testid="calphad-provenance" className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300 space-y-0.5">
+          <div>
+            Provenance: pycalphad {solveResult.pycalphadVersion ?? "(version not reported)"} equilibrium on {provenanceLabels.database}
+            {solveResult.modelCache?.databaseSha256 ? ` (TDB SHA-256 ${solveResult.modelCache.databaseSha256.slice(0, 12)}…)` : ""}.
+            Calculated, not validated against experiment in this application.
+          </div>
+          <div data-testid="calphad-model-cache">
+            {formatModelCache(solveResult.modelCache)}{timingText ? `. Measured: ${timingText}.` : "."}
+          </div>
+        </div>
+      )}
+
+      {coverage.length > 0 && (
+        <details data-testid="calphad-coverage" className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300">
+          <summary className="cursor-pointer text-slate-200 font-semibold">
+            Database coverage: {coverage.filter((c) => c.status === "covered").length} of {coverage.length} reference alloy systems
+          </summary>
+          <ul className="mt-1 space-y-0.5">
+            {coverage.map((row) => (
+              <li key={row.id} className={row.status === "covered" ? "text-slate-300" : "text-amber-200"}>
+                {formatCoverageRow(row)}
+                {row.knownDeviation && <span className="block text-amber-300/90">Known deviation: {row.knownDeviation}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {/* Python HPC Telemetry & Execution Banner */}
@@ -481,7 +591,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           Database scope: {provenanceLabels.scope}
         </div>
       )}
-      {solveResult.nonConvergedPoints && solveResult.nonConvergedPoints.length > 0 && (
+      {showNumbers && solveResult.nonConvergedPoints && solveResult.nonConvergedPoints.length > 0 && (
         <div role="alert" className="px-4 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-[11px]">
           {solveResult.nonConvergedPoints.length} grid point(s) did not converge and are shown as n/a: {solveResult.nonConvergedPoints.join(", ")} °C.
         </div>
@@ -544,7 +654,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           </div>
         </div>
 
-        {solveResult.boundaryRefinement && (
+        {showNumbers && solveResult.boundaryRefinement && (
           <div className="pt-2 border-t border-[#162032] text-[11px] text-slate-300">
             Refinement {solveResult.boundaryRefinement.enabled ? "on" : "off"}, tolerance ±{solveResult.boundaryRefinement.toleranceC}°C,{" "}
             {solveResult.boundaryRefinement.equilibriumCalls} refinement round(s). {solveResult.boundaryRefinement.note}
@@ -662,7 +772,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       </div>
 
       {/* Main Grid: Composition & State Sliders (Left 4 cols) + Interactive CALPHAD Graphs (Right 8 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className={`grid grid-cols-1 lg:grid-cols-12 gap-5 ${isSolving ? "opacity-60" : ""}`} aria-busy={isSolving}>
         {/* Left Column: Multi-Element Composition Sliders & Critical Temperatures */}
         <div className="lg:col-span-4 space-y-4">
           {/* Element Sliders */}
@@ -699,6 +809,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           </div>
 
           {/* Critical Transition Temperatures */}
+          {showNumbers && (
           <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
             <div className="flex items-center justify-between border-b border-[#162032] pb-2 text-xs">
               <span className="font-bold text-white flex items-center gap-1.5">
@@ -755,9 +866,17 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Right Column: Interactive Graphs & Solute Partitioning Matrix */}
+        {!showNumbers ? (
+          <div className="lg:col-span-8 p-6 rounded-2xl bg-[#090e18] border border-amber-500/30 text-xs text-amber-200 space-y-2" data-testid="calphad-no-result">
+            <div className="font-bold text-sm">No equilibrium result</div>
+            <div>{pythonUnavailable ? calphadUnavailableHeadline(pythonUnavailable) : ""}. Phase fractions, Gibbs energies,
+              partition coefficients and the Scheil path are not shown because no CALPHAD calculation was made.</div>
+          </div>
+        ) : (
         <div className="lg:col-span-8 space-y-4">
           {/* Sub-tab Switcher */}
           <div className="p-3 rounded-2xl bg-[#090e18] border border-[#1e2d46] flex flex-wrap items-center justify-between gap-2">
@@ -829,9 +948,9 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <span className="text-slate-400">T Probe: <strong className="text-violet-300">{probeTemperatureC}°C</strong></span>
               <input aria-label="T Probe (°C)"
                 type="range"
-                min="500"
-                max="1450"
-                step="25"
+                min={tempWindow.tMin}
+                max={tempWindow.tMax}
+                step={tempWindow.tStep}
                 value={probeTemperatureC}
                 onChange={(e) => setProbeTemperatureC(parseInt(e.target.value, 10))}
                 className="w-28 accent-violet-500"
@@ -845,7 +964,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Activity className="w-4 h-4 text-violet-400" />
-                  <span>Equilibrium Phase Mole Fractions vs Temperature (500°C – 1450°C)</span>
+                  <span>Equilibrium Phase Mole Fractions vs Temperature ({solveResult.temperatureRangeC[0]}°C – {solveResult.temperatureRangeC[1]}°C)</span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
                   Minimization: min G(T, x_i)
@@ -1191,48 +1310,65 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
             </div>
           )}
 
-          {/* Subtab 2: Solute Partitioning Matrix */}
+          {/* Subtab 2: Solute Partitioning */}
           {viewSubTab === "solute_partitioning" && (
             <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Table className="w-4 h-4 text-purple-400" />
-                  <span>Solute Partitioning Matrix (k_i = C_i_precipitate / C_i_matrix)</span>
+                  <span>
+                    {provenanceLabels.isPycalphad
+                      ? "Solid/liquid partition coefficients k_i = x_i(primary solid) / x_i(liquid)"
+                      : "Partition table of the client screening model (not CALPHAD)"}
+                  </span>
                 </span>
               </div>
+              {provenanceLabels.isPycalphad && (
+                <p className="text-[11px] text-slate-400" data-testid="partition-definition">
+                  From the equilibrium tie-line between the majority solid phase of the Scheil-Gulliver path and the liquid,
+                  at the temperature where that phase first forms (mole fractions). Calculated, not validated against experiment.
+                </p>
+              )}
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse font-mono">
                   <thead>
                     <tr className="border-b border-[#162032] text-slate-400 text-[10px] uppercase">
                       <th className="pb-2">Element</th>
-                      <th className="pb-2 text-right">Matrix (γ) wt%</th>
-                      <th className="pb-2 text-right">Precipitate (γ'/γ'') wt%</th>
                       <th className="pb-2 text-right">Partition k_i</th>
-                      <th className="pb-2 text-right">Metallurgical Role</th>
+                      <th className="pb-2 text-right">Primary solid / T</th>
+                      <th className="pb-2 text-right">Meaning</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#162032]/60">
                     {solveResult.solutePartitioning.map((sp) => (
                       <tr key={sp.element} className="hover:bg-white/[0.02]">
                         <td className="py-2.5 font-bold text-white">{sp.element}</td>
-                        <td className="py-2.5 text-right text-slate-300">{sp.matrixFraction_pct.toFixed(2)}%</td>
-                        <td className="py-2.5 text-right text-purple-300 font-bold">{sp.precipitateFraction_pct.toFixed(2)}%</td>
-                        <td className="py-2.5 text-right">
+                        <td className="py-2.5 text-right" title={sp.partitionCoefficient_k == null ? sp.reason ?? "" : ""}>
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              sp.partitionCoefficient_k > 1.0
+                              sp.partitionCoefficient_k == null
+                                ? "bg-slate-800 text-slate-400 border border-slate-700"
+                                : sp.partitionCoefficient_k > 1.0
                                 ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
                                 : "bg-blue-500/20 text-blue-300 border border-blue-500/40"
                             }`}
                           >
-                            k = {sp.partitionCoefficient_k.toFixed(2)}
+                            {formatPartitionK(sp.partitionCoefficient_k)}
                           </span>
                         </td>
+                        <td className="py-2.5 text-right text-slate-300">
+                          {sp.primarySolidPhase
+                            ? `${sp.primarySolidPhase}${typeof sp.temperatureC === "number" ? ` at ${sp.temperatureC} °C` : ""}`
+                            : "n/a"}
+                        </td>
                         <td className="py-2.5 text-right text-[11px] text-slate-400">
-                          {sp.role}
-                          {partitionSourceNote((sp as { partitionCoefficientSource?: string }).partitionCoefficientSource) && (
-                            <span className="block text-amber-300">{partitionSourceNote((sp as { partitionCoefficientSource?: string }).partitionCoefficientSource)}</span>
+                          {sp.role ?? sp.reason ?? ""}
+                          {!provenanceLabels.isPycalphad && (
+                            <span className="block text-amber-300">screening value, not CALPHAD</span>
+                          )}
+                          {partitionSourceNote(sp.partitionCoefficientSource) && (
+                            <span className="block text-amber-300">{partitionSourceNote(sp.partitionCoefficientSource)}</span>
                           )}
                         </td>
                       </tr>
@@ -1243,25 +1379,40 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
             </div>
           )}
 
-          {/* Subtab 3: Multi-Element Scheil Solidification Simulator */}
+          {/* Subtab 3: Scheil-Gulliver solidification path */}
           {viewSubTab === "multi_scheil" && (
             <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Flame className="w-4 h-4 text-amber-400" />
-                  <span>Solidification screening curve (Scheil-style segregation, not a CALPHAD Scheil calculation)</span>
+                  <span>
+                    {provenanceLabels.isPycalphad
+                      ? "Scheil-Gulliver solidification path (pycalphad equilibria of the remaining liquid)"
+                      : "Solidification screening curve of the client model (not a CALPHAD Scheil calculation)"}
+                  </span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
-                  Freezing Range ΔT = {formatFreezingRange(solveResult.criticalTemperatures.freezingRangeC)}
+                  Equilibrium freezing range ΔT = {formatFreezingRange(solveResult.criticalTemperatures.freezingRangeC)}
                 </span>
               </div>
 
               {solveResult.multiElementScheilNote && (
                 <p className="text-[11px] text-slate-400" data-testid="scheil-note">{solveResult.multiElementScheilNote}</p>
               )}
-              {solveResult.multiElementScheil.every((pt) => pt.temperatureC == null) && (
+              {provenanceLabels.isPycalphad && scheilBlock && (
+                <div data-testid="scheil-summary" className={`p-3 rounded-xl text-xs space-y-0.5 border ${
+                  scheilBlock.status === SCHEIL_COMPUTED ? "bg-[#050810] border-[#162032] text-slate-300" : "bg-amber-500/10 border-amber-500/40 text-amber-200"
+                }`}>
+                  {scheilSummaryLines(scheilBlock).map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                  {scheilBlock.validity && <div className="text-slate-400">Validity: {scheilBlock.validity}</div>}
+                  <div className="text-amber-300">Evidence: {scheilBlock.evidence ?? "unvalidated"} (calculated path, no experimental comparison here)</div>
+                </div>
+              )}
+              {!provenanceLabels.isPycalphad && solveResult.multiElementScheil.every((pt) => pt.temperatureC == null) && (
                 <div role="status" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1" data-testid="scheil-unavailable">
-                  <div>No temperature axis: the curve needs both the liquidus and the solidus.</div>
+                  <div>No temperature axis: the screening curve needs both the liquidus and the solidus.</div>
                   {(["liquidusC", "solidusC"] as const).map((key) =>
                     solveResult.criticalTemperatures[key] == null ? (
                       <div key={key}>{key === "liquidusC" ? "Liquidus" : "Solidus"} unavailable: {criticalStatus[key]?.reason ?? "no reason reported"}</div>
@@ -1270,42 +1421,62 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 </div>
               )}
 
-              <div className="h-[320px] w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={solveResult.multiElementScheil}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e2d46" />
-                    <XAxis
-                      dataKey="fractionSolid"
-                      stroke="#64748b"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit=" (f_S)"
-                    />
-                    <YAxis
-                      stroke="#64748b"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit="°C"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#050810",
-                        borderColor: "#1e2d46",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        fontFamily: "monospace",
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="temperatureC"
-                      name="Scheil Cooling Curve"
-                      stroke="#f59e0b"
-                      strokeWidth={2.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {(scheilComputed || !provenanceLabels.isPycalphad) && solveResult.multiElementScheil.some((pt) => pt.temperatureC != null) && (
+                <div className="h-[320px] w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e2d46" />
+                      <XAxis
+                        dataKey="fractionSolid"
+                        type="number"
+                        domain={[0, 1]}
+                        stroke="#64748b"
+                        tick={{ fill: "#94a3b8", fontSize: 11 }}
+                        unit=" (f_S)"
+                      />
+                      <YAxis
+                        dataKey="temperatureC"
+                        type="number"
+                        domain={["auto", "auto"]}
+                        stroke="#64748b"
+                        tick={{ fill: "#94a3b8", fontSize: 11 }}
+                        unit="°C"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#050810",
+                          borderColor: "#1e2d46",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                          fontFamily: "monospace",
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        data={solveResult.multiElementScheil.filter((pt) => pt.temperatureC != null)}
+                        type="linear"
+                        dataKey="temperatureC"
+                        name={provenanceLabels.isPycalphad ? "Scheil-Gulliver (no solid diffusion)" : "Screening curve (client model)"}
+                        stroke="#f59e0b"
+                        strokeWidth={2.5}
+                        dot={false}
+                      />
+                      {provenanceLabels.isPycalphad && equilibriumSolidCurve.length > 1 && (
+                        <Line
+                          data={equilibriumSolidCurve}
+                          type="linear"
+                          dataKey="temperatureC"
+                          name="Equilibrium (lever rule, grid points)"
+                          stroke="#38bdf8"
+                          strokeWidth={2}
+                          strokeDasharray="5 3"
+                          dot={{ r: 2 }}
+                        />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           )}
 
@@ -1331,6 +1502,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

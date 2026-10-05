@@ -28,6 +28,13 @@ import {
   type CalphadFieldStatus,
   type CalphadUnavailable,
 } from "../utils/calphadDisplay";
+import type {
+  CalphadModelCacheInfo,
+  CalphadPartitionRow,
+  CalphadScheilBlock,
+  CalphadScheilPoint,
+  CalphadSystemCoverage,
+} from "../utils/calphadResultDisplay";
 
 export interface PersistentIPCDiagnostics {
   success: boolean;
@@ -85,7 +92,18 @@ export interface PythonCalphadDatabaseEntry {
   assessedBaseElements?: string[];
 }
 
-export interface PythonCalphadSolveResult extends MultiComponentSolveResult {
+export interface PythonCalphadSolveResult
+  extends Omit<MultiComponentSolveResult, "solutePartitioning" | "multiElementScheil"> {
+  /** pycalphad: k of the primary solid phase from the Scheil path (null with a reason); client: screening rows. */
+  solutePartitioning: CalphadPartitionRow[];
+  /** pycalphad: Scheil-Gulliver path points; client: the screening curve. */
+  multiElementScheil: CalphadScheilPoint[];
+  /** pycalphad only: the Scheil-Gulliver block (status, termination, validity, evidence label). */
+  scheilSolidification?: CalphadScheilBlock;
+  /** pycalphad only: compiled-model cache of the worker process ("cold" or "warm"). */
+  modelCache?: CalphadModelCacheInfo;
+  /** pycalphad only: measured stage times of this request (ms). */
+  timingsMs?: Record<string, number>;
   engine: string;
   /** null when the engine did not report a time (never an invented one). */
   computeTimeMs: number | null;
@@ -572,6 +590,11 @@ export type SolidificationMicrostructureResult =
   | SolidificationMicrostructureDegenerate
   | SolidificationMicrostructureUnavailable;
 
+/** Unavailable envelope for a CALPHAD request the Python service did not answer (no equilibrium is shown). */
+function engineUnreachable(reason: string): CalphadUnavailable {
+  return { unavailableKind: "engine-unreachable", reason, reasons: [reason] };
+}
+
 class PythonComputationService {
   private statusCache: PythonEngineStatus | null = null;
   private lastCheckTime = 0;
@@ -773,6 +796,8 @@ class PythonComputationService {
     pycalphadAvailable: boolean;
     pycalphadVersion: string;
     databases: PythonCalphadDatabaseEntry[];
+    /** Reference alloy systems: covered by an assessed database, or unavailable with the reason. */
+    systemCoverage?: CalphadSystemCoverage[];
   }> {
     try {
       const res = await fetch("/api/python/calphad-databases", {
@@ -842,9 +867,13 @@ class PythonComputationService {
           pythonUnavailable = parseCalphadUnavailable(data);
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
+          if (!validation) {
+            pythonUnavailable = engineUnreachable(`the Python CALPHAD service answered HTTP ${res.status}`);
+          }
         }
       } catch (err) {
-        console.warn("Python CALPHAD proxy call failed, falling back to TypeScript engine:", err);
+        console.warn("Python CALPHAD proxy call failed:", err);
+        pythonUnavailable = engineUnreachable("the Python CALPHAD service could not be reached");
       }
       // Invalid input (e.g. an unknown element symbol): surface it; the caller decides
       // whether to show the client solver instead. Network errors and 5xx still fall back.
