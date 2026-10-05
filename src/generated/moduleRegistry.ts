@@ -1997,8 +1997,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "micrograph",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Micrograph Analysis",
       "description": "Image segmentation requires scale calibration and independent inspection.",
@@ -2012,6 +2012,272 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
+          "id": "micrograph-measure",
+          "method": "POST",
+          "route": "/api/python/micrograph-measure",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/micrograph_measure.py",
+            "workerMethod": null,
+            "timeoutMs": 60000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [
+            {
+              "key": "cropTopPx",
+              "label": "Rows excluded at the top",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "cropBottomPx",
+              "label": "Rows excluded at the bottom (data bar)",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default."
+            },
+            {
+              "key": "cropLeftPx",
+              "label": "Columns excluded at the left",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "cropRightPx",
+              "label": "Columns excluded at the right",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "umPerPx",
+              "label": "Stated pixel size",
+              "valueType": "number",
+              "unit": "µm/px",
+              "displayUnits": [],
+              "quantityKind": "image-scale",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar."
+            },
+            {
+              "key": "barLengthUm",
+              "label": "Scale-bar length",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx."
+            },
+            {
+              "key": "barLengthPx",
+              "label": "Scale-bar length on the image",
+              "valueType": "number",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-length",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied."
+            },
+            {
+              "key": "darkMaxGrey",
+              "label": "Dark class: grey <= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": -1,
+              "max": 254,
+              "step": 1,
+              "default": -1,
+              "required": false,
+              "enum": [],
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured."
+            },
+            {
+              "key": "brightMinGrey",
+              "label": "Bright class: grey >= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": 1,
+              "max": 256,
+              "step": 1,
+              "default": 256,
+              "required": false,
+              "enum": [],
+              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured."
+            },
+            {
+              "key": "boundaryMaxGrey",
+              "label": "Grain boundaries: grey <= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": -1,
+              "max": 254,
+              "step": 1,
+              "default": -1,
+              "required": false,
+              "enum": [],
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains."
+            },
+            {
+              "key": "tiles",
+              "label": "Tiles per side for the field-to-field CI",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 2,
+              "max": 10,
+              "step": 1,
+              "default": 4,
+              "required": false,
+              "enum": [],
+              "note": "Convention of this module (k x k tiles of one image), not a standard value."
+            },
+            {
+              "key": "sensitivityDeltaGrey",
+              "label": "Threshold sensitivity step",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": 1,
+              "max": 64,
+              "step": 1,
+              "default": 10,
+              "required": false,
+              "enum": [],
+              "note": "The class fraction is also reported at threshold -/+ this many grey levels."
+            },
+            {
+              "key": "minAreaPx",
+              "label": "Smallest counted particle",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 1,
+              "max": 100000,
+              "step": 1,
+              "default": 4,
+              "required": false,
+              "enum": [],
+              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention."
+            },
+            {
+              "key": "linesPerDirection",
+              "label": "E112 test lines per direction",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 1,
+              "max": 50,
+              "step": 1,
+              "default": 8,
+              "required": false,
+              "enum": [],
+              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest."
+            },
+            {
+              "key": "returnMasks",
+              "label": "Return class masks for the overlay",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": true,
+              "required": false,
+              "enum": [],
+              "note": null
+            }
+          ],
+          "undeclaredInput": [
+            "imageWidth",
+            "imageHeight",
+            "imageData",
+            "calibrationNote",
+            "darkLabel",
+            "brightLabel",
+            "manualCounts",
+            "manualClicks"
+          ],
+          "output": {
+            "fields": [
+              "schema",
+              "methodVersion",
+              "record",
+              "calibrationRequired",
+              "testLines",
+              "classes",
+              "grainSize",
+              "grainSizeManual",
+              "limitations"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
           "id": "diagnose-micrograph",
           "method": "POST",
           "route": "/api/metallurgy/diagnose-micrograph",
@@ -2019,31 +2285,44 @@ export const MODULE_REGISTRY = {
             "kind": "node-provider",
             "script": null,
             "workerMethod": null,
-            "timeoutMs": null,
+            "timeoutMs": 60000,
             "gpu": "none",
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        },
-        {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "mimeType",
+              "label": "Image media type",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "media-type",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "image/jpeg",
+              "required": false,
+              "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/gif"
+              ],
+              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415."
+            }
+          ],
+          "undeclaredInput": [
+            "imageBase64",
+            "prompt"
+          ],
+          "output": {
+            "fields": [
+              "diagnosis"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2058,24 +2337,48 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: neither output carries a status key. micrograph-measure is measurement software (threshold area fraction with field-to-field CI and threshold sensitivity, connected-component particles, ASTM E112 intersection counting) checked against synthetic oracle images in python/test_micrograph_measure.py; it has no comparison with real micrographs or with manual counts by a metallographer, so the ceiling stays screening-only. Lengths, areas, densities and G are null without a user calibration. diagnose-micrograph returns language-model text: advisory, never a measurement."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_micrograph.py",
         "oracle": {
-          "status": "pending",
-          "ref": null,
+          "status": "present",
+          "ref": "python/test_micrograph_measure.py::O1SquareGrid.test_exact_intercept_and_g",
           "ciNote": null,
-          "scope": null
+          "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
         },
-        "docs": null
+        "docs": "docs/modules/micrograph.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
+        "imageData is the 8-bit greyscale image (row-major bytes, base64) with imageWidth and imageHeight (each 1-4096); labels, calibrationNote, manualCounts (one count per test line, multiples of 0.5) and manualClicks are free text or lists. The Field schema cannot describe them, so they are recorded as undeclaredInput; the authority validates them.",
+        "The view decodes PNG/JPEG/BMP/GIF/WebP in the browser; TIFF is not decoded (the view says so) and no instrument metadata (pixel size) is read from files.",
+        "diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider default (server/openaiService.ts), the route passes none.",
+        "No validity domain is declared: no real-image comparison establishes an applicability range.",
+        "micrograph-measure runs as a python-ipc script (IPC process pool, or an ad-hoc process when the daemon is unreachable) under a 60000 ms deadline, not in the serial LPBF worker: the worker refuses RPC lines over 1,000,000 characters (an image above about 865 x 865 px) and would hold up LPBF job calls. The route answers 413 above 24,000,000 bytes of JSON (a 4096 x 4096 image is 22.4 MB)."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "routes/physics.ts",
+        "server/processOrchestrator.ts::runPythonScript",
+        "python/micrograph_measure.py::main",
+        "python/micrograph_measure.py::read_request",
+        "python/micrograph_measure.py::measure",
+        "python/micrograph_measure.py::intercept_statistics",
+        "routes/copilot.ts",
+        "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
+        "src/components/MicrographLab.tsx::MicrographLab",
+        "src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription",
+        "src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio",
+        "src/services/micrographMeasureService.ts::measureMicrograph",
+        "src/utils/micrographInput.ts::buildMeasureRequest",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2100,17 +2403,17 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
+          "id": "eds-peak-id",
+          "method": null,
+          "route": null,
           "authority": {
-            "kind": "node-provider",
+            "kind": "browser-local",
             "script": null,
             "workerMethod": null,
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": null
+            "exceptionReason": "Recorded debt (single-authority rule): SNIP background, 3 sqrt(background) peak search and cited line-table matching (src/utils/edsPeakId.ts) and vendor quantification import run in the browser."
           },
           "input": [],
           "undeclaredInput": [],

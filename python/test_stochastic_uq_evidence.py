@@ -41,14 +41,17 @@ class SamplingEvidenceTests(unittest.TestCase):
             self.assertEqual(tuple(stats[key] for key in ('mean', 'stdDev', 'aBasisAllowable', 'bBasisAllowable')), expected)
 
     def test_sensitivity_matches_actual_supplied_chemistry(self):
-        original = solver.solve_single_realization
+        # The solver evaluates populations through the vectorised physics kernel
+        # (solve_single_realization is the scalar reference, covered by the parity test).
+        original = solver.solve_realizations_vec
         seen = []
         def observe(*args, **kwargs):
             seen.append(set(kwargs['comp'] if kwargs else args[1]))
             return original(*args, **kwargs)
-        with patch.object(solver, 'solve_single_realization', side_effect=observe):
+        with patch.object(solver, 'solve_realizations_vec', side_effect=observe):
             result = solver.solve_stochastic_uq({'mcSamples': 500, 'baseMetal': 'Al',
                 'composition_wt': {'Si': 10.0, 'Mg': 0.3}, 'composition_tolerances': {'Si': 0.5, 'Mg': 0.1}})
+        self.assertTrue(seen)
         self.assertTrue(all(keys == {'Si', 'Mg'} for keys in seen))
         self.assertEqual(len(result['sobolSensitivityAnalysis']), 5)
         self.assertEqual(result['sensitivityMetadata']['evaluationCount'], 150 * 7)

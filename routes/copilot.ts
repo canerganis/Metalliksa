@@ -96,31 +96,3 @@ copilotRouter.post("/api/metallurgy/diagnose-micrograph", async (req: Request, r
   }
 });
 
-// SEM Legend Detection
-copilotRouter.post("/api/metallurgy/detect-sem-legend", async (_req: Request, res: Response) => {
-  return res.json({
-    scaleBarLengthPx: 140,
-    physicalLengthUm: 20,
-    confidence: 0.94,
-    magnification: "2500x",
-  });
-});
-
-// SEM Auto Analysis
-copilotRouter.post("/api/metallurgy/analyze-sem", async (req: Request, res: Response) => {
-  if (denyIfAirgapped(res, "SEM analysis")) return;
-  try {
-    const { imageBase64, analysisType } = req.body;
-    return res.json({
-      success: true,
-      grainSizeUm: 14.8,
-      aspectRatio: 1.25,
-      secondaryDendriteArmSpacingUm: 0.85,
-      porosityAreaFractionPct: 0.042,
-      identifiedPhases: ["gamma-matrix", "gamma-prime", "carbide-mc"],
-      summary: "High-density consolidated microstructure with negligible lack-of-fusion voids. Sub-micron cellular dendritic structure observed.",
-    });
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message || "SEM analysis failed" });
-  }
-});

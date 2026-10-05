@@ -191,6 +191,7 @@ export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",
   "lpbf_thermal_solver",
+  "micrograph_measure",
   "pourbaix_solver",
   "stl_slicer_build_time_solver",
   "stochastic_uq_mmpds_solver",

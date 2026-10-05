@@ -222,8 +222,6 @@ CEILING_SNAPSHOT = {
             "POST /api/lpbf/sources/:datasetId/import",
             "POST /api/lpbf/sources/:datasetId/preview",
             "POST /api/lpbf/sources/:datasetId/verify",
-            "POST /api/metallurgy/analyze-sem",
-            "POST /api/metallurgy/detect-sem-legend",
             "POST /api/python/ipc-warmup",
             "POST /api/python/xrd-deconvolve",
         ],
@@ -241,8 +239,6 @@ CEILING_SNAPSHOT = {
         },
         "cannedBaseline": [
             "GET /api/health",
-            "POST /api/metallurgy/analyze-sem",
-            "POST /api/metallurgy/detect-sem-legend",
         ],
     },
     "src/UNREACHABLE_SUPPORT_BASELINE.ceiling.json": {

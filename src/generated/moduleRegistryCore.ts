@@ -369,7 +369,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "micrograph",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Micrograph Analysis",
       "description": "Image segmentation requires scale calibration and independent inspection.",
@@ -381,15 +381,15 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/MicrographLab.tsx",
         "export": "MicrographLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
       "tests": {
         "oracle": {
-          "status": "pending",
+          "status": "present",
           "ciNote": null,
-          "scope": null
+          "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
         }
       }
     },

@@ -32,8 +32,6 @@
     "POST /api/lpbf/sources/:datasetId/import",
     "POST /api/lpbf/sources/:datasetId/preview",
     "POST /api/lpbf/sources/:datasetId/verify",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend",
     "POST /api/python/ipc-warmup",
     "POST /api/python/xrd-deconvolve"
   ],
@@ -50,8 +48,6 @@
     "USE /api/research/registry": 1
   },
   "cannedBaseline": [
-    "GET /api/health",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend"
+    "GET /api/health"
   ]
 }

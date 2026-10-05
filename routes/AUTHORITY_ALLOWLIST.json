@@ -10,8 +10,6 @@
     "POST /api/calphad/minimize": "Alias of POST /api/python/calphad-minimize (phase-diagram calphad-minimize operation).",
     "GET /api/calphad/databases": "Alias of GET /api/python/calphad-databases (phase-diagram calphad-databases operation).",
     "POST /api/python/xrd-deconvolve": "Python XRD route; the service method has no caller in src/.",
-    "POST /api/metallurgy/detect-sem-legend": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
-    "POST /api/metallurgy/analyze-sem": "Canned constant response (see cannedBaseline); recorded as a micrograph legacyNote, not bound.",
     "GET /api/research/registry/history": "Research registry sub-resource of the research-hub research-registry operation.",
     "GET /api/research/registry/revisions/:revision": "Research registry sub-resource of the research-hub research-registry operation.",
     "GET /api/lpbf/sources/:datasetId": "LPBF source catalog sub-resource (src/services/lpbfSourceService.ts, 3d-distortion-lab lpbf-source-catalog).",
@@ -46,8 +44,6 @@
     "USE /api/research/registry (routes/researchRegistry.ts#1)": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
   },
   "cannedBaseline": {
-    "POST /api/metallurgy/detect-sem-legend": "Returns a constant scale bar (140 px = 20 um, confidence 0.94) for any input. Known offender (design 7).",
-    "POST /api/metallurgy/analyze-sem": "Returns constant microstructure metrics (grain size 14.8 um, porosity 0.042 %) for any image. Known offender (design 7).",
     "GET /api/health": "server.ts liveness: 'hasApiKey: AIRGAPPED ? false : <runtime check>' trips the ternary-of-literals rule. Transport metadata, not a result; heuristic false positive kept visible."
   }
 }
