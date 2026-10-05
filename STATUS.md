@@ -1,3 +1,10 @@
+## SDK composition, EDS ve Elastic Constants — 2026-10-05
+
+- Yerel merge `2bf52a5`: üç kaynak bağlı sözleşme entegre; registry 12 contracted / 13 legacy. Composition girişleri sonlu ve 0–100 aralığında; callback canlı state yerine kopya alıyor. Ara toplamın 100 olması zorunlu değil; normalize açık kullanıcı işlemi.
+- Staging: 1297 TS test / 1295 PASS / 0 FAIL / 1 SKIP / 1 mevcut Tafel TODO; 89 Python sözleşme testi PASS; tsc/build/bundle/gen PASS. Worktree'de CMU kaynakları eksik olduğu için atlanan Phase 4 testi, ana dal merge revizyonunda kilitli Python ve mevcut kaynaklarla ayrıca PASS (1/1, skip yok). Ceiling review 0.
+- Sol kaynak/test incelemesinde callback mutasyon bulgusu kapatıldı. Opus availability incelemesi kota nedeniyle sonuç vermedi; onay sayılmadı. Antigravity kotası sonrası Sol 6.1 yönetici, GPT-6 Luna worker; ayrı Gemini erişimi henüz doğrulanmadı.
+- Availability transport alanları evidence değildir; pending-oracle tavanı korunuyor. Yazılım kontrolleri fiziksel doğrulama sayılmaz; donmuş LPBF fizik/pin değişmedi. Push yok.
+- Devam: ayrı Luna worktree'lerinde Database ve CALPHAD sözleşmeleri; Composition Editor bilimsel bağlam metni düzeltmesi; kalan SDK/a11y/premium UI ve final revizyon Docker/tarayıcı kontrolleri.
 ## SDK yerel otorite ve kayıt görüntüleme — 2026-10-05
 
 - `476fe1b`/`4380fe3` ve `1f20e53`/`5d24f47` yerel birleştirildi: routesiz/methodsuz browser-local işlemler için sahte deadline gerekmiyor. Remote deadline ve pending-oracle tavanı korunuyor; availability/evidence ayrımı henüz sonraki dar şema işi.

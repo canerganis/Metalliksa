@@ -1,3 +1,6 @@
+## SDK ürün ve giriş güvenilirliği kaydı — 2026-10-05
+
+`2bf52a5` composition/EDS/elasticity sözleşmelerini kaynak bağlı yerel işlemler ve gerçek availability çıktılarıyla kaydeder. Evidence üretmez; pending oracle screening-only tavanı ve remote deadline gereksinimi korunur. Composition finite/range ve callback kopyalama regresyonları yazılım davranışını doğrular; malzeme özelliklerinin deneysel doğruluğunu kanıtlamaz. Staging 1295 PASS, 1 kaynak-eksik SKIP, 1 measured-benchmark TODO; ana merge revizyonunda mevcut CMU kaynaklarıyla Phase 4 arşiv turu ayrıca 1 PASS. Donmuş LPBF modeli değişmedi.
 ## 2026-10-05 — Elastic Constants girdi ve ürün davranışı (`038d487`)
 
 - Kullanıcı Cij veya K/G girdileri Python elasticity çekirdeğine gider; explicit input mode katalogdan sabit veya yoğunluk doldurmaz. Eksik yoğunluk/composition temelli sonuçlar unavailable kalır. Hesaplanan VRH/Born özellikleri continuum elasticity model çıktılarıdır; DFT ya da deneysel ölçüm değildir.
