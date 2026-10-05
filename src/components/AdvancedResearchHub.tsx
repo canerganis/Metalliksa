@@ -1,3 +1,4 @@
+import { WORKSPACES } from '../data/workspaces';
 import React, { useRef, useState } from 'react';
 import { BookOpen, Download, Upload } from 'lucide-react';
 import { MeltPoolMeasuredTrackPanel } from './MeltPoolMeasuredTrackPanel';
@@ -21,7 +22,7 @@ export const AdvancedResearchHub: React.FC = () => {
   }
   return <div className="mx-auto max-w-[1500px] space-y-5 p-4 lg:p-7" data-testid="research-hub">
     <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-5">
-      <div><div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-sky-400"><BookOpen size={15} /> Evidence & Qualification <Badge>Research</Badge></div><h1 className="text-2xl font-semibold text-slate-100">Research Hub</h1><p className="mt-2 max-w-3xl text-sm text-slate-400">Turn literature into traceable engineering evidence. Extract reported values, review their conditions, and link them to material and validation work.</p></div>
+      <div><div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-sky-400"><BookOpen size={15} /> {WORKSPACES.find(workspace => workspace.id === 'evidence')!.label} <Badge>Research</Badge></div><h1 className="text-2xl font-semibold text-slate-100">Research Hub</h1><p className="mt-2 max-w-3xl text-sm text-slate-400">Turn literature into traceable engineering evidence. Extract reported values, review their conditions, and link them to material and validation work.</p></div>
       <div className="flex gap-2"><button className={buttonClass} onClick={exportRegistry}><Download size={14} /> Export registry</button><button className={buttonClass} onClick={() => importRef.current?.click()}><Upload size={14} /> Import registry</button><input ref={importRef} type="file" accept=".json,application/json" className="hidden" aria-label="Import research registry" onChange={async event => { const file = event.target.files?.[0]; if (!file) return; const input = event.currentTarget; try { if (file.size > 10 * 1024 * 1024) throw new Error('Registry exceeds the 10 MB import limit.'); const result = state.importSnapshot(JSON.parse(await file.text())); setMessages(result.errors.length ? result.errors : ['Registry imported. Existing records were preserved.']); } catch (error) { setMessages([error instanceof Error ? error.message : 'Unable to import registry.']); } input.value = ''; }} /></div>
     </header>
     <Notice messages={[...(state.storageError ? [state.storageError] : []), ...messages]} />

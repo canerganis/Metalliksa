@@ -560,7 +560,7 @@ function TafelPolarizationLabWithData({
               className="px-3 py-1.5 rounded-lg text-xs font-mono transition border flex items-center gap-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
             >
               {savedToDtNotification ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{savedToDtNotification ? "Twin Synced!" : "Sync Digital Twin"}</span>
+              <span>{savedToDtNotification ? "Record Saved!" : "Save to Specimen Record"}</span>
             </button>
           )}
         </div>

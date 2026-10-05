@@ -97,7 +97,7 @@ Background work: none; resources: fetch.
 - `src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio`
 - `src/services/micrographMeasureService.ts::measureMicrograph`
 - `src/utils/micrographInput.ts::buildMeasureRequest`
-- `docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis`
+- `docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` /`
 
 ## Tests
 

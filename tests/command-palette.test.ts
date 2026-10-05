@@ -68,7 +68,7 @@ test('every token must match (AND); scattered letters match the label only, rank
 test('real registry queries: label, id and workspace hits', () => {
   assert.equal(ids('keyhole')[0], 'keyhole-raytracing');
   assert.equal(ids('calphad')[0], 'phase-diagram');
-  const evidence = ids('evidence & qualification');
+  const evidence = ids('evidence & records');
   const inEvidence = MODULES.filter(module => module.workspace === 'evidence').map(module => module.id);
   for (const id of inEvidence) assert.ok(evidence.includes(id), `${id} found by its workspace name`);
   assert.ok(ids('preview').length >= MODULES.filter(module => module.scope === 'Preview').length, 'scope is searchable');
@@ -95,7 +95,7 @@ test('real registry: one letter never lists every module; each hit has a label w
   }
   // The review's measured cases: e, r and i used to match all 37 through workspace and maturity names.
   for (const letter of ['e', 'r', 'i', 'İ', 'ı']) assert.ok(ids(letter).length < MODULES.length, letter);
-  assert.deepEqual(ids('k'), ['keyhole-raytracing', 'toolpath-studio'], 'Keyhole Ray Tracing (prefix) before Toolpath & Kinematics (word start)');
+  assert.deepEqual(ids('k'), ['keyhole-raytracing', 'toolpath-studio'], 'Keyhole Ray Tracing (prefix) before Scan Path Kinematics (word start)');
   assert.ok(ids('re').length > ids('r').length, 'two characters reach id, workspace, maturity and description');
 });
 
@@ -259,7 +259,7 @@ test('paletteChoice: the result at the given index, null for an empty list or an
 });
 
 test('commitPaletteChoice navigates to the chosen module, then closes; an empty list is a no-op', () => {
-  const results = rankPaletteEntries(ENTRIES, 'thermal');
+  const results = rankPaletteEntries(ENTRIES, 'process');
   const { calls, effects } = recorder();
   assert.equal(commitPaletteChoice(results, 1, effects), results[1].id);
   assert.deepEqual(calls, [['navigate', results[1].id], ['close']], 'navigate exactly once with the chosen id, before closing');

@@ -365,7 +365,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
             <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight flex items-center gap-2.5">
               <ShieldCheck className="w-7 h-7 text-sky-400" />
-              UQ-Lab: Quasi-Monte Carlo & Coupon Scatter
+              Coupon Statistics &amp; UQ Sampling
             </h1>
 
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl leading-relaxed">
