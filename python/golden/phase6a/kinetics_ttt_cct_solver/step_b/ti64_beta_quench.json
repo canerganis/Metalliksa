@@ -116,6 +116,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[0].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[0].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -197,6 +203,12 @@
    "key": "cctContinuousCoolingMap[1].phaseFractions_status",
    "kind": "added",
    "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[1].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -284,6 +296,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[2].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[2].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -365,6 +383,12 @@
    "key": "cctContinuousCoolingMap[3].phaseFractions_status",
    "kind": "added",
    "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[3].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -452,6 +476,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[4].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[4].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -533,6 +563,12 @@
    "key": "cctContinuousCoolingMap[5].phaseFractions_status",
    "kind": "added",
    "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[5].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -620,6 +656,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[6].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[6].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -701,6 +743,12 @@
    "key": "cctContinuousCoolingMap[7].phaseFractions_status",
    "kind": "added",
    "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
+   "key": "cctContinuousCoolingMap[7].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -788,6 +836,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[8].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[8].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -872,6 +926,12 @@
    "old": null
   },
   {
+   "key": "cctContinuousCoolingMap[9].phaseStartTemps_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "cctContinuousCoolingMap[9].predictedHardness_HRC",
    "kind": "changed",
    "new": null,
@@ -938,6 +998,24 @@
    "old": null
   },
   {
+   "key": "criticalTransformationTemperatures.Ae3_C_status",
+   "kind": "added",
+   "new": "registry-screening-value",
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Bs_C",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "criticalTransformationTemperatures.Bs_C_status",
+   "kind": "added",
+   "new": "unavailable-kinetics-model-steel-only",
+   "old": null
+  },
+  {
    "key": "criticalTransformationTemperatures.CriticalCoolingRate_CCR_C_s",
    "kind": "changed",
    "new": null,
@@ -962,9 +1040,27 @@
    "old": null
   },
   {
+   "key": "engine",
+   "kind": "changed",
+   "new": "MetalliX-Python-Li1998-Additivity-Kinetics-v4.0",
+   "old": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10"
+  },
+  {
+   "key": "kineticsModel.evidenceLevel",
+   "kind": "added",
+   "new": "screening",
+   "old": null
+  },
+  {
    "key": "kineticsModel.illustrativeOnly",
    "kind": "added",
    "new": true,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.li1998",
+   "kind": "added",
+   "new": null,
    "old": null
   },
   {
@@ -986,9 +1082,15 @@
    "old": null
   },
   {
+   "key": "kineticsModel.modelVersion",
+   "kind": "added",
+   "new": "li1998-additivity-v1",
+   "old": null
+  },
+  {
    "key": "kineticsModel.note",
    "kind": "added",
-   "new": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "new": "The Li (1998) TTT/CCT model covers low-alloy steels only; no sourced transformation-kinetics model of this alloy class is implemented, so no TTT/CCT curves, start temperatures, phase fractions or hardness are reported.",
    "old": null
   },
   {
@@ -1012,13 +1114,55 @@
   {
    "key": "kineticsModel.scope",
    "kind": "added",
-   "new": "steel-only",
+   "new": "low-alloy steels inside the composition range stated for the Li (1998) model",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.sourceLabel",
+   "kind": "added",
+   "new": "Li, Niebuhr, Meekisho & Atteridge, Metall. Mater. Trans. B 29 (1998) 661-672: equations as printed in M. Li, PhD thesis, Oregon Graduate Institute (1996), Eqs. 3.67 and 3.70-3.77, and in Collins et al., Metals 13 (2023) 1168, Eqs. 1-14; Ae3/Ae1: Grange (1961) as printed in Collins et al. Eqs. 8 and 11; Ms: Andrews linear equation modified by Kung & Rayment (1982), Li (1996) Eq. 3.77; CCT: additivity rule (Scheil 1935).",
    "old": null
   },
   {
    "key": "kineticsModel.status",
    "kind": "added",
    "new": "unavailable",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validationStatus",
+   "kind": "added",
+   "new": "unvalidated",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.source",
+   "kind": "added",
+   "new": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.status",
+   "kind": "added",
+   "new": "not-applicable-alloy-class",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.unchecked",
+   "kind": "added",
+   "new": [],
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.violations",
+   "kind": "added",
+   "new": [],
    "old": null
   },
   {
@@ -1250,13 +1394,13 @@
   {
    "key": "tttIncubationFloor.floorValue_s",
    "kind": "added",
-   "new": 0.001,
+   "new": null,
    "old": null
   },
   {
    "key": "tttIncubationFloor.note",
    "kind": "added",
-   "new": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "new": "No TTT points: the kinetics model is unavailable for this alloy.",
    "old": null
   },
   {
@@ -3169,7 +3313,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "f4bc04b10402e8f8bdac23fa40778041c3144e54",
+ "gitHead": "a062a46e3b706eb6eb39186a45809d5618ad8fc9",
  "input": {
   "agingTemp_C": 550.0,
   "agingTime_h": 4.0,
@@ -3203,6 +3347,7 @@
      68.0
     ]
    },
+   "kineticsModelVersion": "li1998-additivity-v1",
    "registryAlloyId": "ti6al4v",
    "registryVersion": "alloy-registry-2"
   }
@@ -3210,7 +3355,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "2990cbe8ad4ad676b81ec78c9d60073142a03b510e63ad6d8c0de87c6dce0b9e",
+ "solverSha256": "954fa53e7a0e2610f807d2364146e28887910a07eb945dd3a9004875d1f1467d",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -3268,6 +3413,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3287,6 +3433,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3306,6 +3453,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3325,6 +3473,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3344,6 +3493,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3363,6 +3513,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3382,6 +3533,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3401,6 +3553,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3420,6 +3573,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3439,6 +3593,7 @@
      "RetainedAustenite_pct": null
     },
     "phaseFractions_status": "unavailable-kinetics-model-steel-only",
+    "phaseStartTemps_C": null,
     "predictedHardness_HRC": null,
     "predictedHardness_HRC_status": "unavailable-kinetics-model-steel-only",
     "predictedHardness_HV": null,
@@ -3454,6 +3609,9 @@
    "Ae1_C": null,
    "Ae1_C_status": "unavailable-kinetics-model-steel-only",
    "Ae3_BetaTransus_GammaSolvus_C": 995.0,
+   "Ae3_C_status": "registry-screening-value",
+   "Bs_C": null,
+   "Bs_C_status": "unavailable-kinetics-model-steel-only",
    "CriticalCoolingRate_CCR_C_s": null,
    "CriticalCoolingRate_CCR_status": "unavailable-kinetics-model-steel-only",
    "Mf_C": 650.0,
@@ -3461,7 +3619,7 @@
    "Ms_C": 800.0,
    "Ms_C_status": "registry-screening-value"
   },
-  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
+  "engine": "MetalliX-Python-Li1998-Additivity-Kinetics-v4.0",
   "inputParameters": {
    "agingTemp_C": 550.0,
    "agingTime_h": 4.0,
@@ -3470,18 +3628,30 @@
    "selectedCoolingRate_C_s": 500.0
   },
   "kineticsModel": {
+   "evidenceLevel": "screening",
    "illustrativeOnly": true,
+   "li1998": null,
    "lswPrecipitateCoarsening": {
     "note": "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the activation energy is per alloy; one molar volume serves both the matrix concentration and the precipitate); the strengthening column is an unsourced screening curve.",
     "reason": null,
     "status": "generic-constants-illustrative"
    },
-   "note": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "modelVersion": "li1998-additivity-v1",
+   "note": "The Li (1998) TTT/CCT model covers low-alloy steels only; no sourced transformation-kinetics model of this alloy class is implemented, so no TTT/CCT curves, start temperatures, phase fractions or hardness are reported.",
    "placeholderParameters": [],
    "reason": "kinetics model is steel-only",
    "registryAlloyId": "ti6al4v",
-   "scope": "steel-only",
-   "status": "unavailable"
+   "scope": "low-alloy steels inside the composition range stated for the Li (1998) model",
+   "sourceLabel": "Li, Niebuhr, Meekisho & Atteridge, Metall. Mater. Trans. B 29 (1998) 661-672: equations as printed in M. Li, PhD thesis, Oregon Graduate Institute (1996), Eqs. 3.67 and 3.70-3.77, and in Collins et al., Metals 13 (2023) 1168, Eqs. 1-14; Ae3/Ae1: Grange (1961) as printed in Collins et al. Eqs. 8 and 11; Ms: Andrews linear equation modified by Kung & Rayment (1982), Li (1996) Eq. 3.77; CCT: additivity rule (Scheil 1935).",
+   "status": "unavailable",
+   "validationStatus": "unvalidated",
+   "validityDomain": {
+    "grainSize": null,
+    "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
+    "status": "not-applicable-alloy-class",
+    "unchecked": [],
+    "violations": []
+   }
   },
   "lswPrecipitateCoarsening": [
    {
@@ -3558,8 +3728,8 @@
   "success": true,
   "tttIncubationFloor": {
    "floorHitCount": null,
-   "floorValue_s": 0.001,
-   "note": "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants (nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a sourced model of this alloy, so they are not reported.",
+   "floorValue_s": null,
+   "note": "No TTT points: the kinetics model is unavailable for this alloy.",
    "pointCount": null,
    "status": "unavailable-kinetics-model-steel-only"
   },

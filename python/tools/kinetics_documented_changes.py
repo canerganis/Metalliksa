@@ -1,35 +1,32 @@
 """
-Documented value changes of kinetics_ttt_cct_solver made by the engine-fix lane fx-kinetics.
+Documented value changes of kinetics_ttt_cct_solver against the d33b6f5 / 7f3f803 base goldens.
 
 Used by capture_phase6a_golden.documented_change_violation (via
-phase6a_t2b_golden_cases.EXPECTED_DOCUMENTED_VALUE_CHANGES) and by
-test_phase6a_t2b_migration. Every drift row of the listed patterns is verified EXACTLY against
-the re-blessed document; nothing is accepted by a numeric tolerance except the display rounding
-of a value that is recomputed here by an independent formula (LSW).
+phase6a_t2b_golden_cases.EXPECTED_DOCUMENTED_VALUE_CHANGES) and by test_phase6a_t2b_migration.
 
-Because a drift row exists only where a value differs from the d33b6f5 base, a value that stays at
-(or returns to) the base value produces no row. document_violations therefore also checks the
-WHOLE re-blessed document against an independent expectation of every status, text and
-availability field of the kinetics result.
+Two levels of checking:
 
-Changes (the d33b6f5 / 7f3f803 base golden -> now):
+* row_violation: each drift row of a documented pattern must be of an allowed kind and must be exactly the value
+  the re-blessed document holds at that key (a removed row: the key is absent / the curve list is null). The LSW
+  rows additionally check the OLD value against the old formula (unit error, 1e-3 floor, legacy R).
+* document_violations: the WHOLE re-blessed document is compared with an independent expectation: every status,
+  text and availability field exactly; for a steel inside the Li (1998) model range every TTT point, critical
+  temperature, CCT start and the critical cooling rate against tools/kinetics_li_oracle.py (scipy quad / brentq,
+  separate code from the solver) within the display rounding; LSW rows against an independent SI formula.
 
-1. Non-steel alloys (registry class without "Steel": Inconel 718, Ti-6Al-4V, Al 7075): the steel
-   template outputs are unavailable. TTT curves are null; the CCT rows keep the cooling-rate grid
-   but start temperature/time, primary microstructure, phase fractions and HRC are null;
-   the CALPHAD-vs-kinetics equilibrium text, martensite fields, the critical cooling rate (also in
-   alloyMetadata) and the eutectoid Ae1 are null. Every one carries an explicit status and the
-   reason "kinetics model is steel-only".
-2. Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS: in718 and al7075 Ms/Mf) are null
-   in alloyMetadata and criticalTransformationTemperatures, with a status.
-3. Steels: TTT points get floorHit (== tStart_s is the 1 ms floor). The diffusional CCT start of
-   every steel row is null (the incubation law has no Ae3 asymptote; start not computed).
-   A steel row with no diffusional start above Ms stays the athermal Ms row.
-4. LSW: K_LSW used the mole fraction where mol/m^3 is needed (K too small by 1/Vm = 9.1e4) and
-   had a 1e-3 nm^3/h floor. The radius, strengthening value and regime of every row are
-   recomputed here with an independent SI formula for both the old and the new definition. An aging
-   temperature at or above the registry Ae3 (steels: also Ae1) makes every LSW row null with a status.
-5. Steel D2: the fixed equilibrium text names alloy carbides instead of cementite.
+Changes (base golden -> now):
+
+1. Lane kin-li: the steel template (unsourced nose temperatures, Avrami constants, 1 ms floor, CCT phase
+   fractions/HRC looked up by cooling-rate band) is replaced by the Li et al. (1998) model: TTT C-curves for
+   ferrite/pearlite/bainite from composition and ASTM grain size, CCT starts by the additivity rule, Grange
+   Ae3/Ae1, Li Bs, Kung-Rayment Ms, model critical cooling rate. Phase fractions and HRC are null (not computed).
+   Reported only for a steel inside the composition range stated by M. Li (1996 thesis p. 86); a steel outside
+   it (AISI D2) and every non-steel alloy are unavailable with an explicit status and reason.
+2. fx-kinetics (kept): non-steel alloys unavailable ("kinetics model is steel-only"); registry placeholders
+   (alloy_registry.KINETICS_PLACEHOLDERS) null in alloyMetadata; non-steel alloyMetadata Ae1/critical cooling
+   rate null.
+3. fx-kinetics (kept): LSW K used the mole fraction where mol/m^3 is needed (K too small by 1/Vm = 9.1e4) and had
+   a 1e-3 nm^3/h floor; null at or above the registry Ae3 (steels: Ae1).
 """
 
 from __future__ import annotations
@@ -41,65 +38,125 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 PYTHON_DIR = Path(__file__).resolve().parent.parent
-if str(PYTHON_DIR) not in sys.path:
-    sys.path.insert(0, str(PYTHON_DIR))
+TOOLS_DIR = Path(__file__).resolve().parent
+for _p in (PYTHON_DIR, TOOLS_DIR):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 import alloy_registry  # noqa: E402 (python/ module)
 import hardness_conversion_e140 as e140  # noqa: E402 (python/ module)
 import input_validation  # noqa: E402 (python/ module)
 import physical_constants  # noqa: E402 (python/ module)
+import kinetics_li_oracle as oracle  # noqa: E402 (tools/ module)
 
 STEEL_ONLY_REASON = "kinetics model is steel-only"
 ST_STEEL_ONLY = "unavailable-kinetics-model-steel-only"
+ST_OUTSIDE = "unavailable-composition-outside-li-model-range"
 ST_PLACEHOLDER = "unavailable-registry-placeholder"
 ST_REGISTRY = "registry-screening-value"
-ST_START_NO_ASYMPTOTE = "unavailable-ttt-incubation-law-no-ae3-asymptote"
+ST_START_LI = "li1998-additivity-first-diffusional-start"
 ST_START_ATHERMAL = "athermal-martensite-no-diffusional-start-above-ms"
-ST_LOOKUP = "steel-lookup-by-ccr-band-not-computed"
+ST_NOT_AUSTENITIC = "unavailable-austenitizing-at-or-below-ae3"
+ST_FRACTIONS = "unavailable-fractions-not-computed"
+ST_HV_NO_HRC = "unavailable-no-predicted-hrc"
 ST_STATIC_TEXT = "static-text-not-a-calphad-calculation"
-ST_ILLUSTRATIVE = "steel-illustrative-correlation"
+ST_LI = "li1998-additivity-screening"
+ST_GRANGE = "computed-grange-1961-screening"
+ST_BS = "computed-li-1998-screening"
+ST_MS = "computed-andrews-kung-rayment-1982-screening"
+ST_MF = "unavailable-not-modelled"
+ST_TTT_NO_FLOOR = "no-floor-li-1998-law"
 ST_LSW_ILLUSTRATIVE = "generic-constants-illustrative"
 ST_LSW_ABOVE = "unavailable-aging-temperature-at-or-above-solvus"
-TTT_FLOOR_S = 0.001
 LEGACY_R_GAS = 8.314  # the d33b6f5 / 7f3f803 base goldens were captured with this R
 CCT_RATES = (0.05, 0.2, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 500.0, 2000.0)
-NO_ASYMPTOTE_REASON = "incubation law has no Ae3 asymptote; start not computed"
-STEEL_PHASES = "Ferrite + Cementite / Equilibrium intermetallics"
-D2_PHASES = "Ferrite + alloy carbides (M7C3 / M23C6)"
-OLD_STEEL_PHASES = "Ferrite + Cementite / Equilibrium intermetallics"  # the base text, every alloy
 ATHERMAL_LABEL = "Martensite (Athermal)"
+MODEL_VERSION = "li1998-additivity-v1"
+ENGINE = "MetalliX-Python-Li1998-Additivity-Kinetics-v4.0"
+TTT_POINT_KEYS = ["temperature_C", "phase", "tStart_s", "t50_s", "tFinish_s", "avramiExponent_n",
+                  "drivingForce_DeltaT_C", "floorHit"]
+KM_ALPHA = 0.011
 
 # Independent copies of the solver texts (a typo or a rewording in the solver must be seen here).
+SCOPE = "low-alloy steels inside the composition range stated for the Li (1998) model"
+SOURCE_LABEL = (
+    "Li, Niebuhr, Meekisho & Atteridge, Metall. Mater. Trans. B 29 (1998) 661-672: equations as printed in "
+    "M. Li, PhD thesis, Oregon Graduate Institute (1996), Eqs. 3.67 and 3.70-3.77, and in Collins et al., "
+    "Metals 13 (2023) 1168, Eqs. 1-14; Ae3/Ae1: Grange (1961) as printed in Collins et al. Eqs. 8 and 11; "
+    "Ms: Andrews linear equation modified by Kung & Rayment (1982), Li (1996) Eq. 3.77; CCT: additivity rule "
+    "(Scheil 1935)."
+)
+VALIDITY_SOURCE = (
+    "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the "
+    "model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, "
+    "Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%)."
+)
 NON_STEEL_NOTE = (
-    "The TTT/CCT numeric curves of non-steel alloys come from unsourced alloy-class constants "
-    "(nose temperature, rate prefactor, Avrami exponent) and steel-template phase labels, not from a "
-    "sourced model of this alloy, so they are not reported."
+    "The Li (1998) TTT/CCT model covers low-alloy steels only; no sourced transformation-kinetics model of this "
+    "alloy class is implemented, so no TTT/CCT curves, start temperatures, phase fractions or hardness are reported."
 )
-STEEL_NOTE = (
-    "Steel template with unsourced class constants: the TTT nose/prefactor/Avrami constants are not fitted "
-    "to published data, and the CCT phase fractions and HRC are a lookup by cooling-rate band, not computed."
+OUTSIDE_NOTE = (
+    "The composition is outside the range stated for the Li (1998) model (M. Li 1996 thesis p. 86), so no TTT/CCT "
+    "curves, start temperatures, phase fractions or hardness are reported."
 )
+LI_NOTE = (
+    "Li et al. (1998) isothermal start/finish law with Grange Ae3/Ae1, Li Bs and Kung-Rayment Ms; CCT starts from "
+    "the additivity rule applied to each phase's 1 % start curve independently (no phase interaction, no carbon "
+    "partitioning). Unvalidated screening model: phase fractions and hardness are not computed."
+)
+FRACTIONS_REASON = (
+    "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite "
+    "amounts from a thermodynamic Fe-C-M model that is not implemented"
+)
+TTT_NO_FLOOR_NOTE = (
+    "The Li (1998) start-time law diverges at its start temperature (Ae3, Ae1, Bs); no time floor is applied. "
+    "Points with a start time of 1e6 s or more are not listed."
+)
+TTT_UNAVAILABLE_NOTE = "No TTT points: the kinetics model is unavailable for this alloy."
 LSW_NOTE = (
     "K_LSW uses generic gamma, equilibrium concentration, molar volume and D0 shared by every alloy (only the "
     "activation energy is per alloy; one molar volume serves both the matrix concentration and the "
     "precipitate); the strengthening column is an unsourced screening curve."
 )
-TTT_FLOOR_NOTE = (
-    "tStart_s is clamped to a 1 ms floor where the unsourced incubation law (no Ae3 asymptote) gives "
-    "less; a point with floorHit true is that floor, not a model value, and its t50_s and tFinish_s "
-    "are derived from it."
-)
-GAP_STEEL_EQ_REASON = "fixed steel text; no equilibrium (CALPHAD) calculation is performed here"
-GAP_STEEL_REALITY_REASON = "steel template with unsourced registry critical cooling rate; screening only"
-GAP_STEEL_EQ = {"martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
-                "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)"}
-TTT_POINT_KEYS = ["temperature_C", "phase", "tStart_s", "t50_s", "tFinish_s", "avramiExponent_n",
-                  "drivingForce_DeltaT_C", "floorHit"]
+STEEL_PHASES = "Ferrite + Cementite / Equilibrium intermetallics"
+GAP_STEEL_EQ = {"stablePhasesAtRT": STEEL_PHASES,
+                "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
+                "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
+                "status": ST_STATIC_TEXT,
+                "reason": "fixed steel text; no equilibrium (CALPHAD) calculation is performed here"}
+GAP_LI_REASON = (
+    "Li (1998) start-time model with the additivity rule; phase fractions are not computed. The martensite "
+    "% is given only when no diffusional start is reached above Ms (Koistinen-Marburger, alpha = 0.011/K "
+    "as in Li 1996 Eq. 3.76, at 25 C)")
+GRAIN_DEFINITION = ("priorGrainSize_um is taken as the mean planar grain diameter d; "
+                    "G = -3.2877 - 6.6439 log10(sqrt(pi/4) d / mm) (ASTM E112, Collins et al. Eqs. 3-4)")
+REACTION_FRACTION_BASIS = {
+    "Ferrite": ("volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount "
+                "(thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)"),
+    "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+    "Bainite": ("volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining "
+                "austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"),
+}
+GRAIN_NOTE = ("input bounds are a sanity limit of this implementation; the compared range is the span of "
+              "published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a "
+              "validity statement of the source")
+START_CRITERION = ("1 % reaction (X = 0.01) per phase; each phase's start curve is integrated "
+                   "independently from the austenitizing temperature (no phase interaction)")
+CCR_DEFINITION = ("slowest linear cooling rate from the austenitizing temperature at which "
+                  "no ferrite, pearlite or bainite 1 % start is reached above Ms")
+SUPPRESSED_VERDICT = "No diffusional start above Ms (Li 1998 additivity): martensite from Ms"
+_VERDICT_RE = re.compile(r"(Ferrite|Pearlite|Bainite) start at (-?\d+\.\d) C \(Li 1998 additivity\); "
+                         r"phase fractions not computed")
+# Tolerances: display rounding of the solver plus its 0.05 K midpoint integration (oracle: adaptive quad).
+TOL_TEMP_C = 0.1          # temperatures rounded to 0.1 C (0.05) + integration
+TOL_REL_TIME = 2e-5       # 6 significant digits (5e-6) + quadrature
+TOL_REL_CCT_TIME = 1e-3   # 4 significant digits (5e-4) + start-temperature error / rate
+TOL_REL_CCR = 1e-3        # 4 significant digits (5e-4) + midpoint rule
+OLD_KINETICS_HRC_BANDS = (18.0, 28.0, 42.0, 54.0, 58.0, 64.0)
 
 # ----------------------------------------------------------------------------------------------
 # LSW oracle: r^3 - r0^3 = K t, K = 8 gamma D C_e Vm^2 / (9 R T) with C_e in mol/m^3.
 # Lifshitz & Slyozov, J. Phys. Chem. Solids 19 (1961) 35; Wagner, Z. Elektrochem. 65 (1961) 581.
-# Dimensional check: (J/m^2)(m^2/s)(mol/m^3)(m^3/mol)^2 / (J/mol) = m^3/s.
 _GAMMA_J_M2 = 0.045
 _X_E = 0.02
 _VM_M3_MOL = 1.1e-5
@@ -151,29 +208,46 @@ def lsw_reason(aging_c: float, limit: Tuple[str, float]) -> str:
 
 
 # ----------------------------------------------------------------------------------------------
-class _Ctx:
-    def __init__(self, new_stdout: Dict[str, Any], new_r_gas: float):
-        self.n = new_stdout
-        self.alloy_type = new_stdout["alloyMetadata"]["type"]
-        self.steel = "Steel" in self.alloy_type
-        self.new_r = new_r_gas
-        model = new_stdout.get("kineticsModel") or {}
-        self.model = model
-        self.reg_id = model.get("registryAlloyId")
-
-    def cct_row(self, i: int) -> Dict[str, Any]:
-        return self.n["cctContinuousCoolingMap"][i]
-
-    def aging_limit(self) -> Optional[Tuple[str, float]]:
-        meta = dict(self.n["alloyMetadata"])
-        # Ae3/Ae1 are registry values that are never nulled for steels; for non-steels Ae1 is null in the
-        # output and not used (only Ae3 limits a non-steel).
-        meta.setdefault("Ae1_C", None)
-        return lsw_limit(meta, self.n["inputParameters"]["agingTemp_C"], self.steel)
+_PATH_RE = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 
-def _idx(key: str) -> int:
-    return int(re.search(r"\[(\d+)\]", key).group(1))
+def _leaf(doc: Any, key: str) -> Tuple[bool, Any]:
+    """(present, value) at a drift-report key such as 'a.b[3].c'."""
+    cur = doc
+    for name, index in _PATH_RE.findall(key):
+        if name:
+            if not isinstance(cur, dict) or name not in cur:
+                return False, None
+            cur = cur[name]
+        else:
+            i = int(index)
+            if not isinstance(cur, list) or i >= len(cur):
+                return False, None
+            cur = cur[i]
+    return True, cur
+
+
+def _same(a: Any, b: Any) -> bool:
+    return a == b and type(a) is type(b)
+
+
+def _record(doc: Dict[str, Any]):
+    return input_validation.require_known_alloy(doc["alloy"], alloy_registry.DOMAIN_KINETICS, field="alloy")
+
+
+def _alloy_is_steel(reg_id: str) -> bool:
+    """Steel class from the registry descriptor type (alloy_data_kinetics_uq_fatigue), not from the solver output."""
+    import alloy_data_kinetics_uq_fatigue as kinetics_data  # noqa: E402 (python/ module)
+    return "Steel" in kinetics_data.KINETICS_DESCRIPTORS[reg_id]["type"]
+
+
+def classify(doc: Dict[str, Any]) -> Tuple[str, bool, bool]:
+    """(registry id, steel, inside the Li range), independent of the solver's own flags."""
+    record = _record(doc)
+    steel = _alloy_is_steel(record.id)
+    comp = dict(record.value("composition_wt", alloy_registry.DOMAIN_KINETICS))
+    bad, _unchecked = oracle.range_violations(comp)
+    return record.id, steel, steel and not bad
 
 
 def _is_null_change(row) -> Optional[str]:
@@ -182,184 +256,46 @@ def _is_null_change(row) -> Optional[str]:
     return None
 
 
-def _is_added(row, expected) -> Optional[str]:
-    if row["kind"] != "added" or row["new"] != expected or type(row["new"]) is not type(expected):
-        return f"{row['key']}: expected an added {expected!r}, got {row['kind']} {row['new']!r}"
-    return None
-
-
-def _need_non_steel(ctx: _Ctx, row) -> Optional[str]:
-    if ctx.steel:
-        return f"{row['key']}: a steel alloy ({ctx.alloy_type}) keeps this value"
-    if ctx.model.get("status") != "unavailable" or ctx.model.get("reason") != STEEL_ONLY_REASON:
-        return f"{row['key']}: kineticsModel is not unavailable with the reason {STEEL_ONLY_REASON!r}"
-    return None
-
-
-# --- non-steel: curves, CCT row values, equilibrium/martensite fields -------------------------
-def _h_ttt_removed(row, ctx):
-    problem = _need_non_steel(ctx, row)
-    if problem:
-        return problem
-    if row["kind"] != "removed" or ctx.n.get("tttIsothermalCurves") is not None:
-        return f"{row['key']}: expected a removed TTT point and tttIsothermalCurves null"
-    return None
-
-
-def _h_ttt_null(row, ctx):
-    problem = _need_non_steel(ctx, row)
-    if problem:
-        return problem
-    if row["kind"] != "added" or row["new"] is not None or ctx.n.get("tttIsothermalCurves", 0) is not None:
-        return f"{row['key']}: expected tttIsothermalCurves added as null"
-    return None
-
-
-def _h_nonsteel_null(row, ctx):
-    return _need_non_steel(ctx, row) or _is_null_change(row)
-
-
-def _h_cct_start_null(row, ctx):
-    """transformedStartTemp_C / Time_s / primaryMicrostructure -> null: non-steel, or a steel start not computed."""
-    problem = _is_null_change(row)
-    if problem:
-        return problem
-    entry = ctx.cct_row(_idx(row["key"]))
-    if ctx.steel:
-        if entry.get("transformedStart_status") != ST_START_NO_ASYMPTOTE:
-            return f"{row['key']}: null start of a steel row whose status is {entry.get('transformedStart_status')!r}"
-        if any(entry.get(k) is not None for k in ("transformedStartTemp_C", "transformedStartTime_s",
-                                                 "primaryMicrostructure")):
-            return f"{row['key']}: a not-computed start must have all three start fields null"
+def _h_doc_leaf(row, doc, r_gas):
+    """The row's new value is the document's value at that key (whole-document checks verify the value)."""
+    present, value = _leaf(doc, row["key"])
+    if row["kind"] == "removed":
+        if present:
+            return f"{row['key']}: removed row but the key is present in the re-blessed document"
         return None
-    return _need_non_steel(ctx, row)
-
-
-def _h_cct_status_added(row, ctx):
-    """Added per-row status keys; the expected value follows from the (verified) row content."""
-    entry = ctx.cct_row(_idx(row["key"]))
-    leaf = row["key"].rsplit(".", 1)[-1]
-    if not ctx.steel:
-        problem = _need_non_steel(ctx, row)
-        if problem:
-            return problem
-        return _is_added(row, STEEL_ONLY_REASON if leaf == "unavailableReason" else ST_STEEL_ONLY)
-    if leaf in ("phaseFractions_status", "predictedHardness_HRC_status"):
-        return _is_added(row, ST_LOOKUP)
-    if leaf == "transformedStart_status":
-        if entry.get("primaryMicrostructure") is None:
-            expected = ST_START_NO_ASYMPTOTE
-        elif entry.get("primaryMicrostructure") == ATHERMAL_LABEL:
-            expected = ST_START_ATHERMAL
-        else:
-            return f"{row['key']}: a steel row reports a diffusional start ({entry.get('primaryMicrostructure')!r})"
-        return _is_added(row, expected)
-    if leaf == "unavailableReason":
-        if entry.get("transformedStart_status") == ST_START_NO_ASYMPTOTE:
-            return _is_added(row, NO_ASYMPTOTE_REASON)
-        return _is_added(row, None)
-    return f"{row['key']}: unknown status key"
-
-
-def _h_gap_stable_phases(row, ctx):
-    """Non-steel: null. Steel D2 only: the fixed text names alloy carbides instead of cementite."""
-    if not ctx.steel:
-        return _need_non_steel(ctx, row) or _is_null_change(row)
-    if ctx.reg_id != "aisid2":
-        return f"{row['key']}: only AISI D2 changes its fixed equilibrium text"
-    if row["kind"] != "changed" or row["old"] != OLD_STEEL_PHASES or row["new"] != D2_PHASES:
-        return f"{row['key']}: expected {OLD_STEEL_PHASES!r} -> {D2_PHASES!r}, got {row['old']!r} -> {row['new']!r}"
+    if not present:
+        return f"{row['key']}: key absent from the re-blessed document"
+    if not _same(value, row["new"]):
+        return f"{row['key']}: row new {row['new']!r} != document {value!r}"
     return None
 
 
-def _h_gap_status_added(row, ctx):
-    leaf = row["key"].rsplit(".", 1)[-1]
-    block = "equilibriumPrediction" if ".equilibriumPrediction." in row["key"] else "kineticRealityAtSelectedCooling"
-    if not ctx.steel:
-        problem = _need_non_steel(ctx, row)
-        if problem:
-            return problem
-        return _is_added(row, ST_STEEL_ONLY if leaf == "status" else STEEL_ONLY_REASON)
-    if leaf == "status":
-        return _is_added(row, ST_STATIC_TEXT if block == "equilibriumPrediction" else ST_ILLUSTRATIVE)
-    return _is_added(row, GAP_STEEL_EQ_REASON if block == "equilibriumPrediction" else GAP_STEEL_REALITY_REASON)
-
-
-# --- placeholders and other withdrawn registry echoes -------------------------------------------
-def _h_placeholder_null(row, ctx):
-    key = row["key"].rsplit(".", 1)[-1]  # Ms_C / Mf_C
-    if (ctx.reg_id, key) not in alloy_registry.KINETICS_PLACEHOLDERS:
-        return f"{row['key']}: ({ctx.reg_id}, {key}) is not flagged in alloy_registry.KINETICS_PLACEHOLDERS"
+def _h_alloy_meta_nonsteel(row, doc, r_gas):
+    _rid, steel, _inside = classify(doc)
+    if steel:
+        return f"{row['key']}: a steel keeps its registry echo"
     return _is_null_change(row)
 
 
-def _h_critical_status_added(row, ctx):
+def _h_placeholder_null(row, doc, r_gas):
+    reg_id = _record(doc).id
+    key = row["key"].rsplit(".", 1)[-1]
+    if (reg_id, key) not in alloy_registry.KINETICS_PLACEHOLDERS:
+        return f"{row['key']}: ({reg_id}, {key}) is not flagged in alloy_registry.KINETICS_PLACEHOLDERS"
+    return _is_null_change(row)
+
+
+def _h_lsw(row, doc, r_gas):
+    i = int(re.search(r"\[(\d+)\]", row["key"]).group(1))
     leaf = row["key"].rsplit(".", 1)[-1]
-    if leaf in ("CriticalCoolingRate_CCR_status", "Ae1_C_status"):
-        return _is_added(row, ST_REGISTRY if ctx.steel else ST_STEEL_ONLY)
-    base = leaf[:-len("_status")]
-    flagged = (ctx.reg_id, base) in alloy_registry.KINETICS_PLACEHOLDERS
-    return _is_added(row, ST_PLACEHOLDER if flagged else ST_REGISTRY)
-
-
-# --- steel floor flags and summary blocks -----------------------------------------------------
-def _h_floor_hit_added(row, ctx):
-    if not ctx.steel:
-        return f"{row['key']}: floorHit exists only for the steel TTT points"
-    if row["kind"] != "added" or not isinstance(row["new"], bool):
-        return f"{row['key']}: expected an added bool"
-    point = ctx.n["tttIsothermalCurves"][_idx(row["key"])]
-    if row["new"] != (point["tStart_s"] == TTT_FLOOR_S):
-        return f"{row['key']}: floorHit {row['new']!r} but tStart_s is {point['tStart_s']!r}"
-    return None
-
-
-def _h_model_added(row, ctx):
-    if row["kind"] != "added":
-        return f"{row['key']}: expected an added key"
-    if row["key"] == "kineticsModel.status":
-        return _is_added(row, "available" if ctx.steel else "unavailable")
-    if row["key"] == "kineticsModel.reason":
-        return _is_added(row, None if ctx.steel else STEEL_ONLY_REASON)
-    if row["key"] == "kineticsModel.registryAlloyId":
-        # independent of the solver: the registry id the request alloy name resolves to
-        record = input_validation.require_known_alloy(ctx.n["alloy"], alloy_registry.DOMAIN_KINETICS, field="alloy")
-        return _is_added(row, record.id)
-    return None  # the other keys are compared exactly by document_violations
-
-
-def _h_floor_block_added(row, ctx):
-    if row["kind"] != "added":
-        return f"{row['key']}: expected an added key"
-    block = ctx.n["tttIncubationFloor"]
-    curves = ctx.n.get("tttIsothermalCurves")
-    leaf = row["key"].rsplit(".", 1)[-1]
-    if leaf == "pointCount":
-        return _is_added(row, len(curves) if ctx.steel else None)
-    if leaf == "floorHitCount":
-        return _is_added(row, sum(1 for p in curves if p["floorHit"]) if ctx.steel else None)
-    if leaf == "floorValue_s":
-        return _is_added(row, TTT_FLOOR_S)
-    if leaf == "status":
-        if not ctx.steel:
-            return _is_added(row, ST_STEEL_ONLY)
-        return _is_added(row, "floor-hit-points-flagged" if block["floorHitCount"] else "no-floor-hit-points")
-    return None
-
-
-def _h_added_key(row, ctx):
-    return None if row["kind"] == "added" else f"{row['key']}: expected an added key"
-
-
-# --- LSW --------------------------------------------------------------------------------------
-def _h_lsw(row, ctx):
-    i = _idx(row["key"])
-    leaf = row["key"].rsplit(".", 1)[-1]
-    q = ctx.n["alloyMetadata"]["Q_diff_kJ_mol"]
-    aging_c = ctx.n["inputParameters"]["agingTemp_C"]
-    t_h = ctx.n["lswPrecipitateCoarsening"][i]["agingTime_h"]
-    unavailable = ctx.aging_limit() is not None
-    r_new = lsw_radius_nm(q, aging_c, t_h, ctx.new_r, corrected=True)
+    q = doc["alloyMetadata"]["Q_diff_kJ_mol"]
+    aging_c = doc["inputParameters"]["agingTemp_C"]
+    t_h = doc["lswPrecipitateCoarsening"][i]["agingTime_h"]
+    _rid, steel, _inside = classify(doc)
+    meta = {"Ae3_C": _record(doc).value("Ae3_C", alloy_registry.DOMAIN_KINETICS),
+            "Ae1_C": _record(doc).value("Ae1_C", alloy_registry.DOMAIN_KINETICS)}
+    unavailable = lsw_limit(meta, aging_c, steel) is not None
+    r_new = lsw_radius_nm(q, aging_c, t_h, r_gas, corrected=True)
     r_old = lsw_radius_nm(q, aging_c, t_h, LEGACY_R_GAS, corrected=False)
     if leaf == "meanRadius_nm":
         exp_old, exp_new, tol = r_old, r_new, 0.005
@@ -386,56 +322,61 @@ def _h_lsw(row, ctx):
     return None
 
 
-def _h_lsw_status_added(row, ctx):
-    return _is_added(row, ST_LSW_ABOVE if ctx.aging_limit() is not None else ST_LSW_ILLUSTRATIVE)
+def hv_violation(row, doc) -> Optional[str]:
+    """predictedHardness_HV / _status rows of a row whose HRC is null (Li model: not computed; non-steel).
+
+    The old HV must be round(10.5 * HRC + 40) of one of the old lookup-band HRC values; the new HV null, the
+    status the one that belongs to the alloy class (steel: unavailable-no-predicted-hrc; other: no verified table).
+    """
+    match = re.fullmatch(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?", row["key"])
+    if not match:
+        return f"{row['key']}: not an HV row"
+    entry = doc["cctContinuousCoolingMap"][int(match.group(1))]
+    if entry.get("predictedHardness_HRC") is not None:
+        return f"{row['key']}: HRC is not null"
+    reg_id = _record(doc).id
+    expected_status = ST_HV_NO_HRC if reg_id in {"aisi4140", "aisi4340", "aisid2"} else \
+        e140.STATUS_UNAVAILABLE_ALLOY_CLASS
+    if entry.get("predictedHardness_HV_status") != expected_status or entry.get("predictedHardness_HV") is not None:
+        return f"{row['key']}: HV/status {entry.get('predictedHardness_HV')!r}/{entry.get('predictedHardness_HV_status')!r}"
+    if match.group(2):
+        if row["kind"] != "added" or row["new"] != expected_status:
+            return f"{row['key']}: expected an added status {expected_status!r}"
+        return None
+    allowed = {round(h * 10.5 + 40.0, 0) for h in OLD_KINETICS_HRC_BANDS}
+    if row["kind"] != "changed" or row["new"] is not None or type(row["old"]) is not float or row["old"] not in allowed:
+        return f"{row['key']}: expected old round(10.5 * HRC + 40) of an old HRC band -> null, got {row!r}"
+    return None
 
 
-# One rule per documented change: (pattern, row kinds it may be documented for, handler, description).
-# A row of another kind (for example the bounded numeric R drift of a steel TTT time) is NOT a
-# documented change: it goes through the default guard.
-_A, _C, _R, _N = {"added"}, {"changed"}, {"removed"}, {"numeric", "changed"}
-_CCT = r"cctContinuousCoolingMap\[\d+\]"
-_GAP = r"calphadVsKineticsGap"
+_ANY = {"added", "changed", "numeric", "removed"}
+_A, _C = {"added"}, {"changed"}
 _LSW = r"lswPrecipitateCoarsening\[\d+\]"
 _RULES: List[Tuple[str, set, Callable, str]] = [
-    (r"tttIsothermalCurves\[\d+\]\.(?!floorHit).+", _R, _h_ttt_removed,
-     "non-steel alloys: the TTT curves (unsourced alloy-class constants, steel phase labels) are removed"),
-    (r"tttIsothermalCurves", _A, _h_ttt_null, "non-steel alloys: tttIsothermalCurves is null (kinetics model is steel-only)"),
-    (r"tttIsothermalCurves\[\d+\]\.floorHit", _A, _h_floor_hit_added,
-     "steel TTT points: new floorHit flag (== tStart_s is the 1 ms floor)"),
-    (_CCT + r"\.(predictedHardness_HRC|phaseFractions\.(Martensite_pct|Bainite_pct|Pearlite_Ferrite_pct|RetainedAustenite_pct))",
-     _C, _h_nonsteel_null, "non-steel alloys: phase fractions and HRC are null (steel lookup table)"),
-    (_CCT + r"\.(transformedStartTemp_C|transformedStartTime_s|primaryMicrostructure)", _C, _h_cct_start_null,
-     "CCT start null: non-steel (steel-only) or a steel diffusional start (incubation law has no Ae3 asymptote)"),
-    (_CCT + r"\.(transformedStart_status|phaseFractions_status|predictedHardness_HRC_status|unavailableReason)", _A,
-     _h_cct_status_added, "new per-row status keys"),
-    (_GAP + r"\.equilibriumPrediction\.stablePhasesAtRT", _C, _h_gap_stable_phases,
-     "non-steel alloys: steel equilibrium text is null; AISI D2 names alloy carbides"),
-    (_GAP + r"\.equilibriumPrediction\.(martensiteFraction|soluteSupersaturation)", _C, _h_nonsteel_null,
-     "non-steel alloys: steel equilibrium text is null"),
-    (_GAP + r"\.kineticRealityAtSelectedCooling\.(criticalCoolingRate_C_s|isSuppressedEquilibrium|"
-            r"predictedMartensite_pct|diffusionSuppressionIndex|verdict)", _C, _h_nonsteel_null,
-     "non-steel alloys: steel martensite/verdict fields are null"),
-    (_GAP + r"\.(equilibriumPrediction|kineticRealityAtSelectedCooling)\.(status|reason)", _A, _h_gap_status_added,
-     "new status/reason keys"),
-    (r"criticalTransformationTemperatures\.(CriticalCoolingRate_CCR_C_s|Ae1_C)", _C, _h_nonsteel_null,
-     "non-steel alloys: the steel critical cooling rate and the eutectoid Ae1 are null"),
-    (r"alloyMetadata\.(Ae1_C|critical_cooling_rate_C_s)", _C, _h_nonsteel_null,
-     "non-steel alloys: the steel-template registry echoes Ae1 and critical cooling rate are null"),
-    (r"(alloyMetadata|criticalTransformationTemperatures)\.(Ms_C|Mf_C)", _C, _h_placeholder_null,
+    (r"engine", _C, _h_doc_leaf, "engine name: Li (1998) additivity kinetics v4.0"),
+    (r"tttIsothermalCurves", _A, _h_doc_leaf, "TTT curves null when the model is unavailable"),
+    (r"tttIsothermalCurves\[\d+\](\..+)?", _ANY, _h_doc_leaf,
+     "TTT curves: Li (1998) C-curves of a steel inside the model range (verified against the independent oracle); "
+     "removed when the model is unavailable"),
+    (r"cctContinuousCoolingMap\[\d+\]\.(?!predictedHardness_HV(_status)?$).+", _ANY, _h_doc_leaf,
+     "CCT rows: additivity-rule starts of the Li model (oracle-verified), fractions/HRC null (not computed), statuses; "
+     "all null with the reason when the model is unavailable"),
+    (r"criticalTransformationTemperatures\..+", _ANY, _h_doc_leaf,
+     "critical temperatures: Grange Ae3/Ae1, Li Bs, Kung-Rayment Ms, model critical cooling rate (oracle-verified); "
+     "registry echoes with statuses when the model is unavailable"),
+    (r"calphadVsKineticsGap\..+", _ANY, _h_doc_leaf,
+     "kinetic reality at the selected rate from the Li model; null with the reason when unavailable"),
+    (r"kineticsModel(\..+)?", _ANY, _h_doc_leaf, "kineticsModel block (verified exactly as a whole)"),
+    (r"tttIncubationFloor\..+", _ANY, _h_doc_leaf, "tttIncubationFloor block (no floor in the Li law)"),
+    (r"provenance\.kineticsModelVersion", _A, _h_doc_leaf, "provenance names the kinetics model version"),
+    (r"alloyMetadata\.(Ae1_C|critical_cooling_rate_C_s)", _C, _h_alloy_meta_nonsteel,
+     "non-steel alloys: the steel registry echoes Ae1 and critical cooling rate are null"),
+    (r"alloyMetadata\.(Ms_C|Mf_C)", _C, _h_placeholder_null,
      "registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS) are null"),
-    (r"criticalTransformationTemperatures\.(Ae1_C_status|Ms_C_status|Mf_C_status|CriticalCoolingRate_CCR_status)", _A,
-     _h_critical_status_added, "new status keys for Ae1/Ms/Mf/CCR"),
-    (r"kineticsModel\.(status|reason|registryAlloyId)", _A, _h_model_added, "new kineticsModel block"),
-    (r"kineticsModel\.(scope|illustrativeOnly|note|placeholderParameters(\[\d+\])?|"
-     r"lswPrecipitateCoarsening\.(status|note|reason))", _A, _h_added_key, "new kineticsModel block"),
-    (r"tttIncubationFloor\.(status|floorValue_s|pointCount|floorHitCount)", _A, _h_floor_block_added,
-     "new tttIncubationFloor block"),
-    (r"tttIncubationFloor\.note", _A, _h_added_key, "new tttIncubationFloor block"),
-    (_LSW + r"\.(meanRadius_nm|precipitationHardening_MPa|strengtheningMechanism)", _N, _h_lsw,
+    (_LSW + r"\.(meanRadius_nm|precipitationHardening_MPa|strengtheningMechanism)", {"numeric", "changed"}, _h_lsw,
      "LSW unit fix: C_e in mol/m^3 (x_e/Vm), no 1e-3 nm^3/h floor; null at or above the registry solvus "
      "(steels: Ae1); checked against an independent SI formula"),
-    (_LSW + r"\.status", _A, _h_lsw_status_added, "new LSW row status"),
+    (_LSW + r"\.status", _A, _h_doc_leaf, "new LSW row status"),
 ]
 HANDLERS: Dict[str, Callable] = {p: h for p, _k, h, _d in _RULES}
 HANDLER_KINDS: Dict[str, set] = {p: k for p, k, _h, _d in _RULES}
@@ -445,18 +386,17 @@ assert len(HANDLERS) == len(_RULES)
 
 def row_violation(row: Dict[str, Any], new_stdout: Dict[str, Any],
                   new_r_gas: Optional[float] = None) -> Optional[str]:
-    """None when ``row`` is exactly one of the documented changes above, else the problem."""
+    """None when ``row`` is one of the documented changes above (value equal to the document), else the problem."""
     if new_r_gas is None:
         new_r_gas = physical_constants.GAS_CONSTANT_R.value
-    try:
-        ctx = _Ctx(new_stdout, new_r_gas)
-    except (KeyError, TypeError):
-        return f"{row['key']}: re-blessed document lacks alloyMetadata.type"
+    if not isinstance(new_stdout, dict):
+        return f"{row['key']}: no re-blessed document"
     for pattern, handler in HANDLERS.items():
         if re.fullmatch(pattern, row["key"]) and row["kind"] in HANDLER_KINDS[pattern]:
             try:
-                return handler(row, ctx)
-            except (KeyError, IndexError, TypeError) as exc:
+                return handler(row, new_stdout, new_r_gas)
+            except (KeyError, IndexError, TypeError, ValueError, AttributeError,
+                    input_validation.ValidationError) as exc:
                 return f"{row['key']}: cannot verify against the re-blessed document ({exc!r})"
     return f"{row['key']}: no documented-change handler"
 
@@ -468,162 +408,199 @@ def is_documented_row(key: str, kind: Optional[str]) -> bool:
 
 # ----------------------------------------------------------------------------------------------
 def document_violations(new_stdout: Dict[str, Any], new_r_gas: Optional[float] = None) -> List[str]:
-    """Whole-document checks of a kinetics result, also for fields that did not drift.
-
-    Every status, text, availability and flag field of the kinetics result is compared with an
-    independent expectation derived from the alloy class (the registry descriptor type), the registry
-    placeholder flags, the request inputs and the solver's own numeric tables.
-    """
+    """Whole-document checks of a kinetics result, also for fields that did not drift."""
     if new_r_gas is None:
         new_r_gas = physical_constants.GAS_CONSTANT_R.value
     out: List[str] = []
     try:
         return _document_violations(new_stdout, new_r_gas, out)
-    except (KeyError, IndexError, TypeError, ValueError) as exc:
+    except (KeyError, IndexError, TypeError, ValueError, AttributeError) as exc:
         return out + [f"document is malformed ({exc!r})"]
 
 
-def _document_violations(n: Dict[str, Any], new_r_gas: float, out: List[str]) -> List[str]:
-    meta = n["alloyMetadata"]
-    steel = "Steel" in meta["type"]
-    record = input_validation.require_known_alloy(n["alloy"], alloy_registry.DOMAIN_KINETICS, field="alloy")
+def _close(a: Any, b: float, tol: float) -> bool:
+    return isinstance(a, float) and abs(a - b) <= tol + 1e-12
+
+
+def _rel_close(a: Any, b: float, rel: float) -> bool:
+    return isinstance(a, float) and abs(a - b) <= rel * abs(b) + 1e-12
+
+
+def _document_violations(n: Dict[str, Any], r_gas: float, out: List[str]) -> List[str]:
+    record = _record(n)
     reg_id = record.id
+    meta = n["alloyMetadata"]
+    steel = _alloy_is_steel(reg_id)
+    if steel != ("Steel" in meta["type"]):
+        out.append(f"alloyMetadata.type {meta['type']!r} disagrees with the registry descriptor")
+    comp = dict(record.value("composition_wt", alloy_registry.DOMAIN_KINETICS))
+    violations, unchecked = oracle.range_violations(comp)
+    modelled = steel and not violations
     placeholders = sorted(k for a, k in alloy_registry.KINETICS_PLACEHOLDERS if a == reg_id)
     params = n["inputParameters"]
     aging_c = params["agingTemp_C"]
-    user_cr = params["selectedCoolingRate_C_s"]
-    registry_values = {key: record.value(key, alloy_registry.DOMAIN_KINETICS)
-                       for key in ("Ae3_C", "Ae1_C", "Ms_C", "Mf_C", "Q_diff_kJ_mol", "critical_cooling_rate_C_s")}
+    registry = {key: record.value(key, alloy_registry.DOMAIN_KINETICS)
+                for key in ("Ae3_C", "Ae1_C", "Ms_C", "Mf_C", "Q_diff_kJ_mol", "critical_cooling_rate_C_s")}
+    if n.get("engine") != ENGINE:
+        out.append(f"engine {n.get('engine')!r}")
     # ---- alloyMetadata echoes
-    for key, value in registry_values.items():
-        if key in placeholders or (not steel and key in ("Ae1_C", "critical_cooling_rate_C_s")):
-            expected = None
-        else:
-            expected = value
+    for key, value in registry.items():
+        expected = None if (key in placeholders or (not steel and key in ("Ae1_C", "critical_cooling_rate_C_s"))) \
+            else value
         if meta[key] != expected:
             out.append(f"alloyMetadata.{key} is {meta[key]!r}, expected {expected!r}")
-    # ---- kineticsModel block
-    limit = lsw_limit({"Ae3_C": registry_values["Ae3_C"], "Ae1_C": registry_values["Ae1_C"]}, aging_c, steel)
-    lsw_status = ST_LSW_ABOVE if limit else ST_LSW_ILLUSTRATIVE
+    if meta["composition_wt"] != comp:
+        out.append("alloyMetadata.composition_wt is not the registry composition")
+    # ---- availability
+    if not steel:
+        st, reason, note = ST_STEEL_ONLY, STEEL_ONLY_REASON, NON_STEEL_NOTE
+    elif violations:
+        st, reason, note = ST_OUTSIDE, "composition outside the Li (1998) model range: " + "; ".join(violations), \
+            OUTSIDE_NOTE
+    else:
+        st, reason, note = None, None, LI_NOTE
+    orc = None
+    aust = params["austSolutionTemp_C"]
+    user_cr = params["selectedCoolingRate_C_s"]
+    if modelled:
+        orc = oracle.Oracle(comp, float(params["priorGrainSize_um"]), r_gas)
+    # ---- kineticsModel
+    limit = lsw_limit({"Ae3_C": registry["Ae3_C"], "Ae1_C": registry["Ae1_C"]}, aging_c, steel)
+    model = n["kineticsModel"]
     expected_model = {
-        "status": "available" if steel else "unavailable",
-        "reason": None if steel else STEEL_ONLY_REASON,
-        "scope": "steel-only",
+        "status": "available" if modelled else "unavailable",
+        "reason": reason,
+        "scope": SCOPE,
         "registryAlloyId": reg_id,
         "illustrativeOnly": True,
-        "note": STEEL_NOTE if steel else NON_STEEL_NOTE,
+        "note": note,
         "placeholderParameters": placeholders,
-        "lswPrecipitateCoarsening": {"status": lsw_status, "note": LSW_NOTE,
+        "lswPrecipitateCoarsening": {"status": ST_LSW_ABOVE if limit else ST_LSW_ILLUSTRATIVE, "note": LSW_NOTE,
                                      "reason": lsw_reason(aging_c, limit) if limit else None},
+        "modelVersion": MODEL_VERSION,
+        "sourceLabel": SOURCE_LABEL,
+        "validationStatus": "unvalidated",
+        "evidenceLevel": "screening",
+        "validityDomain": {"status": "not-applicable-alloy-class" if not steel else
+                           ("outside" if violations else ("inside-partially-checked" if unchecked else "inside")),
+                           "source": VALIDITY_SOURCE,
+                           "violations": violations if steel else [],
+                           "unchecked": unchecked if steel else [],
+                           "grainSize": None if orc is None else {
+                               "astmG": round(orc.g, 3), "inputBounds_um": [1.0, 1000.0],
+                               "comparedRange_G": [5.6, 11.0],
+                               "insideComparedRange": 5.6 <= orc.g <= 11.0, "note": GRAIN_NOTE}},
     }
-    if n.get("kineticsModel") != expected_model:
-        out.append(f"kineticsModel differs from the expected block: {n.get('kineticsModel')!r}")
+    li_block = model.get("li1998")
+    if {k: v for k, v in model.items() if k != "li1998"} != expected_model:
+        out.append(f"kineticsModel differs from the expected block: {model!r}")
+    if not modelled:
+        if li_block is not None:
+            out.append("kineticsModel.li1998 must be null when the model is unavailable")
+    else:
+        exp_texts = {"grainSizeDefinition": GRAIN_DEFINITION, "activationEnergy_J_mol": 115060.0,
+                     "startCriterion": START_CRITERION, "criticalCoolingRateDefinition": CCR_DEFINITION,
+                     "fractionsComputed": False, "fractionsReason": FRACTIONS_REASON,
+                     "reactionFractionBasis": REACTION_FRACTION_BASIS}
+        for key, value in exp_texts.items():
+            if not _same(li_block.get(key), value):
+                out.append(f"kineticsModel.li1998.{key} is {li_block.get(key)!r}")
+        if not _close(li_block.get("astmGrainSize_G"), orc.g, 0.0005):
+            out.append(f"kineticsModel.li1998.astmGrainSize_G {li_block.get('astmGrainSize_G')!r} != {orc.g!r}")
+        for ph in oracle.PHASES:
+            if not _rel_close(li_block["compositionFactors"].get(ph), orc.F[ph], 1e-5):
+                out.append(f"kineticsModel.li1998.compositionFactors.{ph}")
+        for name, x in (("X_0p01", 0.01), ("X_0p5", 0.5), ("X_0p99", 0.99)):
+            if not _rel_close(li_block["reactionIntegral_S"].get(name), oracle.s_integral(x), 1e-5):
+                out.append(f"kineticsModel.li1998.reactionIntegral_S.{name}")
+        if sorted(li_block["reactionIntegral_S"]) != ["X_0p01", "X_0p5", "X_0p99"]:
+            out.append("kineticsModel.li1998.reactionIntegral_S keys")
+        if sorted(li_block) != sorted(list(exp_texts) + ["astmGrainSize_G", "compositionFactors", "reactionIntegral_S"]):
+            out.append(f"kineticsModel.li1998 keys {sorted(li_block)!r}")
     # ---- TTT curves and the floor block
     curves = n["tttIsothermalCurves"]
     floor = n["tttIncubationFloor"]
-    if steel:
-        if not curves:
-            out.append("a steel alloy must have TTT curves")
-            curves = []
-        for i, point in enumerate(curves):
-            if sorted(point) != sorted(TTT_POINT_KEYS):  # goldens store sorted keys: compare as sets
-                out.append(f"tttIsothermalCurves[{i}] keys {list(point)!r}")
-            elif point["floorHit"] is not (point["tStart_s"] == TTT_FLOOR_S):
-                out.append(f"tttIsothermalCurves[{i}]: floorHit {point['floorHit']!r} but tStart_s {point['tStart_s']!r}")
-        hits = sum(1 for p in curves if p.get("floorHit") is True)
-        expected_floor = {"status": "floor-hit-points-flagged" if hits else "no-floor-hit-points",
-                          "floorValue_s": TTT_FLOOR_S, "pointCount": len(curves), "floorHitCount": hits,
-                          "note": TTT_FLOOR_NOTE}
+    if modelled:
+        exp_points = orc.ttt()
+        if not isinstance(curves, list) or len(curves) != len(exp_points):
+            out.append(f"tttIsothermalCurves: {None if curves is None else len(curves)} points, oracle {len(exp_points)}")
+        else:
+            for i, (p, e) in enumerate(zip(curves, exp_points)):
+                tag = f"tttIsothermalCurves[{i}]"
+                if sorted(p) != sorted(TTT_POINT_KEYS):
+                    out.append(f"{tag} keys {list(p)!r}")
+                    continue
+                if p["phase"] != e["phase"] or p["avramiExponent_n"] is not None or p["floorHit"] is not False:
+                    out.append(f"{tag}: phase/avrami/floorHit {p['phase']!r} {p['avramiExponent_n']!r} {p['floorHit']!r}")
+                if not _close(p["temperature_C"], e["temperature_C"], 0.005) or \
+                        not _close(p["drivingForce_DeltaT_C"], e["drivingForce_DeltaT_C"], 0.005):
+                    out.append(f"{tag}: temperature {p['temperature_C']!r} vs oracle {e['temperature_C']!r}")
+                for key in ("tStart_s", "t50_s", "tFinish_s"):
+                    if e[key] is None:
+                        if p[key] is not None:
+                            out.append(f"{tag}.{key} must be null (ferrite: equilibrium-capped fraction)")
+                    elif not _rel_close(p[key], e[key], TOL_REL_TIME):
+                        out.append(f"{tag}.{key} {p[key]!r} vs oracle {e[key]!r}")
+        expected_floor = {"status": ST_TTT_NO_FLOOR, "floorValue_s": None,
+                          "pointCount": len(curves) if isinstance(curves, list) else None,
+                          "floorHitCount": 0, "note": TTT_NO_FLOOR_NOTE}
     else:
         if curves is not None:
-            out.append("a non-steel alloy must have tttIsothermalCurves null")
-        expected_floor = {"status": ST_STEEL_ONLY, "floorValue_s": TTT_FLOOR_S, "pointCount": None,
-                          "floorHitCount": None, "note": NON_STEEL_NOTE}
+            out.append("tttIsothermalCurves must be null when the model is unavailable")
+        expected_floor = {"status": st, "floorValue_s": None, "pointCount": None, "floorHitCount": None,
+                          "note": TTT_UNAVAILABLE_NOTE}
     if floor != expected_floor:
         out.append(f"tttIncubationFloor differs from the expected block: {floor!r}")
-    # ---- critical temperatures
-    flagged = lambda key: key in placeholders  # noqa: E731
-    expected_crit = {
-        "Ae3_BetaTransus_GammaSolvus_C": registry_values["Ae3_C"],
-        "Ae1_C": registry_values["Ae1_C"] if steel else None,
-        "Ms_C": None if flagged("Ms_C") else registry_values["Ms_C"],
-        "Mf_C": None if flagged("Mf_C") else registry_values["Mf_C"],
-        "CriticalCoolingRate_CCR_C_s": registry_values["critical_cooling_rate_C_s"] if steel else None,
-        "Ae1_C_status": ST_REGISTRY if steel else ST_STEEL_ONLY,
-        "Ms_C_status": ST_PLACEHOLDER if flagged("Ms_C") else ST_REGISTRY,
-        "Mf_C_status": ST_PLACEHOLDER if flagged("Mf_C") else ST_REGISTRY,
-        "CriticalCoolingRate_CCR_status": ST_REGISTRY if steel else ST_STEEL_ONLY,
-    }
-    if n["criticalTransformationTemperatures"] != expected_crit:
-        out.append(f"criticalTransformationTemperatures differs: {n['criticalTransformationTemperatures']!r}")
-    # ---- CCT rows
+    # ---- critical temperatures, CCT rows, gap
+    crit = n["criticalTransformationTemperatures"]
     rows = n["cctContinuousCoolingMap"]
+    gap = n["calphadVsKineticsGap"]
     if [r["coolingRate_C_s"] for r in rows] != list(CCT_RATES):
         out.append("cctContinuousCoolingMap cooling-rate grid changed")
-    for i, row in enumerate(rows):
-        tag = f"cctContinuousCoolingMap[{i}]"
-        if not steel:
+    hv_status = ST_HV_NO_HRC if reg_id in {"aisi4140", "aisi4340", "aisid2"} else e140.STATUS_UNAVAILABLE_ALLOY_CLASS
+    null_fractions = {"Martensite_pct": None, "Bainite_pct": None, "Pearlite_Ferrite_pct": None,
+                      "RetainedAustenite_pct": None}
+    if not modelled:
+        expected_crit = {
+            "Ae3_BetaTransus_GammaSolvus_C": registry["Ae3_C"],
+            "Ae1_C": registry["Ae1_C"] if steel else None,
+            "Ms_C": None if "Ms_C" in placeholders else registry["Ms_C"],
+            "Mf_C": None if "Mf_C" in placeholders else registry["Mf_C"],
+            "CriticalCoolingRate_CCR_C_s": None,
+            "Ae1_C_status": ST_REGISTRY if steel else ST_STEEL_ONLY,
+            "Ms_C_status": ST_PLACEHOLDER if "Ms_C" in placeholders else ST_REGISTRY,
+            "Mf_C_status": ST_PLACEHOLDER if "Mf_C" in placeholders else ST_REGISTRY,
+            "CriticalCoolingRate_CCR_status": st,
+            "Ae3_C_status": ST_REGISTRY,
+            "Bs_C": None,
+            "Bs_C_status": st,
+        }
+        if crit != expected_crit:
+            out.append(f"criticalTransformationTemperatures differs: {crit!r}")
+        for i, row in enumerate(rows):
             expected_row = {
                 "coolingRate_C_s": row["coolingRate_C_s"], "transformedStartTemp_C": None,
-                "transformedStartTime_s": None, "primaryMicrostructure": None,
-                "phaseFractions": {"Martensite_pct": None, "Bainite_pct": None, "Pearlite_Ferrite_pct": None,
-                                   "RetainedAustenite_pct": None},
-                "predictedHardness_HRC": None, "predictedHardness_HV": None,
-                "predictedHardness_HV_status": e140.STATUS_UNAVAILABLE_ALLOY_CLASS,
-                "transformedStart_status": ST_STEEL_ONLY, "phaseFractions_status": ST_STEEL_ONLY,
-                "predictedHardness_HRC_status": ST_STEEL_ONLY, "unavailableReason": STEEL_ONLY_REASON,
+                "transformedStartTime_s": None, "primaryMicrostructure": None, "phaseFractions": null_fractions,
+                "predictedHardness_HRC": None, "predictedHardness_HV": None, "predictedHardness_HV_status": hv_status,
+                "transformedStart_status": st, "phaseFractions_status": st, "predictedHardness_HRC_status": st,
+                "unavailableReason": reason, "phaseStartTemps_C": None,
             }
             if row != expected_row:
-                out.append(f"{tag}: a non-steel row carries steel-template values or a wrong status: {row!r}")
-            continue
-        hv, hv_status = e140.hrc_to_hv_non_austenitic_steel(row["predictedHardness_HRC"])
-        if (row["predictedHardness_HV"], row["predictedHardness_HV_status"]) != (hv, hv_status):
-            out.append(f"{tag}: HV/status is not the E140 conversion of the row's HRC")
-        if row["transformedStart_status"] == ST_START_NO_ASYMPTOTE:
-            ok = (row["transformedStartTemp_C"] is None and row["transformedStartTime_s"] is None
-                  and row["primaryMicrostructure"] is None and row["unavailableReason"] == NO_ASYMPTOTE_REASON)
-        elif row["transformedStart_status"] == ST_START_ATHERMAL:
-            ok = (row["primaryMicrostructure"] == ATHERMAL_LABEL
-                  and row["transformedStartTemp_C"] == registry_values["Ms_C"]
-                  and isinstance(row["transformedStartTime_s"], float) and row["unavailableReason"] is None)
-        else:
-            ok = False
-        if not ok:
-            out.append(f"{tag}: start fields do not match status {row['transformedStart_status']!r}")
-        if (row["phaseFractions_status"], row["predictedHardness_HRC_status"]) != (ST_LOOKUP, ST_LOOKUP):
-            out.append(f"{tag}: lookup statuses")
-    # ---- CALPHAD-vs-kinetics gap
-    gap = n["calphadVsKineticsGap"]
-    eq, reality = gap["equilibriumPrediction"], gap["kineticRealityAtSelectedCooling"]
-    if not steel:
+                out.append(f"cctContinuousCoolingMap[{i}]: unavailable row differs: {row!r}")
         expected_eq = {"stablePhasesAtRT": None, "martensiteFraction": None, "soluteSupersaturation": None,
-                       "status": ST_STEEL_ONLY, "reason": STEEL_ONLY_REASON}
+                       "status": st, "reason": reason}
         expected_reality = {"coolingRate_C_s": user_cr, "criticalCoolingRate_C_s": None,
                             "isSuppressedEquilibrium": None, "predictedMartensite_pct": None,
-                            "diffusionSuppressionIndex": None, "verdict": None,
-                            "status": ST_STEEL_ONLY, "reason": STEEL_ONLY_REASON}
+                            "diffusionSuppressionIndex": None, "verdict": None, "status": st, "reason": reason}
+        if gap["equilibriumPrediction"] != expected_eq:
+            out.append(f"calphadVsKineticsGap.equilibriumPrediction differs: {gap['equilibriumPrediction']!r}")
+        if gap["kineticRealityAtSelectedCooling"] != expected_reality:
+            out.append(f"calphadVsKineticsGap.kineticRealityAtSelectedCooling differs: "
+                       f"{gap['kineticRealityAtSelectedCooling']!r}")
     else:
-        ccr = registry_values["critical_cooling_rate_C_s"]
-        ms = registry_values["Ms_C"]
-        fraction = (max(0.0, 1.0 - math.exp(-0.011 * max(0.0, ms - 25.0))) if user_cr >= ccr * 0.8
-                    else (user_cr / ccr) * 0.95)
-        fraction = min(0.99, max(0.0, fraction))
-        verdict = ("Full Martensitic / Metastable Quench" if user_cr >= ccr else
-                   "Mixed Microstructure (Martensite + Bainite)" if user_cr >= ccr * 0.2 else
-                   "Diffusional Equilibrium Decomposition")
-        expected_eq = dict(GAP_STEEL_EQ, stablePhasesAtRT=D2_PHASES if reg_id == "aisid2" else STEEL_PHASES,
-                           status=ST_STATIC_TEXT, reason=GAP_STEEL_EQ_REASON)
-        expected_reality = {"coolingRate_C_s": user_cr, "criticalCoolingRate_C_s": ccr,
-                            "isSuppressedEquilibrium": user_cr >= 2.0,
-                            "predictedMartensite_pct": round(fraction * 100.0, 1),
-                            "diffusionSuppressionIndex": round(min(1.0, user_cr / max(1e-2, ccr)), 3),
-                            "verdict": verdict, "status": ST_ILLUSTRATIVE, "reason": GAP_STEEL_REALITY_REASON}
-    if eq != expected_eq:
-        out.append(f"calphadVsKineticsGap.equilibriumPrediction differs: {eq!r}")
-    if reality != expected_reality:
-        out.append(f"calphadVsKineticsGap.kineticRealityAtSelectedCooling differs: {reality!r}")
+        _check_modelled(n, orc, crit, rows, gap, aust, user_cr, hv_status, null_fractions, out)
     # ---- LSW rows
-    q = registry_values["Q_diff_kJ_mol"]
+    q = registry["Q_diff_kJ_mol"]
     for i, entry in enumerate(n["lswPrecipitateCoarsening"]):
         tag = f"lswPrecipitateCoarsening[{i}]"
         if sorted(entry) != sorted(["agingTime_h", "meanRadius_nm", "precipitationHardening_MPa",
@@ -635,7 +612,7 @@ def _document_violations(n: Dict[str, Any], new_r_gas: float, out: List[str]) ->
                     entry["status"]) != (None, None, None, ST_LSW_ABOVE):
                 out.append(f"{tag}: aging above the solvus must be unavailable")
             continue
-        r = lsw_radius_nm(q, aging_c, entry["agingTime_h"], new_r_gas, corrected=True)
+        r = lsw_radius_nm(q, aging_c, entry["agingTime_h"], r_gas, corrected=True)
         if entry["meanRadius_nm"] is None or abs(entry["meanRadius_nm"] - r) > 0.005 + 1e-9:
             out.append(f"{tag}.meanRadius_nm {entry['meanRadius_nm']} != SI oracle {r}")
         if (entry["precipitationHardening_MPa"] is None
@@ -646,3 +623,107 @@ def _document_violations(n: Dict[str, Any], new_r_gas: float, out: List[str]) ->
         if entry["status"] != ST_LSW_ILLUSTRATIVE:
             out.append(f"{tag}.status {entry['status']!r}")
     return out
+
+
+def _check_modelled(n, orc, crit, rows, gap, aust, user_cr, hv_status, null_fractions, out):
+    fully_austenitic = aust > orc.ae3
+    exp_temps = {"Ae3_BetaTransus_GammaSolvus_C": orc.ae3, "Ae1_C": orc.ae1, "Ms_C": orc.ms, "Bs_C": orc.bs}
+    for key, value in exp_temps.items():
+        if not _close(crit.get(key), value, 0.05):
+            out.append(f"criticalTransformationTemperatures.{key} {crit.get(key)!r} vs oracle {value!r}")
+    exp_status = {"Mf_C": None, "Ae1_C_status": ST_GRANGE, "Ms_C_status": ST_MS, "Mf_C_status": ST_MF,
+                  "Ae3_C_status": ST_GRANGE, "Bs_C_status": ST_BS,
+                  "CriticalCoolingRate_CCR_status": ST_LI if fully_austenitic else ST_NOT_AUSTENITIC}
+    for key, value in exp_status.items():
+        if crit.get(key) != value:
+            out.append(f"criticalTransformationTemperatures.{key} is {crit.get(key)!r}, expected {value!r}")
+    if sorted(crit) != sorted(list(exp_temps) + list(exp_status) + ["CriticalCoolingRate_CCR_C_s"]):
+        out.append(f"criticalTransformationTemperatures keys {sorted(crit)!r}")
+    ccr = orc.critical_rate(aust) if fully_austenitic else None
+    if ccr is None:
+        if crit.get("CriticalCoolingRate_CCR_C_s") is not None:
+            out.append("CriticalCoolingRate_CCR_C_s must be null below Ae3")
+    elif not _rel_close(crit.get("CriticalCoolingRate_CCR_C_s"), ccr, TOL_REL_CCR):
+        out.append(f"CriticalCoolingRate_CCR_C_s {crit.get('CriticalCoolingRate_CCR_C_s')!r} vs oracle {ccr!r}")
+    not_aust_reason = (f"austenitizing temperature {aust:g} C is at or below the Grange Ae3 of {orc.ae3:.1f} C: "
+                       "the Li model assumes a fully austenitic start")
+    for i, row in enumerate(rows):
+        tag = f"cctContinuousCoolingMap[{i}]"
+        cr = row["coolingRate_C_s"]
+        if not fully_austenitic:
+            expected_row = {
+                "coolingRate_C_s": cr, "transformedStartTemp_C": None, "transformedStartTime_s": None,
+                "primaryMicrostructure": None, "phaseFractions": null_fractions, "predictedHardness_HRC": None,
+                "predictedHardness_HV": None, "predictedHardness_HV_status": hv_status,
+                "transformedStart_status": ST_NOT_AUSTENITIC, "phaseFractions_status": ST_NOT_AUSTENITIC,
+                "predictedHardness_HRC_status": ST_NOT_AUSTENITIC, "unavailableReason": not_aust_reason,
+                "phaseStartTemps_C": None}
+            if row != expected_row:
+                out.append(f"{tag}: not-austenitic row differs: {row!r}")
+            continue
+        starts = {ph: orc.phase_start(ph, aust, cr) for ph in oracle.PHASES}
+        got = row.get("phaseStartTemps_C") or {}
+        if sorted(got) != sorted(oracle.PHASES):
+            out.append(f"{tag}.phaseStartTemps_C keys {sorted(got)!r}")
+            continue
+        for ph, value in starts.items():
+            if (value is None) != (got[ph] is None) or (value is not None and not _close(got[ph], value, TOL_TEMP_C)):
+                out.append(f"{tag}.phaseStartTemps_C.{ph} {got[ph]!r} vs oracle {value!r}")
+        found = {ph: t for ph, t in starts.items() if t is not None}
+        if not found:
+            ok = (row["primaryMicrostructure"] == ATHERMAL_LABEL and _close(row["transformedStartTemp_C"], orc.ms, 0.05)
+                  and row["transformedStart_status"] == ST_START_ATHERMAL)
+            first_t = orc.ms
+        else:
+            first_t = max(found.values())
+            near = {ph for ph, t in found.items() if first_t - t <= 2 * TOL_TEMP_C}  # tie within the rounding
+            ok = (row["primaryMicrostructure"] in near and _close(row["transformedStartTemp_C"], first_t, TOL_TEMP_C)
+                  and row["transformedStart_status"] == ST_START_LI)
+        if not ok:
+            out.append(f"{tag}: first start {row['primaryMicrostructure']!r} {row['transformedStartTemp_C']!r} "
+                       f"{row['transformedStart_status']!r} vs oracle {first_t!r} {sorted(found)!r}")
+        if not _rel_close(row["transformedStartTime_s"], (aust - first_t) / cr, TOL_REL_CCT_TIME):
+            out.append(f"{tag}.transformedStartTime_s {row['transformedStartTime_s']!r}")
+        fixed = {"phaseFractions": null_fractions, "predictedHardness_HRC": None, "predictedHardness_HV": None,
+                 "predictedHardness_HV_status": hv_status, "phaseFractions_status": ST_FRACTIONS,
+                 "predictedHardness_HRC_status": ST_FRACTIONS, "unavailableReason": None}
+        for key, value in fixed.items():
+            if row.get(key) != value:
+                out.append(f"{tag}.{key} is {row.get(key)!r}, expected {value!r}")
+        if len(row) != 13:
+            out.append(f"{tag}: keys {sorted(row)!r}")
+    if gap["equilibriumPrediction"] != GAP_STEEL_EQ:
+        out.append(f"calphadVsKineticsGap.equilibriumPrediction differs: {gap['equilibriumPrediction']!r}")
+    reality = gap["kineticRealityAtSelectedCooling"]
+    if not fully_austenitic:
+        expected = {"coolingRate_C_s": user_cr, "criticalCoolingRate_C_s": None, "isSuppressedEquilibrium": None,
+                    "predictedMartensite_pct": None, "diffusionSuppressionIndex": None, "verdict": None,
+                    "status": ST_NOT_AUSTENITIC, "reason": not_aust_reason}
+        if reality != expected:
+            out.append(f"calphadVsKineticsGap.kineticRealityAtSelectedCooling differs: {reality!r}")
+        return
+    user_starts = {ph: orc.phase_start(ph, aust, user_cr) for ph in oracle.PHASES}
+    found = {ph: t for ph, t in user_starts.items() if t is not None}
+    suppressed = not found
+    km = round((1.0 - math.exp(-KM_ALPHA * max(0.0, orc.ms - 25.0))) * 100.0, 1)
+    fixed = {"coolingRate_C_s": user_cr, "isSuppressedEquilibrium": suppressed,
+             "predictedMartensite_pct": km if suppressed else None, "diffusionSuppressionIndex": None,
+             "status": ST_LI, "reason": GAP_LI_REASON}
+    for key, value in fixed.items():
+        if not (reality.get(key) == value or (isinstance(value, float) and _close(reality.get(key), value, 0.1))):
+            out.append(f"calphadVsKineticsGap.kineticRealityAtSelectedCooling.{key} is {reality.get(key)!r}, "
+                       f"expected {value!r}")
+    if not _rel_close(reality.get("criticalCoolingRate_C_s"), ccr, TOL_REL_CCR):
+        out.append("calphadVsKineticsGap.kineticRealityAtSelectedCooling.criticalCoolingRate_C_s")
+    verdict = reality.get("verdict")
+    if suppressed:
+        if verdict != SUPPRESSED_VERDICT:
+            out.append(f"verdict {verdict!r}")
+    else:
+        m = _VERDICT_RE.fullmatch(verdict or "")
+        first_t = max(found.values())
+        near = {ph for ph, t in found.items() if first_t - t <= 2 * TOL_TEMP_C}
+        if not m or m.group(1) not in near or abs(float(m.group(2)) - first_t) > TOL_TEMP_C:
+            out.append(f"verdict {verdict!r} vs oracle {sorted(found.items())!r}")
+    if len(reality) != 8:
+        out.append(f"kineticRealityAtSelectedCooling keys {sorted(reality)!r}")

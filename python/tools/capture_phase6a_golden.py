@@ -692,6 +692,14 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
         alloy_type = new_stdout["alloyMetadata"]["type"]
     except (KeyError, IndexError, TypeError):
         return f"{key}: re-blessed document lacks the row, its HRC or the alloy type"
+    if hrc is None and "alloy" in new_stdout:
+        # Lane kin-li: the Li (1998) model computes no HRC (steels) and non-steels are unavailable; the old HV
+        # must be the old formula of an old lookup band, the new HV null with the alloy-class status.
+        import kinetics_documented_changes as kdc  # noqa: E402 (tools/ module)
+        try:
+            return kdc.hv_violation(row, new_stdout)
+        except Exception as exc:  # noqa: BLE001 - any malformed document is a violation, never accepted
+            return f"{key}: cannot verify against the re-blessed document ({exc!r})"
     # Classified from the registry descriptor "type", independently of the solver's id set.
     if "Steel" in alloy_type:
         expected_hv, expected_status = e140.hrc_to_hv_non_austenitic_steel(hrc)

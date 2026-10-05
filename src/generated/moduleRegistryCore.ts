@@ -346,7 +346,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "materials",
       "label": "TTT / CCT",
-      "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
+      "description": "Li (1998) TTT/CCT start curves for low-alloy steels (screening, unvalidated); other alloys are unavailable.",
       "next": "micrograph",
       "maturity": "Research",
       "navigation": "listed",

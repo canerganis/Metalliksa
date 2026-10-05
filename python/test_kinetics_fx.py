@@ -7,9 +7,9 @@
 2. LSW coarsening: K_LSW = 8 gamma D C_e Vm^2 / (9 R T) needs C_e in mol/m^3; the solver used the
    mole fraction (K too small by 1/Vm = 9.1e4). Oracle: an independent SI calculation and the
    audit's own number r(8 h) = 9.6 nm for AISI 4140 at 720 C (old code: 1.5 nm).
-3. TTT incubation floor: 32 of 40 TTT points of AISI 4140 are the 1 ms floor; they are flagged
-   (floorHit, tttIncubationFloor) and a CCT start the floor or a single integration step drives is
-   unavailable instead of "Pearlite starts at ~770 C at every cooling rate".
+3. (superseded by lane kin-li) The steel template with its 1 ms TTT floor is replaced by the Li (1998)
+   model (oracle tests: test_kinetics_li1998.py); the tests below keep the steel-only / placeholder / LSW
+   behaviour and check that the floor and the cooling-rate-band lookup are gone.
 
 Run from python/: python -B -m unittest test_kinetics_fx
 """
@@ -178,19 +178,24 @@ class SteelOnlyTest(unittest.TestCase):
             self.assertEqual(kin.is_steel_alloy(meta), rid in kin.E140_NON_AUSTENITIC_STEEL_IDS, name)
             self.assertEqual(kin.is_steel_alloy(meta), name in STEELS)
 
-    def test_steel_values_keep_the_model_numbers_and_get_statuses(self):
+    def test_steel_values_come_from_the_li_model_with_statuses(self):
         res = solve("AISI 4140", cooling=100.0)
         self.assertEqual(res["kineticsModel"]["status"], "available")
         self.assertIsNone(res["kineticsModel"]["reason"])
         self.assertIs(res["kineticsModel"]["illustrativeOnly"], True)
+        self.assertEqual(res["kineticsModel"]["validationStatus"], "unvalidated")
         row = next(r for r in res["cctContinuousCoolingMap"] if r["coolingRate_C_s"] == 100.0)
-        self.assertEqual(row["phaseFractions"]["Martensite_pct"], 98.0)
-        self.assertEqual(row["predictedHardness_HRC"], 58.0)
-        self.assertEqual(row["phaseFractions_status"], "steel-lookup-by-ccr-band-not-computed")
-        self.assertEqual(row["predictedHardness_HRC_status"], "steel-lookup-by-ccr-band-not-computed")
+        # the former lookup (98 % martensite, 58 HRC) is gone: fractions and hardness are not computed
+        self.assertIsNone(row["phaseFractions"]["Martensite_pct"])
+        self.assertIsNone(row["predictedHardness_HRC"])
+        self.assertEqual(row["phaseFractions_status"], "unavailable-fractions-not-computed")
+        self.assertEqual(row["predictedHardness_HRC_status"], "unavailable-fractions-not-computed")
+        self.assertEqual(row["primaryMicrostructure"], "Martensite (Athermal)")
         self.assertEqual(res["calphadVsKineticsGap"]["equilibriumPrediction"]["status"],
                          "static-text-not-a-calphad-calculation")
-        self.assertEqual(res["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]["predictedMartensite_pct"], 96.5)
+        reality = res["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]
+        self.assertTrue(reality["isSuppressedEquilibrium"])
+        self.assertEqual(reality["predictedMartensite_pct"], 96.5)  # Koistinen-Marburger at 25 C from Ms 328.5 C
 
     def test_registry_placeholders_are_never_reported(self):
         self.assertEqual(alloy_registry.KINETICS_PLACEHOLDERS,
@@ -215,9 +220,12 @@ class SteelOnlyTest(unittest.TestCase):
         flags = frozenset(alloy_registry.KINETICS_PLACEHOLDERS | {("aisi4140", "Ms_C")})
         with mock.patch.object(alloy_registry, "KINETICS_PLACEHOLDERS", flags):
             res = solve("AISI 4140")
-        self.assertIsNone(res["criticalTransformationTemperatures"]["Ms_C"])
+        # the flagged registry echo is withheld; the Li model's own Ms (composition, Kung-Rayment) is not a
+        # registry value and stays
         self.assertIsNone(res["alloyMetadata"]["Ms_C"])
-        self.assertEqual(res["criticalTransformationTemperatures"]["Mf_C"], 180.0)
+        self.assertEqual(res["kineticsModel"]["placeholderParameters"], ["Ms_C"])
+        self.assertEqual(res["criticalTransformationTemperatures"]["Ms_C"], 328.5)
+        self.assertEqual(res["alloyMetadata"]["Mf_C"], 180.0)
 
     def test_every_alloy_serialises_without_nan_or_inf(self):
         for name in STEELS + NON_STEELS:
@@ -226,89 +234,46 @@ class SteelOnlyTest(unittest.TestCase):
                 self.assertNotIn("NaN", text)
 
 
-class TttFloorTest(unittest.TestCase):
-    def test_audit_4140_32_of_40_points_are_the_floor(self):
-        res = solve("AISI 4140")
-        curves = res["tttIsothermalCurves"]
-        self.assertEqual(len(curves), 40)
-        flagged = [p for p in curves if p["floorHit"]]
-        self.assertEqual(len(flagged), 32)
-        self.assertTrue(all(p["tStart_s"] == 0.001 for p in flagged))
-        self.assertTrue(all(p["tStart_s"] > 0.001 for p in curves if not p["floorHit"]))
-        block = res["tttIncubationFloor"]
-        self.assertEqual((block["status"], block["pointCount"], block["floorHitCount"], block["floorValue_s"]),
-                         ("floor-hit-points-flagged", 40, 32, 0.001))
-        self.assertIn("floor", block["note"])
+class NoFloorTest(unittest.TestCase):
+    """The audit's 1 ms incubation floor (32 of 40 AISI 4140 TTT points) is gone with the Li (1998) law."""
 
-    def test_point_key_set_is_the_old_one_plus_the_flag(self):
-        # No model rework (audit): the TTT numbers equal the base blob's (test_phase6a_t2b_migration);
-        # only floorHit is new.
+    def test_no_point_is_on_a_floor(self):
+        for name in ("AISI 4140", "AISI 4340"):
+            res = solve(name)
+            curves = res["tttIsothermalCurves"]
+            self.assertTrue(curves)
+            self.assertTrue(all(p["floorHit"] is False for p in curves))
+            self.assertEqual(res["tttIncubationFloor"], {
+                "status": "no-floor-li-1998-law", "floorValue_s": None, "pointCount": len(curves),
+                "floorHitCount": 0, "note": kin.TTT_NO_FLOOR_NOTE})
+            self.assertEqual({p["phase"] for p in curves}, {"Ferrite", "Pearlite", "Bainite"})
+
+    def test_point_key_set_is_kept(self):
         res = solve("AISI 4140")
         self.assertEqual(list(res["tttIsothermalCurves"][0]),
                          ["temperature_C", "phase", "tStart_s", "t50_s", "tFinish_s", "avramiExponent_n",
                           "drivingForce_DeltaT_C", "floorHit"])
+        self.assertIsNone(res["tttIsothermalCurves"][0]["avramiExponent_n"])  # S(X), not an Avrami exponent
 
-    def test_cct_pearlite_at_770_at_every_rate_is_unavailable(self):
+    def test_cct_pearlite_at_770_at_every_rate_is_gone(self):
         # audit: "Pearlite starts at ~770 C" at every cooling rate for AISI 4140 up to 500 C/s.
         res = solve("AISI 4140")
-        for row in res["cctContinuousCoolingMap"]:
-            with self.subTest(rate=row["coolingRate_C_s"]):
-                self.assertIsNone(row["transformedStartTemp_C"])
-                self.assertIsNone(row["transformedStartTime_s"])
-                self.assertIsNone(row["primaryMicrostructure"])
-                self.assertEqual(row["transformedStart_status"], "unavailable-ttt-incubation-law-no-ae3-asymptote")
-                self.assertEqual(row["unavailableReason"], "incubation law has no Ae3 asymptote; start not computed")
+        rows = res["cctContinuousCoolingMap"]
+        self.assertFalse(any(r["primaryMicrostructure"] == "Pearlite" and r["transformedStartTemp_C"] >= 760.0
+                             for r in rows))
+        self.assertEqual([r["primaryMicrostructure"] for r in rows][-3:], ["Martensite (Athermal)"] * 3)
 
-    def test_no_steel_row_reports_a_diffusional_start(self):
-        # fx-kinetics review S1: with no Ae3 asymptote the Scheil start is the first step below Ae3 - 5 K, whatever
-        # the time step, so NO steel row reports one (the former 760 C "Pearlite" at 2000 C/s, AISI 4140, aust 800 C,
-        # 100 um grain, while the same row's lookup says 98 % martensite, is gone).
-        checked = 0
-        for name in STEELS:
-            for aust_offset in (-60.0, 0.0, 100.0):
-                for grain in (5.0, 25.0, 100.0):
-                    res = solve(name, grain=grain, aust=DEFAULT_AUST[name] + aust_offset)
-                    for row in res["cctContinuousCoolingMap"]:
-                        checked += 1
-                        self.assertNotIn(row["primaryMicrostructure"], ("Pearlite", "Bainite", "Ferrite"),
-                                         (name, aust_offset, grain, row["coolingRate_C_s"]))
-                        self.assertIn(row["transformedStart_status"],
-                                      ("unavailable-ttt-incubation-law-no-ae3-asymptote",
-                                       "athermal-martensite-no-diffusional-start-above-ms"))
-        self.assertEqual(checked, 3 * 3 * 3 * 10)
-        row = next(r for r in solve("AISI 4140", aust=800.0, grain=100.0)["cctContinuousCoolingMap"]
-                   if r["coolingRate_C_s"] == 2000.0)
-        self.assertIsNone(row["transformedStartTemp_C"])
-        self.assertIsNone(row["primaryMicrostructure"])
-        self.assertEqual(row["phaseFractions"]["Martensite_pct"], 98.0)  # the lookup, unchanged
-
-    def test_athermal_row_when_no_diffusional_start_exists_above_ms(self):
-        # Austenitised just above Ms (340 C vs Ms 330 C): the law finds no start before Ms: the Ms row stays.
-        res = solve("AISI 4140", aust=340.0)
+    def test_athermal_row_above_the_critical_cooling_rate(self):
+        res = solve("AISI 4140")
+        crit = res["criticalTransformationTemperatures"]
         for row in res["cctContinuousCoolingMap"]:
-            if row["transformedStart_status"] == "athermal-martensite-no-diffusional-start-above-ms":
-                self.assertEqual((row["transformedStartTemp_C"], row["primaryMicrostructure"]), (330.0, "Martensite (Athermal)"))
-                self.assertIsInstance(row["transformedStartTime_s"], float)
+            if row["coolingRate_C_s"] >= crit["CriticalCoolingRate_CCR_C_s"]:
+                self.assertEqual((row["transformedStartTemp_C"], row["primaryMicrostructure"]),
+                                 (crit["Ms_C"], "Martensite (Athermal)"))
+                self.assertEqual(row["transformedStart_status"], "athermal-martensite-no-diffusional-start-above-ms")
                 self.assertIsNone(row["unavailableReason"])
-                break
-        else:
-            self.fail("no athermal row for AISI 4140 austenitised at 340 C")
-
-    def test_floor_check_uses_the_unrounded_law_value(self):
-        steel = kin.resolve_kinetics_alloy("AISI 4140")[2]
-        point = kin.calculate_jmak_isothermal_kinetics(700.0, steel, 25.0, "Pearlite")
-        self.assertTrue(point["floorHit"] and point["tStart_s"] == 0.001)
-        near_ae3 = kin.calculate_jmak_isothermal_kinetics(770.0, steel, 25.0, "Pearlite")
-        self.assertFalse(near_ae3["floorHit"])
-        self.assertGreater(near_ae3["tStart_s"], 0.001)
-
-    def test_steel_floor_summary_for_all_steels(self):
-        for name in STEELS:
-            res = solve(name)
-            block = res["tttIncubationFloor"]
-            self.assertEqual(block["pointCount"], len(res["tttIsothermalCurves"]))
-            self.assertEqual(block["floorHitCount"], sum(p["floorHit"] for p in res["tttIsothermalCurves"]))
-            self.assertGreater(block["floorHitCount"], 0)
+            else:
+                self.assertEqual(row["transformedStart_status"], "li1998-additivity-first-diffusional-start")
 
 
 class LswAboveSolvusTest(unittest.TestCase):
@@ -350,10 +315,13 @@ class LswAboveSolvusTest(unittest.TestCase):
 
 
 class SteelTextTest(unittest.TestCase):
-    def test_d2_names_carbides_not_cementite(self):
-        d2 = solve("AISI D2")["calphadVsKineticsGap"]["equilibriumPrediction"]
-        self.assertEqual(d2["stablePhasesAtRT"], "Ferrite + alloy carbides (M7C3 / M23C6)")
-        self.assertNotIn("Cementite", d2["stablePhasesAtRT"])
+    def test_d2_is_outside_the_li_range_and_unavailable(self):
+        res = solve("AISI D2")
+        self.assertEqual(res["kineticsModel"]["status"], "unavailable")
+        self.assertTrue(res["kineticsModel"]["reason"].startswith("composition outside the Li (1998) model range"))
+        eq = res["calphadVsKineticsGap"]["equilibriumPrediction"]
+        self.assertIsNone(eq["stablePhasesAtRT"])
+        self.assertEqual(eq["status"], "unavailable-composition-outside-li-model-range")
         for name in ("AISI 4140", "AISI 4340"):
             self.assertIn("Cementite", solve(name)["calphadVsKineticsGap"]["equilibriumPrediction"]["stablePhasesAtRT"])
 

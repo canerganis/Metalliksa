@@ -141,8 +141,9 @@ def build_rate_martensite(registry_id, alloy_name, gap, cct_row):
     """Martensite fraction and verdict at the build rate, or unavailable with the reason.
 
     Withheld when the alloy's registry Ms is a non-physical placeholder (alloy_registry
-    KINETICS_PLACEHOLDERS), and when no CCT row was selected for the build rate: the same
-    steel-type model is not reported outside its tabulated range either.
+    KINETICS_PLACEHOLDERS), when no CCT row was selected for the build rate (the CCT map is not
+    extrapolated), and when the kinetics result has no martensite fraction: the Li (1998) model
+    gives one (Koistinen-Marburger at 25 C) only when no diffusional start is reached above Ms.
     """
     reality = (gap or {}).get("kineticRealityAtSelectedCooling") or {}
     out = {"status": "unavailable", "reason": None, "predictedMartensite_pct": None, "verdict": None,

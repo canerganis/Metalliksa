@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { convertSteelHardness } from "../src/utils/hardnessConversion";
 import {
   KINETICS_HV_STATUS_NOTES,
+  KINETICS_STATUS_NOTES,
   buildJobCctRow,
   buildJobKineticsAvailability,
   buildJobMartensiteText,
@@ -15,7 +16,9 @@ import {
   kineticsLabelText,
   kineticsLswAvailability,
   kineticsModelBanner,
+  kineticsNoseText,
   kineticsPhaseSlices,
+  kineticsPhaseStartsText,
   kineticsStatusNote,
   kineticsValueText,
   kineticsVerdictSentence,
@@ -26,7 +29,7 @@ const STEP_B = join(ROOT, "python", "golden", "phase6a", "kinetics_ttt_cct_solve
 
 type Row = {
   coolingRate_C_s: number;
-  predictedHardness_HRC: number;
+  predictedHardness_HRC: number | null;
   predictedHardness_HV: number | null;
   predictedHardness_HV_status: string;
 };
@@ -77,7 +80,9 @@ test("kinetics hardness text: no solver row shows Unavailable instead of the old
   assert.equal(kineticsHardnessText({ predictedHardness_HRC: Number.NaN, predictedHardness_HV: Number.NaN }).hv, "HV: Unavailable");
 });
 
-test("re-blessed solver goldens: steel HV equals the shared TS E140 util; non-steel HV is null", () => {
+test("re-blessed solver goldens: no hardness is predicted (Li model), HV null with the alloy-class status", () => {
+  // Lane kin-li: the Li (1998) model computes no phase fractions or hardness, so the E140 conversion has no input;
+  // the TS util itself is unchanged (convertSteelHardness still converts a given HRC).
   const files = readdirSync(STEP_B).filter((f) => f.endsWith(".json")).sort();
   assert.deepEqual(files, [
     "aisi4140_ui_defaults.json",
@@ -85,27 +90,19 @@ test("re-blessed solver goldens: steel HV equals the shared TS E140 util; non-st
     "in718_lpbf_quench.json",
     "ti64_beta_quench.json",
   ]);
-  let converted = 0;
   for (const f of files) {
     const { type, rows } = goldenRows(f);
     assert.equal(rows.length, 10, f);
     for (const r of rows) {
-      if (type.includes("Steel")) {
-        // Python solver (hardness_conversion_e140) and TS util (convertSteelHardness) must agree.
-        const ts = convertSteelHardness(r.predictedHardness_HRC, "HRC").HV;
-        assert.equal(r.predictedHardness_HV, ts, `${f} ${r.coolingRate_C_s} C/s`);
-        if (ts !== null) converted++;
-        assert.equal(
-          r.predictedHardness_HV_status,
-          ts === null ? "unavailable-outside-e140-table1-hrc-20-68" : "converted-astm-e140-table1"
-        );
-      } else {
-        assert.equal(r.predictedHardness_HV, null, `${f} ${r.coolingRate_C_s} C/s`);
-        assert.equal(r.predictedHardness_HV_status, "unavailable-no-verified-table-for-alloy-class");
-      }
+      assert.equal(r.predictedHardness_HRC, null, `${f} ${r.coolingRate_C_s} C/s`);
+      assert.equal(r.predictedHardness_HV, null, `${f} ${r.coolingRate_C_s} C/s`);
+      assert.equal(
+        r.predictedHardness_HV_status,
+        type.includes("Steel") ? "unavailable-no-predicted-hrc" : "unavailable-no-verified-table-for-alloy-class"
+      );
     }
   }
-  assert.equal(converted, 16);
+  assert.equal(convertSteelHardness(58, "HRC").HV, 653);
 });
 
 test("Studio table text for the AISI 4140 UI-default golden (old -> new)", () => {
@@ -113,21 +110,23 @@ test("Studio table text for the AISI 4140 UI-default golden (old -> new)", () =>
   assert.deepEqual(
     rows.map((r) => {
       const t = kineticsHardnessText(r);
-      return `${r.coolingRate_C_s}: ${t.hrc} (${t.hv})`;
+      const c = kineticsCctRowText(r);
+      return `${r.coolingRate_C_s}: ${c.startTemp} ${c.microstructure}; ${t.hrc} (${t.hv})`;
     }),
     [
-      "0.05: 18 HRC (HV: Unavailable)", // was 18 HRC (229 HV)
-      "0.2: 18 HRC (HV: Unavailable)", // was 18 HRC (229 HV)
-      "1: 28 HRC (286 HV)", // was 334
-      "5: 28 HRC (286 HV)", // was 334
-      "10: 42 HRC (412 HV)", // was 481
-      "25: 42 HRC (412 HV)", // was 481
-      "50: 54 HRC (577 HV)", // was 607
-      "100: 58 HRC (653 HV)", // was 649
-      "500: 58 HRC (653 HV)", // was 649
-      "2000: 58 HRC (653 HV)", // was 649
+      "0.05: 721.3 °C Ferrite; HRC: Unavailable (HV: Unavailable)", // was Unavailable start; 18 HRC (HV: Unavailable)
+      "0.2: 689.3 °C Ferrite; HRC: Unavailable (HV: Unavailable)", // was Unavailable; 18 HRC
+      "1: 611.1 °C Pearlite; HRC: Unavailable (HV: Unavailable)", // was Unavailable; 28 HRC (286 HV)
+      "5: 479.1 °C Bainite; HRC: Unavailable (HV: Unavailable)", // was Unavailable; 28 HRC (286 HV)
+      "10: 448.6 °C Bainite; HRC: Unavailable (HV: Unavailable)", // was Unavailable; 42 HRC (412 HV)
+      "25: 328.5 °C Martensite (Athermal); HRC: Unavailable (HV: Unavailable)", // was Unavailable; 42 HRC (412 HV)
+      "50: 328.5 °C Martensite (Athermal); HRC: Unavailable (HV: Unavailable)", // was Unavailable; 54 HRC (577 HV)
+      "100: 328.5 °C Martensite (Athermal); HRC: Unavailable (HV: Unavailable)", // was Unavailable; 58 HRC (653 HV)
+      "500: 328.5 °C Martensite (Athermal); HRC: Unavailable (HV: Unavailable)", // was Unavailable; 58 HRC (653 HV)
+      "2000: 328.5 °C Martensite (Athermal); HRC: Unavailable (HV: Unavailable)", // was Unavailable; 58 HRC (653 HV)
     ]
   );
+  assert.equal(kineticsHardnessText(rows[0]).note, KINETICS_STATUS_NOTES["unavailable-fractions-not-computed"]);
 });
 
 test("consumers: no invented hardness fallbacks, null HV goes through the display helper", () => {
@@ -268,33 +267,42 @@ test("fx-kinetics: registry placeholder Ms/Mf (IN718) are null in the golden and
   assert.equal(kineticsValueText(goldenDoc("ti64_beta_quench.json").criticalTransformationTemperatures.Ms_C, " °C"), "800 °C");
 });
 
-test("fx-kinetics: steel goldens flag the TTT floor, CCT starts the floor drives are Unavailable", () => {
+test("kin-li: steel goldens show Li-model starts, no floor line, fractions Unavailable with the reason", () => {
   const doc = goldenDoc("aisi4140_ui_defaults.json");
   const banner = kineticsModelBanner(doc.kineticsModel, doc.tttIncubationFloor);
   assert.equal(banner.available, true);
   assert.equal(banner.reason, "");
-  assert.equal(
-    banner.floorLine,
-    "32 of 40 TTT points are on the 0.001 s incubation floor (floorHit): their start time is the floor, not a model value."
+  assert.equal(banner.headline, "Li et al. (1998) TTT/CCT model (screening, unvalidated).");
+  assert.equal(banner.floorLine, null); // was "32 of 40 TTT points are on the 0.001 s incubation floor ..."
+  assert.deepEqual(banner.validityLines, [
+    "Validity range only partially checked: Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked.",
+  ]);
+  const coarse = kineticsModelBanner(
+    { status: "available", validityDomain: { status: "inside", unchecked: [], grainSize: { astmG: 0.73, comparedRange_G: [5.6, 11], insideComparedRange: false } } },
+    null
   );
-  assert.equal(doc.tttIsothermalCurves.filter((p: { floorHit: boolean }) => p.floorHit).length, 32);
+  assert.deepEqual(coarse.validityLines, ["Grain size ASTM G 0.73 is outside the span of the published comparisons (G 5.6-11)."]);
+  assert.deepEqual(kineticsModelBanner({ status: "unavailable", validityDomain: { status: "outside", unchecked: ["x"] } }, null).validityLines, []);
+  assert.equal(doc.tttIsothermalCurves.filter((p: { floorHit: boolean }) => p.floorHit).length, 0);
   for (const row of doc.cctContinuousCoolingMap) {
-    // audit: "Pearlite starts at ~770 °C at every cooling rate" is no longer reported
     const rt = kineticsCctRowText(row);
-    assert.equal(rt.startTemp, "Unavailable");
-    assert.equal(rt.microstructure, "Unavailable");
-    assert.match(rt.startNote, /no Ae3 asymptote; start not computed/);
-    // the phase-fraction lookup is shown with its caveat
-    assert.match(rt.fractionsNote, /lookup by cooling-rate band/);
+    assert.match(rt.startTemp, /^\d+\.\d °C$/);
+    assert.equal(rt.startNote, "");
+    assert.equal(rt.martensite, "Unavailable");
+    assert.equal(rt.fractionsNote, KINETICS_STATUS_NOTES["unavailable-fractions-not-computed"]);
+    assert.deepEqual(kineticsPhaseSlices(row).slices, []);
   }
-  const row100 = doc.cctContinuousCoolingMap.find((r: { coolingRate_C_s: number }) => r.coolingRate_C_s === 100);
-  assert.equal(kineticsCctRowText(row100).martensite, "98%");
-  assert.deepEqual(
-    kineticsPhaseSlices(row100).slices.map((s) => `${s.name}:${s.value}`),
-    ["Martensite:98", "Bainite:1", "Pearlite / Ferrite:0.5", "Retained Austenite:0.5"]
-  );
-  // an unknown status never produces a note from thin air
+  assert.equal(kineticsPhaseStartsText(doc.cctContinuousCoolingMap[0]), "F 721.3 / P 691.9 / B 531.6 °C");
+  assert.equal(kineticsPhaseStartsText(doc.cctContinuousCoolingMap[9]), "F - / P - / B - °C");
+  assert.equal(kineticsPhaseStartsText(null), "Unavailable");
+  assert.equal(kineticsPhaseStartsText(goldenDoc("in718_lpbf_quench.json").cctContinuousCoolingMap[0]), "Unavailable");
+  assert.match(kineticsNoseText(doc.tttIsothermalCurves), /^Ferrite \d+ °C \([\d.e+]+ s\) \/ Pearlite \d+ °C \([\d.e+]+ s\) \/ Bainite \d+ °C \([\d.e+]+ s\)$/);
+  assert.equal(kineticsNoseText(null), "");
+  assert.equal(kineticsNoseText([{ phase: "Bainite", temperature_C: 464.2, tStart_s: 4.591 }, { phase: "Bainite", temperature_C: 500, tStart_s: 9 }]),
+    "Bainite 464 °C (4.6 s)");
+  // an unknown status never produces a note from thin air; removed template statuses have no note any more
   assert.equal(kineticsStatusNote("something-else"), "");
+  assert.equal(kineticsStatusNote("steel-lookup-by-ccr-band-not-computed"), "");
   assert.equal(kineticsStatusNote(null), "");
   assert.equal(kineticsModelBanner(null, null).floorLine, null);
   assert.equal(kineticsModelBanner(null, null).available, false);
@@ -320,11 +328,16 @@ test("fx-kinetics: floor line only when at least one point is on the floor; LSW 
     kineticsLswAvailability(null, { status: "unavailable-aging-temperature-at-or-above-solvus" }).reason,
     "Unavailable: the aging temperature is at or above the registry solvus (steels: Ae1); no precipitate population."
   );
-  // the verdict sentence follows the verdict and never claims shear for a diffusional verdict
-  assert.match(kineticsVerdictSentence("Full Martensitic / Metastable Quench", 100, true), /athermally via shear/);
-  assert.match(kineticsVerdictSentence("Mixed Microstructure (Martensite + Bainite)", 10, true), /part of the austenite/);
-  assert.doesNotMatch(kineticsVerdictSentence("Diffusional Equilibrium Decomposition", 0.05, true), /shear/);
+  // the verdict sentence follows the Li verdict and never claims martensite for a diffusional start
+  assert.match(kineticsVerdictSentence("No diffusional start above Ms (Li 1998 additivity): martensite from Ms", 100, true),
+    /transforms athermally \(martensite\)/);
+  assert.equal(kineticsVerdictSentence("Bainite start at 448.6 C (Li 1998 additivity); phase fractions not computed", 10, true),
+    "At 10 °C/s, the Li (1998) additivity model reaches a bainite start above Ms; the phase fractions are not computed.");
+  assert.doesNotMatch(kineticsVerdictSentence("Ferrite start at 721.3 C (Li 1998 additivity); phase fractions not computed", 0.05, true), /martensite|shear/);
+  assert.equal(kineticsVerdictSentence("Full Martensitic / Metastable Quench", 100, true), ""); // old template verdict: no sentence
   assert.equal(kineticsVerdictSentence(null, 10, false), "Unavailable: kinetics model is steel-only.");
+  assert.equal(kineticsVerdictSentence(null, 10, false, "composition outside the Li (1998) model range: C 1.55 wt%"),
+    "Unavailable: composition outside the Li (1998) model range: C 1.55 wt%.");
   assert.equal(kineticsVerdictSentence(null, 10, true), "");
   // registry-screening-value has a note (the Ti-6Al-4V Ms/Mf tooltips were empty)
   assert.notEqual(kineticsStatusNote("registry-screening-value"), "");

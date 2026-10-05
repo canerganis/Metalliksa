@@ -526,8 +526,11 @@ def main():
         "lpbf-build-job-kinetics-same-alloy-v3",
         "lpbf-build-job-kinetics-steel-only-v4",
         "lpbf-build-job-microstructure-projection-v5",
+        "lpbf-build-job-kinetics-li1998-v6",
+        "lpbf-build-job-extent-status-v6",
+        "lpbf-build-job-kinetics-li1998-extent-v7",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-extent-status-v6"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-kinetics-li1998-extent-v8"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

@@ -88,19 +88,17 @@ class KineticsSolverHardnessTest(unittest.TestCase):
         res = kin.solve_phase_transformation_kinetics(name, 10.0, 25.0, self.STUDIO_DEFAULT_AUST[name], 8.0, 720.0)
         return res["cctContinuousCoolingMap"]
 
-    def test_steels_use_e140_and_null_below_hrc_20(self):
+    def test_steels_have_no_predicted_hrc_so_no_hv(self):
+        # Lane kin-li: the Li (1998) model computes no hardness (the cooling-rate-band HRC lookup is gone), so the
+        # E140 conversion has no input: HV null with STATUS_HV_NO_HRC for the steels (also AISI D2, outside the
+        # model range). The conversion itself is tested above.
         for name in ("AISI 4140", "AISI 4340", "AISI D2"):
             for row in self._rows(name):
                 with self.subTest(alloy=name, cr=row["coolingRate_C_s"]):
-                    hrc, hv, status = (row["predictedHardness_HRC"], row["predictedHardness_HV"],
-                                       row["predictedHardness_HV_status"])
-                    if hrc < 20.0:
-                        self.assertIsNone(hv)
-                        self.assertEqual(status, e140.STATUS_UNAVAILABLE_RANGE)
-                    else:
-                        self.assertEqual(hv, float(dict(e140.E140_TABLE1_HRC_HV)[int(hrc)]))
-                        self.assertIsInstance(hv, float)
-                        self.assertEqual(status, e140.STATUS_CONVERTED)
+                    self.assertIsNone(row["predictedHardness_HRC"])
+                    self.assertIsNone(row["predictedHardness_HV"])
+                    self.assertEqual(row["predictedHardness_HV_status"], kin.STATUS_HV_NO_HRC)
+        self.assertEqual(kin.predicted_hardness_hv(58.0, "aisi4140"), (653.0, e140.STATUS_CONVERTED))
 
     def test_non_steels_are_unavailable(self):
         for name in ("Inconel 718", "Ti-6Al-4V", "Al 7075"):
@@ -117,10 +115,10 @@ class KineticsSolverHardnessTest(unittest.TestCase):
         self.assertNotIn("10.5 + 40", src)
         self.assertNotIn("* 10.5", src)
         keys = list(self._rows("AISI 4140")[0])
-        # the HV keys keep their place; fx-kinetics appended four status keys after them
-        self.assertEqual(keys[-7:], ["predictedHardness_HRC", "predictedHardness_HV", "predictedHardness_HV_status",
+        # the HV keys keep their place; fx-kinetics appended four status keys after them, kin-li phaseStartTemps_C
+        self.assertEqual(keys[-8:], ["predictedHardness_HRC", "predictedHardness_HV", "predictedHardness_HV_status",
                                      "transformedStart_status", "phaseFractions_status",
-                                     "predictedHardness_HRC_status", "unavailableReason"])
+                                     "predictedHardness_HRC_status", "unavailableReason", "phaseStartTemps_C"])
 
     def test_json_null_and_provenance(self):
         res = kin.solve_phase_transformation_kinetics("Ti-6Al-4V")

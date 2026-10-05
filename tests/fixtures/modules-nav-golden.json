@@ -92,7 +92,7 @@
     "workspace": "materials",
     "label": "TTT / CCT",
     "scope": "Research",
-    "description": "Illustrative steel-only transformation kinetics (TTT/CCT); other alloy classes are unavailable.",
+    "description": "Li (1998) TTT/CCT start curves for low-alloy steels (screening, unvalidated); other alloys are unavailable.",
     "next": "micrograph"
   },
   {
