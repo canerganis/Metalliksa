@@ -4,9 +4,6 @@ import { convertSteelHardness, hardnessMaterialClassOf } from "./hardnessConvers
 import { estimateSteelHvFromYield, HV_FROM_YIELD_ESTIMATE_NOTE } from "./hardnessStrengthEstimate";
 
 export type ModuleTargetId =
-  | "thermal-scheduler"
-  | "xrd-lab"
-  | "hardness-tensile"
   | "alloy-builder"
   | "icme-motor"
   | "phase-diagram"

@@ -533,13 +533,6 @@ Provide an evidence-gap review:
                     <Microscope className="w-3.5 h-3.5" />
                     <span>Micrograph AI</span>
                   </button>
-                  <button
-                    onClick={() => onNavigateToModule?.("thermal-scheduler")}
-                    className="p-2 rounded-lg bg-slate-950/70 hover:bg-amber-950/30 border border-slate-800 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-amber-300"
-                  >
-                    <Flame className="w-3.5 h-3.5" />
-                    <span>Heat Treatment</span>
-                  </button>
                 </div>
               </div>
             </div>

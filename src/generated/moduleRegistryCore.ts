@@ -294,7 +294,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.0.0",
       "workspace": "materials",
       "label": "Alloy Builder",
-      "description": "Composition exploration and inverse design with model-dependent estimates.",
+      "description": "Composition and specimen editor for the shared active material (no property prediction).",
       "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",

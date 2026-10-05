@@ -94,7 +94,7 @@
     "workspace": "materials",
     "label": "Alloy Builder",
     "scope": "Research",
-    "description": "Composition exploration and inverse design with model-dependent estimates.",
+    "description": "Composition and specimen editor for the shared active material (no property prediction).",
     "next": "phase-diagram",
     "viewComponent": "src/components/AlloyBuilder.tsx",
     "viewExport": "AlloyBuilder"

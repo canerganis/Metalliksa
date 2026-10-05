@@ -194,8 +194,8 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
-            {error} Industrial verdict needs <code className="text-amber-100">POST /api/python/lpbf-build-job</code>{" "}
-            (Express + <code className="text-amber-100">python/lpbf_build_job_solver.py</code>). Restart{" "}
+            {error} Industrial verdict needs <code className="text-amber-100">POST /api/lpbf/jobs</code>{" "}
+            (LPBF worker, <code className="text-amber-100">routes/lpbfSimulation.ts</code> → <code className="text-amber-100">python/lpbf_worker.py</code>). Restart{" "}
             <code className="text-amber-100">npm run dev</code> if this route 404s.
           </span>
         </div>
