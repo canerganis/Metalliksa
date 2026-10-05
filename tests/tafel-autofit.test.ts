@@ -93,5 +93,6 @@ test('autoFitTafel preserves an explicitly zero SHE reference offset', () => {
   dataset.metadata.referenceElectrode = 'SHE';
   dataset.metadata.refOffsetVsSHE = 0;
   const fit = mod().autoFitTafel(dataset);
+  assert.notEqual(fit.eCorr, null);
   assert.equal(fit.eCorrSHE, fit.eCorr);
 });
