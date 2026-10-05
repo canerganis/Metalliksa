@@ -498,7 +498,8 @@ class TestNonConvergedEquilibrium(unittest.TestCase):
                    mock.patch.object(cs, "np", np, create=True),
                    mock.patch.object(cs, "v", fake_v, create=True),
                    mock.patch.object(cs, "equilibrium", _fake_equilibrium(nan_rows), create=True),
-                   mock.patch.object(cs, "load_pycalphad_database", lambda *a, **k: fake_dbf),
+                   mock.patch.object(cs, "load_database_with_info",
+                                     lambda *a, **k: (fake_dbf, {"status": "miss", "sha256": "fake"})),
                    mock.patch.dict(sys.modules, {"pycalphad": None}))  # no Workspace: plain equilibrium path
         with contextlib.ExitStack() as stack:
             for p in patches:
@@ -592,9 +593,12 @@ class TestRealPath(unittest.TestCase):
         self.assertEqual(out["criticalTemperatureStatus"]["solidusC"]["status"], "bisected")
         self.assertIsNone(crit["gammaPrimeSolvusC"])
         self.assertEqual(out["criticalTemperatureStatus"]["gammaPrimeSolvusC"]["status"], "unavailable")
-        self.assertEqual(out["multiElementScheilStatus"], "screening-curve-not-thermodynamic")
+        # the former ad hoc screening curve and the default k table are gone: a stepwise Scheil-Gulliver
+        # path from pycalphad equilibria, and k only from its primary-phase tie-line
+        self.assertEqual(out["multiElementScheilStatus"], "pycalphad-scheil-gulliver")
         for row in out["solutePartitioning"]:
-            self.assertIn(row["partitionCoefficientSource"], ("tie-line", "default-table-not-thermodynamic"))
+            self.assertEqual(row["partitionCoefficientSource"], "scheil-primary-phase-tie-line")
+            self.assertNotIn("assumedPrecipitateFraction", row)
         # pycalphad's own consistency: fractions sum to 1, and sum(x_i mu_i) = G_m
         for point in out["equilibriumProfile"]:
             self.assertAlmostEqual(sum(ph["fraction"] for ph in point["phases"]), 1.0, delta=2e-3)

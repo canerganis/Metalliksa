@@ -17,18 +17,23 @@ What a successful pycalphad run computes:
     on a temperature grid at fixed composition and 1 atm.
  2. Chemical potentials (MU) and activities a_i = exp(mu_i / RT).
  3. Phase constitution (phase names, fractions, phase compositions) per temperature.
- 4. New-PHACOMP Nv / Md screening (tabulated values; unlisted elements use 1.0).
+ 4. New-PHACOMP Nv / Md screening (Ni-base only, tabulated values; unavailable otherwise).
+ 5. Liquidus / solidus refined between grid points by multi-section equilibria.
+ 6. A stepwise Scheil-Gulliver solidification path (pycalphad equilibria of the remaining
+    liquid; scheil_gulliver) and, from it, partition coefficients k of the primary solid
+    phase at its first appearance. Labelled unvalidated, with its validity range.
 
-Post-processing that is NOT a calculated CALPHAD result is flagged, not hidden
-(see criticalTemperatureStatus, solutePartitioning[].partitionCoefficientSource and
-multiElementScheilStatus in the output):
- - liquidus: first grid temperature with liquid >= 98 % (grid resolution only);
- - solidus: only when the grid hit a trace-liquid point; unavailable when the
-   solver reached the grid bound (the former value was the lowest grid temperature);
+Every field that cannot be computed is null with a status and a reason (see
+criticalTemperatureStatus, scheilSolidification, solutePartitioning[].reason):
  - gamma-prime solvus: unavailable, the L1_2 model phase also describes the
    disordered gamma and no site-fraction ordering check exists;
- - the Scheil-style curve and the default partition coefficients are screening
-   numbers, not thermodynamic results.
+ - beta transus / sigma: flagged phase-name heuristics on the grid.
+
+Speed: parsed databases and compiled pycalphad models (Workspace) are cached per process by
+calphad_model_cache (key: database SHA-256, components, phases, condition keys). In the IPC
+service calphad requests run in one dedicated worker (persistent_ipc_service
+AFFINITY_SCRIPT_NAMES), so repeated requests for a system are warm. Each result reports
+modelCache.status ("cold" / "warm") and timingsMs.
 
 Databases: python/databases holds pycalphad test files next to a few real
 assessments. Test fixtures (file header or catalogue flag) are refused; the catalogue
@@ -64,6 +69,7 @@ except Exception as e:
 
 import physical_constants
 from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
+from calphad_model_cache import process_cache, read_tdb_text
 from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
 
 # Phase 6a value step (b): R is the exact SI 2019 product N_A*k from
@@ -74,9 +80,6 @@ ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # Directory containing open-source TDB databases
 DATABASES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databases")
-
-# Global in-memory cache for loaded pycalphad Database objects
-_TDB_CACHE: Dict[str, Any] = {}
 
 def _atomic_weight(el: str) -> float:
     """CIAAW 2021 abridged standard atomic weight (physical_constants), in g/mol.
@@ -215,6 +218,56 @@ OPEN_TDB_CATALOG = [
 ]
 
 
+# Alloy systems the application works with, as (id, label, base element, major alloying elements).
+# Element sets only (no composition numbers): coverage depends on which elements a database
+# contains and which base elements it is assessed for. Minor/impurity elements (C, Co, B, ...) are
+# left out, so "covered" is the most favourable reading; a request that adds them can still be
+# refused for missing elements.
+COVERAGE_REFERENCE_SYSTEMS = (
+    ("in718", "Inconel 718 (UNS N07718)", "Ni", ("Ni", "Cr", "Fe", "Nb", "Mo", "Ti", "Al")),
+    ("in625", "Inconel 625 (UNS N06625)", "Ni", ("Ni", "Cr", "Mo", "Nb", "Fe")),
+    ("ti6al4v", "Ti-6Al-4V (UNS R56400)", "Ti", ("Ti", "Al", "V")),
+    ("ss316l", "316L stainless steel (UNS S31603)", "Fe", ("Fe", "Cr", "Ni", "Mo", "Mn", "Si")),
+    ("alsi10mg", "AlSi10Mg (EN AC-43000 family)", "Al", ("Al", "Si", "Mg")),
+    ("alsi10mg_fe", "AlSi10Mg with Fe impurity", "Al", ("Al", "Si", "Mg", "Fe")),
+    ("ni_al", "Ni-Al binary (model alloy)", "Ni", ("Ni", "Al")),
+)
+
+
+# Deviations observed with the covering database (stated, not corrected).
+COVERAGE_KNOWN_DEVIATIONS = {
+    "ti6al4v": ("COST 507 gives the HCP_A3 (alpha) phase up to about 925 degC for Ti-6Al-4V on a 25 degC grid "
+                "(phase-name heuristic), against a beta transus of about 995 degC usually reported for this "
+                "alloy; treat alpha/beta results from this database as indicative only."),
+}
+
+
+def system_coverage() -> List[Dict[str, Any]]:
+    """Which reference alloy systems an installed, assessed database can answer, and why not otherwise.
+
+    Uses the same resolve_database rules as a calculation (no database is substituted, test
+    fixtures never count). "covered" says a database contains every major element and is
+    assessed for the base element; it does not say that results were validated for that alloy.
+    """
+    out = []
+    for sys_id, label, base, elements in COVERAGE_REFERENCE_SYSTEMS:
+        res = resolve_database(list(elements), None, None, base)
+        row: Dict[str, Any] = {"id": sys_id, "label": label, "baseElement": base, "elements": list(elements)}
+        if res["ok"]:
+            row.update({"status": "covered", "databaseId": res["id"], "databaseUsed": res["name"],
+                        "databaseSuitability": res["suitability"],
+                        "note": "a database contains every major element and is assessed for the base element; "
+                                "agreement with experiment is not established by this check"})
+            if sys_id in COVERAGE_KNOWN_DEVIATIONS:
+                row["knownDeviation"] = COVERAGE_KNOWN_DEVIATIONS[sys_id]
+        else:
+            row.update({"status": "unavailable", "unavailableKind": res["kind"],
+                        "reason": "no thermodynamic database for this system: " + res["reason"],
+                        "missingElements": res["extra"].get("missingElements", [])})
+        out.append(row)
+    return out
+
+
 def list_available_databases() -> Dict[str, Any]:
     """Returns the list of available Open TDB databases and engine capabilities."""
     installed_files = []
@@ -222,6 +275,8 @@ def list_available_databases() -> Dict[str, Any]:
         installed_files = [os.path.basename(p) for p in glob.glob(os.path.join(DATABASES_DIR, "*.tdb"))]
 
     return {
+        "systemCoverage": system_coverage(),
+        "modelCache": process_cache().stats(),
         "success": True,
         "engine": "pycalphad-open-tdb",
         "pycalphadAvailable": PYCALPHAD_AVAILABLE,
@@ -539,26 +594,27 @@ def resolve_database(
             "extra": {"databasesConsidered": considered}}
 
 
-def load_pycalphad_database(tdb_path_or_text: str, is_raw_text: bool = False) -> Any:
-    """Loads and caches a pycalphad Database instance in memory."""
+def load_database_with_info(tdb_path_or_text: str, is_raw_text: bool = False) -> Tuple[Any, Dict[str, Any]]:
+    """Parsed pycalphad Database plus cache information, or (None, info) when it cannot be loaded.
+
+    The TDB text is read and hashed on every call; the parse is reused from the process cache
+    (calphad_model_cache) only for identical text, so an edited file is never served stale.
+    """
     if not PYCALPHAD_AVAILABLE:
-        return None
-
-    cache_key = "custom_tdb" if is_raw_text else tdb_path_or_text
-    if cache_key in _TDB_CACHE and not is_raw_text:
-        return _TDB_CACHE[cache_key]
-
+        return None, {"status": "unavailable"}
     try:
-        if is_raw_text:
-            dbf = Database(tdb_path_or_text)
-        else:
-            dbf = Database(tdb_path_or_text)
-        if not is_raw_text:
-            _TDB_CACHE[cache_key] = dbf
-        return dbf
+        text = tdb_path_or_text if is_raw_text else read_tdb_text(tdb_path_or_text)
+        return process_cache().database(
+            text, lambda t: Database.from_string(t, fmt="tdb"),
+            path=None if is_raw_text else tdb_path_or_text)
     except Exception as e:
         sys.stderr.write(f"[CALPHAD] Error loading TDB: {e}\n")
-        return None
+        return None, {"status": "error"}
+
+
+def load_pycalphad_database(tdb_path_or_text: str, is_raw_text: bool = False) -> Any:
+    """Parsed pycalphad Database (cached per process by content hash), or None."""
+    return load_database_with_info(tdb_path_or_text, is_raw_text)[0]
 
 
 PHACOMP_UNAVAILABLE_KEYS = {
@@ -783,6 +839,226 @@ def derive_critical_temperatures(
     return values, status
 
 
+PHASE_COLORS = {
+    "LIQUID": "#0284c7",
+    "FCC_A1": "#38bdf8",
+    "FCC_L12": "#a855f7",
+    "L12_FCC": "#a855f7",
+    "BCC_A2": "#10b981",
+    "BCC_B2": "#f59e0b",
+    "HCP_A3": "#6366f1",
+    "SIGMA_SGTE": "#ef4444",
+    "LAVES_C14": "#f97316",
+    "LAVES_C15": "#ea580c",
+    "MG2SI": "#14b8a6",
+    "DIAMOND_A4": "#eab308",
+    "CEMENTITE": "#b45309",
+    "M23C6": "#dc2626",
+}
+
+
+def _friendly_phase_name(phase_str: str) -> str:
+    if phase_str in ["FCC_A1", "GAMMA"]:
+        return "γ-Matrix (FCC_A1 solid solution)"
+    if phase_str in ["FCC_L12", "L12_FCC"]:
+        return "L1_2 phase (γ' only if ordered; ordering not verified)"
+    if phase_str in ["BCC_A2"]:
+        return "α-Ferrite / β-Titanium (BCC_A2)"
+    if phase_str in ["BCC_B2"]:
+        return "B2 Superlattice Intermetallic (BCC_B2)"
+    if phase_str in ["HCP_A3"]:
+        return "α-Phase / HCP Matrix (HCP_A3)"
+    if "SIGMA" in phase_str:
+        return "TCP σ (Sigma) Embrittling Phase"
+    if phase_str == "LIQUID":
+        return "Liquid Phase"
+    if phase_str == "MG2SI":
+        return "Mg2Si Hardening Precipitate"
+    return phase_str
+
+
+class _EquilibriumRunner:
+    """Runs pycalphad equilibria for one (database, components, phases, condition keys) system.
+
+    With pycalphad's Workspace the compiled models come from the process cache
+    (calphad_model_cache); without it (older pycalphad) each call is a plain equilibrium().
+    Every call goes through ``run`` with the same condition keys, so a cached Workspace keeps
+    its PhaseRecordFactory (pycalphad rebuilds it only when the condition keys change).
+    """
+
+    def __init__(self, dbf: Any, db_sha: str, comps: List[str], phases: List[str], conditions: Dict[Any, Any]):
+        self.dbf = dbf
+        self.comps = comps
+        self.phases = phases
+        self.workspace: Any = None
+        self.lock: Any = None
+        self.calls = 0
+        self.cache_info: Dict[str, Any] = {"status": "not-used", "buildMs": 0.0}
+        try:
+            from pycalphad import Workspace
+        except ImportError:  # older pycalphad: plain equilibrium(), every call builds its models
+            self.cache_info = {"status": "unavailable-no-workspace-api", "buildMs": 0.0}
+            return
+        key = (PYCALPHAD_VERSION, db_sha, tuple(sorted(comps)), tuple(sorted(phases)),
+               tuple(str(k) for k in conditions))
+        self.workspace, self.lock, self.cache_info = process_cache().workspace(
+            key, lambda: Workspace(dbf, comps, phases, conditions))
+
+    def run(self, conditions: Dict[Any, Any], as_dataset: bool = False) -> Any:
+        self.calls += 1
+        if self.workspace is None:
+            return equilibrium(self.dbf, self.comps, self.phases, conditions)
+        self.workspace.conditions = conditions
+        result = self.workspace.eq
+        return result.get_dataset() if as_dataset else result
+
+
+def _flat_point_arrays(eq_r: Any, n: int) -> Tuple[Any, Any, Any, Any, Any]:
+    """(GM[n], MU[n, c], Phase[n, v], NP[n, v], X[n, v, c] or None) for n temperatures at one composition."""
+    def arr(x: Any) -> Any:
+        return np.asarray(getattr(x, "values", x))
+    gm = arr(eq_r.GM).reshape(n, -1)[:, 0]
+    mu = arr(eq_r.MU).reshape(n, -1)
+    ph = arr(eq_r.Phase).reshape(n, -1)
+    nps = arr(eq_r.NP).reshape(n, -1)
+    x = None
+    if hasattr(eq_r, "X"):
+        try:
+            x = arr(eq_r.X).reshape(n, ph.shape[1], -1)
+        except Exception:
+            x = None
+    return gm, mu, ph, nps, x
+
+
+SCHEIL_DEFAULT_STEP_C = 2.0
+SCHEIL_MAX_STEPS = 400
+SCHEIL_TIME_BUDGET_S = 20.0
+SCHEIL_LIQUID_STOP = 1e-3       # stop when < 0.1 % liquid remains (same cut-off as the solidus definition)
+SCHEIL_MIN_MOLE_FRACTION = 1e-6  # lower bound for a liquid-composition condition (clamps are counted)
+
+
+def scheil_gulliver(
+    run_point: Callable[[float, Dict[str, float]], Optional[Dict[str, Any]]],
+    start_c: float,
+    x0: Dict[str, float],
+    step_c: float = SCHEIL_DEFAULT_STEP_C,
+    max_steps: int = SCHEIL_MAX_STEPS,
+    time_budget_s: float = SCHEIL_TIME_BUDGET_S,
+    min_temperature_c: float = -273.0,
+) -> Dict[str, Any]:
+    """Scheil-Gulliver solidification path (no diffusion in the solid, complete mixing in the liquid).
+
+    Classic stepwise algorithm: at each temperature step the current liquid (composition x_L) is
+    equilibrated; the solid that forms is removed from the system, the liquid fraction is
+    multiplied by the local liquid fraction and x_L becomes the composition of the equilibrium
+    liquid. ``run_point(T_C, x_liquid)`` returns {"liquid": f, "liquidX": {...},
+    "phases": {name: amount}} for one equilibrium, or None when it did not converge.
+
+    Fractions are on the pycalphad basis (moles of atoms). The path stops when the liquid
+    fraction falls below SCHEIL_LIQUID_STOP, when the liquid disappears inside one step (an
+    invariant reaction or the step skipped the end of solidification: the terminal temperature
+    is then known to within that step), when a point does not converge, at the step or time
+    limit, or at the lowest temperature. Every stop is reported with its reason; nothing is
+    extrapolated. Pure function of ``run_point``: testable without pycalphad.
+    """
+    t0 = time.perf_counter()
+    comps = sorted(x0)
+    x_liq = {c: float(x0[c]) for c in comps}
+    f_liq = 1.0
+    solid_integral = {c: 0.0 for c in comps}
+    phase_amounts: Dict[str, float] = {}
+    points: List[Dict[str, Any]] = [{"temperatureC": round(start_c, 2), "fractionSolid": 0.0,
+                                     "liquidX": dict(x_liq), "solidX": None, "solidPhases": []}]
+    t_c = start_c
+    clamped_steps = 0
+    first_solid: Optional[Dict[str, Any]] = None
+    first_appearance: Dict[str, Dict[str, Any]] = {}
+    reason = "step-limit"
+    terminal_bracket: Optional[List[float]] = None
+    steps = 0
+    while steps < max_steps:
+        if time.perf_counter() - t0 > time_budget_s:
+            reason = "time-budget"
+            break
+        t_prev = t_c
+        t_c = t_prev - step_c
+        if t_c < min_temperature_c:
+            reason = "temperature-floor"
+            break
+        cond_x = {}
+        clamped = False
+        for c in comps:
+            val = max(SCHEIL_MIN_MOLE_FRACTION, x_liq[c])
+            clamped = clamped or val != x_liq[c]
+            cond_x[c] = val
+        total = sum(cond_x.values())
+        cond_x = {c: val / total for c, val in cond_x.items()}
+        clamped_steps += int(clamped)
+        res = run_point(t_c, cond_x)
+        steps += 1
+        if res is None:
+            reason = "equilibrium-not-converged"
+            terminal_bracket = [round(t_c, 2), round(t_prev, 2)]
+            break
+        local_liq = float(res["liquid"])
+        solids = {k: float(v) for k, v in res["phases"].items() if v > 0.0}
+        local_solid = max(0.0, 1.0 - local_liq)
+        if local_liq <= 1e-9:
+            # The remaining liquid solidified completely inside this step.
+            for name, amount in solids.items():
+                phase_amounts[name] = phase_amounts.get(name, 0.0) + f_liq * amount
+            for c in comps:
+                solid_integral[c] += f_liq * cond_x[c]
+            points.append({"temperatureC": round(t_c, 2), "fractionSolid": 1.0, "liquidX": None,
+                           "solidX": dict(cond_x), "solidPhases": sorted(solids)})
+            f_liq = 0.0
+            reason = "liquid-exhausted-within-step"
+            terminal_bracket = [round(t_c, 2), round(t_prev, 2)]
+            break
+        new_x_liq = {c: float(res["liquidX"].get(c, 0.0)) for c in comps}
+        solid_x = None
+        if local_solid > 1e-12:
+            solid_x = {c: (cond_x[c] - local_liq * new_x_liq[c]) / local_solid for c in comps}
+            for c in comps:
+                solid_integral[c] += f_liq * local_solid * solid_x[c]
+            for name, amount in solids.items():
+                phase_amounts[name] = phase_amounts.get(name, 0.0) + f_liq * amount
+            if first_solid is None:
+                first_solid = {"temperatureC": round(t_c, 2), "liquidX": dict(cond_x), "solidX": dict(solid_x),
+                               "phases": sorted(solids)}
+            # first appearance of each solid phase: its composition next to the coexisting liquid
+            for name, phase_x in (res.get("phasesX") or {}).items():
+                if name not in first_appearance and phase_x:
+                    first_appearance[name] = {"temperatureC": round(t_c, 2), "phaseX": dict(phase_x),
+                                              "liquidX": dict(new_x_liq)}
+        f_liq *= local_liq
+        x_liq = new_x_liq
+        points.append({"temperatureC": round(t_c, 2), "fractionSolid": round(1.0 - f_liq, 6),
+                       "liquidX": dict(x_liq), "solidX": solid_x, "solidPhases": sorted(solids)})
+        if f_liq < SCHEIL_LIQUID_STOP:
+            reason = "liquid-below-0.1-percent"
+            break
+    # Mass balance of the path: solid formed + liquid left must give back the alloy composition.
+    balance = max(abs(solid_integral[c] + f_liq * (x_liq[c] if f_liq > 0 else 0.0) - x0[c]) for c in comps)
+    complete = reason in ("liquid-below-0.1-percent", "liquid-exhausted-within-step")
+    return {
+        "status": "complete" if complete else "incomplete",
+        "terminationReason": reason,
+        "terminalTemperatureC": points[-1]["temperatureC"],
+        "terminalBracketC": terminal_bracket,
+        "remainingLiquidFraction": round(f_liq, 6),
+        "steps": steps,
+        "stepC": step_c,
+        "points": points,
+        "phaseAmounts": {k: round(v, 6) for k, v in sorted(phase_amounts.items())},
+        "firstSolid": first_solid,
+        "firstAppearance": first_appearance,
+        "clampedSteps": clamped_steps,
+        "massBalanceMaxAbsError": balance,
+        "elapsedMs": round((time.perf_counter() - t0) * 1000.0, 2),
+    }
+
+
 def solve_pycalphad_equilibrium(
     alloy_name: str,
     wt_pct: dict,
@@ -798,7 +1074,9 @@ def solve_pycalphad_equilibrium(
     min_refine_step_c: float = 0.5,
     db_id: str = "",
     db_status: str = "",
-    db_suitability: str = ""
+    db_suitability: str = "",
+    scheil: bool = True,
+    scheil_step_c: float = SCHEIL_DEFAULT_STEP_C,
 ) -> Dict[str, Any]:
     """
     Gibbs free energy minimisation with pycalphad on a database already chosen by
@@ -807,10 +1085,18 @@ def solve_pycalphad_equilibrium(
     elements are never dropped or renormalised.
     """
     start_time = time.perf_counter()
+    timings: Dict[str, float] = {}
 
-    dbf = load_pycalphad_database(custom_tdb_text if custom_tdb_text else tdb_path, is_raw_text=bool(custom_tdb_text))
+    def _lap(name: str, since: float) -> float:
+        now = time.perf_counter()
+        timings[name] = round((now - since) * 1000.0, 2)
+        return now
+
+    dbf, db_cache = load_database_with_info(custom_tdb_text if custom_tdb_text else tdb_path,
+                                            is_raw_text=bool(custom_tdb_text))
     if dbf is None:
         raise CalphadUnavailable(KIND_DATABASE_LOAD_FAILED, "pycalphad could not load the thermodynamic database")
+    t_mark = _lap("databaseLoad", start_time)
 
     db_elements = [e.upper() for e in dbf.elements if e.upper() not in ["VA", "/-"]]
 
@@ -833,17 +1119,17 @@ def solve_pycalphad_equilibrium(
         )
     active_at_frac = {el.upper(): float(val) for el, val in at_frac.items()}
 
-    # Reference dependent component (usually base element with highest fraction)
-    sorted_comps = sorted(available_comps, key=lambda c: active_at_frac[c], reverse=True)
-    dep_comp = sorted_comps[0]
-    indep_comps = sorted_comps[1:]
+    # Dependent component: the base element (largest fraction). The independent components are
+    # in alphabetical order so that the condition keys (and with them the cached model key) do
+    # not depend on the order of the minor fractions.
+    dep_comp = sorted(available_comps, key=lambda c: active_at_frac[c], reverse=True)[0]
+    indep_comps = sorted(c for c in available_comps if c != dep_comp)
 
     # All components for pycalphad (including VA for vacancy sublattice if present in DB)
     all_comps = list(available_comps)
     if "VA" in dbf.elements:
         all_comps.append("VA")
 
-    # Filter all phases in the database
     phases = list(dbf.phases.keys())
 
     # Build temperature grid
@@ -852,7 +1138,6 @@ def solve_pycalphad_equilibrium(
     num_steps = max(5, min(80, int(round((t_end_k - t_start_k) / t_step_c)) + 1))
     temp_grid_k = [round(float(t_start_k + i * (t_end_k - t_start_k) / (num_steps - 1)), 2) for i in range(num_steps)]
 
-    # Setup conditions
     conditions = {
         v.P: 101325.0,
         v.T: temp_grid_k,
@@ -865,48 +1150,61 @@ def solve_pycalphad_equilibrium(
             composition_adjustments[comp] = {"requestedMoleFraction": active_at_frac[comp], "usedMoleFraction": val}
         conditions[v.X(comp)] = val
 
-    # Execute pycalphad equilibrium. A Workspace is what equilibrium() builds internally; keeping it
-    # lets the boundary refinement re-evaluate single temperatures without rebuilding the
-    # models (about 7 s for COST 507 against 0.3 s per call).
+    runner = _EquilibriumRunner(dbf, db_cache.get("sha256", ""), all_comps, phases, conditions)
+    t_mark = _lap("workspaceBuild", t_mark)
+    if runner.lock is not None:
+        runner.lock.acquire()
     try:
-        from pycalphad import Workspace
-        workspace: Any = Workspace(dbf, all_comps, phases, conditions)
-        eq = workspace.eq.get_dataset()
-    except ImportError:  # older pycalphad: plain equilibrium(), refinement then rebuilds per call
-        workspace = None
-        eq = equilibrium(dbf, all_comps, phases, conditions)
+        result = _solve_with_runner(
+            runner, conditions, dep_comp, indep_comps, alloy_name, wt_pct, at_frac, t_min_c, t_max_c, t_step_c,
+            tdb_path, db_name, db_id, db_status, db_suitability, boundary_refinement, min_refine_step_c,
+            scheil, scheil_step_c, num_steps, available_comps, unsupported_elems, composition_adjustments,
+            timings, t_mark)
+    finally:
+        if runner.lock is not None:
+            runner.lock.release()
+
+    elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+    timings["total"] = elapsed_ms
+    result["computeTimeMs"] = elapsed_ms
+    result["timingsMs"] = timings
+    cache_stats = process_cache().stats()
+    workspace_status = runner.cache_info.get("status")
+    result["modelCache"] = {
+        "status": "warm" if workspace_status == "hit" else ("cold" if workspace_status in ("miss", "disabled") else
+                                                            "not-cached"),
+        "workspace": workspace_status,
+        "database": db_cache.get("status"),
+        "databaseSha256": db_cache.get("sha256"),
+        "workspaceBuildMs": runner.cache_info.get("buildMs"),
+        "originalWorkspaceBuildMs": runner.cache_info.get("originalBuildMs"),
+        "note": ("Compiled pycalphad models are cached per worker process and keyed by database content "
+                 "(SHA-256), components and phases. 'cold' means this process built them for this request "
+                 "(model construction and code generation included in the time); 'warm' means they were reused."),
+        **cache_stats,
+    }
+    return result
+
+
+def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt_pct, at_frac, t_min_c, t_max_c,
+                       t_step_c, tdb_path, db_name, db_id, db_status, db_suitability, boundary_refinement,
+                       min_refine_step_c, scheil, scheil_step_c, num_steps, available_comps, unsupported_elems,
+                       composition_adjustments, timings, t_mark) -> Dict[str, Any]:
+    eq = runner.run(conditions, as_dataset=runner.workspace is not None)
+    t_mark_now = time.perf_counter()
+    timings["gridEquilibrium"] = round((t_mark_now - t_mark) * 1000.0, 2)
+    t_mark = t_mark_now
 
     # Extract coordinates and arrays
     t_coords = list(eq.T.values)
     eq_comps = [str(c) for c in eq.component.values]
-    
+
     equilibrium_profile = []
     not_converged_temps: List[float] = []
     all_phases_observed = set()
     beta_transus_c = None
     sigma_phase_solvus_c = None
     l12_by_name_max_c = None  # highest grid T with a phase NAMED L1_2 (not a verified gamma-prime)
-
-    # Track tie-line partition coefficients from two-phase regions
-    tie_line_partitioning = {c: [] for c in eq_comps}
-
-    # Color mapping for phases
-    PHASE_COLORS = {
-        "LIQUID": "#0284c7",
-        "FCC_A1": "#38bdf8",
-        "FCC_L12": "#a855f7",
-        "L12_FCC": "#a855f7",
-        "BCC_A2": "#10b981",
-        "BCC_B2": "#f59e0b",
-        "HCP_A3": "#6366f1",
-        "SIGMA_SGTE": "#ef4444",
-        "LAVES_C14": "#f97316",
-        "LAVES_C15": "#ea580c",
-        "MG2SI": "#14b8a6",
-        "DIAMOND_A4": "#eab308",
-        "CEMENTITE": "#b45309",
-        "M23C6": "#dc2626",
-    }
 
     for i, t_k in enumerate(t_coords):
         t_c = round(t_k - ZERO_CELSIUS_K, 1)
@@ -916,8 +1214,8 @@ def solve_pycalphad_equilibrium(
         gm_kj_mol = round(gm_j_mol / 1000.0, 3)
 
         # Active phases and fractions
-        phs = eq.Phase.values[0, 0, i, 0, 0, :] if len(eq.Phase.shape) == 6 else eq.Phase.values.squeeze()[i]
-        nps = eq.NP.values[0, 0, i, 0, 0, :] if len(eq.NP.shape) == 6 else eq.NP.values.squeeze()[i]
+        phs = eq.Phase.values[0, 0, i, 0, 0, :] if len(eq.Phase.shape) == 6 else eq.Phase.values.reshape(len(t_coords), -1)[i]
+        nps = eq.NP.values[0, 0, i, 0, 0, :] if len(eq.NP.shape) == 6 else eq.NP.values.reshape(len(t_coords), -1)[i]
 
         # A point whose equilibrium did not converge (pycalphad returns NaN) is never reported
         # as a state: null values and status "not-converged" (no NaN reaches the JSON).
@@ -947,13 +1245,9 @@ def solve_pycalphad_equilibrium(
             continue
 
         step_phases = []
-        liq_fraction = 0.0
         gamma_prime_frac = 0.0
         hcp_frac = 0.0
         sigma_frac = 0.0
-
-        # Phase compositions for tie-line partitioning
-        phase_compositions: Dict[str, Dict[str, float]] = {}
 
         for vertex_idx, (p_name, np_val) in enumerate(zip(phs, nps)):
             if not p_name or np.isnan(np_val) or float(np_val) <= 0.001:
@@ -963,8 +1257,6 @@ def solve_pycalphad_equilibrium(
             all_phases_observed.add(phase_str)
             fraction = round(float(np_val), 4)
 
-            if "LIQUID" in phase_str:
-                liq_fraction += fraction
             if phase_str in ["FCC_L12", "L12_FCC", "GAMMA_PRIME"]:
                 gamma_prime_frac += fraction
             if phase_str in ["HCP_A3", "ALPHA_HCP"]:
@@ -972,7 +1264,7 @@ def solve_pycalphad_equilibrium(
             if "SIGMA" in phase_str:
                 sigma_frac += fraction
 
-            # Extract composition of this phase if available
+            comp_map: Dict[str, float] = {}
             try:
                 if hasattr(eq, 'X'):
                     # Access 7D array: (N, P, T, X1, X2, vertex, component)
@@ -981,63 +1273,21 @@ def solve_pycalphad_equilibrium(
                     elif len(eq.X.shape) == 6:
                         x_arr = eq.X.values[0, 0, i, 0, vertex_idx, :]
                     else:
-                        x_arr = eq.X.values.squeeze()[i, vertex_idx, :]
+                        x_arr = eq.X.values.reshape(len(t_coords), len(phs), -1)[i, vertex_idx, :]
                     comp_map = {eq_comps[ci]: round(float(x_arr[ci]), 4) for ci in range(len(eq_comps)) if not np.isnan(x_arr[ci])}
-                    phase_compositions[phase_str] = comp_map
             except Exception:
-                pass
-
-            # Friendly human readable phase name
-            friendly_name = phase_str
-            if phase_str in ["FCC_A1", "GAMMA"]:
-                friendly_name = "γ-Matrix (FCC_A1 solid solution)"
-            elif phase_str in ["FCC_L12", "L12_FCC"]:
-                friendly_name = "L1_2 phase (γ' only if ordered; ordering not verified)"
-            elif phase_str in ["BCC_A2"]:
-                friendly_name = "α-Ferrite / β-Titanium (BCC_A2)"
-            elif phase_str in ["BCC_B2"]:
-                friendly_name = "B2 Superlattice Intermetallic (BCC_B2)"
-            elif phase_str in ["HCP_A3"]:
-                friendly_name = "α-Phase / HCP Matrix (HCP_A3)"
-            elif "SIGMA" in phase_str:
-                friendly_name = "TCP σ (Sigma) Embrittling Phase"
-            elif phase_str == "LIQUID":
-                friendly_name = "Liquid Phase"
-            elif phase_str == "MG2SI":
-                friendly_name = "Mg2Si Hardening Precipitate"
-
-            color = PHASE_COLORS.get(phase_str, "#94a3b8")
+                comp_map = {}
 
             step_phases.append({
                 "phaseId": phase_str,
-                "phaseName": friendly_name,
+                "phaseName": _friendly_phase_name(phase_str),
                 "fraction": fraction,
-                "color": color,
+                "color": PHASE_COLORS.get(phase_str, "#94a3b8"),
                 "isPrimary": phase_str in ["FCC_A1", "BCC_A2", "HCP_A3", "LIQUID"],
                 "isPrecipitate": phase_str in ["FCC_L12", "L12_FCC", "MG2SI", "BCC_B2"],
                 "isTCP": "SIGMA" in phase_str or "LAVES" in phase_str,
-                "compositions": phase_compositions.get(phase_str, {})
+                "compositions": comp_map,
             })
-
-        # Calculate tie-line partitioning coefficients if two key phases coexist
-        # (e.g., L12 vs FCC_A1, or Solid vs Liquid in mushy zone)
-        ppt_phase = "L12_FCC" if "L12_FCC" in phase_compositions else ("FCC_L12" if "FCC_L12" in phase_compositions else None)
-        mat_phase = "FCC_A1" if "FCC_A1" in phase_compositions else ("BCC_A2" if "BCC_A2" in phase_compositions else None)
-        liq_phase = "LIQUID" if "LIQUID" in phase_compositions else None
-
-        if ppt_phase and mat_phase:
-            for c in eq_comps:
-                x_ppt = phase_compositions[ppt_phase].get(c, 0.0)
-                x_mat = phase_compositions[mat_phase].get(c, 0.0)
-                if x_mat > 0.001 and x_ppt > 0.0001:
-                    tie_line_partitioning[c].append(x_ppt / x_mat)
-        elif mat_phase and liq_phase:
-            # Solid-liquid partitioning
-            for c in eq_comps:
-                x_sol = phase_compositions[mat_phase].get(c, 0.0)
-                x_liq = phase_compositions[liq_phase].get(c, 0.0)
-                if x_liq > 0.001 and x_sol > 0.0001:
-                    tie_line_partitioning[c].append(x_sol / x_liq)
 
         # Chemical Potentials and Thermodynamic Activities
         activities = {}
@@ -1080,129 +1330,104 @@ def solve_pycalphad_equilibrium(
     phacomp = calculate_phacomp(at_frac)
     phacomp_sigma_c = phacomp["tcpSigmaRiskTemperatureC"]
 
-    def liquid_fraction_at(temps_c: List[float]) -> List[Optional[float]]:
-        """Liquid fraction at each temperature (one pycalphad call); None where it did not converge."""
+    def point_equilibria(temps_c: List[float], x_indep: Optional[Dict[str, float]] = None
+                         ) -> List[Optional[Dict[str, Any]]]:
+        """Phase amounts and the liquid composition at each temperature (one pycalphad call).
+
+        ``x_indep`` replaces the independent mole fractions (Scheil steps); the condition keys stay
+        those of the grid, so a cached Workspace keeps its compiled functions. None marks a point
+        that did not converge (or a failed call): such a point never becomes a value.
+        """
         try:
             cond = dict(conditions)
             cond[v.T] = [float(t) + ZERO_CELSIUS_K for t in temps_c]
-            if workspace is not None:
-                workspace.conditions = cond
-                eq_r = workspace.eq
-            else:
-                eq_r = equilibrium(dbf, all_comps, phases, cond)
+            if x_indep is not None:
+                for comp in indep_comps:
+                    cond[v.X(comp)] = float(x_indep[comp])
+            eq_r = runner.run(cond)
             n = len(temps_c)
-
-            def _flat(x: Any) -> Any:
-                return np.asarray(getattr(x, "values", x)).reshape(n, -1)
-
-            gm_r = _flat(eq_r.GM)[:, 0]
-            mu_r = _flat(eq_r.MU)
-            ph_r = _flat(eq_r.Phase)
-            np_r = _flat(eq_r.NP)
-        except Exception as err:  # a failed refinement leaves the grid bracket, it never invents a value
-            sys.stderr.write(f"[pycalphad] boundary refinement failed: {err}\n")
+            gm_r, mu_r, ph_r, np_r, x_r = _flat_point_arrays(eq_r, n)
+        except Exception as err:  # a failed call leaves the bracket / stops the path, it never invents a value
+            sys.stderr.write(f"[pycalphad] point equilibrium failed: {err}\n")
             return [None] * len(temps_c)
-        out: List[Optional[float]] = []
+        out: List[Optional[Dict[str, Any]]] = []
         for k in range(len(temps_c)):
             if not (math.isfinite(float(gm_r[k])) and bool(np.all(np.isfinite(mu_r[k])))):
                 out.append(None)
                 continue
-            out.append(sum(float(x) for name, x in zip(ph_r[k], np_r[k])
-                           if name and "LIQUID" in str(name) and bool(np.isfinite(x)) and float(x) > 0.001))
+            liquid = 0.0
+            liquid_vertices = 0
+            liquid_x: Dict[str, float] = {}
+            solids: Dict[str, float] = {}
+            solids_x: Dict[str, Dict[str, float]] = {}
+            for j, (name, amount) in enumerate(zip(ph_r[k], np_r[k])):
+                if not name or not bool(np.isfinite(amount)) or float(amount) <= 0.0:
+                    continue
+                name_s = str(name).strip()
+                if "LIQUID" in name_s:
+                    if float(amount) > 0.001:
+                        liquid += float(amount)
+                        liquid_vertices += 1
+                        if x_r is not None:
+                            liquid_x = {eq_comps[ci]: float(x_r[k, j, ci]) for ci in range(len(eq_comps))
+                                        if eq_comps[ci] != "VA" and np.isfinite(x_r[k, j, ci])}
+                else:
+                    solids[name_s] = solids.get(name_s, 0.0) + float(amount)
+                    if x_r is not None and name_s not in solids_x:
+                        solids_x[name_s] = {eq_comps[ci]: float(x_r[k, j, ci]) for ci in range(len(eq_comps))
+                                            if eq_comps[ci] != "VA" and np.isfinite(x_r[k, j, ci])}
+            out.append({"liquid": liquid, "liquidVertices": liquid_vertices, "liquidX": liquid_x,
+                        "phases": solids, "phasesX": solids_x})
         return out
 
+    def liquid_fraction_at(temps_c: List[float]) -> List[Optional[float]]:
+        return [None if p is None else p["liquid"] for p in point_equilibria(temps_c)]
+
     refinement_tolerance_c = max(0.05, float(min_refine_step_c))
+    calls_before = runner.calls
     critical_temperatures, status = derive_critical_temperatures(
         equilibrium_profile, l12_by_name_max_c, beta_transus_c, sigma_phase_solvus_c, phacomp_sigma_c,
         refine=liquid_fraction_at if boundary_refinement else None,
         tolerance_c=refinement_tolerance_c)
+    refinement_calls = runner.calls - calls_before
+    t_mark_now = time.perf_counter()
+    timings["boundaryRefinement"] = round((t_mark_now - t_mark) * 1000.0, 2)
+    t_mark = t_mark_now
     liquidus_c = critical_temperatures["liquidusC"]
-    solidus_c = critical_temperatures["solidusC"]
 
-    # Calculate average partition coefficients from tie-lines
-    partitioning_table = []
-    for c in eq_comps:
-        k_vals = tie_line_partitioning.get(c, [])
-        # Find nominal wt% case-insensitively
-        elem_wt = next((wt_pct[k] for k in wt_pct if k.upper() == c.upper()), 0.0)
+    # ---------------------------------------------------------------- Scheil-Gulliver path
+    scheil_result: Optional[Dict[str, Any]] = None
+    scheil_unavailable: Optional[str] = None
+    liquidus_status = status.get("liquidusC", {})
+    if not scheil:
+        scheil_unavailable = "not requested"
+    elif liquidus_c is None:
+        scheil_unavailable = "the liquidus is not available on this grid, so there is no start temperature"
+    elif liquidus_status.get("status") != "bisected":
+        scheil_unavailable = "the liquidus was not refined (grid bracket only); the path needs a refined start temperature"
+    else:
+        # the composition of the grid conditions (including any reported clamp)
+        x0 = {c: float(conditions[v.X(c)]) for c in indep_comps}
+        x0[dep_comp] = 1.0 - sum(x0.values())
 
-        if k_vals:
-            k_avg = float(np.mean(k_vals))
-            k_source = "tie-line"
-        else:
-            # Screening default (not thermodynamic): used when no two-phase tie-line exists
-            k_source = "default-table-not-thermodynamic"
-            if c in ["AL", "TI", "TA"]:
-                k_avg = 3.2
-            elif c in ["NB", "V"]:
-                k_avg = 2.8
-            elif c in ["CR", "CO", "FE"]:
-                k_avg = 0.55
-            elif c in ["MO", "W"]:
-                k_avg = 0.72
-            else:
-                k_avg = 1.0
+        def run_point(t_c: float, x_liq: Dict[str, float]) -> Optional[Dict[str, Any]]:
+            res = point_equilibria([t_c], {c: x_liq[c] for c in indep_comps})[0]
+            if res is None or res["liquidVertices"] > 1:
+                return None  # non-convergence or a liquid miscibility gap: the path stops here
+            if res["liquid"] > 0.0 and not res["liquidX"]:
+                return None
+            return res
 
-        # Determine metallurgical role based on thermodynamics
-        if k_avg > 1.3:
-            role = "Precipitate / Gamma'-Forming Partitioning Element"
-        elif k_avg < 0.8:
-            role = "Matrix / Gamma-Partitioning Element"
-        else:
-            role = "Neutral / Solid-Solution Element"
+        start_c = float(liquidus_status["bracketC"][1])  # upper end of the bracket: fully liquid
+        scheil_result = scheil_gulliver(run_point, start_c, x0, step_c=max(0.25, min(10.0, float(scheil_step_c))),
+                                        min_temperature_c=t_start_floor_c(conditions))
+    timings["scheil"] = round((time.perf_counter() - t_mark) * 1000.0, 2)
+    t_mark = time.perf_counter()
 
-        # Material balance: X_tot = f_mat * X_mat + f_ppt * X_ppt, with an ASSUMED f_ppt
-        f_ppt_est = 0.30
-        c_mat = elem_wt / ((1.0 - f_ppt_est) + f_ppt_est * k_avg) if (1.0 - f_ppt_est + f_ppt_est * k_avg) > 0 else elem_wt
-        c_ppt = k_avg * c_mat
+    scheil_points, scheil_block, partitioning_table = _scheil_outputs(
+        scheil_result, scheil_unavailable, wt_pct, db_name, available_comps)
 
-        partitioning_table.append({
-            "element": c,
-            "partitionCoefficient_k": round(k_avg, 3),
-            "partitionCoefficientSource": k_source,
-            "assumedPrecipitateFraction": f_ppt_est,
-            "matrixFraction_pct": round(c_mat, 2),
-            "precipitateFraction_pct": round(c_ppt, 2),
-            "role": role,
-            "source": (f"Mean of tie-line composition ratios from pycalphad equilibria in {db_name}; "
-                       f"matrix/precipitate wt% use an assumed precipitate fraction of {f_ppt_est}"
-                       if k_source == "tie-line" else
-                       "Default screening value (no tie-line in this calculation); NOT a CALPHAD result; "
-                       f"matrix/precipitate wt% use an assumed precipitate fraction of {f_ppt_est}")
-        })
-
-    # Scheil-style segregation curve from the k values. NOT a Scheil-Gulliver calculation:
-    # the temperature axis is an ad hoc power law between liquidus and solidus, and it is
-    # left null when either critical temperature is unavailable.
-    scheil_points = []
-    k_dict = {row["element"]: row["partitionCoefficient_k"] for row in partitioning_table}
-    curve_available = liquidus_c is not None and solidus_c is not None
-
-    for step in range(21):
-        fs = step * 0.048  # 0.0 to ~0.96
-        t_scheil: Optional[float] = None
-        if curve_available:
-            delta_t = max(15.0, liquidus_c - solidus_c)
-            t_scheil = liquidus_c - delta_t * (math.pow(max(0.005, 1.0 - fs), -0.28) - 1.0)
-            t_scheil = max(solidus_c - 140.0, min(liquidus_c, t_scheil))
-
-        liq_comp = {}
-        sol_comp = {}
-        for elem, c0 in wt_pct.items():
-            k_part = k_dict.get(elem.upper(), 0.85 if elem in ["Nb", "Mo", "Ti", "C"] else 0.98)
-            cl = c0 * math.pow(max(0.02, 1.0 - fs), k_part - 1.0)
-            cs = k_part * cl
-            liq_comp[elem] = round(cl, 2)
-            sol_comp[elem] = round(cs, 2)
-
-        scheil_points.append({
-            "fractionSolid": round(fs, 3),
-            "temperatureC": round(t_scheil, 1) if t_scheil is not None else None,
-            "liquidCompositions": liq_comp,
-            "solidCompositions": sol_comp
-        })
-
-    elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+    timings["postProcessing"] = round((time.perf_counter() - t_mark) * 1000.0, 2)
 
     return {
         "success": True,
@@ -1215,37 +1440,149 @@ def solve_pycalphad_equilibrium(
         "databasePath": tdb_path,
         "thermodynamicModel": "Compound Energy Formalism (CEF) Gibbs minimisation (pycalphad equilibrium)",
         "isEmpirical": False,
-        "computeTimeMs": elapsed_ms,
-        "iterations": num_steps * len(phases),
+        "equilibriumCalls": runner.calls,
         "alloyName": alloy_name,
         "nominalComposition": wt_pct,
         "atomicFractions": at_frac,
         "activeComponents": available_comps,
+        "dependentComponent": dep_comp,
         "unsupportedElements": unsupported_elems,
         "compositionAdjustments": composition_adjustments,
         "temperatureRangeC": [t_min_c, t_max_c],
         "temperatureStepC": t_step_c,
+        "gridPoints": num_steps,
         "equilibriumProfile": equilibrium_profile,
         "criticalTemperatures": critical_temperatures,
         "criticalTemperatureStatus": status,
         "phacompAnalysis": phacomp,
         "solutePartitioning": partitioning_table,
         "multiElementScheil": scheil_points,
-        "multiElementScheilStatus": "screening-curve-not-thermodynamic",
-        "multiElementScheilNote": ("Compositions follow the Scheil equation C_L = C0 (1 - fs)^(k - 1) with the k values "
-                                   "above; the temperature axis is an ad hoc curve between liquidus and solidus, "
-                                   "not a Scheil-Gulliver calculation, and is null when either is unavailable."),
+        "multiElementScheilStatus": scheil_block["status"],
+        "multiElementScheilNote": scheil_block["note"],
+        "scheilSolidification": scheil_block,
         "thermodynamicStabilityIndex": phacomp["thermodynamicStabilityIndex"],
         "tcpEmbrittlementRisk": phacomp["tcpEmbrittlementRisk"],
         "nonConvergedPoints": not_converged_temps,
         "boundaryRefinement": {
             "enabled": bool(boundary_refinement),
             "toleranceC": refinement_tolerance_c,
-            "equilibriumCalls": sum(status[k].get("refinementRounds", 0) for k in ("liquidusC", "solidusC")),
+            "equilibriumCalls": refinement_calls,
             "note": ("Liquidus and solidus are refined between the bracketing grid points by repeated "
                      "multi-section equilibrium calculations; there is no adaptive grid."),
         },
     }
+
+
+def t_start_floor_c(conditions: Dict[Any, Any]) -> float:
+    """Lowest temperature (degC) a Scheil path may reach: the bottom of the requested grid."""
+    temps = conditions[v.T]
+    return min(float(t) for t in temps) - ZERO_CELSIUS_K
+
+
+def _mole_to_wt_pct(x: Dict[str, float]) -> Dict[str, float]:
+    masses = {c: x[c] * _atomic_weight(c.capitalize()) for c in x if c != "VA"}
+    total = sum(masses.values())
+    if total <= 0:
+        return {}
+    return {c.capitalize(): round(100.0 * m / total, 3) for c, m in masses.items()}
+
+
+SCHEIL_STATUS_COMPUTED = "pycalphad-scheil-gulliver"
+SCHEIL_STATUS_UNAVAILABLE = "unavailable"
+
+
+def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason: Optional[str],
+                    wt_pct: Dict[str, float], db_name: str, comps: List[str]
+                    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any], List[Dict[str, Any]]]:
+    """Chart points, the scheilSolidification block and the liquidus partition table."""
+    validity = ("Scheil-Gulliver limit: no diffusion in the solid, complete mixing in the liquid, local "
+                "equilibrium at the interface, no undercooling. Real solidification lies between this path and "
+                "equilibrium (lever rule); back-diffusion of fast interstitials (C, N) is ignored. "
+                f"Thermodynamics from {db_name}; not validated against experiment in this application.")
+    if scheil_result is None:
+        block = {
+            "status": SCHEIL_STATUS_UNAVAILABLE,
+            "reason": unavailable_reason,
+            "note": f"Scheil-Gulliver path unavailable: {unavailable_reason}.",
+            "validity": validity,
+            "evidence": "unvalidated",
+        }
+        rows = [{"element": c, "partitionCoefficient_k": None, "partitionCoefficientSource": "unavailable",
+                 "reason": "needs the Scheil-Gulliver path", "temperatureC": None,
+                 "primarySolidPhase": None, "role": None}
+                for c in comps]
+        return [], block, rows
+
+    points = []
+    for p in scheil_result["points"]:
+        points.append({
+            "fractionSolid": round(p["fractionSolid"], 4),
+            "temperatureC": p["temperatureC"],
+            "liquidCompositions": _mole_to_wt_pct(p["liquidX"]) if p["liquidX"] else None,
+            "solidCompositions": _mole_to_wt_pct(p["solidX"]) if p["solidX"] else None,
+            "solidPhases": p["solidPhases"],
+        })
+    # Partition coefficient k = x(phase) / x(liquid) of the majority solid phase of the path, at its
+    # first appearance (equilibrium tie-line between that phase and the liquid it forms from).
+    amounts = scheil_result["phaseAmounts"]
+    primary = max(amounts, key=lambda name: amounts[name]) if amounts else None
+    tie = scheil_result.get("firstAppearance", {}).get(primary) if primary else None
+    rows = []
+    for c in comps:
+        k = None
+        if tie is not None and tie["liquidX"].get(c, 0.0) > 1e-9 and c in tie["phaseX"]:
+            k = tie["phaseX"][c] / tie["liquidX"][c]
+        if k is None:
+            role = None
+        elif k < 0.95:
+            role = "Rejected into the liquid (k < 1): enriches the last liquid / interdendritic regions"
+        elif k > 1.05:
+            role = "Enriched in the primary solid (k > 1): depleted in the last liquid"
+        else:
+            role = "Little partitioning (k close to 1)"
+        rows.append({
+            "element": c,
+            "partitionCoefficient_k": round(k, 4) if k is not None else None,
+            "partitionCoefficientSource": "scheil-primary-phase-tie-line" if k is not None else "unavailable",
+            "reason": None if k is not None else "no tie-line between the primary solid and the liquid on the path",
+            "temperatureC": tie["temperatureC"] if tie else None,
+            "primarySolidPhase": primary,
+            "role": role,
+        })
+    complete = scheil_result["status"] == "complete"
+    reason_text = {
+        "liquid-below-0.1-percent": "the remaining liquid fell below 0.1 %",
+        "liquid-exhausted-within-step": "the remaining liquid solidified within the last temperature step "
+                                        "(invariant reaction; temperature known to within one step)",
+        "equilibrium-not-converged": "an equilibrium on the path did not converge or showed a liquid miscibility gap",
+        "time-budget": "the time budget was reached",
+        "step-limit": "the step limit was reached",
+        "temperature-floor": "the bottom of the requested temperature range was reached",
+    }
+    termination = scheil_result["terminationReason"]
+    reason_text = reason_text.get(termination, termination)
+    block = {
+        "status": SCHEIL_STATUS_COMPUTED if complete else "incomplete",
+        "reason": None if complete else f"the path stopped early: {reason_text}",
+        "note": ("Scheil-Gulliver solidification path computed step by step with pycalphad equilibria of the "
+                 "remaining liquid; fractions are mole fractions of atoms. Stopped because " + reason_text + "."),
+        "method": "stepwise Scheil-Gulliver with pycalphad equilibrium (removed solid, mixed liquid)",
+        "fractionBasis": "mole fraction of atoms",
+        "terminationReason": scheil_result["terminationReason"],
+        "startTemperatureC": scheil_result["points"][0]["temperatureC"],
+        "terminalTemperatureC": scheil_result["terminalTemperatureC"],
+        "terminalBracketC": scheil_result["terminalBracketC"],
+        "remainingLiquidFraction": scheil_result["remainingLiquidFraction"],
+        "stepC": scheil_result["stepC"],
+        "steps": scheil_result["steps"],
+        "phaseAmounts": scheil_result["phaseAmounts"],
+        "clampedSteps": scheil_result["clampedSteps"],
+        "massBalanceMaxAbsError": scheil_result["massBalanceMaxAbsError"],
+        "validity": validity,
+        "evidence": "unvalidated",
+        "elapsedMs": scheil_result["elapsedMs"],
+    }
+    return points, block, rows
 
 
 def compute_multi_component_equilibrium(
@@ -1259,7 +1596,9 @@ def compute_multi_component_equilibrium(
     custom_tdb_text: Optional[str] = None,
     adaptive_grid: bool = True,
     boundary_refinement: bool = True,
-    min_refine_step_c: float = 0.5
+    min_refine_step_c: float = 0.5,
+    scheil: bool = True,
+    scheil_step_c: float = SCHEIL_DEFAULT_STEP_C,
 ) -> Dict[str, Any]:
     """
     Main entry point. Resolves the database, then runs the pycalphad Gibbs minimisation.
@@ -1303,6 +1642,8 @@ def compute_multi_component_equilibrium(
             db_id=resolved["id"],
             db_status=resolved["status"],
             db_suitability=resolved["suitability"],
+            scheil=scheil,
+            scheil_step_c=scheil_step_c,
         )
     except CalphadUnavailable as exc:
         return unavailable_result(exc.kind, exc.reason, **base, **db_extra, **exc.extra)
@@ -1376,6 +1717,8 @@ def main():
         adaptive_grid = bool(payload.get("adaptiveGrid", True))
         boundary_refinement = bool(payload.get("boundaryRefinement", True))
         min_refine_step = float(payload.get("minRefineStep", 0.5))
+        scheil = bool(payload.get("scheil", True))
+        scheil_step = float(payload.get("scheilStepC", SCHEIL_DEFAULT_STEP_C))
 
         result = compute_multi_component_equilibrium(
             name=name,
@@ -1388,7 +1731,9 @@ def main():
             custom_tdb_text=custom_tdb,
             adaptive_grid=adaptive_grid,
             boundary_refinement=boundary_refinement,
-            min_refine_step_c=min_refine_step
+            min_refine_step_c=min_refine_step,
+            scheil=scheil,
+            scheil_step_c=scheil_step,
         )
         # Phase 6a provenance (constants version, the R actually used, domain data)
         result["provenance"] = {

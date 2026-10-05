@@ -128,6 +128,14 @@ ALLOWED_SCRIPT_NAMES = frozenset({
     "xrd_peak_deconvolution",
 })
 
+# Scripts served by their own single-worker pool. Their per-process caches (calphad_model_cache:
+# the compiled pycalphad models) are then always in the process that serves the next request for
+# that script, and only that one process holds them (a shared-pool worker would be picked at
+# random, so up to NUM_WORKERS cold builds and copies per system). Requests for such a script run
+# one at a time. METALLIX_IPC_AFFINITY=0 sends them to the shared pool instead.
+AFFINITY_SCRIPT_NAMES = (frozenset({"calphad_solver"})
+                         if os.environ.get("METALLIX_IPC_AFFINITY", "1") != "0" else frozenset())
+
 _SCRIPT_FILE_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.py\Z")
 MAX_SCRIPT_ARGS = 64
 MAX_TIMEOUT_MS = 600000
@@ -502,6 +510,10 @@ class ConcurrentModuleRegistry:
         self.total_duration_ms = 0.0
         self.start_time = time.time()
         self.pool: Optional[ProcessPoolExecutor] = None
+        # Single-worker pools for AFFINITY_SCRIPT_NAMES, created on first use (or start_affinity_pools).
+        self.affinity_pools: Dict[str, ProcessPoolExecutor] = {}
+        self.affinity_active: Dict[str, int] = {}
+        self.affinity_lock = threading.Lock()
 
         self.warmup()
         self._init_pool()
@@ -555,6 +567,68 @@ class ConcurrentModuleRegistry:
             sys.stderr.write(f"[PersistentIPC] Worker pool creation error: {e}\n")
             self.pool = None
 
+    def _affinity_name(self, full_path: str) -> Optional[str]:
+        name = os.path.splitext(os.path.basename(full_path))[0]
+        return name if name in AFFINITY_SCRIPT_NAMES else None
+
+    def _affinity_pool(self, name: str, recycle: bool = False) -> Optional[ProcessPoolExecutor]:
+        """The single-worker pool of ``name`` (created on first use; ``recycle`` replaces it)."""
+        with self.affinity_lock:
+            pool = self.affinity_pools.get(name)
+            if pool is not None and not recycle:
+                return pool
+            if pool is not None:
+                self._kill_pool(pool)
+            try:
+                pool = ProcessPoolExecutor(
+                    max_workers=1,
+                    mp_context=_pool_mp_context(),
+                    initializer=_worker_init,
+                    initargs=(self.script_dir, [name]),
+                )
+            except Exception as e:
+                sys.stderr.write(f"[PersistentIPC] Affinity pool creation error for {name}: {e}\n")
+                self.affinity_pools.pop(name, None)
+                return None
+            self.affinity_pools[name] = pool
+            return pool
+
+    def start_affinity_pools(self) -> None:
+        """Starts the affinity workers in the background (no wait), so the first request does not
+        pay for the process start and imports."""
+        for name in sorted(AFFINITY_SCRIPT_NAMES):
+            pool = self._affinity_pool(name)
+            if pool is not None:
+                try:
+                    pool.submit(_worker_noop, 0.0)
+                except Exception as e:
+                    sys.stderr.write(f"[PersistentIPC] Affinity pre-start failed for {name}: {e}\n")
+
+    @staticmethod
+    def _kill_pool(pool: ProcessPoolExecutor) -> None:
+        procs = list((getattr(pool, "_processes", None) or {}).values())
+        try:
+            pool.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
+        for proc in procs:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+
+    def _abandon_affinity(self, name: str, future) -> str:
+        """_abandon for an affinity pool: kill and replace its worker only when no other request for
+        the same script is in flight (that request would lose its worker too)."""
+        if future.cancel():
+            return "job cancelled before it started"
+        with self.stats_lock:
+            others = self.affinity_active.get(name, 1) - 1
+        if others <= 0:
+            self._affinity_pool(name, recycle=True)
+            return "worker terminated and affinity pool recycled"
+        return f"job left running: {others} other job(s) share the {name} worker"
+
     def execute_script(
         self,
         script_rel_path: str,
@@ -586,19 +660,28 @@ class ConcurrentModuleRegistry:
 
         timeout_sec = max(1.0, float(timeout_ms) / 1000.0)
 
+        affinity = self._affinity_name(full_path)
+        pool = self._affinity_pool(affinity) if affinity else self.pool
+        concurrency = f"affinity_pool:{affinity}" if affinity else "process_pool"
+
         with self.stats_lock:
             self.active_jobs += 1
+            if affinity:
+                self.affinity_active[affinity] = self.affinity_active.get(affinity, 0) + 1
 
         try:
             # 1. Primary execution via ProcessPoolExecutor
             future = None
-            if self.pool is not None:
+            if pool is not None:
                 try:
-                    future = self.pool.submit(_worker_run_script, full_path, input_str, args)
+                    future = pool.submit(_worker_run_script, full_path, input_str, args)
                 except (BrokenProcessPool, RuntimeError):
                     # Not submitted, so not executed: recycle and use the in-process path below.
                     sys.stderr.write("[PersistentIPC] Worker pool unusable at submit; recycling...\n")
-                    self._init_pool()
+                    if affinity:
+                        self._affinity_pool(affinity, recycle=True)
+                    else:
+                        self._init_pool()
                     future = None
             if future is not None:
                 try:
@@ -613,29 +696,32 @@ class ConcurrentModuleRegistry:
                         "exitCode": res["exitCode"],
                         "durationMs": duration_ms,
                         "warm": True,
-                        "concurrency": "process_pool",
+                        "concurrency": concurrency,
                     }
                 except TimeoutError:
-                    outcome = self._abandon(future)
+                    outcome = self._abandon_affinity(affinity, future) if affinity else self._abandon(future)
                     return {
                         "stdout": "",
                         "stderr": f"Execution timed out after {timeout_ms}ms ({outcome})",
                         "exitCode": 124,
                         "durationMs": round((time.perf_counter() - start_time) * 1000.0, 2),
                         "warm": True,
-                        "concurrency": "process_pool",
+                        "concurrency": concurrency,
                     }
                 except BrokenProcessPool:
                     # The worker died while this job may have been running: never re-run it here.
                     sys.stderr.write("[PersistentIPC] Worker died during execution; recycling pool...\n")
-                    self._init_pool()
+                    if affinity:
+                        self._affinity_pool(affinity, recycle=True)
+                    else:
+                        self._init_pool()
                     return {
                         "stdout": "",
                         "stderr": "Worker process died during execution; the request was not re-run.",
                         "exitCode": 1,
                         "durationMs": round((time.perf_counter() - start_time) * 1000.0, 2),
                         "warm": True,
-                        "concurrency": "process_pool",
+                        "concurrency": concurrency,
                     }
 
             # 2. Resilient In-Process Fallback if pool is recovering
@@ -694,6 +780,8 @@ class ConcurrentModuleRegistry:
         finally:
             with self.stats_lock:
                 self.active_jobs = max(0, self.active_jobs - 1)
+                if affinity:
+                    self.affinity_active[affinity] = max(0, self.affinity_active.get(affinity, 1) - 1)
 
     def get_status(self) -> Dict[str, Any]:
         with self.stats_lock:
@@ -717,6 +805,7 @@ class ConcurrentModuleRegistry:
             "uptimeSeconds": uptime_sec,
             "pythonVersion": sys.version.split()[0],
             "moduleImportTimesMs": self.import_times,
+            "affinityPools": sorted(self.affinity_pools.keys()),
         }
 
     def _terminate_workers(self):
@@ -760,8 +849,12 @@ class ConcurrentModuleRegistry:
             return 0
 
     def shutdown(self):
-        """Closes the worker pool and terminates its processes (no orphaned workers)."""
+        """Closes the worker pools and terminates their processes (no orphaned workers)."""
         self._terminate_workers()
+        with self.affinity_lock:
+            pools, self.affinity_pools = list(self.affinity_pools.values()), {}
+        for pool in pools:
+            self._kill_pool(pool)
 
 
 def _is_pool_worker_process() -> bool:
@@ -1248,6 +1341,7 @@ def run_services():
     if registry is None:
         registry = ConcurrentModuleRegistry(SCRIPT_DIR)
     workers_ready = registry.prewarm_pool()
+    registry.start_affinity_pools()
     if ipc_server:
         ipc_server.reg = registry
         ipc_server.serve()
