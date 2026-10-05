@@ -64,7 +64,10 @@ class CalculatorsContractTests(unittest.TestCase):
     def test_hardness_value_has_conditional_unit_and_real_material_class_enum(self):
         operation = self.operations["calculate-hardness"]
         fields = {field.key: field for field in operation.input}
-        self.assertEqual(fields["hardnessVal"].unit, "scale-dependent (hardnessScale)")
+        self.assertIsNone(fields["hardnessVal"].unit)
+        self.assertEqual(fields["hardnessVal"].unit_selector, "hardnessScale")
+        self.assertEqual(dict(fields["hardnessVal"].unit_options),
+                         {scale: scale for scale in ("HRC", "HV", "HRB", "HBW", "HBS")})
         self.assertEqual(fields["hardnessVal"].quantity_kind, "hardness")
         self.assertIsNone(fields["hardnessVal"].min)
         self.assertIsNone(fields["hardnessVal"].max)
@@ -94,6 +97,36 @@ class CalculatorsContractTests(unittest.TestCase):
         self.assertIsNone(thickness.max)
         self.assertIn("slider", thickness.note)
         self.assertIn("physical validity", thickness.note)
+
+    def test_other_valid_module_identity_is_rejected(self):
+        with self.assertRaises(ValueError):
+            build_calculators_contract({**self.seed, "id": "copilot"})
+
+    def test_selected_unit_maps_and_report_outputs_match_source(self):
+        temp = next(field for field in self.operations["convert-unit-suite-temperature"].input if field.key == "tempInput")
+        self.assertEqual((temp.unit, temp.unit_selector), (None, "tempUnit"))
+        self.assertEqual(dict(temp.unit_options), {"C": "degC", "K": "K", "F": "degF", "R": "degR"})
+        for operation in self.operations.values():
+            fields = {field.key: field for field in operation.input}
+            for field in fields.values():
+                if field.unit_selector:
+                    self.assertEqual(set(dict(field.unit_options)), set(fields[field.unit_selector].enum))
+                    self.assertIsNone(field.min)
+                    self.assertIsNone(field.max)
+        source = (ROOT / "src/utils/metallurgicalConversions.ts").read_text(encoding="utf-8")
+        report_source = source.split("export function computeDualUnitReport", 1)[1]
+        literal = report_source.rsplit("return {", 1)[1].split("};", 1)[0]
+        return_keys = set(re.findall(r"^\s*(\w+)\s*(?::|,)", literal, re.M))
+        self.assertTrue({"hardnessMeasured", "hardnessConverted", "hrc", "hv", "hbw"} <= return_keys)
+        self.assertFalse(return_keys - set(self.operations["calculate-dual-unit-report"].output.fields))
+        copy = self.operations["copy-formatted-report"]
+        self.assertTrue({"reportHardnessEntered", "reportHardnessSyncNote"} <= set(copy.undeclared_input))
+        view = (ROOT / "src/components/MetallurgicalUnitConverter.tsx").read_text(encoding="utf-8")
+        self.assertIn("reportHardnessLine(reportHardnessEntered", view)
+        notes = " ".join(self.contract.legacy_notes)
+        self.assertIn("not confirmed write success", notes)
+        self.assertIn("0.8 cm^2", notes)
+        self.assertIn("7.85 g/cm^3", notes)
 
     def test_outputs_capture_real_result_surfaces_and_sync_preserves_prior_values(self):
         expected_outputs = {

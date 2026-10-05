@@ -150,14 +150,16 @@ def _is_integer(value: Any) -> bool:
 
 @dataclass(frozen=True)
 class InputField:
-    """One request key of an operation, in the canonical unit the authority expects.
+    """One request key, with a fixed unit or an explicit selector-to-unit map.
 
     ``min``/``max`` are hard bounds (outside -> reject). A bound is None when no
     limit is established from the authority code or a source; it is never guessed.
+    Selected-unit values pass unchanged to the authority; bounds/steps cannot
+    silently apply across multiple scales. Operation validates the enum linkage.
     """
     key: str
     label: str
-    unit: Optional[str]  # canonical unit sent to the authority (number/integer only)
+    unit: Optional[str]  # fixed canonical unit, or None with a closed selected-unit map
     quantity_kind: str
     min: Optional[float]
     max: Optional[float]
@@ -169,6 +171,8 @@ class InputField:
     value_type: str = "number"
     # Recorded fact about how the authority treats this key (e.g. clamps instead of rejecting).
     note: Optional[str] = None
+    unit_selector: Optional[str] = None
+    unit_options: Tuple[Tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         _require(isinstance(self.key, str) and bool(_KEY.match(self.key)), f"invalid field key {self.key!r}")
@@ -180,8 +184,23 @@ class InputField:
         if self.note is not None:
             _text(self.note, f"{self.key}.note")
         numeric = self.value_type in ("number", "integer")
+        selected_unit = self.unit_selector is not None
+        if selected_unit:
+            _require(numeric, f"{self.key}: only numeric fields may select a unit")
+            _require(isinstance(self.unit_selector, str) and bool(_KEY.fullmatch(self.unit_selector)),
+                     f"{self.key}: unitSelector must name an input field")
+            _require(self.unit is None and self.min is None and self.max is None and self.step is None,
+                     f"{self.key}: selected units have no fixed unit or cross-scale bounds/step")
+            _require(len(self.unit_options) > 0, f"{self.key}: selected units need a closed map")
+            _unique(tuple(choice for choice, _ in self.unit_options), f"{self.key}.unitOptions keys")
+            for choice, unit in self.unit_options:
+                _text(choice, f"{self.key}.unitOptions key")
+                _text(unit, f"{self.key}.unitOptions unit")
+        else:
+            _require(not self.unit_options, f"{self.key}: unitOptions require a unitSelector")
         if numeric:
-            _text(self.unit, f"{self.key}.unit")
+            if not selected_unit:
+                _text(self.unit, f"{self.key}.unit")
             for bound in ("min", "max"):
                 if getattr(self, bound) is not None:
                     _finite(getattr(self, bound), f"{self.key}.{bound}")
@@ -229,6 +248,7 @@ class InputField:
             "displayUnits": list(self.display_units), "quantityKind": self.quantity_kind,
             "min": self.min, "max": self.max, "step": self.step, "default": self.default,
             "required": self.required, "enum": list(self.enum), "note": self.note,
+            "unitSelector": self.unit_selector, "unitOptions": dict(self.unit_options),
         }
 
 
@@ -386,6 +406,15 @@ class Operation:
             _require(isinstance(key, str) and bool(_KEY.match(key)), f"{self.id}: invalid undeclared key {key!r}")
         _require(not set(self.undeclared_input) & {f.key for f in self.input},
                  f"{self.id}: a key cannot be both declared and undeclared")
+        fields = {field.key: field for field in self.input}
+        for field in self.input:
+            if field.unit_selector is None:
+                continue
+            selector = fields.get(field.unit_selector)
+            _require(selector is not None and selector.value_type == "enum",
+                     f"{self.id}.{field.key}: unitSelector must reference a declared enum")
+            _require(set(dict(field.unit_options)) == set(selector.enum),
+                     f"{self.id}.{field.key}: unitOptions must cover exactly the selector enum")
 
     def to_dict(self) -> dict:
         return {
@@ -662,10 +691,13 @@ class ModuleContract:
 # --- Round trip (generated JSON -> contract) ----------------------------------
 
 def _field_from_dict(d: dict) -> InputField:
+    options = d.get("unitOptions", {})
+    _require(isinstance(options, dict), "input.unitOptions must be a JSON object")
     return InputField(key=d["key"], label=d["label"], unit=d["unit"], quantity_kind=d["quantityKind"],
                       min=d["min"], max=d["max"], default=d["default"], required=d["required"],
                       step=d["step"], display_units=tuple(d["displayUnits"]), enum=tuple(d["enum"]),
-                      value_type=d["valueType"], note=d["note"])
+                      value_type=d["valueType"], note=d["note"],
+                      unit_selector=d.get("unitSelector"), unit_options=tuple(options.items()))
 
 
 def _output_from_dict(out: dict) -> OutputSchema:

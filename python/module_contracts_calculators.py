@@ -7,6 +7,7 @@ from module_contract import (
     OWNER_UNASSIGNED,
     PENDING_ORACLE_CEILING,
     Authority,
+    ContractError,
     Evidence,
     InputField,
     Lifecycle,
@@ -37,6 +38,12 @@ def _enum(key: str, label: str, quantity: str, default: str, values: Tuple[str, 
                       default=default, value_type="enum", enum=values, required=True)
 
 
+def _selected(key, label, selector, options, quantity, default, note=_NO_HARD_BOUND):
+    return InputField(key=key, label=label, unit=None, unit_selector=selector,
+                      unit_options=tuple(options), quantity_kind=quantity,
+                      min=None, max=None, default=default, required=True, note=note)
+
+
 def _browser_operation(
     operation_id: str,
     *,
@@ -61,6 +68,16 @@ _HARDNESS_CLASSES = (
 )
 _HARDNESS_SCALES = ("HRC", "HV", "HRB", "HBW", "HBS")
 _ALL_HARDNESS_SCALES = ("HRC", "HV", "HRB", "HBW", "HBS", "HK", "HLD")
+_STRESS_UNITS = (("MPa", "MPa"), ("ksi", "ksi"), ("GPa", "GPa"), ("psi", "psi"),
+                 ("bar", "bar"), ("kgf_mm2", "kgf/mm^2"), ("N_mm2", "N/mm^2"))
+_TEMP_UNITS = (("C", "degC"), ("K", "K"), ("F", "degF"), ("R", "degR"))
+_KIC_UNITS = (("MPa_m05", "MPa*sqrt(m)"), ("ksi_in05", "ksi*sqrt(in)"),
+              ("N_mm15", "N/mm^(3/2)"), ("MPa_mm05", "MPa*sqrt(mm)"))
+_CVN_UNITS = (("J", "J"), ("ft_lbf", "ft*lbf"), ("kgf_m", "kgf*m"), ("J_cm2", "J/cm^2"))
+_LENGTH_UNITS = (("angstrom", "angstrom"), ("nm", "nm"), ("um", "µm"),
+                 ("mm", "mm"), ("mil", "mil"), ("in", "in"))
+_CR_UNITS = (("mpy", "mpy"), ("mm_yr", "mm/yr"), ("um_yr", "µm/yr"),
+             ("nm_day", "nm/day"), ("g_m2_day", "g/(m^2*day)"))
 _HARDNESS_PRESETS = (
     "316L Annealed", "Ti-6Al-4V Annealed", "Inconel 718 Aged", "4140 Q&T",
     "AerMet 100", "52100 Bearing Steel", "M2 High-Speed Tool",
@@ -76,7 +93,8 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
         "ceComp", "schaefflerComp", "ttComp", "xrdStructure", "latticeA", "syncToast",
     )),
     _browser_operation("calculate-hardness", fields=(
-        _number("hardnessVal", "Measured hardness value", "scale-dependent (hardnessScale)", "hardness", 30.0,
+        _selected("hardnessVal", "Measured hardness value", "hardnessScale",
+                  tuple((scale, scale) for scale in _HARDNESS_SCALES), "hardness", 30.0,
                 note="Value is interpreted in hardnessScale. Conversion table range is scale- and class-dependent; "
                      "no universal static numeric bound applies."),
         _enum("hardnessScale", "Hardness scale", "hardness-scale", "HRC", _HARDNESS_SCALES),
@@ -91,7 +109,7 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
     ), undeclared=("ceComp",), outputs=("ceResult", "ceIIW", "pcm", "cen", "weldabilityLevel", "recommendedPreheatTemp", "riskNotes")),
     _browser_operation("reset-weldability-s355", outputs=("ceComp", "ceResult")),
     _browser_operation("simulate-diffusion", fields=(
-        _number("carbTemp", "Carburizing temperature", "°C", "temperature", 930.0, note="UI slider spans 840–1020 °C; not an independently established model-validity domain."),
+        _number("carbTemp", "Carburizing temperature", "degC", "temperature", 930.0, note="UI slider spans 840–1020 degC; not an independently established model-validity domain."),
         _number("carbTime", "Soak time", "h", "time", 6.0, note="UI slider spans 1–24 h; not an independently established model-validity domain."),
         _number("carbSurfaceC", "Surface carbon potential", "mass % C", "mass-fraction-percent", 1.05, note="UI slider spans 0.70–1.30 mass %; not an independent validity oracle."),
         _number("carbCoreC", "Core carbon content", "mass % C", "mass-fraction-percent", 0.20, note="UI slider spans 0.10–0.35 mass %; not an independent validity oracle."),
@@ -104,7 +122,7 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
     ),), outputs=("schaefflerComp", "schaefflerResult")),
     _browser_operation("calculate-xrd", fields=(
         _enum("xrdStructure", "Bravais lattice", "crystal-structure", "BCC", ("BCC", "FCC")),
-        _number("latticeA", "Cubic lattice parameter", "Å", "length", 2.8665, note="UI slider spans 2.5–5.0 Å; display/control range only."),
+        _number("latticeA", "Cubic lattice parameter", "angstrom", "length", 2.8665, note="UI slider spans 2.5–5.0 angstrom; display/control range only."),
         _enum("xrayTarget", "X-ray tube target", "xray-target", "Cu-Ka", ("Cu-Ka", "Mo-Ka", "Co-Ka", "Fe-Ka")),
     ), outputs=("xrdPeaks", "twoTheta", "dSpacing", "hkl", "intensityPct")),
     _browser_operation("apply-xrd-structure-preset", fields=(
@@ -113,7 +131,7 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
     _browser_operation("calculate-hall-petch", fields=(
         _number("grainSize", "Average planimetric grain diameter", "µm", "length", 25.0, note="UI slider spans 0.5–100 µm; display/control range only."),
         _number("sigma0", "Lattice friction stress", "MPa", "pressure", 70.0, note="UI slider spans 20–200 MPa; display/control range only."),
-        _number("ky", "Hall–Petch slope", "MPa·mm^(1/2)", "stress-intensity", 18.5, note="UI slider spans 5–30; display/control range only."),
+        _number("ky", "Hall–Petch slope", "MPa*sqrt(mm)", "stress-intensity", 18.5, note="UI slider spans 5–30; display/control range only."),
     ), outputs=("hallPetchResult", "grainSizeMicrons", "yieldStrengthMpa", "strengtheningIncrement", "astmG")),
     _browser_operation("calculate-transformation", undeclared=("ttComp",), outputs=("ttResult", "ms", "mf", "bs", "ac1", "ac3")),
 
@@ -146,10 +164,10 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
     ),), outputs=("hardnessInputScale", "hardnessValHrc", "hardnessValHv", "hardnessClass", "hardnessConversions")),
     _browser_operation("convert-quick-temperature", fields=(
         _enum("tempInputScale", "Temperature input scale", "temperature-scale", "C", ("C", "K", "R", "F")),
-        _number("tempValC", "Temperature in Celsius", "°C", "temperature", 650.0),
+        _number("tempValC", "Temperature in Celsius", "degC", "temperature", 650.0),
         _number("tempValK", "Temperature in kelvin", "K", "temperature", 923.15),
-        _number("tempValR", "Temperature in Rankine", "°R", "temperature", 1661.67),
-        _number("tempValF", "Temperature in Fahrenheit", "°F", "temperature", 1202.0),
+        _number("tempValR", "Temperature in Rankine", "degR", "temperature", 1661.67),
+        _number("tempValF", "Temperature in Fahrenheit", "degF", "temperature", 1202.0),
     ), outputs=("tempConversions", "C", "K", "R", "F")),
     _browser_operation("apply-quick-temperature-preset", fields=(_enum(
         "preset", "Quick temperature preset", "temperature-preset", "Ambient Standard Lab",
@@ -167,12 +185,13 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
         ("stress", "hardness", "temperature", "toughness", "grain_length", "corrosion", "report_matrix"),
     ),), outputs=("propertyCategory",)),
     _browser_operation("convert-unit-suite-stress", fields=(
-        _number("stressInput", "Stress input", "unit-dependent (stressUnit)", "pressure", 850.0),
+        _selected("stressInput", "Stress input", "stressUnit", _STRESS_UNITS, "pressure", 850.0),
         _enum("stressUnit", "Stress input unit", "stress-unit", "MPa", ("MPa", "ksi", "GPa", "psi", "bar", "kgf_mm2", "N_mm2")),
     ), outputs=("stressState", "MPa", "ksi", "GPa", "psi", "bar", "kgf_mm2", "N_mm2",
                 "stressInterpretation", "category", "typicalMaterials", "color", "notes")),
     _browser_operation("convert-unit-suite-hardness", fields=(
-        _number("hardnessInput", "Measured hardness input", "scale-dependent (hardnessScale)", "hardness", 32.0),
+        _selected("hardnessInput", "Measured hardness input", "hardnessScale",
+                  tuple((scale, scale) for scale in _ALL_HARDNESS_SCALES), "hardness", 32.0),
         _enum("hardnessScale", "Hardness scale", "hardness-scale", "HRC", _ALL_HARDNESS_SCALES),
         _enum("hardnessClass", "Material class", "hardness-material-class", "non-austenitic-steel", _HARDNESS_CLASSES),
     ), outputs=("hardnessState", "inputScale", "inputValue", "HV", "HRC", "HRB", "HBW", "HBS", "HK", "HLD",
@@ -181,34 +200,34 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
         "preset", "Measured hardness example", "hardness-preset", "4140 Q&T", _HARDNESS_PRESETS,
     ),), outputs=("hardnessInput", "hardnessScale", "hardnessClass", "hardnessState")),
     _browser_operation("convert-unit-suite-temperature", fields=(
-        _number("tempInput", "Temperature input", "unit-dependent (tempUnit)", "temperature", 650.0),
+        _selected("tempInput", "Temperature input", "tempUnit", _TEMP_UNITS, "temperature", 650.0),
         _enum("tempUnit", "Temperature unit", "temperature-scale", "C", ("C", "K", "F", "R")),
-        InputField(key="selectedMeltingPresetIdx", label="Melting-point preset option index", unit="option index",
+        InputField(key="selectedMeltingPresetIdx", label="Melting-point preset option index", unit="1",
                    quantity_kind="ui-selection-index", min=0, max=8, step=1, default=0, required=True,
                    value_type="integer",
                    note="Index selects one of the nine source-defined METALLURGICAL_MELTING_PRESETS; index limits are UI options, not material validity bounds."),
     ), outputs=("tempState", "C", "K", "F", "R", "homologousState", "th", "regime",
                 "deformationMechanism", "color", "recommendation")),
     _browser_operation("convert-fracture-toughness", fields=(
-        _number("kicInput", "Plane-strain fracture toughness", "unit-dependent (kicUnit)", "fracture-toughness", 55.0),
+        _selected("kicInput", "Plane-strain fracture toughness", "kicUnit", _KIC_UNITS, "fracture-toughness", 55.0),
         _enum("kicUnit", "Fracture-toughness unit", "fracture-toughness-unit", "MPa_m05", ("MPa_m05", "ksi_in05", "N_mm15", "MPa_mm05")),
     ), outputs=("kicState", "MPa_m05", "ksi_in05", "N_mm15", "MPa_mm05")),
     _browser_operation("convert-charpy-impact-energy", fields=(
-        _number("cvnInput", "Charpy V-notch impact energy", "unit-dependent (cvnUnit)", "energy", 45.0),
+        _selected("cvnInput", "Charpy V-notch impact energy", "cvnUnit", _CVN_UNITS, "impact-energy-or-area-normalized-energy", 45.0),
         _enum("cvnUnit", "Impact-energy unit", "impact-energy-unit", "J", ("J", "ft_lbf", "kgf_m", "J_cm2")),
     ), outputs=("cvnState", "J", "ft_lbf", "kgf_m", "J_cm2")),
     _browser_operation("convert-micro-length", fields=(
-        _number("lengthInput", "Micro length input", "unit-dependent (lengthUnit)", "length", 25.0),
+        _selected("lengthInput", "Micro length input", "lengthUnit", _LENGTH_UNITS, "length", 25.0),
         _enum("lengthUnit", "Length unit", "length-unit", "um", ("angstrom", "nm", "um", "mm", "mil", "in")),
     ), outputs=("lengthState", "angstrom", "nm", "um", "mm", "mil", "in")),
     _browser_operation("calculate-astm-e112-grain-size", fields=(
         _enum("astmMode", "ASTM E112 input mode", "grain-size-input-mode", "g_number", ("g_number", "diameter")),
-        _number("astmGInput", "ASTM grain-size number", "G", "grain-size-number", 8.0),
+        _number("astmGInput", "ASTM grain-size number", "1", "grain-size-number", 8.0),
         _number("astmDInput", "Mean grain diameter", "µm", "length", 22.4),
     ), outputs=("astmResult", "gNumber", "meanInterceptUm", "meanInterceptMm", "grainsPerMm2",
                 "grainsPerSqInch100x", "classification")),
     _browser_operation("convert-corrosion-rate", fields=(
-        _number("crInput", "Corrosion penetration rate", "unit-dependent (crUnit)", "corrosion-rate", 2.5),
+        _selected("crInput", "Corrosion penetration or mass-loss rate", "crUnit", _CR_UNITS, "corrosion-rate", 2.5),
         _enum("crUnit", "Corrosion-rate unit", "corrosion-rate-unit", "mpy", ("mpy", "mm_yr", "um_yr", "nm_day", "g_m2_day")),
     ), outputs=("crState", "mpy", "mm_yr", "um_yr", "nm_day", "g_m2_day", "naceRating", "naceColor")),
     _browser_operation("sync-unit-report-from-specimen", undeclared=("activeMaterialSpecimen",), outputs=(
@@ -218,13 +237,15 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
     _browser_operation("calculate-dual-unit-report", fields=(
         _number("reportYieldMpa", "Yield strength", "MPa", "pressure", 880.0),
         _number("reportUtsMpa", "Tensile strength", "MPa", "pressure", 950.0),
-        _number("reportHardnessValue", "Measured hardness", "scale-dependent (reportHardnessScale)", "hardness", 34.0),
+        _selected("reportHardnessValue", "Measured hardness", "reportHardnessScale",
+                  tuple((scale, scale) for scale in ("HRC", "HV", "HBW", "HRB")), "hardness", 34.0),
         _enum("reportHardnessScale", "Reported hardness scale", "hardness-scale", "HRC", ("HRC", "HV", "HBW", "HRB")),
         _enum("reportHardnessClass", "Hardness material class", "hardness-material-class", "titanium-alloy", _HARDNESS_CLASSES),
         _number("reportCvnJ", "Charpy V-notch energy", "J", "energy", 42.0),
-        _number("reportTestTempC", "Test temperature", "°C", "temperature", 23.0),
-    ), undeclared=("reportAlloyName",), outputs=("reportCalculated", "yieldKsi", "utsKsi", "hardnessText", "cvnFtLbf", "tempF", "tempK")),
-    _browser_operation("copy-formatted-report", outputs=("reportText", "clipboardWrite", "copiedId", "copyToastTimeoutMs")),
+        _number("reportTestTempC", "Test temperature", "degC", "temperature", 23.0),
+    ), undeclared=("reportAlloyName",), outputs=("reportCalculated", "yieldKsi", "utsKsi", "hardnessMeasured", "hardnessConverted", "hardnessText", "hrc", "hv", "hbw", "cvnFtLbf", "tempF", "tempK")),
+    _browser_operation("copy-formatted-report", undeclared=("reportCalculated", "reportHardnessEntered", "reportHardnessSyncNote", "reportAlloyName"),
+                       outputs=("reportText", "clipboardWrite", "copiedId", "copyToastTimeoutMs")),
     _browser_operation("copy-unit-suite-conversion-value", undeclared=("value", "copiedId"),
                        outputs=("clipboardWrite", "copiedId", "copyToastTimeoutMs")),
 )
@@ -232,6 +253,8 @@ CALCULATORS_OPERATIONS: Tuple[Operation, ...] = (
 
 def build_calculators_contract(seed: Mapping[str, str]) -> ModuleContract:
     """Build the calculator contract without changing registry seed identity."""
+    if seed.get("id") != "calculators":
+        raise ContractError("Calculator contract preserves only the calculators identity")
     return ModuleContract(
         id=seed["id"], version=CONTRACT_VERSION, owner=OWNER_UNASSIGNED,
         workspace=seed["workspace"], label=seed["label"], description=seed["description"],
@@ -258,7 +281,15 @@ def build_calculators_contract(seed: Mapping[str, str]) -> ModuleContract:
             "Hardness numbers are conditional on their selected scale. The hardness material class is the finite "
             "source enum; table availability and tabulated conversion ranges vary by scale and class.",
             "Copy and toast-feedback actions use browser clipboard and short timers (1.8–3.0 s); there is no "
-            "persistent background worker or external resource lifecycle.",
+            "persistent background worker or external resource lifecycle. Clipboard promises are not awaited, "
+            "so feedback is optimistic, not confirmed write success; the short timers have no unmount cleanup.",
+            "Selected-unit fields carry their real enum-to-unit map; the browser passes their value and selected "
+            "unit directly to conversion functions. Contract declarations do not normalize values or certify conversions. "
+            "Impact J/cm^2 conversion assumes a fixed 0.8 cm^2 Charpy ligament; mass-loss corrosion conversion uses "
+            "the converter's default carbon-steel density 7.85 g/cm^3, not the active specimen density.",
+            "The copied report calls reportHardnessLine with reportHardnessEntered and reportHardnessSyncNote. "
+            "After loading a specimen without entered measured hardness, it reports not entered rather than "
+            "exporting the scratchpad's illustrative numeric value as a measurement.",
         ),
         source_refs=(
             "src/components/PocketCalculators.tsx:62-75#root, tab, and hardness state",

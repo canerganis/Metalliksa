@@ -1271,6 +1271,7 @@ def render_ts(document: dict) -> str:
         "export interface ContractField {",
         "  readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;",
         "  readonly displayUnits: readonly string[]; readonly quantityKind: string;",
+        "  readonly unitSelector: string | null; readonly unitOptions: Readonly<Record<string, string>>;",
         "  readonly min: number | null; readonly max: number | null; readonly step: number | null;",
         "  readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];",
         "  readonly note: string | null;",
@@ -1380,6 +1381,11 @@ def render_module_doc(contract: ModuleContract) -> str:
         if op.undeclared_input:
             lines += ["", "Undeclared input keys (read by the authority, not describable by the Field schema): "
                       + ", ".join(f"`{k}`" for k in op.undeclared_input) + "."]
+        for field in op.input:
+            if field.unit_selector:
+                lines += ["", f"`{field.key}` is interpreted in the unit selected by `{field.unit_selector}`: "
+                          + ", ".join(f"`{choice}` → `{unit}`" for choice, unit in field.unit_options)
+                          + ". No fixed canonical-unit conversion is performed by this contract."]
         if op.output:
             status = (f"evidence status key `{op.output.status_key}`" if op.output.status_key
                       else "no status key, so the output carries no evidence status")

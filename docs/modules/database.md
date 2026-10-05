@@ -230,6 +230,235 @@ Required keys are marked in the contract JSON.
 
 Output fields (no status key, so the output carries no evidence status): `pipelineMaterialEvent`, `navigationTarget`.
 
+### `render-heatmap`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `materials`, `selectedMaterial`.
+
+Output fields (no status key, so the output carries no evidence status): `displayedMaterials`, `svgPlot`.
+
+### `set-heatmap-mode`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `heatmapMode` | D3 plot mode | enum ['alloy-elements', 'element-property-binned', 'property-correlation'] | — | — | — | — | alloy-elements | — |
+
+— = not established from the authority code or a source; the contract states no bound.
+Required keys are marked in the contract JSON.
+
+Output fields (no status key, so the output carries no evidence status): `heatmapMode`, `svgPlot`.
+
+### `set-heatmap-property`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `selectedPropertyKey` | Heatmap property | enum ['yieldStrength', 'tensileStrength', 'youngsModulus', 'density', 'specificStrength', 'elongation', 'thermalConductivity'] | — | — | — | — | yieldStrength | — |
+
+— = not established from the authority code or a source; the contract states no bound.
+Required keys are marked in the contract JSON.
+
+Output fields (no status key, so the output carries no evidence status): `selectedPropertyKey`, `svgPlot`.
+
+### `set-heatmap-element`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `selectedElement` | Focused alloying element | enum ['C', 'Cr', 'Ni', 'Mo', 'Ti', 'Al', 'Cu', 'V', 'Mn', 'Si', 'Mg', 'W', 'Co', 'Nb', 'Zr', 'Fe'] | — | — | — | — | Cr | The select options are the component's alloying-element list; plot-axis clicks choose from elements present in the current data. |
+
+— = not established from the authority code or a source; the contract states no bound.
+Required keys are marked in the contract JSON.
+
+Output fields (no status key, so the output carries no evidence status): `selectedElement`, `svgPlot`.
+
+### `sort-heatmap-alloys`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `sortBy` | Heatmap sort key | enum ['property', 'element', 'category', 'name'] | — | — | — | — | property | This selector is rendered only in alloy-elements mode; sortAsc is initialized false but has no current UI setter. |
+
+— = not established from the authority code or a source; the contract states no bound.
+Required keys are marked in the contract JSON.
+
+Output fields (no status key, so the output carries no evidence status): `displayedMaterials`, `svgPlot`.
+
+### `set-heatmap-palette`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `colorPalette` | D3 color palette | enum ['viridis', 'plasma', 'turbo', 'emerald', 'amber-flame'] | — | — | — | — | viridis | — |
+
+— = not established from the authority code or a source; the contract states no bound.
+Required keys are marked in the contract JSON.
+
+Output fields (no status key, so the output carries no evidence status): `colorPalette`, `svgPlot`.
+
+### `select-heatmap-element-from-axis`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `elem`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedElement`, `svgPlot`.
+
+### `select-heatmap-property-from-axis`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `prop`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedPropertyKey`, `svgPlot`.
+
+### `select-composition-cell`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `mat`, `elem`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedMaterial`, `selectedElement`.
+
+### `select-binned-bucket`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `b`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedMaterial`.
+
+### `select-correlation-cell`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `cell`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedElement`, `selectedPropertyKey`, `svgPlot`.
+
+### `select-scatter-point`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `mat`.
+
+Output fields (no status key, so the output carries no evidence status): `selectedMaterial`.
+
+### `inspect-composition-cell`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `mat`, `elem`, `wt`.
+
+Output fields (no status key, so the output carries no evidence status): `hoveredCell`, `xLabel`, `yLabel`, `value`, `unit`, `material`, `extraInfo`, `xPos`, `yPos`.
+
+### `inspect-binned-cell`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `b`.
+
+Output fields (no status key, so the output carries no evidence status): `hoveredCell`, `xLabel`, `yLabel`, `value`, `extraInfo`, `xPos`, `yPos`.
+
+### `inspect-correlation-cell`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `cell`.
+
+Output fields (no status key, so the output carries no evidence status): `hoveredCell`, `xLabel`, `yLabel`, `value`, `extraInfo`, `xPos`, `yPos`.
+
+### `clear-heatmap-tooltip`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Output fields (no status key, so the output carries no evidence status): `hoveredCell`.
+
+### `export-heatmap-svg`: `None None`
+
+Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Output fields (no status key, so the output carries no evidence status): `source`, `blob`, `url`, `download`.
+
 ## Evidence
 
 - Ceiling: screening-only (the strongest class this module may claim; not a result status)
@@ -251,6 +480,7 @@ Background work: none; resources: none.
 ## Recorded notes
 
 - This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.
+- The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.
 - MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.
 - Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.
 - createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.
@@ -259,7 +489,11 @@ Background work: none; resources: none.
 - The property-filter panel has a local showFilters toggle. The comparison drawer opens only when the compare list is nonempty and closes from its modal callback or either close button.
 - Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.
 - Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource kind; these are noted as short UI effects rather than invented lifecycle resources.
-- No fetch, worker, solver, scheduled job, or source download is initiated by this view. The nested comparison and transfer dialogs are UI children, not background work.
+- MaterialsPropertyHeatmapD3 is mounted only while activeTab is "split" or "heatmap"; catalog mode unmounts it. Its ResizeObserver disconnects on effect dependency change and unmount. The D3-render effect has no cleanup function: redraw removes prior SVG descendants, while normal unmount removes the child DOM. If displayedMaterials becomes empty, that effect returns before clearing the prior SVG, so a previous plot can remain visible until a later nonempty redraw or unmount.
+- The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only. Correlation mode omits thermalConductivity from its plotted target properties.
+- Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member, and correlation cells display a Pearson r computed from displayed records with sample count (fewer than three positive-property pairs are represented as r=0). These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.
+- The child SVG export serializes the current SVG into a Blob, creates an object URL, clicks a temporary download anchor named from heatmapMode and selectedPropertyKey, then revokes the URL synchronously. These output names describe transient browser transport effects, not a returned API object. ResizeObserver, timers, and object URLs have no matching lifecycle resource kind in the schema vocabulary and are documented here rather than mislabeled as raf/interval/three/fetch.
+- No fetch, worker, solver, scheduled job, or source download is initiated by this view or its D3 child. The nested comparison and transfer dialogs are UI children, not background work.
 
 ## Source references
 
@@ -278,6 +512,13 @@ Background work: none; resources: none.
 - `src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec`
 - `src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)`
 - `src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)`
+- `src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3`
+- `src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES`
+- `src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell`
 - `src/types.ts:32-63#MaterialSpec`
 - `src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE`
 - `src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec`

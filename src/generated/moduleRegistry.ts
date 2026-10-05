@@ -16,6 +16,7 @@ export type FieldValueType = "number" | "integer" | "boolean" | "enum";
 export interface ContractField {
   readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;
   readonly displayUnits: readonly string[]; readonly quantityKind: string;
+  readonly unitSelector: string | null; readonly unitOptions: Readonly<Record<string, string>>;
   readonly min: number | null; readonly max: number | null; readonly step: number | null;
   readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];
   readonly note: string | null;
@@ -620,7 +621,9 @@ export const MODULE_REGISTRY = {
                 "gcode",
                 "cli"
               ],
-              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultPower_W",
@@ -635,7 +638,9 @@ export const MODULE_REGISTRY = {
               "default": 250.0,
               "required": false,
               "enum": [],
-              "note": "Used for vectors without an explicit power word. Passed unconverted; no bound is enforced."
+              "note": "Used for vectors without an explicit power word. Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultSpeed_mms",
@@ -650,7 +655,9 @@ export const MODULE_REGISTRY = {
               "default": 1000.0,
               "required": false,
               "enum": [],
-              "note": "Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced."
+              "note": "Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "skywritingEnabled",
@@ -665,7 +672,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted to the scanner profile."
+              "note": "Passed unconverted to the scanner profile.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "accelMax_mms2",
@@ -680,7 +689,9 @@ export const MODULE_REGISTRY = {
               "default": 40000.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpSpeed_mms",
@@ -695,7 +706,9 @@ export const MODULE_REGISTRY = {
               "default": 3000.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "laserOnDelay_us",
@@ -710,7 +723,9 @@ export const MODULE_REGISTRY = {
               "default": 100.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "laserOffDelay_us",
@@ -725,7 +740,9 @@ export const MODULE_REGISTRY = {
               "default": 120.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine."
+              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "markDelay_us",
@@ -740,7 +757,9 @@ export const MODULE_REGISTRY = {
               "default": 200.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpDelay_us",
@@ -755,7 +774,9 @@ export const MODULE_REGISTRY = {
               "default": 350.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -882,7 +903,9 @@ export const MODULE_REGISTRY = {
                 "Inconel 718",
                 "AlSi10Mg"
               ],
-              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers."
+              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "sqrtArea_um",
@@ -897,7 +920,9 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422)."
+              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "location",
@@ -916,7 +941,9 @@ export const MODULE_REGISTRY = {
                 "sub-surface",
                 "internal"
               ],
-              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values."
+              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "stressRatio_R",
@@ -931,7 +958,9 @@ export const MODULE_REGISTRY = {
               "default": -1.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."
+              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "stressAmplitude_MPa",
@@ -946,7 +975,9 @@ export const MODULE_REGISTRY = {
               "default": 220.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."
+              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -1067,7 +1098,9 @@ export const MODULE_REGISTRY = {
                 "gcode",
                 "cli"
               ],
-              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultPower_W",
@@ -1082,7 +1115,9 @@ export const MODULE_REGISTRY = {
               "default": 280.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultSpeed_mms",
@@ -1097,7 +1132,9 @@ export const MODULE_REGISTRY = {
               "default": 1000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "apply67DegRotation",
@@ -1112,7 +1149,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": false,
               "enum": [],
-              "note": "The authority coerces with bool(); the contract accepts only booleans."
+              "note": "The authority coerces with bool(); the contract accepts only booleans.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "layerIndex",
@@ -1127,7 +1166,9 @@ export const MODULE_REGISTRY = {
               "default": 1,
               "required": false,
               "enum": [],
-              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0."
+              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "accelMax_mms2",
@@ -1142,7 +1183,9 @@ export const MODULE_REGISTRY = {
               "default": 40000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpSpeed_mms",
@@ -1157,7 +1200,9 @@ export const MODULE_REGISTRY = {
               "default": 3000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -1277,7 +1322,9 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "ny",
@@ -1292,7 +1339,9 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "dx",
@@ -1307,7 +1356,9 @@ export const MODULE_REGISTRY = {
               "default": 2e-06,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "dy",
@@ -1322,7 +1373,9 @@ export const MODULE_REGISTRY = {
               "default": 2e-06,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "power_W",
@@ -1337,7 +1390,9 @@ export const MODULE_REGISTRY = {
               "default": 250,
               "required": false,
               "enum": [],
-              "note": "The view sends the shared LPBF process laserPower_W."
+              "note": "The view sends the shared LPBF process laserPower_W.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "beam_radius_um",
@@ -1352,7 +1407,9 @@ export const MODULE_REGISTRY = {
               "default": 50,
               "required": false,
               "enum": [],
-              "note": "The view sends the shared beamDiameter_um / 2."
+              "note": "The view sends the shared beamDiameter_um / 2.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "base_absorption",
@@ -1367,7 +1424,9 @@ export const MODULE_REGISTRY = {
               "default": 0.3,
               "required": false,
               "enum": [],
-              "note": "Empirical angular law input, not complex-index Fresnel optics."
+              "note": "Empirical angular law input, not complex-index Fresnel optics.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "keyhole_depth_um",
@@ -1382,7 +1441,9 @@ export const MODULE_REGISTRY = {
               "default": 100,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "max_bounces",
@@ -1397,7 +1458,9 @@ export const MODULE_REGISTRY = {
               "default": 5,
               "required": false,
               "enum": [],
-              "note": "Power still in flight at the limit is reported as bounce-limited (truncated), not escaped."
+              "note": "Power still in flight at the limit is reported as bounce-limited (truncated), not escaped.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "num_rays",
@@ -1412,7 +1475,9 @@ export const MODULE_REGISTRY = {
               "default": 10000,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "seed",
@@ -1427,7 +1492,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "ui_ray_limit",
@@ -1442,7 +1509,9 @@ export const MODULE_REGISTRY = {
               "default": 1000,
               "required": false,
               "enum": [],
-              "note": "Display subset only; drawn from a separate generator and never changes the physics samples. The view sends 150."
+              "note": "Display subset only; drawn from a separate generator and never changes the physics samples. The view sends 150.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "device",
@@ -1460,7 +1529,9 @@ export const MODULE_REGISTRY = {
                 "cpu",
                 "cuda:0"
               ],
-              "note": "No silent backend substitution: any other value is rejected."
+              "note": "No silent backend substitution: any other value is rejected.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1729,7 +1800,9 @@ export const MODULE_REGISTRY = {
                 "Refractory & Specialty",
                 "Ceramic & Carbide"
               ],
-              "note": "These are the exact category pills in MaterialsDatabaseView; the field filters local rows only."
+              "note": "These are the exact category pills in MaterialsDatabaseView; the field filters local rows only.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1770,7 +1843,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": "UI state default and slider step; slider attributes do not establish material validity bounds."
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1811,7 +1886,9 @@ export const MODULE_REGISTRY = {
               "default": 40,
               "required": false,
               "enum": [],
-              "note": "UI state default and slider step; slider attributes do not establish material validity bounds."
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1852,7 +1929,9 @@ export const MODULE_REGISTRY = {
               "default": 17.0,
               "required": false,
               "enum": [],
-              "note": "The visible density slider edits maxDensity (value=maxDensity, setter=setMaxDensity); its state default is 17.0 and step is 0.2. minDensity remains fixed at 1.5 here. Slider attributes do not establish material validity bounds."
+              "note": "The visible density slider edits maxDensity (value=maxDensity, setter=setMaxDensity); its state default is 17.0 and step is 0.2. minDensity remains fixed at 1.5 here. Slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1950,7 +2029,9 @@ export const MODULE_REGISTRY = {
                 "heatmap",
                 "catalog"
               ],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1997,7 +2078,9 @@ export const MODULE_REGISTRY = {
                 "density",
                 "name"
               ],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "sortOrder",
@@ -2015,7 +2098,9 @@ export const MODULE_REGISTRY = {
                 "desc",
                 "asc"
               ],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -2233,7 +2318,9 @@ export const MODULE_REGISTRY = {
                 "3d-distortion-lab",
                 "phase-diagram"
               ],
-              "note": "Exact destination IDs rendered by SendToModuleModal for this transfer flow."
+              "note": "Exact destination IDs rendered by SendToModuleModal for this transfer flow.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -2241,6 +2328,602 @@ export const MODULE_REGISTRY = {
             "fields": [
               "pipelineMaterialEvent",
               "navigationTarget"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "render-heatmap",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "materials",
+            "selectedMaterial"
+          ],
+          "output": {
+            "fields": [
+              "displayedMaterials",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-mode",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "heatmapMode",
+              "label": "D3 plot mode",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-view-mode",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "alloy-elements",
+              "required": true,
+              "enum": [
+                "alloy-elements",
+                "element-property-binned",
+                "property-correlation"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "heatmapMode",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-property",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedPropertyKey",
+              "label": "Heatmap property",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "catalog-property-key",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "yieldStrength",
+              "required": true,
+              "enum": [
+                "yieldStrength",
+                "tensileStrength",
+                "youngsModulus",
+                "density",
+                "specificStrength",
+                "elongation",
+                "thermalConductivity"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-element",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedElement",
+              "label": "Focused alloying element",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "element-symbol",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "Cr",
+              "required": true,
+              "enum": [
+                "C",
+                "Cr",
+                "Ni",
+                "Mo",
+                "Ti",
+                "Al",
+                "Cu",
+                "V",
+                "Mn",
+                "Si",
+                "Mg",
+                "W",
+                "Co",
+                "Nb",
+                "Zr",
+                "Fe"
+              ],
+              "note": "The select options are the component's alloying-element list; plot-axis clicks choose from elements present in the current data.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "sort-heatmap-alloys",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "sortBy",
+              "label": "Heatmap sort key",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "property",
+              "required": true,
+              "enum": [
+                "property",
+                "element",
+                "category",
+                "name"
+              ],
+              "note": "This selector is rendered only in alloy-elements mode; sortAsc is initialized false but has no current UI setter.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "displayedMaterials",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-palette",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "colorPalette",
+              "label": "D3 color palette",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-plot-style",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "viridis",
+              "required": true,
+              "enum": [
+                "viridis",
+                "plasma",
+                "turbo",
+                "emerald",
+                "amber-flame"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "colorPalette",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-heatmap-element-from-axis",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "elem"
+          ],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-heatmap-property-from-axis",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "prop"
+          ],
+          "output": {
+            "fields": [
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-composition-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat",
+            "elem"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial",
+              "selectedElement"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-binned-bucket",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "b"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-correlation-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "cell"
+          ],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-scatter-point",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-composition-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat",
+            "elem",
+            "wt"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "unit",
+              "material",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-binned-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "b"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-correlation-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "cell"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "clear-heatmap-tooltip",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "hoveredCell"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "export-heatmap-svg",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "source",
+              "blob",
+              "url",
+              "download"
             ],
             "statusKey": null,
             "transportValues": {},
@@ -2279,6 +2962,7 @@ export const MODULE_REGISTRY = {
       "migrationState": "contracted",
       "legacyNotes": [
         "This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.",
+        "The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.",
         "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
         "Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.",
         "createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.",
@@ -2287,7 +2971,11 @@ export const MODULE_REGISTRY = {
         "The property-filter panel has a local showFilters toggle. The comparison drawer opens only when the compare list is nonempty and closes from its modal callback or either close button.",
         "Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.",
         "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
-        "No fetch, worker, solver, scheduled job, or source download is initiated by this view. The nested comparison and transfer dialogs are UI children, not background work."
+        "MaterialsPropertyHeatmapD3 is mounted only while activeTab is \"split\" or \"heatmap\"; catalog mode unmounts it. Its ResizeObserver disconnects on effect dependency change and unmount. The D3-render effect has no cleanup function: redraw removes prior SVG descendants, while normal unmount removes the child DOM. If displayedMaterials becomes empty, that effect returns before clearing the prior SVG, so a previous plot can remain visible until a later nonempty redraw or unmount.",
+        "The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only. Correlation mode omits thermalConductivity from its plotted target properties.",
+        "Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member, and correlation cells display a Pearson r computed from displayed records with sample count (fewer than three positive-property pairs are represented as r=0). These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.",
+        "The child SVG export serializes the current SVG into a Blob, creates an object URL, clicks a temporary download anchor named from heatmapMode and selectedPropertyKey, then revokes the URL synchronously. These output names describe transient browser transport effects, not a returned API object. ResizeObserver, timers, and object URLs have no matching lifecycle resource kind in the schema vocabulary and are documented here rather than mislabeled as raf/interval/three/fetch.",
+        "No fetch, worker, solver, scheduled job, or source download is initiated by this view or its D3 child. The nested comparison and transfer dialogs are UI children, not background work."
       ],
       "sourceRefs": [
         "src/components/MaterialsDatabaseView.tsx:36-111#filteredMaterials",
@@ -2305,6 +2993,13 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
         "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
         "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell",
         "src/types.ts:32-63#MaterialSpec",
         "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
         "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
@@ -2496,7 +3191,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": true,
               "enum": [],
-              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint."
+              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -2775,7 +3472,9 @@ export const MODULE_REGISTRY = {
               "default": 500.0,
               "required": true,
               "enum": [],
-              "note": "Direct solver default is 500 degC. The mounted UI always sends a base-element-selected window: Al 400–750 degC, Mg 350–700 degC, Ti 600–1750 degC, otherwise 500–1550 degC; the UI also sends its step (10 degC for Al/Mg, otherwise 25 degC). No solver hard bound is declared for these request values."
+              "note": "Direct solver default is 500 degC. The mounted UI always sends a base-element-selected window: Al 400–750 degC, Mg 350–700 degC, Ti 600–1750 degC, otherwise 500–1550 degC; the UI also sends its step (10 degC for Al/Mg, otherwise 25 degC). No solver hard bound is declared for these request values.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tMax",
@@ -2790,7 +3489,9 @@ export const MODULE_REGISTRY = {
               "default": 1450.0,
               "required": true,
               "enum": [],
-              "note": "Direct solver default is 1450 degC. UI-selected windows are documented on tMin; they depend on the largest alloy element."
+              "note": "Direct solver default is 1450 degC. UI-selected windows are documented on tMin; they depend on the largest alloy element.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tStep",
@@ -2805,7 +3506,9 @@ export const MODULE_REGISTRY = {
               "default": 20.0,
               "required": true,
               "enum": [],
-              "note": "Direct solver default is 20 degC. UI passes 10 or 25 degC from the selected base-element window. The Python solver caps the actual uniform grid at 80 points; these UI values are not backend bounds."
+              "note": "Direct solver default is 20 degC. UI passes 10 or 25 degC from the selected base-element window. The Python solver caps the actual uniform grid at 80 points; these UI values are not backend bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "unit",
@@ -2823,7 +3526,9 @@ export const MODULE_REGISTRY = {
                 "wt_pct",
                 "at_pct"
               ],
-              "note": "UI sends wt_pct for the live specimen; the authority also accepts at_pct."
+              "note": "UI sends wt_pct for the live specimen; the authority also accepts at_pct.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "adaptiveGrid",
@@ -2838,7 +3543,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": true,
               "enum": [],
-              "note": "The UI sends false; the engine has a uniform grid, not an adaptive grid."
+              "note": "The UI sends false; the engine has a uniform grid, not an adaptive grid.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "boundaryRefinement",
@@ -2853,7 +3560,9 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": true,
               "enum": [],
-              "note": "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus."
+              "note": "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "minRefineStep",
@@ -2868,7 +3577,9 @@ export const MODULE_REGISTRY = {
               "default": 0.5,
               "required": true,
               "enum": [],
-              "note": "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 degC. Direct Python requests are not restricted to those options; the solver uses max(0.05 degC, requested value) as its refinement tolerance and declares no upper bound."
+              "note": "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 degC. Direct Python requests are not restricted to those options; the solver uses max(0.05 degC, requested value) as its refinement tolerance and declares no upper bound.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -3022,7 +3733,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": true,
               "enum": [],
-              "note": "This operation is selected only when the user explicitly turns the Python engine off; Python request failure does not enter this path."
+              "note": "This operation is selected only when the user explicitly turns the Python engine off; Python request failure does not enter this path.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tMin",
@@ -3037,7 +3750,9 @@ export const MODULE_REGISTRY = {
               "default": 500.0,
               "required": true,
               "enum": [],
-              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input."
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tMax",
@@ -3052,7 +3767,9 @@ export const MODULE_REGISTRY = {
               "default": 1550.0,
               "required": true,
               "enum": [],
-              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input."
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tStep",
@@ -3067,7 +3784,9 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": true,
               "enum": [],
-              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input."
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -3127,7 +3846,9 @@ export const MODULE_REGISTRY = {
               "default": 850.0,
               "required": true,
               "enum": [],
-              "note": "Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical applicability bound is established by the UI."
+              "note": "Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical applicability bound is established by the UI.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "compositionB",
@@ -3142,7 +3863,9 @@ export const MODULE_REGISTRY = {
               "default": 0.45,
               "required": true,
               "enum": [],
-              "note": "Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the selected browser model. System-specific values are selected in the UI."
+              "note": "Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the selected browser model. System-specific values are selected in the UI.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -3220,7 +3943,9 @@ export const MODULE_REGISTRY = {
                 "calphad_solver",
                 "fe_c_diagram"
               ],
-              "note": "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; switching back remounts its mount-time requests. Fe-C is not a Python error fallback."
+              "note": "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; switching back remounts its mount-time requests. Fe-C is not a Python error fallback.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -3260,7 +3985,9 @@ export const MODULE_REGISTRY = {
               "default": 0.45,
               "required": true,
               "enum": [],
-              "note": "Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping clamps to that chart extent and rounds to two decimals. These are UI bounds, not a validated physical domain; this state is separate from the shared specimen."
+              "note": "Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping clamps to that chart extent and rounds to two decimals. These are UI bounds, not a validated physical domain; this state is separate from the shared specimen.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "temperatureC",
@@ -3275,7 +4002,9 @@ export const MODULE_REGISTRY = {
               "default": 850,
               "required": true,
               "enum": [],
-              "note": "Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that chart extent and rounds to whole degC, so pointer values need not follow the slider step. No assessed thermodynamic applicability is declared."
+              "note": "Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that chart extent and rounds to whole degC, so pointer values need not follow the slider step. No assessed thermodynamic applicability is declared.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -3332,7 +4061,9 @@ export const MODULE_REGISTRY = {
                 "Eutectic White Cast Iron (Ledeburite)",
                 "Hypereutectic White Cast Iron"
               ],
-              "note": "The handler sets selectedPreset and copies only carbon composition from the matching table row; temperature is unchanged. The dropdown exposes all rows and quick buttons expose the first four."
+              "note": "The handler sets selectedPreset and copies only carbon composition from the matching table row; temperature is unchanged. The dropdown exposes all rows and quick buttons expose the first four.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -3556,7 +4287,9 @@ export const MODULE_REGISTRY = {
                 "Ti-6Al-4V",
                 "Al 7075"
               ],
-              "note": "The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers."
+              "note": "The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_C_s",
@@ -3571,7 +4304,9 @@ export const MODULE_REGISTRY = {
               "default": 10.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is rejected with NON_FINITE (exit 2) and no bound is enforced."
+              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is rejected with NON_FINITE (exit 2) and no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "grainSize_um",
@@ -3586,7 +4321,9 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
+              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "austTemp_C",
@@ -3601,7 +4338,9 @@ export const MODULE_REGISTRY = {
               "default": 860.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC (input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed)."
+              "note": "Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC (input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_C",
@@ -3616,7 +4355,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point; no bound is enforced."
+              "note": "Passed unconverted by the entry point; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_h",
@@ -3631,7 +4372,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."
+              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -3763,7 +4506,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropBottomPx",
@@ -3778,7 +4523,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default."
+              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropLeftPx",
@@ -3793,7 +4540,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropRightPx",
@@ -3808,7 +4557,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "umPerPx",
@@ -3823,7 +4574,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar."
+              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "barLengthUm",
@@ -3838,7 +4591,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx."
+              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "barLengthPx",
@@ -3853,7 +4608,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied."
+              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "darkMaxGrey",
@@ -3868,7 +4625,9 @@ export const MODULE_REGISTRY = {
               "default": -1,
               "required": false,
               "enum": [],
-              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured."
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "brightMinGrey",
@@ -3883,7 +4642,9 @@ export const MODULE_REGISTRY = {
               "default": 256,
               "required": false,
               "enum": [],
-              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured."
+              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "boundaryMaxGrey",
@@ -3898,7 +4659,9 @@ export const MODULE_REGISTRY = {
               "default": -1,
               "required": false,
               "enum": [],
-              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains."
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tiles",
@@ -3913,7 +4676,9 @@ export const MODULE_REGISTRY = {
               "default": 4,
               "required": false,
               "enum": [],
-              "note": "Convention of this module (k x k tiles of one image), not a standard value."
+              "note": "Convention of this module (k x k tiles of one image), not a standard value.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "sensitivityDeltaGrey",
@@ -3928,7 +4693,9 @@ export const MODULE_REGISTRY = {
               "default": 10,
               "required": false,
               "enum": [],
-              "note": "The class fraction is also reported at threshold -/+ this many grey levels."
+              "note": "The class fraction is also reported at threshold -/+ this many grey levels.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "minAreaPx",
@@ -3943,7 +4710,9 @@ export const MODULE_REGISTRY = {
               "default": 4,
               "required": false,
               "enum": [],
-              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention."
+              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "linesPerDirection",
@@ -3958,7 +4727,9 @@ export const MODULE_REGISTRY = {
               "default": 8,
               "required": false,
               "enum": [],
-              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest."
+              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "returnMasks",
@@ -3973,7 +4744,9 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -4035,7 +4808,9 @@ export const MODULE_REGISTRY = {
                 "image/webp",
                 "image/gif"
               ],
-              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415."
+              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -4209,7 +4984,9 @@ export const MODULE_REGISTRY = {
               "default": 130.0,
               "required": false,
               "enum": [],
-              "note": "Optional peak-search setting; the UI falls back to 130 eV when the value is out of range."
+              "note": "Optional peak-search setting; the UI falls back to 130 eV when the value is out of range.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -4562,7 +5339,9 @@ export const MODULE_REGISTRY = {
                 "Ti",
                 "Al"
               ],
-              "note": "Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."
+              "note": "Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_C_s",
@@ -4577,7 +5356,9 @@ export const MODULE_REGISTRY = {
               "default": 150000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."
+              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_C",
@@ -4592,7 +5373,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_h",
@@ -4607,7 +5390,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "strainRate_s_inv",
@@ -4622,7 +5407,9 @@ export const MODULE_REGISTRY = {
               "default": 0.001,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); written into the exported material cards only. No bound is enforced."
+              "note": "Converted with float(); written into the exported material cards only. No bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceTemp_C",
@@ -4637,7 +5424,9 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC)."
+              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "componentType",
@@ -4656,7 +5445,9 @@ export const MODULE_REGISTRY = {
                 "pressure_bulkhead",
                 "lpbf_bracket"
               ],
-              "note": "The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys."
+              "note": "The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -4796,7 +5587,9 @@ export const MODULE_REGISTRY = {
                 "custom",
                 "isotropic"
               ],
-              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract."
+              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "crystal_system",
@@ -4818,7 +5611,9 @@ export const MODULE_REGISTRY = {
                 "orthorhombic",
                 "isotropic"
               ],
-              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen."
+              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -5156,7 +5951,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": true,
               "enum": [],
-              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot."
+              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -5434,7 +6231,9 @@ export const MODULE_REGISTRY = {
                 "Ti",
                 "Al"
               ],
-              "note": "The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; the contract accepts only the four tabulated keys."
+              "note": "The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; the contract accepts only the four tabulated keys.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_nominal",
@@ -5449,7 +6248,9 @@ export const MODULE_REGISTRY = {
               "default": 150000.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound)."
+              "note": "No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_cov",
@@ -5464,7 +6265,9 @@ export const MODULE_REGISTRY = {
               "default": 0.25,
               "required": false,
               "enum": [],
-              "note": "Fraction (0.25 = 25 %); no bound is enforced."
+              "note": "Fraction (0.25 = 25 %); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_nominal",
@@ -5479,7 +6282,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 200 degC."
+              "note": "No bound is enforced; each draw is floored at 200 degC.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_stdDev",
@@ -5494,7 +6299,9 @@ export const MODULE_REGISTRY = {
               "default": 7.5,
               "required": false,
               "enum": [],
-              "note": "Temperature difference (no offset); no bound is enforced."
+              "note": "Temperature difference (no offset); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_nominal",
@@ -5509,7 +6316,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 0.2 h."
+              "note": "No bound is enforced; each draw is floored at 0.2 h.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_stdDev",
@@ -5524,7 +6333,9 @@ export const MODULE_REGISTRY = {
               "default": 0.25,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceStress_nominal",
@@ -5539,7 +6350,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 50 MPa."
+              "note": "No bound is enforced; each draw is floored at 50 MPa.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceStress_cov",
@@ -5554,7 +6367,9 @@ export const MODULE_REGISTRY = {
               "default": 0.08,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "initialFlawSize_um_mean",
@@ -5569,7 +6384,9 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 5 µm."
+              "note": "No bound is enforced; each draw is floored at 5 µm.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "initialFlawSize_um_std",
@@ -5584,7 +6401,9 @@ export const MODULE_REGISTRY = {
               "default": 15.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinYield_MPa",
@@ -5599,7 +6418,9 @@ export const MODULE_REGISTRY = {
               "default": 1100.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinUTS_MPa",
@@ -5614,7 +6435,9 @@ export const MODULE_REGISTRY = {
               "default": 1350.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinElongation_pct",
@@ -5629,7 +6452,9 @@ export const MODULE_REGISTRY = {
               "default": 12.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "mcSamples",
@@ -5644,7 +6469,9 @@ export const MODULE_REGISTRY = {
               "default": 2500,
               "required": false,
               "enum": [],
-              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range."
+              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "samplingMethod",
@@ -5661,7 +6488,9 @@ export const MODULE_REGISTRY = {
               "enum": [
                 "sobol_qmc"
               ],
-              "note": "The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."
+              "note": "The authority rejects 'pseudo_mc' with a ValueError; the view still offers it.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "scramble",
@@ -5676,7 +6505,9 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": false,
               "enum": [],
-              "note": "The authority coerces with bool(); the contract accepts only booleans."
+              "note": "The authority coerces with bool(); the contract accepts only booleans.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "seed",
@@ -5691,7 +6522,9 @@ export const MODULE_REGISTRY = {
               "default": 42,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced (int() conversion)."
+              "note": "No bound is enforced (int() conversion).",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -5827,7 +6660,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": true,
               "enum": [],
-              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot."
+              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],

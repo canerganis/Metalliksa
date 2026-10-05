@@ -42,9 +42,11 @@ def build_copilot_contract(seed):
             "The server returns response/text/answer on success. The shared parser accepts nonempty answer text and the view appends operational errors to its transcript. Missing provider text is not a scientific result. Air-gap refusal and validation/provider errors do not execute a local substitute.",
             "The 60000 ms bound is the provider request deadline, not a browser-side scientific execution time. Clearing history, starting a newer request or unmount invalidates the generation and aborts the fetch. Result, error and loading writes are guarded against stale completions.",
             "The current view sends prompt/history only. The route additionally accepts message, context and systemInstruction; prompt/message length is capped at 8000 characters, systemInstruction at 2000 and serialized context at 50000. These free-text/nested keys are recorded as undeclared because InputField cannot enforce string length or context-object shape; handler validation is the authority.",
-            "Clipboard feedback awaits writeText and shows failure when unavailable; success feedback clears on a 2000 ms timer, cleared on clear-history/unmount. Pending clipboard completion after clear or a newer copy is a separately tracked product race until its generation repair is verified. The loading phrase says advisory response, not physics computation; scrolling and the spinner respect reduced motion.",
+            "Clipboard feedback awaits writeText and shows failure when unavailable; success feedback clears on a 2000 ms timer. Separate copy-generation guards reject success/failure after clear-history, unmount or a newer copy; the timer is cleared on those actions. The loading phrase says advisory response, not physics computation; scrolling and the spinner respect reduced motion.",
         ),
         source_refs=("src/components/MetallurgyCopilot.tsx::MetallurgyCopilot",
+                     "src/utils/copilotConsultation.ts:9-29#export class CopilotRequestLifecycle",
+                     "src/utils/copilotConsultation.ts:32-47#export class CopyFeedbackLifecycle",
                      "routes/copilot.ts", "server/openaiService.ts::generateGpt6Response"),
         seed_derived=("label", "description", "next", "maturity"),
     )

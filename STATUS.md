@@ -1,3 +1,14 @@
+## Güncel devam noktası — 2026-10-05 / SDK entegrasyonu
+
+- **Ana dala teslim:** `8202c3f`; önceki yerel birleştirmeler korunuyor. Aşağıdaki staging çalışmaları henüz ana dala teslim edilmiş değildir.
+- **Doğrulandı, commit bekliyor:** `codex/sdk-wave2@9ab3bde` üzerindeki seçili-birim şeması ve hesaplayıcı sözleşmesi düzeltmeleri. Bağımsız Luna incelemesinde blocker yok; ebeveyn 154 Python sözleşme testi PASS, üretim kontrolü ve diff kontrolü PASS. Bunlar yazılım kontrolleridir.
+- **İnceleme/entegrasyon bekliyor:** Copilot reduced-motion `ff238555`; deneysel doğrulama ekranı, electrochem ve ana LPBF workflow SDK worker teslimleri. Registry 16 contracted / 9 legacy; helper teslimi tek başına registry geçişi sayılmaz.
+- **Antigravity:** Gemini 3.1 Pro gerçek yanıt verdi. Dijital ikiz taslağının onarım denemesi MCP iznine takıldı; taslak entegre edilmedi, test veya onay sayılmıyor.
+- **Sıradaki:** seçili-birim paketini yerel commit; kaynak bağlı helper incelemeleri ve registry geçişleri; ardından sabit revizyonda birleşik test/build, gerçek tarayıcı ve Docker doğrulaması, yerel merge.
+- **Sınırlar:** push/PR yok; donmuş LPBF fiziği değişmez. Residual unavailable/null, experimentalValidation false ve opticalOperatorMatched false korunur.
+
+> Not akışı: bu üst bölüm güncel teslim ve devam durumudur. Aşağıdaki tarihli bölümler geçmiş kanıttır; güncel başarı olarak yeniden kullanılmaz. Ajan çıktıları inceleme bekleyen teslimdir; ana dal merge ve doğrulama ayrı kaydedilir.
+
 ## SDK composition, EDS ve Elastic Constants — 2026-10-05
 
 - Yerel merge `2bf52a5`: üç kaynak bağlı sözleşme entegre; registry 12 contracted / 13 legacy. Composition girişleri sonlu ve 0–100 aralığında; callback canlı state yerine kopya alıyor. Ara toplamın 100 olması zorunlu değil; normalize açık kullanıcı işlemi.
