@@ -1641,8 +1641,8 @@
     },
     {
       "id": "alloy-builder",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Composition Editor",
       "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
@@ -1656,7 +1656,7 @@
       },
       "operations": [
         {
-          "id": "specimen-editor",
+          "id": "update-specimen-name",
           "method": null,
           "route": null,
           "authority": {
@@ -1666,11 +1666,279 @@
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): the composition/specimen editor writes the shared active specimen in the browser."
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "name"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "update-category",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "category"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "update-standard-designation",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "standardDesignation"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "update-manufacturing-route",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "manufacturingRoute"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "add-element",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "element"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "set-element-content",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [
+            {
+              "key": "percentage",
+              "label": "Element content",
+              "valueType": "number",
+              "unit": "%",
+              "displayUnits": [],
+              "quantityKind": "element-composition-percentage",
+              "min": 0.0,
+              "max": 100.0,
+              "step": 0.1,
+              "default": 0.0,
+              "required": true,
+              "enum": [],
+              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint."
+            }
+          ],
+          "undeclaredInput": [
+            "element"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "remove-element",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "element"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "normalize-composition",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
           },
           "input": [],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "load-preset",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "presetId"
+          ],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "reset-to-default",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeMaterialSpecimen"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "save-current-specimen",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "savedSpecimens"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1685,22 +1953,49 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No oracle is present. The browser editor's composition-based KPI display is explicitly unvalidated and remains screening-only; software contract checks do not establish physical validation."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_composition.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/alloy-builder.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "Composition remains browser-local state: MaterialSpecimen.composition is an element-symbol-to-number map, not a request object. Each operation scopes one visible store action; the map is not encoded as a fabricated flat or nested InputField schema. UI controls preserve dynamic state between actions.",
+        "String-valued arguments are recorded by their actual key in undeclaredInput because the SDK value types do not include strings. Category and route choices can include the active value at runtime, so no closed enum is inferred.",
+        "Add Element calls setElement with the selected symbol and a fixed 1.0; the editable number and slider call setElement with the current symbol and value. The numeric control has min=0/max=100/step=0.1; the slider max is 100 for the active base metal and 35 otherwise. The store rejects non-finite, negative and over-100 content before modifying state or deriving estimates.",
+        "normalizeComposition is a separate click action; invalid entries or a non-finite/non-positive total are rejected before scaling by 100/total. JSON import validates composition before derivation and rejects exponent overflow; invalid maps leave both active specimen aliases unchanged.",
+        "Preset buttons call loadPreset(key); Reset calls resetToDefault; Save calls saveCurrentSpecimen with a generated time label and updates savedSpecimens. The save confirmation is cleared by a 2500 ms setTimeout. Lifecycle vocabulary has no timeout resource, so this UI timer is recorded here and is not mislabeled as an interval or background job.",
+        "The component destructures updateComposition but does not call it directly; edits currently use setElement/removeElement and the separate metadata setters. Weight-percent updates also publish an active pipeline payload; atomic-percent updates return before that pipeline sync.",
+        "Name/category/designation/route, composition edits, preset, reset, normalize, and save are separate browser-local actions; the component does not submit one combined specimen-editor request.",
+        "The visible density/thermal/mechanical KPI panel is composition-derived and states 'Composition-based estimate; unvalidated.' No physical oracle is present."
+      ],
+      "sourceRefs": [
+        "src/components/AlloyBuilder.tsx:38-80#activeMaterialSpecimen",
+        "src/components/AlloyBuilder.tsx:70-80#saveCurrentSpecimen",
+        "src/components/AlloyBuilder.tsx:145-160#resetToDefault",
+        "src/components/AlloyBuilder.tsx:183-229#Specimen Name",
+        "src/components/AlloyBuilder.tsx:54-58#categoryOptions",
+        "src/components/AlloyBuilder.tsx:239-253#loadPreset(key)",
+        "src/components/AlloyBuilder.tsx:263-360#Auto-Normalize to 100%",
+        "src/components/AlloyBuilder.tsx:422#Composition-based estimate; unvalidated",
+        "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
+        "src/store/useMaterialStore.ts:94-119#Core Actions",
+        "src/store/useMaterialStore.ts::isValidCompositionInput",
+        "src/store/useMaterialStore.ts",
+        "tests/material-composition-validation.test.ts",
+        "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2417,8 +2712,8 @@
     },
     {
       "id": "eds-lab",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "1.0.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "EDS Spectrum Viewer",
       "description": "Imports and plots EDS spectra with reference line markers; uploaded spectra are not quantified; built-in spots are training examples.",
@@ -2432,7 +2727,7 @@
       },
       "operations": [
         {
-          "id": "eds-peak-id",
+          "id": "import-spectrum",
           "method": null,
           "route": null,
           "authority": {
@@ -2442,11 +2737,204 @@
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): SNIP background, 3 sqrt(background) peak search and cited line-table matching (src/utils/edsPeakId.ts) and vendor quantification import run in the browser."
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "file"
+          ],
+          "output": {
+            "fields": [
+              "uploadedSpectrum",
+              "importError",
+              "sourceRestoreState"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "restore-latest-source",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
           },
           "input": [],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "uploadedSpectrum",
+              "sourceRestoreState"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "identify-peak-candidates",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [
+            {
+              "key": "fwhmEv",
+              "label": "Detector FWHM",
+              "valueType": "number",
+              "unit": "eV",
+              "displayUnits": [],
+              "quantityKind": "energy_resolution",
+              "min": 20.0,
+              "max": 1000.0,
+              "step": null,
+              "default": 130.0,
+              "required": false,
+              "enum": [],
+              "note": "Optional peak-search setting; the UI falls back to 130 eV when the value is out of range."
+            }
+          ],
+          "undeclaredInput": [
+            "uploadedSpectrum"
+          ],
+          "output": {
+            "fields": [
+              "peaks",
+              "background",
+              "parameters"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "export-parsed-csv",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "uploadedSpectrum"
+          ],
+          "output": {
+            "fields": [
+              "blob",
+              "url",
+              "anchor"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "download-original-source",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "uploadedSpectrum"
+          ],
+          "output": {
+            "fields": [
+              "url",
+              "anchor"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "import-vendor-quantification",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "vendorFile",
+            "vendorInstrument",
+            "vendorSoftware",
+            "vendorAnalysisType"
+          ],
+          "output": {
+            "fields": [
+              "rows",
+              "errors",
+              "warnings",
+              "totalWeightPct",
+              "composition",
+              "provenance",
+              "transferLabel",
+              "accepted"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
+          "id": "send-vendor-composition",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EDSSpectrumLab uses browser File APIs, local EDS utilities, IndexedDB source storage, and an optional parent callback; no server operation or deadline is declared."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "vendorCurrent",
+            "vendorResult",
+            "onSendToAlloyBuilder"
+          ],
+          "output": {
+            "fields": [
+              "composition",
+              "transfer"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2461,22 +2949,51 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Peak identification reports spectrum maxima and nearby tabulated line candidates; it does not produce quantitative composition. Composition transfer is limited to accepted vendor-reported quantification and retains its provenance; it is not bulk composition. No independent oracle promotes these outputs beyond screening-only. Parse, archive, restore, or storage failures are operational outcomes, not scientific evidence statuses."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "raf"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_eds.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/eds-lab.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "Browser-local operations have no server route or declared timeout; file selection and component mount are their triggers, while export and source download consume current uploadedSpectrum state.",
+        "File inputs are browser File objects read through arrayBuffer(); parsed spectrum state is the parser result plus source metadata, and parse failure is surfaced in importError.",
+        "Nested values: uploadedSpectrum.points is an array of {energyKeV: number, counts: number}; source and vendor file bytes are ArrayBuffer values; vendor metadata is held in instrument, software, and analysisType strings, with accepted analysis types spot and area.",
+        "Browser download handlers return void; export output fields name the actual Blob, object URL, and anchor used for the download, while composition-transfer output fields name the composition and transfer payload passed to the callback or shared-store update.",
+        "Source bytes are stored in browser IndexedDB through idb-keyval with SHA-256 content keys and read-back verification; archive failure leaves parsed data usable with sourceRestoreState failed.",
+        "Latest-source restore is started on component mount; unmount suppresses later state writes but does not cancel the IndexedDB reads, SHA-256 verification, or parsing already in progress.",
+        "Peak line matching is candidate listing only and must not be interpreted as elemental quantification.",
+        "Vendor-import metadata is required for acceptance; invalid tables are not transferable.",
+        "Exports create a Blob and object URL, click an anchor, then revoke the URL; original-source downloads use the current uploadedSpectrum source bytes and follow the same URL cleanup.",
+        "Composition transfer requires vendorCurrent, an accepted vendorResult with provenance and transferLabel; it calls the optional onSendToAlloyBuilder callback when present, otherwise updates the shared material specimen store.",
+        "The child WebGLSpectrometerCanvas owns a visibility-aware requestAnimationFrame loop that is cancelled on hide or unmount and deletes its WebGL program on unmount; the loop is the declared raf resource, while browser storage and File APIs have no matching lifecycle vocabulary entry.",
+        "The visibility-aware frame hook starts and stops rendering with workspace visibility; this contract does not claim cancellation of in-flight browser storage work or disposal of every replaced WebGL buffer."
+      ],
+      "sourceRefs": [
+        "python/module_registry_seed.json",
+        "src/components/EDSSpectrumLab.tsx::EDSSpectrumLab",
+        "src/components/WebGLSpectrometerCanvas.tsx::WebGLSpectrometerCanvas",
+        "src/hooks/useVisibleAnimationFrame.ts::useVisibleAnimationFrame",
+        "src/utils/edsParser.ts::parseRawEDSFile",
+        "src/utils/edsPeakId.ts::findEdsPeaks",
+        "src/utils/edsVendorQuant.ts::importVendorQuant",
+        "src/utils/edsSourceArchive.ts::archiveEDSSource",
+        "src/utils/edsSourceArchive.ts::restoreLatestEDSSource",
+        "src/utils/edsSourceArchive.ts::sha256Bytes"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2824,8 +3341,8 @@
     },
     {
       "id": "materials-project",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Elastic Constants",
       "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
@@ -2839,7 +3356,7 @@
       },
       "operations": [
         {
-          "id": "dft-properties",
+          "id": "calculate-elasticity",
           "method": "POST",
           "route": "/api/python/dft-properties",
           "authority": {
@@ -2851,9 +3368,98 @@
             "warm": true,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "input_mode",
+              "label": "Elastic constants source",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "custom",
+              "required": true,
+              "enum": [
+                "custom",
+                "isotropic"
+              ],
+              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract."
+            },
+            {
+              "key": "crystal_system",
+              "label": "Crystal symmetry",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "cubic",
+              "required": true,
+              "enum": [
+                "cubic",
+                "hexagonal",
+                "trigonal",
+                "tetragonal",
+                "orthorhombic",
+                "isotropic"
+              ],
+              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen."
+            }
+          ],
+          "undeclaredInput": [
+            "custom_c_ij",
+            "formula",
+            "density",
+            "k_vrh",
+            "g_vrh",
+            "molar_mass",
+            "atoms_per_formula_unit"
+          ],
+          "output": {
+            "fields": [
+              "success",
+              "status",
+              "engine",
+              "scientificModel",
+              "label",
+              "isDft",
+              "constantsOrigin",
+              "referenceStatus",
+              "sourceNotes",
+              "computeTimeMs",
+              "materialInfo",
+              "elasticStiffnessMatrix_Cij_GPa",
+              "elasticComplianceMatrix_Sij_1_over_GPa",
+              "bornStability",
+              "voigtReussHillModuli",
+              "mechanicalIntegrityIndices",
+              "acousticAndThermalProperties",
+              "directionalYoungsModuli",
+              "directionalYoungsModuliStatus",
+              "directionalYoungsModuliReason",
+              "unavailableCode",
+              "reason",
+              "isPythonEngine"
+            ],
+            "statusKey": null,
+            "transportValues": {
+              "status": [
+                "available",
+                "unavailable"
+              ],
+              "directionalYoungsModuliStatus": [
+                "available",
+                "unavailable"
+              ],
+              "referenceStatus": [
+                "supplied-by-caller"
+              ]
+            }
+          }
         }
       ],
       "validityDomain": null,
@@ -2868,24 +3474,54 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status is also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_elasticity.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/materials-project.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "Elastic Constants retains the materials-project identity. The user explicitly submits custom C_ij or isotropic K/G; optional density and composition are not taken from the shared specimen or the legacy library. No catalog, consultation or Materials Project request is dispatched. Missing derived properties remain unavailable; input edits invalidate pending responses."
+        "Scope is the explicit Calculate P2 form: blank initial numerical fields; no autoCalculate or shared specimen/process auto-fill. Backend library mode and absent-mode legacy behavior remain outside this operation; explicit custom/isotropic never use library constants or density.",
+        "custom_c_ij is a dynamic nested map in GPa, recorded as undeclaredInput, not fake scalar fields. The form requires complete selected symmetry: cubic c11,c12,c44; hexagonal c11,c33,c12,c13,c44; trigonal also c14; tetragonal also c66; orthorhombic c11,c22,c33,c12,c13,c23,c44,c55,c66; custom isotropic c11,c12. Finite values are required; diagonals positive, off-diagonals may be negative.",
+        "isotropic requires finite positive k_vrh and g_vrh in GPa, with no custom_c_ij. The SDK cannot encode conditional required fields or blank numeric defaults; these are undeclaredInput, with actual validation in buildElasticityInput and the Python authority. input_problems does not validate undeclared keys, tensor completeness, positivity or mode/symmetry combinations.",
+        "formula is optional trimmed text. density is optional finite positive g/cm^3; blank is omitted, not replaced by 8.2 or library density. Optional molar_mass (g/mol) and atoms_per_formula_unit (formula-unit atom count) must be entered together and finite positive. No numerical defaults or unsupported min/max applicability limits are invented.",
+        "Successful output inventories Cij (GPa), Sij (1/GPa), VRH K/G/E (GPa), dimensionless Poisson ratio and anisotropy indices, Born mechanical stability and optional acoustic/directional results. Born is elastic mechanical stability, not phase stability; VRH is homogenization, not DFT. isDft is false; materialInfo phase/electronic metadata is not calculated by this P2 form.",
+        "status=available/unavailable and directionalYoungsModuliStatus=available/unavailable are explicit transport values, separate from evidence. The output fields are a conditional union, not mandatory non-null outputs. unavailableCode/reason accompanies solver unavailable results (HTTP 200), without fabricated tensor/moduli. Missing density leaves acoustic values null/unavailable while directional E may remain available. Missing composition or paired mass/atom inputs leaves Debye quantities null even when velocities are available.",
+        "Service failures return unavailable with PYTHON_NOT_REQUESTED, PYTHON_BAD_RESPONSE, PYTHON_HTTP_ERROR or PYTHON_UNREACHABLE; no browser surrogate calculation. isPythonEngine and computeTimeMs are execution metadata, not evidence. Raw route failures/CLI errors are normalized by calculateDFTProperties before reaching this view.",
+        "Request generation is held in useRef: begin on Calculate, invalidate on edits and unmount; old success/error including A-B-A is ignored. Fetch is not aborted by the generation gate; the Python IPC deadline is enforced separately. Pure gate tests do not prove mounted effects.",
+        "No physical applicability domain is declared. Source tests cover numerical formulas and software regressions; they do not qualify a material or validate supplied constants experimentally."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "src/utils/elasticityInput.ts::buildElasticityInput",
+        "src/utils/elasticityRequestGate.ts::createElasticityRequestGate",
+        "src/components/MaterialsProjectExplorer.tsx::MaterialsProjectExplorer",
+        "src/components/MaterialsProjectElasticityPanel.tsx",
+        "src/services/pythonComputationService.ts",
+        "routes/physics.ts:67-69#/api/python/dft-properties",
+        "routes/physics.ts:11-17#25000",
+        "python/persistent_ipc_service.py:95-100#dft_property_calculator",
+        "python/dft_property_calculator.py::calculate_dft_properties",
+        "python/dft_property_calculator.py::_calculate_elasticity",
+        "python/dft_property_calculator.py::_unavailable_result",
+        "python/dft_property_calculator.py::_acoustic_and_directional",
+        "python/test_elasticity_input_mode.py",
+        "python/test_elasticity_oracle.py",
+        "tests/elasticity-input.test.ts",
+        "tests/elasticity-request-gate.test.ts"
+      ],
       "seedDerived": [
         "label",
         "description",

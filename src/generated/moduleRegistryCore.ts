@@ -317,7 +317,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "alloy-builder",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Composition Editor",
       "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
@@ -329,7 +329,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/AlloyBuilder.tsx",
         "export": "AlloyBuilder"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -421,7 +421,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "eds-lab",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "workspace": "materials",
       "label": "EDS Spectrum Viewer",
       "description": "Imports and plots EDS spectra with reference line markers; uploaded spectra are not quantified; built-in spots are training examples.",
@@ -433,7 +433,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/EDSSpectrumLab.tsx",
         "export": "EDSSpectrumLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -499,7 +499,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "materials-project",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Elastic Constants",
       "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
@@ -511,7 +511,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/MaterialsProjectExplorer.tsx",
         "export": "MaterialsProjectExplorer"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

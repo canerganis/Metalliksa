@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 16  # Read-only dataset comparison now has a source-bound display contract.
+LEGACY_CEILING = 13  # Dataset view, EDS, composition and elasticity are source-bound.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "alloy-builder", "ttt-cct-kinetics", "micrograph", "eds-lab", "icme-motor", "materials-project", "uq-lab")
 
 
 def _view():
@@ -648,7 +648,7 @@ class ContractedRegistryTests(unittest.TestCase):
                                      # Phase 7 wave 2
                                      "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s",
                                      # micrograph rework (image pixels and image scale)
-                                     "px", "µm/px"})
+                                     "px", "µm/px", "eV"})
         texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
         texts += [n for c in self.contracted.values() for n in c.legacy_notes]
         texts += [c.evidence.note for c in self.contracted.values()]

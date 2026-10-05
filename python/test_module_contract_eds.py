@@ -69,7 +69,6 @@ class EDSModuleContractTests(unittest.TestCase):
     def test_registry_reference_validation_accepts_real_sources_and_generated_doc(self):
         generated_doc = mr.module_doc_path("eds-lab")
         self.assertEqual(self.contract.tests.docs, generated_doc)
-        self.assertFalse((ROOT / generated_doc).exists())
         problems = mr.contract_ref_problems(self.contract, root=ROOT, generated=frozenset({generated_doc}))
         self.assertEqual(problems, [])
 

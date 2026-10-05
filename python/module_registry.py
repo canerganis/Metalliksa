@@ -38,6 +38,9 @@ from module_contract import (
     Authority, Evidence, InputField, Lifecycle, ModuleContract, Operation, Oracle, OutputSchema, TestRefs, View,
 )
 from module_contracts_dataset_view import build_dataset_view_contract
+from module_contracts_eds import build_eds_contract
+from module_contracts_composition import build_composition_contract
+from module_contracts_elasticity import build_elasticity_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -181,17 +184,10 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
     # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
-    "alloy-builder": (
-        _local("specimen-editor", "the composition/specimen editor writes the shared active specimen in the browser."),
-    ),
     "phase-diagram": (
         _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
         _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
         _AI_CONSULT,
-    ),
-    "eds-lab": (
-        _local("eds-peak-id", "SNIP background, 3 sqrt(background) peak search and cited line-table matching "
-               "(src/utils/edsPeakId.ts) and vendor quantification import run in the browser."),
     ),
     "electrochem-suite": (
         _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
@@ -199,10 +195,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
             _py("tafel_corrosion_rate_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
         _op("battery-corrosion-eis", "POST", "/api/python/battery-corrosion-eis",
             _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
-    ),
-    "materials-project": (
-        _op("dft-properties", "POST", "/api/python/dft-properties",
-            _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
     ),
     "calculators": (
         _local("engineering-correlations", "unit-aware engineering correlations are evaluated in the browser."),
@@ -992,6 +984,9 @@ def module_doc_path(module_id: str) -> str:
 
 
 CONTRACTED_BUILDERS = {
+    "alloy-builder": build_composition_contract,
+    "materials-project": build_elasticity_contract,
+    "eds-lab": build_eds_contract,
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "keyhole-raytracing": _keyhole_contract,
     "uq-lab": _uq_contract,

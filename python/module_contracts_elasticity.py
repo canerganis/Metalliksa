@@ -119,4 +119,5 @@ def build_elasticity_contract(seed) -> ModuleContract:
             'python/test_elasticity_input_mode.py', 'python/test_elasticity_oracle.py',
             'tests/elasticity-input.test.ts', 'tests/elasticity-request-gate.test.ts',
         ),
+        seed_derived=('label', 'description', 'next', 'maturity'),
     )
