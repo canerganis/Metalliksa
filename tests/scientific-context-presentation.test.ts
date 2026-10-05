@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import type { ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
+import { useMaterialSpecimenStore, type ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
 import { buildScientificContext } from '../src/utils/scientificContext';
 
 test('Elastic Constants context describes form inputs independently of the shared specimen', () => {
-  const specimen = {
+  const defaultSpecimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
+  const specimen: ActiveSpecimenState = {
+    ...defaultSpecimen,
     name: 'Shared IN718 fixture', composition: { Ni: 52, Cr: 19 }, density_gcm3: 8.2,
     freezingRange_C: 80,
-    lpbf: { laserPower_W: 280, scanSpeed_mms: 940, hatch_um: 100, layer_um: 40 },
-  } as ActiveSpecimenState;
-  const otherSpecimen = {
+    lpbf: { ...defaultSpecimen.lpbf, laserPower_W: 280, scanSpeed_mms: 940, hatch_um: 100, layer_um: 40 },
+  };
+  const otherSpecimen: ActiveSpecimenState = {
     ...specimen, name: 'Different aluminium fixture', composition: { Al: 100 }, density_gcm3: 2.7,
     lpbf: { ...specimen.lpbf, laserPower_W: 500, scanSpeed_mms: 1600 },
-  } as ActiveSpecimenState;
+  };
   const context = buildScientificContext('materials-project', specimen);
   assert.deepEqual(context, buildScientificContext('materials-project', otherSpecimen));
   assert.equal(context.title, 'Elastic Constants input context');
