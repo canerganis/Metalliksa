@@ -383,7 +383,8 @@ def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
     if rc:
         lim.append(f"Rosenthal conduction statistics rest on {rc['n']} of {rc['n'] + rc['nExcluded']} conduction rows: "
                    "they are selected by the kernel's own output (only rows where Rosenthal resolves an extent "
-                   "larger than the beam are 'computed'), so they describe the rows it can resolve, not the regime.")
+                   "without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor "
+                   "are 'computed'), so they describe the rows it can resolve, not the regime.")
     et = summary["eagar-tsai"].get("keyhole", {}).get("depth")
     gk = summary["goldak"].get("keyhole", {}).get("depth")
     if et and gk:
@@ -661,14 +662,19 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
     L += ["## Absorptivity sensitivity (SENSITIVITY, not a calibration)", "", sens["label"], "",
           f"Conduction rows: {sens['rows']}.", "",
           "| kernel | " + " | ".join(f"a={v:.2f} W MAPE %" for v in sens["values"]) + " | "
+          + " | ".join(f"a={v:.2f} D MAPE %" for v in sens["values"]) + " | "
           + " | ".join(f"a={v:.2f} n" for v in sens["values"]) + " |",
-          "|---|" + "---|" * (2 * len(sens["values"]))]
+          "|---|" + "---|" * (3 * len(sens["values"]))]
     for k in KERNELS:
         w = sens[k]["width_mape_pct_by_value"]
+        d = sens[k]["depth_mape_pct_by_value"]
         n = sens[k]["n_included_by_value"]
         L.append(f"| {k} | " + " | ".join(_fmt(w[f'{v:.2f}']) for v in sens["values"]) + " | "
+                 + " | ".join(_fmt(d[f'{v:.2f}']) for v in sens["values"]) + " | "
                  + " | ".join(str(n[f'{v:.2f}']) for v in sens["values"]) + " |")
-    L.append("")
+    L += ["", "Included row counts vary with assumed absorptivity: each column uses only rows where the "
+          "kernel resolves an extent. These are different evaluation subsets; lower width error can accompany "
+          "higher depth error. Sensitivity, not calibration.", ""]
     ref = doc.get("referenceTransient")
     if ref:
         c = ref["counts"]

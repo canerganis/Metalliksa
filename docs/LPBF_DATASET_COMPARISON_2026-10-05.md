@@ -4,7 +4,7 @@
 
 Schema `lpbf-dataset-comparison-1`; implementation fingerprint `11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359`; quick mode: False. Honesty: comparison, not validation; screening kernels; estimated material laws; absorptivity assumed (not measured); published single-track measurements, no replicate or uncertainty model; a failing comparison is reported, not fitted away. `experimentalValidation` = false.
 
-Slim view record `LPBF_DATASET_COMPARISON_2026-10-05.view.json` (this record minus `breakdowns` and `referenceTransient.rows`; sha256 of its LF bytes `914e79fefd117f05da9b60f0df9f2e443403ed219d048d0d4629fb39802a9153`).
+Slim view record `LPBF_DATASET_COMPARISON_2026-10-05.view.json` (this record minus `breakdowns` and `referenceTransient.rows`; sha256 of its LF bytes `1fac207aa192fad2d966cc51bfc22d84d2099753f144b927b96fd6ed3c0435ad`).
 
 ## Datasets
 
@@ -54,7 +54,7 @@ flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the 
 ## Limits
 
 - Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 757, eagar-tsai 757 of 757, goldak 743 of 757. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.
-- Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent larger than the beam are 'computed'), so they describe the rows it can resolve, not the regime.
+- Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor are 'computed'), so they describe the rows it can resolve, not the regime.
 - Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias +0.4 %, MAPE 24.7 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.
 - The measurements carry no uncertainty model (neither dataset provides per-row measurement uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.
 - Replicate rows are not independent: the Hofmann table has 677 rows but only 623 distinct parameter sets; the bootstrap intervals resample whole parameter sets (clusters), the point statistics weight every row.
@@ -301,11 +301,13 @@ SENSITIVITY, not a calibrated value: conduction-regime rows (regime assigned at 
 
 Conduction rows: 141.
 
-| kernel | a=0.30 W MAPE % | a=0.40 W MAPE % | a=0.50 W MAPE % | a=0.60 W MAPE % | a=0.30 n | a=0.40 n | a=0.50 n | a=0.60 n |
-|---|---|---|---|---|---|---|---|---|
-| rosenthal | 49.9 | 37.2 | 22.0 | 12.8 | 15 | 26 | 37 | 48 |
-| eagar-tsai | 23.1 | 15.6 | 11.5 | 9.9 | 140 | 141 | 141 | 141 |
-| goldak | 41.2 | 31.4 | 23.6 | 17.4 | 103 | 126 | 136 | 139 |
+| kernel | a=0.30 W MAPE % | a=0.40 W MAPE % | a=0.50 W MAPE % | a=0.60 W MAPE % | a=0.30 D MAPE % | a=0.40 D MAPE % | a=0.50 D MAPE % | a=0.60 D MAPE % | a=0.30 n | a=0.40 n | a=0.50 n | a=0.60 n |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rosenthal | 49.9 | 37.2 | 22.0 | 12.8 | 34.6 | 30.0 | 45.9 | 90.0 | 15 | 26 | 37 | 48 |
+| eagar-tsai | 23.1 | 15.6 | 11.5 | 9.9 | 30.5 | 28.7 | 39.5 | 56.2 | 140 | 141 | 141 | 141 |
+| goldak | 41.2 | 31.4 | 23.6 | 17.4 | 29.7 | 42.0 | 60.3 | 76.6 | 103 | 126 | 136 | 139 |
+
+Included row counts vary with assumed absorptivity: each column uses only rows where the kernel resolves an extent. These are different evaluation subsets; lower width error can accompany higher depth error. Sensitivity, not calibration.
 
 ## Reference transient (bare plate, low power)
 

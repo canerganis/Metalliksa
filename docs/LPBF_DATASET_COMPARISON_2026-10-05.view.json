@@ -165,7 +165,7 @@
  ],
  "limits": [
   "Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 757, eagar-tsai 757 of 757, goldak 743 of 757. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.",
-  "Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent larger than the beam are 'computed'), so they describe the rows it can resolve, not the regime.",
+  "Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor are 'computed'), so they describe the rows it can resolve, not the regime.",
   "Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias +0.4 %, MAPE 24.7 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.",
   "The measurements carry no uncertainty model (neither dataset provides per-row measurement uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.",
   "Replicate rows are not independent: the Hofmann table has 677 rows but only 623 distinct parameter sets; the bootstrap intervals resample whole parameter sets (clusters), the point statistics weight every row.",
