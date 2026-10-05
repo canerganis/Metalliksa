@@ -20,13 +20,27 @@ Source sets (one primary set per element, each with its own H2O value):
      gibbsite from Robie, Hemingway & Fisher, USGS Bull. 1452 (1978) (J/mol); H2O is the SUPCRT92
      value used with those aqueous species (-56687 cal/mol). Consistency is checked through the
      reaction constants (gibbsite solubility, Al(OH)4- formation), not assumed.
+     For Cr it supplies only the withheld SSWS97 (Shock, Sassani, Willis & Sverjensky 1997) candidate.
+  X  log K at infinite dilution, 298 K, from the COST NECTAR WG1 tables of critical compilations
+     (cost-nectar.eu/docs/wg1_pt/{CrIII,CrVI,Mo,TiIV}.pdf): Brown & Ekberg 2016 (Cr(III), Ti(IV)
+     hydrolysis), Ball & Nordstrom 1998 (Cr), Crea et al. 2017 (Mo(VI) protonation). Rows derived
+     from an NBS species with such a constant carry source X.
+  P  PHREEQC llnl.dat (LLNL thermo.com.V8.R6, USGS distribution): log K of the Cr and Ti phases and
+     species (withheld candidates only; O2 in its reactions is O2(aq), OBIGT 3954 cal, and its water is
+     the SUPCRT92 -56687 cal).
+  C  E0 from the Wikipedia "Standard electrode potential (data page)" (CC BY-SA; CRC / Bratsch 1989 /
+     Bard-Parsons-Jordan lineage): withheld candidates only.
+  J  NIST-JANAF Thermochemical Tables (janaf.nist.gov, Chase 1998): verification, and the withheld TiO
+     candidate.
 Verification levels (reached by this module, not by the table author):
   V1  equals an open table value within 0.5 kJ/mol (OpenStax Chemistry 2e App. G, CC BY 4.0;
       CHNOSZ OBIGT; SKI 95:73 Table 3).
   V2  reproduces a published E0 within 10 mV, or an independently published open equilibrium
       quantity (reaction free energy) within 2.5 kJ/mol.
-  V3  not confirmed: the row is NOT used; its element or row is withheld (see
-      WITHHELD_SPECIES / UNAVAILABLE_ELEMENTS).
+  V3  not confirmed, or contradicted by another reputable compilation: the row is NOT used; its
+      element or row is withheld (see WITHHELD_SPECIES / UNAVAILABLE_ELEMENTS). For Cr, Mo and Ti the
+      withheld rows are grouped into CANDIDATE_SETS: the solver reports, as dataValidity regions, where
+      any candidate set would change the stable species (the map is not valid there).
 
 CLI (from python/):
   python pourbaix_species_25c.py --emit    write src/generated/pourbaixSpecies25C.json (LF)
@@ -40,7 +54,7 @@ from pathlib import Path
 
 import physical_constants
 
-SCHEMA = "pourbaix-species-25c-v1"
+SCHEMA = "pourbaix-species-25c-v2"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 GENERATED_JSON = REPO_ROOT / "src" / "generated" / "pourbaixSpecies25C.json"
 
@@ -56,6 +70,11 @@ LN10 = math.log(10.0)
 # activities are refused instead of mapped without these species.
 ACTIVITY_LOG10_RANGE = (-6.0, 0.0)
 ACTIVITY_LOG10_DEFAULT = -6.0
+# Narrower ranges where an excluded polynuclear species would otherwise take a domain even under the
+# per-species activity convention: Cr2O7 2- from 10^-1.55 (NBS) / 10^-1.75 (Ball & Nordstrom 1998 constant on the NBS
+# CrO4 2- / HCrO4- pair),
+# the heptamolybdates from 10^-3.53 (Crea et al. 2017 constants). Requests outside are refused.
+ACTIVITY_LOG10_RANGE_BY_ELEMENT = {"Cr": (-6.0, -2.0), "Mo": (-6.0, -4.0)}
 BOX = {"pH_min": -2.0, "pH_max": 16.0, "E_min_V_SHE": -3.0, "E_max_V_SHE": 2.5}
 
 WATER_DFG_NBS_KJ_MOL = -237.129  # also fixes the O2/H2O water line (1.2288 V)
@@ -65,7 +84,7 @@ CATEGORY_BY_ROLE = {
     "metal": "Immunity",
     "cation": "Corrosion (acid)",
     "anion_low": "Corrosion (alkaline)",
-    "oxide": "Passivation (thermodynamic, film-forming)",
+    "oxide": "Passivation (thermodynamic)",
     "anion_high": "Transpassive",
 }
 
@@ -96,6 +115,95 @@ _NI_NIO2 = _NI2P + 2.0 * _NI_H2O + 2.0 * physical_constants.FARADAY.value * 1.59
 
 # Al set O: SUPCRT92 water used with the Tagirov & Schott 2001 aqueous species.
 _AL_H2O = _obigt_cal(-56687.0)
+
+# ---- Cr, Mo, Ti (NBS set N, H2O -237.129; values read from the NIST-hosted scan of Wagman et al. 1982,
+# Tables 51 (Cr, p. 2-197), 52 (Mo, p. 2-201) and 57 (Ti, p. 2-209)) ---------------------------------
+_F_KJ = physical_constants.FARADAY.value / 1000.0           # kJ/(mol V)
+_K_LOG = LN10 * physical_constants.GAS_CONSTANT_R.value * TEMPERATURE_K / 1000.0  # kJ/mol per log10 unit
+_W = WATER_DFG_NBS_KJ_MOL
+
+_CR2O3 = -1058.1          # Cr2O3(cr), NBS
+_CRO4 = -727.75           # CrO4 2-(ao), NBS
+_HCRO4 = -764.7           # HCrO4-(ao), NBS
+_CR2O7 = -1301.1          # Cr2O7 2-(ao), NBS (polynuclear: withheld)
+_MOO2 = -533.01           # MoO2(cr), NBS
+_MOO3 = -667.97           # MoO3(cr), NBS
+_MOO4 = -836.3            # MoO4 2-(ao), NBS
+_RUTILE = -889.5          # TiO2 rutile (cr3), NBS
+_ANATASE = -884.5         # TiO2 anatase (cr), NBS
+_TI2O3 = -1434.2          # Ti2O3(cr), NBS
+_TI3O5 = -2317.4          # Ti3O5(cr), NBS
+_TIO_NBS = -495.0         # TiO alpha (cr), NBS
+_TIH2 = -80.3             # TiH2(cr), NBS
+
+# Mo(VI) protonation, Crea et al. 2017 (NECTAR Mo table, I = 0): MoO4 2- + H+ = HMoO4- 4.47 +/- 0.02,
+# MoO4 2- + 2H+ = H2MoO4 8.12 +/- 0.03.
+_HMOO4 = _MOO4 - _K_LOG * 4.47
+_H2MOO4 = _MOO4 - _K_LOG * 8.12
+
+
+def _from_e0_metal(n, e0):
+    """dfG of M^n+ from E0(M^n+/M) = e0 V."""
+    return n * _F_KJ * e0
+
+
+def _hydrolysis(parent_dfg, n_water, log_k):
+    """dfG of M(OH)_n (charge from the parent) from parent + n H2O = product + n H+, log K."""
+    return parent_dfg + n_water * _W - _K_LOG * log_k
+
+
+# Cr(III) and Cr(II) candidate sets (withheld: the four compilations put Cr3+ between -214.2 and -195.1 kJ/mol).
+# C: Wikipedia data page E0 Cr3+/Cr -0.74 V, Cr2+/Cr -0.9 V (their difference implies Cr3+/Cr2+ -0.42 V, the
+#    listed -0.407 V is 13 mV away: rounding of the printed values).
+_CR3_C = _from_e0_metal(3, -0.74)
+_CR2_C = _from_e0_metal(2, -0.9)
+# O: OBIGT SSWS97 Cr+3 -49300 cal, Cr+2 -39400 cal.
+_CR3_O = _obigt_cal(-49300.0)
+_CR2_O = _obigt_cal(-39400.0)
+# P: llnl.dat  Cr + 3H+ + 0.75 O2(aq) = Cr3+ + 1.5 H2O        log K 98.6784
+#              5H+ + CrO4 2- = Cr3+ + 2.5 H2O + 0.75 O2(aq)    log K 8.3842
+#              4H+ + CrO4 2- = Cr2+ + 2 H2O + O2(aq)          log K -21.6373
+_LLNL_H2O = _obigt_cal(-56687.0)
+_LLNL_O2AQ = _obigt_cal(3954.0)
+_CR3_P = -_K_LOG * 98.6784 + 0.75 * _LLNL_O2AQ - 1.5 * _LLNL_H2O
+_CRO4_P = _CR3_P + 2.5 * _LLNL_H2O + 0.75 * _LLNL_O2AQ + _K_LOG * 8.3842
+_CR2_P = _K_LOG * 21.6373 - 2.0 * _LLNL_H2O - _LLNL_O2AQ + _CRO4_P
+# X: Ball & Nordstrom 1998 Cr2O3(s) + 6H+ = 2Cr3+ + 3H2O log K 8.52 (NECTAR CrIII table), on the NBS Cr2O3;
+#    Cr2+ from it with E0(Cr3+/Cr2+) = -0.407 V (Wikipedia data page).
+_CR3_X = (-_K_LOG * 8.52 - 3.0 * _W + _CR2O3) / 2.0
+_CR2_X = _CR3_X + _F_KJ * 0.407
+# Cr(III) hydrolysis, Brown & Ekberg 2016 (NECTAR CrIII table, shaded 'best' values): Cr3+ + nH2O = ...
+_CR_HYDROLYSIS = (("CrOH2+", "CrOH²⁺", 1, 1, 2, 1, -3.60), ("Cr(OH)2+", "Cr(OH)₂⁺", 2, 2, 1, 2, -9.65),
+                  ("Cr(OH)3(aq)", "Cr(OH)₃(aq)", 3, 3, 0, 3, -16.25), ("Cr(OH)4-", "Cr(OH)₄⁻", 4, 4, -1, 4, -27.56))
+# H2CrO4: Ball & Nordstrom 1998 CrO4 2- + 2H+ = H2CrO4 log K 6.31 (NECTAR CrVI table), on the NBS CrO4 2-.
+_H2CRO4_X = _CRO4 - _K_LOG * 6.31
+
+# Ti candidates. C: Wikipedia data page E0 Ti2+/Ti -1.63, Ti3+/Ti -1.37, TiO2+/Ti -0.93 (TiO2+ + 2H+ + 4e-),
+# TiO2+/Ti3+ +0.19, TiO/Ti -1.31 V (TiO + 2H+ + 2e-).
+_TI2_C = _from_e0_metal(2, -1.63)
+_TI3_C = _from_e0_metal(3, -1.37)
+_TIO2P_C = _W + 4.0 * _F_KJ * (-0.93)          # -596.05: from TiO2+/Ti
+_TIO2P_C2 = _TI3_C + _W + _F_KJ * 0.19          # -615.35: from TiO2+/Ti3+ with Ti3+/Ti (same table)
+_TIO_C = _W + 2.0 * _F_KJ * (-1.31)
+# J: NIST-JANAF TiO alpha (O-018) dfG(298.15 K) -513.278 kJ/mol.
+_TIO_J = -513.278
+# X: Brown & Ekberg 2016 (NECTAR TiIV table) on NBS rutile (the table writes TiO2(s); rutile is assumed):
+#    TiO2 + 4H+ = Ti4+ + 2H2O -3.56; TiO2 + H+ = TiOOH+ -6.06; TiO2 + H2O = TiO(OH)2 -9.02;
+#    TiO(OH)2 + H2O = TiO(OH)3- + H+ -11.9.
+_TI4_X = _RUTILE - 2.0 * _W - _K_LOG * (-3.56)
+_TIOOH_X = _RUTILE - _K_LOG * (-6.06)
+# Titanyl (fix round 2, review pbxt-sol SF-1): TiO2 + H+ = TiOOH+ (-6.06) minus TiO2+ + H2O = TiOOH+ + H+ (-2.48)
+# gives TiO2 + 2H+ = TiO2+ + H2O, log K -3.58 (same Brown & Ekberg 2016 table).
+_TIO2P_X = _RUTILE - _W - _K_LOG * (-6.06 - (-2.48))
+_TIOOH2_X = _RUTILE + _W - _K_LOG * (-9.02)
+_TIOOH3_X = _TIOOH2_X + _W - _K_LOG * (-11.9)
+# P: llnl.dat rutile + 2 H2O = Ti(OH)4(aq) log K -9.6452, on NBS rutile.
+_TIOH4_P = _RUTILE + 2.0 * _W - _K_LOG * (-9.6452)
+# Mo(III): Wikipedia data page E0(H2MoO4 + 6H+ + 3e- = Mo3+ + 4H2O) = +0.43 V on the table's H2MoO4.
+_MO3_C = _H2MOO4 - 4.0 * _W - 3.0 * _F_KJ * 0.43
+# Heptamolybdates (Crea et al. 2017, NECTAR Mo table): 7 MoO4 2- + p H+ = species + 4 H2O, log K.
+_MO7 = (("Mo7O24^6-", "Mo₇O₂₄⁶⁻", 0, -6, 51.93), ("HMo7O24^5-", "HMo₇O₂₄⁵⁻", 1, -5, 58.90),
+        ("H2Mo7O24^4-", "H₂Mo₇O₂₄⁴⁻", 2, -4, 64.63), ("H3Mo7O24^3-", "H₃Mo₇O₂₄³⁻", 3, -3, 68.68))
 
 # (id, formula, x, o, h, z, phase, dfG_kJ_mol, role, source, level, evidence)
 # phase: "s" solid (activity 1), "aq" dissolved (activity = 10**ionActivity_log10).
@@ -201,6 +309,52 @@ _ROWS = {
          "phreeqc.dat -22.7 (0.85 kJ/mol). E0(Al(OH)4-/Al, alkaline) -2.338 V vs -2.33 V "
          "(Wikipedia data page, 'H2AlO3-' notation, CRC): 8 mV"),
     ),
+    "Cr": (
+        ("Cr", "Cr", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
+        ("Cr2O3", "Cr₂O₃", 2, 3, 0, 0, "s", _CR2O3, "oxide", "N", "V2",
+         "NBS (Wagman 1982, Table 51) -1058.1 kJ/mol; LLNL thermo.com.V8.R6 eskolaite (llnl.dat log K -9.1306 "
+         "with its CrO4 2-) -1058.10. NIST-JANAF (Chase 1998, Cr-014) -1053.07 and Ziemniak et al. (KAPL "
+         "LM-06K145, 2007) -1049.96 are 5.0 and 8.1 kJ/mol less negative: E0(Cr2O3/Cr) -0.5989 V (NBS) vs "
+         "-0.5902 V (JANAF), 8.7 mV; -0.5848 V (KAPL), 14 mV"),
+        ("HCrO4-", "HCrO₄⁻", 1, 4, 1, -1, "aq", _HCRO4, "anion_high", "N", "V1",
+         "NBS -764.7 kJ/mol; LLNL thermo.com.V8.R6 -764.83 (0.13 kJ/mol). CrO4 2- + H+ = HCrO4-: table log K "
+         "6.473 vs Ball & Nordstrom 1998 6.55 +/- 0.04 and Baes & Mesmer 1976 6.51 (COST NECTAR CrVI table)"),
+        ("CrO4^2-", "CrO₄²⁻", 1, 4, 0, -2, "aq", _CRO4, "anion_high", "N", "V1",
+         "NBS -727.75 kJ/mol; LLNL thermo.com.V8.R6 (llnl.dat, Cr3+ and CrO4 2- through Cr(s)) -727.76 "
+         "(0.01 kJ/mol); OBIGT SSWS97 -174800 cal = -731.36 (3.6 kJ/mol)"),
+    ),
+    "Mo": (
+        ("Mo", "Mo", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
+        ("MoO2", "MoO₂", 1, 2, 0, 0, "s", _MOO2, "oxide", "N", "V2",
+         "NBS (Wagman 1982, Table 52) -533.01 kJ/mol; NIST-JANAF (Mo-009) -532.01 (1.0 kJ/mol). "
+         "E0(MoO2/Mo) -0.1522 V vs -0.15 V (Wikipedia data page)"),
+        ("MoO3", "MoO₃", 1, 3, 0, 0, "s", _MOO3, "oxide", "N", "V1",
+         "NBS -667.97 kJ/mol; NIST-JANAF (Mo-014) -668.08 (0.11 kJ/mol). MoO3 + H2O = MoO4 2- + 2H+: table "
+         "log K -12.05 vs Baes & Mesmer -12.06 (3 M NaClO4, NECTAR Mo table); MoO3 + H2O = H2MoO4(aq) -3.93, so "
+         "MoO3 has a domain only above 10^-3.93 M (outside the Mo activity range)"),
+        ("H2MoO4", "H₂MoO₄(aq)", 1, 4, 2, 0, "aq", _H2MOO4, "anion_high", "X", "V2",
+         "NBS MoO4 2- with MoO4 2- + 2H+ = H2MoO4 log K 8.12 +/- 0.03 (Crea et al. 2017, NECTAR Mo table); "
+         "NIST46 4.24 + 4.0 = 8.24 (0.7 kJ/mol). E0(H2MoO4/MoO2) 0.6458 V vs 0.65 V and E0(H2MoO4/Mo) "
+         "0.1138 V vs 0.11 V (Wikipedia data page). Neutral Mo(VI) oxo species: category of the high-valence "
+         "dissolved species (transpassive)"),
+        ("HMoO4-", "HMoO₄⁻", 1, 4, 1, -1, "aq", _HMOO4, "anion_high", "X", "V2",
+         "NBS MoO4 2- with MoO4 2- + H+ = HMoO4- log K 4.47 +/- 0.02 (Crea et al. 2017, NECTAR Mo table); "
+         "NIST46 4.24 (1.3 kJ/mol), OBIGT SSWS97 4.40 (0.4 kJ/mol)"),
+        ("MoO4^2-", "MoO₄²⁻", 1, 4, 0, -2, "aq", _MOO4, "anion_high", "N", "V2",
+         "NBS -836.3 kJ/mol; OBIGT SSWS97 -200400 cal = -838.47 (2.2 kJ/mol). High-valence Mo(VI) oxyanion: "
+         "transpassive category (at neutral and alkaline pH its domain begins directly above MoO2)"),
+    ),
+    "Ti": (
+        ("Ti", "Ti", 1, 0, 0, 0, "s", 0.0, "metal", "ref", "V1", "reference state"),
+        ("Ti2O3", "Ti₂O₃", 2, 3, 0, 0, "s", _TI2O3, "oxide", "N", "V1",
+         "NBS (Wagman 1982, Table 57) -1434.2 kJ/mol; NIST-JANAF (O-059) -1433.83 (0.37 kJ/mol). "
+         "E0(2TiO2/Ti2O3) -0.5580 V vs -0.56 V (Wikipedia data page)"),
+        ("Ti3O5", "Ti₃O₅", 3, 5, 0, 0, "s", _TI3O5, "oxide", "N", "V1",
+         "NBS -2317.4 kJ/mol; NIST-JANAF (O-080) -2317.29 (0.11 kJ/mol). It has no domain with these values "
+         "(Ti2O3 + TiO2 is lower)"),
+        ("TiO2", "TiO₂ (rutile)", 1, 2, 0, 0, "s", _RUTILE, "oxide", "N", "V1",
+         "NBS rutile -889.5 kJ/mol; NIST-JANAF (O-043) -889.41 (0.09 kJ/mol). E0(TiO2/Ti) -1.0759 V"),
+    ),
 }
 
 ELEMENT_SET = {
@@ -216,16 +370,31 @@ ELEMENT_SET = {
                          "The mononuclear hydrolysis species AlOH2+, Al(OH)2+ and Al(OH)3(aq) (TS01) are "
                          "omitted as for the other elements: they have no domain for log a >= -7.16; at "
                          "log a = -8 AlOH2+ would take pH 4.96-5.38 from Al3+ and gibbsite"),
+    "Cr": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982): Cr, Cr2O3, HCrO4-, CrO4 2-. The Cr(III)/Cr(II) aqueous "
+                                      "species are WITHHELD: four reputable compilations put Cr3+ between -214.2 and "
+                                      "-195.1 kJ/mol (66 mV in E0(Cr3+/Cr)); they are carried as candidate sets and "
+                                      "the map is not valid where any of them would be stable (dataValidity)"),
+    "Mo": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982) for Mo, MoO2, MoO3 and MoO4 2-; HMoO4- and H2MoO4(aq) from "
+                                      "the NBS MoO4 2- with the Crea et al. 2017 constants (NECTAR). Mo(III) is a "
+                                      "withheld candidate; Mo(VI) cations and the polymolybdates are not represented "
+                                      "(dissolved activity limited to 10^-6..10^-4)"),
+    "Ti": ("N", WATER_DFG_NBS_KJ_MOL, "NBS set (Wagman 1982): Ti, Ti2O3, Ti3O5, TiO2 (rutile), each within 0.4 kJ/mol "
+                                      "of NIST-JANAF. TiO (NBS and JANAF 18 kJ/mol apart), the Ti(II)/Ti(III)/Ti(IV) "
+                                      "aqueous species (mutually inconsistent) and the hydride TiH2 are WITHHELD "
+                                      "candidates; the map is not valid where any of them would be stable "
+                                      "(dataValidity)"),
 }
 
-# Couple used for the informational standardE0_V (unit activity, pH independent).
-REFERENCE_CATION = {"Fe": "Fe2+", "Ni": "Ni2+", "Cu": "Cu2+", "Zn": "Zn2+", "Mg": "Mg2+", "Al": "Al3+"}
+# Couple used for the informational standardE0_V (unit activity, pH independent); None when the element
+# has no verified cation in the table (its standardE0_V is then null).
+REFERENCE_CATION = {"Fe": "Fe2+", "Ni": "Ni2+", "Cu": "Cu2+", "Zn": "Zn2+", "Mg": "Mg2+", "Al": "Al3+",
+                    "Cr": None, "Mo": None, "Ti": None}
 
 NAMES = {
     "Fe": "Iron (Fe-H₂O System)", "Cr": "Chromium (Cr-H₂O System)", "Ni": "Nickel (Ni-H₂O System)",
     "Ti": "Titanium (Ti-H₂O System)", "Al": "Aluminum (Al-H₂O Amphoteric System)",
     "Cu": "Copper (Cu-H₂O System)", "Zn": "Zinc (Zn-H₂O System Amphoteric)",
-    "Mg": "Magnesium (Mg-H₂O System)",
+    "Mg": "Magnesium (Mg-H₂O System)", "Mo": "Molybdenum (Mo-H₂O System)",
 }
 
 # Rows NOT used by the engine: kept with their values so a reviewer can see what was withheld.
@@ -273,15 +442,143 @@ WITHHELD_SPECIES = {
     ),
 }
 
-UNAVAILABLE_ELEMENTS = {
-    "Cr": ("No verified Cr-H2O data in this tool: the alkaline Cr(III) species (CrO2-/Cr(OH)4-) have no value "
-           "that this project has verified yet (candidate source: Ball & Nordstrom, J. Chem. Eng. Data 43 "
-           "(1998) 895)."),
-    "Ti": ("Published aqueous Ti data are mutually inconsistent (TiO2+ -596 or -615 kJ/mol from the "
-           "same E0 table; Ti/TiO2 -1.076 V with rutile vs -0.86 V with the atlas oxide). No verified "
-           "Ti-H2O data."),
-    "Mo": "No sourced Mo-H2O data.",
+_CR_SETS = (
+    # (tag, Cr3+ dfG, Cr2+ dfG, source, provenance of the two cations)
+    ("CRC", _CR3_C, _CR2_C, "C", "Wikipedia data page E0 Cr3+/Cr -0.74 V and Cr2+/Cr -0.9 V (CRC / Bratsch lineage)"),
+    ("SSWS97", _CR3_O, _CR2_O, "O", "CHNOSZ OBIGT SSWS97 Cr+3 -49300 cal and Cr+2 -39400 cal"),
+    ("LLNL", _CR3_P, _CR2_P, "P", "PHREEQC llnl.dat (LLNL thermo.com.V8.R6) log K 98.6784 (Cr(s) -> Cr3+), 8.3842 "
+                                  "and -21.6373 (CrO4 2- -> Cr3+, Cr2+), SUPCRT92 water and OBIGT O2(aq); its "
+                                  "E0(Cr3+/Cr2+) is -0.504 V against the measured -0.407 V"),
+    ("BN98", _CR3_X, _CR2_X, "X", "Ball & Nordstrom 1998 Cr2O3 + 6H+ = 2Cr3+ + 3H2O log K 8.52 (NECTAR CrIII "
+                                  "table) on the NBS Cr2O3, Cr2+ by E0(Cr3+/Cr2+) = -0.407 V"),
+)
+
+
+def _cr_candidate_rows():
+    rows = []
+    for tag, cr3, cr2, src, prov in _CR_SETS:
+        why = (f"WITHHELD candidate ({prov}): Cr3+ from -214.2 to -195.1 kJ/mol across the four compilations "
+               "consulted (CRC, SSWS97, LLNL, Ball & Nordstrom 1998), contradictory by 66 mV in E0(Cr3+/Cr)")
+        rows.append((f"Cr2+[{tag}]", f"Cr²⁺ ({tag})", 1, 0, 0, 2, "aq", cr2, "cation", src, "V3", why))
+        rows.append((f"Cr3+[{tag}]", f"Cr³⁺ ({tag})", 1, 0, 0, 3, "aq", cr3, "cation", src, "V3", why))
+        rows.append((f"CrOH+[{tag}]", f"CrOH⁺ ({tag})", 1, 1, 1, 1, "aq", _hydrolysis(cr2, 1, -5.5), "cation", "X", "V3",
+                     f"WITHHELD candidate: Cr2+ + H2O = CrOH+ + H+ log K -5.5 (NIST46, NECTAR CrII table, which says "
+                     f"the reliability of the Cr(II) data is in doubt) on the {tag} Cr2+, which is itself withheld"))
+        for sid, formula, o, h, z, n_w, log_k in _CR_HYDROLYSIS:
+            rows.append((f"{sid}[{tag}]", f"{formula} ({tag})", 1, o, h, z, "aq", _hydrolysis(cr3, n_w, log_k),
+                         "anion_low" if z < 0 else "cation", "X", "V3",
+                         f"WITHHELD candidate: Cr3+ + {n_w} H2O hydrolysis log K {log_k} (Brown & Ekberg 2016, NECTAR "
+                         f"CrIII table) on the {tag} Cr3+, which is itself withheld"
+                         + ("; neutral species, role 'cation' is bookkeeping only" if z == 0 else "")))
+    return tuple(rows)
+
+
+WITHHELD_SPECIES.update({
+    "Cr": _cr_candidate_rows() + (
+        ("H2CrO4[BN98]", "H₂CrO₄(aq) (BN98)", 1, 4, 2, 0, "aq", _H2CRO4_X, "anion_high", "X", "V3",
+         "WITHHELD candidate: CrO4 2- + 2H+ = H2CrO4 log K 6.31 (Ball & Nordstrom 1998, NECTAR CrVI table) on the NBS "
+         "CrO4 2-; HCrO4- + H+ = H2CrO4 -0.16 here, -0.20 Baes & Mesmer, but llnl.dat -1.32 and minteq.v4.dat -0.09. "
+         "Its region (pH below about -0.2, above 1.2 V) has the same category as HCrO4- (transpassive)"),
+        ("Cr2O7^2-", "Cr₂O₇²⁻", 2, 7, 0, -2, "aq", _CR2O7, "anion_high", "N", "V2",
+         "EXCLUDED (polynuclear): NBS -1301.1 kJ/mol; 2HCrO4- = Cr2O7 2- + H2O log K 1.55 (NBS), 1.6 (Ball & "
+         "Nordstrom 1998), 1.523 (Baes & Mesmer). Under the per-species activity convention it would take a domain "
+         "from 10^-1.55 M (10^-1.75 M with the Ball & Nordstrom 2CrO4 2- + 2H+ constant 14.7 on the NBS CrO4 2- and "
+         "HCrO4-), so the Cr activity is limited to 10^-6..10^-2 M"),
+    ),
+    "Mo": (
+        ("Mo3+[CRC]", "Mo³⁺ (CRC)", 1, 0, 0, 3, "aq", _MO3_C, "cation", "C", "V3",
+         "WITHHELD candidate: E0(H2MoO4 + 6H+ + 3e- = Mo3+ + 4H2O) = 0.43 V (Wikipedia data page, single "
+         "atlas / Latimer lineage, no second compilation found) on the table's H2MoO4; E0(Mo3+/Mo) -0.200 V"),
+    ) + tuple(
+        (sid, formula, 7, 24, h, z, "aq", 7.0 * _MOO4 - 4.0 * _W - _K_LOG * log_k, "anion_high", "X", "V2",
+         f"EXCLUDED (polynuclear): 7 MoO4 2- + {8 + h} H+ = {sid} + 4H2O log K {log_k} (Crea et al. 2017, NECTAR Mo "
+         "table). Under the per-species activity convention the heptamolybdates take a domain from 10^-3.53 M, "
+         "so the Mo activity is limited to 10^-6..10^-4 M")
+        for sid, formula, h, z, log_k in _MO7),
+    "Ti": (
+        ("Ti2+[CRC]", "Ti²⁺ (CRC)", 1, 0, 0, 2, "aq", _TI2_C, "cation", "C", "V3",
+         "WITHHELD candidate: E0(Ti2+/Ti) -1.63 V (Wikipedia data page); the same table's Ti(II)/Ti(III)/Ti(IV) "
+         "couples are mutually inconsistent (TiO2+ -596.05 from TiO2+/Ti, -615.35 from TiO2+/Ti3+)"),
+        ("Ti3+[CRC]", "Ti³⁺ (CRC)", 1, 0, 0, 3, "aq", _TI3_C, "cation", "C", "V3",
+         "WITHHELD candidate: E0(Ti3+/Ti) -1.37 V (Wikipedia data page); no second compilation consulted gives a "
+         "Ti3+ value"),
+        ("TiOH2+[CRC]", "TiOH²⁺ (CRC)", 1, 1, 1, 2, "aq", _hydrolysis(_TI3_C, 1, -1.65), "cation", "X", "V3",
+         "WITHHELD candidate: Ti3+ + H2O = TiOH2+ + H+ log K -1.65 +/- 0.11 (Brown & Ekberg 2016, NECTAR TiIII "
+         "table; Perrin 1969 -1.29, Baes & Mesmer -2.2) on the CRC Ti3+, which is itself withheld"),
+        ("TiO2+[CRC]", "TiO²⁺ (CRC, TiO²⁺/Ti)", 1, 1, 0, 2, "aq", _TIO2P_C, "cation", "C", "V3",
+         "WITHHELD candidate: E0(TiO2+ + 2H+ + 4e- = Ti + H2O) -0.93 V (Wikipedia data page) gives -596.05 kJ/mol"),
+        ("TiO[CRC]", "TiO (CRC)", 1, 1, 0, 0, "s", _TIO_C, "oxide", "C", "V3",
+         "WITHHELD candidate: E0(TiO + 2H+ + 2e- = Ti + H2O) -1.31 V (Wikipedia data page) gives -489.92 kJ/mol"),
+        ("TiO2+[CRC-b]", "TiO²⁺ (CRC, TiO²⁺/Ti³⁺)", 1, 1, 0, 2, "aq", _TIO2P_C2, "cation", "C", "V3",
+         "WITHHELD candidate: E0(TiO2+/Ti3+) +0.19 V with E0(Ti3+/Ti) -1.37 V (same table) gives -615.35 kJ/mol, "
+         "19 kJ/mol below the TiO2+/Ti route"),
+        ("TiO[NBS]", "TiO (NBS)", 1, 1, 0, 0, "s", _TIO_NBS, "oxide", "N", "V3",
+         "WITHHELD candidate: NBS TiO alpha -495.0 kJ/mol; NIST-JANAF (O-018) -513.28: 18.3 kJ/mol apart "
+         "(95 mV in E0(TiO/Ti)). Both values give TiO a band between Ti and Ti2O3"),
+        ("TiO[JANAF]", "TiO (JANAF)", 1, 1, 0, 0, "s", _TIO_J, "oxide", "J", "V3",
+         "WITHHELD candidate: NIST-JANAF TiO alpha (O-018) -513.278 kJ/mol; NBS -495.0"),
+        ("Ti4+[BE16]", "Ti⁴⁺ (BE16)", 1, 0, 0, 4, "aq", _TI4_X, "cation", "X", "V3",
+         "WITHHELD candidate: TiO2(s) + 4H+ = Ti4+ + 2H2O log K -3.56 +/- 0.10 (Brown & Ekberg 2016, NECTAR TiIV "
+         "table) on NBS rutile (the table does not name the polymorph); Baes & Mesmer give only Ti(OH)2 2+ based "
+         "constants"),
+        ("TiO2+[BE16]", "TiO²⁺ (BE16)", 1, 1, 0, 2, "aq", _TIO2P_X, "cation", "X", "V3",
+         "WITHHELD candidate: TiO2(s) + 2H+ = TiO2+ + H2O log K -3.58, the difference of TiO2(s) + H+ = TiOOH+ "
+         "(-6.06 +/- 0.30) and TiO2+ + H2O = TiOOH+ + H+ (-2.48 +/- 0.10) (Brown & Ekberg 2016, NECTAR TiIV table) on "
+         "NBS rutile; its region at 1e-6 M reaches pH 1.21 inside the water window. Their TiO2+ + 2H2O = TiO(OH)2 + 2H+ "
+         "(-5.49) agrees with the TiO(OH)2 row to 0.05 log units"),
+        ("TiOOH+[BE16]", "TiO(OH)⁺ (BE16)", 1, 2, 1, 1, "aq", _TIOOH_X, "cation", "X", "V3",
+         "WITHHELD candidate: TiO2(s) + H+ = TiOOH+ log K -6.06 +/- 0.30 (Brown & Ekberg 2016) on NBS rutile"),
+        ("TiO(OH)2[BE16]", "TiO(OH)₂(aq) (BE16)", 1, 3, 2, 0, "aq", _TIOOH2_X, "cation", "X", "V3",
+         "WITHHELD candidate: TiO2(s) + H2O = TiO(OH)2 log K -9.02 +/- 0.02 (Brown & Ekberg 2016) on NBS rutile; "
+         "Baes & Mesmer about -4.8 (TiO2(c) + 2H2O = Ti(OH)4); neutral species, role 'cation' is bookkeeping only"),
+        ("TiO(OH)3-[BE16]", "TiO(OH)₃⁻ (BE16)", 1, 4, 3, -1, "aq", _TIOOH3_X, "anion_low", "X", "V3",
+         "WITHHELD candidate: TiO(OH)2 + H2O = TiO(OH)3- + H+ log K -11.9 +/- 0.5 (Brown & Ekberg 2016)"),
+        ("Ti(OH)4[LLNL]", "Ti(OH)₄(aq) (LLNL)", 1, 4, 4, 0, "aq", _TIOH4_P, "cation", "P", "V3",
+         "WITHHELD candidate: rutile + 2H2O = Ti(OH)4 log K -9.6452 (llnl.dat) on NBS rutile (anatase -8.5586); no "
+         "domain for log a >= -6; neutral species, role 'cation' is bookkeeping only"),
+        ("TiH2", "TiH₂", 1, 0, 2, 0, "s", _TIH2, "metal", "N", "V2",
+         "EXCLUDED (scope: hydride): NBS TiH2 -80.3 kJ/mol. Ti + 2H+ + 2e- = TiH2 lies at E = 0.416 - 0.0592 pH, "
+         "above the Ti/oxide lines, so the hydride, not the metal, is the equilibrium phase wherever the map shows "
+         "Ti; role 'metal' is bookkeeping only (a reduced solid, not immunity)"),
+        ("TiO2(anatase)", "TiO₂ (anatase)", 1, 2, 0, 0, "s", _ANATASE, "oxide", "N", "V2",
+         "EXCLUDED (metastable): NBS anatase -884.5 kJ/mol, 5.0 kJ/mol above rutile (JANAF O-042 -883.27, 6.1 "
+         "above); it never has a domain"),
+    ),
+})
+
+# Alternative datasets whose domains, when added to the served table one set at a time, mark where the map is
+# not valid (pourbaix_solver dataValidity). Each set is (id, label, member ids of WITHHELD_SPECIES).
+CANDIDATE_SETS = {
+    "Cr": tuple((f"Cr-{tag}", f"Cr(III)/Cr(II) with hydrolysis, {tag} values",
+                 tuple(r[0] for r in WITHHELD_SPECIES["Cr"]
+                       if r[0].endswith(f"[{tag}]") and not r[0].startswith("H2CrO4")))
+                for tag, *_ in _CR_SETS),
+    "Mo": (("Mo-CRC", "Mo(III): Mo3+ (CRC E0)", ("Mo3+[CRC]",)),),
+    "Ti": (("Ti-CRC", "Ti(II)/Ti(III)/Ti(IV) and TiO, CRC E0 (TiO2+ from TiO2+/Ti)",
+            ("Ti2+[CRC]", "Ti3+[CRC]", "TiOH2+[CRC]", "TiO2+[CRC]", "TiO[CRC]")),
+           ("Ti-CRC-b", "TiO2+ from TiO2+/Ti3+ (CRC E0)", ("TiO2+[CRC-b]",)),
+           ("Ti-TiO-NBS", "TiO (NBS)", ("TiO[NBS]",)),
+           ("Ti-TiO-JANAF", "TiO (NIST-JANAF)", ("TiO[JANAF]",)),
+           ("Ti-BE16", "Ti(IV) hydrolysis (Brown & Ekberg 2016)",
+            ("Ti4+[BE16]", "TiO2+[BE16]", "TiOOH+[BE16]", "TiO(OH)2[BE16]", "TiO(OH)3-[BE16]")),
+           ("Ti-LLNL", "Ti(OH)4(aq) (llnl.dat)", ("Ti(OH)4[LLNL]",)),
+           ("Ti-hydride", "TiH2 (NBS; hydride outside the oxide/ion table)", ("TiH2",))),
 }
+# The Cr set made of BN98 rows also carries H2CrO4 (same compilation).
+CANDIDATE_SETS["Cr"] = CANDIDATE_SETS["Cr"] + (("Cr-H2CrO4", "H2CrO4 (Ball & Nordstrom 1998)", ("H2CrO4[BN98]",)),)
+
+# Species that matter for the element but have no value in any compilation consulted (not represented).
+UNSOURCED_SPECIES = {
+    "Mo": (("MoO₂²⁺", "cationic Mo(VI) species of strongly acid solution: no constant in NBS 1982, the NECTAR Mo "
+                      "table, llnl.dat or minteq.v4.dat; below about pH 1 the dissolved Mo(VI) domain is shown as "
+                      "H2MoO4(aq)"),
+           ("Mo(V)", "no aqueous Mo(V) species with a sourced value"),),
+    "Cr": (("Cr(OH)₃ (amorphous)", "metastable solid: Cr(OH)3(s) + 3H+ = Cr3+ + 3H2O log K 9.41 (Brown & Ekberg "
+                                   "2016) / 9.35 (Ball & Nordstrom 1998) against 4.26 per Cr for Cr2O3 (Ball & "
+                                   "Nordstrom): more soluble than Cr2O3, and its value depends on the withheld Cr3+"),),
+}
+
+UNAVAILABLE_ELEMENTS = {}
 
 ROW_KEYS = ("id", "formula", "x", "o", "h", "z", "phase", "dfG_kJ_mol", "role", "source",
             "verification", "evidence")
@@ -306,6 +603,31 @@ def water_dfg_kj_mol(element):
     return ELEMENT_SET[element][1]
 
 
+def activity_range(element):
+    """(lo, hi) log10 dissolved activity accepted for ``element``."""
+    return ACTIVITY_LOG10_RANGE_BY_ELEMENT.get(element, ACTIVITY_LOG10_RANGE)
+
+
+def withheld_rows(element):
+    return [_row_dict(r) for r in WITHHELD_SPECIES.get(element, ())]
+
+
+def candidate_sets(element):
+    """[{id, label, speciesIds}] of the withheld alternative datasets of ``element`` (empty for most)."""
+    return [{"id": sid, "label": label, "speciesIds": list(ids)} for sid, label, ids in CANDIDATE_SETS.get(element, ())]
+
+
+def candidate_rows(element, set_id):
+    """Rows (dicts) of one candidate set, in the set's order."""
+    by_id = {r[0]: r for r in WITHHELD_SPECIES.get(element, ())}
+    ids = next(ids for sid, _, ids in CANDIDATE_SETS[element] if sid == set_id)
+    return [_row_dict(by_id[i]) for i in ids]
+
+
+def unsourced_species(element):
+    return [{"formula": f, "reason": r} for f, r in UNSOURCED_SPECIES.get(element, ())]
+
+
 def build_document():
     elements = {}
     for symbol in NAMES:
@@ -318,15 +640,16 @@ def build_document():
                 "sourceSetNote": note,
                 "waterDfG_kJ_mol": h2o,
                 "referenceCation": REFERENCE_CATION[symbol],
+                "activityLog10Range": list(activity_range(symbol)),
                 "species": [_row_dict(r) for r in _ROWS[symbol]],
+                "candidateSets": candidate_sets(symbol),
+                "unsourcedSpecies": unsourced_species(symbol),
             })
         else:
             entry.update({"available": False, "reason": UNAVAILABLE_ELEMENTS[symbol]})
         if symbol in WITHHELD_SPECIES:
             entry["withheldSpecies"] = [_row_dict(r) for r in WITHHELD_SPECIES[symbol]]
         elements[symbol] = entry
-    elements_unavailable = {"Mo": {"name": "Molybdenum", "available": False,
-                                   "reason": UNAVAILABLE_ELEMENTS["Mo"]}}
     return {
         "schema": SCHEMA,
         "generatedBy": "python/pourbaix_species_25c.py",
@@ -353,7 +676,7 @@ def build_document():
         "formulaBookkeeping": (
             "per species: x metal atoms, o O atoms, h H atoms, charge z; m=(2o-h)/x H+ released and "
             "n=(z+2o-h)/x electrons per metal atom; g=[dfG-o*dfG(H2O)+RT ln a]/x - m ln10 RT pH - nFE"),
-        "elements": {**elements, **elements_unavailable},
+        "elements": elements,
     }
 
 

@@ -247,8 +247,11 @@ class PourbaixElementTest(unittest.TestCase):
     # others (Cr, Ti, and Mo which has no system at all) raise POURBAIX_DATA_UNAVAILABLE,
     # a code of its own that is never confused with UNKNOWN_ELEMENT (a name no system knows).
     # WP-Al: Al is available (OBIGT TS01 + gibbsite set), so it is pinned as solving.
+    # Engine v5 (lane pbx-ticrmo): Cr, Mo and Ti are served from NBS tables with their contradictory species
+    # withheld as candidate sets (dataValidity), so no engine element is unavailable any more; the refusal
+    # path stays for an element whose table is removed.
     GOLDEN_ELEMENTS = ("Fe", "Ni", "Cu", "Zn", "Mg", "Al")
-    PINNED_UNAVAILABLE = ("Cr", "Ti", "Mo")
+    V5_ELEMENTS = ("Cr", "Mo", "Ti")
 
     def test_available_elements_still_solve(self):
         available = [el for el, entry in pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS.items() if entry["available"]]
@@ -257,20 +260,25 @@ class PourbaixElementTest(unittest.TestCase):
             with self.subTest(element=el):
                 out = pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
                 self.assertEqual(out["element"], el)
-        self.assertEqual(set(available), {"Fe", "Ni", "Cu", "Zn", "Mg", "Al"})  # Al joined by WP-Al; Cr, Ti, Mo stay out
+        self.assertEqual(set(available), set(self.GOLDEN_ELEMENTS) | set(self.V5_ELEMENTS))  # Al: WP-Al; Cr, Mo, Ti: v5
 
     def test_unavailable_elements_raise_data_unavailable(self):
+        from unittest import mock
+        import pourbaix_species_25c as table
         unavailable = [el for el, entry in pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS.items()
                        if not entry["available"]]
-        self.assertIn("Ti", unavailable)  # no consistent Ti-H2O dataset (species table UNAVAILABLE_ELEMENTS)
-        self.assertNotIn("Al", unavailable)  # Al now solves (test_available_elements_still_solve)
-        # Cr and Ti are system entries marked unavailable; Mo has no system at all
-        self.assertTrue({"Cr", "Ti"} <= set(unavailable), unavailable)
-        self.assertIn("Mo", pourbaix_solver.UNAVAILABLE_ONLY_ELEMENTS)
-        for el in sorted(set(unavailable) | set(self.PINNED_UNAVAILABLE) | set(pourbaix_solver.UNAVAILABLE_ONLY_ELEMENTS)):
+        self.assertEqual(unavailable, [])
+        self.assertEqual(pourbaix_solver.UNAVAILABLE_ONLY_ELEMENTS, ())
+        for el in self.V5_ELEMENTS:  # each has withheld candidate sets and a dataValidity block
+            self.assertTrue(table.candidate_sets(el), el)
+            self.assertEqual(pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])["dataValidity"]["status"],
+                             "withheld-species-regions")
+        for el in self.V5_ELEMENTS:
             with self.subTest(element=el):
-                with self.assertRaises(iv.ValidationError) as ctx:
-                    pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
+                rest = [e for e in table.available_elements() if e != el]
+                with mock.patch.object(table, "available_elements", return_value=rest),                         mock.patch.dict(table.UNAVAILABLE_ELEMENTS, {el: "table removed in this test"}):
+                    with self.assertRaises(iv.ValidationError) as ctx:
+                        pourbaix_solver.solve_pourbaix_diagram(el, 25.0, -6.0, 0.0, [])
                 self.assertEqual(ctx.exception.code, pourbaix_solver.POURBAIX_DATA_UNAVAILABLE)
                 self.assertEqual(ctx.exception.field, "element")
                 self.assertTrue(ctx.exception.detail["reason"])
@@ -402,7 +410,7 @@ class SourceGuardTest(unittest.TestCase):
 
     def test_atomic_masses_come_from_physical_constants(self):
         src = (HERE / "pourbaix_solver.py").read_text(encoding="utf-8")
-        self.assertEqual(src.count('"atomicMass": physical_constants.atomic_weight('), 8)
+        self.assertEqual(src.count('"atomicMass": physical_constants.atomic_weight('), 9)  # v5: Mo added
 
 
 if __name__ == "__main__":

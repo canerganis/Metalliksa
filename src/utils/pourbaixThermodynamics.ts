@@ -11,6 +11,8 @@
 import speciesJson from "../generated/pourbaixSpecies25C.json";
 import type {
   AlloyPreset,
+  PourbaixAvailableElement,
+  PourbaixWithheldRegion,
   PourbaixDomain,
   PourbaixPointState,
   PourbaixPolygon,
@@ -47,12 +49,32 @@ export function pourbaixUnavailableReason(element: string): string | null {
 // Equilibrium port
 // ---------------------------------------------------------------------------
 
-/** Per-species affine g_i(pH, E) for one element at a fixed dissolved activity (table order is the tie-break order). */
-export function speciesCoefficients(element: string, log10Activity: number): SpeciesCoefficients[] {
+function availableEntry(element: string): PourbaixAvailableElement {
   const entry = POURBAIX_DATA.elements[element];
   if (!entry || !("species" in entry)) throw new Error(`No verified ${element}-H2O data: ${pourbaixUnavailableReason(element)}`);
-  const h2o = entry.waterDfG_kJ_mol * 1000;
-  return entry.species.map((s: PourbaixSpeciesRow) => {
+  return entry;
+}
+
+/** log10 dissolved activity range the engine accepts for this element (Cr: up to 1e-2, Mo: up to 1e-4; others 1e-6..1). */
+export function pourbaixActivityRange(element: string): [number, number] {
+  const entry = POURBAIX_DATA.elements[element];
+  return entry && "activityLog10Range" in entry ? entry.activityLog10Range : POURBAIX_DATA.activity.log10Range;
+}
+
+export function activityInRange(element: string, log10Activity: number): boolean {
+  const [lo, hi] = pourbaixActivityRange(element);
+  return log10Activity >= lo - 1e-9 && log10Activity <= hi + 1e-9;
+}
+
+/** Per-species affine g_i(pH, E) for one element at a fixed dissolved activity (table order is the tie-break order). */
+export function speciesCoefficients(element: string, log10Activity: number): SpeciesCoefficients[] {
+  const entry = availableEntry(element);
+  return coefficientsOf(entry.species, entry.waterDfG_kJ_mol, log10Activity);
+}
+
+function coefficientsOf(rows: PourbaixSpeciesRow[], waterDfG_kJ_mol: number, log10Activity: number): SpeciesCoefficients[] {
+  const h2o = waterDfG_kJ_mol * 1000;
+  return rows.map((s: PourbaixSpeciesRow) => {
     const m = (2 * s.o - s.h) / s.x;
     const n = (s.z + 2 * s.o - s.h) / s.x;
     const lnA = s.phase === "s" ? 0 : log10Activity * K.ln10;
@@ -150,6 +172,87 @@ export function computeDomains(coeffs: SpeciesCoefficients[]): PourbaixDomain[] 
   return domains;
 }
 
+// ---------------------------------------------------------------------------
+// Withheld-data regions (python pourbaix_solver dataValidity): each candidate set of withheld rows is added to the
+// served table on its own; where one of its species becomes the argmin, the map is not valid.
+// ---------------------------------------------------------------------------
+
+interface CandidateCoefficients { setId: string; coeffs: SpeciesCoefficients[]; members: Set<string> }
+
+function candidateCoefficients(element: string, log10Activity: number): CandidateCoefficients[] {
+  const entry = availableEntry(element);
+  const byId = new Map((entry.withheldSpecies ?? []).map((r) => [r.id, r]));
+  return entry.candidateSets.map((set) => ({
+    setId: set.id,
+    coeffs: coefficientsOf([...entry.species, ...set.speciesIds.map((id) => byId.get(id)!)], entry.waterDfG_kJ_mol, log10Activity),
+    members: new Set(set.speciesIds),
+  }));
+}
+
+/** Candidate sets whose own species would be stable at this point ([] = the map is valid here). */
+export function withheldSpeciesAt(element: string, log10Activity: number, ph: number, e_she: number): { candidateSet: string; speciesId: string; formula: string }[] {
+  const hits: { candidateSet: string; speciesId: string; formula: string }[] = [];
+  for (const c of candidateCoefficients(element, log10Activity)) {
+    const sp = dominantSpecies(c.coeffs, ph, e_she);
+    if (c.members.has(sp.id)) hits.push({ candidateSet: c.setId, speciesId: sp.id, formula: sp.formula });
+  }
+  return hits;
+}
+
+/** Exact convex regions (one per candidate species with a domain) where the map is not valid. */
+export function computeWithheldRegions(element: string, log10Activity: number): PourbaixWithheldRegion[] {
+  const out: PourbaixWithheldRegion[] = [];
+  for (const c of candidateCoefficients(element, log10Activity)) {
+    for (const d of computeDomains(c.coeffs)) {
+      if (c.members.has(d.speciesId)) out.push({ candidateSet: c.setId, speciesId: d.speciesId, formula: d.formula, polygon: d.polygon });
+    }
+  }
+  return out;
+}
+
+/** One constituent element evaluated alone at a point: its served state (null without data or outside its activity
+ * range) and the withheld candidate species that would be stable there (non-empty = the map is not valid here). */
+export interface ConstituentState {
+  state: PourbaixPointState | null;
+  withheld: { candidateSet: string; speciesId: string; formula: string }[];
+  reason: "ok" | "unavailable" | "activity-outside-range";
+}
+
+export function constituentStates(elements: string[], log10Activity: number, ph: number, e_she: number): Record<string, ConstituentState> {
+  const out: Record<string, ConstituentState> = {};
+  for (const el of elements) {
+    if (pourbaixUnavailableReason(el) !== null) out[el] = { state: null, withheld: [], reason: "unavailable" };
+    else if (!activityInRange(el, log10Activity)) out[el] = { state: null, withheld: [], reason: "activity-outside-range" };
+    else out[el] = {
+      state: classifyPourbaixPoint(speciesCoefficients(el, log10Activity), ph, e_she),
+      withheld: withheldSpeciesAt(el, log10Activity, ph, e_she),
+      reason: "ok",
+    };
+  }
+  return out;
+}
+
+/** pH intervals in which no withheld region touches the water stability window. */
+export function freePhWindows(regions: PourbaixWithheldRegion[]): [number, number][] {
+  const k = NERNST_SLOPE_25C;
+  const e0 = POURBAIX_DATA.water.e0_O2_H2O_V;
+  const blocked: [number, number][] = [];
+  for (const r of regions) {
+    let poly = clipPolygon(r.polygon, -k, -1, 0); // E >= -k pH (line a)
+    if (poly.length) poly = clipPolygon(poly, k, 1, -e0); // E <= e0 - k pH (line b)
+    if (poly.length && polygonArea(poly) > 1e-9) blocked.push([Math.min(...poly.map((p) => p[0])), Math.max(...poly.map((p) => p[0]))]);
+  }
+  blocked.sort((a, b) => a[0] - b[0]);
+  const free: [number, number][] = [];
+  let start = BOX.pH_min;
+  for (const [lo, hi] of blocked) {
+    if (lo > start) free.push([start, lo]);
+    start = Math.max(start, hi);
+  }
+  if (start < BOX.pH_max) free.push([start, BOX.pH_max]);
+  return free;
+}
+
 /** Exact line g_a = g_b of two table species (E = E0 + slope*pH, or a vertical pH line); null when identical. */
 export function boundaryLine(coeffs: SpeciesCoefficients[], idA: string, idB: string): PourbaixBoundaryEquation | null {
   const a = coeffs.find((s) => s.id === idA), b = coeffs.find((s) => s.id === idB);
@@ -165,12 +268,22 @@ export function boundaryLine(coeffs: SpeciesCoefficients[], idA: string, idB: st
 
 export const PASSIVATION_NOTE = "thermodynamic domain of a solid oxide/hydroxide (not a kinetic passivity claim)";
 
+/** Dissolved-activity options of the studio (each element shows only those inside its range). */
+export const ION_ACTIVITY_OPTIONS: { value: number; label: string }[] = [
+  { value: 1e-6, label: "10⁻⁶ M (corrosion convention)" },
+  { value: 1e-4, label: "10⁻⁴ M" },
+  { value: 1e-3, label: "10⁻³ M (Millimolar)" },
+  { value: 1.0, label: "1.0 M (Concentrated)" },
+];
+
+export const WITHHELD_REGION_NOTE = "withheld-data region: a contradictory or excluded species would be stable here, so the map is not valid";
+
 export const CATEGORY_STYLE: Record<StabilityCategory, { color: string; alpha: number; legend: string }> = {
   "Immunity": { color: "#38bdf8", alpha: 0.25, legend: "Immunity (metal stable)" },
   "Corrosion (acid)": { color: "#f87171", alpha: 0.22, legend: "Corrosion (acid): cation stable" },
   "Corrosion (alkaline)": { color: "#fb923c", alpha: 0.28, legend: "Corrosion (alkaline): anion stable" },
-  "Passivation (thermodynamic, film-forming)": { color: "#10b981", alpha: 0.32, legend: "Passivation (thermodynamic): solid oxide/hydroxide stable" },
-  "Transpassive": { color: "#a855f7", alpha: 0.30, legend: "Transpassive: high-valence oxyanion stable" },
+  "Passivation (thermodynamic)": { color: "#10b981", alpha: 0.32, legend: "Passivation (thermodynamic): solid oxide/hydroxide stable" },
+  "Transpassive": { color: "#a855f7", alpha: 0.30, legend: "Transpassive: high-valence oxyanion or oxyacid stable" },
 };
 
 /** Display text per category for a classified point (derived from the port's category, never from a solver echo). */
@@ -178,8 +291,8 @@ export const CATEGORY_DISPLAY: Record<StabilityCategory, string> = {
   "Immunity": "Metal stable (immunity domain)",
   "Corrosion (acid)": "Cation stable (acid corrosion domain)",
   "Corrosion (alkaline)": "Oxyanion stable (alkaline corrosion domain)",
-  "Passivation (thermodynamic, film-forming)": "Solid oxide/hydroxide stable (thermodynamic domain only)",
-  "Transpassive": "High-valence oxyanion stable (transpassive domain)",
+  "Passivation (thermodynamic)": "Solid oxide/hydroxide stable (thermodynamic domain only)",
+  "Transpassive": "High-valence oxyanion or oxyacid stable (transpassive domain)",
 };
 
 // ---------------------------------------------------------------------------
@@ -252,7 +365,7 @@ export const ALLOY_PRESETS: AlloyPreset[] = [
     id: "pure-ti",
     name: "Pure Titanium (Grade 2 CP)",
     category: "Pure Metal",
-    description: "Elemental titanium. The engine has no verified Ti–H₂O data, so no map is drawn.",
+    description: "Elemental titanium: the Ti–H₂O map (rutile, Ti₂O₃). The aqueous Ti species, TiO and the hydride TiH₂ are withheld; their regions are hatched.",
     composition: { Ti: 100.0 },
     recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
@@ -268,8 +381,16 @@ export const ALLOY_PRESETS: AlloyPreset[] = [
     id: "pure-cr",
     name: "Pure Chromium (Cr)",
     category: "Pure Metal",
-    description: "Elemental chromium. The engine has no verified Cr–H₂O data, so no map is drawn.",
+    description: "Elemental chromium: the Cr–H₂O map (Cr₂O₃, HCrO₄⁻, CrO₄²⁻). The Cr(III)/Cr(II) aqueous species are withheld; their regions are hatched.",
     composition: { Cr: 100.0 },
+    recommendedApplication: APPLICATION_NOT_COMPUTED,
+  },
+  {
+    id: "pure-mo",
+    name: "Pure Molybdenum (Mo)",
+    category: "Pure Metal",
+    description: "Elemental molybdenum: the Mo–H₂O map (MoO₂, dissolved Mo(VI)); dissolved activity 10⁻⁶ to 10⁻⁴ M. Mo³⁺ is withheld; its region is hatched.",
+    composition: { Mo: 100.0 },
     recommendedApplication: APPLICATION_NOT_COMPUTED,
   },
   {

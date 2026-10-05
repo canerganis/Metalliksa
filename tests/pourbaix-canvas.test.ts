@@ -8,11 +8,12 @@ import {
   classifyPourbaixPoint,
   clipPolygon,
   computeDomains,
+  computeWithheldRegions,
   polygonArea,
   speciesCoefficients,
   waterLines25C,
 } from "../src/utils/pourbaixThermodynamics";
-import { ZONE_LABEL, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
+import { WITHHELD_HATCH, ZONE_LABEL, drawPourbaixScene, type PourbaixScene } from "../src/utils/pourbaixCanvas";
 import { REF_OFFSETS_VS_SHE } from "../src/utils/experimentalPourbaixOverlay";
 
 // The Studio only builds a scene; the drawing is a pure function, so a recording 2D context can check it
@@ -154,4 +155,40 @@ test("the water lines are drawn, the overlay toggles work and nothing is drawn f
   drawPourbaixScene(noLabels.ctx, scene("Mg", { showPointLabels: false }));
   assert.ok(!noLabels.calls.some((c) => c.op === "fillText" && c.args[0] === "Stage one"));
   assert.ok(calls.some((c) => c.op === "fillText" && c.args[0] === "Stage one"));
+});
+
+test("withheld-data regions (Cr, Mo, Ti) are hatched with strokes clipped to each region; the domain fills are unchanged", () => {
+  for (const el of ["Cr", "Mo", "Ti"]) {
+    const regions = computeWithheldRegions(el, -6);
+    assert.ok(regions.length > 0, el);
+    const plain = recorder();
+    drawPourbaixScene(plain.ctx, scene(el));
+    const { ctx, calls } = recorder();
+    drawPourbaixScene(ctx, scene(el, { withheldRegions: regions, probeInWithheldRegion: true }));
+    assert.equal(calls.filter((c) => c.op === "clip").length, regions.length, `${el}: one clip per region`);
+    assert.equal(plain.calls.filter((c) => c.op === "clip").length, 0, `${el}: no hatch without regions`);
+    const fills = (cs: Call[]) => cs.filter((c) => c.op === "fill" && c.alpha < 1).length;
+    assert.equal(fills(calls), fills(plain.calls), `${el}: the hatch adds no translucent fill`);
+    assert.ok(calls.some((c) => c.op === "stroke" && c.strokeStyle === WITHHELD_HATCH.color), `${el}: hatch strokes`);
+    assert.ok(calls.some((c) => c.op === "fillText" && c.args[0] === "withheld-data region: map not valid here"), `${el}: probe readout`);
+    assert.ok(!plain.calls.some((c) => c.op === "fillText" && c.args[0] === "withheld-data region: map not valid here"));
+    // every hatched region starts at the first vertex of its polygon
+    for (const r of regions) {
+      assert.ok(calls.some((c) => c.op === "moveTo" && Math.abs((c.args[0] as number) - xOf(r.polygon[0][0])) < 1e-9
+        && Math.abs((c.args[1] as number) - yOf(r.polygon[0][1])) < 1e-9), `${el} ${r.speciesId}`);
+    }
+  }
+});
+
+test("review Sol 6.1 NIT 1: the water-line equations are written on the displayed reference scale", () => {
+  const she = recorder();
+  drawPourbaixScene(she.ctx, scene("Fe"));
+  assert.ok(she.calls.some((c) => c.op === "fillText" && c.args[0] === `(a) H₂/H⁺: E = 0.000 - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SHE`));
+  const sce = recorder();
+  drawPourbaixScene(sce.ctx, scene("Fe", { refOffset: REF_OFFSETS_VS_SHE.SCE, refLabel: "SCE" }));
+  const a = sce.calls.find((c) => c.op === "fillText" && String(c.args[0]).startsWith("(a) H₂/H⁺"))!;
+  const b = sce.calls.find((c) => c.op === "fillText" && String(c.args[0]).startsWith("(b) O₂/H₂O"))!;
+  assert.equal(a.args[0], `(a) H₂/H⁺: E = -0.241 - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SCE`);
+  assert.equal(b.args[0], `(b) O₂/H₂O: E = ${(POURBAIX_DATA.water.e0_O2_H2O_V - 0.241).toFixed(3)} - ${NERNST_SLOPE_25C.toFixed(3)}·pH V vs SCE`);
+  assert.ok(String(b.args[0]).includes("0.988"));
 });

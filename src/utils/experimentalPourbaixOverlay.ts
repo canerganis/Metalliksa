@@ -18,6 +18,9 @@ export const REF_OFFSETS_VS_SHE: { [k in ReferenceElectrode]: number } = {
 
 /** Shown wherever preset points are drawn or listed. */
 export const PRESET_POINTS_NOTE = "Preset points are illustrative scenarios, not measured data: no source is cited.";
+/** A probe captured from the computed map is a computed coordinate, never a measurement (review Sol 6.1 SF-1). */
+export const CAPTURED_PROBE_STAGE = "Computed coordinate (probe, not measured)";
+export const CAPTURED_PROBE_NOTE = "Coordinate copied from the computed map probe; not a measurement.";
 
 export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = [
   {

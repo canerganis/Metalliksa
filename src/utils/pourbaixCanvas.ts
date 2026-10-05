@@ -6,6 +6,7 @@ import { CATEGORY_STYLE, clipPolygon, polygonArea, polygonCentroid } from "./pou
 import type {
   PourbaixDomain,
   PourbaixPointState,
+  PourbaixWithheldRegion,
   SpeciesCoefficients,
   StabilityCategory,
   WaterStabilityLines,
@@ -15,7 +16,7 @@ export const ZONE_LABEL: Record<StabilityCategory, string> = {
   "Immunity": "IMMUNITY",
   "Corrosion (acid)": "ACID CORROSION",
   "Corrosion (alkaline)": "ALKALINE CORROSION",
-  "Passivation (thermodynamic, film-forming)": "PASSIVATION (THERMODYNAMIC)",
+  "Passivation (thermodynamic)": "PASSIVATION (THERMODYNAMIC)",
   "Transpassive": "TRANSPASSIVE",
 };
 
@@ -39,6 +40,8 @@ export interface PourbaixScene {
   viewBounds: { minPH: number; maxPH: number; minE: number; maxE: number };
   /** E(displayed reference) = E(SHE) - refOffset. */
   refOffset: number;
+  /** Name of the displayed reference electrode (default "SHE"); the water-line equations are written on it. */
+  refLabel?: string;
   domains: PourbaixDomain[];
   coeffs: SpeciesCoefficients[] | null;
   waterLines: WaterStabilityLines;
@@ -53,7 +56,14 @@ export interface PourbaixScene {
   showPointLabels: boolean;
   points: CanvasTestPoint[];
   selectedPointId: string | null;
+  /** Regions where a withheld candidate species would be stable (hatched; the map is not valid there). */
+  withheldRegions?: PourbaixWithheldRegion[];
+  /** True when the probe lies in a withheld-data region (the readout says so). */
+  probeInWithheldRegion?: boolean;
 }
+
+/** Hatch colour and spacing of the withheld-data regions (strokes only: the domain fills keep their alpha). */
+export const WITHHELD_HATCH = { color: "rgba(226, 232, 240, 0.55)", spacingPx: 9 };
 
 export const MARKER_FALLBACK_COLOR = "#38bdf8";
 
@@ -81,6 +91,31 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
     ctx.fill();
   }
   ctx.globalAlpha = 1.0;
+
+  // 2b. Withheld-data regions: diagonal hatch clipped to each region polygon, dashed outline
+  for (const r of s.withheldRegions ?? []) {
+    ctx.save();
+    ctx.beginPath();
+    r.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
+    ctx.closePath();
+    ctx.clip();
+    ctx.strokeStyle = WITHHELD_HATCH.color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = -height; x < width; x += WITHHELD_HATCH.spacingPx) {
+      ctx.moveTo(x, height);
+      ctx.lineTo(x + height, 0);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = WITHHELD_HATCH.color;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    r.polygon.forEach(([ph, e], i) => (i === 0 ? ctx.moveTo(phToX(ph), eToY(e)) : ctx.lineTo(phToX(ph), eToY(e))));
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // 3. Grid lines and axis labels (the E axis shows the displayed reference scale)
   ctx.strokeStyle = "#162235";
@@ -134,14 +169,17 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
   ctx.setLineDash([]);
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 11px monospace";
+  // Equations on the displayed reference scale (review Sol 6.1 NIT 1): intercept = E0(SHE) - refOffset
+  const refLabel = s.refLabel ?? "SHE";
+  const intercept = (e0: number) => (e0 - refOffset).toFixed(3);
   ctx.fillText(
-    `(a) H₂/H⁺: E = -${nernstSlope.toFixed(3)}·pH`,
+    `(a) H₂/H⁺: E = ${intercept(waterLines.herLine.e_at_ph0)} - ${nernstSlope.toFixed(3)}·pH V vs ${refLabel}`,
     phToX(2) + 6,
     eToY(waterLines.herLine.e_at_ph0 + waterLines.herLine.slope * 2) - 6
   );
   ctx.fillStyle = "#f43f5e";
   ctx.fillText(
-    `(b) O₂/H₂O: E = ${waterLines.oerLine.e_at_ph0.toFixed(2)} - ${nernstSlope.toFixed(3)}·pH`,
+    `(b) O₂/H₂O: E = ${intercept(waterLines.oerLine.e_at_ph0)} - ${nernstSlope.toFixed(3)}·pH V vs ${refLabel}`,
     phToX(2) + 6,
     eToY(waterLines.oerLine.e_at_ph0 + waterLines.oerLine.slope * 2) - 6
   );
@@ -276,9 +314,10 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
   ctx.strokeStyle = probeColor;
   ctx.lineWidth = 1.5;
   const boxX = Math.min(width - boxW - 10, Math.max(10, probeX + 12));
-  const boxY = Math.min(height - 60, Math.max(20, probeY - 45));
-  ctx.fillRect(boxX, boxY, boxW, 50);
-  ctx.strokeRect(boxX, boxY, boxW, 50);
+  const boxH = s.probeInWithheldRegion ? 64 : 50;
+  const boxY = Math.min(height - boxH - 10, Math.max(20, probeY - 45));
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 10px monospace";
   ctx.fillText(`pH: ${s.probePH.toFixed(2)} | E: ${(s.probePotential_SHE - refOffset).toFixed(3)}V`, boxX + 6, boxY + 16);
@@ -291,4 +330,8 @@ export function drawPourbaixScene(ctx: CanvasRenderingContext2D, s: PourbaixScen
     boxX + 6,
     boxY + 42
   );
+  if (s.probeInWithheldRegion) {
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText("withheld-data region: map not valid here", boxX + 6, boxY + 56);
+  }
 }

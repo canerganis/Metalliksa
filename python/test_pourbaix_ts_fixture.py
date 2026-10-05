@@ -40,7 +40,7 @@ class TsFixtureTest(unittest.TestCase):
 
     def test_every_available_element_and_activity_is_covered(self):
         got = {(c["element"], c["log10Activity"]) for c in self.data["cases"]}
-        want = {(e, a) for e in table.available_elements() for a in fixture.LOG_ACTIVITIES}
+        want = {(e, a) for e in table.available_elements() for a in fixture.activities(e)}
         self.assertEqual(got, want)
         self.assertEqual(self.data["n"], 200)
 
@@ -53,11 +53,36 @@ class TsFixtureTest(unittest.TestCase):
             used = {case["speciesIds"][int(c)] for r in case["rows"] for c in decode(r) if c != "."}
             self.assertEqual(used, set(case["speciesIds"]), log_a)  # the grid reaches all four domains
 
-    def test_unavailable_elements_are_not_in_the_fixture(self):
+    def test_cr_mo_ti_are_in_the_fixture_with_withheld_flags(self):
+        # v5: Cr, Mo and Ti are served; their cases carry the withheld-data flag grid, the others do not
         got = {c["element"] for c in self.data["cases"]}
-        for element in ("Cr", "Ti", "Mo"):
-            self.assertNotIn(element, got)
         self.assertEqual(got, set(table.available_elements()))
+        self.assertEqual(fixture.activities("Mo"), (-6.0, -4.0))
+        self.assertEqual(fixture.activities("Cr"), (-6.0, -3.0))
+        for case in self.data["cases"]:
+            has = bool(table.candidate_sets(case["element"]))
+            self.assertEqual("withheldRows" in case, has, case["element"])
+            if has:
+                flags = {c for r in case["withheldRows"] for c in decode(r)}
+                self.assertEqual(flags, {"0", "1", "."}, (case["element"], case["log10Activity"]))
+                self.assertEqual(len(case["withheldRows"]), 200)
+
+    def test_withheld_flags_agree_with_the_oracle(self):
+        phs, es = fixture.cell_centres()
+        for case in self.data["cases"]:
+            if "withheldRows" not in case:
+                continue
+            element, log_a = case["element"], case["log10Activity"]
+            near = 0
+            for j in range(0, 200, 3):
+                for i, token in enumerate(decode(case["withheldRows"][j])):
+                    if token == ".":
+                        near += 1
+                        continue
+                    if i % 3 == 0:
+                        self.assertEqual(token == "1", bool(oracle.withheld_hits(element, phs[i], es[j], log_a)),
+                                         (element, log_a, phs[i], es[j]))
+            self.assertLess(near / (67 * 200), 0.05, (element, log_a))
 
     def test_grid_shape_and_every_species_with_area_appears(self):
         for case in self.data["cases"]:

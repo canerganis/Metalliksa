@@ -15,7 +15,12 @@ Dominance is the minimum Gibbs energy per metal atom at 25 C and fixed activitie
 ``dominant`` is the brute-force check: it evaluates EVERY species at the point and takes the
 minimum, so no species can have a lower g than the answer by construction.
 
-Usage:  python tools/pourbaix_oracle.py [Fe|Ni|Cu|Zn|Mg|Al ...]    # prints the domain areas
+Cr, Mo and Ti (engine v5): the served rows are typed again here from the NBS 1982 scan (kJ/mol) and the
+NECTAR log K values; the withheld candidate sets are rebuilt from their primary numbers (E0 in V, log K,
+OBIGT cal/mol), never read from the engine. ``withheld_hits`` / ``withheld_polygons`` are the oracle's own
+version of the engine's dataValidity regions.
+
+Usage:  python tools/pourbaix_oracle.py [Fe|Ni|Cu|Zn|Mg|Al|Cr|Mo|Ti ...]    # prints the domain areas
 """
 
 import math
@@ -120,8 +125,142 @@ WITHHELD = {
     }},
 }
 
+# ---- Cr, Mo, Ti (engine v5) --------------------------------------------------------------------------
+_K = LN10 * R * T / 1000.0  # kJ/mol per log10 unit
+_FK = F / 1000.0
+_W_NBS = -237.129
+
+
+def _e0_cation(n, e0):
+    return n * _FK * e0
+
+
+DATA.update({
+    "Cr": {"H2O": _W_NBS, "sp": {
+        "Cr": (1, 0, 0, 0, 0.0, "s", "metal"),
+        "Cr2O3": (2, 3, 0, 0, -1058.1, "s", "oxide"),
+        "HCrO4-": (1, 4, 1, -1, -764.7, "aq", "anion_high"),
+        "CrO4^2-": (1, 4, 0, -2, -727.75, "aq", "anion_high"),
+    }},
+    "Mo": {"H2O": _W_NBS, "sp": {
+        "Mo": (1, 0, 0, 0, 0.0, "s", "metal"),
+        "MoO2": (1, 2, 0, 0, -533.01, "s", "oxide"),
+        "MoO3": (1, 3, 0, 0, -667.97, "s", "oxide"),
+        "H2MoO4": (1, 4, 2, 0, -836.3 - 8.12 * _K, "aq", "anion_high"),
+        "HMoO4-": (1, 4, 1, -1, -836.3 - 4.47 * _K, "aq", "anion_high"),
+        "MoO4^2-": (1, 4, 0, -2, -836.3, "aq", "anion_high"),
+    }},
+    "Ti": {"H2O": _W_NBS, "sp": {
+        "Ti": (1, 0, 0, 0, 0.0, "s", "metal"),
+        "Ti2O3": (2, 3, 0, 0, -1434.2, "s", "oxide"),
+        "Ti3O5": (3, 5, 0, 0, -2317.4, "s", "oxide"),
+        "TiO2": (1, 2, 0, 0, -889.5, "s", "oxide"),
+    }},
+})
+
+ACTIVITY_RANGE = {"Cr": (-6.0, -2.0), "Mo": (-6.0, -4.0)}  # others (-6, 0)
+
+
+def _cr_set(tag, cr3, cr2):
+    """Cr2+, Cr3+ and the hydrolysis species of one candidate set (Brown & Ekberg 2016 / NIST46 log K)."""
+    def hyd(parent, n_w, lk):
+        return parent + n_w * _W_NBS - _K * lk
+    return {
+        f"Cr2+[{tag}]": (1, 0, 0, 2, cr2, "aq", "cation"),
+        f"Cr3+[{tag}]": (1, 0, 0, 3, cr3, "aq", "cation"),
+        f"CrOH+[{tag}]": (1, 1, 1, 1, hyd(cr2, 1, -5.5), "aq", "cation"),
+        f"CrOH2+[{tag}]": (1, 1, 1, 2, hyd(cr3, 1, -3.60), "aq", "cation"),
+        f"Cr(OH)2+[{tag}]": (1, 2, 2, 1, hyd(cr3, 2, -9.65), "aq", "cation"),
+        f"Cr(OH)3(aq)[{tag}]": (1, 3, 3, 0, hyd(cr3, 3, -16.25), "aq", "cation"),
+        f"Cr(OH)4-[{tag}]": (1, 4, 4, -1, hyd(cr3, 4, -27.56), "aq", "anion_low"),
+    }
+
+
+_SUPCRT_H2O = -56687 * CAL / 1000.0
+_O2_AQ = 3954 * CAL / 1000.0
+_CR3_LLNL = -98.6784 * _K + 0.75 * _O2_AQ - 1.5 * _SUPCRT_H2O
+_CRO4_LLNL = _CR3_LLNL + 2.5 * _SUPCRT_H2O + 0.75 * _O2_AQ + 8.3842 * _K
+_CR3_BN = (-8.52 * _K - 3 * _W_NBS - 1058.1) / 2.0
+_TI3_CRC = _e0_cation(3, -1.37)
+
+# Candidate sets in the engine's order: {set id: {species: row}}.
+CANDIDATES = {
+    "Cr": {
+        "Cr-CRC": _cr_set("CRC", _e0_cation(3, -0.74), _e0_cation(2, -0.9)),
+        "Cr-SSWS97": _cr_set("SSWS97", -49300 * CAL / 1000.0, -39400 * CAL / 1000.0),
+        "Cr-LLNL": _cr_set("LLNL", _CR3_LLNL, 21.6373 * _K - 2 * _SUPCRT_H2O - _O2_AQ + _CRO4_LLNL),
+        "Cr-BN98": _cr_set("BN98", _CR3_BN, _CR3_BN + _FK * 0.407),
+        "Cr-H2CrO4": {"H2CrO4[BN98]": (1, 4, 2, 0, -727.75 - 6.31 * _K, "aq", "anion_high")},
+    },
+    "Mo": {
+        # H2MoO4 + 6H+ + 3e- = Mo3+ + 4H2O, E0 = 0.43 V
+        "Mo-CRC": {"Mo3+[CRC]": (1, 0, 0, 3, -836.3 - 8.12 * _K - 4 * _W_NBS - 3 * _FK * 0.43, "aq", "cation")},
+    },
+    "Ti": {
+        "Ti-CRC": {
+            "Ti2+[CRC]": (1, 0, 0, 2, _e0_cation(2, -1.63), "aq", "cation"),
+            "Ti3+[CRC]": (1, 0, 0, 3, _TI3_CRC, "aq", "cation"),
+            "TiOH2+[CRC]": (1, 1, 1, 2, _TI3_CRC + _W_NBS + 1.65 * _K, "aq", "cation"),
+            "TiO2+[CRC]": (1, 1, 0, 2, _W_NBS - 4 * _FK * 0.93, "aq", "cation"),
+            "TiO[CRC]": (1, 1, 0, 0, _W_NBS - 2 * _FK * 1.31, "s", "oxide"),
+        },
+        "Ti-CRC-b": {"TiO2+[CRC-b]": (1, 1, 0, 2, _TI3_CRC + _W_NBS + _FK * 0.19, "aq", "cation")},
+        "Ti-TiO-NBS": {"TiO[NBS]": (1, 1, 0, 0, -495.0, "s", "oxide")},
+        "Ti-TiO-JANAF": {"TiO[JANAF]": (1, 1, 0, 0, -513.278, "s", "oxide")},
+        "Ti-BE16": {
+            "Ti4+[BE16]": (1, 0, 0, 4, -889.5 - 2 * _W_NBS + 3.56 * _K, "aq", "cation"),
+            # TiO2 + 2H+ = TiO2+ + H2O: log K = -6.06 - (-2.48) (rutile -> TiOOH+ minus titanyl hydrolysis)
+            "TiO2+[BE16]": (1, 1, 0, 2, -889.5 - _W_NBS + (6.06 - 2.48) * _K, "aq", "cation"),
+            "TiOOH+[BE16]": (1, 2, 1, 1, -889.5 + 6.06 * _K, "aq", "cation"),
+            "TiO(OH)2[BE16]": (1, 3, 2, 0, -889.5 + _W_NBS + 9.02 * _K, "aq", "cation"),
+            "TiO(OH)3-[BE16]": (1, 4, 3, -1, -889.5 + 2 * _W_NBS + (9.02 + 11.9) * _K, "aq", "anion_low"),
+        },
+        "Ti-LLNL": {"Ti(OH)4[LLNL]": (1, 4, 4, 0, -889.5 + 2 * _W_NBS + 9.6452 * _K, "aq", "cation")},
+        "Ti-hydride": {"TiH2": (1, 0, 2, 0, -80.3, "s", "metal")},
+    },
+}
+# Excluded (V2) rows that are in no candidate set: polynuclear Cr2O7 2- and heptamolybdates, anatase.
+EXCLUDED = {
+    "Cr": {"Cr2O7^2-": (2, 7, 0, -2, -1301.1, "aq", "anion_high")},
+    "Mo": {n: (7, 24, h, z, 7 * -836.3 - 4 * _W_NBS - lk * _K, "aq", "anion_high")
+           for n, h, z, lk in (("Mo7O24^6-", 0, -6, 51.93), ("HMo7O24^5-", 1, -5, 58.90),
+                               ("H2Mo7O24^4-", 2, -4, 64.63), ("H3Mo7O24^3-", 3, -3, 68.68))},
+    "Ti": {"TiO2(anatase)": (1, 2, 0, 0, -884.5, "s", "oxide")},
+}
+
+
+def withheld_hits(element, pH, E, log_a=-6.0):
+    """[(set id, species)] of every candidate set whose own species is the brute-force minimum here."""
+    hits = []
+    for set_id, members in CANDIDATES.get(element, {}).items():
+        sp = dict(DATA[element]["sp"])
+        sp.update(members)
+        c = coeffs_of(sp, DATA[element]["H2O"], log_a)
+        best = None
+        for name, v in c.items():
+            g = v[0] + v[1] * pH + v[2] * E
+            if best is None or g < best[1]:
+                best = (name, g)
+        if best[0] in members:
+            hits.append((set_id, best[0]))
+    return hits
+
+
+def withheld_polygons(element, log_a=-6.0, box=BOX):
+    """[(set id, species, polygon)] of the candidate species' domains, one candidate set at a time."""
+    out = []
+    for set_id, members in CANDIDATES.get(element, {}).items():
+        sp = dict(DATA[element]["sp"])
+        sp.update(members)
+        polys = _polygons_of(coeffs_of(sp, DATA[element]["H2O"], log_a), box)
+        for name, (poly, _) in polys.items():
+            if name in members:
+                out.append((set_id, name, poly))
+    return out
+
+
 CATEGORY = {"metal": "Immunity", "cation": "Corrosion (acid)", "anion_low": "Corrosion (alkaline)",
-            "oxide": "Passivation (thermodynamic, film-forming)", "anion_high": "Transpassive"}
+            "oxide": "Passivation (thermodynamic)", "anion_high": "Transpassive"}
 
 
 def dataset(element, include_withheld=False):
@@ -195,7 +334,10 @@ def boundary(element, a, b, log_a=-6.0):
 
 def polygons(element, log_a=-6.0, box=BOX, include_withheld=False):
     """species -> (polygon, area) by Sutherland-Hodgman clipping (domains with area > 1e-9)."""
-    c = coeffs(element, log_a, include_withheld)
+    return _polygons_of(coeffs(element, log_a, include_withheld), box)
+
+
+def _polygons_of(c, box=BOX):
     res = {}
     for i in c:
         poly = [(box[0], box[2]), (box[1], box[2]), (box[1], box[3]), (box[0], box[3])]
