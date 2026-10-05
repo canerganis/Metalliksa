@@ -10,25 +10,25 @@
 # python/test_allowlist_ceilings.py asserts that every ceiling file and every
 # PROTECTED_PATHS entry of scripts/check_ceiling_review.py is listed here.
 
-/.github/CODEOWNERS @0000can0000
-/.github/workflows/ci.yml @0000can0000
-/scripts/check_ceiling_review.py @0000can0000
-/python/test_allowlist_ceilings.py @0000can0000
-/tests/support/ceiling.ts @0000can0000
-/tests/support/routeScan.ts @0000can0000
-/tests/support/importGraph.ts @0000can0000
-/tests/route-authority.test.ts @0000can0000
-/tests/component-reachability.test.ts @0000can0000
-*.ceiling.json @0000can0000
+/.github/CODEOWNERS @canerganis
+/.github/workflows/ci.yml @canerganis
+/scripts/check_ceiling_review.py @canerganis
+/python/test_allowlist_ceilings.py @canerganis
+/tests/support/ceiling.ts @canerganis
+/tests/support/routeScan.ts @canerganis
+/tests/support/importGraph.ts @canerganis
+/tests/route-authority.test.ts @canerganis
+/tests/component-reachability.test.ts @canerganis
+*.ceiling.json @canerganis
 # LPBF implementation fingerprint pin (changes only at a planned bump) and the parity goldens
 # (the "before" side of the next bump; re-recorded only in a reviewed commit of their own,
 # never together with a manifest edit); design 5c section 8.
-/python/lpbf_implementation_fingerprint.expected @0000can0000
-/python/golden/lpbf_parity/ @0000can0000
+/python/lpbf_implementation_fingerprint.expected @canerganis
+/python/golden/lpbf_parity/ @canerganis
 # Guards around the pin: pin test, pin parser, FORBIDDEN_MANIFEST_IMPORTS, manifest count.
-/python/test_lpbf_implementation_fingerprint_pin.py @0000can0000
-/python/lpbf_fingerprint_pin.py @0000can0000
-/python/test_lpbf_implementation_fingerprint.py @0000can0000
-/python/test_phase6a_leaf_modules.py @0000can0000
+/python/test_lpbf_implementation_fingerprint_pin.py @canerganis
+/python/lpbf_fingerprint_pin.py @canerganis
+/python/test_lpbf_implementation_fingerprint.py @canerganis
+/python/test_phase6a_leaf_modules.py @canerganis
 # The parity harness (--expect-drift rules).
-/python/tools/lpbf_parity_check.py @0000can0000
+/python/tools/lpbf_parity_check.py @canerganis
