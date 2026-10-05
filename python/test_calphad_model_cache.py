@@ -22,6 +22,8 @@ import os
 import shutil
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from unittest import mock
 
@@ -369,18 +371,74 @@ class TestAlSiScheilOracle(unittest.TestCase):
         json.dumps(out, allow_nan=False)
 
 
-class TestIpcAffinityRouting(unittest.TestCase):
-    """calphad_solver runs in a dedicated single-worker pool so its model cache is reused."""
+@NEEDS_PYCALPHAD
+class TestPrimaryPhaseAndCaveats(unittest.TestCase):
+    """Sol S1: the partition coefficient belongs to the phase that forms first. Hypereutectic Al-20 wt% Si
+    solidifies primary Si (DIAMOND_A4) before the Al-Si eutectic (577 degC); FCC_A1 is only the final
+    majority. Opus S4/S5: model phase names and database deviations are carried with the numbers."""
 
-    def test_calphad_requests_go_to_the_affinity_pool_and_other_scripts_do_not(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.alsi20 = cs.compute_multi_component_equilibrium(
+            "Al-20Si", {"Al": 80.0, "Si": 20.0}, t_min_c=500.0, t_max_c=850.0, t_step_c=10.0, scheil_step_c=1.0)
+        cls.ti64 = cs.compute_multi_component_equilibrium(
+            "Ti-6Al-4V", {"Ti": 90.0, "Al": 6.0, "V": 4.0}, t_min_c=600.0, t_max_c=1750.0, t_step_c=25.0)
+
+    def test_hypereutectic_al_si_primary_phase_is_silicon(self):
+        out = self.alsi20
+        block = out["scheilSolidification"]
+        self.assertEqual(block["primarySolidPhase"], "DIAMOND_A4")
+        self.assertGreater(block["phaseAmounts"]["FCC_A1"], block["phaseAmounts"]["DIAMOND_A4"])  # final majority
+        k = {r["element"]: r for r in out["solutePartitioning"]}
+        self.assertEqual(k["SI"]["primarySolidPhase"], "DIAMOND_A4")
+        self.assertEqual(k["SI"]["partitionCoefficientSource"], "scheil-primary-phase-tie-line")
+        self.assertGreater(k["SI"]["partitionCoefficient_k"], 3.0)  # nearly pure Si next to a ~19 at% Si liquid
+        self.assertLess(k["AL"]["partitionCoefficient_k"], 0.01)
+        self.assertLess(k["SI"]["temperatureC"], out["criticalTemperatures"]["liquidusC"] + 1e-9)
+        lo, hi = block["terminalBracketC"]
+        self.assertAlmostEqual((lo + hi) / 2.0, 577.0, delta=1.5)  # ends at the Al-Si eutectic
+
+    def test_order_disorder_model_phases_carry_the_caveat(self):
+        out = self.ti64
+        self.assertIn("BCC_B2", out["phaseNameNotes"])
+        self.assertIn("ordering is not checked", out["phaseNameNotes"]["BCC_B2"])
+        self.assertIn("BCC_B2", out["scheilSolidification"]["phaseNameNotes"])
+        for point in out["equilibriumProfile"]:
+            for ph in point["phases"]:
+                if ph["phaseId"] == "BCC_B2":
+                    self.assertNotIn("Intermetallic", ph["phaseName"])
+                    self.assertIs(ph["isPrecipitate"], False)
+                    self.assertIs(ph["orderingNotChecked"], True)
+
+    def test_ti64_beta_transus_and_melting_range_carry_the_database_deviation(self):
+        status = self.ti64["criticalTemperatureStatus"]
+        self.assertEqual(self.ti64["criticalTemperatures"]["betaTransusC"], 925.0)
+        self.assertIn("70 K", status["betaTransusC"]["knownDeviation"])
+        self.assertIn("995", status["betaTransusC"]["knownDeviation"])
+        self.assertIn("knownDeviation", status["liquidusC"])
+        # no deviation text on systems without one
+        ni_al = cs.compute_multi_component_equilibrium("Ni-Al", {"Ni": 90.0, "Al": 10.0}, unit="at_pct",
+                                                       t_min_c=1300.0, t_max_c=1500.0, t_step_c=20.0, scheil=False)
+        self.assertNotIn("knownDeviation", ni_al["criticalTemperatureStatus"]["liquidusC"])
+
+
+class TestIpcAffinityRouting(unittest.TestCase):
+    """calphad_solver runs in a dedicated single-worker lane so its model cache is reused; metadata
+    requests (the database list) go to the shared pool."""
+
+    def test_calphad_requests_go_to_the_affinity_lane_and_other_scripts_do_not(self):
         import persistent_ipc_service as ipc
         self.assertIn("calphad_solver", ipc.AFFINITY_SCRIPT_NAMES)
         reg = ipc.ConcurrentModuleRegistry.__new__(ipc.ConcurrentModuleRegistry)
         reg.script_dir = ipc.SCRIPT_DIR
         self.assertEqual(reg._affinity_name(os.path.join(ipc.SCRIPT_DIR, "calphad_solver.py")), "calphad_solver")
         self.assertIsNone(reg._affinity_name(os.path.join(ipc.SCRIPT_DIR, "pourbaix_solver.py")))
+        self.assertEqual(ipc._payload_field('{"action": "list_databases"}', "action"), "list_databases")
+        self.assertEqual(ipc._supersede_key({"supersedeKey": "k1"}), "k1")
+        self.assertIsNone(ipc._supersede_key({"supersedeKey": "x" * 500}))
+        self.assertIsNone(ipc._supersede_key({"supersedeKey": 3}))
 
-    def test_two_calphad_requests_share_one_worker(self):
+    def test_two_calphad_requests_share_one_worker_and_the_list_uses_the_shared_pool(self):
         import persistent_ipc_service as ipc
         reg = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
         self.addCleanup(reg.shutdown)
@@ -390,7 +448,14 @@ class TestIpcAffinityRouting(unittest.TestCase):
         for r in runs:
             self.assertEqual(r["exitCode"], 0, r["stderr"][-800:])
             self.assertEqual(r["concurrency"], "affinity_pool:calphad_solver")
-        self.assertEqual(reg.get_status()["affinityPools"], ["calphad_solver"])
+            self.assertIn("queueWaitMs", r)
+        listing = reg.execute_script("python/calphad_solver.py", {"action": "list_databases"}, [], 120000)
+        self.assertEqual(listing["exitCode"], 0, listing["stderr"][-800:])
+        self.assertEqual(listing["concurrency"], "process_pool")  # review S1: never behind a calculation
+        self.assertIn("systemCoverage", json.loads(listing["stdout"]))
+        status = reg.get_status()
+        self.assertEqual(status["affinityPools"], ["calphad_solver"])
+        self.assertEqual(status["affinityLanes"]["calphad_solver"]["completed"], 2)
         outs = [json.loads(r["stdout"]) for r in runs]
         if cs.PYCALPHAD_AVAILABLE:
             self.assertEqual([o["modelCache"]["status"] for o in outs], ["cold", "warm"])
@@ -399,24 +464,169 @@ class TestIpcAffinityRouting(unittest.TestCase):
         else:
             self.assertEqual(outs[0]["unavailableKind"], "pycalphad-not-installed")
 
-    def test_timeout_recycles_only_the_affinity_worker_when_it_is_alone(self):
+
+def _sleep_then(delay, value):
+    time.sleep(delay)
+    return value
+
+
+class _FakePool:
+    """Thread pool stand-in for the lane (counts kills, can be 'broken')."""
+    kills = []
+
+    def __init__(self):
+        from concurrent.futures import ThreadPoolExecutor
+        self.inner = ThreadPoolExecutor(1)
+        self.in_flight = 0
+        self.max_in_flight = 0
+        self.lock = threading.Lock()
+
+    def submit(self, fn, *args):
+        with self.lock:
+            self.in_flight += 1
+            self.max_in_flight = max(self.max_in_flight, self.in_flight)
+
+        def run():
+            try:
+                return fn(*args)
+            finally:
+                with self.lock:
+                    self.in_flight -= 1
+        return self.inner.submit(run)
+
+    def shutdown(self, wait=False, cancel_futures=True):
+        _FakePool.kills.append(self)
+        self.inner.shutdown(wait=False, cancel_futures=True)
+
+
+class TestAffinityLane(unittest.TestCase):
+    """Queue semantics of the serial CALPHAD lane (reviews: Opus S2, Sol S2/S3), deterministic, no processes."""
+
+    def setUp(self):
         import persistent_ipc_service as ipc
-        reg = ipc.ConcurrentModuleRegistry.__new__(ipc.ConcurrentModuleRegistry)
-        import threading
-        reg.stats_lock = threading.Lock()
-        reg.affinity_active = {"calphad_solver": 1}
-        reg._affinity_pool = mock.Mock()
-        reg._terminate_workers = mock.Mock()
-        running = mock.Mock()
-        running.cancel.return_value = False
-        self.assertEqual(reg._abandon_affinity("calphad_solver", running),
-                         "worker terminated and affinity pool recycled")
-        reg._affinity_pool.assert_called_once_with("calphad_solver", recycle=True)
-        reg._terminate_workers.assert_not_called()  # the shared pool is untouched
-        reg.affinity_active = {"calphad_solver": 2}
-        reg._affinity_pool.reset_mock()
-        self.assertIn("other job(s) share", reg._abandon_affinity("calphad_solver", running))
-        reg._affinity_pool.assert_not_called()
+        self.ipc = ipc
+        _FakePool.kills = []
+        self.pools = []
+
+        def factory():
+            pool = _FakePool()
+            self.pools.append(pool)
+            return pool
+        self.lane = ipc._AffinityLane("calphad_solver", factory)
+
+    def run_async(self, job, timeout_s, key=None):
+        box = {}
+        t = threading.Thread(target=lambda: box.setdefault("out", self.lane.run(job, timeout_s, key)), daemon=True)
+        t.start()
+        return t, box
+
+    def test_only_one_job_is_ever_inside_the_pool(self):
+        threads = [self.run_async((_sleep_then, 0.05, i), 10.0) for i in range(5)]
+        for t, _ in threads:
+            t.join(10)
+        self.assertEqual(sorted(box["out"]["result"] for _, box in threads), [0, 1, 2, 3, 4])
+        self.assertEqual(self.pools[0].max_in_flight, 1)
+        self.assertEqual(self.lane.snapshot()["completed"], 5)
+
+    def test_a_newer_request_with_the_same_key_supersedes_the_queued_one(self):
+        first = self.run_async((_sleep_then, 0.4, "running"), 10.0, key="studio-1")
+        time.sleep(0.1)  # first is running
+        stale = self.run_async((_sleep_then, 0.0, "stale"), 10.0, key="studio-1")
+        time.sleep(0.05)
+        other = self.run_async((_sleep_then, 0.0, "other-client"), 10.0, key="studio-2")
+        time.sleep(0.05)
+        latest = self.run_async((_sleep_then, 0.0, "latest"), 10.0, key="studio-1")
+        for t, _ in (first, stale, other, latest):
+            t.join(10)
+        self.assertEqual(first[1]["out"]["result"], "running")  # a running job is never superseded
+        self.assertEqual(stale[1]["out"]["outcome"], "superseded")
+        self.assertEqual(other[1]["out"]["result"], "other-client")  # another client's request is kept
+        self.assertEqual(latest[1]["out"]["result"], "latest")
+        self.assertEqual(self.lane.snapshot()["superseded"], 1)
+
+    def test_a_request_that_times_out_in_the_queue_never_runs_later(self):
+        ran = []
+        blocker = self.run_async((_sleep_then, 0.6, "blocker"), 10.0)
+        time.sleep(0.1)
+        queued = self.run_async((ran.append, "queued"), 0.2)
+        queued[0].join(5)
+        self.assertEqual(queued[1]["out"]["outcome"], "queue-timeout")
+        self.assertEqual(queued[1]["out"]["ahead"], 1)
+        blocker[0].join(5)
+        time.sleep(0.2)
+        self.assertEqual(ran, [])  # no zombie work after the caller gave up
+        self.assertEqual(self.lane.snapshot()["queueTimeouts"], 1)
+
+    def test_a_job_over_its_budget_replaces_the_worker_even_with_requests_queued(self):
+        stuck = self.run_async((_sleep_then, 5.0, "stuck"), 0.3)
+        time.sleep(0.05)
+        waiting = self.run_async((_sleep_then, 0.0, "next"), 10.0)
+        stuck[0].join(5)
+        waiting[0].join(5)
+        self.assertEqual(stuck[1]["out"]["outcome"], "run-timeout")
+        self.assertEqual(waiting[1]["out"]["result"], "next")  # served by the replacement worker
+        self.assertEqual(len(self.pools), 2)
+        self.assertIn(self.pools[0], _FakePool.kills)
+        self.assertNotIn(self.pools[1], _FakePool.kills)
+
+    def test_a_stale_recycle_never_kills_the_replacement(self):
+        self.lane.prestart()
+        gen1 = self.lane.generation
+        self.assertTrue(self.lane.recycle(gen1))
+        replacement = self.lane.pool
+        self.assertFalse(self.lane.recycle(gen1))  # a second handler of the same failed generation
+        self.assertIs(self.lane.pool, replacement)
+        self.assertNotIn(replacement, _FakePool.kills)
+
+    def test_a_dead_worker_fails_only_the_running_request(self):
+        from concurrent.futures.process import BrokenProcessPool
+
+        def die():
+            raise BrokenProcessPool("worker died")
+        dead = self.run_async((die,), 5.0)
+        dead[0].join(5)
+        self.assertEqual(dead[1]["out"]["outcome"], "worker-died")
+        nxt = self.run_async((_sleep_then, 0.0, "ok"), 5.0)
+        nxt[0].join(5)
+        self.assertEqual(nxt[1]["out"]["result"], "ok")
+
+
+class TestDaemonStdinWatchSpawn(unittest.TestCase):
+    """Review B1: with METALLIX_IPC_STDIN_WATCH=1 and stdin a pipe (exactly how
+    server/processOrchestrator.ts starts the daemon), the calphad affinity worker, which is started
+    after the stdin watch thread, must run requests. Before the fix it hung at interpreter start on
+    Windows and every calphad request timed out."""
+
+    def test_calphad_requests_succeed_through_the_real_daemon_with_a_watched_stdin(self):
+        import subprocess
+        import test_persistent_ipc_security as t
+        env = {"METALLIX_IPC_TOKEN": t.TOKEN, "METALLIX_IPC_STDIN_WATCH": "1", "METALLIX_IPC_HTTP": "1"}
+        proc = t._spawn_service(env, t.REPO, stdin=subprocess.PIPE)
+        self.addCleanup(t._kill_tree, proc)
+        ready = json.loads(t._read_line(proc.stdout, 300))
+        port = ready["httpPort"]
+        time.sleep(1.0)  # the watch thread is now blocked in its read, as in production
+
+        def execute(payload, timeout_ms):
+            body = json.dumps({"script": "python/calphad_solver.py", "payload": payload, "timeoutMs": timeout_ms})
+            headers = t._signed(port, "POST", "/execute", body)
+            t0 = time.perf_counter()
+            status, parsed, _, _ = t._raw_request(port, "POST", "/execute", headers, body)
+            return status, parsed, time.perf_counter() - t0
+
+        status, parsed, secs = execute({"name": "Ni-Al", "elements": {"Ni": 90.0, "Al": 10.0}, "unit": "at_pct",
+                                        "tMin": 1300.0, "tMax": 1500.0, "tStep": 20.0}, 90000)
+        self.assertEqual(status, 200, parsed)
+        self.assertEqual(parsed["exitCode"], 0, parsed.get("stderr"))
+        self.assertEqual(parsed["concurrency"], "affinity_pool:calphad_solver")
+        self.assertLess(secs, 80.0)
+        status, parsed, _ = execute({"action": "list_databases"}, 60000)
+        self.assertEqual((status, parsed["exitCode"]), (200, 0), parsed.get("stderr"))
+        self.assertIn("systemCoverage", json.loads(parsed["stdout"]))
+        # the watcher still sees the supervisor go away
+        proc.stdin.close()
+        proc.wait(60)
+        self.assertEqual(proc.returncode, 0)
 
 
 if __name__ == "__main__":

@@ -237,8 +237,23 @@ COVERAGE_REFERENCE_SYSTEMS = (
 # Deviations observed with the covering database (stated, not corrected).
 COVERAGE_KNOWN_DEVIATIONS = {
     "ti6al4v": ("COST 507 gives the HCP_A3 (alpha) phase up to about 925 degC for Ti-6Al-4V on a 25 degC grid "
-                "(phase-name heuristic), against a beta transus of about 995 degC usually reported for this "
-                "alloy; treat alpha/beta results from this database as indicative only."),
+                "(phase-name heuristic), against a beta transus of about 995 +/- 10 degC reported for this "
+                "alloy (TIMET technical manual), i.e. about 70 K low; its liquidus/solidus (about 1686/1681 degC) "
+                "are above the values usually quoted for Ti-6Al-4V (not checked against a primary source here). "
+                "Treat alpha/beta and melting results from this database as indicative only."),
+}
+
+# The same deviations, attached to a result's critical-temperature status: (database id, base element)
+# -> {field: text}. Shown next to the number, not only in the coverage list.
+RESULT_KNOWN_DEVIATIONS = {
+    ("cost507", "Ti"): {
+        "betaTransusC": ("COST 507 places alpha (HCP_A3) up to about 925 degC for Ti-6Al-4V, about 70 K below the "
+                         "995 +/- 10 degC beta transus reported for the alloy (TIMET technical manual)."),
+        "liquidusC": ("COST 507 liquidus/solidus for Ti-6Al-4V (about 1686/1681 degC) lie above the values usually "
+                      "quoted for the alloy; not checked against a primary source here."),
+        "solidusC": ("COST 507 liquidus/solidus for Ti-6Al-4V (about 1686/1681 degC) lie above the values usually "
+                     "quoted for the alloy; not checked against a primary source here."),
+    },
 }
 
 
@@ -857,15 +872,28 @@ PHASE_COLORS = {
 }
 
 
+# Order/disorder model phases: one Gibbs model that also describes the DISORDERED solution (FCC_L12
+# also gamma, BCC_B2 also beta-Ti / alpha-Fe). The phase name alone never shows ordering, and no
+# site-fraction ordering check is implemented, so these names carry this note wherever they appear.
+ORDER_DISORDER_PHASES = frozenset({"FCC_L12", "L12_FCC", "BCC_B2"})
+ORDERING_NOT_CHECKED = ("order/disorder model phase: the name does not show ordering, and site-fraction "
+                        "ordering is not checked (near the melting range it is usually the disordered solution)")
+
+
+def phase_name_notes(names) -> Dict[str, str]:
+    """{phase name: caveat} for the order/disorder model phases among ``names``."""
+    return {name: ORDERING_NOT_CHECKED for name in sorted(set(names)) if name in ORDER_DISORDER_PHASES}
+
+
 def _friendly_phase_name(phase_str: str) -> str:
     if phase_str in ["FCC_A1", "GAMMA"]:
         return "γ-Matrix (FCC_A1 solid solution)"
     if phase_str in ["FCC_L12", "L12_FCC"]:
-        return "L1_2 phase (γ' only if ordered; ordering not verified)"
+        return "FCC_L12 model phase (γ or γ'; ordering not checked)"
     if phase_str in ["BCC_A2"]:
         return "α-Ferrite / β-Titanium (BCC_A2)"
     if phase_str in ["BCC_B2"]:
-        return "B2 Superlattice Intermetallic (BCC_B2)"
+        return "BCC_B2 model phase (disordered BCC such as β-Ti, or B2; ordering not checked)"
     if phase_str in ["HCP_A3"]:
         return "α-Phase / HCP Matrix (HCP_A3)"
     if "SIGMA" in phase_str:
@@ -1030,7 +1058,7 @@ def scheil_gulliver(
             for name, phase_x in (res.get("phasesX") or {}).items():
                 if name not in first_appearance and phase_x:
                     first_appearance[name] = {"temperatureC": round(t_c, 2), "phaseX": dict(phase_x),
-                                              "liquidX": dict(new_x_liq)}
+                                              "liquidX": dict(new_x_liq), "amount": float(solids.get(name, 0.0))}
         f_liq *= local_liq
         x_liq = new_x_liq
         points.append({"temperatureC": round(t_c, 2), "fractionSolid": round(1.0 - f_liq, 6),
@@ -1284,7 +1312,8 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
                 "fraction": fraction,
                 "color": PHASE_COLORS.get(phase_str, "#94a3b8"),
                 "isPrimary": phase_str in ["FCC_A1", "BCC_A2", "HCP_A3", "LIQUID"],
-                "isPrecipitate": phase_str in ["FCC_L12", "L12_FCC", "MG2SI", "BCC_B2"],
+                "isPrecipitate": phase_str in ["MG2SI"],
+                "orderingNotChecked": phase_str in ORDER_DISORDER_PHASES,
                 "isTCP": "SIGMA" in phase_str or "LAVES" in phase_str,
                 "compositions": comp_map,
             })
@@ -1488,6 +1517,17 @@ def _mole_to_wt_pct(x: Dict[str, float]) -> Dict[str, float]:
 
 
 SCHEIL_STATUS_COMPUTED = "pycalphad-scheil-gulliver"
+
+
+def _primary_phase(scheil_result: Dict[str, Any]) -> Optional[str]:
+    """The solid phase that appears first on the Scheil path; on a tie, the larger amount at that step."""
+    appearances = scheil_result.get("firstAppearance") or {}
+    if not appearances:
+        return None
+    first_t = max(a["temperatureC"] for a in appearances.values())
+    candidates = sorted(name for name, a in appearances.items() if a["temperatureC"] == first_t)
+    amounts = {name: appearances[name].get("amount", 0.0) for name in candidates}
+    return max(candidates, key=lambda name: amounts[name])
 SCHEIL_STATUS_UNAVAILABLE = "unavailable"
 
 
@@ -1522,10 +1562,11 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
             "solidCompositions": _mole_to_wt_pct(p["solidX"]) if p["solidX"] else None,
             "solidPhases": p["solidPhases"],
         })
-    # Partition coefficient k = x(phase) / x(liquid) of the majority solid phase of the path, at its
-    # first appearance (equilibrium tie-line between that phase and the liquid it forms from).
-    amounts = scheil_result["phaseAmounts"]
-    primary = max(amounts, key=lambda name: amounts[name]) if amounts else None
+    # Partition coefficient k = x(phase) / x(liquid) of the PRIMARY solid phase: the phase that forms
+    # first on the path (the largest amount at that step when several appear together), from its
+    # equilibrium tie-line with the liquid at its first appearance. (The final majority phase is not
+    # the primary phase: in hypereutectic Al-Si, Si forms first and FCC_A1 ends as the majority.)
+    primary = _primary_phase(scheil_result)
     tie = scheil_result.get("firstAppearance", {}).get(primary) if primary else None
     rows = []
     for c in comps:
@@ -1576,6 +1617,8 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
         "stepC": scheil_result["stepC"],
         "steps": scheil_result["steps"],
         "phaseAmounts": scheil_result["phaseAmounts"],
+        "primarySolidPhase": primary,
+        "phaseNameNotes": phase_name_notes(list(scheil_result["phaseAmounts"]) + ([primary] if primary else [])),
         "clampedSteps": scheil_result["clampedSteps"],
         "massBalanceMaxAbsError": scheil_result["massBalanceMaxAbsError"],
         "validity": validity,
@@ -1626,7 +1669,7 @@ def compute_multi_component_equilibrium(
         return unavailable_result(KIND_PYCALPHAD_MISSING, UNAVAILABLE_REASON_PYCALPHAD, **base, **db_extra)
 
     try:
-        return solve_pycalphad_equilibrium(
+        result = solve_pycalphad_equilibrium(
             alloy_name=name,
             wt_pct=wt_pct,
             at_frac=at_frac,
@@ -1645,6 +1688,14 @@ def compute_multi_component_equilibrium(
             scheil=scheil,
             scheil_step_c=scheil_step_c,
         )
+        deviations = RESULT_KNOWN_DEVIATIONS.get((resolved["id"], base_element(at_frac)), {})
+        for field, text in deviations.items():
+            entry = result["criticalTemperatureStatus"].get(field)
+            if entry is not None and result["criticalTemperatures"].get(field) is not None:
+                entry["knownDeviation"] = text
+        result["phaseNameNotes"] = phase_name_notes(
+            ph["phaseId"] for point in result["equilibriumProfile"] for ph in point["phases"])
+        return result
     except CalphadUnavailable as exc:
         return unavailable_result(exc.kind, exc.reason, **base, **db_extra, **exc.extra)
     except Exception as err:
