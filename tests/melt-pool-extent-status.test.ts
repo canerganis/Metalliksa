@@ -40,10 +40,9 @@ test("literature % error is replaced by 'not computed — <status>' unless compu
   assert.equal(literatureErrorUnavailableText({}), "not computed — not-reported");
 });
 
-test("the three melt-pool views render the shared notice; the literature % error guards on the status util", () => {
+test("the two surviving melt-pool views render the shared notice; the literature % error guards on the status util", () => {
   for (const view of [
     "src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx",
-    "src/components/LaserMeltPoolThermalMap.tsx",
     "src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx",
   ]) {
     const src = read(view);
@@ -63,10 +62,10 @@ test("the three melt-pool views render the shared notice; the literature % error
   assert.match(decision, /not computed — \{c\.extentStatus/);
 });
 
-test("types declare extentStatus/extentNote in both meltPoolGeometry blocks", () => {
+test("types declare extentStatus/extentNote in the meltPoolGeometry block", () => {
+  // The optional legacy block (PythonMarangoniPoreResult) was deleted on 2026-10-04 with its route.
   const svc = read("src/services/pythonComputationService.ts");
   assert.match(svc, /extentStatus: MeltPoolExtentStatus;\r?\n\s*extentNote: string \| null;/);
-  assert.match(svc, /extentStatus\?: MeltPoolExtentStatus;\r?\n\s*extentNote\?: string \| null;/);
   assert.match(svc, /verdict: "printable" \| "risky" \| "do-not-print" \| "inconclusive"/);
 });
 

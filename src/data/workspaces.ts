@@ -4,12 +4,11 @@ import { LISTED_CONTRACTS, type ListedModuleId } from '../modules/registry';
 export type ModuleScope = 'Production' | 'Research' | 'Preview' | 'Unresolved';
 /** Tooltip of every maturity badge (module header, command palette). */
 export const MATURITY_BADGE_TITLE = 'Module maturity; this is not a validation claim for any result.';
-export type WorkspaceId = 'lpbf' | 'materials' | 'evidence' | 'orchestration';
+export type WorkspaceId = 'lpbf' | 'materials' | 'evidence';
 export const WORKSPACES = [
   { id: 'lpbf', label: 'LPBF Engineering', description: 'Process setup through thermal research, build screening and qualification evidence.', defaultModule: '3d-distortion-lab' },
   { id: 'materials', label: 'Materials Intelligence', description: 'Characterization, thermodynamics and material models supporting engineering decisions.', defaultModule: 'database' },
   { id: 'evidence', label: 'Evidence & Qualification', description: 'Sources, experimental records, uncertainty and traceable engineering reports.', defaultModule: 'research-hub' },
-  { id: 'orchestration', label: 'AI Orchestration', description: 'Human-gated multi-agent planning for datasets and engineering workflows.', defaultModule: 'ai-orchestrator' },
 ] as const;
 
 export type ModuleId = ListedModuleId;

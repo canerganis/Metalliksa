@@ -27,24 +27,6 @@ from typing import Any, Dict, List, Optional
 # battery_corrosion_eis_solver adds a wall-clock duration under this name.
 EXTRA_VOLATILE_KEYS = frozenset({"pythonDurationMs"})
 
-# Synthetic Randles + Warburg spectrum (Rs 0.015 ohm, Rct 0.032 ohm, Cdl 1.6 F,
-# sigma 0.004 ohm s^-1/2), 31 log-spaced points from 10 kHz to 10 mHz, rounded to
-# 8 decimals. Synthetic, not measured data.
-_EIS_F = [10000.0, 6309.573445, 3981.071706, 2511.886432, 1584.893192, 1000.0, 630.957344,
-          398.107171, 251.188643, 158.489319, 100.0, 63.095734, 39.810717, 25.118864, 15.848932,
-          10.0, 6.309573, 3.981072, 2.511886, 1.584893, 1.0, 0.630957, 0.398107, 0.251189,
-          0.158489, 0.1, 0.063096, 0.039811, 0.025119, 0.015849, 0.01]
-_EIS_ZR = [0.01501596, 0.0150201, 0.01502531, 0.01503189, 0.01504021, 0.01505077, 0.01506431,
-           0.01508193, 0.01510559, 0.01513906, 0.01519047, 0.01527838, 0.01544683, 0.01580107,
-           0.01658622, 0.01832425, 0.02188526, 0.02792002, 0.03536584, 0.04166528, 0.04559466,
-           0.04774272, 0.04901273, 0.04997638, 0.05092542, 0.05201318, 0.05333968, 0.05499251,
-           0.05706651, 0.05967479, 0.06295736]
-_EIS_ZI = [-2.59e-05, -3.585e-05, -5.028e-05, -7.144e-05, -0.00010285, -0.00014993, -0.00022118,
-           -0.00032982, -0.00049663, -0.00075414, -0.00115334, -0.0017736, -0.00273639,
-           -0.00421871, -0.0064446, -0.00957533, -0.01332138, -0.01632226, -0.0166503,
-           -0.01421681, -0.01092469, -0.00824724, -0.00656125, -0.00575303, -0.00563571,
-           -0.00607464, -0.00700212, -0.00840752, -0.01032716, -0.01283877, -0.01606063]
-
 def _key_sorted(value: Any) -> Any:
     """Return ``value`` with every dict in key order.
 
@@ -95,20 +77,9 @@ _RAW_CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
         },
     },
     "battery_corrosion_eis_solver": {
-        # R 8.314, F 96485.332 (p2d site).
-        "p2d_continuum_nmc811": {"action": "p2d_continuum", "chemistryId": "nmc811", "cRate": 2.5,
-                                 "tempC": 15.0, "soc": 0.6},
-        # R 8.314 (degradation site).
-        "battery_degradation_lfp": {"action": "battery_degradation", "chemistryId": "lfp",
-                                    "cycles": 800, "tempC": 35.0, "chargeCRate": 1.5},
-        # R 8.314462618, F 96485.33212 (Nernst-Planck-Poisson site).
-        "nernst_planck_poisson": {"action": "nernst_planck_poisson", "formulationId": "lipf6_ec_emc",
-                                  "currentDensity_mA_cm2": 6.0, "gap_um": 40.0, "tempC": 10.0},
-        # R 8.31446, F 96485.33 (uploaded-EIS exchange-current site).
-        "uploaded_eis_synthetic_randles": {"action": "analyze_uploaded_eis", "frequencies": _EIS_F,
-                                           "zReal": _EIS_ZR, "zImag": _EIS_ZI,
-                                           "applicationDomain": "battery", "cellTemperatureC": 30.0,
-                                           "nominalCapacityAh": 4.8},
+        # The p2d_continuum_nmc811, battery_degradation_lfp, nernst_planck_poisson and
+        # uploaded_eis_synthetic_randles cases (and their step_b goldens) were deleted on
+        # 2026-10-04 with their solver actions (no UI consumer; only corrosion_kinetics stays).
         # Recorded as the pre-migration success:true masking; since the V1 follow-up the
         # solver reports success:false for it (see EXPECTED_SUCCESS_FLAG_CHANGES).
         "edge_unknown_action_success_masking": {"action": "no_such_action"},

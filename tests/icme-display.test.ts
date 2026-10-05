@@ -27,17 +27,6 @@ test("ICME studio and service never show the old overclaiming strings and use th
   assert.ok(studio.includes("ultimateTensileStrength_UTS_MPa != null"), "UTS reference line must be conditional");
 });
 
-test("Industrial certification lab shows the design limit honestly and handles null limits", () => {
-  const lab = readFileSync(join(ROOT, "src", "components", "IndustrialCertificationLab.tsx"), "utf8");
-  for (const old of ["99% Survival Design Limit", "99_Percent_Survival_Design_Limit_MPa"]) {
-    assert.ok(!lab.includes(old), `lab still contains ${old}`);
-  }
-  assert.ok(lab.includes("Design Limit (fixed 0.85 knockdown, illustrative)"));
-  assert.ok(lab.includes("formatOptionalValue(result.Certification_Limits?.Design_Limit_MPa"));
-  assert.ok(lab.includes("formatOptionalValue(result.Certification_Limits?.Expected_Fatigue_Limit_MPa"));
-  assert.ok(lab.includes("result.Certification_Limits?.Status"), "the unavailable reason (e.g. no hardness for alloy) is shown");
-});
-
 test("ICME solver output (golden) is illustrative with unavailable UTS/K_Ic and a yield-only verdict", () => {
   const doc = JSON.parse(
     readFileSync(join(ROOT, "python", "golden", "phase6a", "icme_multiscale_pipeline_solver", "step_b", "default_payload_in718.json"), "utf8"),

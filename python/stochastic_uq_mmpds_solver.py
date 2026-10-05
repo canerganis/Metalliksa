@@ -15,6 +15,8 @@ import time
 import random
 from statistics import NormalDist
 
+import numpy as np
+
 import alloy_data_kinetics_uq_fatigue as _uq_data
 import alloy_registry
 import physical_constants
@@ -52,6 +54,95 @@ def norm_ppf(p: float) -> float:
     if p >= 1.0:
         return 8.0
     return _STD_NORMAL.inv_cdf(p)
+
+# Wichura AS241 (PPND16) coefficients: the same rational approximation as CPython's
+# statistics.NormalDist.inv_cdf, evaluated here with the identical Horner order so that the
+# vectorised quantile agrees with norm_ppf to the last bit or two (checked in
+# test_stochastic_uq_vectorized_parity).
+_AS241_CENTRAL_NUM = (2.50908_09287_30122_6727e+3, 3.34305_75583_58812_8105e+4, 6.72657_70927_00870_0853e+4,
+                      4.59219_53931_54987_1457e+4, 1.37316_93765_50946_1125e+4, 1.97159_09503_06551_4427e+3,
+                      1.33141_66789_17843_7745e+2, 3.38713_28727_96366_6080e+0)
+_AS241_CENTRAL_DEN = (5.22649_52788_52854_5610e+3, 2.87290_85735_72194_2674e+4, 3.93078_95800_09271_0610e+4,
+                      2.12137_94301_58659_5867e+4, 5.39419_60214_24751_1077e+3, 6.87187_00749_20579_0830e+2,
+                      4.23133_30701_60091_1252e+1, 1.0)
+_AS241_NEAR_NUM = (7.74545_01427_83414_07640e-4, 2.27238_44989_26918_45833e-2, 2.41780_72517_74506_11770e-1,
+                   1.27045_82524_52368_38258e+0, 3.64784_83247_63204_60504e+0, 5.76949_72214_60691_40550e+0,
+                   4.63033_78461_56545_29590e+0, 1.42343_71107_49683_57734e+0)
+_AS241_NEAR_DEN = (1.05075_00716_44416_84324e-9, 5.47593_80849_95344_94600e-4, 1.51986_66563_61645_71966e-2,
+                   1.48103_97642_74800_74590e-1, 6.89767_33498_51000_04550e-1, 1.67638_48301_83803_84940e+0,
+                   2.05319_16266_37758_82187e+0, 1.0)
+_AS241_FAR_NUM = (2.01033_43992_92288_13265e-7, 2.71155_55687_43487_57815e-5, 1.24266_09473_88078_43860e-3,
+                  2.65321_89526_57612_30930e-2, 2.96560_57182_85048_91230e-1, 1.78482_65399_17291_33580e+0,
+                  5.46378_49111_64114_36990e+0, 6.65790_46435_01103_77720e+0)
+_AS241_FAR_DEN = (2.04426_31033_89939_78564e-15, 1.42151_17583_16445_88870e-7, 1.84631_83175_10054_68180e-5,
+                  7.86869_13114_56132_59100e-4, 1.48753_61290_85061_48525e-2, 1.36929_88092_27358_05310e-1,
+                  5.99832_20655_58879_37690e-1, 1.0)
+
+def _horner(coeffs, r):
+    acc = coeffs[0] * r + coeffs[1]
+    for c in coeffs[2:]:
+        acc = acc * r + c
+    return acc
+
+def norm_ppf_array(p):
+    """Vectorised norm_ppf: same AS241 evaluation and the same +/-8 clamp, elementwise."""
+    p = np.asarray(p, dtype=np.float64)
+    out = np.empty(p.shape, dtype=np.float64)
+    low = p <= 0.0
+    high = p >= 1.0
+    interior = ~(low | high)
+    out[low] = -8.0
+    out[high] = 8.0
+    pi = p[interior]
+    q = pi - 0.5
+    x = np.empty(pi.shape, dtype=np.float64)
+    central = np.abs(q) <= 0.425
+    if central.any():
+        qc = q[central]
+        r = 0.180625 - qc * qc
+        num = _horner(_AS241_CENTRAL_NUM[:-1], r) * r + _AS241_CENTRAL_NUM[-1]
+        num = num * qc
+        den = _horner(_AS241_CENTRAL_DEN[:-1], r) * r + _AS241_CENTRAL_DEN[-1]
+        x[central] = num / den
+    tail = ~central
+    if tail.any():
+        qt = q[tail]
+        pt = pi[tail]
+        r = np.sqrt(-np.log(np.where(qt <= 0.0, pt, 1.0 - pt)))
+        xt = np.empty(r.shape, dtype=np.float64)
+        near = r <= 5.0
+        if near.any():
+            rn = r[near] - 1.6
+            xt[near] = _horner(_AS241_NEAR_NUM[:-1], rn) * rn + _AS241_NEAR_NUM[-1]
+            xt[near] = xt[near] / (_horner(_AS241_NEAR_DEN[:-1], rn) * rn + _AS241_NEAR_DEN[-1])
+        far = ~near
+        if far.any():
+            rf = r[far] - 5.0
+            xt[far] = (_horner(_AS241_FAR_NUM[:-1], rf) * rf + _AS241_FAR_NUM[-1]) / (
+                _horner(_AS241_FAR_DEN[:-1], rf) * rf + _AS241_FAR_DEN[-1])
+        xt = np.where(qt < 0.0, -xt, xt)
+        x[tail] = xt
+    out[interior] = x
+    return out
+
+def _require_finite(*arrays):
+    """Reject non-finite populations the way the scalar code did (math.exp/pow raised OverflowError).
+
+    NumPy silently produces inf/nan where math.exp(1e308)-style calls raised; a population with
+    non-finite draws or outputs would otherwise be reported as a successful run with
+    Infinity/NaN statistics.
+    """
+    for arr in arrays:
+        if not np.all(np.isfinite(arr)):
+            raise OverflowError("math range error")
+
+def _pmax(a, b):
+    """Elementwise Python max(a, b): b only if b > a (keeps the NaN/tie behaviour of the scalar code)."""
+    return np.where(b > a, b, a)
+
+def _pmin(a, b):
+    """Elementwise Python min(a, b): b only if b < a."""
+    return np.where(b < a, b, a)
 
 def compute_mmpds_k_factors(n: int):
     """
@@ -167,59 +258,63 @@ class SobolSequenceGenerator:
         self.X = [0] * self.d
         self.count = 0
 
-    def generate(self, n: int):
-        points = []
-        for i in range(self.count, self.count + n):
-            c = 0
-            temp = i
-            while temp & 1:
-                temp >>= 1
-                c += 1
-            if c >= self.L:
-                c = self.L - 1
-            pt = [0.0] * self.d
-            for d in range(self.d):
-                self.X[d] ^= self.V[d][c]
-                val = self.X[d] ^ self.shift[d]
-                # Map strictly to open interval (0, 1) to avoid infinite probit boundaries
-                pt[d] = (val + 0.5) / self.two_pow_L
-            points.append(pt)
+    def generate_array(self, n: int):
+        """Next n points as an (n, d) float64 array (vectorised Antonov-Saleev Gray-code update).
+
+        Point i XORs direction number V[d][c_i] into the running state, c_i = trailing ones of i, so
+        the states are an XOR prefix-scan; every value is an exact integer below 2**32, hence the
+        points are bit-identical to the sequential loop this replaced.
+        """
+        if n <= 0:
+            return np.empty((0, self.d), dtype=np.float64)
+        idx = np.arange(self.count, self.count + n, dtype=np.int64) + 1
+        lowest = idx & -idx  # lowest set bit of i + 1 == 2**(trailing ones of i)
+        c = np.minimum(np.frexp(lowest.astype(np.float64))[1] - 1, self.L - 1)
+        v_all = np.asarray(self.V, dtype=np.uint64)  # (d, L)
+        state = np.bitwise_xor.accumulate(v_all[:, c], axis=1)  # (d, n)
+        state ^= np.asarray(self.X, dtype=np.uint64)[:, None]
+        self.X = [int(v) for v in state[:, -1]]
+        val = state ^ np.asarray(self.shift, dtype=np.uint64)[:, None]
+        # Map strictly to open interval (0, 1) to avoid infinite probit boundaries
+        pts = (val.astype(np.float64) + 0.5) / self.two_pow_L
         self.count += n
-        return points
+        return np.ascontiguousarray(pts.T)
+
+    def generate(self, n: int):
+        return self.generate_array(n).tolist()
 
 def compute_centered_l2_discrepancy(points, max_eval: int = 150) -> float:
     """
     Computes Hickernell (1998) centered L2 star discrepancy CD_2(P)
     to rigorously benchmark point cloud uniformity on the unit hypercube.
+
+    Vectorised with NumPy: the per-dimension products and the left-to-right accumulation order
+    of the original double loop are kept, so the value is unchanged.
     """
     N = len(points)
     if N == 0:
         return 0.0
-    sub = points[:max_eval]
-    M = len(sub)
-    d = len(sub[0])
+    sub = np.asarray(points[:max_eval], dtype=np.float64)
+    M = sub.shape[0]
+    d = sub.shape[1]
 
     term1 = (13.0 / 12.0) ** d
 
-    sum_term2 = 0.0
-    for i in range(M):
-        prod = 1.0
-        for k in range(d):
-            z = abs(sub[i][k] - 0.5)
-            prod *= (1.0 + 0.5 * z - 0.5 * (z ** 2))
-        sum_term2 += prod
+    z = np.abs(sub - 0.5)
+    prod2 = np.ones(M)
+    for k in range(d):
+        prod2 *= (1.0 + 0.5 * z[:, k] - 0.5 * (z[:, k] ** 2))
+    sum_term2 = float(np.cumsum(prod2)[-1])  # sequential adds, as the original `+=`
     term2 = (2.0 / M) * sum_term2
 
-    sum_term3 = 0.0
-    for i in range(M):
-        for j in range(M):
-            prod = 1.0
-            for k in range(d):
-                zi = abs(sub[i][k] - 0.5)
-                zj = abs(sub[j][k] - 0.5)
-                zdiff = abs(sub[i][k] - sub[j][k])
-                prod *= (1.0 + 0.5 * zi + 0.5 * zj - 0.5 * zdiff)
-            sum_term3 += prod
+    prod3 = np.ones((M, M))
+    for k in range(d):
+        col = sub[:, k]
+        zi = z[:, k][:, None]
+        zj = z[:, k][None, :]
+        zdiff = np.abs(col[:, None] - col[None, :])
+        prod3 *= (1.0 + 0.5 * zi + 0.5 * zj - 0.5 * zdiff)
+    sum_term3 = float(np.cumsum(prod3.ravel())[-1])  # row-major == original i-outer, j-inner order
     term3 = (1.0 / (M * M)) * sum_term3
 
     cd2_sq = max(0.0, term1 - term2 + term3)
@@ -337,6 +432,110 @@ def solve_single_realization(
         "applied_stress": applied_stress
     }
 
+def solve_realizations_vec(
+    base_metal: str,
+    comp: dict,
+    cooling_rate,
+    aging_temp_C,
+    aging_time_h,
+    service_stress_MPa,
+    flaw_size_um
+) -> dict:
+    """Vectorised solve_single_realization: same physics, same operation order, arrays in/out.
+
+    comp maps element -> float64 array (or float); the other arguments are float64 arrays of the
+    same length. Python max/min are emulated with _pmax/_pmin so ties and NaN behave as before.
+    solve_single_realization (scalar) stays the readable reference; test_stochastic_uq_vectorized_parity
+    compares the two.
+    """
+    lattice = _uq_data.uq_lattice_constants(base_metal)
+    b_nm = lattice["b_nm"]
+    C11, C12, C44 = lattice["C11"], lattice["C12"], lattice["C44"]
+    taylor_M = lattice["taylor_M"]
+    sigma_0 = lattice["sigma_0"]
+    k_hp = lattice["k_hp"]  # MPa*sqrt(um)
+    nu = lattice["nu"]
+    G_c_kJ_m2 = lattice["G_c_kJ_m2"]  # fracture energy
+
+    # VRH Elastic Moduli (scalars)
+    bulk_B = (C11 + 2.0 * C12) / 3.0
+    G_Voigt = (C11 - C12 + 3.0 * C44) / 5.0
+    G_Reuss = 5.0 * (C11 - C12) * C44 / max(1.0, (4.0 * C44 + 3.0 * (C11 - C12)))
+    G_GPa = (G_Voigt + G_Reuss) / 2.0
+    E_GPa = (9.0 * bulk_B * G_GPa) / max(1.0, (3.0 * bulk_B + G_GPa))
+
+    # Solid solution strengthening (Labusch), element order as in comp
+    delta_sigma_ss = 0.0
+    misfit_weights = _uq_data.UQ_SOLUTE_POTENCY
+    for el, wt in comp.items():
+        wt_val = _pmax(0.0, wt)
+        potency = misfit_weights.get(el, _uq_data.UQ_DEFAULT_SOLUTE_POTENCY)
+        delta_sigma_ss = delta_sigma_ss + potency * (wt_val ** 0.67)
+
+    # Grain size and Hall-Petch
+    cooling_rate_eff = _pmax(0.1, cooling_rate)
+    d_grain_um = _pmax(0.5, 45.0 * (cooling_rate_eff ** -0.32))
+    delta_sigma_hp = k_hp / np.sqrt(d_grain_um)
+
+    # Dislocation forest hardening
+    rho_m2 = _pmax(1e12, 1e13 * (cooling_rate_eff ** 0.22))
+    alpha_disloc = 0.35
+    delta_sigma_disloc = taylor_M * alpha_disloc * (G_GPa * 1000.0) * (b_nm * 1e-3) * np.sqrt(rho_m2) * 1e-6
+
+    # Precipitation (LSW ripening + shearing/Orowan)
+    T_K = aging_temp_C + ZERO_C_K
+    Q_diff = _uq_data.UQ_PRECIPITATION_Q_J_MOL  # J/mol
+    R_gas = R_GAS
+    arrhenius = np.exp(-_pmin(45.0, Q_diff / (R_gas * _pmax(300.0, T_K))))
+    r_nm = _pmax(0.8, 18.0 * ((arrhenius * 1e8 * _pmax(0.1, aging_time_h)) ** 0.333))
+
+    f_pct = _pmin(28.0, (comp.get("Nb", 0.0) * 2.2 + comp.get("Ti", 0.0) * 3.5 + comp.get("Al", 0.0) * 4.0 + comp.get("Mg", 0.0) * 3.0))
+    f_vol = _pmax(0.005, f_pct / 100.0)
+    lambda_spacing_nm = _pmax(2.0, (np.sqrt(math.pi / _pmax(0.001, f_vol)) - 2.0) * r_nm)
+
+    sigma_shear = (taylor_M * (G_GPa * 1000.0) * (b_nm / 1.0)) * np.sqrt(_pmax(0.001, f_vol * r_nm / 1.5)) * 0.12
+    sigma_orowan = (taylor_M * 0.8 * (G_GPa * 1000.0) * b_nm) / _pmax(5.0, lambda_spacing_nm) * np.log(_pmax(2.0, 2.0 * r_nm / b_nm)) * 0.18
+    delta_sigma_ppt = _pmin(sigma_shear, sigma_orowan)
+
+    # Generalized power-law superposition (q = 1.4)
+    q_pow = 1.4
+    coupled_term = (delta_sigma_disloc ** q_pow + delta_sigma_ppt ** q_pow) ** (1.0 / q_pow)
+    sigma_yield_MPa = sigma_0 + delta_sigma_ss + delta_sigma_hp + coupled_term
+
+    # Tensile UTS, Hollomon strain hardening, ductility
+    n_work_hardening = _pmax(0.05, _pmin(0.35, 0.42 - 0.00022 * sigma_yield_MPa))
+    sigma_uts_MPa = sigma_yield_MPa * (1.0 + 2.15 * n_work_hardening)
+    elongation_pct = _pmax(3.0, _pmin(50.0, 3200.0 / (sigma_yield_MPa ** 0.82) * (1.0 + 1.5 * n_work_hardening)))
+
+    # Fracture toughness and critical flaw size
+    k1c_base = math.sqrt((E_GPa * G_c_kJ_m2) / max(0.1, (1.0 - nu**2)))
+    k1c_MPa_sqrt_m = _pmax(18.0, _pmin(160.0, k1c_base * (1.0 + 0.025 * elongation_pct) * (900.0 / _pmax(300.0, sigma_yield_MPa)) ** 0.35))
+
+    applied_stress = _pmax(50.0, service_stress_MPa)
+    flaw_ac_mm = (1.0 / math.pi) * ((k1c_MPa_sqrt_m / (1.12 * applied_stress)) ** 2) * 1000.0
+    flaw_ac_mm = _pmax(0.05, _pmin(250.0, flaw_ac_mm))
+
+    margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
+    margin_flaw_mm = flaw_ac_mm - (flaw_size_um / 1000.0)
+
+    _require_finite(sigma_yield_MPa, sigma_uts_MPa, elongation_pct, k1c_MPa_sqrt_m, flaw_ac_mm,
+                    margin_yield_MPa, margin_flaw_mm, delta_sigma_ss, delta_sigma_hp, delta_sigma_ppt,
+                    d_grain_um, applied_stress)
+    return {
+        "yield_MPa": sigma_yield_MPa,
+        "uts_MPa": sigma_uts_MPa,
+        "elongation_pct": elongation_pct,
+        "k1c_MPa_m": k1c_MPa_sqrt_m,
+        "critical_flaw_ac_mm": flaw_ac_mm,
+        "margin_yield_MPa": margin_yield_MPa,
+        "margin_flaw_mm": margin_flaw_mm,
+        "delta_sigma_ss": delta_sigma_ss,
+        "delta_sigma_hp": delta_sigma_hp,
+        "delta_sigma_ppt": delta_sigma_ppt,
+        "grain_size_um": d_grain_um,
+        "applied_stress": applied_stress
+    }
+
 def solve_stochastic_uq(params: dict) -> dict:
     t0 = time.time()
 
@@ -392,7 +591,7 @@ def solve_stochastic_uq(params: dict) -> dict:
     # -------------------------------------------------------------
     if sampling_method == "sobol_qmc":
         sobol_gen = SobolSequenceGenerator(dimension=total_dims, scramble=scramble, seed=seed)
-        qmc_points = sobol_gen.generate(N_samples)
+        qmc_points = sobol_gen.generate_array(N_samples)
         sobol_cd2 = compute_centered_l2_discrepancy(qmc_points, max_eval=min(150, N_samples))
         
         # Disabled pseudo benchmark comparison to strictly enforce Sobol QMC
@@ -401,79 +600,64 @@ def solve_stochastic_uq(params: dict) -> dict:
     else:
         raise ValueError("Standard Pseudo-Random Monte Carlo is disabled. Enforcing QMC/Sobol determinism. Pass samplingMethod='sobol_qmc'.")
 
-    yield_list = []
-    uts_list = []
-    elong_list = []
-    k1c_list = []
-    flaw_ac_list = []
-    margin_yield_list = []
+    qmc_points = np.asarray(qmc_points, dtype=np.float64)
 
-    for i in range(N_samples):
-        pt = qmc_points[i]
-
-        # 1. Sample normal composition and floor at zero (not a truncated-normal CDF)
-        comp_sample = {}
+    def draw_factors(U):
+        """Quantile-transform an (n, >=E_dim+3) matrix of uniforms into physical draws."""
+        comp_draw = {}
         for idx_e, el in enumerate(elements):
             nom = nominal_comp[el]
             tol = comp_tolerances.get(el, nom * 0.1)
             std_el = tol / 3.0
-            u_val = pt[idx_e]
-            z_el = norm_ppf(u_val)
-            val = nom + z_el * std_el
-            comp_sample[el] = max(0.0, val)
+            # Sample normal composition and floor at zero (not a truncated-normal CDF)
+            comp_draw[el] = _pmax(0.0, nom + norm_ppf_array(U[:, idx_e]) * std_el)
+        # Cooling rate (log-normal), aging temperature / time (normal) via exact quantile transforms
+        cr = np.exp(mu_log_cr + sigma_log_cr * norm_ppf_array(U[:, E_dim]))
+        t_age = _pmax(200.0, aging_temp_nominal + norm_ppf_array(U[:, E_dim + 1]) * aging_temp_std)
+        time_age = _pmax(0.2, aging_time_nominal + norm_ppf_array(U[:, E_dim + 2]) * aging_time_std)
+        _require_finite(cr, t_age, time_age, *comp_draw.values())
+        return comp_draw, cr, t_age, time_age
 
-        # 2. Sample Process Parameters via exact quantile transformations
-        # Cooling rate (Log-normal distribution)
-        z_cr = norm_ppf(pt[E_dim])
-        cooling_rate_i = math.exp(mu_log_cr + sigma_log_cr * z_cr)
+    comp_s, cr_s, t_age_s, time_age_s = draw_factors(qmc_points)
+    # Service stress (normal) and flaw size (normal) are sampled only in the main population.
+    service_stress_s = _pmax(50.0, service_stress_nominal + norm_ppf_array(qmc_points[:, E_dim + 3]) * (service_stress_nominal * service_stress_cov))
+    flaw_size_s = _pmax(5.0, flaw_size_mean_um + norm_ppf_array(qmc_points[:, E_dim + 4]) * flaw_size_std_um)
+    _require_finite(service_stress_s, flaw_size_s)
 
-        # Aging temperature (Normal)
-        z_temp = norm_ppf(pt[E_dim + 1])
-        aging_temp_i = max(200.0, aging_temp_nominal + z_temp * aging_temp_std)
-
-        # Aging time (Normal)
-        z_time = norm_ppf(pt[E_dim + 2])
-        aging_time_i = max(0.2, aging_time_nominal + z_time * aging_time_std)
-
-        # Service stress (Normal)
-        z_stress = norm_ppf(pt[E_dim + 3])
-        service_stress_i = max(50.0, service_stress_nominal + z_stress * (service_stress_nominal * service_stress_cov))
-
-        # Flaw size (Normal)
-        z_flaw = norm_ppf(pt[E_dim + 4])
-        flaw_size_i = max(5.0, flaw_size_mean_um + z_flaw * flaw_size_std_um)
-
-        # Solve Physics
-        res = solve_single_realization(
-            base_metal=base_metal,
-            comp=comp_sample,
-            cooling_rate=cooling_rate_i,
-            aging_temp_C=aging_temp_i,
-            aging_time_h=aging_time_i,
-            service_stress_MPa=service_stress_i,
-            flaw_size_um=flaw_size_i
-        )
-
-        yield_list.append(res["yield_MPa"])
-        uts_list.append(res["uts_MPa"])
-        elong_list.append(res["elongation_pct"])
-        k1c_list.append(res["k1c_MPa_m"])
-        flaw_ac_list.append(res["critical_flaw_ac_mm"])
-        margin_yield_list.append(res["margin_yield_MPa"])
+    res = solve_realizations_vec(
+        base_metal=base_metal,
+        comp=comp_s,
+        cooling_rate=cr_s,
+        aging_temp_C=t_age_s,
+        aging_time_h=time_age_s,
+        service_stress_MPa=service_stress_s,
+        flaw_size_um=flaw_size_s
+    )
+    yield_list = res["yield_MPa"]
+    uts_list = res["uts_MPa"]
+    elong_list = res["elongation_pct"]
+    k1c_list = res["k1c_MPa_m"]
+    flaw_ac_list = res["critical_flaw_ac_mm"]
+    margin_yield_list = res["margin_yield_MPa"]
 
     # Descriptive model statistics; uncertainty of a single QMC run is not estimated.
-    def calc_stats(arr: list, spec_min: float = None):
-        sorted_arr = sorted(arr)
+    def calc_stats(arr, spec_min: float = None):
+        sorted_np = np.sort(np.asarray(arr, dtype=np.float64))
+        sorted_arr = sorted_np.tolist()
         n = len(sorted_arr)
+        # builtin sum over the (sorted) float list: same compensated summation as the scalar loop
         mean_val = sum(sorted_arr) / n
-        var_val = sum((x - mean_val)**2 for x in sorted_arr) / (n - 1) if sorted_arr[0] != sorted_arr[-1] else 0.0
+        dev = sorted_np - mean_val
+        # the scalar code raised OverflowError from float ** on overflow; do not report inf/nan statistics
+        _require_finite(dev, dev ** 2, dev ** 3, dev ** 4)
+        var_val = sum((dev ** 2).tolist()) / (n - 1) if sorted_arr[0] != sorted_arr[-1] else 0.0
         std_val = math.sqrt(var_val)
         cov_pct = (std_val / mean_val * 100.0) if mean_val != 0 else 0.0
 
         # Skewness
-        skew = (sum((x - mean_val)**3 for x in sorted_arr) / n) / max(1e-6, (std_val**3))
+        skew = (sum((dev ** 3).tolist()) / n) / max(1e-6, (std_val**3))
         # Kurtosis
-        kurt = (sum((x - mean_val)**4 for x in sorted_arr) / n) / max(1e-6, (std_val**4)) - 3.0
+        kurt = (sum((dev ** 4).tolist()) / n) / max(1e-6, (std_val**4)) - 3.0
 
         # Percentiles
         def get_pct(p: float):
@@ -509,7 +693,7 @@ def solve_stochastic_uq(params: dict) -> dict:
         conformance_pct = 100.0
         if spec_min is not None:
             cpk = round((mean_val - spec_min) / (3.0 * std_val), 2) if std_val > 0 else None
-            conformance_count = sum(1 for x in sorted_arr if x >= spec_min)
+            conformance_count = n - int(np.searchsorted(sorted_np, spec_min, side='left'))
             conformance_pct = round((conformance_count / n) * 100.0, 2)
 
         # Histogram Bins generation (25 bins)
@@ -517,11 +701,19 @@ def solve_stochastic_uq(params: dict) -> dict:
         max_v = sorted_arr[-1]
         bin_width = (max_v - min_v) / 25.0 if max_v > min_v else 1.0
         histogram = []
+        starts = [min_v + b * bin_width for b in range(25)]
+        ends = [b_start + bin_width for b_start in starts]
+        lower_idx = np.searchsorted(sorted_np, starts, side='left').tolist()
+        upper_idx = np.searchsorted(sorted_np, ends, side='left').tolist()
+        cum_idx = np.searchsorted(sorted_np, ends, side='right').tolist()
         for b in range(25):
-            b_start = min_v + b * bin_width
-            b_end = b_start + bin_width
+            b_start = starts[b]
+            b_end = ends[b]
             b_center = (b_start + b_end) / 2.0
-            count = sum(1 for x in sorted_arr if b_start <= x < b_end or (b == 24 and x == max_v))
+            if b == 24:
+                count = int(np.count_nonzero(((sorted_np >= b_start) & (sorted_np < b_end)) | (sorted_np == max_v)))
+            else:
+                count = upper_idx[b] - lower_idx[b]
             freq = count / (n * bin_width) if bin_width > 0 else 0.0
             # Fitted normal probability density
             fitted_pdf = (1.0 / (std_val * math.sqrt(2 * math.pi))) * math.exp(-0.5 * ((b_center - mean_val) / std_val)**2) if std_val > 0 else 0.0
@@ -532,7 +724,7 @@ def solve_stochastic_uq(params: dict) -> dict:
                 "count": count,
                 "empiricalPdf": round(freq, 6),
                 "fittedNormalPdf": round(fitted_pdf, 6),
-                "cumulativePct": round((sum(1 for x in sorted_arr if x <= b_end) / n) * 100.0, 1)
+                "cumulativePct": round((cum_idx[b] / n) * 100.0, 1)
             })
 
         return {
@@ -571,7 +763,7 @@ def solve_stochastic_uq(params: dict) -> dict:
     flaw_ac_stats = calc_stats(flaw_ac_list, 1.0)
 
     # 4. Reliability & Failure Probability
-    failures_yield = sum(1 for m in margin_yield_list if m < 0)
+    failures_yield = int(np.count_nonzero(margin_yield_list < 0))
     pf_yield = failures_yield / N_samples
     beta_reliability_yield = norm_ppf(1.0 - max(1e-6, min(1.0 - 1e-6, pf_yield)))
 
@@ -588,38 +780,36 @@ def solve_stochastic_uq(params: dict) -> dict:
     M_saltelli = min(350, max(150, N_samples // 6))
     k_factors = len(sensitivity_factors)
     saltelli_sobol = SobolSequenceGenerator(dimension=2 * k_factors, scramble=scramble, seed=seed + 101)
-    saltelli_pts = saltelli_sobol.generate(M_saltelli)
+    saltelli_pts = saltelli_sobol.generate_array(M_saltelli)
 
-    def eval_factor_vector(vec):
-        c_draw = {
-            el: max(0.0, nominal_comp[el] + norm_ppf(vec[idx]) * (comp_tolerances.get(el, nominal_comp[el] * 0.1) / 3.0))
-            for idx, el in enumerate(elements)
-        }
-        cr_draw = math.exp(mu_log_cr + sigma_log_cr * norm_ppf(vec[E_dim]))
-        t_age_draw = max(200.0, aging_temp_nominal + norm_ppf(vec[E_dim + 1]) * aging_temp_std)
-        time_age_draw = max(0.2, aging_time_nominal + norm_ppf(vec[E_dim + 2]) * aging_time_std)
-        return solve_single_realization(
+    def eval_factor_matrix(V):
+        """Yield strength for every row of V (rows are factor-uniform vectors)."""
+        c_draw, cr_draw, t_age_draw, time_age_draw = draw_factors(V)
+        return solve_realizations_vec(
             base_metal, c_draw, cr_draw, t_age_draw, time_age_draw,
             service_stress_nominal, flaw_size_mean_um
         )["yield_MPa"]
 
-    y_A = [eval_factor_vector(row[:k_factors]) for row in saltelli_pts]
-    y_B = [eval_factor_vector(row[k_factors:]) for row in saltelli_pts]
-    combined_y = y_A + y_B
-    mean_comb = sum(combined_y) / len(combined_y)
-    total_var = sum((v - mean_comb)**2 for v in combined_y) / len(combined_y)
-    variance_available = max(combined_y) - min(combined_y) > 1e-12 * max(1.0, abs(mean_comb))
+    A_pts = saltelli_pts[:, :k_factors]
+    B_pts = saltelli_pts[:, k_factors:]
+    y_A = eval_factor_matrix(A_pts)
+    y_B = eval_factor_matrix(B_pts)
+    combined_y = np.concatenate([y_A, y_B])
+    combined_list = combined_y.tolist()
+    mean_comb = sum(combined_list) / len(combined_list)
+    _require_finite(combined_y, (combined_y - mean_comb) ** 2)
+    total_var = sum(((combined_y - mean_comb) ** 2).tolist()) / len(combined_list)
+    variance_available = max(combined_list) - min(combined_list) > 1e-12 * max(1.0, abs(mean_comb))
     sensitivity_indices = []
     for idx, item in enumerate(sensitivity_factors):
-        y_AB = []
-        for row in saltelli_pts:
-            vec_AB = list(row[:k_factors])
-            vec_AB[idx] = row[k_factors + idx]
-            y_AB.append(eval_factor_vector(vec_AB))
+        vec_AB = A_pts.copy()
+        vec_AB[:, idx] = B_pts[:, idx]
+        y_AB = eval_factor_matrix(vec_AB)
+        _require_finite((y_A - y_AB) ** 2, (y_B - mean_comb) * (y_AB - y_A))
         # Centered Saltelli first-order and Jansen total-order estimators.
         # Raw finite-sample estimates may be negative or exceed one.
-        s_first = sum((y_B[j] - mean_comb) * (y_AB[j] - y_A[j]) for j in range(M_saltelli)) / (M_saltelli * total_var) if variance_available else None
-        s_total = sum((y_A[j] - y_AB[j])**2 for j in range(M_saltelli)) / (2.0 * M_saltelli * total_var) if variance_available else None
+        s_first = sum(((y_B - mean_comb) * (y_AB - y_A)).tolist()) / (M_saltelli * total_var) if variance_available else None
+        s_total = sum(((y_A - y_AB) ** 2).tolist()) / (2.0 * M_saltelli * total_var) if variance_available else None
         sensitivity_indices.append({
             "parameter": item["param"],
             "description": item["desc"],

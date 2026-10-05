@@ -12,8 +12,6 @@
     "GET /api/lpbf/sources/:datasetId",
     "GET /api/lpbf/sources/:datasetId/revisions",
     "GET /api/lpbf/sources/:datasetId/revisions/:revision",
-    "GET /api/materials-project/search",
-    "GET /api/orchestrator/approved-sources",
     "GET /api/python/ipc-status",
     "GET /api/python/status",
     "GET /api/research/registry/history",
@@ -34,20 +32,7 @@
     "POST /api/lpbf/sources/:datasetId/import",
     "POST /api/lpbf/sources/:datasetId/preview",
     "POST /api/lpbf/sources/:datasetId/verify",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend",
-    "POST /api/metallurgy/qualify-aerospace",
-    "POST /api/orchestrator/collect-source",
-    "POST /api/python/bisquert-tlm-identify",
-    "POST /api/python/inverse-alloy-optimize",
     "POST /api/python/ipc-warmup",
-    "POST /api/python/lpbf-bayesian-optimization",
-    "POST /api/python/lpbf-experimental-validation",
-    "POST /api/python/lpbf-support-optimization",
-    "POST /api/python/lpbf-thermal",
-    "POST /api/python/lpbf-transient-enthalpy-fdm",
-    "POST /api/python/marangoni-pore-instability",
-    "POST /api/python/part-scale-inherent-strain",
     "POST /api/python/xrd-deconvolve"
   ],
   "unclassified": [
@@ -63,11 +48,6 @@
     "USE /api/research/registry": 1
   },
   "cannedBaseline": [
-    "GET /api/health",
-    "GET /api/materials-project/search",
-    "GET /api/orchestrator/approved-sources",
-    "POST /api/metallurgy/analyze-sem",
-    "POST /api/metallurgy/detect-sem-legend",
-    "POST /api/metallurgy/qualify-aerospace"
+    "GET /api/health"
   ]
 }

@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 28
+LEGACY_CEILING = 16  # micrograph rework contracted micrograph (17 -> 16 after the 2026-10-04 deletions)
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
-CONTRACTED = ("toolpath-studio", "murakami-fatigue", "defect-twin", "adaptive-mitigation", "optical-tomography",
-              "keyhole-raytracing", "ttt-cct-kinetics", "icme-motor", "uq-lab")
+CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
+              "keyhole-raytracing", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
 
 
 def _view():
@@ -541,6 +541,17 @@ class ContractedRegistryTests(unittest.TestCase):
                     self.assertIsNone(oracle.ci_note, "no gap to record")
         self.assertEqual(mr.oracle_ci_missing_packages(self.contracted["keyhole-raytracing"].tests.oracle.ref), ["warp"])
 
+    def test_a_present_oracle_without_a_ci_gap_note_is_listed_in_the_ci_workflow(self):
+        # Micrograph review S2: "no CI gap" must mean the oracle module really runs in CI, not only that its
+        # packages are in the CI lock. The generated module page derives its "Oracle in CI" line from the same check.
+        for contract in self.contracted.values():
+            oracle = contract.tests.oracle
+            if oracle.status == "present" and not oracle.ci_note:
+                with self.subTest(module=contract.id):
+                    self.assertTrue(mr.oracle_listed_in_ci(oracle.ref), mr.oracle_ci_module(oracle.ref))
+                    self.assertTrue(mr.oracle_listed_in_ci(contract.tests.schema), contract.tests.schema)
+        self.assertFalse(mr.oracle_listed_in_ci("python/test_not_a_module.py::T.t"))
+
     def test_ci_note_must_be_echoed_in_the_evidence_note(self):
         base = mr.CONTRACTED_BUILDERS["keyhole-raytracing"]
         row = next(r for r in mr.load_seed() if r["id"] == "keyhole-raytracing")
@@ -577,7 +588,9 @@ class ContractedRegistryTests(unittest.TestCase):
         units = {f.unit for c in self.contracted.values() for op in c.operations for f in op.input if f.unit}
         self.assertLessEqual(units, {"1", "m", "W", "µm", "K/s", "degC", "K", "h", "MPa", "%",
                                      # Phase 7 wave 2
-                                     "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s"})
+                                     "1/s", "mm/s", "mm/s^2", "µs", "W/(m*K)", "m^2/s",
+                                     # micrograph rework (image pixels and image scale)
+                                     "px", "µm/px"})
         texts = [f.note or "" for c in self.contracted.values() for op in c.operations for f in op.input]
         texts += [n for c in self.contracted.values() for n in c.legacy_notes]
         texts += [c.evidence.note for c in self.contracted.values()]
@@ -603,11 +616,8 @@ class ContractedRegistryTests(unittest.TestCase):
         expected = {
             "toolpath-studio": ("toolpath-kinematics", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics") + worker,
             "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
-            "defect-twin": ("stl-voxelize", "/api/python/lpbf-stl-voxelize", "stl-voxelize") + worker,
             "adaptive-mitigation": ("adaptive-feedforward", "/api/python/lpbf-adaptive-feedforward",
                                     "adaptive-feedforward") + worker,
-            "optical-tomography": ("optical-tomography", "/api/python/lpbf-optical-tomography",
-                                   "optical-tomography") + worker,
             "ttt-cct-kinetics": ("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct",
                                  "python/kinetics_ttt_cct_solver.py", "python-ipc", 25000, True),
             "icme-motor": ("icme-multiscale-pipeline", "/api/python/icme-multiscale-pipeline",

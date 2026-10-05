@@ -12,7 +12,6 @@ import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
 import { characterizationRouter } from "./routes/characterization.ts";
 import { copilotRouter } from "./routes/copilot.ts";
 import { researchRouter } from "./routes/research.ts";
-import { orchestratorRouter } from "./routes/orchestrator.ts";
 import { createResearchRegistryRouter } from "./routes/researchRegistry.ts";
 import { createLpbfSourcesRouter } from "./routes/lpbfSources.ts";
 import { createLpbfRunsRouter } from "./routes/lpbfRuns.ts";
@@ -118,7 +117,6 @@ app.use(characterizationRouter);
 // 3. AI Copilot, Metallurgy Consultation, Alloy Formulation & Materials Project
 app.use(copilotRouter);
 app.use(researchRouter);
-app.use(orchestratorRouter);
 
 // Explicit JSON 404 for unmatched /api routes (prevents SPA index.html fallback for API calls)
 app.all("/api/*", (req: Request, res: Response) => {

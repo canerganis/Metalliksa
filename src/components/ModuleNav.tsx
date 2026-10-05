@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, BookOpen, Flame, Network } from 'lucide-react';
+import { Layers, BookOpen, Flame } from 'lucide-react';
 import { MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
 import { rovingIndex } from '../utils/rovingFocus';
 
@@ -47,7 +47,7 @@ export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
   return <nav aria-label="Engineering workspaces" onKeyDown={onKey}>
     <p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules.</p>
     {WORKSPACES.map(workspace => {
-      const Icon = workspace.id === 'lpbf' ? Flame : workspace.id === 'materials' ? Layers : workspace.id === 'orchestration' ? Network : BookOpen;
+      const Icon = workspace.id === 'lpbf' ? Flame : workspace.id === 'materials' ? Layers : BookOpen;
       const entries = modules.filter(m => m.workspace === workspace.id);
       if (!entries.length) return null;
       return <div key={workspace.id} className="mb-5"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mb-2 flex items-center gap-2 text-xs font-semibold ${workspace.id === activeWorkspace ? 'text-cyan-100' : 'text-slate-200'}`}><Icon className="w-4 h-4"/>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => <button key={module.id} {...item(module.id, ' nav-desc-' + module.id)} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => onNavigate(module.id)} className={`mk-nav-item w-full text-left px-3 py-2 text-sm transition-colors ${activeTab === module.id ? 'is-active text-cyan-50 font-medium' : 'text-slate-300 hover:text-white'}`}>{module.label}</button>)}</div></div>;
