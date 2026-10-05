@@ -115,6 +115,7 @@ Active development by a single maintainer. The workstation is usable for researc
 Metalliksa is looking for collaborators, research partners and the right engineering team to grow with. If you work on additive manufacturing, computational materials science or evidence-driven engineering software and this resonates, open an issue or reach out:
 
 - LinkedIn: [Muhammet Can Erganis](https://www.linkedin.com/in/muhammet-can-erganis)
+- Email: [muhammetcanerganis@gmail.com](mailto:muhammetcanerganis@gmail.com)
 - GitHub: [@canerganis](https://github.com/canerganis)
 
 ## License

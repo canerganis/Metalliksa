@@ -6,6 +6,8 @@ Metalliksa is a local research workstation. It runs on your machine, stores no a
 
 Please report security issues privately through GitHub: **Security > Report a vulnerability** on this repository (private vulnerability reporting). Do not open a public issue for a vulnerability.
 
+If GitHub reporting is unavailable to you, email muhammetcanerganis@gmail.com instead (do not include exploit details in public places).
+
 Include what you found, how to reproduce it and the affected version or commit. You will get an acknowledgement as soon as the maintainer can respond; this is a single-maintainer project, so please allow some days.
 
 ## Scope
