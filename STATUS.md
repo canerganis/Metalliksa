@@ -1,11 +1,10 @@
-## Güncel devam noktası — 2026-10-05 / SDK entegrasyonu
+## Güncel devam noktası — 2026-10-05 / SDK dalga 2 yerel birleşti, push ile birlikte
 
-- **Ana dala teslim:** `8202c3f`; önceki yerel birleştirmeler korunuyor. Aşağıdaki staging çalışmaları henüz ana dala teslim edilmiş değildir.
-- **Doğrulandı, commit bekliyor:** `codex/sdk-wave2@9ab3bde` üzerindeki seçili-birim şeması ve hesaplayıcı sözleşmesi düzeltmeleri. Bağımsız Luna incelemesinde blocker yok; ebeveyn 154 Python sözleşme testi PASS, üretim kontrolü ve diff kontrolü PASS. Bunlar yazılım kontrolleridir.
-- **İnceleme/entegrasyon bekliyor:** Copilot reduced-motion `ff238555`; deneysel doğrulama ekranı, electrochem ve ana LPBF workflow SDK worker teslimleri. Registry 16 contracted / 9 legacy; helper teslimi tek başına registry geçişi sayılmaz.
-- **Antigravity:** Gemini 3.1 Pro gerçek yanıt verdi. Dijital ikiz taslağının onarım denemesi MCP iznine takıldı; taslak entegre edilmedi, test veya onay sayılmıyor.
-- **Sıradaki:** seçili-birim paketini yerel commit; kaynak bağlı helper incelemeleri ve registry geçişleri; ardından sabit revizyonda birleşik test/build, gerçek tarayıcı ve Docker doğrulaması, yerel merge.
-- **Sınırlar:** push/PR yok; donmuş LPBF fiziği değişmez. Residual unavailable/null, experimentalValidation false ve opticalOperatorMatched false korunur.
+- **Ana dala teslim:** SDK dalga 2 (Database, CALPHAD, evidence, copilot, LPBF secondary, research, calculators, electrochem, deneysel doğrulama sözleşmeleri) yerel olarak birleştirildi (`7c85bb2`). Birleştirmeden önce bir gerileme bulundu ve düzeltildi: kompozisyon koruması eski, eksik alanlı kayıtların taşınmasını atlıyor ve eski sertliği tutuyordu (`aa0e2df`).
+- **Doğrulama (temiz worktree, bu revizyon):** `tsc --noEmit` temiz; TS birim paketi 1313 PASS / 0 FAIL / 1 skip; Python CI listesi 1249 test OK (50 atlandı, CPU yorumlayıcısı `.runtime/lpbf-win-py312`); registry `--check`, ceiling (0 incelenmemiş) ve bundle bütçesi PASS. Bunlar yazılım kontrolleridir, bilimsel doğrulama değildir.
+- **Yarım kalan (birleşmedi):** Antigravity görevleri (uitour, hero, a11y, studiotests, copy) hiç başlamadı; copilot/calculators/research/lpbf-secondary/digital-twin/experimental-validation/lpbf-workflow sözleşmeleri registry'ye bağlanmadı; Sol'un SDK wave2 blocker düzeltmeleri yeniden incelenmedi. Ayrıntı: `.orchestra/HANDOFF.md`.
+- **Sıradaki:** GitHub Actions ilk koşusunu izle (yalnız `main` push ve PR'da tetiklenir; Linux/py3.11 yolları doğrulanmadı); kalan SDK sözleşmelerini registry'ye bağla; Antigravity görevlerini Codex ile dağıt; ana checkout'ta `npm ci`.
+- **Sınırlar:** donmuş LPBF fiziği ve parmak izi (`11b04b8f…`) değişmedi. Residual unavailable/null, experimentalValidation false ve opticalOperatorMatched false korunur.
 
 > Not akışı: bu üst bölüm güncel teslim ve devam durumudur. Aşağıdaki tarihli bölümler geçmiş kanıttır; güncel başarı olarak yeniden kullanılmaz. Ajan çıktıları inceleme bekleyen teslimdir; ana dal merge ve doğrulama ayrı kaydedilir.
 
