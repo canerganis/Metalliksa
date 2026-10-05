@@ -43,6 +43,45 @@
 - **Kanıtlanmayan:** tarayıcı arayüzü, üretim başlatma yolu, Linux/Docker/CI, GPU, OpenFOAM, test paketleri (kod değişmedi). Bu yazılım eşitliğidir, bilimsel doğrulama değil; aynı girdinin aynı çıktıyı vermesi bağımsız replike değildir.
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
+## 2026-10-05 — Li (1998) çelik TTT/CCT kinetiği (`ea3e18a`; birleşik hat `0909274`)
+
+- Li (1998) düşük alaşımlı çelik modeli şablonun yerini aldı; AISI 4140 TTT noktaları 40→118 oldu, CCR 45→19,81 °C/s değişti. Ferrit t50/tFinish artık null; faz fraksiyonu ve sertlik üretilmiyor.
+- Geçerlilik `inside` → `inside-partially-checked`; kayıt bileşiminde Al olmadığından Al sınırı denetlenemiyor. Build Job revizyonu `lpbf-build-job-kinetics-li1998-extent-v8`.
+- Son fix kapısı: Python 959 OK (27 atlandı), TS 1223 testte 1218 geçti, 0 başarısız, 1 atlandı, 4 todo; parity, hızlı Build Job, build ve fingerprint kontrolleri geçti. Birleşik ağaçtaki ayrı 1017 testlik koşuda Pourbaix atom-ağırlık snapshot’ında 1 hata vardı; `33ffb13` bu sabitler testini güncelledi.
+- `--slow` Build Job, Phase 7 pytest ve görsel tarayıcı kontrolü yapılmadı; Li 1998 makalesi doğrudan okunmadı, deneysel TTT/CCT oracle beklemede ve model geçerliliği tüm beyan aralığında gösterilmedi.
+- NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — Pourbaix Ti/Cr/Mo (`v6`; lane birleştirmesi `0909274`)
+
+- 25 °C Gibbs motoru v5→v6 oldu; TiO2+ [BE16] withheld aday kümesine alındı ve pH 1 / E=0 / log a=−6 regresyonu TiO2 kararlılık alanındaki withheld uyarısını doğruluyor. Cr/Mo/Ti tutarsız türleri aday kümeleri ve harita/probe geçerlilik bölgeleriyle gösteriliyor.
+- Aktivite sınırları Cr 10⁻⁶–10⁻², Mo 10⁻⁶–10⁻⁴, Ti 10⁻⁶–1; dışı `OUT_OF_RANGE`. Ti serbest pH aralığı a=10⁻⁶’da 0,909–14,92’den 1,210–14,92’ye daraltıldı.
+- Fix-round-2 Python kapısı 13 modülde 331 test OK; altın ve tür kontrolleri geçti. Birleşik 1017 test koşusundaki tek Mo atom-ağırlığı snapshot hatası, mevcut taban `33ffb13` ile düzeltildi.
+- Güncel tarayıcı doğrulaması ve Pourbaix atlası karşılaştırması yok; bazı türler kaynak/termodinamik belirsizliği nedeniyle withheld veya temsil dışı kaldı.
+- NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — Modül silme dalgaları D1–D5 (birleştirme `7058f35`)
+
+- Modül sayısı 37→24, workspace 4→3 oldu; 175 dosyada +299/−34.851 satır. Battery solver’daki kullanılmayan yollar, transient-3d-GPU, modulus-FNO, powder-compaction, optical-tomography/defect-twin, thermal-map/accumulation, multilaser-plume/thermomechanical/certification, qualification/aerospace audit, AI-orchestrator workspace, InverseAlloyStudio alt ağacı ve canned Materials Project API araması kaldırıldı.
+- Kapsam 9→7 contracted ve 28→17 legacy modüle indi; donmuş LPBF solver’ları korundu. `toleranceFactors` kaldırıldı ve UQ-Lab’a bağlanmadı; CALPHAD istemci fallback’i ile kullanılan bundled Materials Project katalog presetleri kaldı.
+- D5 kapısında TS 1111 test: 1106 geçti, 0 başarısız, 1 atlandı, 4 todo; Python CI listesi 772 OK, 25 atlandı. Birleştirilmiş ağaçta ayrıca Python 944 OK, 25 atlandı ve TS 1183 testte 1180 geçti, 0 başarısız, 1 atlandı, 2 todo raporlandı.
+- Tarayıcı kapsamı, GitHub/Linux CI ve Docker build doğrulanmadı; bazı kanıt/envanter belgeleri tarihsel kaldı. Silinen yolların kullanıcı ihtiyacına göre geri alınması ve katalog Cij formu açık işlerdir.
+- NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — Mikrograf/EDS ölçüm rework’ü (birleştirme `0a877a0`, demo kaldırma `372a317`)
+
+- Canned SEM analiz/tespit yolları ve uydurma sonuç arayüzü kaldırıldı. Python `micrograph_measure.py` ASTM E112 kesişim ölçümü ve alan oranı için otorite oldu; ölçüm öncesi kalibrasyon gerekir. Kullanıcı kararıyla sentetik demo görselleri arayüzden çıkarıldı (sentetik oracle test fikstürleri kaldı).
+- Görüntüler ayrı IPC script route’undan geçiyor; sınır 24.000.000 bayt / 4096 px. Gerçek dispatch: 1024×768 ve 4096×4096 istekleri HTTP 200, limit üstü 413, geçersiz girdi 422. İçe aktarılan EDS spektrumlarında SNIP tepe tanımlama var; harita/çizgi taraması ve canned rapor yok.
+- Fix-round kapısı: Python 1001 OK (28 atlandı); TS 1251 testte 1248 geçti, 0 başarısız, 1 atlandı, 2 todo. Test görüntülerinde 0,25 µm/px kalibrasyonla ortalama kesişim 8 µm ölçüldü.
+- Gerçek SEM/optik mikroğraf, TIFF, eşzamanlı IPC yükü ve Ubuntu route CI doğrulanmadı; ölçüm oracle’ı deneysel ASTM uygunluk gösterimi değildir.
+- NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — UQ Monte Carlo vektörleştirmesi (birleştirme `5d01287`, fix `571a8f3`)
+
+- `N=10.000` çözüm medyanı 386→40 ms’ye indi (yaklaşık 9,7×; ilk ölçüm 34 ms idi). Eski skaler referansa karşı 12/12 tam çıktı belgesi JSON-birebir, incelenen ham fizik dizileri bu Windows/NumPy ortamında bit-eşit.
+- Taşma ve sonlu olmayan popülasyonlar artık kontrollü biçimde reddediliyor; eşitlik karşılaştırması her alanın üretim yuvarlama hassasiyetini kullanıyor. Son fix kapısı 227 Python testi OK (1 atlandı), parity modülü 17 OK; TS seçkisi 30 geçti ve `tsc` temizdi.
+- Tam TS paketi, Linux/CI ve diğer NumPy sürümleri çalıştırılmadı; `N=10.000` için 10–20 ms hedefi tutmadı. Uç taşma girdilerinde NumPy stderr uyarıları sürebilir.
+- NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
 ## 2026-10-04 — Birleştirilmiş motor dürüstlüğü düzeltmeleri (3728516, 09b76c7)
 
 ### UQ sampler (1eeb789)
