@@ -442,7 +442,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Microstructure Lab",
       "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
-      "next": "thermomechanical-distortion",
+      "next": "experimental-validation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -505,82 +505,13 @@ export const MODULE_REGISTRY = {
       ]
     },
     {
-      "id": "thermomechanical-distortion",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Thermomechanical Lab",
-      "description": "Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.",
-      "next": "experimental-validation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ThermomechanicalDistortionLab.tsx",
-        "export": "ThermomechanicalDistortionLab"
-      },
-      "operations": [
-        {
-          "id": "thermomechanical-distortion",
-          "method": "POST",
-          "route": "/api/python/lpbf-thermomechanical-distortion",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "thermomechanical-distortion",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
       "id": "experimental-validation",
       "version": "0.0.0",
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "lpbf",
       "label": "EBSD/CT Validation",
       "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
-      "next": "modulus-fno-lab",
+      "next": "toolpath-studio",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -643,82 +574,13 @@ export const MODULE_REGISTRY = {
       ]
     },
     {
-      "id": "modulus-fno-lab",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Modulus FNO Surrogate",
-      "description": "Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.",
-      "next": "toolpath-studio",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ModulusFNOLab.tsx",
-        "export": "ModulusFNOLab"
-      },
-      "operations": [
-        {
-          "id": "modulus-fno",
-          "method": "POST",
-          "route": "/api/python/lpbf-modulus-fno",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "modulus-fno",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
       "id": "toolpath-studio",
       "version": "0.1.0",
       "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-      "next": "toolpath-thermal-map",
+      "next": "murakami-fatigue",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -958,149 +820,11 @@ export const MODULE_REGISTRY = {
         "python/lpbf_toolpath_kinematics.py::ScannerProfile",
         "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
         "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
-        "routes/lpbfSimulation.ts:34#/api/python/lpbf-toolpath-kinematics",
+        "routes/lpbfSimulation.ts:30#/api/python/lpbf-toolpath-kinematics",
         "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
         "src/services/pythonComputationService.ts::simulateToolpathKinematics",
         "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "toolpath-thermal-map",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Toolpath Thermal Map",
-      "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-      "next": "industrial-certification",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ToolpathThermalMapLab.tsx",
-        "export": "ToolpathThermalMapLab"
-      },
-      "operations": [
-        {
-          "id": "toolpath-thermal-map",
-          "method": "POST",
-          "route": "/api/python/lpbf-toolpath-thermal-map",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "toolpath-thermal-map",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "industrial-certification",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Industrial Certification",
-      "description": "Industrial qualification standards and audit readiness for production release.",
-      "next": "murakami-fatigue",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/IndustrialCertificationLab.tsx",
-        "export": "IndustrialCertificationLab"
-      },
-      "operations": [
-        {
-          "id": "industrial-fatigue",
-          "method": "POST",
-          "route": "/api/python/lpbf-industrial-fatigue",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "industrial-fatigue",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",
@@ -1115,7 +839,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-      "next": "defect-twin",
+      "next": "adaptive-mitigation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1281,136 +1005,11 @@ export const MODULE_REGISTRY = {
         "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
         "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
         "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
-        "routes/lpbfSimulation.ts:35#/api/python/lpbf-fatigue-fracture",
+        "routes/lpbfSimulation.ts:31#/api/python/lpbf-fatigue-fracture",
         "routes/lpbfSimulation.ts::workerError",
         "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
         "src/services/pythonComputationService.ts::computeMurakamiFatigue",
         "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` / Fatigue & Fracture Lab"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "defect-twin",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Spatial Defect Twin",
-      "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-      "next": "adaptive-mitigation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfDefectTwinLab.tsx",
-        "export": "LpbfDefectTwinLab"
-      },
-      "operations": [
-        {
-          "id": "stl-voxelize",
-          "method": "POST",
-          "route": "/api/python/lpbf-stl-voxelize",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "stl-voxelize",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "resolution",
-              "label": "Grid divisions per axis",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 32,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced (0 divides by zero)."
-            }
-          ],
-          "undeclaredInput": [
-            "stlContent",
-            "defects"
-          ],
-          "output": {
-            "fields": [
-              "num_triangles",
-              "bounds",
-              "grid_resolution",
-              "voxel_size_mm",
-              "part_volume_mm3",
-              "total_defects_count",
-              "total_pore_volume_mm3",
-              "relative_density_pct",
-              "defects",
-              "sample_surface_voxels"
-            ],
-            "statusKey": null,
-            "transportValues": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key. part_volume_mm3 is max(triangle count, 1) times the voxel volume (no inside/outside fill is computed) and relative_density_pct compares it with the summed sphere volumes of the defects supplied in the request; the defects are inputs, not detections. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_defect_twin.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/defect-twin.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "stlContent is ASCII STL text or base64 binary STL; defects is a list of {x, y, z, type, diameter_um} objects. The Field schema cannot describe them, so they are recorded as undeclaredInput.",
-        "An empty or unparsable stlContent is not rejected: the authority uses 10 mm default bounds with zero triangles and a part_volume_mm3 of 0.031 (one voxel). Without defects it reports relative_density_pct 100; with the 8 synthesized defects the view always sends it reports about 94.95 against that fictitious volume (observed in Phase 7 wave 2).",
-        "The view's own 20 mm sample cube (4 triangles) gives part_volume_mm3 0.977 against an enclosed 8000 mm3 and relative_density_pct 99.842 with the view's 8 defects: the volume is a triangle-count proxy, orders of magnitude below the enclosed volume.",
-        "The cited inventory row named the route /api/python/lpbf-defect-twin, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-stl-voxelize.",
-        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
-        "No validity domain is declared: no source-backed applicability range is established."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_stl_voxelize",
-        "python/stl_voxelizer.py::STLVoxelizer.compute_bounds",
-        "python/stl_voxelizer.py::STLVoxelizer.voxelize",
-        "routes/lpbfSimulation.ts:36#/api/python/lpbf-stl-voxelize",
-        "src/components/LpbfDefectTwinLab.tsx::LpbfDefectTwinLab",
-        "src/services/pythonComputationService.ts::voxelizeSTLDefects",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:33#`defect-twin` / Spatial Defect Twin"
       ],
       "seedDerived": [
         "label",
@@ -1426,7 +1025,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Defect Mitigation",
       "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
-      "next": "multilaser-plume",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1619,505 +1218,11 @@ export const MODULE_REGISTRY = {
         "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
         "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
         "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
-        "routes/lpbfSimulation.ts:37#/api/python/lpbf-adaptive-feedforward",
+        "routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward",
         "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
         "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
         "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "multilaser-plume",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Multi-Laser Plume",
-      "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-      "next": "thermal-accumulation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiLaserPlumeLab.tsx",
-        "export": "MultiLaserPlumeLab"
-      },
-      "operations": [
-        {
-          "id": "multilaser-plume",
-          "method": "POST",
-          "route": "/api/python/lpbf-multilaser-plume",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "multilaser-plume",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "thermal-accumulation",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Thermal Accumulation",
-      "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "powder-compaction",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiTrackThermalLab.tsx",
-        "export": "MultiTrackThermalLab"
-      },
-      "operations": [
-        {
-          "id": "thermal-accumulation",
-          "method": "POST",
-          "route": "/api/python/lpbf-thermal-accumulation",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "thermal-accumulation",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "powder-compaction",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Powder DEM Compaction",
-      "description": "Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.",
-      "next": "optical-tomography",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PowderDEMCompactionLab.tsx",
-        "export": "PowderDEMCompactionLab"
-      },
-      "operations": [
-        {
-          "id": "powder-dem-compaction",
-          "method": "POST",
-          "route": "/api/python/lpbf-powder-dem-compaction",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "powder-dem-compaction",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "optical-tomography",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Optical Tomography",
-      "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-      "next": "transient-3d-gpu",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/OpticalTomographyLab.tsx",
-        "export": "OpticalTomographyLab"
-      },
-      "operations": [
-        {
-          "id": "optical-tomography",
-          "method": "POST",
-          "route": "/api/python/lpbf-optical-tomography",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "optical-tomography",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "res_x",
-              "label": "Sensor pixels (x)",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 64,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError); the pure-Python pixel loop runs res_x * res_y times with no limit below the 20000 ms worker timeout."
-            },
-            {
-              "key": "res_y",
-              "label": "Sensor pixels (y)",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 64,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced. 0 fails (ZeroDivisionError)."
-            },
-            {
-              "key": "fov_um",
-              "label": "Field of view",
-              "valueType": "number",
-              "unit": "µm",
-              "displayUnits": [],
-              "quantityKind": "length",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 1000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "emissivity",
-              "label": "Emissivity",
-              "valueType": "number",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "emissivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 0.35,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "laserPower_W",
-              "label": "Laser power",
-              "valueType": "number",
-              "unit": "W",
-              "displayUnits": [],
-              "quantityKind": "power",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 280.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "scanSpeed_mms",
-              "label": "Scan speed",
-              "valueType": "number",
-              "unit": "mm/s",
-              "displayUnits": [],
-              "quantityKind": "speed",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 1000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "material_k",
-              "label": "Thermal conductivity",
-              "valueType": "number",
-              "unit": "W/(m*K)",
-              "displayUnits": [],
-              "quantityKind": "thermal-conductivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 15.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            },
-            {
-              "key": "material_alpha",
-              "label": "Thermal diffusivity",
-              "valueType": "number",
-              "unit": "m^2/s",
-              "displayUnits": [],
-              "quantityKind": "thermal-diffusivity",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 5e-06,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced. 0 fails (ZeroDivisionError)."
-            },
-            {
-              "key": "T0_K",
-              "label": "Ambient temperature",
-              "valueType": "number",
-              "unit": "K",
-              "displayUnits": [],
-              "quantityKind": "temperature",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 300.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced."
-            }
-          ],
-          "undeclaredInput": [],
-          "output": {
-            "fields": [
-              "resolution",
-              "fov_um",
-              "max_expected_intensity",
-              "pixels_1d",
-              "pixels_noise_sigma"
-            ],
-            "statusKey": null,
-            "transportValues": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key. Each pixel is a Rosenthal point-source temperature capped at 3500 K, converted to Stefan-Boltzmann radiance with a fixed 0.005 signal scale; the noise value is the square root of that signal. No sensor calibration or measured frame is involved. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_optical_tomography.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/optical-tomography.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "The view sends laser_power_W, scan_speed_mm_s and sensor_resolution, which the authority does not read (it reads laserPower_W, scanSpeed_mms, res_x and res_y), so the view's power, speed and resolution are ignored and the authority defaults apply (the view's fixed 64 x 64 resolution equals the default, so in practice power and speed are lost); material_k, material_alpha and fov_um match. Observed in Phase 7 wave 2; the view is not changed here.",
-        "Recorded wording gap (not changed here): the simulator docstring and the inventory row describe NETD (noise-equivalent temperature difference) bounds; the code returns sqrt(expected signal) per pixel, not a temperature-domain noise bound.",
-        "The worker RPC handler reads each key with a default and applies no range check (float()/int() conversion only where noted); the contract's types and enums are stricter than the authority.",
-        "No validity domain is declared: no source-backed applicability range is established."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_optical_tomography",
-        "python/lpbf_optical_tomography.py::OpticalTomographySimulator.simulate_sensor_frame",
-        "routes/lpbfSimulation.ts:40#/api/python/lpbf-optical-tomography",
-        "src/components/OpticalTomographyLab.tsx::OpticalTomographyLab",
-        "src/services/pythonComputationService.ts::simulateOpticalTomography",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:38#`optical-tomography` / Optical Tomography"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "transient-3d-gpu",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "lpbf",
-      "label": "Transient 3D GPU Solver",
-      "description": "Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/TransientEnthalpy3DGPULab.tsx",
-        "export": "TransientEnthalpy3DGPULab"
-      },
-      "operations": [],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [
-        "The view calls POST /api/python/transient-3d-gpu, which no server route handles; no authority exists for this module."
-      ],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",
@@ -2427,7 +1532,7 @@ export const MODULE_REGISTRY = {
         "python/lpbf_keyhole_raytracing.py::_number",
         "python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing",
         "python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing",
-        "routes/lpbfSimulation.ts:44#/api/python/lpbf-keyhole-raytracing",
+        "routes/lpbfSimulation.ts:33#/api/python/lpbf-keyhole-raytracing",
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
         "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
         "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing"
@@ -2513,7 +1618,7 @@ export const MODULE_REGISTRY = {
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "materials",
       "label": "Alloy Builder",
-      "description": "Composition exploration and inverse design with model-dependent estimates.",
+      "description": "Composition and specimen editor for the shared active material (no property prediction).",
       "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",
@@ -2524,17 +1629,17 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "lpbf-thermal-solver",
-          "method": "POST",
-          "route": "/api/python/lpbf-thermal-solver",
+          "id": "specimen-editor",
+          "method": null,
+          "route": null,
           "authority": {
-            "kind": "python-ipc",
-            "script": "python/lpbf_thermal_solver.py",
+            "kind": "browser-local",
+            "script": null,
             "workerMethod": null,
-            "timeoutMs": 25000,
+            "timeoutMs": null,
             "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
+            "warm": false,
+            "exceptionReason": "Recorded debt (single-authority rule): the composition/specimen editor writes the shared active specimen in the browser."
           },
           "input": [],
           "undeclaredInput": [],
@@ -2879,7 +1984,7 @@ export const MODULE_REGISTRY = {
         "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
         "python/input_validation.py::require_known_alloy",
         "routes/physics.ts::handlePythonDispatch",
-        "routes/physics.ts:111#python/kinetics_ttt_cct_solver.py",
+        "routes/physics.ts:94#python/kinetics_ttt_cct_solver.py",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
         "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
@@ -2894,8 +1999,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "micrograph",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Micrograph Analysis",
       "description": "Image segmentation requires scale calibration and independent inspection.",
@@ -2909,6 +2014,272 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
+          "id": "micrograph-measure",
+          "method": "POST",
+          "route": "/api/python/micrograph-measure",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/micrograph_measure.py",
+            "workerMethod": null,
+            "timeoutMs": 60000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [
+            {
+              "key": "cropTopPx",
+              "label": "Rows excluded at the top",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "cropBottomPx",
+              "label": "Rows excluded at the bottom (data bar)",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default."
+            },
+            {
+              "key": "cropLeftPx",
+              "label": "Columns excluded at the left",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "cropRightPx",
+              "label": "Columns excluded at the right",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 0,
+              "max": 4095,
+              "step": 1,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": null
+            },
+            {
+              "key": "umPerPx",
+              "label": "Stated pixel size",
+              "valueType": "number",
+              "unit": "µm/px",
+              "displayUnits": [],
+              "quantityKind": "image-scale",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar."
+            },
+            {
+              "key": "barLengthUm",
+              "label": "Scale-bar length",
+              "valueType": "number",
+              "unit": "µm",
+              "displayUnits": [],
+              "quantityKind": "length",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx."
+            },
+            {
+              "key": "barLengthPx",
+              "label": "Scale-bar length on the image",
+              "valueType": "number",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-length",
+              "min": 0,
+              "max": null,
+              "step": null,
+              "default": 0.0,
+              "required": false,
+              "enum": [],
+              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied."
+            },
+            {
+              "key": "darkMaxGrey",
+              "label": "Dark class: grey <= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": -1,
+              "max": 254,
+              "step": 1,
+              "default": -1,
+              "required": false,
+              "enum": [],
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured."
+            },
+            {
+              "key": "brightMinGrey",
+              "label": "Bright class: grey >= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": 1,
+              "max": 256,
+              "step": 1,
+              "default": 256,
+              "required": false,
+              "enum": [],
+              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured."
+            },
+            {
+              "key": "boundaryMaxGrey",
+              "label": "Grain boundaries: grey <= threshold",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": -1,
+              "max": 254,
+              "step": 1,
+              "default": -1,
+              "required": false,
+              "enum": [],
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains."
+            },
+            {
+              "key": "tiles",
+              "label": "Tiles per side for the field-to-field CI",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 2,
+              "max": 10,
+              "step": 1,
+              "default": 4,
+              "required": false,
+              "enum": [],
+              "note": "Convention of this module (k x k tiles of one image), not a standard value."
+            },
+            {
+              "key": "sensitivityDeltaGrey",
+              "label": "Threshold sensitivity step",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "grey-level",
+              "min": 1,
+              "max": 64,
+              "step": 1,
+              "default": 10,
+              "required": false,
+              "enum": [],
+              "note": "The class fraction is also reported at threshold -/+ this many grey levels."
+            },
+            {
+              "key": "minAreaPx",
+              "label": "Smallest counted particle",
+              "valueType": "integer",
+              "unit": "px",
+              "displayUnits": [],
+              "quantityKind": "pixel-count",
+              "min": 1,
+              "max": 100000,
+              "step": 1,
+              "default": 4,
+              "required": false,
+              "enum": [],
+              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention."
+            },
+            {
+              "key": "linesPerDirection",
+              "label": "E112 test lines per direction",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": 1,
+              "max": 50,
+              "step": 1,
+              "default": 8,
+              "required": false,
+              "enum": [],
+              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest."
+            },
+            {
+              "key": "returnMasks",
+              "label": "Return class masks for the overlay",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": true,
+              "required": false,
+              "enum": [],
+              "note": null
+            }
+          ],
+          "undeclaredInput": [
+            "imageWidth",
+            "imageHeight",
+            "imageData",
+            "calibrationNote",
+            "darkLabel",
+            "brightLabel",
+            "manualCounts",
+            "manualClicks"
+          ],
+          "output": {
+            "fields": [
+              "schema",
+              "methodVersion",
+              "record",
+              "calibrationRequired",
+              "testLines",
+              "classes",
+              "grainSize",
+              "grainSizeManual",
+              "limitations"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        },
+        {
           "id": "diagnose-micrograph",
           "method": "POST",
           "route": "/api/metallurgy/diagnose-micrograph",
@@ -2916,31 +2287,44 @@ export const MODULE_REGISTRY = {
             "kind": "node-provider",
             "script": null,
             "workerMethod": null,
-            "timeoutMs": null,
+            "timeoutMs": 60000,
             "gpu": "none",
             "warm": false,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        },
-        {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "mimeType",
+              "label": "Image media type",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "media-type",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "image/jpeg",
+              "required": false,
+              "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/gif"
+              ],
+              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415."
+            }
+          ],
+          "undeclaredInput": [
+            "imageBase64",
+            "prompt"
+          ],
+          "output": {
+            "fields": [
+              "diagnosis"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2955,24 +2339,48 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "Emits no evidence status: neither output carries a status key. micrograph-measure is measurement software (threshold area fraction with field-to-field CI and threshold sensitivity, connected-component particles, ASTM E112 intersection counting) checked against synthetic oracle images in python/test_micrograph_measure.py; it has no comparison with real micrographs or with manual counts by a metallographer, so the ceiling stays screening-only. Lengths, areas, densities and G are null without a user calibration. diagnose-micrograph returns language-model text: advisory, never a measurement."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_contract_micrograph.py",
         "oracle": {
-          "status": "pending",
-          "ref": null,
+          "status": "present",
+          "ref": "python/test_micrograph_measure.py::O1SquareGrid.test_exact_intercept_and_g",
           "ciNote": null,
-          "scope": null
+          "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
         },
-        "docs": null
+        "docs": "docs/modules/micrograph.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "POST /api/metallurgy/detect-sem-legend and POST /api/metallurgy/analyze-sem return constant values without calling any authority; not bound as operations."
+        "imageData is the 8-bit greyscale image (row-major bytes, base64) with imageWidth and imageHeight (each 1-4096); labels, calibrationNote, manualCounts (one count per test line, multiples of 0.5) and manualClicks are free text or lists. The Field schema cannot describe them, so they are recorded as undeclaredInput; the authority validates them.",
+        "The view decodes PNG/JPEG/BMP/GIF/WebP in the browser; TIFF is not decoded (the view says so) and no instrument metadata (pixel size) is read from files.",
+        "diagnose-micrograph needs OPENAI_API_KEY and is refused when AIRGAPPED=1; its timeout is the provider default (server/openaiService.ts), the route passes none.",
+        "No validity domain is declared: no real-image comparison establishes an applicability range.",
+        "micrograph-measure runs as a python-ipc script (IPC process pool, or an ad-hoc process when the daemon is unreachable) under a 60000 ms deadline, not in the serial LPBF worker: the worker refuses RPC lines over 1,000,000 characters (an image above about 865 x 865 px) and would hold up LPBF job calls. The route answers 413 above 24,000,000 bytes of JSON (a 4096 x 4096 image is 22.4 MB)."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "routes/physics.ts",
+        "server/processOrchestrator.ts::runPythonScript",
+        "python/micrograph_measure.py::main",
+        "python/micrograph_measure.py::read_request",
+        "python/micrograph_measure.py::measure",
+        "python/micrograph_measure.py::intercept_statistics",
+        "routes/copilot.ts",
+        "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
+        "src/components/MicrographLab.tsx::MicrographLab",
+        "src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription",
+        "src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio",
+        "src/services/micrographMeasureService.ts::measureMicrograph",
+        "src/utils/micrographInput.ts::buildMeasureRequest",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2997,17 +2405,17 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
+          "id": "eds-peak-id",
+          "method": null,
+          "route": null,
           "authority": {
-            "kind": "node-provider",
+            "kind": "browser-local",
             "script": null,
             "workerMethod": null,
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": null
+            "exceptionReason": "Recorded debt (single-authority rule): SNIP background, 3 sqrt(background) peak search and cited line-table matching (src/utils/edsPeakId.ts) and vendor quantification import run in the browser."
           },
           "input": [],
           "undeclaredInput": [],
@@ -3374,7 +2782,7 @@ export const MODULE_REGISTRY = {
         "python/icme_multiscale_pipeline_solver.py::_unknown_element",
         "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
         "routes/physics.ts::handlePythonDispatch",
-        "routes/physics.ts:116#python/icme_multiscale_pipeline_solver.py",
+        "routes/physics.ts:99#python/icme_multiscale_pipeline_solver.py",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
         "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
@@ -3465,7 +2873,7 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [
-        "GET /api/materials-project/search returns a hard-coded record list (routes/copilot.ts MATERIALS_PROJECT_VERIFIED_DATA) labelled 'Verified Materials Project Physical DFT Reference Catalog' without calling any authority; not bound as an operation (canned; deletion/follow-up candidate)."
+        "The canned GET /api/materials-project/search route and its server catalog were deleted on 2026-10-04. The view still lists a hard-coded client catalog (CURATED_MP_PRESETS) that feeds the elasticity tool; replacing it with a user C_ij input form is an open follow-up."
       ],
       "sourceRefs": [],
       "seedDerived": [
@@ -3776,7 +3184,7 @@ export const MODULE_REGISTRY = {
       "workspace": "evidence",
       "label": "Uncertainty & Coupons",
       "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
-      "next": "qualification",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -4152,155 +3560,13 @@ export const MODULE_REGISTRY = {
         "routes/physics.ts::handlePythonDispatch",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
-        "routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py",
+        "routes/physics.ts:104-105#python/stochastic_uq_mmpds_solver.py",
         "src/components/UQLab.tsx::UQLab",
         "src/components/UQLab.tsx::runQMCSolver",
         "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
         "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
         "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "qualification",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "evidence",
-      "label": "ASTM / MMPDS Screening",
-      "description": "Protocol screening and coupon statistics; no automatic standards certification.",
-      "next": "aerospace-pdf-audit",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/StandardQualificationEngine.tsx",
-        "export": "StandardQualificationEngine"
-      },
-      "operations": [
-        {
-          "id": "coupon-statistics",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): protocol screening and coupon statistics are computed in the browser."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [
-        "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
-      ],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "aerospace-pdf-audit",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "evidence",
-      "label": "Audit Templates",
-      "description": "Demonstration report templates; no airworthiness or NADCAP approval.",
-      "next": "traceability",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AerospaceAuditReportGenerator.tsx",
-        "export": "AerospaceAuditReportGenerator"
-      },
-      "operations": [
-        {
-          "id": "report-template",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): demonstration report templates are assembled in the browser."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [
-        "POST /api/metallurgy/qualify-aerospace returns constant values (qualified: true) without calling any authority; not bound as an operation."
-      ],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",
@@ -4381,75 +3647,6 @@ export const MODULE_REGISTRY = {
           "id": "metallurgy-consult",
           "method": "POST",
           "route": "/api/metallurgy/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "ai-orchestrator",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "orchestration",
-      "label": "AI Orchestrator",
-      "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-      "next": "research-hub",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AIOrchestratorPanel.tsx",
-        "export": "AIOrchestratorPanel"
-      },
-      "operations": [
-        {
-          "id": "dataset-plan",
-          "method": "POST",
-          "route": "/api/orchestrator/dataset-plan",
           "authority": {
             "kind": "node-provider",
             "script": null,

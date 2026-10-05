@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 import lpbf_worker
 import lpbf_worker_rpc
 
-# The 29 method names served by the original if/elif chain in lpbf_worker.py (frozen literal).
+# The method names served by the original if/elif chain in lpbf_worker.py (frozen literal; 29
+# until 2026-10-04, when experimental-validation, support-optimization, bayesian-optimizer,
+# transient-enthalpy-fdm, modulus-fno, powder-dem-compaction, transient-3d-gpu, stl-voxelize,
+# optical-tomography, toolpath-thermal-map, thermal-accumulation, thermomechanical-distortion,
+# industrial-fatigue and multilaser-plume were deleted
+# with their routes/views).
 ORIGINAL_METHOD_NAMES = (
     "capabilities",
     "estimate",
@@ -16,23 +21,9 @@ ORIGINAL_METHOD_NAMES = (
     "get",
     "cancel",
     "solidification-microstructure",
-    "thermomechanical-distortion",
-    "industrial-fatigue",
-    "experimental-validation",
-    "modulus-fno",
     "toolpath-kinematics",
     "fatigue-fracture",
-    "toolpath-thermal-map",
-    "stl-voxelize",
     "adaptive-feedforward",
-    "multilaser-plume",
-    "thermal-accumulation",
-    "powder-dem-compaction",
-    "optical-tomography",
-    "support-optimization",
-    "bayesian-optimizer",
-    "transient-enthalpy-fdm",
-    "transient-3d-gpu",
     "keyhole-raytracing",
     "purge-unverified-artifacts",
 )
@@ -45,7 +36,7 @@ def original_method_names():
 class WorkerDispatchTest(unittest.TestCase):
     def test_original_method_list_is_complete(self):
         names = original_method_names()
-        self.assertEqual(len(names), 29)
+        self.assertEqual(len(names), 15)
         self.assertEqual(len(names), len(set(names)))
 
     def test_every_original_method_has_a_handler(self):

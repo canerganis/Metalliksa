@@ -3,7 +3,6 @@ import test from "node:test";
 import type { MaterialSpec } from "../src/types";
 import { MATERIALS_DATABASE } from "../src/data/materialsDatabase";
 import {
-  createPipelinePayloadFromCandidate,
   createPipelinePayloadFromMaterialSpec,
   deriveHardnessProfile,
   isNonAusteniticSteel,
@@ -81,27 +80,6 @@ test("predicted hardness strings are flagged as predictions", () => {
   assert.equal(r.hardnessHV, 330);
   assert.equal(r.hardnessHVSource, "estimate-predicted");
   assert.match(r.hardnessProfile.description, /predicted value, not a measurement/);
-});
-
-test("candidate transfer: HV from the predicted yield strength for steels only (old: YS/3 + 30 for every candidate)", () => {
-  const base = {
-    name: "Candidate",
-    yieldStrength_25C_MPa: 900,
-    uts_25C_MPa: 1100,
-    density_gcm3: 7.8,
-    youngsModulus_GPa: 205,
-    elongation_pct: 12,
-  };
-  const steel = createPipelinePayloadFromCandidate({ ...base, compositionWt: { Fe: 96.7, Cr: 1, Ni: 2, C: 0.3 }, matrixPhase: "Martensitic" });
-  assert.equal(steel.hardnessHV, 344); // (900 + 90.7) / 2.876 = 344.5 -> 344; old round(900 / 3 + 30) = 330
-  assert.equal(steel.hardnessHVSource, "estimate-predicted");
-  assert.equal(steel.hardness, "344 HV (estimate from predicted yield strength, not measured)");
-  const fcc = createPipelinePayloadFromCandidate({ ...base, compositionWt: { Fe: 70, Cr: 18, Ni: 12, C: 0.03 }, matrixPhase: "FCC" });
-  assert.equal(fcc.hardnessHV, null);
-  assert.equal(fcc.hardness, "Unavailable (no verified hardness-strength relation for this candidate)");
-  const ni = createPipelinePayloadFromCandidate({ ...base, compositionWt: { Ni: 60, Cr: 20, Fe: 20 }, matrixPhase: "FCC" });
-  assert.equal(ni.hardnessHV, null);
-  assert.equal(ni.hardnessHVSource, "unavailable");
 });
 
 test("Materials Database path passes the composition: a steel without a hardness string gets the estimate", () => {

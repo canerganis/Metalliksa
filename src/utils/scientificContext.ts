@@ -46,7 +46,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'Imported or synthetic records are not automatically equivalent to measured sample evidence.',
   };
 
-  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'uq-lab' || moduleId === 'qualification' || moduleId === 'traceability') return {
+  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'uq-lab' || moduleId === 'traceability') return {
     title: 'Evidence chain for any claim',
     observation: `${shared} Here the goal is traceability: which data supports a claim, under which conditions, with what uncertainty.`,
     mechanism: 'Scientific confidence is built through claim → method → data → condition match → uncertainty characterization → independent validation. Solver convergence supports numerical robustness; external comparison supports real-world confidence.',

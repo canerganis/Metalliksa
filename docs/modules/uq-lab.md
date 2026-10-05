@@ -82,7 +82,7 @@ Background work: none; resources: fetch.
 - `routes/physics.ts::handlePythonDispatch`
 - `python/persistent_ipc_service.py::WARM_MODULE_NAMES`
 - `server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute`
-- `routes/physics.ts:120-121#python/stochastic_uq_mmpds_solver.py`
+- `routes/physics.ts:104-105#python/stochastic_uq_mmpds_solver.py`
 - `src/components/UQLab.tsx::UQLab`
 - `src/components/UQLab.tsx::runQMCSolver`
 - `src/components/uqLabData.ts::computeMMPDSEmpiricalStats`

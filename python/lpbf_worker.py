@@ -1250,7 +1250,9 @@ def main():
     for line in sys.stdin:
         request = {}
         try:
-            if len(line) > 1000000: raise ValueError("RPC payload too large")
+            if len(line) > RPC_MAX_LINE_CHARS:
+                request = {"id": _leading_request_id(line)}
+                raise ValueError(f"RPC payload too large ({len(line)} characters; limit {RPC_MAX_LINE_CHARS})")
             request = json.loads(line)
             method = request["method"]
             data = lpbf_worker_rpc.dispatch(request, queue, _capabilities_response)
@@ -1259,6 +1261,17 @@ def main():
             response = rpc_error_response(request, e)
         print(json.dumps(response, allow_nan=False), flush=True)
     queue.close()
+
+
+RPC_MAX_LINE_CHARS = 1000000
+_LEADING_ID = re.compile(r'\s*\{\s*"id"\s*:\s*(-?\d+|"(?:[^"\\]|\\.){0,128}")\s*,')
+
+
+def _leading_request_id(line):
+    """Request id of an RPC line without parsing the whole (oversized) line. The Node bridge serialises
+    {id, method, payload} with the id first; anything else yields None."""
+    match = _LEADING_ID.match(line[:256])
+    return None if match is None else json.loads(match.group(1))
 
 
 def rpc_error_response(request, error):

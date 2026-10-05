@@ -7,7 +7,7 @@ export type RunState = "unvalidated" | "inconclusive" | "unavailable" | "outside
 export type EvidenceStatus = EvidenceType | RunState;
 export type ContractMaturity = "Research" | "Preview";
 export type ContractNavigation = "listed" | "hidden";
-export type ContractWorkspace = "lpbf" | "materials" | "evidence" | "orchestration";
+export type ContractWorkspace = "lpbf" | "materials" | "evidence";
 export type OracleState = "present" | "pending";
 export type MigrationState = "legacy" | "contracted";
 
@@ -113,7 +113,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Microstructure Lab",
       "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
-      "next": "thermomechanical-distortion",
+      "next": "experimental-validation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -134,38 +134,12 @@ export const MODULE_REGISTRY_CORE = {
       }
     },
     {
-      "id": "thermomechanical-distortion",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Thermomechanical Lab",
-      "description": "Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.",
-      "next": "experimental-validation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ThermomechanicalDistortionLab.tsx",
-        "export": "ThermomechanicalDistortionLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
       "id": "experimental-validation",
       "version": "0.0.0",
       "workspace": "lpbf",
       "label": "EBSD/CT Validation",
       "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
-      "next": "modulus-fno-lab",
+      "next": "toolpath-studio",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -186,38 +160,12 @@ export const MODULE_REGISTRY_CORE = {
       }
     },
     {
-      "id": "modulus-fno-lab",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Modulus FNO Surrogate",
-      "description": "Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.",
-      "next": "toolpath-studio",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ModulusFNOLab.tsx",
-        "export": "ModulusFNOLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
       "id": "toolpath-studio",
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Toolpath & Kinematics",
       "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-      "next": "toolpath-thermal-map",
+      "next": "murakami-fatigue",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -238,64 +186,12 @@ export const MODULE_REGISTRY_CORE = {
       }
     },
     {
-      "id": "toolpath-thermal-map",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Toolpath Thermal Map",
-      "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-      "next": "industrial-certification",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ToolpathThermalMapLab.tsx",
-        "export": "ToolpathThermalMapLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "industrial-certification",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Industrial Certification",
-      "description": "Industrial qualification standards and audit readiness for production release.",
-      "next": "murakami-fatigue",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/IndustrialCertificationLab.tsx",
-        "export": "IndustrialCertificationLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
       "id": "murakami-fatigue",
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Fatigue & Fracture Lab",
       "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-      "next": "defect-twin",
+      "next": "adaptive-mitigation",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -316,38 +212,12 @@ export const MODULE_REGISTRY_CORE = {
       }
     },
     {
-      "id": "defect-twin",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Spatial Defect Twin",
-      "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-      "next": "adaptive-mitigation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfDefectTwinLab.tsx",
-        "export": "LpbfDefectTwinLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
       "id": "adaptive-mitigation",
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Defect Mitigation",
       "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
-      "next": "multilaser-plume",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -356,136 +226,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "LpbfAdaptiveMitigationLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "multilaser-plume",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Multi-Laser Plume",
-      "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-      "next": "thermal-accumulation",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiLaserPlumeLab.tsx",
-        "export": "MultiLaserPlumeLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "thermal-accumulation",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Thermal Accumulation",
-      "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-      "next": "powder-compaction",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MultiTrackThermalLab.tsx",
-        "export": "MultiTrackThermalLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "powder-compaction",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Powder DEM Compaction",
-      "description": "Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.",
-      "next": "optical-tomography",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PowderDEMCompactionLab.tsx",
-        "export": "PowderDEMCompactionLab"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "optical-tomography",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Optical Tomography",
-      "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-      "next": "transient-3d-gpu",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/OpticalTomographyLab.tsx",
-        "export": "OpticalTomographyLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "transient-3d-gpu",
-      "version": "0.0.0",
-      "workspace": "lpbf",
-      "label": "Transient 3D GPU Solver",
-      "description": "Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/TransientEnthalpy3DGPULab.tsx",
-        "export": "TransientEnthalpy3DGPULab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -554,7 +294,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.0.0",
       "workspace": "materials",
       "label": "Alloy Builder",
-      "description": "Composition exploration and inverse design with model-dependent estimates.",
+      "description": "Composition and specimen editor for the shared active material (no property prediction).",
       "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",
@@ -629,7 +369,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "micrograph",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Micrograph Analysis",
       "description": "Image segmentation requires scale calibration and independent inspection.",
@@ -641,15 +381,15 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/MicrographLab.tsx",
         "export": "MicrographLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
       "tests": {
         "oracle": {
-          "status": "pending",
+          "status": "present",
           "ciNote": null,
-          "scope": null
+          "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
         }
       }
     },
@@ -867,7 +607,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "evidence",
       "label": "Uncertainty & Coupons",
       "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
-      "next": "qualification",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -876,58 +616,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "UQLab"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "qualification",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "ASTM / MMPDS Screening",
-      "description": "Protocol screening and coupon statistics; no automatic standards certification.",
-      "next": "aerospace-pdf-audit",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/StandardQualificationEngine.tsx",
-        "export": "StandardQualificationEngine"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "aerospace-pdf-audit",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "Audit Templates",
-      "description": "Demonstration report templates; no airworthiness or NADCAP approval.",
-      "next": "traceability",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AerospaceAuditReportGenerator.tsx",
-        "export": "AerospaceAuditReportGenerator"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -978,32 +666,6 @@ export const MODULE_REGISTRY_CORE = {
       "view": {
         "component": "src/components/MetallurgyCopilot.tsx",
         "export": "MetallurgyCopilot"
-      },
-      "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "ai-orchestrator",
-      "version": "0.0.0",
-      "workspace": "orchestration",
-      "label": "AI Orchestrator",
-      "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-      "next": "research-hub",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AIOrchestratorPanel.tsx",
-        "export": "AIOrchestratorPanel"
       },
       "migrationState": "legacy",
       "evidence": {

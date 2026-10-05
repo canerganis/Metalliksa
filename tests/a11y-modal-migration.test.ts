@@ -8,7 +8,6 @@ const MIGRATED = [
   "src/components/EngineStatusDialog.tsx", // the App engine status modal, now its own lazy chunk
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/SendToModuleModal.tsx",
-  "src/components/StandardQualificationEngine.tsx",
   "src/components/TafelPolarizationLab.tsx",
   "src/components/UQLab.tsx",
 ];

@@ -6401,7 +6401,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "6944569e9a669d2b211f432b94ee33acb57facb4",
+ "gitHead": "50315d628980d8a4924bc5cf6e4c67a8a5b347ed",
  "input": {
   "agingTemp_nominal": 480,
   "agingTemp_stdDev": 5.0,
@@ -6452,7 +6452,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "stochastic_uq_mmpds_solver",
  "solverFile": "python/stochastic_uq_mmpds_solver.py",
- "solverSha256": "5fb1cb225f0529bd02741561630e53e48b2da090033d584a0c398961f828b033",
+ "solverSha256": "5a33ee81596d82a937a9d2b5e4a669e7672c0483ad05a1c1db97b4c2b49babe7",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { thermalMapHeaderSource } from "../src/utils/meltPoolMapAuthority";
 import { buildGoldakCaeCard, goldakAbsorbedPower_W, goldakFrontRearFractions, type GoldakCaeCardInput } from "../src/utils/goldakCaeCard";
 
 // Solver-producible keyhole state: IN718, 285 W / 960 mm/s, beam 80 um, layer 40 um, hatch 110 um
@@ -233,31 +232,9 @@ test("unchanged card lines stay verbatim; only the enthalpy line differs by vari
 const source = (relative: string) => readFileSync(resolve(process.cwd(), relative), "utf8").replace(/\r\n/g, "\n");
 
 test("call sites pass the correct card variant (a swap must fail)", () => {
-  const thermalMap = source("src/components/LaserMeltPoolThermalMap.tsx");
+  // The thermal-map call site (LaserMeltPoolThermalMap) was deleted on 2026-10-04 with the InverseAlloyStudio subtree.
   const crossSection = source("src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx");
   const calls = (text: string) => [...text.matchAll(/buildGoldakCaeCard\(([^)]*)\)/g)].map((m) => m[1].replace(/\s+/g, ""));
-  assert.deepEqual(calls(thermalMap), ["pyResult,\"thermal-map\""]);
   assert.deepEqual(calls(crossSection), ["pyResult,\"cross-section\""]);
-  assert.ok(thermalMap.includes('import { buildGoldakCaeCard } from "../utils/goldakCaeCard";'));
   assert.ok(crossSection.includes('import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";'));
-});
-
-test("thermal-map header states the Rosenthal / TS-interpolation wording and no longer claims high fidelity", () => {
-  const thermalMap = source("src/components/LaserMeltPoolThermalMap.tsx");
-  assert.ok(!/high[- ]fidelity/i.test(thermalMap), "no High-fidelity wording");
-  assert.ok(!thermalMap.includes("Goldak 3D · screening"), "no fixed Goldak chip");
-  assert.ok(thermalMap.includes("Analytical screening: {thermalMapHeaderSource("), "header renders the model id from the result");
-  assert.ok(!thermalMap.includes("Analytical screening: regularised Rosenthal"), "no hard-coded Rosenthal in the header");
-  assert.ok(thermalMap.includes("illustrative TS interpolation of the Python pool extents, not a solved field"));
-  assert.ok(thermalMap.includes("Not FEA, not CFD, not validated."));
-  assert.ok(thermalMap.includes("screening map (TS interpolation)"));
-  assert.ok(!/const (Tm|Ts) = 1350|const (Tm|Ts) = 1260/.test(thermalMap), "no hard-coded liquidus/solidus");
-});
-
-test("thermal-map header source: result model id, Rosenthal only as the documented default without a result", () => {
-  assert.equal(thermalMapHeaderSource("goldak-half-space-v3"), "goldak-half-space-v3 point-source conduction field");
-  assert.equal(thermalMapHeaderSource("rosenthal-screening-v1"), "rosenthal-screening-v1 point-source conduction field");
-  for (const absent of [undefined, null, "", "  "]) {
-    assert.equal(thermalMapHeaderSource(absent), "regularised Rosenthal point-source conduction field (default heat source; no result yet)");
-  }
 });

@@ -25,19 +25,9 @@
     "label": "Microstructure Lab",
     "scope": "Research",
     "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
-    "next": "thermomechanical-distortion",
+    "next": "experimental-validation",
     "viewComponent": "src/components/SolidificationMicrostructureLab.tsx",
     "viewExport": "SolidificationMicrostructureLab"
-  },
-  {
-    "id": "thermomechanical-distortion",
-    "workspace": "lpbf",
-    "label": "Thermomechanical Lab",
-    "scope": "Research",
-    "description": "Macro-scale inherent strain estimation and King & Cunningham keyhole porosity risk analysis.",
-    "next": "experimental-validation",
-    "viewComponent": "src/components/ThermomechanicalDistortionLab.tsx",
-    "viewExport": "ThermomechanicalDistortionLab"
   },
   {
     "id": "experimental-validation",
@@ -45,19 +35,9 @@
     "label": "EBSD/CT Validation",
     "scope": "Research",
     "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
-    "next": "modulus-fno-lab",
+    "next": "toolpath-studio",
     "viewComponent": "src/components/ExperimentalValidationLab.tsx",
     "viewExport": "ExperimentalValidationLab"
-  },
-  {
-    "id": "modulus-fno-lab",
-    "workspace": "lpbf",
-    "label": "Modulus FNO Surrogate",
-    "scope": "Preview",
-    "description": "Phase 11: Part-scale 3D thermal history prediction using NVIDIA Modulus Fourier Neural Operators.",
-    "next": "toolpath-studio",
-    "viewComponent": "src/components/ModulusFNOLab.tsx",
-    "viewExport": "ModulusFNOLab"
   },
   {
     "id": "toolpath-studio",
@@ -65,29 +45,9 @@
     "label": "Toolpath & Kinematics",
     "scope": "Research",
     "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
-    "next": "toolpath-thermal-map",
+    "next": "murakami-fatigue",
     "viewComponent": "src/components/LpbfToolpathStudioLab.tsx",
     "viewExport": "LpbfToolpathStudioLab"
-  },
-  {
-    "id": "toolpath-thermal-map",
-    "workspace": "lpbf",
-    "label": "Toolpath Thermal Map",
-    "scope": "Preview",
-    "description": "Phase 12+17: 2D toolpath and multi-track thermal accumulation visualization by laser scan strategy (Chessboard/Stripe).",
-    "next": "industrial-certification",
-    "viewComponent": "src/components/ToolpathThermalMapLab.tsx",
-    "viewExport": "ToolpathThermalMapLab"
-  },
-  {
-    "id": "industrial-certification",
-    "workspace": "lpbf",
-    "label": "Industrial Certification",
-    "scope": "Preview",
-    "description": "Industrial qualification standards and audit readiness for production release.",
-    "next": "murakami-fatigue",
-    "viewComponent": "src/components/IndustrialCertificationLab.tsx",
-    "viewExport": "IndustrialCertificationLab"
   },
   {
     "id": "murakami-fatigue",
@@ -95,19 +55,9 @@
     "label": "Fatigue & Fracture Lab",
     "scope": "Research",
     "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
-    "next": "defect-twin",
+    "next": "adaptive-mitigation",
     "viewComponent": "src/components/MurakamiFatigueLab.tsx",
     "viewExport": "MurakamiFatigueLab"
-  },
-  {
-    "id": "defect-twin",
-    "workspace": "lpbf",
-    "label": "Spatial Defect Twin",
-    "scope": "Research",
-    "description": "Phase 14: CAD/STL 3D voxelization, spatial defect mapping and relative density (%99.X).",
-    "next": "adaptive-mitigation",
-    "viewComponent": "src/components/LpbfDefectTwinLab.tsx",
-    "viewExport": "LpbfDefectTwinLab"
   },
   {
     "id": "adaptive-mitigation",
@@ -115,59 +65,9 @@
     "label": "Defect Mitigation",
     "scope": "Research",
     "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
-    "next": "multilaser-plume",
+    "next": "keyhole-raytracing",
     "viewComponent": "src/components/LpbfAdaptiveMitigationLab.tsx",
     "viewExport": "LpbfAdaptiveMitigationLab"
-  },
-  {
-    "id": "multilaser-plume",
-    "workspace": "lpbf",
-    "label": "Multi-Laser Plume",
-    "scope": "Research",
-    "description": "Phase 16: Fluid-optic cross-flow, Beer-Lambert plume attenuation and downwind de-confliction.",
-    "next": "thermal-accumulation",
-    "viewComponent": "src/components/MultiLaserPlumeLab.tsx",
-    "viewExport": "MultiLaserPlumeLab"
-  },
-  {
-    "id": "thermal-accumulation",
-    "workspace": "lpbf",
-    "label": "Thermal Accumulation",
-    "scope": "Research",
-    "description": "Phase 17: Multi-Track heat buildup, inter-pass temperature drift, and optimal dwell delay routing.",
-    "next": "powder-compaction",
-    "viewComponent": "src/components/MultiTrackThermalLab.tsx",
-    "viewExport": "MultiTrackThermalLab"
-  },
-  {
-    "id": "powder-compaction",
-    "workspace": "lpbf",
-    "label": "Powder DEM Compaction",
-    "scope": "Research",
-    "description": "Phase 18: Quasi-Monte Carlo particle packing simulation and recoater geometry.",
-    "next": "optical-tomography",
-    "viewComponent": "src/components/PowderDEMCompactionLab.tsx",
-    "viewExport": "PowderDEMCompactionLab"
-  },
-  {
-    "id": "optical-tomography",
-    "workspace": "lpbf",
-    "label": "Optical Tomography",
-    "scope": "Research",
-    "description": "Phase 19: In-Situ sensor thermal flux expected value and analytical noise bounds.",
-    "next": "transient-3d-gpu",
-    "viewComponent": "src/components/OpticalTomographyLab.tsx",
-    "viewExport": "OpticalTomographyLab"
-  },
-  {
-    "id": "transient-3d-gpu",
-    "workspace": "lpbf",
-    "label": "Transient 3D GPU Solver",
-    "scope": "Research",
-    "description": "Phase 22: GPU-accelerated high-fidelity melt pool simulation using NVIDIA Warp.",
-    "next": "keyhole-raytracing",
-    "viewComponent": "src/components/TransientEnthalpy3DGPULab.tsx",
-    "viewExport": "TransientEnthalpy3DGPULab"
   },
   {
     "id": "keyhole-raytracing",
@@ -194,7 +94,7 @@
     "workspace": "materials",
     "label": "Alloy Builder",
     "scope": "Research",
-    "description": "Composition exploration and inverse design with model-dependent estimates.",
+    "description": "Composition and specimen editor for the shared active material (no property prediction).",
     "next": "phase-diagram",
     "viewComponent": "src/components/AlloyBuilder.tsx",
     "viewExport": "AlloyBuilder"
@@ -315,29 +215,9 @@
     "label": "Uncertainty & Coupons",
     "scope": "Research",
     "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
-    "next": "qualification",
+    "next": "traceability",
     "viewComponent": "src/components/UQLab.tsx",
     "viewExport": "UQLab"
-  },
-  {
-    "id": "qualification",
-    "workspace": "evidence",
-    "label": "ASTM / MMPDS Screening",
-    "scope": "Research",
-    "description": "Protocol screening and coupon statistics; no automatic standards certification.",
-    "next": "aerospace-pdf-audit",
-    "viewComponent": "src/components/StandardQualificationEngine.tsx",
-    "viewExport": "StandardQualificationEngine"
-  },
-  {
-    "id": "aerospace-pdf-audit",
-    "workspace": "evidence",
-    "label": "Audit Templates",
-    "scope": "Preview",
-    "description": "Demonstration report templates; no airworthiness or NADCAP approval.",
-    "next": "traceability",
-    "viewComponent": "src/components/AerospaceAuditReportGenerator.tsx",
-    "viewExport": "AerospaceAuditReportGenerator"
   },
   {
     "id": "traceability",
@@ -358,15 +238,5 @@
     "next": "3d-distortion-lab",
     "viewComponent": "src/components/MetallurgyCopilot.tsx",
     "viewExport": "MetallurgyCopilot"
-  },
-  {
-    "id": "ai-orchestrator",
-    "workspace": "orchestration",
-    "label": "AI Orchestrator",
-    "scope": "Preview",
-    "description": "Plan and review multi-agent dataset decisions before any data is uploaded or changed.",
-    "next": "research-hub",
-    "viewComponent": "src/components/AIOrchestratorPanel.tsx",
-    "viewExport": "AIOrchestratorPanel"
   }
 ]

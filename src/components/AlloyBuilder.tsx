@@ -3,7 +3,6 @@ import {
   Boxes,
   Atom,
   Sliders,
-  Sparkles,
   Plus,
   Trash2,
   RotateCcw,
@@ -22,7 +21,6 @@ import {
 import { useMaterialStore, MATERIAL_PRESETS, BaseMetalType } from "../store/useMaterialStore";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { MATERIAL_CATEGORIES, normalizeMaterialCategory } from "../utils/materialCategory";
-import { InverseAlloyStudio } from "./InverseAlloyStudio";
 
 interface AlloyBuilderProps {
   onNavigate?: (tabId: string) => void;
@@ -60,7 +58,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
     ? MANUFACTURING_ROUTES : [...MANUFACTURING_ROUTES, manufacturingRoute];
 
   // Local UI state for tab switching & element selection dropdown only
-  const [activeSubView, setActiveSubView] = useState<"specimen-studio" | "inverse-pareto">("specimen-studio");
+  const [activeSubView, setActiveSubView] = useState<"specimen-studio">("specimen-studio");
   const [selectedElementToAdd, setSelectedElementToAdd] = useState<string>("Re");
   const [isSavedToast, setIsSavedToast] = useState<boolean>(false);
 
@@ -121,18 +119,6 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
             >
               <Sliders className="w-3.5 h-3.5" />
               <span>Specimen Formulator</span>
-            </button>
-            <button
-              id="tab-inverse-pareto"
-              onClick={() => setActiveSubView("inverse-pareto")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                activeSubView === "inverse-pareto"
-                  ? "bg-emerald-500 text-slate-950 shadow-md font-bold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Inverse Pareto AI</span>
             </button>
           </div>
         </div>
@@ -437,11 +423,6 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
             </div>
           </div>
         </>
-      )}
-
-      {/* Sub-View: Inverse Pareto Multi-Objective Optimization Studio */}
-      {activeSubView === "inverse-pareto" && (
-        <InverseAlloyStudio onNavigate={onNavigate} />
       )}
     </div>
   );
