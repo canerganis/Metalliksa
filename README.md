@@ -22,7 +22,6 @@ Synthetic demonstrations, literature estimates, measured findings, model results
 
 - [Product overview](docs/PRODUCT_OVERVIEW.md) — intended users, problem and value hypotheses, current scope, maturity, and evidence limits.
 - [Product roadmap](ROADMAP.md) — current priorities and evidence gates.
-- [HANGAR BİGG application draft](docs/HANGAR_BIGG_BASVURU_TASLAGI.md) — internal venture draft with assumptions that still need validation.
 - [Documentation map](docs/README.md) — product and technical documentation.
 
 ## Developer setup
