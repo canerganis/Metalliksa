@@ -39,7 +39,7 @@ Output fields (no status key, so the output carries no evidence status): `num_tr
 
 ## Validity domain
 
-None declared: no source-backed applicability range is established.
+None declared in this contract (any solver-side applicability check is described in the recorded notes).
 
 ## Lifecycle
 

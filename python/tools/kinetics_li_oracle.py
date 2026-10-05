@@ -48,6 +48,8 @@ def range_violations(comp: Dict[str, float]) -> Tuple[List[str], List[str]]:
     """Violation and unchecked texts in the solver's wording (the wording is part of the output contract)."""
     bad: List[str] = []
     for el in sorted(comp):
+        if float(comp[el] or 0.0) < 0.0:
+            bad.append(f"{el} {comp[el]:g} wt% is negative")
         if el not in COVERED and float(comp[el] or 0.0) > 0.0:
             bad.append(f"{el} {comp[el]:g} wt% is not covered by the stated range")
     c = wt(comp, "C")
@@ -111,8 +113,13 @@ class Oracle:
                 ts = self.tau(ph, 0.01, t_c)
                 if ts >= max_s:
                     continue
-                out.append({"temperature_C": t_c, "phase": ph, "tStart_s": ts, "t50_s": self.tau(ph, 0.5, t_c),
-                            "tFinish_s": self.tau(ph, 0.99, t_c), "drivingForce_DeltaT_C": self.top[ph] - t_c})
+                # Li (1996) p. 84: ferrite X is the volume fraction of the austenite and the reaction ends at the
+                # equilibrium ferrite amount (not modelled), so only the 1 % time of ferrite is a model output.
+                capped = ph == "Ferrite"
+                out.append({"temperature_C": t_c, "phase": ph, "tStart_s": ts,
+                            "t50_s": None if capped else self.tau(ph, 0.5, t_c),
+                            "tFinish_s": None if capped else self.tau(ph, 0.99, t_c),
+                            "drivingForce_DeltaT_C": self.top[ph] - t_c})
         return out
 
     def integral(self, phase: str, t_from: float, t_to: float) -> float:

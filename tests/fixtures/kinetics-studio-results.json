@@ -55,8 +55,8 @@
     "temperature_C": 328.48,
     "phase": "Ferrite",
     "tStart_s": 6894.55,
-    "t50_s": 67787.7,
-    "tFinish_s": 128681.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 451.82,
     "floorHit": false
@@ -65,8 +65,8 @@
     "temperature_C": 340.04,
     "phase": "Ferrite",
     "tStart_s": 4830.13,
-    "t50_s": 47490.2,
-    "tFinish_s": 90150.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 440.26,
     "floorHit": false
@@ -75,8 +75,8 @@
     "temperature_C": 351.6,
     "phase": "Ferrite",
     "tStart_s": 3445.72,
-    "t50_s": 33878.5,
-    "tFinish_s": 64311.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 428.7,
     "floorHit": false
@@ -85,8 +85,8 @@
     "temperature_C": 363.16,
     "phase": "Ferrite",
     "tStart_s": 2501.13,
-    "t50_s": 24591.3,
-    "tFinish_s": 46681.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 417.14,
     "floorHit": false
@@ -95,8 +95,8 @@
     "temperature_C": 374.72,
     "phase": "Ferrite",
     "tStart_s": 1845.99,
-    "t50_s": 18149.9,
-    "tFinish_s": 34453.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 405.58,
     "floorHit": false
@@ -105,8 +105,8 @@
     "temperature_C": 386.28,
     "phase": "Ferrite",
     "tStart_s": 1384.49,
-    "t50_s": 13612.4,
-    "tFinish_s": 25840.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 394.02,
     "floorHit": false
@@ -115,8 +115,8 @@
     "temperature_C": 397.84,
     "phase": "Ferrite",
     "tStart_s": 1054.57,
-    "t50_s": 10368.6,
-    "tFinish_s": 19682.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 382.46,
     "floorHit": false
@@ -125,8 +125,8 @@
     "temperature_C": 409.4,
     "phase": "Ferrite",
     "tStart_s": 815.398,
-    "t50_s": 8017.06,
-    "tFinish_s": 15218.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 370.9,
     "floorHit": false
@@ -135,8 +135,8 @@
     "temperature_C": 420.96,
     "phase": "Ferrite",
     "tStart_s": 639.709,
-    "t50_s": 6289.67,
-    "tFinish_s": 11939.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 359.34,
     "floorHit": false
@@ -145,8 +145,8 @@
     "temperature_C": 432.52,
     "phase": "Ferrite",
     "tStart_s": 509.036,
-    "t50_s": 5004.88,
-    "tFinish_s": 9500.72,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 347.79,
     "floorHit": false
@@ -155,8 +155,8 @@
     "temperature_C": 444.08,
     "phase": "Ferrite",
     "tStart_s": 410.701,
-    "t50_s": 4038.04,
-    "tFinish_s": 7665.39,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 336.23,
     "floorHit": false
@@ -165,8 +165,8 @@
     "temperature_C": 455.64,
     "phase": "Ferrite",
     "tStart_s": 335.891,
-    "t50_s": 3302.51,
-    "tFinish_s": 6269.13,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 324.67,
     "floorHit": false
@@ -175,8 +175,8 @@
     "temperature_C": 467.2,
     "phase": "Ferrite",
     "tStart_s": 278.404,
-    "t50_s": 2737.28,
-    "tFinish_s": 5196.16,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 313.11,
     "floorHit": false
@@ -185,8 +185,8 @@
     "temperature_C": 478.76,
     "phase": "Ferrite",
     "tStart_s": 233.823,
-    "t50_s": 2298.96,
-    "tFinish_s": 4364.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 301.55,
     "floorHit": false
@@ -195,8 +195,8 @@
     "temperature_C": 490.32,
     "phase": "Ferrite",
     "tStart_s": 198.973,
-    "t50_s": 1956.32,
-    "tFinish_s": 3713.66,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 289.99,
     "floorHit": false
@@ -205,8 +205,8 @@
     "temperature_C": 501.88,
     "phase": "Ferrite",
     "tStart_s": 171.547,
-    "t50_s": 1686.66,
-    "tFinish_s": 3201.78,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 278.43,
     "floorHit": false
@@ -215,8 +215,8 @@
     "temperature_C": 513.44,
     "phase": "Ferrite",
     "tStart_s": 149.855,
-    "t50_s": 1473.38,
-    "tFinish_s": 2796.91,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 266.87,
     "floorHit": false
@@ -225,8 +225,8 @@
     "temperature_C": 525.0,
     "phase": "Ferrite",
     "tStart_s": 132.649,
-    "t50_s": 1304.22,
-    "tFinish_s": 2475.79,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 255.31,
     "floorHit": false
@@ -235,8 +235,8 @@
     "temperature_C": 536.56,
     "phase": "Ferrite",
     "tStart_s": 119.007,
-    "t50_s": 1170.09,
-    "tFinish_s": 2221.17,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 243.75,
     "floorHit": false
@@ -245,8 +245,8 @@
     "temperature_C": 548.12,
     "phase": "Ferrite",
     "tStart_s": 108.244,
-    "t50_s": 1064.26,
-    "tFinish_s": 2020.27,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 232.19,
     "floorHit": false
@@ -255,8 +255,8 @@
     "temperature_C": 559.68,
     "phase": "Ferrite",
     "tStart_s": 99.8535,
-    "t50_s": 981.767,
-    "tFinish_s": 1863.68,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 220.63,
     "floorHit": false
@@ -265,8 +265,8 @@
     "temperature_C": 571.23,
     "phase": "Ferrite",
     "tStart_s": 93.4732,
-    "t50_s": 919.035,
-    "tFinish_s": 1744.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 209.07,
     "floorHit": false
@@ -275,8 +275,8 @@
     "temperature_C": 582.79,
     "phase": "Ferrite",
     "tStart_s": 88.8522,
-    "t50_s": 873.601,
-    "tFinish_s": 1658.35,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 197.51,
     "floorHit": false
@@ -285,8 +285,8 @@
     "temperature_C": 594.35,
     "phase": "Ferrite",
     "tStart_s": 85.8383,
-    "t50_s": 843.969,
-    "tFinish_s": 1602.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 185.95,
     "floorHit": false
@@ -295,8 +295,8 @@
     "temperature_C": 605.91,
     "phase": "Ferrite",
     "tStart_s": 84.3722,
-    "t50_s": 829.554,
-    "tFinish_s": 1574.74,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 174.39,
     "floorHit": false
@@ -305,8 +305,8 @@
     "temperature_C": 617.47,
     "phase": "Ferrite",
     "tStart_s": 84.4928,
-    "t50_s": 830.739,
-    "tFinish_s": 1576.99,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 162.83,
     "floorHit": false
@@ -315,8 +315,8 @@
     "temperature_C": 629.03,
     "phase": "Ferrite",
     "tStart_s": 86.3567,
-    "t50_s": 849.066,
-    "tFinish_s": 1611.77,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 151.27,
     "floorHit": false
@@ -325,8 +325,8 @@
     "temperature_C": 640.59,
     "phase": "Ferrite",
     "tStart_s": 90.2798,
-    "t50_s": 887.638,
-    "tFinish_s": 1685.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 139.71,
     "floorHit": false
@@ -335,8 +335,8 @@
     "temperature_C": 652.15,
     "phase": "Ferrite",
     "tStart_s": 96.8144,
-    "t50_s": 951.886,
-    "tFinish_s": 1806.96,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 128.15,
     "floorHit": false
@@ -345,8 +345,8 @@
     "temperature_C": 663.71,
     "phase": "Ferrite",
     "tStart_s": 106.896,
-    "t50_s": 1051.01,
-    "tFinish_s": 1995.12,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 116.6,
     "floorHit": false
@@ -355,8 +355,8 @@
     "temperature_C": 675.27,
     "phase": "Ferrite",
     "tStart_s": 122.125,
-    "t50_s": 1200.74,
-    "tFinish_s": 2279.36,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 105.04,
     "floorHit": false
@@ -365,8 +365,8 @@
     "temperature_C": 686.83,
     "phase": "Ferrite",
     "tStart_s": 145.348,
-    "t50_s": 1429.07,
-    "tFinish_s": 2712.79,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 93.48,
     "floorHit": false
@@ -375,8 +375,8 @@
     "temperature_C": 698.39,
     "phase": "Ferrite",
     "tStart_s": 181.93,
-    "t50_s": 1788.75,
-    "tFinish_s": 3395.57,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 81.92,
     "floorHit": false
@@ -385,8 +385,8 @@
     "temperature_C": 709.95,
     "phase": "Ferrite",
     "tStart_s": 242.862,
-    "t50_s": 2387.84,
-    "tFinish_s": 4532.82,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 70.36,
     "floorHit": false
@@ -395,8 +395,8 @@
     "temperature_C": 721.51,
     "phase": "Ferrite",
     "tStart_s": 353.313,
-    "t50_s": 3473.79,
-    "tFinish_s": 6594.28,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 58.8,
     "floorHit": false
@@ -405,8 +405,8 @@
     "temperature_C": 733.07,
     "phase": "Ferrite",
     "tStart_s": 580.693,
-    "t50_s": 5709.42,
-    "tFinish_s": 10838.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 47.24,
     "floorHit": false
@@ -415,8 +415,8 @@
     "temperature_C": 744.63,
     "phase": "Ferrite",
     "tStart_s": 1152.83,
-    "t50_s": 11334.7,
-    "tFinish_s": 21516.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 35.68,
     "floorHit": false
@@ -425,8 +425,8 @@
     "temperature_C": 756.19,
     "phase": "Ferrite",
     "tStart_s": 3203.26,
-    "t50_s": 31494.7,
-    "tFinish_s": 59786.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 24.12,
     "floorHit": false
@@ -435,8 +435,8 @@
     "temperature_C": 767.75,
     "phase": "Ferrite",
     "tStart_s": 19539.5,
-    "t50_s": 192113.0,
-    "tFinish_s": 364687.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 12.56,
     "floorHit": false
@@ -1583,12 +1583,25 @@
    "validationStatus": "unvalidated",
    "evidenceLevel": "screening",
    "validityDomain": {
-    "status": "inside",
+    "status": "inside-partially-checked",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
-    ]
+    ],
+    "grainSize": {
+     "astmG": 7.705,
+     "inputBounds_um": [
+      1.0,
+      1000.0
+     ],
+     "comparedRange_G": [
+      5.6,
+      11.0
+     ],
+     "insideComparedRange": true,
+     "note": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source"
+    }
    },
    "li1998": {
     "astmGrainSize_G": 7.705,
@@ -1607,7 +1620,12 @@
     "startCriterion": "1 % reaction (X = 0.01) per phase; each phase's start curve is integrated independently from the austenitizing temperature (no phase interaction)",
     "criticalCoolingRateDefinition": "slowest linear cooling rate from the austenitizing temperature at which no ferrite, pearlite or bainite 1 % start is reached above Ms",
     "fractionsComputed": false,
-    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented"
+    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented",
+    "reactionFractionBasis": {
+     "Ferrite": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+     "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+     "Bainite": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"
+    }
    }
   },
   "tttIncubationFloor": {
@@ -1675,8 +1693,8 @@
     "temperature_C": 301.97,
     "phase": "Ferrite",
     "tStart_s": 88785.5,
-    "t50_s": 872946.0,
-    "tFinish_s": 1657110.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 450.09,
     "floorHit": false
@@ -1685,8 +1703,8 @@
     "temperature_C": 313.49,
     "phase": "Ferrite",
     "tStart_s": 59839.3,
-    "t50_s": 588345.0,
-    "tFinish_s": 1116850.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 438.57,
     "floorHit": false
@@ -1695,8 +1713,8 @@
     "temperature_C": 325.0,
     "phase": "Ferrite",
     "tStart_s": 41155.5,
-    "t50_s": 404644.0,
-    "tFinish_s": 768132.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 427.06,
     "floorHit": false
@@ -1705,8 +1723,8 @@
     "temperature_C": 336.52,
     "phase": "Ferrite",
     "tStart_s": 28858.0,
-    "t50_s": 283734.0,
-    "tFinish_s": 538610.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 415.54,
     "floorHit": false
@@ -1715,8 +1733,8 @@
     "temperature_C": 348.03,
     "phase": "Ferrite",
     "tStart_s": 20613.0,
-    "t50_s": 202669.0,
-    "tFinish_s": 384724.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 404.03,
     "floorHit": false
@@ -1725,8 +1743,8 @@
     "temperature_C": 359.55,
     "phase": "Ferrite",
     "tStart_s": 14987.4,
-    "t50_s": 147357.0,
-    "tFinish_s": 279728.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 392.51,
     "floorHit": false
@@ -1735,8 +1753,8 @@
     "temperature_C": 371.06,
     "phase": "Ferrite",
     "tStart_s": 11084.8,
-    "t50_s": 108987.0,
-    "tFinish_s": 206889.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 381.0,
     "floorHit": false
@@ -1745,8 +1763,8 @@
     "temperature_C": 382.58,
     "phase": "Ferrite",
     "tStart_s": 8334.62,
-    "t50_s": 81946.6,
-    "tFinish_s": 155559.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 369.48,
     "floorHit": false
@@ -1755,8 +1773,8 @@
     "temperature_C": 394.09,
     "phase": "Ferrite",
     "tStart_s": 6367.41,
-    "t50_s": 62604.9,
-    "tFinish_s": 118842.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 357.97,
     "floorHit": false
@@ -1765,8 +1783,8 @@
     "temperature_C": 405.61,
     "phase": "Ferrite",
     "tStart_s": 4940.33,
-    "t50_s": 48573.7,
-    "tFinish_s": 92207.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 346.45,
     "floorHit": false
@@ -1775,8 +1793,8 @@
     "temperature_C": 417.12,
     "phase": "Ferrite",
     "tStart_s": 3891.23,
-    "t50_s": 38258.9,
-    "tFinish_s": 72626.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 334.94,
     "floorHit": false
@@ -1785,8 +1803,8 @@
     "temperature_C": 428.64,
     "phase": "Ferrite",
     "tStart_s": 3110.33,
-    "t50_s": 30581.0,
-    "tFinish_s": 58051.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 323.42,
     "floorHit": false
@@ -1795,8 +1813,8 @@
     "temperature_C": 440.15,
     "phase": "Ferrite",
     "tStart_s": 2522.27,
-    "t50_s": 24799.1,
-    "tFinish_s": 47075.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 311.91,
     "floorHit": false
@@ -1805,8 +1823,8 @@
     "temperature_C": 451.67,
     "phase": "Ferrite",
     "tStart_s": 2074.65,
-    "t50_s": 20398.1,
-    "tFinish_s": 38721.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 300.39,
     "floorHit": false
@@ -1815,8 +1833,8 @@
     "temperature_C": 463.18,
     "phase": "Ferrite",
     "tStart_s": 1730.62,
-    "t50_s": 17015.6,
-    "tFinish_s": 32300.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 288.88,
     "floorHit": false
@@ -1825,8 +1843,8 @@
     "temperature_C": 474.7,
     "phase": "Ferrite",
     "tStart_s": 1463.94,
-    "t50_s": 14393.6,
-    "tFinish_s": 27323.2,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 277.36,
     "floorHit": false
@@ -1835,8 +1853,8 @@
     "temperature_C": 486.21,
     "phase": "Ferrite",
     "tStart_s": 1255.75,
-    "t50_s": 12346.7,
-    "tFinish_s": 23437.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 265.85,
     "floorHit": false
@@ -1845,8 +1863,8 @@
     "temperature_C": 497.73,
     "phase": "Ferrite",
     "tStart_s": 1092.38,
-    "t50_s": 10740.3,
-    "tFinish_s": 20388.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 254.33,
     "floorHit": false
@@ -1855,8 +1873,8 @@
     "temperature_C": 509.24,
     "phase": "Ferrite",
     "tStart_s": 963.817,
-    "t50_s": 9476.32,
-    "tFinish_s": 17988.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 242.82,
     "floorHit": false
@@ -1865,8 +1883,8 @@
     "temperature_C": 520.76,
     "phase": "Ferrite",
     "tStart_s": 862.737,
-    "t50_s": 8482.49,
-    "tFinish_s": 16102.2,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 231.3,
     "floorHit": false
@@ -1875,8 +1893,8 @@
     "temperature_C": 532.27,
     "phase": "Ferrite",
     "tStart_s": 783.756,
-    "t50_s": 7705.95,
-    "tFinish_s": 14628.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 219.79,
     "floorHit": false
@@ -1885,8 +1903,8 @@
     "temperature_C": 543.79,
     "phase": "Ferrite",
     "tStart_s": 722.963,
-    "t50_s": 7108.23,
-    "tFinish_s": 13493.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 208.27,
     "floorHit": false
@@ -1895,8 +1913,8 @@
     "temperature_C": 555.3,
     "phase": "Ferrite",
     "tStart_s": 677.585,
-    "t50_s": 6662.07,
-    "tFinish_s": 12646.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 196.76,
     "floorHit": false
@@ -1905,8 +1923,8 @@
     "temperature_C": 566.82,
     "phase": "Ferrite",
     "tStart_s": 645.781,
-    "t50_s": 6349.37,
-    "tFinish_s": 12053.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 185.24,
     "floorHit": false
@@ -1915,8 +1933,8 @@
     "temperature_C": 578.33,
     "phase": "Ferrite",
     "tStart_s": 626.529,
-    "t50_s": 6160.08,
-    "tFinish_s": 11693.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 173.73,
     "floorHit": false
@@ -1925,8 +1943,8 @@
     "temperature_C": 589.85,
     "phase": "Ferrite",
     "tStart_s": 619.606,
-    "t50_s": 6092.02,
-    "tFinish_s": 11564.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 162.21,
     "floorHit": false
@@ -1935,8 +1953,8 @@
     "temperature_C": 601.36,
     "phase": "Ferrite",
     "tStart_s": 625.681,
-    "t50_s": 6151.74,
-    "tFinish_s": 11677.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 150.7,
     "floorHit": false
@@ -1945,8 +1963,8 @@
     "temperature_C": 612.88,
     "phase": "Ferrite",
     "tStart_s": 646.552,
-    "t50_s": 6356.95,
-    "tFinish_s": 12067.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 139.18,
     "floorHit": false
@@ -1955,8 +1973,8 @@
     "temperature_C": 624.39,
     "phase": "Ferrite",
     "tStart_s": 685.637,
-    "t50_s": 6741.23,
-    "tFinish_s": 12796.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 127.67,
     "floorHit": false
@@ -1965,8 +1983,8 @@
     "temperature_C": 635.91,
     "phase": "Ferrite",
     "tStart_s": 748.916,
-    "t50_s": 7363.39,
-    "tFinish_s": 13977.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 116.15,
     "floorHit": false
@@ -1975,8 +1993,8 @@
     "temperature_C": 647.42,
     "phase": "Ferrite",
     "tStart_s": 846.764,
-    "t50_s": 8325.44,
-    "tFinish_s": 15804.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 104.64,
     "floorHit": false
@@ -1985,8 +2003,8 @@
     "temperature_C": 658.94,
     "phase": "Ferrite",
     "tStart_s": 997.724,
-    "t50_s": 9809.69,
-    "tFinish_s": 18621.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 93.12,
     "floorHit": false
@@ -1995,8 +2013,8 @@
     "temperature_C": 670.45,
     "phase": "Ferrite",
     "tStart_s": 1236.81,
-    "t50_s": 12160.4,
-    "tFinish_s": 23084.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 81.61,
     "floorHit": false
@@ -2005,8 +2023,8 @@
     "temperature_C": 681.97,
     "phase": "Ferrite",
     "tStart_s": 1635.68,
-    "t50_s": 16082.1,
-    "tFinish_s": 30528.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 70.09,
     "floorHit": false
@@ -2015,8 +2033,8 @@
     "temperature_C": 693.48,
     "phase": "Ferrite",
     "tStart_s": 2358.14,
-    "t50_s": 23185.4,
-    "tFinish_s": 44012.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 58.58,
     "floorHit": false
@@ -2025,8 +2043,8 @@
     "temperature_C": 705.0,
     "phase": "Ferrite",
     "tStart_s": 3842.0,
-    "t50_s": 37774.8,
-    "tFinish_s": 71707.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 47.06,
     "floorHit": false
@@ -2035,8 +2053,8 @@
     "temperature_C": 716.51,
     "phase": "Ferrite",
     "tStart_s": 7562.87,
-    "t50_s": 74358.7,
-    "tFinish_s": 141154.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 35.55,
     "floorHit": false
@@ -2045,8 +2063,8 @@
     "temperature_C": 728.03,
     "phase": "Ferrite",
     "tStart_s": 20840.8,
-    "t50_s": 204908.0,
-    "tFinish_s": 388976.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 24.03,
     "floorHit": false
@@ -2055,8 +2073,8 @@
     "temperature_C": 739.54,
     "phase": "Ferrite",
     "tStart_s": 126074.0,
-    "t50_s": 1239570.0,
-    "tFinish_s": 2353060.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 12.52,
     "floorHit": false
@@ -3203,12 +3221,25 @@
    "validationStatus": "unvalidated",
    "evidenceLevel": "screening",
    "validityDomain": {
-    "status": "inside",
+    "status": "inside-partially-checked",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
-    ]
+    ],
+    "grainSize": {
+     "astmG": 7.705,
+     "inputBounds_um": [
+      1.0,
+      1000.0
+     ],
+     "comparedRange_G": [
+      5.6,
+      11.0
+     ],
+     "insideComparedRange": true,
+     "note": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source"
+    }
    },
    "li1998": {
     "astmGrainSize_G": 7.705,
@@ -3227,7 +3258,12 @@
     "startCriterion": "1 % reaction (X = 0.01) per phase; each phase's start curve is integrated independently from the austenitizing temperature (no phase interaction)",
     "criticalCoolingRateDefinition": "slowest linear cooling rate from the austenitizing temperature at which no ferrite, pearlite or bainite 1 % start is reached above Ms",
     "fractionsComputed": false,
-    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented"
+    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented",
+    "reactionFractionBasis": {
+     "Ferrite": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+     "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+     "Bainite": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"
+    }
    }
   },
   "tttIncubationFloor": {
@@ -3614,7 +3650,8 @@
     ],
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
-    ]
+    ],
+    "grainSize": null
    },
    "li1998": null
   },
@@ -3997,7 +4034,8 @@
     "status": "not-applicable-alloy-class",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
-    "unchecked": []
+    "unchecked": [],
+    "grainSize": null
    },
    "li1998": null
   },
@@ -4373,7 +4411,8 @@
     "status": "not-applicable-alloy-class",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
-    "unchecked": []
+    "unchecked": [],
+    "grainSize": null
    },
    "li1998": null
   },
@@ -4752,7 +4791,8 @@
     "status": "not-applicable-alloy-class",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
-    "unchecked": []
+    "unchecked": [],
+    "grainSize": null
    },
    "li1998": null
   },
@@ -4821,8 +4861,8 @@
     "temperature_C": 301.97,
     "phase": "Ferrite",
     "tStart_s": 88785.5,
-    "t50_s": 872946.0,
-    "tFinish_s": 1657110.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 450.09,
     "floorHit": false
@@ -4831,8 +4871,8 @@
     "temperature_C": 313.49,
     "phase": "Ferrite",
     "tStart_s": 59839.3,
-    "t50_s": 588345.0,
-    "tFinish_s": 1116850.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 438.57,
     "floorHit": false
@@ -4841,8 +4881,8 @@
     "temperature_C": 325.0,
     "phase": "Ferrite",
     "tStart_s": 41155.5,
-    "t50_s": 404644.0,
-    "tFinish_s": 768132.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 427.06,
     "floorHit": false
@@ -4851,8 +4891,8 @@
     "temperature_C": 336.52,
     "phase": "Ferrite",
     "tStart_s": 28858.0,
-    "t50_s": 283734.0,
-    "tFinish_s": 538610.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 415.54,
     "floorHit": false
@@ -4861,8 +4901,8 @@
     "temperature_C": 348.03,
     "phase": "Ferrite",
     "tStart_s": 20613.0,
-    "t50_s": 202669.0,
-    "tFinish_s": 384724.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 404.03,
     "floorHit": false
@@ -4871,8 +4911,8 @@
     "temperature_C": 359.55,
     "phase": "Ferrite",
     "tStart_s": 14987.4,
-    "t50_s": 147357.0,
-    "tFinish_s": 279728.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 392.51,
     "floorHit": false
@@ -4881,8 +4921,8 @@
     "temperature_C": 371.06,
     "phase": "Ferrite",
     "tStart_s": 11084.8,
-    "t50_s": 108987.0,
-    "tFinish_s": 206889.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 381.0,
     "floorHit": false
@@ -4891,8 +4931,8 @@
     "temperature_C": 382.58,
     "phase": "Ferrite",
     "tStart_s": 8334.62,
-    "t50_s": 81946.6,
-    "tFinish_s": 155559.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 369.48,
     "floorHit": false
@@ -4901,8 +4941,8 @@
     "temperature_C": 394.09,
     "phase": "Ferrite",
     "tStart_s": 6367.41,
-    "t50_s": 62604.9,
-    "tFinish_s": 118842.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 357.97,
     "floorHit": false
@@ -4911,8 +4951,8 @@
     "temperature_C": 405.61,
     "phase": "Ferrite",
     "tStart_s": 4940.33,
-    "t50_s": 48573.7,
-    "tFinish_s": 92207.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 346.45,
     "floorHit": false
@@ -4921,8 +4961,8 @@
     "temperature_C": 417.12,
     "phase": "Ferrite",
     "tStart_s": 3891.23,
-    "t50_s": 38258.9,
-    "tFinish_s": 72626.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 334.94,
     "floorHit": false
@@ -4931,8 +4971,8 @@
     "temperature_C": 428.64,
     "phase": "Ferrite",
     "tStart_s": 3110.33,
-    "t50_s": 30581.0,
-    "tFinish_s": 58051.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 323.42,
     "floorHit": false
@@ -4941,8 +4981,8 @@
     "temperature_C": 440.15,
     "phase": "Ferrite",
     "tStart_s": 2522.27,
-    "t50_s": 24799.1,
-    "tFinish_s": 47075.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 311.91,
     "floorHit": false
@@ -4951,8 +4991,8 @@
     "temperature_C": 451.67,
     "phase": "Ferrite",
     "tStart_s": 2074.65,
-    "t50_s": 20398.1,
-    "tFinish_s": 38721.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 300.39,
     "floorHit": false
@@ -4961,8 +5001,8 @@
     "temperature_C": 463.18,
     "phase": "Ferrite",
     "tStart_s": 1730.62,
-    "t50_s": 17015.6,
-    "tFinish_s": 32300.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 288.88,
     "floorHit": false
@@ -4971,8 +5011,8 @@
     "temperature_C": 474.7,
     "phase": "Ferrite",
     "tStart_s": 1463.94,
-    "t50_s": 14393.6,
-    "tFinish_s": 27323.2,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 277.36,
     "floorHit": false
@@ -4981,8 +5021,8 @@
     "temperature_C": 486.21,
     "phase": "Ferrite",
     "tStart_s": 1255.75,
-    "t50_s": 12346.7,
-    "tFinish_s": 23437.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 265.85,
     "floorHit": false
@@ -4991,8 +5031,8 @@
     "temperature_C": 497.73,
     "phase": "Ferrite",
     "tStart_s": 1092.38,
-    "t50_s": 10740.3,
-    "tFinish_s": 20388.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 254.33,
     "floorHit": false
@@ -5001,8 +5041,8 @@
     "temperature_C": 509.24,
     "phase": "Ferrite",
     "tStart_s": 963.817,
-    "t50_s": 9476.32,
-    "tFinish_s": 17988.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 242.82,
     "floorHit": false
@@ -5011,8 +5051,8 @@
     "temperature_C": 520.76,
     "phase": "Ferrite",
     "tStart_s": 862.737,
-    "t50_s": 8482.49,
-    "tFinish_s": 16102.2,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 231.3,
     "floorHit": false
@@ -5021,8 +5061,8 @@
     "temperature_C": 532.27,
     "phase": "Ferrite",
     "tStart_s": 783.756,
-    "t50_s": 7705.95,
-    "tFinish_s": 14628.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 219.79,
     "floorHit": false
@@ -5031,8 +5071,8 @@
     "temperature_C": 543.79,
     "phase": "Ferrite",
     "tStart_s": 722.963,
-    "t50_s": 7108.23,
-    "tFinish_s": 13493.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 208.27,
     "floorHit": false
@@ -5041,8 +5081,8 @@
     "temperature_C": 555.3,
     "phase": "Ferrite",
     "tStart_s": 677.585,
-    "t50_s": 6662.07,
-    "tFinish_s": 12646.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 196.76,
     "floorHit": false
@@ -5051,8 +5091,8 @@
     "temperature_C": 566.82,
     "phase": "Ferrite",
     "tStart_s": 645.781,
-    "t50_s": 6349.37,
-    "tFinish_s": 12053.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 185.24,
     "floorHit": false
@@ -5061,8 +5101,8 @@
     "temperature_C": 578.33,
     "phase": "Ferrite",
     "tStart_s": 626.529,
-    "t50_s": 6160.08,
-    "tFinish_s": 11693.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 173.73,
     "floorHit": false
@@ -5071,8 +5111,8 @@
     "temperature_C": 589.85,
     "phase": "Ferrite",
     "tStart_s": 619.606,
-    "t50_s": 6092.02,
-    "tFinish_s": 11564.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 162.21,
     "floorHit": false
@@ -5081,8 +5121,8 @@
     "temperature_C": 601.36,
     "phase": "Ferrite",
     "tStart_s": 625.681,
-    "t50_s": 6151.74,
-    "tFinish_s": 11677.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 150.7,
     "floorHit": false
@@ -5091,8 +5131,8 @@
     "temperature_C": 612.88,
     "phase": "Ferrite",
     "tStart_s": 646.552,
-    "t50_s": 6356.95,
-    "tFinish_s": 12067.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 139.18,
     "floorHit": false
@@ -5101,8 +5141,8 @@
     "temperature_C": 624.39,
     "phase": "Ferrite",
     "tStart_s": 685.637,
-    "t50_s": 6741.23,
-    "tFinish_s": 12796.8,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 127.67,
     "floorHit": false
@@ -5111,8 +5151,8 @@
     "temperature_C": 635.91,
     "phase": "Ferrite",
     "tStart_s": 748.916,
-    "t50_s": 7363.39,
-    "tFinish_s": 13977.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 116.15,
     "floorHit": false
@@ -5121,8 +5161,8 @@
     "temperature_C": 647.42,
     "phase": "Ferrite",
     "tStart_s": 846.764,
-    "t50_s": 8325.44,
-    "tFinish_s": 15804.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 104.64,
     "floorHit": false
@@ -5131,8 +5171,8 @@
     "temperature_C": 658.94,
     "phase": "Ferrite",
     "tStart_s": 997.724,
-    "t50_s": 9809.69,
-    "tFinish_s": 18621.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 93.12,
     "floorHit": false
@@ -5141,8 +5181,8 @@
     "temperature_C": 670.45,
     "phase": "Ferrite",
     "tStart_s": 1236.81,
-    "t50_s": 12160.4,
-    "tFinish_s": 23084.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 81.61,
     "floorHit": false
@@ -5151,8 +5191,8 @@
     "temperature_C": 681.97,
     "phase": "Ferrite",
     "tStart_s": 1635.68,
-    "t50_s": 16082.1,
-    "tFinish_s": 30528.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 70.09,
     "floorHit": false
@@ -5161,8 +5201,8 @@
     "temperature_C": 693.48,
     "phase": "Ferrite",
     "tStart_s": 2358.14,
-    "t50_s": 23185.4,
-    "tFinish_s": 44012.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 58.58,
     "floorHit": false
@@ -5171,8 +5211,8 @@
     "temperature_C": 705.0,
     "phase": "Ferrite",
     "tStart_s": 3842.0,
-    "t50_s": 37774.8,
-    "tFinish_s": 71707.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 47.06,
     "floorHit": false
@@ -5181,8 +5221,8 @@
     "temperature_C": 716.51,
     "phase": "Ferrite",
     "tStart_s": 7562.87,
-    "t50_s": 74358.7,
-    "tFinish_s": 141154.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 35.55,
     "floorHit": false
@@ -5191,8 +5231,8 @@
     "temperature_C": 728.03,
     "phase": "Ferrite",
     "tStart_s": 20840.8,
-    "t50_s": 204908.0,
-    "tFinish_s": 388976.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 24.03,
     "floorHit": false
@@ -5201,8 +5241,8 @@
     "temperature_C": 739.54,
     "phase": "Ferrite",
     "tStart_s": 126074.0,
-    "t50_s": 1239570.0,
-    "tFinish_s": 2353060.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "avramiExponent_n": null,
     "drivingForce_DeltaT_C": 12.52,
     "floorHit": false
@@ -6349,12 +6389,25 @@
    "validationStatus": "unvalidated",
    "evidenceLevel": "screening",
    "validityDomain": {
-    "status": "inside",
+    "status": "inside-partially-checked",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
-    ]
+    ],
+    "grainSize": {
+     "astmG": 7.705,
+     "inputBounds_um": [
+      1.0,
+      1000.0
+     ],
+     "comparedRange_G": [
+      5.6,
+      11.0
+     ],
+     "insideComparedRange": true,
+     "note": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source"
+    }
    },
    "li1998": {
     "astmGrainSize_G": 7.705,
@@ -6373,7 +6426,12 @@
     "startCriterion": "1 % reaction (X = 0.01) per phase; each phase's start curve is integrated independently from the austenitizing temperature (no phase interaction)",
     "criticalCoolingRateDefinition": "slowest linear cooling rate from the austenitizing temperature at which no ferrite, pearlite or bainite 1 % start is reached above Ms",
     "fractionsComputed": false,
-    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented"
+    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented",
+    "reactionFractionBasis": {
+     "Ferrite": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+     "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+     "Bainite": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"
+    }
    }
   },
   "tttIncubationFloor": {
@@ -6751,7 +6809,8 @@
     "status": "not-applicable-alloy-class",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
-    "unchecked": []
+    "unchecked": [],
+    "grainSize": null
    },
    "li1998": null
   },

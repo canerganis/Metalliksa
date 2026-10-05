@@ -182,7 +182,9 @@ class ValidityDomainTest(unittest.TestCase):
     def test_registry_steels(self):
         for name, inside in (("AISI 4140", True), ("AISI 4340", True), ("AISI D2", False)):
             res = kin.solve_phase_transformation_kinetics(name)
-            self.assertEqual(res["kineticsModel"]["validityDomain"]["status"], "inside" if inside else "outside")
+            # Sol review S2: the Al bound cannot be checked (no Al in the registry) -> partially checked
+            self.assertEqual(res["kineticsModel"]["validityDomain"]["status"],
+                             "inside-partially-checked" if inside else "outside")
             self.assertEqual(res["kineticsModel"]["status"], "available" if inside else "unavailable")
         d2 = kin.solve_phase_transformation_kinetics("AISI D2", aust_temp_c=1020.0)
         self.assertEqual(d2["kineticsModel"]["validityDomain"]["violations"], [
@@ -207,6 +209,13 @@ class ValidityDomainTest(unittest.TestCase):
         # sums: Mn+Ni+Cr+Mo and the printed Mo+Ni+Cr+Mo
         self.assertFalse(kin.li_composition_check(dict(base, Mn=1.9, Ni=2.0, Cr=0.9, Mo=0.2))[0])
         self.assertFalse(kin.li_composition_check(dict(base, Mn=0.5, Ni=3.0, Cr=0.6, Mo=0.7))[0])
+
+    def test_negative_content_is_outside_not_a_crash(self):
+        inside, violations, _ = kin.li_composition_check({"C": 0.3, "Mo": -0.1, "Al": 0.03})
+        self.assertFalse(inside)
+        self.assertIn("Mo -0.1 wt% is negative", violations)
+        self.assertEqual(violations, oracle.range_violations({"C": 0.3, "Mo": -0.1, "Al": 0.03})[0])
+        self.assertEqual(kin.li_composition_check({"C": 0.3, "Mn": 0.8, "Al": 0.03})[:2], (True, []))
 
     def test_unspecified_al_is_reported_unchecked(self):
         res = kin.solve_phase_transformation_kinetics("AISI 4140")
@@ -267,6 +276,40 @@ class SolverOutputTest(unittest.TestCase):
             self.assertIsNone(row["transformedStartTemp_C"])
         self.assertIsNone(res["criticalTransformationTemperatures"]["CriticalCoolingRate_CCR_C_s"])
         self.assertEqual(kdc.document_violations(res), [])
+
+    def test_ferrite_reports_only_its_start(self):
+        # Sol review S1: ferrite X is a volume fraction of the austenite that ends at the (not modelled) equilibrium
+        # amount, e.g. XFE = 0.507 in the Li 1996 example, so 50 % / 99 % ferrite times are not reported.
+        res = kin.solve_phase_transformation_kinetics("AISI 4140")
+        for p in res["tttIsothermalCurves"]:
+            if p["phase"] == "Ferrite":
+                self.assertIsNone(p["t50_s"])
+                self.assertIsNone(p["tFinish_s"])
+            else:
+                self.assertGreater(p["tFinish_s"], p["t50_s"])
+                self.assertGreater(p["t50_s"], p["tStart_s"])
+        self.assertIn("equilibrium ferrite amount", res["kineticsModel"]["li1998"]["reactionFractionBasis"]["Ferrite"])
+
+    def test_grain_and_austenitizing_bounds(self):
+        # Opus review S3: no 3e247 C/s critical cooling rate, no "math domain error"
+        for kwargs in ({"grain_size_um": 5e-324}, {"grain_size_um": 1e-300}, {"grain_size_um": 0.999},
+                       {"grain_size_um": 1000.001}, {"grain_size_um": 1e9}, {"aust_temp_c": 1e308},
+                       {"aust_temp_c": -1.0}, {"aust_temp_c": 1600.1}):
+            with self.subTest(**kwargs):
+                with self.assertRaises(input_validation.ValidationError) as ctx:
+                    kin.solve_phase_transformation_kinetics("AISI 4140", **kwargs)
+                self.assertEqual(ctx.exception.code, input_validation.OUT_OF_RANGE)
+        for d in (1.0, 1000.0):
+            res = kin.solve_phase_transformation_kinetics("AISI 4140", grain_size_um=d)
+            self.assertEqual(res["kineticsModel"]["status"], "available")
+        g = kin.solve_phase_transformation_kinetics("AISI 4140", grain_size_um=500.0)["kineticsModel"]["validityDomain"]
+        self.assertFalse(g["grainSize"]["insideComparedRange"])  # G 0.73, outside the compared G 5.6-11.0
+        self.assertTrue(kin.solve_phase_transformation_kinetics("AISI 4140")["kineticsModel"]["validityDomain"][
+            "grainSize"]["insideComparedRange"])
+        # non-steels: the rate must still be a number (validation envelope instead of a float() crash)
+        with self.assertRaises(input_validation.ValidationError) as ctx:
+            kin.solve_phase_transformation_kinetics("Inconel 718", None)
+        self.assertEqual(ctx.exception.code, input_validation.NON_FINITE)
 
     def test_invalid_inputs_of_the_modelled_steels(self):
         for kwargs in ({"grain_size_um": -5.0}, {"grain_size_um": 0.0}, {"cooling_rate_c_s": 0.0},

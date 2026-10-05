@@ -427,12 +427,25 @@
    "validationStatus": "unvalidated",
    "evidenceLevel": "screening",
    "validityDomain": {
-    "status": "inside",
+    "status": "inside-partially-checked",
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "violations": [],
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
-    ]
+    ],
+    "grainSize": {
+     "astmG": 7.705,
+     "inputBounds_um": [
+      1.0,
+      1000.0
+     ],
+     "comparedRange_G": [
+      5.6,
+      11.0
+     ],
+     "insideComparedRange": true,
+     "note": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source"
+    }
    },
    "li1998": {
     "astmGrainSize_G": 7.705,
@@ -451,7 +464,12 @@
     "startCriterion": "1 % reaction (X = 0.01) per phase; each phase's start curve is integrated independently from the austenitizing temperature (no phase interaction)",
     "criticalCoolingRateDefinition": "slowest linear cooling rate from the austenitizing temperature at which no ferrite, pearlite or bainite 1 % start is reached above Ms",
     "fractionsComputed": false,
-    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented"
+    "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented",
+    "reactionFractionBasis": {
+     "Ferrite": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+     "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+     "Bainite": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"
+    }
    }
   },
   "tttIncubationFloor": {

@@ -538,8 +538,9 @@ export interface PythonKineticsResult {
     temperature_C: number;
     phase: string;
     tStart_s: number;
-    t50_s: number;
-    tFinish_s: number;
+    /** null for ferrite: its fraction ends at the (not modelled) equilibrium amount; only the 1 % start is reported. */
+    t50_s: number | null;
+    tFinish_s: number | null;
     avramiExponent_n: number | null;
     drivingForce_DeltaT_C: number;
     floorHit?: boolean;
@@ -616,7 +617,20 @@ export interface PythonKineticsResult {
     sourceLabel?: string;
     validationStatus?: string;
     evidenceLevel?: string;
-    validityDomain?: { status: string; source: string; violations: string[]; unchecked: string[] };
+    /** status "inside" | "inside-partially-checked" (a bound, e.g. Al, could not be checked) | "outside" | "not-applicable-alloy-class". */
+    validityDomain?: {
+      status: string;
+      source: string;
+      violations: string[];
+      unchecked: string[];
+      grainSize?: {
+        astmG: number;
+        inputBounds_um: number[];
+        comparedRange_G: number[];
+        insideComparedRange: boolean;
+        note: string;
+      } | null;
+    };
     li1998?: {
       astmGrainSize_G: number;
       grainSizeDefinition: string;
@@ -627,6 +641,7 @@ export interface PythonKineticsResult {
       criticalCoolingRateDefinition: string;
       fractionsComputed: boolean;
       fractionsReason: string;
+      reactionFractionBasis?: Record<string, string>;
     } | null;
   };
   /** TTT time-floor summary; the Li law has no floor (floorValue_s null, floorHitCount 0). */

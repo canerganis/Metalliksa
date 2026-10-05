@@ -140,8 +140,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
       temperature: pt.temperature_C,
       phase: pt.phase,
       log_tStart: Math.log10(Math.max(0.0001, pt.tStart_s)),
-      log_t50: Math.log10(Math.max(0.0002, pt.t50_s)),
-      log_tFinish: Math.log10(Math.max(0.0003, pt.tFinish_s)),
+      // null for ferrite (its fraction ends at the equilibrium amount, not modelled): no 50 %/99 % point is drawn
+      log_t50: typeof pt.t50_s === "number" ? Math.log10(Math.max(0.0002, pt.t50_s)) : null,
+      log_tFinish: typeof pt.tFinish_s === "number" ? Math.log10(Math.max(0.0003, pt.tFinish_s)) : null,
       tStart_s: pt.tStart_s,
       t50_s: pt.t50_s,
       tFinish_s: pt.tFinish_s,
@@ -233,7 +234,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   Li 1998 / Additivity / LSW
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  PYTHON 3.10 HPC
+                  PYTHON 3.12
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -279,6 +280,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
               : `Kinetics model unavailable for this alloy: ${modelBanner.reason}`}
           </strong>{" "}
           {modelBanner.caution}
+          {modelBanner.validityLines.map((line) => (
+            <p key={line} data-kinetics-validity className="mt-1 text-amber-200/90">{line}</p>
+          ))}
         </div>
       )}
 
@@ -309,9 +313,18 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   <span>Alloy Class:</span>
                   <span className="text-white font-medium">{kineticsData.alloyMetadata.type}</span>
                 </div>
+                {/* The registry Q feeds only the LSW coarsening tab; the Li (1998) TTT/CCT law uses its own Q. */}
                 <div className="text-slate-400 flex justify-between">
-                  <span>Activation Energy $Q$:</span>
-                  <span className="text-amber-300 font-mono font-medium">{kineticsData.alloyMetadata.Q_diff_kJ_mol} kJ/mol</span>
+                  <span>LSW Diffusion $Q$ (registry, aging tab only):</span>
+                  <span className="text-amber-300 font-mono font-medium">{kineticsValueText(kineticsData.alloyMetadata.Q_diff_kJ_mol, " kJ/mol")}</span>
+                </div>
+                <div className="text-slate-400 flex justify-between">
+                  <span>TTT/CCT Law $Q$ (Li 1998):</span>
+                  <span data-li-q className="text-amber-300 font-mono font-medium">
+                    {typeof kineticsData.kineticsModel?.li1998?.activationEnergy_J_mol === "number"
+                      ? `${kineticsData.kineticsModel.li1998.activationEnergy_J_mol / 1000} kJ/mol`
+                      : kineticsValueText(null)}
+                  </span>
                 </div>
                 <div className="text-slate-400 flex justify-between">
                   <span>Critical Cooling Rate ($v_&#123;crit&#125;$):</span>
@@ -558,6 +571,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                       type="number"
                       dataKey="temperature"
                       domain={[100, 900]}
+                      reversed
                       label={{ value: "Temperature (°C)", angle: -90, position: "insideLeft", fill: "#94a3b8", fontSize: 11 }}
                       stroke="#475569"
                     />
@@ -569,8 +583,11 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                             <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 shadow-xl text-xs font-mono">
                               <div className="font-bold text-white mb-1">{d.temperature} °C ({d.phase})</div>
                               <div className="text-emerald-400">1% Start: {d.tStart_s} s</div>
-                              <div className="text-amber-400">50% Trans: {d.t50_s} s</div>
-                              <div className="text-red-400">99% Finish: {d.tFinish_s} s</div>
+                              <div className="text-amber-400">50% of reaction: {kineticsValueText(d.t50_s, " s")}</div>
+                              <div className="text-red-400">99% of reaction: {kineticsValueText(d.tFinish_s, " s")}</div>
+                              {d.phase === "Ferrite" && (
+                                <div className="text-slate-400 mt-1">Ferrite ends at its equilibrium amount (not modelled): only the 1 % start is reported.</div>
+                              )}
                             </div>
                           );
                         }
@@ -631,7 +648,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <tr>
                       <th className="p-2.5">Cooling Rate ($\dot&#123;T&#125;$)</th>
                       <th className="p-2.5">Start Temp</th>
-                      <th className="p-2.5">Incubation Time</th>
+                      <th className="p-2.5" title="Time from the austenitizing temperature to the first start (to Ms for the martensite rows)">Time to Start</th>
                       <th className="p-2.5">First Start Product</th>
                       <th className="p-2.5">Phase Starts (1 %)</th>
                       <th className="p-2.5">Martensite %</th>
@@ -734,9 +751,11 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <span className="text-xs font-bold text-amber-300 uppercase tracking-wide">
                       KINETIC REALITY (dT/dt = {coolingRate} °C/s)
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                      Li 1998 & Additivity
-                    </span>
+                    {modelBanner.available && (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                        Li 1998 & Additivity
+                      </span>
+                    )}
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
@@ -750,7 +769,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Actual Martensite Formed:</span>
+                      <span className="text-slate-400">Model Martensite (KM, screening):</span>
                       <span className="text-red-400 font-mono font-bold">
                         {kineticsValueText(gap?.kineticRealityAtSelectedCooling.predictedMartensite_pct, "%")}
                       </span>

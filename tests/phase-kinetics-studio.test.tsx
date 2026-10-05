@@ -190,6 +190,34 @@ test("Phase & Hardness tab: fractions and hardness are Unavailable with the reas
   assert.ok(text(render("in718", "microstructure")).includes("Phase fractions: Unavailable: kinetics model is steel-only."));
 });
 
+test("kin-li review fixes: axis orientation, Q labels, validity caveat, badges, ferrite 50/99 % withheld", () => {
+  const src = readFileSync(new URL("../src/components/PhaseKineticsTTTCCTStudio.tsx", import.meta.url), "utf8");
+  // Opus S1: temperature must increase upward (verified in a real browser: Ae3 label above Ms, curves open to the right)
+  assert.match(src, /domain=\{\[100, 900\]\}\s*reversed/);
+  assert.ok(!src.includes("PYTHON 3.10 HPC"));
+  const t4140 = text(render("aisi4140", "ttt"));
+  // Opus S2: the registry LSW Q is not shown as the TTT/CCT Q
+  assert.ok(t4140.includes("LSW Diffusion $Q$ (registry, aging tab only): 240 kJ/mol"), t4140);
+  assert.ok(t4140.includes("TTT/CCT Law $Q$ (Li 1998): 115.06 kJ/mol"), t4140);
+  assert.ok(!t4140.includes("Activation Energy $Q$"));
+  assert.ok(text(render("in718", "ttt")).includes("TTT/CCT Law $Q$ (Li 1998): Unavailable"));
+  // Sol S2: the unchecked Al bound is shown, never an invented Al value
+  assert.ok(t4140.includes("Validity range only partially checked: Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked."), t4140);
+  assert.ok(!render("in718", "ttt").includes("data-kinetics-validity"));
+  // Opus nits: badge only with an available model, screening wording, column header
+  assert.ok(text(render("aisi4140", "calphad_vs_kinetics")).includes("Li 1998 & Additivity"));
+  for (const key of UNAVAILABLE) assert.ok(!text(render(key, "calphad_vs_kinetics")).includes("Li 1998 & Additivity"), key);
+  assert.ok(text(render("aisi4340", "calphad_vs_kinetics")).includes("Model Martensite (KM, screening): 95.2%"));
+  assert.ok(!text(render("aisi4340", "calphad_vs_kinetics")).includes("Actual Martensite"));
+  assert.ok(text(render("aisi4140", "cct")).includes("Time to Start"));
+  assert.ok(!text(render("aisi4140", "cct")).includes("Incubation Time"));
+  // Sol S1: ferrite carries only its 1 % start in the solver output
+  for (const p of FIXTURE.aisi4140.tttIsothermalCurves ?? []) {
+    if (p.phase === "Ferrite") assert.deepEqual([p.t50_s, p.tFinish_s], [null, null]);
+    else assert.ok(typeof p.tFinish_s === "number");
+  }
+});
+
 test("the first render uses the supplied result: the solver is not called", () => {
   const src = readFileSync(new URL("../src/components/PhaseKineticsTTTCCTStudio.tsx", import.meta.url), "utf8");
   assert.match(src, /if \(initialData\) return;/);

@@ -536,16 +536,21 @@ _KINETICS_FIELDS = (
     _num("coolingRate_C_s", "Selected cooling rate", "K/s", "cooling-rate", 10.0,
          note="Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; "
               "the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value "
-              "<= 0 is rejected with input_validation NON_POSITIVE (exit 2); otherwise no bound is enforced."),
+              "<= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is "
+              "rejected with NON_FINITE (exit 2) and no bound is enforced."),
     _num("grainSize_um", "Prior austenite grain size", _MICRO, "length", 25.0,
          note="Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as "
               "the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is "
-              "rejected with input_validation NON_POSITIVE (exit 2). For AISI D2 (outside the model range), "
+              "rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity "
+              "bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside "
+              "the model range), "
               "Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative "
               "value returns exit 0."),
     _num("austTemp_C", "Austenitisation temperature", "degC", "temperature", 860.0,
-         note="Passed unconverted by the entry point; no bound is enforced. At or below the Grange Ae3 the Li "
-              "model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed)."),
+         note="Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC "
+              "(input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or "
+              "below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully "
+              "austenitic start assumed)."),
     _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
          note="Passed unconverted by the entry point; no bound is enforced."),
     _num("agingTime_h", "Aging time", "h", "time", 8.0,
@@ -602,8 +607,14 @@ def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
             "registry Ae3 (steels: Ae1).",
             "Validity domain (kineticsModel.validityDomain): 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, "
             "Cu<0.5, Mn+Ni+Cr+Mo<5 (printed as Mo+Ni+Cr+Mo; both sums are checked), 0.01<Al<0.05 wt% (M. Li 1996 "
-            "thesis p. 86, stated as untested by the author); Al is not in the registry compositions and is reported "
-            "unchecked.",
+            "thesis p. 86, stated as untested by the author); a negative content is outside. Al is not in the "
+            "registry compositions, so the Al bound is unchecked and the status is 'inside-partially-checked' "
+            "(AISI 4140, AISI 4340). This solver-side check is not declared as the contract validity domain "
+            "(pilot contracts carry none).",
+            "tttIsothermalCurves: for ferrite only tStart_s (1 %) is reported; t50_s and tFinish_s are null because "
+            "the ferrite fraction is a volume fraction of the austenite that ends at the equilibrium ferrite amount "
+            "(not modelled). Pearlite uses the phantom fraction (goes to completion) and bainite the volume "
+            "fraction (kineticsModel.li1998.reactionFractionBasis).",
             "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
             "IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per "
             "attempt.",
@@ -1389,7 +1400,8 @@ def render_module_doc(contract: ModuleContract) -> str:
         lines += [f"- `{r.key}`: {r.min} to {r.max} {r.unit}" for r in vd.ranges]
         lines += [f"- Source: {ref}" for ref in vd.source_refs]
     else:
-        lines.append("None declared: no source-backed applicability range is established.")
+        lines.append("None declared in this contract (any solver-side applicability check is described in the "
+                     "recorded notes).")
     lc = c.lifecycle
     lines += [
         "",

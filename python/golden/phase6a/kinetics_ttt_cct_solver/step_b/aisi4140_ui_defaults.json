@@ -1264,6 +1264,24 @@
    "old": null
   },
   {
+   "key": "kineticsModel.li1998.reactionFractionBasis.Bainite",
+   "kind": "added",
+   "new": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.li1998.reactionFractionBasis.Ferrite",
+   "kind": "added",
+   "new": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+   "old": null
+  },
+  {
+   "key": "kineticsModel.li1998.reactionFractionBasis.Pearlite",
+   "kind": "added",
+   "new": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+   "old": null
+  },
+  {
    "key": "kineticsModel.li1998.reactionIntegral_S.X_0p01",
    "kind": "added",
    "new": 0.10434,
@@ -1360,6 +1378,48 @@
    "old": null
   },
   {
+   "key": "kineticsModel.validityDomain.grainSize.astmG",
+   "kind": "added",
+   "new": 7.705,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.comparedRange_G[0]",
+   "kind": "added",
+   "new": 5.6,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.comparedRange_G[1]",
+   "kind": "added",
+   "new": 11.0,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.inputBounds_um[0]",
+   "kind": "added",
+   "new": 1.0,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.inputBounds_um[1]",
+   "kind": "added",
+   "new": 1000.0,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.insideComparedRange",
+   "kind": "added",
+   "new": true,
+   "old": null
+  },
+  {
+   "key": "kineticsModel.validityDomain.grainSize.note",
+   "kind": "added",
+   "new": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source",
+   "old": null
+  },
+  {
    "key": "kineticsModel.validityDomain.source",
    "kind": "added",
    "new": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
@@ -1368,7 +1428,7 @@
   {
    "key": "kineticsModel.validityDomain.status",
    "kind": "added",
-   "new": "inside",
+   "new": "inside-partially-checked",
    "old": null
   },
   {
@@ -1690,20 +1750,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 67786.8447,
    "key": "tttIsothermalCurves[0].t50_s",
-   "kind": "numeric",
-   "new": 67787.7,
-   "old": 0.8553,
-   "rel": 79255.05050859349
+   "kind": "changed",
+   "new": null,
+   "old": 0.8553
   },
   {
-   "abs": 128678.7955,
    "key": "tttIsothermalCurves[0].tFinish_s",
-   "kind": "numeric",
-   "new": 128681.0,
-   "old": 2.2045,
-   "rel": 58370.96643229757
+   "kind": "changed",
+   "new": null,
+   "old": 2.2045
   },
   {
    "abs": 6894.447,
@@ -2228,20 +2284,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 4038.0317,
    "key": "tttIsothermalCurves[10].t50_s",
-   "kind": "numeric",
-   "new": 4038.04,
-   "old": 0.0083,
-   "rel": 486509.843373494
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 7665.368600000001,
    "key": "tttIsothermalCurves[10].tFinish_s",
-   "kind": "numeric",
-   "new": 7665.39,
-   "old": 0.0214,
-   "rel": 358194.7943925234
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 410.70000000000005,
@@ -2670,20 +2722,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 3302.5017000000003,
    "key": "tttIsothermalCurves[11].t50_s",
-   "kind": "numeric",
-   "new": 3302.51,
-   "old": 0.0083,
-   "rel": 397891.7710843374
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 6269.1086000000005,
    "key": "tttIsothermalCurves[11].tFinish_s",
-   "kind": "numeric",
-   "new": 6269.13,
-   "old": 0.0214,
-   "rel": 292949.00000000006
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 335.89000000000004,
@@ -2728,20 +2776,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 2737.2717000000002,
    "key": "tttIsothermalCurves[12].t50_s",
-   "kind": "numeric",
-   "new": 2737.28,
-   "old": 0.0083,
-   "rel": 329791.7710843374
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 5196.1386,
    "key": "tttIsothermalCurves[12].tFinish_s",
-   "kind": "numeric",
-   "new": 5196.16,
-   "old": 0.0214,
-   "rel": 242810.21495327106
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 278.403,
@@ -2786,20 +2830,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 2298.9517,
    "key": "tttIsothermalCurves[13].t50_s",
-   "kind": "numeric",
-   "new": 2298.96,
-   "old": 0.0083,
-   "rel": 276982.1325301205
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 4364.078600000001,
    "key": "tttIsothermalCurves[13].tFinish_s",
-   "kind": "numeric",
-   "new": 4364.1,
-   "old": 0.0214,
-   "rel": 203928.90654205612
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 233.822,
@@ -2844,20 +2884,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1956.2939999999999,
    "key": "tttIsothermalCurves[14].t50_s",
-   "kind": "numeric",
-   "new": 1956.32,
-   "old": 0.026,
-   "rel": 75242.07692307692
+   "kind": "changed",
+   "new": null,
+   "old": 0.026
   },
   {
-   "abs": 3713.6112,
    "key": "tttIsothermalCurves[14].tFinish_s",
-   "kind": "numeric",
-   "new": 3713.66,
-   "old": 0.0488,
-   "rel": 76098.59016393442
+   "kind": "changed",
+   "new": null,
+   "old": 0.0488
   },
   {
    "abs": 198.9667,
@@ -2902,20 +2938,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1686.6470000000002,
    "key": "tttIsothermalCurves[15].t50_s",
-   "kind": "numeric",
-   "new": 1686.66,
-   "old": 0.013,
-   "rel": 129742.07692307694
+   "kind": "changed",
+   "new": null,
+   "old": 0.013
   },
   {
-   "abs": 3201.7556000000004,
    "key": "tttIsothermalCurves[15].tFinish_s",
-   "kind": "numeric",
-   "new": 3201.78,
-   "old": 0.0244,
-   "rel": 131219.4918032787
+   "kind": "changed",
+   "new": null,
+   "old": 0.0244
   },
   {
    "abs": 171.5438,
@@ -2960,20 +2992,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1473.3732,
    "key": "tttIsothermalCurves[16].t50_s",
-   "kind": "numeric",
-   "new": 1473.38,
-   "old": 0.0068,
-   "rel": 216672.52941176473
+   "kind": "changed",
+   "new": null,
+   "old": 0.0068
   },
   {
-   "abs": 2796.8970999999997,
    "key": "tttIsothermalCurves[16].tFinish_s",
-   "kind": "numeric",
-   "new": 2796.91,
-   "old": 0.0129,
-   "rel": 216813.7286821705
+   "kind": "changed",
+   "new": null,
+   "old": 0.0129
   },
   {
    "abs": 149.8533,
@@ -3018,20 +3046,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1304.2159,
    "key": "tttIsothermalCurves[17].t50_s",
-   "kind": "numeric",
-   "new": 1304.22,
-   "old": 0.0041,
-   "rel": 318101.4390243902
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 2475.7823,
    "key": "tttIsothermalCurves[17].tFinish_s",
-   "kind": "numeric",
-   "new": 2475.79,
-   "old": 0.0077,
-   "rel": 321530.1688311688
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 132.648,
@@ -3076,20 +3100,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1170.0858999999998,
    "key": "tttIsothermalCurves[18].t50_s",
-   "kind": "numeric",
-   "new": 1170.09,
-   "old": 0.0041,
-   "rel": 285386.8048780487
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 2221.1623,
    "key": "tttIsothermalCurves[18].tFinish_s",
-   "kind": "numeric",
-   "new": 2221.17,
-   "old": 0.0077,
-   "rel": 288462.63636363635
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 119.006,
@@ -3134,20 +3154,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1064.2558999999999,
    "key": "tttIsothermalCurves[19].t50_s",
-   "kind": "numeric",
-   "new": 1064.26,
-   "old": 0.0041,
-   "rel": 259574.60975609752
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 2020.2622999999999,
    "key": "tttIsothermalCurves[19].tFinish_s",
-   "kind": "numeric",
-   "new": 2020.27,
-   "old": 0.0077,
-   "rel": 262371.72727272724
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 108.243,
@@ -3192,20 +3208,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 47489.9039,
    "key": "tttIsothermalCurves[1].t50_s",
-   "kind": "numeric",
-   "new": 47490.2,
-   "old": 0.2961,
-   "rel": 160384.6805133401
+   "kind": "changed",
+   "new": null,
+   "old": 0.2961
   },
   {
-   "abs": 90149.5368,
    "key": "tttIsothermalCurves[1].tFinish_s",
-   "kind": "numeric",
-   "new": 90150.3,
-   "old": 0.7632,
-   "rel": 118120.46226415095
+   "kind": "changed",
+   "new": null,
+   "old": 0.7632
   },
   {
    "abs": 4830.0943,
@@ -3250,20 +3262,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 981.7629000000001,
    "key": "tttIsothermalCurves[20].t50_s",
-   "kind": "numeric",
-   "new": 981.767,
-   "old": 0.0041,
-   "rel": 239454.36585365853
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1863.6723,
    "key": "tttIsothermalCurves[20].tFinish_s",
-   "kind": "numeric",
-   "new": 1863.68,
-   "old": 0.0077,
-   "rel": 242035.36363636362
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 99.85249999999999,
@@ -3308,20 +3316,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 919.0309,
    "key": "tttIsothermalCurves[21].t50_s",
-   "kind": "numeric",
-   "new": 919.035,
-   "old": 0.0041,
-   "rel": 224153.87804878046
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1744.5922999999998,
    "key": "tttIsothermalCurves[21].tFinish_s",
-   "kind": "numeric",
-   "new": 1744.6,
-   "old": 0.0077,
-   "rel": 226570.42857142855
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 93.4722,
@@ -3366,20 +3370,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 873.5969,
    "key": "tttIsothermalCurves[22].t50_s",
-   "kind": "numeric",
-   "new": 873.601,
-   "old": 0.0041,
-   "rel": 213072.41463414632
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1658.3422999999998,
    "key": "tttIsothermalCurves[22].tFinish_s",
-   "kind": "numeric",
-   "new": 1658.35,
-   "old": 0.0077,
-   "rel": 215369.12987012984
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 88.85119999999999,
@@ -3424,20 +3424,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 843.9649000000001,
    "key": "tttIsothermalCurves[23].t50_s",
-   "kind": "numeric",
-   "new": 843.969,
-   "old": 0.0041,
-   "rel": 205845.0975609756
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1602.0922999999998,
    "key": "tttIsothermalCurves[23].tFinish_s",
-   "kind": "numeric",
-   "new": 1602.1,
-   "old": 0.0077,
-   "rel": 208063.93506493504
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 85.8373,
@@ -3482,20 +3478,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 829.5499,
    "key": "tttIsothermalCurves[24].t50_s",
-   "kind": "numeric",
-   "new": 829.554,
-   "old": 0.0041,
-   "rel": 202329.243902439
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1574.7323,
    "key": "tttIsothermalCurves[24].tFinish_s",
-   "kind": "numeric",
-   "new": 1574.74,
-   "old": 0.0077,
-   "rel": 204510.68831168828
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 84.3712,
@@ -3540,20 +3532,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 830.7349,
    "key": "tttIsothermalCurves[25].t50_s",
-   "kind": "numeric",
-   "new": 830.739,
-   "old": 0.0041,
-   "rel": 202618.26829268291
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1576.9823,
    "key": "tttIsothermalCurves[25].tFinish_s",
-   "kind": "numeric",
-   "new": 1576.99,
-   "old": 0.0077,
-   "rel": 204802.89610389608
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 84.4918,
@@ -3598,20 +3586,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 849.0619,
    "key": "tttIsothermalCurves[26].t50_s",
-   "kind": "numeric",
-   "new": 849.066,
-   "old": 0.0041,
-   "rel": 207088.26829268291
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1611.7622999999999,
    "key": "tttIsothermalCurves[26].tFinish_s",
-   "kind": "numeric",
-   "new": 1611.77,
-   "old": 0.0077,
-   "rel": 209319.7792207792
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 86.3557,
@@ -3656,20 +3640,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 887.6339,
    "key": "tttIsothermalCurves[27].t50_s",
-   "kind": "numeric",
-   "new": 887.638,
-   "old": 0.0041,
-   "rel": 216496.0731707317
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1684.9923,
    "key": "tttIsothermalCurves[27].tFinish_s",
-   "kind": "numeric",
-   "new": 1685.0,
-   "old": 0.0077,
-   "rel": 218830.16883116882
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 90.27879999999999,
@@ -3714,20 +3694,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 951.8819,
    "key": "tttIsothermalCurves[28].t50_s",
-   "kind": "numeric",
-   "new": 951.886,
-   "old": 0.0041,
-   "rel": 232166.3170731707
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1806.9523,
    "key": "tttIsothermalCurves[28].tFinish_s",
-   "kind": "numeric",
-   "new": 1806.96,
-   "old": 0.0077,
-   "rel": 234669.12987012987
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 96.8134,
@@ -3772,20 +3748,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1051.0058999999999,
    "key": "tttIsothermalCurves[29].t50_s",
-   "kind": "numeric",
-   "new": 1051.01,
-   "old": 0.0041,
-   "rel": 256342.90243902433
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 1995.1122999999998,
    "key": "tttIsothermalCurves[29].tFinish_s",
-   "kind": "numeric",
-   "new": 1995.12,
-   "old": 0.0077,
-   "rel": 259105.49350649348
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 106.895,
@@ -3830,20 +3802,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 33878.3908,
    "key": "tttIsothermalCurves[2].t50_s",
-   "kind": "numeric",
-   "new": 33878.5,
-   "old": 0.1092,
-   "rel": 310241.673992674
+   "kind": "changed",
+   "new": null,
+   "old": 0.1092
   },
   {
-   "abs": 64311.1184,
    "key": "tttIsothermalCurves[2].tFinish_s",
-   "kind": "numeric",
-   "new": 64311.4,
-   "old": 0.2816,
-   "rel": 228377.55113636362
+   "kind": "changed",
+   "new": null,
+   "old": 0.2816
   },
   {
    "abs": 3445.7068,
@@ -3888,20 +3856,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1200.7359,
    "key": "tttIsothermalCurves[30].t50_s",
-   "kind": "numeric",
-   "new": 1200.74,
-   "old": 0.0041,
-   "rel": 292862.4146341463
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 2279.3523,
    "key": "tttIsothermalCurves[30].tFinish_s",
-   "kind": "numeric",
-   "new": 2279.36,
-   "old": 0.0077,
-   "rel": 296019.7792207792
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 122.124,
@@ -3946,20 +3910,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1429.0658999999998,
    "key": "tttIsothermalCurves[31].t50_s",
-   "kind": "numeric",
-   "new": 1429.07,
-   "old": 0.0041,
-   "rel": 348552.6585365853
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 2712.7823,
    "key": "tttIsothermalCurves[31].tFinish_s",
-   "kind": "numeric",
-   "new": 2712.79,
-   "old": 0.0077,
-   "rel": 352309.3896103896
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 145.347,
@@ -4004,20 +3964,16 @@
    "old": "Pearlite"
   },
   {
-   "abs": 1788.7459,
    "key": "tttIsothermalCurves[32].t50_s",
-   "kind": "numeric",
-   "new": 1788.75,
-   "old": 0.0041,
-   "rel": 436279.487804878
+   "kind": "changed",
+   "new": null,
+   "old": 0.0041
   },
   {
-   "abs": 3395.5623,
    "key": "tttIsothermalCurves[32].tFinish_s",
-   "kind": "numeric",
-   "new": 3395.57,
-   "old": 0.0077,
-   "rel": 440982.1168831169
+   "kind": "changed",
+   "new": null,
+   "old": 0.0077
   },
   {
    "abs": 181.929,
@@ -4056,20 +4012,16 @@
    "old": null
   },
   {
-   "abs": 2387.8346,
    "key": "tttIsothermalCurves[33].t50_s",
-   "kind": "numeric",
-   "new": 2387.84,
-   "old": 0.0054,
-   "rel": 442191.5925925926
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 4532.8084,
    "key": "tttIsothermalCurves[33].tFinish_s",
-   "kind": "numeric",
-   "new": 4532.82,
-   "old": 0.0116,
-   "rel": 390759.3448275862
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 242.861,
@@ -4108,20 +4060,16 @@
    "old": null
   },
   {
-   "abs": 3473.7846,
    "key": "tttIsothermalCurves[34].t50_s",
-   "kind": "numeric",
-   "new": 3473.79,
-   "old": 0.0054,
-   "rel": 643293.4444444444
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 6594.2684,
    "key": "tttIsothermalCurves[34].tFinish_s",
-   "kind": "numeric",
-   "new": 6594.28,
-   "old": 0.0116,
-   "rel": 568471.4137931035
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 353.312,
@@ -4160,20 +4108,16 @@
    "old": null
   },
   {
-   "abs": 5709.4146,
    "key": "tttIsothermalCurves[35].t50_s",
-   "kind": "numeric",
-   "new": 5709.42,
-   "old": 0.0054,
-   "rel": 1057299.0
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 10838.0884,
    "key": "tttIsothermalCurves[35].tFinish_s",
-   "kind": "numeric",
-   "new": 10838.1,
-   "old": 0.0116,
-   "rel": 934317.9655172415
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 580.692,
@@ -4212,20 +4156,16 @@
    "old": null
   },
   {
-   "abs": 11334.6946,
    "key": "tttIsothermalCurves[36].t50_s",
-   "kind": "numeric",
-   "new": 11334.7,
-   "old": 0.0054,
-   "rel": 2099017.5185185187
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 21516.4884,
    "key": "tttIsothermalCurves[36].tFinish_s",
-   "kind": "numeric",
-   "new": 21516.5,
-   "old": 0.0116,
-   "rel": 1854869.6896551724
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 1152.829,
@@ -4264,20 +4204,16 @@
    "old": null
   },
   {
-   "abs": 31494.694600000003,
    "key": "tttIsothermalCurves[37].t50_s",
-   "kind": "numeric",
-   "new": 31494.7,
-   "old": 0.0054,
-   "rel": 5832350.851851852
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 59786.0884,
    "key": "tttIsothermalCurves[37].tFinish_s",
-   "kind": "numeric",
-   "new": 59786.1,
-   "old": 0.0116,
-   "rel": 5153973.137931035
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 3203.259,
@@ -4316,20 +4252,16 @@
    "old": null
   },
   {
-   "abs": 192112.9946,
    "key": "tttIsothermalCurves[38].t50_s",
-   "kind": "numeric",
-   "new": 192113.0,
-   "old": 0.0054,
-   "rel": 35576480.48148148
+   "kind": "changed",
+   "new": null,
+   "old": 0.0054
   },
   {
-   "abs": 364686.9884,
    "key": "tttIsothermalCurves[38].tFinish_s",
-   "kind": "numeric",
-   "new": 364687.0,
-   "old": 0.0116,
-   "rel": 31438533.48275862
+   "kind": "changed",
+   "new": null,
+   "old": 0.0116
   },
   {
    "abs": 19539.499,
@@ -4432,20 +4364,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 24591.2571,
    "key": "tttIsothermalCurves[3].t50_s",
-   "kind": "numeric",
-   "new": 24591.3,
-   "old": 0.0429,
-   "rel": 573222.7762237762
+   "kind": "changed",
+   "new": null,
+   "old": 0.0429
   },
   {
-   "abs": 46681.3895,
    "key": "tttIsothermalCurves[3].tFinish_s",
-   "kind": "numeric",
-   "new": 46681.5,
-   "old": 0.1105,
-   "rel": 422456.0135746606
+   "kind": "changed",
+   "new": null,
+   "old": 0.1105
   },
   {
    "abs": 2501.1248,
@@ -4970,20 +4898,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 18149.882100000003,
    "key": "tttIsothermalCurves[4].t50_s",
-   "kind": "numeric",
-   "new": 18149.9,
-   "old": 0.0179,
-   "rel": 1013959.8938547488
+   "kind": "changed",
+   "new": null,
+   "old": 0.0179
   },
   {
-   "abs": 34453.8539,
    "key": "tttIsothermalCurves[4].tFinish_s",
-   "kind": "numeric",
-   "new": 34453.9,
-   "old": 0.0461,
-   "rel": 747372.1019522777
+   "kind": "changed",
+   "new": null,
+   "old": 0.0461
   },
   {
    "abs": 1845.9878,
@@ -5508,20 +5432,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 13612.3917,
    "key": "tttIsothermalCurves[5].t50_s",
-   "kind": "numeric",
-   "new": 13612.4,
-   "old": 0.0083,
-   "rel": 1640047.1927710844
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 25840.3786,
    "key": "tttIsothermalCurves[5].tFinish_s",
-   "kind": "numeric",
-   "new": 25840.4,
-   "old": 0.0214,
-   "rel": 1207494.3271028039
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 1384.489,
@@ -6046,20 +5966,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 10368.5917,
    "key": "tttIsothermalCurves[6].t50_s",
-   "kind": "numeric",
-   "new": 10368.6,
-   "old": 0.0083,
-   "rel": 1249227.9156626507
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 19682.6786,
    "key": "tttIsothermalCurves[6].tFinish_s",
-   "kind": "numeric",
-   "new": 19682.7,
-   "old": 0.0214,
-   "rel": 919751.3364485982
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 1054.569,
@@ -6584,20 +6500,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 8017.0517,
    "key": "tttIsothermalCurves[7].t50_s",
-   "kind": "numeric",
-   "new": 8017.06,
-   "old": 0.0083,
-   "rel": 965909.843373494
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 15218.678600000001,
    "key": "tttIsothermalCurves[7].tFinish_s",
-   "kind": "numeric",
-   "new": 15218.7,
-   "old": 0.0214,
-   "rel": 711153.2056074768
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 815.397,
@@ -7122,20 +7034,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 6289.6617,
    "key": "tttIsothermalCurves[8].t50_s",
-   "kind": "numeric",
-   "new": 6289.67,
-   "old": 0.0083,
-   "rel": 757790.5662650602
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 11939.5786,
    "key": "tttIsothermalCurves[8].tFinish_s",
-   "kind": "numeric",
-   "new": 11939.6,
-   "old": 0.0214,
-   "rel": 557924.2336448599
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 639.708,
@@ -7660,20 +7568,16 @@
    "old": "Bainite"
   },
   {
-   "abs": 5004.8717,
    "key": "tttIsothermalCurves[9].t50_s",
-   "kind": "numeric",
-   "new": 5004.88,
-   "old": 0.0083,
-   "rel": 602996.5903614458
+   "kind": "changed",
+   "new": null,
+   "old": 0.0083
   },
   {
-   "abs": 9500.6986,
    "key": "tttIsothermalCurves[9].tFinish_s",
-   "kind": "numeric",
-   "new": 9500.72,
-   "old": 0.0214,
-   "rel": 443957.8785046729
+   "kind": "changed",
+   "new": null,
+   "old": 0.0214
   },
   {
    "abs": 509.035,
@@ -7693,7 +7597,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "d55f912b91d74f79bf02a6c91774ba5188a1cabc",
+ "gitHead": "a062a46e3b706eb6eb39186a45809d5618ad8fc9",
  "input": {
   "agingTemp_C": 720.0,
   "agingTime_h": 8.0,
@@ -7735,7 +7639,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "f7b553015b3351e2b22389b4f6f6e84c97c527368d4cdc934f1fc1f59a405530",
+ "solverSha256": "954fa53e7a0e2610f807d2364146e28887910a07eb945dd3a9004875d1f1467d",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -8064,6 +7968,11 @@
     "fractionsComputed": false,
     "fractionsReason": "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite amounts from a thermodynamic Fe-C-M model that is not implemented",
     "grainSizeDefinition": "priorGrainSize_um is taken as the mean planar grain diameter d; G = -3.2877 - 6.6439 log10(sqrt(pi/4) d / mm) (ASTM E112, Collins et al. Eqs. 3-4)",
+    "reactionFractionBasis": {
+     "Bainite": "volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled",
+     "Ferrite": "volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount (thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)",
+     "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)"
+    },
     "reactionIntegral_S": {
      "X_0p01": 0.10434,
      "X_0p5": 1.02588,
@@ -8086,8 +7995,21 @@
    "status": "available",
    "validationStatus": "unvalidated",
    "validityDomain": {
+    "grainSize": {
+     "astmG": 7.705,
+     "comparedRange_G": [
+      5.6,
+      11.0
+     ],
+     "inputBounds_um": [
+      1.0,
+      1000.0
+     ],
+     "insideComparedRange": true,
+     "note": "input bounds are a sanity limit of this implementation; the compared range is the span of published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a validity statement of the source"
+    },
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
-    "status": "inside",
+    "status": "inside-partially-checked",
     "unchecked": [
      "Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked"
     ],
@@ -8180,8 +8102,8 @@
     "drivingForce_DeltaT_C": 451.82,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 67787.7,
-    "tFinish_s": 128681.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 6894.55,
     "temperature_C": 328.48
    },
@@ -8190,8 +8112,8 @@
     "drivingForce_DeltaT_C": 440.26,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 47490.2,
-    "tFinish_s": 90150.3,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 4830.13,
     "temperature_C": 340.04
    },
@@ -8200,8 +8122,8 @@
     "drivingForce_DeltaT_C": 428.7,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 33878.5,
-    "tFinish_s": 64311.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 3445.72,
     "temperature_C": 351.6
    },
@@ -8210,8 +8132,8 @@
     "drivingForce_DeltaT_C": 417.14,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 24591.3,
-    "tFinish_s": 46681.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 2501.13,
     "temperature_C": 363.16
    },
@@ -8220,8 +8142,8 @@
     "drivingForce_DeltaT_C": 405.58,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 18149.9,
-    "tFinish_s": 34453.9,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 1845.99,
     "temperature_C": 374.72
    },
@@ -8230,8 +8152,8 @@
     "drivingForce_DeltaT_C": 394.02,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 13612.4,
-    "tFinish_s": 25840.4,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 1384.49,
     "temperature_C": 386.28
    },
@@ -8240,8 +8162,8 @@
     "drivingForce_DeltaT_C": 382.46,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 10368.6,
-    "tFinish_s": 19682.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 1054.57,
     "temperature_C": 397.84
    },
@@ -8250,8 +8172,8 @@
     "drivingForce_DeltaT_C": 370.9,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 8017.06,
-    "tFinish_s": 15218.7,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 815.398,
     "temperature_C": 409.4
    },
@@ -8260,8 +8182,8 @@
     "drivingForce_DeltaT_C": 359.34,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 6289.67,
-    "tFinish_s": 11939.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 639.709,
     "temperature_C": 420.96
    },
@@ -8270,8 +8192,8 @@
     "drivingForce_DeltaT_C": 347.79,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 5004.88,
-    "tFinish_s": 9500.72,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 509.036,
     "temperature_C": 432.52
    },
@@ -8280,8 +8202,8 @@
     "drivingForce_DeltaT_C": 336.23,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 4038.04,
-    "tFinish_s": 7665.39,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 410.701,
     "temperature_C": 444.08
    },
@@ -8290,8 +8212,8 @@
     "drivingForce_DeltaT_C": 324.67,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 3302.51,
-    "tFinish_s": 6269.13,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 335.891,
     "temperature_C": 455.64
    },
@@ -8300,8 +8222,8 @@
     "drivingForce_DeltaT_C": 313.11,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 2737.28,
-    "tFinish_s": 5196.16,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 278.404,
     "temperature_C": 467.2
    },
@@ -8310,8 +8232,8 @@
     "drivingForce_DeltaT_C": 301.55,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 2298.96,
-    "tFinish_s": 4364.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 233.823,
     "temperature_C": 478.76
    },
@@ -8320,8 +8242,8 @@
     "drivingForce_DeltaT_C": 289.99,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1956.32,
-    "tFinish_s": 3713.66,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 198.973,
     "temperature_C": 490.32
    },
@@ -8330,8 +8252,8 @@
     "drivingForce_DeltaT_C": 278.43,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1686.66,
-    "tFinish_s": 3201.78,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 171.547,
     "temperature_C": 501.88
    },
@@ -8340,8 +8262,8 @@
     "drivingForce_DeltaT_C": 266.87,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1473.38,
-    "tFinish_s": 2796.91,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 149.855,
     "temperature_C": 513.44
    },
@@ -8350,8 +8272,8 @@
     "drivingForce_DeltaT_C": 255.31,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1304.22,
-    "tFinish_s": 2475.79,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 132.649,
     "temperature_C": 525.0
    },
@@ -8360,8 +8282,8 @@
     "drivingForce_DeltaT_C": 243.75,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1170.09,
-    "tFinish_s": 2221.17,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 119.007,
     "temperature_C": 536.56
    },
@@ -8370,8 +8292,8 @@
     "drivingForce_DeltaT_C": 232.19,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1064.26,
-    "tFinish_s": 2020.27,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 108.244,
     "temperature_C": 548.12
    },
@@ -8380,8 +8302,8 @@
     "drivingForce_DeltaT_C": 220.63,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 981.767,
-    "tFinish_s": 1863.68,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 99.8535,
     "temperature_C": 559.68
    },
@@ -8390,8 +8312,8 @@
     "drivingForce_DeltaT_C": 209.07,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 919.035,
-    "tFinish_s": 1744.6,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 93.4732,
     "temperature_C": 571.23
    },
@@ -8400,8 +8322,8 @@
     "drivingForce_DeltaT_C": 197.51,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 873.601,
-    "tFinish_s": 1658.35,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 88.8522,
     "temperature_C": 582.79
    },
@@ -8410,8 +8332,8 @@
     "drivingForce_DeltaT_C": 185.95,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 843.969,
-    "tFinish_s": 1602.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 85.8383,
     "temperature_C": 594.35
    },
@@ -8420,8 +8342,8 @@
     "drivingForce_DeltaT_C": 174.39,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 829.554,
-    "tFinish_s": 1574.74,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 84.3722,
     "temperature_C": 605.91
    },
@@ -8430,8 +8352,8 @@
     "drivingForce_DeltaT_C": 162.83,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 830.739,
-    "tFinish_s": 1576.99,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 84.4928,
     "temperature_C": 617.47
    },
@@ -8440,8 +8362,8 @@
     "drivingForce_DeltaT_C": 151.27,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 849.066,
-    "tFinish_s": 1611.77,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 86.3567,
     "temperature_C": 629.03
    },
@@ -8450,8 +8372,8 @@
     "drivingForce_DeltaT_C": 139.71,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 887.638,
-    "tFinish_s": 1685.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 90.2798,
     "temperature_C": 640.59
    },
@@ -8460,8 +8382,8 @@
     "drivingForce_DeltaT_C": 128.15,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 951.886,
-    "tFinish_s": 1806.96,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 96.8144,
     "temperature_C": 652.15
    },
@@ -8470,8 +8392,8 @@
     "drivingForce_DeltaT_C": 116.6,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1051.01,
-    "tFinish_s": 1995.12,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 106.896,
     "temperature_C": 663.71
    },
@@ -8480,8 +8402,8 @@
     "drivingForce_DeltaT_C": 105.04,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1200.74,
-    "tFinish_s": 2279.36,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 122.125,
     "temperature_C": 675.27
    },
@@ -8490,8 +8412,8 @@
     "drivingForce_DeltaT_C": 93.48,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1429.07,
-    "tFinish_s": 2712.79,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 145.348,
     "temperature_C": 686.83
    },
@@ -8500,8 +8422,8 @@
     "drivingForce_DeltaT_C": 81.92,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 1788.75,
-    "tFinish_s": 3395.57,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 181.93,
     "temperature_C": 698.39
    },
@@ -8510,8 +8432,8 @@
     "drivingForce_DeltaT_C": 70.36,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 2387.84,
-    "tFinish_s": 4532.82,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 242.862,
     "temperature_C": 709.95
    },
@@ -8520,8 +8442,8 @@
     "drivingForce_DeltaT_C": 58.8,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 3473.79,
-    "tFinish_s": 6594.28,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 353.313,
     "temperature_C": 721.51
    },
@@ -8530,8 +8452,8 @@
     "drivingForce_DeltaT_C": 47.24,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 5709.42,
-    "tFinish_s": 10838.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 580.693,
     "temperature_C": 733.07
    },
@@ -8540,8 +8462,8 @@
     "drivingForce_DeltaT_C": 35.68,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 11334.7,
-    "tFinish_s": 21516.5,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 1152.83,
     "temperature_C": 744.63
    },
@@ -8550,8 +8472,8 @@
     "drivingForce_DeltaT_C": 24.12,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 31494.7,
-    "tFinish_s": 59786.1,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 3203.26,
     "temperature_C": 756.19
    },
@@ -8560,8 +8482,8 @@
     "drivingForce_DeltaT_C": 12.56,
     "floorHit": false,
     "phase": "Ferrite",
-    "t50_s": 192113.0,
-    "tFinish_s": 364687.0,
+    "t50_s": null,
+    "tFinish_s": null,
     "tStart_s": 19539.5,
     "temperature_C": 767.75
    },

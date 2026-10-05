@@ -2744,7 +2744,7 @@ export const MODULE_REGISTRY = {
               "default": 10.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); otherwise no bound is enforced."
+              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is rejected with NON_FINITE (exit 2) and no bound is enforced."
             },
             {
               "key": "grainSize_um",
@@ -2759,7 +2759,7 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
+              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
             },
             {
               "key": "austTemp_C",
@@ -2774,7 +2774,7 @@ export const MODULE_REGISTRY = {
               "default": 860.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point; no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed)."
+              "note": "Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC (input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed)."
             },
             {
               "key": "agingTemp_C",
@@ -2866,7 +2866,8 @@ export const MODULE_REGISTRY = {
         "TTT/CCT model: Li, Niebuhr, Meekisho & Atteridge (1998) ferrite/pearlite/bainite start curves from composition and ASTM grain size (kineticsModel.sourceLabel, modelVersion li1998-additivity-v1), Grange Ae3/Ae1, Li Bs, Kung-Rayment Ms, CCT starts by the additivity rule per phase (no phase interaction). Reported only for a steel inside the composition range stated by M. Li (1996 thesis p. 86): AISI 4140 and AISI 4340; AISI D2 is outside it and Inconel 718, Ti-6Al-4V and Al 7075 are not steels, so their TTT curves, CCT starts, critical cooling rate and verdict are null with the reason (for the non-steels: 'kinetics model is steel-only'). Registry placeholders (alloy_registry.KINETICS_PLACEHOLDERS: Inconel 718 and Al 7075 Ms/Mf) are null.",
         "cctContinuousCoolingMap[].phaseFractions, predictedHardness_HRC and predictedHardness_HV are null for every alloy (status unavailable-fractions-not-computed for the modelled steels): the Li model needs the equilibrium ferrite/pearlite amounts of a thermodynamic Fe-C-M model that is not implemented. calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct is given only when no diffusional start is reached above Ms (Koistinen-Marburger at 25 C).",
         "The LSW coarsening profile (K = 8 gamma D C_e Vm^2 / (9 R T), C_e in mol/m^3) uses the same nucleus radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical radius) for every alloy; only the diffusion activation energy differs. It is null at or above the registry Ae3 (steels: Ae1).",
-        "Validity domain (kineticsModel.validityDomain): 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mn+Ni+Cr+Mo<5 (printed as Mo+Ni+Cr+Mo; both sums are checked), 0.01<Al<0.05 wt% (M. Li 1996 thesis p. 86, stated as untested by the author); Al is not in the registry compositions and is reported unchecked.",
+        "Validity domain (kineticsModel.validityDomain): 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mn+Ni+Cr+Mo<5 (printed as Mo+Ni+Cr+Mo; both sums are checked), 0.01<Al<0.05 wt% (M. Li 1996 thesis p. 86, stated as untested by the author); a negative content is outside. Al is not in the registry compositions, so the Al bound is unchecked and the status is 'inside-partially-checked' (AISI 4140, AISI 4340). This solver-side check is not declared as the contract validity domain (pilot contracts carry none).",
+        "tttIsothermalCurves: for ferrite only tStart_s (1 %) is reported; t50_s and tFinish_s are null because the ferrite fraction is a volume fraction of the austenite that ends at the equilibrium ferrite amount (not modelled). Pearlite uses the phantom fraction (goes to completion) and bainite the volume fraction (kineticsModel.li1998.reactionFractionBasis).",
         "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per attempt."
       ],
       "sourceRefs": [

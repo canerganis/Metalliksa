@@ -83,6 +83,14 @@ LI_RANGE_ELEMENTS = frozenset({"Fe", "C", "Si", "Mn", "Ni", "Cr", "Mo", "V", "Cu
 TTT_POINTS_PER_PHASE = 40          # temperatures per C-curve, evenly spaced from Ms to (T_i - 1 C)
 TTT_DISPLAY_MAX_S = 1.0e6          # TTT points with a start time at or above 1e6 s are not listed (as before)
 CCT_STEP_K = 0.05                  # temperature step of the additivity integral (midpoint rule)
+# Input bounds of this implementation for the modelled steels (sanity limits of the inputs, NOT a source validity
+# range): prior-austenite grain diameter 1-1000 um (ASTM G about 18.3 to -1.6) and austenitizing temperature
+# 0-1600 C. Outside them the request is rejected (OUT_OF_RANGE). The published comparisons used here span
+# G 5.6-11.0 (Collins et al. 2023 Figs. 3, 6, 9) and G 8 (Li 1996 AISI 4140 example); validityDomain.grainSize
+# says whether a request is inside that compared span.
+GRAIN_SIZE_BOUNDS_UM = (1.0, 1000.0)
+AUST_TEMP_BOUNDS_C = (0.0, 1600.0)
+COMPARED_G_RANGE = (5.6, 11.0)
 KM_ALPHA_PER_K = 0.011             # Koistinen-Marburger rate constant as used in [Li96] Eq. 3.76
 ROOM_TEMPERATURE_C = 25.0
 
@@ -122,6 +130,16 @@ LI_NOTE = (
     "the additivity rule applied to each phase's 1 % start curve independently (no phase interaction, no carbon "
     "partitioning). Unvalidated screening model: phase fractions and hardness are not computed."
 )
+# X in tau(X, T) per phase ([Li96] p. 84): ferrite and bainite use the volume fraction of the austenite directly;
+# ferrite completes at its equilibrium amount (thermodynamic model, not implemented), so only its 1 % start is a
+# reportable time. Pearlite uses a phantom (normalized) fraction that goes to completion.
+REACTION_FRACTION_BASIS = {
+    "Ferrite": ("volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount "
+                "(thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)"),
+    "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+    "Bainite": ("volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining "
+                "austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"),
+}
 FRACTIONS_REASON = (
     "phase fractions and hardness are not computed: the Li (1998) model needs the equilibrium ferrite and pearlite "
     "amounts from a thermodynamic Fe-C-M model that is not implemented"
@@ -204,6 +222,8 @@ def li_composition_check(comp):
     """(inside: bool, violations: list[str], unchecked: list[str]) against the [Li96] p. 86 range (wt%)."""
     violations, unchecked = [], []
     for element in sorted(comp):
+        if float(comp[element] or 0.0) < 0.0:
+            violations.append(f"{element} {comp[element]:g} wt% is negative")
         if element not in LI_RANGE_ELEMENTS and float(comp[element] or 0.0) > 0.0:
             violations.append(f"{element} {comp[element]:g} wt% is not covered by the stated range")
     c = _w(comp, "C")
@@ -340,12 +360,14 @@ class LiModel:
                 t_start, t_50, t_finish = (self.tau(phase, x, temp) for x in TTT_FRACTIONS)
                 if t_start is None or t_start >= TTT_DISPLAY_MAX_S:
                     continue
+                if phase == "Ferrite":  # 50 % / 99 % of the austenite need not be attainable (equilibrium cap)
+                    t_50 = t_finish = None
                 points.append({
                     "temperature_C": round(temp, 2),
                     "phase": phase,
                     "tStart_s": _sig(t_start),
-                    "t50_s": _sig(t_50),
-                    "tFinish_s": _sig(t_finish),
+                    "t50_s": None if t_50 is None else _sig(t_50),
+                    "tFinish_s": None if t_finish is None else _sig(t_finish),
                     "avramiExponent_n": None,
                     "drivingForce_DeltaT_C": round(self.start_temp[phase] - temp, 2),
                     "floorHit": False,
@@ -473,10 +495,12 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
     if modelled:
         user_cr = input_validation.require_positive("coolingRate_C_s", cooling_rate_c_s)
         grain = input_validation.require_positive("grainSize_um", grain_size_um)
-        aust = input_validation.require_finite("austTemp_C", aust_temp_c)
+        grain = input_validation.require_range("grainSize_um", grain, *GRAIN_SIZE_BOUNDS_UM, "um")
+        aust = input_validation.require_range("austTemp_C", aust_temp_c, *AUST_TEMP_BOUNDS_C, "degC")
         li = LiModel(comp, astm_grain_size_number(grain))
     else:
-        user_cr = float(cooling_rate_c_s)
+        # No model runs; the rate is only echoed, but it must be a number (NON_FINITE envelope, not a crash).
+        user_cr = input_validation.require_finite("coolingRate_C_s", cooling_rate_c_s)
 
     # 1. TTT curves
     if modelled:
@@ -687,6 +711,7 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
                                               "no ferrite, pearlite or bainite 1 % start is reached above Ms"),
             "fractionsComputed": False,
             "fractionsReason": FRACTIONS_REASON,
+            "reactionFractionBasis": dict(REACTION_FRACTION_BASIS),
         }
     else:
         critical = {
@@ -722,10 +747,21 @@ def solve_phase_transformation_kinetics(alloy_name="AISI 4140", cooling_rate_c_s
         "validationStatus": VALIDATION_STATUS,
         "evidenceLevel": EVIDENCE_LEVEL,
         "validityDomain": {
-            "status": ("not-applicable-alloy-class" if not steel else ("inside" if inside else "outside")),
+            # "inside-partially-checked": inside every bound that could be checked, but a bound (Al) is unchecked
+            "status": ("not-applicable-alloy-class" if not steel else
+                       ("outside" if not inside else ("inside-partially-checked" if unchecked else "inside"))),
             "source": VALIDITY_SOURCE,
             "violations": violations if steel else [],
             "unchecked": unchecked if steel else [],
+            "grainSize": None if li is None else {
+                "astmG": round(li.grain_g, 3),
+                "inputBounds_um": list(GRAIN_SIZE_BOUNDS_UM),
+                "comparedRange_G": list(COMPARED_G_RANGE),
+                "insideComparedRange": COMPARED_G_RANGE[0] <= li.grain_g <= COMPARED_G_RANGE[1],
+                "note": ("input bounds are a sanity limit of this implementation; the compared range is the span of "
+                         "published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a "
+                         "validity statement of the source"),
+            },
         },
         "li1998": li_block,
     }

@@ -274,6 +274,15 @@ test("kin-li: steel goldens show Li-model starts, no floor line, fractions Unava
   assert.equal(banner.reason, "");
   assert.equal(banner.headline, "Li et al. (1998) TTT/CCT model (screening, unvalidated).");
   assert.equal(banner.floorLine, null); // was "32 of 40 TTT points are on the 0.001 s incubation floor ..."
+  assert.deepEqual(banner.validityLines, [
+    "Validity range only partially checked: Al not specified in the registry composition: the 0.01 < Al < 0.05 wt% bound is not checked.",
+  ]);
+  const coarse = kineticsModelBanner(
+    { status: "available", validityDomain: { status: "inside", unchecked: [], grainSize: { astmG: 0.73, comparedRange_G: [5.6, 11], insideComparedRange: false } } },
+    null
+  );
+  assert.deepEqual(coarse.validityLines, ["Grain size ASTM G 0.73 is outside the span of the published comparisons (G 5.6-11)."]);
+  assert.deepEqual(kineticsModelBanner({ status: "unavailable", validityDomain: { status: "outside", unchecked: ["x"] } }, null).validityLines, []);
   assert.equal(doc.tttIsothermalCurves.filter((p: { floorHit: boolean }) => p.floorHit).length, 0);
   for (const row of doc.cctContinuousCoolingMap) {
     const rt = kineticsCctRowText(row);

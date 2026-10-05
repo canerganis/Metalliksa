@@ -1136,6 +1136,12 @@
    "old": null
   },
   {
+   "key": "kineticsModel.validityDomain.grainSize",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "kineticsModel.validityDomain.source",
    "kind": "added",
    "new": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
@@ -3307,7 +3313,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "d55f912b91d74f79bf02a6c91774ba5188a1cabc",
+ "gitHead": "a062a46e3b706eb6eb39186a45809d5618ad8fc9",
  "input": {
   "agingTemp_C": 550.0,
   "agingTime_h": 4.0,
@@ -3349,7 +3355,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "kinetics_ttt_cct_solver",
  "solverFile": "python/kinetics_ttt_cct_solver.py",
- "solverSha256": "f7b553015b3351e2b22389b4f6f6e84c97c527368d4cdc934f1fc1f59a405530",
+ "solverSha256": "954fa53e7a0e2610f807d2364146e28887910a07eb945dd3a9004875d1f1467d",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -3640,6 +3646,7 @@
    "status": "unavailable",
    "validationStatus": "unvalidated",
    "validityDomain": {
+    "grainSize": null,
     "source": "M. Li (1996) thesis p. 86: the author 'has not thoroughly tested the application range' and believes the model valid 'at least within the same range of Creusot-Loire model': 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, Cu<0.5, Mo+Ni+Cr+Mo<5 (as printed), 0.01<Al<0.05 (wt%).",
     "status": "not-applicable-alloy-class",
     "unchecked": [],

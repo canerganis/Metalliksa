@@ -130,6 +130,16 @@ GAP_LI_REASON = (
     "as in Li 1996 Eq. 3.76, at 25 C)")
 GRAIN_DEFINITION = ("priorGrainSize_um is taken as the mean planar grain diameter d; "
                     "G = -3.2877 - 6.6439 log10(sqrt(pi/4) d / mm) (ASTM E112, Collins et al. Eqs. 3-4)")
+REACTION_FRACTION_BASIS = {
+    "Ferrite": ("volume fraction of the original austenite; the reaction ends at the equilibrium ferrite amount "
+                "(thermodynamic model, not implemented), so t50_s and tFinish_s are not reported (null)"),
+    "Pearlite": "phantom (normalized) reaction fraction that goes to completion (Li 1996 p. 84)",
+    "Bainite": ("volume fraction of the austenite (Li 1996 p. 84); the model lets bainite consume all remaining "
+                "austenite (Li 1996 p. 86), incomplete-reaction effects are not modelled"),
+}
+GRAIN_NOTE = ("input bounds are a sanity limit of this implementation; the compared range is the span of "
+              "published examples reproduced in test_kinetics_li1998 (Collins 2023, Li 1996), not a "
+              "validity statement of the source")
 START_CRITERION = ("1 % reaction (X = 0.01) per phase; each phase's start curve is integrated "
                    "independently from the austenitizing temperature (no phase interaction)")
 CCR_DEFINITION = ("slowest linear cooling rate from the austenitizing temperature at which "
@@ -472,10 +482,14 @@ def _document_violations(n: Dict[str, Any], r_gas: float, out: List[str]) -> Lis
         "validationStatus": "unvalidated",
         "evidenceLevel": "screening",
         "validityDomain": {"status": "not-applicable-alloy-class" if not steel else
-                           ("outside" if violations else "inside"),
+                           ("outside" if violations else ("inside-partially-checked" if unchecked else "inside")),
                            "source": VALIDITY_SOURCE,
                            "violations": violations if steel else [],
-                           "unchecked": unchecked if steel else []},
+                           "unchecked": unchecked if steel else [],
+                           "grainSize": None if orc is None else {
+                               "astmG": round(orc.g, 3), "inputBounds_um": [1.0, 1000.0],
+                               "comparedRange_G": [5.6, 11.0],
+                               "insideComparedRange": 5.6 <= orc.g <= 11.0, "note": GRAIN_NOTE}},
     }
     li_block = model.get("li1998")
     if {k: v for k, v in model.items() if k != "li1998"} != expected_model:
@@ -486,7 +500,8 @@ def _document_violations(n: Dict[str, Any], r_gas: float, out: List[str]) -> Lis
     else:
         exp_texts = {"grainSizeDefinition": GRAIN_DEFINITION, "activationEnergy_J_mol": 115060.0,
                      "startCriterion": START_CRITERION, "criticalCoolingRateDefinition": CCR_DEFINITION,
-                     "fractionsComputed": False, "fractionsReason": FRACTIONS_REASON}
+                     "fractionsComputed": False, "fractionsReason": FRACTIONS_REASON,
+                     "reactionFractionBasis": REACTION_FRACTION_BASIS}
         for key, value in exp_texts.items():
             if not _same(li_block.get(key), value):
                 out.append(f"kineticsModel.li1998.{key} is {li_block.get(key)!r}")
@@ -521,7 +536,10 @@ def _document_violations(n: Dict[str, Any], r_gas: float, out: List[str]) -> Lis
                         not _close(p["drivingForce_DeltaT_C"], e["drivingForce_DeltaT_C"], 0.005):
                     out.append(f"{tag}: temperature {p['temperature_C']!r} vs oracle {e['temperature_C']!r}")
                 for key in ("tStart_s", "t50_s", "tFinish_s"):
-                    if not _rel_close(p[key], e[key], TOL_REL_TIME):
+                    if e[key] is None:
+                        if p[key] is not None:
+                            out.append(f"{tag}.{key} must be null (ferrite: equilibrium-capped fraction)")
+                    elif not _rel_close(p[key], e[key], TOL_REL_TIME):
                         out.append(f"{tag}.{key} {p[key]!r} vs oracle {e[key]!r}")
         expected_floor = {"status": ST_TTT_NO_FLOOR, "floorValue_s": None,
                           "pointCount": len(curves) if isinstance(curves, list) else None,

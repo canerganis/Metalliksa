@@ -242,6 +242,11 @@ export interface KineticsModelLike {
   note?: string | null;
   validationStatus?: string | null;
   evidenceLevel?: string | null;
+  validityDomain?: {
+    status?: string | null;
+    unchecked?: string[] | null;
+    grainSize?: { astmG?: number | null; comparedRange_G?: number[] | null; insideComparedRange?: boolean | null } | null;
+  } | null;
 }
 export interface TttIncubationFloorLike {
   status?: string | null;
@@ -260,6 +265,8 @@ export interface KineticsModelBanner {
   caution: string;
   /** "32 of 40 TTT points are on the 1 ms incubation floor" or null. */
   floorLine: string | null;
+  /** Applicability caveats of an available model: unchecked bounds, grain size outside the compared span. */
+  validityLines: string[];
 }
 
 export function kineticsModelBanner(
@@ -270,11 +277,25 @@ export function kineticsModelBanner(
   const hits = floor?.floorHitCount;
   const count = floor?.pointCount;
   const labels = [model?.evidenceLevel, model?.validationStatus].filter((v): v is string => typeof v === "string" && !!v);
+  const domain = model?.validityDomain;
+  const validityLines: string[] = [];
+  if (available && domain) {
+    if (domain.status === "inside-partially-checked") {
+      for (const u of domain.unchecked ?? []) validityLines.push(`Validity range only partially checked: ${sentence(u)}`);
+    }
+    const g = domain.grainSize;
+    if (g && g.insideComparedRange === false && finite(g.astmG) && Array.isArray(g.comparedRange_G)) {
+      validityLines.push(
+        `Grain size ASTM G ${g.astmG} is outside the span of the published comparisons (G ${g.comparedRange_G.join("-")}).`
+      );
+    }
+  }
   return {
     available,
     headline: available ? `Li et al. (1998) TTT/CCT model${labels.length ? ` (${labels.join(", ")})` : ""}.` : "",
     reason: available ? "" : sentence(model?.reason || "Kinetics model unavailable"),
     caution: typeof model?.note === "string" ? model.note : "",
+    validityLines,
     floorLine:
       finite(hits) && finite(count) && hits > 0
         ? `${hits} of ${count} TTT points are on the ${floor?.floorValue_s ?? 0.001} s incubation floor (floorHit): ` +

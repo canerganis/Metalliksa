@@ -60,6 +60,11 @@ class KineticsContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.T
             self.assertEqual(result["inputParameters"]["priorGrainSize_um"], -5.0)
         note = next(f.note for f in self.operation.input if f.key == "grainSize_um")
         self.assertIn("rejected with input_validation NON_POSITIVE (exit 2)", note)
+        self.assertIn("outside 1-1000 µm", note)
+        exit_code, result = run_script(SCRIPT, {"grainSize_um": 5e-324})  # was "math domain error" (internal)
+        self.assertEqual((exit_code, result["error"]["code"]), (2, "OUT_OF_RANGE"))
+        exit_code, result = run_script(SCRIPT, {"alloy": "Inconel 718", "coolingRate_C_s": None})
+        self.assertEqual((exit_code, result["error"]["code"]), (2, "NON_FINITE"))
         self.assertIn("Inconel 718, Ti-6Al-4V and Al 7075 it is ignored", note)
 
     def test_gap_closed_equilibrium_text_is_steel_text_only_for_the_steels(self):
