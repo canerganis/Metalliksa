@@ -52,7 +52,7 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-900 text-gray-200">
       <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
         <div>
-          <h2 className="text-lg font-bold text-white">Closed-Loop Feed-Forward Defect Mitigation Lab</h2>
+          <h2 className="text-lg font-bold text-white">Corner Power Compensation</h2>
           <p className="text-sm text-gray-400">Phase 15: Inverse Kinematic Power Compensation & 67° Interlayer Scan Rotation</p>
         </div>
         <button

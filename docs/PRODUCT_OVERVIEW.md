@@ -24,8 +24,8 @@ Bunlar mevcut kullanıcı görüşmeleriyle doğrulanmış müşteri segmentleri
 Uygulama üç bağlantılı çalışma alanı sunar:
 
 1. **LPBF Engineering:** malzeme ve proses girdileriyle mevcut termal ve analitik tarama iş akışlarını yürütür; girdileri, sonuçları ve sınırlamaları incelemeye açar.
-2. **Materials Intelligence:** malzeme verisi ve malzeme araştırma araçlarını bir araya getirir.
-3. **Evidence & Qualification:** kaynakları, incelenmiş bulguları, ölçüm kayıtlarını ve mühendislik sonuçlarını izlenebilir bir inceleme paketinde ilişkilendirir.
+2. **Materials & Characterization:** malzeme verisi ve malzeme araştırma araçlarını bir araya getirir.
+3. **Evidence & Records:** kaynakları, incelenmiş bulguları, ölçüm kayıtlarını ve mühendislik sonuçlarını izlenebilir bir inceleme paketinde ilişkilendirir.
 
 Research Hub'daki bir kaynak veya bulgu, çözücü girdisini kendiliğinden değiştirmez. Sonuçlar, kullanıldıkları girdiler ve kanıt durumlarıyla birlikte değerlendirilmelidir. Her modül aynı olgunlukta değildir; uygulamadaki Research/Preview ve kanıt etiketleri ürün kapsamının parçasıdır.
 

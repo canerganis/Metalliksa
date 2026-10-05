@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ExperimentalValidationLab } from '../src/components/ExperimentalValidationLab';
 const html = renderToStaticMarkup(<ExperimentalValidationLab />);
-assert.match(html, /LPBF Experimental Comparison/);
+assert.match(html, /Melt Pool vs Measurements/);
 assert.match(html, /Compare traceable measurements/);
 assert.match(html, /Loading experimental data.../);
 assert.doesNotMatch(html, /<input|Run Traceability Pipeline|value="1.6"/);

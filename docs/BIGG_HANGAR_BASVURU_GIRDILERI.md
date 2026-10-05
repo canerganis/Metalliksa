@@ -22,8 +22,8 @@ Bu henüz müşteri görüşmeleriyle doğrulanmış bir bulgu değildir. Başvu
 Metalliksa, bugün çalışan araştırma mühendisliği prototipi içinde üç bağlantılı çalışma alanı sunar:
 
 - **LPBF Engineering:** malzeme/proses girdileriyle kullanılabilir termal ve analitik tarama iş akışları;
-- **Materials Intelligence:** malzeme verisi ve malzeme araştırma araçları;
-- **Evidence & Qualification:** araştırma kaynakları, incelenmiş bulgular, ölçüm kayıtları ve mühendislik sonuçları için izlenebilir inceleme akışı.
+- **Materials & Characterization:** malzeme verisi ve malzeme araştırma araçları;
+- **Evidence & Records:** araştırma kaynakları, incelenmiş bulgular, ölçüm kayıtları ve mühendislik sonuçları için izlenebilir inceleme akışı.
 
 Research Hub kaynak ve bulguları modüllerle ilişkilendirebilir; bu kayıtlar çözücü girdilerini kendiliğinden değiştirmez. Amaç, analizi ve dayanaklarını birlikte inceleyebilmektir.
 

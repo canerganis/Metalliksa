@@ -1,3 +1,4 @@
+import { contractById } from '../modules/registry';
 import React, { useState } from "react";
 import { AccessibleModal } from "./AccessibleModal";
 import {
@@ -63,7 +64,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   const targets = [
     {
       id: "alloy-builder" as ModuleTargetId,
-      name: "Alloy Builder (composition editor)",
+      name: contractById("alloy-builder").label,
       category: "Composition & Specimen",
       icon: FlaskConical,
       color: "text-purple-400",
@@ -79,7 +80,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "icme-motor" as ModuleTargetId,
-      name: "Multi-Scale ICME Alloy Engine",
+      name: contractById("icme-motor").label,
       category: "Solidification & CALPHAD Microsegregation",
       icon: Cpu,
       color: "text-cyan-400",
@@ -95,7 +96,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "3d-distortion-lab" as ModuleTargetId,
-      name: "Additive LPBF Process Job",
+      name: contractById("3d-distortion-lab").label,
       category: "Laser Powder Bed Fusion",
       icon: Box,
       color: "text-cyan-300",
@@ -111,7 +112,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "phase-diagram" as ModuleTargetId,
-      name: "Fe-C Phase Diagram Explorer",
+      name: contractById("phase-diagram").label,
       category: "Equilibrium Thermodynamics",
       icon: Compass,
       color: "text-indigo-400",

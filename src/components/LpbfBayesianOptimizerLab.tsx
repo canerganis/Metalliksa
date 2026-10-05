@@ -65,7 +65,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
             <Target className="w-5 h-5 text-sky-400" />
-            Bayesian Process Window Optimization
+            Process Parameter Search
           </h2>
           <p className="text-sm text-slate-400 mt-1">
             Autonomous closed-loop search for optimal LPBF parameters balancing productivity and defect risk.

@@ -4,7 +4,7 @@ Metalliksa's product goal and current validation boundary are summarized in the 
 
 ## Product structure
 
-The application starts in **LPBF Engineering** on a new browser profile. Returning sessions restore the last module. **Materials Intelligence** contains the existing database, alloy design, CALPHAD, TTT/CCT, thermal cycle, characterization, corrosion and mechanical tools. **Evidence & Qualification** contains Research Hub, measured evidence, Digital Twin, coupon/UQ screening and export. Specialist LPBF labs remain available from the LPBF workspace.
+The application starts in **LPBF Engineering** on a new browser profile. Returning sessions restore the last module. **Materials & Characterization** contains the existing database, alloy design, CALPHAD, TTT/CCT, thermal cycle, characterization, corrosion and mechanical tools. **Evidence & Records** contains Research Hub, measured evidence, Digital Twin, coupon/UQ screening and export. Specialist LPBF labs remain available from the LPBF workspace.
 
 `src/data/workspaces.ts` owns the module registry, workspace membership, conservative maturity labels and suggested next actions. Existing module IDs and `metallix-navigate-tab` events remain supported. Routes use `#/module-id`; browser back/forward restores the selected module. LPBF stage links use `?lpbfStage=...`, and old specialist links remain supported. Unknown module hashes open LPBF safely.
 

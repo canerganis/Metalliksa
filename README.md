@@ -5,8 +5,8 @@ Metalliksa is a research engineering platform for materials engineers and resear
 ## Workspaces
 
 - **LPBF Engineering** — define a material and process context, run available thermal and build-screening workflows, and review their inputs, outputs and limitations. LPBF is the primary workflow.
-- **Materials Intelligence** — access materials-focused analysis and research tools.
-- **Evidence & Qualification** — connect reviewed sources, findings and engineering records, and export a traceable review package.
+- **Materials & Characterization** — access materials-focused analysis and research tools.
+- **Evidence & Records** — connect reviewed sources, findings and engineering records, and export a traceable review package.
 
 The Research Hub links literature metadata, reviewed numeric findings and module evidence. Adding a research reference does not silently change solver inputs or establish that a model has been validated.
 
