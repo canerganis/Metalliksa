@@ -61,10 +61,20 @@ class ElasticityContractTests(unittest.TestCase):
         self.assertEqual(out['status'], 'unavailable')
 
     def assert_output_inventory(self, output):
-        self.assertFalse(set(output) - set(self.operation.output.fields) - set(AVAILABILITY_OUTPUTS))
+        self.assertFalse(set(output) - set(self.operation.output.fields))
         for key, values in AVAILABILITY_OUTPUTS.items():
             if key in output:
                 self.assertIn(output[key], values)
+
+    def test_availability_fields_are_explicit_transport_without_evidence(self):
+        schema = self.operation.output
+        transport = dict(schema.transport_values)
+        for key in ('status', 'directionalYoungsModuliStatus'):
+            self.assertIn(key, schema.fields)
+            self.assertEqual(transport[key], ('available', 'unavailable'))
+        self.assertIsNone(schema.status_key)
+        self.assertEqual(self.contract.evidence.emits, ())
+        self.assertEqual(contract_from_dict(self.contract.to_dict()), self.contract)
 
     def test_real_custom_result_has_no_library_density_or_evidence_status(self):
         out = calculate_dft_properties({'input_mode': 'custom', 'formula': 'Ni', 'crystal_system': 'cubic',

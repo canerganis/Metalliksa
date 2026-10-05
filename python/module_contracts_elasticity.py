@@ -9,9 +9,7 @@ from module_contract import (
 )
 
 
-# Real availability values, deliberately outside the SDK evidence-status schema.
-# OutputSchema currently rejects transport values that overlap evidence vocabulary
-# ('unavailable'). Keep the gap explicit instead of relabelling them as evidence.
+# Real availability values are explicit transport, not emitted evidence statuses.
 AVAILABILITY_OUTPUTS = {
     'status': ('available', 'unavailable'),
     'directionalYoungsModuliStatus': ('available', 'unavailable'),
@@ -44,15 +42,15 @@ def build_elasticity_contract(seed) -> ModuleContract:
         undeclared_input=('custom_c_ij', 'formula', 'density', 'k_vrh', 'g_vrh',
                           'molar_mass', 'atoms_per_formula_unit'),
         # Union inventory, not required keys: unavailable results have no tensor/moduli.
-        # The two availability keys above cannot be expressed by this schema yet.
         output=OutputSchema(status_key=None,
-            fields=('success', 'engine', 'scientificModel', 'label', 'isDft', 'constantsOrigin',
+            fields=('success', 'status', 'engine', 'scientificModel', 'label', 'isDft', 'constantsOrigin',
                     'referenceStatus', 'sourceNotes', 'computeTimeMs', 'materialInfo',
                     'elasticStiffnessMatrix_Cij_GPa', 'elasticComplianceMatrix_Sij_1_over_GPa',
                     'bornStability', 'voigtReussHillModuli', 'mechanicalIntegrityIndices',
-                    'acousticAndThermalProperties', 'directionalYoungsModuli',
+                    'acousticAndThermalProperties', 'directionalYoungsModuli', 'directionalYoungsModuliStatus',
                     'directionalYoungsModuliReason', 'unavailableCode', 'reason', 'isPythonEngine'),
-            transport_values=(('referenceStatus', ('supplied-by-caller',)),)),
+            transport_values=tuple(AVAILABILITY_OUTPUTS.items()) +
+                             (('referenceStatus', ('supplied-by-caller',)),)),
     )
     return ModuleContract(
         id=seed['id'], version='0.1.0', owner=OWNER_UNASSIGNED, workspace=seed['workspace'],
@@ -63,9 +61,8 @@ def build_elasticity_contract(seed) -> ModuleContract:
         evidence=Evidence(emits=(), ceiling='screening-only', forbidden_claims=FORBIDDEN_CLAIM_KEYS,
             note='No evidence status is emitted. status and directionalYoungsModuliStatus are availability '
                  '(available/unavailable), not evidence; acousticAndThermalProperties.status is also availability. '
-                 'OutputSchema cannot encode the top-level availability keys because unavailable overlaps its '
-                 'evidence vocabulary; these keys are explicitly recorded in AVAILABILITY_OUTPUTS and notes, '
-                 'not silently treated as evidence. referenceStatus=supplied-by-caller is provenance, not '
+                 'Top-level availability keys are explicitly declared transport values with no evidence status key. '
+                 'referenceStatus=supplied-by-caller is provenance, not '
                  'measurement. Contract oracle pending; existing algebraic/regression tests do not establish '
                  'experimental validation or an applicability domain.'),
         tests=TestRefs(oracle=Oracle(status='pending'), schema='python/test_module_contract_elasticity.py',
@@ -91,7 +88,7 @@ def build_elasticity_contract(seed) -> ModuleContract:
             'Born is elastic mechanical stability, not phase stability; VRH is homogenization, not DFT. '
             'isDft is false; materialInfo phase/electronic metadata is not calculated by this P2 form.',
             'status=available/unavailable and directionalYoungsModuliStatus=available/unavailable are '
-            'omitted from OutputSchema only due to its transport/evidence vocabulary collision. The output '
+            'explicit transport values, separate from evidence. The output '
             'fields are a conditional union, not mandatory non-null outputs. unavailableCode/reason accompanies '
             'solver unavailable results (HTTP 200), without fabricated tensor/moduli. Missing density leaves '
             'acoustic values null/unavailable while directional E may remain available. Missing composition '
