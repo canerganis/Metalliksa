@@ -131,8 +131,22 @@ def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False, solver=N
             unit = _display_unit(row["old"]) if display_unit else None
             if unit is not None and abs(row["abs"]) <= unit * (1 + 1e-9):
                 continue
+        if _is_cnls_iteration_count_slip(row, solver, display_unit):
+            continue
         bad.append(row)
     return bad
+
+
+def _is_cnls_iteration_count_slip(row, solver, display_unit):
+    """The Levenberg-Marquardt iteration count of an ill-conditioned fit may differ by one between
+    LAPACK builds (the accept/stop tests act on rounding-level quantities of J^T J; see
+    test_random_starts_reach_the_same_optimum). CI on Linux hit 7 vs 6 and 6 vs 7 on a Windows
+    capture. Only the integer count, only by one, only for the cnls fitting solver (or a cross-platform
+    golden comparison); every fitted value and the termination reason must still match."""
+    if row["key"] != "iterations" or not (solver == "cnls_fitting_solver" or display_unit):
+        return False
+    old, new = row["old"], row["new"]
+    return isinstance(old, int) and isinstance(new, int) and not isinstance(old, bool) and abs(old - new) <= 1
 
 
 # Elasticity honesty lane (dft_property_calculator v4.0 -> v4.1; AUDIT-engines-nonlpbf-opus.md D7).
