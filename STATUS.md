@@ -1,3 +1,11 @@
+## Tafel test paketi ve sıfır referans ofseti — 2026-10-05
+
+- Yerel birleştirme: `6532f19`; worker `f12bc55` → `608fa09` → `55c8a2d` → `05cb2b7`. Parser ve fit açık SHE/NHE sıfır ofsetini SCE 0,241 V ile değiştirmiyor.
+- Kontroller: parser/edge/autofit 33 PASS, 0 FAIL, 1 mevcut TODO; unavailable/linear/empty-state 29 PASS; tsc ve diff kontrolü temiz. TODO ölçülmüş benchmark verisi yokluğudur.
+- İnceleme: Sol gerçek commit ve bağımsız testlerle onay; Opus sağlanan gerçek diff üzerinden onay (araçsız, tüm repo incelemesi değil). Opus önerisiyle null olmayan Ecorr koşulu eklendi ve autofit tekrar geçti.
+- Sınır: sentetik CSV başlıkları tam yerel cihaz formatı doğrulaması değildir; eski birim çıkarımı ve bilinmeyen referans için SCE varsayılanı korunuyor. Deneysel doğrulama yok, donmuş LPBF fiziği değişmedi.
+- Sıradaki: LPBF batch2 fix incelemesi ve CI eksik testleri; Elastic Constants ekranı ve kalan SDK sözleşmeleri.
+
 # Metalliksa Proje Durumu (STATUS)
 
 *Bu dosya projenin anlık durumunu, tamamlanan entegrasyonları ve sıradaki hedefleri tutar.*

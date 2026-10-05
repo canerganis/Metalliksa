@@ -3309,3 +3309,7 @@ Recorded fixed-scan widths at 20/10/5 µm: 72.46245576/74.36212556/77.70163613 �
 
 - **Kapsam:** menüden erişilemeyen ~25,8 bin satır (lab/stüdyo bileşenleri, EIS/CNLS zinciri, kök çöp betikleri, `src/physics/lpbfBuildJob.ts`) ve yalnız onlara hizmet eden testler silindi; ayrıntı `STATUS.md` "Temizlik dalgası".
 - **Etki:** Yukarıdaki eski kanıt girdilerinin (örn. Proof Entry 008 `lpbfBuildJob.ts`; `LPBFGroundTruthDataLab`, `LpbfBuildJobRail` anmaları) atıf yaptığı modüller artık depoda yoktur; o girdiler tarihsel kayıt olarak kalır, güncel kabul kanıtı sayılmaz. LPBF uygulama parmak izi değişmedi.
+
+## Tafel zero-offset software regression — 2026-10-05
+
+Revision `6532f19` integrates synthetic CSV edge tests and preserves explicit zero reference offsets in both parsing and fitting. A pre-fix SHE regression differed by exactly 0.241 V; post-fix parser/autofit checks report 33 PASS, zero FAIL and one existing measured-benchmark TODO. Related unavailable, linear-regression and empty-state checks report 29 PASS. TypeScript and diff checks pass. Sol independently reviewed code/tests; Opus reviewed the supplied committed diff without repository tools. The final added non-null Ecorr assertion passed the autofit rerun (4 PASS, 1 TODO). Synthetic fixtures and software regression do not establish experimental accuracy, native instrument-format coverage or unit-inference validity. Existing SCE defaults and legacy unit heuristics remain limitations. LPBF physics and scientific evidence statuses are unchanged.
