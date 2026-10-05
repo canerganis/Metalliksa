@@ -22,7 +22,7 @@ test('loader accepts the schema-conformant fixture and the committed record', ()
   assert.equal(doc.honesty.experimentalValidation, false);
   assert.ok(doc.rows.some((r) => Object.values(r.predictions).some((p) => !p.included && p.extentStatus !== 'computed')));
   const committed = checkedDatasetComparison(real());
-  assert.equal(committed.rows.length, 757);
+  assert.equal(committed.rows.length, committed.datasets.reduce((total, dataset) => total + dataset.rows, 0));
   assert.ok(Array.isArray(committed.datasets[0].notes));
 });
 
@@ -102,7 +102,7 @@ test('loader validates every field the view consumes, with a clear message', () 
     ['dataset rows', (d) => setPath(d, ['datasets', 0, 'rows'], 'many'), /datasets\[0\]\.rows/],
     ['dataset notes string', (d) => setPath(d, ['datasets', 0, 'notes'], 'a string'), /datasets\[0\]\.notes is not an array of strings/],
     ['dataset notes entry', (d) => setPath(d, ['datasets', 0, 'notes'], ['ok', 3]), /datasets\[0\]\.notes/],
-    ['row measured width', (d) => setPath(d, ['rows', 2, 'measured', 'width_um'], null), /rows\[2\]\.measured\.width_um/],
+    ['row measured width', (d) => setPath(d, ['rows', 2, 'measured', 'width_um'], 'unknown'), /rows\[2\]\.measured\.width_um/],
     ['row measured depth', (d) => setPath(d, ['rows', 1, 'measured', 'depth_um'], Number.NaN), /rows\[1\]\.measured\.depth_um/],
     ['row missing kernel', (d) => deletePath(d, ['rows', 3, 'predictions', 'goldak']), /rows\[3\]\.predictions has no entry for declared kernel goldak/],
     ['row extentStatus', (d) => setPath(d, ['rows', 0, 'predictions', 'goldak', 'extentStatus'], 1), /extentStatus/],
@@ -128,4 +128,21 @@ test('loader accepts a null width or depth slot', () => {
   setPath(doc, ['summary', 'rosenthal', 'conduction', 'depth'], null);
   const checked = checkedDatasetComparison(doc);
   assert.equal(checked.summary.rosenthal.conduction.width, null);
+});
+
+test('loader accepts rows with unreported measured extents', () => {
+  const doc = fixture();
+  setPath(doc, ['rows', 0, 'measured', 'width_um'], null);
+  setPath(doc, ['rows', 0, 'measured', 'depth_um'], null);
+  const checked = checkedDatasetComparison(doc);
+  assert.equal(checked.rows[0].measured.width_um, null);
+  assert.equal(checked.rows[0].measured.depth_um, null);
+});
+
+test('loader accepts compact rows with a dataset-wide excluded prediction status', () => {
+  const doc = fixture();
+  deletePath(doc, ['rows', 0, 'predictions']);
+  setPath(doc, ['rows', 0, 'predictionExclusion'], 'excluded: input unavailable');
+  const checked = checkedDatasetComparison(doc);
+  assert.equal(checked.rows[0].predictionExclusion, 'excluded: input unavailable');
 });

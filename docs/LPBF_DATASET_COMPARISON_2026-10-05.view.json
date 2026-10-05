@@ -15,7 +15,7 @@
   "note": "flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the predictions change (reviewer stub: Eagar-Tsai hofmann-0001 171.0/119.6 -> 209.2/143.6 um at effective 0.65). fallbackWarnings counts the solver's 'GPU Powder Bed Ray Tracing failed' messages (captured, not suppressed): with the pin it fires once per solver call (solverCalls), which confirms the flat-plate branch was the realized path.",
   "path": "flat-plate",
   "pinned": true,
-  "raytracerImportable": false,
+  "raytracerImportable": true,
   "raytracerModulePresent": true,
   "solverCalls": 3963
  },
@@ -91,6 +91,7 @@
  },
  "assumptions": {
   "absorptivity": "the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35), flat-plate",
+  "addedDatasetTreatment": "CMU ST has no power field; all CMU rows lack beam diameter. KU Leuven source dimensions retain unresolved units and width operator. These rows have no numeric regime classification or kernel predictions and are excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons.",
   "hatch_um": "100 (neither dataset has a hatch: single tracks; the hatch only enters the lack-of-fusion screen, not the width/depth/length extents)",
   "inclusionRule": "a row counts for statistics only when extentStatus == 'computed'",
   "layer_um": "t_powder 0 (bare plate) rows are passed with a nominal 30 um layer because the function requires a positive layer; width/depth/length do not depend on it (checked at 10/30/60 um)",
@@ -149,6 +150,60 @@
     "raw_sha256": "3211cbaa9fe29f1126ea25666cb6de902335aa4cd974dc0918d1c247a31c1e42"
    },
    "url": "https://data.mendeley.com/datasets/s9438vb5xd/1"
+  },
+  {
+   "citation": "CMU KiltHub, Ti-6Al-4V melt-pool variability, 10.1184/R1/25696293.v1.",
+   "doi": "10.1184/R1/25696293.v1",
+   "id": "cmu-ti64-st-2026",
+   "license": "CC BY 4.0",
+   "materialKey": "Ti-6Al-4V",
+   "notes": [
+    "ST source table has no power column; beam diameter is also unreported. No solver prediction is made."
+   ],
+   "rows": 216,
+   "sha256": "7f415afb20cd8e1698efcbc4948654ed4b95bb4fc1854b5c1e7f45e9874a1f90",
+   "source": {
+    "file": "STMeasurements.csv",
+    "rawSha256": "2e6db89484a91b8c8c5112bc1f68dbe7388dfddea19d92428e4ae160e0372e5c"
+   },
+   "url": "https://doi.org/10.1184/R1/25696293.v1"
+  },
+  {
+   "citation": "CMU KiltHub, Ti-6Al-4V melt-pool variability, 10.1184/R1/25696293.v1.",
+   "doi": "10.1184/R1/25696293.v1",
+   "id": "cmu-ti64-mt-2026",
+   "license": "CC BY 4.0",
+   "materialKey": "Ti-6Al-4V",
+   "notes": [
+    "Beam diameter, layer, preheat and absorptivity are unreported; no solver prediction is made."
+   ],
+   "rows": 410,
+   "sha256": "d8d318fd673c69ad250a9d44cc7b37b71d3706cde7ad93539049454aedf09c57",
+   "source": {
+    "file": "MTMeasurements.csv",
+    "rawSha256": "871a915a3850754af3174c2cd14295d3351ab745bed4f3a9a4bc31d8dd693743"
+   },
+   "url": "https://doi.org/10.1184/R1/25696293.v1"
+  },
+  {
+   "citation": "KU Leuven IN718 melt-pool measurements, Figshare, 10.6084/m9.figshare.15035706.v1.",
+   "doi": "10.6084/m9.figshare.15035706.v1",
+   "id": "ku-leuven-in718-2021",
+   "license": "CC0",
+   "materialKey": "Inconel 718",
+   "notes": [
+    "Source CSV does not state units for w exp/d exp; article describes half-width, so dimensions are retained as source values and excluded from numeric comparison until resolved.",
+    "48 numbered conditions; 38 contain both dimensions and 10 have missing dimensions.",
+    "Condition means, not individual cross-sections; source sample counts vary.",
+    "Paper reports 37.5 um spot and 60 um powder layer; preheat and measured absorptivity are not reported."
+   ],
+   "rows": 48,
+   "sha256": "d8731ecc5cd027e697e4fbd7f9dabb634c197f0325f4282eb3c86ce9ff9d512b",
+   "source": {
+    "file": "Data_Inconel718.csv",
+    "rawSha256": "029f5c6992bd261891b30966d3bcc01ff327cd2cf1c7a6963e94de075766e1e5"
+   },
+   "url": "https://doi.org/10.6084/m9.figshare.15035706.v1"
   }
  ],
  "generatedAt": "2026-10-05",
@@ -164,7 +219,7 @@
   "goldak"
  ],
  "limits": [
-  "Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 757, eagar-tsai 757 of 757, goldak 743 of 757. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.",
+  "Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 1431, eagar-tsai 757 of 1431, goldak 743 of 1431. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.",
   "Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor are 'computed'), so they describe the rows it can resolve, not the regime.",
   "Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias +0.4 %, MAPE 24.7 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.",
   "The measurements carry no uncertainty model (neither dataset provides per-row measurement uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.",
@@ -174,6 +229,23 @@
   "The kernels ignore powder-layer thickness (identical predictions at 0/30/60 um; see assumptions.layer_um), so any trend with powder-layer thickness is in the measurements only.",
   "Absorption path: flat-plate absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35); the GPU powder ray tracer was not used; with the ray tracer the predictions change.",
   "The reference-transient block depends on wall-clock budgets (total and per case): on a slower host rows can become 'not-run (budget)'. --reuse-reference copies the block of an earlier record instead."
+ ],
+ "predictionExclusions": [
+  {
+   "count": 410,
+   "regime": "unclassified-missing-process-input",
+   "status": "excluded: beam diameter not reported"
+  },
+  {
+   "count": 216,
+   "regime": "unclassified-missing-process-input",
+   "status": "excluded: power not reported"
+  },
+  {
+   "count": 48,
+   "regime": "unclassified-source-dimensions-unresolved",
+   "status": "excluded: source width/depth units and width operator unresolved"
+  }
  ],
  "quick": false,
  "referenceTransient": {
@@ -187,7 +259,7 @@
   "reusedFrom": {
    "hashOf": "LF-normalised bytes of the source record",
    "note": "block copied, not re-run: it depends on wall-clock budgets",
-   "sha256": "28f10da131bbdf8e2f3669150e8b195ef4e0f8d4d89f15a323252c98e92020a4"
+   "sha256": "a47f3c443433f212d63d2605568694e12a002732434a2d87513c0b983a4522b5"
   },
   "selection": "Hofmann rows with t_powder = 0 (bare plate) and P <= 100 W (26 rows); all other rows are not run with the reference transient.",
   "settings": {
@@ -210,7 +282,7 @@
    "keyholeEnthalpy": 30.0,
    "transitionEnthalpy": 15.0
   },
-  "rule": "Screening classifier, not the papers' regime definition. Inputs: normalised enthalpy dH/h_s = eta*P / (rho*cp_s*max(50, T_liq-T0)*sqrt(pi*alpha_s*v*r^3)) (same form as lpbf_thermal_solver.py, flat-plate absorptivity_IR of the material authority, solid k/cp, r = d/2) and the dataset's own balling flag. balling == 1 -> 'balling-flagged' (Hofmann only); otherwise dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 30 -> 'transition', >= 30 -> 'keyhole'. Measured D/W is recorded next to the label but not used for it."
+  "rule": "Screening classifier, not the papers' regime definition. Inputs: normalised enthalpy dH/h_s = eta*P / (rho*cp_s*max(50, T_liq-T0)*sqrt(pi*alpha_s*v*r^3)) (same form as lpbf_thermal_solver.py, flat-plate absorptivity_IR of the material authority, solid k/cp, r = d/2) and the dataset's own balling flag. balling == 1 -> 'balling-flagged' (Hofmann only); otherwise dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 30 -> 'transition', >= 30 -> 'keyhole'. Measured D/W is recorded next to the label but not used for it. Added datasets without a reported beam diameter (CMU) or with unresolved measured dimension units/operator (KU Leuven) are labeled unclassified and excluded from kernel predictions; no regime label is inferred for them."
  },
  "rows": [
   {
@@ -37248,7 +37320,7 @@
      "withinFactor2": 0.9141
     },
     "n": 757,
-    "nExcluded": 0,
+    "nExcluded": 674,
     "width": {
      "bias_pct": -10.2125,
      "bias_pct_ci95": [
@@ -37320,7 +37392,7 @@
      "withinFactor2": 0.9114
     },
     "n": 519,
-    "nExcluded": 238,
+    "nExcluded": 912,
     "width": {
      "bias_pct": -8.3562,
      "bias_pct_ci95": [
@@ -37445,6 +37517,18 @@
      "within30pct": 0.9223,
      "withinFactor2": 1.0
     }
+   },
+   "unclassified-missing-process-input": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 626,
+    "width": null
+   },
+   "unclassified-source-dimensions-unresolved": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 48,
+    "width": null
    }
   },
   "goldak": {
@@ -37466,7 +37550,7 @@
      "withinFactor2": 0.9058
     },
     "n": 743,
-    "nExcluded": 14,
+    "nExcluded": 688,
     "width": {
      "bias_pct": -17.4463,
      "bias_pct_ci95": [
@@ -37538,7 +37622,7 @@
      "withinFactor2": 0.9094
     },
     "n": 519,
-    "nExcluded": 238,
+    "nExcluded": 912,
     "width": {
      "bias_pct": -12.5858,
      "bias_pct_ci95": [
@@ -37663,6 +37747,18 @@
      "within30pct": 0.8495,
      "withinFactor2": 0.9951
     }
+   },
+   "unclassified-missing-process-input": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 626,
+    "width": null
+   },
+   "unclassified-source-dimensions-unresolved": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 48,
+    "width": null
    }
   },
   "rosenthal": {
@@ -37684,7 +37780,7 @@
      "withinFactor2": 0.8593
     },
     "n": 519,
-    "nExcluded": 238,
+    "nExcluded": 912,
     "width": {
      "bias_pct": 21.4844,
      "bias_pct_ci95": [
@@ -37756,7 +37852,7 @@
      "withinFactor2": 0.8593
     },
     "n": 519,
-    "nExcluded": 238,
+    "nExcluded": 912,
     "width": {
      "bias_pct": 21.4844,
      "bias_pct_ci95": [
@@ -37881,6 +37977,18 @@
      "within30pct": 0.9609,
      "withinFactor2": 1.0
     }
+   },
+   "unclassified-missing-process-input": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 626,
+    "width": null
+   },
+   "unclassified-source-dimensions-unresolved": {
+    "depth": null,
+    "n": 0,
+    "nExcluded": 48,
+    "width": null
    }
   }
  }

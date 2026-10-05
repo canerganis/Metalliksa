@@ -219,13 +219,40 @@ class CommittedComparisonTests(unittest.TestCase):
         self.assertIs(doc["honesty"]["experimentalValidation"], False)
         self.assertIn("not validation", doc["honesty"]["statement"])
         self.assertEqual(doc["kernels"], ["rosenthal", "eagar-tsai", "goldak"])
-        self.assertEqual({d["sha256"] for d in doc["datasets"]}, {pds.HOFMANN_TABLE_SHA256, pds.TOTIS_TABLE_SHA256})
+        expected_dataset_hashes = {
+            pds.HOFMANN_TABLE_SHA256, pds.TOTIS_TABLE_SHA256,
+            pds.CMU_ST_TABLE_SHA256, pds.CMU_MT_TABLE_SHA256, pds.KU_LEUVEN_TABLE_SHA256,
+        }
+        self.assertEqual({d["sha256"] for d in doc["datasets"]}, expected_dataset_hashes)
+        by_id = {d["id"]: d for d in doc["datasets"]}
+        self.assertEqual({key: by_id[key]["rows"] for key in (
+            "cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021")},
+            ({"cmu-ti64-st-2026": 0, "cmu-ti64-mt-2026": 40, "ku-leuven-in718-2021": 40}
+             if doc["quick"] else
+             {"cmu-ti64-st-2026": 216, "cmu-ti64-mt-2026": 410, "ku-leuven-in718-2021": 48}))
         if not doc["quick"]:
-            self.assertEqual(len(doc["rows"]), 757)
+            self.assertEqual(len(doc["rows"]), 1431)
+            self.assertEqual({d["id"] for d in doc["datasets"]}, {
+                "hofmann-316l-2026", "totis-ti64-2021", "cmu-ti64-st-2026",
+                "cmu-ti64-mt-2026", "ku-leuven-in718-2021"})
         for r in doc["rows"]:
             for k in doc["kernels"]:
                 p = r["predictions"][k]
                 self.assertEqual(p["included"], p["extentStatus"] == "computed")
+        excluded_source_rows = [r for r in doc["rows"] if r["dataset"].startswith(("cmu-ti64-", "ku-leuven-"))]
+        self.assertTrue(all(not r["predictions"][k]["included"]
+                            for r in excluded_source_rows for k in doc["kernels"]))
+        expected_source_rows = (("cmu-ti64-st-2026", 0), ("cmu-ti64-mt-2026", 40),
+                                ("ku-leuven-in718-2021", 40)) if doc["quick"] else (
+                                ("cmu-ti64-st-2026", 216), ("cmu-ti64-mt-2026", 410),
+                                ("ku-leuven-in718-2021", 48))
+        for dataset_id, count in expected_source_rows:
+            self.assertEqual(sum(r["dataset"] == dataset_id for r in excluded_source_rows), count)
+            for kernel in doc["kernels"]:
+                cell = doc["breakdowns"]["byDataset"][dataset_id][kernel]["all"]
+                self.assertEqual((cell["n"], cell["nExcluded"]), (0, count))
+                self.assertIsNone(cell["width"])
+                self.assertIsNone(cell["depth"])
         self.assertEqual(doc["absorptivitySensitivity"]["values"], [0.3, 0.4, 0.5, 0.6])
         ab = doc["absorption"]
         self.assertEqual((ab["path"], ab["pinned"]), ("flat-plate", True))
@@ -251,7 +278,16 @@ class CommittedComparisonTests(unittest.TestCase):
         self.assertEqual(view["referenceTransient"]["counts"], doc["referenceTransient"]["counts"])
         for k in doc:
             if k not in ("breakdowns", "referenceTransient"):
-                self.assertEqual(view[k], doc[k], k)
+                if k != "rows":
+                    self.assertEqual(view[k], doc[k], k)
+        compact_datasets = {"cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021"}
+        compact_count = sum(row["dataset"] in compact_datasets for row in doc["rows"])
+        self.assertEqual(len(view["rows"]), len(doc["rows"]) - compact_count)
+        self.assertFalse(any(row["dataset"] in compact_datasets for row in view["rows"]))
+        self.assertEqual(sum(item["count"] for item in view["predictionExclusions"]), compact_count)
+        for row in view["rows"]:
+            source = next(item for item in doc["rows"] if item["dataset"] == row["dataset"] and item["rowId"] == row["rowId"])
+            self.assertEqual(row, source)
 
 
 if __name__ == "__main__":

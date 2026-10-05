@@ -431,7 +431,13 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
 
     h = pd.load_hofmann_316l()
     t = pd.load_totis_ti64()
+    cmu = pd.load_cmu_ti64()
+    kl = pd.load_ku_leuven_in718()
     data_rows = h["rows"][:40] + t["rows"][:40] if quick else h["rows"] + t["rows"]
+    extra_rows = cmu["rows"] + kl["rows"]
+    if quick:
+        extra_rows = [r for dataset_id in ("cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021")
+                      for r in [x for x in extra_rows if x["dataset"] == dataset_id][:40]]
 
     for r in data_rows:
         r["regime"] = pd.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
@@ -457,6 +463,27 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
                        "beamDiameter_um": r["beamDiameter_um"], "layer_um": r["layer_um"],
                        "preheat_C": r["preheat_C"]},
             "measured": measured, "regime": r["regime"], "predictions": p})
+
+    # Preserve the newly added source rows without fabricating missing process inputs or resolving
+    # KU Leuven's unresolved width/depth units and half-width operator. These rows are explicitly excluded.
+    for r in extra_rows:
+        missing = ("power" if r.get("power_W") is None else None) or ("beam diameter" if r.get("beamDiameter_um") is None else None)
+        if str(r["dataset"]).startswith("ku-leuven"):
+            exclusion = "excluded: source width/depth units and width operator unresolved"
+            measured = {"width_um": None, "depth_um": None}
+            regime = {"label": "unclassified-source-dimensions-unresolved", "normalizedEnthalpy": None}
+        else:
+            exclusion = f"excluded: {missing} not reported" if missing else "excluded: beam diameter not reported"
+            measured = {"width_um": r["width_um"], "depth_um": r["depth_um"]}
+            regime = {"label": "unclassified-missing-process-input", "normalizedEnthalpy": None}
+        predictions = {k: {"width_um": None, "depth_um": None, "length_um": None,
+                           "extentStatus": exclusion, "extentNote": exclusion, "included": False}
+                       for k in KERNELS}
+        inputs = {"material": r["material"], "power_W": r.get("power_W"), "speed_mm_s": r["speed_mm_s"],
+                  "beamDiameter_um": r.get("beamDiameter_um"), "layer_um": r.get("layer_um"),
+                  "preheat_C": r.get("preheat_C")}
+        out_rows.append({"dataset": r["dataset"], "rowId": r["rowId"], "inputs": inputs,
+                         "measured": measured, "regime": regime, "predictions": predictions})
 
     summary = summarize(out_rows, with_ci=True)
     add_common_cells(summary, out_rows, with_ci=True)
@@ -553,6 +580,36 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
                     "measuredVsEstimated": "measured: dataset widths/depths; estimated: all material laws and the "
                                            "absorptivity; computed: kernel outputs"},
     }
+    # Dataset catalog is additive: existing IDs and keys stay stable for the TypeScript consumer.
+    extra_catalog = []
+    for dataset_id, filename, digest, count, note in (
+        ("cmu-ti64-st-2026", "STMeasurements.csv", pd.CMU_ST_TABLE_SHA256, 216,
+         "ST source table has no power column; beam diameter is also unreported. No solver prediction is made."),
+        ("cmu-ti64-mt-2026", "MTMeasurements.csv", pd.CMU_MT_TABLE_SHA256, 410,
+         "Beam diameter, layer, preheat and absorptivity are unreported; no solver prediction is made."),
+    ):
+        extra_catalog.append({"id": dataset_id, "doi": pd.CMU_DOI, "license": "CC BY 4.0",
+                              "url": "https://doi.org/" + pd.CMU_DOI, "sha256": digest,
+                              "rows": sum(1 for r in out_rows if r["dataset"] == dataset_id),
+                              "citation": pd.CMU_PROVENANCE["citation"], "notes": [note],
+                              "source": {"file": filename, "rawSha256": pd.CMU_FILES[filename]["sha256"]},
+                              "materialKey": "Ti-6Al-4V"})
+    extra_catalog.append({"id": pd.KU_LEUVEN_PROVENANCE["id"], "doi": pd.KU_LEUVEN_PROVENANCE["doi"],
+                          "license": "CC0", "url": pd.KU_LEUVEN_PROVENANCE["url"],
+                          "sha256": pd.KU_LEUVEN_TABLE_SHA256,
+                          "rows": sum(1 for r in out_rows if r["dataset"] == pd.KU_LEUVEN_PROVENANCE["id"]),
+                          "citation": pd.KU_LEUVEN_PROVENANCE["citation"],
+                          "notes": pd.KU_LEUVEN_PROVENANCE["caveats"],
+                          "source": {"file": "Data_Inconel718.csv", "rawSha256": "029f5c6992bd261891b30966d3bcc01ff327cd2cf1c7a6963e94de075766e1e5"},
+                          "materialKey": "Inconel 718"})
+    doc["datasets"].extend(extra_catalog)
+    doc["regimeFilter"]["rule"] += (" Added datasets without a reported beam diameter (CMU) or with unresolved measured "
+                                      "dimension units/operator (KU Leuven) are labeled unclassified and excluded "
+                                      "from kernel predictions; no regime label is inferred for them.")
+    doc["assumptions"]["addedDatasetTreatment"] = (
+        "CMU ST has no power field; all CMU rows lack beam diameter. KU Leuven source dimensions retain unresolved "
+        "units and width operator. These rows have no numeric regime classification or kernel predictions and are "
+        "excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons.")
     if reuse_reference is not None:
         sha, norm = _lf_sha256(reuse_reference)
         src = json.loads(norm.decode("utf-8"))
@@ -617,7 +674,7 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
               f"sha256 of its LF bytes `{view_sha256}`).", ""]
     L += ["## Datasets", ""]
     for d in doc["datasets"]:
-        L.append(f"- **{d['id']}** ({d['materialKey']}): DOI {d['doi']}, {d['license']}, {d['rows']} rows used, "
+        L.append(f"- **{d['id']}** ({d['materialKey']}): DOI {d['doi']}, {d['license']}, {d['rows']} rows recorded, "
                  f"table sha256 `{d['sha256']}`. {d['citation']}")
         for n in d["notes"]:
             L.append(f"  - caveat: {n}")
@@ -698,6 +755,29 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
     return "\n".join(L).rstrip("\n") + "\n"
 
 
+def make_view_record(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Drop non-rendered analysis detail from the browser payload for excluded public rows."""
+    view = {k: v for k, v in doc.items() if k != "breakdowns"}
+    if "referenceTransient" in view:
+        view["referenceTransient"] = {k: v for k, v in view["referenceTransient"].items() if k != "rows"}
+    excluded_datasets = {"cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021"}
+    slim_rows = []
+    compact_exclusions: Dict[tuple, int] = {}
+    for row in view["rows"]:
+        if row.get("dataset") not in excluded_datasets:
+            slim_rows.append(row)
+            continue
+        status = row["predictions"]["rosenthal"]["extentStatus"]
+        key = (row["regime"]["label"], status)
+        compact_exclusions[key] = compact_exclusions.get(key, 0) + 1
+    view["rows"] = slim_rows
+    view["predictionExclusions"] = [
+        {"regime": regime, "status": status, "count": count}
+        for (regime, status), count in sorted(compact_exclusions.items())
+    ]
+    return view
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", required=True, help="output JSON path (the .md goes next to it)")
@@ -725,9 +805,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                          allow_raytracer=a.allow_raytracer,
                          reuse_reference=Path(a.reuse_reference).resolve() if a.reuse_reference else None)
     out.parent.mkdir(parents=True, exist_ok=True)
-    view = {k: v for k, v in doc.items() if k != "breakdowns"}
-    if "referenceTransient" in view:
-        view["referenceTransient"] = {k: v for k, v in view["referenceTransient"].items() if k != "rows"}
+    view = make_view_record(doc)
     view_text = json.dumps(view, sort_keys=True, indent=1, ensure_ascii=False) + "\n"
     out.write_text(json.dumps(doc, sort_keys=True, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     view_out.write_text(view_text, encoding="utf-8", newline="\n")
