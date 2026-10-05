@@ -60,6 +60,29 @@
   - *Yerine geçti (2026-10-05):* V1 kabulü kullanıcı kararıyla önce `edddf0dc…` kaydına (Faz C `1104bec`), bu düzeltilmiş-fizik güncellemesinden sonra da `11b04b8f…` parmak izine bağlandı; bkz. en üstteki "V1 kabulünün `11b04b8f…` parmak izine bağlanması" bloğu. Bu satır tarihsel kayıttır.
 - **Durumlar (değişmedi):** NIST optik residual `unavailable`/null; yakınsama `inconclusive`; deneysel doğrulama `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`).
 
+## 2026-10-05 — Kanıt kaydı: CALPHAD cache/Scheil ve Windows worker fix (`d13ff7d`)
+
+- Kaynak kapsamı: `.orchestra/HANDOFF-calphad-use.md` ve `REVIEW-calphad-opus.md` / `REVIEW-calphad-sol.md`; commits `064a1fd`–`d13ff7d`. TDB SHA-256 ile cache, pycalphad Workspace reuse, tek affinity worker ve stepwise Scheil yolu kayda geçti.
+- IPC ölçümleri önce → sıcak: AlSi10Mg+1Fe 5,04–5,69 → 1,47–1,50 s; Ni-10Al 0,71–0,75 → 0,22 s; Ti-6Al-4V 3,89–4,08 → 0,73 s. Yaklaşık hız farkları sırasıyla 3–4×, 3–4× ve 5,3×; yeni ölçümler Scheil hesabını da içeriyor.
+- Handoff doğrulamaları: Python 1.059 OK (36 atlandı), TS 1.217 / 1.214 geçti / 0 başarısız / 1 atlandı / 2 todo; gerçek daemon CALPHAD burst 12/12 HTTP 200. Windows stdin-watch fix’i kaldırılınca test 90 s’de timeout, fix ile yaklaşık 3 s.
+- Sınır: IN718, IN625 ve 316L için veritabanı yok; POSIX, Docker, gerçek hung-job recovery ve tam canlı UI akışı doğrulanmadı. Warm hız ölçümü tek makineye aittir ve ±%10 civarı oynaklık bildirilmiştir.
+- NIT: NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — Kanıt kaydı: Porcelain premium UI (`c7456f9`)
+
+- Kaynak kapsamı: `.orchestra/HANDOFF-ui-premium-opus.md`, `.orchestra/REVIEW-ui-opus.md` ve `.orchestra/REVIEW-ui-sol.md`; final fix-round `c7456f9`. Açık-gri Porcelain tema, boot/Atrium/logo ve görsel uyarı etiketi kayda geçti.
+- Headless Edge CDP, 1440×900, 10 s idle: Atrium task duration 1,97 → 0,08 s / layout 1.305 → 0; LPBF workflow 0,88 → 0,02 s / layout 1.301 → 0. Donanımlar arası CPU/batarya sonucu değildir.
+- Handoff final kapısı: TS 1.201 / 1.198 geçti / 0 başarısız / 1 atlandı / 2 todo; tsc, lint ve bundle bütçesi geçti. Bu sayılar review raporunda bağımsız yeniden çalıştırılmış sonuçlar olarak sunulmuyor.
+- `@fontsource/newsreader` 5.3.0, OFL-1.1 olarak kilitli. Artwork origin/creator/licence **UNKNOWN**; backend/online akışlar, bütün subview’lar ve düşük seviye GPU akıcılığı doğrulanmadı.
+- NIT: NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
+## 2026-10-05 — Kanıt kaydı: gerçek-worker flake düzeltmeleri (`066857b`)
+
+- Kaynak: `.orchestra/HANDOFF-flaky-sonnet.md`; commitler `f7ca49e` ve `066857b`. Prewarm PID gözlemi tekrarlı batch’e; readiness/delete/roundtrip başlangıç ve retry davranışı sınırlı beklemelere taşındı. Delete bridge/pid wait 15/10 → 90/90 s, roundtrip phase 90 → 240 s; submit timeout’ta retry edilmez ve assertion/solver semantiği değiştirilmedi.
+- Handoff koşuları: IPC Python 60 OK (11 atlandı); üç hedef dosya birlikte üç tur ve ayrı ayrı üçer tur geçti; 4 spinner altında 14/14 iki koşu, 12 spinner’da 14/14 bir koşu. Tam TS 1.217 / 1.214 geçti / 0 başarısız / 1 atlandı / 2 todo.
+- Açık başarısızlık: 24 spinner/16 çekirdekte roundtrip archive-capture RPC 20 s limitini 180 s’den uzun süre aşıyor; test başarısız kalıyor ve neden teşhis edilmedi. `actual 32 expected 0` yeniden üretilemedi.
+- NIT: NIST optical residual unavailable/null; convergence inconclusive; experimental validation unvalidated: experimentalValidation=false, opticalOperatorMatched=false.
+
 ## 2026-10-05 — Kanıt kaydı: Li (1998) çelik TTT/CCT kinetiği (`ea3e18a`; birleşik hat `0909274`)
 
 - Li (1998) düşük alaşımlı çelik modeli şablonun yerini aldı; AISI 4140 TTT noktaları 40→118 oldu, CCR 45→19,81 °C/s değişti. Ferrit t50/tFinish artık null; faz fraksiyonu ve sertlik üretilmiyor.
