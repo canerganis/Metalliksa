@@ -203,7 +203,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "materials-project": (
         _op("dft-properties", "POST", "/api/python/dft-properties",
             _py("dft_property_calculator", _PHYSICS_TIMEOUT_MS, warm=True)),
-        _op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),
     ),
     "calculators": (
         _local("engineering-correlations", "unit-aware engineering correlations are evaluated in the browser."),
@@ -226,9 +225,10 @@ LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
         "so no operation is bound.",
     ),
     "materials-project": (
-        "The canned GET /api/materials-project/search route and its server catalog were deleted on "
-        "2026-10-04. The view still lists a hard-coded client catalog (CURATED_MP_PRESETS) that feeds the "
-        "elasticity tool; replacing it with a user C_ij input form is an open follow-up.",
+        "Elastic Constants retains the materials-project identity. The user explicitly submits custom "
+        "C_ij or isotropic K/G; optional density and composition are not taken from the shared specimen "
+        "or the legacy library. No catalog, consultation or Materials Project request is dispatched. "
+        "Missing derived properties remain unavailable; input edits invalidate pending responses.",
     ),
     "experimental-data": (_EVIDENCE_READS_ONLY,),
     "traceability": (_EVIDENCE_READS_ONLY,),
