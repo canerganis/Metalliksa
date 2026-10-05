@@ -54,6 +54,45 @@ import {
   parseConsultationResponse,
 } from "../utils/calphadConsultation";
 
+export const CALPHADConsultationFeedback: React.FC<{
+  report: string | null;
+  error: string | null;
+  onDismiss: () => void;
+}> = ({ report, error, onDismiss }) => {
+  if (!report && !error) return null;
+
+  return (
+    <div className="bg-slate-900/90 border border-violet-500/40 rounded-2xl p-4 shadow-xl space-y-2">
+      {report && (
+        <>
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-violet-400" />
+              <span className="text-xs font-bold text-violet-300">
+                CALPHAD Thermodynamic Specialist Consultation
+              </span>
+            </div>
+            <button
+              onClick={onDismiss}
+              className="text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+          <div className="prose prose-invert prose-xs max-w-none text-slate-300 text-xs leading-relaxed space-y-2 whitespace-pre-line">
+            {report}
+          </div>
+        </>
+      )}
+      {error && (
+        <p role="status" aria-live="polite" aria-atomic="true" className="text-sm text-amber-200">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const CALPHADThermodynamicsLab: React.FC = () => {
   // Selected binary system
   const [selectedSystemId, setSelectedSystemId] = useState<string>("fe-c");
@@ -272,11 +311,13 @@ Provide a deep physical breakdown:
             <button
               id="calphad-ai-consult-btn"
               onClick={runAiCalphadConsult}
+              aria-label={`AI consultation for the selected ${currentSystem.elementA}-${currentSystem.elementB} binary system`}
+              title={`Consults the selected ${currentSystem.elementA}-${currentSystem.elementB} binary system, including in multi-component mode.`}
               disabled={isAiConsulting}
               className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs flex items-center gap-2 transition-all motion-reduce:transition-none shadow-lg shadow-violet-500/20 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{isAiConsulting ? "Computing..." : "AI CALPHAD Diagnosis"}</span>
+              <span>{isAiConsulting ? "Consulting..." : `AI Consult · ${currentSystem.elementA}–${currentSystem.elementB} Binary`}</span>
             </button>
           </div>
         </div>
@@ -903,32 +944,14 @@ Provide a deep physical breakdown:
             )}
           </div>
 
-          {/* AI Metallurgical & CALPHAD Diagnosis Report Card */}
-          {(aiReport || aiConsultationError) && (
-            <div className="bg-slate-900/90 border border-violet-500/40 rounded-2xl p-4 shadow-xl space-y-2">
-              {aiReport && <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-violet-400" />
-                  <span className="text-xs font-bold text-violet-300">
-                    CALPHAD Thermodynamic Specialist Consultation
-                  </span>
-                </div>
-                <button
-                  onClick={() => setAiReport(null)}
-                  className="text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
-                >
-                  Dismiss
-                </button>
-              </div>}
-              {aiReport && <div className="prose prose-invert prose-xs max-w-none text-slate-300 text-xs leading-relaxed space-y-2 whitespace-pre-line">
-                {aiReport}
-              </div>}
-              {aiConsultationError && <p role="status" aria-live="polite" aria-atomic="true" className="text-sm text-amber-200">{aiConsultationError}</p>}
-            </div>
-          )}
         </div>
       </div>
       )}
+      <CALPHADConsultationFeedback
+        report={aiReport}
+        error={aiConsultationError}
+        onDismiss={() => setAiReport(null)}
+      />
     </div>
   );
 };

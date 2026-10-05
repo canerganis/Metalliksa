@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { CALPHADConsultationFeedback, CALPHADThermodynamicsLab } from "../src/components/CALPHADThermodynamicsLab.tsx";
 import {
   ConsultationResponseError,
   LatestConsultationRequest,
@@ -37,4 +40,21 @@ test("only the latest consultation request may publish a result", async () => {
   requests.invalidate();
   await publish(beforeEdit, "edited inputs stale response");
   assert.deepEqual(visible, ["current inputs"]);
+});
+
+test("the default multi-component view labels the AI action as binary-scoped", () => {
+  const markup = renderToStaticMarkup(React.createElement(CALPHADThermodynamicsLab));
+  assert.match(markup, /aria-label="AI consultation for the selected Fe-C binary system"/);
+  assert.match(markup, /AI Consult · Fe–C Binary/);
+});
+
+test("consultation HTTP errors render as a live status in the shared feedback panel", () => {
+  const markup = renderToStaticMarkup(React.createElement(CALPHADConsultationFeedback, {
+    report: null,
+    error: "Consultation request failed (HTTP 503).",
+    onDismiss: () => {},
+  }));
+
+  assert.match(markup, /role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(markup, /Consultation request failed \(HTTP 503\)\./);
 });
