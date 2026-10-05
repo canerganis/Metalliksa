@@ -68,12 +68,12 @@ flowchart LR
     I["Inputs and material identity"] --> S["Solver or estimate"]
     S --> C{"Checked against"}
     C -->|"nothing yet"| U["Unresolved or Screening only"]
-    C -->|"literature value"| L["Literature estimate"]
-    C -->|"public dataset"| V["Calibrated or validated simulation"]
-    C -->|"your measurement"| M["Measured"]
+    C -->|"a published value"| L["Literature estimate"]
+    C -->|"a documented calibration or validation against data"| V["Calibrated or validated simulation"]
+    C -->|"your own measurement"| M["Measured"]
 ```
 
-A result can only be labelled as strongly as the evidence behind it. Software checks passing never promotes a label.
+A result can only be labelled as strongly as the evidence behind it. Passing software checks, or merely comparing against a dataset, never promotes a label by itself.
 
 ## What you can do with it
 
