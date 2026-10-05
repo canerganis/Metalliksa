@@ -55,14 +55,14 @@ def build_calphad_contract(seed) -> ModuleContract:
                     "Direct solver default is 500 °C. The mounted UI always sends a base-element-selected "
                     "window: Al 400–750 °C, Mg 350–700 °C, Ti 600–1750 °C, otherwise 500–1550 °C; "
                     "the UI also sends its step (10 °C for Al/Mg, otherwise 25 °C). No solver hard bound "
-                    "is declared for these request values.", minimum=350.0, maximum=600.0),
+                    "is declared for these request values."),
             _number("tMax", "Maximum temperature", "degC", "temperature", 1450.0,
                     "Direct solver default is 1450 °C. UI-selected windows are documented on tMin; "
-                    "they depend on the largest alloy element.", minimum=700.0, maximum=1750.0),
+                    "they depend on the largest alloy element."),
             _number("tStep", "Temperature grid step", "degC", "temperature-step", 20.0,
                     "Direct solver default is 20 °C. UI passes 10 or 25 °C from the selected base-element "
-                    "window. The Python solver caps the actual uniform grid at 80 points.",
-                    minimum=10.0, maximum=25.0),
+                    "window. The Python solver caps the actual uniform grid at 80 points; these UI values "
+                    "are not backend bounds."),
             _selector("unit", "Composition unit", ("wt_pct", "at_pct"), "wt_pct",
                       "UI sends wt_pct for the live specimen; the authority also accepts at_pct."),
             _boolean("adaptiveGrid", "Adaptive grid", False,
@@ -70,8 +70,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             _boolean("boundaryRefinement", "Boundary refinement", True,
                      "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus."),
             _number("minRefineStep", "Boundary tolerance", "degC", "temperature-tolerance", 0.5,
-                    "UI selector values are 0.2, 0.5, 1.0, and 2.0 °C; solver floors the internal "
-                    "refinement tolerance at 0.05 °C.", minimum=0.2, maximum=2.0),
+                    "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 °C. Direct Python "
+                    "requests are not restricted to those options; the solver uses max(0.05 °C, requested "
+                    "value) as its refinement tolerance and declares no upper bound."),
         ),
         undeclared_input=("name", "elements", "databaseId", "customTdbText", "supersedeKey"),
         output=OutputSchema(
@@ -102,11 +103,14 @@ def build_calphad_contract(seed) -> ModuleContract:
                      "This operation is selected only when the user explicitly turns the Python engine off; "
                      "Python request failure does not enter this path."),
             _number("tMin", "Minimum temperature", "degC", "temperature", 500.0,
-                    "Passed from the same base-element window as the Python request.", minimum=350.0, maximum=600.0),
+                    "Passed from the same base-element window as the Python request; that selection is not a "
+                    "bound on the browser solver input."),
             _number("tMax", "Maximum temperature", "degC", "temperature", 1550.0,
-                    "Passed from the same base-element window as the Python request.", minimum=700.0, maximum=1750.0),
+                    "Passed from the same base-element window as the Python request; that selection is not a "
+                    "bound on the browser solver input."),
             _number("tStep", "Temperature grid step", "degC", "temperature-step", 25.0,
-                    "Passed from the same base-element window as the Python request.", minimum=10.0, maximum=25.0),
+                    "Passed from the same base-element window as the Python request; that selection is not a "
+                    "bound on the browser solver input."),
         ),
         undeclared_input=("alloy", "selectedTdbIndex", "activeTdbContent"),
         output=OutputSchema(fields=("engine", "isPythonEngine", "isEmpirical", "thermodynamicModel",
@@ -184,12 +188,30 @@ def build_calphad_contract(seed) -> ModuleContract:
             "on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
         ),
         source_refs=(
-            "python/module_registry.py", "src/App.tsx", "src/modules/views.ts",
-            "src/components/PhaseDiagramViewer.tsx", "src/components/CALPHADThermodynamicsLab.tsx",
-            "src/components/CALPHADMultiComponentStudio.tsx", "src/services/pythonComputationService.ts",
-            "src/utils/calphadResultDisplay.ts", "routes/physics.ts", "routes/copilot.ts",
-            "server/openaiService.ts", "python/calphad_solver.py",
-            "src/physics/calphadMultiComponentSolver.ts", "src/physics/calphadGibbsEngine.ts",
+            'python/module_registry.py:187-191#"phase-diagram": (',
+            "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
+            "src/modules/views.ts:23-23#'phase-diagram': lazy(",
+            "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
+            "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
+            "src/components/CALPHADThermodynamicsLab.tsx:178-184#} catch (err: any) {",
+            "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
+            "src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases",
+            "src/services/pythonComputationService.ts::PythonComputationService.solveCalphadEquilibrium",
+            "src/utils/calphadResultDisplay.ts::calphadTemperatureWindow",
+            "routes/physics.ts:58-63#physicsRouter.post([\"/api/python/calphad-minimize\"",
+            "routes/physics.ts:62-63#physicsRouter.get([\"/api/python/calphad-databases\"",
+            "routes/copilot.ts:23-52#copilotRouter.post([\"/api/metallurgy/consult\"",
+            "server/openaiService.ts::generateGpt6Response",
+            "python/calphad_solver.py::list_available_databases",
+            "python/calphad_solver.py::normalize_composition",
+            "python/calphad_solver.py::unavailable_result",
+            "python/calphad_solver.py::resolve_database",
+            "python/calphad_solver.py::solve_pycalphad_equilibrium",
+            "python/calphad_solver.py::compute_multi_component_equilibrium",
+            "python/calphad_solver.py::main",
+            "src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium",
+            "src/physics/calphadGibbsEngine.ts::calculatePhaseEquilibrium",
+            "src/physics/calphadGibbsEngine.ts::simulateScheilSolidification",
             "python/test_module_contract_calphad.py",
         ),
         seed_derived=("label", "description", "next", "maturity"),

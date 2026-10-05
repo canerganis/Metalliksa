@@ -42,7 +42,7 @@ class CalphadContractTests(unittest.TestCase):
         self.assertEqual(self.contract.lifecycle.background_work, "none")
         self.assertEqual(set(self.contract.lifecycle.resources), {"fetch", "interval"})
 
-    def test_dynamic_payloads_and_actual_temperature_window_defaults(self):
+    def test_dynamic_payloads_and_temperature_window_is_not_a_backend_bound(self):
         op = self.operations["calphad-minimize"]
         self.assertEqual({field.key for field in op.input}, {
             "tMin", "tMax", "tStep", "unit", "adaptiveGrid", "boundaryRefinement", "minRefineStep",
@@ -53,18 +53,25 @@ class CalphadContractTests(unittest.TestCase):
                          (500.0, 1450.0, 20.0))
         self.assertEqual((fields["tMin"].min, fields["tMin"].max,
                           fields["tMax"].min, fields["tMax"].max,
-                          fields["tStep"].min, fields["tStep"].max),
-                         (350.0, 600.0, 700.0, 1750.0, 10.0, 25.0))
+                          fields["tStep"].min, fields["tStep"].max,
+                          fields["minRefineStep"].min, fields["minRefineStep"].max),
+                         (None, None, None, None, None, None, None, None))
         self.assertEqual((fields["adaptiveGrid"].value_type, fields["adaptiveGrid"].default), ("boolean", False))
         self.assertEqual((fields["boundaryRefinement"].value_type, fields["boundaryRefinement"].default),
                          ("boolean", True))
+        # These are valid direct solver inputs despite lying outside the UI's
+        # element-selected windows and tolerance dropdown options.
         self.assertEqual(op.input_problems({
-            "tMin": 400.0, "tMax": 750.0, "tStep": 10.0, "unit": "wt_pct",
-            "adaptiveGrid": False, "boundaryRefinement": True, "minRefineStep": 0.2,
+            "tMin": 200.0, "tMax": 1800.0, "tStep": 5.0, "unit": "wt_pct",
+            "adaptiveGrid": False, "boundaryRefinement": True, "minRefineStep": 0.1,
         }), [])
+        self.assertIn("not restricted to those options", fields["minRefineStep"].note)
+        self.assertIn("max(0.05 °C, requested value)", fields["minRefineStep"].note)
         self.assertFalse(self.operations["client-screening"].input[0].default)
         self.assertIn("Python request failure does not enter this path",
                       self.operations["client-screening"].input[0].note)
+        self.assertTrue(all(field.min is None and field.max is None
+                            for field in self.operations["client-screening"].input[1:]))
         self.assertIn("Al 400–750 °C", " ".join(field.note for field in op.input))
 
     def test_transport_status_is_not_emitted_evidence(self):
@@ -87,7 +94,7 @@ class CalphadContractTests(unittest.TestCase):
         with patch.object(calphad_solver, "PYCALPHAD_AVAILABLE", False):
             result = calphad_solver.compute_multi_component_equilibrium(
                 name="contract availability path", elements={"Ni": 80, "Al": 20},
-                unit="wt_pct", t_min_c=500, t_max_c=1550, t_step_c=25,
+                unit="wt_pct", t_min_c=200, t_max_c=1800, t_step_c=5,
                 database_id="alni_dupin_2001",
                 adaptive_grid=False, boundary_refinement=True, min_refine_step_c=0.5,
             )
@@ -99,6 +106,8 @@ class CalphadContractTests(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["status"], "unavailable")
         self.assertEqual(result["unavailableKind"], "pycalphad-not-installed")
+        self.assertEqual(result["temperatureRangeC"], [200, 1800])
+        self.assertEqual(result["temperatureStepC"], 5)
         self.assertNotIn("equilibriumProfile", result)
         self.assertNotIn("criticalTemperatures", result)
         self.assertNotIn("evidenceStatus", result)
