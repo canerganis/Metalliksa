@@ -408,7 +408,7 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "routes/lpbfSimulation.ts:33#/api/python/lpbf-keyhole-raytracing",
                       "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
                       "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
-                      "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` / Keyhole Ray Tracing",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` /",
                   ))
 
 
@@ -456,7 +456,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "src/components/UQLab.tsx::runQMCSolver",
                       "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
                       "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
-                      "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` / Uncertainty & Coupons",
+                      "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` /",
                   ))
 
 
@@ -606,7 +606,7 @@ def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
             "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
             "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
             "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` / TTT / CCT",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` /",
         ))
 
 
@@ -691,7 +691,7 @@ def _icme_contract(row: Dict[str, str]) -> ModuleContract:
             "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
             "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
             "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` / ICME Modeling",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` /",
         ))
 
 
@@ -745,7 +745,7 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
             "routes/lpbfSimulation.ts::workerError",
             "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
             "src/services/pythonComputationService.ts::computeMurakamiFatigue",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` / Fatigue & Fracture Lab",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` /",
         ))
 
 
@@ -799,7 +799,7 @@ def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
             "routes/lpbfSimulation.ts:30#/api/python/lpbf-toolpath-kinematics",
             "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
             "src/services/pythonComputationService.ts::simulateToolpathKinematics",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` / Toolpath & Kinematics",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /",
         ))
 
 
@@ -850,7 +850,7 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
             "routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward",
             "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
             "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` / Defect Mitigation",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` /",
         ))
 
 
@@ -960,7 +960,7 @@ def _micrograph_contract(row: Dict[str, str]) -> ModuleContract:
             "src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio",
             "src/services/micrographMeasureService.ts::measureMicrograph",
             "src/utils/micrographInput.ts::buildMeasureRequest",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` / Micrograph Analysis",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:64#`micrograph` /",
         ),
     )
 

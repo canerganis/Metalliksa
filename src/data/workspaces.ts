@@ -6,9 +6,9 @@ export type ModuleScope = 'Production' | 'Research' | 'Preview' | 'Unresolved';
 export const MATURITY_BADGE_TITLE = 'Module maturity; this is not a validation claim for any result.';
 export type WorkspaceId = 'lpbf' | 'materials' | 'evidence';
 export const WORKSPACES = [
-  { id: 'lpbf', label: 'LPBF Engineering', description: 'Process setup through thermal research, build screening and qualification evidence.', defaultModule: '3d-distortion-lab' },
-  { id: 'materials', label: 'Materials Intelligence', description: 'Characterization, thermodynamics and material models supporting engineering decisions.', defaultModule: 'database' },
-  { id: 'evidence', label: 'Evidence & Qualification', description: 'Sources, experimental records, uncertainty and traceable engineering reports.', defaultModule: 'research-hub' },
+  { id: 'lpbf', label: 'LPBF Engineering', description: 'Process setup, thermal simulation, build screening and specialist process labs.', defaultModule: '3d-distortion-lab' },
+  { id: 'materials', label: 'Materials & Characterization', description: 'Material data, thermodynamics, property estimates, characterization and corrosion tools.', defaultModule: 'database' },
+  { id: 'evidence', label: 'Evidence & Records', description: 'Sources, measured findings, specimen records, coupon statistics and export.', defaultModule: 'research-hub' },
 ] as const;
 
 export type ModuleId = ListedModuleId;

@@ -2,9 +2,9 @@
   {
     "id": "3d-distortion-lab",
     "workspace": "lpbf",
-    "label": "LPBF workflow",
+    "label": "LPBF Workflow",
     "scope": "Research",
-    "description": "One material and process vector; explicit simulation and screening scope.",
+    "description": "Material and process setup, transient thermal simulation, build screening and measurement comparison for one process vector.",
     "next": "lpbf-optimizer",
     "viewComponent": "src/components/LpbfEngineeringWorkspace.tsx",
     "viewExport": "LpbfEngineeringWorkspace"
@@ -12,9 +12,9 @@
   {
     "id": "lpbf-optimizer",
     "workspace": "lpbf",
-    "label": "Bayesian Optimization",
+    "label": "Process Parameter Search",
     "scope": "Preview",
-    "description": "Autonomous closed-loop search for optimal parameters balancing productivity and defect risk.",
+    "description": "Gaussian-process search over power, speed, hatch and layer, scored by the screening build verdict times scan rate; a suggestion, not a qualified window.",
     "next": "solidification-microstructure",
     "viewComponent": "src/components/LpbfBayesianOptimizerLab.tsx",
     "viewExport": "LpbfBayesianOptimizerLab"
@@ -22,9 +22,9 @@
   {
     "id": "solidification-microstructure",
     "workspace": "lpbf",
-    "label": "Microstructure Lab",
+    "label": "Solidification Map (G/R)",
     "scope": "Research",
-    "description": "Screening-field solidification G/R (Python lpbf_thermal_solver, Rosenthal/ET/Goldak conduction fields) with Hunt G/R morphology, Hunt–Lu PDAS and Kirkwood SDAS; status-labelled screening, not in-situ tracking, not validated",
+    "description": "Screening G/R, cooling rate, dendrite arm spacing (Hunt–Lu, Kirkwood) and morphology tendency from the Python conduction field; not validated.",
     "next": "experimental-validation",
     "viewComponent": "src/components/SolidificationMicrostructureLab.tsx",
     "viewExport": "SolidificationMicrostructureLab"
@@ -32,9 +32,9 @@
   {
     "id": "experimental-validation",
     "workspace": "lpbf",
-    "label": "EBSD/CT Validation",
+    "label": "Melt Pool vs Measurements",
     "scope": "Research",
-    "description": "Phase 10: Experimental EBSD/CT metric comparison and Traceability Pipeline.",
+    "description": "Plots measured single-track melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
     "next": "toolpath-studio",
     "viewComponent": "src/components/ExperimentalValidationLab.tsx",
     "viewExport": "ExperimentalValidationLab"
@@ -42,9 +42,9 @@
   {
     "id": "toolpath-studio",
     "workspace": "lpbf",
-    "label": "Toolpath & Kinematics",
+    "label": "Scan Path Kinematics",
     "scope": "Research",
-    "description": "Phase 12: Galvanometer mirror acceleration, G-Code/CLI delays and local thermal hotspot detection.",
+    "description": "Parses G-code/CLI scan vectors; galvanometer acceleration, mark/jump delays and local line energy; delays are not machine-calibrated.",
     "next": "murakami-fatigue",
     "viewComponent": "src/components/LpbfToolpathStudioLab.tsx",
     "viewExport": "LpbfToolpathStudioLab"
@@ -52,9 +52,9 @@
   {
     "id": "murakami-fatigue",
     "workspace": "lpbf",
-    "label": "Fatigue & Fracture Lab",
+    "label": "Defect Fatigue & Crack Growth",
     "scope": "Research",
-    "description": "Phase 13: Kitagawa-Takahashi diagrams, El-Haddad small defect limits and Paris crack propagation.",
+    "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates.",
     "next": "adaptive-mitigation",
     "viewComponent": "src/components/MurakamiFatigueLab.tsx",
     "viewExport": "MurakamiFatigueLab"
@@ -62,9 +62,9 @@
   {
     "id": "adaptive-mitigation",
     "workspace": "lpbf",
-    "label": "Defect Mitigation",
+    "label": "Corner Power Compensation",
     "scope": "Research",
-    "description": "Phase 15: Inverse kinematic power compensation and 67° scan rotation for defect suppression.",
+    "description": "Open-loop feed-forward: laser power scaled down where the modelled scanner slows, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
     "next": "keyhole-raytracing",
     "viewComponent": "src/components/LpbfAdaptiveMitigationLab.tsx",
     "viewExport": "LpbfAdaptiveMitigationLab"
@@ -92,9 +92,9 @@
   {
     "id": "alloy-builder",
     "workspace": "materials",
-    "label": "Alloy Builder",
+    "label": "Composition Editor",
     "scope": "Research",
-    "description": "Composition and specimen editor for the shared active material (no property prediction).",
+    "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
     "next": "phase-diagram",
     "viewComponent": "src/components/AlloyBuilder.tsx",
     "viewExport": "AlloyBuilder"
@@ -102,9 +102,9 @@
   {
     "id": "phase-diagram",
     "workspace": "materials",
-    "label": "CALPHAD",
+    "label": "Phase Diagrams & CALPHAD",
     "scope": "Research",
-    "description": "Phase equilibrium within the selected database and model coverage.",
+    "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
     "next": "ttt-cct-kinetics",
     "viewComponent": "src/components/PhaseDiagramViewer.tsx",
     "viewExport": "PhaseDiagramViewer"
@@ -112,9 +112,9 @@
   {
     "id": "ttt-cct-kinetics",
     "workspace": "materials",
-    "label": "TTT / CCT",
+    "label": "Steel TTT / CCT (Illustrative)",
     "scope": "Research",
-    "description": "Li (1998) TTT/CCT start curves for low-alloy steels (screening, unvalidated); other alloys are unavailable.",
+    "description": "Illustrative steel-only transformation kinetics (AISI 4140, 4340, D2); other alloy classes are unavailable.",
     "next": "micrograph",
     "viewComponent": "src/components/PhaseKineticsTTTCCTStudio.tsx",
     "viewExport": "PhaseKineticsTTTCCTStudio"
@@ -124,7 +124,7 @@
     "workspace": "materials",
     "label": "Micrograph Analysis",
     "scope": "Preview",
-    "description": "Image segmentation requires scale calibration and independent inspection.",
+    "description": "Grey-level threshold segmentation (porosity, phase fraction, grain intercepts) of scale-calibrated images; language-model descriptions are advisory.",
     "next": "eds-lab",
     "viewComponent": "src/components/MicrographLab.tsx",
     "viewExport": "MicrographLab"
@@ -132,9 +132,9 @@
   {
     "id": "eds-lab",
     "workspace": "materials",
-    "label": "SEM-EDS",
+    "label": "EDS Spectrum Viewer",
     "scope": "Research",
-    "description": "Spectroscopy and composition characterization with method limitations.",
+    "description": "Imports and plots EDS spectra with reference line markers; uploaded spectra are not quantified; built-in spots are training examples.",
     "next": "electrochem-suite",
     "viewComponent": "src/components/EDSSpectrumLab.tsx",
     "viewExport": "EDSSpectrumLab"
@@ -142,9 +142,9 @@
   {
     "id": "electrochem-suite",
     "workspace": "materials",
-    "label": "Corrosion / EIS",
+    "label": "Corrosion & Electrochemistry",
     "scope": "Research",
-    "description": "Electrochemical measurements, equivalent circuits and model fitting.",
+    "description": "Galvanic couples, PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and corrosion EIS; no equivalent-circuit fitting.",
     "next": "icme-motor",
     "viewComponent": "src/components/CorrosionEngineeringLab.tsx",
     "viewExport": "CorrosionEngineeringLab"
@@ -152,9 +152,9 @@
   {
     "id": "icme-motor",
     "workspace": "materials",
-    "label": "ICME Multi-Scale Studio",
+    "label": "Yield Strength Breakdown (Illustrative)",
     "scope": "Research",
-    "description": "Illustrative closed-form property estimates on tabulated constants; no DFT, CALPHAD or FEA is run.",
+    "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable.",
     "next": "materials-project",
     "viewComponent": "src/components/ICMEMultiScalePipelineStudio.tsx",
     "viewExport": "ICMEMultiScalePipelineStudio"
@@ -172,9 +172,9 @@
   {
     "id": "calculators",
     "workspace": "materials",
-    "label": "Engineering Calculators",
+    "label": "Metallurgy Calculators",
     "scope": "Research",
-    "description": "Unit-aware engineering correlations within their stated assumptions.",
+    "description": "Hardness conversion (ASTM E140), carbon equivalent, Fick diffusion, Schaeffler, Bragg, Hall–Petch and Ms/Bs/Ac3 correlations within stated ranges.",
     "next": "research-hub",
     "viewComponent": "src/components/PocketCalculators.tsx",
     "viewExport": "PocketCalculators"
@@ -192,9 +192,9 @@
   {
     "id": "experimental-data",
     "workspace": "evidence",
-    "label": "Experimental Data",
+    "label": "Measured Findings",
     "scope": "Research",
-    "description": "Measured findings, traceability gaps and feedback linked to simulation jobs.",
+    "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
     "next": "digital-twin",
     "viewComponent": "src/components/EvidenceWorkspace.tsx",
     "viewExport": "EvidenceWorkspace"
@@ -202,9 +202,9 @@
   {
     "id": "digital-twin",
     "workspace": "evidence",
-    "label": "Digital Twin",
+    "label": "Specimen Records",
     "scope": "Research",
-    "description": "Specimen history and module context; completeness does not establish qualification.",
+    "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
     "next": "uq-lab",
     "viewComponent": "src/components/DigitalTwinHub.tsx",
     "viewExport": "DigitalTwinHub"
@@ -212,9 +212,9 @@
   {
     "id": "uq-lab",
     "workspace": "evidence",
-    "label": "Uncertainty & Coupons",
+    "label": "Coupon Statistics & UQ Sampling",
     "scope": "Research",
-    "description": "Sampling and uploaded coupon statistics; simulation scatter is not test evidence.",
+    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence.",
     "next": "traceability",
     "viewComponent": "src/components/UQLab.tsx",
     "viewExport": "UQLab"
@@ -222,9 +222,9 @@
   {
     "id": "traceability",
     "workspace": "evidence",
-    "label": "Export / Traceability",
+    "label": "Export Review Package",
     "scope": "Research",
-    "description": "Export active specimen, source provenance and linked evidence as a review package.",
+    "description": "Exports the active specimen, source provenance and linked evidence as a review package; meshes and worker artifacts are excluded.",
     "next": "copilot",
     "viewComponent": "src/components/EvidenceWorkspace.tsx",
     "viewExport": "EvidenceWorkspace"
@@ -232,9 +232,9 @@
   {
     "id": "copilot",
     "workspace": "evidence",
-    "label": "Research Assistant",
+    "label": "AI Assistant",
     "scope": "Preview",
-    "description": "AI suggestions require source verification before use in engineering decisions.",
+    "description": "Language-model answers to metallurgy questions; advisory only, verify every claim against sources.",
     "next": "3d-distortion-lab",
     "viewComponent": "src/components/MetallurgyCopilot.tsx",
     "viewExport": "MetallurgyCopilot"
