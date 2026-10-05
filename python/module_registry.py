@@ -176,6 +176,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
+    "lpbf-dataset-comparison": (),
     "database": (
         _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
     ),
@@ -219,6 +220,11 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
+    "lpbf-dataset-comparison": (
+        "Read-only view of the committed Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json "
+        "(src/data/lpbfDatasetComparison.ts); it dispatches no request and computes nothing in the browser, "
+        "so no operation is bound.",
+    ),
     "materials-project": (
         "The canned GET /api/materials-project/search route and its server catalog were deleted on "
         "2026-10-04. The view still lists a hard-coded client catalog (CURATED_MP_PRESETS) that feeds the "
@@ -1154,13 +1160,28 @@ def oracle_listed_in_ci(ref: str) -> bool:
 
 
 def _top_level_imports(path: Path) -> set:
+    """Module-level imports, including those guarded by a module-level try/if (an oracle that probes
+    `import warp` and skips itself still needs warp to run for real, so the CI gap must still be recorded)."""
     import ast
     names = set()
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if isinstance(node, ast.Import):
-            names.update(alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            names.add(node.module.split(".")[0])
+
+    def visit(statements):
+        for node in statements:
+            if isinstance(node, ast.Import):
+                names.update(alias.name.split(".")[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                names.add(node.module.split(".")[0])
+            elif isinstance(node, ast.Try):
+                visit(node.body)
+                for handler in node.handlers:
+                    visit(handler.body)
+                visit(node.orelse)
+                visit(node.finalbody)
+            elif isinstance(node, ast.If):
+                visit(node.body)
+                visit(node.orelse)
+
+    visit(ast.parse(path.read_text(encoding="utf-8")).body)
     return names
 
 

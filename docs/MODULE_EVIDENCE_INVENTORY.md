@@ -92,7 +92,7 @@ All modules need the browser application and Node-served assets described by `pa
 
 ### Browser calculations and local records
 
-Modules: `database`, `alloy-builder`, `eds-lab`, `calculators`, `experimental-data`, `traceability`.
+Modules: `database`, `alloy-builder`, `eds-lab`, `calculators`, `experimental-data`, `traceability`, `lpbf-dataset-comparison`.
 
 Principal paths run in the browser using the components/parsers/stores above. File import/export needs browser file APIs; persistent records depend on browser storage. Shared server registry synchronization needs `routes/researchRegistry.ts` and a writable `.research-registry/` directory. EDS consultation and other optional assistant controls additionally use the provider group below. Formula/demo AI labels do not establish an installed trained model. Registry/parser tests establish selected software contracts only.
 
@@ -144,3 +144,11 @@ The inherited 97-unit-test pass and CPU/GPU/tool checks are recorded in `docs/EN
 4. Maintain this inventory when registry IDs, rendering, request paths or evidence change. Verify all registered IDs remain mapped exactly once; do not silently promote a maturity or result label.
 
 `docs/RESEARCH_WORKSTATION.md` describes product/evidence boundaries. This inventory changes no solver, source dataset, qualification record or proof claim. Commit/push and operational/proof records are owned by the parent task.
+
+## Modules registered after the review pass
+
+Appended at the end so existing line references in `python/module_registry.py` keep resolving.
+
+| Module / label | Principal view | Request path and authority | Evidence tier | Next gap |
+| --- | --- | --- | --- | --- |
+| `lpbf-dataset-comparison` / Dataset Comparison (LPBF) | `src/components/LpbfDatasetComparisonLab.tsx` (re-export shim; implementation `src/components/3d-distortion-lab/LpbfDatasetComparisonLab.tsx`) | Read-only view of the committed Python-generated record `docs/LPBF_DATASET_COMPARISON_2026-10-05.json` via `src/data/lpbfDatasetComparison.ts`; no server route and no browser computation. | **Research. S:** `tests/lpbf-dataset-comparison.test.ts`, `tests/lpbf-dataset-comparison-lab.test.tsx`. Comparison of screening kernels against published single-track measurements, not validation; the page shows only numbers carried by the JSON. | Experimental validation, calibration and the reference transient on these datasets remain open. |

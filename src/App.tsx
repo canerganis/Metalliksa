@@ -56,6 +56,7 @@ const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudio
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
+const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
 
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
@@ -68,6 +69,8 @@ export type NavSubTab = ModuleId;
 export type DisciplineHubId = typeof WORKSPACES[number]['id'];
 
 // The start page: no hash, "#", "#/" or "#/home". Any other hash is a module link (unknown -> LPBF).
+// Modules whose data are not about the shared specimen (the shared-material block and the context panel would describe the wrong material).
+export const MODULES_WITHOUT_SHARED_SPECIMEN: ReadonlySet<string> = new Set(['lpbf-dataset-comparison']);
 const isHome = (hash: string) => /^(#\/?(home)?)?$/.test(hash);
 const startsHome = () => isHome(window.location.hash) && !/[?&]lpbf(Stage|SubTab)=/.test(window.location.search);
 
@@ -169,6 +172,7 @@ export default function App() {
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
+      case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
@@ -211,12 +215,12 @@ export default function App() {
         {/* Laser wipe on entering a module (ornament, transform only, once per navigation). */}
         <div key={'wipe-' + activeTab} className="mk-wipe" aria-hidden="true" />
         <div key={activeTab} className="mk-content-header mb-6 border-b pb-6 pt-1"><p className="mk-kicker mb-3">{activeWorkspace.label} / Active surface</p><h2>{activeModule.label}</h2><div className="mt-3 flex flex-wrap items-center gap-2"><span title={MATURITY_BADGE_TITLE} className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span><EvidenceBadge moduleId={activeModule.id} /></div><p className="mt-4 max-w-3xl text-[15px] leading-7 text-slate-300">{activeModule.description}</p></div>
-        <details className="mk-plate mb-5 px-4 py-3 text-xs">
+        {!MODULES_WITHOUT_SHARED_SPECIMEN.has(activeTab) && <details className="mk-plate mb-5 px-4 py-3 text-xs">
           <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {formatExactNumber(specimen.lpbf.laserPower_W)} W / {formatExactNumber(specimen.lpbf.scanSpeed_mms)} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
-        </details>
+        </details>}
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
-        <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>
+        {!MODULES_WITHOUT_SHARED_SPECIMEN.has(activeTab) && <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>}
         </>}
         {visited.map(id => <div key={id} hidden={home || id !== activeTab} data-module={id}><WorkspaceVisibility visible={!home && id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>

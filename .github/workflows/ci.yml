@@ -103,6 +103,9 @@ jobs:
           test_pourbaix_equilibrium test_pourbaix_ts_fixture test_pourbaix_ticrmo
           test_goldak_power_normalization test_lpbf_boiling_cap
           test_lpbf_meltpool_consumer_pins
+          test_lpbf_public_datasets test_phase7 test_phase8 test_keyhole_contract
+          test_lpbf_transient_3d_gpu test_lpbf_phase22_energy_ledger test_lpbf_phase22_full_field_cuda_parity
+          test_lpbf_phase22_multistep_cuda_parity test_lpbf_phase22_manufactured_thermal test_lpbf_phase22_cuda_manufactured_pressure
       # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
       # package-aware manifest import closure and the canonical-v3 framing vectors. The
       # canonical identity normalises CRLF, so these are checkout-newline independent.

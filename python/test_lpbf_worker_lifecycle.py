@@ -4,6 +4,7 @@ import json
 import io
 import os
 import sqlite3
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -24,6 +25,17 @@ GPU_CASE = {
     "mesh_um": 40, "maxDt_s": 2e-7, "layer_um": 80,
     "trackLength_um": 200, "cooling_s": 2e-5, "dwell_s": 0,
 }
+
+
+def _resolve_test_root(case):
+    """Configured/pre-created test root when present, else a fresh private temp root (removed on cleanup)."""
+    configured = Path(os.environ.get(
+        "METALLIX_LPBF_TEST_ROOT", Path(__file__).resolve().parent / "codex-lpbf-test-tmp"))
+    if configured.is_dir():
+        return configured
+    created = Path(tempfile.mkdtemp(prefix="lpbf-worker-lifecycle-"))
+    case.addCleanup(shutil.rmtree, created, True)
+    return created
 
 
 @contextmanager
@@ -273,9 +285,7 @@ class QueueLifecycle(unittest.TestCase):
             self.assertEqual(len(children), 1)
 
     def test_queue_close_reaps_real_child_before_terminal_state_or_artifacts(self):
-        test_root = Path(os.environ.get(
-            "METALLIX_LPBF_TEST_ROOT", Path(__file__).resolve().parent / "codex-lpbf-test-tmp"))
-        self.assertTrue(test_root.is_dir(), f"test root must exist before the run: {test_root}")
+        test_root = _resolve_test_root(self)
         with tempfile.TemporaryDirectory(prefix="queue-close-", dir=test_root) as root, \
              isolated_queue(root) as queue:
             submitted = submit_gpu(queue)
@@ -642,9 +652,7 @@ class QueueLifecycle(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "Windows Job Object hard-crash integration")
     def test_abrupt_parent_death_kills_execute_child_and_prevents_publication(self):
-        test_root = Path(os.environ.get(
-            "METALLIX_LPBF_TEST_ROOT", Path(__file__).resolve().parent / "codex-lpbf-test-tmp"))
-        self.assertTrue(test_root.is_dir(), f"test root must exist before the run: {test_root}")
+        test_root = _resolve_test_root(self)
         with tempfile.TemporaryDirectory(prefix="job-owner-crash-", dir=test_root) as root:
             job = "b" * 32
             folder = Path(root) / job
