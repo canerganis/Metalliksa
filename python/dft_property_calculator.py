@@ -843,8 +843,15 @@ def _optional_float(value):
 
 def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
     material_id = payload.get("material_id", "mp-custom")
+    input_mode = payload.get("input_mode")
+    if input_mode not in (None, "custom", "isotropic", "library"):
+        raise ElasticityUnavailable(
+            "INVALID_INPUT_MODE", "input_mode must be 'custom', 'isotropic' or 'library'")
+
     user_c_ij = payload.get("custom_c_ij", None)
-    entry = lookup_library_entry(formula)
+    entry = lookup_library_entry(formula) if input_mode in (None, "library") else None
+    if input_mode == "library" and entry is None:
+        raise ElasticityUnavailable("NO_ELASTIC_CONSTANTS", "library mode requires an exact formula entry")
 
     crystal_system = payload.get("crystal_system")
     space_group = payload.get("space_group")
@@ -854,8 +861,24 @@ def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
             "PHASE_MISMATCH",
             f"the library entry for {entry['match']} is {entry['space_group']}; the requested space group "
             f"{space_group!r} is another phase")
-    custom_present = bool(user_c_ij) and any((_numeric_or_none(v) or 0.0) > 0 for v in user_c_ij.values())
-    if crystal_system is None:
+    if input_mode == "custom":
+        custom_present = isinstance(user_c_ij, dict) and bool(user_c_ij) and any(
+            (_numeric_or_none(value) or 0.0) > 0.0 for value in user_c_ij.values())
+    elif input_mode is None:
+        custom_present = bool(user_c_ij) and any(
+            (_numeric_or_none(value) or 0.0) > 0.0 for value in user_c_ij.values())
+    else:
+        custom_present = False
+    if input_mode == "custom":
+        if not custom_present:
+            raise ElasticityUnavailable(
+                "MISSING_ELASTIC_CONSTANTS", "custom mode requires symmetry-complete caller-supplied custom_c_ij")
+        if crystal_system is None:
+            raise ElasticityUnavailable(
+                "MISSING_CRYSTAL_SYSTEM", "custom_c_ij needs the crystal system that fixes its symmetry class")
+    elif input_mode == "isotropic":
+        crystal_system, space_group = "Isotropic", None
+    elif crystal_system is None:
         if custom_present:
             raise ElasticityUnavailable(
                 "MISSING_CRYSTAL_SYSTEM", "custom_c_ij needs the crystal system that fixes its symmetry class")
@@ -863,17 +886,47 @@ def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
     if space_group is None and entry is not None:
         space_group = entry["space_group"]
 
-    k_vrh = _optional_float(payload.get("k_vrh"))
-    g_vrh = _optional_float(payload.get("g_vrh"))
+    if input_mode == "isotropic":
+        try:
+            k_vrh, g_vrh = _optional_float(payload.get("k_vrh")), _optional_float(payload.get("g_vrh"))
+        except (TypeError, ValueError, OverflowError):
+            raise ElasticityUnavailable("INVALID_MODULI", "isotropic mode requires finite positive K_VRH and G_VRH")
+    elif input_mode in ("custom", "library"):
+        k_vrh = g_vrh = None
+    else:
+        k_vrh, g_vrh = _optional_float(payload.get("k_vrh")), _optional_float(payload.get("g_vrh"))
     density = _optional_float(payload.get("density"))
     if density is None and entry is not None:
         density = entry["density"]  # library density (reference status as the entry's)
+
+    if input_mode == "custom":
+        user_c_ij_for_matrix = user_c_ij
+        formula_for_matrix = ""
+    elif input_mode == "isotropic":
+        if k_vrh is None or g_vrh is None:
+            raise ElasticityUnavailable("NO_ELASTIC_CONSTANTS", "isotropic mode requires caller-supplied K_VRH and G_VRH")
+        if not math.isfinite(k_vrh) or not math.isfinite(g_vrh):
+            raise ElasticityUnavailable("NON_FINITE_MODULI", "isotropic mode requires finite K_VRH and G_VRH")
+        if k_vrh <= 0.0 or g_vrh <= 0.0:
+            raise ElasticityUnavailable("NON_POSITIVE_MODULI", "K_VRH and G_VRH must be positive")
+        user_c_ij_for_matrix = None
+        formula_for_matrix = ""
+    elif input_mode == "library":
+        # This mode selects the exact library tensor even if the payload also carries custom values or K/G.
+        user_c_ij_for_matrix = None
+        formula_for_matrix = formula
+    else:
+        # No mode preserves the original caller precedence and exact-formula lookup behavior.
+        user_c_ij_for_matrix = user_c_ij
+        formula_for_matrix = formula
+
     formation_e = _optional_float(payload.get("formation_energy_per_atom"))
     e_above_hull = _optional_float(payload.get("energy_above_hull"))
     band_gap = _optional_float(payload.get("band_gap"))
 
     # 1. Build 6x6 Elastic Stiffness Tensor C_ij (GPa) respecting crystal symmetry
-    c_matrix, source_notes = build_stiffness_matrix(crystal_system, k_vrh, g_vrh, formula or "", user_c_ij)
+    c_matrix, source_notes = build_stiffness_matrix(
+        crystal_system, k_vrh, g_vrh, formula_for_matrix or "", user_c_ij_for_matrix)
     _require_finite_stiffness(c_matrix, source_notes, k_vrh, g_vrh)
     family = crystal_family(crystal_system)  # a library entry of another family raised PHASE_MISMATCH above
     if source_notes == "Custom User Elastic Constants":

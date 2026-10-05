@@ -15,6 +15,15 @@ export interface ScientificContext {
 const format = formatDisplayNumber;
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
+  if (moduleId === 'materials-project') return {
+    title: 'Elastic Constants input context',
+    observation: 'This engine uses only the form inputs: user-supplied C_ij or isotropic K/G. Shared specimen values and process parameters are not automatically filled into the form or used by this engine.',
+    mechanism: 'Voigt-Reuss-Hill homogenisation derives aggregate elastic moduli from the supplied stiffness tensor. Born criteria describe mechanical stability against infinitesimal strain, not thermodynamic phase stability.',
+    variables: ['Form C_ij (GPa) with crystal symmetry, or isotropic K/G (GPa)', 'Optional user density (g/cm³) and composition or paired molar mass / atoms per formula unit for acoustic and Debye properties'],
+    interpretation: 'Before selecting Calculate Elasticity, no computed result is available. Missing density or composition can leave dependent properties unavailable even when an elastic tensor is available.',
+    limitation: 'User inputs and computed elasticity are not a measurement or a validation claim. Shared specimen composition, density, and LPBF settings do not establish the inputs or evidence for this calculation.',
+  };
+
   const { lpbf } = specimen;
   const ved = lpbf.laserPower_W / ((lpbf.scanSpeed_mms || 1) * (lpbf.hatch_um / 1000) * (lpbf.layer_um / 1000));
   const shared = `Active specimen ${specimen.name}; ${format(lpbf.laserPower_W)} W, ${format(lpbf.scanSpeed_mms)} mm/s, ${format(lpbf.hatch_um)} µm hatch, ${format(lpbf.layer_um)} µm layer.`;

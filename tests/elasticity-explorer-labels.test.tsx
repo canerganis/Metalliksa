@@ -22,9 +22,15 @@ const text = (markup: string) =>
 const count = (haystack: string, needle: string) => haystack.split(needle).length - 1;
 const BANNED = [/ab-initio/i, /Authentic/, /DFT HPC/, /Python DFT/, /Python 6x6/];
 
-test("Explorer tab header says the engine is continuum elasticity, not DFT", () => {
-  const markup = text(renderToStaticMarkup(<MaterialsProjectExplorer />));
-  assert.ok(markup.includes("Elastic C_ij & Debye (continuum, not DFT)"), "tab label");
+test("Explorer starts with blank user inputs and identifies continuum elasticity, not DFT", () => {
+  const raw = renderToStaticMarkup(<MaterialsProjectExplorer />);
+  const markup = text(raw);
+  assert.ok(markup.includes("Elastic Constants"), "module label");
+  assert.ok(markup.includes("Continuum Elasticity Homogenization"), "model label");
+  assert.ok(markup.includes("Not a DFT Calculation"), "claim boundary");
+  assert.ok(markup.includes("Calculate Elasticity"));
+  assert.ok(!raw.includes('value="Fe3C"'), "no canned initial formula");
+  assert.ok(markup.includes("Unavailable"), "no result before user calculation");
   assert.ok(!markup.includes("Python 6x6 C_ij"), "old tab label");
 });
 

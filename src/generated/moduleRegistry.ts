@@ -2853,8 +2853,8 @@ export const MODULE_REGISTRY = {
       "version": "0.0.0",
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "materials",
-      "label": "Materials Project",
-      "description": "External computed-material records; connection and coverage may be unavailable.",
+      "label": "Elastic Constants",
+      "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
       "next": "calculators",
       "maturity": "Research",
       "navigation": "listed",
@@ -2875,23 +2875,6 @@ export const MODULE_REGISTRY = {
             "timeoutMs": 25000,
             "gpu": "none",
             "warm": true,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        },
-        {
-          "id": "metallurgy-consult",
-          "method": "POST",
-          "route": "/api/metallurgy/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
             "exceptionReason": null
           },
           "input": [],
@@ -2926,7 +2909,7 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "legacy",
       "legacyNotes": [
-        "The canned GET /api/materials-project/search route and its server catalog were deleted on 2026-10-04. The view still lists a hard-coded client catalog (CURATED_MP_PRESETS) that feeds the elasticity tool; replacing it with a user C_ij input form is an open follow-up."
+        "Elastic Constants retains the materials-project identity. The user explicitly submits custom C_ij or isotropic K/G; optional density and composition are not taken from the shared specimen or the legacy library. No catalog, consultation or Materials Project request is dispatched. Missing derived properties remain unavailable; input edits invalidate pending responses."
       ],
       "sourceRefs": [],
       "seedDerived": [

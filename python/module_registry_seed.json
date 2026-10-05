@@ -172,9 +172,9 @@
   {
     "id": "materials-project",
     "workspace": "materials",
-    "label": "Materials Project",
+    "label": "Elastic Constants",
     "scope": "Research",
-    "description": "External computed-material records; connection and coverage may be unavailable.",
+    "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
     "next": "calculators",
     "viewComponent": "src/components/MaterialsProjectExplorer.tsx",
     "viewExport": "MaterialsProjectExplorer"
