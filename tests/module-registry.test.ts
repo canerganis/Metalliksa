@@ -12,8 +12,8 @@ const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistr
 
 // Ratchet: Phase 7 step 0 generated one legacy contract per listed module. Migration may only
 // lower this number. Raising it needs an explicit edit here and maintainer review.
-// Raised 16 -> 17 for the read-only lpbf-dataset-comparison view (legacy contract, no operations; LPBF batch 1).
-const LEGACY_CEILING = 17;
+// Dataset comparison now has a source-bound read-only display contract.
+const LEGACY_CEILING = 16;
 
 test('contracts cover exactly the modules listed in workspaces.ts and legacy never grows', () => {
   const legacy = registry.contracts.filter(contract => contract.migrationState === 'legacy');
@@ -54,7 +54,7 @@ test('legacy contracts keep the pending-oracle cap and forbid every claim key', 
 
 test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted status, screening-only ceiling, every claim forbidden', () => {
   const contracted = registry.contracts.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'ttt-cct-kinetics', 'micrograph', 'icme-motor', 'uq-lab']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'ttt-cct-kinetics', 'micrograph', 'icme-motor', 'uq-lab']);
   for (const contract of contracted) {
     assert.deepEqual(contract.evidence.emits, [], contract.id);
     assert.equal(contract.evidence.ceiling, 'screening-only', contract.id);
@@ -63,8 +63,12 @@ test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted sta
     assert.equal(contract.tests.docs, `docs/modules/${contract.id}.md`);
     for (const operation of contract.operations) {
       assert.equal(operation.output?.statusKey, null, `${contract.id}: output carries no evidence status`);
-      assert.ok(operation.input.length > 0, contract.id);
-      assert.notEqual(operation.authority.timeoutMs, null, contract.id);
+      assert.ok(operation.input.length > 0 || operation.undeclaredInput.length > 0, contract.id);
+      if (operation.authority.kind === 'browser-local' && operation.route === null && operation.method === null) {
+        assert.equal(operation.authority.timeoutMs, null, `${contract.id}: no invented local deadline`);
+      } else {
+        assert.notEqual(operation.authority.timeoutMs, null, contract.id);
+      }
     }
   }
 });

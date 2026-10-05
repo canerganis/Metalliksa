@@ -1475,8 +1475,8 @@
     },
     {
       "id": "lpbf-dataset-comparison",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Dataset Comparison (LPBF)",
       "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
@@ -1488,7 +1488,38 @@
         "component": "src/components/LpbfDatasetComparisonLab.tsx",
         "export": "LpbfDatasetComparisonLab"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "display-comparison-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Read-only committed JSON display and local plot filtering; no solver or server operation."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "document",
+            "kernel",
+            "enabledRegimes"
+          ],
+          "output": {
+            "fields": [
+              "datasets",
+              "rows",
+              "summary",
+              "honesty"
+            ],
+            "statusKey": null,
+            "transportValues": {}
+          }
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -1501,24 +1532,37 @@
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No numerical oracle is declared for this view. Published measurements are displayed alongside screening predictions; rendering them does not validate a solver or establish independent evidence."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_dataset_view.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/lpbf-dataset-comparison.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "Read-only view of the committed Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json (src/data/lpbfDatasetComparison.ts); it dispatches no request and computes nothing in the browser, so no operation is bound."
+        "The operation describes a local view, not a request/response endpoint. Output fields name consumed record sections. The SDK scalar input schema cannot express the nested document or dynamic kernel and regime selections; these are undeclaredInput, with runtime validation in checkedDatasetComparison.",
+        "Vite eagerly bundles the committed .view.json record. An absent record produces NoComparisonRecord; malformed committed bytes throw during checkedDatasetComparison rather than producing an empty success.",
+        "No fetch, solver, timer, worker or archive mutation runs in this module. Filters change plotted rows and axis scales locally; error statistics, provenance, hashes and uncertainty figures are read from JSON.",
+        "Record dataset hashes and citations are displayed provenance, not a fresh remote source verification. Prediction exclusions and honesty statements remain visible; the view does not upgrade evidence status."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "src/data/lpbfDatasetComparisonRecord.ts",
+        "src/data/lpbfDatasetComparison.ts::checkedDatasetComparison",
+        "src/components/3d-distortion-lab/LpbfDatasetComparisonLab.tsx::DatasetComparisonView",
+        "src/components/3d-distortion-lab/LpbfDatasetComparisonLab.tsx::NoComparisonRecord",
+        "tests/lpbf-dataset-comparison.test.ts",
+        "tests/lpbf-dataset-comparison-lab.test.tsx"
+      ],
       "seedDerived": [
         "label",
         "description",

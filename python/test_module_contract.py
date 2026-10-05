@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 17  # 16 + the read-only lpbf-dataset-comparison view (legacy contract, no operations; LPBF batch 1)
+LEGACY_CEILING = 16  # Read-only dataset comparison now has a source-bound display contract.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
-              "keyhole-raytracing", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "ttt-cct-kinetics", "micrograph", "icme-motor", "uq-lab")
 
 
 def _view():

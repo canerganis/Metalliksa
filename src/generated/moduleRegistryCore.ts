@@ -265,7 +265,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "lpbf-dataset-comparison",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Dataset Comparison (LPBF)",
       "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
@@ -277,7 +277,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/LpbfDatasetComparisonLab.tsx",
         "export": "LpbfDatasetComparisonLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
