@@ -1,3 +1,11 @@
+## LPBF batch2 kapanışı — 2026-10-05
+
+- Yerel merge `f17af49`: `codex/batch2-ci@4686ec5` dahil; mevcut analiz paketinin son CI ve kanıt dili düzeltmeleri entegre. İki yeni unittest modülü Python CI listesinde.
+- Bağımsız kontroller: ebeveyn 22/22 Python PASS; Sol fix incelemesi 24/24 (iki pin kontrolü dahil) PASS. Staging tsc/build/bundle PASS; ceiling review 0 incelenmemiş değişiklik; solver/pin diff boş.
+- Opus sağlanan gerçek diff'te sayısal/provenance blocker bulmadı; oracle bağımsızlığı ifadesi onun bulgusuyla ikinci transkripsiyon + limit regresyonları olarak düzeltildi. Opus araçsız patch kapsamıyla sınırlı; yayımlanmış equation sayfası bu tur HTTP 429 nedeniyle yeniden doğrulanamadı. Fiziksel doğrulama iddiası yok.
+- Sınırlar: ZS N=0 kaldırılabilir tekilliği genel kullanıma açılmadan ayrıca ele alınmalı; bu kayıttaki girdiler o noktada değil. Kaynak reuse mevcut kimlik ve settings eşleşmesi kontrolünden geçiyor; tam içerik bilimsel doğrulaması değil.
+- Devam: `codex/elastic-input-mode` Luna backend; `codex/elastic-ui` Gemini UI. Modül kimliği korunacak, boş başlangıç/explicit Calculate/unavailable/stale yanıt atma kontrolleriyle birlikte çapraz inceleme ve yerel merge.
+
 ## Tafel test paketi ve sıfır referans ofseti — 2026-10-05
 
 - Yerel birleştirme: `6532f19`; worker `f12bc55` → `608fa09` → `55c8a2d` → `05cb2b7`. Parser ve fit açık SHE/NHE sıfır ofsetini SCE 0,241 V ile değiştirmiyor.
