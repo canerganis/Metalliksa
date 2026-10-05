@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { FileSearch } from "lucide-react";
 import {
-  absorptivityMapeByValue,
+  absorptivitySensitivityCells,
+  type ComparisonErrorStats,
   type ComparisonRow,
-  type ComparisonSummaryCell,
   type LpbfDatasetComparisonDocument,
 } from "../../data/lpbfDatasetComparison";
 import { COMMITTED_DATASET_COMPARISON } from "../../data/lpbfDatasetComparisonRecord";
@@ -18,12 +18,30 @@ const CardHeader = ({ children, className = "" }: SlotProps) => <header classNam
 const CardContent = ({ children, className = "" }: SlotProps) => <div className={`p-4 ${className}`}>{children}</div>;
 const CardTitle = ({ children, className = "" }: SlotProps) => <h2 className={`font-semibold text-slate-800 ${className}`}>{children}</h2>;
 
-const REGIME_COLORS = ["#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0d9488"] as const;
+// Darkest shades: white chip text on these is >= 4.5:1 and they read on a light card as text too.
+export const REGIME_COLORS = ["#1d4ed8", "#b45309", "#b91c1c", "#6d28d9", "#0f766e"] as const;
 const KERNEL_LABELS: Readonly<Record<string, string>> = {
   rosenthal: "Rosenthal",
   "eagar-tsai": "Eagar–Tsai v2",
   goldak: "Goldak v3",
 };
+
+/** One decimal place for every displayed error figure (the record carries more digits). */
+export function fmt1(value: number): string {
+  const text = value.toFixed(1);
+  return text === "-0.0" ? "0.0" : text;
+}
+
+const DEPTH_REFERENCE_NOTE = /depth reference line/i;
+const POWDER_LAYER_NOTE = "The screening kernels ignore the powder-layer thickness (identical predictions for 0/30/60 µm layers); any powder-layer trend is in the measurements only.";
+const SENSITIVITY_SENTENCE = "Sensitivity, not a calibration: included row counts differ per column (only rows where the kernel resolves an extent are counted), and width and depth errors pull in opposite directions.";
+const DEFAULT_LIMITS: readonly string[] = [
+  "Rosenthal conduction rests on rows selected by its own output (extent resolved).",
+  "Eagar–Tsai and Goldak keyhole depths are identical because both add the same Fabbro depth term (not independent evidence).",
+  "No confidence intervals are computed.",
+  "Replicate rows (same parameter set) are not independent.",
+  "Balling-flagged rows are included in the pooled headline.",
+];
 
 export function doiHref(doi: string): string {
   return /^https?:\/\//.test(doi) ? doi : `https://doi.org/${doi}`;
@@ -72,7 +90,9 @@ function ScatterPlot({ metric, points, axisMax }: { metric: Metric; points: read
       <line data-guide="band-lower" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(lower)} stroke="var(--mk-text-dim)" strokeDasharray="4 3" />
       <line data-guide="one-to-one" x1={sx(0)} y1={sy(0)} x2={sx(axisMax)} y2={sy(axisMax)} stroke="var(--mk-text-strong)" />
       {points.map((p) => {
-        const common = { fill: p.hollow ? "#ffffff" : p.color, stroke: p.color, strokeWidth: 1.6, fillOpacity: p.hollow ? 0.2 : 0.85 };
+        const common = p.hollow
+          ? { fill: "none", stroke: p.color, strokeWidth: 1.6 }
+          : { fill: p.color, stroke: p.color, strokeWidth: 1.6, fillOpacity: 0.85 };
         return (
           <g key={p.key} data-point={p.hollow ? "excluded" : "included"}>
             <title>{p.tip}</title>
@@ -83,7 +103,7 @@ function ScatterPlot({ metric, points, axisMax }: { metric: Metric; points: read
         );
       })}
       <text x={m.l + w / 2} y={size - 6} fontSize="10" textAnchor="middle" fill="var(--mk-text-strong)">{`measured ${metric} (µm)`}</text>
-      <text x={12} y={m.t + h / 2} fontSize="10" textAnchor="middle" fill="#334155" transform={`rotate(-90 12 ${m.t + h / 2})`}>{`predicted ${metric} (µm)`}</text>
+      <text x={12} y={m.t + h / 2} fontSize="10" textAnchor="middle" fill="var(--mk-text-strong)" transform={`rotate(-90 12 ${m.t + h / 2})`}>{`predicted ${metric} (µm)`}</text>
     </svg>
   );
 }
@@ -93,14 +113,26 @@ export function formatFraction(fraction: number): string {
   return `${Math.round(fraction * 1000) / 10}`;
 }
 
-function StatLine({ label, cell }: { label: string; cell: ComparisonSummaryCell["width"] }) {
+function Interval({ ci }: { ci?: readonly [number, number] }) {
+  return ci ? <span className="text-slate-500">{` (95 % CI ${fmt1(ci[0])}–${fmt1(ci[1])})`}</span> : null;
+}
+
+function StatLine({ label, cell }: { label: string; cell: ComparisonErrorStats | null }) {
+  if (cell === null) {
+    return (
+      <div>
+        <div className="text-xs font-medium text-slate-600">{label}</div>
+        <p className="text-xs text-slate-500" data-empty-slot={label}>no included rows</p>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="text-xs font-medium text-slate-600">{label}</div>
       <dl className="grid grid-cols-2 gap-x-3 text-xs text-slate-700">
-        <dt>bias</dt><dd>{`${cell.bias_pct} %`}</dd>
-        <dt>MAPE</dt><dd>{`${cell.mape_pct} %`}</dd>
-        <dt>RMSE</dt><dd>{`${cell.rmse_um} µm`}</dd>
+        <dt>bias</dt><dd>{`${fmt1(cell.bias_pct)} %`}<Interval ci={cell.bias_pct_ci95} /></dd>
+        <dt>MAPE</dt><dd>{`${fmt1(cell.mape_pct)} %`}<Interval ci={cell.mape_pct_ci95} /></dd>
+        <dt>RMSE</dt><dd>{`${fmt1(cell.rmse_um)} µm`}</dd>
         <dt>within ±30 %</dt><dd>{`${formatFraction(cell.within30pct)} %`}</dd>
         {typeof cell.withinFactor2 === "number" ? <><dt>within ×0.5–2</dt><dd>{`${formatFraction(cell.withinFactor2)} %`}</dd></> : null}
       </dl>
@@ -137,7 +169,8 @@ function pointsFor(
       tip,
     });
   }
-  return out;
+  // Excluded (hollow) markers are drawn after the included ones so they stay visible.
+  return [...out.filter((p) => !p.hollow), ...out.filter((p) => p.hollow)];
 }
 
 export function DatasetComparisonView({ document }: { document: LpbfDatasetComparisonDocument }) {
@@ -171,8 +204,16 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
 
   const excludedRows = shownRows.filter((r) => r.predictions[kernel] && !r.predictions[kernel].included);
   const excludedStatuses = Array.from(new Set(excludedRows.map((r) => r.predictions[kernel].extentStatus)));
-  const summaryForKernel = document.summary[kernel] ?? {};
-  const sensitivityKernels = kernels.filter((k) => absorptivityMapeByValue(document, k) !== null);
+  const summaryEntries = Object.entries(document.summary[kernel] ?? {})
+    .filter(([regime]) => regime === "all" || regime === "common" || enabled.includes(regime))
+    .sort(([a], [b]) => (a === "all" ? -1 : b === "all" ? 1 : a === "common" ? -1 : b === "common" ? 1 : 0));
+  const sensitivityKernels = kernels.filter((k) => absorptivitySensitivityCells(document, k) !== null);
+  const depthReferenceUnstated = document.datasets.some((d) => d.notes.some((note) => DEPTH_REFERENCE_NOTE.test(note)));
+  const limits = document.limits ?? DEFAULT_LIMITS;
+  const pooledN = kernels.flatMap((k) => {
+    const pooled = document.summary[k]?.all;
+    return pooled ? [`${KERNEL_LABELS[k] ?? k} n ${pooled.n}`] : [];
+  });
 
   const toggleRegime = (label: string) =>
     setEnabled((current) => (current.includes(label) ? current.filter((l) => l !== label) : [...current, label]));
@@ -183,6 +224,7 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
         <CardHeader>
           <CardTitle>Dataset Comparison (LPBF)</CardTitle>
           <p className="mt-1 text-sm font-medium text-amber-800" data-testid="honesty-statement">{document.honesty.statement}</p>
+          {document.absorption?.path ? <p className="mt-1 text-xs text-slate-600" data-testid="absorption-path">{`Absorption path: ${document.absorption.path}`}</p> : null}
           <p className="mt-1 text-xs text-slate-500">
             {`Python-generated record, ${document.generatedAt}, implementation ${document.implementationHash}. Regime rule: ${document.regimeFilter.rule}`}
           </p>
@@ -198,7 +240,11 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
                 <div>{`License: ${d.license}`}</div>
                 <div className="break-all">{`sha256: ${d.sha256}`}</div>
                 <div>{`Rows in dataset: ${d.rows}`}</div>
-                {d.notes ? <div className="text-slate-500">{d.notes}</div> : null}
+                {d.notes.length > 0 ? (
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-slate-500" data-testid={`notes-${d.id}`}>
+                    {d.notes.map((note, i) => <li key={i}>{note}</li>)}
+                  </ul>
+                ) : null}
               </div>
             ))}
           </div>
@@ -229,8 +275,8 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
                     type="button"
                     aria-pressed={on}
                     onClick={() => toggleRegime(label)}
-                    className={`rounded-full border px-3 py-1 text-xs ${on ? "text-white" : "bg-white text-slate-600"}`}
-                    style={{ borderColor: regimeColor(label), backgroundColor: on ? regimeColor(label) : undefined }}
+                    className={`rounded-full border px-3 py-1 text-xs ${on ? "text-white" : "bg-white"}`}
+                    style={{ borderColor: regimeColor(label), backgroundColor: on ? regimeColor(label) : undefined, color: on ? undefined : regimeColor(label) }}
                   >
                     {label}
                   </button>
@@ -238,6 +284,7 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
               })}
             </div>
           </div>
+          <p className="basis-full text-xs text-slate-600" data-testid="powder-layer-note">{POWDER_LAYER_NOTE}</p>
         </CardContent>
       </Card>
 
@@ -248,6 +295,9 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
             <CardContent>
               <ScatterPlot metric={metric} points={metric === "width" ? widthPoints : depthPoints} axisMax={axisFor(metric)} />
               <p className="mt-2 text-xs text-slate-500">Solid line: 1:1. Dashed lines: ±30 %. Hollow markers: rows excluded from the statistics.</p>
+              {metric === "depth" && depthReferenceUnstated ? (
+                <p className="mt-1 text-xs text-slate-600" data-testid="depth-reference-caption">Totis depth reference line not stated (substrate vs powder surface); 25 µm powder layer over a printed base.</p>
+              ) : null}
             </CardContent>
           </Card>
         ))}
@@ -260,12 +310,13 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
 
       <Card>
         <CardHeader><CardTitle className="text-sm">{`Summary by regime: ${KERNEL_LABELS[kernel] ?? kernel}`}</CardTitle></CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {Object.entries(summaryForKernel)
-            .filter(([regime]) => regime === "all" || enabled.includes(regime))
-            .map(([regime, cell]) => (
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {summaryEntries.map(([regime, cell]) => (
               <div key={regime} className="rounded-lg border border-slate-200 p-3" data-summary={`${kernel}/${regime}`}>
-                <div className="text-sm font-semibold" style={{ color: regime === "all" ? undefined : regimeColor(regime) }}>{regime === "all" ? "all regimes (pooled)" : regime}</div>
+                <div className="text-sm font-semibold" style={{ color: regime === "all" || regime === "common" ? undefined : regimeColor(regime) }}>
+                  {regime === "all" ? "all regimes (pooled, independent of the chip filter)" : regime === "common" ? "common subset (rows where all kernels are computed)" : regime}
+                </div>
                 <div className="mb-2 text-xs text-slate-500">{`n ${cell.n}, excluded ${cell.nExcluded}`}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <StatLine label="width" cell={cell.width} />
@@ -273,6 +324,14 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
                 </div>
               </div>
             ))}
+          </div>
+          <div className="mt-3 text-xs text-slate-600" data-testid="summary-limits">
+            <p className="font-medium">Limits of this summary</p>
+            <ul className="list-disc space-y-0.5 pl-4">
+              <li data-testid="pooled-n">{`Kernels are compared on different included subsets (pooled n: ${pooledN.join(", ")}).`}</li>
+              {limits.map((limit, i) => <li key={i}>{limit}</li>)}
+            </ul>
+          </div>
         </CardContent>
       </Card>
 
@@ -281,8 +340,11 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
           <CardTitle className="text-sm">Absorptivity bracket: sensitivity, not calibration</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="text-xs text-slate-700">
-            <caption className="mb-1 text-left text-slate-500">Width MAPE (%) per kernel at each assumed absorptivity. Sensitivity, not calibration: no value is fitted.</caption>
+          <table className="text-xs text-slate-700" data-testid="sensitivity-table">
+            <caption className="mb-1 text-left text-slate-500">
+              {document.absorptivitySensitivity.label ? <span data-testid="sensitivity-label">{document.absorptivitySensitivity.label} </span> : null}
+              Width MAPE, depth MAPE and included rows n per kernel at each assumed absorptivity. Sensitivity, not calibration: no value is fitted.
+            </caption>
             <thead>
               <tr>
                 <th className="pr-4 text-left">kernel</th>
@@ -291,15 +353,20 @@ export function DatasetComparisonView({ document }: { document: LpbfDatasetCompa
             </thead>
             <tbody>
               {sensitivityKernels.map((k) => (
-                <tr key={k}>
+                <tr key={k} className="align-top">
                   <td className="pr-4">{KERNEL_LABELS[k] ?? k}</td>
-                  {(absorptivityMapeByValue(document, k) ?? []).map((v, i) => (
-                    <td key={i} className="pr-4 text-right">{v === null ? "n/a" : `${v}`}</td>
+                  {(absorptivitySensitivityCells(document, k) ?? []).map((c) => (
+                    <td key={c.value} className="pr-4 text-right" data-sensitivity={`${k}/${c.value}`}>
+                      <div>{`width ${c.widthMape === null ? "n/a" : `${fmt1(c.widthMape)} %`}`}</div>
+                      <div>{`depth ${c.depthMape === null ? "n/a" : `${fmt1(c.depthMape)} %`}`}</div>
+                      <div>{`n ${c.nIncluded === null ? "n/a" : c.nIncluded}`}</div>
+                    </td>
                   ))}
                 </tr>
               ))}
             </tbody>
           </table>
+          <p className="mt-2 text-xs text-slate-600" data-testid="sensitivity-sentence">{SENSITIVITY_SENTENCE}</p>
         </CardContent>
       </Card>
 
