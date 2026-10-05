@@ -1,9 +1,9 @@
 /**
- * Foundry stage: the studio picture of a metal world being built by a laser (public/images, carried over
- * from the earlier art direction, see design-system/metalliksa/MASTER.md "Artwork provenance") brought to
- * life as a cinemagraph. Live layers sit exactly on the beam and its melt point in the picture: a
- * flickering beam, a pulsing melt bloom, scan rings spreading over the new layer, sparks, a slow camera
- * push and a light sweep. Purely decorative: no data, no numbers, not a simulation.
+ * Foundry stage: an original vector picture of a laser melt pool on a metal powder bed (public/images,
+ * composed in code for Metalliksa, see design-system/metalliksa/MASTER.md "Artwork provenance") brought to
+ * life as a cinemagraph. Live layers sit exactly on the melt pool in the picture: a flickering beam, a
+ * pulsing melt bloom, ripples spreading over the bed, sparks, a slow camera push and a light sweep.
+ * Purely decorative: no data, no numbers, not a simulation.
  *
  * No caption is shown by default (maintainer decision 2026-10-05: the picture is obviously decorative); a host
  * may pass `caption` to show one. Children (the optional WebGL spark layer) are placed inside the picture frame so they line up with it. All motion is transform and
@@ -12,7 +12,7 @@
  */
 import React from 'react';
 
-export const FOUNDRY_ART = '/images/metalliksa-foundry-art.webp';
+export const FOUNDRY_ART = '/images/metalliksa-melt-pool.svg';
 const SPARKS = 14;
 
 export function FoundryStage({ className = '', caption, paused = false, sparks = false, children }: {

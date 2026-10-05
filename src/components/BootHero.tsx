@@ -25,9 +25,9 @@ import {
 const COUNT = 260;
 const SLOW_FRAME_MS = 20;
 const SLOW_FRAME_LIMIT = 30;
-// Melt point in the artwork, as a fraction of the frame (matches --hx / --hy in foundry.css).
-const HIT_X = 0.742;
-const HIT_Y = 0.146;
+// Melt pool in the artwork, as a fraction of the frame (matches --hx / --hy in foundry.css).
+const HIT_X = 0.677;
+const HIT_Y = 0.547;
 
 /** Soft round sprite for the spark heads (drawn once on a small canvas, no image file). */
 function glowTexture(): CanvasTexture {
