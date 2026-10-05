@@ -122,6 +122,95 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual((s["n"], s["nExcluded"], s["width"], s["depth"]), (0, 1, None, None))
 
 
+class BootstrapAndCommonTests(unittest.TestCase):
+    @staticmethod
+    def _row(i, power, pw, pd_, included=True, kernels=("rosenthal", "goldak")):
+        return {"rowId": f"r{i}", "dataset": "hofmann", "regime": {"label": "conduction"},
+                "inputs": {"power_W": power, "speed_mm_s": 500.0, "beamDiameter_um": 80.0, "layer_um": 30.0},
+                "measured": {"width_um": 100.0, "depth_um": 50.0},
+                "predictions": {k: {"width_um": pw, "depth_um": pd_, "included": included} for k in kernels}}
+
+    def _rows(self):
+        # parameter sets: P=100 (two replicate rows), P=200, P=300 (one row excluded for goldak)
+        rows = [self._row(1, 100.0, 110.0, 40.0), self._row(2, 100.0, 90.0, 60.0),
+                self._row(3, 200.0, 130.0, 50.0), self._row(4, 300.0, 70.0, 55.0)]
+        rows[3]["predictions"]["goldak"]["included"] = False
+        return rows
+
+    def test_set_key_groups_replicates(self):
+        rows = self._rows()
+        self.assertEqual(cmp._set_key(rows[0]), cmp._set_key(rows[1]))
+        self.assertNotEqual(cmp._set_key(rows[0]), cmp._set_key(rows[2]))
+
+    def test_bootstrap_is_deterministic_and_brackets_the_point_estimate(self):
+        rows = self._rows()
+        a = cmp.summarize(rows, kernels=("rosenthal",), with_ci=True)["rosenthal"]["all"]
+        b = cmp.summarize(rows, kernels=("rosenthal",), with_ci=True)["rosenthal"]["all"]
+        self.assertEqual(a, b)
+        w = a["width"]
+        self.assertEqual(w["n_parameterSets"], 3)
+        lo, hi = w["bias_pct_ci95"]
+        self.assertLessEqual(lo, w["bias_pct"] + 1e-9)
+        self.assertGreaterEqual(hi, w["bias_pct"] - 1e-9)
+        self.assertLessEqual(w["mape_pct_ci95"][0], w["mape_pct_ci95"][1])
+        # per-set mean relative width errors are 0, +30 % and -30 %: any resample mean stays inside
+        self.assertGreaterEqual(lo, -30.0 - 1e-9)
+        self.assertLessEqual(hi, 30.0 + 1e-9)
+        # one parameter set (two replicate rows, +10 % and -10 %) => degenerate interval at the point value
+        one = cmp.summarize(rows[:2], kernels=("rosenthal",), with_ci=True)["rosenthal"]["all"]["width"]
+        self.assertEqual(one["n_parameterSets"], 1)
+        self.assertAlmostEqual(one["bias_pct_ci95"][0], 0.0)
+        self.assertAlmostEqual(one["bias_pct_ci95"][1], 0.0)
+        self.assertAlmostEqual(one["mape_pct_ci95"][0], 10.0)
+        self.assertAlmostEqual(one["mape_pct_ci95"][1], 10.0)
+
+    def test_without_ci_cells_keep_the_old_shape(self):
+        w = cmp.summarize(self._rows(), kernels=("rosenthal",))["rosenthal"]["all"]["width"]
+        self.assertNotIn("bias_pct_ci95", w)
+        self.assertNotIn("n_parameterSets", w)
+
+    def test_percentile_interpolates(self):
+        self.assertEqual(cmp._percentile([0.0, 10.0], 50.0), 5.0)
+        self.assertEqual(cmp._percentile([1.0, 2.0, 3.0], 100.0), 3.0)
+
+    def test_common_cell_uses_rows_where_all_kernels_are_computed(self):
+        rows = self._rows()
+        s = cmp.summarize(rows, kernels=("rosenthal", "goldak"))
+        cmp.add_common_cells(s, rows, kernels=("rosenthal", "goldak"), with_ci=True)
+        for k in ("rosenthal", "goldak"):
+            c = s[k]["common"]
+            self.assertEqual((c["n"], c["nExcluded"]), (3, 1))
+            self.assertEqual(c["width"]["n_parameterSets"], 2)
+        self.assertEqual(s["rosenthal"]["all"]["n"], 4)
+        self.assertEqual(s["goldak"]["all"]["n"], 3)
+
+
+class AbsorptionPinTests(unittest.TestCase):
+    def setUp(self):
+        self._saved = sys.modules.get("powder_bed_raytracer", "absent")
+        sys.modules.pop("powder_bed_raytracer", None)
+
+    def tearDown(self):
+        sys.modules.pop("powder_bed_raytracer", None)
+        if self._saved != "absent":
+            sys.modules["powder_bed_raytracer"] = self._saved
+
+    def test_pin_blocks_the_raytracer_import_and_flag_unpins(self):
+        cmp.pin_flat_plate(allow_raytracer=True)
+        self.assertNotIn("powder_bed_raytracer", sys.modules)
+        cmp.pin_flat_plate()
+        self.assertIsNone(sys.modules["powder_bed_raytracer"])
+        with self.assertRaises(ImportError):
+            from powder_bed_raytracer import calculate_powder_bed_absorptivity  # noqa: F401
+
+    def test_pinned_solver_call_takes_flat_plate_and_counts_the_warning(self):
+        row = {"material": "316L Stainless Steel", "power_W": 200.0, "speed_mm_s": 800.0,
+               "beamDiameter_um": 80.0, "preheat_C": 20.0, "layer_um": 30.0, "hatch_um": 100.0}
+        res = cmp._predict({"row": row, "kernel": "eagar-tsai"})
+        self.assertGreaterEqual(res["_fallbackWarnings"], 1)
+        self.assertIsNotNone(res["width_um"])
+
+
 class CommittedComparisonTests(unittest.TestCase):
     def test_committed_json_honesty_and_shape(self):
         self.assertTrue(COMMITTED_JSON.exists(), "run tools/lpbf_dataset_comparison.py first")
@@ -138,6 +227,31 @@ class CommittedComparisonTests(unittest.TestCase):
                 p = r["predictions"][k]
                 self.assertEqual(p["included"], p["extentStatus"] == "computed")
         self.assertEqual(doc["absorptivitySensitivity"]["values"], [0.3, 0.4, 0.5, 0.6])
+        ab = doc["absorption"]
+        self.assertEqual((ab["path"], ab["pinned"]), ("flat-plate", True))
+        self.assertEqual(ab["fallbackWarnings"], ab["solverCalls"])
+        self.assertEqual(ab["absorptivity_by_material"], {"316L": 0.42, "Ti-6Al-4V": 0.35})
+        self.assertGreaterEqual(len(doc["limits"]), 8)
+        for k in doc["kernels"]:
+            c = doc["summary"][k]["common"]
+            self.assertEqual(c["n"] + c["nExcluded"], len(doc["rows"]))
+            for regime, cell in doc["summary"][k].items():
+                for q in ("width", "depth"):
+                    if cell[q] is not None:
+                        lo, hi = cell[q]["mape_pct_ci95"]
+                        self.assertLessEqual(lo, hi, (k, regime, q))
+
+    def test_view_record_is_the_record_minus_breakdowns_and_reference_rows(self):
+        view_path = COMMITTED_JSON.with_suffix(".view.json")
+        self.assertTrue(view_path.exists())
+        doc = json.loads(COMMITTED_JSON.read_text(encoding="utf-8"))
+        view = json.loads(view_path.read_text(encoding="utf-8"))
+        self.assertNotIn("breakdowns", view)
+        self.assertNotIn("rows", view["referenceTransient"])
+        self.assertEqual(view["referenceTransient"]["counts"], doc["referenceTransient"]["counts"])
+        for k in doc:
+            if k not in ("breakdowns", "referenceTransient"):
+                self.assertEqual(view[k], doc[k], k)
 
 
 if __name__ == "__main__":

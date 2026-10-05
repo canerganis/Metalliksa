@@ -4,6 +4,8 @@
 
 Schema `lpbf-dataset-comparison-1`; implementation fingerprint `11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359`; quick mode: False. Honesty: comparison, not validation; screening kernels; estimated material laws; absorptivity assumed (not measured); published single-track measurements, no replicate or uncertainty model; a failing comparison is reported, not fitted away. `experimentalValidation` = false.
 
+Slim view record `LPBF_DATASET_COMPARISON_2026-10-05.view.json` (this record minus `breakdowns` and `referenceTransient.rows`; sha256 of its LF bytes `914e79fefd117f05da9b60f0df9f2e443403ed219d048d0d4629fb39802a9153`).
+
 ## Datasets
 
 - **hofmann-316l-2026** (316L Stainless Steel): DOI 10.5281/zenodo.16979848, CC BY 4.0, 677 rows used, table sha256 `d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8`. Hofmann et al., melt-pool geometry data for 316L single tracks (Aconity Midi), Zenodo 10.5281/zenodo.16979848 (v1, 2025-08-28); associated paper Materials & Design 262 (2026) 115459, doi:10.1016/j.matdes.2026.115459.
@@ -39,13 +41,34 @@ Row counts per regime: all 757, balling-flagged 216, conduction 141, keyhole 194
 - **preheat_C**: 20 C assumed (not given by either dataset)
 - **absorptivity**: the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35), flat-plate
 - **inclusionRule**: a row counts for statistics only when extentStatus == 'computed'
-- **powderBedRayTracer**: calculate_meltpool_physics falls back to the flat-plate absorptivity when the optional GPU powder ray tracer is unavailable (as in this environment)
+- **powderBedRayTracer**: calculate_meltpool_physics tries the optional GPU powder ray tracer and falls back to the flat-plate absorptivity on any exception. This harness pins the flat-plate path (sys.modules['powder_bed_raytracer'] = None before the solver import; --allow-raytracer unpins), so the ray tracer was not used; see `absorption`
+
+## Absorption path
+
+Path: **flat-plate** (pinned: True). sys.modules['powder_bed_raytracer'] = None is set in the main process and in every worker before lpbf_thermal_solver is imported, so the solver's `from powder_bed_raytracer import ...` raises ImportError and its except branch (flat-plate absorptivity) is taken; the solver is not edited.
+
+Ray-tracer module present: True; importable in a separate probe process: False. Absorptivity by material: 316L 0.42, Ti-6Al-4V 0.35. Fallback warnings captured: 3963 of 3963 solver calls (by kernel, main run: rosenthal 757, eagar-tsai 757, goldak 757).
+
+flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the predictions change (reviewer stub: Eagar-Tsai hofmann-0001 171.0/119.6 -> 209.2/143.6 um at effective 0.65). fallbackWarnings counts the solver's 'GPU Powder Bed Ray Tracing failed' messages (captured, not suppressed): with the pin it fires once per solver call (solverCalls), which confirms the flat-plate branch was the realized path.
+
+## Limits
+
+- Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 757, eagar-tsai 757 of 757, goldak 743 of 757. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.
+- Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent larger than the beam are 'computed'), so they describe the rows it can resolve, not the regime.
+- Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias +0.4 %, MAPE 24.7 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.
+- The measurements carry no uncertainty model (neither dataset provides per-row measurement uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.
+- Replicate rows are not independent: the Hofmann table has 677 rows but only 623 distinct parameter sets; the bootstrap intervals resample whole parameter sets (clusters), the point statistics weight every row.
+- Balling-flagged rows (216) are inside the pooled 'all' headline statistics; a continuous-track screening kernel is not meant to describe them.
+- The Totis depth reference line (original substrate surface vs powder surface) is not stated by the source; the 80 Totis depths carry an unknown offset.
+- The kernels ignore powder-layer thickness (identical predictions at 0/30/60 um; see assumptions.layer_um), so any trend with powder-layer thickness is in the measurements only.
+- Absorption path: flat-plate absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35); the GPU powder ray tracer was not used; with the ray tracer the predictions change.
+- The reference-transient block depends on wall-clock budgets (total and per case): on a slower host rows can become 'not-run (budget)'. --reuse-reference copies the block of an earlier record instead.
 
 ## Summary: kernel x regime (all datasets pooled)
 
 Bias = mean((pred-meas)/meas); rows with extentStatus other than `computed` are excluded and counted. Fractions: share of rows within +-30 % of the measurement / within the x0.5-2 band.
 
-### Pooled
+### Pooled (the `common` regime = rows where all kernels are computed)
 
 | kernel | regime | n | excluded | W bias % | W MAPE % | W RMSE um | W within +-30% / x0.5-2 | D bias % | D MAPE % | D RMSE um | D within +-30% / x0.5-2 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -54,16 +77,44 @@ Bias = mean((pred-meas)/meas); rows with extentStatus other than `computed` are 
 | rosenthal | conduction | 27 | 114 | -35.0 | 35.0 | 59.8 | 22% / 96% | -1.1 | 29.9 | 20.1 | 52% / 93% |
 | rosenthal | keyhole | 192 | 2 | +44.9 | 44.9 | 85.5 | 34% / 98% | +23.4 | 36.4 | 94.2 | 55% / 93% |
 | rosenthal | transition | 179 | 27 | +1.4 | 13.8 | 30.2 | 96% / 100% | +32.5 | 38.4 | 40.9 | 59% / 90% |
+| rosenthal | common | 519 | 238 | +21.5 | 30.3 | 61.1 | 61% / 98% | +42.6 | 51.8 | 73.7 | 50% / 86% |
 | eagar-tsai | all | 757 | 0 | -10.2 | 13.9 | 29.0 | 94% / 100% | +10.9 | 34.1 | 54.1 | 63% / 91% |
 | eagar-tsai | balling-flagged | 216 | 0 | -10.1 | 14.6 | 31.9 | 92% / 100% | +37.9 | 50.8 | 46.7 | 56% / 84% |
 | eagar-tsai | conduction | 141 | 0 | -12.5 | 14.8 | 27.0 | 94% / 100% | +17.2 | 28.5 | 13.3 | 74% / 93% |
 | eagar-tsai | keyhole | 194 | 0 | -4.0 | 11.2 | 25.0 | 98% / 100% | +0.4 | 24.7 | 82.8 | 67% / 98% |
 | eagar-tsai | transition | 206 | 0 | -14.6 | 15.2 | 30.7 | 92% / 100% | -11.9 | 29.2 | 43.6 | 59% / 92% |
+| eagar-tsai | common | 519 | 238 | -8.4 | 13.2 | 28.3 | 95% / 100% | +9.8 | 36.7 | 64.5 | 59% / 91% |
 | goldak | all | 743 | 14 | -17.4 | 20.0 | 39.5 | 81% / 99% | +17.7 | 37.7 | 54.6 | 61% / 91% |
 | goldak | balling-flagged | 215 | 1 | -17.1 | 20.2 | 41.3 | 79% / 100% | +44.8 | 54.4 | 47.0 | 53% / 83% |
 | goldak | conduction | 128 | 13 | -29.9 | 30.1 | 50.0 | 52% / 98% | +38.9 | 43.9 | 17.0 | 56% / 88% |
 | goldak | keyhole | 194 | 0 | -6.6 | 12.4 | 27.9 | 98% / 100% | +0.4 | 24.7 | 82.8 | 67% / 98% |
 | goldak | transition | 206 | 0 | -20.3 | 20.4 | 39.6 | 85% / 100% | -7.6 | 28.6 | 42.5 | 65% / 93% |
+| goldak | common | 519 | 238 | -12.6 | 16.2 | 33.9 | 91% / 100% | +11.9 | 37.0 | 64.3 | 60% / 91% |
+
+### Cluster-bootstrap 95 % intervals (pooled summary cells)
+
+Distinct parameter sets (dataset, power, speed, beam diameter, layer) resampled with replacement, 1000 replicates, `random.Random(0)`, percentile 2.5/97.5; replicates of one set stay together. The intervals cover this resampling only (no measurement uncertainty, no material-law uncertainty); they are in JSON `summary.<kernel>.<regime>.<width|depth>.{bias_pct_ci95, mape_pct_ci95, n_parameterSets}`.
+
+| kernel | regime | n | parameter sets | W bias % CI95 | W MAPE % CI95 | D bias % CI95 | D MAPE % CI95 |
+|---|---|---|---|---|---|---|---|
+| rosenthal | all | 519 | 477 | [18.6, 24.3] | [28.2, 32.3] | [36.4, 49.4] | [46.1, 58.1] |
+| rosenthal | balling-flagged | 121 | 120 | [21.6, 32.2] | [26.1, 35.5] | [78.1, 118.9] | [81.7, 121.7] |
+| rosenthal | conduction | 27 | 24 | [-38.6, -31.3] | [31.3, 38.6] | [-12.0, 10.7] | [20.7, 38.8] |
+| rosenthal | keyhole | 192 | 183 | [41.3, 48.1] | [41.4, 48.1] | [17.2, 29.6] | [31.6, 41.4] |
+| rosenthal | transition | 179 | 159 | [-1.2, 3.8] | [12.5, 15.1] | [25.8, 39.3] | [32.5, 44.2] |
+| rosenthal | common | 519 | 477 | [18.6, 24.3] | [28.2, 32.3] | [36.4, 49.4] | [46.1, 58.1] |
+| eagar-tsai | all | 757 | 703 | [-11.1, -9.3] | [13.3, 14.6] | [6.8, 15.2] | [30.8, 37.8] |
+| eagar-tsai | balling-flagged | 216 | 215 | [-12.1, -8.3] | [13.3, 15.8] | [27.7, 49.1] | [41.5, 61.4] |
+| eagar-tsai | conduction | 141 | 128 | [-14.4, -10.7] | [13.4, 16.1] | [9.5, 25.0] | [22.1, 35.2] |
+| eagar-tsai | keyhole | 194 | 185 | [-5.7, -2.1] | [10.2, 12.2] | [-4.1, 4.8] | [22.0, 27.3] |
+| eagar-tsai | transition | 206 | 185 | [-16.1, -13.3] | [14.0, 16.4] | [-16.9, -7.3] | [25.9, 32.5] |
+| eagar-tsai | common | 519 | 477 | [-9.6, -7.2] | [12.5, 13.9] | [4.8, 15.5] | [32.4, 41.6] |
+| goldak | all | 743 | 690 | [-18.5, -16.4] | [19.1, 20.8] | [13.1, 22.2] | [33.9, 41.6] |
+| goldak | balling-flagged | 215 | 214 | [-19.1, -15.0] | [18.7, 21.7] | [34.4, 56.0] | [45.5, 65.1] |
+| goldak | conduction | 128 | 116 | [-32.0, -27.9] | [28.2, 32.1] | [29.0, 49.0] | [35.1, 53.3] |
+| goldak | keyhole | 194 | 185 | [-8.4, -4.7] | [11.3, 13.5] | [-4.1, 4.8] | [22.0, 27.3] |
+| goldak | transition | 206 | 185 | [-21.6, -19.0] | [19.2, 21.7] | [-12.7, -2.9] | [25.0, 32.0] |
+| goldak | common | 519 | 477 | [-13.8, -11.4] | [15.4, 17.0] | [6.8, 17.6] | [32.7, 41.9] |
 
 ### Dataset hofmann-316l-2026
 
@@ -182,6 +233,8 @@ Bias = mean((pred-meas)/meas); rows with extentStatus other than `computed` are 
 | goldak | keyhole | 7 | 0 | -13.7 | 13.7 | 57.6 | 100% / 100% | +1.2 | 27.1 | 94.2 | 71% / 100% |
 | goldak | transition | 48 | 0 | -18.7 | 18.7 | 50.1 | 96% / 100% | -17.2 | 27.0 | 64.5 | 56% / 94% |
 
+**Powder-layer breakdowns below:** the kernels ignore powder-layer thickness (identical predictions at 0/30/60 um, see `assumptions.layer_um`), so any trend with powder-layer thickness in these tables is in the measurements only, not a kernel result.
+
 ### Hofmann, powder layer 0 um
 
 | kernel | regime | n | excluded | W bias % | W MAPE % | W RMSE um | W within +-30% / x0.5-2 | D bias % | D MAPE % | D RMSE um | D within +-30% / x0.5-2 |
@@ -256,6 +309,8 @@ Conduction rows: 141.
 
 ## Reference transient (bare plate, low power)
 
+This block depends on wall-clock budgets (total and per case): on a slower or busier host cases can turn into 'not-run (budget)', so it is not guaranteed to reproduce; `--reuse-reference` copies the block of an earlier record instead of re-running it. This record's block was reused from a record with sha256 `28f10da131bbdf8e2f3669150e8b195ef4e0f8d4d89f15a323252c98e92020a4` (LF-normalised).
+
 Hofmann rows with t_powder = 0 (bare plate) and P <= 100 W (26 rows); all other rows are not run with the reference transient.
 Completed 17, boiling stop 9, not run (budget) 0 of 26. sourcePenetration_um = 40 is an arbitrary, unvalidated choice for the bare-plate volumetric absorption depth; mesh 20 um is coarse relative to the 50-140 um spots and the result is not mesh-converged: every completed case has depth <= 2 cells, so its width/depth are cell-quantised (meshLimited = true) and carry almost no information about the measured track; a completed width of 0 means no resolved liquid extent. completed/boiling-stop is the reference transient's own validity stop; the widths/depths are a model comparison, not validation. Rows beyond the budget were skipped, not estimated.
 
@@ -287,4 +342,3 @@ Completed 17, boiling stop 9, not run (budget) 0 of 26. sourcePenetration_um = 4
 | hofmann-0608 | 50 | 1050 | 80 | completed (mesh-limited) | 0.0 | 71.1 | 0.0 | 14.6 |
 | hofmann-0613 | 50 | 900 | 50 | completed (mesh-limited) | 39.5 | 52.4 | 19.7 | 20.9 |
 | hofmann-0618 | 100 | 600 | 80 | boiling-stop | - | 96.1 | - | 38.1 |
-
