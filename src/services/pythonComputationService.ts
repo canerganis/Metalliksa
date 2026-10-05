@@ -144,6 +144,7 @@ export interface PythonCalphadSolveResult
 
 export interface DFTStructureInput {
   formula: string;
+  input_mode?: "custom" | "isotropic" | "library";
   material_id?: string;
   crystal_system?: string;
   space_group?: string;
@@ -164,6 +165,7 @@ export interface DFTStructureInput {
     c33?: number;
     c12?: number;
     c13?: number;
+    c14?: number;
     c23?: number;
     c44?: number;
     c55?: number;
