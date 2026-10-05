@@ -100,7 +100,10 @@ Active development by a single maintainer. The workstation is usable for researc
 
 ## Work with me
 
-Metalliksa is looking for collaborators, research partners and the right engineering team to grow with. If you work on additive manufacturing, computational materials science or evidence-driven engineering software and this resonates, open an issue or reach out through the [GitHub profile](https://github.com/0000can0000).
+Metalliksa is looking for collaborators, research partners and the right engineering team to grow with. If you work on additive manufacturing, computational materials science or evidence-driven engineering software and this resonates, open an issue or reach out:
+
+- LinkedIn: [Muhammet Can Erganis](https://www.linkedin.com/in/muhammet-can-erganis)
+- GitHub: [@0000can0000](https://github.com/0000can0000)
 
 ## License
 
