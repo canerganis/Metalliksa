@@ -31,7 +31,9 @@
   font-family: var(--mk-font-sans);
 }
 .mk-boot { position: relative; min-height: 100%; }
-.mk-boot-art { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; mask-image: linear-gradient(90deg, transparent 0, black 34%), linear-gradient(180deg, black 82%, transparent); mask-composite: intersect; }
+.mk-boot-art { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; }
+
+.mk-boot-art > .mk-foundry { mask-image: linear-gradient(90deg, transparent 0, black 34%), linear-gradient(180deg, black 82%, transparent); mask-composite: intersect; }
 .mk-boot-art .f-frame { height: 100%; }
 .mk-boot-copy {
   position: relative;
@@ -161,20 +163,7 @@
 
 /* WebGL spark layer over the artwork (lazy) and its honesty caption. */
 .mk-boot-hero { position: absolute; inset: 0; margin: 0; }
-.mk-boot-hero > div, .mk-boot-hero canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.mk-boot-hero figcaption {
-  position: absolute;
-  right: var(--mk-space-5);
-  top: var(--mk-space-4);
-  padding: var(--mk-space-1) var(--mk-space-3);
-  border-radius: 999px;
-  background: var(--mk-glass-bg);
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-fs-2xs);
-  letter-spacing: var(--mk-tracking-caps);
-  text-transform: uppercase;
-  color: var(--mk-evidence-unvalidated);
-}
+.mk-boot-hero canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 
 /* Choreography (first animated start only). */
 .mk-boot[data-animate="true"] .e-ring { animation: mkDraw 1.4s var(--mk-ease-out) both; }
@@ -191,7 +180,7 @@
 .mk-boot[data-animate="true"] .mk-boot-trace > i[data-state="running"] { animation: mkBootTrace 1.2s linear infinite; }
 .mk-boot[data-animate="true"] .mk-boot-tagline span { animation: mkLetter 1.1s var(--mk-ease-out) both; animation-delay: 0.5s; }
 .mk-boot[data-animate="true"] .mk-boot-tagline span + span { animation-delay: 0.85s; }
-.mk-boot[data-animate="true"] .mk-boot-art { animation: mkArtIn 1.6s var(--mk-ease-out) both; }
+.mk-boot[data-animate="true"] .mk-boot-art > .mk-foundry { animation: mkArtIn 1.6s var(--mk-ease-out) both; }
 .mk-boot[data-animate="true"] .mk-boot-row:not([data-state="pending"]) { animation: mkBootRowIn var(--mk-dur-slow) var(--mk-ease-out); }
 .mk-boot[data-animate="true"] [data-state="running"] > .mk-boot-icon { animation: mkBootPulse 0.9s var(--mk-ease-inout) infinite alternate; }
 
@@ -213,19 +202,18 @@
 
 /* Narrow screens: picture on top (sphere centred), copy below with the headline over the fade. */
 @media (max-width: 63.99rem) {
-  .mk-boot-art { position: relative; width: 100%; height: 50vh; mask-image: linear-gradient(180deg, black 55%, transparent), linear-gradient(90deg, transparent, black 8%, black 92%, transparent); mask-composite: intersect; }
+  .mk-boot-art { position: relative; width: 100%; height: 50vh; }
+
+  .mk-boot-art > .mk-foundry { mask-image: linear-gradient(180deg, black 55%, transparent), linear-gradient(90deg, transparent, black 8%, black 92%, transparent); mask-composite: intersect; }
   .mk-boot-art .f-frame { right: auto; left: 50%; transform: translateX(-64%); }
   .mk-boot-copy { width: 100%; max-width: 40rem; min-height: 0; margin-top: -3vh; padding-top: 0; }
   .mk-boot-stage { order: -1; }
+  /* Skip stays on screen (sticky dock), so the initially focused control is visible without scrolling. */
+  .mk-boot-actions { position: sticky; bottom: 0; z-index: 3; margin: var(--mk-space-4) calc(-1 * clamp(1.25rem, 6vw, 6.5rem)) 0; padding: var(--mk-space-3) clamp(1.25rem, 6vw, 6.5rem); border-top: 1px solid var(--mk-border); background: var(--mk-glass-bg); backdrop-filter: blur(var(--mk-glass-blur)); }
 }
 
 @media (min-width: 37.5rem) and (max-width: 63.99rem) {
   .mk-boot-art .f-frame { top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; transform: none; }
-}
-
-@media (max-width: 30rem) {
-  /* The frame is wider than the phone and centred on its 64% line, so centre the caption there. */
-  .mk-boot-hero figcaption { top: var(--mk-space-2); right: auto; left: 64%; transform: translateX(-50%); white-space: nowrap; font-size: 9px; letter-spacing: 0.06em; }
 }
 
 /* Telemetry strip: every cell shows a value returned by an API, or "unavailable".

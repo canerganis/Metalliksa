@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { AccessibleModal } from './AccessibleModal';
 import { EvidenceBadge } from './sdk/EvidenceBadge';
 import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
+import { SUBVIEW_KEYWORDS } from '../data/paletteKeywords';
 import {
   PALETTE_QUERY_MAX_LENGTH, commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects,
 } from '../utils/commandPalette';
@@ -14,6 +15,7 @@ import {
 
 const ENTRIES = MODULES.map(module => ({
   ...module,
+  keywords: SUBVIEW_KEYWORDS[module.id] ?? '',
   workspaceLabel: WORKSPACES.find(workspace => workspace.id === module.workspace)?.label ?? module.workspace,
 }));
 

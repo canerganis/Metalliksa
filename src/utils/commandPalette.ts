@@ -14,6 +14,8 @@ export interface PaletteEntry {
   readonly description: string;
   readonly scope: string;
   readonly workspaceLabel: string;
+  /** Optional sub-view terms (tabs inside the module), matched like the id. */
+  readonly keywords?: string;
 }
 
 /** Longest query the palette field accepts (the input's maxLength). */
@@ -59,7 +61,7 @@ export function subsequenceScore(text: string, token: string): number | null {
 /** Highest score a scattered (subsequence) label match can reach: below every exact field match. */
 export const FUZZY_SCORE_CAP = 19;
 
-interface NormalizedEntry { readonly label: string; readonly id: string; readonly workspace: string; readonly scope: string; readonly description: string }
+interface NormalizedEntry { readonly label: string; readonly id: string; readonly workspace: string; readonly scope: string; readonly description: string; readonly keywords: string }
 // Entries are static (the registry), so each is normalized once, not on every keystroke.
 const normalized = new WeakMap<PaletteEntry, NormalizedEntry>();
 function normalizedEntry(entry: PaletteEntry): NormalizedEntry {
@@ -67,7 +69,7 @@ function normalizedEntry(entry: PaletteEntry): NormalizedEntry {
   if (!value) {
     value = {
       label: normalizeForSearch(entry.label), id: normalizeForSearch(entry.id), workspace: normalizeForSearch(entry.workspaceLabel),
-      scope: normalizeForSearch(entry.scope), description: normalizeForSearch(entry.description),
+      scope: normalizeForSearch(entry.scope), description: normalizeForSearch(entry.description), keywords: normalizeForSearch(entry.keywords ?? ''),
     };
     normalized.set(entry, value);
   }
@@ -87,6 +89,7 @@ function tokenScore(entry: PaletteEntry, token: string): number | null {
   if (token.length < 2) return null;
   if (fields.label.includes(token)) return 80;
   if (fields.id.includes(token)) return 60;
+  if (fields.keywords.includes(token)) return 50;
   if (fields.workspace.includes(token) || fields.scope.includes(token)) return 40;
   if (fields.description.includes(token)) return 20;
   const fuzzy = subsequenceScore(fields.label, token);

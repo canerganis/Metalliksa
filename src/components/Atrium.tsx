@@ -5,7 +5,7 @@
  * decorative (aria-hidden), carries no numbers and is not a simulation.
  */
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, Pause, Play, Search } from 'lucide-react';
 import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
 import type { PythonEngineStatus } from '../services/pythonComputationService';
 import { FoundryStage } from './FoundryStage';
@@ -45,7 +45,10 @@ export interface AtriumProps {
 }
 
 export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNavigate, onSearch }: AtriumProps) {
-  const motion = useMotionAllowed();
+  const motionAllowed = useMotionAllowed();
+  // A page-level pause for the ambient motion (review Sol S6): stops the picture, glints, tilt and light.
+  const [paused, setPaused] = useState(false);
+  const motion = motionAllowed && !paused;
   const resume = MODULES.find((m) => m.id === continueId) ?? MODULES[0];
   const maturity = SCOPES.map((scope) => [scope, MODULES.filter((m) => m.scope === scope).length] as const).filter(([, n]) => n > 0);
   const engineText = engineChecking && !engine ? 'checking' : engine?.online ? 'online' : 'unavailable';
@@ -71,7 +74,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
   return (
     <section className="mk-atrium" aria-labelledby="atrium-title" data-motion={String(motion)} onPointerMove={spot}>
       <div className="mk-at-hero">
-        <FoundryStage className="mk-at-art" caption="Illustration — not a simulation result" />
+        <FoundryStage className="mk-at-art" paused={!motion} />
         <div className="mk-at-copy">
           <p className="mk-at-kicker">Metalliksa · Local research workstation · Laser powder-bed fusion</p>
           <h2 id="atrium-title" className="mk-at-title"><span>Built by light,</span> <span>layer by layer.</span></h2>
@@ -90,11 +93,17 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
             <div title={MATURITY_BADGE_TITLE}><dt>Maturity</dt><dd>{maturity.map(([scope, n]) => `${n} ${scope.toLowerCase()}`).join(' · ')}</dd></div>
           </dl>
           <p className="mk-at-note">Maturity describes a module, not a validation claim for any result.</p>
+          {motionAllowed && (
+            <button type="button" className="mk-at-motion" aria-pressed={paused} onClick={() => setPaused(p => !p)}>
+              {paused ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
+              {paused ? 'Play ambient motion' : 'Pause ambient motion'}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="mk-at-section">
-        <p className="mk-at-section-label"><span>02</span>Select a workspace · {WORKSPACES.length}</p>
+        <p className="mk-at-section-label"><span>{two(WORKSPACES.length)}</span>Workspaces</p>
       </div>
       <div className="mk-at-grid">
         {WORKSPACES.map((workspace, index) => {

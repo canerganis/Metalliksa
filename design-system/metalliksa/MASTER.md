@@ -122,6 +122,13 @@ Module bodies were authored for a dark UI. The Tailwind ramps are re-pointed ins
 - `outline: 2px solid var(--mk-focus-color)` (cobalt), `outline-offset: 3px`, optional halo `--mk-focus-halo`.
 - The focus ring never animates or transitions.
 
+## 8b. Artwork provenance (public/images/metalliksa-foundry-art.webp)
+
+- **What is known:** the file is byte-identical to the asset committed in `codex/premium-ui` commit `a29012b` ("feat: art direct foundry interface", author 0000can0000). Size 109,868 bytes, sha256 `3f6b9ae6b32b51a628e2f19a0a83f97a25074f6010c918b861eca418b28a9c88`, git blob `7d9640b49d41901e3caebfe34aba8f61dcd76a2b`. That proves how it reached this branch, nothing more.
+- **What is not known (not recorded anywhere in the repository):** who or what created the image, its original source, and the licence or permitted use. No assumption is made about how it was produced.
+- **Before distribution:** the owner must record the creator/source and the usage rights here. Until then the picture is used only as decoration inside the local application.
+- **Honesty in the UI:** wherever the picture appears (boot, atrium) it carries the caption "Illustrative — not a simulation result" on an opaque pill that is never masked, faded or animated; module mastheads do not use the picture.
+
 ## 9. Brand mark
 
 A world built additively: a globe grown bottom-up from graphite layers, meridians cut through the finished layers, the unbuilt cap drawn as a hairline graticule, and a laser from above finishing the current layer. Same drawing in the header (CSS, `.mk-brand-mark`), the boot emblem (SVG, animated) and `public/icon.svg`.

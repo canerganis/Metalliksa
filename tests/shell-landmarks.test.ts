@@ -43,14 +43,15 @@ test("exactly one <main> landmark and one banner <header> in the source tree", (
 
 test("module navigation is its own component (focus moves do not re-render App), wired with arrow keys", () => {
   const nav = read("src/components/ModuleNav.tsx");
-  assert.match(app, /<ModuleNav modules=\{filtered\} activeTab=\{activeTab\} activeWorkspace=\{activeWorkspace\.id\} onNavigate=\{navigate\} \/>/);
+  // On the start page no module is the current page (review N1), so App passes home state.
+  assert.match(app, /<ModuleNav home=\{home\} modules=\{filtered\} activeTab=\{activeTab\} activeWorkspace=\{activeWorkspace\.id\} onNavigate=\{navigate\} \/>/);
   assert.doesNotMatch(app, /navFocus|setNavFocus|onFocus=/, "App holds no roving focus state");
   assert.match(nav, /<nav aria-label="Engineering workspaces" onKeyDown=\{onKey\}>/);
   assert.match(nav, /<p id="module-nav-hint" className="mk-sr-only">Arrow keys move between modules\.<\/p>/);
   assert.match(nav, /tabIndex: key === stop \? 0 : -1/);
   assert.match(nav, /if \(event\.ctrlKey \|\| event\.altKey \|\| event\.metaKey\) return;/, "modifier shortcuts are left to the browser");
   assert.match(nav, /<button \{\.\.\.item\('ws:' \+ workspace\.id\)\}/, "workspace headings join the roving group");
-  assert.match(nav, /<button key=\{module\.id\} \{\.\.\.item\(module\.id, ' nav-desc-' \+ module\.id\)\} aria-current=\{activeTab === module\.id \? 'page' : undefined\}/);
+  assert.match(nav, /<button key=\{module\.id\} \{\.\.\.item\(module\.id, ' nav-desc-' \+ module\.id\)\} aria-current=\{!home && activeTab === module\.id \? 'page' : undefined\}/);
 });
 
 test("rovingIndex: Up/Down wrap, Home/End jump, other keys are ignored", () => {

@@ -165,12 +165,6 @@ export function BootSequence() {
   const open = !gone && !snap.dismissed;
   // Shell decisions outside this chunk (the command palette never opens over the boot screen).
   useEffect(() => setBootOverlayOpen(open), [open]);
-  // The modal focuses Skip (the first control, at the end of the column), which scrolls a tall panel on
-  // phones; bring the picture and headline back into view. Focus stays on Skip.
-  useEffect(() => {
-    const frame = open ? requestAnimationFrame(() => document.querySelector(".mk-boot-panel")?.scrollTo(0, 0)) : 0;
-    return () => cancelAnimationFrame(frame);
-  }, [open]);
   // The stage stylesheet travels in its own chunk (kept out of the index CSS); the picture mounts once it
   // has arrived, so it never flashes unstyled. The checklist does not wait for it.
   const [stageReady, setStageReady] = useState(false);
@@ -202,7 +196,7 @@ export function BootSequence() {
     >
       <div className="mk-boot" data-animate={String(snap.animate)} data-phase={snap.phase}>
         {/* The foundry artwork as a live cinemagraph; the WebGL spark layer joins it on a plain animated start. */}
-        {stageReady && <FoundryStage className="mk-boot-art">
+        {stageReady && <FoundryStage className="mk-boot-art" sparks>
           {webgl && wantsHero && (
             <Suspense fallback={null}>
               <BootHero />
@@ -216,7 +210,7 @@ export function BootSequence() {
             <p className="mk-boot-word" aria-hidden="true">
               {[...WORDMARK].map((letter, i) => <span key={i} style={{ "--i": i } as React.CSSProperties}>{letter}</span>)}
             </p>
-            <p className="mk-boot-kicker">Metalliksa · local start-up</p>
+            <p className="mk-boot-kicker">Local start-up · research workstation</p>
           </div>
         </div>
         <p className="mk-boot-tagline" aria-hidden="true"><span>A world,</span> <span>built by light.</span></p>

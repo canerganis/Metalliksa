@@ -20,8 +20,8 @@ export function syncNavFocus(focus: { key: string; tab: string }, activeTab: str
  * Sidebar module navigation as one Tab stop (roving tabindex). Its own component so that moving focus
  * between entries re-renders only the navigation, not App and the mounted module views.
  */
-export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
-  modules: (typeof MODULES)[number][]; activeTab: ModuleId; activeWorkspace: string; onNavigate: (id: string) => void;
+export function ModuleNav({ home = false, modules, activeTab, activeWorkspace, onNavigate }: {
+  home?: boolean; modules: (typeof MODULES)[number][]; activeTab: ModuleId; activeWorkspace: string; onNavigate: (id: string) => void;
 }) {
   // The remembered entry is tied to the active module it was focused under: any navigation (hash change,
   // back button, Next link, navigate event) moves the Tab stop back to the aria-current entry.
@@ -49,7 +49,7 @@ export function ModuleNav({ modules, activeTab, activeWorkspace, onNavigate }: {
     {WORKSPACES.map(workspace => {
       const entries = modules.filter(m => m.workspace === workspace.id);
       if (!entries.length) return null;
-      return <div key={workspace.id} className="mb-6"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mk-nav-ws${workspace.id === activeWorkspace ? ' is-current' : ''}`}>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => <button key={module.id} {...item(module.id, ' nav-desc-' + module.id)} aria-current={activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => onNavigate(module.id)} className={`mk-nav-item${activeTab === module.id ? ' is-active' : ''}`}>{module.label}</button>)}</div></div>;
+      return <div key={workspace.id} className="mb-6"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mk-nav-ws${workspace.id === activeWorkspace ? ' is-current' : ''}`}>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => <button key={module.id} {...item(module.id, ' nav-desc-' + module.id)} aria-current={!home && activeTab === module.id ? 'page' : undefined} title={module.description} onClick={() => onNavigate(module.id)} className={`mk-nav-item${!home && activeTab === module.id ? ' is-active' : ''}`}>{module.label}</button>)}</div></div>;
     })}
     <div hidden>{modules.map(module => <span key={module.id} id={'nav-desc-' + module.id}>{module.description}</span>)}</div>
     {!modules.length && <p role="status" className="text-sm text-slate-400">No matching modules. Try a material, method or workflow name.</p>}

@@ -860,18 +860,22 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                       dataKey="temperatureC"
                       stroke="#64748b"
                       tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit="°C"
+                      minTickGap={28}
+                      tickFormatter={(value: number) => `${Math.round(value)}°C`}
                     />
                     <YAxis
                       stroke="#64748b"
                       tick={{ fill: "#94a3b8", fontSize: 11 }}
                       domain={[0, 100]}
-                      unit="%"
+                      ticks={[0, 25, 50, 75, 100]}
+                      allowDataOverflow
+                      tickFormatter={(value: number) => `${Math.round(value)}%`}
+                      width={44}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#050810",
-                        borderColor: "#1e2d46",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#d0d5dc",
                         borderRadius: "12px",
                         fontSize: "12px",
                         fontFamily: "monospace",

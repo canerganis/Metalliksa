@@ -4,9 +4,10 @@
  * The picture is toned towards silver (white-grey identity); the laser keeps its warmth.
  * Without motion everything rests on its base style: beam and bloom lit, rings and sparks hidden.
  */
-/* Zero-specificity base, so the placing class of each host (boot, atrium) decides position and size. */
-:where(.mk-foundry) { position: relative; }
-.mk-foundry { --hx: 74.2%; --hy: 14.6%; overflow: hidden; pointer-events: none; }
+/* The host class (boot, atrium) decides position and size; the picture layer fills it and carries the
+ * host's mask; the caption is a sibling of the picture, so it is never masked or faded. */
+:where(.mk-foundry-host) { position: relative; }
+.mk-foundry { --hx: 74.2%; --hy: 14.6%; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .mk-foundry .f-frame { position: absolute; top: 0; right: 0; height: 100%; aspect-ratio: 3 / 2; transform-origin: 72% 38%; }
 .mk-foundry .f-art {
   display: block;
@@ -46,30 +47,28 @@
 .mk-foundry .f-rings { position: absolute; left: var(--hx); top: var(--hy); width: 26%; height: 17%; transform: translate(-50%, -50%) rotate(-14deg); }
 .mk-foundry .f-rings i {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2px;
-  height: 2px;
-  border: 1px solid rgba(255, 196, 130, 0.9);
+  inset: 0;
+  border: 1.5px solid rgba(255, 196, 130, 0.9);
   border-radius: 50%;
   opacity: 0;
-  transform: translate(-50%, -50%);
+  transform: scale(0.02);
   box-shadow: 0 0 6px rgba(255, 150, 70, 0.6);
 }
 /* A diagonal light sweep over the metal. */
 .mk-foundry .f-sheen {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.28) 48%, transparent 58%) no-repeat;
-  background-size: 260% 100%;
-  background-position: 140% 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.28) 50%, transparent 80%);
   mix-blend-mode: soft-light;
+  transform: translateX(-100%);
 }
 /* CSS sparks (used where no WebGL spark layer is mounted). */
 .mk-foundry .f-sparks { position: absolute; left: var(--hx); top: var(--hy); width: 0; height: 0; }
-.mk-foundry .f-sparks i {
-  --a: calc(var(--k) * 27deg - 200deg);
-  --d: calc(40px + var(--k) * 4px);
+.mk-foundry .f-sparks i { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.mk-foundry .f-sparks b {
   position: absolute;
   left: -1.5px;
   top: -1.5px;
@@ -81,30 +80,30 @@
   opacity: 0;
 }
 .mk-foundry.has-webgl .f-sparks { display: none; }
-.mk-foundry .f-caption { position: absolute; top: 16px; right: 20px; padding: 3px 10px; border-radius: 999px; background: var(--mk-glass-bg); font-family: var(--mk-font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mk-evidence-unvalidated); }
+/* Honesty caption: opaque pill, contrast-tested colour (#8b1d9c on white is 7.6:1), never animated. */
+.mk-foundry-caption { position: absolute; z-index: 2; top: 16px; right: 20px; margin: 0; padding: 4px 11px; border: 1px solid rgba(139, 29, 156, 0.28); border-radius: 999px; background: #ffffff; font-family: var(--mk-font-mono); font-size: 10.5px; line-height: 1.3; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mk-evidence-unvalidated); box-shadow: 0 4px 14px -8px rgba(16, 24, 40, 0.4); }
+.mk-foundry.is-paused, .mk-foundry.is-paused * { animation-play-state: paused !important; }
 
 @media (prefers-reduced-motion: no-preference) {
   .mk-foundry .f-frame { animation: mkFoundryPush 18s ease-in-out infinite alternate; }
-  .mk-foundry .f-beam { animation: mkFoundryFlicker 0.18s steps(2, end) infinite; }
   .mk-foundry .f-hit { animation: mkFoundryBloom 1.4s ease-in-out infinite alternate; }
   .mk-foundry .f-rings i { animation: mkFoundryRing 3.6s cubic-bezier(0.2, 0.7, 0.3, 1) infinite; }
   .mk-foundry .f-rings i:nth-child(2) { animation-delay: 1.2s; }
   .mk-foundry .f-rings i:nth-child(3) { animation-delay: 2.4s; }
   .mk-foundry .f-sheen { animation: mkFoundrySheen 9s ease-in-out 1.2s infinite; }
-  .mk-foundry .f-sparks i { animation: mkFoundrySpark 1.1s cubic-bezier(0.15, 0.6, 0.4, 1) infinite; animation-delay: calc(var(--k) * -83ms); }
+  .mk-foundry .f-sparks b { animation: mkFoundrySpark 1.1s cubic-bezier(0.15, 0.6, 0.4, 1) infinite; animation-delay: inherit; }
 }
 @keyframes mkFoundryPush { from { scale: 1; } to { scale: 1.045; } }
-@keyframes mkFoundryFlicker { from { opacity: 1; } to { opacity: 0.82; } }
 @keyframes mkFoundryBloom { from { opacity: 0.78; scale: 0.92; } to { opacity: 1; scale: 1.08; } }
 @keyframes mkFoundryRing {
-  0% { width: 4px; height: 3px; opacity: 0.95; }
+  0% { transform: scale(0.02); opacity: 0.95; }
   70% { opacity: 0.35; }
-  100% { width: 100%; height: 100%; opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
 }
-@keyframes mkFoundrySheen { 0%, 20% { background-position: 140% 0; } 70%, 100% { background-position: -60% 0; } }
+@keyframes mkFoundrySheen { 0%, 20% { transform: translateX(-100%); } 70%, 100% { transform: translateX(240%); } }
 @keyframes mkFoundrySpark {
-  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  0% { opacity: 1; transform: translateX(0) scale(1); }
   60% { opacity: 0.9; }
-  100% { opacity: 0; transform: translate(calc(cos(var(--a)) * var(--d)), calc(sin(var(--a)) * var(--d) + 36px)) scale(0.4); }
+  100% { opacity: 0; transform: translateX(64px) scale(0.4); }
 }
-@media (max-width: 30rem) { .mk-foundry .f-caption { top: 10px; right: auto; left: 64%; transform: translateX(-50%); white-space: nowrap; font-size: 9px; letter-spacing: 0.06em; } }
+@media (max-width: 30rem) { .mk-foundry-caption { top: 10px; right: 50%; transform: translateX(50%); white-space: nowrap; font-size: 9px; letter-spacing: 0.06em; } }

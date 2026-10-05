@@ -142,7 +142,7 @@ export function CorrosionEngineeringLab() {
   return (
     <div className="space-y-6">
       {/* Top Banner Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#090e18] p-5 rounded-2xl border border-[#162032] shadow-sm">
+      <div className="flex flex-col gap-4 bg-[#090e18] p-5 rounded-2xl border border-[#162032] shadow-sm">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.25)]">
             <ShieldAlert className="w-6 h-6" />
@@ -162,8 +162,8 @@ export function CorrosionEngineeringLab() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#050810] rounded-xl border border-[#162032] overflow-x-auto">
+        {/* Tab Navigation: its own row and wrapping, so every tab (Pourbaix included) and the active one stay visible. */}
+        <div role="group" aria-label="Corrosion views" className="flex flex-wrap items-center gap-1.5 p-1 bg-[#050810] rounded-xl border border-[#162032]">
           <button
             type="button"
             onClick={() => {

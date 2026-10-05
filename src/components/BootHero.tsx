@@ -153,12 +153,14 @@ export default function BootHero() {
     let raf = 0;
     let last = 0;
     let slow = 0;
+    let base = 0;
     let stopped = false;
 
     const frame = (now: number) => {
       const dtMs = last ? now - last : 16;
       last = now;
-      slow = dtMs > SLOW_FRAME_MS ? slow + 1 : 0;
+      if (dtMs > 0 && dtMs < 100) base = base ? base * 0.95 + Math.min(dtMs, base * 2) * 0.05 : dtMs;
+      slow = dtMs > Math.max(SLOW_FRAME_MS, base * 1.5) ? slow + 1 : 0;
       const dt = Math.min(dtMs, 50) / 1000;
       const gravity = 520 * (width / 900);
       for (let i = 0; i < COUNT; i += 1) {
@@ -209,12 +211,27 @@ export default function BootHero() {
       if (!document.hidden && !stopped) raf = requestAnimationFrame(frame);
     };
     document.addEventListener("visibilitychange", onVisibility);
+    // A reduced-motion request made while the boot is on screen stops the sparks at once (the picture stays).
+    const motionQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    const onMotion = () => {
+      if (!motionQuery?.matches) return;
+      stopped = true;
+      cancelAnimationFrame(raf);
+      headCol.fill(0);
+      trailCol.fill(0);
+      heads.attributes.color.needsUpdate = true;
+      trails.attributes.color.needsUpdate = true;
+      renderer.render(scene, camera);
+      container.closest(".mk-foundry")?.classList.remove("has-webgl");
+    };
+    motionQuery?.addEventListener("change", onMotion);
     onVisibility();
 
     return () => {
       stopped = true;
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVisibility);
+      motionQuery?.removeEventListener("change", onMotion);
       observer?.disconnect();
       container.closest(".mk-foundry")?.classList.remove("has-webgl");
       heads.dispose();
@@ -228,10 +245,7 @@ export default function BootHero() {
     };
   }, []);
 
-  return (
-    <figure className="mk-boot-hero">
-      <div ref={host} />
-      <figcaption>Illustrative — not a simulation result</figcaption>
-    </figure>
-  );
+  // The "Illustrative — not a simulation result" caption belongs to the picture (FoundryStage renders it
+  // with or without this spark layer), so this layer is purely decorative.
+  return <div ref={host} className="mk-boot-hero" aria-hidden="true" />;
 }

@@ -167,9 +167,31 @@ test("boot and telemetry text never claims validation or readiness (strings in a
   for (const file of [...NEW_TSX, ...NEW_TS]) assert.deepEqual(claimHits(read(file)), [], `${file} claims validation/readiness`);
 });
 
-test("hero is labelled illustrative and respects DPR, visibility and disposal budgets", () => {
+test("the boot artwork is always captioned illustrative, independent of WebGL; the hero respects DPR, visibility, motion and disposal budgets", () => {
+  // Review B1: the caption lives on the picture (FoundryStage), outside its masked/animated layer, so a
+  // static start, missing WebGL or a lazy-loading spark layer can never show the picture without it.
+  const stage = read("src/components/FoundryStage.tsx");
+  assert.match(stage, /export const FOUNDRY_CAPTION = 'Illustrative — not a simulation result';/);
+  assert.match(stage, /caption = FOUNDRY_CAPTION/, "the caption has a default, so no host can forget it");
+  const pictureStart = stage.indexOf("<div className={`mk-foundry$");
+  const captionAt = stage.indexOf('<p className="mk-foundry-caption">');
+  assert.ok(pictureStart > 0 && captionAt > pictureStart, "caption follows the picture layer");
+  assert.match(stage.slice(pictureStart, captionAt), /<\/div>\s*<\/div>\s*$/, "caption is a sibling of the picture layer, not inside it");
+  const boot = read("src/components/BootSequence.tsx");
+  assert.match(boot, /<FoundryStage className="mk-boot-art"/, "boot shows the stage");
+  assert.doesNotMatch(boot, /<FoundryStage[^>]*caption=/, "boot never overrides the caption");
+  const foundryCss = read("src/styles/foundry.css").replace(/\/\*[\s\S]*?\*\//g, "");
+  const captionRule = foundryCss.match(/\.mk-foundry-caption \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(captionRule, /background: #ffffff;/, "opaque pill");
+  assert.doesNotMatch(captionRule, /opacity|animation|filter/, "never faded or animated");
+  for (const file of ["src/styles/atrium.css", "src/styles/boot.css", "src/styles/foundry.css"]) {
+    assert.doesNotMatch(read(file), /\.mk-foundry-caption[^{]*\{[^}]*(opacity|mask|animation)/, `${file} must not fade the caption`);
+    assert.doesNotMatch(read(file), /\.mk-foundry-host[^{]*\{[^}]*(opacity|mask-image|animation)/, `${file}: the host (caption parent) is never masked or faded`);
+  }
+  // Module mastheads carry no artwork (the reticle is pure ornament), so there is no uncaptioned picture.
+  assert.doesNotMatch(read("src/index.css"), /metalliksa-foundry-art/);
   const hero = read("src/components/BootHero.tsx");
-  assert.match(hero, /Illustrative — not a simulation result/);
+  assert.match(hero, /prefers-reduced-motion: reduce/, "a reduced-motion change stops the sparks");
   assert.match(hero, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
   assert.match(hero, /visibilitychange/);
   for (const call of ["renderer.dispose()", "renderer.forceContextLoss()", "observer?.disconnect()", "cancelAnimationFrame(raf)"]) {

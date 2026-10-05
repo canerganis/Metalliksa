@@ -76,8 +76,9 @@ function initialTab(): ModuleId {
   if (linked) return linked;
   const parameters = new URLSearchParams(window.location.search);
   if (parameters.has('lpbfStage') || parameters.has('lpbfSubTab')) return '3d-distortion-lab';
-  // Explicit unknown routes go to LPBF instead of silently restoring another workspace.
-  if (window.location.hash) return '3d-distortion-lab';
+  // Explicit unknown routes go to LPBF instead of silently restoring another workspace. The start page
+  // (#/home) is not unknown: it keeps the remembered module as its Continue target.
+  if (window.location.hash && !isHome(window.location.hash)) return '3d-distortion-lab';
   try { const saved = localStorage.getItem('metallixa.workspace.module'); if (isModuleId(saved)) return saved; } catch { /* Optional storage. */ }
   return '3d-distortion-lab';
 }
@@ -195,7 +196,7 @@ export default function App() {
     <AirgapBanner />
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden mk-status px-3 py-2 text-xs">Modules</button><div className="hidden sm:contents"><div className="mk-brand-mark" aria-label="Metalliksa logo"><span className="mk-brand-laser" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title">METALLIKSA</h1><p className="mk-brand-tag hidden lg:block">Research engineering workstation</p></div></div>
+        <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden mk-status px-3 py-2 text-xs">Modules</button><div className="contents"><div className="mk-brand-mark" role="img" aria-label="Metalliksa logo"><span className="mk-brand-laser" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title">METALLIKSA</h1><p className="mk-brand-tag hidden lg:block">Research engineering workstation</p></div></div>
         <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px]">{SHORTCUT_LABEL}</kbd></button><span className="mk-hud-chip hidden xl:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-500 animate-pulse' : status?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}/>{checking ? 'Checking…' : status?.online ? 'Engine connected' : 'Engine unavailable'}</button></div>
       </div>
     </header>
@@ -203,10 +204,12 @@ export default function App() {
       <aside className={`${navigationOpen ? 'block' : 'hidden'}${home ? ' is-home' : ''} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[var(--mk-header-h)] lg:h-[calc(100vh_-_var(--mk-header-h))] overflow-y-auto`}>
         <div className="mb-5 flex items-center justify-between"><div><p className="mk-side-kicker">Navigation</p><p className="mt-1 text-sm text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(MODULES.length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-slate-400">Find a module</label><div className="relative mb-6"><Search className="absolute left-3 top-3 w-4 h-4 text-slate-500"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm"/></div>
         <button type="button" onClick={goHome} aria-current={home ? 'page' : undefined} className={`mk-nav-item mk-nav-home mb-5${home ? ' is-active' : ''}`}>Overview</button>
-        <ModuleNav modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
+        <ModuleNav home={home} modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
       </aside>
       <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
-        {home ? <Suspense fallback={<div role="status" className="mk-loading">Loading overview…</div>}><Atrium continueId={activeTab} engine={status} engineChecking={checking || (status === null && statusError === null)} shortcutLabel={SHORTCUT_LABEL} onNavigate={navigate} onSearch={openPalette} /></Suspense> : <>
+        {home ? <ModuleBoundary label="Overview"><Suspense fallback={<div role="status" className="mk-loading">Loading overview…</div>}><Atrium continueId={activeTab} engine={status} engineChecking={checking || (status === null && statusError === null)} shortcutLabel={SHORTCUT_LABEL} onNavigate={navigate} onSearch={openPalette} /></Suspense></ModuleBoundary> : <>
+        {/* Laser wipe on entering a module (ornament, transform only, once per navigation). */}
+        <div key={'wipe-' + activeTab} className="mk-wipe" aria-hidden="true" />
         <div key={activeTab} className="mk-content-header mb-6 border-b pb-6 pt-1"><p className="mk-kicker mb-3">{activeWorkspace.label} / Active surface</p><h2>{activeModule.label}</h2><div className="mt-3 flex flex-wrap items-center gap-2"><span title={MATURITY_BADGE_TITLE} className={`mk-scope-badge ${activeModule.scope === 'Preview' ? 'is-preview' : ''}`}>{activeModule.scope}</span><EvidenceBadge moduleId={activeModule.id} /></div><p className="mt-4 max-w-3xl text-[15px] leading-7 text-slate-300">{activeModule.description}</p></div>
         <details className="mk-plate mb-5 px-4 py-3 text-xs">
           <summary className="cursor-pointer text-slate-300">Shared material · <span className="text-sky-200">{specimen.name}</span> · {formatExactNumber(specimen.lpbf.laserPower_W)} W / {formatExactNumber(specimen.lpbf.scanSpeed_mms)} mm/s <span className="ml-2 text-slate-500">Context & trust</span></summary>

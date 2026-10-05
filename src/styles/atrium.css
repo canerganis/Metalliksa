@@ -25,7 +25,9 @@
 }
 .mk-at-copy { position: relative; z-index: 1; max-width: 36rem; padding: 2rem 0; }
 /* Foundry cinemagraph behind the copy, fading out to the left and bottom. */
-.mk-at-art { position: absolute; top: 0; right: 0; bottom: 0; width: 72%; border-radius: 0 0 0 28px; mask-image: linear-gradient(90deg, transparent 0, black 36%), linear-gradient(180deg, transparent 0, black 14%, black 76%, transparent); mask-composite: intersect; }
+.mk-at-art { position: absolute; top: 0; right: 0; bottom: 0; width: 72%; }
+
+.mk-at-art > .mk-foundry { border-radius: 0 0 0 28px; mask-image: linear-gradient(90deg, transparent 0, black 36%), linear-gradient(180deg, transparent 0, black 14%, black 76%, transparent); mask-composite: intersect; }
 .mk-at-kicker {
   font-family: var(--mk-font-mono);
   font-size: 10.5px;
@@ -94,6 +96,8 @@
 .mk-at-readout dd { color: var(--mk-text-strong); }
 .mk-at-readout dd[data-tone="ok"] { color: var(--mk-signal-ok); }
 .mk-at-readout dd[data-tone="fail"] { color: var(--mk-signal-fail); }
+.mk-at-motion { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 0.9rem; padding: 0.3rem 0.75rem; border: 1px solid var(--mk-border-bright); border-radius: 999px; background: rgba(255, 255, 255, 0.7); font-family: var(--mk-font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mk-text-soft); }
+.mk-at-motion:hover { background: var(--mk-surface-raised); }
 .mk-at-note { margin-top: 0.6rem; font-size: 12px; color: var(--mk-text-dim); }
 
 /* Section label */
@@ -141,10 +145,10 @@
 .mk-at-card-top { display: flex; justify-content: space-between; font-family: var(--mk-font-mono); font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; }
 .mk-at-code { color: var(--mk-ice); }
 .mk-at-count { color: var(--mk-text-dim); }
-.mk-at-motif { position: absolute; right: 1.1rem; top: 2.4rem; width: 6.5rem; height: 6.5rem; fill: none; stroke: rgba(17, 22, 31, 0.32); stroke-width: 1; }
+.mk-at-motif { position: absolute; right: 1.1rem; top: 2.1rem; width: 5.25rem; height: 5.25rem; fill: none; stroke: rgba(17, 22, 31, 0.32); stroke-width: 1; }
 .mk-at-motif circle { fill: var(--mk-paper); }
 .mk-at-motif .m-hot { fill: var(--mk-laser); stroke: none; filter: drop-shadow(0 0 4px var(--mk-laser)); }
-.mk-at-card-title { margin-top: 2.6rem; max-width: 70%; font-size: 1.55rem; font-weight: 300; letter-spacing: -0.005em; color: var(--mk-text-strong); }
+.mk-at-card-title { margin-top: 2.6rem; max-width: 66%; font-family: var(--mk-font-serif); font-size: 1.8rem; font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; color: var(--mk-text-strong); }
 .mk-at-card-text { margin-top: 0.5rem; max-width: 34rem; font-size: 0.9rem; line-height: 1.6; color: var(--mk-text-subtle); }
 .mk-at-mods { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1.1rem 0 0; padding: 0; list-style: none; }
 .mk-at-mods button {
@@ -195,7 +199,9 @@
 
 @media (max-width: 63.99rem) {
   .mk-at-hero { display: block; min-height: 0; margin: -1rem -1rem 0; padding: 0 1rem; }
-  .mk-at-art { position: relative; width: auto; height: 44vh; margin: 0 -1rem; mask-image: linear-gradient(180deg, black 55%, transparent), linear-gradient(90deg, transparent, black 10%, black 90%, transparent); mask-composite: intersect; }
+  .mk-at-art { position: relative; width: auto; height: 44vh; margin: 0 -1rem; }
+
+  .mk-at-art > .mk-foundry { mask-image: linear-gradient(180deg, black 55%, transparent), linear-gradient(90deg, transparent, black 10%, black 90%, transparent); mask-composite: intersect; }
   .mk-at-art .f-frame { right: auto; left: 50%; transform: translateX(-64%); }
   .mk-at-copy { margin-top: -5vh; padding-top: 0; }
 }

@@ -135,7 +135,8 @@ test('phone header keeps one row with the trigger: decorative brand mark from sm
   // Browser-measured at 375 px: without this the status button overflowed the viewport (right edge 422 px);
   // a wrapped header would exceed --mk-header-h (scroll padding, WCAG 2.4.11), so the row must not wrap.
   const app = read('src/App.tsx');
-  assert.match(app, /<div className="hidden sm:contents"><div className="mk-brand-mark" aria-label="Metalliksa logo">/);
+  // The mark is shown at every width (phones too, review N3), exposed as one labelled image.
+  assert.match(app, /<div className="contents"><div className="mk-brand-mark" role="img" aria-label="Metalliksa logo">/);
   assert.match(app, /<div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog"/);
   assert.match(app, /<h1 className="mk-brand-title[^"]*">METALLIKSA<\/h1>/, 'the brand name stays visible at every width');
 });
