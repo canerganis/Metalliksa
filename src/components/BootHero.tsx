@@ -245,7 +245,6 @@ export default function BootHero() {
     };
   }, []);
 
-  // The "Illustrative — not a simulation result" caption belongs to the picture (FoundryStage renders it
-  // with or without this spark layer), so this layer is purely decorative.
+  // This layer is purely decorative.
   return <div ref={host} className="mk-boot-hero" aria-hidden="true" />;
 }

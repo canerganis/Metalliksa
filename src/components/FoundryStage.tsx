@@ -5,19 +5,17 @@
  * flickering beam, a pulsing melt bloom, scan rings spreading over the new layer, sparks, a slow camera
  * push and a light sweep. Purely decorative: no data, no numbers, not a simulation.
  *
- * The honesty caption is always rendered, outside the masked and animated picture layer, on an opaque
- * glass pill, so no host mask, entrance fade or missing WebGL can hide it. Children (the optional WebGL
- * spark layer) are placed inside the picture frame so they line up with it. All motion is transform and
+ * No caption is shown by default (maintainer decision 2026-10-05: the picture is obviously decorative); a host
+ * may pass `caption` to show one. Children (the optional WebGL spark layer) are placed inside the picture frame so they line up with it. All motion is transform and
  * opacity only and stops when `paused` is set or the user asks for reduced motion.
  * Styles: src/styles/foundry.css, imported by the host (Atrium statically, the boot screen on demand).
  */
 import React from 'react';
 
 export const FOUNDRY_ART = '/images/metalliksa-foundry-art.webp';
-export const FOUNDRY_CAPTION = 'Illustrative — not a simulation result';
 const SPARKS = 14;
 
-export function FoundryStage({ className = '', caption = FOUNDRY_CAPTION, paused = false, sparks = false, children }: {
+export function FoundryStage({ className = '', caption, paused = false, sparks = false, children }: {
   className?: string; caption?: string; paused?: boolean;
   /** CSS sparks (the boot's fallback when the WebGL layer is absent). Off on long-lived pages: they cost
    *  main-thread style work every frame, and the atrium must idle cheaply (review S2). */
@@ -42,7 +40,7 @@ export function FoundryStage({ className = '', caption = FOUNDRY_CAPTION, paused
           {children}
         </div>
       </div>
-      <p className="mk-foundry-caption">{caption}</p>
+      {caption && <p className="mk-foundry-caption">{caption}</p>}
     </div>
   );
 }
