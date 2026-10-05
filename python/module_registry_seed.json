@@ -75,9 +75,19 @@
     "label": "Keyhole Ray Tracing",
     "scope": "Research",
     "description": "Phase 26: GPU-accelerated multiple light scattering inside keyhole via NVIDIA Warp BVH.",
-    "next": "database",
+    "next": "lpbf-dataset-comparison",
     "viewComponent": "src/components/KeyholeRaytracingLab.tsx",
     "viewExport": "KeyholeRaytracingLab"
+  },
+  {
+    "id": "lpbf-dataset-comparison",
+    "workspace": "lpbf",
+    "label": "Dataset Comparison (LPBF)",
+    "scope": "Research",
+    "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
+    "next": "database",
+    "viewComponent": "src/components/LpbfDatasetComparisonLab.tsx",
+    "viewExport": "LpbfDatasetComparisonLab"
   },
   {
     "id": "database",

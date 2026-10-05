@@ -56,6 +56,7 @@ const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudio
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
+const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
 
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
@@ -169,6 +170,7 @@ export default function App() {
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
+      case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
