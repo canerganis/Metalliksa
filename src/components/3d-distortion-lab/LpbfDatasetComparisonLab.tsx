@@ -8,7 +8,7 @@ import {
 } from "../../data/lpbfDatasetComparison";
 import { COMMITTED_DATASET_COMPARISON } from "../../data/lpbfDatasetComparisonRecord";
 
-// Read-only view of the Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json.
+// Read-only view of the Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.view.json.
 // Every number below is read from that JSON: no physics and no statistics are computed here.
 // The only derived display facts are point counts of what is plotted and axis scales.
 
@@ -389,7 +389,7 @@ export function NoComparisonRecord() {
           <div>
             <p className="font-medium">No comparison record committed yet.</p>
             <p className="text-xs text-slate-500">
-              This page only displays the Python-generated file docs/LPBF_DATASET_COMPARISON_2026-10-05.json; nothing is
+              This page only displays the Python-generated file docs/LPBF_DATASET_COMPARISON_2026-10-05.view.json; nothing is
               computed in the browser. Nothing is shown until that file exists.
             </p>
           </div>
