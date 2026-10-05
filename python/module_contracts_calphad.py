@@ -12,6 +12,19 @@ from module_contract import (
 
 CONTRACT_VERSION = "0.1.0"
 
+# UI option names, not an alloy applicability/qualification list.
+FE_C_PRESET_NAMES = (
+    "AISI 1008 Low Carbon / IF Steel", "AISI 1018 Mild Structural Steel",
+    "AISI 1045 Medium Carbon Machinery Steel", "AISI 1080 Eutectoid Rail & Wire Steel",
+    "AISI 1095 High Carbon Spring & Tool Steel", "AISI 52100 High-Carbon Bearing Steel",
+    "Class 30 Gray Cast Iron (Hypoeutectic)", "Eutectic White Cast Iron (Ledeburite)",
+    "Hypereutectic White Cast Iron",
+)
+FE_C_PROBE_OUTPUTS = (
+    "compositionC", "temperatureC", "regionName", "stateCategory", "phasesPresent",
+    "equilibriumDescription", "liquidus", "solidus",
+)
+
 
 def _selector(key, label, values, default, note):
     return InputField(key=key, label=label, unit=None, quantity_kind="selection",
@@ -32,6 +45,47 @@ def _boolean(key, label, default, note):
 def _python_authority(timeout_ms):
     return Authority(kind="python-ipc", script="python/calphad_solver.py",
                      timeout_ms=timeout_ms, warm=True)
+
+
+def _fe_c_operations():
+    local = Authority(kind="browser-local", timeout_ms=None, exception_reason=(
+        "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule "
+        "expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+    ))
+    def operation(operation_id, fields=(), outputs=(), undeclared=()):
+        return Operation(id=operation_id, route=None, method=None, authority=local,
+                         input=fields, undeclared_input=undeclared,
+                         output=OutputSchema(fields=outputs, status_key=None))
+
+    return (
+        operation("switch-phase-view", fields=(
+            _selector("activeView", "Phase explorer view", ("calphad_solver", "fe_c_diagram"),
+                      "calphad_solver", "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; "
+                      "switching back remounts its mount-time requests. Fe-C is not a Python error fallback."),
+        ), outputs=("activeView",)),
+        operation("fe-c-probe", fields=(
+            InputField(key="compositionC", label="Carbon content (wt% C)", unit="%",
+                       quantity_kind="carbon-mass-percentage", min=None, max=None, default=0.45,
+                       step=0.01, note="Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping "
+                       "clamps to that chart extent and rounds to two decimals. These are UI bounds, "
+                       "not a validated physical domain; this state is separate from the shared specimen."),
+            InputField(key="temperatureC", label="Probe temperature", unit="degC",
+                       quantity_kind="temperature", min=None, max=None, default=850, step=5,
+                       note="Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that "
+                       "chart extent and rounds to whole degC, so pointer values need not follow the "
+                       "slider step. No assessed thermodynamic applicability is declared."),
+        ), outputs=FE_C_PROBE_OUTPUTS),
+        operation("select-fe-c-preset", fields=(
+            _selector("presetName", "Fe-C preset", FE_C_PRESET_NAMES,
+                      "AISI 1045 Medium Carbon Machinery Steel", "The handler sets selectedPreset and "
+                      "copies only carbon composition from the matching table row; temperature is unchanged. "
+                      "The dropdown exposes all rows and quick buttons expose the first four."),
+        ), outputs=("selectedPreset", "compositionC")),
+        operation("drag-fe-c-probe", outputs=("isDragging", "compositionC", "temperatureC"),
+                  undeclared=("e",)),
+        operation("end-fe-c-drag", outputs=("isDragging",)),
+        operation("hover-fe-c-region", outputs=("hoveredRegion",), undeclared=("hoveredRegion",)),
+    )
 
 
 def build_calphad_contract(seed) -> ModuleContract:
@@ -79,18 +133,22 @@ def build_calphad_contract(seed) -> ModuleContract:
             fields=("success", "status", "unavailableKind", "reason", "reasons", "engine",
                     "pycalphadAvailable", "pycalphadVersion", "alloyName", "nominalComposition",
                     "atomicFractions", "requestedElements", "baseElement", "databaseId", "databaseUsed",
-                    "databaseSuitability", "databasePath", "missingElements", "databasesConsidered",
+                    "databaseStatus", "databaseSuitability", "databasePath", "missingElements", "databasesConsidered",
                     "temperatureRangeC",
                     "temperatureStepC", "thermodynamicModel", "isEmpirical", "equilibriumCalls",
                     "activeComponents", "dependentComponent", "unsupportedElements", "compositionAdjustments",
                     "gridPoints", "equilibriumProfile", "criticalTemperatures",
                     "phacompAnalysis", "solutePartitioning", "multiElementScheil",
-                    "multiElementScheilNote", "scheilSolidification", "thermodynamicStabilityIndex",
+                    "multiElementScheilStatus", "multiElementScheilNote", "scheilSolidification", "thermodynamicStabilityIndex",
                     "tcpEmbrittlementRisk", "nonConvergedPoints", "boundaryRefinement", "phaseNameNotes",
                     "computeTimeMs", "timingsMs", "modelCache", "provenance", "isPythonEngine",
                     "pythonUnavailable",
                     "error", "errorKind", "field", "extra", "rawOutput", "stderr", "script"),
-            status_key=None, transport_values=(("status", ("unavailable",)),),
+            status_key=None, transport_values=(
+                ("status", ("unavailable",)),
+                ("databaseStatus", ("assessment", "test-fixture", "user-supplied")),
+                ("multiElementScheilStatus", ("pycalphad-scheil-gulliver", "incomplete", "unavailable")),
+            ),
         ),
     )
     client_screening = Operation(
@@ -116,7 +174,8 @@ def build_calphad_contract(seed) -> ModuleContract:
         output=OutputSchema(fields=("engine", "isPythonEngine", "isEmpirical", "thermodynamicModel",
                                     "databaseUsed", "iterations", "equilibriumProfile", "criticalTemperatures",
                                     "solutePartitioning", "multiElementScheil", "temperatureRangeC",
-                                    "temperatureStepC"), status_key=None),
+                                    "temperatureStepC", "alloyName", "nominalComposition", "computeTimeMs",
+                                    "thermodynamicStabilityIndex", "tcpEmbrittlementRisk"), status_key=None),
     )
     binary_browser = Operation(
         id="binary-browser-analysis", route=None,
@@ -147,7 +206,7 @@ def build_calphad_contract(seed) -> ModuleContract:
         next=seed["next"], maturity=seed["scope"], navigation="listed",
         view=View(component=seed["viewComponent"], export=seed["viewExport"]),
         migration_state="contracted",
-        operations=(database_operation, minimize, client_screening, binary_browser, consultation),
+        operations=(database_operation, minimize, client_screening, binary_browser, consultation) + _fe_c_operations(),
         lifecycle=Lifecycle(background_work="none", resources=("fetch", "interval")),
         evidence=Evidence(
             emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=FORBIDDEN_CLAIM_KEYS,
@@ -162,7 +221,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             "renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio "
             "requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, "
             "then schedules a minimization after "
-            "a short debounce; edits/supersession abort stale client requests. The 250 ms interval only updates "
+            "an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard "
+            "result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. "
+            "The 250 ms interval has clearInterval cleanup and only updates "
             "elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
             "The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database "
             "coverage, missing elements, refused test-fixture TDBs, or equilibrium failure yields an unavailable "
@@ -182,17 +243,43 @@ def build_calphad_contract(seed) -> ModuleContract:
             "validated CALPHAD result. Neither browser path is promoted as Python output.",
             "The SDK output fields are conditional inventories. Database coverage entries can say covered or "
             "unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver "
-            "'status=unavailable' is transport state only; no evidence status is emitted. Nested "
-            "databaseStatus/criticalTemperatureStatus and multiElementScheilStatus carry richer values the SDK "
-            "transport schema cannot type, so those nested keys are intentionally not declared as output fields. "
+            "'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is "
+            "database provenance classification (assessment/test-fixture/user-supplied), not validation; "
+            "multiElementScheilStatus is computed-path/incomplete/unavailable transport state. "
+            "criticalTemperatureStatus is a top-level per-temperature object map; the current scalar status "
+            "schema cannot honestly represent it. This remaining structured-output schema debt is not a "
+            "claim that the map is absent from real solver output. "
             "Output numbers depend "
             "on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
+            "The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded "
+            "piecewise boundaries, approximate tie lines and lever-rule fractions, not an assessed TDB or a "
+            "pycalphad call. probeState holds the declared Fe-C output fields; phasesPresent contains name, "
+            "formula, fractionPct, compositionC and crystal. UI labels including 'CALPHAD Standard' and the "
+            "unconditional 'Solver: Online' text are not authority or physical validation. The declared "
+            "diagramMode Fe-C/Al-Cu/Ti-Al state has no reachable setter/control; no extra system operation is invented.",
+            "Fe-C pointer events e carry browser coordinates; the SVG bounding rectangle maps them to a "
+            "900x600 viewBox. Dragging begins on pointer down, updates only within the chart, and ends on "
+            "pointer up on that SVG; no pointer capture, leave or cancel handler is registered. Hover sets "
+            "a region label on mouse enter and null on mouse leave; the "
+            "nullable hoveredRegion input is undeclared because InputField has no nullable string type. "
+            "Hover is display-only. React owns these handlers/ref; this branch has no "
+            "effect, fetch, interval or external listener to dispose. Root probe/preset state survives child "
+            "view switches. Slider/pointer changes do not update selectedPreset, so the preset morphology "
+            "card remains table text independent of the current probe, not recomputed microstructure evidence.",
+            "The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed "
+            "500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the "
+            "debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with "
+            "the element-selected window, and replaces the initial local result. These two screening paths "
+            "are not identical database/window authorities. Output inventory includes the service wrapper fields.",
         ),
         source_refs=(
             "python/module_registry.py::build_registry",
             "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
             "src/modules/views.ts:23-23#'phase-diagram': lazy(",
             "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
+            "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
+            "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",
+            "src/components/PhaseDiagramViewer.tsx::updateProbeFromEvent",
             "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
             "src/utils/calphadConsultation.ts::parseConsultationResponse",
             "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
@@ -208,6 +295,8 @@ def build_calphad_contract(seed) -> ModuleContract:
             "python/calphad_solver.py::unavailable_result",
             "python/calphad_solver.py::resolve_database",
             "python/calphad_solver.py::solve_pycalphad_equilibrium",
+            "python/calphad_solver.py::derive_critical_temperatures",
+            "python/calphad_solver.py::_scheil_outputs",
             "python/calphad_solver.py::compute_multi_component_equilibrium",
             "python/calphad_solver.py::main",
             "src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium",

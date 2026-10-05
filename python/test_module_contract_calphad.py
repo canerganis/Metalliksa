@@ -1,4 +1,6 @@
 """Bounded contract checks against the rendered route inventory and Python authority."""
+from pathlib import Path
+import re
 import unittest
 from unittest.mock import patch
 
@@ -6,6 +8,28 @@ import calphad_solver
 from module_contract import contract_from_dict
 from module_contracts_calphad import build_calphad_contract
 from module_registry import load_seed, contract_ref_problems
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def product_source(path):
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def ts_return_keys(source):
+    """Read keys at the top level of the final TS return literal, not nested keys."""
+    block = source.rsplit("return {", 1)[1]
+    depth = 0
+    keys = set()
+    for line in block.splitlines():
+        if depth == 0:
+            match = re.match(r"\s*(\w+)\s*(?::|,)", line)
+            if match:
+                keys.add(match.group(1))
+        depth += line.count("{") - line.count("}")
+        if depth < 0:
+            break
+    return keys
 
 
 class CalphadContractTests(unittest.TestCase):
@@ -30,6 +54,8 @@ class CalphadContractTests(unittest.TestCase):
         self.assertEqual(set(self.operations), {
             "calphad-databases", "calphad-minimize", "client-screening",
             "binary-browser-analysis", "ai-consult",
+            "switch-phase-view", "fe-c-probe", "select-fe-c-preset",
+            "drag-fe-c-probe", "end-fe-c-drag", "hover-fe-c-region",
         })
         database = self.operations["calphad-databases"]
         self.assertEqual((database.method, database.route, database.authority.script,
@@ -99,9 +125,7 @@ class CalphadContractTests(unittest.TestCase):
                 adaptive_grid=False, boundary_refinement=True, min_refine_step_c=0.5,
             )
         solver_contract = self.operations["calphad-minimize"]
-        # This nested provenance state is intentionally outside OutputSchema: its
-        # values are assessment/test-fixture, not the SDK's available/unavailable transport pair.
-        self.assertEqual(set(result) - set(solver_contract.output.fields), {"databaseStatus"})
+        self.assertFalse(set(result) - set(solver_contract.output.fields))
         self.assertIn(result["databaseStatus"], {"assessment", "test-fixture"})
         self.assertFalse(result["success"])
         self.assertEqual(result["status"], "unavailable")
@@ -111,6 +135,127 @@ class CalphadContractTests(unittest.TestCase):
         self.assertNotIn("equilibriumProfile", result)
         self.assertNotIn("criticalTemperatures", result)
         self.assertNotIn("evidenceStatus", result)
+
+    def test_scalar_provenance_and_scheil_statuses_are_real_transport_values(self):
+        output = self.operations["calphad-minimize"].output
+        transport = dict(output.transport_values)
+        self.assertEqual(set(transport["databaseStatus"]),
+                         {"assessment", "test-fixture", "user-supplied"})
+        self.assertEqual(set(transport["multiElementScheilStatus"]),
+                         {"pycalphad-scheil-gulliver", "incomplete", "unavailable"})
+        # Exercise the real formatting path with a deliberately unavailable path;
+        # this checks transport/absence semantics, not a numerical oracle.
+        points, block, rows = calphad_solver._scheil_outputs(
+            None, "contract transport test", {"Ni": 100}, "test label", ["NI"])
+        self.assertEqual(points, [])
+        self.assertIn(block["status"], transport["multiElementScheilStatus"])
+        self.assertIsNone(rows[0]["partitionCoefficient_k"])
+        self.assertEqual(self.contract.evidence.emits, ())
+        # Synthetic formatter inputs cover complete/incomplete branches without
+        # running equilibrium or claiming a thermodynamic numerical oracle.
+        path = dict(points=[dict(fractionSolid=0.0, temperatureC=900,
+                                liquidX={}, solidX={}, solidPhases=[])],
+                    firstAppearance={}, terminationReason="temperature-floor",
+                    terminalTemperatureC=900, terminalBracketC=None,
+                    remainingLiquidFraction=1.0, stepC=5, steps=1, phaseAmounts={},
+                    clampedSteps=0, massBalanceMaxAbsError=0.0, elapsedMs=0.0)
+        for state, expected in (("complete", "pycalphad-scheil-gulliver"),
+                                ("incomplete", "incomplete")):
+            _, formatted, _ = calphad_solver._scheil_outputs(
+                {**path, "status": state}, None, {"Ni": 100}, "synthetic formatter", ["NI"])
+            self.assertEqual(formatted["status"], expected)
+            self.assertIn(formatted["status"], transport["multiElementScheilStatus"])
+
+    def test_actual_critical_temperature_map_is_structured_and_numbers_remain_unavailable(self):
+        values, statuses = calphad_solver.derive_critical_temperatures([], None, None, None, None)
+        self.assertTrue(values)
+        self.assertEqual(set(values), set(statuses))
+        self.assertTrue(all(value is None for value in values.values()))
+        for field, entry in statuses.items():
+            with self.subTest(field=field):
+                self.assertIsInstance(entry, dict)
+                self.assertEqual(entry["status"], "unavailable")
+                self.assertTrue(entry["reason"])
+        # A status map is not a scalar enum: the helper documents this schema
+        # debt separately instead of falsely describing the whole map as a string.
+        self.assertIn("per-temperature object map", " ".join(self.contract.legacy_notes))
+
+    def test_client_output_inventory_covers_actual_solver_and_service_return(self):
+        solver_keys = ts_return_keys(product_source("src/physics/calphadMultiComponentSolver.ts"))
+        service = product_source("src/services/pythonComputationService.ts")
+        service_block = service.split("// Client-side TypeScript Fallback", 1)[1].split(
+            "async ", 1)[0]
+        keys = solver_keys | ts_return_keys(service_block)
+        self.assertTrue({"alloyName", "nominalComposition", "computeTimeMs",
+                         "thermodynamicStabilityIndex", "tcpEmbrittlementRisk"} <= keys)
+        self.assertFalse(keys - set(self.operations["client-screening"].output.fields))
+
+    def test_fe_c_controls_match_source_without_invented_domain_or_other_systems(self):
+        source = product_source("src/components/PhaseDiagramViewer.tsx")
+        switch = self.operations["switch-phase-view"]
+        self.assertEqual(switch.input[0].enum, ("calphad_solver", "fe_c_diagram"))
+        self.assertEqual(switch.input[0].default, "calphad_solver")
+        probe = self.operations["fe-c-probe"]
+        fields = {field.key: field for field in probe.input}
+        for key, label, default, unit, step in (
+            ("compositionC", "Carbon Composition (wt % C)", 0.45, "%", 0.01),
+            ("temperatureC", "Isothermal Probe Temperature (°C)", 850, "degC", 5),
+        ):
+            slider = re.search(r'<input aria-label="' + re.escape(label) + r'"(.*?)\s*/>', source, re.S)
+            self.assertIsNotNone(slider)
+            self.assertIn(f"value={{{key}}}", slider.group(1))
+            self.assertEqual(float(re.search(r'step="([\d.]+)"', slider.group(1))[1]), step)
+            self.assertEqual((fields[key].default, fields[key].unit, fields[key].step), (default, unit, step))
+            self.assertIsNone(fields[key].min)
+            self.assertIsNone(fields[key].max)
+        self.assertEqual(probe.input_problems({"compositionC": 0.76, "temperatureC": 727}), [])
+        self.assertTrue(probe.input_problems({"compositionC": float("nan")}))
+        self.assertTrue(probe.input_problems({"diagramMode": "Al-Cu"}))
+        self.assertEqual(source.count("setDiagramMode"), 1)  # unused declaration, no selector
+        for op_id in ("switch-phase-view", "fe-c-probe", "select-fe-c-preset",
+                      "drag-fe-c-probe", "end-fe-c-drag", "hover-fe-c-region"):
+            operation = self.operations[op_id]
+            self.assertEqual((operation.route, operation.method, operation.authority.timeout_ms),
+                             (None, None, None))
+            self.assertEqual(operation.authority.kind, "browser-local")
+            self.assertIsNone(operation.output.status_key)
+        self.assertIsNone(self.contract.validity_domain)
+
+    def test_fe_c_preset_and_probe_output_coverage_tracks_actual_source(self):
+        source = product_source("src/components/PhaseDiagramViewer.tsx")
+        table = source.split("export const FEC_ALLOY_PRESETS", 1)[1].split("];", 1)[0]
+        names = tuple(re.findall(r'name: "([^"]+)"', table))
+        preset = self.operations["select-fe-c-preset"]
+        self.assertEqual(preset.input[0].key, "presetName")
+        self.assertEqual(preset.input[0].enum, names)
+        handler = source.split("const handleSelectPreset", 1)[1].split("return (", 1)[0]
+        self.assertIn("setSelectedPreset(presetName)", handler)
+        self.assertIn("setCompositionC(pr.composition_wt_pct_C)", handler)
+        self.assertNotIn("setTemperatureC", handler)
+        probe_block = source.split("const probeState = useMemo", 1)[1].split(
+            "const handleSelectPreset", 1)[0]
+        self.assertEqual(ts_return_keys(probe_block), set(self.operations["fe-c-probe"].output.fields))
+        self.assertIn("}, [compositionC, temperatureC])", probe_block)
+        self.assertEqual(self.operations["drag-fe-c-probe"].undeclared_input, ("e",))
+        svg = source.split("<svg", 1)[1].split(">", 1)[0]
+        self.assertIn("onPointerUp={handleSvgPointerUp}", svg)
+        self.assertNotIn("onPointerLeave", svg)
+        self.assertNotIn("onPointerCancel", svg)
+
+    def test_lifecycle_records_actual_cleanup_and_client_model_selection_limits(self):
+        notes = " ".join(self.contract.legacy_notes)
+        studio = product_source("src/components/CALPHADMultiComponentStudio.tsx")
+        self.assertIn("clearTimeout(timer)", studio)
+        self.assertIn("controller.abort()", studio)
+        self.assertIn("clearInterval(id)", studio)
+        self.assertIn("80 ms", notes)
+        self.assertIn("250 ms", notes)
+        self.assertIn("no cleanup guard", notes)
+        self.assertIn("PRELOADED_MULTI_COMPONENT_TDB[0]", notes)
+        self.assertIn("500/1450/20", notes)
+        self.assertIn("selectedPreset", notes)
+        self.assertIn("piecewise", notes)
+        self.assertIn("not an assessed TDB", notes)
 
 
 if __name__ == "__main__":
