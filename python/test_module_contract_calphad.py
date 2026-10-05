@@ -1,5 +1,7 @@
 """Bounded contract checks against the rendered route inventory and Python authority."""
 from pathlib import Path
+import ast
+import inspect
 import re
 import unittest
 from unittest.mock import patch
@@ -176,9 +178,25 @@ class CalphadContractTests(unittest.TestCase):
                 self.assertIsInstance(entry, dict)
                 self.assertEqual(entry["status"], "unavailable")
                 self.assertTrue(entry["reason"])
-        # A status map is not a scalar enum: the helper documents this schema
-        # debt separately instead of falsely describing the whole map as a string.
+        output = self.operations["calphad-minimize"].output
+        self.assertIn("criticalTemperatureStatus", output.fields)
+        self.assertNotIn("criticalTemperatureStatus", dict(output.transport_values))
+        leaves = dict(dict(output.transport_objects)["criticalTemperatureStatus"])
+        self.assertEqual(set(leaves), {f"{field}.status" for field in statuses})
+        for field, entry in statuses.items():
+            self.assertIn(entry["status"], leaves[f"{field}.status"])
         self.assertIn("per-temperature object map", " ".join(self.contract.legacy_notes))
+
+    def test_success_output_inventory_covers_literal_python_return(self):
+        tree = ast.parse(inspect.getsource(calphad_solver._solve_with_runner))
+        returns = [node.value for node in ast.walk(tree)
+                   if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict)]
+        successful = [value for value in returns
+                      if any(isinstance(key, ast.Constant) and key.value == "criticalTemperatureStatus"
+                             for key in value.keys)]
+        self.assertEqual(len(successful), 1)
+        keys = {key.value for key in successful[0].keys if isinstance(key, ast.Constant)}
+        self.assertFalse(keys - set(self.operations["calphad-minimize"].output.fields))
 
     def test_client_output_inventory_covers_actual_solver_and_service_return(self):
         solver_keys = ts_return_keys(product_source("src/physics/calphadMultiComponentSolver.ts"))

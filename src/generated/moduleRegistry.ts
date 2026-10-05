@@ -32,6 +32,7 @@ export interface ContractOperation {
   readonly output: {
     readonly fields: readonly string[]; readonly statusKey: string | null;
     readonly transportValues: Readonly<Record<string, readonly string[]>>;
+    readonly transportObjects: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;
   } | null;
 }
 export interface ContractValidityDomain {
@@ -774,7 +775,8 @@ export const MODULE_REGISTRY = {
               "skywriting_mitigation_active"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -957,7 +959,8 @@ export const MODULE_REGISTRY = {
               "paris_crack_growth"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1171,7 +1174,8 @@ export const MODULE_REGISTRY = {
               "sample_segments"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1484,7 +1488,8 @@ export const MODULE_REGISTRY = {
               "status": [
                 "success"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -1586,7 +1591,8 @@ export const MODULE_REGISTRY = {
               "honesty"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1679,7 +1685,8 @@ export const MODULE_REGISTRY = {
               "visibleCount"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1732,7 +1739,8 @@ export const MODULE_REGISTRY = {
               "visibleCount"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1772,7 +1780,8 @@ export const MODULE_REGISTRY = {
               "visibleCount"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1812,7 +1821,8 @@ export const MODULE_REGISTRY = {
               "visibleCount"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1852,7 +1862,8 @@ export const MODULE_REGISTRY = {
               "visibleCount"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1880,7 +1891,8 @@ export const MODULE_REGISTRY = {
               "maxDensity"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1903,7 +1915,8 @@ export const MODULE_REGISTRY = {
               "showFilters"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1946,7 +1959,8 @@ export const MODULE_REGISTRY = {
               "activeView"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2010,7 +2024,8 @@ export const MODULE_REGISTRY = {
               "sortedMaterials"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2035,7 +2050,8 @@ export const MODULE_REGISTRY = {
               "selectedMaterial"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2060,7 +2076,8 @@ export const MODULE_REGISTRY = {
               "compareList"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2083,7 +2100,8 @@ export const MODULE_REGISTRY = {
               "isCompareOpen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2106,7 +2124,8 @@ export const MODULE_REGISTRY = {
               "isCompareOpen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2130,7 +2149,8 @@ export const MODULE_REGISTRY = {
               "optimisticCopyFeedback"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2153,7 +2173,8 @@ export const MODULE_REGISTRY = {
               "fullCatalogJsonDownload"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2176,7 +2197,8 @@ export const MODULE_REGISTRY = {
               "transferPickerOpen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2221,7 +2243,8 @@ export const MODULE_REGISTRY = {
               "navigationTarget"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -2338,7 +2361,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2363,7 +2387,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2388,7 +2413,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2413,7 +2439,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2438,7 +2465,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2479,7 +2507,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2504,7 +2533,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2527,7 +2557,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2552,7 +2583,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2575,7 +2607,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2598,7 +2631,8 @@ export const MODULE_REGISTRY = {
               "savedSpecimens"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -2710,7 +2744,8 @@ export const MODULE_REGISTRY = {
               "modelCache"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2860,6 +2895,7 @@ export const MODULE_REGISTRY = {
               "baseElement",
               "databaseId",
               "databaseUsed",
+              "databaseStatus",
               "databaseSuitability",
               "databasePath",
               "missingElements",
@@ -2876,9 +2912,11 @@ export const MODULE_REGISTRY = {
               "gridPoints",
               "equilibriumProfile",
               "criticalTemperatures",
+              "criticalTemperatureStatus",
               "phacompAnalysis",
               "solutePartitioning",
               "multiElementScheil",
+              "multiElementScheilStatus",
               "multiElementScheilNote",
               "scheilSolidification",
               "thermodynamicStabilityIndex",
@@ -2904,7 +2942,56 @@ export const MODULE_REGISTRY = {
             "transportValues": {
               "status": [
                 "unavailable"
+              ],
+              "databaseStatus": [
+                "assessment",
+                "test-fixture",
+                "user-supplied"
+              ],
+              "multiElementScheilStatus": [
+                "pycalphad-scheil-gulliver",
+                "incomplete",
+                "unavailable"
               ]
+            },
+            "transportObjects": {
+              "criticalTemperatureStatus": {
+                "liquidusC.status": [
+                  "bisected",
+                  "bracketed-by-grid",
+                  "unavailable"
+                ],
+                "solidusC.status": [
+                  "bisected",
+                  "bracketed-by-grid",
+                  "unavailable"
+                ],
+                "freezingRangeC.status": [
+                  "computed",
+                  "unavailable"
+                ],
+                "gammaPrimeSolvusC.status": [
+                  "unavailable"
+                ],
+                "gammaDoublePrimeSolvusC.status": [
+                  "unavailable"
+                ],
+                "deltaSolvusC.status": [
+                  "unavailable"
+                ],
+                "carbidePrecipitationC.status": [
+                  "unavailable"
+                ],
+                "betaTransusC.status": [
+                  "heuristic-phase-name",
+                  "unavailable"
+                ],
+                "tcpSigmaRiskTemperatureC.status": [
+                  "heuristic-phase-name",
+                  "screening-constant",
+                  "unavailable"
+                ]
+              }
             }
           }
         },
@@ -3001,10 +3088,16 @@ export const MODULE_REGISTRY = {
               "solutePartitioning",
               "multiElementScheil",
               "temperatureRangeC",
-              "temperatureStepC"
+              "temperatureStepC",
+              "alloyName",
+              "nominalComposition",
+              "computeTimeMs",
+              "thermodynamicStabilityIndex",
+              "tcpEmbrittlementRisk"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3063,7 +3156,8 @@ export const MODULE_REGISTRY = {
               "tdbText"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3092,7 +3186,242 @@ export const MODULE_REGISTRY = {
               "error"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "switch-phase-view",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "activeView",
+              "label": "Phase explorer view",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "calphad_solver",
+              "required": true,
+              "enum": [
+                "calphad_solver",
+                "fe_c_diagram"
+              ],
+              "note": "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; switching back remounts its mount-time requests. Fe-C is not a Python error fallback."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeView"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "fe-c-probe",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "compositionC",
+              "label": "Carbon content (wt% C)",
+              "valueType": "number",
+              "unit": "%",
+              "displayUnits": [],
+              "quantityKind": "carbon-mass-percentage",
+              "min": null,
+              "max": null,
+              "step": 0.01,
+              "default": 0.45,
+              "required": true,
+              "enum": [],
+              "note": "Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping clamps to that chart extent and rounds to two decimals. These are UI bounds, not a validated physical domain; this state is separate from the shared specimen."
+            },
+            {
+              "key": "temperatureC",
+              "label": "Probe temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": 5,
+              "default": 850,
+              "required": true,
+              "enum": [],
+              "note": "Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that chart extent and rounds to whole degC, so pointer values need not follow the slider step. No assessed thermodynamic applicability is declared."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "compositionC",
+              "temperatureC",
+              "regionName",
+              "stateCategory",
+              "phasesPresent",
+              "equilibriumDescription",
+              "liquidus",
+              "solidus"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-fe-c-preset",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "presetName",
+              "label": "Fe-C preset",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "AISI 1045 Medium Carbon Machinery Steel",
+              "required": true,
+              "enum": [
+                "AISI 1008 Low Carbon / IF Steel",
+                "AISI 1018 Mild Structural Steel",
+                "AISI 1045 Medium Carbon Machinery Steel",
+                "AISI 1080 Eutectoid Rail & Wire Steel",
+                "AISI 1095 High Carbon Spring & Tool Steel",
+                "AISI 52100 High-Carbon Bearing Steel",
+                "Class 30 Gray Cast Iron (Hypoeutectic)",
+                "Eutectic White Cast Iron (Ledeburite)",
+                "Hypereutectic White Cast Iron"
+              ],
+              "note": "The handler sets selectedPreset and copies only carbon composition from the matching table row; temperature is unchanged. The dropdown exposes all rows and quick buttons expose the first four."
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedPreset",
+              "compositionC"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "drag-fe-c-probe",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "e"
+          ],
+          "output": {
+            "fields": [
+              "isDragging",
+              "compositionC",
+              "temperatureC"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "end-fe-c-drag",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isDragging"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "hover-fe-c-region",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "hoveredRegion"
+          ],
+          "output": {
+            "fields": [
+              "hoveredRegion"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -3129,17 +3458,23 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "contracted",
       "legacyNotes": [
-        "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx; its default view renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after a short debounce; edits/supersession abort stale client requests. The 250 ms interval only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
+        "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx; its default view renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
         "The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database coverage, missing elements, refused test-fixture TDBs, or equilibrium failure yields an unavailable envelope without equilibrium/critical-temperature numbers. HTTP 422 validation refusal is displayed without a client substitute. The visible client solver is reached only after the user explicitly turns the Python engine off; it is marked empirical/screening and is not the fallback for failure.",
         "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are 500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable 0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
         "The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' button submits binary-system prompt text to /api/consult; service failure or empty/malformed response leaves the consultation unavailable instead of fabricating a scientific report. Input changes and unmount abort/invalidate the request. A provider response is not an independently validated CALPHAD result. Neither browser path is promoted as Python output.",
-        "The SDK output fields are conditional inventories. Database coverage entries can say covered or unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver 'status=unavailable' is transport state only; no evidence status is emitted. Nested databaseStatus/criticalTemperatureStatus and multiElementScheilStatus carry richer values the SDK transport schema cannot type, so those nested keys are intentionally not declared as output fields. Output numbers depend on the selected assessed database and conditions; no numerical oracle or physical domain is claimed."
+        "The SDK output fields are conditional inventories. Database coverage entries can say covered or unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver 'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is database provenance classification (assessment/test-fixture/user-supplied), not validation; multiElementScheilStatus is computed-path/incomplete/unavailable transport state. criticalTemperatureStatus is a top-level per-temperature object map; transportObjects declares each member's nested status leaf and its closed computed-path/availability vocabulary. Reason text and numerical bracket/refinement metadata are not fully typed by this status inventory. Output numbers depend on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
+        "The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded piecewise boundaries, approximate tie lines and lever-rule fractions, not an assessed TDB or a pycalphad call. probeState holds the declared Fe-C output fields; phasesPresent contains name, formula, fractionPct, compositionC and crystal. UI labels including 'CALPHAD Standard' and the unconditional 'Solver: Online' text are not authority or physical validation. The declared diagramMode Fe-C/Al-Cu/Ti-Al state has no reachable setter/control; no extra system operation is invented.",
+        "Fe-C pointer events e carry browser coordinates; the SVG bounding rectangle maps them to a 900x600 viewBox. Dragging begins on pointer down, updates only within the chart, and ends on pointer up on that SVG; no pointer capture, leave or cancel handler is registered. Hover sets a region label on mouse enter and null on mouse leave; the nullable hoveredRegion input is undeclared because InputField has no nullable string type. Hover is display-only. React owns these handlers/ref; this branch has no effect, fetch, interval or external listener to dispose. Root probe/preset state survives child view switches. Slider/pointer changes do not update selectedPreset, so the preset morphology card remains table text independent of the current probe, not recomputed microstructure evidence.",
+        "The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed 500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with the element-selected window, and replaces the initial local result. These two screening paths are not identical database/window authorities. Output inventory includes the service wrapper fields."
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
         "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
         "src/modules/views.ts:23-23#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
+        "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
+        "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",
+        "src/components/PhaseDiagramViewer.tsx::updateProbeFromEvent",
         "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
         "src/utils/calphadConsultation.ts::parseConsultationResponse",
         "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
@@ -3155,6 +3490,8 @@ export const MODULE_REGISTRY = {
         "python/calphad_solver.py::unavailable_result",
         "python/calphad_solver.py::resolve_database",
         "python/calphad_solver.py::solve_pycalphad_equilibrium",
+        "python/calphad_solver.py::derive_critical_temperatures",
+        "python/calphad_solver.py::_scheil_outputs",
         "python/calphad_solver.py::compute_multi_component_equilibrium",
         "python/calphad_solver.py::main",
         "src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium",
@@ -3316,7 +3653,8 @@ export const MODULE_REGISTRY = {
               "provenance"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -3661,7 +3999,8 @@ export const MODULE_REGISTRY = {
               "limitations"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3708,7 +4047,8 @@ export const MODULE_REGISTRY = {
               "diagnosis"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -3813,7 +4153,8 @@ export const MODULE_REGISTRY = {
               "sourceRestoreState"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3837,7 +4178,8 @@ export const MODULE_REGISTRY = {
               "sourceRestoreState"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3880,7 +4222,8 @@ export const MODULE_REGISTRY = {
               "parameters"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3907,7 +4250,8 @@ export const MODULE_REGISTRY = {
               "anchor"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3933,7 +4277,8 @@ export const MODULE_REGISTRY = {
               "anchor"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3968,7 +4313,8 @@ export const MODULE_REGISTRY = {
               "accepted"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3996,7 +4342,8 @@ export const MODULE_REGISTRY = {
               "transfer"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -4340,7 +4687,8 @@ export const MODULE_REGISTRY = {
               "modelStatus": [
                 "illustrative"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -4521,7 +4869,8 @@ export const MODULE_REGISTRY = {
               "referenceStatus": [
                 "supplied-by-caller"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -4817,7 +5166,8 @@ export const MODULE_REGISTRY = {
               "findings"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -4842,7 +5192,8 @@ export const MODULE_REGISTRY = {
               "tabId"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -4867,7 +5218,8 @@ export const MODULE_REGISTRY = {
               "tabId"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -4902,7 +5254,8 @@ export const MODULE_REGISTRY = {
               "notice"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -5363,7 +5716,8 @@ export const MODULE_REGISTRY = {
               "provenance"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -5483,7 +5837,8 @@ export const MODULE_REGISTRY = {
               "findings"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -5508,7 +5863,8 @@ export const MODULE_REGISTRY = {
               "tabId"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -5543,7 +5899,8 @@ export const MODULE_REGISTRY = {
               "notice"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],

@@ -286,6 +286,10 @@ class OutputSchema:
     # can put there (e.g. ("status", ("success",))). Explicit availability-only
     # outputs may use unavailable without emitting evidence; claims stay forbidden.
     transport_values: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
+    # Object-valued transport fields: explicit dot paths to status leaves, each
+    # with its own closed vocabulary. Other result metadata is not asserted to
+    # be validated by this inventory (e.g. reason text or numerical brackets).
+    transport_objects: Tuple[Tuple[str, Tuple[Tuple[str, Tuple[str, ...]], ...]], ...] = ()
 
     def __post_init__(self) -> None:
         _require(len(self.fields) > 0, "output.fields must not be empty")
@@ -294,6 +298,9 @@ class OutputSchema:
             _require(key not in FORBIDDEN_CLAIM_KEYS, f"output field {key!r} is a forbidden claim key")
         transport = dict(self.transport_values)
         _require(len(transport) == len(self.transport_values), "output.transportValues keys must be unique")
+        objects = dict(self.transport_objects)
+        _require(len(objects) == len(self.transport_objects), "output.transportObjects keys must be unique")
+        _require(not set(objects) & set(transport), "output transport scalar/object declarations cannot overlap")
         for key, values in transport.items():
             _require(key in self.fields, f"output.transportValues key {key!r} is not an output field")
             _require(key != self.status_key, f"output.transportValues cannot describe the status key {key!r}")
@@ -306,10 +313,33 @@ class OutputSchema:
                 availability_only = value == "unavailable" and self.status_key is None
                 _require((value not in EVIDENCE_STATUSES or availability_only) and value not in FORBIDDEN_CLAIM_KEYS,
                          f"output.transportValues[{key!r}] value {value!r} is an evidence status or claim")
+        for key, members in objects.items():
+            _require(key in self.fields, f"output.transportObjects key {key!r} is not an output field")
+            _require(key != self.status_key, f"output.transportObjects cannot describe the status key {key!r}")
+            _require(not key.replace("_", "").lower().startswith("evidence"),
+                     f"output.transportObjects cannot hide evidence field {key!r}")
+            _require(len(members) > 0, f"output.transportObjects[{key!r}] needs status paths")
+            _unique(tuple(path for path, _ in members), f"output.transportObjects[{key!r}] paths")
+            for path, values in members:
+                _text(path, "output.transportObjects path")
+                parts = path.split(".")
+                _require(len(parts) >= 2 and all(_KEY.fullmatch(part) for part in parts),
+                         f"output.transportObjects path {path!r} must name an explicit nested status leaf")
+                _require(looks_like_status_key(parts[-1]), f"transport object path {path!r} must end in a status leaf")
+                _require(all(part not in FORBIDDEN_CLAIM_KEYS and
+                             not part.replace("_", "").lower().startswith("evidence") for part in parts),
+                         f"transport object path {path!r} hides evidence or a claim")
+                _require(len(values) > 0, f"transport object path {path!r} needs values")
+                _unique(values, f"transport object path {path!r} values")
+                for value in values:
+                    _text(value, f"transport object path {path!r} value")
+                    availability_only = value == "unavailable" and self.status_key is None
+                    _require((value not in EVIDENCE_STATUSES or availability_only) and value not in FORBIDDEN_CLAIM_KEYS,
+                             f"transport object path {path!r} value {value!r} is an evidence status or claim")
         for key in self.fields:
             if key != self.status_key and looks_like_status_key(key):
                 # Without this, a contract with statusKey None could hide a real status field.
-                _require(key in transport, f"output field {key!r} looks like a status key; declare it as the "
+                _require(key in transport or key in objects, f"output field {key!r} looks like a status key; declare it as the "
                                            "statusKey or list its transport values")
         if self.status_key is None:
             return
@@ -322,7 +352,9 @@ class OutputSchema:
 
     def to_dict(self) -> dict:
         return {"fields": list(self.fields), "statusKey": self.status_key,
-                "transportValues": {key: list(values) for key, values in self.transport_values}}
+                "transportValues": {key: list(values) for key, values in self.transport_values},
+                "transportObjects": {key: {path: list(values) for path, values in members}
+                                     for key, members in self.transport_objects}}
 
 
 @dataclass(frozen=True)
@@ -645,7 +677,9 @@ def _operation_from_dict(d: dict) -> Operation:
                      input=tuple(_field_from_dict(f) for f in d["input"]),
                      undeclared_input=tuple(d["undeclaredInput"]),
                      output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
-                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()))
+                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()),
+                                         transport_objects=tuple((k, tuple((path, tuple(values)) for path, values in members.items()))
+                                                                 for k, members in out.get("transportObjects", {}).items()))
                      if out else None)
 
 

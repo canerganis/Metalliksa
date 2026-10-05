@@ -137,7 +137,7 @@ def build_calphad_contract(seed) -> ModuleContract:
                     "temperatureRangeC",
                     "temperatureStepC", "thermodynamicModel", "isEmpirical", "equilibriumCalls",
                     "activeComponents", "dependentComponent", "unsupportedElements", "compositionAdjustments",
-                    "gridPoints", "equilibriumProfile", "criticalTemperatures",
+                    "gridPoints", "equilibriumProfile", "criticalTemperatures", "criticalTemperatureStatus",
                     "phacompAnalysis", "solutePartitioning", "multiElementScheil",
                     "multiElementScheilStatus", "multiElementScheilNote", "scheilSolidification", "thermodynamicStabilityIndex",
                     "tcpEmbrittlementRisk", "nonConvergedPoints", "boundaryRefinement", "phaseNameNotes",
@@ -149,6 +149,17 @@ def build_calphad_contract(seed) -> ModuleContract:
                 ("databaseStatus", ("assessment", "test-fixture", "user-supplied")),
                 ("multiElementScheilStatus", ("pycalphad-scheil-gulliver", "incomplete", "unavailable")),
             ),
+            transport_objects=(("criticalTemperatureStatus", (
+                ("liquidusC.status", ("bisected", "bracketed-by-grid", "unavailable")),
+                ("solidusC.status", ("bisected", "bracketed-by-grid", "unavailable")),
+                ("freezingRangeC.status", ("computed", "unavailable")),
+                ("gammaPrimeSolvusC.status", ("unavailable",)),
+                ("gammaDoublePrimeSolvusC.status", ("unavailable",)),
+                ("deltaSolvusC.status", ("unavailable",)),
+                ("carbidePrecipitationC.status", ("unavailable",)),
+                ("betaTransusC.status", ("heuristic-phase-name", "unavailable")),
+                ("tcpSigmaRiskTemperatureC.status", ("heuristic-phase-name", "screening-constant", "unavailable")),
+            )),),
         ),
     )
     client_screening = Operation(
@@ -246,9 +257,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             "'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is "
             "database provenance classification (assessment/test-fixture/user-supplied), not validation; "
             "multiElementScheilStatus is computed-path/incomplete/unavailable transport state. "
-            "criticalTemperatureStatus is a top-level per-temperature object map; the current scalar status "
-            "schema cannot honestly represent it. This remaining structured-output schema debt is not a "
-            "claim that the map is absent from real solver output. "
+            "criticalTemperatureStatus is a top-level per-temperature object map; transportObjects declares "
+            "each member's nested status leaf and its closed computed-path/availability vocabulary. Reason "
+            "text and numerical bracket/refinement metadata are not fully typed by this status inventory. "
             "Output numbers depend "
             "on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
             "The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded "

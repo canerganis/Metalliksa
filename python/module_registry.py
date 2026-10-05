@@ -1287,6 +1287,7 @@ def render_ts(document: dict) -> str:
         "  readonly output: {",
         "    readonly fields: readonly string[]; readonly statusKey: string | null;",
         "    readonly transportValues: Readonly<Record<string, readonly string[]>>;",
+        "    readonly transportObjects: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;",
         "  } | null;",
         "}",
         "export interface ContractValidityDomain {",
@@ -1386,6 +1387,10 @@ def render_module_doc(contract: ModuleContract) -> str:
             for key, values in op.output.transport_values:
                 lines += ["", f"`{key}` is a transport field, not an evidence status; values: "
                           + ", ".join(f"`{v}`" for v in values) + "."]
+            for key, members in op.output.transport_objects:
+                lines += ["", f"`{key}` is an object-valued transport inventory, not evidence or a full metadata schema:"]
+                for path, values in members:
+                    lines += [f"- `{path}`: " + ", ".join(f"`{v}`" for v in values) + "."]
     e = c.evidence
     oracle = (f"present, `{c.tests.oracle.ref}`" if c.tests.oracle.status == "present"
               else f"pending (ceiling capped at {PENDING_ORACLE_CEILING})")

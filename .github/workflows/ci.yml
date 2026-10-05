@@ -89,6 +89,11 @@ jobs:
           test_lpbf_worker_validation_error
           test_lpbf_material_authority_json
           test_module_contract test_module_warm_parity test_allowlist_ceilings
+          test_module_contract_structured_transport
+          test_module_contract_dataset_view test_module_contract_composition
+          test_module_contract_eds test_module_contract_elasticity
+          test_module_contract_database test_module_contract_calphad test_module_contract_evidence
+          test_module_contract_copilot test_module_contract_lpbf_secondary test_module_contract_calculators
           test_contract_keyhole_raytracing test_contract_uq_lab
           test_contract_ttt_cct_kinetics test_contract_icme_motor test_contract_murakami_fatigue
           test_contract_toolpath_studio test_contract_adaptive_mitigation
