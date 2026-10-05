@@ -119,7 +119,11 @@ DATABASE_OPERATIONS: Tuple[Operation, ...] = (
                 key="maxDensity", label="Maximum density filter", unit="g/cm^3",
                 quantity_kind="local-catalog-filter", min=None, max=None, default=17.0,
                 required=False, step=0.2,
-                note="UI state default and slider step; slider attributes do not establish material validity bounds.",
+                note=(
+                    "The visible density slider edits maxDensity (value=maxDensity, setter=setMaxDensity); "
+                    "its state default is 17.0 and step is 0.2. minDensity remains fixed at 1.5 here. "
+                    "Slider attributes do not establish material validity bounds."
+                ),
             ),
         ),
         outputs=("filteredMaterials", "visibleCount"),
@@ -127,6 +131,10 @@ DATABASE_OPERATIONS: Tuple[Operation, ...] = (
     _local_operation(
         "reset-property-range-filters",
         outputs=("minYield", "maxYield", "minModulus", "maxModulus", "minDensity", "maxDensity"),
+    ),
+    _local_operation(
+        "toggle-property-filter-panel",
+        outputs=("showFilters",),
     ),
     _local_operation(
         "switch-view-mode",
@@ -163,12 +171,20 @@ DATABASE_OPERATIONS: Tuple[Operation, ...] = (
         outputs=("compareList",),
     ),
     _local_operation(
+        "open-comparison-drawer",
+        outputs=("isCompareOpen",),
+    ),
+    _local_operation(
+        "close-comparison-drawer",
+        outputs=("isCompareOpen",),
+    ),
+    _local_operation(
         "copy-selected-record",
-        outputs=("clipboardWrite", "copyFeedback"),
+        outputs=("clipboardWriteAttempt", "optimisticCopyFeedback"),
     ),
     _local_operation(
         "export-catalog-json",
-        outputs=("downloadedJsonFile",),
+        outputs=("fullCatalogJsonDownload",),
     ),
     _local_operation(
         "open-transfer-picker",
@@ -240,9 +256,14 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "The comparison list initially contains catalog entries at indexes 0 and 5; clicking toggles membership "
             "and additions stop at four entries. The category and view-mode enums below describe the actual visible "
             "controls, not material-property validity classes.",
-            "Copy feedback clears after a 2000 ms setTimeout. Catalog JSON export creates an object URL, clicks a "
-            "download link, and revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource "
-            "kind; these are noted as short UI effects rather than invented lifecycle resources.",
+            "The property-filter panel has a local showFilters toggle. The comparison drawer opens only when the "
+            "compare list is nonempty and closes from its modal callback or either close button.",
+            "Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately "
+            "sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records "
+            "an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.",
+            "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object "
+            "URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL "
+            "resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
             "No fetch, worker, solver, scheduled job, or source download is initiated by this view. The nested "
             "comparison and transfer dialogs are UI children, not background work.",
         ),
@@ -251,13 +272,17 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsDatabaseView.tsx:122-143#handleCopySpec",
             "src/components/MaterialsDatabaseView.tsx:60-72#categories",
             "src/components/MaterialsDatabaseView.tsx:236-338#Property Sliders",
+            "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
             "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
+            "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
             "src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions",
             "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
             "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
             "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
             "src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)",
             "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
+            "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
+            "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
             "src/types.ts:32-63#MaterialSpec",
             "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
             "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",

@@ -1,9 +1,16 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
 from module_contract import ContractError, ModuleContract
 from module_contracts_database import DATABASE_OPERATIONS, build_database_contract
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def read_product_source(relative_path):
+    return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
 class DatabaseContractTests(unittest.TestCase):
@@ -37,7 +44,8 @@ class DatabaseContractTests(unittest.TestCase):
             tuple(operations),
             ("search-catalog", "filter-by-category", "filter-by-min-yield-strength",
              "filter-by-min-modulus", "filter-by-max-density", "reset-property-range-filters",
-             "switch-view-mode", "sort-catalog", "select-material-record", "toggle-comparison-record",
+             "toggle-property-filter-panel", "switch-view-mode", "sort-catalog", "select-material-record",
+             "toggle-comparison-record", "open-comparison-drawer", "close-comparison-drawer",
              "copy-selected-record", "export-catalog-json", "open-transfer-picker", "dispatch-material-to-module"),
         )
         self.assertTrue(all(op.route is None and op.method is None for op in operations.values()))
@@ -47,6 +55,12 @@ class DatabaseContractTests(unittest.TestCase):
         self.assertEqual(operations["select-material-record"].undeclared_input, ("material",))
         self.assertEqual(operations["sort-catalog"].output.fields, ("sortedMaterials",))
         self.assertEqual(operations["toggle-comparison-record"].output.fields, ("compareList",))
+        self.assertEqual(operations["toggle-property-filter-panel"].output.fields, ("showFilters",))
+        self.assertEqual(operations["open-comparison-drawer"].output.fields, ("isCompareOpen",))
+        self.assertEqual(operations["close-comparison-drawer"].output.fields, ("isCompareOpen",))
+        self.assertEqual(operations["copy-selected-record"].output.fields,
+                         ("clipboardWriteAttempt", "optimisticCopyFeedback"))
+        self.assertEqual(operations["export-catalog-json"].output.fields, ("fullCatalogJsonDownload",))
         self.assertEqual(operations["dispatch-material-to-module"].input[0].enum,
                          ("alloy-builder", "icme-motor", "3d-distortion-lab", "phase-diagram"))
 
@@ -92,6 +106,34 @@ class DatabaseContractTests(unittest.TestCase):
                          ("split", "heatmap", "catalog"))
         self.assertIsNotNone(operations["dispatch-material-to-module"].input[0].value_problem("database"))
 
+    def test_density_filter_drawers_copy_and_export_match_current_component_source(self):
+        source = read_product_source("src/components/MaterialsDatabaseView.tsx")
+        self.assertRegex(
+            source,
+            re.compile(
+                r'<input aria-label="Maximum Density \(ρ\) \(g/cm³\)"\s+type="range"\s+'
+                r'min="1\.5"\s+max="17\.0"\s+step="0\.2"\s+value=\{maxDensity\}\s+'
+                r'onChange=\{\(e\) => setMaxDensity\(Number\(e\.target\.value\)\)\}',
+                re.S,
+            ),
+        )
+        self.assertIn("onClick={() => setShowFilters(!showFilters)}", source)
+        self.assertIn("{showFilters && (", source)
+        self.assertIn("onClick={() => setIsCompareOpen(true)}", source)
+        self.assertIn("{isCompareOpen && (", source)
+        self.assertIn("onClose={() => setIsCompareOpen(false)}", source)
+
+        copy_handler = source.split("const handleCopySpec = () => {", 1)[1].split(
+            "const handleExportAllJSON = () => {", 1
+        )[0]
+        self.assertRegex(copy_handler, r"navigator\.clipboard\.writeText\(jsonStr\);\s*setCopied\(true\);")
+        self.assertNotIn("await navigator.clipboard.writeText", copy_handler)
+        self.assertNotIn(".catch(", copy_handler)
+        export_handler = source.split("const handleExportAllJSON = () => {", 1)[1].split("\n  };", 1)[0]
+        self.assertIn("JSON.stringify(MATERIALS_DATABASE, null, 2)", export_handler)
+        self.assertNotIn("filteredMaterials", export_handler)
+        self.assertIn("URL.revokeObjectURL(url)", export_handler)
+
     def test_provenance_limits_and_derived_transfer_are_explicit(self):
         contract = build_database_contract(self.seed)
         notes = " ".join(contract.legacy_notes)
@@ -104,6 +146,9 @@ class DatabaseContractTests(unittest.TestCase):
         self.assertIn("not a database measurement", notes)
         self.assertIn("not provider/server execution", notes)
         self.assertIn("indexes 0 and 5", notes)
+        self.assertIn("attempted copy, not confirmed clipboard success", notes)
+        self.assertIn("full MATERIALS_DATABASE array, independent of active filters", notes)
+        self.assertIn("local showFilters toggle", notes)
         self.assertIn("No fetch, worker, solver", notes)
         self.assertIn("physical validation", contract.evidence.note)
 
