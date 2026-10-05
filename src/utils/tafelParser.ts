@@ -235,7 +235,7 @@ export function parseTafelFile(
 
   const effectiveArea = customAreaCm2 > 0 ? customAreaCm2 : 1.0;
   const areaFactor = isCurrentDensityDeclared ? 1.0 : effectiveArea;
-  const refOffset = REFERENCE_ELECTRODES[refElectrode]?.offsetVsSHE || 0.241;
+  const refOffset = REFERENCE_ELECTRODES[refElectrode]?.offsetVsSHE ?? 0.241;
 
   // Build points array
   const points: TafelRawPoint[] = rawDataRows.map((r, idx) => {
@@ -613,7 +613,7 @@ export function tryAutoFitTafel(
   }
 
   // 7. Potential vs SHE
-  const refOffset = dataset.metadata.refOffsetVsSHE || 0.241;
+  const refOffset = dataset.metadata.refOffsetVsSHE ?? 0.241;
   const eCorrSHE = extrapolatedEcorr === null ? null : extrapolatedEcorr + refOffset;
 
   // 8. Generate Tangent Extrapolation Lines for Charting (only for the branches that were fitted)

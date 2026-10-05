@@ -26,6 +26,8 @@ Potential (V), Current (mA)
   assert.equal(ds.sourceInstrument, 'biologic');
   assert.equal(ds.metadata.scanRateMv_s, 10);
   assert.equal(ds.metadata.referenceElectrode, 'SHE');
+  assert.equal(ds.metadata.refOffsetVsSHE, 0);
+  assert.equal(ds.points[0].potentialSHE, ds.points[0].potential);
 });
 
 test('Synthetic CSV: recognizes Gamry header signature and V/s scan rate conversion', () => {
