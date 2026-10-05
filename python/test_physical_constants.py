@@ -242,7 +242,10 @@ class AtomicWeightTest(unittest.TestCase):
         import pourbaix_solver
         snapshot = HERE / "golden" / "phase6a" / "pourbaix_solver" / "_source_tables.json"
         old = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
-        self.assertEqual(set(old), set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS))
+        # Ti, Cr and Mo were added after the snapshot; every snapshot element must still be served.
+        self.assertLessEqual(set(old), set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS))
+        for el in set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS) - set(old):
+            self.assertEqual(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS[el]["atomicMass"], pc.atomic_weight(el), el)
         for el, entry in old.items():
             self.assertEqual(pc.atomic_weight(el), entry["atomicMass"], el)
             self.assertEqual(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS[el]["atomicMass"], entry["atomicMass"], el)
