@@ -56,7 +56,7 @@ const GALVANIC_METALS: GalvanicMetal[] = [
 ];
 
 export function CorrosionEngineeringLab() {
-  const [activeTab, setActiveTab] = useState<"galvanic" | "pren" | "polarization" | "ocp-g59" | "pourbaix" | "corrosion-eis">("corrosion-eis");
+  const [activeTab, setActiveTab] = useState<"galvanic" | "pren" | "polarization" | "pourbaix" | "corrosion-eis">("corrosion-eis");
 
   // Galvanic Simulator State
   const [anodeIdx, setAnodeIdx] = useState<number>(1); // 7075 Al
@@ -212,21 +212,6 @@ export function CorrosionEngineeringLab() {
             <span>Tafel / Stern-Geary</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(8);
-              setActiveTab("ocp-g59");
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "ocp-g59"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Real-Time OCP &amp; ASTM G59</span>
-          </button>
 
           <button
             type="button"
@@ -241,7 +226,7 @@ export function CorrosionEngineeringLab() {
             }`}
           >
             <Compass className="w-3.5 h-3.5 text-sky-400" />
-            <span>Dynamic Pourbaix (E-pH-T-Salinity)</span>
+            <span>Pourbaix E–pH (25 °C)</span>
           </button>
 
           <button
@@ -681,16 +666,7 @@ export function CorrosionEngineeringLab() {
       )}
 
       {/* ======================================================== */}
-      {/* 4. REAL-TIME OCP & ASTM G59 LPR TRANSIENT STUDIO        */}
-      {/* ======================================================== */}
-      {activeTab === "ocp-g59" && (
-        <div className="pt-2">
-          
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* 5. DYNAMIC POURBAIX (E-pH-T-SALINITY) PHASE GENERATOR   */}
+      {/* 5. POURBAIX E-pH (25 °C, SINGLE ELEMENT) STUDIO          */}
       {/* ======================================================== */}
       {activeTab === "pourbaix" && (
         <div className="pt-2">

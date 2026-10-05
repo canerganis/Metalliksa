@@ -4,9 +4,9 @@
  "group": "G1",
  "description": "V1 acceptance case from the archived inputJson (fc8325d9...), with all artifacts",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  29.3,
-  25.0
+  21.6,
+  22.5
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "3eed50effcb82e8cffce55f2a24816cee37e634bb92aa4127be46f1c23a88f83",
-  "result.orderedTypedSha256": "863c40b187e922a5645fe391518d6621a541c1438e07b8a68f390818e0ebff06",
+  "result.canonicalSha256": "6a5e59bec2d296b4decdffcae4aab13c64eb84e02f1f7af80d83b17a057c81e9",
+  "result.orderedTypedSha256": "e99822a902aef031d2b1a4cf5d6922e07b12d03e13eb9c218d8c56c723021227",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -129,7 +129,7 @@
   "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "result.key.provenance": "aaf1f88272b383b13df47fd1eac27c0cb4b8252a4a58c6aa092cf31275b7dc43",
-  "result.key.analyticalComparison": "e3ba82396d094a40f6a0aeac86dab858785e57f75d1c1a320b23a97e19540edb",
+  "result.key.analyticalComparison": "fc0532aeb4bcacfaa25726de67f3aae2eda62225c48176c3355d0412c5fc8dc0",
   "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "11a5c14594391e855405c7ab8222a82076df5d188c37e68aadb9320855265139",
@@ -590,7 +590,7 @@
   ],
   "result.artifactsListedMatchDisk": true,
   "result.artifactsImplementationHashOccurrences": 0,
-  "v1Archive.strippedResultEqual": true
+  "v1Archive.strippedResultEqual": false
  },
  "rawValues": {
   "result.key.analyticalComparison": {
@@ -606,9 +606,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 16.666666666666668,
-    "depth_um": 8.333333333333334,
-    "length_um": 70.00000000000018,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 186.66666666666657,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334

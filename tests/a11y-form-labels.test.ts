@@ -11,12 +11,10 @@ import { test } from "node:test";
  */
 const EXCLUSIONS: Record<string, string> = {
   // Thin wrappers: the <input>/<select> is a pass-through element; every call site is wrapped by <label>.
-  "src/components/OpticalTomographyLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
-  "src/components/PowderDEMCompactionLab.tsx": "wrapper-only Input; call sites wrapped by <label>",
-  "src/components/TransientEnthalpy3DGPULab.tsx": "wrapper-only Input/Select; call sites wrapped by <label>",
+  // (empty since 2026-10-04: the three wrapper-only labs were deleted)
 };
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // cwd-independent
-const MAX_EXCLUSIONS = 3; // the list may shrink, never grow silently
+const MAX_EXCLUSIONS = 0; // the list may shrink, never grow silently (3 -> 0: the three excluded labs were deleted 2026-10-04)
 
 // Files labelled in Phase 8 batches 1 and 2; independent of the automatic scan.
 const PINNED_GUARDED = [
@@ -25,19 +23,11 @@ const PINNED_GUARDED = [
   "src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx",
   "src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx",
   "src/components/LpbfBayesianOptimizerLab.tsx",
-  "src/components/MultiLaserPlumeLab.tsx",
-  "src/components/MultiTrackThermalLab.tsx",
-  "src/components/LaserMeltPoolThermalMap.tsx",
-  "src/components/LPBFAdditivePhysicsSuite.tsx",
-  "src/components/ToolpathThermalMapLab.tsx",
   "src/components/LpbfAdaptiveMitigationLab.tsx",
   "src/components/LpbfToolpathStudioLab.tsx",
   "src/components/MetallurgicalUnitConverter.tsx",
   "src/components/PocketCalculators.tsx",
-  "src/components/InverseAlloyStudio.tsx",
   "src/components/CorrosionEngineeringLab.tsx",
-  "src/components/AIOrchestratorPanel.tsx",
-  "src/components/AerospaceAuditReportGenerator.tsx",
   "src/components/AlloyBuilder.tsx",
   "src/components/CALPHADMultiComponentStudio.tsx",
   "src/components/CALPHADThermodynamicsLab.tsx",
@@ -45,34 +35,24 @@ const PINNED_GUARDED = [
   "src/components/DigitalTwinHub.tsx",
   "src/components/DynamicPourbaixStudio.tsx",
   "src/components/EDSSpectrumLab.tsx",
-  "src/components/HeatTreatmentAgingSimulator.tsx",
   "src/components/ICMEMultiScalePipelineStudio.tsx",
-  "src/components/IndustrialCertificationLab.tsx",
-  "src/components/LpbfDefectTwinLab.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsProjectExplorer.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
   "src/components/MetallurgicalQuickConversionsGrid.tsx",
   "src/components/MetallurgyCopilot.tsx",
-  "src/components/MicroAlloySandbox.tsx",
-  "src/components/MicrographLab.tsx",
+  "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab
+  "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MurakamiFatigueLab.tsx",
   "src/components/PhaseDiagramViewer.tsx",
   "src/components/PhaseKineticsTTTCCTStudio.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
-  "src/components/SEMAutoAnalyzerStudio.tsx",
-  "src/components/StandardQualificationEngine.tsx",
   "src/components/TafelPolarizationLab.tsx",
   "src/components/UQLab.tsx",
-  "src/components/WebGLEDSHyperMapCanvas.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.
-const PINNED_EXCLUDED = [
-  "src/components/OpticalTomographyLab.tsx",
-  "src/components/PowderDEMCompactionLab.tsx",
-  "src/components/TransientEnthalpy3DGPULab.tsx",
-];
+const PINNED_EXCLUDED: string[] = [];
 
 const MAX_LABEL_LENGTH = 80;
 
@@ -244,8 +224,8 @@ export function rawUnitInterpolations(source: string): number[] {
     });
   return lines;
 }
-// Option values are already the display text there (µm/nm/mm), so interpolating the state is safe.
-const RAW_UNIT_ALLOWED = new Set(["src/components/SEMAutoAnalyzerStudio.tsx"]);
+// Files whose *Unit state values are already display text (µm/nm/mm), so interpolating them is safe.
+const RAW_UNIT_ALLOWED = new Set<string>([]); // the only former entry (SEMAutoAnalyzerStudio.tsx) was deleted
 
 function listTsx(dir: string): string[] {
   return (readdirSync(resolve(ROOT, dir), { recursive: true }) as string[])

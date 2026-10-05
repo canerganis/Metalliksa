@@ -94,12 +94,11 @@ async function withRunners(reply: Reply, fn: (h: Harness, seen: string[]) => Pro
 }
 
 // Every python dispatch route that stays after the dead-surface removal (p7 re-audit fix round):
-// pourbaix/tafel plus battery-corrosion-eis, bisquert-tlm-identify and xrd-deconvolve.
+// pourbaix/tafel plus battery-corrosion-eis and xrd-deconvolve (bisquert-tlm-identify was deleted on 2026-10-04).
 const ROUTES = [
   ["/api/python/pourbaix-diagram", "python/pourbaix_solver.py"],
   ["/api/python/tafel-corrosion-rate", "python/tafel_corrosion_rate_solver.py"],
   ["/api/python/battery-corrosion-eis", "python/battery_corrosion_eis_solver.py"],
-  ["/api/python/bisquert-tlm-identify", "python/battery_corrosion_eis_solver.py"],
   ["/api/python/xrd-deconvolve", "python/xrd_peak_deconvolution.py"],
 ] as const;
 

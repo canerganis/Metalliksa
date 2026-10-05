@@ -77,7 +77,7 @@ ALWAYS_FORBIDDEN_CLAIMS: Tuple[str, ...] = ("qualified", "certified", "productio
 
 MATURITY = ("Research", "Preview")  # Production barred until roadmap G03.
 NAVIGATION = ("listed", "hidden")
-WORKSPACES = ("lpbf", "materials", "evidence", "orchestration")
+WORKSPACES = ("lpbf", "materials", "evidence")
 AUTHORITY_KINDS = ("python-ipc", "lpbf-worker", "browser-local", "node-provider")
 GPU_MODES = ("none", "optional", "required")
 BACKGROUND_WORK = ("none", "pausable", "server-job")

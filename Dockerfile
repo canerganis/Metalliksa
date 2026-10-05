@@ -71,12 +71,11 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # Runtime image (default target). Runs as a non-root user (uid 10001).
-# Code trees (dist, node_modules, python, data, assets, docs/sources/in625, .lpbf-surrogates) are root-owned
+# Code trees (dist, node_modules, python, data, assets, docs/sources/in625) are root-owned
 # and read-only for that user. It can write only to:
 #  - /data (the volume): every root below is redirected there by environment variables;
 #  - the WORKDIR-relative default data directories, created and chowned below so the server also works
 #    when those variables are unset;
-#  - /app/data/collected-sources (server/approvedSourceCollector.ts writes there, relative to the cwd);
 #  - /tmp: Python temporary directories (tempfile), including the IPC daemon's private 0700 socket directory
 #    (/tmp/metallix-ipc-*/ipc.sock; the daemon refuses a socket placed directly in /tmp).
 # PYTHONDONTWRITEBYTECODE=1 (base stage) keeps Python from writing __pycache__ into python/.
@@ -107,18 +106,12 @@ COPY assets ./assets
 # docs/sources/in625 is read at run time (server/lpbfPropertySourceCatalog.ts resolves it
 # against the working directory; lpbfSourceArchiveService archives from it).
 COPY docs/sources/in625 ./docs/sources/in625
-# Tracked surrogate models. Only python/phase9_surrogate.py (offline scripts/tests, not called by
-# the server) uses .lpbf-surrogates; it imports sklearn/joblib, which the lpbf lock does not
-# provide, so this copy is inert unless scikit-learn is added to the image.
-COPY .lpbf-surrogates ./.lpbf-surrogates
 RUN useradd --system --uid 10001 --no-create-home --home-dir /app metalliksa \
  && chmod -R go-w /app \
  && mkdir -p /data/lpbf-sources /data/lpbf-runs /data/lpbf-run-bundles /data/lpbf-jobs /data/research-registry \
       /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs /app/.research-registry /app/.runtime \
-      /app/data/collected-sources \
  && chown -R metalliksa /data \
-      /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs /app/.research-registry /app/.runtime \
-      /app/data/collected-sources
+      /app/.lpbf-sources /app/.lpbf-runs /app/.lpbf-run-bundles /app/.lpbf-jobs /app/.research-registry /app/.runtime
 USER metalliksa
 VOLUME ["/data"]
 EXPOSE 3000

@@ -179,7 +179,7 @@ test("DISPATCHABLE_SCRIPTS mirrors ALLOWED_SCRIPT_NAMES in the daemon; the ad-ho
   const block = /ALLOWED_SCRIPT_NAMES = frozenset\(\{([\s\S]*?)\}\)/.exec(src);
   assert.ok(block, "ALLOWED_SCRIPT_NAMES block not found");
   const pyNames = [...block![1].matchAll(/"([A-Za-z0-9_]+)"/g)].map((m) => m[1]).sort();
-  assert.ok(pyNames.length >= 15);
+  assert.ok(pyNames.length >= 12); // 12 dispatchable scripts since the 2026-10-04 deletions
   assert.deepEqual([...DISPATCHABLE_SCRIPTS].sort(), pyNames);
 
   assertDispatchableScript("python/pourbaix_solver.py");
@@ -424,5 +424,21 @@ test("a squatter on a configured fixed port never receives a request or gets its
   } finally {
     killDaemon(sup);
     await new Promise<void>((resolve) => squatter.close(() => resolve()));
+  }
+});
+
+test("the ad-hoc fallback starts Python in UTF-8 mode, so non-ASCII payload text survives a non-UTF-8 locale (request-loop root cause)", async () => {
+  const sup = Object.create(PersistentPythonIPCSupervisor.prototype) as any;
+  const saved = process.env.PYTHONUTF8;
+  process.env.PYTHONUTF8 = "0"; // the parent environment asks for the locale code page: the spawn must override it
+  try {
+    const notes = "Fe²⁺ → Fe₂O₃ · çğıöşü";
+    const res = await sup.executeViaAdHocSpawn("tests/fixtures/python_stdin_probe.py", { notes }, [], 30000);
+    assert.equal(res.exitCode, 0, res.stderr);
+    const out = JSON.parse(res.stdout);
+    assert.equal(out.utf8Mode, 1);
+    assert.equal(JSON.parse(out.text).notes, notes);
+  } finally {
+    if (saved === undefined) delete process.env.PYTHONUTF8; else process.env.PYTHONUTF8 = saved;
   }
 });

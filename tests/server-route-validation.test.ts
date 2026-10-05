@@ -6,7 +6,6 @@ import type { Server } from "node:http";
 import { applySecurity, errorHandler } from "../server/security.ts";
 import { characterizationRouter } from "../routes/characterization.ts";
 import { copilotRouter } from "../routes/copilot.ts";
-import { orchestratorRouter } from "../routes/orchestrator.ts";
 
 // Importing the characterization router starts the persistent Python supervisor (import side
 // effect in server/processOrchestrator.ts) which keeps the event loop alive; exit explicitly
@@ -37,7 +36,6 @@ async function start(token: string | null, rate?: { aiLimit?: number; generalLim
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
   app.use(characterizationRouter);
   app.use(copilotRouter);
-  app.use(orchestratorRouter);
   app.use(errorHandler(() => {}));
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, "127.0.0.1", () => resolve(s));
@@ -93,34 +91,6 @@ test("consult and diagnose-micrograph enforce input limits before calling the mo
   }
 });
 
-test("collect-source rejects prototype keys, non-strings and long URLs", async () => {
-  const h = await start(null, { aiLimit: 1000 });
-  try {
-    for (const sourceId of ["constructor", "toString", "__proto__", 7, null, { a: 1 }]) {
-      const r = await post(h, "/api/orchestrator/collect-source", { sourceId, url: "https://www.nist.gov/a.csv" });
-      assert.equal(r.status, 400, `sourceId ${JSON.stringify(sourceId)}`);
-    }
-    const long = "https://www.nist.gov/" + "a".repeat(2100);
-    assert.equal((await post(h, "/api/orchestrator/collect-source", { sourceId: "nistAmbench", url: long })).status, 400);
-    assert.equal((await post(h, "/api/orchestrator/collect-source", { sourceId: "nistAmbench", url: 123 })).status, 400);
-  } finally {
-    await h.close();
-  }
-});
-
-test("dataset-plan caps string fields", async () => {
-  const h = await start(null, { aiLimit: 1000 });
-  try {
-    const big = "x".repeat(4001);
-    assert.equal((await post(h, "/api/orchestrator/dataset-plan", { objective: big })).status, 400);
-    assert.equal((await post(h, "/api/orchestrator/dataset-plan", { objective: "ok", constraints: big })).status, 400);
-    assert.equal((await post(h, "/api/orchestrator/dataset-plan", { objective: "ok", availableData: big })).status, 400);
-    assert.equal((await post(h, "/api/orchestrator/dataset-plan", {})).status, 400);
-  } finally {
-    await h.close();
-  }
-});
-
 test("end to end: token auth returns 401 and AI buckets return 429", async () => {
   const h = await start("s3cret", { aiLimit: 2, generalLimit: 1000 });
   try {
@@ -143,8 +113,8 @@ test("end to end: token auth returns 401 and AI buckets return 429", async () =>
     const auth = { Authorization: "Bearer s3cret" };
     const bad = { prompt: "x".repeat(8001) };
     assert.equal((await post(fresh, "/api/consult", bad, auth)).status, 400);
-    // collect-source shares the stricter AI bucket.
-    assert.equal((await post(fresh, "/api/orchestrator/collect-source", { sourceId: "constructor", url: "x" }, auth)).status, 400);
+    // A second AI request fills the bucket (the deleted collect-source route used to be this call).
+    assert.equal((await post(fresh, "/api/metallurgy/consult", bad, auth)).status, 400);
     const limited = await post(fresh, "/api/consult", bad, auth);
     assert.equal(limited.status, 429);
     assert.ok(limited.headers.get("retry-after"));

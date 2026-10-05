@@ -18,15 +18,17 @@ test("available (field map): numbers, correlation names, modelId · gradientSour
   const markup = html("available_in718_285_960");
   const t = text(markup);
   assert.match(markup, /data-micro-status="available"/);
-  assert.ok(t.includes("0.67") && t.includes("0.53"), t);
+  assert.ok(t.includes("0.66") && t.includes("0.51"), t);
   assert.ok(t.includes("Hunt–Lu 1996"), t);
   // modelId and gradientSource are the same string on the field-map path: the source is shown once, not repeated.
   assert.equal(t.split("solidification-front-v1").length - 1, 1, t);
   assert.match(markup, /data-micro-provenance/);
   assert.ok(t.includes("Source: solidification-front-v1"), t);
-  assert.ok(t.includes("cells have no secondary arms · Kirkwood 1985"), t);
+  // The 285 W / 960 mm/s morphology is dendritic after the physics bump (was Cellular), so the
+  // cellular-only "no secondary arms" tooltip is absent; the SDAS correlation name is still shown.
+  assert.ok(t.includes("Kirkwood 1985") && !t.includes("cells have no secondary arms"), t);
   assert.ok(t.includes("median of G·R over front samples"), t);
-  assert.ok(t.includes("Cellular (Hunt G/R screening)"), t);
+  assert.ok(t.includes("Columnar dendritic (Hunt G/R screening)"), t);
   assert.match(markup, /data-micro-note="regime"/);
   assert.ok(t.includes("Keyhole Mode: outside the conduction regime of the G/R field"), t);
   assert.doesNotMatch(markup, /data-micro-note="screening-fallback"/);

@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track island powder run with dwell",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  3.7,
-  3.2
+  1.9,
+  2.1
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "e0d22f0e07ab92a1b88c9dbca1e8bb49c96ca85ae8f9c47be34c5f824c9b0340",
-  "result.orderedTypedSha256": "829cef9e352bcc1cda85e50f69721ee26f31a4bd1a12eadbdc131dc0d07201b1",
+  "result.canonicalSha256": "49325cb8911b6d8cfc7a13de772a6b1d5d2b5fddc56903db08304d006f2d158a",
+  "result.orderedTypedSha256": "4df8d6651c4623ca54d832d287950c51863773ddfd859ba90c41c60830a80a4f",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -126,7 +126,7 @@
   "result.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "result.key.provenance": "fc2d9266211302826a0728d3b4e7ffece37b242c798c7333f52bdc35dc5cbd20",
-  "result.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "result.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "d26442117d0e5c52e12d833efa690045823942ef74c55e525d51f9ec7b9d226f",
@@ -177,9 +177,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334

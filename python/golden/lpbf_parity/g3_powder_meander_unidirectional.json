@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track meander and unidirectional powder runs",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  6.7,
-  7.1
+  5.1,
+  5.1
  ],
  "recordedTwice": true,
  "observations": {
-  "meander.canonicalSha256": "923019aff0e723e769a5729eece09e58da179ec285b8ca1378eed0e1ca5c0da4",
-  "meander.orderedTypedSha256": "5a9c8f3822f46cc45ae77cb038d39c22c9d5d59fb3015711dfd31cc437566832",
+  "meander.canonicalSha256": "e36391458e7d1d4d520920f9c96a4b5f8c6ad94dc1460954a248391a557a7973",
+  "meander.orderedTypedSha256": "927619ec7fc4dae542a516934eb8441d65971418c73af6e41c34aaf3f833a1dd",
   "meander.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -126,7 +126,7 @@
   "meander.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "meander.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "meander.key.provenance": "5a90b4427c93423311a18d749c2a6e711c1e4d653677659fa3df11311b18f2e4",
-  "meander.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "meander.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "meander.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "meander.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "meander.key.metrics": "c2fe6c15c08c6ecae4189ba4224ab2ccb6220b332cfda27e241b4e30ae0a6fba",
@@ -162,8 +162,8 @@
   "meander.label": "Unvalidated transient thermal",
   "meander.confidence": "low",
   "meander.implementationHashOccurrencesAfterStrip": 0,
-  "unidirectional.canonicalSha256": "1dc81c3e3c255f34a44efdda4556c35cd59785a7e9838e8c0b0d707b186e2693",
-  "unidirectional.orderedTypedSha256": "f714f3f4f43c43d7481c5a678463155530c7a61759444f07ccba8afc44f282a3",
+  "unidirectional.canonicalSha256": "ac3ec9ac1269c4e3a6978b47d65c049128d49f63cabbc731af81173bb0dc943d",
+  "unidirectional.orderedTypedSha256": "700b5bbb8931327b7dcbc744f960e63a1b4fd2df95b554dbe916d21e66c53ea9",
   "unidirectional.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -215,7 +215,7 @@
   "unidirectional.key.productionReady": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
   "unidirectional.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "unidirectional.key.provenance": "275537bd365979b3cdd3f4f1801f42a7aa340f6377bf3a99de30435face9e087",
-  "unidirectional.key.analyticalComparison": "50cc58b7e136632bb16434bcc7dba3e9aa65f228189b3dc39c5e4f0ca58f444d",
+  "unidirectional.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
   "unidirectional.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
   "unidirectional.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "unidirectional.key.metrics": "2c05af8a920d45665af64bdf5e7fb29f2d5a8c7fa865d0ca035e3c2c0b7f6fb4",
@@ -266,9 +266,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334
@@ -675,9 +675,9 @@
     "assumptions": "Constant preheat properties; conduction only; discrete liquidus extent; no keyhole correction."
    },
    "goldak": {
-    "width_um": 0.0,
-    "depth_um": 0.0,
-    "length_um": 23.333333333333105,
+    "width_um": 50.0,
+    "depth_um": 25.0,
+    "length_um": 128.3333333333336,
     "gridResolution_um": [
      11.666666666666769,
      8.333333333333334

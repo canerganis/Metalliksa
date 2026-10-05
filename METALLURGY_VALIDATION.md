@@ -110,7 +110,7 @@ The \(+v^*\tau\) sign matches the Rosenthal moving frame used in this repository
 - **Spot Size Dependency**: Demonstrates that for identical laser power $P$ and speed $v$, increasing beam spot $r_0$ broadens and flattens the melt pool, lowering peak temperature and suppressing vaporization.
 
 ### 2.5 Implementation Note
-The integral in §2.3 is evaluated in `python/eagar_tsai_solver.py` (`eagar-tsai-v1`) with \(\tau = u^2\) Gauss–Legendre quadrature. The Melt Pool 3D lab requests this field; the industrial Build Job remains regularized Rosenthal. The model is conduction-only (no recoil keyhole). NIST AMB2022-03 IN718 width is a literature check; keyhole depth is not an Eagar–Tsai claim.
+The integral in §2.3 is evaluated in `python/eagar_tsai_solver.py` (`eagar-tsai-v2`) with \(\tau = u^2\) composite Gauss–Legendre quadrature (a panel on \([0,1]\), then geometric panels sized to resolve the far-wake pulse; the retired `eagar-tsai-v1` used a single quadrature panel). The Melt Pool 3D lab requests this field; the industrial Build Job remains regularized Rosenthal. The model is conduction-only (no recoil keyhole). NIST AMB2022-03 IN718 width is a literature check; keyhole depth is not an Eagar–Tsai claim.
 
 ---
 

@@ -507,58 +507,6 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
           </div>
 
           {/* Quick Simulation Lab Pipeline Bar */}
-          <div className="p-3 bg-[#050810] rounded-xl border border-sky-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-              <span className="text-[11px] font-mono text-slate-300 font-semibold">
-                Direct Simulator Pipeline:
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  const p = createPipelinePayloadFromMaterialSpec(selectedMaterial, "Materials Database");
-                  setActivePipelineMaterial(p);
-                  if (onNavigate) onNavigate("thermal-scheduler");
-                }}
-                className="px-2.5 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-mono text-[10.5px] flex items-center gap-1 transition"
-                title="Send kinetics, solvus and composition into Thermal Cycle Scheduler"
-              >
-                <Flame className="w-3 h-3 text-amber-400" />
-                <span>Heat Treatment ➔</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const p = createPipelinePayloadFromMaterialSpec(selectedMaterial, "Materials Database");
-                  setActivePipelineMaterial(p);
-                  if (onNavigate) onNavigate("xrd-lab");
-                }}
-                className="px-2.5 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 font-mono text-[10.5px] flex items-center gap-1 transition"
-                title="Send crystal structure, space group and Bragg peaks into Rapid XRD Lab"
-              >
-                <Atom className="w-3 h-3 text-sky-400" />
-                <span>XRD Lab ➔</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const p = createPipelinePayloadFromMaterialSpec(selectedMaterial, "Materials Database");
-                  setActivePipelineMaterial(p);
-                  if (onNavigate) onNavigate("hardness-tensile");
-                }}
-                className="px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-mono text-[10.5px] flex items-center gap-1 transition"
-                title="Send hardness, elastic modulus and Tabor parameters into Hardness Lab"
-              >
-                <Gauge className="w-3 h-3 text-emerald-400" />
-                <span>Hardness Lab ➔</span>
-              </button>
-            </div>
-          </div>
-
           {/* Chemical Composition Breakdown */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">

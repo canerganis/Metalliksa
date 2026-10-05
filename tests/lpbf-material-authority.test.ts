@@ -13,20 +13,18 @@ import { getHostPython } from '../server/pythonRuntime';
 import {
   LPBF_MATERIAL_AUTHORITY, LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION, authorityPvWindow, authorityThermal,
   authorityThermalProvenance, celsiusToKelvin, checkedAuthorityDocument, solidificationMaterialInputs,
-  transientGpuMaterialInputs, type AuthorityAlloyId, type LpbfMaterialAuthorityDocument,
+  type AuthorityAlloyId, type LpbfMaterialAuthorityDocument,
 } from '../src/data/lpbfMaterialAuthority';
 import * as foundation from '../src/types/lpbfDataFoundation';
 import { ALLOY_THERMAL_PROPERTIES, alloyThermalConstants, classifyProcessRegime, type LPBFAlloyId } from '../src/types/lpbfDataFoundation';
 import { LITERATURE_PV_WINDOWS } from '../src/utils/lpbfFourAlloySchema';
 import { MASTER_LPBF_REFERENCE_DATASETS } from '../src/data/lpbfReferenceDatasets';
 import { findNearestLiteratureRecord } from '../src/utils/lpbfIndustrialDecision';
-import { GPU_LAB_MATERIALS, transientGpuRequest, type GpuLabParams } from '../src/components/TransientEnthalpy3DGPULab';
 import { SOLIDIFICATION_PRESETS, solidificationPresetInputs, solidificationRequest } from '../src/components/SolidificationMicrostructureLab';
 
 const FOUR = ['ti6al4v', 'ss316l', 'alsi10mg', 'in718'] as const;
 const GENERATED = 'src/generated/lpbfMaterialAuthority.json';
 // Expected dropdown label -> alloy id, written out independently of the components.
-const GPU_LABELS: Record<string, AuthorityAlloyId> = { 'Ti-6Al-4V': 'ti6al4v', IN718: 'in718', '316L': 'ss316l', AlSi10Mg: 'alsi10mg' };
 const SOLIDIFICATION_LABELS: Record<string, AuthorityAlloyId> = { 'Inconel 718': 'in718', 'Ti-6Al-4V': 'ti6al4v', AlSi10Mg: 'alsi10mg', '316L SS': 'ss316l' };
 
 function runPython(args: string[]) {
@@ -51,7 +49,7 @@ let liveCache: LivePython | undefined;
 /** The authority read straight from the Python modules (not through the generator). */
 function live(): LivePython {
   if (liveCache) return liveCache;
-  const labels = JSON.stringify([...Object.keys(GPU_LABELS), ...Object.keys(SOLIDIFICATION_LABELS)]);
+  const labels = JSON.stringify(Object.keys(SOLIDIFICATION_LABELS));
   const code = [
     'import json, sys', 'sys.path.insert(0, "python")',
     'import four_alloy_materials as f, in625_thermal_material as m, lpbf_material_registry as r',
@@ -111,8 +109,8 @@ test('committed JSON equals the live Python authority (read without the generato
   assert.deepEqual(values('latent heat of fusion'), [py.in625.latent_heat_fusion_J_kg, ...py.in625Other.latent]);
   assert.deepEqual(values('boiling point'), [py.in625.boiling_C, Number((py.in625Other.boiling_K - 273.15).toFixed(2))]);
   assert.deepEqual(values('IR absorptivity'), [py.in625.absorptivity_IR, py.in625Other.absorptivity]);
-  assert.match(in625.note, /260000 vs 290000 vs 227000 J\/kg/);
-  assert.match(in625.note, /2880 vs 2900 C/);
+  assert.match(in625.note, /latent heat of fusion: 290000 J\/kg in Rosenthal \/ build-job path \[SECONDARY_THERMOPHYSICAL_DB\] and Sabau et al\. 2020 fusion-enthalpy screening \[LATENT_HEAT_J_KG\] vs 227000 J\/kg in transient material spec \[IN625_LATENT_HEAT_FUSION_MILLS_J_KG\]/);
+  assert.match(in625.note, /boiling point: 2880 C in .* vs 2900 C in /);
 });
 
 test('accessor refuses an unsupported schemaVersion and labels every row it serves', () => {
@@ -183,7 +181,6 @@ test('unknown alloy or preset is unavailable: no silent surrogate', () => {
   assert.throws(() => authorityPvWindow('in625'), /no surrogate alloy/);
   assert.throws(() => solidificationPresetInputs('Inconel 625'), /Unknown material preset "Inconel 625"/);
   assert.throws(() => solidificationPresetInputs('toString'), /Unknown material preset/);
-  assert.throws(() => transientGpuRequest({ ...gpuParams('IN718'), material: 'IN625' as never }), /Unknown material preset "IN625"/);
 });
 
 test('lpbfFourAlloySchema P-v boxes equal the authority; IN625 stays TS-local', () => {
@@ -203,32 +200,6 @@ function assertLabelNamesAlloy(label: string, id: AuthorityAlloyId) {
   const entry = LPBF_MATERIAL_AUTHORITY.alloys[id];
   assert.ok([entry.thermalName, entry.slicerName].some(name => words(name) === words(label)), `${label} does not name ${entry.thermalName}/${entry.slicerName}`);
 }
-
-function gpuParams(material: string): GpuLabParams {
-  return { nx: 64, ny: 64, nz: 32, dx: 2, dy: 2, dz: 2, power_W: 200, T_preheat_K: 300, material: material as GpuLabParams['material'] };
-}
-
-test('GPU lab: each dropdown label maps to its alloy and the payload carries the authority row in K', () => {
-  assert.deepEqual({ ...GPU_LAB_MATERIALS }, GPU_LABELS);
-  for (const [label, id] of Object.entries(GPU_LABELS)) {
-    assertLabelNamesAlloy(label, id);
-    const t = LPBF_MATERIAL_AUTHORITY.alloys[id].thermal;
-    const request = transientGpuRequest(gpuParams(label));
-    assert.deepEqual(
-      { rho: request.rho, L_f: request.L_f, T_solidus: request.T_solidus, T_liquidus: request.T_liquidus, cp_solid: request.cp_solid, cp_liquid: request.cp_liquid, k_solid: request.k_solid, k_liquid: request.k_liquid },
-      { rho: t.density_kg_m3, L_f: t.latent_heat_fusion_J_kg, T_solidus: celsiusToKelvin(t.solidus_C), T_liquidus: celsiusToKelvin(t.liquidus_C), cp_solid: t.specific_heat_J_kgK, cp_liquid: t.specific_heat_liquid_J_kgK, k_solid: t.thermal_conductivity_W_mK, k_liquid: t.thermal_conductivity_liquid_W_mK },
-      label,
-    );
-    assert.deepEqual(transientGpuMaterialInputs(id), { rho: request.rho, L_f: request.L_f, T_solidus: request.T_solidus, T_liquidus: request.T_liquidus, cp_solid: request.cp_solid, cp_liquid: request.cp_liquid, k_solid: request.k_solid, k_liquid: request.k_liquid });
-    // Kelvin, not Celsius: no conversion back after the accessor.
-    assert.ok(Math.abs(request.T_liquidus - (t.liquidus_C + 273.15)) < 0.006, `${label} T_liquidus is in K`);
-    assert.ok(Math.abs(request.T_solidus - (t.solidus_C + 273.15)) < 0.006, `${label} T_solidus is in K`);
-  }
-  // The component hands this builder's output to the service unchanged.
-  const source = readFileSync('src/components/TransientEnthalpy3DGPULab.tsx', 'utf8');
-  assert.match(source, /computeTransient3DGPU\(transientGpuRequest\(params\)\)/);
-  assert.equal(source.match(/computeTransient3DGPU\(/g)?.length, 1);
-});
 
 test('Solidification lab: each preset label maps to its alloy; the payload carries the Python name, not alloy numbers', () => {
   assert.deepEqual({ ...SOLIDIFICATION_PRESETS }, SOLIDIFICATION_LABELS);
@@ -258,7 +229,6 @@ test('the consumer files hold no alloy-property literals, named numeric constant
   // Allowed: the labelled TS-local IN625 box, orientation angles and a chart bar radius.
   const files: Record<string, { block?: RegExp; lines?: string[] }> = {
     'src/types/lpbfDataFoundation.ts': {},
-    'src/components/TransientEnthalpy3DGPULab.tsx': {},
     'src/components/SolidificationMicrostructureLab.tsx': { lines: ['radius={[7, 7, 2, 2]}'] },
     'src/utils/lpbfFourAlloySchema.ts': { block: /const IN625_PV_WINDOW_TS_LOCAL[\s\S]*?\n};\n/, lines: ['([0, 45, 90] as const)'] },
     'src/data/lpbfMaterialAuthority.ts': { lines: ['export const LPBF_MATERIAL_AUTHORITY_SCHEMA_VERSION = 1;'] },

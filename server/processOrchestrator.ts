@@ -188,12 +188,10 @@ export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "calphad_solver",
   "dft_property_calculator",
   "icme_multiscale_pipeline_solver",
-  "inverse_alloy_optimizer",
   "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",
   "lpbf_thermal_solver",
-  "marangoni_pore_instability_solver",
-  "part_scale_inherent_strain_solver",
+  "micrograph_measure",
   "pourbaix_solver",
   "stl_slicer_build_time_solver",
   "stochastic_uq_mmpds_solver",
@@ -553,9 +551,17 @@ export class PersistentPythonIPCSupervisor {
       const scriptPath = path.join(process.cwd(), scriptRelativePath);
 
       const python = getHostPython();
-      const pyProcess = spawn(python.cmd, [...python.prefix, scriptPath, ...args], { windowsHide: true });
+      // UTF-8 mode: the JSON protocol is UTF-8 in both directions, but a Python started without it reads stdin
+      // in the locale code page (cp1254/cp1252 on Windows) and garbles non-ASCII text.
+      const pyProcess = spawn(python.cmd, [...python.prefix, scriptPath, ...args], {
+        windowsHide: true,
+        env: { ...process.env, PYTHONUTF8: "1" },
+      });
       let stdout = "";
       let stderr = "";
+      // Decode as a stream: a multi-byte character split across two chunks must not become U+FFFD.
+      pyProcess.stdout.setEncoding("utf8");
+      pyProcess.stderr.setEncoding("utf8");
 
       const timer = setTimeout(() => {
         pyProcess.kill("SIGKILL");

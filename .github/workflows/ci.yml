@@ -91,15 +91,18 @@ jobs:
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_contract_keyhole_raytracing test_contract_uq_lab
           test_contract_ttt_cct_kinetics test_contract_icme_motor test_contract_murakami_fatigue
-          test_contract_optical_tomography test_contract_toolpath_studio test_contract_adaptive_mitigation
-          test_contract_defect_twin
-          test_phase6b_vector_parity test_stochastic_uq_evidence test_persistent_ipc_security
+          test_contract_toolpath_studio test_contract_adaptive_mitigation
+          test_contract_micrograph test_micrograph_measure test_lpbf_worker_dispatch
+          test_phase6b_vector_parity test_stochastic_uq_evidence test_stochastic_uq_vectorized_parity
+          test_persistent_ipc_security
           test_murakami_constants test_xrd_formulas test_cnls_validation
           test_electrochem_fallbacks test_elasticity_oracle test_icme_illustrative
-          test_phase10_industrial_defects
           test_kinetics_fx test_calphad_honesty
           test_lpbf_validity_envelope test_phase8_microstructure_contract
           test_lpbf_solidification_microstructure_rpc
+          test_pourbaix_equilibrium test_pourbaix_ts_fixture test_pourbaix_ticrmo
+          test_goldak_power_normalization test_lpbf_boiling_cap
+          test_lpbf_meltpool_consumer_pins
       # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
       # package-aware manifest import closure and the canonical-v3 framing vectors. The
       # canonical identity normalises CRLF, so these are checkout-newline independent.

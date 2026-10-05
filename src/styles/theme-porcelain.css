@@ -323,9 +323,8 @@ svg [stroke="#475569" i], svg [stroke="#4b5563" i] { stroke: var(--mk-chart-axis
 svg [stroke="#e2e8f0" i], svg [stroke="#cbd5e1" i], svg [stroke="#f1f5f9" i], svg [stroke="#94a3b8" i] { stroke: var(--mk-chart-axis); }
 
 /* Light-authored islands: a solid bg-white card was always meant as a white card with Tailwind's own palette
- * inside it, and three labs were authored entirely as light cards inside the old dark shell. Inside those
- * the original ramps are restored, so their text and accents stay as authored (dark on white). */
-.bg-white, [data-module="transient-3d-gpu"], [data-module="powder-compaction"], [data-module="optical-tomography"] {
+ * inside it, so the original ramps are restored there (dark on white, as authored). */
+.bg-white {
   --color-white: #fff;
   --color-black: #000;
   --color-red-50: oklch(97.1% 0.013 17.38);

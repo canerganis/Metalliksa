@@ -387,6 +387,107 @@ def check_build_job_microstructure_degenerate_floor():
         assert degenerate["reason"] == DEGENERATE_FLOOR_REASON
 
 
+def check_extent_status_consumers():
+    """Heuristic / floored / box-limited melt-pool extent must not become a hard verdict."""
+    import copy
+
+    from lpbf_build_job_solver import GEOMETRY_DEPENDENT_GATES, compose_verdict
+    from nist_ambench_2018_02 import CBM_CASES, run_ambench_validation
+
+    common = {"alloyId": "in718", "beamDiameter_um": 80, "layerThickness_um": 30,
+              "hatchSpacing_um": 100, "bypassCache": True}
+
+    # (a) IN718 200 W / 1000 mm/s / d80: the Rosenthal path has no resolvable liquidus extent.
+    heur = run_job({**common, "laserPower_W": 200, "scanSpeed_mm_s": 1000})
+    geo = heur["thermal"]["meltPoolGeometry"]
+    assert geo["extentStatus"] == "heuristic-width-fallback", geo["extentStatus"]
+    v = heur["verdict"]
+    assert v["verdict"] == "inconclusive", v["verdict"]
+    assert v["geometryResolved"] is False and v["extentStatus"] == "heuristic-width-fallback"
+    reason = f"melt-pool geometry not resolved (heuristic-width-fallback): {geo['extentNote']}"
+    assert v["verdictReason"] == reason
+    by_id = {g["id"]: g for g in v["gates"]}
+    assert sorted(v["unavailableGates"]) == sorted(GEOMETRY_DEPENDENT_GATES)
+    for gid in ("lof_tang", "lof_wh", "lof_dt", "balling"):
+        assert by_id[gid]["status"] == "unavailable", (gid, by_id[gid])
+        assert by_id[gid]["reason"] == reason and by_id[gid]["measured"] is None
+    # Geometry-independent gates keep their result.
+    assert by_id["keyhole"]["status"] == "pass" and by_id["keyhole"]["measured"] == heur["thermal"]["processParameters"]["normalizedEnthalpy"]
+    assert by_id["literature_pv"]["status"] == "pass" and by_id["downskin"]["status"] == "pass"
+    assert by_id["recoater"]["status"] == "warn" and by_id["distortion"]["status"] == "warn"
+    assert v["verdict"] not in ("printable", "do-not-print", "risky")
+    assert "do-not-print" not in json.dumps(v["headline"]).lower()
+    assert not any(r.startswith("Lack of fusion (Tang)") or "Plateau" in r for r in v["reasons"]), v["reasons"]
+    assert v["dominantGate"] not in GEOMETRY_DEPENDENT_GATES
+    assert len(v["gates"]) == 9  # shape: no gate removed
+
+    # Every non-"computed" status is inconclusive, even with a geometry that would fail Tang.
+    for status in ("width-floor-applied", "search-box-limited", "heuristic-width-fallback"):
+        th = copy.deepcopy(heur["thermal"])
+        th["meltPoolGeometry"].update(extentStatus=status, extentNote=f"note for {status}")
+        th["defectDiagnostics"].update(lackOfFusionStatus="Fail",
+                                       ballingInstabilityRisk="High Balling Risk (Capillary Pinch-Off & Humping)")
+        out = compose_verdict(th, "in718")
+        assert out["verdict"] == "inconclusive" and out["extentStatus"] == status, (status, out["verdict"])
+        assert out["verdictReason"] == f"melt-pool geometry not resolved ({status}): note for {status}"
+        assert sorted(out["unavailableGates"]) == sorted(GEOMETRY_DEPENDENT_GATES)
+        assert all(g["status"] != "fail" for g in out["gates"] if g["id"] in GEOMETRY_DEPENDENT_GATES)
+
+    # (b) A computed case keeps its verdict and gate statuses (no unavailable gate, no new reason).
+    comp = run_job({**common, "laserPower_W": 285, "scanSpeed_mm_s": 960})
+    assert comp["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed"
+    cv = comp["verdict"]
+    assert cv["verdict"] == "do-not-print", cv["verdict"]
+    assert cv["geometryResolved"] is True and cv["verdictReason"] is None
+    assert cv["unavailableGates"] == [] and cv["geometryIndependentFailGates"] == []
+    assert {g["id"]: g["status"] for g in cv["gates"]} == {
+        "lof_tang": "pass", "lof_wh": "pass", "lof_dt": "pass", "keyhole": "warn",
+        "balling": "fail", "literature_pv": "pass", "recoater": "warn", "distortion": "warn",
+        "downskin": "pass"}, cv["gates"]
+    assert cv["dominantGate"] == "balling"
+    assert all("reason" not in g and g["measured"] is not None or g["id"] == "downskin" for g in cv["gates"])
+    assert not any("not resolved" in r for r in cv["reasons"])
+
+    # NIST AM-Bench: only computed rows enter the overall error.
+    def stub(statuses):
+        by_power = {(c["power_W"], c["speed_mm_s"]): statuses[c["caseId"]] for c in CBM_CASES}
+
+        def fn(p_w, v_mms, beam_um, overrides):
+            status = by_power[(p_w, v_mms)]
+            return {"meltPoolGeometry": {
+                "length_um": 700.0, "width_um": 150.0, "depth_um": 100.0, "extentStatus": status,
+                "extentNote": None if status == "computed" else f"{status} note"}}
+        return fn
+
+    mixed = run_ambench_validation(stub({"CBM-A": "computed", "CBM-B": "heuristic-width-fallback",
+                                         "CBM-C": "width-floor-applied"}))
+    rows = {r["caseId"]: r for r in mixed["cases"]}
+    assert rows["CBM-A"]["status"] == "computed" and rows["CBM-A"]["extentStatus"] == "computed"
+    assert rows["CBM-A"]["mape_pct"]["mean"] is not None
+    for cid, status in (("CBM-B", "heuristic-width-fallback"), ("CBM-C", "width-floor-applied")):
+        assert rows[cid]["status"] == "not-computed" and rows[cid]["mape_pct"] is None
+        assert rows[cid]["extentStatus"] == status and rows[cid]["extentNote"] == f"{status} note"
+    assert mixed["overallMeanMape_pct"] == rows["CBM-A"]["mape_pct"]["mean"]
+    assert mixed["computedCases"] == 1 and mixed["notComputedCases"] == 2
+    assert "not-computed" in mixed["overallNote"]
+    none_computed = run_ambench_validation(stub({c["caseId"]: "search-box-limited" for c in CBM_CASES}))
+    assert none_computed["overallMeanMape_pct"] is None
+    assert none_computed["computedCases"] == 0 and none_computed["notComputedCases"] == 3
+    all_computed = run_ambench_validation(stub({c["caseId"]: "computed" for c in CBM_CASES}))
+    means = [r["mape_pct"]["mean"] for r in all_computed["cases"]]
+    assert all_computed["overallMeanMape_pct"] == round(sum(means) / 3.0, 2)
+    assert all_computed["computedCases"] == 3 and all_computed["notComputedCases"] == 0
+
+    # UQ counts report inconclusive verdicts separately (not as "risky").
+    from lpbf_screening_uq import run_screening_uq
+
+    uq = run_screening_uq(base_power_W=200.0, base_beam_um=80.0, n_samples=8, seed=1,
+                          thermal_runner=lambda p, d, o: heur["thermal"],
+                          verdict_fn=lambda th: compose_verdict(th, "in718"))
+    assert uq["counts"] == {"printable": 0, "risky": 0, "do_not_print": 0, "inconclusive": 8}, uq["counts"]
+    assert uq["P_printable"] == 0.0
+
+
 def main():
     from lpbf_job_cache import clear_cache
     from murakami_fatigue_screening import parse_defect_sqrt_areas_text
@@ -424,7 +525,9 @@ def main():
         "lpbf-build-job-core-peak-field-v2",
         "lpbf-build-job-kinetics-same-alloy-v3",
         "lpbf-build-job-kinetics-steel-only-v4",
+        "lpbf-build-job-microstructure-projection-v5",
     ), BUILD_JOB_SOLVER_REVISION
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-extent-status-v6"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default
@@ -783,7 +886,13 @@ def main():
             "bypassCache": True,
         }
     )
-    assert lof["verdict"]["verdict"] in ("risky", "do-not-print"), lof["verdict"]
+    # 90 W / 1400 mm/s has no resolvable Rosenthal liquidus extent (heuristic W/D/L): the Tang
+    # LoF verdict is unavailable rather than a hard do-not-print built on heuristic numbers.
+    if lof["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed":
+        assert lof["verdict"]["verdict"] in ("risky", "do-not-print"), lof["verdict"]
+    else:
+        assert lof["verdict"]["verdict"] == "inconclusive", lof["verdict"]
+        assert "lof_tang" in lof["verdict"]["unavailableGates"]
     assert lof["verdict"]["suggestedPatch"] is not None
 
     kh = run_job(
@@ -884,6 +993,8 @@ def main():
     assert omitted_alloy["success"] is True
     assert omitted_alloy["alloyId"] == "in718"
 
+    check_extent_status_consumers()
+
     if not SLOW:
         print("PASS: solve_lpbf_build_job Phase 5 fast (cache, lazy UQ/NIST, Murakami paste)")
         print("HINT: re-run with --slow for UQ + NIST AM-Bench coverage")
@@ -916,6 +1027,14 @@ def main():
     assert uq["ambench"]["source"]["doi"] == "10.1007/s40192-020-00169-1"
     assert len(uq["ambench"]["cases"]) == 3
     assert uq["ambench"]["cases"][0]["nist"]["length_um"] == 659.0
+    amb_rows = uq["ambench"]["cases"]
+    assert all(r["status"] in ("computed", "not-computed") for r in amb_rows)
+    assert all((r["status"] == "computed") == (r["extentStatus"] == "computed") for r in amb_rows)
+    assert all((r["mape_pct"] is None) == (r["status"] == "not-computed") for r in amb_rows)
+    assert uq["ambench"]["computedCases"] + uq["ambench"]["notComputedCases"] == 3
+    computed_means = [r["mape_pct"]["mean"] for r in amb_rows if r["status"] == "computed"]
+    assert uq["ambench"]["overallMeanMape_pct"] == (
+        round(sum(computed_means) / len(computed_means), 2) if computed_means else None)
     assert uq["qualification"]["status"] == "not_executed"
 
     uq2 = run_job(

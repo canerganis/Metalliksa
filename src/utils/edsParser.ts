@@ -1,6 +1,12 @@
 // Source-declared EMSA/MAS and delimited EDS spectra. Opaque binary SPC calibration is not guessed.
 
-import { CHARACTERISTIC_XRAY_LINES, SpectrumPoint } from "../data/edsReferenceData";
+/** One channel of an imported spectrum. Background is not modelled at import: it is 0 and netCounts equals counts. */
+export interface SpectrumPoint {
+  energyKeV: number;
+  counts: number;
+  background: number;
+  netCounts: number;
+}
 
 const DECIMAL_TOKEN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 
@@ -44,18 +50,6 @@ export interface ParsedEDSSpectrum {
   deadTimePct?: number;
   energyCalibrationSource?: string;
   points: SpectrumPoint[];
-  detectedPeaks: {
-    energyKeV: number;
-    counts: number;
-    matchedElement?: string;
-    matchedLine?: string;
-    confidence: number;
-  }[];
-  estimatedComposition?: {
-    symbol: string;
-    weightPct: number;
-    atomicPct: number;
-  }[];
 }
 
 /**
@@ -121,41 +115,6 @@ export function parseRawEDSFile(
     };
   });
 
-  // Peak detection (local maxima)
-  const detectedPeaks: ParsedEDSSpectrum["detectedPeaks"] = [];
-  for (let i = 2; i < points.length - 2; i++) {
-    const p = points[i];
-    if (p.netCounts > 200 && p.netCounts > points[i - 1].netCounts && p.netCounts > points[i + 1].netCounts) {
-      if (p.netCounts > points[i - 2].netCounts && p.netCounts > points[i + 2].netCounts) {
-        // Match with known characteristic X-ray lines
-        let bestMatch: string | undefined;
-        let bestLine: string | undefined;
-        let minDiff = 0.08; // 80 eV tolerance
-
-        Object.entries(CHARACTERISTIC_XRAY_LINES).forEach(([sym, elem]) => {
-          if (elem.lines.kAlpha && Math.abs(elem.lines.kAlpha - p.energyKeV) < minDiff) {
-            minDiff = Math.abs(elem.lines.kAlpha - p.energyKeV);
-            bestMatch = sym;
-            bestLine = `Kα (${elem.lines.kAlpha.toFixed(2)} keV)`;
-          }
-          if (elem.lines.lAlpha && Math.abs(elem.lines.lAlpha - p.energyKeV) < minDiff) {
-            minDiff = Math.abs(elem.lines.lAlpha - p.energyKeV);
-            bestMatch = sym;
-            bestLine = `Lα (${elem.lines.lAlpha.toFixed(2)} keV)`;
-          }
-        });
-
-        detectedPeaks.push({
-          energyKeV: p.energyKeV,
-          counts: p.counts,
-          matchedElement: bestMatch,
-          matchedLine: bestLine,
-          confidence: bestMatch ? 90 : 50,
-        });
-      }
-    }
-  }
-
   return {
     fileName,
     sampleTitle,
@@ -164,7 +123,6 @@ export function parseRawEDSFile(
     deadTimePct,
     energyCalibrationSource,
     points,
-    detectedPeaks,
   };
 }
 

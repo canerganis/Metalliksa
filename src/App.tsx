@@ -48,34 +48,21 @@ const MetallurgyCopilot = lazy(() => import("./components/MetallurgyCopilot").th
 const CorrosionEngineeringLab = lazy(() => import("./components/CorrosionEngineeringLab").then(m => ({ default: m.CorrosionEngineeringLab })));
 const MaterialsProjectExplorer = lazy(() => import("./components/MaterialsProjectExplorer").then(m => ({ default: m.MaterialsProjectExplorer })));
 const ICMEMultiScalePipelineStudio = lazy(() => import("./components/ICMEMultiScalePipelineStudio").then(m => ({ default: m.ICMEMultiScalePipelineStudio })));
-const StandardQualificationEngine = lazy(() => import("./components/StandardQualificationEngine").then(m => ({ default: m.StandardQualificationEngine })));
 const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineeringWorkspace").then(m => ({ default: m.LpbfEngineeringWorkspace })));
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
-const ThermomechanicalDistortionLab = lazy(() => import("./components/ThermomechanicalDistortionLab").then(m => ({ default: m.ThermomechanicalDistortionLab })));  // Phase 9
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
-const ModulusFNOLab = lazy(() => import("./components/ModulusFNOLab").then(m => ({ default: m.ModulusFNOLab }))); // Phase 11
 const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudioLab").then(m => ({ default: m.LpbfToolpathStudioLab }))); // Phase 12
-const ToolpathThermalMapLab = lazy(() => import("./components/ToolpathThermalMapLab").then(m => ({ default: m.ToolpathThermalMapLab }))); // Phase 12+17
-const IndustrialCertificationLab = lazy(() => import("./components/IndustrialCertificationLab").then(m => ({ default: m.IndustrialCertificationLab }))); // Phase 9 & 10
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
-const LpbfDefectTwinLab = lazy(() => import("./components/LpbfDefectTwinLab").then(m => ({ default: m.LpbfDefectTwinLab }))); // Phase 14
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
-const MultiLaserPlumeLab = lazy(() => import("./components/MultiLaserPlumeLab").then(m => ({ default: m.MultiLaserPlumeLab }))); // Phase 16
-const MultiTrackThermalLab = lazy(() => import("./components/MultiTrackThermalLab").then(m => ({ default: m.MultiTrackThermalLab }))); // Phase 17
-const PowderDEMCompactionLab = lazy(() => import("./components/PowderDEMCompactionLab").then(m => ({ default: m.PowderDEMCompactionLab }))); // Phase 18
-const OpticalTomographyLab = lazy(() => import("./components/OpticalTomographyLab").then(m => ({ default: m.OpticalTomographyLab }))); // Phase 19
-const TransientEnthalpy3DGPULab = lazy(() => import("./components/TransientEnthalpy3DGPULab").then(m => ({ default: m.TransientEnthalpy3DGPULab }))); // Phase 22
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 
-const AerospaceAuditReportGenerator = lazy(() => import("./components/AerospaceAuditReportGenerator").then(m => ({ default: m.AerospaceAuditReportGenerator })));
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
 const EDSSpectrumLab = lazy(() => import("./components/EDSSpectrumLab").then(m => ({ default: m.EDSSpectrumLab })));
 const DigitalTwinHub = lazy(() => import("./components/DigitalTwinHub").then(m => ({ default: m.DigitalTwinHub })));
 const PhaseKineticsTTTCCTStudio = lazy(() => import("./components/PhaseKineticsTTTCCTStudio").then(m => ({ default: m.PhaseKineticsTTTCCTStudio })));
 const UQLab = lazy(() => import("./components/UQLab").then(m => ({ default: m.UQLab })));
-const AIOrchestratorPanel = lazy(() => import("./components/AIOrchestratorPanel").then(m => ({ default: m.AIOrchestratorPanel })));
 
 export type NavSubTab = ModuleId;
 export type DisciplineHubId = typeof WORKSPACES[number]['id'];
@@ -176,20 +163,10 @@ export default function App() {
       case '3d-distortion-lab': return <LpbfEngineeringWorkspace />;
       case 'lpbf-optimizer': return <LpbfBayesianOptimizerLab />;
       case 'solidification-microstructure': return <SolidificationMicrostructureLab />;  // Phase 8
-      case 'thermomechanical-distortion': return <ThermomechanicalDistortionLab />; // Phase 9
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
-      case 'modulus-fno-lab': return <ModulusFNOLab />; // Phase 11
       case 'toolpath-studio': return <LpbfToolpathStudioLab />; // Phase 12
-      case 'toolpath-thermal-map': return <ToolpathThermalMapLab />; // Phase 12+17
-      case 'industrial-certification': return <IndustrialCertificationLab />; // Phase 9 & 10
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
-      case 'defect-twin': return <LpbfDefectTwinLab />; // Phase 14
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
-      case 'multilaser-plume': return <MultiLaserPlumeLab />; // Phase 16
-      case 'thermal-accumulation': return <MultiTrackThermalLab />; // Phase 17
-      case 'powder-compaction': return <PowderDEMCompactionLab />; // Phase 18
-      case 'optical-tomography': return <OpticalTomographyLab />; // Phase 19
-      case 'transient-3d-gpu': return <TransientEnthalpy3DGPULab />; // Phase 22
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
@@ -197,10 +174,8 @@ export default function App() {
       case 'uq-lab': return <UQLab onNavigate={navigate} />;
       case 'digital-twin': return <DigitalTwinHub onNavigateToModule={navigate} />;
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
-      case 'aerospace-pdf-audit': return <AerospaceAuditReportGenerator />;
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'icme-motor': return <ICMEMultiScalePipelineStudio />;
-      case 'qualification': return <StandardQualificationEngine />;
       case 'materials-project': return <MaterialsProjectExplorer />;
       case 'calculators': return <PocketCalculators />;
       case 'eds-lab': return <EDSSpectrumLab />;
@@ -209,7 +184,6 @@ export default function App() {
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;
       case 'phase-diagram': return <PhaseDiagramViewer />;
       case 'copilot': return <MetallurgyCopilot />;
-      case 'ai-orchestrator': return <AIOrchestratorPanel />;
     }
   }
 
@@ -239,7 +213,7 @@ export default function App() {
           <div className="mt-3 grid gap-3 md:grid-cols-2 text-slate-400"><p>Hatch {specimen.lpbf.hatch_um} µm · Layer {specimen.lpbf.layer_um} µm · Beam {specimen.lpbf.beamDiameter_um} µm · Preheat {specimen.lpbf.preheatTemp_C} °C. Material and process are shared across LPBF stages.</p><p>Module scope: Production / Research / Preview / Unresolved. Result evidence: Measured / Validated simulation / Calibrated simulation / Literature estimate / Screening only / Unresolved. Conservation, convergence and experimental validation are separate checks.</p><p>Visited modules retain their local view during navigation. Specimen and registry persist in this browser. Meshes and most specialist views remain session-only.</p></div>
         </details>
         {materialTransfer.message && <p role={materialTransfer.error ? 'alert' : 'status'} className={`mb-4 rounded-lg border px-4 py-3 text-xs ${materialTransfer.error ? 'border-amber-500/30 text-amber-200' : 'border-cyan-500/20 text-cyan-200'}`}>{materialTransfer.message}</p>}
-        {activeTab !== 'ai-orchestrator' && <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>}
+        <SilentBoundary><Suspense fallback={null}><ScientificContextPanel moduleId={activeTab} specimen={specimen} /></Suspense></SilentBoundary>
         </>}
         {visited.map(id => <div key={id} hidden={home || id !== activeTab} data-module={id}><WorkspaceVisibility visible={!home && id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>

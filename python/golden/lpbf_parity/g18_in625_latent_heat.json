@@ -4,9 +4,9 @@
  "group": "G18",
  "description": "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
  "slow": false,
- "recordedImplementationHash": "edddf0dce4e70b8f85192c6795ab353cdc5f5a67bfa3c20447e8eb571234101e",
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "08c08ed0c279952fe1b27cb614a172104d10f60c",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,12 +68,12 @@
   }
  },
  "recordedRuns_s": [
-  0.1,
-  0.1
+  0.0,
+  0.0
  ],
  "recordedTwice": true,
  "observations": {
-  "meltpool.in625": "b5773275d729fd34c377c324476ef348a298583f7786f55f404033d6c3b6918a",
+  "meltpool.in625": "3bfb5efeac406ac8c7578781412b2701b604578042e54edddcc48628c9ebd2e2",
   "meltpool.in625.materialEvidence": {
    "propertySource": "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB.Inconel 625",
    "provenanceClass": "legacy-estimated-secondary",
@@ -81,12 +81,13 @@
    "scope": "direct-meltpool-screening",
    "usesBoundedIN625Snapshot": false
   },
+  "meltpool.in625.geometry_um": "2b721e3fc6c761e5645cb14f1246aa445c11ee8848f756659c8852b49c97106b",
   "meltpool.in625.equalWithLatentHeatFusion.227000": false,
-  "meltpool.in625.equalWithLatentHeatFusion.260000": true,
-  "meltpool.in625.equalWithLatentHeatFusion.290000": false,
+  "meltpool.in625.equalWithLatentHeatFusion.260000": false,
+  "meltpool.in625.equalWithLatentHeatFusion.290000": true,
   "meltpool.in625.table.latent_heat_fusion_J_kg": [
-   260000.0,
-   "0x1.fbd0000000000p+17"
+   290000.0,
+   "0x1.1b34000000000p+18"
   ],
   "meltpool.in625.table.latent_heat_vap_J_kg": [
    6300000.0,
@@ -113,5 +114,12 @@
    "error": "ValueError: Inconel 625: thermophysical data missing; supply sourced properties"
   }
  },
- "rawValues": {}
+ "rawValues": {
+  "meltpool.in625.geometry_um": [
+   145.4,
+   107.6,
+   795.0,
+   37.7
+  ]
+ }
 }

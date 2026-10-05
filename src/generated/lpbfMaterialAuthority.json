@@ -170,7 +170,7 @@
       "source": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
       "registryCatalogQuality": "missing",
       "registryCatalogNote": "Bounded fusion-enthalpy literature-model screening only; full transient solver unavailable.",
-      "note": "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in python/in625_thermal_material.py (Sabau et al. 2020 screening; transient spec) and they are not reconciled: latent heat of fusion 260000 vs 290000 vs 227000 J/kg; boiling point 2880 vs 2900 C; IR absorptivity 0.38 vs 0.4. The material registry catalog does not offer this row as a material.",
+      "note": "Secondary alloy, outside the four-alloy authority and not labelled by it. Constant properties are python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB['Inconel 625'] (Rosenthal / build-job path). Python holds other IN625 values in python/in625_thermal_material.py (Sabau et al. 2020 screening snapshot; Mills-based transient specification) and the paths that differ are not reconciled (paths holding the same value are grouped): latent heat of fusion: 290000 J/kg in Rosenthal / build-job path [SECONDARY_THERMOPHYSICAL_DB] and Sabau et al. 2020 fusion-enthalpy screening [LATENT_HEAT_J_KG] vs 227000 J/kg in transient material spec [IN625_LATENT_HEAT_FUSION_MILLS_J_KG]; boiling point: 2880 C in Rosenthal / build-job path [SECONDARY_THERMOPHYSICAL_DB] vs 2900 C in transient material spec (K - 273.15) [IN625_BOILING_K]; IR absorptivity: 0.38 in Rosenthal / build-job path [SECONDARY_THERMOPHYSICAL_DB] vs 0.4 in transient material spec [IN625_ABSORPTIVITY_IR]. The material registry catalog does not offer this row as a material.",
       "unreconciledPythonValues": [
         {
           "quantity": "latent heat of fusion",
@@ -178,8 +178,8 @@
           "values": [
             {
               "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
-              "use": "Rosenthal / build-job path (this row)",
-              "value": 260000.0
+              "use": "Rosenthal / build-job path",
+              "value": 290000.0
             },
             {
               "module": "python/in625_thermal_material.py LATENT_HEAT_J_KG",
@@ -199,7 +199,7 @@
           "values": [
             {
               "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
-              "use": "Rosenthal / build-job path (this row)",
+              "use": "Rosenthal / build-job path",
               "value": 2880.0
             },
             {
@@ -215,7 +215,7 @@
           "values": [
             {
               "module": "python/lpbf_thermal_solver.py SECONDARY_THERMOPHYSICAL_DB",
-              "use": "Rosenthal / build-job path (this row)",
+              "use": "Rosenthal / build-job path",
               "value": 0.38
             },
             {
@@ -238,7 +238,7 @@
         "thermal_conductivity_liquid_W_mK": 30.0,
         "specific_heat_J_kgK": 410.0,
         "specific_heat_liquid_J_kgK": 750.0,
-        "latent_heat_fusion_J_kg": 260000.0,
+        "latent_heat_fusion_J_kg": 290000.0,
         "latent_heat_vap_J_kg": 6300000.0,
         "absorptivity_IR": 0.38,
         "absorptivity_Green": 0.58,

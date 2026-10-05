@@ -33,6 +33,8 @@ import physical_constants as pc  # noqa: E402
 from phase6a_test_support import require_git_revision  # noqa: E402
 
 SOLVERS = ("calphad_solver", "battery_corrosion_eis_solver", "icme_multiscale_pipeline_solver")
+# battery_corrosion_eis_solver kept one case when its battery actions were deleted (2026-10-04).
+MIN_CASES = {"battery_corrosion_eis_solver": 1}
 TRANCHE2_BASE = "7f3f803"
 
 
@@ -123,7 +125,7 @@ class GoldenRegressionTest(unittest.TestCase):
 
     def test_case_counts(self):
         for solver in SOLVERS:
-            self.assertGreaterEqual(len(cases.CASES[solver]), 3)
+            self.assertGreaterEqual(len(cases.CASES[solver]), MIN_CASES.get(solver, 3))
             self.assertLessEqual(len(cases.CASES[solver]), 5)
             self.assertIn(solver, golden.CASES)
 
@@ -143,7 +145,7 @@ class GoldenRegressionTest(unittest.TestCase):
                 self._check("icme_multiscale_pipeline_solver", case)
 
     def test_volatile_duration_key_is_stripped(self):
-        doc = golden.load_golden("battery_corrosion_eis_solver", "p2d_continuum_nmc811")
+        doc = golden.load_golden("battery_corrosion_eis_solver", "edge_unknown_action_success_masking")
         self.assertNotIn("pythonDurationMs", json.dumps(doc["stdout"]))
         self.assertIn("pythonDurationMs", golden.VOLATILE_KEYS)
 
@@ -153,13 +155,9 @@ class BaseBlobTest(unittest.TestCase):
     """The pre-migration blob vs the migrated solver on payloads outside the golden set."""
 
     PARITY = {
-        "battery_corrosion_eis_solver": [
-            {"action": "bernardi_thermal", "cellFormat": "4680-tabless", "nominalCapAh": 22.0,
-             "cRate": 2.0, "coolingType": "bottom_cold_plate", "tempAmbientC": 30.0},
-            {"action": "lli_lam_deconvolution", "chemistryId": "nmc811", "initialCapAh": 5.0, "degradedCapAh": 4.2},
-            {"action": "drt", "frequencies": cases._EIS_F, "zReal": cases._EIS_ZR, "zImag": cases._EIS_ZI},
-            {"action": "p2d_continuum", "chemistryId": "lfp", "cRate": 0.5, "tempC": 45.0, "soc": 0.2},
-        ],
+        # The bernardi_thermal, lli_lam_deconvolution, drt and p2d_continuum payloads left with
+        # their actions (deleted 2026-10-04); corrosion_kinetics is checked exactly below.
+        "battery_corrosion_eis_solver": [],
     }
     # calphad_solver left PARITY with the fallback removal (fx-calphad): its success output no
     # longer exists on the locked interpreter. What is still comparable (the wt%/at%
@@ -515,6 +513,11 @@ class IcmeElementTest(unittest.TestCase):
         self.assertEqual(icme._default_composition_wt()["Cr"], 19.0)
 
 
+# The one remaining successful action of battery_corrosion_eis_solver (al-7075 registry record).
+CORROSION_PAYLOAD = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": 0.12, "betaC": 0.11,
+                     "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66}
+
+
 class EnvelopeAndProvenanceTest(unittest.TestCase):
     def test_calphad_internal_error(self):
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 80}, "tMin": "cold"})
@@ -531,20 +534,17 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(out["errorKind"], "internal")
 
     def test_battery_internal_error_and_error_returns_report_success_false(self):
-        code, out = _run("battery_corrosion_eis_solver.py", {"action": "p2d_continuum", "tempC": "warm"})
+        code, out = _run("battery_corrosion_eis_solver.py", {"action": "corrosion_kinetics", "exposureDays": "long"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
         # V1 follow-up: the former success:true masking (pinned here until now) is gone.
         # Error returns keep exit code 0 and the same message, but report success:false.
-        few = {"frequencies": [1000.0, 100.0, 10.0], "zReal": [1.0, 1.1, 1.2], "zImag": [-0.1, -0.2, -0.3]}
+        # The deleted actions (2026-10-04) are unknown actions now.
         expected = [
             ({"action": "no_such_action"}, "Unknown action 'no_such_action'"),
-            ({"action": "drt", **few}, "Insufficient frequency points for DRT"),
-            ({"action": "analyze_uploaded_eis", **few}, "At least 4 frequency points are required for EIS analysis."),
-            ({"action": "identify_bisquert_tlm", **few},
-             "At least 4 frequency points are required for Bisquert TLM component identification."),
-            ({"action": "analyze_uploaded_eis", "frequencies": [1.0, 2.0, 3.0, 4.0], "zReal": [float("nan")] * 4,
-              "zImag": [0.0] * 4}, "No valid numeric impedance data found."),
+            ({"action": "drt"}, "Unknown action 'drt'"),
+            ({"action": "analyze_uploaded_eis"}, "Unknown action 'analyze_uploaded_eis'"),
+            ({"action": "identify_bisquert_tlm"}, "Unknown action 'identify_bisquert_tlm'"),
         ]
         for payload, message in expected:
             with self.subTest(action=payload["action"], message=message):
@@ -554,7 +554,7 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
                 self.assertEqual(out["error"], message)
                 self.assertNotIn("provenance", out)
         # Successful outputs still say success:true and carry provenance.
-        code, out = _run("battery_corrosion_eis_solver.py", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
+        code, out = _run("battery_corrosion_eis_solver.py", CORROSION_PAYLOAD)
         self.assertEqual(code, 0)
         self.assertIs(out["success"], True)
         self.assertNotIn("error", out)
@@ -573,10 +573,10 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(prov["atomicWeightsSource"], pc.CIAAW_SOURCE)
         self.assertEqual(icme.R_GAS, pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
-        fresh = golden.run_solver("battery_corrosion_eis_solver", cases.CASES["battery_corrosion_eis_solver"]["nernst_planck_poisson"])
+        fresh = golden.run_solver("battery_corrosion_eis_solver", CORROSION_PAYLOAD)
         prov = fresh["provenance"]["provenance"]
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
-        # Design step (b): one exact R/F for all four battery sites.
+        # Design step (b): one exact R/F in the provenance block.
         self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
 
@@ -657,9 +657,9 @@ class SourceGuardTest(unittest.TestCase):
         self.assertIn("physical_constants.atomic_weight(el)", src)
 
     def test_no_table_fallback_pattern_in_calphad_and_icme(self):
-        # battery_corrosion_eis_solver keeps ELECTROLYTE_FORMULATIONS.get(id, TABLE[...]) and
-        # specs.get(fmt, specs[...]); icme keeps component_catalog.get(componentType, ...).
-        # Neither is an alloy/element name; both are listed for step (b).
+        # icme keeps component_catalog.get(componentType, ...), not an alloy/element name; it is
+        # listed for step (b). (battery_corrosion_eis_solver's ELECTROLYTE_FORMULATIONS and specs
+        # tables were deleted with their actions on 2026-10-04.)
         allowed = {("icme_multiscale_pipeline_solver.py", "component_catalog")}
         for name in ("calphad_solver.py", "icme_multiscale_pipeline_solver.py"):
             for node in ast.walk(self._tree(name)):

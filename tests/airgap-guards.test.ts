@@ -3,7 +3,6 @@ import { test } from "node:test";
 import { AirgapBlockedError, assertNotAirgapped } from "../server/airgap";
 import { researchSearchUrl } from "../server/researchSearch";
 import { generateGpt6Response } from "../server/openaiService";
-import { collectApprovedSource } from "../server/approvedSourceCollector";
 
 async function withAirgap<T>(value: string | undefined, fn: (calls: () => number) => Promise<T> | T): Promise<T> {
   const origFetch = globalThis.fetch;
@@ -34,22 +33,6 @@ test("researchSearchUrl refuses when air-gapped and works otherwise", async () =
     assert.equal(calls(), 0);
   });
   await withAirgap("0", () => { assert.equal(researchSearchUrl("LPBF fixture").hostname, "api.crossref.org"); });
-});
-
-test("collectApprovedSource refuses when air-gapped without any network call", async () => {
-  await withAirgap("1", async (calls) => {
-    await assert.rejects(collectApprovedSource("nistAmbench", "https://www.nist.gov/file.csv"), AirgapBlockedError);
-    assert.equal(calls(), 0);
-  });
-});
-
-test("collectApprovedSource negative control: guard does not trigger when AIRGAPPED=0", async () => {
-  await withAirgap("0", async () => {
-    await assert.rejects(
-      collectApprovedSource("nistAmbench", "http://www.nist.gov/file.csv"),
-      (e: unknown) => !(e instanceof AirgapBlockedError) && /HTTPS/.test((e as Error).message),
-    );
-  });
 });
 
 test("generateGpt6Response refuses when air-gapped without any network call", async () => {

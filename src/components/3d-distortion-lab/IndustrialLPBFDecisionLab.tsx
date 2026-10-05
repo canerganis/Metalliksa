@@ -29,6 +29,8 @@ import { mapActionableReasons, modelHonestyLine, toActionableHeadline } from "..
 import { heatTreatmentCohorts, orientationCohorts } from "../../utils/lpbfFourAlloySchema";
 import type { PythonLpbfScreeningGate } from "../../services/pythonComputationService";
 import { LPBF_DEMO_VECTORS } from "../../utils/lpbfDemoVectors";
+import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
+import { isComputedMeltPoolExtent, meltPoolExtentInfo } from "../../utils/meltPoolExtentStatus";
 import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
 
@@ -57,6 +59,8 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
   const slicer = job?.slicer ?? null;
   const decision = job?.verdict ?? null;
   const litWindow = job?.verdict?.literatureWindow;
+  const geometryResolved = thermal ? isComputedMeltPoolExtent(thermal.meltPoolGeometry) : true;
+  const extentLabel = thermal ? meltPoolExtentInfo(thermal.meltPoolGeometry).status : "";
   const htCohorts = useMemo(() => heatTreatmentCohorts(materials.alloyId), [materials.alloyId]);
   const oriCohorts = useMemo(() => orientationCohorts(materials.alloyId), [materials.alloyId]);
 
@@ -190,8 +194,8 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
-            {error} Industrial verdict needs <code className="text-amber-100">POST /api/python/lpbf-build-job</code>{" "}
-            (Express + <code className="text-amber-100">python/lpbf_build_job_solver.py</code>). Restart{" "}
+            {error} Industrial verdict needs <code className="text-amber-100">POST /api/lpbf/jobs</code>{" "}
+            (LPBF worker, <code className="text-amber-100">routes/lpbfSimulation.ts</code> → <code className="text-amber-100">python/lpbf_worker.py</code>). Restart{" "}
             <code className="text-amber-100">npm run dev</code> if this route 404s.
           </span>
         </div>
@@ -314,10 +318,19 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                         </td>
                         <td className="py-1 pr-2">
                           {c.predicted.length_um}/{c.predicted.width_um}/{c.predicted.depth_um}
+                          {c.predictedIsHeuristic ? " (heuristic)" : ""}
                         </td>
                         <td className="py-1">
-                          L {c.mape_pct.length ?? "—"} · W {c.mape_pct.width ?? "—"} · D {c.mape_pct.depth ?? "—"} · μ{" "}
-                          {c.mape_pct.mean ?? "—"}
+                          {c.mape_pct ? (
+                            <>
+                              L {c.mape_pct.length ?? "—"} · W {c.mape_pct.width ?? "—"} · D {c.mape_pct.depth ?? "—"} · μ{" "}
+                              {c.mape_pct.mean ?? "—"}
+                            </>
+                          ) : (
+                            <span className="text-amber-300" title={c.extentNote ?? undefined}>
+                              not computed — {c.extentStatus ?? "extent status not reported"}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -325,7 +338,12 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 </table>
               </div>
               <p className="text-[10px] text-slate-500">
-                Overall mean MAPE {job.ambench.overallMeanMape_pct ?? "—"}% — screening only, not a qualification gate.
+                Overall mean MAPE{" "}
+                {job.ambench.overallMeanMape_pct != null ? `${job.ambench.overallMeanMape_pct}%` : "not computed"}
+                {job.ambench.computedCases != null
+                  ? ` (computed cases ${job.ambench.computedCases}, not computed ${job.ambench.notComputedCases ?? 0})`
+                  : ""}{" "}
+                — screening only, not a qualification gate.
               </p>
             </>
           ) : (
@@ -433,15 +451,15 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
             <div className="grid grid-cols-2 gap-2">
               <Metric
                 label="W / h"
-                value={decision.lofGeometry.widthOverHatch.toFixed(2)}
-                ok={decision.lofGeometry.widthOverHatch >= 1.05}
-                hint="> 1.05"
+                value={geometryResolved ? decision.lofGeometry.widthOverHatch.toFixed(2) : "unavailable"}
+                ok={!geometryResolved || decision.lofGeometry.widthOverHatch >= 1.05}
+                hint={geometryResolved ? "> 1.05" : extentLabel}
               />
               <Metric
                 label="D / t"
-                value={decision.lofGeometry.depthOverLayer.toFixed(2)}
-                ok={decision.lofGeometry.depthOverLayer >= 1.15}
-                hint="> 1.15"
+                value={geometryResolved ? decision.lofGeometry.depthOverLayer.toFixed(2) : "unavailable"}
+                ok={!geometryResolved || decision.lofGeometry.depthOverLayer >= 1.15}
+                hint={geometryResolved ? "> 1.15" : extentLabel}
               />
               <Metric
                 label="ΔH/hₛ"
@@ -456,7 +474,12 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 hint={`${decision.literatureWindow.box.powerMin_W}–${decision.literatureWindow.box.powerMax_W} W`}
               />
               <Metric label="Recoater" value={shortRisk(thermal.defectDiagnostics.recoaterCrashRisk)} ok={!thermal.defectDiagnostics.recoaterCrashRisk.startsWith("High")} />
-              <Metric label="Balling" value={shortRisk(thermal.defectDiagnostics.ballingInstabilityRisk)} ok={!thermal.defectDiagnostics.ballingInstabilityRisk.startsWith("High")} />
+              <Metric
+                label="Balling"
+                value={geometryResolved ? shortRisk(thermal.defectDiagnostics.ballingInstabilityRisk) : "unavailable"}
+                ok={!geometryResolved || !thermal.defectDiagnostics.ballingInstabilityRisk.startsWith("High")}
+                hint={geometryResolved ? undefined : extentLabel}
+              />
             </div>
           ) : (
             <SkeletonLines />
@@ -601,6 +624,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
           <Tiny label="ε K/s" value={thermal.solidificationKinetics.coolingRate_K_s.toExponential(1)} />
         </div>
       )}
+      {thermal && <MeltPoolExtentNotice geometry={thermal.meltPoolGeometry} />}
 
       {job?.porosity && (
         <div className="rounded-2xl border border-violet-500/30 bg-[#090e18] p-3.5 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -658,6 +682,7 @@ function shortRisk(s: string): string {
 function verdictTone(v: PrintVerdict): string {
   if (v === "printable") return "border-emerald-500/40 bg-emerald-500/10 text-emerald-100";
   if (v === "risky") return "border-amber-500/40 bg-amber-500/10 text-amber-100";
+  if (v === "inconclusive") return "border-slate-500/40 bg-slate-500/10 text-slate-100";
   return "border-rose-500/40 bg-rose-500/10 text-rose-100";
 }
 
@@ -690,7 +715,13 @@ const VerdictBanner: React.FC<{
 }) => (
   <div className={`rounded-2xl border p-4 ${verdictTone(verdict)}`}>
     <div className="flex items-center gap-2 font-bold text-sm">
-      {verdict === "printable" ? <CheckCircle2 className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+      {verdict === "printable" ? (
+        <CheckCircle2 className="w-5 h-5" />
+      ) : verdict === "inconclusive" ? (
+        <AlertTriangle className="w-5 h-5" />
+      ) : (
+        <ShieldAlert className="w-5 h-5" />
+      )}
       {headline}
     </div>
     <p className="mt-1 text-[10px] opacity-80">{modelHonestyLine(modelId)}</p>
@@ -715,13 +746,15 @@ const VerdictBanner: React.FC<{
         {gates.map((g) => (
           <span
             key={g.id}
-            title={g.note}
+            title={g.reason ?? g.note}
             className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
               g.status === "fail"
                 ? "border-rose-400/50 text-rose-100"
                 : g.status === "warn"
                   ? "border-amber-400/50 text-amber-100"
-                  : "border-white/20 text-white/70"
+                  : g.status === "unavailable"
+                    ? "border-dashed border-slate-400/50 text-slate-300"
+                    : "border-white/20 text-white/70"
             } ${dominantGate === g.id ? "ring-1 ring-white/60" : ""}`}
           >
             {g.id} {g.status}

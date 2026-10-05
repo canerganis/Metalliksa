@@ -1,7 +1,8 @@
 /**
- * Experimental E-pH Test Data Presets, Parser & Mechanism Diagnostics
- * Provides curated experimental corrosion datasets, tabular CSV/TSV parsing,
- * and reference electrode transformation utilities.
+ * E-pH test-point presets, parser and reference electrode transformation utilities.
+ * The presets are ILLUSTRATIVE scenarios: they cite no dataset, publication or laboratory record, so
+ * they are not measured data (AGENTS.md: measured, literature, computed and synthetic data are kept
+ * apart). Tabular CSV/TSV points a user loads are the only measured data the studio can show.
  */
 
 import { ExperimentalEpHEntry, ExperimentalEpHTrajectoryPreset, ReferenceElectrode } from "../types/pourbaix";
@@ -15,12 +16,18 @@ export const REF_OFFSETS_VS_SHE: { [k in ReferenceElectrode]: number } = {
   MMS: 0.640,
 };
 
+/** Shown wherever preset points are drawn or listed. */
+export const PRESET_POINTS_NOTE = "Preset points are illustrative scenarios, not measured data: no source is cited.";
+/** A probe captured from the computed map is a computed coordinate, never a measurement (review Sol 6.1 SF-1). */
+export const CAPTURED_PROBE_STAGE = "Computed coordinate (probe, not measured)";
+export const CAPTURED_PROBE_NOTE = "Coordinate copied from the computed map probe; not a measurement.";
+
 export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = [
   {
     id: "fe_marine_crevice",
     name: "Carbon Steel (AISI 1018) — Seawater Occluded Crevice & Under-Deposit Corrosion",
     element: "Fe",
-    description: "In-situ micro-electrode monitoring of carbon steel undergoing local acidification under marine fouling and subsequent impressed current cathodic protection (ICCP).",
+    description: "Illustrative scenario, not measured data (no source is cited): In-situ micro-electrode monitoring of carbon steel undergoing local acidification under marine fouling and subsequent impressed current cathodic protection (ICCP).",
     environmentSummary: "3.5 wt% NaCl Aerated Seawater (T = 25°C, [Cl⁻] = 19,000 ppm)",
     points: [
       {
@@ -31,8 +38,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 12.4,
         timeHours: 1.0,
-        stageName: "Initial Passivation / Magnetite Nucleation",
-        notes: "Freely corroding specimen forming dark green-rust / mixed oxide."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p2",
@@ -42,8 +49,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 24.8,
         timeHours: 48.0,
-        stageName: "Oxygen Depletion Under Deposit",
-        notes: "Dissolved oxygen diffusion blocked under slime layer; potential shifts negative."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p3",
@@ -53,8 +60,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SCE",
         currentDensity_uA_cm2: 185.0,
         timeHours: 120.0,
-        stageName: "Active Crevice Dissolution",
-        notes: "Fe²⁺ hydrolysis (Fe²⁺ + 2H₂O → Fe(OH)₂ + 2H⁺) drives severe local acidification and rapid active dissolution."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "fe_p4",
@@ -64,8 +71,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "CSE",
         currentDensity_uA_cm2: 0.08,
         timeHours: 144.0,
-        stageName: "Full Cathodic Immunity",
-        notes: "Cathodic protection depressed potential below -0.85V vs CSE immunity criterion. Metal loss arrested."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -73,7 +80,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "ss316l_pitting_hydrolysis",
     name: "Stainless Steel 316L — In-Situ Pit Acidification & Transpassive Scan",
     element: "Cr",
-    description: "Micro-capillary chemical profiling inside single artificial pitting cell in 1M NaCl + potentiodynamic anodic polarizations.",
+    description: "Illustrative scenario, not measured data (no source is cited): Micro-capillary chemical profiling inside single artificial pitting cell in 1M NaCl + potentiodynamic anodic polarizations.",
     environmentSummary: "1.0 M NaCl (35,500 ppm Cl⁻), Aerated Acid/Neutral, Ambient 25°C",
     points: [
       {
@@ -84,8 +91,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.15,
         timeHours: 2.0,
-        stageName: "Stable Cr₂O₃ Passive Film",
-        notes: "Low passive current density; nano-metric chromia barrier active."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p2",
@@ -95,8 +102,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 8.2,
         timeHours: 6.0,
-        stageName: "Metastable Pitting Events",
-        notes: "Chloride adsorption displaces oxygen; transient current transients observed."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p3",
@@ -106,8 +113,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 4500.0,
         timeHours: 12.0,
-        stageName: "Autocatalytic Stable Pit Growth",
-        notes: "Cr³⁺ hydrolysis drives internal pit pH to 1.8 with 4.5 mA/cm² dissolution rate."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ss_p4",
@@ -117,8 +124,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 820.0,
         timeHours: 14.0,
-        stageName: "Transpassive CrO₄²⁻ Formation",
-        notes: "Oxidation of insoluble Cr(III) oxide to soluble hexavalent chromate (CrO₄²⁻)."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -126,7 +133,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "al7075_exco_saline",
     name: "Aluminum AA7075-T651 — Atmospheric Salt Fog & Exfoliation Acidification",
     element: "Al",
-    description: "ASTM G34 EXCO testing titration monitoring intergranular attack, pit nucleation, and alkaline caustic rinsing.",
+    description: "Illustrative scenario, not measured data (no source is cited): ASTM G34 EXCO testing titration monitoring intergranular attack, pit nucleation, and alkaline caustic rinsing.",
     environmentSummary: "EXCO Solution (4.0 M NaCl + 0.5 M KNO₃ + 0.1 M HNO₃), T = 25°C",
     points: [
       {
@@ -137,8 +144,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 0.8,
         timeHours: 0.5,
-        stageName: "Native Al₂O₃·3H₂O Barrier",
-        notes: "Passivated surface in ambient air."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p2",
@@ -148,8 +155,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 320.0,
         timeHours: 4.0,
-        stageName: "Severe Acid Intergranular Attack",
-        notes: "Acidic dissolution of anodic η-phase (MgZn₂) precipitate along grain boundaries."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p3",
@@ -159,8 +166,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 850.0,
         timeHours: 24.0,
-        stageName: "Autocatalytic Exfoliation Blistering",
-        notes: "Hydrogen gas generation and voluminous Al(OH)₃ wedge grains apart."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "al_p4",
@@ -170,8 +177,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 1200.0,
         timeHours: 25.0,
-        stageName: "Amphoteric Aluminate Dissolution",
-        notes: "Alkaline attack converting aluminum into soluble AlO₂⁻ aluminate."
+        stageName: "Point 4 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -179,7 +186,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "ti_biomed_saline",
     name: "Titanium Ti-6Al-4V — Orthopedic Implant in Simulated Body Fluid (SBF)",
     element: "Ti",
-    description: "Electrochemical testing of surgical implant subjected to peri-implant inflammation and oxidative burst (H₂O₂).",
+    description: "Illustrative scenario, not measured data (no source is cited): Electrochemical testing of surgical implant subjected to peri-implant inflammation and oxidative burst (H₂O₂).",
     environmentSummary: "Simulated Body Fluid (pH 7.4, 0.9% NaCl, 37°C physiological)",
     points: [
       {
@@ -190,8 +197,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.02,
         timeHours: 24.0,
-        stageName: "Ultra-Stable TiO₂ Passivation",
-        notes: "Zero detectable metal ion release; complete biocompatibility."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ti_p2",
@@ -201,8 +208,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 0.18,
         timeHours: 72.0,
-        stageName: "Oxidative Potential Elevation",
-        notes: "Inflammatory cytokines and peroxide elevate OCP without breaking TiO₂ barrier."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "ti_p3",
@@ -212,8 +219,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "Ag/AgCl (3M KCl)",
         currentDensity_uA_cm2: 4.5,
         timeHours: 120.0,
-        stageName: "Acid Fluoride Stressing",
-        notes: "Still within passive TiO₂ stability zone, slight current elevation."
+        stageName: "Point 3 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   },
@@ -221,7 +228,7 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
     id: "cu_potable_water",
     name: "Copper Plumbing Pipe — Potable Water Pitting & Blue Water Syndrome",
     element: "Cu",
-    description: "Examination of cold potable water pipe pitting caused by high dissolved oxygen and sulfate/chloride ratio.",
+    description: "Illustrative scenario, not measured data (no source is cited): Examination of cold potable water pipe pitting caused by high dissolved oxygen and sulfate/chloride ratio.",
     environmentSummary: "Municipal Drinking Water (pH 6.8 - 8.5, Aerated, 45 ppm Cl⁻)",
     points: [
       {
@@ -232,8 +239,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 45.0,
         timeHours: 12.0,
-        stageName: "Active Cu²⁺ Dissolution (Blue Water)",
-        notes: "Aerated acidic water dissolves copper into blue Cu²⁺ ions."
+        stageName: "Point 1 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       },
       {
         id: "cu_p2",
@@ -243,8 +250,8 @@ export const EXPERIMENTAL_POURBAIX_PRESETS: ExperimentalEpHTrajectoryPreset[] = 
         refElectrode: "SHE",
         currentDensity_uA_cm2: 0.4,
         timeHours: 720.0,
-        stageName: "Cu₂O / Malachite Protective Patina",
-        notes: "Alkaline buffering precipitates protective reddish-brown Cu₂O layer."
+        stageName: "Point 2 (illustrative)",
+        notes: "Illustrative scenario point; no measurement."
       }
     ]
   }

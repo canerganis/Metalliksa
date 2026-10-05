@@ -68,7 +68,7 @@ Status colour is never the only signal: always pair it with a text label and, wh
 Module bodies were authored for a dark UI. The Tailwind ramps are re-pointed instead of editing modules:
 - neutral and chromatic ramps are inverted; text steps 200-400 are pushed until they reach 4.6:1 on `#e6e8ec`, step 500 reaches 3:1;
 - dark literal surfaces (`bg-[#090e18]` and friends) map to paper / well / hover tokens; dark SVG presentation colours used by D3 and Recharts map to light tokens;
-- a solid `bg-white` card and the three light-authored labs (GPU solver, DEM compaction, tomography) get Tailwind's own ramps back inside them;
+- a solid `bg-white` card gets Tailwind's own ramps back inside it;
 - canvas and WebGL views keep their own dark backgrounds (instrument screens).
 
 ### Contrast rules
