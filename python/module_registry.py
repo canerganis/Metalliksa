@@ -42,6 +42,8 @@ from module_contracts_eds import build_eds_contract
 from module_contracts_composition import build_composition_contract
 from module_contracts_elasticity import build_elasticity_contract
 from module_contracts_database import build_database_contract
+from module_contracts_calphad import build_calphad_contract
+from module_contracts_evidence import build_experimental_data_contract, build_traceability_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -182,11 +184,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
     # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
-    "phase-diagram": (
-        _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
-        _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
-        _AI_CONSULT,
-    ),
     "electrochem-suite": (
         _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("tafel-corrosion-rate", "POST", "/api/python/tafel-corrosion-rate",
@@ -202,9 +199,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("research-registry-save", "PUT", "/api/research/registry", _NODE),
         _op("research-search", "GET", "/api/research/search", _NODE),
     ),
-    "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
-    "traceability": (),
     "copilot": (_op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),),
 }
 
@@ -983,6 +978,9 @@ def module_doc_path(module_id: str) -> str:
 
 CONTRACTED_BUILDERS = {
     "database": build_database_contract,
+    "phase-diagram": build_calphad_contract,
+    "experimental-data": build_experimental_data_contract,
+    "traceability": build_traceability_contract,
     "alloy-builder": build_composition_contract,
     "materials-project": build_elasticity_contract,
     "eds-lab": build_eds_contract,

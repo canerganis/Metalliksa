@@ -15,10 +15,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Ratchet mirrored in tests/module-registry.test.ts: Phase 7 step 0 generated
 # one legacy contract per listed module. Migration may only lower this number.
-LEGACY_CEILING = 12  # Materials Database now has a source-bound local-view contract.
+LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue", "adaptive-mitigation",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "database", "alloy-builder", "ttt-cct-kinetics", "micrograph", "eds-lab", "icme-motor", "materials-project", "uq-lab")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "database", "alloy-builder", "phase-diagram", "ttt-cct-kinetics", "micrograph", "eds-lab", "icme-motor", "materials-project", "experimental-data", "uq-lab", "traceability")
 
 
 def _view():

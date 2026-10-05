@@ -52,15 +52,15 @@ def build_calphad_contract(seed) -> ModuleContract:
         authority=_python_authority(40000),
         input=(
             _number("tMin", "Minimum temperature", "degC", "temperature", 500.0,
-                    "Direct solver default is 500 °C. The mounted UI always sends a base-element-selected "
-                    "window: Al 400–750 °C, Mg 350–700 °C, Ti 600–1750 °C, otherwise 500–1550 °C; "
-                    "the UI also sends its step (10 °C for Al/Mg, otherwise 25 °C). No solver hard bound "
+                    "Direct solver default is 500 degC. The mounted UI always sends a base-element-selected "
+                    "window: Al 400–750 degC, Mg 350–700 degC, Ti 600–1750 degC, otherwise 500–1550 degC; "
+                    "the UI also sends its step (10 degC for Al/Mg, otherwise 25 degC). No solver hard bound "
                     "is declared for these request values."),
             _number("tMax", "Maximum temperature", "degC", "temperature", 1450.0,
-                    "Direct solver default is 1450 °C. UI-selected windows are documented on tMin; "
+                    "Direct solver default is 1450 degC. UI-selected windows are documented on tMin; "
                     "they depend on the largest alloy element."),
             _number("tStep", "Temperature grid step", "degC", "temperature-step", 20.0,
-                    "Direct solver default is 20 °C. UI passes 10 or 25 °C from the selected base-element "
+                    "Direct solver default is 20 degC. UI passes 10 or 25 degC from the selected base-element "
                     "window. The Python solver caps the actual uniform grid at 80 points; these UI values "
                     "are not backend bounds."),
             _selector("unit", "Composition unit", ("wt_pct", "at_pct"), "wt_pct",
@@ -70,8 +70,8 @@ def build_calphad_contract(seed) -> ModuleContract:
             _boolean("boundaryRefinement", "Boundary refinement", True,
                      "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus."),
             _number("minRefineStep", "Boundary tolerance", "degC", "temperature-tolerance", 0.5,
-                    "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 °C. Direct Python "
-                    "requests are not restricted to those options; the solver uses max(0.05 °C, requested "
+                    "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 degC. Direct Python "
+                    "requests are not restricted to those options; the solver uses max(0.05 degC, requested "
                     "value) as its refinement tolerance and declares no upper bound."),
         ),
         undeclared_input=("name", "elements", "databaseId", "customTdbText", "supersedeKey"),
@@ -125,7 +125,7 @@ def build_calphad_contract(seed) -> ModuleContract:
                                             "Gibbs models in the browser; this is legacy single-authority debt."),
         input=(
             _number("temperatureC", "Probe temperature", "degC", "temperature", 850.0,
-                    "Initial probe is 850 °C for Fe-C; changing system selects other UI presets. No physical "
+                    "Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical "
                     "applicability bound is established by the UI."),
             _number("compositionB", "Component B content", "%", "composition-percentage", 0.45,
                     "Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the "
@@ -170,10 +170,10 @@ def build_calphad_contract(seed) -> ModuleContract:
             "without a client substitute. The visible client solver is reached only after the user explicitly "
             "turns the Python engine off; it is marked empirical/screening and is not the fallback for failure.",
             "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are "
-            "undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 °C, "
-            "Mg 350–700/10 °C, Ti 600–1750/25 °C, otherwise 500–1550/25 °C. Direct Python defaults are "
-            "500/1450/20 °C. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable "
-            "0.2/0.5/1/2 °C tolerance; no blanket hard temperature applicability limits are asserted.",
+            "undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, "
+            "Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are "
+            "500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable "
+            "0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
             "The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style "
             "solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' "
             "button submits binary-system prompt text to /api/consult; service failure or empty/malformed "

@@ -66,13 +66,13 @@ class CalphadContractTests(unittest.TestCase):
             "adaptiveGrid": False, "boundaryRefinement": True, "minRefineStep": 0.1,
         }), [])
         self.assertIn("not restricted to those options", fields["minRefineStep"].note)
-        self.assertIn("max(0.05 °C, requested value)", fields["minRefineStep"].note)
+        self.assertIn("max(0.05 degC, requested value)", fields["minRefineStep"].note)
         self.assertFalse(self.operations["client-screening"].input[0].default)
         self.assertIn("Python request failure does not enter this path",
                       self.operations["client-screening"].input[0].note)
         self.assertTrue(all(field.min is None and field.max is None
                             for field in self.operations["client-screening"].input[1:]))
-        self.assertIn("Al 400–750 °C", " ".join(field.note for field in op.input))
+        self.assertIn("Al 400–750 degC", " ".join(field.note for field in op.input))
 
     def test_transport_status_is_not_emitted_evidence(self):
         op = self.operations["calphad-minimize"]

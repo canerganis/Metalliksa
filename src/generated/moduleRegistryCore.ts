@@ -343,7 +343,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "phase-diagram",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
@@ -355,7 +355,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/PhaseDiagramViewer.tsx",
         "export": "PhaseDiagramViewer"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -577,7 +577,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "experimental-data",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "workspace": "evidence",
       "label": "Measured Findings",
       "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
@@ -589,7 +589,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -655,7 +655,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "traceability",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "workspace": "evidence",
       "label": "Export Review Package",
       "description": "Exports the active specimen, source provenance and linked evidence as a review package; meshes and worker artifacts are excluded.",
@@ -667,7 +667,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
