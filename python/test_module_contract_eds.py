@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 import module_contract as mc
+import module_registry as mr
 from module_contracts_eds import build_eds_contract
 
 
@@ -38,9 +39,10 @@ class EDSModuleContractTests(unittest.TestCase):
         self.assertEqual((fwhm.value_type, fwhm.unit, fwhm.min, fwhm.max, fwhm.default),
                          ("number", "eV", 20.0, 1000.0, 130.0))
         self.assertFalse(fwhm.required)
-        self.assertIn("spectrumPoints", operations["identify-peak-candidates"].undeclared_input)
+        self.assertIn("uploadedSpectrum", operations["identify-peak-candidates"].undeclared_input)
         vendor = operations["import-vendor-quantification"]
-        self.assertEqual(set(vendor.undeclared_input), {"fileName", "bytes", "instrument", "software", "analysisType"})
+        self.assertEqual(set(vendor.undeclared_input),
+                         {"vendorFile", "vendorInstrument", "vendorSoftware", "vendorAnalysisType"})
         self.assertTrue(any("ArrayBuffer" in note and "energyKeV" in note for note in self.contract.legacy_notes))
 
     def test_outputs_separate_transport_from_evidence_and_keep_peak_id_nonquantitative(self):
@@ -52,7 +54,7 @@ class EDSModuleContractTests(unittest.TestCase):
         self.assertIn("peaks", outputs["identify-peak-candidates"])
         self.assertNotIn("composition", outputs["identify-peak-candidates"])
         self.assertIn("composition", outputs["import-vendor-quantification"])
-        self.assertIn("transferProvenance", outputs["send-vendor-composition"])
+        self.assertIn("transfer", outputs["send-vendor-composition"])
         self.assertIn("does not produce quantitative composition", contract.evidence.note)
 
     def test_seed_identity_and_round_trip_are_preserved(self):
@@ -64,15 +66,29 @@ class EDSModuleContractTests(unittest.TestCase):
         restored = mc.contract_from_dict(contract.to_dict())
         self.assertEqual(restored, contract)
 
-    def test_every_source_reference_resolves_to_an_existing_line_span(self):
-        for ref in self.contract.source_refs:
-            path, span = ref.split(":", 1)
-            target = ROOT / path
-            self.assertTrue(target.is_file(), ref)
-            line_count = len(target.read_text(encoding="utf-8").splitlines())
-            bounds = [int(value) for value in span.split("-")]
-            self.assertLessEqual(bounds[0], bounds[-1], ref)
-            self.assertLessEqual(bounds[-1], line_count, ref)
+    def test_registry_reference_validation_accepts_real_sources_and_generated_doc(self):
+        generated_doc = mr.module_doc_path("eds-lab")
+        self.assertEqual(self.contract.tests.docs, generated_doc)
+        self.assertFalse((ROOT / generated_doc).exists())
+        problems = mr.contract_ref_problems(self.contract, root=ROOT, generated=frozenset({generated_doc}))
+        self.assertEqual(problems, [])
+
+    def test_stateful_operations_declare_the_state_they_consume(self):
+        operations = {operation.id: operation for operation in self.contract.operations}
+        self.assertEqual(operations["restore-latest-source"].input, ())
+        self.assertEqual(operations["export-parsed-csv"].undeclared_input, ("uploadedSpectrum",))
+        self.assertEqual(operations["download-original-source"].undeclared_input, ("uploadedSpectrum",))
+        self.assertEqual(operations["send-vendor-composition"].undeclared_input,
+                         ("vendorCurrent", "vendorResult", "onSendToAlloyBuilder"))
+        self.assertEqual(set(operations["export-parsed-csv"].output.fields), {"blob", "url", "anchor"})
+        self.assertEqual(set(operations["send-vendor-composition"].output.fields), {"composition", "transfer"})
+
+    def test_lifecycle_records_child_renderer_and_restore_cleanup_limits(self):
+        self.assertEqual(self.contract.lifecycle.resources, ("raf",))
+        notes = " ".join(self.contract.legacy_notes)
+        self.assertIn("cancelled on hide or unmount", notes)
+        self.assertIn("does not cancel the IndexedDB reads", notes)
+        self.assertIn("browser storage and File APIs have no matching lifecycle vocabulary", notes)
 
 
 if __name__ == "__main__":
